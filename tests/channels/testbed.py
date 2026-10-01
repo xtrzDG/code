@@ -182,6 +182,7 @@ from app.use_cases.voice.start_voice_call_use_case import StartVoiceCallUseCase
 from app.utilities.config_helpers.app_settings_assembler import assemble_app_settings
 from app.utilities.localization.localized_text_resolver import LocalizedTextResolver
 from app.utilities.localization.phone_number_parser import PhoneNumberParser
+from app.utilities.storage.storage_scope_context import StorageScopeContext
 
 # Responses of FastAPI's TestClient (built on httpx2).
 HttpResponse = httpx2.Response
@@ -580,6 +581,7 @@ class ChannelsTestbed:
             self.audit_log_repo,
             self.settings,
             self.wall_clock,
+            StorageScopeContext(),
         )
         self.disable_channel = DisableChannelUseCase(
             self.authorize_business_access,

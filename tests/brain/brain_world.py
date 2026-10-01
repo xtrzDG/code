@@ -140,6 +140,7 @@ from app.use_cases.conversations.run_assistant_tool_use_case import (
 from app.utilities.conversations.language_detector import LanguageDetector
 from app.utilities.localization.localized_text_resolver import LocalizedTextResolver
 from app.utilities.localization.phone_number_parser import PhoneNumberParser
+from app.utilities.storage.storage_scope_context import StorageScopeContext
 from tests.brain.fake_tools import (
     FakeBookings,
     FakeCancelBooking,
@@ -533,6 +534,7 @@ def build_world(
         record_unanswered_question=record_question,
         phone_number_parser=PhoneNumberParser(),
     )
+    storage_scope = StorageScopeContext()
     orchestrator = ConversationTurnOrchestrator(
         prepare_turn=PrepareConversationTurnUseCase(
             business_repo=business_repo,
@@ -566,6 +568,7 @@ def build_world(
             wall_clock=wall_clock,
         ),
         localized_text_resolver=texts,
+        storage_scope=storage_scope,
     )
     voice_orchestrator = VoiceToolCallOrchestrator(
         open_voice_conversation=OpenVoiceConversationUseCase(
@@ -580,6 +583,7 @@ def build_world(
             message_repo=message_repo,
             wall_clock=wall_clock,
         ),
+        storage_scope=storage_scope,
     )
     return BrainWorld(
         clock=clock,

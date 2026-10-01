@@ -169,6 +169,7 @@ from app.use_cases.autotests.start_autotest_run_use_case import (
 )
 from app.utilities.assembly.llm_costs import DEFAULT_LLM_TOKEN_PRICES
 from app.utilities.config_helpers.app_settings_assembler import assemble_app_settings
+from app.utilities.storage.storage_scope_context import StorageScopeContext
 from tests.assembly.fakes import (
     FakeAssistantToolCatalog,
     FakeAuthenticationOperator,
@@ -539,6 +540,7 @@ class AssemblyTestbed:
             wall_clock=self.wall_clock,
             error_reporter=self.worker_errors,
             poll_seconds=WorkerPollSeconds(5),
+            storage_scope=StorageScopeContext(),
         )
         activate = ActivateAssistantVersionUseCase(
             check_go_live_readiness=CheckGoLiveReadinessUseCase(
