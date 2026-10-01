@@ -11,6 +11,7 @@ from app.adapters.voice.elevenlabs_voice_agent_provisioner import (
 )
 from app.contracts.recording_storage import RecordingStorageAdapterContract
 from app.schemas.constants.assistants import AssistantToolName
+from app.schemas.dto.call_recordings import RecordingAudio
 from app.schemas.dto.conversations import LlmToolDefinition
 from app.schemas.dto.voice import VoiceAgentSpec, VoiceGreeting
 from app.schemas.exceptions.application_errors import ExternalServiceError
@@ -387,6 +388,11 @@ class TestRecordingStorage:
         deleted_elsewhere: list[str] = []
 
         class LocalStorage(RecordingStorageAdapterContract):
+            def read(
+                self, recording_path: RecordingStoragePath
+            ) -> RecordingAudio | None:
+                raise AssertionError("Deleting reads nothing.")
+
             def delete(self, recording_path: RecordingStoragePath) -> None:
                 deleted_elsewhere.append(str(recording_path))
 

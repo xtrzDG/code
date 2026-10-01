@@ -11,6 +11,7 @@ from app.adapters.storage.in_memory_document_collection import (
 from app.contracts.brain import MenuExtractionAdapterContract
 from app.contracts.facilitators import ChannelMessageSenderFacilitatorContract
 from app.contracts.operator_contract import OperatorContract
+from app.contracts.recording_storage import RecordingStorageAdapterContract
 from app.gateways.http.conversation_routes import build_conversation_router
 from app.gateways.http.error_responses import install_error_handlers
 from app.gateways.http.menu_import_routes import build_menu_import_router
@@ -27,6 +28,7 @@ from app.repositories.knowledge_repositories import ResourceRepository
 from app.schemas.constants.channels import ChannelKind
 from app.schemas.domain.bookings import BookingDocument, LeadDocument
 from app.schemas.domain.resources import ResourceDocument
+from app.schemas.dto.call_recordings import CallRecordingQuery, RecordingAudio
 from app.schemas.dto.conversation_feed import (
     ConversationDetailView,
     ConversationListQuery,
@@ -53,7 +55,12 @@ from app.schemas.exceptions.application_errors import (
 )
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.channels.constrained_strings import WhatsAppTemplateName
-from app.schemas.typings.conversations.strings import ChannelUserId, MessageText
+from app.schemas.typings.conversations.constrained_strings import RecordingMediaType
+from app.schemas.typings.conversations.strings import (
+    ChannelUserId,
+    MessageText,
+    RecordingStoragePath,
+)
 from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.schemas.typings.users.prefixed_id import UserId
 from app.schemas.typings.users.strings import AccessToken
@@ -63,6 +70,9 @@ from app.transformers.conversations.conversation_summary_transformer import (
 )
 from app.transformers.conversations.message_view_transformer import (
     MessageViewTransformer,
+)
+from app.use_cases.conversations.get_call_recording_use_case import (
+    GetCallRecordingUseCase,
 )
 from app.use_cases.conversations.get_conversation_use_case import (
     GetConversationUseCase,
@@ -133,6 +143,31 @@ class RecordingChannelSender(ChannelMessageSenderFacilitatorContract):
         raise AssertionError("Staff replies never use templates.")
 
 
+class InMemoryRecordingStorage(RecordingStorageAdapterContract):
+    """Recordings by path; `failure` makes the storage unreachable."""
+
+    def __init__(self) -> None:
+        self.recordings: dict[str, bytes] = {}
+        self.reads: list[str] = []
+        self.failure: str | None = None
+
+    def read(self, recording_path: RecordingStoragePath) -> RecordingAudio | None:
+        self.reads.append(str(recording_path))
+        if self.failure is not None:
+            raise ExternalServiceError(self.failure)
+
+        content: bytes | None = self.recordings.get(str(recording_path))
+        if content is None:
+            return None
+
+        return RecordingAudio(
+            content=content, media_type=RecordingMediaType("audio/mpeg")
+        )
+
+    def delete(self, recording_path: RecordingStoragePath) -> None:
+        self.recordings.pop(str(recording_path), None)
+
+
 @dataclass
 class CabinetStorage:
     """What the cabinet reads beside the brain world: bookings, leads, places."""
@@ -155,6 +190,9 @@ class CabinetStorage:
     channel_sender: RecordingChannelSender = field(
         default_factory=RecordingChannelSender
     )
+    recording_storage: InMemoryRecordingStorage = field(
+        default_factory=InMemoryRecordingStorage
+    )
 
 
 @dataclass(frozen=True)
@@ -166,6 +204,7 @@ class CabinetOperators:
     ]
     owner_test_chat: OperatorContract[OwnerTestChatCommand, AssistantReply]
     send_staff_message: OperatorContract[SendStaffMessageCommand, StaffMessageResult]
+    get_call_recording: OperatorContract[CallRecordingQuery, RecordingAudio]
     import_menu: OperatorContract[ImportMenuCommand, MenuImportResult]
     confirm_imported_items: OperatorContract[
         ConfirmImportedItemsCommand, ConfirmImportedItemsResult
@@ -231,6 +270,19 @@ def build_cabinet_operators(
                         audit_log_repo=world.audit_log_repo,
                         channel_message_sender=storage.channel_sender,
                         message_transformer=MessageViewTransformer(),
+                        wall_clock=world.clock.wall_clock(),
+                    )
+                )
+            )
+        ),
+        get_call_recording=PipelineOperator(
+            OrchestratorPipeline(
+                UseCaseOrchestrator(
+                    GetCallRecordingUseCase(
+                        authorize_business_access=world.authorize,
+                        call_repo=world.call_repo,
+                        recording_storage=storage.recording_storage,
+                        audit_log_repo=world.audit_log_repo,
                         wall_clock=world.clock.wall_clock(),
                     )
                 )
@@ -319,6 +371,7 @@ def build_cabinet_client(
             rate_conversation_operator=operators.rate_conversation,
             current_user=current_user,
             send_staff_message_operator=operators.send_staff_message,
+            get_call_recording_operator=operators.get_call_recording,
         )
     )
     http_application.include_router(

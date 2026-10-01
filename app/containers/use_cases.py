@@ -91,6 +91,7 @@ from app.schemas.dto.calendar import (
     CalendarConnectionStatusQuery,
     CalendarConnectionStatusView,
 )
+from app.schemas.dto.call_recordings import CallRecordingQuery, RecordingAudio
 from app.schemas.dto.catalog import (
     CallForwardingInstructions,
     CallForwardingInstructionsQuery,
@@ -475,6 +476,9 @@ from app.use_cases.conversations.build_call_greeting_use_case import (
 )
 from app.use_cases.conversations.generate_assistant_reply_use_case import (
     GenerateAssistantReplyUseCase,
+)
+from app.use_cases.conversations.get_call_recording_use_case import (
+    GetCallRecordingUseCase,
 )
 from app.use_cases.conversations.get_conversation_use_case import GetConversationUseCase
 from app.use_cases.conversations.list_conversations_use_case import (
@@ -1490,6 +1494,16 @@ class UseCasesContainer(containers.DeclarativeContainer):
         handoff_repo=repositories.handoff_repo,
         resource_repo=repositories.resource_repo,
         channel_repo=repositories.channel_repo,
+    )
+    get_call_recording_use_case: Factory[
+        UseCaseContract[CallRecordingQuery, RecordingAudio]
+    ] = Factory(
+        GetCallRecordingUseCase,
+        authorize_business_access=authorize_business_access_use_case,
+        call_repo=repositories.call_repo,
+        recording_storage=adapters.recording_storage,
+        audit_log_repo=repositories.audit_log_repo,
+        wall_clock=time_provider.microsecond_wall_clock,
     )
     send_staff_message_use_case: Factory[
         UseCaseContract[SendStaffMessageCommand, StaffMessageResult]

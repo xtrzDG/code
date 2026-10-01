@@ -162,6 +162,7 @@ def build_application_routers(app_container: AppContainer) -> list[APIRouter]:
             rate_conversation_operator=operators.rate_conversation_operator(),
             current_user=current_user,
             send_staff_message_operator=operators.send_staff_message_operator(),
+            get_call_recording_operator=operators.get_call_recording_operator(),
         ),
         build_assistant_router(
             assemble_assistant_version_operator=(

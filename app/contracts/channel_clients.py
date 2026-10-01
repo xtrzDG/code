@@ -4,6 +4,7 @@ from typing import Protocol
 
 from app.contracts.client_contract import ClientContract
 from app.schemas.constants.assistants import AssistantToolName
+from app.schemas.dto.call_recordings import RecordingAudio
 from app.schemas.dto.channels import (
     MetaPageProfile,
     TelegramBotProfile,
@@ -161,6 +162,13 @@ class ElevenLabsApiClientContract(ClientContract, Protocol):
         raise NotImplementedError
 
     def delete_tool(self, tool_id: VoicePlatformToolId) -> None:
+        raise NotImplementedError
+
+    def get_conversation_audio(
+        self,
+        conversation_id: ProviderCallId,
+    ) -> RecordingAudio | None:
+        """The audio recording of a call; None when the platform has none."""
         raise NotImplementedError
 
     def delete_conversation(self, conversation_id: ProviderCallId) -> None:

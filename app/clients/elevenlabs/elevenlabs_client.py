@@ -1,7 +1,10 @@
+from urllib.parse import quote
+
 import httpx
 
 from app.contracts.channel_clients import ElevenLabsApiClientContract, JsonObject
 from app.schemas.constants.assistants import AssistantToolName
+from app.schemas.dto.call_recordings import RecordingAudio
 from app.schemas.exceptions.application_errors import ExternalServiceError
 from app.schemas.typings.assistants.strings import VoiceAgentId
 from app.schemas.typings.channels.constrained_strings import PublicBaseUrl
@@ -15,6 +18,7 @@ from app.utilities.channels.json_values import (
     read_strings,
     read_text,
 )
+from app.utilities.channels.voice_recordings import read_recording_media_type
 
 API_KEY_HEADER: str = "xi-api-key"
 REQUEST_TIMEOUT_SECONDS: float = 20.0
@@ -30,9 +34,11 @@ class ElevenLabsClient(ElevenLabsApiClientContract):
 
     Agents: POST /v1/convai/agents/create, GET, PATCH and DELETE
     /v1/convai/agents/{agent_id}. Tools: POST /v1/convai/tools, GET, PATCH and
-    DELETE /v1/convai/tools/{tool_id}. Conversations: DELETE
-    /v1/convai/conversations/{conversation_id}. The base URL selects the data
-    residency (https://api.eu.residency.elevenlabs.io keeps data in the EU).
+    DELETE /v1/convai/tools/{tool_id}. Conversations: GET
+    /v1/convai/conversations/{conversation_id}/audio (the call recording)
+    and DELETE /v1/convai/conversations/{conversation_id}. The base URL
+    selects the data residency (https://api.eu.residency.elevenlabs.io keeps
+    data in the EU).
     """
 
     def __init__(
@@ -109,8 +115,26 @@ class ElevenLabsClient(ElevenLabsApiClientContract):
     def delete_tool(self, tool_id: VoicePlatformToolId) -> None:
         self._delete(f"/v1/convai/tools/{tool_id}")
 
+    def get_conversation_audio(
+        self,
+        conversation_id: ProviderCallId,
+    ) -> RecordingAudio | None:
+        path: str = f"{conversation_path(conversation_id)}/audio"
+        response: httpx.Response = self._perform("GET", path, None)
+        if response.status_code == NOT_FOUND_STATUS_CODE:
+            return None
+
+        self._raise_for_error(response, path)
+        if not response.content:
+            return None
+
+        return RecordingAudio(
+            content=response.content,
+            media_type=read_recording_media_type(response.headers.get("content-type")),
+        )
+
     def delete_conversation(self, conversation_id: ProviderCallId) -> None:
-        self._delete(f"/v1/convai/conversations/{conversation_id}")
+        self._delete(conversation_path(conversation_id))
 
     def _read(self, path: str) -> JsonObject | None:
         response: httpx.Response = self._perform("GET", path, None)
@@ -141,10 +165,16 @@ class ElevenLabsClient(ElevenLabsApiClientContract):
             ) from None
 
     def _parse(self, response: httpx.Response, path: str) -> JsonObject:
-        body: JsonObject = parse_json_object(response.content) or {}
-        if response.status_code < 400:
-            return body
+        self._raise_for_error(response, path)
+        return parse_json_object(response.content) or {}
 
+    def _raise_for_error(self, response: httpx.Response, path: str) -> None:
+        """ExternalServiceError with the platform's reason for an HTTP error."""
+
+        if response.status_code < 400:
+            return
+
+        body: JsonObject = parse_json_object(response.content) or {}
         detail: object = body.get("detail")
         detail_text: str = detail if isinstance(detail, str) else ""
         detail_object: JsonObject | None = read_object(body, "detail")
@@ -155,3 +185,9 @@ class ElevenLabsClient(ElevenLabsApiClientContract):
             f"ElevenLabs {path.split('/')[3]} request returned HTTP "
             f"{response.status_code}{': ' + detail_text if detail_text else ''}."
         )
+
+
+def conversation_path(conversation_id: ProviderCallId) -> str:
+    """API path of a conversation; the id is one escaped path segment."""
+
+    return f"/v1/convai/conversations/{quote(str(conversation_id), safe='')}"

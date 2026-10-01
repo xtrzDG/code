@@ -29,6 +29,20 @@ class OwnerTestChatSessionKey(BaseConstrainedTypedString):
     pattern = r"^[A-Za-z0-9][A-Za-z0-9_\-]*$"
 
 
+class RecordingMediaType(BaseConstrainedTypedString):
+    """
+    Audio media type of a call recording as it is played back, e.g.
+    "audio/mpeg" for the MP3 the voice platform keeps.
+
+    Example:
+        media_type = RecordingMediaType("audio/mpeg")
+    """
+
+    min_length = 7
+    max_length = 100
+    pattern = r"^audio/[a-z0-9][a-z0-9.+\-]*$"
+
+
 class StaffReplyText(BaseConstrainedTypedString):
     """
     Text an owner or staff member writes to a customer from the cabinet;

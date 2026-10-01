@@ -97,6 +97,7 @@ from app.schemas.domain.users import (
     UserSessionDocument,
 )
 from app.schemas.dto.businesses import CreateBusinessCommand, CreateBusinessRequest
+from app.schemas.dto.call_recordings import RecordingAudio
 from app.schemas.dto.localization import (
     CountryProfile,
     LanguageProfile,
@@ -577,6 +578,10 @@ class InMemoryRecordingStorage(RecordingStorageAdapterContract):
     def __init__(self) -> None:
         self.deleted_paths: list[RecordingStoragePath] = []
         self.is_failing: bool = False
+
+    def read(self, recording_path: RecordingStoragePath) -> RecordingAudio | None:
+        del recording_path
+        return None
 
     def delete(self, recording_path: RecordingStoragePath) -> None:
         if self.is_failing:

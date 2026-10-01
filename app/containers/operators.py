@@ -275,6 +275,9 @@ class OperatorsContainer(containers.DeclarativeContainer):
     send_staff_message_operator = pipeline_operator(
         pipelines.send_staff_message_pipeline, storage_scope
     )
+    get_call_recording_operator = pipeline_operator(
+        pipelines.get_call_recording_pipeline, storage_scope
+    )
     import_menu_operator = pipeline_operator(
         pipelines.import_menu_pipeline, storage_scope
     )

@@ -2,7 +2,7 @@
 
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Query, Request
+from fastapi import APIRouter, Depends, Query, Request, Response
 
 from app.contracts.operator_contract import OperatorContract
 from app.gateways.http.paging_query import parse_page_request
@@ -15,6 +15,7 @@ from app.gateways.http.strict_request_parsing import (
 from app.gateways.http.user_authentication import CurrentUserDependency
 from app.schemas.constants.channels import ChannelKind
 from app.schemas.constants.conversations import ConversationStatus
+from app.schemas.dto.call_recordings import CallRecordingQuery, RecordingAudio
 from app.schemas.dto.conversation_feed import (
     ConversationDetailView,
     ConversationListQuery,
@@ -37,12 +38,24 @@ from app.schemas.typings.conversations.booleans import IncludeSandboxConversatio
 from app.schemas.typings.conversations.constrained_strings import (
     ConversationSearchText,
 )
-from app.schemas.typings.conversations.prefixed_id import ConversationId
+from app.schemas.typings.conversations.prefixed_id import CallId, ConversationId
 from app.schemas.typings.users.prefixed_id import UserId
 
 read_test_chat_body = build_json_body_dependency(OwnerTestChatRequest)
 read_rating_body = build_json_body_dependency(ConversationRatingRequest)
 read_staff_message_body = build_json_body_dependency(StaffMessageRequest)
+# A recording is personal data: no HTTP cache keeps it (shared proxies and
+# CDNs least of all); the browser's player buffers it in memory.
+RECORDING_RESPONSE_HEADERS: dict[str, str] = {
+    "Cache-Control": "private, no-store",
+    "X-Content-Type-Options": "nosniff",
+}
+RECORDING_OPENAPI_RESPONSES: dict[int | str, dict[str, object]] = {
+    200: {
+        "description": "The call recording (audio/mpeg from the voice platform).",
+        "content": {"audio/*": {"schema": {"type": "string", "format": "binary"}}},
+    }
+}
 TRUE_FLAGS: frozenset[str] = frozenset({"1", "true", "yes"})
 FALSE_FLAGS: frozenset[str] = frozenset({"0", "false", "no"})
 
@@ -66,6 +79,7 @@ def build_conversation_router(
         SendStaffMessageCommand,
         StaffMessageResult,
     ],
+    get_call_recording_operator: OperatorContract[CallRecordingQuery, RecordingAudio],
 ) -> APIRouter:
     """
     Routes (all require a bearer token; owners and staff):
@@ -80,8 +94,12 @@ def build_conversation_router(
         PUT  .../conversations/{conversation_id}/rating
                                                     {rating: good|bad|null}
         POST .../conversations/{conversation_id}/messages
-                                                    {text}: staff write to the
-                                                    customer (audited)
+                                                    {text, as_template?}: staff
+                                                    write to the customer
+                                                    (audited)
+        GET  /v1/businesses/{business_id}/calls/{call_id}/recording
+                                                    the call's audio (audited,
+                                                    never kept by shared caches)
         POST /v1/businesses/{business_id}/test-chat
                                                     {text, session_key?,
                                                      assistant_version_id?}
@@ -185,6 +203,31 @@ def build_conversation_router(
                 text=body.text,
                 client_ip_address=read_client_ip_address(request),
             )
+        )
+
+    @router.get(
+        "/v1/businesses/{business_id}/calls/{call_id}/recording",
+        response_class=Response,
+        responses=RECORDING_OPENAPI_RESPONSES,
+    )
+    def get_call_recording(
+        request: Request,
+        business_id: str,
+        call_id: str,
+        user_id: Annotated[UserId, Depends(current_user)],
+    ) -> Response:
+        audio: RecordingAudio = get_call_recording_operator.operate(
+            CallRecordingQuery(
+                user_id=user_id,
+                business_id=parse_path_identifier(business_id, BusinessId, "Business"),
+                call_id=parse_path_identifier(call_id, CallId, "Call"),
+                client_ip_address=read_client_ip_address(request),
+            )
+        )
+        return Response(
+            content=audio.content,
+            media_type=str(audio.media_type),
+            headers=RECORDING_RESPONSE_HEADERS,
         )
 
     @router.post(

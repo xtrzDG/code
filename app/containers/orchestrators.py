@@ -397,6 +397,9 @@ class OrchestratorsContainer(containers.DeclarativeContainer):
     send_staff_message_orchestrator = use_case_orchestrator(
         use_cases.send_staff_message_use_case
     )
+    get_call_recording_orchestrator = use_case_orchestrator(
+        use_cases.get_call_recording_use_case
+    )
     import_menu_orchestrator = use_case_orchestrator(use_cases.import_menu_use_case)
     confirm_imported_items_orchestrator = use_case_orchestrator(
         use_cases.confirm_imported_items_use_case

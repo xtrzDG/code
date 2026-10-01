@@ -1,8 +1,13 @@
+import logging
 from pathlib import Path
 
 from app.contracts.recording_storage import RecordingStorageAdapterContract
+from app.schemas.dto.call_recordings import RecordingAudio
 from app.schemas.exceptions.application_errors import ValidationFailedError
 from app.schemas.typings.conversations.strings import RecordingStoragePath
+from app.utilities.channels.voice_recordings import recording_media_type_of_file
+
+logger: logging.Logger = logging.getLogger(__name__)
 
 
 class LocalRecordingStorageAdapter(RecordingStorageAdapterContract):
@@ -11,11 +16,30 @@ class LocalRecordingStorageAdapter(RecordingStorageAdapterContract):
 
     For development and single-server installs; production keeps recordings
     in EU object storage behind the same contract. Recording paths are
-    relative to the root and may not leave it.
+    relative to the root and may not leave it; the media type of a
+    recording comes from its file extension.
     """
 
     def __init__(self, root_directory: Path) -> None:
         self._root_directory: Path = root_directory.resolve()
+
+    def read(self, recording_path: RecordingStoragePath) -> RecordingAudio | None:
+        try:
+            file_path: Path = self.resolve_path(recording_path)
+        except ValidationFailedError:
+            # A stored path that leaves the directory names no recording here.
+            logger.warning("Recording path %r is not readable here.", recording_path)
+            return None
+
+        try:
+            content: bytes = file_path.read_bytes()
+        except FileNotFoundError, IsADirectoryError, NotADirectoryError:
+            return None
+
+        return RecordingAudio(
+            content=content,
+            media_type=recording_media_type_of_file(file_path.name),
+        )
 
     def delete(self, recording_path: RecordingStoragePath) -> None:
         file_path: Path = self.resolve_path(recording_path)

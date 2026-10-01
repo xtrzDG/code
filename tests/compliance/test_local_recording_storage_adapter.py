@@ -67,3 +67,38 @@ def test_directories_are_not_deleted(tmp_path: Path) -> None:
         storage.delete(RecordingStoragePath("business_1"))
 
     assert (tmp_path / "business_1").is_dir()
+
+
+def test_reads_recordings_with_the_media_type_of_their_extension(
+    tmp_path: Path,
+) -> None:
+    (tmp_path / "business_1").mkdir()
+    (tmp_path / "business_1" / "call-1.ogg").write_bytes(b"OggS")
+    (tmp_path / "call-2.MP3").write_bytes(b"ID3")
+    (tmp_path / "call-3.bin").write_bytes(b"\x00")
+    storage = LocalRecordingStorageAdapter(tmp_path)
+
+    ogg = storage.read(RecordingStoragePath("business_1/call-1.ogg"))
+    mp3 = storage.read(RecordingStoragePath("/call-2.MP3"))
+    unknown = storage.read(RecordingStoragePath("call-3.bin"))
+
+    assert ogg is not None and mp3 is not None and unknown is not None
+    assert (ogg.content, str(ogg.media_type)) == (b"OggS", "audio/ogg")
+    assert (mp3.content, str(mp3.media_type)) == (b"ID3", "audio/mpeg")
+    assert str(unknown.media_type) == "audio/mpeg"
+
+
+@pytest.mark.parametrize(
+    "recording_path",
+    ["never-existed.mp3", "missing/never-existed.mp3", "business_1", "../outside.mp3"],
+)
+def test_missing_directories_and_outside_paths_read_as_no_recording(
+    tmp_path: Path,
+    recording_path: str,
+) -> None:
+    recordings = tmp_path / "recordings"
+    (recordings / "business_1").mkdir(parents=True)
+    (tmp_path / "outside.mp3").write_bytes(b"secret")
+    storage = LocalRecordingStorageAdapter(recordings)
+
+    assert storage.read(RecordingStoragePath(recording_path)) is None

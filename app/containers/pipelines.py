@@ -334,6 +334,9 @@ class PipelinesContainer(containers.DeclarativeContainer):
     send_staff_message_pipeline = orchestrator_pipeline(
         orchestrators.send_staff_message_orchestrator
     )
+    get_call_recording_pipeline = orchestrator_pipeline(
+        orchestrators.get_call_recording_orchestrator
+    )
     import_menu_pipeline = orchestrator_pipeline(orchestrators.import_menu_orchestrator)
     confirm_imported_items_pipeline = orchestrator_pipeline(
         orchestrators.confirm_imported_items_orchestrator

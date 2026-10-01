@@ -1,5 +1,6 @@
 from app.contracts.channel_clients import ElevenLabsApiClientContract, JsonObject
 from app.schemas.constants.assistants import AssistantToolName
+from app.schemas.dto.call_recordings import RecordingAudio
 from app.schemas.exceptions.application_errors import ExternalServiceError
 from app.schemas.typings.assistants.strings import VoiceAgentId
 from app.schemas.typings.channels.strings import VoicePlatformToolId
@@ -14,8 +15,8 @@ class UnconfiguredElevenLabsClient(ElevenLabsApiClientContract):
 
     The application still starts (voice is optional per plan); every call
     fails with ExternalServiceError (HTTP 502), so publishing a voice
-    version or deleting a voice recording reports the missing key instead
-    of pretending to succeed.
+    version, playing or deleting a voice recording reports the missing key
+    instead of pretending to succeed.
     """
 
     def create_agent(self, agent_config: JsonObject) -> VoiceAgentId:
@@ -55,6 +56,13 @@ class UnconfiguredElevenLabsClient(ElevenLabsApiClientContract):
 
     def delete_tool(self, tool_id: VoicePlatformToolId) -> None:
         del tool_id
+        raise ExternalServiceError(NOT_CONFIGURED_MESSAGE)
+
+    def get_conversation_audio(
+        self,
+        conversation_id: ProviderCallId,
+    ) -> RecordingAudio | None:
+        del conversation_id
         raise ExternalServiceError(NOT_CONFIGURED_MESSAGE)
 
     def delete_conversation(self, conversation_id: ProviderCallId) -> None:
