@@ -39,6 +39,9 @@ class GetLoginOptionsUseCase(UseCaseContract[LoginOptionsQuery, LoginOptionsView
             self._otp_delivery_facilitator.available_channels()
         )
         is_email_available: bool = OtpDeliveryChannel.EMAIL in available_channels
+        configured_channels: list[OtpDeliveryChannel] = [
+            channel for channel in OtpDeliveryChannel if channel in available_channels
+        ]
         if input_data.country_code is None:
             phone_channels: list[OtpDeliveryChannel] = [
                 channel
@@ -47,6 +50,7 @@ class GetLoginOptionsUseCase(UseCaseContract[LoginOptionsQuery, LoginOptionsView
             ]
             return LoginOptionsView(
                 phone_channels=phone_channels,
+                configured_channels=configured_channels,
                 is_phone_login_available=bool(phone_channels),
                 is_email_login_available=is_email_available,
             )
@@ -56,6 +60,7 @@ class GetLoginOptionsUseCase(UseCaseContract[LoginOptionsQuery, LoginOptionsView
             return LoginOptionsView(
                 country_code=country.country_code,
                 phone_channels=[],
+                configured_channels=configured_channels,
                 is_phone_login_available=False,
                 is_email_login_available=is_email_available,
                 is_sign_up_restricted=True,
@@ -67,6 +72,7 @@ class GetLoginOptionsUseCase(UseCaseContract[LoginOptionsQuery, LoginOptionsView
         return LoginOptionsView(
             country_code=country.country_code,
             phone_channels=usable_channels,
+            configured_channels=configured_channels,
             is_phone_login_available=bool(usable_channels),
             is_email_login_available=is_email_available,
         )

@@ -147,7 +147,10 @@ uv run python -m app.adapters.storage.postgres.migrate             # приме�
 Код приходит через первый канал из списка страны номера (SMS, WhatsApp, Telegram),
 для которого настроен провайдер; запрошенный пользователем канал идёт первым. Если
 провайдер отказал, тот же код уходит следующим каналом, а в ответе указан канал,
-который сработал. Вход по почте требует SMTP.
+который сработал. Вход по почте требует SMTP. `GET /v1/auth/login-options?country_code=GE`
+говорит странице входа, какие каналы страны работают прямо сейчас (пересечение списка
+страны и настроенных провайдеров) и работает ли вход по почте: кабинет предлагает
+только их и объясняет, когда входа нет.
 
 | Канал | Провайдер | Переменные |
 | --- | --- | --- |
@@ -179,11 +182,19 @@ DOM (стили сайта и виджета не смешиваются), яз�
 языков бизнеса, письмо справа налево для иврита и арабского, индикатор набора,
 ошибки с повтором, полноэкранное окно на телефоне, управление с клавиатуры.
 Посетителя узнаёт случайный ключ в `localStorage`, там же — последние сообщения.
-Необязательные атрибуты: `data-color="#0f766e"`, `data-position="left"`,
-`data-language="ka"`, `data-open="true"`. Сайту со строгой CSP нужно разрешить
-адрес API в `script-src` и `connect-src`. Страница
-`GET /widget/demo?business_id=…` показывает виджет как на сайте, даже пока чат
-выключен (предпросмотр для владельца и UI-тестов).
+Фирменный цвет и угол кнопки владелец выбирает в кабинете (`PUT …/channels/web`
+с `widget_color` и `widget_position`), приветствие на каждом языке живой версии
+приходит в `GET /v1/widget/{id}/config`. Атрибуты кода важнее настроек кабинета:
+`data-color="#0f766e"`, `data-position="left"`, а также `data-language="ka"`,
+`data-open="true"`. После передачи сотруднику виджет опрашивает
+`GET /v1/widget/{id}/messages?session_key=…&after=<id сообщения>` и показывает
+ответы сотрудников: пока передача открыта или окно открыто в течение суток после
+неё, сначала раз в 4 с, без новостей реже (до 30 с, до 60 с с закрытым окном), на
+скрытой вкладке не опрашивает. Сайту со строгой CSP нужно разрешить адрес API в
+`script-src` и `connect-src`. Страница `GET /widget/demo?business_id=…` показывает
+виджет как на сайте, даже пока чат выключен (предпросмотр для владельца и
+UI-тестов); `color`, `position` и `language` в ней показывают ещё не сохранённый
+выбор.
 
 ## Окружение
 
@@ -224,7 +235,7 @@ DOM (стили сайта и виджета не смешиваются), яз�
 | Раздел | Маршруты |
 | --- | --- |
 | Здоровье | `GET /healthz` |
-| Вход и профиль | `POST /v1/auth/otp/start`, `POST /v1/auth/otp/verify`, `POST /v1/auth/logout`, `GET·PATCH /v1/me` |
+| Вход и профиль | `GET /v1/auth/login-options[?country_code=…]`, `POST /v1/auth/otp/start`, `POST /v1/auth/otp/verify`, `POST /v1/auth/logout`, `GET·PATCH /v1/me` |
 | Каталог | `GET /v1/catalog/countries[/{code}]`, `GET /v1/catalog/languages`, `GET /v1/catalog/plans`, `GET /v1/catalog/niches[/{niche}]`, `POST /v1/phone-numbers/parse` |
 | Бизнесы и команда | `POST·GET /v1/businesses`, `GET·PATCH /v1/businesses/{id}`, `POST …/members`, `DELETE …/members/{user_id}`, `GET …/call-forwarding-instructions` |
 | Данные и договор | `GET·POST …/dpa`, `GET …/audit-log`, `GET …/contacts/{contact_id}/export`, `DELETE …/contacts/{contact_id}` |
@@ -232,11 +243,11 @@ DOM (стили сайта и виджета не смешиваются), яз�
 | Знания | `GET·POST …/knowledge`, `GET·PATCH·DELETE …/knowledge/{item_id}`, `POST …/knowledge/search`, `POST …/knowledge/import[/confirm]` |
 | Ресурсы и расписание | `GET·POST …/resources`, `PATCH …/resources/{id}`, `GET·POST …/schedule-exceptions`, `DELETE …/schedule-exceptions/{id}` |
 | Брони, заявки, передачи | `GET …/availability`, `GET·POST …/bookings`, `PATCH …/bookings/{id}`, `POST …/bookings/{id}/cancel`, `POST …/bookings/{id}/reschedule`, `GET …/leads`, `PATCH …/leads/{id}`, `GET …/handoffs`, `POST …/handoffs/{id}/resolve`, `GET …/unanswered-questions`, `POST …/unanswered-questions/{id}/answer`, `GET …/dashboard` |
-| Google Calendar | `GET …/integrations/google-calendar/connect-url`, `DELETE …/integrations/google-calendar`, `GET /v1/integrations/google-calendar/callback` |
+| Google Calendar | `GET·DELETE …/integrations/google-calendar`, `GET …/integrations/google-calendar/connect-url`, `GET /v1/integrations/google-calendar/callback` (возвращает владельца в кабинет: `CABINET_BASE_URL/b/{id}/channels?calendar=connected` или `?calendar=error&reason=…`) |
 | Разговоры | `GET …/conversations[/{id}]`, `PUT …/conversations/{id}/rating`, `POST …/test-chat` |
 | Сборка помощника | `POST·GET …/assistant-versions`, `GET …/assistant-versions/{id}[/autotest-run]`, `POST …/assistant-versions/{id}/autotests`, `POST …/assistant-versions/{id}/publish`, `POST …/assistant-versions/{id}/rollback` |
 | Каналы (кабинет) | `GET …/channels`, `PUT·DELETE …/channels/{channel}`, `GET …/channels/web/snippet`, `POST …/manager-contacts/telegram-link` |
-| Вебхуки и виджет | `POST /v1/channels/telegram/{channel_id}/webhook`, `GET·POST /v1/channels/meta/webhook`, `POST /v1/channels/telegram-platform/webhook`, `GET /v1/widget/{id}/config`, `POST /v1/widget/{id}/messages`, `GET /widget.js`, `GET /widget/demo` |
+| Вебхуки и виджет | `POST /v1/channels/telegram/{channel_id}/webhook`, `GET·POST /v1/channels/meta/webhook`, `POST /v1/channels/telegram-platform/webhook`, `GET /v1/widget/{id}/config`, `GET·POST /v1/widget/{id}/messages`, `GET /widget.js`, `GET /widget/demo` |
 | Голос | `POST /v1/voice/tools/{tool}`, `POST /v1/voice/webhooks/conversation-initiation`, `POST /v1/voice/webhooks/post-call` |
 | Оплата | `GET …/billing`, `POST …/billing/trial`, `POST …/billing/plan`, `POST …/billing/cancel`, `POST …/billing/checkout`, `POST /v1/payments/flitt/webhook` |
 | Админка платформы | `GET /v1/admin/clients[/{business_id}]`, `POST /v1/admin/clients/{business_id}/open` |

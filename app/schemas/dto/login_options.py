@@ -23,11 +23,13 @@ class LoginOptionsView(ImmutableDTO):
     that have a configured provider (all configured phone channels when no
     country is given), in the order they are tried, and whether e-mail
     sign-in works. `is_sign_up_restricted` is true for a country whose
-    numbers cannot sign in at all.
+    numbers cannot sign in at all. `configured_channels` are all channels
+    with a provider, for any country (empty: sign-in is down everywhere).
     """
 
     country_code: CountryCode | None = None
     phone_channels: list[OtpDeliveryChannel]
+    configured_channels: list[OtpDeliveryChannel]
     is_phone_login_available: IsPhoneLoginAvailable
     is_email_login_available: IsEmailLoginAvailable
     is_sign_up_restricted: IsSignUpRestricted = False

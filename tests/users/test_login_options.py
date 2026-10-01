@@ -20,6 +20,7 @@ def test_country_channels_meet_the_configured_providers() -> None:
     assert georgia.json() == {
         "country_code": "GE",
         "phone_channels": ["sms", "telegram"],
+        "configured_channels": ["sms", "telegram"],
         "is_phone_login_available": True,
         "is_email_login_available": False,
         "is_sign_up_restricted": False,
@@ -36,6 +37,7 @@ def test_no_working_phone_channel_but_e_mail() -> None:
     body = testbed.build_http_client().get(PATH, params={"country_code": "DE"}).json()
 
     assert body["phone_channels"] == []
+    assert body["configured_channels"] == ["telegram", "email"]
     assert body["is_phone_login_available"] is False
     assert body["is_email_login_available"] is True
 
@@ -53,6 +55,7 @@ def test_without_a_country_every_configured_phone_channel_counts() -> None:
     assert body == {
         "country_code": None,
         "phone_channels": ["sms", "whatsapp"],
+        "configured_channels": ["sms", "whatsapp"],
         "is_phone_login_available": True,
         "is_email_login_available": False,
         "is_sign_up_restricted": False,
@@ -62,6 +65,7 @@ def test_without_a_country_every_configured_phone_channel_counts() -> None:
     nothing = client.get(PATH).json()
     assert nothing["is_phone_login_available"] is False
     assert nothing["is_email_login_available"] is False
+    assert nothing["configured_channels"] == []
 
 
 def test_restricted_and_unknown_countries() -> None:
