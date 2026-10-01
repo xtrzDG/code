@@ -20,7 +20,7 @@ from app.contracts.repositories import (
     UsageEventRepoContract,
 )
 from app.contracts.use_case_contract import UseCaseContract
-from app.schemas.constants.billing import UsageKind
+from app.schemas.constants.billing import SubscriptionStatus, UsageKind
 from app.schemas.constants.conversations import MessageAuthor
 from app.schemas.domain.billing import SubscriptionDocument
 from app.schemas.domain.businesses import BusinessDocument
@@ -262,12 +262,15 @@ class GetDashboardStatsUseCase(UseCaseContract[DashboardStatsQuery, DashboardSta
     def _package_usage(
         self, business: BusinessDocument
     ) -> DashboardPackageUsage | None:
-        """The current billing window's package; None without a subscription."""
+        """
+        The current billing window's package; None without a subscription or
+        while it waits for its first payment (INCOMPLETE: no service yet).
+        """
 
         subscription: SubscriptionDocument | None = find_current_subscription(
             self._subscription_repo, business.id
         )
-        if subscription is None:
+        if subscription is None or subscription.status is SubscriptionStatus.INCOMPLETE:
             return None
 
         plan: PlanDefinition = self._plan_registry.get(subscription.plan_key)

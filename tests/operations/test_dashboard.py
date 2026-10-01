@@ -421,3 +421,23 @@ def test_package_of_the_billing_window_without_prices() -> None:
     assert package.overage_voice_minutes == 0
     assert (package.used_dialogs, package.included_dialogs) == (300, 1500)
     assert package.dialog_usage_percent == 20
+
+
+def test_no_package_while_the_subscription_waits_for_its_first_payment() -> None:
+    dashboard = DashboardFixture()
+    start = to_microseconds(datetime.fromisoformat("2026-10-01T00:00:00+04:00"))
+    end = to_microseconds(datetime.fromisoformat("2026-11-01T00:00:00+04:00"))
+    dashboard.world.subscription_repo.save(
+        SubscriptionDocument(
+            business_id=dashboard.business.id,
+            plan_key=PlanKey.VOICE_AND_CHAT,
+            billing_period=BillingPeriod.MONTHLY,
+            price_minor=MoneyAmountMinor(25_000),
+            currency_code=CurrencyCode("GEL"),
+            status=SubscriptionStatus.INCOMPLETE,
+            period_start=start,
+            period_end=end,
+        )
+    )
+
+    assert dashboard.stats().package is None
