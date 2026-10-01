@@ -3,10 +3,12 @@ from app.contracts.repositories import (
     BusinessRepoContract,
     QuestionnaireRepoContract,
 )
+from app.schemas.constants.channels import ChannelKind
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.questionnaires import QuestionnaireDocument
 from app.schemas.typings.accounts.prefixed_id import OwnerId
 from app.schemas.typings.businesses.prefixed_id import BusinessId
+from app.schemas.typings.channels.strings import ChannelAccountId
 
 
 class BusinessRepository(BusinessRepoContract):
@@ -30,6 +32,18 @@ class BusinessRepository(BusinessRepoContract):
             for business in self._collection.list_all()
             if business.owner_id == owner_id
         ]
+
+    def find_by_channel_account(
+        self,
+        channel: ChannelKind,
+        account_id: ChannelAccountId,
+    ) -> BusinessDocument | None:
+        for business in self._collection.list_all():
+            for connection in business.channels:
+                if connection.kind is channel and connection.account_id == account_id:
+                    return business
+
+        return None
 
 
 class QuestionnaireRepository(QuestionnaireRepoContract):

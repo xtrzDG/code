@@ -7,6 +7,7 @@ must not change stored state until `save` is called.
 from typing import Protocol
 
 from app.contracts.repo_contract import RepoContract
+from app.schemas.constants.channels import ChannelKind
 from app.schemas.domain.assistants import AssistantVersionDocument, AutotestRunDocument
 from app.schemas.domain.bookings import BookingDocument, LeadDocument
 from app.schemas.domain.businesses import BusinessDocument
@@ -35,6 +36,7 @@ from app.schemas.typings.assistants.prefixed_id import (
 )
 from app.schemas.typings.bookings.prefixed_id import BookingId, LeadId
 from app.schemas.typings.businesses.prefixed_id import BusinessId
+from app.schemas.typings.channels.strings import ChannelAccountId
 from app.schemas.typings.conversations.prefixed_id import ConversationId
 from app.schemas.typings.handoffs.prefixed_id import HandoffId, UnansweredQuestionId
 from app.schemas.typings.localization.constrained_strings import E164PhoneNumber
@@ -87,6 +89,14 @@ class BusinessRepoContract(RepoContract, Protocol):
         raise NotImplementedError
 
     def list_by_owner(self, owner_id: OwnerId) -> list[BusinessDocument]:
+        raise NotImplementedError
+
+    def find_by_channel_account(
+        self,
+        channel: ChannelKind,
+        account_id: ChannelAccountId,
+    ) -> BusinessDocument | None:
+        """Find the business whose connected channel has this account id."""
         raise NotImplementedError
 
 

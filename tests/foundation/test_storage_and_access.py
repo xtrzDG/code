@@ -88,3 +88,33 @@ def test_app_container_wires_repositories_as_singletons() -> None:
     second_repo = app_container.repositories.business_repo()
 
     assert first_repo is second_repo
+
+
+def test_business_is_found_by_connected_channel_account() -> None:
+    from app.schemas.constants.channels import ChannelKind
+    from app.schemas.domain.businesses import ChannelConnection
+    from app.schemas.typings.channels.strings import ChannelAccountId
+
+    repository = BusinessRepository(
+        InMemoryDocumentCollectionAdapter[BusinessDocument](BusinessDocument)
+    )
+    business = build_business(OwnerId())
+    business.channels = [
+        ChannelConnection(
+            kind=ChannelKind.WHATSAPP,
+            account_id=ChannelAccountId("109876543210"),
+        )
+    ]
+    repository.save(business)
+
+    found = repository.find_by_channel_account(
+        ChannelKind.WHATSAPP,
+        ChannelAccountId("109876543210"),
+    )
+    missing = repository.find_by_channel_account(
+        ChannelKind.TELEGRAM,
+        ChannelAccountId("109876543210"),
+    )
+
+    assert found is not None and found.id == business.id
+    assert missing is None

@@ -115,3 +115,19 @@ class LlmResponse(ImmutableDTO):
     text: MessageText | None = None
     tool_calls: list[LlmToolCall] = Field(default_factory=list[LlmToolCall])
     assistant_turn_payload: LlmProviderPayload
+
+
+class CallGreetingRequest(ImmutableDTO):
+    """Ask for the opening line of a phone call answered by the assistant."""
+
+    business_id: BusinessId
+    language: LanguageTag | None = None
+
+
+class CallGreeting(ImmutableDTO):
+    """
+    Opening line of a call: AI disclosure, recording notice, how to reach a human.
+    """
+
+    text: MessageText
+    language: LanguageTag

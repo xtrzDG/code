@@ -38,6 +38,7 @@ class AvailabilityQuery(ImmutableDTO):
     time: LocalTimeOfDay | None = None
     party_size: PartySize | None = None
     resource_name: ResourceName | None = None
+    is_sandbox: IsSandboxConversation = False
 
 
 class AvailableSlot(ImmutableDTO):
