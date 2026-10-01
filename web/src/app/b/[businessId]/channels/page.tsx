@@ -1,8 +1,9 @@
-import { SectionPlaceholder, sectionMetadata } from "@/components/business/SectionPlaceholder";
+import { sectionMetadata } from "@/components/business/SectionPlaceholder";
+
+import { ChannelsScreen } from "./ChannelsScreen";
 
 export const generateMetadata = sectionMetadata("channels");
 
-/** Placeholder: replace with the real channels page (see web/README.md, "Adding a page"). */
-export default function Page() {
-  return <SectionPlaceholder section="channels" />;
+export default function ChannelsPage() {
+  return <ChannelsScreen />;
 }
