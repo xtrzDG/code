@@ -533,3 +533,14 @@ class UnreachableVoicePlatform:
     def remove_agent(self, agent_id: VoiceAgentId) -> None:
         self.attempts.append(agent_id)
         raise ExternalServiceError("Voice platform is down.")
+
+
+def test_the_voice_agent_can_put_callers_through_to_the_handoff_phone() -> None:
+    testbed = AssemblyTestbed()
+    business = seed_georgian_restaurant(testbed, PlanKey.VOICE_AND_CHAT)
+    version = ready_version(testbed, business)
+
+    testbed.publish(business.id, version.id)
+
+    [spec] = testbed.voice_provisioner.specs
+    assert spec.transfer_phone_number == "+995555123456"

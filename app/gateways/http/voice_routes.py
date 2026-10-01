@@ -35,6 +35,11 @@ from app.utilities.channels.channel_endpoints import (
     VOICE_TOOL_SECRET_HEADER,
 )
 from app.utilities.channels.language_codes import to_voice_platform_language
+from app.utilities.channels.voice_service import (
+    OPEN_NOW_NO,
+    OPEN_NOW_VARIABLE,
+    OPEN_NOW_YES,
+)
 
 CALL_INITIATION_RESPONSE_TYPE: str = "conversation_initiation_client_data"
 JSON_MEDIA_TYPE: str = "application/json"
@@ -118,6 +123,11 @@ def build_voice_router(
                     "first_message": str(initiation.first_message),
                     "language": to_voice_platform_language(initiation.language),
                 }
+            },
+            "dynamic_variables": {
+                OPEN_NOW_VARIABLE: (
+                    OPEN_NOW_YES if initiation.is_open_now else OPEN_NOW_NO
+                )
             },
         }
 

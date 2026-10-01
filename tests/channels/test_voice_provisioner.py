@@ -27,7 +27,10 @@ from app.schemas.typings.conversations.strings import (
     MessageText,
     RecordingStoragePath,
 )
-from app.schemas.typings.localization.constrained_strings import LanguageTag
+from app.schemas.typings.localization.constrained_strings import (
+    E164PhoneNumber,
+    LanguageTag,
+)
 from app.schemas.typings.platform.strings import PlatformSecret
 from app.utilities.channels.webhook_signatures import derive_voice_tool_secret
 from tests.channels.testbed import (
@@ -190,6 +193,34 @@ class TestAgentCreation:
         assert set(
             agent["conversation_config"]["agent"]["prompt"]["built_in_tools"]
         ) == {"end_call"}
+
+    def test_staff_transfer_is_offered_only_with_a_number_and_when_open(
+        self,
+    ) -> None:
+        testbed = ChannelsTestbed()
+        testbed.elevenlabs_transport.respond(
+            "POST", r"^/v1/convai/agents/create$", {"agent_id": "agent_tr"}
+        )
+        spec = build_spec(tools=[]).model_copy(
+            update={"transfer_phone_number": E164PhoneNumber("+995599000111")}
+        )
+
+        provisioner(testbed).upsert_agent(spec)
+
+        agent = testbed.elevenlabs_transport.requests_to("/agents/create")[0].json()
+        agent_config = agent["conversation_config"]["agent"]
+        transfer = agent_config["prompt"]["built_in_tools"]["transfer_to_number"]
+        assert transfer["params"]["system_tool_type"] == "transfer_to_number"
+        [destination] = transfer["params"]["transfers"]
+        assert destination["transfer_destination"] == {
+            "type": "phone",
+            "phone_number": "+995599000111",
+        }
+        assert "{{is_open_now}}" in destination["condition"]
+        assert "handoff_to_human" in destination["condition"]
+        assert agent_config["dynamic_variables"] == {
+            "dynamic_variable_placeholders": {"is_open_now": "no"}
+        }
 
     def test_brazilian_portuguese_uses_the_regional_code(self) -> None:
         testbed = ChannelsTestbed()

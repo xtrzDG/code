@@ -8,7 +8,7 @@ from typed_time_provider import Microseconds
 from app.schemas.constants.assistants import AssistantToolName
 from app.schemas.constants.billing import PlanKey, UsageKind
 from app.schemas.constants.bookings import BookingStatus, LeadType
-from app.schemas.constants.businesses import BusinessStatus
+from app.schemas.constants.businesses import BusinessStatus, Weekday
 from app.schemas.constants.channels import ChannelKind, ChannelStatus
 from app.schemas.constants.handoffs import HandoffReason
 from app.schemas.constants.niches import NicheKey
@@ -18,6 +18,7 @@ from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.contacts import ChannelIdentity, ContactDocument
 from app.schemas.domain.conversations import CallDocument, ConversationDocument
 from app.schemas.domain.handoffs import HandoffDocument
+from app.schemas.domain.profiles import BusinessProfileDocument, OpeningInterval
 from app.schemas.dto.channels import DisableChannelCommand
 from app.schemas.typings.assistants.constrained_integers import AssistantVersionNumber
 from app.schemas.typings.assistants.constrained_strings import LlmModelId
@@ -29,6 +30,10 @@ from app.schemas.typings.bookings.constrained_integers import (
 )
 from app.schemas.typings.bookings.prefixed_id import ResourceId
 from app.schemas.typings.bookings.strings import LeadDetails
+from app.schemas.typings.businesses.constrained_integers import (
+    ClosingMinuteOfDay,
+    OpeningMinuteOfDay,
+)
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.conversations.strings import ChannelUserId
 from app.schemas.typings.handoffs.strings import HandoffSummary
@@ -409,6 +414,8 @@ class TestCallInitiation:
                     "language": "ka",
                 }
             },
+            # No opening hours in the profile: never put through to staff.
+            "dynamic_variables": {"is_open_now": "no"},
         }
         [greeting_request] = setup.testbed.call_greeting.requests
         assert greeting_request.business_id == setup.business.id
@@ -451,6 +458,41 @@ class TestCallInitiation:
 
         assert response.status_code == 409, response.text
         assert testbed.call_greeting.requests == []
+
+    @pytest.mark.parametrize(
+        ("opens", "closes", "expected"),
+        [(0, 1440, "yes"), (0, 1, "no")],
+    )
+    def test_the_agent_learns_whether_the_business_is_open_now(
+        self, opens: int, closes: int, expected: str
+    ) -> None:
+        setup = build_voice_setup()
+        setup.testbed.profile_repo.save(
+            BusinessProfileDocument(
+                business_id=setup.business.id,
+                niche_key=NicheKey.ENTERTAINMENT,
+                answers_language=LanguageTag("ka"),
+                hours=[
+                    OpeningInterval(
+                        weekday=weekday,
+                        opens_at=OpeningMinuteOfDay(opens),
+                        closes_at=ClosingMinuteOfDay(closes),
+                    )
+                    for weekday in Weekday
+                ],
+            )
+        )
+
+        response = setup.testbed.build_http_client().post(
+            "/v1/voice/webhooks/conversation-initiation",
+            content=to_json_bytes({"caller_id": CALLER, "agent_id": "agent_1"}),
+            headers={
+                "X-Assistant-Business-Id": str(setup.business.id),
+                "X-Assistant-Tool-Secret": tool_secret(setup.business.id),
+            },
+        )
+
+        assert response.json()["dynamic_variables"] == {"is_open_now": expected}
 
     def test_initiation_needs_the_business_secret(self) -> None:
         setup = build_voice_setup()
@@ -688,6 +730,29 @@ class TestPostCallWebhook:
             setup.business.id, Microseconds(0), Microseconds(2**62)
         )
         assert usage.kind is UsageKind.VOICE_SECONDS
+
+    def test_minutes_after_a_transfer_to_staff_are_metered(self) -> None:
+        setup = build_voice_setup()
+        payload = post_call_payload()
+        payload["data"]["transcript"].append(
+            {
+                "role": "agent",
+                "message": "Connecting you to a colleague.",
+                "time_in_call_secs": 35,
+                "tool_calls": [{"tool_name": "transfer_to_number"}],
+            }
+        )
+
+        response = post_call(setup, payload)
+
+        assert response.json()["status"] == "recorded"
+        usage = setup.testbed.usage_event_repo.list_by_business_between(
+            setup.business.id, Microseconds(0), Microseconds(2**62)
+        )
+        assert {(event.kind, int(event.quantity)) for event in usage} == {
+            (UsageKind.VOICE_SECONDS, 95),
+            (UsageKind.TRANSFER_SECONDS, 60),
+        }
 
     def test_turning_the_phone_number_off_removes_the_voice_agent(self) -> None:
         setup = build_voice_setup()

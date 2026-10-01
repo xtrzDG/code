@@ -2,10 +2,23 @@
 
 from app.schemas.constants.businesses import BusinessStatus
 from app.schemas.constants.channels import ChannelStatus
+from app.schemas.constants.handoffs import ManagerContactChannel
 from app.schemas.domain.assistants import AssistantVersionDocument
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.channels import ChannelDocument
+from app.schemas.domain.profiles import BusinessProfileDocument
 from app.schemas.dto.billing import PlanDefinition
+from app.schemas.typings.localization.constrained_strings import E164PhoneNumber
+
+# The voice platform's tool that puts a caller through to staff, and the
+# per-call variable telling the agent whether the business is open now.
+TRANSFER_TOOL_NAME: str = "transfer_to_number"
+OPEN_NOW_VARIABLE: str = "is_open_now"
+OPEN_NOW_YES: str = "yes"
+OPEN_NOW_NO: str = "no"
+PHONE_CONTACT_CHANNELS: frozenset[ManagerContactChannel] = frozenset(
+    {ManagerContactChannel.WHATSAPP, ManagerContactChannel.SMS}
+)
 
 
 def find_voice_refusal(
@@ -33,5 +46,25 @@ def find_voice_refusal(
 
     if phone_channel is None or phone_channel.status is not ChannelStatus.CONNECTED:
         return f"{business.name} has no connected phone number."
+
+    return None
+
+
+def find_transfer_phone_number(
+    business: BusinessDocument,
+    profile: BusinessProfileDocument | None,
+) -> E164PhoneNumber | None:
+    """
+    The staff mobile a caller is put through to in opening hours: the
+    profile's handoff phone, else the first manager reachable by phone
+    (WhatsApp or SMS). None when nobody can take a call.
+    """
+
+    if profile is not None and profile.contacts.handoff_phone_number is not None:
+        return profile.contacts.handoff_phone_number
+
+    for contact in business.manager_contacts:
+        if contact.channel in PHONE_CONTACT_CHANNELS:
+            return E164PhoneNumber(str(contact.address))
 
     return None

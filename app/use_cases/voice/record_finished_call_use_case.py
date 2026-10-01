@@ -29,7 +29,7 @@ from app.schemas.domain.channels import ChannelDocument
 from app.schemas.domain.compliance import AuditLogEntryDocument
 from app.schemas.domain.conversations import CallDocument, ConversationDocument
 from app.schemas.dto.voice_webhooks import FinishedCallReport, RecordedCall
-from app.schemas.typings.billing.constrained_integers import UsageQuantity
+from app.schemas.typings.billing.constrained_integers import CostMicroUsd, UsageQuantity
 from app.schemas.typings.channels.strings import ChannelExternalId
 from app.schemas.typings.compliance.strings import (
     AuditEntityName,
@@ -168,6 +168,7 @@ class RecordFinishedCallUseCase(UseCaseContract[FinishedCallReport, RecordedCall
         self._call_repo.save(call)
         if existing_call is None:
             self._record_usage(call, now)
+            self._record_transfer(call, input_data, now)
             self._audit_log_repo.append(
                 AuditLogEntryDocument(
                     business_id=business.id,
@@ -294,6 +295,39 @@ class RecordFinishedCallUseCase(UseCaseContract[FinishedCallReport, RecordedCall
         return conversation is not None and any(
             handoff.conversation_id == conversation.id
             for handoff in self._handoff_repo.list_by_business(business.id)
+        )
+
+    def _record_transfer(
+        self,
+        call: CallDocument,
+        report: FinishedCallReport,
+        now: Microseconds,
+    ) -> None:
+        """
+        Minutes after the caller was put through to staff (concept
+        `transfer_min`): from the transfer to the end of the call.
+        """
+
+        if report.transfer_offset_seconds is None:
+            return
+
+        self._usage_event_repo.append(
+            UsageEventDocument(
+                business_id=call.business_id,
+                conversation_id=call.conversation_id,
+                kind=UsageKind.TRANSFER_SECONDS,
+                quantity=UsageQuantity(
+                    max(
+                        int(call.duration_seconds)
+                        - int(report.transfer_offset_seconds),
+                        0,
+                    )
+                ),
+                cost_micro_usd=CostMicroUsd(0),
+                occurred_at=call.started_at,
+                created_at=now,
+                updated_at=now,
+            )
         )
 
     def _record_usage(self, call: CallDocument, now: Microseconds) -> None:

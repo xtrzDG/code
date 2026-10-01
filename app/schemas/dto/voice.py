@@ -7,7 +7,10 @@ from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.businesses.strings import BusinessName
 from app.schemas.typings.channels.constrained_strings import PublicBaseUrl
 from app.schemas.typings.conversations.strings import MessageText
-from app.schemas.typings.localization.constrained_strings import LanguageTag
+from app.schemas.typings.localization.constrained_strings import (
+    E164PhoneNumber,
+    LanguageTag,
+)
 
 
 class VoiceGreeting(ImmutableDTO):
@@ -32,3 +35,5 @@ class VoiceAgentSpec(ImmutableDTO):
     greetings: list[VoiceGreeting]
     tools: list[LlmToolDefinition] = Field(default_factory=list[LlmToolDefinition])
     tool_webhook_base_url: PublicBaseUrl
+    # Staff mobile a caller may be put through to during opening hours.
+    transfer_phone_number: E164PhoneNumber | None = None

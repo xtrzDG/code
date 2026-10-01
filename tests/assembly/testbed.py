@@ -558,6 +558,7 @@ class AssemblyTestbed:
                 self.version_repo,
                 self.voice_provisioner,
             ),
+            business_profile_repo=self.profile_repo,
             business_repo=self.business_repo,
             assistant_version_repo=self.version_repo,
             voice_agent_provisioner=self.voice_provisioner,
