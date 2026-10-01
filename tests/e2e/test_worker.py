@@ -16,7 +16,10 @@ from app.containers.gateways import (
     PURGE_EXPIRED_RECORDINGS_JOB,
     SEND_BOOKING_REMINDERS_JOB,
 )
+from app.contracts.jobs import QueuedJobOperator
 from app.gateways.worker.background_worker import PeriodicJobSpec
+from app.schemas.typings.platform.constrained_strings import JobName
+from app.use_cases.autotests.enqueue_autotest_run_use_case import RUN_AUTOTESTS_JOB
 from app.worker_main import STOP_SIGNALS, install_stop_signal_handlers, main
 from tests.e2e.harness import start_workshop
 
@@ -43,6 +46,12 @@ def test_worker_ticks_once_with_every_job_registered() -> None:
         (SEND_BOOKING_REMINDERS_JOB, 900),
         (FLUSH_LLM_TRACES_JOB, 60),
     ]
+    # The worker plays queued autotest runs (concept: assembly autotests run
+    # in the background worker).
+    queued_operators = cast(
+        dict[JobName, QueuedJobOperator], container.gateways.queued_job_operators()
+    )
+    assert list(queued_operators) == [RUN_AUTOTESTS_JOB]
     assert (first.periodic_runs, first.queued_runs, first.failures) == (7, 0, 0)
     assert right_after.periodic_runs == 0
     assert a_minute_later.periodic_runs == 1  # the trace flush
