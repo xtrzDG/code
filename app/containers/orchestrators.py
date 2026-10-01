@@ -266,6 +266,11 @@ class OrchestratorsContainer(containers.DeclarativeContainer):
     delete_contact_data_orchestrator = use_case_orchestrator(
         use_cases.delete_contact_data_use_case
     )
+    get_dpa_document_orchestrator = use_case_orchestrator(
+        use_cases.get_dpa_document_use_case
+    )
+    list_contacts_orchestrator = use_case_orchestrator(use_cases.list_contacts_use_case)
+    get_contact_orchestrator = use_case_orchestrator(use_cases.get_contact_use_case)
 
     # --- Niche templates and the profile wizard.
     list_niche_templates_orchestrator = use_case_orchestrator(

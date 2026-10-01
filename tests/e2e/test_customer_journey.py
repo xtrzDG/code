@@ -353,7 +353,7 @@ def test_second_owner_in_italy_is_isolated_and_admin_access_is_audited(
     ).json()
     admin_entries = [
         entry
-        for entry in audit
+        for entry in audit["items"]
         if entry["actor_id"] == admin_session["user"]["id"]
         and entry["action"] == "admin_access"
     ]

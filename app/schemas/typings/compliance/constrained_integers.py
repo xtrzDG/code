@@ -3,18 +3,6 @@
 from base_typed_int import BaseConstrainedTypedInt
 
 
-class AuditLogPageSize(BaseConstrainedTypedInt):
-    """
-    Maximum number of audit log entries returned at once (newest first).
-
-    Example:
-        page_size = AuditLogPageSize(200)
-    """
-
-    ge = 1
-    le = 1000
-
-
 class DeletedRecordingCount(BaseConstrainedTypedInt):
     """Number of call recording files removed from recording storage."""
 

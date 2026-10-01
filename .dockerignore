@@ -1,5 +1,5 @@
 # Build context of the backend image: only pyproject.toml, uv.lock, app/,
-# migrations/ and docker/ are used.
+# migrations/, docs/legal/ and docker/ are used.
 .git
 .github
 .claude

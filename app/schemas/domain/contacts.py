@@ -1,5 +1,6 @@
 from base_pydantic_schemas import BaseDocument, PersistentDocument
 from pydantic import Field
+from typed_time_provider import Microseconds
 
 from app.schemas.constants.channels import ChannelKind
 from app.schemas.typings.businesses.prefixed_id import BusinessId
@@ -29,6 +30,10 @@ class ContactDocument(BaseDocument):
     user shared about themselves, the caller ID of a call). Only the
     verified phone proves that bookings under that phone are the
     customer's own.
+
+    `erased_at` marks a customer erased at their request: the document then
+    keeps no personal data (no name, phones, language or channel
+    identities), only its id, so records that point to it read as erased.
     """
 
     id: ContactId = Field(default_factory=ContactId)
@@ -40,3 +45,4 @@ class ContactDocument(BaseDocument):
     channel_identities: list[ChannelIdentity] = Field(
         default_factory=list[ChannelIdentity]
     )
+    erased_at: Microseconds | None = None

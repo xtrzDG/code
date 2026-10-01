@@ -196,6 +196,13 @@ class PipelinesContainer(containers.DeclarativeContainer):
     delete_contact_data_pipeline = orchestrator_pipeline(
         orchestrators.delete_contact_data_orchestrator
     )
+    get_dpa_document_pipeline = orchestrator_pipeline(
+        orchestrators.get_dpa_document_orchestrator
+    )
+    list_contacts_pipeline = orchestrator_pipeline(
+        orchestrators.list_contacts_orchestrator
+    )
+    get_contact_pipeline = orchestrator_pipeline(orchestrators.get_contact_orchestrator)
 
     # --- Niche templates and the profile wizard.
     list_niche_templates_pipeline = orchestrator_pipeline(

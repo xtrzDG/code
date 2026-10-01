@@ -78,6 +78,9 @@ def build_application_routers(app_container: AppContainer) -> list[APIRouter]:
             list_audit_log_operator=operators.list_audit_log_operator(),
             export_contact_data_operator=operators.export_contact_data_operator(),
             delete_contact_data_operator=operators.delete_contact_data_operator(),
+            list_contacts_operator=operators.list_contacts_operator(),
+            get_contact_operator=operators.get_contact_operator(),
+            get_dpa_document_operator=operators.get_dpa_document_operator(),
             current_user=current_user,
         ),
         build_profile_router(

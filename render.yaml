@@ -49,6 +49,8 @@ services:
     dockerCommand: workshop api
     preDeployCommand: workshop migrate
     healthCheckPath: /healthz
+    # docs/** is ignored, so a new DPA text in docs/legal alone does not
+    # redeploy: change DPA_DOCUMENT_VERSION too (or deploy by hand).
     buildFilter:
       ignoredPaths:
         - web/**
