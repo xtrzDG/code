@@ -99,33 +99,34 @@ const TONE_STYLES: Record<ToastTone, { icon: typeof IconCheck; className: string
 /**
  * The modal dialog on top of the top layer, or null. Dialogs are stacked in
  * the order they were opened; one opened later covers the earlier ones.
+ * `recheck` (the visible toasts) re-reads the stack, which also drops a
+ * dialog that was removed from the page while open.
  */
-function useTopModalDialog(): HTMLDialogElement | null {
+function useTopModalDialog(recheck: unknown): HTMLDialogElement | null {
   const [top, setTop] = useState<HTMLDialogElement | null>(null);
+  const stack = useRef<HTMLDialogElement[]>([]);
+
+  const sync = useCallback(() => {
+    const dialogs = stack.current.filter((dialog) => dialog.isConnected && dialog.matches(":modal"));
+    for (const dialog of document.querySelectorAll<HTMLDialogElement>("dialog:modal")) {
+      if (!dialogs.includes(dialog)) {
+        dialogs.push(dialog);
+      }
+    }
+    stack.current = dialogs;
+    setTop(dialogs.at(-1) ?? null);
+  }, []);
 
   useEffect(() => {
-    const stack: HTMLDialogElement[] = [];
-    const sync = () => {
-      for (let index = stack.length - 1; index >= 0; index -= 1) {
-        const dialog = stack[index];
-        if (!dialog || !dialog.isConnected || !dialog.matches(":modal")) {
-          stack.splice(index, 1);
-        }
-      }
-      for (const dialog of document.querySelectorAll<HTMLDialogElement>("dialog:modal")) {
-        if (!stack.includes(dialog)) {
-          stack.push(dialog);
-        }
-      }
-      setTop(stack.at(-1) ?? null);
-    };
+    // Only the "open" attribute is watched (showModal() / close()), which is cheap.
     const observer = new MutationObserver(sync);
-    // "open" flips on showModal()/close(); childList catches a dialog that
-    // is removed while open.
-    observer.observe(document.body, { subtree: true, childList: true, attributes: true, attributeFilter: ["open"] });
-    sync();
+    observer.observe(document.body, { subtree: true, attributes: true, attributeFilter: ["open"] });
     return () => observer.disconnect();
-  }, []);
+  }, [sync]);
+
+  useEffect(() => {
+    sync();
+  }, [recheck, sync]);
 
   return top;
 }
@@ -139,7 +140,7 @@ function ToastViewport({
   onDismiss: (id: number) => void;
   closeLabel: string;
 }) {
-  const topDialog = useTopModalDialog();
+  const topDialog = useTopModalDialog(items);
   const viewport = (
     <div
       className="pointer-events-none fixed inset-x-0 bottom-0 z-[60] flex flex-col items-center gap-2 p-4 sm:items-end"

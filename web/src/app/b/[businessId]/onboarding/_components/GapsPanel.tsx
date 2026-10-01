@@ -88,6 +88,11 @@ export function GapsSummary({
               {t("common.retry")}
             </Button>
           ) : null}
+          {gaps?.is_ready_for_assembly ? (
+            <ButtonLink href={businessPath(business.id, "assistant")} size="sm">
+              {t("onboarding.gaps.toAssistant")}
+            </ButtonLink>
+          ) : null}
           {items.length > 0 ? (
             <Button size="sm" variant="secondary" onClick={onShowList} aria-haspopup="dialog">
               {t("onboarding.gaps.showList")}
@@ -95,11 +100,6 @@ export function GapsSummary({
                 {items.length}
               </Badge>
             </Button>
-          ) : null}
-          {gaps?.is_ready_for_assembly ? (
-            <ButtonLink href={businessPath(business.id, "assistant")} size="sm">
-              {t("onboarding.gaps.toAssistant")}
-            </ButtonLink>
           ) : null}
         </div>
       </div>
