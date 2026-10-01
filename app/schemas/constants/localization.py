@@ -1,6 +1,20 @@
 from enum import StrEnum
 
 
+class CallForwardingCondition(StrEnum):
+    """
+    When a carrier forwards a call to the assistant (GSM conditional forwarding).
+
+    The concept forwards only "no answer / busy / unreachable", never every
+    call, so staff still answer first. CANCEL_ALL switches forwarding off.
+    """
+
+    NO_ANSWER = "no_answer"
+    BUSY = "busy"
+    UNREACHABLE = "unreachable"
+    CANCEL_ALL = "cancel_all"
+
+
 class CountryOnboardingStatus(StrEnum):
     """Whether businesses from a country may create an assistant."""
 
