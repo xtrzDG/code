@@ -1,3 +1,7 @@
+import { insightsEn } from "./sections/insights";
+import { contentEn } from "./sections/content";
+import { workspaceEn } from "./sections/workspace";
+
 /**
  * English texts: the reference dictionary. Every key added here must be
  * added to ru.ts and ka.ts too (the type checker enforces it).
@@ -352,6 +356,9 @@ export const en = {
     tooLong: "The text is too long",
     hoursOverlap: "The intervals of this day overlap",
   },
+  ...insightsEn,
+  ...contentEn,
+  ...workspaceEn,
 } as const satisfies NestedMessages;
 
 interface NestedMessages {

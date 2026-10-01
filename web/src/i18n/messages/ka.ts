@@ -1,4 +1,7 @@
 import type { Messages } from "../translate";
+import { insightsKa } from "./sections/insights";
+import { contentKa } from "./sections/content";
+import { workspaceKa } from "./sections/workspace";
 
 /** ქართული ტექსტები. გასაღებები — როგორც en.ts-ში. */
 export const ka: Messages = {
@@ -347,4 +350,7 @@ export const ka: Messages = {
     tooLong: "ტექსტი ძალიან გრძელია",
     hoursOverlap: "ამ დღის ინტერვალები ერთმანეთს გადაფარავს",
   },
+  ...insightsKa,
+  ...contentKa,
+  ...workspaceKa,
 };

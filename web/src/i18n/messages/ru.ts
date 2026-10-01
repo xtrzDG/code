@@ -1,4 +1,7 @@
 import type { Messages } from "../translate";
+import { insightsRu } from "./sections/insights";
+import { contentRu } from "./sections/content";
+import { workspaceRu } from "./sections/workspace";
 
 /** Русские тексты. Ключи — как в en.ts. */
 export const ru: Messages = {
@@ -352,4 +355,7 @@ export const ru: Messages = {
     tooLong: "Слишком длинный текст",
     hoursOverlap: "Интервалы этого дня пересекаются",
   },
+  ...insightsRu,
+  ...contentRu,
+  ...workspaceRu,
 };

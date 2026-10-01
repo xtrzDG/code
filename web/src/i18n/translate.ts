@@ -30,6 +30,9 @@ type Stringify<T> = {
 /** The shape every dictionary must have (English is the reference). */
 export type Messages = Stringify<typeof en>;
 
+/** The translation of one section dictionary (see messages/sections/). */
+export type Translation<T> = Stringify<T>;
+
 type LeafPaths<T, Prefix extends string = ""> = {
   [Key in keyof T & string]: T[Key] extends string
     ? `${Prefix}${Key}`
