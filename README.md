@@ -132,7 +132,7 @@ uv run python -m app.adapters.storage.postgres.migrate             # приме�
 | Ресурсы и расписание | `GET·POST …/resources`, `PATCH …/resources/{id}`, `GET·POST …/schedule-exceptions`, `DELETE …/schedule-exceptions/{id}` |
 | Брони, заявки, передачи | `GET …/availability`, `GET·POST …/bookings`, `PATCH …/bookings/{id}`, `POST …/bookings/{id}/cancel`, `POST …/bookings/{id}/reschedule`, `GET …/leads`, `PATCH …/leads/{id}`, `GET …/handoffs`, `POST …/handoffs/{id}/resolve`, `GET …/unanswered-questions`, `POST …/unanswered-questions/{id}/answer`, `GET …/dashboard` |
 | Google Calendar | `GET …/integrations/google-calendar/connect-url`, `DELETE …/integrations/google-calendar`, `GET /v1/integrations/google-calendar/callback` |
-| Разговоры | `GET …/conversations[/{id}]`, `POST …/test-chat` |
+| Разговоры | `GET …/conversations[/{id}]`, `PUT …/conversations/{id}/rating`, `POST …/test-chat` |
 | Сборка помощника | `POST·GET …/assistant-versions`, `GET …/assistant-versions/{id}[/autotest-run]`, `POST …/assistant-versions/{id}/autotests`, `POST …/assistant-versions/{id}/publish`, `POST …/assistant-versions/{id}/rollback` |
 | Каналы (кабинет) | `GET …/channels`, `PUT·DELETE …/channels/{channel}`, `GET …/channels/web/snippet`, `POST …/manager-contacts/telegram-link` |
 | Вебхуки и виджет | `POST /v1/channels/telegram/{channel_id}/webhook`, `GET·POST /v1/channels/meta/webhook`, `POST /v1/channels/telegram-platform/webhook`, `GET /v1/widget/{id}/config`, `POST /v1/widget/{id}/messages` |

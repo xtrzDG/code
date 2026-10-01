@@ -1,15 +1,25 @@
 from typing import Any
 
 from fastapi.testclient import TestClient
+from typed_time_provider import Microseconds
 
 from app.schemas.constants.assistants import AssistantToolName, AssistantVersionStatus
 from app.schemas.constants.channels import ChannelKind
 from app.schemas.constants.compliance import AuditAction
+from app.schemas.constants.conversations import CallOutcome
+from app.schemas.domain.conversations import CallDocument
 from app.schemas.dto.menu_import import MenuExtraction, MenuExtractionRequest
 from app.schemas.typings.assistants.constrained_integers import AssistantVersionNumber
 from app.schemas.typings.assistants.prefixed_id import AssistantVersionId
 from app.schemas.typings.assistants.strings import SystemPromptText
-from app.schemas.typings.conversations.prefixed_id import ConversationId
+from app.schemas.typings.conversations.constrained_integers import CallDurationSeconds
+from app.schemas.typings.conversations.prefixed_id import CallId, ConversationId
+from app.schemas.typings.conversations.strings import (
+    CallTranscriptText,
+    ProviderCallId,
+    RecordingStoragePath,
+)
+from app.schemas.typings.localization.constrained_strings import E164PhoneNumber
 from app.schemas.typings.users.prefixed_id import UserId
 from tests.brain.brain_world import BrainWorld, build_world, call_tool, say, scripted
 from tests.brain.cabinet_http import bearer, build_cabinet_client
@@ -103,6 +113,81 @@ def test_conversation_card_shows_tool_calls_and_is_audited() -> None:
     ]
     assert audit[0].entity_id == str(reply.conversation_id)
     assert audit[0].ip_address == "testclient"
+
+
+def test_phone_conversation_card_shows_the_call_transcript_and_recording() -> None:
+    world = build_world(scripted(say("Да, есть.")))
+    reply = world.send("Есть столик на вечер?", channel=ChannelKind.PHONE)
+    call = CallDocument(
+        business_id=world.business.id,
+        conversation_id=reply.conversation_id,
+        from_phone_number=E164PhoneNumber("+995555123456"),
+        to_phone_number=E164PhoneNumber("+995322000000"),
+        started_at=Microseconds(1_790_855_000_000_000),
+        duration_seconds=CallDurationSeconds(95),
+        recording_path=RecordingStoragePath("elevenlabs/conversations/conv_1"),
+        transcript=CallTranscriptText(
+            "[00:00] assistant: Здравствуйте!\n[00:04] customer: Есть столик?"
+        ),
+        provider_call_id=ProviderCallId("conv_1"),
+        outcome=CallOutcome.INFORMATION,
+    )
+    world.call_repo.save(call)
+    other_call = call.model_copy(
+        update={
+            "id": CallId(),
+            "conversation_id": None,
+            "provider_call_id": ProviderCallId("x"),
+        }
+    )
+    world.call_repo.save(other_call)
+
+    card = cabinet(world).get(
+        f"/v1/businesses/{world.business.id}/conversations/{reply.conversation_id}",
+        headers=bearer("owner"),
+    )
+
+    assert card.status_code == 200
+    [shown] = card.json()["calls"]
+    assert shown["id"] == str(call.id)
+    assert shown["duration_seconds"] == 95
+    assert shown["outcome"] == "information"
+    assert shown["transcript"].endswith("customer: Есть столик?")
+    assert shown["recording_path"] == "elevenlabs/conversations/conv_1"
+    audit = world.audit_log_repo.list_by_business(world.business.id)
+    assert [(entry.entity, entry.entity_id) for entry in audit] == [
+        ("conversation", str(reply.conversation_id)),
+        ("call", str(call.id)),
+    ]
+
+
+def test_owners_and_staff_rate_a_conversation_good_or_bad() -> None:
+    world = build_world(scripted(say("Да, есть.")))
+    reply = world.send("Есть столик?")
+    client = cabinet(world)
+    url = (
+        f"/v1/businesses/{world.business.id}/conversations/"
+        f"{reply.conversation_id}/rating"
+    )
+
+    bad = client.put(url, json={"rating": "bad"}, headers=bearer("staff"))
+    feed = client.get(
+        f"/v1/businesses/{world.business.id}/conversations", headers=bearer("owner")
+    )
+    stored = world.conversations()[0]
+    cleared = client.put(url, json={"rating": None}, headers=bearer("owner"))
+    invalid = client.put(url, json={"rating": "meh"}, headers=bearer("owner"))
+    stranger = client.put(url, json={"rating": "good"}, headers=bearer("stranger"))
+
+    assert bad.status_code == 200, bad.text
+    assert bad.json()["rating"] == "bad"
+    assert feed.json()[0]["rating"] == "bad"
+    assert stored.rated_by == world.staff_id
+    assert stored.rated_at is not None
+    assert cleared.json()["rating"] is None
+    assert world.conversations()[0].rated_by is None
+    assert invalid.status_code == 422
+    assert stranger.status_code == 404
 
 
 def test_feed_errors_map_to_http_status_codes() -> None:

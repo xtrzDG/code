@@ -41,6 +41,17 @@ class LlmStopReason(StrEnum):
     OTHER = "other"
 
 
+class ConversationRating(StrEnum):
+    """
+    The owner's or staff's verdict on how the assistant handled a
+    conversation (concept section 8, "good / bad" on the card), used in the
+    weekly quality review (section 11).
+    """
+
+    GOOD = "good"
+    BAD = "bad"
+
+
 class CallOutcome(StrEnum):
     """Result extracted from a finished phone call."""
 

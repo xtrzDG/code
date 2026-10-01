@@ -142,6 +142,7 @@ from app.schemas.dto.conversation_feed import (
     ConversationQuery,
     ConversationSummaryView,
     OwnerTestChatVersionQuery,
+    RateConversationCommand,
 )
 from app.schemas.dto.conversations import (
     AssistantReply,
@@ -436,6 +437,9 @@ from app.use_cases.conversations.open_voice_conversation_use_case import (
 )
 from app.use_cases.conversations.prepare_conversation_turn_use_case import (
     PrepareConversationTurnUseCase,
+)
+from app.use_cases.conversations.rate_conversation_use_case import (
+    RateConversationUseCase,
 )
 from app.use_cases.conversations.record_assistant_reply_use_case import (
     RecordAssistantReplyUseCase,
@@ -1358,6 +1362,19 @@ class UseCasesContainer(containers.DeclarativeContainer):
         audit_log_repo=repositories.audit_log_repo,
         summary_transformer=transformers.conversation_summary_transformer,
         message_transformer=transformers.message_view_transformer,
+        wall_clock=time_provider.microsecond_wall_clock,
+        call_repo=repositories.call_repo,
+        call_transformer=transformers.call_view_transformer,
+    )
+    rate_conversation_use_case: Factory[
+        UseCaseContract[RateConversationCommand, ConversationSummaryView]
+    ] = Factory(
+        RateConversationUseCase,
+        authorize_business_access=authorize_business_access_use_case,
+        conversation_repo=repositories.conversation_repo,
+        contact_repo=repositories.contact_repo,
+        message_repo=repositories.message_repo,
+        summary_transformer=transformers.conversation_summary_transformer,
         wall_clock=time_provider.microsecond_wall_clock,
     )
     resolve_test_chat_version_use_case: Factory[

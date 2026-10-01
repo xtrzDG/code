@@ -26,6 +26,9 @@ from app.transformers.billing.invoice_description_transformer import (
 from app.transformers.businesses.business_view_transformer import (
     BusinessViewTransformer,
 )
+from app.transformers.conversations.call_view_transformer import (
+    CallViewTransformer,
+)
 from app.transformers.conversations.conversation_summary_transformer import (
     ConversationSummaryTransformer,
 )
@@ -102,6 +105,9 @@ class TransformersContainer(containers.DeclarativeContainer):
     # --- Conversation feed.
     conversation_summary_transformer: Singleton[ConversationSummaryTransformer] = (
         Singleton(ConversationSummaryTransformer)
+    )
+    call_view_transformer: Singleton[CallViewTransformer] = Singleton(
+        CallViewTransformer
     )
     message_view_transformer: Singleton[MessageViewTransformer] = Singleton(
         MessageViewTransformer

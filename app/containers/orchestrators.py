@@ -364,6 +364,9 @@ class OrchestratorsContainer(containers.DeclarativeContainer):
     get_conversation_orchestrator = use_case_orchestrator(
         use_cases.get_conversation_use_case
     )
+    rate_conversation_orchestrator = use_case_orchestrator(
+        use_cases.rate_conversation_use_case
+    )
     import_menu_orchestrator = use_case_orchestrator(use_cases.import_menu_use_case)
     confirm_imported_items_orchestrator = use_case_orchestrator(
         use_cases.confirm_imported_items_use_case

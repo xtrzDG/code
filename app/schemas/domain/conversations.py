@@ -6,6 +6,7 @@ from app.schemas.constants.assistants import AssistantToolName
 from app.schemas.constants.channels import ChannelKind, MessageDirection
 from app.schemas.constants.conversations import (
     CallOutcome,
+    ConversationRating,
     ConversationStatus,
     LlmTurnRole,
     MessageAuthor,
@@ -45,6 +46,7 @@ from app.schemas.typings.localization.constrained_strings import (
     E164PhoneNumber,
     LanguageTag,
 )
+from app.schemas.typings.users.prefixed_id import UserId
 
 
 class ConversationDocument(BaseDocument):
@@ -52,7 +54,7 @@ class ConversationDocument(BaseDocument):
     Customer conversation in one channel (concept table `conversations`).
 
     Pinned to one assistant version so its instruction and tools never change
-    mid-conversation.
+    mid-conversation. `rating` is the owner's or staff's good / bad verdict.
     """
 
     id: ConversationId = Field(default_factory=ConversationId)
@@ -66,6 +68,9 @@ class ConversationDocument(BaseDocument):
     is_after_hours: IsAfterHours = False
     is_sandbox: IsSandboxConversation = False
     last_message_at: Microseconds
+    rating: ConversationRating | None = None
+    rated_by: UserId | None = None
+    rated_at: Microseconds | None = None
 
 
 class ToolCallRecord(PersistentDocument):

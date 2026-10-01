@@ -17,9 +17,11 @@ from app.schemas.dto.conversation_feed import (
     ConversationDetailView,
     ConversationListQuery,
     ConversationQuery,
+    ConversationRatingRequest,
     ConversationSummaryView,
     OwnerTestChatCommand,
     OwnerTestChatRequest,
+    RateConversationCommand,
 )
 from app.schemas.dto.conversations import AssistantReply
 from app.schemas.exceptions.application_errors import ValidationFailedError
@@ -29,6 +31,7 @@ from app.schemas.typings.conversations.prefixed_id import ConversationId
 from app.schemas.typings.users.prefixed_id import UserId
 
 read_test_chat_body = build_json_body_dependency(OwnerTestChatRequest)
+read_rating_body = build_json_body_dependency(ConversationRatingRequest)
 TRUE_FLAGS: frozenset[str] = frozenset({"1", "true", "yes"})
 FALSE_FLAGS: frozenset[str] = frozenset({"0", "false", "no"})
 
@@ -43,6 +46,10 @@ def build_conversation_router(
         ConversationDetailView,
     ],
     owner_test_chat_operator: OperatorContract[OwnerTestChatCommand, AssistantReply],
+    rate_conversation_operator: OperatorContract[
+        RateConversationCommand,
+        ConversationSummaryView,
+    ],
     current_user: CurrentUserDependency,
 ) -> APIRouter:
     """
@@ -50,7 +57,10 @@ def build_conversation_router(
         GET  /v1/businesses/{business_id}/conversations?channel=&include_sandbox=
                                                     feed, newest first
         GET  /v1/businesses/{business_id}/conversations/{conversation_id}
-                                                    card with messages (audited)
+                                                    card with messages and calls
+                                                    (audited)
+        PUT  .../conversations/{conversation_id}/rating
+                                                    {rating: good|bad|null}
         POST /v1/businesses/{business_id}/test-chat
                                                     {text, session_key?,
                                                      assistant_version_id?}
@@ -91,6 +101,29 @@ def build_conversation_router(
                     "Conversation",
                 ),
                 client_ip_address=read_client_ip_address(request),
+            )
+        )
+
+    @router.put(
+        "/v1/businesses/{business_id}/conversations/{conversation_id}/rating",
+        openapi_extra=describe_json_body(ConversationRatingRequest),
+    )
+    def rate_conversation(
+        business_id: str,
+        conversation_id: str,
+        user_id: Annotated[UserId, Depends(current_user)],
+        body: Annotated[ConversationRatingRequest, Depends(read_rating_body)],
+    ) -> ConversationSummaryView:
+        return rate_conversation_operator.operate(
+            RateConversationCommand(
+                user_id=user_id,
+                business_id=parse_path_identifier(business_id, BusinessId, "Business"),
+                conversation_id=parse_path_identifier(
+                    conversation_id,
+                    ConversationId,
+                    "Conversation",
+                ),
+                rating=body.rating,
             )
         )
 

@@ -38,6 +38,7 @@ from app.repositories.business_repositories import (
 )
 from app.repositories.compliance_repositories import AuditLogRepository
 from app.repositories.conversation_repositories import (
+    CallRepository,
     ContactRepository,
     ConversationRepository,
     LlmTurnRepository,
@@ -67,6 +68,7 @@ from app.schemas.domain.channels import ChannelDocument
 from app.schemas.domain.compliance import AuditLogEntryDocument
 from app.schemas.domain.contacts import ContactDocument
 from app.schemas.domain.conversations import (
+    CallDocument,
     ConversationDocument,
     LlmTurnDocument,
     MessageDocument,
@@ -244,6 +246,7 @@ class BrainWorld:
     usage_event_repo: UsageEventRepository
     handoff_repo: HandoffRepository
     channel_repo: ChannelRepository
+    call_repo: CallRepository
     audit_log_repo: AuditLogRepository
     user_repo: UserRepository
     knowledge_item_repo: KnowledgeItemRepository
@@ -413,6 +416,7 @@ def build_world(
         InMemoryDocumentCollectionAdapter[UsageEventDocument](UsageEventDocument)
     )
     channel_repo = ChannelRepository(InMemoryDocumentCollectionAdapter(ChannelDocument))
+    call_repo = CallRepository(InMemoryDocumentCollectionAdapter(CallDocument))
     handoff_repo = HandoffRepository(
         InMemoryDocumentCollectionAdapter[HandoffDocument](HandoffDocument)
     )
@@ -619,6 +623,7 @@ def build_world(
         llm_turn_repo=llm_turn_repo,
         usage_event_repo=usage_event_repo,
         channel_repo=channel_repo,
+        call_repo=call_repo,
         handoff_repo=handoff_repo,
         audit_log_repo=audit_log_repo,
         user_repo=user_repo,
