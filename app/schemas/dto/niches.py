@@ -16,6 +16,7 @@ from app.schemas.typings.assistants.strings import PromptRuleText
 from app.schemas.typings.niches.booleans import (
     IsQuestionRequired,
     RequiresLegalReview,
+    TakesBookings,
 )
 from app.schemas.typings.niches.strings import IntegrationName
 from app.schemas.typings.profiles.constrained_strings import (
@@ -50,8 +51,13 @@ class NicheTemplate(ImmutableDTO):
     Everything a niche changes: profile questions, what is booked, and the
     rules for passing to a human (concept "Одна платформа для всех ниш").
 
-    Prompt rules and default handoff/forbidden rules are English text for the
-    language model; the assistant still answers customers in their language.
+    Prompt rules are English text for the language model; the assistant still
+    answers customers in their language. Default handoff and forbidden rules
+    are localized for the owner, one rule per line, and pre-fill the profile.
+
+    `takes_bookings` is False for niches that only take orders as leads
+    (online shops, B2B supply); their resource kind and booking unit are then
+    unused.
     """
 
     key: NicheKey
@@ -61,6 +67,7 @@ class NicheTemplate(ImmutableDTO):
     recommended_plans: list[PlanKey]
     resource_kind: ResourceKind
     booking_unit: BookingUnit
+    takes_bookings: TakesBookings = True
     resource_nouns: LocalizedText
     knowledge_kinds: list[KnowledgeItemKind]
     questions: list[QuestionDefinition]
