@@ -13,22 +13,30 @@ import { cn } from "@/lib/cn";
 import { IconChevronDown } from "../icons";
 
 const CONTROL =
-  "block w-full rounded-lg border border-line-strong bg-surface text-ink shadow-sm transition-colors " +
+  "block rounded-lg border border-line-strong bg-surface text-ink shadow-sm transition-colors " +
   "placeholder:text-ink-subtle hover:border-ink-subtle " +
   "focus:border-focus focus:outline-none focus:ring-2 focus:ring-focus/30 " +
   "disabled:cursor-not-allowed disabled:bg-surface-muted disabled:text-ink-subtle " +
   "aria-invalid:border-danger aria-invalid:focus:ring-danger/25";
 
+/**
+ * Controls fill their container unless the caller sets a width ("w-32"):
+ * `cn` does not merge Tailwind classes, so both would apply and `w-full` wins.
+ */
+function fullWidthUnlessSized(className: string | undefined): string | false {
+  return !/(^|\s)w-/.test(className ?? "") && "w-full";
+}
+
 export type InputProps = ComponentPropsWithRef<"input">;
 
 export function Input({ className, type = "text", ...props }: InputProps) {
-  return <input type={type} className={cn(CONTROL, "h-10 px-3 text-sm", className)} {...props} />;
+  return <input type={type} className={cn(CONTROL, fullWidthUnlessSized(className), "h-10 px-3 text-sm", className)} {...props} />;
 }
 
 export type TextareaProps = ComponentPropsWithRef<"textarea">;
 
 export function Textarea({ className, rows = 3, ...props }: TextareaProps) {
-  return <textarea rows={rows} className={cn(CONTROL, "px-3 py-2 text-sm", className)} {...props} />;
+  return <textarea rows={rows} className={cn(CONTROL, fullWidthUnlessSized(className), "px-3 py-2 text-sm", className)} {...props} />;
 }
 
 export type SelectProps = ComponentPropsWithRef<"select">;
@@ -37,7 +45,7 @@ export type SelectProps = ComponentPropsWithRef<"select">;
 export function Select({ className, children, ...props }: SelectProps) {
   return (
     <div className={cn("relative", className)}>
-      <select className={cn(CONTROL, "h-10 appearance-none pr-9 pl-3 text-sm")} {...props}>
+      <select className={cn(CONTROL, "h-10 w-full appearance-none pr-9 pl-3 text-sm")} {...props}>
         {children}
       </select>
       <IconChevronDown
