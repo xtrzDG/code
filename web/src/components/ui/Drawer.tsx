@@ -1,34 +1,30 @@
 "use client";
 
 /**
- * A modal dialog on the native <dialog> element: focus is trapped, Escape
- * closes it and the page behind is inert. `onClose` is called only when the
- * person closes it (Escape, the close button, the backdrop), never when
- * `open` turns false, so one dialog can replace another safely.
+ * A side panel over the page (a modal native <dialog>): for secondary
+ * content that would crowd a form, such as a checklist or details. It slides
+ * from the end edge (right in left-to-right languages) and fills the screen
+ * on phones. Same contract as Modal: `onClose` runs only when the person
+ * closes it.
  *
- *     <Modal open={isOpen} onClose={() => setOpen(false)} title="New business"
- *            footer={<Button onClick={save}>Save</Button>}>
- *       …form…
- *     </Modal>
+ *     <Drawer open={isOpen} onClose={() => setOpen(false)} title="What to add">
+ *       …list…
+ *     </Drawer>
  */
 
 import { useId, type ReactNode } from "react";
 
 import { useI18n } from "@/i18n/client";
-import { cn } from "@/lib/cn";
 
 import { IconX } from "../icons";
 import { useModalDialog } from "./useModalDialog";
 
-const SIZES = { sm: "max-w-md", md: "max-w-lg", lg: "max-w-2xl", xl: "max-w-4xl" } as const;
-
-export function Modal({
+export function Drawer({
   open,
   onClose,
   title,
   description,
   footer,
-  size = "md",
   children,
 }: {
   open: boolean;
@@ -36,7 +32,6 @@ export function Modal({
   title: ReactNode;
   description?: ReactNode;
   footer?: ReactNode;
-  size?: keyof typeof SIZES;
   children: ReactNode;
 }) {
   const { t } = useI18n();
@@ -49,13 +44,10 @@ export function Modal({
       {...dialog}
       aria-labelledby={titleId}
       aria-describedby={description ? descriptionId : undefined}
-      className={cn(
-        "m-auto max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] overflow-hidden rounded-2xl border border-line bg-surface p-0 text-ink shadow-2xl",
-        SIZES[size],
-      )}
+      className="ms-auto me-0 my-0 h-dvh max-h-dvh w-full max-w-none overflow-hidden border-s border-line bg-surface p-0 text-ink shadow-2xl sm:w-[28rem]"
     >
       {open ? (
-        <div className="flex max-h-[calc(100dvh-2rem)] flex-col">
+        <div className="flex h-full flex-col">
           <header className="flex items-start justify-between gap-4 border-b border-line px-5 py-4 sm:px-6">
             <div className="min-w-0 space-y-1">
               <h2 id={titleId} className="text-lg font-semibold">

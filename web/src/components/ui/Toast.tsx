@@ -7,9 +7,14 @@
  *     toast.success(t("common.saved"));
  *     toast.error(apiError);                      // localized by error code
  *     toast.error(apiError, { conflict: "bookings.slotTaken" });
+ *
+ * While a modal <dialog> is open (Modal, the phone menu) everything outside
+ * it is inert and drawn below it, so the toasts move into the topmost open
+ * dialog: they stay visible and can be dismissed.
  */
 
-import { createContext, useCallback, useContext, useMemo, useRef, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 
 import { describeError, type ErrorMessageOverrides } from "@/api/errors";
 import { useI18n } from "@/i18n/client";
@@ -91,6 +96,40 @@ const TONE_STYLES: Record<ToastTone, { icon: typeof IconCheck; className: string
   info: { icon: IconInfo, className: "text-info" },
 };
 
+/**
+ * The modal dialog on top of the top layer, or null. Dialogs are stacked in
+ * the order they were opened; one opened later covers the earlier ones.
+ */
+function useTopModalDialog(): HTMLDialogElement | null {
+  const [top, setTop] = useState<HTMLDialogElement | null>(null);
+
+  useEffect(() => {
+    const stack: HTMLDialogElement[] = [];
+    const sync = () => {
+      for (let index = stack.length - 1; index >= 0; index -= 1) {
+        const dialog = stack[index];
+        if (!dialog || !dialog.isConnected || !dialog.matches(":modal")) {
+          stack.splice(index, 1);
+        }
+      }
+      for (const dialog of document.querySelectorAll<HTMLDialogElement>("dialog:modal")) {
+        if (!stack.includes(dialog)) {
+          stack.push(dialog);
+        }
+      }
+      setTop(stack.at(-1) ?? null);
+    };
+    const observer = new MutationObserver(sync);
+    // "open" flips on showModal()/close(); childList catches a dialog that
+    // is removed while open.
+    observer.observe(document.body, { subtree: true, childList: true, attributes: true, attributeFilter: ["open"] });
+    sync();
+    return () => observer.disconnect();
+  }, []);
+
+  return top;
+}
+
 function ToastViewport({
   items,
   onDismiss,
@@ -100,7 +139,8 @@ function ToastViewport({
   onDismiss: (id: number) => void;
   closeLabel: string;
 }) {
-  return (
+  const topDialog = useTopModalDialog();
+  const viewport = (
     <div
       className="pointer-events-none fixed inset-x-0 bottom-0 z-[60] flex flex-col items-center gap-2 p-4 sm:items-end"
       aria-live="polite"
@@ -134,6 +174,9 @@ function ToastViewport({
       })}
     </div>
   );
+  // Fixed positioning inside the dialog still refers to the viewport (the
+  // dialog has no transform), so the corner does not move.
+  return topDialog ? createPortal(viewport, topDialog) : viewport;
 }
 
 export function useToast(): ToastApi {

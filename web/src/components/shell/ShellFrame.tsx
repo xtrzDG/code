@@ -8,7 +8,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useRef, useState, type ComponentType, type ReactNode } from "react";
+import { useState, type ComponentType, type ReactNode } from "react";
 
 import { useI18n } from "@/i18n/client";
 import { cn } from "@/lib/cn";
@@ -16,6 +16,7 @@ import { HOME_PATH } from "@/lib/navigation";
 
 import { LanguageSwitcher } from "../LanguageSwitcher";
 import { IconMenu, IconSparkles, IconX, type IconProps } from "../icons";
+import { useModalDialog } from "../ui/useModalDialog";
 import { SignOutButton } from "./SignOutButton";
 
 export interface ShellNavItem {
@@ -121,20 +122,8 @@ export function ShellFrame({
 }) {
   const { t } = useI18n();
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const drawerRef = useRef<HTMLDialogElement>(null);
   const closeDrawer = () => setDrawerOpen(false);
-
-  useEffect(() => {
-    const drawer = drawerRef.current;
-    if (!drawer) {
-      return;
-    }
-    if (drawerOpen && !drawer.open) {
-      drawer.showModal();
-    } else if (!drawerOpen && drawer.open) {
-      drawer.close();
-    }
-  }, [drawerOpen]);
+  const drawer = useModalDialog(drawerOpen, closeDrawer);
 
   return (
     <div className="min-h-dvh">
@@ -163,17 +152,7 @@ export function ShellFrame({
       </div>
 
       <dialog
-        ref={drawerRef}
-        onClose={closeDrawer}
-        onCancel={(event) => {
-          event.preventDefault();
-          closeDrawer();
-        }}
-        onMouseDown={(event) => {
-          if (event.target === event.currentTarget) {
-            closeDrawer();
-          }
-        }}
+        {...drawer}
         aria-label={t("nav.mainNavigation")}
         className="m-0 h-dvh max-h-dvh w-[min(20rem,85vw)] max-w-none border-r border-line bg-surface p-0 text-ink lg:hidden"
       >
