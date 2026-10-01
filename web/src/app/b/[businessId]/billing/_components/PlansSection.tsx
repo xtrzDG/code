@@ -12,7 +12,6 @@ import {
   hasEstimatedPrices,
   maxAnnualDiscount,
   monthlyEquivalentMinor,
-  needsSubscription,
   planActions,
   planOveragePrice,
   planPrice,
@@ -99,7 +98,7 @@ export function PlansSection({
         </fieldset>
       </div>
 
-      {overview.subscription && needsSubscription(overview) && canManage ? (
+      {(overview.subscription?.status === "past_due" || overview.subscription?.status === "cancelled") && canManage ? (
         <p className="text-sm text-ink-muted">{t("billing.subscribe.resumeHint")}</p>
       ) : null}
 

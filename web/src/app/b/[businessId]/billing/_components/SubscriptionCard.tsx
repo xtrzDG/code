@@ -112,14 +112,17 @@ export function SubscriptionCard({
               label: t("billing.facts.autoDebit"),
               value: subscription.has_auto_debit ? t("billing.facts.autoDebitOn") : t("billing.facts.autoDebitOff"),
             },
-            {
-              label: t("billing.facts.serviceMode"),
-              value: (
-                <Badge tone={overview.service_mode === "full" ? "success" : "danger"}>
-                  {t(overview.service_mode === "full" ? "billing.serviceModes.full" : "billing.serviceModes.leads_only")}
-                </Badge>
-              ),
-            },
+            // A subscription waiting for its first payment serves nobody yet.
+            subscription.status === "incomplete"
+              ? null
+              : {
+                  label: t("billing.facts.serviceMode"),
+                  value: (
+                    <Badge tone={overview.service_mode === "full" ? "success" : "danger"}>
+                      {t(overview.service_mode === "full" ? "billing.serviceModes.full" : "billing.serviceModes.leads_only")}
+                    </Badge>
+                  ),
+                },
           ]}
         />
       </div>
