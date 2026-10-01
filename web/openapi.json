@@ -2166,7 +2166,7 @@
       },
       "BusinessView": {
         "additionalProperties": false,
-        "description": "A business (tenant) as shown in the cabinet.\n\n`viewer_role` is the role of the user who asked; it is None for a\nplatform admin who is not a member.",
+        "description": "A business (tenant) as shown in the cabinet.\n\n`viewer_role` is the role of the user who asked; it is None for a\nplatform admin who is not a member. `revision` grows with every save:\nsend it back as `expected_revision` of a settings change.",
         "properties": {
           "city": {
             "anyOf": [
@@ -2269,6 +2269,11 @@
             "title": "Recording Retention Days",
             "type": "integer"
           },
+          "revision": {
+            "minimum": 0.0,
+            "title": "Revision",
+            "type": "integer"
+          },
           "service_mode": {
             "$ref": "#/components/schemas/ServiceMode"
           },
@@ -2309,6 +2314,7 @@
           "data_region",
           "recording_retention_days",
           "members",
+          "revision",
           "created_at"
         ],
         "title": "BusinessView",
@@ -10524,7 +10530,7 @@
             "application/json": {
               "schema": {
                 "additionalProperties": false,
-                "description": "HTTP body of a settings change; missing fields stay unchanged.\n\nAn empty `city` clears it. `manager_contacts` replaces the whole list.\n`status` only switches a live assistant to paused and back.",
+                "description": "HTTP body of a settings change; missing fields stay unchanged.\n\nAn empty `city` clears it. `manager_contacts` replaces the whole list.\n`status` only switches a live assistant to paused and back.\n\n`expected_revision` is the `revision` of the business the change was\nmade from. When it is given and someone has saved the business since,\nnothing changes and the answer is 409 with the reason\n`stale_revision`: reload, then apply the change again. Without it the\nchange applies to whatever is stored (scripts, older clients).",
                 "properties": {
                   "city": {
                     "anyOf": [
@@ -10550,6 +10556,18 @@
                       }
                     ],
                     "title": "Default Language"
+                  },
+                  "expected_revision": {
+                    "anyOf": [
+                      {
+                        "minimum": 0,
+                        "type": "integer"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Expected Revision"
                   },
                   "languages": {
                     "anyOf": [

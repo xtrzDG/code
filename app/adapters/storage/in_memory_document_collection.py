@@ -1,5 +1,6 @@
 import json
 import threading
+from collections.abc import Callable
 
 from base_pydantic_schemas import PersistentDocument
 
@@ -56,6 +57,23 @@ class InMemoryDocumentCollectionAdapter[StoredDocument: PersistentDocument](
             for serialized_document in serialized_documents
             if read_field_text(serialized_document, field_name) == value
         ]
+
+    def replace_if(
+        self,
+        document_key: str,
+        document: StoredDocument,
+        is_current: Callable[[StoredDocument], bool],
+    ) -> bool:
+        serialized_document: str = document.model_dump_json()
+        with self._lock:
+            stored: str | None = self._serialized_documents.get(document_key)
+            if stored is None or not is_current(
+                self._document_type.model_validate_json(stored)
+            ):
+                return False
+
+            self._serialized_documents[document_key] = serialized_document
+            return True
 
     def delete(self, document_key: str) -> None:
         with self._lock:

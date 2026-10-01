@@ -9,6 +9,7 @@ from app.schemas.constants.channels import ChannelKind
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.channels import ChannelDocument
 from app.schemas.domain.profiles import BusinessProfileDocument
+from app.schemas.typings.businesses.constrained_integers import BusinessRevision
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.channels.prefixed_id import ChannelId
 from app.schemas.typings.channels.strings import ChannelExternalId
@@ -16,6 +17,11 @@ from app.schemas.typings.users.prefixed_id import UserId
 
 
 class BusinessRepository(BusinessRepoContract):
+    """
+    Businesses with a revision that grows with every save (optimistic
+    concurrency of settings changes, see `save_if_unchanged`).
+    """
+
     def __init__(
         self,
         collection: DocumentCollectionAdapterContract[BusinessDocument],
@@ -25,7 +31,28 @@ class BusinessRepository(BusinessRepoContract):
         )
 
     def save(self, business: BusinessDocument) -> None:
+        stored: BusinessDocument | None = self._collection.get(str(business.id))
+        # Never below the stored revision, even when this copy is older.
+        base_revision: int = (
+            int(business.revision)
+            if stored is None
+            else max(int(stored.revision), int(business.revision))
+        )
+        business.revision = BusinessRevision(base_revision + 1)
         self._collection.upsert(str(business.id), business)
+
+    def save_if_unchanged(self, business: BusinessDocument) -> bool:
+        read_revision: BusinessRevision = business.revision
+        business.revision = BusinessRevision(int(read_revision) + 1)
+        is_saved: bool = self._collection.replace_if(
+            str(business.id),
+            business,
+            lambda stored: stored.revision == read_revision,
+        )
+        if not is_saved:
+            business.revision = read_revision
+
+        return is_saved
 
     def get(self, business_id: BusinessId) -> BusinessDocument | None:
         return self._collection.get(str(business_id))

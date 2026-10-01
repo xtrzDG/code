@@ -1,4 +1,4 @@
-from collections.abc import Generator
+from collections.abc import Callable, Generator
 from contextlib import contextmanager
 
 import psycopg
@@ -96,6 +96,13 @@ class PostgresDocumentCollectionAdapter[StoredDocument: PersistentDocument](
             "select document::text from {table} "
             "where document_key = %s and business_id = %s"
         ).format(table=table)
+        self._lock_query: sql.Composed = sql.SQL(
+            "select document::text from {table} where document_key = %s for update"
+        ).format(table=table)
+        self._lock_in_business_query: sql.Composed = sql.SQL(
+            "select document::text from {table} "
+            "where document_key = %s and business_id = %s for update"
+        ).format(table=table)
         self._list_query: sql.Composed = sql.SQL(
             "select document::text from {table} order by created_at, row_sequence"
         ).format(table=table)
@@ -134,6 +141,51 @@ class PostgresDocumentCollectionAdapter[StoredDocument: PersistentDocument](
                     written_at,
                 ),
             )
+
+    def replace_if(
+        self,
+        document_key: str,
+        document: StoredDocument,
+        is_current: Callable[[StoredDocument], bool],
+    ) -> bool:
+        """
+        Read the row `for update` (other writers of it wait until this
+        transaction ends), ask `is_current`, and write in the same
+        transaction.
+        """
+
+        serialized_document: str = document.model_dump_json()
+        business_id: BusinessId | None = read_document_business_id(document)
+        written_at: int = int(self._wall_clock.now_unix())
+        with self._transaction() as (connection, scoped_business_id):
+            if scoped_business_id is None:
+                row: TupleRow | None = connection.execute(
+                    self._lock_query,
+                    (document_key,),
+                ).fetchone()
+            else:
+                row = connection.execute(
+                    self._lock_in_business_query,
+                    (document_key, scoped_business_id),
+                ).fetchone()
+
+            if row is None or not is_current(
+                self._document_type.model_validate_json(self._read_text(row))
+            ):
+                return False
+
+            connection.execute(
+                self._upsert_query,
+                (
+                    document_key,
+                    None if business_id is None else str(business_id),
+                    serialized_document,
+                    written_at,
+                    written_at,
+                ),
+            )
+
+        return True
 
     def get(self, document_key: str) -> StoredDocument | None:
         with self._transaction() as (connection, scoped_business_id):

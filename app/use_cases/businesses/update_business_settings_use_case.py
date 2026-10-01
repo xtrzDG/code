@@ -12,7 +12,10 @@ from app.contracts.repositories import (
 )
 from app.contracts.transformer_contract import TransformerContract
 from app.contracts.use_case_contract import UseCaseContract
-from app.schemas.constants.businesses import BusinessStatus
+from app.schemas.constants.businesses import (
+    BusinessSettingsRefusalCode,
+    BusinessStatus,
+)
 from app.schemas.constants.compliance import AuditAction
 from app.schemas.constants.handoffs import ManagerContactChannel
 from app.schemas.constants.users import BusinessMemberRole
@@ -27,11 +30,13 @@ from app.schemas.dto.businesses import (
     ManagerContactInput,
     UpdateBusinessSettingsCommand,
 )
+from app.schemas.dto.errors import ErrorReason
 from app.schemas.dto.localization import PhoneNumberDetails
 from app.schemas.exceptions.application_errors import (
     ConflictError,
     ValidationFailedError,
 )
+from app.schemas.typings.businesses.constrained_integers import BusinessRevision
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.compliance.strings import (
     AuditEntityName,
@@ -40,6 +45,11 @@ from app.schemas.typings.compliance.strings import (
 from app.schemas.typings.handoffs.strings import ManagerContactAddress
 from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.schemas.typings.localization.strings import RawPhoneNumberInput
+from app.schemas.typings.platform.constrained_strings import (
+    ErrorReasonCode,
+    ErrorReasonDetail,
+)
+from app.schemas.typings.platform.strings import ErrorReasonMessage
 from app.schemas.typings.users.constrained_strings import EmailAddress
 from app.utilities.businesses.business_settings_validation import (
     require_existing_timezone,
@@ -53,6 +63,10 @@ MAX_MANAGER_CONTACTS: int = 20
 MAX_MANAGER_NAME_LENGTH: int = 100
 # Telegram chat ids are integers; group and channel chats are negative.
 TELEGRAM_CHAT_ID_PATTERN: re.Pattern[str] = re.compile(r"^-?[0-9]{1,20}$")
+STALE_REVISION_MESSAGE: str = (
+    "These settings were saved by someone else after you opened them. Reload "
+    "them and make your change again."
+)
 OWNER_STATUS_SWITCHES: frozenset[tuple[BusinessStatus, BusinessStatus]] = frozenset(
     {
         (BusinessStatus.LIVE, BusinessStatus.PAUSED),
@@ -79,6 +93,13 @@ class UpdateBusinessSettingsUseCase(
     chosen here until the business has a subscription; after that it is
     changed in billing, which also changes the price. Contact changes are
     audited because they hold staff personal data.
+
+    Optimistic concurrency: a change made from an older revision than the
+    stored one (`expected_revision`) is refused with ConflictError (reason
+    `stale_revision`), and the write itself only succeeds while nobody else
+    saved the business since it was read here, so a newer save (another
+    owner, a manager linking the platform bot, billing) is never silently
+    overwritten.
     """
 
     def __init__(
@@ -130,31 +151,40 @@ class UpdateBusinessSettingsUseCase(
             )
         )
         changes: BusinessSettingsChanges = input_data.changes
+        if (
+            changes.expected_revision is not None
+            and changes.expected_revision != business.revision
+        ):
+            raise build_stale_revision_error(business.revision)
+
         self._apply_profile_changes(business, changes)
         self._apply_language_changes(business, changes)
         self._apply_status_change(business, changes.status)
 
         now: Microseconds = self._wall_clock.now_unix()
+        contacts_audit_entry: AuditLogEntryDocument | None = None
         if changes.manager_contacts is not None:
             business.manager_contacts = [
                 self._validate_manager_contact(contact_input, business)
                 for contact_input in self._limit_contacts(changes.manager_contacts)
             ]
-            self._audit_log_repo.append(
-                AuditLogEntryDocument(
-                    business_id=business.id,
-                    actor_id=input_data.user_id,
-                    action=AuditAction.UPDATE,
-                    entity=AuditEntityName("manager_contacts"),
-                    entity_id=AuditEntityReference(str(business.id)),
-                    ip_address=input_data.client_ip_address,
-                    created_at=now,
-                    updated_at=now,
-                )
+            contacts_audit_entry = AuditLogEntryDocument(
+                business_id=business.id,
+                actor_id=input_data.user_id,
+                action=AuditAction.UPDATE,
+                entity=AuditEntityName("manager_contacts"),
+                entity_id=AuditEntityReference(str(business.id)),
+                ip_address=input_data.client_ip_address,
+                created_at=now,
+                updated_at=now,
             )
 
         business.updated_at = now
-        self._business_repo.save(business)
+        if not self._business_repo.save_if_unchanged(business):
+            raise build_stale_revision_error(None)
+
+        if contacts_audit_entry is not None:
+            self._audit_log_repo.append(contacts_audit_entry)
         member_users: list[UserDocument] = [
             user
             for member in business.members
@@ -302,3 +332,27 @@ class UpdateBusinessSettingsUseCase(
                     business.country_code,
                 )
                 return ManagerContactAddress(str(phone_number.e164))
+
+
+def build_stale_revision_error(
+    current_revision: BusinessRevision | None,
+) -> ConflictError:
+    """
+    The refusal of a change made from an older revision; its details carry
+    the current revision when it is known.
+    """
+
+    return ConflictError(
+        STALE_REVISION_MESSAGE,
+        reasons=[
+            ErrorReason(
+                code=ErrorReasonCode(BusinessSettingsRefusalCode.STALE_REVISION.value),
+                message=ErrorReasonMessage(STALE_REVISION_MESSAGE),
+                details=(
+                    []
+                    if current_revision is None
+                    else [ErrorReasonDetail(str(int(current_revision)))]
+                ),
+            )
+        ],
+    )

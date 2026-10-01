@@ -69,6 +69,7 @@ class BusinessViewTransformer(TransformerContract[BusinessViewSource, BusinessVi
                 for contact in business.manager_contacts
             ],
             published_assistant_version_id=business.published_assistant_version_id,
+            revision=business.revision,
             viewer_role=viewer_role,
             created_at=business.created_at,
         )

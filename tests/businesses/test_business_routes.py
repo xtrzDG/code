@@ -248,3 +248,40 @@ def test_team_routes_invite_an_owner_and_change_roles() -> None:
     assert demoted.json()["members"][1]["role"] == "staff"
     assert bad_role.status_code == 422
     assert unknown.status_code == 404
+
+
+def test_a_settings_save_from_an_older_revision_is_refused_with_a_reason() -> None:
+    testbed = build_accounts_testbed()
+    client = testbed.build_http_client()
+    owner = signed_in(testbed, GEORGIA_MOBILE)
+    business = create_business(client, owner)
+    path = f"/v1/businesses/{business['id']}"
+    opened = client.get(path, headers=owner).json()
+
+    first_tab = client.patch(
+        path,
+        headers=owner,
+        json={"expected_revision": opened["revision"], "city": "Batumi"},
+    )
+    second_tab = client.patch(
+        path,
+        headers=owner,
+        json={
+            "expected_revision": opened["revision"],
+            "manager_contacts": [
+                {"name": "Nino", "channel": "telegram", "address": "70001"}
+            ],
+        },
+    )
+
+    assert first_tab.status_code == 200, first_tab.text
+    assert first_tab.json()["revision"] == opened["revision"] + 1
+    assert second_tab.status_code == 409
+    body = second_tab.json()
+    assert body["error"] == "conflict"
+    assert body["reasons"][0]["code"] == "stale_revision"
+    assert body["reasons"][0]["details"] == [str(opened["revision"] + 1)]
+    current = client.get(path, headers=owner).json()
+    assert current["city"] == "Batumi"
+    assert current["manager_contacts"] == []
+    assert current["revision"] == opened["revision"] + 1

@@ -118,6 +118,18 @@ class UserSessionRepoContract(RepoContract, Protocol):
 
 class BusinessRepoContract(RepoContract, Protocol):
     def save(self, business: BusinessDocument) -> None:
+        """
+        Store the business and raise its `revision` (on the given document
+        too) above the stored one.
+        """
+        raise NotImplementedError
+
+    def save_if_unchanged(self, business: BusinessDocument) -> bool:
+        """
+        Store the business only while the stored revision is still the one
+        this document carries (nobody saved since it was read), raising the
+        revision by one. False, and nothing stored, otherwise.
+        """
         raise NotImplementedError
 
     def get(self, business_id: BusinessId) -> BusinessDocument | None:

@@ -63,6 +63,9 @@ def build_business_router(
         DELETE /v1/businesses/{business_id}/members/{user_id}  owner: remove member
 
     The last owner of a business can be neither removed nor made staff (409).
+    A settings change carries the `revision` it was made from as
+    `expected_revision`; when someone saved the business since, nothing
+    changes and the answer is 409 with the reason `stale_revision`.
     """
 
     router = APIRouter(tags=["businesses"])

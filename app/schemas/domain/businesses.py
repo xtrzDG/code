@@ -9,6 +9,7 @@ from app.schemas.constants.niches import NicheKey
 from app.schemas.constants.users import BusinessMemberRole
 from app.schemas.typings.assistants.prefixed_id import AssistantVersionId
 from app.schemas.typings.businesses.constrained_integers import (
+    BusinessRevision,
     RecordingRetentionDays,
 )
 from app.schemas.typings.businesses.prefixed_id import BusinessId
@@ -46,6 +47,8 @@ class BusinessDocument(BaseDocument):
     Country-dependent values (time zone, currency, languages, data region) are
     filled from the country profile at creation and may be changed by the owner.
     `default_language` is the greeting language and must be one of `languages`.
+    `revision` grows with every save (the repository sets it): settings
+    changes made from an older revision are refused (optimistic concurrency).
     """
 
     id: BusinessId = Field(default_factory=BusinessId)
@@ -66,3 +69,4 @@ class BusinessDocument(BaseDocument):
     manager_contacts: list[ManagerContact] = Field(default_factory=list[ManagerContact])
     recording_retention_days: RecordingRetentionDays = RecordingRetentionDays(90)
     published_assistant_version_id: AssistantVersionId | None = None
+    revision: BusinessRevision = BusinessRevision(0)

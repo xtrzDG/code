@@ -43,3 +43,10 @@ class BusinessLinkKind(StrEnum):
     BOOKING_PAGE = "booking_page"
     DELIVERY = "delivery"
     WEBSITE = "website"
+
+
+class BusinessSettingsRefusalCode(StrEnum):
+    """Machine-readable reasons a settings change is refused (409)."""
+
+    # The change was made from an older revision: someone saved since.
+    STALE_REVISION = "stale_revision"

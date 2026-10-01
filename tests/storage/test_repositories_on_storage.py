@@ -63,6 +63,7 @@ from app.schemas.typings.bookings.constrained_integers import (
 )
 from app.schemas.typings.bookings.prefixed_id import ResourceId
 from app.schemas.typings.businesses.prefixed_id import BusinessId
+from app.schemas.typings.businesses.strings import BusinessName
 from app.schemas.typings.channels.strings import ChannelExternalId
 from app.schemas.typings.compliance.strings import AuditEntityName
 from app.schemas.typings.contacts.prefixed_id import ContactId
@@ -449,3 +450,32 @@ def test_field_lookups_find_documents_by_a_top_level_value(
     assert [contact.id for contact in found] == [first.id, third.id]
     assert contacts.list_by_field("phone_number", "+1") == []
     assert contacts.list_by_field("no_such_field", "+995555123456") == []
+
+
+def test_business_saves_raise_the_revision_and_stale_copies_are_refused(
+    collections: CollectionFactory,
+) -> None:
+    business_repo = BusinessRepository(collections(BusinessDocument, "businesses"))
+    business = build_business(GEORGIA, UserId())
+    business_repo.save(business)
+    first_tab = business_repo.get(business.id)
+    second_tab = business_repo.get(business.id)
+    assert first_tab is not None and second_tab is not None
+
+    first_tab.name = BusinessName("First tab")
+    is_first_saved = business_repo.save_if_unchanged(first_tab)
+    second_tab.name = BusinessName("Second tab")
+    is_second_saved = business_repo.save_if_unchanged(second_tab)
+
+    assert (is_first_saved, is_second_saved) == (True, False)
+    assert (first_tab.revision, second_tab.revision) == (2, 1)
+    stored = business_repo.get(business.id)
+    assert stored is not None
+    assert (stored.name, stored.revision) == ("First tab", 2)
+    # A plain save of a stale copy still never lowers the revision.
+    business_repo.save(second_tab)
+    assert second_tab.revision == 3
+    assert business_repo.save_if_unchanged(first_tab) is False
+    missing = build_business(ISRAEL, UserId())
+    assert business_repo.save_if_unchanged(missing) is False
+    assert business_repo.get(missing.id) is None
