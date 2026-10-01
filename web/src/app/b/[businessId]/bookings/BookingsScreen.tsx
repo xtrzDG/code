@@ -6,7 +6,7 @@ import { api } from "@/api/client";
 import { useApiMutation, useApiQuery } from "@/api/hooks";
 import { useBusiness } from "@/components/business/BusinessContext";
 import { IconCalendar, IconPlus } from "@/components/icons";
-import { CustomerName, RefreshButton } from "@/components/insights/common";
+import { CustomerName, RefreshButton, RefreshFailed } from "@/components/insights/common";
 import { ConfirmDialog } from "@/components/insights/ConfirmDialog";
 import { CustomerMessageModal } from "@/components/insights/CustomerMessageModal";
 import { todayIn } from "@/components/insights/dates";
@@ -159,6 +159,7 @@ export function BookingsScreen({ initialFilters }: { initialFilters: BookingFilt
           onChange={setFilters}
         />
         <p className="text-xs text-ink-subtle">{t("bookings.timeZoneNote", { timezone: business.timezone })}</p>
+        {bookings.error && bookings.data ? <RefreshFailed error={bookings.error} onRetry={bookings.reload} /> : null}
 
         {!rangeValid ? null : bookings.data === undefined ? (
           <Card>
@@ -183,6 +184,7 @@ export function BookingsScreen({ initialFilters }: { initialFilters: BookingFilt
           </Card>
         ) : (
           <BookingDays
+            key={bookingFiltersQuery(filters)}
             bookings={items}
             newestFirst={filters.range === "past"}
             isStay={isStay}

@@ -7,7 +7,14 @@ import { useApiMutation, useApiQuery } from "@/api/hooks";
 import { useBusiness, useBusinessFormat } from "@/components/business/BusinessContext";
 import { IconCheck, IconHandoff } from "@/components/icons";
 import { HandoffStatusBadge, HandoffUrgencyBadge, TestBadge } from "@/components/insights/Badges";
-import { CustomerName, IncludeTestToggle, PhoneLink, RefreshButton, ShowMore } from "@/components/insights/common";
+import {
+  CustomerName,
+  IncludeTestToggle,
+  PhoneLink,
+  RefreshButton,
+  RefreshFailed,
+  ShowMore,
+} from "@/components/insights/common";
 import { ConfirmDialog } from "@/components/insights/ConfirmDialog";
 import { formatRelative } from "@/components/insights/dates";
 import { isOpenHandoff } from "@/components/insights/handoffs";
@@ -119,6 +126,7 @@ export function HandoffsScreen({ initialFilters }: { initialFilters: HandoffFilt
           <IncludeTestToggle compact checked={filters.includeTest} onChange={(includeTest) => setFilters({ ...filters, includeTest })} />
         </div>
 
+        {handoffs.error && handoffs.data ? <RefreshFailed error={handoffs.error} onRetry={handoffs.reload} /> : null}
         {handoffs.data === undefined ? (
           <Card>
             {handoffs.error ? (

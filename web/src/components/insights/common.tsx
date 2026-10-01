@@ -4,7 +4,8 @@
 
 import type { ReactNode } from "react";
 
-import { Button, Checkbox, Spinner } from "@/components/ui";
+import { describeError } from "@/api/errors";
+import { Alert, Button, Checkbox, Spinner } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { cn } from "@/lib/cn";
 
@@ -93,5 +94,17 @@ export function DetailRow({ label, children }: { label: string; children: ReactN
       <dt className="text-sm text-ink-muted">{label}</dt>
       <dd className="min-w-0 text-sm text-ink">{children}</dd>
     </div>
+  );
+}
+
+/** A reload failed while older data is still shown: say so and offer to retry. */
+export function RefreshFailed({ error, onRetry }: { error: unknown; onRetry: () => void }) {
+  const { t } = useI18n();
+  return (
+    <Alert tone="warning" title={describeError(error, t).title}>
+      <button type="button" onClick={onRetry} className="font-medium text-accent hover:underline">
+        {t("common.retry")}
+      </button>
+    </Alert>
   );
 }

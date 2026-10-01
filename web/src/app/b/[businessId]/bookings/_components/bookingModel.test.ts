@@ -9,6 +9,7 @@ import {
   DEFAULT_BOOKING_FILTERS,
   groupBookingsByDate,
   isRangeValid,
+  limitDays,
   nightsOf,
   parseBookingFilters,
   rangeDates,
@@ -83,6 +84,17 @@ describe("grouping", () => {
     expect(groupBookingsByDate([booking("a", "2026-09-01", null), booking("b", "2026-09-02", null)], { newestFirst: true })[0]?.date).toBe(
       "2026-09-02",
     );
+  });
+
+  it("cuts grouped days to a number of bookings", () => {
+    const days = groupBookingsByDate([
+      booking("a", "2026-10-02", "10:00"),
+      booking("b", "2026-10-02", "11:00"),
+      booking("c", "2026-10-03", "12:00"),
+    ]);
+    expect(limitDays(days, 1).map((day) => day.bookings.map((item) => item.id))).toEqual([["a"]]);
+    expect(limitDays(days, 3).map((day) => day.bookings.map((item) => item.id))).toEqual([["a", "b"], ["c"]]);
+    expect(limitDays(days, 0)).toEqual([]);
   });
 
   it("counts nights of stays", () => {

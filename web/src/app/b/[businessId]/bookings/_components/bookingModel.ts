@@ -121,6 +121,20 @@ export function groupBookingsByDate(bookings: readonly BookingView[], options: {
   return options.newestFirst ? days.reverse() : days;
 }
 
+/** The first `limit` bookings of grouped days, in display order (for "show more"). */
+export function limitDays(days: readonly BookingDay[], limit: number): BookingDay[] {
+  const limited: BookingDay[] = [];
+  let left = limit;
+  for (const day of days) {
+    if (left <= 0) {
+      break;
+    }
+    limited.push({ date: day.date, bookings: day.bookings.slice(0, left) });
+    left -= day.bookings.length;
+  }
+  return limited;
+}
+
 export interface BookingActions {
   confirm: boolean;
   complete: boolean;

@@ -36,6 +36,7 @@ export function ConversationDetail({ conversationId }: { conversationId: string 
       }),
     [businessId, conversationId],
   );
+  // No auto-refresh here: every card view is written to the audit log.
 
   const backLink = (
     <Link

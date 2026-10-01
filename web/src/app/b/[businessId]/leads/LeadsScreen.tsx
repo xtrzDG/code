@@ -8,7 +8,15 @@ import { useApiMutation, useApiQuery } from "@/api/hooks";
 import { useBusiness, useBusinessFormat } from "@/components/business/BusinessContext";
 import { IconInbox } from "@/components/icons";
 import { ChannelBadge, LeadStatusBadge, LeadTypeBadge, TestBadge } from "@/components/insights/Badges";
-import { CustomerName, DetailRow, IncludeTestToggle, PhoneLink, RefreshButton, ShowMore } from "@/components/insights/common";
+import {
+  CustomerName,
+  DetailRow,
+  IncludeTestToggle,
+  PhoneLink,
+  RefreshButton,
+  RefreshFailed,
+  ShowMore,
+} from "@/components/insights/common";
 import { formatLocalDate, formatRelative } from "@/components/insights/dates";
 import { LEAD_STATUS, LEAD_STATUSES } from "@/components/insights/labels";
 import { takePage } from "@/components/insights/numbers";
@@ -105,6 +113,7 @@ export function LeadsScreen({ initialFilters }: { initialFilters: LeadFilters })
           <IncludeTestToggle compact checked={filters.includeTest} onChange={(includeTest) => setFilters({ ...filters, includeTest })} />
         </div>
 
+        {leads.error && leads.data ? <RefreshFailed error={leads.error} onRetry={leads.reload} /> : null}
         {leads.data === undefined ? (
           <Card>
             {leads.error ? <ErrorState error={leads.error} onRetry={leads.reload} /> : <LoadingBlock label={t("leads.loading")} />}

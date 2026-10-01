@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState, type FormEvent } from "react";
 
 import { useCountries } from "@/api/catalog";
@@ -9,9 +10,10 @@ import { useBusiness } from "@/components/business/BusinessContext";
 import { CHANNEL_LABELS, CUSTOMER_CHANNELS } from "@/components/insights/labels";
 import { withJsonBody } from "@/components/insights/requestBody";
 import type { BookingResult, ChannelKind, ManualBookingBody, ResourceView } from "@/components/insights/types";
-import { Button, Field, Input, Select, Textarea } from "@/components/ui";
+import { Alert, Button, Field, Input, Select, Textarea } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { countryFlag, countryName, formatCallingCode } from "@/lib/countries";
+import { businessPath } from "@/lib/navigation";
 
 import { bookingUnitFor, validateBookingForm, type BookingFormErrors, type BookingFormValues } from "./bookingModel";
 import { CustomerLanguageSelect } from "./CustomerLanguageSelect";
@@ -82,14 +84,30 @@ export function BookingForm({
 
   const country = countries.data?.countries.find((item) => item.country_code === business.country_code);
   const phoneHint = t("bookings.form.phoneHint", {
-    country: `${countryFlag(business.country_code)} ${countryName(business.country_code, locale)}`,
-    code: country ? formatCallingCode(country.calling_code) : "",
+    country: [
+      countryFlag(business.country_code),
+      countryName(business.country_code, locale),
+      country ? `(${formatCallingCode(country.calling_code)})` : null,
+    ]
+      .filter(Boolean)
+      .join(" "),
   });
   const partySize = Number(values.partySize);
   const nights = Number(values.nights);
 
   return (
     <form onSubmit={submit} noValidate className="space-y-5">
+      {activeResources.length === 0 ? (
+        <Alert tone="info">
+          <p>{t("bookings.form.noResources")}</p>
+          <Link
+            href={`${businessPath(businessId, "onboarding")}?step=booking_rules`}
+            className="mt-1 inline-block font-medium text-accent hover:underline"
+          >
+            {t("bookings.form.toProfile")}
+          </Link>
+        </Alert>
+      ) : null}
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label={t("bookings.form.contactName")} error={errors.contactName && t(errors.contactName)} required>
           {(control) => (

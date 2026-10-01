@@ -6,7 +6,7 @@ import { useMemo, useState, type ReactNode } from "react";
 import { api } from "@/api/client";
 import { useApiQuery } from "@/api/hooks";
 import { useBusiness } from "@/components/business/BusinessContext";
-import { RefreshButton } from "@/components/insights/common";
+import { RefreshButton, RefreshFailed } from "@/components/insights/common";
 import { todayIn } from "@/components/insights/dates";
 import { useAutoReload } from "@/components/insights/useAutoReload";
 import { replaceUrlQuery } from "@/components/insights/urlQuery";
@@ -90,6 +90,9 @@ export function ConversationsShell({ children }: { children: ReactNode }) {
           )}
         >
           <ConversationFiltersBar filters={filters} onChange={setFilters} />
+          {conversations.error && conversations.data ? (
+            <RefreshFailed error={conversations.error} onRetry={conversations.reload} />
+          ) : null}
           <ConversationList
             key={query}
             query={conversations}

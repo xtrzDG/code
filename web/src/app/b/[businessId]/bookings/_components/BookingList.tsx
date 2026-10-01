@@ -1,14 +1,16 @@
 "use client";
 
+import { useState } from "react";
+
 import { IconChevronRight } from "@/components/icons";
 import { BookingStatusBadge, ChannelBadge, TestBadge } from "@/components/insights/Badges";
-import { CustomerName, DetailRow, PhoneLink } from "@/components/insights/common";
+import { CustomerName, DetailRow, PhoneLink, ShowMore } from "@/components/insights/common";
 import { formatLocalDate, formatLocalTime } from "@/components/insights/dates";
 import { CHANNEL_LABELS } from "@/components/insights/labels";
 import type { BookingView } from "@/components/insights/types";
 import { useI18n } from "@/i18n/client";
 
-import { groupBookingsByDate, nightsOf } from "./bookingModel";
+import { groupBookingsByDate, limitDays, nightsOf } from "./bookingModel";
 
 /** "20:00–22:00" for slots, "3 nights · until Oct 6" for stays. */
 export function useBookingWhen() {
@@ -39,6 +41,8 @@ export function useBookingWhen() {
   };
 }
 
+const PAGE_SIZE = 50;
+
 export function BookingDays({
   bookings,
   newestFirst,
@@ -51,9 +55,12 @@ export function BookingDays({
   onOpen: (booking: BookingView) => void;
 }) {
   const { tp, locale } = useI18n();
+  const [pages, setPages] = useState(1);
+  const shown = Math.min(bookings.length, pages * PAGE_SIZE);
+  const days = limitDays(groupBookingsByDate(bookings, { newestFirst }), shown);
   return (
     <div className="space-y-4">
-      {groupBookingsByDate(bookings, { newestFirst }).map((day) => {
+      {days.map((day) => {
         const headingId = `bookings-day-${day.date}`;
         return (
           <section
@@ -75,6 +82,9 @@ export function BookingDays({
           </section>
         );
       })}
+      {bookings.length > PAGE_SIZE ? (
+        <ShowMore shown={shown} total={bookings.length} onMore={() => setPages((value) => value + 1)} />
+      ) : null}
     </div>
   );
 }
