@@ -680,6 +680,7 @@ class UseCasesContainer(containers.DeclarativeContainer):
         authorize_business_access=authorize_business_access_use_case,
         business_repo=repositories.business_repo,
         user_repo=repositories.user_repo,
+        subscription_repo=repositories.subscription_repo,
         language_registry=registries.language_registry,
         phone_number_parser=utilities.phone_number_parser,
         audit_log_repo=repositories.audit_log_repo,

@@ -7,6 +7,7 @@ from app.contracts.registries import LanguageRegistryContract
 from app.contracts.repositories import (
     AuditLogRepoContract,
     BusinessRepoContract,
+    SubscriptionRepoContract,
     UserRepoContract,
 )
 from app.contracts.transformer_contract import TransformerContract
@@ -71,7 +72,9 @@ class UpdateBusinessSettingsUseCase(
     number of any country for WhatsApp and SMS (stored as E.164, national
     formats read in the business country), an e-mail address for e-mail.
     The owner may only pause a live assistant and resume a paused one;
-    publishing (another module) makes a business live. Contact changes are
+    publishing (another module) makes a business live. The plan may be
+    chosen here until the business has a subscription; after that it is
+    changed in billing, which also changes the price. Contact changes are
     audited because they hold staff personal data.
     """
 
@@ -83,6 +86,7 @@ class UpdateBusinessSettingsUseCase(
         ],
         business_repo: BusinessRepoContract,
         user_repo: UserRepoContract,
+        subscription_repo: SubscriptionRepoContract,
         language_registry: LanguageRegistryContract,
         phone_number_parser: PhoneNumberParserContract,
         audit_log_repo: AuditLogRepoContract,
@@ -98,6 +102,7 @@ class UpdateBusinessSettingsUseCase(
         ] = authorize_business_access
         self._business_repo: BusinessRepoContract = business_repo
         self._user_repo: UserRepoContract = user_repo
+        self._subscription_repo: SubscriptionRepoContract = subscription_repo
         self._language_registry: LanguageRegistryContract = language_registry
         self._phone_number_parser: PhoneNumberParserContract = phone_number_parser
         self._audit_log_repo: AuditLogRepoContract = audit_log_repo
@@ -171,7 +176,12 @@ class UpdateBusinessSettingsUseCase(
             require_existing_timezone(changes.timezone)
             business.timezone = changes.timezone
 
-        if changes.plan_key is not None:
+        if changes.plan_key is not None and changes.plan_key is not business.plan_key:
+            if self._subscription_repo.list_by_business(business.id):
+                raise ConflictError(
+                    "The plan is part of the subscription; change it in billing."
+                )
+
             business.plan_key = changes.plan_key
 
         if changes.recording_retention_days is not None:

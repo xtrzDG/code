@@ -1,10 +1,11 @@
 import pytest
 
-from app.schemas.constants.billing import PlanKey
+from app.schemas.constants.billing import BillingPeriod, PlanKey, SubscriptionStatus
 from app.schemas.constants.businesses import BusinessStatus
 from app.schemas.constants.compliance import AuditAction
 from app.schemas.constants.handoffs import ManagerContactChannel
 from app.schemas.constants.users import LoginMethod
+from app.schemas.domain.billing import SubscriptionDocument
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.users import UserDocument
 from app.schemas.dto.businesses import (
@@ -24,6 +25,7 @@ from app.schemas.exceptions.application_errors import (
     UnsupportedLanguageError,
     ValidationFailedError,
 )
+from app.schemas.typings.billing.constrained_integers import MoneyAmountMinor
 from app.schemas.typings.businesses.constrained_integers import (
     RecordingRetentionDays,
 )
@@ -35,6 +37,7 @@ from app.schemas.typings.businesses.strings import (
 )
 from app.schemas.typings.handoffs.strings import ManagerName
 from app.schemas.typings.localization.constrained_strings import (
+    CurrencyCode,
     LanguageTag,
     TimezoneName,
 )
@@ -80,6 +83,44 @@ def contact(
         address=RawManagerContactAddress(address),
         language=None if language is None else LanguageTag(language),
     )
+
+
+def test_plan_of_a_subscribed_business_is_changed_in_billing_only() -> None:
+    testbed = build_accounts_testbed()
+    owner_id, business = georgian_restaurant(testbed)
+    now = testbed.clock.now_microseconds()
+    testbed.subscription_repo.save(
+        SubscriptionDocument(
+            business_id=business.id,
+            plan_key=business.plan_key,
+            billing_period=BillingPeriod.MONTHLY,
+            price_minor=MoneyAmountMinor(51_700),
+            currency_code=CurrencyCode("GEL"),
+            status=SubscriptionStatus.TRIALING,
+            period_start=now,
+            period_end=now,
+        )
+    )
+
+    unchanged = update(
+        testbed,
+        owner_id,
+        business.id,
+        BusinessSettingsChanges(plan_key=business.plan_key, city=CityName("Kutaisi")),
+    )
+    with pytest.raises(ConflictError, match="change it in billing"):
+        update(
+            testbed,
+            owner_id,
+            business.id,
+            BusinessSettingsChanges(plan_key=PlanKey.PLUS),
+        )
+
+    assert unchanged.plan_key is business.plan_key
+    assert unchanged.city == "Kutaisi"
+    stored = testbed.business_repo.get(business.id)
+    assert stored is not None
+    assert stored.plan_key is business.plan_key
 
 
 def test_owner_changes_profile_settings_and_others_stay() -> None:

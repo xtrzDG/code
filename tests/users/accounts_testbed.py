@@ -34,6 +34,7 @@ from app.gateways.http.users_routes import build_users_router
 from app.operators.pipeline_operator import PipelineOperator
 from app.orchestrators.use_case_orchestrator import UseCaseOrchestrator
 from app.pipelines.orchestrator_pipeline import OrchestratorPipeline
+from app.repositories.billing_repositories import SubscriptionRepository
 from app.repositories.booking_repositories import (
     BookingRepository,
     HandoffRepository,
@@ -73,6 +74,7 @@ from app.schemas.constants.localization import (
     TextDirection,
 )
 from app.schemas.constants.niches import LaunchWave, NicheKey
+from app.schemas.domain.billing import SubscriptionDocument
 from app.schemas.domain.bookings import BookingDocument, LeadDocument
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.compliance import AuditLogEntryDocument, DpaAcceptanceDocument
@@ -601,6 +603,11 @@ class AccountsTestbed:
         self.handoff_repo = HandoffRepository(
             InMemoryDocumentCollectionAdapter[HandoffDocument](HandoffDocument)
         )
+        self.subscription_repo = SubscriptionRepository(
+            InMemoryDocumentCollectionAdapter[SubscriptionDocument](
+                SubscriptionDocument
+            )
+        )
 
         user_view_transformer = UserViewTransformer()
         business_view_transformer = BusinessViewTransformer()
@@ -671,6 +678,7 @@ class AccountsTestbed:
             authorize_business_access=self.authorize_business_access,
             business_repo=self.business_repo,
             user_repo=self.user_repo,
+            subscription_repo=self.subscription_repo,
             language_registry=self.language_registry,
             phone_number_parser=self.phone_parser,
             audit_log_repo=self.audit_log_repo,
