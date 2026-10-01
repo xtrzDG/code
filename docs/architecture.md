@@ -10,7 +10,7 @@
 | В ТЗ | Здесь | Почему |
 | --- | --- | --- |
 | Next.js API-роуты (вебхуки, инструменты) | FastAPI в этом репозитории | требование владельца: бэкенд на Python по шаблону copier |
-| Сайт, анкета, кабинет на Next.js | не в этом репозитории | интерфейс ходит в HTTP API бэкенда |
+| Сайт, анкета, кабинет на Next.js | кабинет на Next.js в `web/` | ходит в HTTP API бэкенда через свои серверные маршруты; токен только в httpOnly cookie |
 | Supabase Postgres (ЕС) + RLS | контракт документного хранилища; in-memory для тестов и Postgres (ЕС) с изоляцией по `business_id` | use case не зависят от базы |
 | Node-воркер + pg-boss | Python-воркер с очередью в Postgres | один язык и одни use case для API и фоновых задач |
 | packages/core, brain, channels, niches, evals | роли шаблона: use_cases, orchestrators, registries, adapters… | `services` запрещён шаблоном |
