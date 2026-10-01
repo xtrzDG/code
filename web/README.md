@@ -1,8 +1,10 @@
 # Assistant Workshop — owner cabinet (web)
 
 The owner cabinet of the AI front-line assistant: sign-in by phone (any country)
-or e-mail, businesses, the six-step profile wizard and the business sections of
-concept section 8. Next.js (App Router) + TypeScript (strict) + Tailwind CSS v4.
+or e-mail, businesses, the six-step profile wizard, every business section of
+concept section 8 (dashboard, conversations, bookings, leads, handoffs,
+knowledge, assistant, channels, billing, settings) and the platform admin.
+Next.js (App Router) + TypeScript (strict) + Tailwind CSS v4.
 Interface languages: Georgian (`ka`), Russian (`ru`), English (`en`).
 
 The browser never talks to the Python API directly and never sees the bearer
@@ -48,26 +50,81 @@ forwards `X-Forwarded-For`, so the audit log keeps the client's address.
 | `npm run lint` | ESLint (`eslint-config-next` + strict project rules), zero warnings allowed |
 | `npm run typecheck` | `next typegen` (route types) + `tsc --noEmit` |
 | `npm test` | Vitest unit tests (`src/**/*.test.ts`) |
+| `npm run e2e` | Playwright end-to-end tests against the real API (see [End-to-end tests](#end-to-end-tests)) |
 | `npm run gen:api` | Regenerate `openapi.json` from the backend (`uv run python -m scripts.export_openapi`) and `src/api/schema.d.ts` from it (openapi-typescript). Run after any backend API change and commit both files. |
 
-All of `npm run lint && npm run typecheck && npm test && npm run build` must pass.
+All of `npm run lint && npm run typecheck && npm test && npm run build` must pass
+(CI job "web"); the CI job "e2e" then runs `npm run e2e`.
+
+## End-to-end tests
+
+`web/e2e/` drives the built cabinet in Chromium against the real Python API:
+
+```bash
+cd web
+npx playwright install chromium   # once (CI: --with-deps)
+npm run e2e                       # builds the cabinet, starts API + cabinet, runs e2e/*.spec.ts
+E2E_SKIP_BUILD=1 npm run e2e      # reuse the last `next build`
+npm run e2e -- onboarding         # one file
+```
+
+- `e2e/playwright.config.ts` starts the API from the repository root
+  (`uv run uvicorn …`, `APP_ENV=development`, in-memory storage, login-code
+  providers blanked) with its output in `e2e/.artifacts/api.log`, and the
+  cabinet with `next build && next start`. Each run starts from empty data.
+- Sign-in codes are read from that log (`e2e/support/login-codes.ts`); the
+  `account` and `owner` fixtures (`e2e/support/fixtures.ts`) sign up through
+  the API and put the session cookie into the browser, so only the sign-in
+  tests type codes.
+- Every test fails on a browser console error or an uncaught exception;
+  `consoleErrors.allow(/…/)` accepts one a test provokes on purpose.
+- Selectors are roles and labels with texts from the cabinet's own
+  dictionaries (`e2e/support/messages.ts`), so rewording a text does not break
+  a test. Prefer `getByRole`/`getByLabel`; avoid CSS classes.
+- Scenarios: sign-in with a German number and with e-mail (and a wrong code),
+  a business in Turkey with Turkish, English and Arabic, a failed save shown
+  above the open dialog, the six wizard steps, every section from the sidebar
+  and from the phone menu (no sideways scrolling at 390 px), switching the
+  interface language ru/ka/en, the website chat demo page of the API.
+
+| Variable | Default | Meaning |
+| --- | --- | --- |
+| `E2E_API_PORT` / `E2E_WEB_PORT` | `8010` / `3010` | Ports of the API and the cabinet under test |
+| `E2E_SKIP_BUILD` | — | `1`: start the existing `.next` build |
+| `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH` | — | A Chromium already on the machine instead of Playwright's download (the suite pins `@playwright/test` 1.56.1, Chromium 141) |
+
+Failures leave screenshots and traces in `e2e/.artifacts/results/`
+(`npx playwright show-trace <trace.zip>`); CI uploads them with the HTML report
+and the API log as the `e2e-report` artifact.
 
 ## Structure
 
 ```text
 web/
   openapi.json                 API description exported from the backend (generated)
+  e2e/                         Playwright end-to-end tests (playwright.config.ts, *.spec.ts, support/)
   src/
     proxy.ts                   runs before pages: sign-in redirects, current path header, language cookie
     app/                       routes (App Router)
       layout.tsx               <html lang>, I18nProvider, ToastProvider
       login/                   sign-in by phone (country picker) or e-mail, 6-digit code
-      businesses/              list and creation of businesses
+      businesses/              list and creation of businesses (a new account gets the form at once)
       b/[businessId]/          one business: layout.tsx loads it + the user and renders the sidebar
-        onboarding/            the six-step profile wizard (+ _components/)
-        dashboard/ conversations/ bookings/ leads/ handoffs/
-        knowledge/ assistant/ channels/ billing/ settings/   placeholders to replace
-      admin/                   platform admin (404 for everyone else)
+        onboarding/            the six-step profile wizard (?step=…) and "what to add" (+ _components/)
+        dashboard/             next step, KPI tiles for a period (?period=), package usage, breakdowns
+        conversations/         list + detail side by side (layout.tsx), [conversationId]/ on phones
+        bookings/              bookings by day, manual booking with free slots, details, move, cancel
+        leads/                 requests by status, status changes, details
+        handoffs/              open/resolved handoffs by urgency, resolve
+        knowledge/             items (layout.tsx: tabs) + questions/ (unanswered), import/ (menu
+                               photo, PDF or link), resources/ (bookable resources, special days)
+        assistant/             test chat (layout.tsx: live version + tabs), versions/,
+                               versions/[versionId]/ (go-live checklist, autotests, publish, rollback)
+        channels/              chat channels, website chat code, call forwarding, Google Calendar,
+                               staff Telegram link
+        billing/               plan, trial, usage, plans of the country, invoices, payment
+        settings/              tabs in the URL hash: general, team, notifications, privacy, audit
+      admin/                   platform admin: clients (filters, sorts) and clients/[businessId]/
       api/
         auth/start|verify|logout|expired   sign-in route handlers (cookie handling)
         backend/[...path]      BFF proxy: /api/backend/v1/... -> BACKEND_URL/v1/...
@@ -86,28 +143,59 @@ web/
       backend.ts               BACKEND_URL, cookies, header allow-lists, CSRF check
       relay.ts                 streaming relay used by the route handlers
     i18n/                      config.ts (locales, negotiation), translate.ts, server.ts, client.tsx
-      messages/en.ts ru.ts ka.ts   dictionaries (English is the reference)
+      messages/en.ts ru.ts ka.ts   shared texts (common, auth, nav, onboarding, errors …); English is the reference
+      messages/sections/       section texts, spread into en/ru/ka: insights.ts (dashboard, conversations,
+                               bookings, leads, handoffs), content.ts (knowledge, assistant),
+                               workspace.ts (channels, billing, settings, admin)
     components/
-      ui/                      Button, ButtonLink, Input, Select, Textarea, Checkbox, Radio, Field,
-                               Fieldset, Card, Table, Badge, Modal, Toast, EmptyState, ErrorState,
-                               Spinner, LoadingBlock, PageHeader, Alert (import from "@/components/ui")
-      shell/                   ShellFrame (sidebar + mobile drawer), BusinessShell, AdminShell, TopBar
+      ui/                      the UI kit (import from "@/components/ui"): Button, ButtonLink, Input,
+                               Select, Textarea, Checkbox, Radio, Field, Fieldset, Card, Table, Badge,
+                               Modal, Drawer, useModalDialog, Toast, EmptyState, ErrorState, Spinner,
+                               LoadingBlock, PageHeader, Alert
+      shell/                   ShellFrame (sidebar + phone menu), BusinessShell, AdminShell, TopBar
       business/                BusinessContext (useBusiness, useBusinessFormat), status badges,
-                               SectionPlaceholder
+                               sectionMetadata (page titles)
+      insights/                shared by dashboard … handoffs: status badges and label maps, segmented
+                               control, confirm and customer-message dialogs, show-more/refresh,
+                               business-local dates, replaceUrlQuery, useAutoReload
+      content/                 shared by knowledge and assistant: SectionTabs (route tabs), Tabs,
+                               ConfirmDialog, Switch, icons, subPageMetadata
+      workspace/               shared by channels, billing, settings, admin: CopyButton, ConfirmDialog
+                               with typed confirmation, InlineError, hash Tabs (useHashTab), UsageMeter,
+                               Facts, OwnerOnly notes, channel names, helpers
       BusinessSwitcher.tsx LanguageSwitcher.tsx CountrySelect.tsx icons.tsx
-    lib/                       pure helpers (unit-tested): navigation, format (Intl), countries
-                               (phone/country), hours (opening hours), wizard, validation (zod), cn
+    lib/                       pure helpers with unit tests (*.test.ts): navigation (sections, paths,
+                               safeNextPath), format (Intl, money units), countries (phone/country),
+                               hours (opening hours), wizard (profile answers), knowledge, resources,
+                               assistant, validation (zod), classMerge (className overrides), cn
 ```
+
+## Sections
+
+| Section | Path | What the owner does there |
+| --- | --- | --- |
+| Profile | `onboarding?step=…` | Six steps (niche and languages, contacts and hours, offer, booking rules, FAQ and handoff, channels), each saved on its own; the "what to add" summary opens the full list in a side panel |
+| Dashboard | `dashboard?period=…` | The next step for the business status, KPI tiles, package minutes and dialogs, languages/channels/handoff reasons |
+| Conversations | `conversations[/{id}]` | Filters kept in the URL, transcript with tool calls, linked bookings, leads and handoffs |
+| Bookings | `bookings` | Day groups, manual booking with free slots, confirm / complete / no-show / move / cancel and the customer text |
+| Leads | `leads` | Status tabs, inline status change, details |
+| Handoffs | `handoffs` | Open first by urgency, resolve, call and conversation links |
+| Knowledge | `knowledge`, `/questions`, `/import`, `/resources` | Items and search, unanswered questions to FAQ, menu import with review, resources and special days |
+| Assistant | `assistant`, `/versions`, `/versions/{id}` | Test chat, versions, go-live checklist, autotests, publish and rollback |
+| Channels | `channels` | Connect messengers, website chat snippet, call forwarding codes, Google Calendar, staff Telegram link |
+| Billing | `billing` | Trial, plan change, usage meters, invoices, payment (owners only) |
+| Settings | `settings#general`, `#team`, `#notifications`, `#privacy`, `#audit` | Business settings and pause, team, manager contacts, data processing agreement and customer data, audit log |
+| Admin | `/admin`, `/admin/clients/{id}` | Platform admins: all clients, health, opening a client's cabinet |
 
 ## Conventions
 
 ### Adding a business page
 
-1. Create `src/app/b/[businessId]/<section>/page.tsx` (replace the placeholder
-   for an existing section). The section's sidebar entry already exists; a new
-   section is added to `BUSINESS_SECTIONS` and `BUSINESS_SECTION_LABELS` in
-   `src/lib/navigation.ts` and to `SECTION_ICONS` in
-   `src/components/shell/BusinessShell.tsx`.
+1. Every section of concept section 8 already has its page; extend it in its
+   folder. A new section gets `src/app/b/[businessId]/<section>/page.tsx`, an
+   entry in `BUSINESS_SECTIONS` and `BUSINESS_SECTION_LABELS`
+   (`src/lib/navigation.ts`) and an icon in `SECTION_ICONS`
+   (`src/components/shell/BusinessShell.tsx`); the e2e suite then opens it too.
 2. Keep `page.tsx` a small Server Component: metadata + one client screen.
 
    ```tsx
@@ -134,7 +222,29 @@ web/
 4. Start the screen with `<PageHeader title=… description=… actions=… />`, use
    `Card`, `Table`, `Badge`, `EmptyState`, `ErrorState`, `LoadingBlock` from
    `@/components/ui`. Owner-only actions: hide or disable them unless `isOwner`
-   (the API answers 403 anyway).
+   (the API answers 403 anyway). Reuse the section folders in `components/`
+   (`insights`, `content`, `workspace`) before writing another dialog or badge.
+5. Filters and tabs that belong in the address: write the query with
+   `replaceUrlQuery` (`components/insights/urlQuery.ts`) or
+   `window.history.replaceState(null, "", url)` and read it with
+   `useSearchParams()`. Never pass `window.history.state`: it carries Next's
+   own marker and the router then ignores the change.
+
+### UI kit notes
+
+- `Modal` and `Drawer` (side panel) are native modal `<dialog>`s driven by
+  `open`. `onClose` runs only when the person closes them (Escape, close
+  button, backdrop), not when `open` turns false, so one dialog can replace
+  another. Own `<dialog>`s use `useModalDialog(open, onClose)` for the same.
+- Toasts move into the topmost open modal dialog, so a failed save inside a
+  dialog is visible and can be dismissed.
+- `Alert`'s `action` sits beside the text when the alert is wide and under it
+  when it is narrow (a container query).
+- `className` on `Button`, `ButtonLink`, `Input` and `Textarea` replaces the
+  component's own width, height, padding, radius, font size and colour
+  classes of the same kind (`w-40`, `text-danger`, `hover:bg-…`; see
+  `lib/classMerge.ts`). Destructive quiet buttons: `variant="danger-ghost"`.
+- Customer texts (names, messages, questions) get `dir="auto"`.
 
 ### Calling the API
 
@@ -192,10 +302,16 @@ and `conflict`.
 
 ### Translations
 
-- All UI text lives in `src/i18n/messages/{en,ru,ka}.ts`. English is the
-  reference; `ru` and `ka` are typed as `Messages`, so a key added to `en.ts`
+- Shared texts (common, auth, nav, pages, onboarding, errors, validation) live
+  in `src/i18n/messages/{en,ru,ka}.ts`; section texts in
+  `src/i18n/messages/sections/{insights,content,workspace}.ts`, whose
+  `*En`/`*Ru`/`*Ka` objects are spread into those files. English is the
+  reference; `ru` and `ka` are typed as `Messages`, so a key added in English
   and missing in another language fails `npm run typecheck` (and a unit test).
   At runtime a missing text falls back to English, then to the key.
+- Top-level keys are namespaces and must not clash between the files. An
+  object with a key named `other` is read as plural forms, so do not use
+  `other` as an ordinary key (e.g. `leads.type.otherRequest`).
 - Client Components: `const { t, tp, locale } = useI18n();` —
   `t("bookings.title")`, `t("onboarding.stepOf", { number: 2, total: 6 })`,
   plurals `tp("onboarding.gaps.times", count)` with Intl plural categories
@@ -203,8 +319,9 @@ and `conflict`.
 - Server Components: `const { t } = await getI18n();` (`@/i18n/server`).
 - Keys are checked by TypeScript (`MessageKey`); for keys built at runtime
   keep a `Record<EnumValue, MessageKey>` map (see `BusinessStatusBadge.tsx`).
-- Add a section's texts under its own namespace (`bookings.*`, `leads.*`),
-  sidebar labels under `nav.*`, page descriptions under `pages.*`.
+- Add a section's texts under its own namespace (`bookings.*`, `leads.*`) in
+  its section file, sidebar labels under `nav.*`, page descriptions under
+  `pages.*`.
 - Pass `language: locale` to API calls that return display texts (catalog,
   wizard, gaps); the BFF also sends `Accept-Language` with the interface language.
 - Dates, times, numbers and money: Intl only (`src/lib/format.ts`,

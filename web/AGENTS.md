@@ -15,8 +15,9 @@ API, translations). In short:
 
 - Browser code calls the API only through `api` from `@/api/client`
   (the BFF at `/api/backend/*`); never `BACKEND_URL`, never the token.
-- Every UI text goes into `src/i18n/messages/en.ts`, `ru.ts` and `ka.ts`
-  (Georgian, Russian, English); no hard-coded strings in components.
+- Every UI text goes into the dictionaries in Georgian, Russian and English:
+  shared texts in `src/i18n/messages/en.ts`, `ru.ts`, `ka.ts`, section texts
+  in `src/i18n/messages/sections/*.ts`; no hard-coded strings in components.
 - Dates, times and money: Intl helpers in `src/lib/format.ts` /
   `useBusinessFormat()`, in the business time zone and currency. API
   timestamps are microseconds, prices are minor units.
@@ -24,4 +25,5 @@ API, translations). In short:
   `src/app/globals.css`.
 - After a backend API change: `npm run gen:api` and commit `openapi.json`
   and `src/api/schema.d.ts`.
-- Before committing: `npm run lint && npm run typecheck && npm test && npm run build`.
+- Before committing: `npm run lint && npm run typecheck && npm test && npm run build`;
+  after changing a flow, also `npm run e2e` (Playwright, see README).
