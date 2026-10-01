@@ -11,7 +11,10 @@ from app.schemas.typings.bookings.booleans import (
 )
 from app.schemas.typings.bookings.constrained_strings import CalendarSyncErrorSummary
 from app.schemas.typings.bookings.strings import (
+    CalendarAuthorizationCode,
+    CalendarAuthorizationState,
     CalendarDisplayName,
+    CalendarProviderErrorCode,
     ExternalCalendarId,
 )
 from app.schemas.typings.businesses.prefixed_id import BusinessId
@@ -21,14 +24,27 @@ class CalendarConnectionOutcome(ImmutableDTO):
     """
     How the OAuth callback ended: the new connection, or why it failed.
 
-    `business_id` is known whenever the callback carried a state we issued
-    (even an expired or used one), so the owner can be sent back to that
-    business's Channels page; it is None for an unknown state.
+    `business_id` is known whenever the callback carried a state the caller
+    was issued (even an expired or used one), so the owner can be sent back
+    to that business's Channels page; it is None for an unknown state or
+    another user's state.
     """
 
     business_id: BusinessId | None = None
     connection: CalendarConnectionView | None = None
     failure: CalendarConnectionFailure | None = None
+
+
+class CompleteCalendarConnectionRequest(ImmutableDTO):
+    """
+    The values Google put on the callback URL, which the cabinet sends on
+    behalf of the signed-in owner who started connecting: the state we
+    issued and Google's code, or Google's error instead of a code.
+    """
+
+    state: CalendarAuthorizationState | None = None
+    code: CalendarAuthorizationCode | None = None
+    error: CalendarProviderErrorCode | None = None
 
 
 class CalendarConnectionStatusQuery(ImmutableDTO):
@@ -43,7 +59,8 @@ class CalendarConnectionStatusView(ImmutableDTO):
     never returned.
 
     `is_configured` tells whether this server can connect Google Calendar
-    at all (Google OAuth credentials and APP_BASE_URL are set). The sync
+    at all (Google OAuth credentials, APP_BASE_URL and CABINET_BASE_URL are
+    set). The sync
     error is a short provider reason; it clears after the next booking that
     syncs.
     """

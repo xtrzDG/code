@@ -554,9 +554,11 @@ class CalendarConnectUrlView(ImmutableDTO):
 class CompleteCalendarConnectionCommand(ImmutableDTO):
     """
     OAuth callback values: the state we issued and Google's code, or the
-    error Google reports instead of a code (the owner declined).
+    error Google reports instead of a code (the owner declined), brought
+    back by the signed-in user who must be the one that started the flow.
     """
 
+    user_id: UserId
     state: CalendarAuthorizationState | None = None
     code: CalendarAuthorizationCode | None = None
     provider_error: CalendarProviderErrorCode | None = None

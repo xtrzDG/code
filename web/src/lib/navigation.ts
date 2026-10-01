@@ -40,7 +40,7 @@ export const LOGIN_PATH = "/login";
 export const ADMIN_PATH = "/admin";
 
 /** Pages that need a session (the proxy sends visitors to /login). */
-const PROTECTED_PREFIXES = [HOME_PATH, "/b/", ADMIN_PATH] as const;
+const PROTECTED_PREFIXES = [HOME_PATH, "/b/", ADMIN_PATH, "/integrations/"] as const;
 
 export function isProtectedPath(pathname: string): boolean {
   return PROTECTED_PREFIXES.some(
@@ -63,12 +63,28 @@ export function sectionFromPathname(pathname: string): BusinessSection | null {
   return root === "b" && isBusinessSection(section) ? section : null;
 }
 
+/** Base used only to check that a path cannot leave the site. */
+const SAME_SITE_PROBE = "https://same-site.invalid";
+
+/** Control characters: the URL parser silently drops tab, LF and CR ("/\t/evil" is "//evil"). */
+const CONTROL_CHARACTERS = /[\u0000-\u001F\u007F]/;
+
 /**
  * A same-site path to return to after signing in. Anything else (absolute
- * URLs, protocol-relative "//evil", backslashes) falls back to the home page.
+ * URLs, protocol-relative "//evil", backslashes, control characters, or a
+ * path the URL parser resolves to another origin) falls back to the home page.
  */
 export function safeNextPath(value: string | null | undefined, fallback: string = HOME_PATH): string {
-  if (!value || !value.startsWith("/") || value.startsWith("//") || value.includes("\\")) {
+  if (
+    !value ||
+    !value.startsWith("/") ||
+    value.startsWith("//") ||
+    value.includes("\\") ||
+    CONTROL_CHARACTERS.test(value)
+  ) {
+    return fallback;
+  }
+  if (new URL(value, SAME_SITE_PROBE).origin !== SAME_SITE_PROBE) {
     return fallback;
   }
   if (value === LOGIN_PATH || value.startsWith(`${LOGIN_PATH}?`) || value.startsWith("/api/")) {

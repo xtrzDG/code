@@ -15,6 +15,9 @@ from app.gateways.http.error_responses import install_error_handlers
 from app.gateways.http.operations_routes import (
     GOOGLE_CALENDAR_CALLBACK_PATH as ROUTE_CALLBACK_PATH,
 )
+from app.gateways.http.operations_routes import (
+    GOOGLE_CALENDAR_COMPLETE_PATH as COMPLETE_PATH,
+)
 from app.gateways.http.operations_routes import build_operations_router
 from app.gateways.http.user_authentication import build_current_user_dependency
 from app.operators.pipeline_operator import PipelineOperator
@@ -243,9 +246,10 @@ def test_openapi_schema_lists_every_route() -> None:
 
     paths = set(api.application.openapi()["paths"])
 
-    assert len(paths) == 15
+    assert len(paths) == 16
     assert "/v1/businesses/{business_id}/bookings/{booking_id}/reschedule" in paths
     assert GOOGLE_CALENDAR_CALLBACK_PATH in paths
+    assert COMPLETE_PATH in paths
 
 
 def test_openapi_schema_describes_every_json_body() -> None:
@@ -504,9 +508,16 @@ def callback(api: Api, **params: str) -> Response:
     return api.client.get(ROUTE_CALLBACK_PATH, params=params, follow_redirects=False)
 
 
+def complete(api: Api, token: str | None = OWNER_TOKEN, **body: str) -> Response:
+    return api.client.post(
+        COMPLETE_PATH,
+        json=body,
+        headers={} if token is None else {"Authorization": f"Bearer {token}"},
+    )
+
+
 def test_google_calendar_connection_routes() -> None:
     api = Api()
-    channels_url = f"{CABINET_URL}/b/{api.business.id}/channels"
 
     assert ROUTE_CALLBACK_PATH == GOOGLE_CALENDAR_CALLBACK_PATH
     staff = api.get("/integrations/google-calendar/connect-url")
@@ -525,25 +536,25 @@ def test_google_calendar_connection_routes() -> None:
         "last_sync_error_at": None,
     }
 
-    denied = callback(api, error="access_denied", state=start_consent(api))
-    assert denied.status_code == 303
-    assert denied.headers["location"] == (
-        f"{channels_url}?calendar=error&reason=access_denied"
-    )
-    unknown = callback(api)
-    assert unknown.status_code == 303
-    assert unknown.headers["location"] == (
-        f"{CABINET_URL}/businesses?calendar=error&reason=link_expired"
-    )
+    denied = complete(api, error="access_denied", state=start_consent(api))
+    assert denied.status_code == 200
+    assert denied.json() == {
+        "business_id": str(api.business.id),
+        "connection": None,
+        "failure": "access_denied",
+    }
+    unknown = complete(api)
+    assert unknown.json()["business_id"] is None
+    assert unknown.json()["failure"] == "link_expired"
     state = start_consent(api)
-    connected = callback(api, code="good-code", state=state)
-    assert connected.status_code == 303, connected.text
-    assert connected.headers["location"] == f"{channels_url}?calendar=connected"
+    connected = complete(api, code="good-code", state=state)
+    assert connected.status_code == 200, connected.text
+    assert connected.json()["business_id"] == str(api.business.id)
+    assert connected.json()["failure"] is None
+    assert connected.json()["connection"]["calendar_id"] == "primary"
     assert api.connection_repo.get_by_business(api.business.id) is not None
-    replayed = callback(api, code="good-code", state=state)
-    assert replayed.headers["location"] == (
-        f"{channels_url}?calendar=error&reason=link_expired"
-    )
+    replayed = complete(api, code="good-code", state=state)
+    assert replayed.json()["failure"] == "link_expired"
 
     status = api.get("/integrations/google-calendar").json()
     assert status["is_connected"] is True
@@ -570,14 +581,54 @@ def test_google_calendar_connection_routes() -> None:
     assert api.get("/integrations/google-calendar").json()["is_connected"] is False
 
 
+def test_google_calendar_callback_only_forwards_to_the_cabinet() -> None:
+    api = Api()
+    state = start_consent(api)
+
+    forwarded = callback(api, code="good-code", state=state, error=" ")
+
+    assert forwarded.status_code == 303
+    assert forwarded.headers["location"] == (
+        f"{CABINET_URL}/integrations/google-calendar/callback?"
+        f"code=good-code&state={state}"
+    )
+    # Nothing was exchanged: the public URL cannot tell who brought it back.
+    assert api.connection_repo.get_by_business(api.business.id) is None
+    assert not any(
+        request.url.host == "oauth2.googleapis.com" for request in api.google.requests
+    )
+    assert complete(api, code="good-code", state=state).json()["failure"] is None
+
+
+def test_google_calendar_completion_is_bound_to_the_user_who_started_it() -> None:
+    api = Api()
+    state = start_consent(api)
+
+    anonymous = complete(api, token=None, code="good-code", state=state)
+    stranger = complete(api, token=STRANGER_TOKEN, code="good-code", state=state)
+
+    assert anonymous.status_code == 401
+    assert stranger.status_code == 200
+    assert stranger.json() == {
+        "business_id": None,
+        "connection": None,
+        "failure": "link_expired",
+    }
+    assert api.connection_repo.get_by_business(api.business.id) is None
+    assert not any(
+        request.url.host == "oauth2.googleapis.com" for request in api.google.requests
+    )
+    owner = complete(api, code="good-code", state=state)
+    assert owner.json()["failure"] is None
+    assert api.connection_repo.get_by_business(api.business.id) is not None
+
+
 def test_google_calendar_callback_without_a_cabinet_address_shows_a_page() -> None:
     api = Api(cabinet_base_url=None)
 
-    connected = callback(api, code="good-code", state=start_consent(api))
-    declined = callback(api, error="access_denied", state=start_consent(api))
+    page = callback(api, code="good-code", state=start_consent(api))
 
-    assert connected.status_code == 200
-    assert connected.headers["content-type"].startswith("text/html")
-    assert "Google Calendar is connected" in connected.text
-    assert declined.status_code == 400
-    assert "access_denied" in declined.text
+    assert page.status_code == 400
+    assert page.headers["content-type"].startswith("text/html")
+    assert "CABINET_BASE_URL" in page.text
+    assert api.connection_repo.get_by_business(api.business.id) is None

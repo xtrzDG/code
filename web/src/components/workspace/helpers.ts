@@ -2,6 +2,16 @@
  * Pure helpers shared by the channels, billing, settings and admin pages.
  */
 
+/** A URL hash without the leading "#", percent-decoded; "" when its escapes are malformed (e.g. "#%"). */
+export function decodeHash(hash: string): string {
+  const raw = hash.replace(/^#/, "");
+  try {
+    return decodeURIComponent(raw);
+  } catch {
+    return "";
+  }
+}
+
 /** Whether the typed confirmation matches (spaces around it and case are ignored). */
 export function isConfirmationTyped(typed: string, expected: string): boolean {
   const target = expected.trim();

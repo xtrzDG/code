@@ -11,6 +11,7 @@ import {
   isCrossSiteRequest,
   pickResponseHeaders,
   sanitizeRequestId,
+  trustedForwardedFor,
 } from "./backend";
 
 describe("BFF path and headers", () => {
@@ -28,17 +29,27 @@ describe("BFF path and headers", () => {
       cookie: "aw_session=secret",
       "content-type": "application/json",
       "accept-language": "de",
-      "x-forwarded-for": "203.0.113.5",
+      "x-forwarded-for": "203.0.113.77, 198.51.100.9",
       host: "cabinet.example",
     });
     const headers = buildUpstreamHeaders(incoming, { token: "tok", locale: "ka", requestId: "r1" });
     expect(headers.get("authorization")).toBe("Bearer tok");
     expect(headers.get("accept-language")).toBe("ka, en;q=0.5");
     expect(headers.get("content-type")).toBe("application/json");
-    expect(headers.get("x-forwarded-for")).toBe("203.0.113.5");
+    // The browser's own X-Forwarded-For could be forged: dropped by default.
+    expect(headers.get("x-forwarded-for")).toBeNull();
     expect(headers.get("x-request-id")).toBe("r1");
     expect(headers.get("cookie")).toBeNull();
     expect(headers.get("host")).toBeNull();
+  });
+
+  it("forwards only the client address the cabinet's own proxies added", () => {
+    const incoming = new Headers({ "x-forwarded-for": "203.0.113.77, 198.51.100.9" });
+    expect(trustedForwardedFor(incoming, { TRUSTED_PROXY_HOPS: "1" })).toBe("198.51.100.9");
+    expect(trustedForwardedFor(incoming, { TRUSTED_PROXY_HOPS: "2" })).toBe("203.0.113.77, 198.51.100.9");
+    expect(trustedForwardedFor(incoming, {})).toBeNull();
+    expect(trustedForwardedFor(incoming, { TRUSTED_PROXY_HOPS: "x" })).toBeNull();
+    expect(trustedForwardedFor(new Headers(), { TRUSTED_PROXY_HOPS: "1" })).toBeNull();
   });
 
   it("passes response headers the browser needs", () => {
@@ -107,6 +118,12 @@ describe("navigation", () => {
     expect(safeNextPath("/\\evil.example")).toBe("/businesses");
     expect(safeNextPath("/login?next=/x")).toBe("/businesses");
     expect(safeNextPath(null)).toBe("/businesses");
+    // The URL parser drops tab, LF and CR, so "/\t/evil" would become "//evil".
+    expect(safeNextPath("/\t/evil.example")).toBe("/businesses");
+    expect(safeNextPath("/\n/evil.example")).toBe("/businesses");
+    expect(safeNextPath("/\r/evil.example")).toBe("/businesses");
+    expect(safeNextPath("/b/x\u0000")).toBe("/businesses");
+    expect(loginPath({ next: "/\t/evil.example", reason: "expired" })).toBe("/login?reason=expired");
   });
 
   it("builds sign-in links", () => {
@@ -118,6 +135,7 @@ describe("navigation", () => {
   it("knows protected pages and business sections", () => {
     expect(isProtectedPath("/businesses")).toBe(true);
     expect(isProtectedPath("/b/x/dashboard")).toBe(true);
+    expect(isProtectedPath("/integrations/google-calendar/callback")).toBe(true);
     expect(isProtectedPath("/admin")).toBe(true);
     expect(isProtectedPath("/login")).toBe(false);
     expect(isProtectedPath("/businessesX")).toBe(false);

@@ -1329,6 +1329,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/integrations/google-calendar/complete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Post Google Calendar Completion
+         * @description Finish connecting with Google's callback values; only the user who
+         *     started connecting can (another user's state is an expired link).
+         */
+        post: operations["post_google_calendar_completion_v1_integrations_google_calendar_complete_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/legal/dpa/{version}": {
         parameters: {
             query?: never;
@@ -2305,6 +2326,27 @@ export interface components {
             expires_at: number;
         };
         /**
+         * CalendarConnectionFailure
+         * @description Why connecting a calendar did not finish; the owner is sent back to the
+         *     cabinet with this reason.
+         * @enum {string}
+         */
+        CalendarConnectionFailure: "access_denied" | "link_expired" | "no_offline_access" | "provider_error";
+        /**
+         * CalendarConnectionOutcome
+         * @description How the OAuth callback ended: the new connection, or why it failed.
+         *
+         *     `business_id` is known whenever the callback carried a state we issued
+         *     (even an expired or used one), so the owner can be sent back to that
+         *     business's Channels page; it is None for an unknown state.
+         */
+        CalendarConnectionOutcome: {
+            /** Business Id */
+            business_id?: string | null;
+            connection?: components["schemas"]["CalendarConnectionView"] | null;
+            failure?: components["schemas"]["CalendarConnectionFailure"] | null;
+        };
+        /**
          * CalendarConnectionStatusView
          * @description Whether Google Calendar is connected and how syncing goes. Tokens are
          *     never returned.
@@ -2333,6 +2375,18 @@ export interface components {
             last_sync_error_at?: number | null;
             /** Last Synced At */
             last_synced_at?: number | null;
+        };
+        /**
+         * CalendarConnectionView
+         * @description A connected calendar of a business.
+         */
+        CalendarConnectionView: {
+            /** Business Id */
+            business_id: string;
+            /** Calendar Id */
+            calendar_id: string;
+            /** Connected At */
+            connected_at: number;
         };
         /**
          * CalendarDisconnectResult
@@ -9121,12 +9175,54 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Back to the cabinet: /b/{business_id}/channels?calendar=connected, or ?calendar=error&reason=<reason>. */
+            /** @description To the cabinet page that finishes connecting for the signed-in owner: CABINET_BASE_URL/integrations/google-calendar/callback with Google's code, state and error. */
             303: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    post_google_calendar_completion_v1_integrations_google_calendar_complete_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Code */
+                    code?: string | null;
+                    /** Error */
+                    error?: string | null;
+                    /** State */
+                    state?: string | null;
+                };
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CalendarConnectionOutcome"];
+                };
             };
             /** @description Validation Error */
             422: {

@@ -96,11 +96,35 @@ export function sanitizeRequestId(value: string | null | undefined): string {
   return crypto.randomUUID();
 }
 
-const FORWARDED_REQUEST_HEADERS = ["accept", "content-type", "user-agent", "x-forwarded-for"] as const;
+const FORWARDED_REQUEST_HEADERS = ["accept", "content-type", "user-agent"] as const;
+
+/**
+ * The X-Forwarded-For hops the cabinet's own proxies added: the right-most
+ * TRUSTED_PROXY_HOPS entries (default 0, header dropped). The rest of the
+ * header comes from the browser and could be forged, and Next.js keeps a
+ * header the browser sent instead of appending the peer address.
+ */
+export function trustedForwardedFor(
+  incoming: Headers | null,
+  env: Record<string, string | undefined> = process.env,
+): string | null {
+  const hops = Number.parseInt(env.TRUSTED_PROXY_HOPS ?? "0", 10);
+  const raw = incoming?.get("x-forwarded-for");
+  if (!raw || !Number.isInteger(hops) || hops <= 0) {
+    return null;
+  }
+  const entries = raw
+    .split(",")
+    .map((entry) => entry.trim())
+    .filter(Boolean);
+  const kept = entries.slice(-hops);
+  return kept.length > 0 ? kept.join(", ") : null;
+}
 
 /**
  * Headers for an API call: a small allow-list of the incoming ones (never
- * the cookies), the bearer token, the interface language and the request id.
+ * the cookies), the client address the cabinet's proxies vouch for, the
+ * bearer token, the interface language and the request id.
  */
 export function buildUpstreamHeaders(
   incoming: Headers | null,
@@ -112,6 +136,10 @@ export function buildUpstreamHeaders(
     if (value) {
       headers.set(name, value);
     }
+  }
+  const forwardedFor = trustedForwardedFor(incoming);
+  if (forwardedFor) {
+    headers.set("x-forwarded-for", forwardedFor);
   }
 
   const acceptLanguage = incoming?.get("accept-language");

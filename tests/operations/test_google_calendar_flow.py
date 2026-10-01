@@ -140,6 +140,7 @@ class CalendarWorld:
         state: CalendarAuthorizationState | None,
         code: str | None = "good-code",
         provider_error: str | None = None,
+        user_id: UserId | None = None,
     ) -> CalendarConnectionOutcome:
         return CompleteGoogleCalendarConnectionUseCase(
             authorization_state_repo=self.state_repo,
@@ -149,6 +150,7 @@ class CalendarWorld:
             wall_clock=self.world.clock.wall_clock,
         ).run(
             CompleteCalendarConnectionCommand(
+                user_id=self.owner_id if user_id is None else user_id,
                 state=state,
                 code=None if code is None else CalendarAuthorizationCode(code),
                 provider_error=(
@@ -232,6 +234,24 @@ class TestConnection:
         assert replayed.failure is CalendarConnectionFailure.LINK_EXPIRED
         assert replayed.business_id == calendar.business.id
         assert replayed.connection is None
+
+    def test_only_the_user_who_started_can_complete_the_connection(self) -> None:
+        calendar = CalendarWorld()
+        state = calendar.start()
+
+        foreign = calendar.complete(state, user_id=UserId())
+
+        assert foreign.failure is CalendarConnectionFailure.LINK_EXPIRED
+        assert foreign.business_id is None
+        assert calendar.connection() is None
+        assert not any(
+            request.url.host == "oauth2.googleapis.com"
+            for request in calendar.google.requests
+        )
+        # The state is not used up: the owner can still finish.
+        owner = calendar.complete(state)
+        assert owner.failure is None
+        assert calendar.connection() is not None
 
     def test_expired_forged_and_refused_authorizations(self) -> None:
         calendar = CalendarWorld()

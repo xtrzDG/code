@@ -1,5 +1,6 @@
 /**
  * Runs before every page (not /api, not static files):
+ *  - a plain form POST (the payment page's return) becomes a GET (303);
  *  - visitors without a session go to /login?next=<page>;
  *  - signed-in users opening /login go to their businesses;
  *  - Server Components learn the current path (for "back after sign-in");
@@ -40,6 +41,14 @@ async function accountLocale(token: string): Promise<string | null> {
 export async function proxy(request: NextRequest): Promise<NextResponse> {
   const { pathname, search, searchParams } = request.nextUrl;
   const token = request.cookies.get(SESSION_COOKIE)?.value;
+
+  // The payment page (Flitt) returns the payer with a cross-site form POST,
+  // which never carries the SameSite=Lax session cookie. Pages take no plain
+  // POSTs (Server Actions send Next-Action), so answer 303: the browser
+  // repeats the visit as a GET, which does carry the cookie.
+  if (request.method === "POST" && !request.headers.has("next-action")) {
+    return NextResponse.redirect(new URL(`${pathname}${search}`, request.url), 303);
+  }
 
   if (!token && isProtectedPath(pathname)) {
     return NextResponse.redirect(new URL(loginPath({ next: `${pathname}${search}` }), request.url));

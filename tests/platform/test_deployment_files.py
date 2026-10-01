@@ -26,6 +26,7 @@ EXTERNAL_VARIABLES: frozenset[str] = frozenset(
         "FORWARDED_ALLOW_IPS",
         "BACKEND_URL",
         "COOKIE_SECURE",
+        "TRUSTED_PROXY_HOPS",
     }
 )
 
@@ -110,6 +111,18 @@ def test_render_blueprint_uses_known_variables_and_the_eu_region() -> None:
     assert "preDeployCommand: workshop migrate" in blueprint
     assert "healthCheckPath: /healthz" in blueprint
     assert "dockerfilePath: ./web/Dockerfile" in blueprint
+
+
+@pytest.mark.parametrize("relative_path", ["render.yaml", "docker-compose.yml"])
+def test_the_api_trusts_only_known_proxies_for_client_addresses(
+    relative_path: str,
+) -> None:
+    # With "*" uvicorn takes the left-most X-Forwarded-For entry, which the
+    # client sends itself: audit-log addresses could be forged.
+    settings = read(relative_path)
+
+    assert "FORWARDED_ALLOW_IPS" in settings
+    assert not re.search(r"FORWARDED_ALLOW_IPS\W+(value: )?\"\*\"", settings)
 
 
 def test_compose_runs_migrations_before_the_api_and_the_worker() -> None:

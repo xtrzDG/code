@@ -14,6 +14,7 @@ from app.containers.factories import (
     DEFAULT_MENU_EXTRACTION_MODEL_ID,
     build_elevenlabs_client,
     build_flitt_client,
+    build_google_calendar_client,
     build_langfuse_ingestion_client,
     build_llm_trace_facilitator,
     resolve_recordings_directory,
@@ -96,3 +97,23 @@ def test_recordings_directory_has_a_default_and_can_be_set() -> None:
 
     assert resolve_recordings_directory(default) == Path("var/recordings")
     assert resolve_recordings_directory(custom) == Path("/srv/recordings")
+
+
+def test_google_calendar_needs_the_cabinet_to_finish_connecting() -> None:
+    google = {
+        "GOOGLE_OAUTH_CLIENT_ID": "client",
+        "GOOGLE_OAUTH_CLIENT_SECRET": "secret",
+        "APP_BASE_URL": "https://api.example.com",
+    }
+
+    settings = assemble_app_settings(
+        {**google, "CABINET_BASE_URL": "https://app.example.com"}
+    )
+
+    with_cabinet = build_google_calendar_client(settings)
+    without_cabinet = build_google_calendar_client(
+        settings.model_copy(update={"cabinet_base_url": None})
+    )
+
+    assert not without_cabinet.is_configured()
+    assert with_cabinet.is_configured()

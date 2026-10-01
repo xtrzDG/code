@@ -44,6 +44,7 @@ from app.schemas.dto.calendar import (
     CalendarConnectionOutcome,
     CalendarConnectionStatusQuery,
     CalendarConnectionStatusView,
+    CompleteCalendarConnectionRequest,
 )
 from app.schemas.dto.operations import (
     AnsweredQuestionResult,
@@ -85,22 +86,16 @@ from app.schemas.typings.bookings.constrained_integers import (
 )
 from app.schemas.typings.bookings.constrained_strings import LocalDate, LocalTimeOfDay
 from app.schemas.typings.bookings.prefixed_id import BookingId, LeadId, ResourceId
-from app.schemas.typings.bookings.strings import (
-    CalendarAuthorizationCode,
-    CalendarAuthorizationState,
-    CalendarProviderErrorCode,
-)
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.handoffs.prefixed_id import HandoffId, UnansweredQuestionId
 from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.schemas.typings.platform.constrained_strings import CabinetBaseUrl
 from app.schemas.typings.users.prefixed_id import UserId
-from app.utilities.calendar.calendar_return_urls import build_calendar_return_url
+from app.utilities.calendar.calendar_return_urls import build_calendar_completion_url
 
 BUSINESS_PREFIX: str = "/v1/businesses/{business_id}"
 GOOGLE_CALENDAR_CALLBACK_PATH: str = "/v1/integrations/google-calendar/callback"
-# Google's `error` and `state` values are short; longer ones are cut.
-MAX_CALLBACK_VALUE_LENGTH: int = 512
+GOOGLE_CALENDAR_COMPLETE_PATH: str = "/v1/integrations/google-calendar/complete"
 TRUE_QUERY_VALUES: frozenset[str] = frozenset({"1", "true", "yes", "on"})
 FALSE_QUERY_VALUES: frozenset[str] = frozenset({"0", "false", "no", "off"})
 
@@ -111,6 +106,9 @@ read_reschedule_body = build_json_body_dependency(RescheduleBookingRequest)
 read_booking_update_body = build_json_body_dependency(UpdateBookingRequest)
 read_lead_status_body = build_json_body_dependency(UpdateLeadStatusRequest)
 read_answer_body = build_json_body_dependency(AnswerUnansweredQuestionRequest)
+read_calendar_completion_body = build_json_body_dependency(
+    CompleteCalendarConnectionRequest
+)
 
 
 def build_operations_router(
@@ -152,8 +150,10 @@ def build_operations_router(
 ) -> APIRouter:
     """
     Cabinet routes under /v1/businesses/{business_id} (Bearer auth; owners
-    and staff, owner only where noted) plus the public Google OAuth callback,
-    which sends the owner back to the cabinet (CABINET_BASE_URL).
+    and staff, owner only where noted) plus the Google OAuth callback: the
+    public callback only forwards Google's values to the cabinet
+    (CABINET_BASE_URL), which finishes connecting for the signed-in owner
+    through the authenticated completion route.
     """
 
     router = APIRouter(tags=["operations"])
@@ -491,8 +491,10 @@ def build_operations_router(
         responses={
             status.HTTP_303_SEE_OTHER: {
                 "description": (
-                    "Back to the cabinet: /b/{business_id}/channels?calendar="
-                    "connected, or ?calendar=error&reason=<reason>."
+                    "To the cabinet page that finishes connecting for the "
+                    "signed-in owner: CABINET_BASE_URL/integrations/"
+                    "google-calendar/callback with Google's code, state and "
+                    "error."
                 )
             }
         },
@@ -502,19 +504,42 @@ def build_operations_router(
         state: OptionalQuery = None,
         error: OptionalQuery = None,
     ) -> Response:
-        outcome: CalendarConnectionOutcome = complete_calendar_connection.operate(
-            CompleteCalendarConnectionCommand(
-                state=read_callback_value(state, CalendarAuthorizationState),
-                code=read_callback_value(code, CalendarAuthorizationCode),
-                provider_error=read_callback_value(error, CalendarProviderErrorCode),
-            )
-        )
+        # Nothing is exchanged here: this public URL cannot tell who brought
+        # the code back. The cabinet completes it behind the owner's session.
         if cabinet_base_url is None:
-            return render_calendar_outcome_page(outcome)
+            return render_cabinet_required_page()
 
         return RedirectResponse(
-            str(build_calendar_return_url(cabinet_base_url, outcome)),
+            str(
+                build_calendar_completion_url(
+                    cabinet_base_url, {"code": code, "state": state, "error": error}
+                )
+            ),
             status_code=status.HTTP_303_SEE_OTHER,
+        )
+
+    @router.post(
+        GOOGLE_CALENDAR_COMPLETE_PATH,
+        openapi_extra=describe_json_body(CompleteCalendarConnectionRequest),
+    )
+    def post_google_calendar_completion(
+        user_id: Annotated[UserId, Depends(current_user)],
+        body: Annotated[
+            CompleteCalendarConnectionRequest, Depends(read_calendar_completion_body)
+        ],
+    ) -> CalendarConnectionOutcome:
+        """
+        Finish connecting with Google's callback values; only the user who
+        started connecting can (another user's state is an expired link).
+        """
+
+        return complete_calendar_connection.operate(
+            CompleteCalendarConnectionCommand(
+                user_id=user_id,
+                state=body.state,
+                code=body.code,
+                provider_error=body.error,
+            )
         )
 
     @router.delete(f"{BUSINESS_PREFIX}/integrations/google-calendar")
@@ -532,43 +557,21 @@ def build_operations_router(
     return router
 
 
-def read_callback_value[Value: str](
-    raw_value: str | None,
-    value_type: Callable[[str], Value],
-) -> Value | None:
-    """A value of Google's callback query; blank means absent."""
-
-    if raw_value is None or raw_value.strip() == "":
-        return None
-
-    return value_type(raw_value.strip()[:MAX_CALLBACK_VALUE_LENGTH])
-
-
-def render_calendar_outcome_page(outcome: CalendarConnectionOutcome) -> HTMLResponse:
+def render_cabinet_required_page() -> HTMLResponse:
     """
     A plain page for the end of Google's consent when CABINET_BASE_URL is
-    not configured (the owner returns to the cabinet by hand).
+    not configured: connecting is finished only from the cabinet.
     """
 
-    is_connected: bool = outcome.failure is None and outcome.connection is not None
-    message: str = (
-        "Google Calendar is connected. You can close this tab and return to "
-        "the cabinet."
-        if is_connected
-        else "Google Calendar was not connected ("
-        + (outcome.failure.value if outcome.failure is not None else "error")
-        + "). Return to the cabinet and try again."
-    )
     return HTMLResponse(
         content=(
             '<!doctype html><html lang="en"><head><meta charset="utf-8">'
             '<meta name="viewport" content="width=device-width, initial-scale=1">'
             "<title>Google Calendar</title></head>"
-            f"<body><p>{message}</p></body></html>"
+            "<body><p>Google Calendar was not connected: it is connected from "
+            "the cabinet, and CABINET_BASE_URL is not configured.</p></body></html>"
         ),
-        status_code=(
-            status.HTTP_200_OK if is_connected else status.HTTP_400_BAD_REQUEST
-        ),
+        status_code=status.HTTP_400_BAD_REQUEST,
         headers={"Cache-Control": "no-store", "X-Robots-Tag": "noindex"},
     )
 

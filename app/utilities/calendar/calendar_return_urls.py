@@ -1,46 +1,34 @@
-"""Where the owner lands after Google's consent page: the cabinet's Channels page."""
+"""Where the owner lands after Google's consent page: the cabinet's callback page."""
 
-from urllib.parse import quote, urlencode
+from urllib.parse import urlencode
 
-from app.schemas.dto.calendar import CalendarConnectionOutcome
 from app.schemas.typings.bookings.constrained_strings import CalendarReturnUrl
 from app.schemas.typings.platform.constrained_strings import CabinetBaseUrl
 
-CALENDAR_QUERY_PARAMETER: str = "calendar"
-REASON_QUERY_PARAMETER: str = "reason"
-CONNECTED_VALUE: str = "connected"
-ERROR_VALUE: str = "error"
-# Without a known business (an unknown state) the owner picks one again.
-BUSINESSES_PATH: str = "/businesses"
-CHANNELS_PATH_TEMPLATE: str = "/b/{business_id}/channels"
+# The cabinet page that finishes connecting for the signed-in owner and then
+# opens the business's Channels page (?calendar=connected or ?calendar=error).
+CABINET_CALLBACK_PATH: str = "/integrations/google-calendar/callback"
+CALLBACK_PARAMETERS: tuple[str, ...] = ("code", "state", "error")
+# Google's values are short; longer ones are cut.
+MAX_CALLBACK_VALUE_LENGTH: int = 512
 
 
-def build_calendar_return_url(
+def build_calendar_completion_url(
     cabinet_base_url: CabinetBaseUrl,
-    outcome: CalendarConnectionOutcome,
+    callback_values: dict[str, str | None],
 ) -> CalendarReturnUrl:
     """
-    {CABINET_BASE_URL}/b/{business_id}/channels?calendar=connected, or
-    ?calendar=error&reason=<failure> when connecting did not finish.
+    {CABINET_BASE_URL}/integrations/google-calendar/callback with Google's
+    code, state and error: the cabinet finishes connecting there, behind the
+    owner's session, so the consent is tied to the user who started it.
     """
 
-    path: str = (
-        BUSINESSES_PATH
-        if outcome.business_id is None
-        else CHANNELS_PATH_TEMPLATE.format(
-            business_id=quote(str(outcome.business_id), safe="")
-        )
-    )
-    query: dict[str, str] = (
-        {CALENDAR_QUERY_PARAMETER: CONNECTED_VALUE}
-        if outcome.failure is None and outcome.connection is not None
-        else {
-            CALENDAR_QUERY_PARAMETER: ERROR_VALUE,
-            REASON_QUERY_PARAMETER: (
-                outcome.failure.value if outcome.failure is not None else ERROR_VALUE
-            ),
-        }
-    )
+    query: dict[str, str] = {
+        name: value.strip()[:MAX_CALLBACK_VALUE_LENGTH]
+        for name in CALLBACK_PARAMETERS
+        if (value := callback_values.get(name)) is not None and value.strip() != ""
+    }
+    suffix: str = f"?{urlencode(query)}" if query else ""
     return CalendarReturnUrl(
-        f"{str(cabinet_base_url).rstrip('/')}{path}?{urlencode(query)}"
+        f"{str(cabinet_base_url).rstrip('/')}{CABINET_CALLBACK_PATH}{suffix}"
     )

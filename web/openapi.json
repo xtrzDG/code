@@ -2354,6 +2354,56 @@
         "title": "CalendarConnectUrlView",
         "type": "object"
       },
+      "CalendarConnectionFailure": {
+        "description": "Why connecting a calendar did not finish; the owner is sent back to the\ncabinet with this reason.",
+        "enum": [
+          "access_denied",
+          "link_expired",
+          "no_offline_access",
+          "provider_error"
+        ],
+        "title": "CalendarConnectionFailure",
+        "type": "string"
+      },
+      "CalendarConnectionOutcome": {
+        "additionalProperties": false,
+        "description": "How the OAuth callback ended: the new connection, or why it failed.\n\n`business_id` is known whenever the callback carried a state we issued\n(even an expired or used one), so the owner can be sent back to that\nbusiness's Channels page; it is None for an unknown state.",
+        "properties": {
+          "business_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Business Id"
+          },
+          "connection": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CalendarConnectionView"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "failure": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CalendarConnectionFailure"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "title": "CalendarConnectionOutcome",
+        "type": "object"
+      },
       "CalendarConnectionStatusView": {
         "additionalProperties": false,
         "description": "Whether Google Calendar is connected and how syncing goes. Tokens are\nnever returned.\n\n`is_configured` tells whether this server can connect Google Calendar\nat all (Google OAuth credentials and APP_BASE_URL are set). The sync\nerror is a short provider reason; it clears after the next booking that\nsyncs.",
@@ -2446,6 +2496,31 @@
           "is_connected"
         ],
         "title": "CalendarConnectionStatusView",
+        "type": "object"
+      },
+      "CalendarConnectionView": {
+        "additionalProperties": false,
+        "description": "A connected calendar of a business.",
+        "properties": {
+          "business_id": {
+            "title": "Business Id",
+            "type": "string"
+          },
+          "calendar_id": {
+            "title": "Calendar Id",
+            "type": "string"
+          },
+          "connected_at": {
+            "title": "Connected At",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "business_id",
+          "calendar_id",
+          "connected_at"
+        ],
+        "title": "CalendarConnectionView",
         "type": "object"
       },
       "CalendarDisconnectResult": {
@@ -19836,7 +19911,7 @@
         ],
         "responses": {
           "303": {
-            "description": "Back to the cabinet: /b/{business_id}/channels?calendar=connected, or ?calendar=error&reason=<reason>."
+            "description": "To the cabinet page that finishes connecting for the signed-in owner: CABINET_BASE_URL/integrations/google-calendar/callback with Google's code, state and error."
           },
           "422": {
             "content": {
@@ -19850,6 +19925,104 @@
           }
         },
         "summary": "Get Google Calendar Callback",
+        "tags": [
+          "operations"
+        ]
+      }
+    },
+    "/v1/integrations/google-calendar/complete": {
+      "post": {
+        "description": "Finish connecting with Google's callback values; only the user who\nstarted connecting can (another user's state is an expired link).",
+        "operationId": "post_google_calendar_completion_v1_integrations_google_calendar_complete_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "description": "The values Google put on the callback URL, which the cabinet sends on\nbehalf of the signed-in owner who started connecting: the state we\nissued and Google's code, or Google's error instead of a code.",
+                "properties": {
+                  "code": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Code"
+                  },
+                  "error": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Error"
+                  },
+                  "state": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "State"
+                  }
+                },
+                "title": "CompleteCalendarConnectionRequest",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CalendarConnectionOutcome"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Post Google Calendar Completion",
         "tags": [
           "operations"
         ]

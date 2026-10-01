@@ -91,12 +91,20 @@ def build_flitt_client(settings: AppSettings) -> FlittClient | None:
 
 
 def build_google_calendar_client(settings: AppSettings) -> GoogleCalendarClient:
-    """Google Calendar client; missing settings make its calls fail with 502."""
+    """
+    Google Calendar client; missing settings make its calls fail with 502.
+    Connecting is finished in the cabinet (behind the owner's session), so
+    without CABINET_BASE_URL the client counts as not configured.
+    """
 
     return GoogleCalendarClient(
         client_id=settings.google_oauth_client_id,
         client_secret=settings.google_oauth_client_secret,
-        redirect_url=build_google_calendar_redirect_url(settings.app_base_url),
+        redirect_url=(
+            None
+            if settings.cabinet_base_url is None
+            else build_google_calendar_redirect_url(settings.app_base_url)
+        ),
     )
 
 

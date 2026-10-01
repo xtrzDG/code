@@ -38,9 +38,12 @@ development the 6-digit code appears in the API log
 | `BACKEND_URL` | `http://localhost:8000` | Base URL of the Python API, used only on the server (route handlers, proxy, Server Components). |
 | `COOKIE_SECURE` | `true` in production | `false` serves the session cookie without `Secure` (a production build over plain HTTP). |
 
+| `TRUSTED_PROXY_HOPS` | `0` | How many right-most `X-Forwarded-For` entries the cabinet's own proxies add (Render: `1`). Only those are forwarded to the API; the rest of the header comes from the browser and could be forged. `0` forwards no client address. |
+
 Behind a reverse proxy, run the API with
-`--proxy-headers --forwarded-allow-ips=<address of this web server>`: the cabinet
-forwards `X-Forwarded-For`, so the audit log keeps the client's address.
+`--proxy-headers --forwarded-allow-ips=<address range of this web server>` (never
+`*`): the cabinet forwards the client address its proxies vouch for
+(`TRUSTED_PROXY_HOPS`), so the audit log keeps the client's address.
 
 ## Scripts
 
@@ -379,10 +382,16 @@ Use semantic HTML, visible focus, and labels for icon-only buttons.
   stopped and what the platform said), the website chat's look (colour, corner,
   a sketch and a link to the API's `/widget/demo` with the unsaved choices) and
   embed code, call forwarding, Google Calendar (connection, calendar, last sync
-  and its error) and staff Telegram links. Google's consent page returns to
-  `?calendar=connected` or `?calendar=error&reason=…`; `page.tsx` reads it, the
-  screen shows it once and removes it from the address. The API needs
-  `CABINET_BASE_URL` set to this cabinet's public address for that return.
+  and its error) and staff Telegram links. Google's consent page returns
+  (through the API's public callback) to `/integrations/google-calendar/callback`,
+  a route handler that finishes connecting with the owner's session (only the
+  user who started can finish) and then opens `?calendar=connected` or
+  `?calendar=error&reason=…`; `page.tsx` reads it, the screen shows it once and
+  removes it from the address. The API needs `CABINET_BASE_URL` set to this
+  cabinet's public address; without it Google Calendar cannot be connected.
+- The proxy answers a plain form POST to a page (the payment page returns the
+  payer that way, without the SameSite=Lax session cookie) with a 303 to the same
+  address, so the browser repeats it as a GET that carries the session.
 - `/login` asks `GET /v1/auth/login-options` for the chosen country: the method
   switch hides e-mail when it cannot deliver codes, the phone form offers a
   channel choice when several work, and explains when none does. Helpers with

@@ -4,6 +4,7 @@ import { useCallback, useRef, useSyncExternalStore, type ComponentType, type Key
 
 import { cn } from "@/lib/cn";
 
+import { decodeHash } from "./helpers";
 import type { IconProps } from "./icons";
 
 const HASH_EVENT = "aw:hashchange";
@@ -17,9 +18,9 @@ function subscribeToHash(onChange: () => void): () => void {
   };
 }
 
-/** The location hash without "#", or "" (also on the server). */
+/** The location hash without "#", or "" (also on the server and for a malformed hash like "#%"). */
 function readHash(): string {
-  return typeof window === "undefined" ? "" : decodeURIComponent(window.location.hash.replace(/^#/, ""));
+  return typeof window === "undefined" ? "" : decodeHash(window.location.hash);
 }
 
 /**

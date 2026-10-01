@@ -42,7 +42,11 @@ class CompleteGoogleCalendarConnectionUseCase(
     """
     OAuth callback: the state must be one we issued, unused and unexpired
     (it is consumed before the code exchange, so a callback cannot be
-    replayed). Google's code is exchanged for tokens; the refresh token is
+    replayed), and it must be brought back by the user who started the flow:
+    a consent link forwarded to someone else cannot attach their Google
+    account to the business that issued it (login CSRF). Another user's
+    state is reported as an expired link, without its business and without
+    consuming it. Google's code is exchanged for tokens; the refresh token is
     stored only encrypted, and the business's primary calendar becomes the
     connected calendar (replacing an earlier connection), with its title
     when Google tells it.
@@ -81,7 +85,7 @@ class CompleteGoogleCalendarConnectionUseCase(
                 hash_authorization_state(input_data.state)
             )
         )
-        if state is None:
+        if state is None or state.user_id != input_data.user_id:
             return CalendarConnectionOutcome(
                 failure=CalendarConnectionFailure.LINK_EXPIRED
             )

@@ -94,7 +94,9 @@ docker run --env-file .env assistant-workshop-backend migrate --dry-run
 Образ работает от непривилегированного пользователя, по умолчанию `APP_ENV=production`
 (нужен `ENCRYPTION_KEY`), слушает `$PORT` (8000), проверка здоровья — `GET /healthz`.
 API запускается с `--proxy-headers`; адреса доверенных прокси — в
-`FORWARDED_ALLOW_IPS` (по умолчанию 127.0.0.1).
+`FORWARDED_ALLOW_IPS` (по умолчанию 127.0.0.1). Указывайте диапазоны адресов
+прокси, а не `*`: со `*` uvicorn берёт самый левый адрес `X-Forwarded-For`,
+который подставляет сам клиент, и IP в журнале аудита можно подделать.
 
 ### Деплой на Render (ЕС)
 
@@ -225,7 +227,8 @@ UI-тестов); `color`, `position` и `language` в ней показываю
 Адреса для внешних кабинетов (`APP_BASE_URL` + путь):
 вебхук Meta — `/v1/channels/meta/webhook`; post-call вебхук ElevenLabs —
 `/v1/voice/webhooks/post-call`; redirect URI Google —
-`/v1/integrations/google-calendar/callback`; колбэк Flitt — `/v1/payments/flitt/webhook`.
+`/v1/integrations/google-calendar/callback` (подключение завершает кабинет, поэтому
+без `CABINET_BASE_URL` Google Calendar выключен); колбэк Flitt — `/v1/payments/flitt/webhook`.
 
 ## HTTP API
 
@@ -245,7 +248,7 @@ UI-тестов); `color`, `position` и `language` в ней показываю
 | Знания | `GET·POST …/knowledge`, `GET·PATCH·DELETE …/knowledge/{item_id}`, `POST …/knowledge/search`, `POST …/knowledge/import[/confirm]`, `DELETE …/knowledge/import/{batch_id}` |
 | Ресурсы и расписание | `GET·POST …/resources`, `PATCH …/resources/{id}`, `GET·POST …/schedule-exceptions`, `DELETE …/schedule-exceptions/{id}` |
 | Брони, заявки, передачи | `GET …/availability` (`full_day=true` — весь день для сотрудников), `GET·POST …/bookings`, `PATCH …/bookings/{id}` (статус, гости, место, примечание, имя), `POST …/bookings/{id}/cancel`, `POST …/bookings/{id}/reschedule`, `GET …/leads`, `PATCH …/leads/{id}`, `GET …/handoffs`, `POST …/handoffs/{id}/resolve`, `GET …/unanswered-questions`, `POST …/unanswered-questions/{id}/answer`, `GET …/dashboard` |
-| Google Calendar | `GET·DELETE …/integrations/google-calendar`, `GET …/integrations/google-calendar/connect-url`, `GET /v1/integrations/google-calendar/callback` (возвращает владельца в кабинет: `CABINET_BASE_URL/b/{id}/channels?calendar=connected` или `?calendar=error&reason=…`) |
+| Google Calendar | `GET·DELETE …/integrations/google-calendar`, `GET …/integrations/google-calendar/connect-url`, `GET /v1/integrations/google-calendar/callback` (ничего не обменивает, только передаёт `code`, `state`, `error` странице кабинета `CABINET_BASE_URL/integrations/google-calendar/callback`), `POST /v1/integrations/google-calendar/complete` (Bearer; завершает подключение только для того пользователя, который его начал; кабинет затем открывает `/b/{id}/channels?calendar=connected` или `?calendar=error&reason=…`) |
 | Разговоры | `GET …/conversations` (страницы, фильтры `channel`, `status`, `from`/`to`, `search`), `GET …/conversations/{id}` (расшифровка, звонки, брони, заявки, передачи), `PUT …/conversations/{id}/rating`, `POST …/conversations/{id}/messages` (ответ сотрудника клиенту), `POST …/test-chat` |
 | Сборка помощника | `POST·GET …/assistant-versions`, `GET …/assistant-versions/{id}[/autotest-run]`, `GET …/assistant-versions/{id}/go-live-readiness`, `POST …/assistant-versions/{id}/autotests`, `POST …/assistant-versions/{id}/publish`, `POST …/assistant-versions/{id}/rollback` |
 | Каналы (кабинет) | `GET …/channels`, `PUT·DELETE …/channels/{channel}`, `GET …/channels/web/snippet`, `POST …/manager-contacts/telegram-link` |

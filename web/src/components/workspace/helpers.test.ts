@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  decodeHash,
   formatMicroUsd,
   isConfirmationTyped,
   isoDay,
@@ -79,5 +80,18 @@ describe("zonedDayStartUs", () => {
     expect(zonedDayStartUs("2026-03-29", "Europe/Berlin")).toBe(Date.UTC(2026, 2, 28, 23) * 1000);
     expect(zonedDayStartUs("2026-07-01", "America/New_York")).toBe(Date.UTC(2026, 6, 1, 4) * 1000);
     expect(zonedDayStartUs("yesterday", "UTC")).toBeNull();
+  });
+});
+
+describe("decodeHash", () => {
+  it("strips # and decodes", () => {
+    expect(decodeHash("#team")).toBe("team");
+    expect(decodeHash("#t%65am")).toBe("team");
+    expect(decodeHash("")).toBe("");
+  });
+
+  it("never throws on malformed escapes", () => {
+    expect(decodeHash("#%")).toBe("");
+    expect(decodeHash("#%E0%A4%A")).toBe("");
   });
 });

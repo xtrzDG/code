@@ -18,8 +18,9 @@ fi
 case "$role" in
   api)
     # Client addresses come from X-Forwarded-For of the proxies listed in
-    # FORWARDED_ALLOW_IPS (uvicorn reads it; default 127.0.0.1). Workers:
-    # WEB_CONCURRENCY (default 1).
+    # FORWARDED_ALLOW_IPS (uvicorn reads it; default 127.0.0.1). List the
+    # proxies' address ranges, never "*" (then the left-most, client-controlled
+    # entry wins). Workers: WEB_CONCURRENCY (default 1).
     exec uvicorn app.main:create_application --factory \
       --host 0.0.0.0 --port "${PORT:-8000}" \
       --proxy-headers --no-server-header "$@"
