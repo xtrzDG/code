@@ -463,11 +463,14 @@ def test_staff_reply_from_the_cabinet_reaches_the_website_widget(
         json={"session_key": WIDGET_SESSION, "text": "Позовите, пожалуйста, менеджера"},
     ).json()
     assert handed_off["is_handed_off"] is True
+    # The harness clock stands still, so the visitor's message and the answer
+    # share a time; poll after the answer itself.
     caught_up = client.get(
         widget_messages,
-        params={"session_key": WIDGET_SESSION, "after": handed_off["cursor"]},
+        params={"session_key": WIDGET_SESSION, "after": handed_off["message_id"]},
     ).json()
-    assert [item["id"] for item in caught_up["items"]] == [handed_off["message_id"]]
+    assert caught_up["items"] == []
+    assert caught_up["is_handed_off"] is True
 
     # The owner answers from the conversation card: the message is kept for
     # the widget, nothing goes through Telegram and the model is not asked.
@@ -484,6 +487,7 @@ def test_staff_reply_from_the_cabinet_reaches_the_website_widget(
     }
     model_calls_before = workshop.model.assistant_calls
     telegram_sends_before = len(workshop.telegram.bodies("sendMessage"))
+    workshop.clock.advance(60)  # the widget orders messages by their time
     sent = client.post(
         f"{restaurant.base}/conversations/{conversation_id}/messages",
         json={"text": "Здравствуйте, это Гиорги. Чем могу помочь?"},
