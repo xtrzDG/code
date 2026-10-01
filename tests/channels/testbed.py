@@ -574,6 +574,7 @@ class ChannelsTestbed:
             self.messenger_adapter,
             self.instagram_adapter,
             self.usage_event_repo,
+            self.channel_repo,
             self.wall_clock,
         )
         self.receive_telegram_webhook = ReceiveTelegramWebhookUseCase(

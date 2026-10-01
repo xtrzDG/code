@@ -3,6 +3,7 @@ import httpx
 from app.contracts.channel_clients import MetaGraphApiClientContract, ProviderToken
 from app.schemas.dto.channels import MetaPageProfile, WhatsAppPhoneNumberProfile
 from app.schemas.exceptions.application_errors import (
+    ChannelCredentialRejectedError,
     ExternalServiceError,
     ValidationFailedError,
 )
@@ -35,6 +36,11 @@ REQUEST_TIMEOUT_SECONDS: float = 10.0
 # 100 invalid parameter / unknown object, 190 invalid token, 200 permission,
 # 803 unknown alias.
 INVALID_INPUT_ERROR_CODES: frozenset[int] = frozenset({100, 190, 200, 803})
+# After connecting, these mean the page or system user token stopped working
+# (expired, revoked, permissions removed): 401 / 403, Graph code 102
+# (session) and 190 (invalid OAuth token).
+REJECTED_CREDENTIAL_STATUS_CODES: frozenset[int] = frozenset({401, 403})
+REJECTED_CREDENTIAL_ERROR_CODES: frozenset[int] = frozenset({102, 190})
 PAGE_WEBHOOK_FIELDS: str = "messages,messaging_postbacks"
 
 
@@ -238,6 +244,15 @@ class MetaGraphClient(MetaGraphApiClientContract):
         if is_lookup and error_code in INVALID_INPUT_ERROR_CODES:
             raise ValidationFailedError(
                 f"Meta did not accept the account or token: {message}"
+            )
+
+        if (
+            response.status_code in REJECTED_CREDENTIAL_STATUS_CODES
+            or error_code in REJECTED_CREDENTIAL_ERROR_CODES
+        ):
+            raise ChannelCredentialRejectedError(
+                f"Meta rejected the access token or its permissions "
+                f"({error_code or response.status_code}): {message}"
             )
 
         raise ExternalServiceError(

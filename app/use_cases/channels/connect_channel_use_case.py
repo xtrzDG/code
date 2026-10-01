@@ -170,6 +170,8 @@ class ConnectChannelUseCase(UseCaseContract[ConnectChannelCommand, ChannelView])
             else self._secret_cipher.encrypt(connection.secret)
         )
         channel.status = ChannelStatus.CONNECTED
+        channel.last_error = None
+        channel.last_error_at = None
         channel.updated_at = now
         self._channel_repo.save(channel)
         self._audit_log_repo.append(

@@ -14,6 +14,7 @@ from app.schemas.typings.channels.booleans import (
 )
 from app.schemas.typings.channels.constrained_integers import WebhookMessageCount
 from app.schemas.typings.channels.constrained_strings import (
+    ChannelErrorSummary,
     ManagerLinkCode,
     MetaObjectId,
     TelegramBotUsername,
@@ -238,7 +239,8 @@ class ChannelView(ImmutableDTO):
 
     `account_id` is the public account inside the channel: bot username,
     WhatsApp phone number id, page id, Instagram account id, or the E.164
-    number of the assistant line.
+    number of the assistant line. With status ERROR, `last_error` is the
+    platform's short reason (no secrets) and `last_error_at` its time.
     """
 
     id: ChannelId
@@ -248,6 +250,8 @@ class ChannelView(ImmutableDTO):
     account_id: ChannelExternalId | None = None
     has_credential: HasChannelCredential
     updated_at: Microseconds
+    last_error: ChannelErrorSummary | None = None
+    last_error_at: Microseconds | None = None
 
 
 # --- Website chat widget ---------------------------------------------------

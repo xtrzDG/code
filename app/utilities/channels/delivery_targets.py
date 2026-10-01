@@ -5,7 +5,7 @@ from typed_time_provider import Microseconds
 from app.contracts.repositories import ChannelRepoContract
 from app.contracts.secret_cipher import SecretCipherAdapterContract
 from app.schemas.constants.billing import UsageKind
-from app.schemas.constants.channels import ChannelKind, ChannelStatus
+from app.schemas.constants.channels import ChannelKind
 from app.schemas.domain.billing import UsageEventDocument
 from app.schemas.domain.channels import ChannelDocument
 from app.schemas.dto.channels import ChannelDeliveryTarget
@@ -19,6 +19,7 @@ from app.schemas.typings.channels.constrained_integers import DeliveredMessageCo
 from app.schemas.typings.channels.strings import ChannelSecret
 from app.schemas.typings.conversations.prefixed_id import ConversationId
 from app.schemas.typings.conversations.strings import ChannelUserId
+from app.utilities.channels.channel_health import ACTIVE_CHANNEL_STATUSES
 
 
 def find_business_channel(
@@ -62,9 +63,12 @@ def build_delivery_target(
     channel_user_id: ChannelUserId,
     secret_cipher: SecretCipherAdapterContract,
 ) -> ChannelDeliveryTarget:
-    """Delivery target for a connected channel; raises ExternalServiceError."""
+    """
+    Delivery target for a connected channel (also one in ERROR: a working
+    delivery is what clears the error); raises ExternalServiceError.
+    """
 
-    if channel.status is not ChannelStatus.CONNECTED:
+    if channel.status not in ACTIVE_CHANNEL_STATUSES:
         raise ExternalServiceError(
             f"The {channel.kind.value} channel of this business is not connected."
         )

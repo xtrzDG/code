@@ -27,6 +27,8 @@ def build_channel_view(channel: ChannelDocument) -> ChannelView:
         account_id=channel.external_id,
         has_credential=channel.encrypted_secret is not None,
         updated_at=channel.updated_at,
+        last_error=channel.last_error,
+        last_error_at=channel.last_error_at,
     )
 
 

@@ -1621,6 +1621,7 @@ class UseCasesContainer(containers.DeclarativeContainer):
         messenger_adapter=adapters.messenger_channel_adapter,
         instagram_adapter=adapters.instagram_channel_adapter,
         usage_event_repo=repositories.usage_event_repo,
+        channel_repo=repositories.channel_repo,
         wall_clock=time_provider.microsecond_wall_clock,
     )
     verify_meta_webhook_use_case: Factory[
