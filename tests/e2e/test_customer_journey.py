@@ -152,21 +152,65 @@ def test_georgian_restaurant_from_sign_in_to_a_booked_and_handed_off_chat(
     assert version["is_voice_enabled"] is True
     assert "18.00 GEL" in str(version["facts"])
 
-    # Autotests in Georgian: an AI customer asks prices, a judge scores.
-    run = client.post(
+    # A narrowed run (Georgian prices only) passes but proves nothing about
+    # the other languages and scenarios: the version stays a draft.
+    narrowed = client.post(
         f"{base}/assistant-versions/{version_id}/autotests",
         json={"languages": ["ka"], "kinds": ["price_question"]},
         headers=headers,
     )
-    assert run.status_code == 200, run.text
-    report: JsonObject = run.json()
+    assert narrowed.status_code == 202, narrowed.text
+    assert narrowed.json()["status"] == "running"
+    assert workshop.model.judge_calls == 0  # nothing ran inside the request
+    worker = workshop.container.gateways.background_worker()
+    assert worker.run_once().queued_runs == 1
+    narrowed_report: JsonObject = client.get(
+        f"{base}/assistant-versions/{version_id}/autotest-run", headers=headers
+    ).json()
+    assert narrowed_report["status"] == "finished"
+    assert narrowed_report["is_passed"] is True
+    assert narrowed_report["is_full_coverage"] is False
+    assert narrowed_report["version_status"] == "draft"
+    assert narrowed_report["scenario_count"] == 3
+    refused = client.post(
+        f"{base}/assistant-versions/{version_id}/publish", json={}, headers=headers
+    )
+    assert refused.status_code == 409, refused.text
+
+    # The full run: an AI customer plays every scenario in ka, ru and en
+    # (prices, bookings, a request for a person, ...), a judge scores.
+    started = client.post(
+        f"{base}/assistant-versions/{version_id}/autotests",
+        json={},
+        headers=headers,
+    )
+    assert started.status_code == 202, started.text
+    assert worker.run_once().queued_runs == 1
+    report: JsonObject = client.get(
+        f"{base}/assistant-versions/{version_id}/autotest-run", headers=headers
+    ).json()
+    assert report["id"] == started.json()["id"]
     assert report["version_status"] == "ready"
     assert report["is_passed"] is True
-    assert report["scenario_count"] == report["passed_count"] == 3
-    first_answer = report["results"][0]["transcript"][1]["text"]
-    assert "18,00\xa0₾" in first_answer
-    assert workshop.model.judge_calls == 3
-    assert workshop.model.tool_calls == ["get_price"] * 3
+    assert report["is_full_coverage"] is True
+    assert report["scenario_count"] == report["passed_count"] == 29
+    results: dict[str, JsonObject] = {
+        str(result["scenario_key"]): result for result in report["results"]
+    }
+    assert "18,00\xa0₾" in results["price_question__ka"]["transcript"][1]["text"]
+    assert results["booking__en"]["transcript"][1]["text"].endswith(
+        "Your table is booked for 19:00."
+    )
+    assert results["human_request__ka"]["transcript"][1]["text"].endswith(
+        "თქვენი მოთხოვნა კოლეგას გადაეცა. მალე გიპასუხებენ."
+    )
+    assert workshop.model.judge_calls == 3 + 29
+    assert sorted(set(workshop.model.tool_calls)) == [
+        "check_availability",
+        "create_booking",
+        "get_price",
+        "handoff_to_human",
+    ]
 
     # Publishing sets up the ElevenLabs agent from the same version.
     published = client.post(

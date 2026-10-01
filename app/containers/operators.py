@@ -26,6 +26,9 @@ class OperatorsContainer(containers.DeclarativeContainer):
         pipelines.call_forwarding_instructions_pipeline
     )
     run_autotests_operator = pipeline_operator(pipelines.run_autotests_pipeline)
+    run_queued_autotests_operator = pipeline_operator(
+        pipelines.run_queued_autotests_pipeline
+    )
     voice_tool_webhook_operator = pipeline_operator(
         pipelines.voice_tool_webhook_pipeline
     )

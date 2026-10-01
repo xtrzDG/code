@@ -1,8 +1,15 @@
 import pytest
 
+from app.gateways.worker.background_worker import BackgroundWorker
+from app.operators.pipeline_operator import PipelineOperator
+from app.orchestrators.assistants.run_queued_autotests_orchestrator import (
+    RunQueuedAutotestsOrchestrator,
+)
+from app.pipelines.orchestrator_pipeline import OrchestratorPipeline
 from app.schemas.constants.assistants import (
     AssistantVersionStatus,
     AutotestOutcome,
+    AutotestRunStatus,
     AutotestScenarioKind,
     LlmEffort,
 )
@@ -12,6 +19,7 @@ from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.dto.assistants import (
     AssistantVersionDetails,
     AssistantVersionQuery,
+    AutotestRunCompletion,
     AutotestRunView,
     AutotestScenarioResultView,
     LlmTokenPrice,
@@ -30,6 +38,8 @@ from app.schemas.typings.assistants.constrained_integers import (
 from app.schemas.typings.assistants.constrained_strings import LlmModelId
 from app.schemas.typings.assistants.prefixed_id import AssistantVersionId
 from app.schemas.typings.localization.constrained_strings import LanguageTag
+from app.schemas.typings.platform.constrained_integers import WorkerPollSeconds
+from app.use_cases.autotests.enqueue_autotest_run_use_case import RUN_AUTOTESTS_JOB
 from tests.assembly.builders import (
     seed_georgian_restaurant,
     seed_israeli_clinic,
@@ -604,3 +614,148 @@ def test_shop_without_bookings_is_not_tested_on_bookings() -> None:
     assert AutotestScenarioKind.CANCELLATION not in kinds
     assert run.scenario_count == 6 + 1
     assert run.version_status is AssistantVersionStatus.READY
+
+
+def test_a_narrowed_rerun_cannot_turn_a_failed_version_ready() -> None:
+    testbed = AssemblyTestbed()
+    business, version = start(testbed)
+    testbed.judge_scores["price_question__ka"] = {
+        "facts_and_prices": 1,
+        "booking_data": 5,
+        "ai_disclosure": 5,
+        "handoff": 5,
+        "language": 5,
+    }
+    failed = testbed.run_autotests(business.id, version.id)
+    assert failed.version_status is AssistantVersionStatus.TESTS_FAILED
+
+    narrowed = run_one(
+        testbed, business, version, "en", AutotestScenarioKind.RUDE_CUSTOMER
+    )
+
+    assert narrowed.is_passed is True
+    assert narrowed.is_full_coverage is False
+    assert narrowed.version_status is AssistantVersionStatus.TESTS_FAILED
+    with pytest.raises(ConflictError, match="has not passed the autotests"):
+        testbed.publish(business.id, version.id)
+
+
+def test_a_run_without_price_and_booking_scenarios_does_not_make_a_version_ready() -> (
+    None
+):
+    testbed = AssemblyTestbed()
+    business, version = start(testbed)
+
+    narrowed = run_one(
+        testbed, business, version, "ka", AutotestScenarioKind.HUMAN_REQUEST
+    )
+
+    assert narrowed.is_passed is True
+    assert narrowed.version_status is AssistantVersionStatus.DRAFT
+    assert testbed.version(business.id, version.id).test_score is None
+
+
+def test_a_narrowed_run_keeps_a_ready_version_ready_unless_it_fails() -> None:
+    testbed = AssemblyTestbed()
+    business, version = start(testbed)
+    full = testbed.run_autotests(business.id, version.id)
+    assert full.is_full_coverage is True
+    assert full.version_status is AssistantVersionStatus.READY
+
+    passed = run_one(testbed, business, version, "ru", AutotestScenarioKind.BOOKING)
+    testbed.judge_raw_answers["booking__ru"] = "no verdict"
+    failed = run_one(testbed, business, version, "ru", AutotestScenarioKind.BOOKING)
+
+    assert passed.version_status is AssistantVersionStatus.READY
+    assert failed.version_status is AssistantVersionStatus.TESTS_FAILED
+
+
+def test_queued_run_is_played_by_the_worker() -> None:
+    testbed = AssemblyTestbed()
+    business, version = start(testbed)
+
+    started = testbed.queue_autotest_run_orchestrator.execute(
+        RunAutotestsCommand(
+            user_id=testbed.owner_id,
+            business_id=business.id,
+            version_id=version.id,
+        )
+    )
+
+    assert started.status is AutotestRunStatus.RUNNING
+    assert started.version_status is AssistantVersionStatus.TESTING
+    assert testbed.conversation.inbound_messages == []
+    assert testbed.version(business.id, version.id).autotest_run_id == started.id
+    with pytest.raises(ConflictError, match="being tested"):
+        testbed.run_autotests(business.id, version.id)
+
+    tick = testbed.run_worker()
+    repeated = testbed.run_worker()
+
+    assert (tick.queued_runs, tick.failures) == (1, 0)
+    assert repeated.queued_runs == 0
+    stored = testbed.run_repo.get(business.id, started.id)
+    assert stored is not None
+    assert stored.status is AutotestRunStatus.FINISHED
+    assert len(stored.results) == GEORGIAN_SCENARIO_COUNT
+    assert testbed.version(business.id, version.id).status is (
+        AssistantVersionStatus.READY
+    )
+
+
+class UnfinishableRun:
+    """Finishing a run fails, as when the database is down at its end."""
+
+    def run(self, input_data: AutotestRunCompletion) -> AutotestRunView:
+        del input_data
+        raise ExternalServiceError("database is down")
+
+
+def test_a_run_the_worker_cannot_finish_does_not_leave_the_version_testing() -> None:
+    testbed = AssemblyTestbed()
+    business, version = start(testbed)
+    full = testbed.run_autotests(business.id, version.id)
+    assert full.version_status is AssistantVersionStatus.READY
+    worker = BackgroundWorker(
+        periodic_jobs=[],
+        queued_job_operators={
+            RUN_AUTOTESTS_JOB: PipelineOperator(
+                OrchestratorPipeline(
+                    RunQueuedAutotestsOrchestrator(
+                        testbed.resume_autotest_run_use_case,
+                        testbed.run_scenario_use_case,
+                        UnfinishableRun(),
+                        testbed.abandon_autotest_run_use_case,
+                    )
+                )
+            )
+        },
+        job_repo=testbed.job_repo,
+        wall_clock=testbed.wall_clock,
+        error_reporter=testbed.worker_errors,
+        poll_seconds=WorkerPollSeconds(5),
+    )
+    started = testbed.queue_autotest_run_orchestrator.execute(
+        RunAutotestsCommand(
+            user_id=testbed.owner_id,
+            business_id=business.id,
+            version_id=version.id,
+            languages=[LanguageTag("en")],
+        )
+    )
+
+    attempts: int = 0
+    while attempts < 10 and testbed.pending_jobs():
+        testbed.advance(3600)
+        worker.run_once()
+        attempts += 1
+
+    assert attempts == 5  # retried with backoff, then given up
+    stored = testbed.run_repo.get(business.id, started.id)
+    assert stored is not None
+    assert stored.status is AutotestRunStatus.ERRORED
+    assert testbed.version(business.id, version.id).status is (
+        AssistantVersionStatus.READY
+    )
+    rerun = testbed.run_autotests(business.id, version.id)
+    assert rerun.status is AutotestRunStatus.FINISHED

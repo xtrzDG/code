@@ -27,6 +27,18 @@ class AssistantToolName(StrEnum):
     RECORD_UNANSWERED_QUESTION = "record_unanswered_question"
 
 
+class AutotestRunStatus(StrEnum):
+    """
+    Progress of an autotest run: the worker plays it in the background
+    (concept section 13, the job queue), so a run is RUNNING until it is
+    FINISHED, or ERRORED when it could not be completed.
+    """
+
+    RUNNING = "running"
+    FINISHED = "finished"
+    ERRORED = "errored"
+
+
 class AutotestScenarioKind(StrEnum):
     """Scripted test conversation run against every version (concept section 11)."""
 

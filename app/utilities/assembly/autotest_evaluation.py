@@ -8,7 +8,11 @@ scenarios passed and the average judge score is at least 4 of 5.
 
 from collections.abc import Sequence
 
-from app.schemas.constants.assistants import AutotestOutcome, AutotestScenarioKind
+from app.schemas.constants.assistants import (
+    AssistantVersionStatus,
+    AutotestOutcome,
+    AutotestScenarioKind,
+)
 from app.schemas.domain.assistants import AutotestScenarioResult, JudgeCriterionScore
 from app.schemas.dto.assistants import AutotestRunSummary, AutotestScenario
 from app.schemas.dto.conversations import AssistantReply
@@ -162,3 +166,30 @@ def summarize_run(results: Sequence[AutotestScenarioResult]) -> AutotestRunSumma
             and is_average_high_enough
         ),
     )
+
+
+def decide_version_status(
+    is_passed: bool,
+    is_full_coverage: bool,
+    previous_status: AssistantVersionStatus,
+) -> AssistantVersionStatus:
+    """
+    The version status after a run: READY only after a passed run that
+    covered everything; TESTS_FAILED after any failed run; after a passed
+    narrowed run, the status from before the run (DRAFT when it was neither
+    READY nor TESTS_FAILED).
+    """
+
+    if not is_passed:
+        return AssistantVersionStatus.TESTS_FAILED
+
+    if is_full_coverage:
+        return AssistantVersionStatus.READY
+
+    if previous_status in (
+        AssistantVersionStatus.READY,
+        AssistantVersionStatus.TESTS_FAILED,
+    ):
+        return previous_status
+
+    return AssistantVersionStatus.DRAFT

@@ -188,5 +188,7 @@ def test_queued_job_dies_after_max_attempts_or_without_handler() -> None:
     orphan = job_repo.get(orphan_id)
     assert dead is not None and dead.status is QueuedJobStatus.DEAD
     assert dead.attempts == 5
+    # Only the last attempt is marked final, so a handler can clean up then.
+    assert [call.is_final_attempt for call in operator.calls] == [False] * 4 + [True]
     assert orphan is not None and orphan.status is QueuedJobStatus.DEAD
     assert reporter.errors == []

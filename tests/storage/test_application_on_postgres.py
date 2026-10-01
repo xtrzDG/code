@@ -82,7 +82,10 @@ def test_published_assistant_books_a_table_with_everything_in_postgres(
     assert stored["resources"] == 1
     assert stored["assistant_versions"] == 1
     assert stored["autotest_runs"] == 1
-    assert stored["bookings"] == 1
+    # The real booking plus one sandbox booking per language from the
+    # autotests the worker played (ka, ru, en).
+    assert stored["bookings"] == 4
+    assert stored["queued_jobs"] == 1
     assert stored["contacts"] >= 1
     assert stored["messages"] > 0
     assert stored["llm_turns"] > 0

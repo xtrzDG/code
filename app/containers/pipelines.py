@@ -68,7 +68,7 @@ class PipelinesContainer(containers.DeclarativeContainer):
     ] = Factory(
         AssembleAssistantVersionPipeline,
         assemble_assistant_version=orchestrators.assemble_assistant_version_orchestrator,
-        run_autotests=orchestrators.run_autotests_orchestrator,
+        run_autotests=orchestrators.queue_autotest_run_orchestrator,
         get_assistant_version=orchestrators.get_assistant_version_orchestrator,
     )
 
@@ -106,7 +106,10 @@ class PipelinesContainer(containers.DeclarativeContainer):
         orchestrators.call_forwarding_instructions_orchestrator
     )
     run_autotests_pipeline = orchestrator_pipeline(
-        orchestrators.run_autotests_orchestrator
+        orchestrators.queue_autotest_run_orchestrator
+    )
+    run_queued_autotests_pipeline = orchestrator_pipeline(
+        orchestrators.run_queued_autotests_orchestrator
     )
     voice_tool_webhook_pipeline = orchestrator_pipeline(
         orchestrators.voice_tool_webhook_orchestrator

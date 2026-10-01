@@ -28,7 +28,7 @@ uv, Python 3.14, ruff, mypy и pyright в строгом режиме, pytest, d
 | Процесс | Точка входа | Что делает |
 | --- | --- | --- |
 | HTTP API | `app.main:create_application` (фабрика uvicorn) | кабинет, каталог, вебхуки каналов, голоса и оплаты, виджет сайта |
-| Фоновый воркер | `python -m app.worker_main` | периодические задачи и очередь задач |
+| Фоновый воркер | `python -m app.worker_main` | периодические задачи и очередь задач (автотесты версий помощника) |
 | Миграции | `python -m app.adapters.storage.postgres.migrate` | схема Postgres (ЕС) с изоляцией по бизнесу (RLS) |
 
 API и воркер собираются из одного контейнера `app/containers/app.py::AppContainer`
@@ -141,6 +141,14 @@ uv run python -m app.adapters.storage.postgres.migrate             # приме�
 | Админка платформы | `GET /v1/admin/clients[/{business_id}]`, `POST /v1/admin/clients/{business_id}/open` |
 
 `…` — это `/v1/businesses/{business_id}`.
+
+Автотесты не выполняются внутри запроса: `POST …/assistant-versions` и
+`POST …/assistant-versions/{id}/autotests` запускают прогон (версия — `testing`,
+прогон — `running`, ответ `202` для повторного прогона), а играет его фоновый воркер.
+Ход прогона виден в `GET …/assistant-versions/{id}/autotest-run`. Статус `ready`
+даёт только прогон по всем языкам и сценариям версии. Выйти в эфир можно с
+пробным периодом или оплаченной подпиской, принятым DPA, контактом менеджера и
+без блокирующих пробелов анкеты.
 
 ## Проверки
 

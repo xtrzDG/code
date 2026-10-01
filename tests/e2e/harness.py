@@ -13,6 +13,7 @@ End-to-end harness: the real AppContainer with overrides only at the edges.
 
 import hashlib
 import json
+import re
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
@@ -225,11 +226,112 @@ def last_tool_call(request: LlmRequest) -> tuple[str, JsonObject] | None:
     return str(calls[-1]["name"]), cast(JsonObject, json.loads(results[-1]["content"]))
 
 
+LANGUAGE_TAG_PATTERN: re.Pattern[str] = re.compile(r"language tag ([A-Za-z\-]+)\)")
+GOAL_PATTERN: re.Pattern[str] = re.compile(r"^Your goal: (.+)$", re.MULTILINE)
+# What the AI customer writes, by scenario language and intent.
+CUSTOMER_MESSAGES: dict[str, dict[str, str]] = {
+    "ka": {
+        "booking": "მინდა მაგიდის დაჯავშნა",
+        "price": "რა ღირს ხაჭაპური?",
+        "human": "მენეჯერთან დამაკავშირეთ, გთხოვთ",
+        "other": "გამარჯობა, კითხვა მაქვს",
+    },
+    "ru": {
+        "booking": "Хочу забронировать столик",
+        "price": "Сколько стоит хачапури?",
+        "human": "Позовите менеджера, пожалуйста",
+        "other": "Здравствуйте, у меня вопрос",
+    },
+    "en": {
+        "booking": "I would like to book a table",
+        "price": "How much is khachapuri?",
+        "human": "Let me talk to a manager, please",
+        "other": "Hello, I have a question",
+    },
+}
+# What the assistant answers, in the language the customer wrote in.
+ASSISTANT_TEXTS: dict[str, dict[str, str]] = {
+    "ka": {
+        "greeting": "გამარჯობა! რით შემიძლია დაგეხმაროთ?",
+        "booked": "მზადაა! მაგიდა დაჯავშნილია 19:00-ზე.",
+        "price": "ხაჭაპურის ფასია {price}.",
+        "no_price": "სამწუხაროდ, ფასი ვერ ვიპოვე.",
+        "fine": "კარგი.",
+    },
+    "ru": {
+        "greeting": "Здравствуйте! Чем могу помочь?",
+        "booked": "Готово, Нино! Ваш столик забронирован на 19:00.",
+        "price": "Хачапури стоит {price}.",
+        "no_price": "К сожалению, цену не нашёл.",
+        "fine": "Хорошо.",
+    },
+    "en": {
+        "greeting": "Hello! How can I help?",
+        "booked": "Done! Your table is booked for 19:00.",
+        "price": "Khachapuri costs {price}.",
+        "no_price": "Sorry, I could not find the price.",
+        "fine": "All right.",
+    },
+}
+HANDOFF_WORDS: tuple[str, ...] = ("менеджер", "მენეჯერ", "manager")
+BOOKING_WORDS: tuple[str, ...] = ("забронировать", "დაჯავშნა", "book a table")
+PRICE_WORDS: tuple[str, ...] = ("ღირს", "Сколько стоит", "How much")
+
+
+def read_customer_intent(goal: str) -> str:
+    """The AI customer's intent from the scenario goal of its instruction."""
+
+    if goal.startswith("Book a "):
+        return "booking"
+
+    if goal.startswith("Ask how much"):
+        return "price"
+
+    if goal.startswith(("Ask to talk to a human", "Report an emergency")):
+        return "human"
+
+    return "other"
+
+
+def detect_language(text: str) -> str:
+    """ka, ru or en by the script the customer wrote in."""
+
+    if any("\u10a0" <= character <= "\u10ff" for character in text):
+        return "ka"
+
+    if any("\u0400" <= character <= "\u04ff" for character in text):
+        return "ru"
+
+    return "en"
+
+
+def last_customer_text(request: LlmRequest) -> str:
+    """Text of the latest turn the customer wrote (not a tool result)."""
+
+    for payload in reversed(request.transcript):
+        turn: JsonObject = read_turn(payload)
+        if turn["role"] != "user":
+            continue
+
+        texts: list[str] = [
+            str(block["text"])
+            for block in turn["content"]
+            if block.get("type") == "text"
+        ]
+        if texts:
+            return "\n".join(texts)
+
+    return ""
+
+
 class WorkshopModelScript:
     """
     The scripted language model of the journey. It plays three roles, told
     apart by the request: the judge (judge prompt), the autotest customer
-    (no tools) and the assistant (tools offered).
+    (no tools) and the assistant (tools offered). The customer writes one
+    message for its scenario goal in the scenario language; the assistant
+    answers in the language the customer wrote in, books, quotes prices
+    through get_price and hands off when asked for a manager.
     """
 
     def __init__(self) -> None:
@@ -259,22 +361,35 @@ class WorkshopModelScript:
 
         if not request.tools:
             self.customer_calls += 1
-            customer_turns: int = sum(
-                1
-                for payload in request.transcript
-                if read_turn(payload)["role"] == "user"
-            )
-            return say("რა ღირს ხაჭაპური?" if customer_turns <= 1 else DONE_MARKER)
+            return self._play_customer(request)
 
         self.assistant_calls += 1
+        language: str = detect_language(last_customer_text(request))
         answered: tuple[str, JsonObject] | None = last_tool_call(request)
         if answered is not None:
-            return self._after_tool(*answered)
+            return self._after_tool(*answered, language=language)
 
-        return self._answer(read_turn_texts(request.transcript[-1]))
+        return self._answer(read_turn_texts(request.transcript[-1]), language)
 
-    def _answer(self, customer_text: str) -> ScriptedLlmTurn:
-        if "менеджер" in customer_text:
+    def _play_customer(self, request: LlmRequest) -> ScriptedLlmTurn:
+        customer_turns: int = sum(
+            1 for payload in request.transcript if read_turn(payload)["role"] == "user"
+        )
+        if customer_turns > 1:
+            return say(DONE_MARKER)
+
+        prompt: str = str(request.system_prompt)
+        language_match: re.Match[str] | None = LANGUAGE_TAG_PATTERN.search(prompt)
+        goal_match: re.Match[str] | None = GOAL_PATTERN.search(prompt)
+        assert language_match is not None and goal_match is not None, prompt
+        return say(
+            CUSTOMER_MESSAGES[language_match.group(1)][
+                read_customer_intent(goal_match.group(1))
+            ]
+        )
+
+    def _answer(self, customer_text: str, language: str) -> ScriptedLlmTurn:
+        if any(word in customer_text for word in HANDOFF_WORDS):
             return self._call(
                 AssistantToolName.HANDOFF_TO_HUMAN,
                 {
@@ -284,7 +399,7 @@ class WorkshopModelScript:
                 },
             )
 
-        if "забронировать" in customer_text:
+        if any(word in customer_text for word in BOOKING_WORDS):
             return self._call(
                 AssistantToolName.CHECK_AVAILABILITY,
                 {
@@ -297,12 +412,18 @@ class WorkshopModelScript:
                 },
             )
 
-        if "ღირს" in customer_text:
+        if any(word in customer_text for word in PRICE_WORDS):
             return self._call(AssistantToolName.GET_PRICE, {"item_name": "ხაჭაპური"})
 
-        return say("Здравствуйте! Чем могу помочь?")
+        return say(ASSISTANT_TEXTS[language]["greeting"])
 
-    def _after_tool(self, tool_name: str, result: JsonObject) -> ScriptedLlmTurn:
+    def _after_tool(
+        self,
+        tool_name: str,
+        result: JsonObject,
+        language: str,
+    ) -> ScriptedLlmTurn:
+        texts: dict[str, str] = ASSISTANT_TEXTS[language]
         if tool_name == AssistantToolName.CHECK_AVAILABILITY:
             self.booking_request = {
                 "name": "Нино",
@@ -318,19 +439,19 @@ class WorkshopModelScript:
             return self._call(AssistantToolName.CREATE_BOOKING, self.booking_request)
 
         if tool_name == AssistantToolName.CREATE_BOOKING:
-            return say("Готово, Нино! Ваш столик забронирован на 19:00.")
+            return say(texts["booked"])
 
         if tool_name == AssistantToolName.GET_PRICE:
             matches: list[JsonObject] = result["matches"]
             if not matches:
-                return say("სამწუხაროდ, ფასი ვერ ვიპოვე.")
+                return say(texts["no_price"])
 
-            return say(f"ხაჭაპურის ფასია {matches[0]['price_text']}.")
+            return say(texts["price"].format(price=matches[0]["price_text"]))
 
         if tool_name == AssistantToolName.HANDOFF_TO_HUMAN:
             return say(str(result["customer_message"]))
 
-        return say("Хорошо.")
+        return say(texts["fine"])
 
     def _call(
         self, tool_name: AssistantToolName, arguments: JsonObject

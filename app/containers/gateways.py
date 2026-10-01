@@ -9,6 +9,7 @@ from app.containers.time_provider import TimeProviderContainer
 from app.gateways.worker.background_worker import BackgroundWorker, PeriodicJobSpec
 from app.schemas.typings.platform.constrained_integers import JobIntervalSeconds
 from app.schemas.typings.platform.constrained_strings import JobName
+from app.use_cases.autotests.enqueue_autotest_run_use_case import RUN_AUTOTESTS_JOB
 
 MINUTE_SECONDS: int = 60
 HOUR_SECONDS: int = 60 * MINUTE_SECONDS
@@ -84,8 +85,11 @@ class GatewaysContainer(containers.DeclarativeContainer):
             operator=operators.flush_llm_traces_operator,
         ),
     )
-    # No module queues jobs yet; handlers go here by job name.
-    queued_job_operators: Dict = Dict()
+    # Handlers of queued jobs by job name (the queue is filled by use cases
+    # through the job queue facilitator).
+    queued_job_operators: Dict = Dict(
+        {RUN_AUTOTESTS_JOB: operators.run_queued_autotests_operator}
+    )
     background_worker: Factory[BackgroundWorker] = Factory(
         BackgroundWorker,
         periodic_jobs=periodic_jobs,

@@ -16,9 +16,10 @@ class AssembleAssistantVersionPipeline(
     Assembly phase followed by the autotest phase (concept section 4).
 
     The version is assembled first; unless the owner turned it off, its
-    autotests run right away (in the requested languages and kinds), and
-    the version is returned as it stands afterwards: READY or TESTS_FAILED
-    with its test score, or DRAFT when tests were skipped.
+    autotests are started (in the requested languages and kinds), and the
+    version is returned as it stands afterwards: TESTING while the worker
+    plays a queued run, READY or TESTS_FAILED after a run played in place,
+    or DRAFT when tests were skipped.
     """
 
     def __init__(

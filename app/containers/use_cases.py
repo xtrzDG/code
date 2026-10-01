@@ -38,9 +38,12 @@ from app.schemas.dto.assistants import (
     AssistantVersionQuery,
     AssistantVersionsQuery,
     AssistantVersionSummary,
+    AutotestPlanningRequest,
     AutotestRunCompletion,
+    AutotestRunFailure,
     AutotestRunPlan,
     AutotestRunView,
+    AutotestScenarioPlanning,
     PublishAssistantVersionCommand,
     RollbackAssistantVersionCommand,
     RunAutotestsCommand,
@@ -157,6 +160,7 @@ from app.schemas.dto.handoffs import (
 from app.schemas.dto.jobs import (
     JobReport,
     JobTick,
+    QueuedJobInput,
 )
 from app.schemas.dto.knowledge import (
     KnowledgeSearchRequest,
@@ -296,10 +300,22 @@ from app.use_cases.assistants.rollback_assistant_version_use_case import (
 from app.use_cases.authorize_business_access_use_case import (
     AuthorizeBusinessAccessUseCase,
 )
+from app.use_cases.autotests.abandon_autotest_run_use_case import (
+    AbandonAutotestRunUseCase,
+)
+from app.use_cases.autotests.enqueue_autotest_run_use_case import (
+    EnqueueAutotestRunUseCase,
+)
 from app.use_cases.autotests.finish_autotest_run_use_case import (
     FinishAutotestRunUseCase,
 )
 from app.use_cases.autotests.get_autotest_run_use_case import GetAutotestRunUseCase
+from app.use_cases.autotests.plan_autotest_scenarios_use_case import (
+    PlanAutotestScenariosUseCase,
+)
+from app.use_cases.autotests.resume_autotest_run_use_case import (
+    ResumeAutotestRunUseCase,
+)
 from app.use_cases.autotests.start_autotest_run_use_case import StartAutotestRunUseCase
 from app.use_cases.billing.assemble_billing_overview_use_case import (
     AssembleBillingOverviewUseCase,
@@ -1409,16 +1425,48 @@ class UseCasesContainer(containers.DeclarativeContainer):
         assistant_version_repo=repositories.assistant_version_repo,
         version_details_transformer=transformers.assistant_version_details_transformer,
     )
+    plan_autotest_scenarios_use_case: Factory[
+        UseCaseContract[AutotestPlanningRequest, AutotestScenarioPlanning]
+    ] = Factory(
+        PlanAutotestScenariosUseCase,
+        business_profile_repo=repositories.business_profile_repo,
+        knowledge_item_repo=repositories.knowledge_item_repo,
+        niche_template_registry=registries.niche_template_registry,
+        language_registry=registries.language_registry,
+    )
     start_autotest_run_use_case: Factory[
         UseCaseContract[RunAutotestsCommand, AutotestRunPlan]
     ] = Factory(
         StartAutotestRunUseCase,
         authorize_business_access=authorize_business_access_use_case,
         assistant_version_repo=repositories.assistant_version_repo,
-        business_profile_repo=repositories.business_profile_repo,
-        knowledge_item_repo=repositories.knowledge_item_repo,
-        niche_template_registry=registries.niche_template_registry,
-        language_registry=registries.language_registry,
+        autotest_run_repo=repositories.autotest_run_repo,
+        plan_autotest_scenarios=plan_autotest_scenarios_use_case,
+        wall_clock=time_provider.microsecond_wall_clock,
+    )
+    enqueue_autotest_run_use_case: Factory[
+        UseCaseContract[AutotestRunPlan, AutotestRunView]
+    ] = Factory(
+        EnqueueAutotestRunUseCase,
+        autotest_run_repo=repositories.autotest_run_repo,
+        job_queue=facilitators.job_queue_facilitator,
+        autotest_run_view_transformer=transformers.autotest_run_view_transformer,
+    )
+    resume_autotest_run_use_case: Factory[
+        UseCaseContract[QueuedJobInput, AutotestRunPlan]
+    ] = Factory(
+        ResumeAutotestRunUseCase,
+        business_repo=repositories.business_repo,
+        assistant_version_repo=repositories.assistant_version_repo,
+        autotest_run_repo=repositories.autotest_run_repo,
+        plan_autotest_scenarios=plan_autotest_scenarios_use_case,
+    )
+    abandon_autotest_run_use_case: Factory[
+        UseCaseContract[AutotestRunFailure, None]
+    ] = Factory(
+        AbandonAutotestRunUseCase,
+        assistant_version_repo=repositories.assistant_version_repo,
+        autotest_run_repo=repositories.autotest_run_repo,
         wall_clock=time_provider.microsecond_wall_clock,
     )
     finish_autotest_run_use_case: Factory[

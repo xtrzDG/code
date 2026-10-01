@@ -23,6 +23,8 @@ class AutotestRunViewTransformer(
             id=run.id,
             business_id=run.business_id,
             assistant_version_id=run.assistant_version_id,
+            status=run.status,
+            is_full_coverage=run.is_full_coverage,
             version_status=input_data.version.status,
             scenario_count=AutotestScenarioCount(len(run.results)),
             passed_count=AutotestScenarioCount(

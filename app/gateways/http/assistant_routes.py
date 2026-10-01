@@ -99,16 +99,18 @@ def build_assistant_router(
     Routes (all require a bearer token; reads are for owners and staff,
     changes for owners):
         POST /v1/businesses/{business_id}/assistant-versions
-             assemble a version, then run its autotests unless
-             run_autotests is false (201)
+             assemble a version, then start its autotests unless
+             run_autotests is false (201; the version is TESTING while the
+             background worker plays them)
         GET  /v1/businesses/{business_id}/assistant-versions
              version history, newest first
         GET  /v1/businesses/{business_id}/assistant-versions/{version_id}
              one version with its instruction and fact table
         GET  .../assistant-versions/{version_id}/autotest-run
-             latest autotest run of the version
+             latest autotest run of the version (RUNNING while it plays)
         POST .../assistant-versions/{version_id}/autotests
-             run the autotests again, optionally narrowed
+             start the autotests again, optionally narrowed (202; only a
+             run over every language and kind can make a version READY)
         POST .../assistant-versions/{version_id}/publish
              make a READY version live once the trial or subscription,
              the DPA and the profile allow it (accept_failed_tests forces an
@@ -171,6 +173,7 @@ def build_assistant_router(
 
     @router.post(
         VERSION_PATH + "/autotests",
+        status_code=status.HTTP_202_ACCEPTED,
         openapi_extra=describe_optional_json_body(RunAutotestsRequest),
     )
     def run_autotests(

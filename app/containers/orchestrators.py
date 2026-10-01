@@ -13,8 +13,14 @@ from app.contracts.conversation_flow import (
 )
 from app.contracts.orchestrator_contract import OrchestratorContract
 from app.contracts.use_case_contract import UseCaseContract
+from app.orchestrators.assistants.queue_autotest_run_orchestrator import (
+    QueueAutotestRunOrchestrator,
+)
 from app.orchestrators.assistants.run_autotests_orchestrator import (
     RunAutotestsOrchestrator,
+)
+from app.orchestrators.assistants.run_queued_autotests_orchestrator import (
+    RunQueuedAutotestsOrchestrator,
 )
 from app.orchestrators.channels.post_call_webhook_orchestrator import (
     PostCallWebhookOrchestrator,
@@ -49,7 +55,7 @@ from app.schemas.dto.catalog import (
 )
 from app.schemas.dto.conversation_feed import OwnerTestChatCommand
 from app.schemas.dto.conversations import InboundMessage, VoiceToolCallResult
-from app.schemas.dto.jobs import JobReport, JobTick
+from app.schemas.dto.jobs import JobReport, JobTick, QueuedJobInput
 from app.schemas.dto.voice_webhooks import (
     PostCallWebhookOutcome,
     PostCallWebhookRequest,
@@ -119,6 +125,23 @@ class OrchestratorsContainer(containers.DeclarativeContainer):
         start_autotest_run=use_cases.start_autotest_run_use_case,
         run_autotest_scenario=run_autotest_scenario_use_case,
         finish_autotest_run=use_cases.finish_autotest_run_use_case,
+    )
+    # The HTTP routes start a run and leave playing it to the worker.
+    queue_autotest_run_orchestrator: Factory[
+        OrchestratorContract[RunAutotestsCommand, AutotestRunView]
+    ] = Factory(
+        QueueAutotestRunOrchestrator,
+        start_autotest_run=use_cases.start_autotest_run_use_case,
+        enqueue_autotest_run=use_cases.enqueue_autotest_run_use_case,
+    )
+    run_queued_autotests_orchestrator: Factory[
+        OrchestratorContract[QueuedJobInput, JobReport]
+    ] = Factory(
+        RunQueuedAutotestsOrchestrator,
+        resume_autotest_run=use_cases.resume_autotest_run_use_case,
+        run_autotest_scenario=run_autotest_scenario_use_case,
+        finish_autotest_run=use_cases.finish_autotest_run_use_case,
+        abandon_autotest_run=use_cases.abandon_autotest_run_use_case,
     )
 
     # --- Call forwarding instructions (access check, then the instructions).

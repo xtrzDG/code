@@ -42,17 +42,31 @@ def test_owner_assembles_tests_publishes_and_rolls_back_over_http() -> None:
     }
     assert "send_link" in draft["tools"]
 
-    tested = client.post(f"{base}/{draft['id']}/autotests", headers=owner)
-    assert tested.status_code == 200, tested.text
-    run: dict[str, Any] = tested.json()
+    # The request only starts the run; the background worker plays it.
+    started = client.post(f"{base}/{draft['id']}/autotests", headers=owner)
+    assert started.status_code == 202, started.text
+    assert started.json()["status"] == "running"
+    assert started.json()["version_status"] == "testing"
+    assert started.json()["scenario_count"] == 0
+    assert testbed.judge_requests.requests == []
+    running = client.get(f"{base}/{draft['id']}/autotest-run", headers=owner)
+    assert running.json()["status"] == "running"
+    publishing_early = client.post(f"{base}/{draft['id']}/publish", headers=owner)
+    assert publishing_early.status_code == 409
+
+    tick = testbed.run_worker()
+
+    assert (tick.queued_runs, tick.failures) == (1, 0)
+    latest_run = client.get(f"{base}/{draft['id']}/autotest-run", headers=owner)
+    assert latest_run.status_code == 200
+    run: dict[str, Any] = latest_run.json()
+    assert run["id"] == started.json()["id"]
+    assert run["status"] == "finished"
+    assert run["is_full_coverage"] is True
     assert run["version_status"] == "ready"
     assert run["is_passed"] is True
     assert run["scenario_count"] == 29
     assert run["results"][0]["transcript"][0]["author"] == "customer"
-
-    latest_run = client.get(f"{base}/{draft['id']}/autotest-run", headers=owner)
-    assert latest_run.status_code == 200
-    assert latest_run.json()["id"] == run["id"]
 
     published = client.post(f"{base}/{draft['id']}/publish", headers=owner)
     assert published.status_code == 200, published.text
@@ -60,6 +74,9 @@ def test_owner_assembles_tests_publishes_and_rolls_back_over_http() -> None:
     assert published.json()["voice_agent_id"] == "agent_1"
 
     second = assemble(client, owner, business.id)
+    assert second["status"] == "testing"
+    testbed.run_worker()
+    second = client.get(f"{base}/{second['id']}", headers=owner).json()
     assert second["status"] == "ready"
     assert second["test_score"] == 5.0
     assert client.post(f"{base}/{second['id']}/publish", headers=owner).json()[
@@ -95,6 +112,7 @@ def test_autotests_can_be_narrowed_over_http() -> None:
         business.id,
         {"languages": ["en"], "kinds": ["human_request", "price_question"]},
     )
+    testbed.run_worker()
     run = client.get(
         f"{versions_url(business.id)}/{version['id']}/autotest-run",
         headers=owner,
@@ -106,13 +124,23 @@ def test_autotests_can_be_narrowed_over_http() -> None:
         "price_question__en__1",
         "price_question__en__2",
     ]
+    # A passed narrowed run proves nothing about the other languages and
+    # kinds: the version is not ready for customers.
+    assert run["is_passed"] is True
+    assert run["is_full_coverage"] is False
+    assert run["version_status"] == "draft"
     rerun = client.post(
         f"{versions_url(business.id)}/{version['id']}/autotests",
         headers=owner,
         json={"languages": ["it"], "kinds": ["rude_customer"]},
     )
-    assert rerun.status_code == 200
-    assert [result["scenario_key"] for result in rerun.json()["results"]] == [
+    assert rerun.status_code == 202
+    testbed.run_worker()
+    rerun_view = client.get(
+        f"{versions_url(business.id)}/{version['id']}/autotest-run",
+        headers=owner,
+    ).json()
+    assert [result["scenario_key"] for result in rerun_view["results"]] == [
         "rude_customer__it"
     ]
 
@@ -124,7 +152,11 @@ def test_failed_version_is_published_only_by_an_admin_with_acceptance() -> None:
     client = testbed.build_client()
     owner = testbed.bearer(testbed.owner_id)
     admin = testbed.bearer(testbed.add_platform_admin())
-    version = assemble(client, owner, business.id)
+    assembled = assemble(client, owner, business.id)
+    testbed.run_worker()
+    version = client.get(
+        f"{versions_url(business.id)}/{assembled['id']}", headers=owner
+    ).json()
     publish_url = f"{versions_url(business.id)}/{version['id']}/publish"
 
     refused = client.post(publish_url, headers=owner)
@@ -233,6 +265,7 @@ def test_voice_provider_failure_is_a_bad_gateway() -> None:
     client = testbed.build_client()
     owner = testbed.bearer(testbed.owner_id)
     version = assemble(client, owner, business.id)
+    testbed.run_worker()
     testbed.voice_provisioner.error = ExternalServiceError("Voice platform is down.")
 
     response = client.post(

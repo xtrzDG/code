@@ -6,6 +6,7 @@ from app.schemas.constants.assistants import (
     AssistantToolName,
     AssistantVersionStatus,
     AutotestOutcome,
+    AutotestRunStatus,
     AutotestScenarioKind,
     JudgeCriterion,
 )
@@ -27,6 +28,7 @@ from app.schemas.dto.niches import NicheTemplate
 from app.schemas.typings.assistants.booleans import (
     AcceptsFailedAutotests,
     IsAutotestRunPassed,
+    IsFullAutotestCoverage,
     ShouldRunAutotests,
 )
 from app.schemas.typings.assistants.constrained_floats import (
@@ -225,13 +227,17 @@ class AutotestRunView(ImmutableDTO):
     """
     An autotest run with the status its version got.
 
-    The run passes (version READY) when every price and booking scenario
-    passed and the average judge score is at least 4 of 5.
+    The run passes when every price and booking scenario passed and the
+    average judge score is at least 4 of 5; only a passed run that covered
+    every language and scenario kind (`is_full_coverage`) makes the version
+    READY. While `status` is RUNNING the worker is still playing it.
     """
 
     id: AutotestRunId
     business_id: BusinessId
     assistant_version_id: AssistantVersionId
+    status: AutotestRunStatus
+    is_full_coverage: IsFullAutotestCoverage
     version_status: AssistantVersionStatus
     scenario_count: AutotestScenarioCount
     passed_count: AutotestScenarioCount
@@ -302,14 +308,52 @@ class AutotestScenario(ImmutableDTO):
 
 
 class AutotestRunPlan(ImmutableDTO):
-    """A started autotest run: the version under test and its scenarios."""
+    """
+    A started autotest run: the version under test and its scenarios.
+
+    `is_full_coverage` tells whether the scenarios cover every version
+    language and applicable kind; `previous_version_status` is the status
+    the version had before the run. An empty `scenarios` list means there
+    is nothing left to run (the run already finished).
+    """
 
     run_id: AutotestRunId
     business: BusinessDocument
     version: AssistantVersionDocument
     scenarios: list[AutotestScenario]
+    is_full_coverage: IsFullAutotestCoverage
+    previous_version_status: AssistantVersionStatus
     customer_phone_number: E164PhoneNumber | None = None
     started_at: Microseconds
+
+
+class AutotestPlanningRequest(ImmutableDTO):
+    """Scenarios to plan for a version; missing lists mean "all of them"."""
+
+    business: BusinessDocument
+    version: AssistantVersionDocument
+    languages: list[LanguageTag] | None = None
+    kinds: list[AutotestScenarioKind] | None = None
+
+
+class AutotestScenarioPlanning(ImmutableDTO):
+    """Planned scenarios and whether they cover everything a launch needs."""
+
+    scenarios: list[AutotestScenario]
+    is_full_coverage: IsFullAutotestCoverage
+
+
+class AutotestJobPayload(ImmutableDTO):
+    """Payload of the queued job that plays a started autotest run."""
+
+    run_id: AutotestRunId
+
+
+class AutotestRunFailure(ImmutableDTO):
+    """A queued autotest run that could not be completed."""
+
+    business_id: BusinessId
+    run_id: AutotestRunId
 
 
 class AutotestScenarioRun(ImmutableDTO):

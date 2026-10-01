@@ -19,12 +19,20 @@ from app.adapters.storage.in_memory_document_collection import (
     InMemoryDocumentCollectionAdapter,
 )
 from app.contracts.llm import LlmAdapterContract
+from app.facilitators.jobs.job_queue_facilitator import JobQueueFacilitator
 from app.gateways.http.assistant_routes import build_assistant_router
 from app.gateways.http.error_responses import install_error_handlers
 from app.gateways.http.user_authentication import build_current_user_dependency
+from app.gateways.worker.background_worker import BackgroundWorker, WorkerTickReport
 from app.operators.pipeline_operator import PipelineOperator
+from app.orchestrators.assistants.queue_autotest_run_orchestrator import (
+    QueueAutotestRunOrchestrator,
+)
 from app.orchestrators.assistants.run_autotests_orchestrator import (
     RunAutotestsOrchestrator,
+)
+from app.orchestrators.assistants.run_queued_autotests_orchestrator import (
+    RunQueuedAutotestsOrchestrator,
 )
 from app.orchestrators.use_case_orchestrator import UseCaseOrchestrator
 from app.pipelines.assistants.assemble_assistant_version_pipeline import (
@@ -46,6 +54,7 @@ from app.repositories.compliance_repositories import (
     DpaAcceptanceRepository,
 )
 from app.repositories.conversation_repositories import MessageRepository
+from app.repositories.job_repositories import QueuedJobRepository
 from app.repositories.knowledge_repositories import (
     KnowledgeItemRepository,
     ResourceRepository,
@@ -66,6 +75,7 @@ from app.schemas.domain.compliance import (
     DpaAcceptanceDocument,
 )
 from app.schemas.domain.conversations import MessageDocument
+from app.schemas.domain.jobs import QueuedJobDocument
 from app.schemas.domain.knowledge import KnowledgeItemDocument
 from app.schemas.domain.profiles import BusinessProfileDocument
 from app.schemas.domain.resources import ResourceDocument, ScheduleExceptionDocument
@@ -93,6 +103,7 @@ from app.schemas.typings.conversations.prefixed_id import ConversationId
 from app.schemas.typings.conversations.strings import MessageText
 from app.schemas.typings.handoffs.prefixed_id import HandoffId
 from app.schemas.typings.localization.constrained_strings import LanguageTag
+from app.schemas.typings.platform.constrained_integers import WorkerPollSeconds
 from app.schemas.typings.users.prefixed_id import UserId
 from app.transformers.assembly.assistant_instruction_transformer import (
     AssistantInstructionTransformer,
@@ -133,10 +144,23 @@ from app.use_cases.assistants.rollback_assistant_version_use_case import (
 from app.use_cases.authorize_business_access_use_case import (
     AuthorizeBusinessAccessUseCase,
 )
+from app.use_cases.autotests.abandon_autotest_run_use_case import (
+    AbandonAutotestRunUseCase,
+)
+from app.use_cases.autotests.enqueue_autotest_run_use_case import (
+    RUN_AUTOTESTS_JOB,
+    EnqueueAutotestRunUseCase,
+)
 from app.use_cases.autotests.finish_autotest_run_use_case import (
     FinishAutotestRunUseCase,
 )
 from app.use_cases.autotests.get_autotest_run_use_case import GetAutotestRunUseCase
+from app.use_cases.autotests.plan_autotest_scenarios_use_case import (
+    PlanAutotestScenariosUseCase,
+)
+from app.use_cases.autotests.resume_autotest_run_use_case import (
+    ResumeAutotestRunUseCase,
+)
 from app.use_cases.autotests.run_autotest_scenario_use_case import (
     RunAutotestScenarioUseCase,
 )
@@ -280,6 +304,14 @@ def build_reply(
     )
 
 
+class RecordingErrorReporter:
+    def __init__(self) -> None:
+        self.errors: list[BaseException] = []
+
+    def capture_exception(self, error: BaseException) -> None:
+        self.errors.append(error)
+
+
 class AssemblyTestbed:
     """
     The slice wired over in-memory repositories, with fakes for registries,
@@ -348,6 +380,10 @@ class AssemblyTestbed:
         self.dpa_repo = DpaAcceptanceRepository(
             InMemoryDocumentCollectionAdapter(DpaAcceptanceDocument)
         )
+        self.job_repo = QueuedJobRepository(
+            InMemoryDocumentCollectionAdapter(QueuedJobDocument)
+        )
+        self.worker_errors = RecordingErrorReporter()
 
         self.niche_registry = FakeNicheTemplateRegistry()
         self.country_registry = FakeCountryRegistry()
@@ -427,15 +463,19 @@ class AssemblyTestbed:
             self.version_repo,
             details_transformer,
         )
-        self.start_autotest_run_use_case = StartAutotestRunUseCase(
-            authorize_business_access=authorize,
-            assistant_version_repo=self.version_repo,
+        plan_scenarios = PlanAutotestScenariosUseCase(
             business_profile_repo=self.profile_repo,
             knowledge_item_repo=self.knowledge_repo,
             niche_template_registry=self.niche_registry,
             language_registry=self.language_registry,
-            wall_clock=self.wall_clock,
             price_question_limit=price_question_limit,
+        )
+        self.start_autotest_run_use_case = StartAutotestRunUseCase(
+            authorize_business_access=authorize,
+            assistant_version_repo=self.version_repo,
+            autotest_run_repo=self.run_repo,
+            plan_autotest_scenarios=plan_scenarios,
+            wall_clock=self.wall_clock,
         )
         self.run_scenario_use_case = RunAutotestScenarioUseCase(
             conversation_turn_orchestrator=self.conversation,
@@ -461,6 +501,44 @@ class AssemblyTestbed:
             self.start_autotest_run_use_case,
             self.run_scenario_use_case,
             self.finish_autotest_run_use_case,
+        )
+        # The production path: the request starts a run, the worker plays it.
+        self.queue_autotest_run_orchestrator = QueueAutotestRunOrchestrator(
+            self.start_autotest_run_use_case,
+            EnqueueAutotestRunUseCase(
+                self.run_repo,
+                JobQueueFacilitator(self.job_repo, self.wall_clock),
+                run_view_transformer,
+            ),
+        )
+        self.resume_autotest_run_use_case = ResumeAutotestRunUseCase(
+            self.business_repo,
+            self.version_repo,
+            self.run_repo,
+            plan_scenarios,
+        )
+        self.abandon_autotest_run_use_case = AbandonAutotestRunUseCase(
+            self.version_repo,
+            self.run_repo,
+            self.wall_clock,
+        )
+        self.run_queued_autotests_orchestrator = RunQueuedAutotestsOrchestrator(
+            self.resume_autotest_run_use_case,
+            self.run_scenario_use_case,
+            self.finish_autotest_run_use_case,
+            self.abandon_autotest_run_use_case,
+        )
+        self.worker = BackgroundWorker(
+            periodic_jobs=[],
+            queued_job_operators={
+                RUN_AUTOTESTS_JOB: PipelineOperator(
+                    OrchestratorPipeline(self.run_queued_autotests_orchestrator)
+                )
+            },
+            job_repo=self.job_repo,
+            wall_clock=self.wall_clock,
+            error_reporter=self.worker_errors,
+            poll_seconds=WorkerPollSeconds(5),
         )
         activate = ActivateAssistantVersionUseCase(
             check_go_live_readiness=CheckGoLiveReadinessUseCase(
@@ -499,6 +577,11 @@ class AssemblyTestbed:
         self.assemble_pipeline = AssembleAssistantVersionPipeline(
             UseCaseOrchestrator(self.assemble_use_case),
             self.run_autotests_orchestrator,
+            UseCaseOrchestrator(self.get_version_use_case),
+        )
+        self.queued_assemble_pipeline = AssembleAssistantVersionPipeline(
+            UseCaseOrchestrator(self.assemble_use_case),
+            self.queue_autotest_run_orchestrator,
             UseCaseOrchestrator(self.get_version_use_case),
         )
 
@@ -556,6 +639,17 @@ class AssemblyTestbed:
             )
         )
 
+    def pending_jobs(self) -> list[QueuedJobDocument]:
+        """Queued jobs still waiting for a (first or repeated) attempt."""
+
+        return self.job_repo.list_due(Microseconds(2**62))
+
+    def run_worker(self) -> WorkerTickReport:
+        """One worker tick: plays every queued autotest run."""
+
+        self.advance(60)
+        return self.worker.run_once()
+
     def add_platform_admin(self) -> UserId:
         admin = UserDocument(
             login_method=LoginMethod.EMAIL,
@@ -589,7 +683,7 @@ class AssemblyTestbed:
         http_application.include_router(
             build_assistant_router(
                 assemble_assistant_version_operator=PipelineOperator(
-                    self.assemble_pipeline
+                    self.queued_assemble_pipeline
                 ),
                 list_assistant_versions_operator=PipelineOperator(
                     OrchestratorPipeline(
@@ -605,7 +699,7 @@ class AssemblyTestbed:
                     )
                 ),
                 run_autotests_operator=PipelineOperator(
-                    OrchestratorPipeline(self.run_autotests_orchestrator)
+                    OrchestratorPipeline(self.queue_autotest_run_orchestrator)
                 ),
                 publish_assistant_version_operator=PipelineOperator(
                     OrchestratorPipeline(UseCaseOrchestrator(self.publish_use_case))

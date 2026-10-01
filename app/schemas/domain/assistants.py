@@ -6,12 +6,16 @@ from app.schemas.constants.assistants import (
     AssistantToolName,
     AssistantVersionStatus,
     AutotestOutcome,
+    AutotestRunStatus,
     AutotestScenarioKind,
     JudgeCriterion,
 )
 from app.schemas.constants.conversations import MessageAuthor
 from app.schemas.constants.niches import NicheKey
-from app.schemas.typings.assistants.booleans import IsAutotestRunPassed
+from app.schemas.typings.assistants.booleans import (
+    IsAutotestRunPassed,
+    IsFullAutotestCoverage,
+)
 from app.schemas.typings.assistants.constrained_floats import (
     AutotestPassRate,
     AverageJudgeScore,
@@ -117,14 +121,28 @@ class AutotestScenarioResult(PersistentDocument):
 
 
 class AutotestRunDocument(BaseDocument):
-    """All scenario results for one assistant version."""
+    """
+    One autotest run of an assistant version and its scenario results.
+
+    It is stored RUNNING when it starts (the worker plays it) and gets its
+    results when FINISHED. `languages` and `kinds` are what the owner asked
+    for (None means all); `is_full_coverage` is True when the run covered
+    every version language and every applicable scenario kind, the only
+    kind of run that can make a version READY. `previous_version_status`
+    is the version's status before the run, restored when the run errors.
+    """
 
     id: AutotestRunId = Field(default_factory=AutotestRunId)
     business_id: BusinessId
     assistant_version_id: AssistantVersionId
+    status: AutotestRunStatus = AutotestRunStatus.FINISHED
+    languages: list[LanguageTag] | None = None
+    kinds: list[AutotestScenarioKind] | None = None
+    is_full_coverage: IsFullAutotestCoverage = False
+    previous_version_status: AssistantVersionStatus | None = None
     results: list[AutotestScenarioResult] = Field(
         default_factory=list[AutotestScenarioResult]
     )
-    pass_rate: AutotestPassRate
+    pass_rate: AutotestPassRate = AutotestPassRate(0.0)
     average_score: AverageJudgeScore | None = None
-    is_passed: IsAutotestRunPassed
+    is_passed: IsAutotestRunPassed = False

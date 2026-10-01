@@ -152,6 +152,7 @@ class BackgroundWorker:
                         job_name=job.name,
                         payload=job.payload,
                         business_id=job.business_id,
+                        is_final_attempt=attempts >= MAX_QUEUED_JOB_ATTEMPTS,
                     )
                 )
             except Exception as error:  # noqa: BLE001 - retried with backoff

@@ -98,7 +98,11 @@ def start_trial_and_accept_dpa(
 
 
 def open_restaurant(workshop: Workshop) -> OpenRestaurant:
-    """Sign in, fill the profile, add a table, assemble, test and publish."""
+    """
+    Sign in, fill the profile, add a table and a manager contact, start the
+    trial, accept the DPA, assemble, let the worker test every language and
+    publish.
+    """
 
     client = workshop.client
     token, owner_id, business_id = sign_in_and_create_restaurant(workshop)
@@ -130,19 +134,12 @@ def open_restaurant(workshop: Workshop) -> OpenRestaurant:
     )
     assert settings.status_code == 200, settings.text
     start_trial_and_accept_dpa(workshop, base, headers)
-    version = client.post(
-        f"{base}/assistant-versions",
-        json={"run_autotests": False},
-        headers=headers,
-    )
+    version = client.post(f"{base}/assistant-versions", json={}, headers=headers)
     assert version.status_code == 201, version.text
+    assert version.json()["status"] == "testing"
     version_id = str(version.json()["id"])
-    run = client.post(
-        f"{base}/assistant-versions/{version_id}/autotests",
-        json={"languages": ["ka"], "kinds": ["price_question"]},
-        headers=headers,
-    )
-    assert run.status_code == 200, run.text
+    # The background worker plays the autotests in every language.
+    workshop.container.gateways.background_worker().run_once()
     published = client.post(
         f"{base}/assistant-versions/{version_id}/publish",
         json={},
