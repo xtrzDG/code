@@ -5,11 +5,17 @@ Texts are compared without case and accents in any script (NFKD with the
 combining marks removed, then case folding), so "nino" finds "Nino" and
 "Ниноʼ", and "jose" finds "José". A phone is matched by its digits in any
 format and numeral system: "599 12-34-56", "+995 599 123456", "0599123456"
-(national prefix) and Arabic-Indic digits all find "+995599123456".
+(national prefix) and Arabic-Indic digits all find "+995599123456"; the
+national prefix of the phone's own country is dropped too ("8 916 …" finds
+"+79161234567", "06 30 …" finds "+3630…").
 """
 
+import re
 import unicodedata
 from collections.abc import Iterable
+
+import phonenumbers
+from phonenumbers import NumberParseException, PhoneMetadata
 
 MIN_PHONE_DIGITS: int = 3
 PHONE_PUNCTUATION: frozenset[str] = frozenset(" +-(). /")
@@ -48,7 +54,8 @@ def looks_like_phone(text: str) -> bool:
 def phone_digits_match(digits: str, phone_number: str | None) -> bool:
     """
     The digits appear in the phone, also without a national or international
-    prefix of zeros ("0599…", "00995…").
+    prefix of zeros ("0599…", "00995…") or without the national prefix of
+    the phone's own country ("8 916…" for +7, "06 30…" for +36).
     """
 
     if phone_number is None or len(digits) < MIN_PHONE_DIGITS:
@@ -58,8 +65,39 @@ def phone_digits_match(digits: str, phone_number: str | None) -> bool:
     if digits in phone_digits:
         return True
 
-    without_prefix: str = digits.lstrip(TRUNK_PREFIX)
-    return len(without_prefix) >= MIN_PHONE_DIGITS and without_prefix in phone_digits
+    return any(
+        len(candidate) >= MIN_PHONE_DIGITS and candidate in phone_digits
+        for candidate in (
+            digits.lstrip(TRUNK_PREFIX),
+            without_national_prefix(digits, phone_number),
+        )
+    )
+
+
+def without_national_prefix(digits: str, phone_number: str) -> str:
+    """
+    The digits without the trunk prefix of the phone's own country (libphonenumber
+    metadata: "8" for +7 and +375, "0" for +995, "06" for +36), also for
+    partial numbers; unchanged when the phone's country has none.
+    """
+
+    try:
+        region: str | None = phonenumbers.region_code_for_number(
+            phonenumbers.parse(phone_number, None)
+        )
+    except NumberParseException:
+        return digits
+
+    metadata: PhoneMetadata | None = (
+        None if region is None else PhoneMetadata.metadata_for_region(region)
+    )
+    if metadata is None or not metadata.national_prefix_for_parsing:
+        return digits
+
+    prefix: re.Match[str] | None = re.match(
+        metadata.national_prefix_for_parsing, digits
+    )
+    return digits if prefix is None else digits[prefix.end() :]
 
 
 def matches_search(

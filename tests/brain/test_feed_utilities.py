@@ -134,3 +134,24 @@ def test_open_channels_and_the_24_hour_window() -> None:
     assert instagram.window_closes_at == int(wrote_at) + 24 * HOUR
     assert (late.is_available, late.block) == (False, StaffReplyBlock.WINDOW_CLOSED)
     assert (never.is_available, never.block) == (False, StaffReplyBlock.WINDOW_CLOSED)
+
+
+@pytest.mark.parametrize(
+    ("search", "phone_number"),
+    [
+        ("8 701 123 4567", "+77011234567"),
+        ("8 (916) 123-45-67", "+79161234567"),
+        ("8 916 123", "+79161234567"),
+        ("8 029 123 45 67", "+375291234567"),
+        ("06 30 123 4567", "+36301234567"),
+    ],
+)
+def test_phone_search_drops_the_national_prefix_of_the_phone_country(
+    search: str, phone_number: str
+) -> None:
+    assert matches_search(search, None, phone_number, [])
+
+
+def test_phone_search_with_a_national_prefix_still_needs_the_digits() -> None:
+    assert not matches_search("8 916 000", None, "+79161234567", [])
+    assert not matches_search("8 701 123 4567", None, "+995599123456", [])

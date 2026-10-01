@@ -16,13 +16,17 @@ from app.schemas.exceptions.application_errors import (
     AccessDeniedError,
     NotFoundError,
 )
+from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.compliance.strings import ClientIpAddress
 from app.schemas.typings.contacts.constrained_strings import ContactSearchText
 from app.schemas.typings.contacts.prefixed_id import ContactId
+from app.schemas.typings.contacts.strings import ContactName
 from app.schemas.typings.conversations.strings import ChannelUserId
+from app.schemas.typings.localization.constrained_strings import E164PhoneNumber
 from app.schemas.typings.localization.strings import RawPhoneNumberInput
 from app.schemas.typings.platform.constrained_integers import PageSize
 from app.schemas.typings.users.prefixed_id import UserId
+from app.utilities.contacts.contact_search import matches_contact_search
 from tests.compliance.visitor_records import (
     SeededVisitor,
     build_conversation,
@@ -136,6 +140,10 @@ def test_owner_lists_the_customers_of_the_business_most_recent_first() -> None:
         ("٦٥٤٣٢١", ["Nino"]),
         ("57", []),
         ("Noa", []),
+        ("0577 65 43 21", ["Nino"]),  # national trunk prefix of the business country
+        ("0577 65", ["Nino"]),  # a partial national number
+        ("00995577123456", ["Giorgi"]),  # international 00 prefix
+        ("NÍNO", ["Nino"]),  # without case and accents, as in the feed
     ],
 )
 def test_search_matches_names_and_phone_digits(search: str, names: list[str]) -> None:
@@ -277,3 +285,30 @@ def test_an_erased_customer_stays_in_the_list_marked_erased() -> None:
     assert erased.conversation_count == 2
     assert detail.contact.erased_at == erased.erased_at
     assert list_contacts(customers, "Giorgi").items == []
+
+
+@pytest.mark.parametrize(
+    ("phone", "search", "search_phone"),
+    [
+        ("+79161234567", "8 916 123-45-67", None),  # Russian trunk prefix 8
+        ("+447911123456", "07911 123456", "+447911123456"),  # a UK national number
+        ("+447911123456", "07911 123456", None),
+    ],
+)
+def test_search_finds_national_numbers_of_any_country(
+    phone: str, search: str, search_phone: str | None
+) -> None:
+    contact = ContactDocument(
+        business_id=BusinessId(),
+        name=ContactName("Customer"),
+        phone_number=E164PhoneNumber(phone),
+    )
+
+    assert matches_contact_search(
+        contact,
+        ContactSearchText(search),
+        None if search_phone is None else E164PhoneNumber(search_phone),
+    )
+    assert not matches_contact_search(
+        contact, ContactSearchText("8 916 000"), E164PhoneNumber("+995599123456")
+    )

@@ -802,6 +802,7 @@ class AccountsTestbed:
             lead_repo=self.lead_repo,
             audit_log_repo=self.audit_log_repo,
             wall_clock=wall_clock,
+            phone_number_parser=self.phone_parser,
         )
         self.get_contact = GetContactUseCase(
             authorize_business_access=self.authorize_business_access,

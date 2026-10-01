@@ -851,6 +851,7 @@ class UseCasesContainer(containers.DeclarativeContainer):
             lead_repo=repositories.lead_repo,
             audit_log_repo=repositories.audit_log_repo,
             wall_clock=time_provider.microsecond_wall_clock,
+            phone_number_parser=utilities.phone_number_parser,
         )
     )
     get_contact_use_case: Factory[UseCaseContract[ContactQuery, ContactDetailView]] = (
