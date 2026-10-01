@@ -3,6 +3,18 @@
 from base_typed_int import BaseConstrainedTypedInt
 
 
+class BillingIntervalMonths(BaseConstrainedTypedInt):
+    """
+    Months between two automatic charges of a subscription (1 or 12).
+
+    Example:
+        annual_interval = BillingIntervalMonths(12)
+    """
+
+    ge = 1
+    le = 12
+
+
 class CostMicroUsd(BaseConstrainedTypedInt):
     """
     Provider cost in millionths of a US dollar (no floating point money).
@@ -58,6 +70,23 @@ class MoneyAmountMinor(BaseConstrainedTypedInt):
     ge = 0
 
 
+class OverageVoiceMinutes(BaseConstrainedTypedInt):
+    """Voice minutes used above the package of a plan in one period."""
+
+    ge = 0
+
+
+class PackageUsagePercent(BaseConstrainedTypedInt):
+    """
+    Whole percent of an included package used in one period (may exceed 100).
+
+    Example:
+        minutes_share = PackageUsagePercent(82)
+    """
+
+    ge = 0
+
+
 class TrialDays(BaseConstrainedTypedInt):
     """Length of the free trial (concept: 14 days)."""
 
@@ -67,6 +96,24 @@ class TrialDays(BaseConstrainedTypedInt):
 
 class UsageQuantity(BaseConstrainedTypedInt):
     """Quantity of one usage event in the unit of its UsageKind."""
+
+    ge = 0
+
+
+class UsageQuantityTotal(BaseConstrainedTypedInt):
+    """Sum of the quantities of one UsageKind over a period."""
+
+    ge = 0
+
+
+class UsedDialogs(BaseConstrainedTypedInt):
+    """Text dialogs started in one billing period."""
+
+    ge = 0
+
+
+class UsedVoiceMinutes(BaseConstrainedTypedInt):
+    """Voice minutes used in one billing period, rounded up to whole minutes."""
 
     ge = 0
 

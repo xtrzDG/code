@@ -4,6 +4,7 @@ from typed_time_provider import Microseconds
 
 from app.schemas.constants.billing import (
     BillingPeriod,
+    InvoiceKind,
     InvoiceStatus,
     PlanKey,
     SubscriptionStatus,
@@ -46,11 +47,15 @@ class SubscriptionDocument(BaseDocument):
 
 
 class InvoiceDocument(BaseDocument):
-    """Invoice for a service period (concept table `invoices`)."""
+    """
+    Invoice for a service period or the one-time setup fee (concept table
+    `invoices`). A setup fee invoice has a zero-length period at its issue time.
+    """
 
     id: InvoiceId = Field(default_factory=InvoiceId)
     business_id: BusinessId
     subscription_id: SubscriptionId | None = None
+    kind: InvoiceKind = InvoiceKind.SERVICE_PERIOD
     description: InvoiceDescription
     amount_minor: MoneyAmountMinor
     currency_code: CurrencyCode

@@ -1,0 +1,201 @@
+from typed_time_provider import Microseconds, WallClock
+
+from app.contracts.registries import PlanRegistryContract
+from app.contracts.repositories import InvoiceRepoContract
+from app.contracts.transformer_contract import TransformerContract
+from app.contracts.use_case_contract import UseCaseContract
+from app.schemas.constants.billing import BillingPeriod, InvoiceKind, InvoiceStatus
+from app.schemas.domain.billing import InvoiceDocument, SubscriptionDocument
+from app.schemas.domain.businesses import BusinessDocument
+from app.schemas.dto.billing import Money, PlanDefinition
+from app.schemas.dto.billing_ledger import DueInvoicesRequest, InvoiceDescriptionInput
+from app.schemas.typings.billing.strings import InvoiceDescription
+from app.use_cases.billing.billing_records import OPEN_INVOICE_STATUSES
+from app.use_cases.billing.subscription_pricing import price_setup_fee
+from app.utilities.billing.billing_periods import add_billing_period
+
+
+class IssueDueInvoicesUseCase(
+    UseCaseContract[DueInvoicesRequest, list[InvoiceDocument]]
+):
+    """
+    Issue the invoice of a service period at its start, in the subscription
+    currency and at the subscription price, with the localized service
+    wording (concept tax rule: never "license" or "consultation").
+
+    The one-time setup fee is invoiced together with the first monthly
+    period; an annual subscription includes it (concept: the setup fee is
+    credited to an annual payment). Issuing is idempotent: an existing
+    invoice of the same period is reused, and an open one takes the
+    requested PAID or FAILED status. VAT is not applied yet; after VAT
+    registration (Georgia: 18 % on top) a VAT line will be added here.
+    """
+
+    def __init__(
+        self,
+        invoice_repo: InvoiceRepoContract,
+        plan_registry: PlanRegistryContract,
+        invoice_description_transformer: TransformerContract[
+            InvoiceDescriptionInput,
+            InvoiceDescription,
+        ],
+        wall_clock: WallClock[Microseconds],
+    ) -> None:
+        self._invoice_repo: InvoiceRepoContract = invoice_repo
+        self._plan_registry: PlanRegistryContract = plan_registry
+        self._invoice_description_transformer: TransformerContract[
+            InvoiceDescriptionInput,
+            InvoiceDescription,
+        ] = invoice_description_transformer
+        self._wall_clock: WallClock[Microseconds] = wall_clock
+
+    def run(self, input_data: DueInvoicesRequest) -> list[InvoiceDocument]:
+        business: BusinessDocument = input_data.business
+        subscription: SubscriptionDocument = input_data.subscription
+        plan: PlanDefinition = self._plan_registry.get(subscription.plan_key)
+        business_invoices: list[InvoiceDocument] = self._invoice_repo.list_by_business(
+            business.id
+        )
+        issued: list[InvoiceDocument] = []
+        if self._needs_setup_fee(input_data, business_invoices):
+            issued.append(self._issue_setup_fee(input_data, plan))
+
+        issued.append(self._issue_period_invoice(input_data, plan, business_invoices))
+        return issued
+
+    def _needs_setup_fee(
+        self,
+        input_data: DueInvoicesRequest,
+        business_invoices: list[InvoiceDocument],
+    ) -> bool:
+        if (
+            not input_data.is_setup_fee_included
+            or input_data.subscription.billing_period is not BillingPeriod.MONTHLY
+        ):
+            return False
+
+        return not any(
+            invoice.kind is InvoiceKind.SETUP_FEE
+            and invoice.status is not InvoiceStatus.VOID
+            for invoice in business_invoices
+        )
+
+    def _issue_setup_fee(
+        self,
+        input_data: DueInvoicesRequest,
+        plan: PlanDefinition,
+    ) -> InvoiceDocument:
+        subscription: SubscriptionDocument = input_data.subscription
+        now: Microseconds = self._wall_clock.now_unix()
+        setup_fee: Money = price_setup_fee(
+            self._plan_registry,
+            subscription.plan_key,
+            subscription.currency_code,
+        )
+        invoice = InvoiceDocument(
+            business_id=subscription.business_id,
+            subscription_id=subscription.id,
+            kind=InvoiceKind.SETUP_FEE,
+            description=self._describe(
+                input_data,
+                plan,
+                InvoiceKind.SETUP_FEE,
+                now,
+                now,
+            ),
+            amount_minor=setup_fee.amount_minor,
+            currency_code=setup_fee.currency_code,
+            status=input_data.status,
+            period_start=now,
+            period_end=now,
+            provider_reference=input_data.payment_reference,
+            created_at=now,
+            updated_at=now,
+        )
+        self._invoice_repo.save(invoice)
+        return invoice
+
+    def _issue_period_invoice(
+        self,
+        input_data: DueInvoicesRequest,
+        plan: PlanDefinition,
+        business_invoices: list[InvoiceDocument],
+    ) -> InvoiceDocument:
+        subscription: SubscriptionDocument = input_data.subscription
+        now: Microseconds = self._wall_clock.now_unix()
+        for invoice in business_invoices:
+            if (
+                invoice.subscription_id == subscription.id
+                and invoice.kind is InvoiceKind.SERVICE_PERIOD
+                and invoice.status is not InvoiceStatus.VOID
+                and invoice.period_start == input_data.period_start
+            ):
+                return self._settle_existing(invoice, input_data, now)
+
+        period_end: Microseconds = add_billing_period(
+            input_data.period_start,
+            subscription.billing_period,
+            input_data.business.timezone,
+        )
+        invoice = InvoiceDocument(
+            business_id=subscription.business_id,
+            subscription_id=subscription.id,
+            kind=InvoiceKind.SERVICE_PERIOD,
+            description=self._describe(
+                input_data,
+                plan,
+                InvoiceKind.SERVICE_PERIOD,
+                input_data.period_start,
+                period_end,
+            ),
+            amount_minor=subscription.price_minor,
+            currency_code=subscription.currency_code,
+            status=input_data.status,
+            period_start=input_data.period_start,
+            period_end=period_end,
+            provider_reference=input_data.payment_reference,
+            created_at=now,
+            updated_at=now,
+        )
+        self._invoice_repo.save(invoice)
+        return invoice
+
+    def _settle_existing(
+        self,
+        invoice: InvoiceDocument,
+        input_data: DueInvoicesRequest,
+        now: Microseconds,
+    ) -> InvoiceDocument:
+        if (
+            input_data.status is InvoiceStatus.ISSUED
+            or invoice.status not in OPEN_INVOICE_STATUSES
+        ):
+            return invoice
+
+        invoice.status = input_data.status
+        if input_data.payment_reference is not None:
+            invoice.provider_reference = input_data.payment_reference
+
+        invoice.updated_at = now
+        self._invoice_repo.save(invoice)
+        return invoice
+
+    def _describe(
+        self,
+        input_data: DueInvoicesRequest,
+        plan: PlanDefinition,
+        kind: InvoiceKind,
+        period_start: Microseconds,
+        period_end: Microseconds,
+    ) -> InvoiceDescription:
+        return self._invoice_description_transformer.transform(
+            InvoiceDescriptionInput(
+                kind=kind,
+                language=input_data.business.owner_language,
+                timezone=input_data.business.timezone,
+                plan_names=plan.names,
+                billing_period=input_data.subscription.billing_period,
+                period_start=period_start,
+                period_end=period_end,
+            )
+        )
