@@ -1,8 +1,11 @@
-import { SectionPlaceholder, sectionMetadata } from "@/components/business/SectionPlaceholder";
+import { sectionMetadata } from "@/components/business/SectionPlaceholder";
+
+import { parseLeadFilters } from "./_components/leadModel";
+import { LeadsScreen } from "./LeadsScreen";
 
 export const generateMetadata = sectionMetadata("leads");
 
-/** Placeholder: replace with the real leads page (see web/README.md, "Adding a page"). */
-export default function Page() {
-  return <SectionPlaceholder section="leads" />;
+/** Leads; `?status=new` opens a tab, `&test=1` includes test activity. */
+export default async function LeadsPage({ searchParams }: PageProps<"/b/[businessId]/leads">) {
+  return <LeadsScreen initialFilters={parseLeadFilters(await searchParams)} />;
 }

@@ -1,8 +1,11 @@
-import { SectionPlaceholder, sectionMetadata } from "@/components/business/SectionPlaceholder";
+import { sectionMetadata } from "@/components/business/SectionPlaceholder";
+
+import { parseBookingFilters } from "./_components/bookingModel";
+import { BookingsScreen } from "./BookingsScreen";
 
 export const generateMetadata = sectionMetadata("bookings");
 
-/** Placeholder: replace with the real bookings page (see web/README.md, "Adding a page"). */
-export default function Page() {
-  return <SectionPlaceholder section="bookings" />;
+/** Bookings; filters come from the URL (`?range=week&status=pending&resource=…`). */
+export default async function BookingsPage({ searchParams }: PageProps<"/b/[businessId]/bookings">) {
+  return <BookingsScreen initialFilters={parseBookingFilters(await searchParams)} />;
 }
