@@ -10,6 +10,9 @@ from pathlib import Path
 import pytest
 
 from app.adapters.storage.postgres.migrate import DEFAULT_MIGRATIONS_DIRECTORY
+from app.registries.legal.legal_document_registry import (
+    DEFAULT_LEGAL_DOCUMENTS_DIRECTORY,
+)
 
 ROOT: Path = Path(__file__).resolve().parents[2]
 ENTRYPOINT: Path = ROOT / "docker" / "entrypoint.sh"
@@ -65,18 +68,25 @@ def test_dockerfile_copies_what_the_image_needs() -> None:
     dockerfile = read("Dockerfile")
     copied = re.findall(r"^COPY (?!--from)(\S+)", dockerfile, re.MULTILINE)
 
-    assert copied == ["app", "migrations", "docker/entrypoint.sh"]
+    assert copied == ["app", "migrations", "docs/legal", "docker/entrypoint.sh"]
     for source in copied:
         assert (ROOT / source).exists(), source
 
     assert DEFAULT_MIGRATIONS_DIRECTORY == ROOT / "migrations"
+    assert DEFAULT_LEGAL_DOCUMENTS_DIRECTORY == ROOT / "docs" / "legal"
     assert "uv sync --frozen --no-dev" in dockerfile
     assert "/healthz" in dockerfile
     assert re.search(r"^USER \d+:\d+$", dockerfile, re.MULTILINE)
     ignored = read(".dockerignore").splitlines()
-    assert not {"app", "migrations", "docker", "uv.lock", "pyproject.toml"} & set(
-        ignored
-    )
+    assert not {
+        "app",
+        "migrations",
+        "docs/legal",
+        "docker",
+        "uv.lock",
+        "pyproject.toml",
+    } & set(ignored)
+    assert "!docs/legal" in ignored
 
 
 def test_every_documented_variable_is_read() -> None:

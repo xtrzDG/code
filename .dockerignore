@@ -19,6 +19,8 @@ htmlcov
 var
 tests
 docs
+# The DPA texts (served by the API) are the only documents in the image.
+!docs/legal
 web
 node_modules
 *.md
