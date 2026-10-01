@@ -68,13 +68,18 @@ class GoLiveCheck(ImmutableDTO):
 
 
 class GoLiveAutotestRunSummary(ImmutableDTO):
-    """The version's latest autotest run as the checklist reports it."""
+    """
+    The version's latest autotest run as the checklist reports it: while it
+    is RUNNING, `scenario_count` is the number of planned scenarios and
+    `completed_count` the ones played so far.
+    """
 
     id: AutotestRunId
     status: AutotestRunStatus
     is_full_coverage: IsFullAutotestCoverage
     is_passed: IsAutotestRunPassed
     scenario_count: AutotestScenarioCount
+    completed_count: AutotestScenarioCount
     passed_count: AutotestScenarioCount
     pass_rate: AutotestPassRate
     average_score: AverageJudgeScore | None = None

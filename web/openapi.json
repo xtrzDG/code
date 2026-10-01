@@ -333,10 +333,48 @@
         "title": "AnsweredQuestionResult",
         "type": "object"
       },
+      "ApiErrorCode": {
+        "description": "Broad kind of a failed API request, the \"error\" field of every error\nbody (app/gateways/http/error_responses.py maps errors to HTTP status).",
+        "enum": [
+          "not_found",
+          "validation_failed",
+          "conflict",
+          "authentication_required",
+          "access_denied",
+          "rate_limited",
+          "external_service_error",
+          "internal_error"
+        ],
+        "title": "ApiErrorCode",
+        "type": "string"
+      },
       "AssistantReply": {
         "additionalProperties": false,
-        "description": "What the assistant answered and what happened during the turn.\n\n`text` is None when the assistant stays silent because staff took over the\nconversation (open handoff in a chat channel). `disclosure_text` is the\n\"I am an AI assistant\" sentence the server put in front of the first\nreply (part of `text`), so checks of what the model wrote can leave it\nout.",
+        "description": "What the assistant answered and what happened during the turn.\n\n`text` is None when the assistant stays silent because staff took over the\nconversation (open handoff in a chat channel). `disclosure_text` is the\n\"I am an AI assistant\" sentence the server put in front of the first\nreply (part of `text`), so checks of what the model wrote can leave it\nout. `assistant_version_id` and `assistant_version_number` name the\nversion that answered (the one the conversation is pinned to);\n`tool_calls` are the tools the model called in this turn, with their\ninput and result (the owner's test chat shows them).",
         "properties": {
+          "assistant_version_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assistant Version Id"
+          },
+          "assistant_version_number": {
+            "anyOf": [
+              {
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assistant Version Number"
+          },
           "conversation_id": {
             "title": "Conversation Id",
             "type": "string"
@@ -403,6 +441,13 @@
               }
             ],
             "title": "Text"
+          },
+          "tool_calls": {
+            "items": {
+              "$ref": "#/components/schemas/ToolCallView"
+            },
+            "title": "Tool Calls",
+            "type": "array"
           }
         },
         "required": [
@@ -817,7 +862,7 @@
       },
       "AutotestRunView": {
         "additionalProperties": false,
-        "description": "An autotest run with the status its version got.\n\nThe run passes when every price and booking scenario passed and the\naverage judge score is at least 4 of 5; only a passed run that covered\nevery language and scenario kind (`is_full_coverage`) makes the version\nREADY. While `status` is RUNNING the worker is still playing it.",
+        "description": "An autotest run with the status its version got.\n\nThe run passes when every price and booking scenario passed and the\naverage judge score is at least 4 of 5; only a passed run that covered\nevery language and scenario kind (`is_full_coverage`) makes the version\nREADY. While `status` is RUNNING the worker is still playing it:\n`scenario_count` is then the number of planned scenarios and `results`\nholds the ones finished so far (progress = results / scenario_count).",
         "properties": {
           "assistant_version_id": {
             "title": "Assistant Version Id",
@@ -3938,6 +3983,33 @@
         "title": "DataRegion",
         "type": "string"
       },
+      "DiscardedImportBatch": {
+        "additionalProperties": false,
+        "description": "Drafts deleted with their import (empty when none were left).",
+        "properties": {
+          "batch_id": {
+            "title": "Batch Id",
+            "type": "string"
+          },
+          "business_id": {
+            "title": "Business Id",
+            "type": "string"
+          },
+          "discarded_item_ids": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Discarded Item Ids",
+            "type": "array"
+          }
+        },
+        "required": [
+          "business_id",
+          "batch_id"
+        ],
+        "title": "DiscardedImportBatch",
+        "type": "object"
+      },
       "DpaAcceptanceView": {
         "additionalProperties": false,
         "description": "Who accepted which version of the agreement, and when.",
@@ -4007,6 +4079,72 @@
           "is_current_version_accepted"
         ],
         "title": "DpaStatusView",
+        "type": "object"
+      },
+      "ErrorBody": {
+        "additionalProperties": false,
+        "description": "Body of every failed request: the broad `error` code, an English\n`message`, and, when the server knows them, `reasons` with stable codes\n(absent otherwise, so older clients keep working).",
+        "properties": {
+          "error": {
+            "$ref": "#/components/schemas/ApiErrorCode"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          },
+          "reasons": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/ErrorReason"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reasons"
+          }
+        },
+        "required": [
+          "error",
+          "message"
+        ],
+        "title": "ErrorBody",
+        "type": "object"
+      },
+      "ErrorReason": {
+        "additionalProperties": false,
+        "description": "One reason a request was refused, in the `reasons` list of an error\nresponse: a stable `code` clients branch on, an English `message`, and\n`details` that qualify it (gap kinds, statuses, missing settings).\n\nExample: {\"code\": \"profile_gaps\", \"message\": \"Complete the profile ...\",\n\"details\": [\"no_opening_hours\"]}",
+        "properties": {
+          "code": {
+            "maxLength": 64,
+            "minLength": 2,
+            "pattern": "^[a-z][a-z0-9_]*$",
+            "title": "Code",
+            "type": "string"
+          },
+          "details": {
+            "items": {
+              "maxLength": 120,
+              "minLength": 1,
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:/+\\-]*$",
+              "type": "string"
+            },
+            "title": "Details",
+            "type": "array"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "message"
+        ],
+        "title": "ErrorReason",
         "type": "object"
       },
       "ExchangeRateQuote": {
@@ -4093,6 +4231,201 @@
           "outcome"
         ],
         "title": "FailedAutotestView",
+        "type": "object"
+      },
+      "GoLiveAutotestRunSummary": {
+        "additionalProperties": false,
+        "description": "The version's latest autotest run as the checklist reports it: while it\nis RUNNING, `scenario_count` is the number of planned scenarios and\n`completed_count` the ones played so far.",
+        "properties": {
+          "average_score": {
+            "anyOf": [
+              {
+                "maximum": 5.0,
+                "minimum": 1.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Average Score"
+          },
+          "completed_count": {
+            "minimum": 0.0,
+            "title": "Completed Count",
+            "type": "integer"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "is_full_coverage": {
+            "title": "Is Full Coverage",
+            "type": "boolean"
+          },
+          "is_passed": {
+            "title": "Is Passed",
+            "type": "boolean"
+          },
+          "pass_rate": {
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Pass Rate",
+            "type": "number"
+          },
+          "passed_count": {
+            "minimum": 0.0,
+            "title": "Passed Count",
+            "type": "integer"
+          },
+          "scenario_count": {
+            "minimum": 0.0,
+            "title": "Scenario Count",
+            "type": "integer"
+          },
+          "status": {
+            "$ref": "#/components/schemas/AutotestRunStatus"
+          },
+          "updated_at": {
+            "title": "Updated At",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "status",
+          "is_full_coverage",
+          "is_passed",
+          "scenario_count",
+          "completed_count",
+          "passed_count",
+          "pass_rate",
+          "updated_at"
+        ],
+        "title": "GoLiveAutotestRunSummary",
+        "type": "object"
+      },
+      "GoLiveCheck": {
+        "additionalProperties": false,
+        "description": "One launch condition and what was found.\n\nA failed `is_blocking` check stops publishing; a failed non-blocking one\nis only a warning (voice without ElevenLabs in development). `details`\nqualify it by code:\n\n- subscription_or_trial: the subscription status, or \"none\";\n- dpa: the agreement version to accept;\n- profile_gaps: the blocking gap kinds (\"no_opening_hours\", ...);\n- staff_contact: \"no_handoff_contact\" while nobody receives handoffs;\n- autotests: the version status, then the latest run's status;\n- voice_configuration: the missing server settings (\"APP_BASE_URL\").",
+        "properties": {
+          "code": {
+            "$ref": "#/components/schemas/GoLiveCheckCode"
+          },
+          "details": {
+            "items": {
+              "maxLength": 120,
+              "minLength": 1,
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:/+\\-]*$",
+              "type": "string"
+            },
+            "title": "Details",
+            "type": "array"
+          },
+          "is_blocking": {
+            "title": "Is Blocking",
+            "type": "boolean"
+          },
+          "is_ok": {
+            "title": "Is Ok",
+            "type": "boolean"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "is_ok",
+          "is_blocking",
+          "message"
+        ],
+        "title": "GoLiveCheck",
+        "type": "object"
+      },
+      "GoLiveCheckCode": {
+        "description": "One launch condition of the go-live checklist (concept section 4,\n\"Проверка\"). The same codes name the reasons of a refused publish or\nrollback (`reasons[].code` of the 409), so clients branch on them\ninstead of the English message.",
+        "enum": [
+          "subscription_or_trial",
+          "dpa",
+          "profile_gaps",
+          "staff_contact",
+          "autotests",
+          "voice_configuration"
+        ],
+        "title": "GoLiveCheckCode",
+        "type": "string"
+      },
+      "GoLiveReadiness": {
+        "additionalProperties": false,
+        "description": "Every go-live check of one version, in a fixed order: subscription or\ntrial, data processing agreement, profile gaps, staff contact,\nautotests, then voice configuration (only for versions with voice).\n\n`is_ready` is True when no blocking check failed: then an owner can\npublish the version. The same checks guard publishing and rollback, and\ntheir codes name the reasons of a refusal.",
+        "properties": {
+          "assistant_version_id": {
+            "title": "Assistant Version Id",
+            "type": "string"
+          },
+          "autotest_run": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/GoLiveAutotestRunSummary"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "business_id": {
+            "title": "Business Id",
+            "type": "string"
+          },
+          "checks": {
+            "items": {
+              "$ref": "#/components/schemas/GoLiveCheck"
+            },
+            "title": "Checks",
+            "type": "array"
+          },
+          "dpa_document_version": {
+            "maxLength": 32,
+            "minLength": 1,
+            "pattern": "^[0-9A-Za-z][0-9A-Za-z.\\-_]*$",
+            "title": "Dpa Document Version",
+            "type": "string"
+          },
+          "is_ready": {
+            "title": "Is Ready",
+            "type": "boolean"
+          },
+          "subscription_status": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SubscriptionStatus"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "version_number": {
+            "minimum": 1.0,
+            "title": "Version Number",
+            "type": "integer"
+          },
+          "version_status": {
+            "$ref": "#/components/schemas/AssistantVersionStatus"
+          }
+        },
+        "required": [
+          "business_id",
+          "assistant_version_id",
+          "version_number",
+          "version_status",
+          "is_ready",
+          "checks",
+          "dpa_document_version"
+        ],
+        "title": "GoLiveReadiness",
         "type": "object"
       },
       "HTTPValidationError": {
@@ -4701,9 +5034,9 @@
         "title": "KnowledgeItemKind",
         "type": "string"
       },
-      "KnowledgeItemList": {
+      "KnowledgeItemPage": {
         "additionalProperties": false,
-        "description": "Items of one business, grouped by kind and ordered by title.",
+        "description": "One page of the knowledge base, newest first (by creation time, ties by\nid); `next_cursor` asks for the next page and is None on the last one.",
         "properties": {
           "items": {
             "items": {
@@ -4711,9 +5044,23 @@
             },
             "title": "Items",
             "type": "array"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "minLength": 1,
+                "pattern": "^[A-Za-z0-9_-]+$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
           }
         },
-        "title": "KnowledgeItemList",
+        "title": "KnowledgeItemPage",
         "type": "object"
       },
       "KnowledgeItemSource": {
@@ -5578,8 +5925,12 @@
       },
       "MenuImportResult": {
         "additionalProperties": false,
-        "description": "Drafts created by one import, in menu order.",
+        "description": "Drafts created by one import, in menu order. `batch_id` names the\nimport: DELETE .../knowledge/import/{batch_id} discards the drafts that\nwere not confirmed.",
         "properties": {
+          "batch_id": {
+            "title": "Batch Id",
+            "type": "string"
+          },
           "business_id": {
             "title": "Business Id",
             "type": "string"
@@ -5599,7 +5950,8 @@
           }
         },
         "required": [
-          "business_id"
+          "business_id",
+          "batch_id"
         ],
         "title": "MenuImportResult",
         "type": "object"
@@ -7485,9 +7837,9 @@
         "title": "UnansweredQuestionDetails",
         "type": "object"
       },
-      "UnansweredQuestionListView": {
+      "UnansweredQuestionPage": {
         "additionalProperties": false,
-        "description": "Questions ordered by occurrence count, then most recent.",
+        "description": "One page of questions, the most asked first, then the most recently\nasked; `next_cursor` asks for the next page (None on the last one).",
         "properties": {
           "items": {
             "items": {
@@ -7495,9 +7847,23 @@
             },
             "title": "Items",
             "type": "array"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "minLength": 1,
+                "pattern": "^[A-Za-z0-9_-]+$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
           }
         },
-        "title": "UnansweredQuestionListView",
+        "title": "UnansweredQuestionPage",
         "type": "object"
       },
       "UsageCostLine": {
@@ -9315,6 +9681,73 @@
         ]
       }
     },
+    "/v1/businesses/{business_id}/assistant-versions/{version_id}/go-live-readiness": {
+      "get": {
+        "operationId": "get_go_live_readiness_v1_businesses__business_id__assistant_versions__version_id__go_live_readiness_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "version_id",
+            "required": true,
+            "schema": {
+              "title": "Version Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GoLiveReadiness"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Go Live Readiness",
+        "tags": [
+          "assistant"
+        ]
+      }
+    },
     "/v1/businesses/{business_id}/assistant-versions/{version_id}/publish": {
       "post": {
         "operationId": "publish_assistant_version_v1_businesses__business_id__assistant_versions__version_id__publish_post",
@@ -9385,6 +9818,26 @@
             },
             "description": "Successful Response"
           },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not allowed; reasons[].code force_publish_admin_only."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Refused; reasons[].code names each failed go-live check (subscription_or_trial, dpa, profile_gaps, staff_contact, autotests, voice_configuration) or the version state (version_already_live, version_archived, version_not_archived)."
+          },
           "422": {
             "content": {
               "application/json": {
@@ -9451,6 +9904,26 @@
               }
             },
             "description": "Successful Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not allowed; reasons[].code force_publish_admin_only."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Refused; reasons[].code names each failed go-live check (subscription_or_trial, dpa, profile_gaps, staff_contact, autotests, voice_configuration) or the version state (version_already_live, version_archived, version_not_archived)."
           },
           "422": {
             "content": {
@@ -11962,6 +12435,38 @@
             }
           },
           {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Limit"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
             "in": "header",
             "name": "authorization",
             "required": false,
@@ -11983,7 +12488,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/KnowledgeItemList"
+                  "$ref": "#/components/schemas/KnowledgeItemPage"
                 }
               }
             },
@@ -12313,11 +12818,21 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
+                  "$ref": "#/components/schemas/ErrorBody"
                 }
               }
             },
-            "description": "Validation Error"
+            "description": "The source cannot be read. For a link, reasons[].code is menu_link_invalid (not a public http(s) address), menu_link_unreachable (unknown host, timeout, no connection, HTTP error, redirect trouble) or menu_link_unreadable (too large, not a photo, PDF, text or web page), with details such as http_status:404 or media_type:application/zip."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The menu model is unavailable (external_service_error)."
           }
         },
         "summary": "Import Menu",
@@ -12405,6 +12920,73 @@
           }
         },
         "summary": "Confirm Imported Items",
+        "tags": [
+          "knowledge"
+        ]
+      }
+    },
+    "/v1/businesses/{business_id}/knowledge/import/{batch_id}": {
+      "delete": {
+        "operationId": "discard_import_batch_v1_businesses__business_id__knowledge_import__batch_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "batch_id",
+            "required": true,
+            "schema": {
+              "title": "Batch Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DiscardedImportBatch"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Discard Import Batch",
         "tags": [
           "knowledge"
         ]
@@ -15777,6 +16359,38 @@
             }
           },
           {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Limit"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
             "in": "header",
             "name": "authorization",
             "required": false,
@@ -15798,7 +16412,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/UnansweredQuestionListView"
+                  "$ref": "#/components/schemas/UnansweredQuestionPage"
                 }
               }
             },

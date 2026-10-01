@@ -11,12 +11,12 @@ import { Alert, Checkbox, Fieldset, Spinner, useToast } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import {
   applicableAutotestKinds,
-  classifyPublishRefusal,
   narrowedSelection,
+  refusalReasons,
   type AssistantVersionDetails,
   type AutotestRunView,
   type AutotestScenarioKind,
-  type PublishRefusal,
+  type Refusal,
 } from "@/lib/assistant";
 import { languageName } from "@/lib/format";
 
@@ -130,13 +130,20 @@ export function RunAutotestsDialog({
   );
 }
 
-function refusalOf(error: ApiError): PublishRefusal | null {
-  return error.status === 409 || error.status === 403 ? classifyPublishRefusal(error.detail) : null;
+interface RefusalState {
+  reasons: Refusal[];
+  error: ApiError;
+}
+
+/** A refused publish or rollback (409, or 403 for a forced publish), else null. */
+function refusalOf(error: ApiError): RefusalState | null {
+  return error.status === 409 || error.status === 403 ? { reasons: refusalReasons(error), error } : null;
 }
 
 /**
  * Publish a version (owner): a confirmation, and the API's refusal reasons
- * (trial, agreement, profile, autotests) with links to fix them.
+ * (by their codes: trial, agreement, profile, staff contact, autotests,
+ * voice setup) with links to fix them.
  * `force` publishes a version that did not pass its autotests (platform admins).
  */
 export function PublishDialog({
@@ -160,7 +167,7 @@ export function PublishDialog({
   const { t } = useI18n();
   const toast = useToast();
   const { business } = useBusiness();
-  const [refusal, setRefusal] = useState<{ refusal: PublishRefusal; detail: string | null } | null>(null);
+  const [refusal, setRefusal] = useState<RefusalState | null>(null);
   const [acknowledged, setAcknowledged] = useState(false);
 
   const publish = useApiMutation(
@@ -180,9 +187,9 @@ export function PublishDialog({
       onPublished(result.data);
       return;
     }
-    const reasons = refusalOf(result.error);
-    if (reasons) {
-      setRefusal({ refusal: reasons, detail: result.error.detail });
+    const refused = refusalOf(result.error);
+    if (refused) {
+      setRefusal(refused);
       onRefused();
     } else {
       toast.error(result.error);
@@ -223,8 +230,8 @@ export function PublishDialog({
         <div role="alert" className="space-y-3 rounded-xl border border-danger/25 bg-danger-soft px-4 py-3">
           <p className="text-sm font-medium text-danger">{t("assistant.publish.refused")}</p>
           <RefusalReasons
-            refusal={refusal.refusal}
-            detail={refusal.detail}
+            reasons={refusal.reasons}
+            error={refusal.error}
             onRunAutotests={() => {
               onClose();
               onRunAutotests();
@@ -253,7 +260,7 @@ export function RollbackDialog({
   const { t } = useI18n();
   const toast = useToast();
   const { business } = useBusiness();
-  const [refusal, setRefusal] = useState<{ refusal: PublishRefusal; detail: string | null } | null>(null);
+  const [refusal, setRefusal] = useState<RefusalState | null>(null);
 
   const rollback = useApiMutation(
     () =>
@@ -271,9 +278,9 @@ export function RollbackDialog({
       onRolledBack(result.data);
       return;
     }
-    const reasons = refusalOf(result.error);
-    if (reasons) {
-      setRefusal({ refusal: reasons, detail: result.error.detail });
+    const refused = refusalOf(result.error);
+    if (refused) {
+      setRefusal(refused);
       onRefused();
     } else {
       toast.error(result.error);
@@ -299,7 +306,7 @@ export function RollbackDialog({
       {refusal ? (
         <div role="alert" className="space-y-3 rounded-xl border border-danger/25 bg-danger-soft px-4 py-3">
           <p className="text-sm font-medium text-danger">{t("assistant.rollback.refused")}</p>
-          <RefusalReasons refusal={refusal.refusal} detail={refusal.detail} />
+          <RefusalReasons reasons={refusal.reasons} error={refusal.error} />
         </div>
       ) : null}
     </ConfirmDialog>

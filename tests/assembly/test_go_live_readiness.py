@@ -63,6 +63,7 @@ def test_a_ready_version_of_a_launch_ready_business_may_go_live() -> None:
     assert result.autotest_run.is_passed is True
     assert result.autotest_run.is_full_coverage is True
     assert result.autotest_run.scenario_count == result.autotest_run.passed_count
+    assert result.autotest_run.completed_count == result.autotest_run.scenario_count
     assert result.subscription_status is not None
     assert str(result.dpa_document_version) == "2026-10-01"
 

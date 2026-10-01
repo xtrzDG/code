@@ -43,7 +43,9 @@ type ChatEntry =
       text: string;
       reply?: AssistantReply;
       toolCalls?: ToolCallView[];
+      /** The version that answered (from the reply, or the restored conversation). */
       versionId: string | null;
+      versionNumber?: number | null;
     }
   | { kind: "silent"; key: string }
   | { kind: "note"; key: string; author: "staff" | "system"; text: string };
@@ -240,31 +242,6 @@ function TestChat({
     input.current?.focus();
   };
 
-  const attachToolCalls = async (conversationId: string, assistantKey: string | null) => {
-    try {
-      const detail = await unwrap(
-        api.GET("/v1/businesses/{business_id}/conversations/{conversation_id}", {
-          params: { path: { business_id: business.id, conversation_id: conversationId } },
-        }),
-      );
-      const messages = [...(detail.messages ?? [])].sort((left, right) => left.created_at - right.created_at);
-      const lastCustomer = messages.map((message) => message.author).lastIndexOf("customer");
-      const answer = messages.slice(lastCustomer + 1).filter((message) => message.author === "assistant").pop();
-      setHandedOff(detail.conversation.status === "handoff");
-      if (assistantKey && answer) {
-        setEntries((current) =>
-          current.map((entry) =>
-            entry.kind === "assistant" && entry.key === assistantKey
-              ? { ...entry, toolCalls: answer.tool_calls ?? [], versionId: detail.conversation.assistant_version_id }
-              : entry,
-          ),
-        );
-      }
-    } catch {
-      // Tool calls are extra detail; the reply itself is already shown.
-    }
-  };
-
   const deliver = async (message: string, retryKey?: string) => {
     const customerKey = retryKey ?? nextKey();
     setEntries((current) =>
@@ -281,16 +258,26 @@ function TestChat({
       );
       return;
     }
+    // The reply names the version that answered and the tools it called,
+    // so the conversation card (an audited read) is not needed here.
     const reply = result.data;
-    const assistantKey = reply.text === null ? null : nextKey();
+    const answeredBy = reply.assistant_version_id ?? session.versionId;
     setEntries((current) => [
       ...current.map((entry) => (entry.key === customerKey && entry.kind === "customer" ? { ...entry, status: "sent" as const } : entry)),
-      reply.text === null
+      reply.text === null || reply.text === undefined
         ? { kind: "silent", key: nextKey() }
-        : { kind: "assistant", key: assistantKey ?? nextKey(), text: reply.text, reply, versionId: session.versionId },
+        : {
+            kind: "assistant",
+            key: nextKey(),
+            text: reply.text,
+            reply,
+            toolCalls: reply.tool_calls ?? [],
+            versionId: answeredBy,
+            versionNumber: reply.assistant_version_number ?? null,
+          },
     ]);
-    setSession((current) => ({ ...current, conversationId: reply.conversation_id }));
-    void attachToolCalls(reply.conversation_id, assistantKey);
+    setHandedOff(reply.is_handed_off);
+    setSession((current) => ({ ...current, versionId: current.versionId ?? answeredBy, conversationId: reply.conversation_id }));
   };
 
   const submit = (event?: FormEvent) => {
@@ -310,11 +297,12 @@ function TestChat({
     }
   };
 
-  const versionLabel = (id: string | null) => {
+  const versionLabel = (id: string | null, number?: number | null) => {
     const version = versions.find((item) => item.id === id);
-    return version
-      ? t("assistant.chat.versionOption", { number: version.version_number, status: t(VERSION_STATUS_LABELS[version.status]) })
-      : t("assistant.chat.unknownVersion");
+    if (version) {
+      return t("assistant.chat.versionOption", { number: version.version_number, status: t(VERSION_STATUS_LABELS[version.status]) });
+    }
+    return number ? t("assistant.versions.number", { number }) : t("assistant.chat.unknownVersion");
   };
   const selected = versions.find((version) => version.id === session.versionId);
 
@@ -453,7 +441,7 @@ function ChatLine({
   isSending,
 }: {
   entry: ChatEntry;
-  versionLabel: (id: string | null) => string;
+  versionLabel: (id: string | null, number?: number | null) => string;
   onRetry: (message: string, key: string) => void;
   isSending: boolean;
 }) {
@@ -529,7 +517,7 @@ function ChatLine({
     <div className="flex flex-col items-start gap-1">
       <p className="mb-0.5 text-xs font-medium text-ink-subtle">
         {t("assistant.authors.assistant")}
-        {entry.versionId ? ` · ${versionLabel(entry.versionId)}` : ""}
+        {entry.versionId ? ` · ${versionLabel(entry.versionId, entry.versionNumber)}` : ""}
       </p>
       <div className="max-w-[85%] rounded-2xl rounded-bl-md bg-surface-muted px-4 py-2.5 text-sm break-words whitespace-pre-wrap text-ink" dir="auto">
         {entry.text}

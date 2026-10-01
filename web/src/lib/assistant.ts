@@ -1,9 +1,10 @@
 /**
  * Pure helpers of the Assistant section (app/b/[businessId]/assistant):
- * version statuses and actions, autotest results, publish refusals and the
- * test chat.
+ * version statuses and actions, autotest results, the go-live checklist and
+ * publish refusals (by the API's reason codes), and the test chat.
  */
 
+import type { ApiError } from "@/api/errors";
 import type { Schema } from "@/api/types";
 
 export type AssistantVersionStatus = Schema<"AssistantVersionStatus">;
@@ -87,21 +88,15 @@ export function liveVersion<T extends Pick<AssistantVersionSummary, "status">>(v
 }
 
 /**
- * The version the test chat should talk to by default: the live one, else
- * the newest ready, draft, under-test or failed one (the API itself only
- * falls back to ready and draft versions), else the newest of all.
+ * The version the test chat talks to by default, as the API picks it: the
+ * newest version that is not archived (one being prepared when it is newer
+ * than the live one, else the live one), else the newest of all.
  */
 export function defaultTestVersionId(
   versions: readonly Pick<AssistantVersionSummary, "id" | "status" | "version_number">[],
 ): string | null {
   const sorted = sortVersions(versions);
-  for (const status of ["published", "ready", "draft", "testing", "tests_failed"] as const) {
-    const match = sorted.find((version) => version.status === status);
-    if (match) {
-      return match.id;
-    }
-  }
-  return sorted[0]?.id ?? null;
+  return (sorted.find((version) => version.status !== "archived") ?? sorted[0])?.id ?? null;
 }
 
 /** "4.25" -> "4.3" in the UI language (scores are 1..5). */
@@ -117,7 +112,7 @@ export function formatScore(score: number, locale: string): string {
  */
 export function isRunInProgress(
   versionStatus: AssistantVersionStatus | undefined,
-  run: (AutotestRunView & { status?: string }) | null | undefined,
+  run: Pick<AutotestRunView, "status"> | null | undefined,
 ): boolean {
   return versionStatus === "testing" || run?.status === "running";
 }
@@ -222,63 +217,86 @@ export function narrowedSelection<T extends string>(chosen: readonly T[], availa
   return unique.length === available.length ? null : unique;
 }
 
-// --- Publishing -------------------------------------------------------------------
+// --- Going live -------------------------------------------------------------------
 
-export type PublishRefusalReason =
-  | "subscription"
-  | "dpa"
-  | "profile"
-  | "autotests"
-  | "testing"
-  | "alreadyLive"
-  | "archived"
-  | "notArchived"
-  | "adminOnly";
+export type GoLiveCheckCode = Schema<"GoLiveCheckCode">;
+export type GoLiveCheck = Schema<"GoLiveCheck">;
+export type GoLiveReadiness = Schema<"GoLiveReadiness">;
 
-export interface PublishRefusal {
-  reasons: PublishRefusalReason[];
-  /** Profile gap kinds named by the API ("no_address", …). */
-  gapKinds: string[];
-}
-
-const REFUSAL_PATTERNS: readonly [RegExp, PublishRefusalReason][] = [
-  [/trial or pay|subscription/i, "subscription"],
-  [/data processing agreement|\bDPA\b/i, "dpa"],
-  [/complete the profile|what to add/i, "profile"],
-  [/not passed the autotests|accept_failed_tests/i, "autotests"],
-  [/is being tested|being tested/i, "testing"],
-  [/already live/i, "alreadyLive"],
-  [/is archived|use rollback/i, "archived"],
-  [/only an earlier live version/i, "notArchived"],
-  [/platform admin/i, "adminOnly"],
+/** Checklist codes, in the order the API lists them. */
+export const GO_LIVE_CHECK_CODES: readonly GoLiveCheckCode[] = [
+  "subscription_or_trial",
+  "dpa",
+  "profile_gaps",
+  "staff_contact",
+  "autotests",
+  "voice_configuration",
 ];
 
+/** Why a version cannot be published or rolled back in its current state. */
+export const VERSION_REFUSAL_CODES = [
+  "version_already_live",
+  "version_archived",
+  "version_not_archived",
+  "force_publish_admin_only",
+] as const;
+
+export type VersionRefusalCode = (typeof VERSION_REFUSAL_CODES)[number];
+export type RefusalCode = GoLiveCheckCode | VersionRefusalCode;
+
+export interface Refusal {
+  /** A code the cabinet knows, or null (then `message` is shown). */
+  code: RefusalCode | null;
+  message: string;
+  details: string[];
+}
+
+const REFUSAL_CODES: ReadonlySet<string> = new Set<string>([...GO_LIVE_CHECK_CODES, ...VERSION_REFUSAL_CODES]);
+
+function isRefusalCode(code: string): code is RefusalCode {
+  return REFUSAL_CODES.has(code);
+}
+
 /**
- * Why the API refused to publish or roll back, from its (English) message.
- * The API answers 409/403 with one sentence listing what is missing, e.g.
- * "The assistant cannot go live yet: start the trial or pay for the
- * subscription; accept the data processing agreement (version …); complete
- * the profile (see what to add: no_address, no_faq)."
+ * Why the API refused to publish or roll back (409, or 403 for a forced
+ * publish), from the machine-readable reasons of its answer. Empty for
+ * other errors, or when the API named no reason.
  */
-export function classifyPublishRefusal(message: string | null | undefined): PublishRefusal {
-  const text = message ?? "";
-  const reasons: PublishRefusalReason[] = [];
-  for (const [pattern, reason] of REFUSAL_PATTERNS) {
-    if (pattern.test(text) && !reasons.includes(reason)) {
-      reasons.push(reason);
-    }
+export function refusalReasons(error: Pick<ApiError, "status" | "reasons"> | null | undefined): Refusal[] {
+  if (!error || (error.status !== 409 && error.status !== 403)) {
+    return [];
   }
-  const gapList = /what to add:\s*([a-z_,\s]+)/i.exec(text)?.[1] ?? "";
-  const gapKinds = gapList
-    .split(",")
-    .map((kind) => kind.trim())
-    .filter((kind) => /^[a-z_]+$/.test(kind));
-  // "Only a platform admin may publish a version that has not passed the
-  // autotests (accept_failed_tests)" is one reason, not two.
-  return {
-    reasons: reasons.includes("adminOnly") ? reasons.filter((reason) => reason !== "autotests") : reasons,
-    gapKinds,
-  };
+  return error.reasons.map((reason) => ({
+    code: isRefusalCode(reason.code) ? reason.code : null,
+    message: reason.message,
+    details: [...reason.details],
+  }));
+}
+
+/** True when the refusal is about a version still under test (not a missing test). */
+export function isTestingRefusal(reason: Pick<Refusal, "code" | "details">): boolean {
+  return reason.code === "autotests" && reason.details[0] === "testing";
+}
+
+export type CheckState = "ok" | "missing" | "warning" | "pending";
+
+/**
+ * How a checklist row looks: done, missing (stops publishing), a warning
+ * (does not stop it), or in progress (the version is being tested).
+ */
+export function checkState(check: Pick<GoLiveCheck, "code" | "is_ok" | "is_blocking" | "details">): CheckState {
+  if (check.is_ok) {
+    return "ok";
+  }
+  if (check.code === "autotests" && (check.details ?? [])[0] === "testing") {
+    return "pending";
+  }
+  return check.is_blocking ? "missing" : "warning";
+}
+
+/** Checks that still stop the version from going live. */
+export function blockingChecks<T extends Pick<GoLiveCheck, "is_ok" | "is_blocking">>(checks: readonly T[]): T[] {
+  return checks.filter((check) => !check.is_ok && check.is_blocking);
 }
 
 // --- Test chat ----------------------------------------------------------------------

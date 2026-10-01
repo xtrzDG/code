@@ -3,9 +3,10 @@
 import { useId, useState, type FormEvent } from "react";
 
 import { api } from "@/api/client";
-import { useApiMutation, useApiQuery } from "@/api/hooks";
+import { useApiMutation } from "@/api/hooks";
 import type { Schema } from "@/api/types";
 import { useBusiness, useBusinessFormat } from "@/components/business/BusinessContext";
+import { usePagedList } from "@/components/content/usePagedList";
 import { IconCheck } from "@/components/icons";
 import {
   Alert,
@@ -34,33 +35,36 @@ type AnsweredQuestionResult = Schema<"AnsweredQuestionResult">;
 
 const PAGE_SIZE = 25;
 
-/** Knowledge -> Questions without an answer: what customers asked and the assistant could not answer. */
+/**
+ * Knowledge -> Questions without an answer: what customers asked and the
+ * assistant could not answer, most asked first, paged and filtered by the API.
+ */
 export function UnansweredQuestionsScreen() {
   const { t, tp, locale } = useI18n();
   const { business, isOwner } = useBusiness();
   const format = useBusinessFormat();
   const [includeResolved, setIncludeResolved] = useState(false);
   const [includeSandbox, setIncludeSandbox] = useState(false);
-  const [shown, setShown] = useState(PAGE_SIZE);
   const [answering, setAnswering] = useState<UnansweredQuestion | null>(null);
   const [answeredCount, setAnsweredCount] = useState(0);
 
-  const questions = useApiQuery(
-    () =>
+  const questions = usePagedList(
+    (cursor) =>
       api.GET("/v1/businesses/{business_id}/unanswered-questions", {
         params: {
           path: { business_id: business.id },
           query: {
             include_resolved: includeResolved ? "true" : undefined,
             include_sandbox: includeSandbox ? "true" : undefined,
+            limit: String(PAGE_SIZE),
+            cursor: cursor ?? undefined,
           },
         },
       }),
     [business.id, includeResolved, includeSandbox],
   );
 
-  const list = questions.data?.items ?? [];
-  const visible = list.slice(0, shown);
+  const list = questions.items;
 
   return (
     <div className="space-y-6">
@@ -75,24 +79,18 @@ export function UnansweredQuestionsScreen() {
               id="questions-include-resolved"
               label={t("knowledge.questions.includeResolved")}
               checked={includeResolved}
-              onChange={(event) => {
-                setIncludeResolved(event.target.checked);
-                setShown(PAGE_SIZE);
-              }}
+              onChange={(event) => setIncludeResolved(event.target.checked)}
             />
             <Checkbox
               id="questions-include-sandbox"
               label={t("knowledge.questions.includeSandbox")}
               checked={includeSandbox}
-              onChange={(event) => {
-                setIncludeSandbox(event.target.checked);
-                setShown(PAGE_SIZE);
-              }}
+              onChange={(event) => setIncludeSandbox(event.target.checked)}
             />
           </div>
         </div>
 
-        {questions.isLoading && !questions.data ? (
+        {questions.isLoading ? (
           <LoadingBlock label={t("common.loading")} />
         ) : questions.error ? (
           <ErrorState error={questions.error} onRetry={questions.reload} />
@@ -105,7 +103,7 @@ export function UnansweredQuestionsScreen() {
         ) : (
           <>
             <ul className="divide-y divide-line">
-              {visible.map((question) => (
+              {list.map((question) => (
                 <li key={question.id} className="flex flex-col gap-3 px-4 py-4 sm:flex-row sm:items-start sm:gap-6 sm:px-6">
                   <div className="min-w-0 flex-1 space-y-1.5">
                     <p className="font-medium break-words text-ink" dir="auto">
@@ -132,10 +130,15 @@ export function UnansweredQuestionsScreen() {
                 </li>
               ))}
             </ul>
-            {list.length > visible.length ? (
-              <div className="border-t border-line px-4 py-3 text-center sm:px-6">
-                <Button variant="ghost" onClick={() => setShown((current) => current + PAGE_SIZE)}>
-                  {t("knowledge.questions.showMore", { count: list.length - visible.length })}
+            {questions.hasMore ? (
+              <div className="flex flex-col items-center gap-2 border-t border-line px-4 py-3 text-center sm:px-6">
+                {questions.loadMoreError ? (
+                  <p className="text-sm text-danger" role="alert">
+                    {t("knowledge.paging.failed")}
+                  </p>
+                ) : null}
+                <Button variant="ghost" isLoading={questions.isLoadingMore} loadingText={t("common.loading")} onClick={questions.loadMore}>
+                  {questions.loadMoreError ? t("common.retry") : t("knowledge.paging.more")}
                 </Button>
               </div>
             ) : null}
@@ -149,11 +152,11 @@ export function UnansweredQuestionsScreen() {
           question={answering}
           onClose={() => setAnswering(null)}
           onAnswered={(result) => {
-            questions.setData((current) => ({
-              items: includeResolved
-                ? (current?.items ?? []).map((item) => (item.id === result.question.id ? result.question : item))
-                : (current?.items ?? []).filter((item) => item.id !== result.question.id),
-            }));
+            questions.update((items) =>
+              includeResolved
+                ? items.map((item) => (item.id === result.question.id ? result.question : item))
+                : items.filter((item) => item.id !== result.question.id),
+            );
             setAnsweredCount((count) => count + 1);
             setAnswering(null);
           }}

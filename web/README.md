@@ -66,7 +66,9 @@ web/
       b/[businessId]/          one business: layout.tsx loads it + the user and renders the sidebar
         onboarding/            the six-step profile wizard (+ _components/)
         dashboard/ conversations/ bookings/ leads/ handoffs/
-        knowledge/ assistant/ channels/ billing/ settings/   placeholders to replace
+        knowledge/             items (server-paged, filtered by the API), questions, menu import, resources
+        assistant/             test chat, versions, go-live checklist, autotests with live progress
+        channels/ billing/ settings/
       admin/                   platform admin (404 for everyone else)
       api/
         auth/start|verify|logout|expired   sign-in route handlers (cookie handling)
@@ -94,6 +96,8 @@ web/
       shell/                   ShellFrame (sidebar + mobile drawer), BusinessShell, AdminShell, TopBar
       business/                BusinessContext (useBusiness, useBusinessFormat), status badges,
                                SectionPlaceholder
+      content/                 Knowledge and Assistant pieces: tabs, ConfirmDialog, Switch, icons,
+                               usePagedList ({items, next_cursor} lists with "show more")
       BusinessSwitcher.tsx LanguageSwitcher.tsx CountrySelect.tsx icons.tsx
     lib/                       pure helpers (unit-tested): navigation, format (Intl), countries
                                (phone/country), hours (opening hours), wizard, validation (zod), cn
@@ -189,6 +193,15 @@ the localized text of the code (`errors.codes.*`): `toast.error(error)` or
 pass overrides: `toast.error(error, { access_denied: "auth.errors.countryRestricted" })`.
 The English backend message is shown as a detail only for `validation_failed`
 and `conflict`.
+
+Some refusals also carry machine-readable reasons, kept as
+`ApiError.reasons` (`[{code, message, details}]`): a refused publish or
+rollback names the failed go-live checks (`subscription_or_trial`, `dpa`,
+`profile_gaps`, `staff_contact`, `autotests`, `voice_configuration`) or the
+version state, and a menu link the API cannot read is `menu_link_invalid`,
+`menu_link_unreachable` or `menu_link_unreadable`. Screens map these codes to
+their own texts (`refusalReasons` in `src/lib/assistant.ts`, `menuLinkProblem`
+in `src/lib/knowledge.ts`); never match the English message.
 
 ### Translations
 

@@ -4,7 +4,10 @@
  * The backend answers errors as {"error": "<code>", "message": "<English text>"}
  * (FastAPI's own validation errors as {"detail": [...]}). Every failure ends
  * up as an ApiError with a stable `code`; the UI shows the localized text of
- * the code (errors.codes.*), not the English backend message.
+ * the code (errors.codes.*), not the English backend message. Some refusals
+ * also carry `reasons` ({code, message, details}: the failed go-live checks
+ * of a publish, why a menu link could not be read); screens map those codes
+ * to their own texts.
  */
 
 import type { MessageKey } from "@/i18n/translate";
@@ -28,6 +31,16 @@ export const API_ERROR_CODES = [
 
 export type ApiErrorCode = (typeof API_ERROR_CODES)[number];
 
+/** One machine-readable reason of a refusal (the backend's `reasons[]`). */
+export interface ApiErrorReason {
+  /** Stable code, e.g. "dpa" or "menu_link_unreachable". */
+  code: string;
+  /** The backend's English explanation (a fallback for unknown codes). */
+  message: string;
+  /** Values that qualify it: gap kinds, statuses, "http_status:404". */
+  details: string[];
+}
+
 export class ApiError extends Error {
   readonly status: number;
   readonly code: ApiErrorCode;
@@ -35,12 +48,15 @@ export class ApiError extends Error {
   readonly detail: string | null;
   /** X-Request-ID of the failed request, for support. */
   readonly requestId: string | null;
+  /** Machine-readable reasons, when the backend gave any. */
+  readonly reasons: readonly ApiErrorReason[];
 
   constructor(init: {
     status: number;
     code: ApiErrorCode;
     detail?: string | null;
     requestId?: string | null;
+    reasons?: readonly ApiErrorReason[];
   }) {
     super(init.detail ?? init.code);
     this.name = "ApiError";
@@ -48,6 +64,7 @@ export class ApiError extends Error {
     this.code = init.code;
     this.detail = init.detail ?? null;
     this.requestId = init.requestId ?? null;
+    this.reasons = init.reasons ?? [];
   }
 }
 
@@ -106,6 +123,29 @@ function describeValidationDetail(detail: unknown): string | null {
   return parts.length > 0 ? parts.join("; ") : null;
 }
 
+/** The well-formed entries of a body's `reasons` list (others are skipped). */
+export function parseErrorReasons(value: unknown): ApiErrorReason[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+  return value.flatMap((item: unknown): ApiErrorReason[] => {
+    if (!item || typeof item !== "object") {
+      return [];
+    }
+    const { code, message, details } = item as { code?: unknown; message?: unknown; details?: unknown };
+    if (typeof code !== "string") {
+      return [];
+    }
+    return [
+      {
+        code,
+        message: typeof message === "string" ? message : "",
+        details: Array.isArray(details) ? details.filter((detail): detail is string => typeof detail === "string") : [],
+      },
+    ];
+  });
+}
+
 /** An ApiError from a failed response's status and parsed JSON body. */
 export function parseApiError(
   status: number,
@@ -113,10 +153,11 @@ export function parseApiError(
   requestId: string | null = null,
 ): ApiError {
   if (body && typeof body === "object") {
-    const { error, message, detail } = body as {
+    const { error, message, detail, reasons } = body as {
       error?: unknown;
       message?: unknown;
       detail?: unknown;
+      reasons?: unknown;
     };
     if (typeof error === "string") {
       return new ApiError({
@@ -124,6 +165,7 @@ export function parseApiError(
         code: isApiErrorCode(error) ? error : codeForStatus(status),
         detail: typeof message === "string" ? message : null,
         requestId,
+        reasons: parseErrorReasons(reasons),
       });
     }
     if (detail !== undefined) {

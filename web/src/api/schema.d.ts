@@ -211,6 +211,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/businesses/{business_id}/assistant-versions/{version_id}/go-live-readiness": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Go Live Readiness */
+        get: operations["get_go_live_readiness_v1_businesses__business_id__assistant_versions__version_id__go_live_readiness_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/businesses/{business_id}/assistant-versions/{version_id}/publish": {
         parameters: {
             query?: never;
@@ -737,6 +754,23 @@ export interface paths {
         /** Confirm Imported Items */
         post: operations["confirm_imported_items_v1_businesses__business_id__knowledge_import_confirm_post"];
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/businesses/{business_id}/knowledge/import/{batch_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Discard Import Batch */
+        delete: operations["discard_import_batch_v1_businesses__business_id__knowledge_import__batch_id__delete"];
         options?: never;
         head?: never;
         patch?: never;
@@ -1480,6 +1514,13 @@ export interface components {
             requires_reassembly: boolean;
         };
         /**
+         * ApiErrorCode
+         * @description Broad kind of a failed API request, the "error" field of every error
+         *     body (app/gateways/http/error_responses.py maps errors to HTTP status).
+         * @enum {string}
+         */
+        ApiErrorCode: "not_found" | "validation_failed" | "conflict" | "authentication_required" | "access_denied" | "rate_limited" | "external_service_error" | "internal_error";
+        /**
          * AssistantReply
          * @description What the assistant answered and what happened during the turn.
          *
@@ -1487,9 +1528,16 @@ export interface components {
          *     conversation (open handoff in a chat channel). `disclosure_text` is the
          *     "I am an AI assistant" sentence the server put in front of the first
          *     reply (part of `text`), so checks of what the model wrote can leave it
-         *     out.
+         *     out. `assistant_version_id` and `assistant_version_number` name the
+         *     version that answered (the one the conversation is pinned to);
+         *     `tool_calls` are the tools the model called in this turn, with their
+         *     input and result (the owner's test chat shows them).
          */
         AssistantReply: {
+            /** Assistant Version Id */
+            assistant_version_id?: string | null;
+            /** Assistant Version Number */
+            assistant_version_number?: number | null;
             /** Conversation Id */
             conversation_id: string;
             /** Created Booking Ids */
@@ -1513,6 +1561,8 @@ export interface components {
             should_end_call: boolean;
             /** Text */
             text: string | null;
+            /** Tool Calls */
+            tool_calls?: components["schemas"]["ToolCallView"][];
         };
         /**
          * AssistantToolName
@@ -1650,7 +1700,9 @@ export interface components {
          *     The run passes when every price and booking scenario passed and the
          *     average judge score is at least 4 of 5; only a passed run that covered
          *     every language and scenario kind (`is_full_coverage`) makes the version
-         *     READY. While `status` is RUNNING the worker is still playing it.
+         *     READY. While `status` is RUNNING the worker is still playing it:
+         *     `scenario_count` is then the number of planned scenarios and `results`
+         *     holds the ones finished so far (progress = results / scenario_count).
          */
         AutotestRunView: {
             /** Assistant Version Id */
@@ -2835,6 +2887,18 @@ export interface components {
          */
         DataRegion: "eu" | "us";
         /**
+         * DiscardedImportBatch
+         * @description Drafts deleted with their import (empty when none were left).
+         */
+        DiscardedImportBatch: {
+            /** Batch Id */
+            batch_id: string;
+            /** Business Id */
+            business_id: string;
+            /** Discarded Item Ids */
+            discarded_item_ids?: string[];
+        };
+        /**
          * DpaAcceptanceView
          * @description Who accepted which version of the agreement, and when.
          */
@@ -2860,6 +2924,36 @@ export interface components {
             /** Is Current Version Accepted */
             is_current_version_accepted: boolean;
             latest_acceptance?: components["schemas"]["DpaAcceptanceView"] | null;
+        };
+        /**
+         * ErrorBody
+         * @description Body of every failed request: the broad `error` code, an English
+         *     `message`, and, when the server knows them, `reasons` with stable codes
+         *     (absent otherwise, so older clients keep working).
+         */
+        ErrorBody: {
+            error: components["schemas"]["ApiErrorCode"];
+            /** Message */
+            message: string;
+            /** Reasons */
+            reasons?: components["schemas"]["ErrorReason"][] | null;
+        };
+        /**
+         * ErrorReason
+         * @description One reason a request was refused, in the `reasons` list of an error
+         *     response: a stable `code` clients branch on, an English `message`, and
+         *     `details` that qualify it (gap kinds, statuses, missing settings).
+         *
+         *     Example: {"code": "profile_gaps", "message": "Complete the profile ...",
+         *     "details": ["no_opening_hours"]}
+         */
+        ErrorReason: {
+            /** Code */
+            code: string;
+            /** Details */
+            details?: string[];
+            /** Message */
+            message: string;
         };
         /**
          * ExchangeRateQuote
@@ -2892,6 +2986,95 @@ export interface components {
             outcome: components["schemas"]["AutotestOutcome"];
             /** Scenario Key */
             scenario_key: string;
+        };
+        /**
+         * GoLiveAutotestRunSummary
+         * @description The version's latest autotest run as the checklist reports it: while it
+         *     is RUNNING, `scenario_count` is the number of planned scenarios and
+         *     `completed_count` the ones played so far.
+         */
+        GoLiveAutotestRunSummary: {
+            /** Average Score */
+            average_score?: number | null;
+            /** Completed Count */
+            completed_count: number;
+            /** Id */
+            id: string;
+            /** Is Full Coverage */
+            is_full_coverage: boolean;
+            /** Is Passed */
+            is_passed: boolean;
+            /** Pass Rate */
+            pass_rate: number;
+            /** Passed Count */
+            passed_count: number;
+            /** Scenario Count */
+            scenario_count: number;
+            status: components["schemas"]["AutotestRunStatus"];
+            /** Updated At */
+            updated_at: number;
+        };
+        /**
+         * GoLiveCheck
+         * @description One launch condition and what was found.
+         *
+         *     A failed `is_blocking` check stops publishing; a failed non-blocking one
+         *     is only a warning (voice without ElevenLabs in development). `details`
+         *     qualify it by code:
+         *
+         *     - subscription_or_trial: the subscription status, or "none";
+         *     - dpa: the agreement version to accept;
+         *     - profile_gaps: the blocking gap kinds ("no_opening_hours", ...);
+         *     - staff_contact: "no_handoff_contact" while nobody receives handoffs;
+         *     - autotests: the version status, then the latest run's status;
+         *     - voice_configuration: the missing server settings ("APP_BASE_URL").
+         */
+        GoLiveCheck: {
+            code: components["schemas"]["GoLiveCheckCode"];
+            /** Details */
+            details?: string[];
+            /** Is Blocking */
+            is_blocking: boolean;
+            /** Is Ok */
+            is_ok: boolean;
+            /** Message */
+            message: string;
+        };
+        /**
+         * GoLiveCheckCode
+         * @description One launch condition of the go-live checklist (concept section 4,
+         *     "Проверка"). The same codes name the reasons of a refused publish or
+         *     rollback (`reasons[].code` of the 409), so clients branch on them
+         *     instead of the English message.
+         * @enum {string}
+         */
+        GoLiveCheckCode: "subscription_or_trial" | "dpa" | "profile_gaps" | "staff_contact" | "autotests" | "voice_configuration";
+        /**
+         * GoLiveReadiness
+         * @description Every go-live check of one version, in a fixed order: subscription or
+         *     trial, data processing agreement, profile gaps, staff contact,
+         *     autotests, then voice configuration (only for versions with voice).
+         *
+         *     `is_ready` is True when no blocking check failed: then an owner can
+         *     publish the version. The same checks guard publishing and rollback, and
+         *     their codes name the reasons of a refusal.
+         */
+        GoLiveReadiness: {
+            /** Assistant Version Id */
+            assistant_version_id: string;
+            autotest_run?: components["schemas"]["GoLiveAutotestRunSummary"] | null;
+            /** Business Id */
+            business_id: string;
+            /** Checks */
+            checks: components["schemas"]["GoLiveCheck"][];
+            /** Dpa Document Version */
+            dpa_document_version: string;
+            /** Is Ready */
+            is_ready: boolean;
+            subscription_status?: components["schemas"]["SubscriptionStatus"] | null;
+            /** Version Number */
+            version_number: number;
+            version_status: components["schemas"]["AssistantVersionStatus"];
         };
         /** HTTPValidationError */
         HTTPValidationError: {
@@ -3136,12 +3319,15 @@ export interface components {
          */
         KnowledgeItemKind: "faq" | "policy" | "menu_item" | "service" | "room_type" | "package" | "vehicle" | "product";
         /**
-         * KnowledgeItemList
-         * @description Items of one business, grouped by kind and ordered by title.
+         * KnowledgeItemPage
+         * @description One page of the knowledge base, newest first (by creation time, ties by
+         *     id); `next_cursor` asks for the next page and is None on the last one.
          */
-        KnowledgeItemList: {
+        KnowledgeItemPage: {
             /** Items */
             items?: components["schemas"]["KnowledgeItemDetails"][];
+            /** Next Cursor */
+            next_cursor?: string | null;
         };
         /**
          * KnowledgeItemSource
@@ -3475,9 +3661,13 @@ export interface components {
         };
         /**
          * MenuImportResult
-         * @description Drafts created by one import, in menu order.
+         * @description Drafts created by one import, in menu order. `batch_id` names the
+         *     import: DELETE .../knowledge/import/{batch_id} discards the drafts that
+         *     were not confirmed.
          */
         MenuImportResult: {
+            /** Batch Id */
+            batch_id: string;
             /** Business Id */
             business_id: string;
             /** Items */
@@ -4215,12 +4405,15 @@ export interface components {
             resolved_knowledge_item_id?: string | null;
         };
         /**
-         * UnansweredQuestionListView
-         * @description Questions ordered by occurrence count, then most recent.
+         * UnansweredQuestionPage
+         * @description One page of questions, the most asked first, then the most recently
+         *     asked; `next_cursor` asks for the next page (None on the last one).
          */
-        UnansweredQuestionListView: {
+        UnansweredQuestionPage: {
             /** Items */
             items?: components["schemas"]["UnansweredQuestionDetails"][];
+            /** Next Cursor */
+            next_cursor?: string | null;
         };
         /**
          * UsageCostLine
@@ -4961,6 +5154,40 @@ export interface operations {
             };
         };
     };
+    get_go_live_readiness_v1_businesses__business_id__assistant_versions__version_id__go_live_readiness_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+                version_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GoLiveReadiness"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     publish_assistant_version_v1_businesses__business_id__assistant_versions__version_id__publish_post: {
         parameters: {
             query?: never;
@@ -4992,6 +5219,24 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AssistantVersionDetails"];
+                };
+            };
+            /** @description Not allowed; reasons[].code force_publish_admin_only. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Refused; reasons[].code names each failed go-live check (subscription_or_trial, dpa, profile_gaps, staff_contact, autotests, voice_configuration) or the version state (version_already_live, version_archived, version_not_archived). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
                 };
             };
             /** @description Validation Error */
@@ -5026,6 +5271,24 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AssistantVersionDetails"];
+                };
+            };
+            /** @description Not allowed; reasons[].code force_publish_admin_only. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Refused; reasons[].code names each failed go-live check (subscription_or_trial, dpa, profile_gaps, staff_contact, autotests, voice_configuration) or the version state (version_already_live, version_archived, version_not_archived). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
                 };
             };
             /** @description Validation Error */
@@ -6114,6 +6377,8 @@ export interface operations {
                 kind?: string | null;
                 is_active?: string | null;
                 language?: string | null;
+                limit?: string | null;
+                cursor?: string | null;
             };
             header?: {
                 authorization?: string | null;
@@ -6131,7 +6396,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["KnowledgeItemList"];
+                    "application/json": components["schemas"]["KnowledgeItemPage"];
                 };
             };
             /** @description Validation Error */
@@ -6250,13 +6515,22 @@ export interface operations {
                     "application/json": components["schemas"]["MenuImportResult"];
                 };
             };
-            /** @description Validation Error */
+            /** @description The source cannot be read. For a link, reasons[].code is menu_link_invalid (not a public http(s) address), menu_link_unreachable (unknown host, timeout, no connection, HTTP error, redirect trouble) or menu_link_unreadable (too large, not a photo, PDF, text or web page), with details such as http_status:404 or media_type:application/zip. */
             422: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The menu model is unavailable (external_service_error). */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
                 };
             };
         };
@@ -6288,6 +6562,40 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ConfirmImportedItemsResult"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    discard_import_batch_v1_businesses__business_id__knowledge_import__batch_id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+                batch_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DiscardedImportBatch"];
                 };
             };
             /** @description Validation Error */
@@ -7458,6 +7766,8 @@ export interface operations {
             query?: {
                 include_resolved?: string | null;
                 include_sandbox?: string | null;
+                limit?: string | null;
+                cursor?: string | null;
             };
             header?: {
                 authorization?: string | null;
@@ -7475,7 +7785,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["UnansweredQuestionListView"];
+                    "application/json": components["schemas"]["UnansweredQuestionPage"];
                 };
             };
             /** @description Validation Error */

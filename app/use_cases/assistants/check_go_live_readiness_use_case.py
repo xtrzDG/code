@@ -306,6 +306,7 @@ def summarize_autotest_run(run: AutotestRunDocument) -> GoLiveAutotestRunSummary
         is_full_coverage=run.is_full_coverage,
         is_passed=run.is_passed,
         scenario_count=count_run_scenarios(run),
+        completed_count=AutotestScenarioCount(len(run.results)),
         passed_count=AutotestScenarioCount(
             sum(1 for result in run.results if result.outcome is AutotestOutcome.PASSED)
         ),

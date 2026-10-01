@@ -25,6 +25,24 @@ describe("parseApiError", () => {
     expect(error.requestId).toBe("req-1");
   });
 
+  it("keeps the machine-readable reasons of a refusal", () => {
+    const error = parseApiError(409, {
+      error: "conflict",
+      message: "The assistant cannot go live yet: Accept the agreement.",
+      reasons: [
+        { code: "dpa", message: "Accept the agreement.", details: ["2026-10-01"] },
+        { code: "profile_gaps", details: ["no_address", 7] },
+        { message: "no code" },
+        "junk",
+      ],
+    });
+    expect(error.reasons).toEqual([
+      { code: "dpa", message: "Accept the agreement.", details: ["2026-10-01"] },
+      { code: "profile_gaps", message: "", details: ["no_address"] },
+    ]);
+    expect(parseApiError(404, { error: "not_found", message: "Gone" }).reasons).toEqual([]);
+  });
+
   it("falls back to the status for unknown error codes", () => {
     expect(parseApiError(409, { error: "slot_taken", message: "Taken" }).code).toBe("conflict");
   });

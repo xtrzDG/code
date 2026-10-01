@@ -113,9 +113,15 @@ export function AutotestsPanel({
         <Stat
           label={t("assistant.autotests.result")}
           value={
-            isRunning ? t("assistant.autotests.running") : run.is_passed ? t("assistant.autotests.runPassed") : t("assistant.autotests.runFailed")
+            isRunning
+              ? t("assistant.autotests.running")
+              : run.status === "errored"
+                ? t("assistant.autotests.outcomes.errored")
+                : run.is_passed
+                  ? t("assistant.autotests.runPassed")
+                  : t("assistant.autotests.runFailed")
           }
-          tone={isRunning ? "info" : run.is_passed ? "success" : "danger"}
+          tone={isRunning ? "info" : run.status === "errored" ? "warning" : run.is_passed ? "success" : "danger"}
         />
       </div>
 
@@ -145,7 +151,27 @@ export function AutotestsPanel({
         </p>
       )}
 
-      {!isRunning && summary.errored > 0 && summary.errored === summary.total ? (
+      {!isRunning && run.status === "errored" ? (
+        <Alert
+          tone="warning"
+          title={t("assistant.autotests.erroredTitle")}
+          action={
+            canRun ? (
+              <Button size="sm" variant="secondary" leadingIcon={<IconFlask className="size-4" aria-hidden />} onClick={onRun}>
+                {t("assistant.autotests.runAgain")}
+              </Button>
+            ) : undefined
+          }
+        >
+          {t("assistant.autotests.erroredDescription")}
+        </Alert>
+      ) : null}
+
+      {!isRunning && run.status === "finished" && !run.is_full_coverage ? (
+        <p className="text-sm text-ink-muted">{t("assistant.autotests.partialRun")}</p>
+      ) : null}
+
+      {!isRunning && run.status !== "errored" && summary.errored > 0 && summary.errored === summary.total ? (
         <Alert tone="warning" title={t("assistant.autotests.allErroredTitle")}>
           {t("assistant.autotests.allErroredDescription")}
         </Alert>

@@ -4,11 +4,13 @@ import { useState, type FormEvent } from "react";
 
 import { api } from "@/api/client";
 import { useApiMutation, useApiQuery } from "@/api/hooks";
+import { unwrap } from "@/api/result";
 import type { KnowledgeItemDetails, KnowledgeItemKind, Schema } from "@/api/types";
 import { useBusiness, useBusinessFormat } from "@/components/business/BusinessContext";
 import { ConfirmDialog } from "@/components/content/ConfirmDialog";
 import { IconPencil, IconSearch, IconUpload } from "@/components/content/icons";
 import { Switch } from "@/components/content/Switch";
+import { usePagedList } from "@/components/content/usePagedList";
 import { IconBook, IconPlus, IconTrash, IconX } from "@/components/icons";
 import {
   Alert,
@@ -28,7 +30,6 @@ import {
 import { useI18n } from "@/i18n/client";
 import { languageName } from "@/lib/format";
 import {
-  countByKind,
   filterKnowledgeItems,
   groupByKind,
   sortByTitle,
@@ -45,8 +46,20 @@ type KnowledgeItemView = Schema<"KnowledgeItemView">;
 
 const GROUP_PAGE_SIZE = 20;
 const SEARCH_LIMIT = 10;
+/** Items per request; "show more" loads the next page (newest first). */
+const ITEMS_PAGE_SIZE = 100;
+/** Open questions counted for the warning; more are shown as "more than". */
+const QUESTIONS_ALERT_LIMIT = 100;
 
-/** Knowledge -> Items: everything the assistant knows, by kind, with search and editing. */
+function statusQuery(status: KnowledgeStatusFilter): "true" | "false" | undefined {
+  return status === "all" ? undefined : status === "active" ? "true" : "false";
+}
+
+/**
+ * Knowledge -> Items: everything the assistant knows, by kind, with search
+ * and editing. The list is paged and filtered by the API; loaded items are
+ * grouped by kind and sorted by title.
+ */
 export function KnowledgeItemsScreen() {
   const { t, tp, locale } = useI18n();
   const toast = useToast();
@@ -54,19 +67,31 @@ export function KnowledgeItemsScreen() {
   const kinds = useKnowledgeKinds();
   const base = businessPath(business.id, "knowledge");
 
-  const items = useApiQuery(
-    () =>
+  const [filter, setFilter] = useState<KnowledgeFilter>({ kind: "all", status: "all" });
+  const items = usePagedList(
+    (cursor) =>
       api.GET("/v1/businesses/{business_id}/knowledge", {
-        params: { path: { business_id: business.id }, query: { language: locale } },
+        params: {
+          path: { business_id: business.id },
+          query: {
+            language: locale,
+            kind: filter.kind === "all" ? undefined : filter.kind,
+            is_active: statusQuery(filter.status),
+            limit: String(ITEMS_PAGE_SIZE),
+            cursor: cursor ?? undefined,
+          },
+        },
       }),
-    [business.id, locale],
+    [business.id, locale, filter.kind, filter.status],
   );
   const questions = useApiQuery(
-    () => api.GET("/v1/businesses/{business_id}/unanswered-questions", { params: { path: { business_id: business.id } } }),
+    () =>
+      api.GET("/v1/businesses/{business_id}/unanswered-questions", {
+        params: { path: { business_id: business.id }, query: { limit: String(QUESTIONS_ALERT_LIMIT) } },
+      }),
     [business.id],
   );
 
-  const [filter, setFilter] = useState<KnowledgeFilter>({ kind: "all", status: "all" });
   const [expanded, setExpanded] = useState<ReadonlySet<KnowledgeItemKind>>(new Set());
   const [editor, setEditor] = useState<{ key: number; target: KnowledgeEditorTarget } | null>(null);
   const [deleting, setDeleting] = useState<KnowledgeItemDetails | null>(null);
@@ -85,17 +110,21 @@ export function KnowledgeItemsScreen() {
     }),
   );
 
-  const all = items.data?.items ?? [];
-  const counts = countByKind(all);
-  const visible = filterKnowledgeItems(all, filter);
-  const groups = groupByKind(visible, kinds);
+  const all = items.items;
+  const isFiltered = filter.kind !== "all" || filter.status !== "all";
+  const groups = groupByKind(sortByTitle(all, locale), kinds);
   const openQuestions = (questions.data?.items ?? []).filter((question) => !question.is_resolved).length;
+  const hasMoreQuestions = Boolean(questions.data?.next_cursor);
 
+  // A saved item stays in the list only while it matches the filters.
   const replaceItem = (saved: KnowledgeItemDetails) =>
-    items.setData((current) => {
-      const list = current?.items ?? [];
-      const exists = list.some((item) => item.id === saved.id);
-      return { items: sortByTitle(exists ? list.map((item) => (item.id === saved.id ? saved : item)) : [...list, saved], locale) };
+    items.update((list) => {
+      const others = list.filter((item) => item.id !== saved.id);
+      if (filterKnowledgeItems([saved], filter).length === 0) {
+        return others;
+      }
+      const exists = others.length < list.length;
+      return exists ? list.map((item) => (item.id === saved.id ? saved : item)) : [saved, ...list];
     });
 
   const openEditor = (target: KnowledgeEditorTarget) => setEditor((current) => ({ key: (current?.key ?? 0) + 1, target }));
@@ -122,7 +151,7 @@ export function KnowledgeItemsScreen() {
     const result = await remove.run(deleting.id);
     if (result.ok) {
       const deletedId = deleting.id;
-      items.setData((current) => ({ items: (current?.items ?? []).filter((item) => item.id !== deletedId) }));
+      items.update((list) => list.filter((item) => item.id !== deletedId));
       toast.success(t("knowledge.items.deleted", { title: deleting.title }));
       setHasChanges(true);
       setDeleting(null);
@@ -136,7 +165,11 @@ export function KnowledgeItemsScreen() {
       {openQuestions > 0 ? (
         <Alert
           tone="warning"
-          title={tp("knowledge.items.questionsAlert", openQuestions)}
+          title={
+            hasMoreQuestions
+              ? t("knowledge.items.questionsAlertMany", { count: openQuestions })
+              : tp("knowledge.items.questionsAlert", openQuestions)
+          }
           action={
             <ButtonLink href={`${base}/questions`} size="sm" variant="secondary">
               {t("knowledge.items.questionsAction")}
@@ -148,12 +181,24 @@ export function KnowledgeItemsScreen() {
       ) : null}
       {hasChanges ? <ReassemblyNotice /> : null}
 
-      <KnowledgeSearch onOpen={(id) => {
-        const item = all.find((entry) => entry.id === id);
-        if (item) {
-          openEditor({ mode: "edit", id: item.id, item });
-        }
-      }} />
+      <KnowledgeSearch
+        onOpen={(id) => {
+          const item = all.find((entry) => entry.id === id);
+          if (item) {
+            openEditor({ mode: "edit", id: item.id, item });
+            return;
+          }
+          // Not loaded yet (on a later page or filtered out): fetch it first.
+          unwrap(
+            api.GET("/v1/businesses/{business_id}/knowledge/{item_id}", {
+              params: { path: { business_id: business.id, item_id: id }, query: { language: locale } },
+            }),
+          ).then(
+            (found) => openEditor({ mode: "edit", id: found.id, item: found }),
+            (error: unknown) => toast.error(error),
+          );
+        }}
+      />
 
       <Card padded={false}>
         <div className="flex flex-col gap-3 border-b border-line px-4 py-4 sm:flex-row sm:items-end sm:justify-between sm:px-6">
@@ -165,10 +210,10 @@ export function KnowledgeItemsScreen() {
                   value={filter.kind}
                   onChange={(event) => setFilter((current) => ({ ...current, kind: event.target.value as KnowledgeFilter["kind"] }))}
                 >
-                  <option value="all">{t("knowledge.items.allKinds", { count: all.length })}</option>
+                  <option value="all">{t("knowledge.items.allKinds")}</option>
                   {kinds.map((kind) => (
                     <option key={kind} value={kind}>
-                      {`${t(KIND_GROUP_LABELS[kind])} (${counts[kind] ?? 0})`}
+                      {t(KIND_GROUP_LABELS[kind])}
                     </option>
                   ))}
                 </Select>
@@ -201,11 +246,11 @@ export function KnowledgeItemsScreen() {
           </div>
         </div>
 
-        {items.isLoading && !items.data ? (
+        {items.isLoading ? (
           <LoadingBlock label={t("common.loading")} />
-        ) : items.error && !items.data ? (
+        ) : items.error ? (
           <ErrorState error={items.error} onRetry={items.reload} />
-        ) : all.length === 0 ? (
+        ) : all.length === 0 && !isFiltered ? (
           <EmptyState
             icon={<IconBook className="size-6" />}
             title={t("knowledge.items.emptyTitle")}
@@ -221,7 +266,7 @@ export function KnowledgeItemsScreen() {
               </div>
             }
           />
-        ) : groups.length === 0 ? (
+        ) : all.length === 0 ? (
           <EmptyState
             title={t("knowledge.items.noMatchesTitle")}
             description={t("knowledge.items.noMatchesDescription")}
@@ -240,7 +285,8 @@ export function KnowledgeItemsScreen() {
               return (
                 <section key={group.kind} aria-labelledby={headingId}>
                   <h2 id={headingId} className="bg-surface-muted/60 px-4 py-2 text-xs font-semibold tracking-wide text-ink-muted uppercase sm:px-6">
-                    {t(KIND_GROUP_LABELS[group.kind])} <span className="font-normal">· {group.items.length}</span>
+                    {t(KIND_GROUP_LABELS[group.kind])}
+                    {items.hasMore ? null : <span className="font-normal"> · {group.items.length}</span>}
                   </h2>
                   <ul className="divide-y divide-line">
                     {shown.map((item) => (
@@ -261,13 +307,27 @@ export function KnowledgeItemsScreen() {
                         size="sm"
                         onClick={() => setExpanded((current) => new Set(current).add(group.kind))}
                       >
-                        {t("knowledge.items.showAll", { count: group.items.length })}
+                        {items.hasMore
+                          ? t("knowledge.items.showRest", { count: group.items.length - shown.length })
+                          : t("knowledge.items.showAll", { count: group.items.length })}
                       </Button>
                     </div>
                   ) : null}
                 </section>
               );
             })}
+            {items.hasMore || items.loadMoreError ? (
+              <div className="flex flex-col items-center gap-2 px-4 py-4 text-center sm:px-6">
+                {items.loadMoreError ? (
+                  <p className="text-sm text-danger" role="alert">
+                    {t("knowledge.paging.failed")}
+                  </p>
+                ) : null}
+                <Button variant="secondary" isLoading={items.isLoadingMore} loadingText={t("common.loading")} onClick={items.loadMore}>
+                  {items.loadMoreError ? t("common.retry") : t("knowledge.paging.more")}
+                </Button>
+              </div>
+            ) : null}
           </div>
         )}
       </Card>
