@@ -10,6 +10,7 @@ from app.contracts.channel_clients import (
 from app.contracts.localization_utilities import PhoneNumberParserContract
 from app.contracts.repositories import AuditLogRepoContract, ChannelRepoContract
 from app.contracts.secret_cipher import SecretCipherAdapterContract
+from app.contracts.storage import StorageScopeContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.configurations.app_settings import AppSettings
 from app.schemas.constants.channels import ChannelKind, ChannelStatus
@@ -115,6 +116,7 @@ class ConnectChannelUseCase(UseCaseContract[ConnectChannelCommand, ChannelView])
         audit_log_repo: AuditLogRepoContract,
         app_settings: AppSettings,
         wall_clock: WallClock[Microseconds],
+        storage_scope: StorageScopeContract,
     ) -> None:
         self._authorize_business_access: UseCaseContract[
             BusinessAccessRequest,
@@ -128,6 +130,7 @@ class ConnectChannelUseCase(UseCaseContract[ConnectChannelCommand, ChannelView])
         self._audit_log_repo: AuditLogRepoContract = audit_log_repo
         self._app_settings: AppSettings = app_settings
         self._wall_clock: WallClock[Microseconds] = wall_clock
+        self._storage_scope: StorageScopeContract = storage_scope
 
     def run(self, input_data: ConnectChannelCommand) -> ChannelView:
         business: BusinessDocument = self._authorize_business_access.run(
@@ -331,10 +334,12 @@ class ConnectChannelUseCase(UseCaseContract[ConnectChannelCommand, ChannelView])
         external_id: ChannelExternalId,
         business: BusinessDocument,
     ) -> None:
-        owner_channel: ChannelDocument | None = self._channel_repo.find_by_external_id(
-            channel_kind,
-            external_id,
-        )
+        # The account may belong to any business: look platform-wide, not
+        # only inside the current business's storage scope.
+        with self._storage_scope.platform_wide():
+            owner_channel: ChannelDocument | None = (
+                self._channel_repo.find_by_external_id(channel_kind, external_id)
+            )
         if owner_channel is not None and owner_channel.business_id != business.id:
             raise ConflictError(
                 f"This {channel_kind.value} account is already connected to "

@@ -594,8 +594,12 @@ def build_workshop_container(
 
 def start_workshop(
     environment: Mapping[str, str] | None = None,
+    prepare: Callable[[AppContainer], None] | None = None,
 ) -> Workshop:
-    """Build the container and the API; the caller enters `client`."""
+    """
+    Build the container and the API; the caller enters `client`. `prepare`
+    may override more providers before the API is built.
+    """
 
     clock = MovableClock(START)
     otp = CapturingOtpDelivery()
@@ -619,6 +623,9 @@ def start_workshop(
         google,
         langfuse,
     )
+    if prepare is not None:
+        prepare(container)
+
     application = build_application(container)
     return Workshop(
         container=container,

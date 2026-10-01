@@ -40,6 +40,7 @@ from app.schemas.typings.assistants.prefixed_id import AssistantVersionId
 from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.schemas.typings.platform.constrained_integers import WorkerPollSeconds
 from app.use_cases.autotests.enqueue_autotest_run_use_case import RUN_AUTOTESTS_JOB
+from app.utilities.storage.storage_scope_context import StorageScopeContext
 from tests.assembly.builders import (
     seed_georgian_restaurant,
     seed_israeli_clinic,
@@ -734,6 +735,7 @@ def test_a_run_the_worker_cannot_finish_does_not_leave_the_version_testing() -> 
         wall_clock=testbed.wall_clock,
         error_reporter=testbed.worker_errors,
         poll_seconds=WorkerPollSeconds(5),
+        storage_scope=StorageScopeContext(),
     )
     started = testbed.queue_autotest_run_orchestrator.execute(
         RunAutotestsCommand(

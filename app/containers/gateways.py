@@ -6,6 +6,7 @@ from app.containers.facilitators import FacilitatorsContainer
 from app.containers.operators import OperatorsContainer
 from app.containers.repositories import RepositoriesContainer
 from app.containers.time_provider import TimeProviderContainer
+from app.containers.utilities import UtilitiesContainer
 from app.gateways.worker.background_worker import BackgroundWorker, PeriodicJobSpec
 from app.schemas.typings.platform.constrained_integers import JobIntervalSeconds
 from app.schemas.typings.platform.constrained_strings import JobName
@@ -36,6 +37,7 @@ class GatewaysContainer(containers.DeclarativeContainer):
     operators: OperatorsContainer = DependenciesContainer()  # type: ignore[assignment]
     repositories: RepositoriesContainer = DependenciesContainer()  # type: ignore[assignment]
     time_provider: TimeProviderContainer = DependenciesContainer()  # type: ignore[assignment]
+    utilities: UtilitiesContainer = DependenciesContainer()  # type: ignore[assignment]
 
     # Periodic jobs in the order they run within a tick: trials end before
     # grace periods are enforced, so an expired trial and its grace period
@@ -98,4 +100,5 @@ class GatewaysContainer(containers.DeclarativeContainer):
         wall_clock=time_provider.microsecond_wall_clock,
         error_reporter=facilitators.error_reporter,
         poll_seconds=config.app_settings.provided.worker_poll_seconds,
+        storage_scope=utilities.storage_scope,
     )

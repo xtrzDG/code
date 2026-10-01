@@ -91,6 +91,7 @@ class OrchestratorsContainer(containers.DeclarativeContainer):
             handoff_to_human=use_cases.handoff_to_human_use_case,
             record_reply=use_cases.record_assistant_reply_use_case,
             localized_text_resolver=utilities.localized_text_resolver,
+            storage_scope=utilities.storage_scope,
         )
     )
     voice_tool_call_orchestrator: Factory[VoiceToolCallOrchestratorContract] = Factory(
@@ -98,6 +99,7 @@ class OrchestratorsContainer(containers.DeclarativeContainer):
         open_voice_conversation=use_cases.open_voice_conversation_use_case,
         run_assistant_tool=use_cases.run_assistant_tool_use_case,
         record_voice_tool_call=use_cases.record_voice_tool_call_use_case,
+        storage_scope=utilities.storage_scope,
     )
     owner_test_chat_orchestrator: Factory[
         OrchestratorContract[OwnerTestChatCommand, InboundMessage]

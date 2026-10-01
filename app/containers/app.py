@@ -97,6 +97,7 @@ class AppContainer(containers.DeclarativeContainer):
     operators: OperatorsContainer = Container(  # type: ignore[assignment]
         OperatorsContainer,
         pipelines=pipelines,
+        utilities=utilities,
     )
     gateways: GatewaysContainer = Container(  # type: ignore[assignment]
         GatewaysContainer,
@@ -105,4 +106,5 @@ class AppContainer(containers.DeclarativeContainer):
         operators=operators,
         repositories=repositories,
         time_provider=time_provider,
+        utilities=utilities,
     )

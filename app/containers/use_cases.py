@@ -1588,6 +1588,7 @@ class UseCasesContainer(containers.DeclarativeContainer):
         audit_log_repo=repositories.audit_log_repo,
         app_settings=config.app_settings,
         wall_clock=time_provider.microsecond_wall_clock,
+        storage_scope=utilities.storage_scope,
     )
     disable_channel_use_case: Factory[
         UseCaseContract[DisableChannelCommand, ChannelView]

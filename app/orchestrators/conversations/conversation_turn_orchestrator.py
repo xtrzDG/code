@@ -2,6 +2,7 @@ import logging
 
 from app.contracts.conversation_flow import ConversationTurnOrchestratorContract
 from app.contracts.localization_utilities import LocalizedTextResolverContract
+from app.contracts.storage import StorageScopeContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.channels import ChannelKind
 from app.schemas.constants.conversation_engine import ReplyFailureKind, TurnGate
@@ -66,6 +67,7 @@ class ConversationTurnOrchestrator(ConversationTurnOrchestratorContract):
         handoff_to_human: UseCaseContract[HandoffCommand, HandoffResult],
         record_reply: UseCaseContract[ReplyRecord, AssistantReply],
         localized_text_resolver: LocalizedTextResolverContract,
+        storage_scope: StorageScopeContract,
     ) -> None:
         self._prepare_turn: UseCaseContract[InboundMessage, PreparedTurn] = prepare_turn
         self._generate_reply: UseCaseContract[PreparedTurn, GeneratedReply] = (
@@ -78,8 +80,15 @@ class ConversationTurnOrchestrator(ConversationTurnOrchestratorContract):
         self._localized_text_resolver: LocalizedTextResolverContract = (
             localized_text_resolver
         )
+        self._storage_scope: StorageScopeContract = storage_scope
 
     def execute(self, input_data: InboundMessage) -> AssistantReply:
+        # The whole turn, the model's tool calls included, sees only this
+        # business's rows (row-level security on Postgres).
+        with self._storage_scope.scoped_to_business(input_data.business_id):
+            return self._answer(input_data)
+
+    def _answer(self, input_data: InboundMessage) -> AssistantReply:
         turn: PreparedTurn = self._prepare_turn.run(input_data)
         is_phone: bool = turn.conversation.channel is ChannelKind.PHONE
         if turn.gate is not TurnGate.ANSWER:
