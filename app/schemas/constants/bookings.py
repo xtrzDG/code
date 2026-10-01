@@ -1,17 +1,48 @@
 from enum import StrEnum
 
 
-class BookingStatus(StrEnum):
-    """Lifecycle of a booking created by the assistant or the owner."""
+class ResourceKind(StrEnum):
+    """What is booked, as in the concept's resources table."""
 
+    TABLE = "table"
+    ROOM = "room"
+    STAFF = "staff"
+    ARENA = "arena"
+    BAY = "bay"
+    VEHICLE = "vehicle"
+    SLOT = "slot"
+
+
+class BookingUnit(StrEnum):
+    """How a resource is booked: for a time slot or for nights (hotels)."""
+
+    TIME_SLOT = "time_slot"
+    NIGHT = "night"
+
+
+class BookingStatus(StrEnum):
+    """Lifecycle of a booking."""
+
+    PENDING = "pending"
     CONFIRMED = "confirmed"
     CANCELLED = "cancelled"
-    COMPLETED = "completed"
     NO_SHOW = "no_show"
+    COMPLETED = "completed"
+
+
+class LeadType(StrEnum):
+    """Kind of request passed to a manager."""
+
+    BANQUET = "banquet"
+    GROUP = "group"
+    CORPORATE = "corporate"
+    ORDER = "order"
+    VIEWING = "viewing"
+    OTHER = "other"
 
 
 class LeadStatus(StrEnum):
-    """Lifecycle of a lead (request for a manager)."""
+    """Lifecycle of a lead."""
 
     NEW = "new"
     IN_PROGRESS = "in_progress"

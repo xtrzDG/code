@@ -16,6 +16,13 @@ class AutotestTurnLimit(BaseConstrainedTypedInt):
     le = 20
 
 
+class JudgeScore(BaseConstrainedTypedInt):
+    """Judge score of one criterion, 1 (bad) to 5 (perfect)."""
+
+    ge = 1
+    le = 5
+
+
 class LlmMaxOutputTokens(BaseConstrainedTypedInt):
     """Upper bound of output tokens for one language-model request."""
 

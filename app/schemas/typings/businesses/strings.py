@@ -3,12 +3,16 @@
 from base_typed_string import BaseTypedString
 
 
-class BusinessAddress(BaseTypedString):
-    """Street address of a business as the owner wrote it."""
+class AddressText(BaseTypedString):
+    """Street address as the owner wrote it."""
 
 
 class BusinessName(BaseTypedString):
     """Public name of a business."""
+
+
+class CityName(BaseTypedString):
+    """City of a business, in the owner's spelling."""
 
 
 # Keep abc order for all non example types, if possible.

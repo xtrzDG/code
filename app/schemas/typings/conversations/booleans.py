@@ -4,6 +4,7 @@ Example:
     is_sandbox: IsSandboxConversation = False
 """
 
+IsAfterHours = bool
 IsConversationHandedOff = bool
 IsLlmToolError = bool
 IsSandboxConversation = bool

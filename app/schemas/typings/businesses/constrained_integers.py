@@ -27,4 +27,11 @@ class OpeningMinuteOfDay(BaseConstrainedTypedInt):
     le = 1439
 
 
+class RecordingRetentionDays(BaseConstrainedTypedInt):
+    """Days call recordings and transcripts are kept (concept default 90)."""
+
+    ge = 1
+    le = 3650
+
+
 # Keep abc order for all non example types, if possible.

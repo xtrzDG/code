@@ -11,10 +11,21 @@ class HandoffReason(StrEnum):
     UNKNOWN_ANSWER = "unknown_answer"
     EMERGENCY = "emergency"
     SENSITIVE_TOPIC = "sensitive_topic"
+    PROFILE_RULE = "profile_rule"
+    UNVERIFIED_NUMBERS = "unverified_numbers"
+
+
+class HandoffUrgency(StrEnum):
+    """How fast staff should react."""
+
+    LOW = "low"
+    NORMAL = "normal"
+    HIGH = "high"
+    CRITICAL = "critical"
 
 
 class HandoffStatus(StrEnum):
-    """Delivery state of a handoff to the business staff."""
+    """Delivery and resolution state of a handoff."""
 
     PENDING = "pending"
     NOTIFIED = "notified"
@@ -23,7 +34,7 @@ class HandoffStatus(StrEnum):
 
 
 class ManagerContactChannel(StrEnum):
-    """Where staff receive handoffs and new leads."""
+    """Where staff receive handoffs, bookings and leads."""
 
     TELEGRAM = "telegram"
     WHATSAPP = "whatsapp"

@@ -2,19 +2,25 @@ from enum import StrEnum
 
 
 class ConversationStatus(StrEnum):
-    """State of a customer conversation."""
+    """
+    State of a customer conversation (concept: open, handoff, closed).
+
+    While a conversation is in HANDOFF the assistant stays silent in chat
+    channels until staff resolve the handoff.
+    """
 
     OPEN = "open"
-    HANDED_OFF = "handed_off"
+    HANDOFF = "handoff"
     CLOSED = "closed"
 
 
 class MessageAuthor(StrEnum):
-    """Who wrote a customer-visible message."""
+    """Who wrote a message."""
 
     CUSTOMER = "customer"
     ASSISTANT = "assistant"
-    HUMAN_AGENT = "human_agent"
+    STAFF = "staff"
+    SYSTEM = "system"
 
 
 class LlmTurnRole(StrEnum):
@@ -33,3 +39,22 @@ class LlmStopReason(StrEnum):
     REFUSAL = "refusal"
     PAUSE_TURN = "pause_turn"
     OTHER = "other"
+
+
+class CallOutcome(StrEnum):
+    """Result extracted from a finished phone call."""
+
+    BOOKING = "booking"
+    LEAD = "lead"
+    HANDOFF = "handoff"
+    UNANSWERED_QUESTION = "unanswered_question"
+    INFORMATION = "information"
+    ABANDONED = "abandoned"
+
+
+class ReplyGuardVerdict(StrEnum):
+    """Result of the invented-numbers guard on an assistant reply."""
+
+    CLEAN = "clean"
+    REWRITTEN = "rewritten"
+    HANDED_OFF = "handed_off"

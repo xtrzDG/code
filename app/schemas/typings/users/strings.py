@@ -4,7 +4,7 @@ from base_typed_string import BaseTypedString
 
 
 class AccessToken(BaseTypedString):
-    """Opaque bearer token handed to an owner after login. Never stored."""
+    """Opaque bearer token handed to a user after login. Never stored."""
 
 
 class AccessTokenHash(BaseTypedString):
@@ -12,11 +12,11 @@ class AccessTokenHash(BaseTypedString):
 
 
 class OtpCodeHash(BaseTypedString):
-    """Salted hash of a one-time code, the only stored form."""
+    """Keyed hash of a one-time code, the only stored form."""
 
 
-class OwnerDisplayName(BaseTypedString):
-    """Name the owner wants to be addressed by."""
+class UserDisplayName(BaseTypedString):
+    """Name the user wants to be addressed by."""
 
 
 # Keep abc order for all non example types, if possible.

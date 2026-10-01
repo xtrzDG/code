@@ -60,6 +60,13 @@ class PhoneNumberKind(StrEnum):
     OTHER = "other"
 
 
+class RecordingConsentRule(StrEnum):
+    """What the law requires before a call may be recorded."""
+
+    NOTICE = "notice"
+    ALL_PARTY_CONSENT = "all_party_consent"
+
+
 class TextDirection(StrEnum):
     """Writing direction of a language script."""
 

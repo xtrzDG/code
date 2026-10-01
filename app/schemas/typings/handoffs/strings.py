@@ -20,7 +20,7 @@ class ManagerName(BaseTypedString):
 
 
 class UnansweredQuestionText(BaseTypedString):
-    """Customer question that the business facts did not answer."""
+    """Customer question that the business knowledge did not answer."""
 
 
 # Keep abc order for all non example types, if possible.

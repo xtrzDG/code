@@ -1,36 +1,47 @@
 """Assemble AppSettings from environment variables (the external boundary)."""
 
 import os
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 
 from app.schemas.configurations.app_settings import AppSettings
-from app.schemas.constants.assistants import LlmEffort
+from app.schemas.constants.assistants import LlmEffort, LlmProvider
 from app.schemas.constants.environment import DeploymentEnvironment
 from app.schemas.constants.localization import DataRegion
 from app.schemas.exceptions.application_errors import ValidationFailedError
-from app.schemas.typings.accounts.booleans import IsOtpCodeLoggingEnabled
-from app.schemas.typings.accounts.constrained_integers import (
-    OtpAttemptCount,
-    OtpLifetimeSeconds,
-    SessionLifetimeSeconds,
-)
 from app.schemas.typings.assistants.constrained_integers import (
     AutotestTurnLimit,
     LlmMaxOutputTokens,
     LlmToolRoundLimit,
 )
 from app.schemas.typings.assistants.constrained_strings import LlmModelId
-from app.schemas.typings.channels.constrained_strings import PublicBaseUrl
-from app.schemas.typings.channels.strings import (
-    ChannelSecret,
-    WebhookVerificationToken,
+from app.schemas.typings.businesses.constrained_integers import (
+    RecordingRetentionDays,
 )
+from app.schemas.typings.channels.constrained_strings import PublicBaseUrl
 from app.schemas.typings.localization.constrained_strings import CountryCode
+from app.schemas.typings.platform.strings import (
+    DatabaseUrl,
+    PlatformIdentifier,
+    PlatformSecret,
+)
+from app.schemas.typings.users.booleans import IsOtpCodeLoggingEnabled
+from app.schemas.typings.users.constrained_integers import (
+    OtpAttemptCount,
+    OtpLifetimeSeconds,
+    SessionLifetimeSeconds,
+)
 
-DEFAULT_LLM_MODEL_ID: str = "claude-opus-5-5"
-# Comprehensively sanctioned jurisdictions for a US-person founder.
-# Confirm the list with a lawyer before launch; override with
-# RESTRICTED_COUNTRY_CODES (comma-separated, empty string disables).
+# The concept's choice: OpenAI gpt-5-mini in a project with EU data residency.
+DEFAULT_LLM_PROVIDER: str = LlmProvider.OPENAI
+DEFAULT_MODEL_IDS: dict[str, str] = {
+    LlmProvider.OPENAI: "gpt-5-mini",
+    LlmProvider.ANTHROPIC: "claude-opus-5-5",
+    LlmProvider.SCRIPTED: "scripted",
+}
+DEFAULT_OPENAI_BASE_URL: str = "https://eu.api.openai.com/v1"
+# Comprehensively sanctioned jurisdictions for a US-person founder. Confirm the
+# list with a lawyer before launch; override with RESTRICTED_COUNTRY_CODES
+# (comma-separated, an empty value disables the restriction).
 DEFAULT_RESTRICTED_COUNTRY_CODES: str = "CU,IR,KP,SY"
 TRUE_VALUES: frozenset[str] = frozenset({"1", "true", "yes", "on"})
 FALSE_VALUES: frozenset[str] = frozenset({"0", "false", "no", "off"})
@@ -49,18 +60,32 @@ def assemble_app_settings(environment_variables: Mapping[str, str]) -> AppSettin
         read_text(environment_variables, "APP_ENV", DeploymentEnvironment.DEVELOPMENT)
     )
     is_development: bool = environment is not DeploymentEnvironment.PRODUCTION
+    llm_provider = LlmProvider(
+        read_text(environment_variables, "LLM_PROVIDER", DEFAULT_LLM_PROVIDER)
+    )
+    default_model_id: str = DEFAULT_MODEL_IDS[llm_provider]
+
+    def secret(variable_name: str) -> PlatformSecret | None:
+        return optional_text(environment_variables, variable_name, PlatformSecret)
+
+    def identifier(variable_name: str) -> PlatformIdentifier | None:
+        return optional_text(environment_variables, variable_name, PlatformIdentifier)
 
     return AppSettings(
         environment=environment,
+        app_base_url=optional_text(
+            environment_variables,
+            "APP_BASE_URL",
+            PublicBaseUrl,
+        ),
+        database_url=optional_text(environment_variables, "DATABASE_URL", DatabaseUrl),
+        encryption_key=secret("ENCRYPTION_KEY"),
+        llm_provider=llm_provider,
         llm_model_id=LlmModelId(
-            read_text(environment_variables, "LLM_MODEL_ID", DEFAULT_LLM_MODEL_ID)
+            read_text(environment_variables, "LLM_MODEL_ID", default_model_id)
         ),
         llm_judge_model_id=LlmModelId(
-            read_text(
-                environment_variables,
-                "LLM_JUDGE_MODEL_ID",
-                DEFAULT_LLM_MODEL_ID,
-            )
+            read_text(environment_variables, "LLM_JUDGE_MODEL_ID", default_model_id)
         ),
         llm_chat_effort=LlmEffort(
             read_text(environment_variables, "LLM_CHAT_EFFORT", LlmEffort.LOW)
@@ -74,6 +99,10 @@ def assemble_app_settings(environment_variables: Mapping[str, str]) -> AppSettin
         llm_tool_round_limit=LlmToolRoundLimit(
             read_integer(environment_variables, "LLM_TOOL_ROUND_LIMIT", 8)
         ),
+        openai_base_url=PublicBaseUrl(
+            read_text(environment_variables, "OPENAI_BASE_URL", DEFAULT_OPENAI_BASE_URL)
+        ),
+        openai_project_id=identifier("OPENAI_PROJECT_ID"),
         autotest_turn_limit=AutotestTurnLimit(
             read_integer(environment_variables, "AUTOTEST_TURN_LIMIT", 4)
         ),
@@ -104,36 +133,25 @@ def assemble_app_settings(environment_variables: Mapping[str, str]) -> AppSettin
         default_data_region=DataRegion(
             read_text(environment_variables, "DEFAULT_DATA_REGION", DataRegion.EU)
         ),
-        public_base_url=optional_text(
-            environment_variables,
-            "PUBLIC_BASE_URL",
-            PublicBaseUrl,
+        default_recording_retention_days=RecordingRetentionDays(
+            read_integer(environment_variables, "RECORDING_RETENTION_DAYS", 90)
         ),
-        whatsapp_access_token=optional_text(
-            environment_variables,
-            "WHATSAPP_ACCESS_TOKEN",
-            ChannelSecret,
-        ),
-        meta_app_secret=optional_text(
-            environment_variables,
-            "META_APP_SECRET",
-            ChannelSecret,
-        ),
-        meta_webhook_verify_token=optional_text(
-            environment_variables,
-            "META_WEBHOOK_VERIFY_TOKEN",
-            WebhookVerificationToken,
-        ),
-        voice_webhook_secret=optional_text(
-            environment_variables,
-            "VOICE_WEBHOOK_SECRET",
-            WebhookVerificationToken,
-        ),
-        manager_telegram_bot_token=optional_text(
-            environment_variables,
-            "MANAGER_TELEGRAM_BOT_TOKEN",
-            ChannelSecret,
-        ),
+        elevenlabs_api_key=secret("ELEVENLABS_API_KEY"),
+        elevenlabs_webhook_secret=secret("ELEVENLABS_WEBHOOK_SECRET"),
+        zadarma_api_key=secret("ZADARMA_API_KEY"),
+        zadarma_api_secret=secret("ZADARMA_API_SECRET"),
+        meta_app_id=identifier("META_APP_ID"),
+        meta_app_secret=secret("META_APP_SECRET"),
+        meta_verify_token=secret("META_VERIFY_TOKEN"),
+        whatsapp_system_user_token=secret("WHATSAPP_SYSTEM_USER_TOKEN"),
+        telegram_platform_bot_token=secret("TELEGRAM_PLATFORM_BOT_TOKEN"),
+        google_oauth_client_id=identifier("GOOGLE_OAUTH_CLIENT_ID"),
+        google_oauth_client_secret=secret("GOOGLE_OAUTH_CLIENT_SECRET"),
+        flitt_merchant_id=identifier("FLITT_MERCHANT_ID"),
+        flitt_secret_key=secret("FLITT_SECRET_KEY"),
+        langfuse_public_key=identifier("LANGFUSE_PUBLIC_KEY"),
+        langfuse_secret_key=secret("LANGFUSE_SECRET_KEY"),
+        sentry_dsn=secret("SENTRY_DSN"),
     )
 
 
@@ -204,7 +222,7 @@ def read_list(
 def optional_text[TypedText: str](
     environment_variables: Mapping[str, str],
     variable_name: str,
-    typed_text_type: type[TypedText],
+    typed_text_type: Callable[[str], TypedText],
 ) -> TypedText | None:
     raw_value: str = environment_variables.get(variable_name, "").strip()
     if raw_value == "":

@@ -15,9 +15,14 @@ Every HTTP endpoint runs `operator.operate` -> `pipeline.start` ->
   `app/orchestrators/use_case_orchestrator.py`).
 - Write a dedicated orchestrator when a flow coordinates several use cases, and a
   dedicated pipeline when a phase orders several orchestrators.
-- Owner endpoints check ownership with `AuthorizeBusinessAccessUseCase`
-  (`app/use_cases/authorize_business_access_use_case.py`) before acting. A foreign
-  business is reported as `NotFoundError`.
+- Cabinet endpoints check access with `AuthorizeBusinessAccessUseCase`
+  (`app/use_cases/authorize_business_access_use_case.py`) before acting: owners
+  and staff pass, `required_role=OWNER` limits billing/settings/publishing to
+  owners, platform admins pass with an audit entry. A foreign business is
+  reported as `NotFoundError`.
+- Tenant-owned documents are read only together with their `business_id`
+  (`BusinessScopedRepository`). The business of a channel message comes from the
+  server-side channel lookup, never from model output.
 - Use cases depend on contracts from `app/contracts/` (repositories, registries,
   utilities, facilitators, LLM adapter), never on concrete classes of another
   module. Constructor injection only; no globals, no service locators.
@@ -48,8 +53,8 @@ Every HTTP endpoint runs `operator.operate` -> `pipeline.start` ->
 
 - Each module exposes `build_<module>_router(...) -> APIRouter` in
   `app/gateways/http/<module>_routes.py`. The builder receives ready operators
-  (and, for owner endpoints, the result of `build_current_owner_dependency`) as
-  arguments.
+  (and, for cabinet endpoints, the result of `build_current_user_dependency`)
+  as arguments.
 - Request and response bodies are DTOs with typed primitives. Path and query
   parameters arrive as raw `str` and are converted to primitives inside the
   route function (the transport boundary).
@@ -70,6 +75,8 @@ Every HTTP endpoint runs `operator.operate` -> `pipeline.start` ->
 
 ## Tests and checks
 
+- Personal-data operations (view of a conversation or contact, export, delete,
+  admin access, retention purge) append an `AuditLogEntryDocument`.
 - Tests live under `tests/<module>/`. No network: use `ScriptedLlmAdapter`
   (`app/adapters/llm/scripted_llm_adapter.py`), in-memory repositories
   (`app/repositories/*` over `InMemoryDocumentCollectionAdapter`), and fakes

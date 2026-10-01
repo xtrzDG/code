@@ -3,7 +3,7 @@ from pydantic import Field
 
 from app.schemas.constants.assistants import AssistantToolName, LlmEffort
 from app.schemas.constants.channels import ChannelKind
-from app.schemas.constants.conversations import LlmStopReason
+from app.schemas.constants.conversations import LlmStopReason, ReplyGuardVerdict
 from app.schemas.typings.assistants.constrained_integers import LlmMaxOutputTokens
 from app.schemas.typings.assistants.constrained_strings import LlmModelId
 from app.schemas.typings.assistants.prefixed_id import AssistantVersionId
@@ -14,16 +14,17 @@ from app.schemas.typings.assistants.strings import (
 )
 from app.schemas.typings.bookings.prefixed_id import BookingId, LeadId
 from app.schemas.typings.businesses.prefixed_id import BusinessId
+from app.schemas.typings.contacts.strings import ContactName
 from app.schemas.typings.conversations.booleans import (
     IsConversationHandedOff,
     IsLlmToolError,
     IsSandboxConversation,
     ShouldEndCall,
 )
+from app.schemas.typings.conversations.constrained_integers import LlmTokenCount
 from app.schemas.typings.conversations.prefixed_id import ConversationId
 from app.schemas.typings.conversations.strings import (
     ChannelUserId,
-    CustomerName,
     LlmProviderPayload,
     LlmToolCallId,
     LlmToolInputJson,
@@ -39,29 +40,36 @@ from app.schemas.typings.localization.constrained_strings import (
 
 class InboundMessage(ImmutableDTO):
     """
-    A customer message from any channel, normalized.
+    A customer message from any channel, normalized (concept: InboundMessage).
 
     `assistant_version_id` pins a specific version (owner test chat,
-    autotests); otherwise the business's active version answers.
+    autotests); otherwise the business's published version answers. The
+    business comes from the server-side channel lookup, never from the model.
     """
 
     business_id: BusinessId
     channel: ChannelKind
     channel_user_id: ChannelUserId
     text: MessageText
-    customer_name: CustomerName | None = None
-    customer_phone_number: E164PhoneNumber | None = None
+    contact_name: ContactName | None = None
+    contact_phone_number: E164PhoneNumber | None = None
     is_sandbox: IsSandboxConversation = False
     assistant_version_id: AssistantVersionId | None = None
 
 
 class AssistantReply(ImmutableDTO):
-    """What the assistant answered and what happened during the turn."""
+    """
+    What the assistant answered and what happened during the turn.
+
+    `text` is None when the assistant stays silent because staff took over the
+    conversation (open handoff in a chat channel).
+    """
 
     conversation_id: ConversationId
-    text: MessageText
+    text: MessageText | None
     language: LanguageTag
     is_handed_off: IsConversationHandedOff
+    guard_verdict: ReplyGuardVerdict = ReplyGuardVerdict.CLEAN
     should_end_call: ShouldEndCall = False
     created_booking_ids: list[BookingId] = Field(default_factory=list[BookingId])
     created_lead_ids: list[LeadId] = Field(default_factory=list[LeadId])
@@ -96,8 +104,10 @@ class LlmRequest(ImmutableDTO):
     """
     One language-model request.
 
-    `transcript` is the verbatim, append-only list of provider payloads built
-    by the same adapter (user text turns, assistant turns, tool result turns).
+    `transcript` is the verbatim, append-only list of payloads: user and tool
+    result turns in the canonical format of app/adapters/llm/llm_payloads.py,
+    assistant turns in the provider's own format. The model id selects the
+    provider adapter.
     """
 
     model_id: LlmModelId
@@ -115,10 +125,12 @@ class LlmResponse(ImmutableDTO):
     text: MessageText | None = None
     tool_calls: list[LlmToolCall] = Field(default_factory=list[LlmToolCall])
     assistant_turn_payload: LlmProviderPayload
+    input_tokens: LlmTokenCount = LlmTokenCount(0)
+    output_tokens: LlmTokenCount = LlmTokenCount(0)
 
 
 class CallGreetingRequest(ImmutableDTO):
-    """Ask for the opening line of a phone call answered by the assistant."""
+    """Ask for the first phrase of a phone call answered by the assistant."""
 
     business_id: BusinessId
     language: LanguageTag | None = None
@@ -126,7 +138,8 @@ class CallGreetingRequest(ImmutableDTO):
 
 class CallGreeting(ImmutableDTO):
     """
-    Opening line of a call: AI disclosure, recording notice, how to reach a human.
+    First phrase of a call (concept section 7): who answers (AI assistant of
+    the business), that the call is recorded, how to reach a human.
     """
 
     text: MessageText

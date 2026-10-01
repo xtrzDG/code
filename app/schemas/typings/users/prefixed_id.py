@@ -9,16 +9,16 @@ class OtpChallengeId(BasePrefixedTypedId):
     prefix = "otp_challenge"
 
 
-class OwnerId(BasePrefixedTypedId):
-    """Random identifier of a business owner account."""
+class UserId(BasePrefixedTypedId):
+    """Random identifier of a user (owner, staff, or platform admin)."""
 
-    prefix = "owner"
+    prefix = "user"
 
 
-class OwnerSessionId(BasePrefixedTypedId):
-    """Random identifier of an owner session."""
+class UserSessionId(BasePrefixedTypedId):
+    """Random identifier of a signed-in session."""
 
-    prefix = "owner_session"
+    prefix = "user_session"
 
 
 # Keep abc order for all non example types, if possible.

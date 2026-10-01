@@ -1,10 +1,11 @@
 """Keep abc order.
 
 Example:
-    is_owner_verified: IsOwnerVerified = True
+    is_user_verified: IsUserVerified = True
 """
 
 IsOtpChallengeConsumed = bool
 IsOtpCodeLoggingEnabled = bool
-IsOwnerVerified = bool
+IsPlatformAdmin = bool
+IsUserVerified = bool
 # Keep abc order for all non example types, if possible.

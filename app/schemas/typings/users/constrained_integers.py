@@ -18,7 +18,7 @@ class OtpLifetimeSeconds(BaseConstrainedTypedInt):
 
 
 class SessionLifetimeSeconds(BaseConstrainedTypedInt):
-    """How long an owner session stays valid, in seconds."""
+    """How long a session stays valid, in seconds."""
 
     ge = 60
 

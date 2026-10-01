@@ -30,24 +30,8 @@ class LaunchWave(StrEnum):
     C = "c"
 
 
-class BookableResourceKind(StrEnum):
-    """What a niche books for a customer."""
-
-    TABLE = "table"
-    ROOM = "room"
-    TIME_SLOT = "time_slot"
-    SPECIALIST = "specialist"
-    TRIAL_CLASS = "trial_class"
-    VEHICLE = "vehicle"
-    TOUR = "tour"
-    VENUE_DATE = "venue_date"
-    VIEWING = "viewing"
-    SERVICE_VISIT = "service_visit"
-    ORDER = "order"
-
-
 class QuestionAnswerType(StrEnum):
-    """Input shape of one questionnaire question."""
+    """Input shape of one niche-specific profile question."""
 
     SHORT_TEXT = "short_text"
     LONG_TEXT = "long_text"
@@ -59,13 +43,12 @@ class QuestionAnswerType(StrEnum):
     PHONE_NUMBER = "phone_number"
 
 
-class QuestionnaireSection(StrEnum):
-    """Questionnaire section a question belongs to."""
+class ProfileWizardStep(StrEnum):
+    """The six steps of the profile wizard from the concept (section 3)."""
 
-    BASICS = "basics"
-    HOURS = "hours"
-    OFFERING = "offering"
+    NICHE_AND_LANGUAGES = "niche_and_languages"
+    CONTACTS_AND_HOURS = "contacts_and_hours"
+    OFFER = "offer"
     BOOKING_RULES = "booking_rules"
-    FAQ = "faq"
-    HANDOFF = "handoff"
+    FAQ_AND_HANDOFF = "faq_and_handoff"
     CHANNELS = "channels"

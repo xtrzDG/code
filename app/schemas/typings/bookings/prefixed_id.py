@@ -15,4 +15,16 @@ class LeadId(BasePrefixedTypedId):
     prefix = "lead"
 
 
+class ResourceId(BasePrefixedTypedId):
+    """Random identifier of a bookable resource."""
+
+    prefix = "resource"
+
+
+class ScheduleExceptionId(BasePrefixedTypedId):
+    """Random identifier of a holiday or special-hours day."""
+
+    prefix = "schedule_exception"
+
+
 # Keep abc order for all non example types, if possible.

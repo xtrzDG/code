@@ -1,61 +1,85 @@
 """Persistence contracts, one per document type.
 
-Implementations must return independent copies: mutating a returned document
-must not change stored state until `save` is called.
+Implementations return independent copies: mutating a returned document does
+not change stored state until it is saved. Every business-owned document is
+looked up through its business id, so one tenant never sees another's data.
 """
 
 from typing import Protocol
 
+from typed_time_provider import Microseconds
+
 from app.contracts.repo_contract import RepoContract
 from app.schemas.constants.channels import ChannelKind
 from app.schemas.domain.assistants import AssistantVersionDocument, AutotestRunDocument
+from app.schemas.domain.billing import (
+    InvoiceDocument,
+    SubscriptionDocument,
+    UsageEventDocument,
+)
 from app.schemas.domain.bookings import BookingDocument, LeadDocument
 from app.schemas.domain.businesses import BusinessDocument
+from app.schemas.domain.channels import ChannelDocument
+from app.schemas.domain.compliance import AuditLogEntryDocument, DpaAcceptanceDocument
+from app.schemas.domain.contacts import ContactDocument
 from app.schemas.domain.conversations import (
+    CallDocument,
     ConversationDocument,
-    ConversationMessageDocument,
     LlmTurnDocument,
+    MessageDocument,
 )
 from app.schemas.domain.handoffs import HandoffDocument, UnansweredQuestionDocument
-from app.schemas.domain.owners import (
+from app.schemas.domain.knowledge import KnowledgeItemDocument
+from app.schemas.domain.profiles import BusinessProfileDocument
+from app.schemas.domain.resources import ResourceDocument, ScheduleExceptionDocument
+from app.schemas.domain.users import (
     OtpChallengeDocument,
-    OwnerDocument,
-    OwnerSessionDocument,
+    UserDocument,
+    UserSessionDocument,
 )
-from app.schemas.domain.questionnaires import QuestionnaireDocument
-from app.schemas.typings.accounts.constrained_strings import EmailAddress
-from app.schemas.typings.accounts.prefixed_id import (
-    OtpChallengeId,
-    OwnerId,
-    OwnerSessionId,
-)
-from app.schemas.typings.accounts.strings import AccessTokenHash
 from app.schemas.typings.assistants.prefixed_id import (
     AssistantVersionId,
     AutotestRunId,
 )
-from app.schemas.typings.bookings.prefixed_id import BookingId, LeadId
+from app.schemas.typings.billing.prefixed_id import InvoiceId, SubscriptionId
+from app.schemas.typings.bookings.prefixed_id import (
+    BookingId,
+    LeadId,
+    ResourceId,
+    ScheduleExceptionId,
+)
 from app.schemas.typings.businesses.prefixed_id import BusinessId
-from app.schemas.typings.channels.strings import ChannelAccountId
-from app.schemas.typings.conversations.prefixed_id import ConversationId
+from app.schemas.typings.channels.prefixed_id import ChannelId
+from app.schemas.typings.channels.strings import ChannelExternalId
+from app.schemas.typings.contacts.prefixed_id import ContactId
+from app.schemas.typings.conversations.prefixed_id import CallId, ConversationId
+from app.schemas.typings.conversations.strings import ChannelUserId, ProviderCallId
 from app.schemas.typings.handoffs.prefixed_id import HandoffId, UnansweredQuestionId
+from app.schemas.typings.knowledge.prefixed_id import KnowledgeItemId
 from app.schemas.typings.localization.constrained_strings import E164PhoneNumber
+from app.schemas.typings.users.constrained_strings import EmailAddress
+from app.schemas.typings.users.prefixed_id import (
+    OtpChallengeId,
+    UserId,
+    UserSessionId,
+)
+from app.schemas.typings.users.strings import AccessTokenHash
 
 
-class OwnerRepoContract(RepoContract, Protocol):
-    def save(self, owner: OwnerDocument) -> None:
+class UserRepoContract(RepoContract, Protocol):
+    def save(self, user: UserDocument) -> None:
         raise NotImplementedError
 
-    def get(self, owner_id: OwnerId) -> OwnerDocument | None:
+    def get(self, user_id: UserId) -> UserDocument | None:
         raise NotImplementedError
 
     def find_by_phone_number(
         self,
         phone_number: E164PhoneNumber,
-    ) -> OwnerDocument | None:
+    ) -> UserDocument | None:
         raise NotImplementedError
 
-    def find_by_email(self, email: EmailAddress) -> OwnerDocument | None:
+    def find_by_email(self, email: EmailAddress) -> UserDocument | None:
         raise NotImplementedError
 
 
@@ -66,18 +90,25 @@ class OtpChallengeRepoContract(RepoContract, Protocol):
     def get(self, challenge_id: OtpChallengeId) -> OtpChallengeDocument | None:
         raise NotImplementedError
 
+    def list_created_since(
+        self,
+        created_after: Microseconds,
+    ) -> list[OtpChallengeDocument]:
+        """Challenges created after a moment (throttling of repeated logins)."""
+        raise NotImplementedError
 
-class OwnerSessionRepoContract(RepoContract, Protocol):
-    def save(self, session: OwnerSessionDocument) -> None:
+
+class UserSessionRepoContract(RepoContract, Protocol):
+    def save(self, session: UserSessionDocument) -> None:
         raise NotImplementedError
 
     def find_by_token_hash(
         self,
         token_hash: AccessTokenHash,
-    ) -> OwnerSessionDocument | None:
+    ) -> UserSessionDocument | None:
         raise NotImplementedError
 
-    def delete(self, session_id: OwnerSessionId) -> None:
+    def delete(self, session_id: UserSessionId) -> None:
         raise NotImplementedError
 
 
@@ -88,49 +119,129 @@ class BusinessRepoContract(RepoContract, Protocol):
     def get(self, business_id: BusinessId) -> BusinessDocument | None:
         raise NotImplementedError
 
-    def list_by_owner(self, owner_id: OwnerId) -> list[BusinessDocument]:
+    def list_by_member(self, user_id: UserId) -> list[BusinessDocument]:
+        """Businesses where the user is an owner or staff member."""
         raise NotImplementedError
 
-    def find_by_channel_account(
+    def list_all(self) -> list[BusinessDocument]:
+        """Every business (platform admin views and background jobs only)."""
+        raise NotImplementedError
+
+
+class ChannelRepoContract(RepoContract, Protocol):
+    def save(self, channel: ChannelDocument) -> None:
+        raise NotImplementedError
+
+    def get(self, channel_id: ChannelId) -> ChannelDocument | None:
+        raise NotImplementedError
+
+    def list_by_business(self, business_id: BusinessId) -> list[ChannelDocument]:
+        raise NotImplementedError
+
+    def find_by_external_id(
         self,
-        channel: ChannelKind,
-        account_id: ChannelAccountId,
-    ) -> BusinessDocument | None:
-        """Find the business whose connected channel has this account id."""
+        kind: ChannelKind,
+        external_id: ChannelExternalId,
+    ) -> ChannelDocument | None:
+        """Resolve the tenant of an incoming webhook from the channel account."""
         raise NotImplementedError
 
 
-class QuestionnaireRepoContract(RepoContract, Protocol):
-    def save(self, questionnaire: QuestionnaireDocument) -> None:
+class BusinessProfileRepoContract(RepoContract, Protocol):
+    def save(self, profile: BusinessProfileDocument) -> None:
         raise NotImplementedError
 
     def get_by_business(
         self,
         business_id: BusinessId,
-    ) -> QuestionnaireDocument | None:
+    ) -> BusinessProfileDocument | None:
         raise NotImplementedError
 
 
-class AssistantVersionRepoContract(RepoContract, Protocol):
-    def save(self, version: AssistantVersionDocument) -> None:
+class KnowledgeItemRepoContract(RepoContract, Protocol):
+    def save(self, item: KnowledgeItemDocument) -> None:
         raise NotImplementedError
 
-    def get(self, version_id: AssistantVersionId) -> AssistantVersionDocument | None:
+    def get(
+        self,
+        business_id: BusinessId,
+        item_id: KnowledgeItemId,
+    ) -> KnowledgeItemDocument | None:
         raise NotImplementedError
 
     def list_by_business(
         self,
         business_id: BusinessId,
-    ) -> list[AssistantVersionDocument]:
-        """Return versions ordered by version_number ascending."""
+    ) -> list[KnowledgeItemDocument]:
+        raise NotImplementedError
+
+    def delete(self, business_id: BusinessId, item_id: KnowledgeItemId) -> None:
         raise NotImplementedError
 
 
-class AutotestRunRepoContract(RepoContract, Protocol):
-    def save(self, run: AutotestRunDocument) -> None:
+class ResourceRepoContract(RepoContract, Protocol):
+    def save(self, resource: ResourceDocument) -> None:
         raise NotImplementedError
 
-    def get(self, run_id: AutotestRunId) -> AutotestRunDocument | None:
+    def get(
+        self,
+        business_id: BusinessId,
+        resource_id: ResourceId,
+    ) -> ResourceDocument | None:
+        raise NotImplementedError
+
+    def list_by_business(self, business_id: BusinessId) -> list[ResourceDocument]:
+        raise NotImplementedError
+
+
+class ScheduleExceptionRepoContract(RepoContract, Protocol):
+    def save(self, exception: ScheduleExceptionDocument) -> None:
+        raise NotImplementedError
+
+    def list_by_business(
+        self,
+        business_id: BusinessId,
+    ) -> list[ScheduleExceptionDocument]:
+        raise NotImplementedError
+
+    def delete(
+        self,
+        business_id: BusinessId,
+        exception_id: ScheduleExceptionId,
+    ) -> None:
+        raise NotImplementedError
+
+
+class ContactRepoContract(RepoContract, Protocol):
+    def save(self, contact: ContactDocument) -> None:
+        raise NotImplementedError
+
+    def get(
+        self,
+        business_id: BusinessId,
+        contact_id: ContactId,
+    ) -> ContactDocument | None:
+        raise NotImplementedError
+
+    def find_by_channel_identity(
+        self,
+        business_id: BusinessId,
+        channel: ChannelKind,
+        channel_user_id: ChannelUserId,
+    ) -> ContactDocument | None:
+        raise NotImplementedError
+
+    def find_by_phone_number(
+        self,
+        business_id: BusinessId,
+        phone_number: E164PhoneNumber,
+    ) -> ContactDocument | None:
+        raise NotImplementedError
+
+    def list_by_business(self, business_id: BusinessId) -> list[ContactDocument]:
+        raise NotImplementedError
+
+    def delete(self, business_id: BusinessId, contact_id: ContactId) -> None:
         raise NotImplementedError
 
 
@@ -138,7 +249,11 @@ class ConversationRepoContract(RepoContract, Protocol):
     def save(self, conversation: ConversationDocument) -> None:
         raise NotImplementedError
 
-    def get(self, conversation_id: ConversationId) -> ConversationDocument | None:
+    def get(
+        self,
+        business_id: BusinessId,
+        conversation_id: ConversationId,
+    ) -> ConversationDocument | None:
         raise NotImplementedError
 
     def list_by_business(
@@ -149,21 +264,19 @@ class ConversationRepoContract(RepoContract, Protocol):
         raise NotImplementedError
 
 
-class ConversationMessageRepoContract(RepoContract, Protocol):
-    def save(self, message: ConversationMessageDocument) -> None:
+class MessageRepoContract(RepoContract, Protocol):
+    def save(self, message: MessageDocument) -> None:
         raise NotImplementedError
 
     def list_by_conversation(
         self,
+        business_id: BusinessId,
         conversation_id: ConversationId,
-    ) -> list[ConversationMessageDocument]:
+    ) -> list[MessageDocument]:
         """Return messages ordered by created_at ascending."""
         raise NotImplementedError
 
-    def list_by_business(
-        self,
-        business_id: BusinessId,
-    ) -> list[ConversationMessageDocument]:
+    def list_by_business(self, business_id: BusinessId) -> list[MessageDocument]:
         raise NotImplementedError
 
 
@@ -180,11 +293,33 @@ class LlmTurnRepoContract(RepoContract, Protocol):
         raise NotImplementedError
 
 
+class CallRepoContract(RepoContract, Protocol):
+    def save(self, call: CallDocument) -> None:
+        raise NotImplementedError
+
+    def get(self, business_id: BusinessId, call_id: CallId) -> CallDocument | None:
+        raise NotImplementedError
+
+    def find_by_provider_call_id(
+        self,
+        business_id: BusinessId,
+        provider_call_id: ProviderCallId,
+    ) -> CallDocument | None:
+        raise NotImplementedError
+
+    def list_by_business(self, business_id: BusinessId) -> list[CallDocument]:
+        raise NotImplementedError
+
+
 class BookingRepoContract(RepoContract, Protocol):
     def save(self, booking: BookingDocument) -> None:
         raise NotImplementedError
 
-    def get(self, booking_id: BookingId) -> BookingDocument | None:
+    def get(
+        self,
+        business_id: BusinessId,
+        booking_id: BookingId,
+    ) -> BookingDocument | None:
         raise NotImplementedError
 
     def list_by_business(self, business_id: BusinessId) -> list[BookingDocument]:
@@ -196,7 +331,7 @@ class LeadRepoContract(RepoContract, Protocol):
     def save(self, lead: LeadDocument) -> None:
         raise NotImplementedError
 
-    def get(self, lead_id: LeadId) -> LeadDocument | None:
+    def get(self, business_id: BusinessId, lead_id: LeadId) -> LeadDocument | None:
         raise NotImplementedError
 
     def list_by_business(self, business_id: BusinessId) -> list[LeadDocument]:
@@ -208,7 +343,11 @@ class HandoffRepoContract(RepoContract, Protocol):
     def save(self, handoff: HandoffDocument) -> None:
         raise NotImplementedError
 
-    def get(self, handoff_id: HandoffId) -> HandoffDocument | None:
+    def get(
+        self,
+        business_id: BusinessId,
+        handoff_id: HandoffId,
+    ) -> HandoffDocument | None:
         raise NotImplementedError
 
     def list_by_business(self, business_id: BusinessId) -> list[HandoffDocument]:
@@ -222,6 +361,7 @@ class UnansweredQuestionRepoContract(RepoContract, Protocol):
 
     def get(
         self,
+        business_id: BusinessId,
         question_id: UnansweredQuestionId,
     ) -> UnansweredQuestionDocument | None:
         raise NotImplementedError
@@ -231,4 +371,105 @@ class UnansweredQuestionRepoContract(RepoContract, Protocol):
         business_id: BusinessId,
     ) -> list[UnansweredQuestionDocument]:
         """Return questions ordered by occurrence_count descending."""
+        raise NotImplementedError
+
+
+class AssistantVersionRepoContract(RepoContract, Protocol):
+    def save(self, version: AssistantVersionDocument) -> None:
+        raise NotImplementedError
+
+    def get(
+        self,
+        business_id: BusinessId,
+        version_id: AssistantVersionId,
+    ) -> AssistantVersionDocument | None:
+        raise NotImplementedError
+
+    def list_by_business(
+        self,
+        business_id: BusinessId,
+    ) -> list[AssistantVersionDocument]:
+        """Return versions ordered by version_number ascending."""
+        raise NotImplementedError
+
+
+class AutotestRunRepoContract(RepoContract, Protocol):
+    def save(self, run: AutotestRunDocument) -> None:
+        raise NotImplementedError
+
+    def get(
+        self,
+        business_id: BusinessId,
+        run_id: AutotestRunId,
+    ) -> AutotestRunDocument | None:
+        raise NotImplementedError
+
+
+class SubscriptionRepoContract(RepoContract, Protocol):
+    def save(self, subscription: SubscriptionDocument) -> None:
+        raise NotImplementedError
+
+    def get(
+        self,
+        business_id: BusinessId,
+        subscription_id: SubscriptionId,
+    ) -> SubscriptionDocument | None:
+        raise NotImplementedError
+
+    def list_by_business(
+        self,
+        business_id: BusinessId,
+    ) -> list[SubscriptionDocument]:
+        raise NotImplementedError
+
+
+class InvoiceRepoContract(RepoContract, Protocol):
+    def save(self, invoice: InvoiceDocument) -> None:
+        raise NotImplementedError
+
+    def get(
+        self,
+        business_id: BusinessId,
+        invoice_id: InvoiceId,
+    ) -> InvoiceDocument | None:
+        raise NotImplementedError
+
+    def list_by_business(self, business_id: BusinessId) -> list[InvoiceDocument]:
+        raise NotImplementedError
+
+
+class UsageEventRepoContract(RepoContract, Protocol):
+    def append(self, event: UsageEventDocument) -> None:
+        raise NotImplementedError
+
+    def list_by_business_between(
+        self,
+        business_id: BusinessId,
+        occurred_from: Microseconds,
+        occurred_to: Microseconds,
+    ) -> list[UsageEventDocument]:
+        """Events with occurred_from <= occurred_at < occurred_to."""
+        raise NotImplementedError
+
+
+class AuditLogRepoContract(RepoContract, Protocol):
+    def append(self, entry: AuditLogEntryDocument) -> None:
+        """Audit entries are never updated or deleted."""
+        raise NotImplementedError
+
+    def list_by_business(
+        self,
+        business_id: BusinessId,
+    ) -> list[AuditLogEntryDocument]:
+        raise NotImplementedError
+
+
+class DpaAcceptanceRepoContract(RepoContract, Protocol):
+    def save(self, acceptance: DpaAcceptanceDocument) -> None:
+        raise NotImplementedError
+
+    def list_by_business(
+        self,
+        business_id: BusinessId,
+    ) -> list[DpaAcceptanceDocument]:
         raise NotImplementedError

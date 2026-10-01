@@ -1,14 +1,18 @@
 from app.contracts.document_store import DocumentCollectionAdapterContract
 from app.contracts.repositories import (
+    BusinessProfileRepoContract,
     BusinessRepoContract,
-    QuestionnaireRepoContract,
+    ChannelRepoContract,
 )
+from app.repositories.business_scoped_repository import BusinessScopedRepository
 from app.schemas.constants.channels import ChannelKind
 from app.schemas.domain.businesses import BusinessDocument
-from app.schemas.domain.questionnaires import QuestionnaireDocument
-from app.schemas.typings.accounts.prefixed_id import OwnerId
+from app.schemas.domain.channels import ChannelDocument
+from app.schemas.domain.profiles import BusinessProfileDocument
 from app.schemas.typings.businesses.prefixed_id import BusinessId
-from app.schemas.typings.channels.strings import ChannelAccountId
+from app.schemas.typings.channels.prefixed_id import ChannelId
+from app.schemas.typings.channels.strings import ChannelExternalId
+from app.schemas.typings.users.prefixed_id import UserId
 
 
 class BusinessRepository(BusinessRepoContract):
@@ -26,42 +30,58 @@ class BusinessRepository(BusinessRepoContract):
     def get(self, business_id: BusinessId) -> BusinessDocument | None:
         return self._collection.get(str(business_id))
 
-    def list_by_owner(self, owner_id: OwnerId) -> list[BusinessDocument]:
+    def list_by_member(self, user_id: UserId) -> list[BusinessDocument]:
         return [
             business
             for business in self._collection.list_all()
-            if business.owner_id == owner_id
+            if any(member.user_id == user_id for member in business.members)
         ]
 
-    def find_by_channel_account(
+    def list_all(self) -> list[BusinessDocument]:
+        return self._collection.list_all()
+
+
+class ChannelRepository(
+    BusinessScopedRepository[ChannelDocument],
+    ChannelRepoContract,
+):
+    def save(self, channel: ChannelDocument) -> None:
+        self._store(str(channel.id), channel)
+
+    def get(self, channel_id: ChannelId) -> ChannelDocument | None:
+        return self._collection.get(str(channel_id))
+
+    def list_by_business(self, business_id: BusinessId) -> list[ChannelDocument]:
+        return self._list(business_id)
+
+    def find_by_external_id(
         self,
-        channel: ChannelKind,
-        account_id: ChannelAccountId,
-    ) -> BusinessDocument | None:
-        for business in self._collection.list_all():
-            for connection in business.channels:
-                if connection.kind is channel and connection.account_id == account_id:
-                    return business
+        kind: ChannelKind,
+        external_id: ChannelExternalId,
+    ) -> ChannelDocument | None:
+        for channel in self._collection.list_all():
+            if channel.kind is kind and channel.external_id == external_id:
+                return channel
 
         return None
 
 
-class QuestionnaireRepository(QuestionnaireRepoContract):
-    """Stores one questionnaire per business, keyed by the business id."""
+class BusinessProfileRepository(BusinessProfileRepoContract):
+    """Stores one profile per business, keyed by the business id."""
 
     def __init__(
         self,
-        collection: DocumentCollectionAdapterContract[QuestionnaireDocument],
+        collection: DocumentCollectionAdapterContract[BusinessProfileDocument],
     ) -> None:
-        self._collection: DocumentCollectionAdapterContract[QuestionnaireDocument] = (
+        self._collection: DocumentCollectionAdapterContract[BusinessProfileDocument] = (
             collection
         )
 
-    def save(self, questionnaire: QuestionnaireDocument) -> None:
-        self._collection.upsert(str(questionnaire.business_id), questionnaire)
+    def save(self, profile: BusinessProfileDocument) -> None:
+        self._collection.upsert(str(profile.business_id), profile)
 
     def get_by_business(
         self,
         business_id: BusinessId,
-    ) -> QuestionnaireDocument | None:
+    ) -> BusinessProfileDocument | None:
         return self._collection.get(str(business_id))

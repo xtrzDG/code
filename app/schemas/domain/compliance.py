@@ -1,0 +1,43 @@
+from base_pydantic_schemas import BaseDocument
+from pydantic import Field
+from typed_time_provider import Microseconds
+
+from app.schemas.constants.compliance import AuditAction
+from app.schemas.typings.businesses.prefixed_id import BusinessId
+from app.schemas.typings.compliance.constrained_strings import DpaDocumentVersion
+from app.schemas.typings.compliance.prefixed_id import (
+    AuditLogEntryId,
+    DpaAcceptanceId,
+)
+from app.schemas.typings.compliance.strings import (
+    AuditEntityName,
+    AuditEntityReference,
+    ClientIpAddress,
+)
+from app.schemas.typings.users.prefixed_id import UserId
+
+
+class AuditLogEntryDocument(BaseDocument):
+    """
+    One operation on personal data (concept table `audit_logs`).
+
+    `actor_id` is null for automatic jobs such as retention purges.
+    """
+
+    id: AuditLogEntryId = Field(default_factory=AuditLogEntryId)
+    business_id: BusinessId | None = None
+    actor_id: UserId | None = None
+    action: AuditAction
+    entity: AuditEntityName
+    entity_id: AuditEntityReference | None = None
+    ip_address: ClientIpAddress | None = None
+
+
+class DpaAcceptanceDocument(BaseDocument):
+    """Acceptance of the data processing agreement (concept `dpa_acceptances`)."""
+
+    id: DpaAcceptanceId = Field(default_factory=DpaAcceptanceId)
+    business_id: BusinessId
+    document_version: DpaDocumentVersion
+    accepted_by: UserId
+    accepted_at: Microseconds

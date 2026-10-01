@@ -26,10 +26,10 @@ class QuestionChoiceKey(BaseConstrainedTypedString):
 
 class QuestionKey(BaseConstrainedTypedString):
     """
-    Snake-case key of one questionnaire question.
+    Snake-case key of one niche-specific profile question.
 
     Example:
-        key = QuestionKey("deposit_policy")
+        key = QuestionKey("live_music")
     """
 
     min_length = 2

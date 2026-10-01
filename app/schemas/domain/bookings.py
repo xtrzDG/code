@@ -1,7 +1,7 @@
 from base_pydantic_schemas import BaseDocument
 from pydantic import Field
 
-from app.schemas.constants.bookings import BookingStatus, LeadStatus
+from app.schemas.constants.bookings import BookingStatus, LeadStatus, LeadType
 from app.schemas.constants.channels import ChannelKind
 from app.schemas.typings.bookings.constrained_integers import (
     BookingEndsAtUnixSeconds,
@@ -9,56 +9,47 @@ from app.schemas.typings.bookings.constrained_integers import (
     PartySize,
 )
 from app.schemas.typings.bookings.constrained_strings import LocalDate
-from app.schemas.typings.bookings.prefixed_id import BookingId, LeadId
+from app.schemas.typings.bookings.prefixed_id import BookingId, LeadId, ResourceId
 from app.schemas.typings.bookings.strings import (
     BookingNote,
     LeadBudgetText,
     LeadDetails,
 )
 from app.schemas.typings.businesses.prefixed_id import BusinessId
+from app.schemas.typings.contacts.prefixed_id import ContactId
 from app.schemas.typings.conversations.booleans import IsSandboxConversation
 from app.schemas.typings.conversations.prefixed_id import ConversationId
-from app.schemas.typings.conversations.strings import ChannelUserId, CustomerName
-from app.schemas.typings.localization.constrained_strings import (
-    E164PhoneNumber,
-    LanguageTag,
-)
-from app.schemas.typings.questionnaires.strings import ResourceName
 
 
 class BookingDocument(BaseDocument):
-    """Booking of a resource; times are UTC, rendering uses the business zone."""
+    """Booking of a resource (concept table `bookings`); times are UTC."""
 
     id: BookingId = Field(default_factory=BookingId)
     business_id: BusinessId
+    resource_id: ResourceId
+    contact_id: ContactId
     conversation_id: ConversationId | None = None
-    resource_name: ResourceName
     starts_at: BookingStartsAtUnixSeconds
     ends_at: BookingEndsAtUnixSeconds
     party_size: PartySize
-    customer_name: CustomerName
-    customer_phone_number: E164PhoneNumber | None = None
-    channel: ChannelKind
-    channel_user_id: ChannelUserId | None = None
-    language: LanguageTag
     status: BookingStatus = BookingStatus.CONFIRMED
-    note: BookingNote | None = None
+    source_channel: ChannelKind
+    notes: BookingNote | None = None
     is_sandbox: IsSandboxConversation = False
 
 
 class LeadDocument(BaseDocument):
-    """Request that needs a manager: banquet, group stay, order, viewing."""
+    """Request for a manager (concept table `leads`)."""
 
     id: LeadId = Field(default_factory=LeadId)
     business_id: BusinessId
+    contact_id: ContactId
     conversation_id: ConversationId | None = None
-    customer_name: CustomerName
-    customer_phone_number: E164PhoneNumber | None = None
+    lead_type: LeadType
     details: LeadDetails
     requested_date: LocalDate | None = None
     party_size: PartySize | None = None
     budget: LeadBudgetText | None = None
-    channel: ChannelKind
-    language: LanguageTag
+    source_channel: ChannelKind
     status: LeadStatus = LeadStatus.NEW
     is_sandbox: IsSandboxConversation = False
