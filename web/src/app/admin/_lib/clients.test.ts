@@ -4,11 +4,9 @@ import {
   EMPTY_FILTERS,
   adminClientPath,
   clientUsagePercent,
-  filterClients,
+  clientsQuery,
   hasFilters,
   isCriticalIssue,
-  sortClients,
-  summarizeClients,
   type AdminClientSummary,
 } from "./clients";
 
@@ -72,44 +70,19 @@ const clients = [
   client({ business_id: "b_c", name: "Charlie", health_status: "attention", business_status: "testing", used_dialogs: 1500, cost: 30, revenue: 0 }),
 ];
 
-describe("filterClients", () => {
-  it("filters by name or id, health and status", () => {
-    expect(filterClients(clients, EMPTY_FILTERS)).toHaveLength(3);
-    expect(filterClients(clients, { ...EMPTY_FILTERS, query: "brav" }).map((item) => item.name)).toEqual(["Bravo"]);
-    expect(filterClients(clients, { ...EMPTY_FILTERS, query: "B_C" }).map((item) => item.name)).toEqual(["Charlie"]);
-    expect(filterClients(clients, { ...EMPTY_FILTERS, health: "critical" }).map((item) => item.name)).toEqual(["Bravo"]);
-    expect(filterClients(clients, { ...EMPTY_FILTERS, status: "testing" }).map((item) => item.name)).toEqual(["Charlie"]);
+describe("clientsQuery", () => {
+  it("sends only the filters that are set", () => {
+    expect(clientsQuery(EMPTY_FILTERS, undefined, "health")).toEqual({ sort: "health" });
+    expect(
+      clientsQuery({ query: "brav", health: "critical", status: "testing", country: "GE", niche: "restaurant" }, "brav", "margin"),
+    ).toEqual({ search: "brav", health: "critical", status: "testing", country: "GE", niche: "restaurant", sort: "margin" });
     expect(hasFilters(EMPTY_FILTERS)).toBe(false);
     expect(hasFilters({ ...EMPTY_FILTERS, query: " x " })).toBe(true);
-  });
-});
-
-describe("sortClients", () => {
-  const names = (sort: Parameters<typeof sortClients>[1]) => sortClients(clients, sort, "en").map((item) => item.name);
-
-  it("puts critical clients first by default", () => {
-    expect(names("health")).toEqual(["Bravo", "Charlie", "Alpha"]);
-  });
-
-  it("sorts by name, usage, margin, cost and revenue", () => {
-    expect(names("name")).toEqual(["Alpha", "Bravo", "Charlie"]);
-    expect(names("usage")).toEqual(["Charlie", "Alpha", "Bravo"]);
-    expect(names("margin")).toEqual(["Bravo", "Alpha", "Charlie"]);
-    expect(names("cost")).toEqual(["Bravo", "Charlie", "Alpha"]);
-    expect(names("revenue")).toEqual(["Alpha", "Bravo", "Charlie"]);
-  });
-
-  it("does not change the input", () => {
-    sortClients(clients, "name", "en");
-    expect(clients.map((item) => item.name)).toEqual(["Alpha", "Bravo", "Charlie"]);
+    expect(hasFilters({ ...EMPTY_FILTERS, country: "IT" })).toBe(true);
   });
 });
 
 describe("summaries", () => {
-  it("counts clients by health and losses", () => {
-    expect(summarizeClients(clients)).toEqual({ total: 3, critical: 1, attention: 1, healthy: 1, losingMoney: 1 });
-  });
-
   it("takes the fuller package", () => {
     expect(clientUsagePercent(clients[0]!)).toBe(50);
     expect(clientUsagePercent(clients[2]!)).toBe(100);

@@ -49,6 +49,8 @@ services:
     dockerCommand: workshop api
     preDeployCommand: workshop migrate
     healthCheckPath: /healthz
+    # docs/** is ignored, so a new DPA text in docs/legal alone does not
+    # redeploy: change DPA_DOCUMENT_VERSION too (or deploy by hand).
     buildFilter:
       ignoredPaths:
         - web/**
@@ -68,6 +70,10 @@ services:
       # public https address of the cabinet, e.g. https://workshop-cabinet.onrender.com
       # (Google Calendar sends owners back there)
       - key: CABINET_BASE_URL
+        sync: false
+      # public https origin of the cabinet, e.g. https://workshop-cabinet.onrender.com
+      # (cabinet CORS; the payment page returns payers there)
+      - key: CORS_ALLOWED_ORIGINS
         sync: false
       - key: PLATFORM_ADMIN_EMAILS
         sync: false

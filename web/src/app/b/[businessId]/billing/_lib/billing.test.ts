@@ -10,7 +10,8 @@ import {
   isInvoiceOpen,
   maxAnnualDiscount,
   monthlyEquivalentMinor,
-  planAction,
+  needsSubscription,
+  planActions,
   planPrice,
   quotedMoneyText,
   sortInvoices,
@@ -119,19 +120,40 @@ describe("actions", () => {
   it("cancels only a subscription that is not cancelled yet", () => {
     expect(canCancel(overview())).toBe(true);
     expect(canCancel(overview({ subscription: subscription({ status: "cancelled" }) }))).toBe(false);
+    expect(canCancel(overview({ subscription: subscription({ status: "incomplete" }) }))).toBe(false);
     expect(canCancel(overview({ subscription: null }))).toBe(false);
   });
 
-  it("knows the current plan, switches and trials", () => {
+  it("lets a subscription waiting for its first payment be paid", () => {
+    expect(
+      canPay(overview({ subscription: subscription({ status: "incomplete", has_auto_debit: false }), invoices: [invoice({ status: "issued" })] })),
+    ).toBe(true);
+  });
+
+  it("switches plans during a trial or an active subscription", () => {
     const voice = quote({ plan_key: "voice_and_chat" });
-    expect(planAction(voice, "monthly", overview())).toBe("current");
-    expect(planAction(voice, "annual", overview())).toBe("switch");
-    expect(planAction(quote(), "monthly", overview())).toBe("switch");
-    expect(planAction(quote(), "monthly", overview({ subscription: null, is_trial_available: true }))).toBe("trial");
-    expect(planAction(quote({ trial_days: 0 }), "monthly", overview({ subscription: null, is_trial_available: true }))).toBe(
-      "unavailable",
-    );
-    expect(planAction(quote(), "monthly", overview({ subscription: null }))).toBe("unavailable");
+    expect(planActions(voice, "monthly", overview())).toEqual({ isCurrent: true, actions: [] });
+    expect(planActions(voice, "annual", overview())).toEqual({ isCurrent: false, actions: ["switch"] });
+    expect(planActions(quote(), "monthly", overview())).toEqual({ isCurrent: false, actions: ["switch"] });
+    expect(planActions(quote(), "monthly", overview({ subscription: subscription({ status: "trialing" }) })).actions).toEqual(["switch"]);
+  });
+
+  it("offers the trial first and subscribing without a subscription", () => {
+    const fresh = overview({ subscription: null, is_trial_available: true });
+    expect(planActions(quote(), "monthly", fresh)).toEqual({ isCurrent: false, actions: ["trial", "subscribe"] });
+    expect(planActions(quote({ trial_days: 0 }), "monthly", fresh).actions).toEqual(["subscribe"]);
+    expect(planActions(quote(), "annual", overview({ subscription: null })).actions).toEqual(["subscribe"]);
+  });
+
+  it("subscribes again after the trial, an overdue payment or a cancellation", () => {
+    for (const status of ["past_due", "cancelled", "incomplete"] as const) {
+      const ended = overview({ subscription: subscription({ status, plan_key: "chat" }) });
+      expect(needsSubscription(ended)).toBe(true);
+      expect(planActions(quote(), "monthly", ended)).toEqual({ isCurrent: true, actions: ["subscribe"] });
+      expect(planActions(quote({ plan_key: "plus" }), "monthly", ended)).toEqual({ isCurrent: false, actions: ["subscribe"] });
+    }
+    expect(needsSubscription(overview())).toBe(false);
+    expect(needsSubscription(overview({ subscription: null }))).toBe(true);
   });
 });
 
@@ -185,6 +207,15 @@ describe("billingNotices", () => {
       { kind: "usage", unit: "dialogs", percent: 106, isExceeded: true },
     ]);
     expect(billingNotices(overview({ usage: { ...usage, voice_usage_percent: null, dialog_usage_percent: 10 } }), NOW)).toEqual([]);
+  });
+
+  it("asks for the first payment of a new subscription instead of listing unpaid invoices", () => {
+    expect(
+      billingNotices(
+        overview({ subscription: subscription({ status: "incomplete" }), invoices: [invoice({ status: "issued" })] }),
+        NOW,
+      ),
+    ).toEqual([{ kind: "incomplete" }]);
   });
 
   it("tells when a cancelled subscription ends", () => {

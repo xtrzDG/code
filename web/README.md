@@ -172,7 +172,9 @@ web/
                                ({items, next_cursor} lists with "show more")
       workspace/               shared by channels, billing, settings, admin: CopyButton, ConfirmDialog
                                with typed confirmation, InlineError, hash Tabs (useHashTab), UsageMeter,
-                               Facts, OwnerOnly notes, channel names, helpers
+                               Facts, OwnerOnly notes, channel names, useCursorList (paged API lists
+                               with "show more"), MarkdownDocument (renders the DPA text without
+                               HTML), helpers (zoned dates, usage)
       BusinessSwitcher.tsx LanguageSwitcher.tsx CountrySelect.tsx icons.tsx
     lib/                       pure helpers with unit tests (*.test.ts): navigation (sections, paths,
                                safeNextPath), format (Intl, money units), countries (phone/country),
@@ -193,9 +195,9 @@ web/
 | Knowledge | `knowledge`, `/questions`, `/import`, `/resources` | Server-paged items and search, unanswered questions to FAQ, menu import with review and batch discard, resources and special days |
 | Assistant | `assistant`, `/versions`, `/versions/{id}` | Test chat with tool calls, versions, go-live checklist with fix links, autotests with live progress, publish and rollback with reasons |
 | Channels | `channels` | Connect messengers and see why one stopped, website chat snippet, colour and corner, call forwarding codes, Google Calendar state and last sync, staff Telegram link |
-| Billing | `billing` | Trial, plan change, usage meters, invoices, payment (owners only) |
-| Settings | `settings#general`, `#team`, `#notifications`, `#privacy`, `#audit` | Business settings and pause, team, manager contacts, data processing agreement and customer data, audit log |
-| Admin | `/admin`, `/admin/clients/{id}` | Platform admins: all clients, health, opening a client's cabinet |
+| Billing | `billing` | Trial, subscribe with payment (after the trial, an overdue payment or a cancellation), plan change, usage meters, invoices, payment (owners only) |
+| Settings | `settings#general`, `#team`, `#notifications`, `#privacy`, `#audit` | Business settings and pause, team with owner/staff roles, manager contacts, reading and accepting the data processing agreement, the customer list with export and erasure, the audit log with server filters |
+| Admin | `/admin`, `/admin/clients/{id}` | Platform admins: all clients (server filters, sorts and paging, totals), health, opening a client's cabinet |
 
 ## Conventions
 

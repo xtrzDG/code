@@ -54,8 +54,9 @@ class EnforceGracePeriodsUseCase(UseCaseContract[JobTick, JobReport]):
       with grace counted from the day the bill was issued.
     - ACTIVE, or TRIALING within its trial, but still LEADS_ONLY (paid):
       back to FULL.
-    - A live business without any subscription (never started the trial)
-      is not entitled to service: LEADS_ONLY.
+    - A live business without any subscription (never started the trial),
+      or whose subscription waits for its first payment (INCOMPLETE), is
+      not entitled to service: LEADS_ONLY.
 
     Each switch re-reads the business and changes only its service mode,
     so an owner's edit made while the job runs is kept.
@@ -120,6 +121,10 @@ class EnforceGracePeriodsUseCase(UseCaseContract[JobTick, JobReport]):
     ) -> bool:
         now: Microseconds = self._wall_clock.now_unix()
         match subscription.status:
+            case SubscriptionStatus.INCOMPLETE:
+                return business.status is BusinessStatus.LIVE and (
+                    self._set_service_mode(business, ServiceMode.LEADS_ONLY, now)
+                )
             case SubscriptionStatus.ACTIVE:
                 return self._enforce_active(business, subscription, now)
             case SubscriptionStatus.TRIALING:

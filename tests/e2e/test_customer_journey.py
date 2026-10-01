@@ -338,7 +338,7 @@ def test_second_owner_in_italy_is_isolated_and_admin_access_is_audited(
     admin_headers = bearer(admin_token)
     assert admin_session["user"]["is_platform_admin"] is True
     clients = client.get("/v1/admin/clients", headers=admin_headers).json()
-    assert clients["client_count"] == 2
+    assert clients["totals"]["client_count"] == 2
     opened = client.post(
         f"/v1/admin/clients/{georgian_business_id}/open",
         headers=admin_headers,
@@ -353,7 +353,7 @@ def test_second_owner_in_italy_is_isolated_and_admin_access_is_audited(
     ).json()
     admin_entries = [
         entry
-        for entry in audit
+        for entry in audit["items"]
         if entry["actor_id"] == admin_session["user"]["id"]
         and entry["action"] == "admin_access"
     ]

@@ -11,6 +11,7 @@ from app.contracts.repositories import (
     UsageEventRepoContract,
 )
 from app.contracts.use_case_contract import UseCaseContract
+from app.schemas.constants.billing import SubscriptionStatus
 from app.schemas.domain.billing import InvoiceDocument, SubscriptionDocument
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.dto.billing import Money, PlanDefinition
@@ -28,7 +29,10 @@ from app.schemas.typings.localization.constrained_strings import (
     CurrencyCode,
     LanguageTag,
 )
-from app.use_cases.billing.billing_records import find_current_subscription
+from app.use_cases.billing.billing_records import (
+    find_current_subscription,
+    is_trial_available,
+)
 from app.use_cases.billing.package_usage import (
     compute_overage_minutes,
     compute_usage_percent,
@@ -56,7 +60,9 @@ class AssembleBillingOverviewUseCase(
     price, status, period, grace), package use in the billing window that
     contains now (voice minutes from VOICE_SECONDS events rounded up, dialogs
     from DIALOG events), minutes above the package with their price, and the
-    newest invoices. Without a subscription the page offers the trial.
+    newest invoices. The trial is offered until the business has started
+    it or paid; a subscription still waiting for its first payment has no
+    package yet.
     """
 
     def __init__(
@@ -85,6 +91,9 @@ class AssembleBillingOverviewUseCase(
         business: BusinessDocument = input_data.business
         language: LanguageTag = input_data.display_language or business.owner_language
         require_babel_locale(language)
+        subscriptions: list[SubscriptionDocument] = (
+            self._subscription_repo.list_by_business(business.id)
+        )
         subscription: SubscriptionDocument | None = find_current_subscription(
             self._subscription_repo,
             business.id,
@@ -106,7 +115,7 @@ class AssembleBillingOverviewUseCase(
             display_language=language,
             currency_code=currency_code,
             service_mode=business.service_mode,
-            is_trial_available=subscription is None,
+            is_trial_available=is_trial_available(subscriptions),
             subscription=(
                 None
                 if subscription is None
@@ -115,6 +124,7 @@ class AssembleBillingOverviewUseCase(
             usage=(
                 None
                 if subscription is None
+                or subscription.status is SubscriptionStatus.INCOMPLETE
                 else self._view_usage(business, subscription, language)
             ),
             invoices=[self._view_invoice(invoice, language) for invoice in invoices],

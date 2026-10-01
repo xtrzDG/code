@@ -18,6 +18,7 @@ class ClientHealthIssue(StrEnum):
     """
 
     NO_SUBSCRIPTION = "no_subscription"
+    FIRST_PAYMENT_PENDING = "first_payment_pending"
     PAYMENT_PAST_DUE = "payment_past_due"
     SUBSCRIPTION_CANCELLED = "subscription_cancelled"
     LEADS_ONLY_MODE = "leads_only_mode"
@@ -28,6 +29,24 @@ class ClientHealthIssue(StrEnum):
     OPEN_QUESTIONS = "open_questions"
     PACKAGE_EXCEEDED = "package_exceeded"
     NEGATIVE_MARGIN = "negative_margin"
+
+
+class AdminClientSort(StrEnum):
+    """
+    Order of the platform admin's client list.
+
+    HEALTH: critical first, then more issues first. NAME: A to Z. USAGE: the
+    fullest package first. MARGIN: the lowest margin first. COST: the
+    largest provider cost first. REVENUE: the largest revenue first, per
+    currency. Unknown values go last; ties keep health, then name order.
+    """
+
+    HEALTH = "health"
+    NAME = "name"
+    USAGE = "usage"
+    MARGIN = "margin"
+    COST = "cost"
+    REVENUE = "revenue"
 
 
 class CabinetSection(StrEnum):

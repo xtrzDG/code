@@ -181,6 +181,9 @@ class PipelinesContainer(containers.DeclarativeContainer):
     remove_member_pipeline = orchestrator_pipeline(
         orchestrators.remove_member_orchestrator
     )
+    change_member_role_pipeline = orchestrator_pipeline(
+        orchestrators.change_member_role_orchestrator
+    )
 
     # --- Compliance.
     get_dpa_status_pipeline = orchestrator_pipeline(
@@ -196,6 +199,13 @@ class PipelinesContainer(containers.DeclarativeContainer):
     delete_contact_data_pipeline = orchestrator_pipeline(
         orchestrators.delete_contact_data_orchestrator
     )
+    get_dpa_document_pipeline = orchestrator_pipeline(
+        orchestrators.get_dpa_document_orchestrator
+    )
+    list_contacts_pipeline = orchestrator_pipeline(
+        orchestrators.list_contacts_orchestrator
+    )
+    get_contact_pipeline = orchestrator_pipeline(orchestrators.get_contact_orchestrator)
 
     # --- Niche templates and the profile wizard.
     list_niche_templates_pipeline = orchestrator_pipeline(
@@ -401,6 +411,7 @@ class PipelinesContainer(containers.DeclarativeContainer):
     start_checkout_pipeline = orchestrator_pipeline(
         orchestrators.start_checkout_orchestrator
     )
+    subscribe_pipeline = orchestrator_pipeline(orchestrators.subscribe_orchestrator)
     process_payment_webhook_pipeline = orchestrator_pipeline(
         orchestrators.process_payment_webhook_orchestrator
     )

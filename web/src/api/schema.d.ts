@@ -381,6 +381,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/businesses/{business_id}/billing/subscribe": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Subscribe */
+        post: operations["subscribe_v1_businesses__business_id__billing_subscribe_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/businesses/{business_id}/billing/trial": {
         parameters: {
             query?: never;
@@ -536,6 +553,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/businesses/{business_id}/contacts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Contacts */
+        get: operations["list_contacts_v1_businesses__business_id__contacts_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/businesses/{business_id}/contacts/{contact_id}": {
         parameters: {
             query?: never;
@@ -543,7 +577,8 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /** Get Contact */
+        get: operations["get_contact_v1_businesses__business_id__contacts__contact_id__get"];
         put?: never;
         post?: never;
         /** Delete Contact Data */
@@ -929,7 +964,8 @@ export interface paths {
         delete: operations["remove_member_v1_businesses__business_id__members__user_id__delete"];
         options?: never;
         head?: never;
-        patch?: never;
+        /** Change Member Role */
+        patch: operations["change_member_role_v1_businesses__business_id__members__user_id__patch"];
         trace?: never;
     };
     "/v1/businesses/{business_id}/profile": {
@@ -1293,6 +1329,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/legal/dpa/{version}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Dpa Document */
+        get: operations["get_dpa_document_v1_legal_dpa__version__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/me": {
         parameters: {
             query?: never;
@@ -1436,16 +1489,27 @@ export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
         /**
-         * AdminClientList
-         * @description Every client, the ones needing attention first.
+         * AdminClientPage
+         * @description One page of clients; `next_cursor` is None on the last page.
+         *
+         *     `matching_count` counts the clients that pass the filters; `totals`,
+         *     `countries` and `niches` describe every client (for the summary tiles
+         *     and the filter choices).
          */
-        AdminClientList: {
-            /** Client Count */
-            client_count: number;
-            /** Clients */
-            clients: components["schemas"]["AdminClientSummary"][];
+        AdminClientPage: {
+            /** Countries */
+            countries?: string[];
             /** Generated At */
             generated_at: number;
+            /** Items */
+            items: components["schemas"]["AdminClientSummary"][];
+            /** Matching Count */
+            matching_count: number;
+            /** Next Cursor */
+            next_cursor?: string | null;
+            /** Niches */
+            niches?: components["schemas"]["NicheKey"][];
+            totals: components["schemas"]["AdminClientTotals"];
         };
         /**
          * AdminClientSummary
@@ -1502,6 +1566,22 @@ export interface components {
             used_dialogs: number;
             /** Used Voice Minutes */
             used_voice_minutes: number;
+        };
+        /**
+         * AdminClientTotals
+         * @description Counts over every client of the platform, whatever the filters.
+         */
+        AdminClientTotals: {
+            /** Attention Count */
+            attention_count: number;
+            /** Client Count */
+            client_count: number;
+            /** Critical Count */
+            critical_count: number;
+            /** Healthy Count */
+            healthy_count: number;
+            /** Losing Money Count */
+            losing_money_count: number;
         };
         /**
          * AdminInvoiceView
@@ -1714,6 +1794,23 @@ export interface components {
             ip_address?: string | null;
             /** Occurred At */
             occurred_at: number;
+        };
+        /**
+         * AuditLogPage
+         * @description One page of the audit log; `next_cursor` is None on the last page.
+         *
+         *     `entities` and `actor_ids` list every entity type and every person in
+         *     the whole log of the business (not only this page), for the filters.
+         */
+        AuditLogPage: {
+            /** Actor Ids */
+            actor_ids?: string[];
+            /** Entities */
+            entities?: string[];
+            /** Items */
+            items: components["schemas"]["AuditLogEntryView"][];
+            /** Next Cursor */
+            next_cursor?: string | null;
         };
         /**
          * AutotestOutcome
@@ -2551,7 +2648,7 @@ export interface components {
          *     asks for a look.
          * @enum {string}
          */
-        ClientHealthIssue: "no_subscription" | "payment_past_due" | "subscription_cancelled" | "leads_only_mode" | "not_published" | "autotests_failed" | "tool_errors" | "many_handoffs" | "open_questions" | "package_exceeded" | "negative_margin";
+        ClientHealthIssue: "no_subscription" | "first_payment_pending" | "payment_past_due" | "subscription_cancelled" | "leads_only_mode" | "not_published" | "autotests_failed" | "tool_errors" | "many_handoffs" | "open_questions" | "package_exceeded" | "negative_margin";
         /**
          * ClientHealthStatus
          * @description Overall state of a client business in the platform admin view.
@@ -2584,6 +2681,33 @@ export interface components {
             business_id: string;
         };
         /**
+         * ContactBookingView
+         * @description A booking of the customer (start in UTC seconds, as bookings use).
+         */
+        ContactBookingView: {
+            /** Created At */
+            created_at: number;
+            /** Id */
+            id: string;
+            /** Starts At */
+            starts_at: number;
+            status: components["schemas"]["BookingStatus"];
+        };
+        /**
+         * ContactConversationView
+         * @description A conversation of the customer (test chats left out).
+         */
+        ContactConversationView: {
+            channel: components["schemas"]["ChannelKind"];
+            /** Id */
+            id: string;
+            /** Last Message At */
+            last_message_at: number;
+            /** Started At */
+            started_at: number;
+            status: components["schemas"]["ConversationStatus"];
+        };
+        /**
          * ContactDataExport
          * @description Machine-readable copy of a visitor's personal data (right of access).
          */
@@ -2595,6 +2719,19 @@ export interface components {
             records: components["schemas"]["ContactRecords"];
         };
         /**
+         * ContactDetailView
+         * @description One customer with their conversations, bookings and leads, newest first.
+         */
+        ContactDetailView: {
+            /** Bookings */
+            bookings?: components["schemas"]["ContactBookingView"][];
+            contact: components["schemas"]["ContactSummaryView"];
+            /** Conversations */
+            conversations?: components["schemas"]["ContactConversationView"][];
+            /** Leads */
+            leads?: components["schemas"]["ContactLeadView"][];
+        };
+        /**
          * ContactDocument
          * @description A customer of one business (concept table `contacts`).
          *
@@ -2604,6 +2741,10 @@ export interface components {
          *     user shared about themselves, the caller ID of a call). Only the
          *     verified phone proves that bookings under that phone are the
          *     customer's own.
+         *
+         *     `erased_at` marks a customer erased at their request: the document then
+         *     keeps no personal data (no name, phones, language or channel
+         *     identities), only its id, so records that point to it read as erased.
          */
         ContactDocument: {
             /** Business Id */
@@ -2615,6 +2756,8 @@ export interface components {
              * @description Creation wall-clock UNIX timestamp in microseconds.
              */
             created_at?: number;
+            /** Erased At */
+            erased_at?: number | null;
             /** Id */
             id?: string;
             /** Language */
@@ -2668,6 +2811,27 @@ export interface components {
             erased_calls: number;
         };
         /**
+         * ContactLeadView
+         * @description A request the customer left for a manager.
+         */
+        ContactLeadView: {
+            /** Created At */
+            created_at: number;
+            /** Id */
+            id: string;
+            status: components["schemas"]["LeadStatus"];
+        };
+        /**
+         * ContactPage
+         * @description One page of customers; `next_cursor` is None on the last page.
+         */
+        ContactPage: {
+            /** Items */
+            items: components["schemas"]["ContactSummaryView"][];
+            /** Next Cursor */
+            next_cursor?: string | null;
+        };
+        /**
          * ContactRecords
          * @description Every stored record that describes one visitor of one business.
          *
@@ -2689,6 +2853,45 @@ export interface components {
             leads?: components["schemas"]["LeadDocument"][];
             /** Messages */
             messages?: components["schemas"]["MessageDocument"][];
+        };
+        /**
+         * ContactSummaryView
+         * @description One customer in the list: how to recognise them and how active they are.
+         *
+         *     `phone_number` is the phone a channel proved when there is one
+         *     (`is_phone_verified`), otherwise the one the customer typed. Counts and
+         *     channels leave out the owner's test chats. An erased customer
+         *     (`erased_at`) has no name, phone or language left; their anonymous
+         *     conversations and bookings still count.
+         */
+        ContactSummaryView: {
+            /** Booking Count */
+            booking_count: number;
+            /** Channels */
+            channels?: components["schemas"]["ChannelKind"][];
+            /** Conversation Count */
+            conversation_count: number;
+            /** Erased At */
+            erased_at?: number | null;
+            /** First Seen At */
+            first_seen_at: number;
+            /** Id */
+            id: string;
+            /**
+             * Is Phone Verified
+             * @default false
+             */
+            is_phone_verified: boolean;
+            /** Language */
+            language?: string | null;
+            /** Last Activity At */
+            last_activity_at: number;
+            /** Lead Count */
+            lead_count: number;
+            /** Name */
+            name?: string | null;
+            /** Phone Number */
+            phone_number?: string | null;
         };
         /**
          * ConversationDetailView
@@ -3061,14 +3264,38 @@ export interface components {
             id: string;
         };
         /**
+         * DpaDocumentView
+         * @description The text of one agreement version.
+         *
+         *     `language` is the language served: the requested one, else its base
+         *     language, else English. `available_languages` lists every translation.
+         */
+        DpaDocumentView: {
+            /** Available Languages */
+            available_languages: string[];
+            /** Language */
+            language: string;
+            /** Text */
+            text: string;
+            /** Title */
+            title: string;
+            /** Version */
+            version: string;
+        };
+        /**
          * DpaStatusView
          * @description Whether the business accepted the agreement version now in force.
+         *
+         *     `document_url` is the API path of that version's text (None when the
+         *     repository has no text for it; then it cannot be accepted).
          */
         DpaStatusView: {
             /** Business Id */
             business_id: string;
             /** Current Document Version */
             current_document_version: string;
+            /** Document Url */
+            document_url?: string | null;
             /** Is Current Version Accepted */
             is_current_version_accepted: boolean;
             latest_acceptance?: components["schemas"]["DpaAcceptanceView"] | null;
@@ -4534,9 +4761,12 @@ export interface components {
         /**
          * SubscriptionStatus
          * @description Subscription state driven by the payment provider.
+         *
+         *     INCOMPLETE: chosen without a trial and waiting for its first payment;
+         *     the business has no service from it until that payment arrives.
          * @enum {string}
          */
-        SubscriptionStatus: "trialing" | "active" | "past_due" | "cancelled";
+        SubscriptionStatus: "incomplete" | "trialing" | "active" | "past_due" | "cancelled";
         /**
          * SubscriptionView
          * @description The subscription as the billing page shows it.
@@ -4911,7 +5141,16 @@ export type $defs = Record<string, never>;
 export interface operations {
     list_clients_v1_admin_clients_get: {
         parameters: {
-            query?: never;
+            query?: {
+                limit?: string | null;
+                cursor?: string | null;
+                status?: string | null;
+                health?: string | null;
+                country?: string | null;
+                niche?: string | null;
+                search?: string | null;
+                sort?: string | null;
+            };
             header?: {
                 authorization?: string | null;
             };
@@ -4926,7 +5165,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["AdminClientList"];
+                    "application/json": components["schemas"]["AdminClientPage"];
                 };
             };
             /** @description Validation Error */
@@ -5662,6 +5901,12 @@ export interface operations {
         parameters: {
             query?: {
                 limit?: string | null;
+                cursor?: string | null;
+                action?: string | null;
+                entity?: string | null;
+                actor_id?: string | null;
+                since?: string | null;
+                until?: string | null;
             };
             header?: {
                 authorization?: string | null;
@@ -5679,7 +5924,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["AuditLogEntryView"][];
+                    "application/json": components["schemas"]["AuditLogPage"];
                 };
             };
             /** @description Validation Error */
@@ -5886,6 +6131,61 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["BillingOverview"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    subscribe_v1_businesses__business_id__billing_subscribe_post: {
+        parameters: {
+            query?: {
+                language?: string | null;
+            };
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /**
+                     * BillingPeriod
+                     * @description How often a subscription is charged.
+                     * @default monthly
+                     * @enum {string}
+                     */
+                    billing_period?: "monthly" | "annual";
+                    /**
+                     * PlanKey
+                     * @description Subscription plan of one assistant ("employee").
+                     * @enum {string}
+                     */
+                    plan_key: "chat" | "voice_and_chat" | "plus";
+                    /** Return Url */
+                    return_url?: string | null;
+                };
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CheckoutSessionView"];
                 };
             };
             /** @description Validation Error */
@@ -6366,6 +6666,77 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ChannelView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_contacts_v1_businesses__business_id__contacts_get: {
+        parameters: {
+            query?: {
+                search?: string | null;
+                limit?: string | null;
+                cursor?: string | null;
+            };
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContactPage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_contact_v1_businesses__business_id__contacts__contact_id__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+                contact_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContactDetailView"];
                 };
             };
             /** @description Validation Error */
@@ -7443,6 +7814,13 @@ export interface operations {
                     email?: string | null;
                     /** Phone Number */
                     phone_number?: string | null;
+                    /**
+                     * BusinessMemberRole
+                     * @description Role of a user inside one business.
+                     * @default staff
+                     * @enum {string}
+                     */
+                    role?: "owner" | "staff";
                 };
             };
         };
@@ -7480,6 +7858,51 @@ export interface operations {
             cookie?: never;
         };
         requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BusinessView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    change_member_role_v1_businesses__business_id__members__user_id__patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+                user_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /**
+                     * BusinessMemberRole
+                     * @description Role of a user inside one business.
+                     * @enum {string}
+                     */
+                    role: "owner" | "staff";
+                };
+            };
+        };
         responses: {
             /** @description Successful Response */
             200: {
@@ -8704,6 +9127,39 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_dpa_document_v1_legal_dpa__version__get: {
+        parameters: {
+            query?: {
+                language?: string | null;
+            };
+            header?: never;
+            path: {
+                version: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DpaDocumentView"];
+                };
             };
             /** @description Validation Error */
             422: {

@@ -17,7 +17,7 @@ from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.users import UserDocument
 from app.schemas.dto.access import BusinessAccessRequest
 from app.schemas.dto.admin import (
-    AdminClientList,
+    AdminClientPage,
     AdminClientQuery,
     AdminClientsQuery,
     AdminClientSummary,
@@ -58,6 +58,8 @@ from app.schemas.dto.billing_cabinet import (
     CheckoutSessionView,
     StartCheckoutCommand,
     StartTrialCommand,
+    SubscribeCommand,
+    SubscriptionOpening,
 )
 from app.schemas.dto.billing_ledger import (
     ClientCostQuery,
@@ -78,6 +80,7 @@ from app.schemas.dto.bookings import (
 from app.schemas.dto.businesses import (
     BusinessQuery,
     BusinessView,
+    ChangeMemberRoleCommand,
     CreateBusinessCommand,
     InviteStaffCommand,
     RemoveMemberCommand,
@@ -128,16 +131,24 @@ from app.schemas.dto.channels import (
 )
 from app.schemas.dto.compliance import (
     AcceptDpaCommand,
-    AuditLogEntryView,
+    AuditLogPage,
     AuditLogQuery,
     ContactDataCommand,
     ContactDataExport,
     ContactErasureResult,
     ContactRecords,
     ContactRecordsQuery,
+    DpaDocumentQuery,
+    DpaDocumentView,
     DpaStatusView,
     PurgeExpiredRecordingsCommand,
     RecordingPurgeResult,
+)
+from app.schemas.dto.contacts import (
+    ContactDetailView,
+    ContactListQuery,
+    ContactPage,
+    ContactQuery,
 )
 from app.schemas.dto.conversation_engine import (
     GeneratedReply,
@@ -361,6 +372,9 @@ from app.use_cases.billing.invoice_usage_overage_use_case import (
     InvoiceUsageOverageUseCase,
 )
 from app.use_cases.billing.issue_due_invoices_use_case import IssueDueInvoicesUseCase
+from app.use_cases.billing.open_subscription_use_case import (
+    OpenSubscriptionUseCase,
+)
 from app.use_cases.billing.process_payment_webhook_use_case import (
     ProcessPaymentWebhookUseCase,
 )
@@ -378,6 +392,9 @@ from app.use_cases.bookings.send_booking_reminders_use_case import (
     SendBookingRemindersUseCase,
 )
 from app.use_cases.bookings.update_booking_use_case import UpdateBookingUseCase
+from app.use_cases.businesses.change_member_role_use_case import (
+    ChangeMemberRoleUseCase,
+)
 from app.use_cases.businesses.create_business_use_case import CreateBusinessUseCase
 from app.use_cases.businesses.get_business_use_case import GetBusinessUseCase
 from app.use_cases.businesses.invite_staff_use_case import InviteStaffUseCase
@@ -443,11 +460,16 @@ from app.use_cases.compliance.delete_contact_data_use_case import (
 from app.use_cases.compliance.export_contact_data_use_case import (
     ExportContactDataUseCase,
 )
+from app.use_cases.compliance.get_dpa_document_use_case import (
+    GetDpaDocumentUseCase,
+)
 from app.use_cases.compliance.get_dpa_status_use_case import GetDpaStatusUseCase
 from app.use_cases.compliance.list_audit_log_use_case import ListAuditLogUseCase
 from app.use_cases.compliance.purge_expired_recordings_use_case import (
     PurgeExpiredRecordingsUseCase,
 )
+from app.use_cases.contacts.get_contact_use_case import GetContactUseCase
+from app.use_cases.contacts.list_contacts_use_case import ListContactsUseCase
 from app.use_cases.conversations.build_call_greeting_use_case import (
     BuildCallGreetingUseCase,
 )
@@ -762,6 +784,17 @@ class UseCasesContainer(containers.DeclarativeContainer):
         business_view_transformer=transformers.business_view_transformer,
         wall_clock=time_provider.microsecond_wall_clock,
     )
+    change_member_role_use_case: Factory[
+        UseCaseContract[ChangeMemberRoleCommand, BusinessView]
+    ] = Factory(
+        ChangeMemberRoleUseCase,
+        authorize_business_access=authorize_business_access_use_case,
+        business_repo=repositories.business_repo,
+        user_repo=repositories.user_repo,
+        audit_log_repo=repositories.audit_log_repo,
+        business_view_transformer=transformers.business_view_transformer,
+        wall_clock=time_provider.microsecond_wall_clock,
+    )
     remove_member_use_case: Factory[
         UseCaseContract[RemoveMemberCommand, BusinessView]
     ] = Factory(
@@ -781,6 +814,7 @@ class UseCasesContainer(containers.DeclarativeContainer):
             authorize_business_access=authorize_business_access_use_case,
             dpa_acceptance_repo=repositories.dpa_acceptance_repo,
             audit_log_repo=repositories.audit_log_repo,
+            legal_document_registry=registries.legal_document_registry,
             app_settings=config.app_settings,
             wall_clock=time_provider.microsecond_wall_clock,
         )
@@ -790,15 +824,46 @@ class UseCasesContainer(containers.DeclarativeContainer):
             GetDpaStatusUseCase,
             authorize_business_access=authorize_business_access_use_case,
             dpa_acceptance_repo=repositories.dpa_acceptance_repo,
+            legal_document_registry=registries.legal_document_registry,
             app_settings=config.app_settings,
         )
     )
-    list_audit_log_use_case: Factory[
-        UseCaseContract[AuditLogQuery, list[AuditLogEntryView]]
+    get_dpa_document_use_case: Factory[
+        UseCaseContract[DpaDocumentQuery, DpaDocumentView]
     ] = Factory(
-        ListAuditLogUseCase,
-        authorize_business_access=authorize_business_access_use_case,
-        audit_log_repo=repositories.audit_log_repo,
+        GetDpaDocumentUseCase,
+        legal_document_registry=registries.legal_document_registry,
+    )
+    list_audit_log_use_case: Factory[UseCaseContract[AuditLogQuery, AuditLogPage]] = (
+        Factory(
+            ListAuditLogUseCase,
+            authorize_business_access=authorize_business_access_use_case,
+            audit_log_repo=repositories.audit_log_repo,
+        )
+    )
+    list_contacts_use_case: Factory[UseCaseContract[ContactListQuery, ContactPage]] = (
+        Factory(
+            ListContactsUseCase,
+            authorize_business_access=authorize_business_access_use_case,
+            contact_repo=repositories.contact_repo,
+            conversation_repo=repositories.conversation_repo,
+            booking_repo=repositories.booking_repo,
+            lead_repo=repositories.lead_repo,
+            audit_log_repo=repositories.audit_log_repo,
+            wall_clock=time_provider.microsecond_wall_clock,
+        )
+    )
+    get_contact_use_case: Factory[UseCaseContract[ContactQuery, ContactDetailView]] = (
+        Factory(
+            GetContactUseCase,
+            authorize_business_access=authorize_business_access_use_case,
+            contact_repo=repositories.contact_repo,
+            conversation_repo=repositories.conversation_repo,
+            booking_repo=repositories.booking_repo,
+            lead_repo=repositories.lead_repo,
+            audit_log_repo=repositories.audit_log_repo,
+            wall_clock=time_provider.microsecond_wall_clock,
+        )
     )
     collect_contact_records_use_case: Factory[
         UseCaseContract[ContactRecordsQuery, ContactRecords]
@@ -1913,6 +1978,7 @@ class UseCasesContainer(containers.DeclarativeContainer):
         StartTrialUseCase,
         authorize_business_access=authorize_business_access_use_case,
         subscription_repo=repositories.subscription_repo,
+        invoice_repo=repositories.invoice_repo,
         business_repo=repositories.business_repo,
         plan_registry=registries.plan_registry,
         assemble_billing_overview=assemble_billing_overview_use_case,
@@ -1953,6 +2019,18 @@ class UseCasesContainer(containers.DeclarativeContainer):
         payment_order_repo=repositories.payment_order_repo,
         issue_due_invoices=issue_due_invoices_use_case,
         payment_gateway=adapters.payment_gateway,
+        app_settings=config.app_settings,
+        wall_clock=time_provider.microsecond_wall_clock,
+    )
+    open_subscription_use_case: Factory[
+        UseCaseContract[SubscribeCommand, SubscriptionOpening]
+    ] = Factory(
+        OpenSubscriptionUseCase,
+        authorize_business_access=authorize_business_access_use_case,
+        subscription_repo=repositories.subscription_repo,
+        invoice_repo=repositories.invoice_repo,
+        business_repo=repositories.business_repo,
+        plan_registry=registries.plan_registry,
         app_settings=config.app_settings,
         wall_clock=time_provider.microsecond_wall_clock,
     )
@@ -2066,7 +2144,7 @@ class UseCasesContainer(containers.DeclarativeContainer):
         wall_clock=time_provider.microsecond_wall_clock,
     )
     list_clients_use_case: Factory[
-        UseCaseContract[AdminClientsQuery, AdminClientList]
+        UseCaseContract[AdminClientsQuery, AdminClientPage]
     ] = Factory(
         ListClientsUseCase,
         authorize_platform_admin=authorize_platform_admin_use_case,

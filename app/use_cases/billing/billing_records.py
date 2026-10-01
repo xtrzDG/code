@@ -73,6 +73,8 @@ def is_service_paid_for(
         return False
 
     match subscription.status:
+        case SubscriptionStatus.INCOMPLETE:
+            return False
         case SubscriptionStatus.ACTIVE:
             return True
         case SubscriptionStatus.TRIALING:
@@ -83,6 +85,19 @@ def is_service_paid_for(
             return subscription.grace_until is None or now < subscription.grace_until
         case SubscriptionStatus.CANCELLED:
             return now < subscription.period_end
+
+
+def is_trial_available(subscriptions: list[SubscriptionDocument]) -> bool:
+    """
+    The free trial is offered once per business: while it has no
+    subscription, or only ones chosen without a trial and never paid.
+    """
+
+    return all(
+        subscription.status is SubscriptionStatus.INCOMPLETE
+        and subscription.trial_ends_at is None
+        for subscription in subscriptions
+    )
 
 
 def list_subscription_invoices(

@@ -1,33 +1,68 @@
 {
   "components": {
     "schemas": {
-      "AdminClientList": {
+      "AdminClientPage": {
         "additionalProperties": false,
-        "description": "Every client, the ones needing attention first.",
+        "description": "One page of clients; `next_cursor` is None on the last page.\n\n`matching_count` counts the clients that pass the filters; `totals`,\n`countries` and `niches` describe every client (for the summary tiles\nand the filter choices).",
         "properties": {
-          "client_count": {
-            "minimum": 0.0,
-            "title": "Client Count",
-            "type": "integer"
-          },
-          "clients": {
+          "countries": {
             "items": {
-              "$ref": "#/components/schemas/AdminClientSummary"
+              "maxLength": 2,
+              "minLength": 2,
+              "pattern": "^[A-Z]{2}$",
+              "type": "string"
             },
-            "title": "Clients",
+            "title": "Countries",
             "type": "array"
           },
           "generated_at": {
             "title": "Generated At",
             "type": "integer"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/AdminClientSummary"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "matching_count": {
+            "minimum": 0.0,
+            "title": "Matching Count",
+            "type": "integer"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "minLength": 1,
+                "pattern": "^[A-Za-z0-9_-]+$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          },
+          "niches": {
+            "items": {
+              "$ref": "#/components/schemas/NicheKey"
+            },
+            "title": "Niches",
+            "type": "array"
+          },
+          "totals": {
+            "$ref": "#/components/schemas/AdminClientTotals"
           }
         },
         "required": [
           "generated_at",
-          "client_count",
-          "clients"
+          "items",
+          "matching_count",
+          "totals"
         ],
-        "title": "AdminClientList",
+        "title": "AdminClientPage",
         "type": "object"
       },
       "AdminClientSummary": {
@@ -226,6 +261,46 @@
           "health_status"
         ],
         "title": "AdminClientSummary",
+        "type": "object"
+      },
+      "AdminClientTotals": {
+        "additionalProperties": false,
+        "description": "Counts over every client of the platform, whatever the filters.",
+        "properties": {
+          "attention_count": {
+            "minimum": 0.0,
+            "title": "Attention Count",
+            "type": "integer"
+          },
+          "client_count": {
+            "minimum": 0.0,
+            "title": "Client Count",
+            "type": "integer"
+          },
+          "critical_count": {
+            "minimum": 0.0,
+            "title": "Critical Count",
+            "type": "integer"
+          },
+          "healthy_count": {
+            "minimum": 0.0,
+            "title": "Healthy Count",
+            "type": "integer"
+          },
+          "losing_money_count": {
+            "minimum": 0.0,
+            "title": "Losing Money Count",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "client_count",
+          "critical_count",
+          "attention_count",
+          "healthy_count",
+          "losing_money_count"
+        ],
+        "title": "AdminClientTotals",
         "type": "object"
       },
       "AdminInvoiceView": {
@@ -838,6 +913,52 @@
           "occurred_at"
         ],
         "title": "AuditLogEntryView",
+        "type": "object"
+      },
+      "AuditLogPage": {
+        "additionalProperties": false,
+        "description": "One page of the audit log; `next_cursor` is None on the last page.\n\n`entities` and `actor_ids` list every entity type and every person in\nthe whole log of the business (not only this page), for the filters.",
+        "properties": {
+          "actor_ids": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Actor Ids",
+            "type": "array"
+          },
+          "entities": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Entities",
+            "type": "array"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/AuditLogEntryView"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "minLength": 1,
+                "pattern": "^[A-Za-z0-9_-]+$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "AuditLogPage",
         "type": "object"
       },
       "AutotestOutcome": {
@@ -3108,6 +3229,7 @@
         "description": "One reason a client needs attention.\n\nCritical: the assistant is limited (leads only) or loses money; the rest\nasks for a look.",
         "enum": [
           "no_subscription",
+          "first_payment_pending",
           "payment_past_due",
           "subscription_cancelled",
           "leads_only_mode",
@@ -3197,6 +3319,69 @@
         "title": "ConfirmImportedItemsResult",
         "type": "object"
       },
+      "ContactBookingView": {
+        "additionalProperties": false,
+        "description": "A booking of the customer (start in UTC seconds, as bookings use).",
+        "properties": {
+          "created_at": {
+            "title": "Created At",
+            "type": "integer"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "starts_at": {
+            "minimum": 0.0,
+            "title": "Starts At",
+            "type": "integer"
+          },
+          "status": {
+            "$ref": "#/components/schemas/BookingStatus"
+          }
+        },
+        "required": [
+          "id",
+          "starts_at",
+          "status",
+          "created_at"
+        ],
+        "title": "ContactBookingView",
+        "type": "object"
+      },
+      "ContactConversationView": {
+        "additionalProperties": false,
+        "description": "A conversation of the customer (test chats left out).",
+        "properties": {
+          "channel": {
+            "$ref": "#/components/schemas/ChannelKind"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "last_message_at": {
+            "title": "Last Message At",
+            "type": "integer"
+          },
+          "started_at": {
+            "title": "Started At",
+            "type": "integer"
+          },
+          "status": {
+            "$ref": "#/components/schemas/ConversationStatus"
+          }
+        },
+        "required": [
+          "id",
+          "channel",
+          "status",
+          "started_at",
+          "last_message_at"
+        ],
+        "title": "ContactConversationView",
+        "type": "object"
+      },
       "ContactDataExport": {
         "additionalProperties": false,
         "description": "Machine-readable copy of a visitor's personal data (right of access).",
@@ -3221,9 +3406,44 @@
         "title": "ContactDataExport",
         "type": "object"
       },
+      "ContactDetailView": {
+        "additionalProperties": false,
+        "description": "One customer with their conversations, bookings and leads, newest first.",
+        "properties": {
+          "bookings": {
+            "items": {
+              "$ref": "#/components/schemas/ContactBookingView"
+            },
+            "title": "Bookings",
+            "type": "array"
+          },
+          "contact": {
+            "$ref": "#/components/schemas/ContactSummaryView"
+          },
+          "conversations": {
+            "items": {
+              "$ref": "#/components/schemas/ContactConversationView"
+            },
+            "title": "Conversations",
+            "type": "array"
+          },
+          "leads": {
+            "items": {
+              "$ref": "#/components/schemas/ContactLeadView"
+            },
+            "title": "Leads",
+            "type": "array"
+          }
+        },
+        "required": [
+          "contact"
+        ],
+        "title": "ContactDetailView",
+        "type": "object"
+      },
       "ContactDocument": {
         "additionalProperties": false,
-        "description": "A customer of one business (concept table `contacts`).\n\n`phone_number` may come from what the customer typed (the model passes\nit to booking and lead tools); `verified_phone_number` only ever comes\nfrom a channel that proves it (WhatsApp sender, a contact the Telegram\nuser shared about themselves, the caller ID of a call). Only the\nverified phone proves that bookings under that phone are the\ncustomer's own.",
+        "description": "A customer of one business (concept table `contacts`).\n\n`phone_number` may come from what the customer typed (the model passes\nit to booking and lead tools); `verified_phone_number` only ever comes\nfrom a channel that proves it (WhatsApp sender, a contact the Telegram\nuser shared about themselves, the caller ID of a call). Only the\nverified phone proves that bookings under that phone are the\ncustomer's own.\n\n`erased_at` marks a customer erased at their request: the document then\nkeeps no personal data (no name, phones, language or channel\nidentities), only its id, so records that point to it read as erased.",
         "properties": {
           "business_id": {
             "title": "Business Id",
@@ -3240,6 +3460,17 @@
             "description": "Creation wall-clock UNIX timestamp in microseconds.",
             "title": "Created At",
             "type": "integer"
+          },
+          "erased_at": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Erased At"
           },
           "id": {
             "title": "Id",
@@ -3384,6 +3615,62 @@
         "title": "ContactErasureResult",
         "type": "object"
       },
+      "ContactLeadView": {
+        "additionalProperties": false,
+        "description": "A request the customer left for a manager.",
+        "properties": {
+          "created_at": {
+            "title": "Created At",
+            "type": "integer"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/LeadStatus"
+          }
+        },
+        "required": [
+          "id",
+          "status",
+          "created_at"
+        ],
+        "title": "ContactLeadView",
+        "type": "object"
+      },
+      "ContactPage": {
+        "additionalProperties": false,
+        "description": "One page of customers; `next_cursor` is None on the last page.",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ContactSummaryView"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "minLength": 1,
+                "pattern": "^[A-Za-z0-9_-]+$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "ContactPage",
+        "type": "object"
+      },
       "ContactRecords": {
         "additionalProperties": false,
         "description": "Every stored record that describes one visitor of one business.\n\nCalls belong to the visitor through one of their conversations or their\nphone number. Raw language-model turns repeat the messages and are not\nlisted.",
@@ -3438,6 +3725,111 @@
           "contact"
         ],
         "title": "ContactRecords",
+        "type": "object"
+      },
+      "ContactSummaryView": {
+        "additionalProperties": false,
+        "description": "One customer in the list: how to recognise them and how active they are.\n\n`phone_number` is the phone a channel proved when there is one\n(`is_phone_verified`), otherwise the one the customer typed. Counts and\nchannels leave out the owner's test chats. An erased customer\n(`erased_at`) has no name, phone or language left; their anonymous\nconversations and bookings still count.",
+        "properties": {
+          "booking_count": {
+            "minimum": 0.0,
+            "title": "Booking Count",
+            "type": "integer"
+          },
+          "channels": {
+            "items": {
+              "$ref": "#/components/schemas/ChannelKind"
+            },
+            "title": "Channels",
+            "type": "array"
+          },
+          "conversation_count": {
+            "minimum": 0.0,
+            "title": "Conversation Count",
+            "type": "integer"
+          },
+          "erased_at": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Erased At"
+          },
+          "first_seen_at": {
+            "title": "First Seen At",
+            "type": "integer"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "is_phone_verified": {
+            "default": false,
+            "title": "Is Phone Verified",
+            "type": "boolean"
+          },
+          "language": {
+            "anyOf": [
+              {
+                "maxLength": 16,
+                "minLength": 2,
+                "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Language"
+          },
+          "last_activity_at": {
+            "title": "Last Activity At",
+            "type": "integer"
+          },
+          "lead_count": {
+            "minimum": 0.0,
+            "title": "Lead Count",
+            "type": "integer"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "phone_number": {
+            "anyOf": [
+              {
+                "maxLength": 16,
+                "minLength": 8,
+                "pattern": "^\\+[1-9][0-9]{6,14}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone Number"
+          }
+        },
+        "required": [
+          "id",
+          "conversation_count",
+          "booking_count",
+          "lead_count",
+          "first_seen_at",
+          "last_activity_at"
+        ],
+        "title": "ContactSummaryView",
         "type": "object"
       },
       "ConversationDetailView": {
@@ -4433,9 +4825,56 @@
         "title": "DpaAcceptanceView",
         "type": "object"
       },
+      "DpaDocumentView": {
+        "additionalProperties": false,
+        "description": "The text of one agreement version.\n\n`language` is the language served: the requested one, else its base\nlanguage, else English. `available_languages` lists every translation.",
+        "properties": {
+          "available_languages": {
+            "items": {
+              "maxLength": 16,
+              "minLength": 2,
+              "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$",
+              "type": "string"
+            },
+            "title": "Available Languages",
+            "type": "array"
+          },
+          "language": {
+            "maxLength": 16,
+            "minLength": 2,
+            "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$",
+            "title": "Language",
+            "type": "string"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "version": {
+            "maxLength": 32,
+            "minLength": 1,
+            "pattern": "^[0-9A-Za-z][0-9A-Za-z.\\-_]*$",
+            "title": "Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "version",
+          "language",
+          "available_languages",
+          "title",
+          "text"
+        ],
+        "title": "DpaDocumentView",
+        "type": "object"
+      },
       "DpaStatusView": {
         "additionalProperties": false,
-        "description": "Whether the business accepted the agreement version now in force.",
+        "description": "Whether the business accepted the agreement version now in force.\n\n`document_url` is the API path of that version's text (None when the\nrepository has no text for it; then it cannot be accepted).",
         "properties": {
           "business_id": {
             "title": "Business Id",
@@ -4447,6 +4886,20 @@
             "pattern": "^[0-9A-Za-z][0-9A-Za-z.\\-_]*$",
             "title": "Current Document Version",
             "type": "string"
+          },
+          "document_url": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "minLength": 2,
+                "pattern": "^/v1/legal/dpa/[0-9A-Za-z][0-9A-Za-z.\\-_]*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Document Url"
           },
           "is_current_version_accepted": {
             "title": "Is Current Version Accepted",
@@ -8164,8 +8617,9 @@
         "type": "object"
       },
       "SubscriptionStatus": {
-        "description": "Subscription state driven by the payment provider.",
+        "description": "Subscription state driven by the payment provider.\n\nINCOMPLETE: chosen without a trial and waiting for its first payment;\nthe business has no service from it until that payment arrives.",
         "enum": [
+          "incomplete",
           "trialing",
           "active",
           "past_due",
@@ -9122,6 +9576,134 @@
         "operationId": "list_clients_v1_admin_clients_get",
         "parameters": [
           {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Limit"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          },
+          {
+            "in": "query",
+            "name": "health",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Health"
+            }
+          },
+          {
+            "in": "query",
+            "name": "country",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Country"
+            }
+          },
+          {
+            "in": "query",
+            "name": "niche",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Niche"
+            }
+          },
+          {
+            "in": "query",
+            "name": "search",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Search"
+            }
+          },
+          {
+            "in": "query",
+            "name": "sort",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Sort"
+            }
+          },
+          {
             "in": "header",
             "name": "authorization",
             "required": false,
@@ -9143,7 +9725,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/AdminClientList"
+                  "$ref": "#/components/schemas/AdminClientPage"
                 }
               }
             },
@@ -10826,6 +11408,102 @@
             }
           },
           {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "in": "query",
+            "name": "action",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Action"
+            }
+          },
+          {
+            "in": "query",
+            "name": "entity",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Entity"
+            }
+          },
+          {
+            "in": "query",
+            "name": "actor_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Actor Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "since",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Since"
+            }
+          },
+          {
+            "in": "query",
+            "name": "until",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Until"
+            }
+          },
+          {
             "in": "header",
             "name": "authorization",
             "required": false,
@@ -10847,11 +11525,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "items": {
-                    "$ref": "#/components/schemas/AuditLogEntryView"
-                  },
-                  "title": "Response List Audit Log V1 Businesses  Business Id  Audit Log Get",
-                  "type": "array"
+                  "$ref": "#/components/schemas/AuditLogPage"
                 }
               }
             },
@@ -11411,6 +12085,132 @@
           }
         },
         "summary": "Change Plan",
+        "tags": [
+          "billing"
+        ]
+      }
+    },
+    "/v1/businesses/{business_id}/billing/subscribe": {
+      "post": {
+        "operationId": "subscribe_v1_businesses__business_id__billing_subscribe_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "language",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Language"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "description": "Body of a subscription paid now: the plan and billing period to pay\nfor, and the cabinet page to return to (as in the checkout request).\n\nExample: {\"plan_key\": \"chat\", \"billing_period\": \"annual\",\n\"return_url\": \"https://app.example.com/b/bus_1/billing\"}.",
+                "properties": {
+                  "billing_period": {
+                    "default": "monthly",
+                    "description": "How often a subscription is charged.",
+                    "enum": [
+                      "monthly",
+                      "annual"
+                    ],
+                    "title": "BillingPeriod",
+                    "type": "string"
+                  },
+                  "plan_key": {
+                    "description": "Subscription plan of one assistant (\"employee\").",
+                    "enum": [
+                      "chat",
+                      "voice_and_chat",
+                      "plus"
+                    ],
+                    "title": "PlanKey",
+                    "type": "string"
+                  },
+                  "return_url": {
+                    "anyOf": [
+                      {
+                        "maxLength": 2048,
+                        "minLength": 10,
+                        "pattern": "^https?://[^\\s/]+(/[^\\s]*)?$",
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Return Url"
+                  }
+                },
+                "required": [
+                  "plan_key"
+                ],
+                "title": "SubscribeRequest",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CheckoutSessionView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Subscribe",
         "tags": [
           "billing"
         ]
@@ -12772,6 +13572,112 @@
         ]
       }
     },
+    "/v1/businesses/{business_id}/contacts": {
+      "get": {
+        "operationId": "list_contacts_v1_businesses__business_id__contacts_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "search",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Search"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Limit"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContactPage"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Contacts",
+        "tags": [
+          "compliance"
+        ]
+      }
+    },
     "/v1/businesses/{business_id}/contacts/{contact_id}": {
       "delete": {
         "operationId": "delete_contact_data_v1_businesses__business_id__contacts__contact_id__delete",
@@ -12834,6 +13740,71 @@
           }
         },
         "summary": "Delete Contact Data",
+        "tags": [
+          "compliance"
+        ]
+      },
+      "get": {
+        "operationId": "get_contact_v1_businesses__business_id__contacts__contact_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "contact_id",
+            "required": true,
+            "schema": {
+              "title": "Contact Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContactDetailView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Contact",
         "tags": [
           "compliance"
         ]
@@ -15399,7 +16370,7 @@
             "application/json": {
               "schema": {
                 "additionalProperties": false,
-                "description": "HTTP body of a staff invitation by phone number (any country) or e-mail.\n\nExactly one of `phone_number` and `email` is set. National phone formats\nare read in `country_hint`, or in the business country when it is missing.",
+                "description": "HTTP body of a team invitation by phone number (any country) or e-mail.\n\nExactly one of `phone_number` and `email` is set. National phone formats\nare read in `country_hint`, or in the business country when it is missing.\n`role` is staff unless an owner adds another owner.\n\nExample: {\"email\": \"chef@example.com\", \"role\": \"owner\"}.",
                 "properties": {
                   "country_hint": {
                     "anyOf": [
@@ -15447,6 +16418,16 @@
                       }
                     ],
                     "title": "Phone Number"
+                  },
+                  "role": {
+                    "default": "staff",
+                    "description": "Role of a user inside one business.",
+                    "enum": [
+                      "owner",
+                      "staff"
+                    ],
+                    "title": "BusinessMemberRole",
+                    "type": "string"
                   }
                 },
                 "title": "InviteStaffRequest",
@@ -15546,6 +16527,98 @@
           }
         },
         "summary": "Remove Member",
+        "tags": [
+          "businesses"
+        ]
+      },
+      "patch": {
+        "operationId": "change_member_role_v1_businesses__business_id__members__user_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "user_id",
+            "required": true,
+            "schema": {
+              "title": "User Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "description": "HTTP body of a role change of a team member.\n\nExample: {\"role\": \"owner\"}.",
+                "properties": {
+                  "role": {
+                    "description": "Role of a user inside one business.",
+                    "enum": [
+                      "owner",
+                      "staff"
+                    ],
+                    "title": "BusinessMemberRole",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "role"
+                ],
+                "title": "MemberRoleChange",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BusinessView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Change Member Role",
         "tags": [
           "businesses"
         ]
@@ -18779,6 +19852,64 @@
         "summary": "Get Google Calendar Callback",
         "tags": [
           "operations"
+        ]
+      }
+    },
+    "/v1/legal/dpa/{version}": {
+      "get": {
+        "operationId": "get_dpa_document_v1_legal_dpa__version__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "version",
+            "required": true,
+            "schema": {
+              "title": "Version",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "language",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Language"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DpaDocumentView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Dpa Document",
+        "tags": [
+          "compliance"
         ]
       }
     },

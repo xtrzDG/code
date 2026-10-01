@@ -49,12 +49,15 @@ class DeleteContactDataUseCase(
     Owner erases one visitor's personal data (right to erasure).
 
     Recordings are deleted from storage first, so a storage failure leaves
-    the database untouched and the erasure can be retried. Then the contact,
-    the messages and model transcripts of their conversations, and call
-    transcripts are deleted. Business records stay but lose the personal
-    parts: conversations lose the channel identity, bookings their notes,
-    leads their details and budget, handoffs their summary. The erasure is
-    audited with the contact id only.
+    the database untouched and the erasure can be retried. Then the messages
+    and model transcripts of their conversations and call transcripts are
+    deleted, and the contact keeps only its id and the erasure time (no
+    name, phones, language or channel identities), so the cabinet shows it
+    as erased and a new message from the same person starts a new contact.
+    Business records stay but lose the personal parts: conversations lose
+    the channel identity, bookings their notes, leads their details and
+    budget, handoffs their summary. The erasure is audited with the contact
+    id only.
     """
 
     def __init__(
@@ -116,7 +119,15 @@ class DeleteContactDataUseCase(
         self._erase_calls(records, now)
         deleted_llm_turns: int = self._erase_conversations(business, records, now)
         self._anonymize_business_records(records, now)
-        self._contact_repo.delete(business.id, contact.id)
+        self._contact_repo.save(
+            ContactDocument(
+                id=contact.id,
+                business_id=business.id,
+                erased_at=now,
+                created_at=contact.created_at,
+                updated_at=now,
+            )
+        )
         self._audit_log_repo.append(
             AuditLogEntryDocument(
                 business_id=business.id,

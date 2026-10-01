@@ -40,6 +40,8 @@ WORKDIR /app
 COPY --from=builder /app/.venv /app/.venv
 COPY app ./app
 COPY migrations ./migrations
+# Texts of the data processing agreement served by GET /v1/legal/dpa/{version}.
+COPY docs/legal ./docs/legal
 COPY docker/entrypoint.sh /usr/local/bin/workshop
 
 # Call recordings kept on this server (RECORDINGS_DIRECTORY); mount a volume

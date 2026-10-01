@@ -34,6 +34,7 @@ from app.gateways.http.users_routes import build_users_router
 from app.operators.pipeline_operator import PipelineOperator
 from app.orchestrators.use_case_orchestrator import UseCaseOrchestrator
 from app.pipelines.orchestrator_pipeline import OrchestratorPipeline
+from app.registries.legal.legal_document_registry import LegalDocumentRegistry
 from app.repositories.billing_repositories import SubscriptionRepository
 from app.repositories.booking_repositories import (
     BookingRepository,
@@ -143,6 +144,9 @@ from app.transformers.users.user_view_transformer import UserViewTransformer
 from app.use_cases.authorize_business_access_use_case import (
     AuthorizeBusinessAccessUseCase,
 )
+from app.use_cases.businesses.change_member_role_use_case import (
+    ChangeMemberRoleUseCase,
+)
 from app.use_cases.businesses.create_business_use_case import CreateBusinessUseCase
 from app.use_cases.businesses.get_business_use_case import GetBusinessUseCase
 from app.use_cases.businesses.invite_staff_use_case import InviteStaffUseCase
@@ -163,11 +167,16 @@ from app.use_cases.compliance.delete_contact_data_use_case import (
 from app.use_cases.compliance.export_contact_data_use_case import (
     ExportContactDataUseCase,
 )
+from app.use_cases.compliance.get_dpa_document_use_case import (
+    GetDpaDocumentUseCase,
+)
 from app.use_cases.compliance.get_dpa_status_use_case import GetDpaStatusUseCase
 from app.use_cases.compliance.list_audit_log_use_case import ListAuditLogUseCase
 from app.use_cases.compliance.purge_expired_recordings_use_case import (
     PurgeExpiredRecordingsUseCase,
 )
+from app.use_cases.contacts.get_contact_use_case import GetContactUseCase
+from app.use_cases.contacts.list_contacts_use_case import ListContactsUseCase
 from app.use_cases.users.authenticate_user_use_case import AuthenticateUserUseCase
 from app.use_cases.users.get_current_user_use_case import GetCurrentUserUseCase
 from app.use_cases.users.get_login_options_use_case import GetLoginOptionsUseCase
@@ -745,6 +754,14 @@ class AccountsTestbed:
             business_view_transformer=business_view_transformer,
             wall_clock=wall_clock,
         )
+        self.change_member_role = ChangeMemberRoleUseCase(
+            authorize_business_access=self.authorize_business_access,
+            business_repo=self.business_repo,
+            user_repo=self.user_repo,
+            audit_log_repo=self.audit_log_repo,
+            business_view_transformer=business_view_transformer,
+            wall_clock=wall_clock,
+        )
 
         collect_contact_records = CollectContactRecordsUseCase(
             contact_repo=self.contact_repo,
@@ -755,21 +772,45 @@ class AccountsTestbed:
             lead_repo=self.lead_repo,
             handoff_repo=self.handoff_repo,
         )
+        self.legal_document_registry = LegalDocumentRegistry()
         self.accept_dpa = AcceptDpaUseCase(
             authorize_business_access=self.authorize_business_access,
             dpa_acceptance_repo=self.dpa_acceptance_repo,
             audit_log_repo=self.audit_log_repo,
+            legal_document_registry=self.legal_document_registry,
             app_settings=self.settings,
             wall_clock=wall_clock,
         )
         self.get_dpa_status = GetDpaStatusUseCase(
             authorize_business_access=self.authorize_business_access,
             dpa_acceptance_repo=self.dpa_acceptance_repo,
+            legal_document_registry=self.legal_document_registry,
             app_settings=self.settings,
         )
         self.list_audit_log = ListAuditLogUseCase(
             authorize_business_access=self.authorize_business_access,
             audit_log_repo=self.audit_log_repo,
+        )
+        self.get_dpa_document = GetDpaDocumentUseCase(
+            legal_document_registry=self.legal_document_registry
+        )
+        self.list_contacts = ListContactsUseCase(
+            authorize_business_access=self.authorize_business_access,
+            contact_repo=self.contact_repo,
+            conversation_repo=self.conversation_repo,
+            booking_repo=self.booking_repo,
+            lead_repo=self.lead_repo,
+            audit_log_repo=self.audit_log_repo,
+            wall_clock=wall_clock,
+        )
+        self.get_contact = GetContactUseCase(
+            authorize_business_access=self.authorize_business_access,
+            contact_repo=self.contact_repo,
+            conversation_repo=self.conversation_repo,
+            booking_repo=self.booking_repo,
+            lead_repo=self.lead_repo,
+            audit_log_repo=self.audit_log_repo,
+            wall_clock=wall_clock,
         )
         self.export_contact_data = ExportContactDataUseCase(
             authorize_business_access=self.authorize_business_access,
@@ -915,6 +956,9 @@ class AccountsTestbed:
                 remove_member_operator=PipelineOperator(
                     OrchestratorPipeline(UseCaseOrchestrator(self.remove_member))
                 ),
+                change_member_role_operator=PipelineOperator(
+                    OrchestratorPipeline(UseCaseOrchestrator(self.change_member_role))
+                ),
                 current_user=current_user,
             )
         )
@@ -931,6 +975,15 @@ class AccountsTestbed:
                 ),
                 export_contact_data_operator=PipelineOperator(
                     OrchestratorPipeline(UseCaseOrchestrator(self.export_contact_data))
+                ),
+                list_contacts_operator=PipelineOperator(
+                    OrchestratorPipeline(UseCaseOrchestrator(self.list_contacts))
+                ),
+                get_contact_operator=PipelineOperator(
+                    OrchestratorPipeline(UseCaseOrchestrator(self.get_contact))
+                ),
+                get_dpa_document_operator=PipelineOperator(
+                    OrchestratorPipeline(UseCaseOrchestrator(self.get_dpa_document))
                 ),
                 delete_contact_data_operator=PipelineOperator(
                     OrchestratorPipeline(UseCaseOrchestrator(self.delete_contact_data))

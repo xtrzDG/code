@@ -14,9 +14,10 @@ from app.schemas.constants.billing import (
     SubscriptionStatus,
     UsageKind,
 )
-from app.schemas.constants.businesses import ServiceMode
+from app.schemas.constants.businesses import BusinessStatus, ServiceMode
 from app.schemas.constants.channels import MessageDirection
 from app.schemas.constants.client_health import (
+    AdminClientSort,
     CabinetSection,
     ClientHealthIssue,
     ClientHealthStatus,
@@ -43,6 +44,7 @@ from app.schemas.dto.billing_cabinet import (
     StartCheckoutCommand,
     StartCheckoutRequest,
 )
+from app.schemas.dto.paging import PageRequest
 from app.schemas.exceptions.application_errors import (
     AccessDeniedError,
     NotFoundError,
@@ -60,6 +62,7 @@ from app.schemas.typings.assistants.constrained_strings import (
 )
 from app.schemas.typings.assistants.strings import JudgeNote, SystemPromptText
 from app.schemas.typings.businesses.prefixed_id import BusinessId
+from app.schemas.typings.client_health.constrained_strings import ClientSearchText
 from app.schemas.typings.compliance.strings import ClientIpAddress
 from app.schemas.typings.contacts.prefixed_id import ContactId
 from app.schemas.typings.conversations.prefixed_id import ConversationId
@@ -72,7 +75,11 @@ from app.schemas.typings.handoffs.strings import (
     HandoffSummary,
     UnansweredQuestionText,
 )
-from app.schemas.typings.localization.constrained_strings import LanguageTag
+from app.schemas.typings.localization.constrained_strings import (
+    CountryCode,
+    LanguageTag,
+)
+from app.schemas.typings.platform.constrained_integers import PageSize
 from tests.billing.billing_testbed import (
     GEORGIA,
     ITALY,
@@ -302,14 +309,16 @@ def test_client_list_shows_health_with_critical_clients_first() -> None:
 
     listing = world.testbed.list_clients.run(AdminClientsQuery(user_id=world.admin.id))
 
-    assert int(listing.client_count) == 3
+    assert int(listing.totals.client_count) == 3
+    assert int(listing.matching_count) == 3
+    assert listing.next_cursor is None
     assert listing.generated_at == world.testbed.clock.now()
-    assert [str(client.name) for client in listing.clients] == [
+    assert [str(client.name) for client in listing.items] == [
         "Bella Napoli",
-        "Austin Bikes",
         "Funicular VR",
+        "Austin Bikes",
     ]
-    italian, american, georgian = listing.clients
+    italian, georgian, american = listing.items
     assert italian.health_status is ClientHealthStatus.CRITICAL
     assert italian.health_issues == [
         ClientHealthIssue.LEADS_ONLY_MODE,
@@ -413,3 +422,102 @@ def test_admin_access_follows_the_platform_admin_flag() -> None:
 
     with pytest.raises(AccessDeniedError):
         world.testbed.list_clients.run(query)
+
+
+def list_names(world: AdminWorld, **query: object) -> list[str]:
+    page = world.testbed.list_clients.run(
+        AdminClientsQuery.model_validate({"user_id": world.admin.id, **query})
+    )
+    return [str(client.name) for client in page.items]
+
+
+def test_client_list_totals_and_filter_choices_cover_every_client() -> None:
+    world = build_admin_world()
+
+    listing = world.testbed.list_clients.run(
+        AdminClientsQuery(user_id=world.admin.id, health=ClientHealthStatus.CRITICAL)
+    )
+
+    assert [str(client.name) for client in listing.items] == ["Bella Napoli"]
+    assert int(listing.matching_count) == 1
+    assert (
+        int(listing.totals.client_count),
+        int(listing.totals.critical_count),
+        int(listing.totals.attention_count),
+        int(listing.totals.healthy_count),
+        int(listing.totals.losing_money_count),
+    ) == (3, 1, 2, 0, 0)
+    assert [str(code) for code in listing.countries] == ["GE", "IT", "US"]
+    assert len(listing.niches) >= 1
+
+
+@pytest.mark.parametrize(
+    ("query", "names"),
+    [
+        ({"health": ClientHealthStatus.ATTENTION}, ["Funicular VR", "Austin Bikes"]),
+        ({"country_code": CountryCode("IT")}, ["Bella Napoli"]),
+        ({"search": ClientSearchText("BIKES")}, ["Austin Bikes"]),
+        (
+            {
+                "search": ClientSearchText("napoli"),
+                "health": ClientHealthStatus.HEALTHY,
+            },
+            [],
+        ),
+        (
+            {"sort": AdminClientSort.NAME},
+            ["Austin Bikes", "Bella Napoli", "Funicular VR"],
+        ),
+        (
+            {"sort": AdminClientSort.USAGE},
+            ["Funicular VR", "Bella Napoli", "Austin Bikes"],
+        ),
+    ],
+)
+def test_client_list_filters_and_sorts_on_the_server(
+    query: dict[str, object],
+    names: list[str],
+) -> None:
+    world = build_admin_world()
+
+    assert list_names(world, **query) == names
+
+
+def test_client_list_filters_by_status_and_niche() -> None:
+    world = build_admin_world()
+    stored = world.testbed.business(world.american.id)
+    stored.status = BusinessStatus.LIVE
+    world.testbed.business_repo.save(stored)
+
+    assert list_names(world, status=BusinessStatus.LIVE) == ["Austin Bikes"]
+    assert list_names(world, niche_key=stored.niche_key) == [
+        "Bella Napoli",
+        "Funicular VR",
+        "Austin Bikes",
+    ]
+
+
+def test_client_list_pages_keep_their_place() -> None:
+    world = build_admin_world()
+    first = world.testbed.list_clients.run(
+        AdminClientsQuery(
+            user_id=world.admin.id,
+            sort=AdminClientSort.NAME,
+            page=PageRequest(size=PageSize(2)),
+        )
+    )
+    second = world.testbed.list_clients.run(
+        AdminClientsQuery(
+            user_id=world.admin.id,
+            sort=AdminClientSort.NAME,
+            page=PageRequest(size=PageSize(2), cursor=first.next_cursor),
+        )
+    )
+
+    assert [str(client.name) for client in first.items] == [
+        "Austin Bikes",
+        "Bella Napoli",
+    ]
+    assert first.next_cursor is not None
+    assert [str(client.name) for client in second.items] == ["Funicular VR"]
+    assert second.next_cursor is None

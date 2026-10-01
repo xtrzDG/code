@@ -38,7 +38,8 @@ MAX_DISPLAY_NAME_LENGTH: int = 100
 
 class InviteStaffUseCase(UseCaseContract[InviteStaffCommand, BusinessView]):
     """
-    Owner adds a staff member by phone number (any country) or e-mail.
+    Owner adds a team member by phone number (any country) or e-mail, as
+    staff or as another owner.
 
     A person without an account gets an unverified one in the business's
     owner language; they confirm it by signing in with a code. Existing
@@ -107,7 +108,7 @@ class InviteStaffUseCase(UseCaseContract[InviteStaffCommand, BusinessView]):
 
         business.members = [
             *business.members,
-            BusinessMember(user_id=staff_user.id, role=BusinessMemberRole.STAFF),
+            BusinessMember(user_id=staff_user.id, role=invitation.role),
         ]
         business.updated_at = now
         self._business_repo.save(business)

@@ -1,30 +1,32 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  EMPTY_AUDIT_FILTERS,
   actorLabel,
+  allowedRoles,
+  auditQuery,
   buildGeneralChanges,
   buildInviteBody,
   canRemoveMember,
   contactFromForm,
-  contactsFromConversations,
+  contactSearchParam,
   contactsToInput,
   erasureConfirmation,
-  filterCustomers,
   generalFormFrom,
+  hasAuditFilters,
   hasChanges,
-  hasMoreAudit,
   languageChoices,
+  markErased,
   memberInitials,
   memberLabel,
-  nextAuditLimit,
-  parseContactId,
+  nextDay,
   parseRetentionDays,
   sortMembers,
   toggleLanguage,
   validateContact,
   type BusinessMember,
   type BusinessView,
-  type ConversationSummary,
+  type ContactSummary,
 } from "./settings";
 
 const member = (overrides: Partial<BusinessMember>): BusinessMember => ({
@@ -138,19 +140,22 @@ describe("team", () => {
     expect(canRemoveMember(owner, [owner, staff])).toBe(false);
     expect(canRemoveMember(owner, [owner, member({ user_id: "u4", role: "owner" })])).toBe(true);
     expect(canRemoveMember(staff, [owner, staff])).toBe(true);
+    expect(allowedRoles(owner, [owner, staff])).toEqual(["owner"]);
+    expect(allowedRoles(owner, [owner, member({ user_id: "u4", role: "owner" })])).toEqual(["owner", "staff"]);
+    expect(allowedRoles(staff, [owner, staff])).toEqual(["owner", "staff"]);
   });
 
-  it("builds invitations by phone or e-mail", () => {
-    const base = { method: "phone" as const, phone: "", countryHint: "ge", email: "", displayName: "" };
+  it("builds invitations by phone or e-mail with a role", () => {
+    const base = { method: "phone" as const, phone: "", countryHint: "ge", email: "", displayName: "", role: "staff" as const };
     expect(buildInviteBody(base)).toEqual({ ok: false, errors: { phone: "required" } });
     expect(buildInviteBody({ ...base, phone: "555 65 43 21", displayName: " Nino " })).toEqual({
       ok: true,
-      body: { phone_number: "555 65 43 21", country_hint: "GE", display_name: "Nino" },
+      body: { phone_number: "555 65 43 21", country_hint: "GE", display_name: "Nino", role: "staff" },
     });
     expect(buildInviteBody({ ...base, method: "email", email: "nino@" })).toEqual({ ok: false, errors: { email: "email" } });
-    expect(buildInviteBody({ ...base, method: "email", email: " nino@example.com " })).toEqual({
+    expect(buildInviteBody({ ...base, method: "email", email: " nino@example.com ", role: "owner" })).toEqual({
       ok: true,
-      body: { email: "nino@example.com" },
+      body: { email: "nino@example.com", role: "owner" },
     });
   });
 });
@@ -191,75 +196,67 @@ describe("notification contacts", () => {
 });
 
 describe("customer data requests", () => {
-  const conversation = (overrides: Partial<ConversationSummary>): ConversationSummary => ({
-    id: "conversation_1",
-    business_id: "business_1",
-    assistant_version_id: "assistant_version_1",
-    channel: "telegram",
-    contact_id: "contact_a",
-    contact_name: null,
-    contact_phone_number: null,
-    created_at: 1,
-    is_after_hours: false,
-    is_sandbox: false,
-    language: null,
-    last_message_at: 10,
-    last_message_text: null,
-    message_count: 1,
-    customer_message_count: 1,
-    status: "open",
+  const contact = (overrides: Partial<ContactSummary> = {}): ContactSummary => ({
+    id: "contact_a",
+    name: "Ana",
+    phone_number: "+995599112233",
+    is_phone_verified: true,
+    language: "ka",
+    channels: ["telegram"],
+    conversation_count: 2,
+    booking_count: 1,
+    lead_count: 0,
+    first_seen_at: 1,
+    last_activity_at: 10,
+    erased_at: null,
     ...overrides,
   });
 
-  it("groups conversations by customer, latest first", () => {
-    const customers = contactsFromConversations([
-      conversation({ id: "c1", contact_id: "contact_a", last_message_at: 10 }),
-      conversation({ id: "c2", contact_id: "contact_b", contact_name: "Ana", last_message_at: 30, channel: "phone" }),
-      conversation({ id: "c3", contact_id: "contact_a", contact_name: "Giorgi", contact_phone_number: "+995599112233", last_message_at: 20, channel: "whatsapp" }),
-    ]);
-    expect(customers).toEqual([
-      { contactId: "contact_b", name: "Ana", phoneNumber: null, lastMessageAt: 30, conversationCount: 1, channels: ["phone"] },
-      {
-        contactId: "contact_a",
-        name: "Giorgi",
-        phoneNumber: "+995599112233",
-        lastMessageAt: 20,
-        conversationCount: 2,
-        channels: ["telegram", "whatsapp"],
-      },
-    ]);
-    expect(filterCustomers(customers, "gio").map((item) => item.contactId)).toEqual(["contact_a"]);
-    expect(filterCustomers(customers, "599 11").map((item) => item.contactId)).toEqual(["contact_a"]);
-    expect(filterCustomers(customers, "contact_b").map((item) => item.contactId)).toEqual(["contact_b"]);
-    expect(filterCustomers(customers, " ")).toHaveLength(2);
-  });
-
   it("asks to type the name, else the phone, else the id", () => {
-    expect(erasureConfirmation({ contactId: "contact_a", name: " Ana ", phoneNumber: "+1" })).toBe("Ana");
-    expect(erasureConfirmation({ contactId: "contact_a", name: null, phoneNumber: "+995599112233" })).toBe("+995599112233");
-    expect(erasureConfirmation({ contactId: "contact_a", name: null, phoneNumber: null })).toBe("contact_a");
+    expect(erasureConfirmation({ id: "contact_a", name: " Ana ", phone_number: "+1" })).toBe("Ana");
+    expect(erasureConfirmation({ id: "contact_a", name: null, phone_number: "+995599112233" })).toBe("+995599112233");
+    expect(erasureConfirmation({ id: "contact_a", name: null, phone_number: null })).toBe("contact_a");
   });
 
-  it("accepts pasted contact ids only", () => {
-    expect(parseContactId(" contact_639833a1-4f05-440f-bbab-540dca7ac3b8 ")).toBe("contact_639833a1-4f05-440f-bbab-540dca7ac3b8");
-    expect(parseContactId("user_639833a1")).toBeNull();
-    expect(parseContactId("contact_")).toBeNull();
+  it("shows an erased customer without personal data", () => {
+    expect(markErased(contact(), 99)).toEqual(
+      contact({ name: null, phone_number: null, is_phone_verified: false, language: null, erased_at: 99 }),
+    );
+  });
+
+  it("sends a trimmed search, or none", () => {
+    expect(contactSearchParam("  599 11 ")).toBe("599 11");
+    expect(contactSearchParam("   ")).toBeUndefined();
+    expect(contactSearchParam("x".repeat(150))).toHaveLength(100);
   });
 });
 
 describe("audit log", () => {
-  it("pages by 50 up to 1000", () => {
-    expect(nextAuditLimit(50)).toBe(100);
-    expect(nextAuditLimit(980)).toBe(1000);
-    expect(hasMoreAudit(50, 50)).toBe(true);
-    expect(hasMoreAudit(12, 50)).toBe(false);
-    expect(hasMoreAudit(1000, 1000)).toBe(false);
-  });
-
   it("names actors who are team members", () => {
     const members = [member({ user_id: "u1", display_name: "Nino" })];
     expect(actorLabel("u1", members)).toBe("Nino");
     expect(actorLabel("u9", members)).toBeNull();
     expect(actorLabel(null, members)).toBeNull();
+  });
+
+  it("turns the filters into the API query", () => {
+    const dayStart = (day: string) => Date.parse(`${day}T00:00:00Z`) * 1000;
+    expect(auditQuery(EMPTY_AUDIT_FILTERS, dayStart)).toEqual({});
+    expect(hasAuditFilters(EMPTY_AUDIT_FILTERS)).toBe(false);
+    const filters = { action: "export" as const, entity: "contact", actorId: "u1", from: "2026-09-30", to: "2026-09-30" };
+    expect(hasAuditFilters(filters)).toBe(true);
+    expect(auditQuery(filters, dayStart)).toEqual({
+      action: "export",
+      entity: "contact",
+      actor_id: "u1",
+      since: String(Date.UTC(2026, 8, 30) * 1000),
+      until: String(Date.UTC(2026, 9, 1) * 1000),
+    });
+  });
+
+  it("counts the next calendar day across months and years", () => {
+    expect(nextDay("2026-02-28")).toBe("2026-03-01");
+    expect(nextDay("2028-02-28")).toBe("2028-02-29");
+    expect(nextDay("2026-12-31")).toBe("2027-01-01");
   });
 });

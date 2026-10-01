@@ -16,6 +16,7 @@ from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.dto.catalog import QuotedMoney
 from app.schemas.typings.billing.booleans import (
     IsAutoDebitActive,
+    IsSubscriptionCreated,
     IsTrialAvailable,
 )
 from app.schemas.typings.billing.constrained_integers import (
@@ -111,6 +112,39 @@ class StartCheckoutCommand(ImmutableDTO):
     business_id: BusinessId
     request: StartCheckoutRequest
     display_language: LanguageTag | None = None
+
+
+class SubscribeRequest(ImmutableDTO):
+    """
+    Body of a subscription paid now: the plan and billing period to pay
+    for, and the cabinet page to return to (as in the checkout request).
+
+    Example: {"plan_key": "chat", "billing_period": "annual",
+    "return_url": "https://app.example.com/b/bus_1/billing"}.
+    """
+
+    plan_key: PlanKey
+    billing_period: BillingPeriod = BillingPeriod.MONTHLY
+    return_url: PaymentReturnUrl | None = None
+
+
+class SubscribeCommand(ImmutableDTO):
+    """Owner subscribes to a plan and goes to the payment page."""
+
+    user_id: UserId
+    business_id: BusinessId
+    request: SubscribeRequest
+    display_language: LanguageTag | None = None
+
+
+class SubscriptionOpening(ImmutableDTO):
+    """
+    The subscription a payment will be for; `is_created` when it was just
+    opened (waiting for its first payment) rather than already there.
+    """
+
+    subscription_id: SubscriptionId
+    is_created: IsSubscriptionCreated
 
 
 class BillingOverviewQuery(ImmutableDTO):

@@ -11,16 +11,19 @@ from app.schemas.domain.conversations import (
     MessageDocument,
 )
 from app.schemas.domain.handoffs import HandoffDocument
+from app.schemas.dto.paging import PageRequest
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.compliance.booleans import IsDpaAccepted
 from app.schemas.typings.compliance.constrained_integers import (
-    AuditLogPageSize,
     DeletedRecordingCount,
     ErasedRecordCount,
     PurgedCallCount,
     ScannedBusinessCount,
 )
-from app.schemas.typings.compliance.constrained_strings import DpaDocumentVersion
+from app.schemas.typings.compliance.constrained_strings import (
+    DpaDocumentUrl,
+    DpaDocumentVersion,
+)
 from app.schemas.typings.compliance.prefixed_id import (
     AuditLogEntryId,
     DpaAcceptanceId,
@@ -29,8 +32,12 @@ from app.schemas.typings.compliance.strings import (
     AuditEntityName,
     AuditEntityReference,
     ClientIpAddress,
+    LegalDocumentMarkdown,
+    LegalDocumentTitle,
 )
 from app.schemas.typings.contacts.prefixed_id import ContactId
+from app.schemas.typings.localization.constrained_strings import LanguageTag
+from app.schemas.typings.platform.constrained_strings import PageCursor
 from app.schemas.typings.users.prefixed_id import UserId
 
 
@@ -52,20 +59,58 @@ class DpaAcceptanceView(ImmutableDTO):
 
 
 class DpaStatusView(ImmutableDTO):
-    """Whether the business accepted the agreement version now in force."""
+    """
+    Whether the business accepted the agreement version now in force.
+
+    `document_url` is the API path of that version's text (None when the
+    repository has no text for it; then it cannot be accepted).
+    """
 
     business_id: BusinessId
     current_document_version: DpaDocumentVersion
     is_current_version_accepted: IsDpaAccepted
     latest_acceptance: DpaAcceptanceView | None = None
+    document_url: DpaDocumentUrl | None = None
+
+
+class DpaDocumentQuery(ImmutableDTO):
+    """Anyone reads one version of the agreement, in a language if it exists."""
+
+    version: DpaDocumentVersion
+    language: LanguageTag | None = None
+
+
+class DpaDocumentView(ImmutableDTO):
+    """
+    The text of one agreement version.
+
+    `language` is the language served: the requested one, else its base
+    language, else English. `available_languages` lists every translation.
+    """
+
+    version: DpaDocumentVersion
+    language: LanguageTag
+    available_languages: list[LanguageTag]
+    title: LegalDocumentTitle
+    text: LegalDocumentMarkdown
 
 
 class AuditLogQuery(ImmutableDTO):
-    """Owner reads the newest audit log entries of a business."""
+    """
+    Owner reads the audit log of a business, newest first, one page at a
+    time. Every filter is optional: the operation, the entity type, who did
+    it, and the period `since` (inclusive) to `until` (exclusive) in UTC
+    microseconds.
+    """
 
     user_id: UserId
     business_id: BusinessId
-    limit: AuditLogPageSize = AuditLogPageSize(200)
+    page: PageRequest = PageRequest()
+    action: AuditAction | None = None
+    entity: AuditEntityName | None = None
+    actor_id: UserId | None = None
+    since: Microseconds | None = None
+    until: Microseconds | None = None
 
 
 class AuditLogEntryView(ImmutableDTO):
@@ -78,6 +123,20 @@ class AuditLogEntryView(ImmutableDTO):
     actor_id: UserId | None = None
     ip_address: ClientIpAddress | None = None
     occurred_at: Microseconds
+
+
+class AuditLogPage(ImmutableDTO):
+    """
+    One page of the audit log; `next_cursor` is None on the last page.
+
+    `entities` and `actor_ids` list every entity type and every person in
+    the whole log of the business (not only this page), for the filters.
+    """
+
+    items: list[AuditLogEntryView]
+    next_cursor: PageCursor | None = None
+    entities: list[AuditEntityName] = Field(default_factory=list[AuditEntityName])
+    actor_ids: list[UserId] = Field(default_factory=list[UserId])
 
 
 class ContactDataCommand(ImmutableDTO):

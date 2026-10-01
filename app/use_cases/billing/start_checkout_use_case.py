@@ -29,11 +29,7 @@ from app.schemas.dto.payments import (
     PaymentCheckoutSession,
     RecurringCharge,
 )
-from app.schemas.exceptions.application_errors import (
-    ConflictError,
-    ValidationFailedError,
-)
-from app.schemas.typings.billing.constrained_strings import PaymentReturnUrl
+from app.schemas.exceptions.application_errors import ConflictError
 from app.schemas.typings.billing.prefixed_id import InvoiceId
 from app.schemas.typings.billing.strings import InvoiceDescription
 from app.schemas.typings.localization.constrained_strings import LanguageTag
@@ -51,6 +47,7 @@ from app.utilities.billing.billing_periods import (
     get_interval_months,
     to_local_calendar_day,
 )
+from app.utilities.billing.return_urls import require_allowed_return_url
 from app.utilities.localization.language_tags import require_babel_locale
 
 
@@ -112,7 +109,7 @@ class StartCheckoutUseCase(UseCaseContract[StartCheckoutCommand, CheckoutSession
         )
         language: LanguageTag = input_data.display_language or business.owner_language
         require_babel_locale(language)
-        self._require_allowed_return_url(input_data.request.return_url)
+        require_allowed_return_url(input_data.request.return_url, self._app_settings)
         subscription: SubscriptionDocument = require_current_subscription(
             self._subscription_repo,
             business.id,
@@ -312,25 +309,6 @@ class StartCheckoutUseCase(UseCaseContract[StartCheckoutCommand, CheckoutSession
             raise ConflictError("There is nothing to pay.")
 
         return payable
-
-    def _require_allowed_return_url(self, return_url: PaymentReturnUrl | None) -> None:
-        if return_url is None:
-            return
-
-        allowed_origins: list[str] = [
-            str(origin).rstrip("/")
-            for origin in self._app_settings.cors_allowed_origins
-        ]
-        if self._app_settings.app_base_url is not None:
-            allowed_origins.append(str(self._app_settings.app_base_url).rstrip("/"))
-
-        url: str = str(return_url)
-        if not any(
-            url == origin or url.startswith(f"{origin}/") for origin in allowed_origins
-        ):
-            raise ValidationFailedError(
-                "The return page must belong to an allowed cabinet origin."
-            )
 
 
 def select_order_description(invoices: list[InvoiceDocument]) -> InvoiceDescription:

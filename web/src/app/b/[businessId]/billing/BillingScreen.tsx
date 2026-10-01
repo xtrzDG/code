@@ -6,7 +6,7 @@ import { useState } from "react";
 import { api } from "@/api/client";
 import { toApiError, type ApiError } from "@/api/errors";
 import { useApiMutation, useApiQuery } from "@/api/hooks";
-import { unwrap } from "@/api/result";
+import { unwrap, type ApiResult } from "@/api/result";
 import { useBusiness, useBusinessFormat } from "@/components/business/BusinessContext";
 import { Alert, Button, Card, ErrorState, LoadingBlock, PageHeader, useToast } from "@/components/ui";
 import { ConfirmDialog } from "@/components/workspace/ConfirmDialog";
@@ -27,8 +27,10 @@ import {
   checkoutReturnUrl,
   planPrice,
   quotedMoneyText,
+  planSetupFee,
   type BillingOverview,
   type BillingPeriod,
+  type CheckoutSession,
 } from "./_lib/billing";
 
 /** /billing: subscription, package usage, plans, invoices, payment (owner only). */
@@ -43,6 +45,7 @@ export function BillingScreen({ isCheckoutReturn }: { isCheckoutReturn: boolean 
   const [isCancelling, setCancelling] = useState(false);
   const [dialogError, setDialogError] = useState<ApiError | null>(null);
   const [isPaying, setPaying] = useState(false);
+  const [isSubscribing, setSubscribing] = useState(false);
   const [showReturnNotice, setShowReturnNotice] = useState(isCheckoutReturn);
   // "Now" for the trial countdown; the page is reloaded far more often than days pass.
   const [nowUs] = useState(() => Date.now() * 1000);
@@ -86,6 +89,25 @@ export function BillingScreen({ isCheckoutReturn }: { isCheckoutReturn: boolean 
       return;
     }
     const body = { plan_key: choice.quote.plan_key, billing_period: choice.period };
+    if (choice.action === "subscribe") {
+      setSubscribing(true);
+      try {
+        const session = await openPaymentPage((returnUrl) =>
+          api.POST("/v1/businesses/{business_id}/billing/subscribe", {
+            params: pathParams,
+            body: returnUrl ? { ...body, return_url: returnUrl } : body,
+          }),
+        );
+        window.location.assign(session.checkout_url);
+      } catch (caught) {
+        setSubscribing(false);
+        setDialogError(toApiError(caught));
+        // The plan may have been switched before the payment page failed.
+        overview.reload();
+        router.refresh();
+      }
+      return;
+    }
     const result = choice.action === "trial" ? await startTrial.run(body) : await changePlan.run(body);
     if (result.ok) {
       setChoice(null);
@@ -105,32 +127,71 @@ export function BillingScreen({ isCheckoutReturn }: { isCheckoutReturn: boolean 
     }
   };
 
+  /**
+   * Ask the API for the payment page with this billing page as the return
+   * page. A cabinet origin the API does not list is refused as a return page
+   * (422); the payment still works without one.
+   */
+  const openPaymentPage = async (
+    request: (returnUrl: string | null) => Promise<ApiResult<CheckoutSession>>,
+  ): Promise<CheckoutSession> => {
+    const returnUrl = checkoutReturnUrl(window.location.origin, businessPath(business.id, "billing"));
+    try {
+      return await unwrap(request(returnUrl));
+    } catch (caught) {
+      if (toApiError(caught).code !== "validation_failed") {
+        throw caught;
+      }
+      return await unwrap(request(null));
+    }
+  };
+
   const onPay = async () => {
     setPaying(true);
-    const returnUrl = checkoutReturnUrl(window.location.origin, businessPath(business.id, "billing"));
-    const request = (withReturn: boolean) =>
-      unwrap(
+    try {
+      const session = await openPaymentPage((returnUrl) =>
         api.POST("/v1/businesses/{business_id}/billing/checkout", {
           params: pathParams,
-          body: withReturn ? { return_url: returnUrl } : {},
+          body: returnUrl ? { return_url: returnUrl } : {},
         }),
       );
-    try {
-      let session;
-      try {
-        session = await request(true);
-      } catch (caught) {
-        // A cabinet origin the API does not list is refused as a return page;
-        // the payment still works without one.
-        if (toApiError(caught).code !== "validation_failed") {
-          throw caught;
-        }
-        session = await request(false);
-      }
       window.location.assign(session.checkout_url);
     } catch (caught) {
       setPaying(false);
       toast.error(caught, { conflict: "billing.errors.nothingToPay", not_found: "billing.errors.noSubscription" });
+    }
+  };
+
+  const periodName = (period: BillingPeriod) =>
+    t(period === "annual" ? "billing.periodNames.annual" : "billing.periodNames.monthly").toLocaleLowerCase(locale);
+  const pricePer = (choice: PlanChoice) =>
+    t(choice.period === "annual" ? "billing.pricePer.annual" : "billing.pricePer.monthly", {
+      price: quotedMoneyText(planPrice(choice.quote, choice.period), format.money),
+    });
+
+  const choiceTitle = (choice: PlanChoice): string => {
+    switch (choice.action) {
+      case "trial":
+        return t("billing.dialogs.trialTitle", { plan: choice.quote.name });
+      case "subscribe":
+        return t("billing.subscribe.title", { plan: choice.quote.name, period: periodName(choice.period) });
+      case "switch":
+        return t("billing.dialogs.changeTitle", { plan: choice.quote.name, period: periodName(choice.period) });
+    }
+  };
+
+  const choiceDescription = (choice: PlanChoice): string => {
+    switch (choice.action) {
+      case "trial":
+        return t("billing.dialogs.trialDescription", { days: choice.quote.trial_days, price: pricePer(choice) });
+      case "subscribe": {
+        const price = quotedMoneyText(planPrice(choice.quote, choice.period), format.money);
+        return choice.period === "annual"
+          ? t("billing.subscribe.descriptionAnnual", { price })
+          : t("billing.subscribe.description", { price, setup: quotedMoneyText(planSetupFee(choice.quote), format.money) });
+      }
+      case "switch":
+        return t("billing.dialogs.changeDescription", { price: pricePer(choice) });
     }
   };
 
@@ -244,37 +305,23 @@ export function BillingScreen({ isCheckoutReturn }: { isCheckoutReturn: boolean 
         onClose={() => setChoice(null)}
         onConfirm={onConfirmChoice}
         tone="primary"
-        isPending={startTrial.isPending || changePlan.isPending}
+        isPending={startTrial.isPending || changePlan.isPending || isSubscribing}
         error={dialogError}
-        errorOverrides={{ conflict: "billing.errors.trialUsed", not_found: "billing.errors.noSubscription" }}
-        title={
-          choice
-            ? choice.action === "trial"
-              ? t("billing.dialogs.trialTitle", { plan: choice.quote.name })
-              : t("billing.dialogs.changeTitle", {
-                  plan: choice.quote.name,
-                  period: t(choice.period === "annual" ? "billing.periodNames.annual" : "billing.periodNames.monthly").toLocaleLowerCase(locale),
-                })
-            : ""
+        errorOverrides={
+          choice?.action === "subscribe"
+            ? { conflict: "billing.errors.nothingToPay" }
+            : { conflict: "billing.errors.trialUsed", not_found: "billing.errors.noSubscription" }
         }
-        confirmLabel={choice?.action === "trial" ? t("billing.dialogs.trialConfirm") : t("billing.dialogs.changeConfirm")}
+        title={choice ? choiceTitle(choice) : ""}
+        confirmLabel={
+          choice?.action === "trial"
+            ? t("billing.dialogs.trialConfirm")
+            : choice?.action === "subscribe"
+              ? t("billing.subscribe.confirm")
+              : t("billing.dialogs.changeConfirm")
+        }
       >
-        {choice ? (
-          <p>
-            {choice.action === "trial"
-              ? t("billing.dialogs.trialDescription", {
-                  days: choice.quote.trial_days,
-                  price: t(choice.period === "annual" ? "billing.pricePer.annual" : "billing.pricePer.monthly", {
-                    price: quotedMoneyText(planPrice(choice.quote, choice.period), format.money),
-                  }),
-                })
-              : t("billing.dialogs.changeDescription", {
-                  price: t(choice.period === "annual" ? "billing.pricePer.annual" : "billing.pricePer.monthly", {
-                    price: quotedMoneyText(planPrice(choice.quote, choice.period), format.money),
-                  }),
-                })}
-          </p>
-        ) : null}
+        {choice ? <p>{choiceDescription(choice)}</p> : null}
       </ConfirmDialog>
 
       <ConfirmDialog

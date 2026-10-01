@@ -170,7 +170,15 @@ def test_erasure_deletes_personal_data_and_anonymizes_business_records() -> None
     result = testbed.delete_contact_data.run(command(tenants, visitor.contact.id))
 
     business_id = tenants.business.id
-    assert testbed.contact_repo.get(business_id, visitor.contact.id) is None
+    erased = testbed.contact_repo.get(business_id, visitor.contact.id)
+    assert erased is not None
+    assert erased.erased_at == testbed.clock.now_microseconds()
+    assert erased.name is None
+    assert erased.phone_number is None
+    assert erased.verified_phone_number is None
+    assert erased.language is None
+    assert erased.channel_identities == []
+    assert erased.created_at == visitor.contact.created_at
     for conversation in (visitor.chat_conversation, visitor.phone_conversation):
         assert (
             testbed.message_repo.list_by_conversation(business_id, conversation.id)
@@ -229,6 +237,8 @@ def test_erasure_deletes_personal_data_and_anonymizes_business_records() -> None
     ]
     with pytest.raises(NotFoundError):
         testbed.export_contact_data.run(command(tenants, visitor.contact.id))
+    with pytest.raises(NotFoundError):
+        testbed.delete_contact_data.run(command(tenants, visitor.contact.id))
 
 
 def test_erasure_leaves_other_visitors_and_tenants_untouched() -> None:
@@ -305,4 +315,6 @@ def test_visitor_without_phone_or_records_is_erased_cleanly() -> None:
 
     assert result.deleted_messages == 0
     assert result.erased_calls == 0
-    assert testbed.contact_repo.get(business.id, contact.id) is None
+    erased = testbed.contact_repo.get(business.id, contact.id)
+    assert erased is not None
+    assert erased.erased_at is not None

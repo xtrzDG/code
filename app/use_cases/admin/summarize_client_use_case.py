@@ -180,7 +180,12 @@ class SummarizeClientUseCase(UseCaseContract[ClientSummarySource, AdminClientSum
         subscription: SubscriptionDocument | None,
         now: Microseconds,
     ) -> tuple[Microseconds, Microseconds]:
-        if subscription is not None:
+        # A subscription still waiting for its first payment has an empty
+        # period; it is metered like no subscription at all.
+        if (
+            subscription is not None
+            and subscription.period_end > subscription.period_start
+        ):
             return find_usage_window(subscription, now, business.timezone)
 
         return (
@@ -292,6 +297,8 @@ def find_health_issues(
 
     if subscription is None:
         issues.append(ClientHealthIssue.NO_SUBSCRIPTION)
+    elif subscription.status is SubscriptionStatus.INCOMPLETE:
+        issues.append(ClientHealthIssue.FIRST_PAYMENT_PENDING)
     elif subscription.status is SubscriptionStatus.PAST_DUE:
         issues.append(ClientHealthIssue.PAYMENT_PAST_DUE)
     elif subscription.status is SubscriptionStatus.CANCELLED:

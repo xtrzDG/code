@@ -113,7 +113,9 @@ API запускается с `--proxy-headers`; адреса доверенны
 пустыми. Воркер берёт значения у API, `ENCRYPTION_KEY` генерируется один раз (не
 меняйте его). После первого деплоя укажите `APP_BASE_URL` (публичный адрес API,
 например `https://workshop-api.onrender.com`), `CABINET_BASE_URL` (публичный адрес
-кабинета, туда Google Calendar возвращает владельца) и `BACKEND_URL` кабинета (внутренний
+кабинета, туда Google Calendar возвращает владельца), `CORS_ALLOWED_ORIGINS` API
+(тот же адрес кабинета, например `https://workshop-cabinet.onrender.com`: без него
+страница оплаты не вернёт плательщика в кабинет) и `BACKEND_URL` кабинета (внутренний
 адрес API из Render: `http://<хост>:8000`, или публичный). Адреса вебхуков для
 внешних кабинетов — в разделе «Окружение».
 
@@ -208,7 +210,7 @@ UI-тестов); `color`, `position` и `language` в ней показываю
 | `CABINET_BASE_URL` | вне `production` — `http://localhost:3000`; в `production` после согласия в Google владелец видит простую страницу вместо возврата в кабинет |
 | `DATABASE_URL` | хранение в памяти |
 | `ENCRYPTION_KEY` | временный ключ: токены каналов не переживут перезапуск |
-| `CORS_ALLOWED_ORIGINS` | CORS выключен (виджет сайта разрешает любой источник сам) |
+| `CORS_ALLOWED_ORIGINS` | CORS выключен (виджет сайта разрешает любой источник сам), и оплата не возвращает плательщика в кабинет: укажите адрес кабинета (`http://localhost:3000` локально; в `docker-compose.yml` он задан) |
 | `LLM_PROVIDER`, `LLM_MODEL_ID`, `OPENAI_API_KEY`, `OPENAI_PROJECT_ID` | ответы модели — ошибка 502 при первом вызове |
 | `PLATFORM_ADMIN_EMAILS`, `PLATFORM_ADMIN_PHONE_NUMBERS` | нет админов платформы |
 | `ELEVENLABS_API_KEY`, `ELEVENLABS_WEBHOOK_SECRET`, `ELEVENLABS_API_BASE_URL` | голосовой агент не создаётся: в `production` публикация версии с голосом отклоняется (409, причина `voice_configuration`), в `development`/`test` версия выходит без голосового агента (предупреждение в логе) |
@@ -237,8 +239,8 @@ UI-тестов); `color`, `position` и `language` в ней показываю
 | Здоровье | `GET /healthz` |
 | Вход и профиль | `GET /v1/auth/login-options[?country_code=…]`, `POST /v1/auth/otp/start`, `POST /v1/auth/otp/verify`, `POST /v1/auth/logout`, `GET·PATCH /v1/me` |
 | Каталог | `GET /v1/catalog/countries[/{code}]`, `GET /v1/catalog/languages`, `GET /v1/catalog/plans`, `GET /v1/catalog/niches[/{niche}]`, `POST /v1/phone-numbers/parse` |
-| Бизнесы и команда | `POST·GET /v1/businesses`, `GET·PATCH /v1/businesses/{id}`, `POST …/members`, `DELETE …/members/{user_id}`, `GET …/call-forwarding-instructions` |
-| Данные и договор | `GET·POST …/dpa`, `GET …/audit-log`, `GET …/contacts/{contact_id}/export`, `DELETE …/contacts/{contact_id}` |
+| Бизнесы и команда | `POST·GET /v1/businesses`, `GET·PATCH /v1/businesses/{id}`, `POST …/members` (роль `owner` или `staff`), `PATCH·DELETE …/members/{user_id}` (последнего владельца нельзя ни удалить, ни сделать сотрудником), `GET …/call-forwarding-instructions` |
+| Данные и договор | `GET·POST …/dpa`, `GET /v1/legal/dpa/{version}?language=` (текст DPA, без токена), `GET …/audit-log` (страницы, фильтры `action`, `entity`, `actor_id`, `since`, `until`), `GET …/contacts` (страницы, `search`), `GET·DELETE …/contacts/{contact_id}`, `GET …/contacts/{contact_id}/export` |
 | Анкета | `GET …/profile/wizard`, `GET·PUT …/profile`, `PUT …/profile/steps/{step}`, `GET …/profile/gaps` |
 | Знания | `GET·POST …/knowledge`, `GET·PATCH·DELETE …/knowledge/{item_id}`, `POST …/knowledge/search`, `POST …/knowledge/import[/confirm]`, `DELETE …/knowledge/import/{batch_id}` |
 | Ресурсы и расписание | `GET·POST …/resources`, `PATCH …/resources/{id}`, `GET·POST …/schedule-exceptions`, `DELETE …/schedule-exceptions/{id}` |
@@ -249,8 +251,8 @@ UI-тестов); `color`, `position` и `language` в ней показываю
 | Каналы (кабинет) | `GET …/channels`, `PUT·DELETE …/channels/{channel}`, `GET …/channels/web/snippet`, `POST …/manager-contacts/telegram-link` |
 | Вебхуки и виджет | `POST /v1/channels/telegram/{channel_id}/webhook`, `GET·POST /v1/channels/meta/webhook`, `POST /v1/channels/telegram-platform/webhook`, `GET /v1/widget/{id}/config`, `GET·POST /v1/widget/{id}/messages`, `GET /widget.js`, `GET /widget/demo` |
 | Голос | `POST /v1/voice/tools/{tool}`, `POST /v1/voice/webhooks/conversation-initiation`, `POST /v1/voice/webhooks/post-call` |
-| Оплата | `GET …/billing`, `POST …/billing/trial`, `POST …/billing/plan`, `POST …/billing/cancel`, `POST …/billing/checkout`, `POST /v1/payments/flitt/webhook` |
-| Админка платформы | `GET /v1/admin/clients[/{business_id}]`, `POST /v1/admin/clients/{business_id}/open` |
+| Оплата | `GET …/billing`, `POST …/billing/trial`, `POST …/billing/plan`, `POST …/billing/cancel`, `POST …/billing/checkout`, `POST …/billing/subscribe` (тариф и период с оплатой сразу: после пробного периода, после отмены или без него), `POST /v1/payments/flitt/webhook` |
+| Админка платформы | `GET /v1/admin/clients` (страницы, фильтры `status`, `health`, `country`, `niche`, `search`, сортировка `sort`), `GET /v1/admin/clients/{business_id}`, `POST /v1/admin/clients/{business_id}/open` |
 
 `…` — это `/v1/businesses/{business_id}`.
 
@@ -282,6 +284,21 @@ UI-тестов); `color`, `position` и `language` в ней показываю
 `?limit=&cursor=`, ответ `{"items", "next_cursor"}`, фильтры применяются до
 разбиения на страницы. Импорт меню возвращает `batch_id`; `DELETE
 …/knowledge/import/{batch_id}` удаляет неподтверждённые черновики этого импорта.
+
+## Договор об обработке данных (DPA)
+
+Текст DPA лежит в [`docs/legal/`](docs/legal/README.md): `dpa-<версия>.<язык>.md`
+на английском, русском и грузинском. API отдаёт его по
+`GET /v1/legal/dpa/{version}?language=` (язык, затем базовый язык, затем
+английский), статус `GET …/dpa` ссылается на него в `document_url`, кабинет
+показывает его перед кнопкой «Принять». Действующая версия — `DPA_DOCUMENT_VERSION`;
+версию без текста принять нельзя.
+
+> **Это шаблон.** До запуска в работу оператор должен показать его юристу своей
+> юрисдикции и стран клиентов, заполнить поля в квадратных скобках (реквизиты,
+> места обработки у субобработчиков, сроки, резервные копии, применимое право) и
+> выпускать изменения новой версией (новые файлы и новое `DPA_DOCUMENT_VERSION`),
+> чтобы владельцы приняли её заново.
 
 ## Проверки
 

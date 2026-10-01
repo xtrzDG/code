@@ -5,8 +5,9 @@
 #
 # Defaults suit a local run: APP_ENV=development (sign-in codes appear in the
 # API log until a provider is configured), APP_BASE_URL=http://localhost:8000,
-# CABINET_BASE_URL=http://localhost:3000,
-# the cabinet's cookies without "Secure" (plain http).
+# CABINET_BASE_URL=http://localhost:3000 and
+# CORS_ALLOWED_ORIGINS=http://localhost:3000 (the cabinet), the cabinet's
+# cookies without "Secure" (plain http).
 name: assistant-workshop
 
 x-backend: &backend
@@ -20,7 +21,10 @@ x-backend: &backend
   environment:
     APP_ENV: ${APP_ENV:-development}
     APP_BASE_URL: ${APP_BASE_URL:-http://localhost:8000}
-    CABINET_BASE_URL: ${CABINET_BASE_URL:-http://localhost:3000}
+    # The cabinet's address: Google Calendar sends owners back there.
+    CABINET_BASE_URL: ${CABINET_BASE_URL:-http://localhost:${WEB_PORT:-3000}}
+    # The cabinet's origin: the payment page returns payers there.
+    CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:${WEB_PORT:-3000}}
     DATABASE_URL: postgresql://${WORKSHOP_DB_USER:-workshop}:${WORKSHOP_DB_PASSWORD:-workshop}@postgres:5432/${WORKSHOP_DB_NAME:-workshop}
     # The cabinet (another container) forwards the visitor's address.
     FORWARDED_ALLOW_IPS: "*"

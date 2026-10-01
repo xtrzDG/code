@@ -259,9 +259,39 @@ def test_admin_routes() -> None:
     detail = world.client.get(detail_path, headers=bearer(world.admin))
     opened = world.client.post(f"{detail_path}/open", headers=bearer(world.admin))
 
+    filtered = world.client.get(
+        "/v1/admin/clients",
+        headers=bearer(world.admin),
+        params={"health": "critical", "sort": "name", "country": "ge", "limit": "5"},
+    )
+    invalid = {
+        name: world.client.get(
+            "/v1/admin/clients", headers=bearer(world.admin), params=params
+        ).status_code
+        for name, params in {
+            "sort": {"sort": "loudest"},
+            "health": {"health": "fine"},
+            "status": {"status": "sleeping"},
+            "country": {"country": "Georgia"},
+            "niche": {"niche": "spaceship"},
+            "limit": {"limit": "0"},
+        }.items()
+    }
+
     assert listing.status_code == 200
-    assert listing.json()["client_count"] == 1
-    assert listing.json()["clients"][0]["health_issues"] == ["not_published"]
+    assert listing.json()["totals"]["client_count"] == 1
+    assert listing.json()["items"][0]["health_issues"] == ["not_published"]
+    assert filtered.status_code == 200
+    assert filtered.json()["items"] == []
+    assert filtered.json()["matching_count"] == 0
+    assert invalid == {
+        "sort": 422,
+        "health": 422,
+        "status": 422,
+        "country": 422,
+        "niche": 422,
+        "limit": 422,
+    }
     assert detail.status_code == 200
     assert detail.json()["summary"]["subscription_status"] == "trialing"
     assert opened.status_code == 200

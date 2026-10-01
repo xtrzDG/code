@@ -6,6 +6,7 @@ from app.containers.repositories import RepositoriesContainer
 from app.containers.time_provider import TimeProviderContainer
 from app.registries.billing.exchange_rate_registry import ExchangeRateRegistry
 from app.registries.billing.plan_registry import PlanRegistry
+from app.registries.legal.legal_document_registry import LegalDocumentRegistry
 from app.registries.localization.call_forwarding_guide_registry import (
     CallForwardingGuideRegistry,
 )
@@ -45,6 +46,10 @@ class RegistriesContainer(containers.DeclarativeContainer):
     # from (AssistantToolCatalogContract), so both offer the same tools.
     assistant_tool_registry: Singleton[AssistantToolRegistry] = Singleton(
         AssistantToolRegistry
+    )
+    # Data processing agreement texts (docs/legal), read once per process.
+    legal_document_registry: Singleton[LegalDocumentRegistry] = Singleton(
+        LegalDocumentRegistry
     )
     # One lock per business shared by every booking use case of the process.
     business_lock_registry: Singleton[BusinessLockRegistry] = Singleton(

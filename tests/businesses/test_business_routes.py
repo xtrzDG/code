@@ -132,6 +132,12 @@ def test_team_routes_invite_and_remove_staff() -> None:
         headers=owner,
     )
     assert last_owner.status_code == 409
+    demoted_last_owner = client.patch(
+        f"/v1/businesses/{business['id']}/members/{business['members'][0]['user_id']}",
+        headers=owner,
+        json={"role": "staff"},
+    )
+    assert demoted_last_owner.status_code == 409
     assert client.get(
         f"/v1/businesses/{business['id']}", headers=staff
     ).status_code == (404)
@@ -205,3 +211,40 @@ def test_business_routes_report_errors_with_status_codes() -> None:
         "unknown member": 404,
         "invalid telegram id": 422,
     }
+
+
+def test_team_routes_invite_an_owner_and_change_roles() -> None:
+    testbed = build_accounts_testbed()
+    client = testbed.build_http_client()
+    owner = signed_in(testbed, GEORGIA_MOBILE)
+    business = create_business(client, owner)
+    members_path = f"/v1/businesses/{business['id']}/members"
+
+    invited = client.post(
+        members_path,
+        headers=owner,
+        json={"email": "partner@example.com", "role": "owner"},
+    )
+    partner = invited.json()["members"][1]
+    demoted = client.patch(
+        f"{members_path}/{partner['user_id']}",
+        headers=owner,
+        json={"role": "staff"},
+    )
+    bad_role = client.patch(
+        f"{members_path}/{partner['user_id']}",
+        headers=owner,
+        json={"role": "manager"},
+    )
+    unknown = client.patch(
+        f"{members_path}/User_9350a036-5dd7-4608-addd-224843d592d8",
+        headers=owner,
+        json={"role": "owner"},
+    )
+
+    assert invited.status_code == 201
+    assert partner["role"] == "owner"
+    assert demoted.status_code == 200
+    assert demoted.json()["members"][1]["role"] == "staff"
+    assert bad_role.status_code == 422
+    assert unknown.status_code == 404

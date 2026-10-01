@@ -12,7 +12,7 @@ import {
   hasEstimatedPrices,
   maxAnnualDiscount,
   monthlyEquivalentMinor,
-  planAction,
+  planActions,
   planOveragePrice,
   planPrice,
   planSetupFee,
@@ -26,8 +26,14 @@ import {
 export interface PlanChoice {
   quote: PlanQuote;
   period: BillingPeriod;
-  action: Extract<PlanAction, "switch" | "trial">;
+  action: PlanAction;
 }
+
+const ACTION_LABELS: Record<PlanAction, "billing.plans.switchTo" | "billing.plans.startTrial" | "billing.subscribe.subscribe"> = {
+  switch: "billing.plans.switchTo",
+  trial: "billing.plans.startTrial",
+  subscribe: "billing.subscribe.subscribe",
+};
 
 /** The plans of the business's country, monthly or yearly, with the owner's action per plan. */
 export function PlansSection({
@@ -92,6 +98,10 @@ export function PlansSection({
         </fieldset>
       </div>
 
+      {(overview.subscription?.status === "past_due" || overview.subscription?.status === "cancelled") && canManage ? (
+        <p className="text-sm text-ink-muted">{t("billing.subscribe.resumeHint")}</p>
+      ) : null}
+
       {error && !quotes ? (
         <Card>
           <ErrorState error={error} onRetry={onRetry} />
@@ -108,9 +118,8 @@ export function PlansSection({
         <>
           <ul className="grid gap-4 lg:grid-cols-3">
             {quotes.map((quote) => {
-              const action = planAction(quote, period, overview);
+              const { isCurrent, actions } = planActions(quote, period, overview);
               const price = planPrice(quote, period);
-              const isCurrent = action === "current";
               const features = [
                 quote.is_voice_included && quote.included_voice_minutes > 0
                   ? t("billing.plans.voiceMinutes", { count: format.number(quote.included_voice_minutes) })
@@ -168,21 +177,24 @@ export function PlansSection({
                       quote.channels.map((channel) => t(CHANNEL_NAMES[channel])),
                     )}
                   </p>
-                  <div className="mt-auto pt-5">
-                    {isCurrent ? (
+                  <div className="mt-auto space-y-2 pt-5">
+                    {actions.length === 0 ? (
                       <Button variant="secondary" fullWidth disabled>
                         {t("billing.plans.current")}
                       </Button>
-                    ) : action === "unavailable" ? (
-                      <p className="text-center text-sm text-ink-muted">{t("billing.plans.unavailable")}</p>
                     ) : canManage ? (
-                      <Button
-                        variant={action === "trial" ? "primary" : "secondary"}
-                        fullWidth
-                        onClick={() => onChoose({ quote, period, action })}
-                      >
-                        {action === "trial" ? t("billing.plans.startTrial") : t("billing.plans.switchTo")}
-                      </Button>
+                      actions.map((action, index) => (
+                        <Button
+                          key={action}
+                          variant={index === 0 ? "primary" : "ghost"}
+                          fullWidth
+                          onClick={() => onChoose({ quote, period, action })}
+                        >
+                          {action === "subscribe" && isCurrent
+                            ? t("billing.subscribe.subscribeCurrent")
+                            : t(ACTION_LABELS[action])}
+                        </Button>
+                      ))
                     ) : null}
                   </div>
                 </li>

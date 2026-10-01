@@ -8,6 +8,7 @@ from pydantic import BaseModel, ValidationError
 
 from app.contracts.operator_contract import OperatorContract
 from app.gateways.http.strict_request_parsing import (
+    build_json_body_dependency,
     describe_json_body,
     describe_validation_error,
     parse_path_identifier,
@@ -24,6 +25,8 @@ from app.schemas.dto.billing_cabinet import (
     StartCheckoutRequest,
     StartTrialCommand,
     StartTrialRequest,
+    SubscribeCommand,
+    SubscribeRequest,
 )
 from app.schemas.dto.payments import PaymentWebhookDelivery, PaymentWebhookReceipt
 from app.schemas.exceptions.application_errors import ValidationFailedError
@@ -46,6 +49,7 @@ type CancelSubscriptionOperator = OperatorContract[
     BillingOverview,
 ]
 type StartCheckoutOperator = OperatorContract[StartCheckoutCommand, CheckoutSessionView]
+type SubscribeOperator = OperatorContract[SubscribeCommand, CheckoutSessionView]
 type PaymentWebhookOperator = OperatorContract[
     PaymentWebhookDelivery,
     PaymentWebhookReceipt,
@@ -83,6 +87,7 @@ async def read_raw_body(request: Request) -> bytes:
 read_start_trial_body = build_optional_json_body_dependency(StartTrialRequest)
 read_change_plan_body = build_optional_json_body_dependency(ChangePlanRequest)
 read_start_checkout_body = build_optional_json_body_dependency(StartCheckoutRequest)
+read_subscribe_body = build_json_body_dependency(SubscribeRequest)
 
 
 def build_billing_router(
@@ -91,6 +96,7 @@ def build_billing_router(
     change_plan_operator: ChangePlanOperator,
     cancel_subscription_operator: CancelSubscriptionOperator,
     start_checkout_operator: StartCheckoutOperator,
+    subscribe_operator: SubscribeOperator,
     payment_webhook_operator: PaymentWebhookOperator,
     current_user: CurrentUserDependency,
 ) -> APIRouter:
@@ -101,12 +107,17 @@ def build_billing_router(
         POST /v1/businesses/{business_id}/billing/plan       change plan
         POST /v1/businesses/{business_id}/billing/cancel     cancel
         POST /v1/businesses/{business_id}/billing/checkout   payment page (201)
+        POST /v1/businesses/{business_id}/billing/subscribe  plan + payment page
+                                                             (201)
         POST /v1/payments/flitt/webhook                      Flitt callback
 
     `language` is a BCP 47 tag; it defaults to the owner language of the
-    business. The webhook needs no token: its signature is verified, and it
-    answers 200 for applied, repeated and ignored notifications, 403 for a
-    wrong signature, 404 for an unknown order and 422 for a malformed body.
+    business. Subscribe works with or without a subscription (after the
+    trial, after cancelling, or instead of the trial): it switches to the
+    chosen plan and period and answers with the payment page like checkout.
+    The webhook needs no token: its signature is verified, and it answers
+    200 for applied, repeated and ignored notifications, 403 for a wrong
+    signature, 404 for an unknown order and 422 for a malformed body.
     """
 
     router = APIRouter(tags=["billing"])
@@ -191,6 +202,26 @@ def build_billing_router(
     ) -> CheckoutSessionView:
         return start_checkout_operator.operate(
             StartCheckoutCommand(
+                user_id=user_id,
+                business_id=parse_business_id(business_id),
+                request=body,
+                display_language=parse_optional_language(language),
+            )
+        )
+
+    @router.post(
+        "/v1/businesses/{business_id}/billing/subscribe",
+        status_code=status.HTTP_201_CREATED,
+        openapi_extra=describe_json_body(SubscribeRequest),
+    )
+    def subscribe(
+        business_id: str,
+        user_id: Annotated[UserId, Depends(current_user)],
+        body: Annotated[SubscribeRequest, Depends(read_subscribe_body)],
+        language: str | None = None,
+    ) -> CheckoutSessionView:
+        return subscribe_operator.operate(
+            SubscribeCommand(
                 user_id=user_id,
                 business_id=parse_business_id(business_id),
                 request=body,

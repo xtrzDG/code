@@ -14,6 +14,7 @@ from app.schemas.constants.billing import (
 )
 from app.schemas.constants.businesses import BusinessStatus, ServiceMode
 from app.schemas.constants.client_health import (
+    AdminClientSort,
     CabinetSection,
     ClientHealthIssue,
     ClientHealthStatus,
@@ -23,6 +24,7 @@ from app.schemas.constants.payments import PaymentStatus
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.dto.billing import Money
 from app.schemas.dto.billing_ledger import ClientCostReport
+from app.schemas.dto.paging import PageRequest
 from app.schemas.typings.assistants.constrained_floats import AverageJudgeScore
 from app.schemas.typings.assistants.constrained_integers import (
     AssistantVersionNumber,
@@ -47,6 +49,7 @@ from app.schemas.typings.client_health.constrained_integers import (
     OpenQuestionCount,
     ToolErrorCount,
 )
+from app.schemas.typings.client_health.constrained_strings import ClientSearchText
 from app.schemas.typings.compliance.prefixed_id import AuditLogEntryId
 from app.schemas.typings.compliance.strings import ClientIpAddress
 from app.schemas.typings.localization.constrained_strings import (
@@ -55,13 +58,25 @@ from app.schemas.typings.localization.constrained_strings import (
     LanguageTag,
     TimezoneName,
 )
+from app.schemas.typings.platform.constrained_strings import PageCursor
 from app.schemas.typings.users.prefixed_id import UserId
 
 
 class AdminClientsQuery(ImmutableDTO):
-    """A platform admin lists every client."""
+    """
+    A platform admin lists clients, one page at a time, in the chosen
+    order. Filters (business status, health, country, niche, search in the
+    name or id) run before paging.
+    """
 
     user_id: UserId
+    page: PageRequest = PageRequest()
+    status: BusinessStatus | None = None
+    health: ClientHealthStatus | None = None
+    country_code: CountryCode | None = None
+    niche_key: NicheKey | None = None
+    search: ClientSearchText | None = None
+    sort: AdminClientSort = AdminClientSort.HEALTH
 
 
 class AdminClientQuery(ImmutableDTO):
@@ -122,12 +137,32 @@ class AdminClientSummary(ImmutableDTO):
     )
 
 
-class AdminClientList(ImmutableDTO):
-    """Every client, the ones needing attention first."""
+class AdminClientTotals(ImmutableDTO):
+    """Counts over every client of the platform, whatever the filters."""
+
+    client_count: ClientCount
+    critical_count: ClientCount
+    attention_count: ClientCount
+    healthy_count: ClientCount
+    losing_money_count: ClientCount
+
+
+class AdminClientPage(ImmutableDTO):
+    """
+    One page of clients; `next_cursor` is None on the last page.
+
+    `matching_count` counts the clients that pass the filters; `totals`,
+    `countries` and `niches` describe every client (for the summary tiles
+    and the filter choices).
+    """
 
     generated_at: Microseconds
-    client_count: ClientCount
-    clients: list[AdminClientSummary]
+    items: list[AdminClientSummary]
+    next_cursor: PageCursor | None = None
+    matching_count: ClientCount
+    totals: AdminClientTotals
+    countries: list[CountryCode] = Field(default_factory=list[CountryCode])
+    niches: list[NicheKey] = Field(default_factory=list[NicheKey])
 
 
 class FailedAutotestView(ImmutableDTO):

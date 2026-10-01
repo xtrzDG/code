@@ -47,6 +47,13 @@ export function BillingNotices({
                 {payAction}
               </Alert>
             );
+          case "incomplete":
+            return (
+              <Alert key="incomplete" tone="warning" title={t("billing.subscribe.incompleteTitle")}>
+                {t("billing.subscribe.incomplete")}
+                {payAction}
+              </Alert>
+            );
           case "pastDue":
             return (
               <Alert key="pastDue" tone="danger" title={t("billing.notices.pastDueTitle")}>

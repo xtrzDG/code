@@ -26,7 +26,8 @@ class CollectContactRecordsUseCase(
     Gather every record about one visitor inside one business.
 
     Every read goes through the business id, so a contact id of another
-    business is reported as missing. Callers check access first.
+    business is reported as missing, and so is an erased contact (nothing
+    personal is left to export or erase). Callers check access first.
     """
 
     def __init__(
@@ -52,7 +53,7 @@ class CollectContactRecordsUseCase(
             input_data.business_id,
             input_data.contact_id,
         )
-        if contact is None:
+        if contact is None or contact.erased_at is not None:
             raise NotFoundError(f"Contact {input_data.contact_id} was not found.")
 
         conversations: list[ConversationDocument] = sorted(
