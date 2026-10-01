@@ -122,3 +122,27 @@ repositories ─ adapters (app/adapters/) ─ clients (app/clients/)  внешн
 - Авторизация: `Authorization: Bearer`, зависимость
   `build_current_user_dependency`; доступ к бизнесу — `AuthorizeBusinessAccessUseCase`
   (owner, staff; вход платформенного админа пишется в журнал аудита).
+
+## Сборка и точки входа
+
+- Корень композиции — `app/containers/app.py::AppContainer`. Контейнеры по ролям
+  зависят только «вниз»: операторы → пайплайны → оркестраторы → use case →
+  репозитории, реестры, фасилитаторы, трансформеры, утилиты → адаптеры → клиенты.
+  Use case типизированы своим контрактом (`UseCaseContract[вход, выход]`), а
+  цепочки `PipelineOperator(OrchestratorPipeline(UseCaseOrchestrator(...)))`
+  строятся типизированными помощниками `app/containers/provider_chains.py`, поэтому
+  вызов каждого `build_<раздел>_router` проверяется mypy и pyright.
+- Где модуль нарушает направление ролей, провайдер стоит в контейнере уровнем выше:
+  прогон сценария автотеста (use case, которому нужен оркестратор разговора) — в
+  `OrchestratorsContainer`, оркестраторы вебхуков каналов и виджета (им нужен
+  пайплайн сообщения клиента) — в `PipelinesContainer`.
+- Синглтоны: клиенты, адаптеры (в том числе все коллекции документов на одном пуле
+  Postgres и одном `StorageScopeContext`), репозитории, реестры (общий
+  `BusinessLockRegistry`), фасилитаторы, пайплайн сообщения клиента (замки по
+  клиенту общие для всех каналов). Use case, оркестраторы и операторы — фабрики.
+- Журнал вызовов модели (`llm_trace_facilitator`) живёт в `AdaptersContainer`:
+  `TracingLlmAdapter` оборачивает им маршрутизирующий адаптер модели, а
+  фасилитаторы сами зависят от адаптеров.
+- HTTP: `app/main.py` (фабрика uvicorn) и `app/gateways/http/router_assembly.py`.
+  Фоновый воркер: `app/worker_main.py`, задачи перечислены в
+  `app/containers/gateways.py`.
