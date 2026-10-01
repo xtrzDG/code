@@ -104,44 +104,44 @@ export function StaffReplyTemplateForm({
       </p>
       {canManage ? (
         <form noValidate onSubmit={(event) => void onSubmit(event)} className="mt-3 space-y-3">
-          <Field
-            label={t("channels.staffTemplate.name")}
-            hint={t("channels.staffTemplate.nameHint")}
-            error={errors.name ? t(FIELD_ERRORS[errors.name]) : undefined}
-          >
-            {(control) => (
-              <Input
-                {...control}
-                value={name}
-                dir="ltr"
-                spellCheck={false}
-                autoComplete="off"
-                maxLength={512}
-                placeholder="staff_reply"
-                className="font-mono"
-                onChange={(event) => setName(event.target.value)}
-              />
-            )}
-          </Field>
-          <Field
-            label={t("channels.staffTemplate.language")}
-            hint={t("channels.staffTemplate.languageHint")}
-            error={errors.language ? t(FIELD_ERRORS[errors.language]) : undefined}
-          >
-            {(control) => (
-              <Input
-                {...control}
-                value={language}
-                dir="ltr"
-                spellCheck={false}
-                autoComplete="off"
-                maxLength={8}
-                placeholder="en_US"
-                className="w-32 font-mono"
-                onChange={(event) => setLanguage(event.target.value)}
-              />
-            )}
-          </Field>
+          <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_8rem]">
+            <Field
+              label={t("channels.staffTemplate.name")}
+              error={errors.name ? t(FIELD_ERRORS[errors.name]) : undefined}
+            >
+              {(control) => (
+                <Input
+                  {...control}
+                  value={name}
+                  dir="ltr"
+                  spellCheck={false}
+                  autoComplete="off"
+                  maxLength={512}
+                  placeholder="staff_reply"
+                  className="font-mono"
+                  onChange={(event) => setName(event.target.value)}
+                />
+              )}
+            </Field>
+            <Field
+              label={t("channels.staffTemplate.language")}
+              error={errors.language ? t(FIELD_ERRORS[errors.language]) : undefined}
+            >
+              {(control) => (
+                <Input
+                  {...control}
+                  value={language}
+                  dir="ltr"
+                  spellCheck={false}
+                  autoComplete="off"
+                  maxLength={8}
+                  placeholder="en_US"
+                  className="font-mono"
+                  onChange={(event) => setLanguage(event.target.value)}
+                />
+              )}
+            </Field>
+          </div>
           <div className="flex flex-wrap gap-2">
             <Button type="submit" size="sm" variant="secondary" isLoading={save.isPending} loadingText={t("channels.widget.saving")}>
               {t("channels.staffTemplate.save")}

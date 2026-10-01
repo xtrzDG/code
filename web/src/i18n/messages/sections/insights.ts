@@ -197,7 +197,7 @@ export const insightsEn = {
       length: "{count} / {max}",
       confirmationPrefilled: "The confirmation is in the reply box: check it and send.",
       template: {
-        intro: "You can still write: the message goes out in your business's approved WhatsApp template.",
+        intro: "More than 24 hours have passed since the customer's last message, so WhatsApp only takes approved templates now. You can still write: the message goes out in your business's template.",
         hint: "Goes to the customer in WhatsApp as the approved template “{name}” ({language}); your text fills its message. Line breaks are sent as spaces. The assistant does not answer it.",
         send: "Send as template",
         sent: "Sent to WhatsApp as a template",
@@ -712,7 +712,7 @@ export const insightsRu: Translation<typeof insightsEn> = {
       length: "{count} / {max}",
       confirmationPrefilled: "Подтверждение уже в поле ответа: проверьте и отправьте.",
       template: {
-        intro: "Написать всё равно можно: сообщение уйдёт в одобренном шаблоне WhatsApp вашего бизнеса.",
+        intro: "С последнего сообщения клиента прошло больше 24 часов, и теперь WhatsApp принимает только одобренные шаблоны. Написать всё равно можно: сообщение уйдёт в шаблоне вашего бизнеса.",
         hint: "Уйдёт клиенту в WhatsApp в одобренном шаблоне «{name}» ({language}); ваш текст подставится в его сообщение. Переносы строк заменятся пробелами. Помощник на него не отвечает.",
         send: "Отправить шаблоном",
         sent: "Отправлено в WhatsApp шаблоном",
@@ -1233,7 +1233,7 @@ export const insightsKa: Translation<typeof insightsEn> = {
       length: "{count} / {max}",
       confirmationPrefilled: "დადასტურება უკვე პასუხის ველშია: შეამოწმეთ და გაგზავნეთ.",
       template: {
-        intro: "მიწერა მაინც შეგიძლიათ: შეტყობინება გაიგზავნება თქვენი ბიზნესის დამტკიცებული WhatsApp შაბლონით.",
+        intro: "კლიენტის ბოლო შეტყობინებიდან 24 საათზე მეტი გავიდა, ამიტომ WhatsApp ახლა მხოლოდ დამტკიცებულ შაბლონებს იღებს. მიწერა მაინც შეგიძლიათ: შეტყობინება თქვენი ბიზნესის შაბლონით გაიგზავნება.",
         hint: "კლიენტს WhatsApp-ში მიუვა დამტკიცებული შაბლონით „{name}“ ({language}); თქვენი ტექსტი მის შეტყობინებაში ჩაჯდება. ხაზის გადატანები ჰარებით შეიცვლება. ასისტენტი მას არ პასუხობს.",
         send: "შაბლონით გაგზავნა",
         sent: "WhatsApp-ში შაბლონით გაიგზავნა",

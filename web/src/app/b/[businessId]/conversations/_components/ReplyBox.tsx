@@ -142,9 +142,8 @@ export function ReplyBox({
     <Card title={t("conversations.reply.title")}>
       {template ? (
         <Alert tone="info" className="mb-3">
-          <p>{t(REPLY_BLOCKS.window_closed, { channel })}</p>
+          <p>{t("conversations.reply.template.intro")}</p>
           {windowClosedAt}
-          <p className="mt-1">{t("conversations.reply.template.intro")}</p>
         </Alert>
       ) : null}
       <form onSubmit={(event) => void submit(event)} className="space-y-3">
