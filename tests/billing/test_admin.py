@@ -3,6 +3,7 @@ from dataclasses import dataclass
 import pytest
 from typed_time_provider import Microseconds
 
+from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.assistants import (
     AssistantToolName,
     AssistantVersionStatus,
@@ -38,8 +39,11 @@ from app.schemas.domain.users import UserDocument
 from app.schemas.dto.admin import (
     AdminClientQuery,
     AdminClientsQuery,
+    AdminClientSummary,
+    ClientSummarySource,
     OpenClientCabinetCommand,
 )
+from app.schemas.dto.billing import Money
 from app.schemas.dto.billing_cabinet import (
     StartCheckoutCommand,
     StartCheckoutRequest,
@@ -61,6 +65,11 @@ from app.schemas.typings.assistants.constrained_strings import (
     LlmModelId,
 )
 from app.schemas.typings.assistants.strings import JudgeNote, SystemPromptText
+from app.schemas.typings.billing.constrained_floats import GrossMarginPercent
+from app.schemas.typings.billing.constrained_integers import (
+    CostMicroUsd,
+    MoneyAmountMinor,
+)
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.client_health.constrained_strings import ClientSearchText
 from app.schemas.typings.compliance.strings import ClientIpAddress
@@ -77,9 +86,14 @@ from app.schemas.typings.handoffs.strings import (
 )
 from app.schemas.typings.localization.constrained_strings import (
     CountryCode,
+    CurrencyCode,
     LanguageTag,
 )
 from app.schemas.typings.platform.constrained_integers import PageSize
+from app.use_cases.admin.authorize_platform_admin_use_case import (
+    AuthorizePlatformAdminUseCase,
+)
+from app.use_cases.admin.list_clients_use_case import ListClientsUseCase
 from tests.billing.billing_testbed import (
     GEORGIA,
     ITALY,
@@ -520,4 +534,98 @@ def test_client_list_pages_keep_their_place() -> None:
     ]
     assert first.next_cursor is not None
     assert [str(client.name) for client in second.items] == ["Funicular VR"]
+    assert second.next_cursor is None
+
+
+# margin %, provider cost (micro USD), revenue (minor units), currency
+type ClientMoney = tuple[float | None, int, int, str]
+
+
+class CostOverridingSummarizer(
+    UseCaseContract[ClientSummarySource, AdminClientSummary]
+):
+    """Real client summaries with a cost picked per business name."""
+
+    def __init__(
+        self,
+        inner: UseCaseContract[ClientSummarySource, AdminClientSummary],
+        costs: dict[str, ClientMoney],
+    ) -> None:
+        self._inner: UseCaseContract[ClientSummarySource, AdminClientSummary] = inner
+        self._costs: dict[str, ClientMoney] = costs
+
+    def run(self, input_data: ClientSummarySource) -> AdminClientSummary:
+        summary: AdminClientSummary = self._inner.run(input_data)
+        margin_percent, provider_cost, revenue, currency = self._costs[
+            str(summary.name)
+        ]
+        cost = summary.cost.model_copy(
+            update={
+                "margin_percent": (
+                    None
+                    if margin_percent is None
+                    else GrossMarginPercent(margin_percent)
+                ),
+                "provider_cost_micro_usd": CostMicroUsd(provider_cost),
+                "revenue": Money(
+                    amount_minor=MoneyAmountMinor(revenue),
+                    currency_code=CurrencyCode(currency),
+                ),
+            }
+        )
+        return summary.model_copy(update={"cost": cost})
+
+
+def build_costed_list_clients(world: AdminWorld) -> ListClientsUseCase:
+    testbed = world.testbed
+    return ListClientsUseCase(
+        authorize_platform_admin=AuthorizePlatformAdminUseCase(
+            user_repo=testbed.user_repo
+        ),
+        business_repo=testbed.business_repo,
+        summarize_client=CostOverridingSummarizer(
+            testbed.summarize_client,
+            {
+                "Funicular VR": (None, 9_000_000, 51_700, "GEL"),
+                "Bella Napoli": (-40.0, 30_000_000, 17_500, "EUR"),
+                "Austin Bikes": (35.0, 1_000_000, 9_900, "EUR"),
+            },
+        ),
+        wall_clock=testbed.clock.wall_clock,
+    )
+
+
+@pytest.mark.parametrize(
+    ("sort", "names"),
+    [
+        # Lowest margin first (losing money on top), unknown margin last.
+        (AdminClientSort.MARGIN, ["Bella Napoli", "Austin Bikes", "Funicular VR"]),
+        # Most expensive first.
+        (AdminClientSort.COST, ["Bella Napoli", "Funicular VR", "Austin Bikes"]),
+        # Grouped by currency code, the highest amount first within a currency.
+        (AdminClientSort.REVENUE, ["Bella Napoli", "Austin Bikes", "Funicular VR"]),
+    ],
+)
+def test_client_list_sorts_by_money_and_pages_keep_the_order(
+    sort: AdminClientSort, names: list[str]
+) -> None:
+    world = build_admin_world()
+    list_clients = build_costed_list_clients(world)
+
+    whole = list_clients.run(AdminClientsQuery(user_id=world.admin.id, sort=sort))
+    first = list_clients.run(
+        AdminClientsQuery(
+            user_id=world.admin.id, sort=sort, page=PageRequest(size=PageSize(2))
+        )
+    )
+    second = list_clients.run(
+        AdminClientsQuery(
+            user_id=world.admin.id,
+            sort=sort,
+            page=PageRequest(size=PageSize(2), cursor=first.next_cursor),
+        )
+    )
+
+    assert [str(client.name) for client in whole.items] == names
+    assert [str(client.name) for client in [*first.items, *second.items]] == names
     assert second.next_cursor is None

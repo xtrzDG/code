@@ -198,7 +198,7 @@ class UpdateBookingRequest(ImmutableDTO):
 
     `status`: COMPLETED, NO_SHOW or CANCELLED, or CONFIRMED for a PENDING
     booking. `party_size` and `resource_id` must fit the booked time (the
-    resource seats the party, is open and has a free unit then). An empty
+    resource seats the party, is open and has a free unit then). An empty or blank
     `notes` text removes the notes. `contact_name` renames the customer.
     The time is changed by rescheduling.
     """

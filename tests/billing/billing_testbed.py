@@ -663,6 +663,7 @@ class BillingTestbed:
             compute_client_cost=self.compute_client_cost,
             wall_clock=wall_clock,
         )
+        self.summarize_client: SummarizeClientUseCase = summarize_client
         self.list_clients = ListClientsUseCase(
             authorize_platform_admin=authorize_admin,
             business_repo=self.business_repo,

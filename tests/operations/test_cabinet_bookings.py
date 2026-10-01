@@ -457,10 +457,10 @@ class TestBookingDetails:
             cabinet,
             booking.id,
             party_size=3,
-            notes="  High chair  ",
+            notes="High chair",
             contact_name="Levan K.",
         )
-        cleared = self.update(cabinet, booking.id, notes="")
+        cleared = self.update(cabinet, booking.id, notes="   ")
 
         assert changed.party_size == 3
         assert changed.notes == "High chair"

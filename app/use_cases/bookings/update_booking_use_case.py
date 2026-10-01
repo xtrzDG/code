@@ -195,16 +195,16 @@ class UpdateBookingUseCase(UseCaseContract[UpdateBookingCommand, BookingView]):
         return True
 
     def _apply_notes(self, booking: BookingDocument, notes: BookingNote | None) -> bool:
+        """Notes as given (the cabinet trims them); blank notes are removed."""
+
         if notes is None:
             return False
 
-        cleaned: BookingNote | None = (
-            BookingNote(str(notes).strip()) if str(notes).strip() else None
-        )
-        if cleaned == booking.notes:
+        new_notes: BookingNote | None = notes if str(notes).strip() else None
+        if new_notes == booking.notes:
             return False
 
-        booking.notes = cleaned
+        booking.notes = new_notes
         return True
 
     def _apply_placement(
