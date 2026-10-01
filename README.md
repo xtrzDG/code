@@ -113,9 +113,9 @@ API запускается с `--proxy-headers`; адреса доверенны
 пустыми. Воркер берёт значения у API, `ENCRYPTION_KEY` генерируется один раз (не
 меняйте его). После первого деплоя укажите `APP_BASE_URL` (публичный адрес API,
 например `https://workshop-api.onrender.com`), `CABINET_BASE_URL` (публичный адрес
-кабинета, туда Google Calendar возвращает владельца), `CORS_ALLOWED_ORIGINS` API
-(тот же адрес кабинета, например `https://workshop-cabinet.onrender.com`: без него
-страница оплаты не вернёт плательщика в кабинет) и `BACKEND_URL` кабинета (внутренний
+кабинета, например `https://workshop-cabinet.onrender.com`: туда Google Calendar и
+страница оплаты возвращают владельца), `CORS_ALLOWED_ORIGINS` API (тот же адрес
+кабинета) и `BACKEND_URL` кабинета (внутренний
 адрес API из Render: `http://<хост>:8000`, или публичный). Адреса вебхуков для
 внешних кабинетов — в разделе «Окружение».
 
@@ -207,10 +207,10 @@ UI-тестов); `color`, `position` и `language` в ней показываю
 | `APP_ENV` | `development`; в `production` обязателен `ENCRYPTION_KEY`, коды входа не пишутся в лог |
 | `TWILIO_*`, `TELEGRAM_GATEWAY_API_TOKEN`, `WHATSAPP_OTP_*`, `SMTP_*` | коды входа только в логе (вне `production`); см. «Коды входа» |
 | `APP_BASE_URL` | нельзя опубликовать голосовую версию, подключить Telegram, принять оплату |
-| `CABINET_BASE_URL` | вне `production` — `http://localhost:3000`; в `production` после согласия в Google владелец видит простую страницу вместо возврата в кабинет |
+| `CABINET_BASE_URL` | вне `production` — `http://localhost:3000`; в `production` после согласия в Google владелец видит простую страницу вместо возврата в кабинет, а страница оплаты возвращает плательщика только на адреса из `CORS_ALLOWED_ORIGINS` |
 | `DATABASE_URL` | хранение в памяти |
 | `ENCRYPTION_KEY` | временный ключ: токены каналов не переживут перезапуск |
-| `CORS_ALLOWED_ORIGINS` | CORS выключен (виджет сайта разрешает любой источник сам), и оплата не возвращает плательщика в кабинет: укажите адрес кабинета (`http://localhost:3000` локально; в `docker-compose.yml` он задан) |
+| `CORS_ALLOWED_ORIGINS` | CORS выключен (виджет сайта разрешает любой источник сам); страница оплаты возвращает плательщика только на источник `CABINET_BASE_URL` и `APP_BASE_URL`. Укажите адрес кабинета (`http://localhost:3000` локально; в `docker-compose.yml` он задан) |
 | `LLM_PROVIDER`, `LLM_MODEL_ID`, `OPENAI_API_KEY`, `OPENAI_PROJECT_ID` | ответы модели — ошибка 502 при первом вызове |
 | `PLATFORM_ADMIN_EMAILS`, `PLATFORM_ADMIN_PHONE_NUMBERS` | нет админов платформы |
 | `ELEVENLABS_API_KEY`, `ELEVENLABS_WEBHOOK_SECRET`, `ELEVENLABS_API_BASE_URL` | голосовой агент не создаётся: в `production` публикация версии с голосом отклоняется (409, причина `voice_configuration`), в `development`/`test` версия выходит без голосового агента (предупреждение в логе) |
