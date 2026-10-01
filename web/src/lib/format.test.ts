@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import { CURRENCY_MINOR_DIGITS } from "./currencyDigits.generated";
 import {
   capitalizeFirst,
   currencyFractionDigits,
@@ -51,6 +52,17 @@ describe("money", () => {
     expect(parseDecimalInput("10.000", "KRW")).toBe(10000);
     expect(parseDecimalInput("1.255", "KWD")).toBe(1.255);
     expect(parseDecimalInput("0,500", "USD")).toBe(0.5);
+  });
+
+  it("counts minor units like the backend, not like the browser's Intl data", () => {
+    // Browsers disagree on rupiah (2 digits in one CLDR release, 0 in the
+    // next); the backend's table decides, so prices never shift 100 times.
+    expect(currencyFractionDigits("IDR")).toBe(CURRENCY_MINOR_DIGITS.IDR);
+    expect(currencyFractionDigits("idr")).toBe(CURRENCY_MINOR_DIGITS.IDR);
+    expect(majorToMinor(25000, "IDR")).toBe(25000 * 10 ** (CURRENCY_MINOR_DIGITS.IDR ?? 2));
+    expect(formatMoney(2_500_000, "IDR", "en")).toContain("25,000.00");
+    expect(formatMoney(1500, "JPY", "en")).toBe("¥1,500");
+    expect(formatMoney(1255, "KWD", "en")).toContain("1.255");
   });
 
   it("refuses prices that would be stored at the wrong amount", () => {

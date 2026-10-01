@@ -7,6 +7,8 @@
  * minor units (cents, tetri).
  */
 
+import { CURRENCY_MINOR_DIGITS } from "./currencyDigits.generated";
+
 export type Timestamp = Date | number;
 
 /** UNIX microseconds (API) -> Date. Dates pass through. */
@@ -45,8 +47,16 @@ export function formatNumber(value: number, locale: string, options?: Intl.Numbe
   return new Intl.NumberFormat(locale, options).format(value);
 }
 
-/** Digits after the decimal point of a currency (GEL 2, JPY 0, KWD 3). */
+/**
+ * Digits after the decimal point of a currency (GEL 2, JPY 0, KWD 3), as the
+ * backend counts minor units. The browser's own Intl data is only a fallback
+ * for codes the table lacks: it differs between browser versions.
+ */
 export function currencyFractionDigits(currency: string): number {
+  const known = CURRENCY_MINOR_DIGITS[currency.toUpperCase()];
+  if (known !== undefined) {
+    return known;
+  }
   try {
     return new Intl.NumberFormat("en", { style: "currency", currency }).resolvedOptions().maximumFractionDigits ?? 2;
   } catch {
@@ -66,7 +76,13 @@ export function majorToMinor(major: number, currency: string): number {
 
 /** A price in minor units as text: formatMoney(1850, "GEL", "ka") -> "18,50 ₾". */
 export function formatMoney(minor: number, currency: string, locale: string): string {
-  return new Intl.NumberFormat(locale, { style: "currency", currency }).format(minorToMajor(minor, currency));
+  const digits = currencyFractionDigits(currency);
+  return new Intl.NumberFormat(locale, {
+    style: "currency",
+    currency,
+    minimumFractionDigits: digits,
+    maximumFractionDigits: digits,
+  }).format(minorToMajor(minor, currency));
 }
 
 /** Spaces, thin spaces and apostrophes people type as thousands grouping. */
