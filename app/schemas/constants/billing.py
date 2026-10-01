@@ -17,8 +17,14 @@ class BillingPeriod(StrEnum):
 
 
 class SubscriptionStatus(StrEnum):
-    """Subscription state driven by the payment provider."""
+    """
+    Subscription state driven by the payment provider.
 
+    INCOMPLETE: chosen without a trial and waiting for its first payment;
+    the business has no service from it until that payment arrives.
+    """
+
+    INCOMPLETE = "incomplete"
     TRIALING = "trialing"
     ACTIVE = "active"
     PAST_DUE = "past_due"

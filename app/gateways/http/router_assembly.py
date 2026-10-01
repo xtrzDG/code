@@ -69,6 +69,7 @@ def build_application_routers(app_container: AppContainer) -> list[APIRouter]:
             ),
             invite_staff_operator=operators.invite_staff_operator(),
             remove_member_operator=operators.remove_member_operator(),
+            change_member_role_operator=operators.change_member_role_operator(),
             current_user=current_user,
         ),
         build_compliance_router(
@@ -199,6 +200,7 @@ def build_application_routers(app_container: AppContainer) -> list[APIRouter]:
             change_plan_operator=operators.change_plan_operator(),
             cancel_subscription_operator=operators.cancel_subscription_operator(),
             start_checkout_operator=operators.start_checkout_operator(),
+            subscribe_operator=operators.subscribe_operator(),
             payment_webhook_operator=operators.process_payment_webhook_operator(),
             current_user=current_user,
         ),

@@ -112,7 +112,9 @@ API запускается с `--proxy-headers`; адреса доверенны
 кодов входа, Meta, Telegram, ElevenLabs, Flitt, Langfuse, Sentry — ненужные оставьте
 пустыми. Воркер берёт значения у API, `ENCRYPTION_KEY` генерируется один раз (не
 меняйте его). После первого деплоя укажите `APP_BASE_URL` (публичный адрес API,
-например `https://workshop-api.onrender.com`) и `BACKEND_URL` кабинета (внутренний
+например `https://workshop-api.onrender.com`), `CORS_ALLOWED_ORIGINS` API (публичный
+адрес кабинета, например `https://workshop-cabinet.onrender.com`: без него страница
+оплаты не вернёт плательщика в кабинет) и `BACKEND_URL` кабинета (внутренний
 адрес API из Render: `http://<хост>:8000`, или публичный). Адреса вебхуков для
 внешних кабинетов — в разделе «Окружение».
 
@@ -195,7 +197,7 @@ DOM (стили сайта и виджета не смешиваются), яз�
 | `APP_BASE_URL` | нельзя опубликовать голосовую версию, подключить Telegram, принять оплату |
 | `DATABASE_URL` | хранение в памяти |
 | `ENCRYPTION_KEY` | временный ключ: токены каналов не переживут перезапуск |
-| `CORS_ALLOWED_ORIGINS` | CORS выключен (виджет сайта разрешает любой источник сам) |
+| `CORS_ALLOWED_ORIGINS` | CORS выключен (виджет сайта разрешает любой источник сам), и оплата не возвращает плательщика в кабинет: укажите адрес кабинета (`http://localhost:3000` локально; в `docker-compose.yml` он задан) |
 | `LLM_PROVIDER`, `LLM_MODEL_ID`, `OPENAI_API_KEY`, `OPENAI_PROJECT_ID` | ответы модели — ошибка 502 при первом вызове |
 | `PLATFORM_ADMIN_EMAILS`, `PLATFORM_ADMIN_PHONE_NUMBERS` | нет админов платформы |
 | `ELEVENLABS_API_KEY`, `ELEVENLABS_WEBHOOK_SECRET`, `ELEVENLABS_API_BASE_URL` | голосовой агент не создаётся (502 при публикации версии с голосом) |

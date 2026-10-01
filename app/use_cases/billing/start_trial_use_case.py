@@ -1,12 +1,16 @@
 from typed_time_provider import Microseconds, WallClock
 
 from app.contracts.registries import PlanRegistryContract
-from app.contracts.repositories import BusinessRepoContract, SubscriptionRepoContract
+from app.contracts.repositories import (
+    BusinessRepoContract,
+    InvoiceRepoContract,
+    SubscriptionRepoContract,
+)
 from app.contracts.use_case_contract import UseCaseContract
-from app.schemas.constants.billing import PlanKey, SubscriptionStatus
+from app.schemas.constants.billing import InvoiceStatus, PlanKey, SubscriptionStatus
 from app.schemas.constants.businesses import ServiceMode
 from app.schemas.constants.users import BusinessMemberRole
-from app.schemas.domain.billing import SubscriptionDocument
+from app.schemas.domain.billing import InvoiceDocument, SubscriptionDocument
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.dto.access import BusinessAccessRequest
 from app.schemas.dto.billing import Money, PlanDefinition
@@ -19,7 +23,14 @@ from app.schemas.exceptions.application_errors import (
     ConflictError,
     ValidationFailedError,
 )
+from app.schemas.typings.billing.prefixed_id import SubscriptionId
 from app.schemas.typings.localization.constrained_strings import CurrencyCode
+from app.use_cases.billing.billing_records import (
+    find_current_subscription,
+    is_trial_available,
+    list_open_invoices,
+    list_subscription_invoices,
+)
 from app.use_cases.billing.subscription_pricing import (
     price_subscription,
     select_subscription_currency,
@@ -35,6 +46,9 @@ class StartTrialUseCase(UseCaseContract[StartTrialCommand, BillingOverview]):
     business currency when the price book has it (GEL in Georgia), otherwise
     in EUR; the trial itself is free, nothing is invoiced yet. The chosen
     plan becomes the business plan and the assistant serves in full.
+
+    A subscription chosen without a trial and never paid (INCOMPLETE)
+    becomes the trial: its unpaid bills are voided.
     """
 
     def __init__(
@@ -44,6 +58,7 @@ class StartTrialUseCase(UseCaseContract[StartTrialCommand, BillingOverview]):
             BusinessDocument,
         ],
         subscription_repo: SubscriptionRepoContract,
+        invoice_repo: InvoiceRepoContract,
         business_repo: BusinessRepoContract,
         plan_registry: PlanRegistryContract,
         assemble_billing_overview: UseCaseContract[
@@ -57,6 +72,7 @@ class StartTrialUseCase(UseCaseContract[StartTrialCommand, BillingOverview]):
             BusinessDocument,
         ] = authorize_business_access
         self._subscription_repo: SubscriptionRepoContract = subscription_repo
+        self._invoice_repo: InvoiceRepoContract = invoice_repo
         self._business_repo: BusinessRepoContract = business_repo
         self._plan_registry: PlanRegistryContract = plan_registry
         self._assemble_billing_overview: UseCaseContract[
@@ -73,7 +89,9 @@ class StartTrialUseCase(UseCaseContract[StartTrialCommand, BillingOverview]):
                 required_role=BusinessMemberRole.OWNER,
             )
         )
-        if self._subscription_repo.list_by_business(business.id) != []:
+        if not is_trial_available(
+            self._subscription_repo.list_by_business(business.id)
+        ):
             raise ConflictError("The free trial of this business was already used.")
 
         plan_key: PlanKey = input_data.request.plan_key or business.plan_key
@@ -98,21 +116,28 @@ class StartTrialUseCase(UseCaseContract[StartTrialCommand, BillingOverview]):
             int(plan.trial_days),
             business.timezone,
         )
-        self._subscription_repo.save(
-            SubscriptionDocument(
-                business_id=business.id,
-                plan_key=plan_key,
-                billing_period=input_data.request.billing_period,
-                price_minor=price.amount_minor,
-                currency_code=price.currency_code,
-                status=SubscriptionStatus.TRIALING,
-                trial_ends_at=trial_ends_at,
-                period_start=now,
-                period_end=trial_ends_at,
-                created_at=now,
-                updated_at=now,
-            )
+        unpaid: SubscriptionDocument | None = find_current_subscription(
+            self._subscription_repo,
+            business.id,
         )
+        if unpaid is not None:
+            self._void_unpaid_invoices(unpaid, now)
+
+        subscription = SubscriptionDocument(
+            id=SubscriptionId() if unpaid is None else unpaid.id,
+            business_id=business.id,
+            plan_key=plan_key,
+            billing_period=input_data.request.billing_period,
+            price_minor=price.amount_minor,
+            currency_code=price.currency_code,
+            status=SubscriptionStatus.TRIALING,
+            trial_ends_at=trial_ends_at,
+            period_start=now,
+            period_end=trial_ends_at,
+            created_at=now if unpaid is None else unpaid.created_at,
+            updated_at=now,
+        )
+        self._subscription_repo.save(subscription)
         business.plan_key = plan_key
         business.service_mode = ServiceMode.FULL
         business.updated_at = now
@@ -123,3 +148,16 @@ class StartTrialUseCase(UseCaseContract[StartTrialCommand, BillingOverview]):
                 display_language=input_data.display_language,
             )
         )
+
+    def _void_unpaid_invoices(
+        self,
+        subscription: SubscriptionDocument,
+        now: Microseconds,
+    ) -> None:
+        open_invoices: list[InvoiceDocument] = list_open_invoices(
+            list_subscription_invoices(self._invoice_repo, subscription)
+        )
+        for invoice in open_invoices:
+            invoice.status = InvoiceStatus.VOID
+            invoice.updated_at = now
+            self._invoice_repo.save(invoice)

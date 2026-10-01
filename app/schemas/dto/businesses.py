@@ -183,16 +183,20 @@ class UpdateBusinessSettingsCommand(ImmutableDTO):
 
 class InviteStaffRequest(ImmutableDTO):
     """
-    HTTP body of a staff invitation by phone number (any country) or e-mail.
+    HTTP body of a team invitation by phone number (any country) or e-mail.
 
     Exactly one of `phone_number` and `email` is set. National phone formats
     are read in `country_hint`, or in the business country when it is missing.
+    `role` is staff unless an owner adds another owner.
+
+    Example: {"email": "chef@example.com", "role": "owner"}.
     """
 
     phone_number: RawPhoneNumberInput | None = None
     email: RawEmailAddressInput | None = None
     country_hint: CountryCode | None = None
     display_name: UserDisplayName | None = None
+    role: BusinessMemberRole = BusinessMemberRole.STAFF
 
 
 class InviteStaffCommand(ImmutableDTO):
@@ -201,6 +205,26 @@ class InviteStaffCommand(ImmutableDTO):
     user_id: UserId
     business_id: BusinessId
     invitation: InviteStaffRequest
+    client_ip_address: ClientIpAddress | None = None
+
+
+class MemberRoleChange(ImmutableDTO):
+    """
+    HTTP body of a role change of a team member.
+
+    Example: {"role": "owner"}.
+    """
+
+    role: BusinessMemberRole
+
+
+class ChangeMemberRoleCommand(ImmutableDTO):
+    """Owner makes a member an owner or staff; the last owner stays owner."""
+
+    user_id: UserId
+    business_id: BusinessId
+    member_user_id: UserId
+    change: MemberRoleChange
     client_ip_address: ClientIpAddress | None = None
 
 

@@ -113,6 +113,9 @@ class OperatorsContainer(containers.DeclarativeContainer):
     remove_member_operator = pipeline_operator(
         pipelines.remove_member_pipeline, storage_scope
     )
+    change_member_role_operator = pipeline_operator(
+        pipelines.change_member_role_pipeline, storage_scope
+    )
 
     # --- Compliance.
     get_dpa_status_operator = pipeline_operator(
@@ -328,6 +331,7 @@ class OperatorsContainer(containers.DeclarativeContainer):
     start_checkout_operator = pipeline_operator(
         pipelines.start_checkout_pipeline, storage_scope
     )
+    subscribe_operator = pipeline_operator(pipelines.subscribe_pipeline, storage_scope)
     process_payment_webhook_operator = pipeline_operator(
         pipelines.process_payment_webhook_pipeline, storage_scope
     )

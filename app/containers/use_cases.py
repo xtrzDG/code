@@ -57,6 +57,8 @@ from app.schemas.dto.billing_cabinet import (
     CheckoutSessionView,
     StartCheckoutCommand,
     StartTrialCommand,
+    SubscribeCommand,
+    SubscriptionOpening,
 )
 from app.schemas.dto.billing_ledger import (
     ClientCostQuery,
@@ -78,6 +80,7 @@ from app.schemas.dto.businesses import (
     BusinessQuery,
     BusinessView,
     CreateBusinessCommand,
+    ChangeMemberRoleCommand,
     InviteStaffCommand,
     RemoveMemberCommand,
     UpdateBusinessSettingsCommand,
@@ -339,6 +342,9 @@ from app.use_cases.billing.invoice_usage_overage_use_case import (
     InvoiceUsageOverageUseCase,
 )
 from app.use_cases.billing.issue_due_invoices_use_case import IssueDueInvoicesUseCase
+from app.use_cases.billing.open_subscription_use_case import (
+    OpenSubscriptionUseCase,
+)
 from app.use_cases.billing.process_payment_webhook_use_case import (
     ProcessPaymentWebhookUseCase,
 )
@@ -360,6 +366,9 @@ from app.use_cases.bookings.update_booking_status_use_case import (
 )
 from app.use_cases.businesses.create_business_use_case import CreateBusinessUseCase
 from app.use_cases.businesses.get_business_use_case import GetBusinessUseCase
+from app.use_cases.businesses.change_member_role_use_case import (
+    ChangeMemberRoleUseCase,
+)
 from app.use_cases.businesses.invite_staff_use_case import InviteStaffUseCase
 from app.use_cases.businesses.list_my_businesses_use_case import ListMyBusinessesUseCase
 from app.use_cases.businesses.remove_member_use_case import RemoveMemberUseCase
@@ -717,6 +726,17 @@ class UseCasesContainer(containers.DeclarativeContainer):
         business_repo=repositories.business_repo,
         user_repo=repositories.user_repo,
         phone_number_parser=utilities.phone_number_parser,
+        audit_log_repo=repositories.audit_log_repo,
+        business_view_transformer=transformers.business_view_transformer,
+        wall_clock=time_provider.microsecond_wall_clock,
+    )
+    change_member_role_use_case: Factory[
+        UseCaseContract[ChangeMemberRoleCommand, BusinessView]
+    ] = Factory(
+        ChangeMemberRoleUseCase,
+        authorize_business_access=authorize_business_access_use_case,
+        business_repo=repositories.business_repo,
+        user_repo=repositories.user_repo,
         audit_log_repo=repositories.audit_log_repo,
         business_view_transformer=transformers.business_view_transformer,
         wall_clock=time_provider.microsecond_wall_clock,
@@ -1806,6 +1826,7 @@ class UseCasesContainer(containers.DeclarativeContainer):
         StartTrialUseCase,
         authorize_business_access=authorize_business_access_use_case,
         subscription_repo=repositories.subscription_repo,
+        invoice_repo=repositories.invoice_repo,
         business_repo=repositories.business_repo,
         plan_registry=registries.plan_registry,
         assemble_billing_overview=assemble_billing_overview_use_case,
@@ -1846,6 +1867,18 @@ class UseCasesContainer(containers.DeclarativeContainer):
         payment_order_repo=repositories.payment_order_repo,
         issue_due_invoices=issue_due_invoices_use_case,
         payment_gateway=adapters.payment_gateway,
+        app_settings=config.app_settings,
+        wall_clock=time_provider.microsecond_wall_clock,
+    )
+    open_subscription_use_case: Factory[
+        UseCaseContract[SubscribeCommand, SubscriptionOpening]
+    ] = Factory(
+        OpenSubscriptionUseCase,
+        authorize_business_access=authorize_business_access_use_case,
+        subscription_repo=repositories.subscription_repo,
+        invoice_repo=repositories.invoice_repo,
+        business_repo=repositories.business_repo,
+        plan_registry=registries.plan_registry,
         app_settings=config.app_settings,
         wall_clock=time_provider.microsecond_wall_clock,
     )

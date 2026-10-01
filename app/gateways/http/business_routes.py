@@ -16,10 +16,12 @@ from app.schemas.dto.businesses import (
     BusinessQuery,
     BusinessSettingsChanges,
     BusinessView,
+    ChangeMemberRoleCommand,
     CreateBusinessCommand,
     CreateBusinessRequest,
     InviteStaffCommand,
     InviteStaffRequest,
+    MemberRoleChange,
     RemoveMemberCommand,
     UpdateBusinessSettingsCommand,
 )
@@ -29,6 +31,7 @@ from app.schemas.typings.users.prefixed_id import UserId
 read_create_business_body = build_json_body_dependency(CreateBusinessRequest)
 read_business_settings_body = build_json_body_dependency(BusinessSettingsChanges)
 read_invite_staff_body = build_json_body_dependency(InviteStaffRequest)
+read_member_role_body = build_json_body_dependency(MemberRoleChange)
 
 
 def build_business_router(
@@ -41,6 +44,10 @@ def build_business_router(
     ],
     invite_staff_operator: OperatorContract[InviteStaffCommand, BusinessView],
     remove_member_operator: OperatorContract[RemoveMemberCommand, BusinessView],
+    change_member_role_operator: OperatorContract[
+        ChangeMemberRoleCommand,
+        BusinessView,
+    ],
     current_user: CurrentUserDependency,
 ) -> APIRouter:
     """
@@ -49,8 +56,13 @@ def build_business_router(
         GET    /v1/businesses                                  my businesses
         GET    /v1/businesses/{business_id}                    one business
         PATCH  /v1/businesses/{business_id}                    owner: settings
-        POST   /v1/businesses/{business_id}/members            owner: invite staff
+        POST   /v1/businesses/{business_id}/members            owner: invite a
+                                                               member (staff or
+                                                               owner)
+        PATCH  /v1/businesses/{business_id}/members/{user_id}  owner: change role
         DELETE /v1/businesses/{business_id}/members/{user_id}  owner: remove member
+
+    The last owner of a business can be neither removed nor made staff (409).
     """
 
     router = APIRouter(tags=["businesses"])
@@ -121,6 +133,27 @@ def build_business_router(
                 user_id=user_id,
                 business_id=parse_path_identifier(business_id, BusinessId, "Business"),
                 invitation=body,
+                client_ip_address=read_client_ip_address(request),
+            )
+        )
+
+    @router.patch(
+        "/v1/businesses/{business_id}/members/{user_id}",
+        openapi_extra=describe_json_body(MemberRoleChange),
+    )
+    def change_member_role(
+        request: Request,
+        business_id: str,
+        user_id: str,
+        current_user_id: Annotated[UserId, Depends(current_user)],
+        body: Annotated[MemberRoleChange, Depends(read_member_role_body)],
+    ) -> BusinessView:
+        return change_member_role_operator.operate(
+            ChangeMemberRoleCommand(
+                user_id=current_user_id,
+                business_id=parse_path_identifier(business_id, BusinessId, "Business"),
+                member_user_id=parse_path_identifier(user_id, UserId, "Member"),
+                change=body,
                 client_ip_address=read_client_ip_address(request),
             )
         )

@@ -35,6 +35,7 @@ from app.gateways.http.billing_routes import build_billing_router
 from app.gateways.http.error_responses import install_error_handlers
 from app.gateways.http.user_authentication import build_current_user_dependency
 from app.operators.pipeline_operator import PipelineOperator
+from app.orchestrators.billing.subscribe_orchestrator import SubscribeOrchestrator
 from app.orchestrators.use_case_orchestrator import UseCaseOrchestrator
 from app.pipelines.orchestrator_pipeline import OrchestratorPipeline
 from app.registries.billing.exchange_rate_registry import ExchangeRateRegistry
@@ -160,6 +161,9 @@ from app.use_cases.billing.invoice_usage_overage_use_case import (
 )
 from app.use_cases.billing.issue_due_invoices_use_case import (
     IssueDueInvoicesUseCase,
+)
+from app.use_cases.billing.open_subscription_use_case import (
+    OpenSubscriptionUseCase,
 )
 from app.use_cases.billing.process_payment_webhook_use_case import (
     ProcessPaymentWebhookUseCase,
@@ -528,6 +532,7 @@ class BillingTestbed:
         self.start_trial = StartTrialUseCase(
             authorize_business_access=authorize,
             subscription_repo=self.subscription_repo,
+            invoice_repo=self.invoice_repo,
             business_repo=self.business_repo,
             plan_registry=self.plan_registry,
             assemble_billing_overview=self.assemble_overview,
@@ -562,6 +567,20 @@ class BillingTestbed:
             payment_gateway=self.payment_gateway,
             app_settings=self.settings,
             wall_clock=wall_clock,
+        )
+        self.open_subscription = OpenSubscriptionUseCase(
+            authorize_business_access=authorize,
+            subscription_repo=self.subscription_repo,
+            invoice_repo=self.invoice_repo,
+            business_repo=self.business_repo,
+            plan_registry=self.plan_registry,
+            app_settings=self.settings,
+            wall_clock=wall_clock,
+        )
+        self.subscribe = SubscribeOrchestrator(
+            open_subscription=self.open_subscription,
+            change_plan=self.change_plan,
+            start_checkout=self.start_checkout,
         )
         self.process_webhook = ProcessPaymentWebhookUseCase(
             payment_gateway=self.payment_gateway,
@@ -817,6 +836,9 @@ class BillingTestbed:
                 change_plan_operator=build_operator(self.change_plan),
                 cancel_subscription_operator=build_operator(self.cancel_subscription),
                 start_checkout_operator=build_operator(self.start_checkout),
+                subscribe_operator=PipelineOperator(
+                    OrchestratorPipeline(self.subscribe)
+                ),
                 payment_webhook_operator=build_operator(self.process_webhook),
                 current_user=current_user,
             )

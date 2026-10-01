@@ -178,6 +178,9 @@ class PipelinesContainer(containers.DeclarativeContainer):
     remove_member_pipeline = orchestrator_pipeline(
         orchestrators.remove_member_orchestrator
     )
+    change_member_role_pipeline = orchestrator_pipeline(
+        orchestrators.change_member_role_orchestrator
+    )
 
     # --- Compliance.
     get_dpa_status_pipeline = orchestrator_pipeline(
@@ -383,6 +386,7 @@ class PipelinesContainer(containers.DeclarativeContainer):
     start_checkout_pipeline = orchestrator_pipeline(
         orchestrators.start_checkout_orchestrator
     )
+    subscribe_pipeline = orchestrator_pipeline(orchestrators.subscribe_orchestrator)
     process_payment_webhook_pipeline = orchestrator_pipeline(
         orchestrators.process_payment_webhook_orchestrator
     )

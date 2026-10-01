@@ -90,10 +90,10 @@ class CheckPackageUsageUseCase(UseCaseContract[JobTick, JobReport]):
                 self._subscription_repo,
                 business.id,
             )
-            if (
-                subscription is None
-                or subscription.status is SubscriptionStatus.CANCELLED
-            ):
+            if subscription is None or subscription.status in {
+                SubscriptionStatus.CANCELLED,
+                SubscriptionStatus.INCOMPLETE,
+            }:
                 continue
 
             warnings_sent += self._check_business(business, subscription)

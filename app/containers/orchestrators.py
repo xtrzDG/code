@@ -22,6 +22,7 @@ from app.orchestrators.assistants.run_autotests_orchestrator import (
 from app.orchestrators.assistants.run_queued_autotests_orchestrator import (
     RunQueuedAutotestsOrchestrator,
 )
+from app.orchestrators.billing.subscribe_orchestrator import SubscribeOrchestrator
 from app.orchestrators.channels.post_call_webhook_orchestrator import (
     PostCallWebhookOrchestrator,
 )
@@ -49,6 +50,7 @@ from app.schemas.dto.assistants import (
     AutotestScenarioRun,
     RunAutotestsCommand,
 )
+from app.schemas.dto.billing_cabinet import CheckoutSessionView, SubscribeCommand
 from app.schemas.dto.catalog import (
     CallForwardingInstructions,
     CallForwardingInstructionsRequest,
@@ -185,6 +187,16 @@ class OrchestratorsContainer(containers.DeclarativeContainer):
         purge_expired_recordings=use_cases.purge_expired_recordings_use_case,
     )
 
+    # --- Subscribing with payment now: open, switch plan, checkout.
+    subscribe_orchestrator: Factory[
+        OrchestratorContract[SubscribeCommand, CheckoutSessionView]
+    ] = Factory(
+        SubscribeOrchestrator,
+        open_subscription=use_cases.open_subscription_use_case,
+        change_plan=use_cases.change_plan_use_case,
+        start_checkout=use_cases.start_checkout_use_case,
+    )
+
     # --- One use case per endpoint or job (typed through the use case).
 
     # --- Catalog.
@@ -236,6 +248,9 @@ class OrchestratorsContainer(containers.DeclarativeContainer):
     )
     invite_staff_orchestrator = use_case_orchestrator(use_cases.invite_staff_use_case)
     remove_member_orchestrator = use_case_orchestrator(use_cases.remove_member_use_case)
+    change_member_role_orchestrator = use_case_orchestrator(
+        use_cases.change_member_role_use_case
+    )
 
     # --- Compliance.
     get_dpa_status_orchestrator = use_case_orchestrator(

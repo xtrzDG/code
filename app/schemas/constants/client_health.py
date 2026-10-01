@@ -18,6 +18,7 @@ class ClientHealthIssue(StrEnum):
     """
 
     NO_SUBSCRIPTION = "no_subscription"
+    FIRST_PAYMENT_PENDING = "first_payment_pending"
     PAYMENT_PAST_DUE = "payment_past_due"
     SUBSCRIPTION_CANCELLED = "subscription_cancelled"
     LEADS_ONLY_MODE = "leads_only_mode"

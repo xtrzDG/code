@@ -145,6 +145,9 @@ from app.use_cases.authorize_business_access_use_case import (
 )
 from app.use_cases.businesses.create_business_use_case import CreateBusinessUseCase
 from app.use_cases.businesses.get_business_use_case import GetBusinessUseCase
+from app.use_cases.businesses.change_member_role_use_case import (
+    ChangeMemberRoleUseCase,
+)
 from app.use_cases.businesses.invite_staff_use_case import InviteStaffUseCase
 from app.use_cases.businesses.list_my_businesses_use_case import (
     ListMyBusinessesUseCase,
@@ -739,6 +742,14 @@ class AccountsTestbed:
             business_view_transformer=business_view_transformer,
             wall_clock=wall_clock,
         )
+        self.change_member_role = ChangeMemberRoleUseCase(
+            authorize_business_access=self.authorize_business_access,
+            business_repo=self.business_repo,
+            user_repo=self.user_repo,
+            audit_log_repo=self.audit_log_repo,
+            business_view_transformer=business_view_transformer,
+            wall_clock=wall_clock,
+        )
 
         collect_contact_records = CollectContactRecordsUseCase(
             contact_repo=self.contact_repo,
@@ -905,6 +916,9 @@ class AccountsTestbed:
                 ),
                 remove_member_operator=PipelineOperator(
                     OrchestratorPipeline(UseCaseOrchestrator(self.remove_member))
+                ),
+                change_member_role_operator=PipelineOperator(
+                    OrchestratorPipeline(UseCaseOrchestrator(self.change_member_role))
                 ),
                 current_user=current_user,
             )

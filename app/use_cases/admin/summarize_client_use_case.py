@@ -292,6 +292,8 @@ def find_health_issues(
 
     if subscription is None:
         issues.append(ClientHealthIssue.NO_SUBSCRIPTION)
+    elif subscription.status is SubscriptionStatus.INCOMPLETE:
+        issues.append(ClientHealthIssue.FIRST_PAYMENT_PENDING)
     elif subscription.status is SubscriptionStatus.PAST_DUE:
         issues.append(ClientHealthIssue.PAYMENT_PAST_DUE)
     elif subscription.status is SubscriptionStatus.CANCELLED:
