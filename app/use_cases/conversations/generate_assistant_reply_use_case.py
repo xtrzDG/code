@@ -47,6 +47,7 @@ from app.schemas.typings.conversations.strings import (
 )
 from app.schemas.typings.handoffs.prefixed_id import HandoffId
 from app.utilities.conversations.turn_context import (
+    EarlierMessage,
     build_rewrite_note,
     build_text_with_unanswered_messages,
     build_user_turn_text,
@@ -170,22 +171,29 @@ class GenerateAssistantReplyUseCase(UseCaseContract[PreparedTurn, GeneratedReply
         self,
         turn: PreparedTurn,
         stored_turns: list[LlmTurnDocument],
-    ) -> list[str]:
+    ) -> list[EarlierMessage]:
         """
-        Customer messages after the last model turn and before this one: the
-        ones the assistant stayed silent on (handoff, hourly limit).
+        Messages after the last model turn and before this one: the customer
+        messages the assistant stayed silent on (handoff, hourly limit) and
+        what staff wrote meanwhile, which the model never saw otherwise.
         """
 
         last_turn_at: int = int(stored_turns[-1].created_at) if stored_turns else -1
         return [
-            str(message.text)
+            EarlierMessage(
+                text=str(message.text),
+                is_from_staff=message.author is MessageAuthor.STAFF,
+            )
             for message in sorted(
                 self._message_repo.list_by_conversation(
                     turn.business.id, turn.conversation.id
                 ),
                 key=lambda message: int(message.created_at),
             )
-            if message.direction is MessageDirection.INBOUND
+            if (
+                message.direction is MessageDirection.INBOUND
+                or message.author is MessageAuthor.STAFF
+            )
             and last_turn_at < int(message.created_at) < int(turn.received_at)
         ]
 
@@ -339,6 +347,11 @@ class GenerateAssistantReplyUseCase(UseCaseContract[PreparedTurn, GeneratedReply
 
             if message.author is MessageAuthor.ASSISTANT:
                 customer_texts.append(str(message.text))
+
+            # Staff are the business speaking: the assistant may repeat their
+            # prices and terms.
+            if message.author is MessageAuthor.STAFF:
+                evidence.append(str(message.text))
 
             # Tool results of earlier replies and of voice-agent calls count.
             evidence.extend(

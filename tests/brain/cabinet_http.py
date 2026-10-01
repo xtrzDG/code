@@ -191,6 +191,8 @@ def build_cabinet_operators(
                         contact_repo=world.contact_repo,
                         message_repo=world.message_repo,
                         summary_transformer=summary_transformer,
+                        audit_log_repo=world.audit_log_repo,
+                        wall_clock=world.clock.wall_clock(),
                     )
                 )
             )

@@ -25,9 +25,13 @@ UPCOMING_DAY_COUNT: int = 7
 CONTEXT_HEADER: str = "[Context from the platform, not written by the customer]"
 CUSTOMER_HEADER: str = "[Customer message]"
 UNANSWERED_HEADER: str = (
-    "(Earlier messages of the customer, written while a colleague handled the "
-    "conversation and the assistant stayed silent:)"
+    "(Messages since your last reply, written while a colleague handled the "
+    "conversation or the assistant stayed silent. Lines marked Staff were "
+    "written by the business's staff and already reached the customer; stay "
+    "consistent with them:)"
 )
+CUSTOMER_LINE_LABEL: str = "Customer"
+STAFF_LINE_LABEL: str = "Staff"
 LATEST_MESSAGE_HEADER: str = "(The latest message:)"
 LEADS_ONLY_NOTE: str = (
     "Bookings are paused for this business: do not check availability or "
@@ -40,6 +44,14 @@ FIRST_REPLY_NOTE: str = (
     "not introduce yourself again."
 )
 AFTER_HOURS_NOTE: str = "The business is closed right now (outside opening hours)."
+
+
+@dataclass(frozen=True)
+class EarlierMessage:
+    """A message since the assistant's last reply (technical record)."""
+
+    text: str
+    is_from_staff: bool
 
 
 @dataclass(frozen=True)
@@ -115,19 +127,25 @@ def build_user_turn_text(context_line: str, customer_text: str) -> str:
 
 
 def build_text_with_unanswered_messages(
-    unanswered_texts: list[str],
+    earlier_messages: list[EarlierMessage],
     customer_text: str,
 ) -> str:
     """
-    The customer's message after what they wrote while the assistant stayed
-    silent (a colleague handled the conversation, or the hourly limit was
-    reached), so the model knows everything the customer said.
+    The customer's message after what was written while the assistant
+    stayed silent (a colleague handled the conversation, or the hourly limit
+    was reached), in time order: the customer's messages and the staff
+    replies, so the model knows everything said and does not contradict the
+    business's own staff.
     """
 
-    if not unanswered_texts:
+    if not earlier_messages:
         return customer_text
 
-    earlier: str = "\n".join(f"- {text}" for text in unanswered_texts)
+    earlier: str = "\n".join(
+        f"- {STAFF_LINE_LABEL if message.is_from_staff else CUSTOMER_LINE_LABEL}: "
+        f"{message.text}"
+        for message in earlier_messages
+    )
     return f"{UNANSWERED_HEADER}\n{earlier}\n{LATEST_MESSAGE_HEADER}\n{customer_text}"
 
 

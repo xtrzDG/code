@@ -2,14 +2,19 @@ from collections import defaultdict
 from datetime import date, timedelta
 from zoneinfo import ZoneInfo
 
+from typed_time_provider import Microseconds, WallClock
+
 from app.contracts.repositories import (
+    AuditLogRepoContract,
     ContactRepoContract,
     ConversationRepoContract,
     MessageRepoContract,
 )
 from app.contracts.transformer_contract import TransformerContract
 from app.contracts.use_case_contract import UseCaseContract
+from app.schemas.constants.compliance import AuditAction
 from app.schemas.domain.businesses import BusinessDocument
+from app.schemas.domain.compliance import AuditLogEntryDocument
 from app.schemas.domain.contacts import ContactDocument
 from app.schemas.domain.conversations import ConversationDocument, MessageDocument
 from app.schemas.dto.access import BusinessAccessRequest
@@ -20,6 +25,7 @@ from app.schemas.dto.conversation_feed import (
     ConversationViewSource,
 )
 from app.schemas.exceptions.application_errors import ValidationFailedError
+from app.schemas.typings.compliance.strings import AuditEntityName
 from app.schemas.typings.contacts.prefixed_id import ContactId
 from app.schemas.typings.conversations.prefixed_id import ConversationId
 from app.schemas.typings.platform.constrained_strings import PageCursor
@@ -30,6 +36,8 @@ from app.utilities.scheduling.zoned_time import (
     local_day_start_microseconds,
     parse_local_date,
 )
+
+CONVERSATION_ENTITY: AuditEntityName = AuditEntityName("conversation")
 
 
 class ListConversationsUseCase(
@@ -46,6 +54,10 @@ class ListConversationsUseCase(
     message in any script. Sandbox conversations (owner test chat,
     autotests) appear only on request. Rows carry counts and a preview of
     the last message, not the messages themselves.
+
+    The rows show customers' names, phones and messages, so every page is
+    audited as a view of "conversation" (the search text is not stored: it
+    may itself be personal data).
     """
 
     def __init__(
@@ -59,6 +71,8 @@ class ListConversationsUseCase(
         summary_transformer: TransformerContract[
             ConversationViewSource, ConversationSummaryView
         ],
+        audit_log_repo: AuditLogRepoContract,
+        wall_clock: WallClock[Microseconds],
     ) -> None:
         self._authorize_business_access: UseCaseContract[
             BusinessAccessRequest, BusinessDocument
@@ -69,6 +83,8 @@ class ListConversationsUseCase(
         self._summary_transformer: TransformerContract[
             ConversationViewSource, ConversationSummaryView
         ] = summary_transformer
+        self._audit_log_repo: AuditLogRepoContract = audit_log_repo
+        self._wall_clock: WallClock[Microseconds] = wall_clock
 
     def run(self, input_data: ConversationListQuery) -> ConversationPage:
         business: BusinessDocument = self._authorize_business_access.run(
@@ -120,6 +136,18 @@ class ListConversationsUseCase(
             input_data.page,
             sort_key=lambda conversation: int(conversation.last_message_at),
             item_id=lambda conversation: str(conversation.id),
+        )
+        now: Microseconds = self._wall_clock.now_unix()
+        self._audit_log_repo.append(
+            AuditLogEntryDocument(
+                business_id=business.id,
+                actor_id=input_data.user_id,
+                action=AuditAction.VIEW,
+                entity=CONVERSATION_ENTITY,
+                ip_address=input_data.client_ip_address,
+                created_at=now,
+                updated_at=now,
+            )
         )
         return ConversationPage(
             items=[

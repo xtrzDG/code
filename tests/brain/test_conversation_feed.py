@@ -407,3 +407,24 @@ def test_test_chat_errors() -> None:
         "extra field": 422,
         "stranger": 404,
     }
+
+
+def test_feed_and_its_search_are_audited_as_a_view_of_conversations() -> None:
+    world = build_world(scripted(say("Да, есть.")))
+    world.send("Здравствуйте, есть столик?", name="Нино")
+    client = cabinet(world)
+    base_url = f"/v1/businesses/{world.business.id}/conversations"
+
+    plain = client.get(base_url, headers=bearer("owner"))
+    searched = client.get(f"{base_url}?search=555123456", headers=bearer("staff"))
+
+    assert plain.status_code == 200 and searched.status_code == 200
+    assert searched.json()["items"][0]["contact_phone_number"] == "+995555123456"
+    audit = world.audit_log_repo.list_by_business(world.business.id)
+    assert [
+        (entry.action, entry.entity, entry.entity_id, entry.actor_id, entry.ip_address)
+        for entry in audit
+    ] == [
+        (AuditAction.VIEW, "conversation", None, world.owner_id, "testclient"),
+        (AuditAction.VIEW, "conversation", None, world.staff_id, "testclient"),
+    ]

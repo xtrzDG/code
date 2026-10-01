@@ -91,6 +91,7 @@ def build_conversation_router(
 
     @router.get("/v1/businesses/{business_id}/conversations")
     def list_conversations(
+        request: Request,
         business_id: str,
         user_id: Annotated[UserId, Depends(current_user)],
         channel: str | None = None,
@@ -113,6 +114,7 @@ def build_conversation_router(
                 search=parse_search(search),
                 include_sandbox=parse_include_sandbox(include_sandbox),
                 page=parse_page_request(limit, cursor),
+                client_ip_address=read_client_ip_address(request),
             )
         )
 

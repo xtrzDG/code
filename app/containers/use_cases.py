@@ -1466,6 +1466,8 @@ class UseCasesContainer(containers.DeclarativeContainer):
         contact_repo=repositories.contact_repo,
         message_repo=repositories.message_repo,
         summary_transformer=transformers.conversation_summary_transformer,
+        audit_log_repo=repositories.audit_log_repo,
+        wall_clock=time_provider.microsecond_wall_clock,
     )
     get_conversation_use_case: Factory[
         UseCaseContract[ConversationQuery, ConversationDetailView]

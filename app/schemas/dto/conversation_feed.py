@@ -89,6 +89,7 @@ class ConversationListQuery(ImmutableDTO):
     search: ConversationSearchText | None = None
     include_sandbox: IncludeSandboxConversations = False
     page: PageRequest = PageRequest()
+    client_ip_address: ClientIpAddress | None = None
 
 
 class ConversationQuery(ImmutableDTO):
