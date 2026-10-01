@@ -17,7 +17,11 @@ from app.schemas.typings.assistants.constrained_strings import LlmModelId
 from app.schemas.typings.businesses.constrained_integers import (
     RecordingRetentionDays,
 )
-from app.schemas.typings.channels.constrained_strings import PublicBaseUrl
+from app.schemas.typings.channels.constrained_strings import (
+    MetaObjectId,
+    PublicBaseUrl,
+    WhatsAppTemplateName,
+)
 from app.schemas.typings.compliance.constrained_strings import DpaDocumentVersion
 from app.schemas.typings.conversations.constrained_integers import (
     ContactMessageLimit,
@@ -51,6 +55,9 @@ DEFAULT_MODEL_IDS: dict[str, str] = {
 DEFAULT_OPENAI_BASE_URL: str = "https://eu.api.openai.com/v1"
 # Langfuse Cloud EU region (the concept keeps data in the EU).
 DEFAULT_LANGFUSE_HOST: str = "https://cloud.langfuse.com"
+# Global ElevenLabs API; set https://api.eu.residency.elevenlabs.io to keep
+# voice data in the EU (concept section 7).
+DEFAULT_ELEVENLABS_API_BASE_URL: str = "https://api.elevenlabs.io"
 # Comprehensively sanctioned jurisdictions for a US-person founder. Confirm the
 # list with a lawyer before launch; override with RESTRICTED_COUNTRY_CODES
 # (comma-separated, an empty value disables the restriction).
@@ -172,12 +179,29 @@ def assemble_app_settings(environment_variables: Mapping[str, str]) -> AppSettin
         ],
         elevenlabs_api_key=secret("ELEVENLABS_API_KEY"),
         elevenlabs_webhook_secret=secret("ELEVENLABS_WEBHOOK_SECRET"),
+        elevenlabs_api_base_url=PublicBaseUrl(
+            read_text(
+                environment_variables,
+                "ELEVENLABS_API_BASE_URL",
+                DEFAULT_ELEVENLABS_API_BASE_URL,
+            )
+        ),
         zadarma_api_key=secret("ZADARMA_API_KEY"),
         zadarma_api_secret=secret("ZADARMA_API_SECRET"),
         meta_app_id=identifier("META_APP_ID"),
         meta_app_secret=secret("META_APP_SECRET"),
         meta_verify_token=secret("META_VERIFY_TOKEN"),
         whatsapp_system_user_token=secret("WHATSAPP_SYSTEM_USER_TOKEN"),
+        whatsapp_notification_phone_number_id=optional_text(
+            environment_variables,
+            "WHATSAPP_NOTIFICATION_PHONE_NUMBER_ID",
+            MetaObjectId,
+        ),
+        whatsapp_notification_template_name=optional_text(
+            environment_variables,
+            "WHATSAPP_NOTIFICATION_TEMPLATE",
+            WhatsAppTemplateName,
+        ),
         telegram_platform_bot_token=secret("TELEGRAM_PLATFORM_BOT_TOKEN"),
         google_oauth_client_id=identifier("GOOGLE_OAUTH_CLIENT_ID"),
         google_oauth_client_secret=secret("GOOGLE_OAUTH_CLIENT_SECRET"),
