@@ -7,10 +7,11 @@ from app.contracts.repositories import (
     ConversationRepoContract,
     MessageRepoContract,
 )
-from app.schemas.constants.channels import ChannelStatus, MessageDirection
+from app.schemas.constants.channels import MessageDirection
 from app.schemas.domain.channels import ChannelDocument
 from app.schemas.domain.conversations import ConversationDocument
 from app.schemas.dto.conversation_feed import StaffReplyView
+from app.utilities.channels.channel_health import is_channel_active
 from app.utilities.channels.delivery_targets import find_business_channel
 from app.utilities.conversations.staff_replies import (
     CUSTOMER_SERVICE_WINDOW_MICROSECONDS,
@@ -27,8 +28,10 @@ def assess_conversation_reply(
 ) -> StaffReplyView:
     """
     The staff reply state of a conversation: the business's channel must be
-    connected, and for windowed channels the customer's last message in
-    that channel (in this or a later conversation) sets the window.
+    connected (a channel in ERROR still gets every delivery attempt, and a
+    working one clears the error), and for windowed channels the customer's
+    last message in that channel (in this or a later conversation) sets the
+    window.
     """
 
     channel: ChannelDocument | None = find_business_channel(
@@ -36,7 +39,7 @@ def assess_conversation_reply(
     )
     return assess_staff_reply(
         conversation,
-        channel is not None and channel.status is ChannelStatus.CONNECTED,
+        channel is not None and is_channel_active(channel),
         last_customer_message_at(conversation, conversation_repo, message_repo, now),
         now,
     )

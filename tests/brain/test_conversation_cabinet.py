@@ -379,6 +379,25 @@ class TestStaffReplies:
         assert "call the customer back" in responses[0].json()["message"]
         assert cabinet.storage.channel_sender.sent == []
 
+    def test_a_channel_in_error_still_takes_staff_replies(self) -> None:
+        world = build_world(scripted(say("Hello!")))
+        reply = world.send(
+            "Hi", channel=ChannelKind.TELEGRAM, user_id="tg-9", phone=None
+        )
+        cabinet = Cabinet(world)
+        # The platform refused the token once; the next delivery may heal it.
+        cabinet.connect(ChannelKind.TELEGRAM, ChannelStatus.ERROR)
+
+        state = cabinet.card(reply.conversation_id)["reply"]
+        sent = cabinet.reply(reply.conversation_id, "We are on it.")
+
+        assert state["is_available"] is True
+        assert state["delivery"] == "sent"
+        assert sent.status_code == 201, sent.text
+        assert cabinet.storage.channel_sender.sent == [
+            (ChannelKind.TELEGRAM, "tg-9", "We are on it.")
+        ]
+
     def test_failed_delivery_stores_nothing_and_bad_input_is_refused(self) -> None:
         world = build_world(scripted(say("Hello!")))
         reply = world.send(
