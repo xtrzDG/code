@@ -22,15 +22,31 @@ const CONTROL =
 
 export type InputProps = ComponentPropsWithRef<"input">;
 
-/** A text input; it fills its container unless `className` sets a width ("w-32"). */
-export function Input({ className, type = "text", ...props }: InputProps) {
-  return <input type={type} className={mergeClassOverrides(`${CONTROL} w-full h-10 px-3 text-sm`, className)} {...props} />;
+/** Free text may be in any script: the browser sets its direction from what is typed. */
+const FREE_TEXT_TYPES = new Set(["text", "search"]);
+
+/**
+ * A text input; it fills its container unless `className` sets a width ("w-32").
+ * Free text (names, addresses, answers) follows its own direction, so Arabic
+ * or Hebrew typed in an English cabinet reads right to left.
+ */
+export function Input({ className, type = "text", dir, ...props }: InputProps) {
+  return (
+    <input
+      type={type}
+      dir={dir ?? (FREE_TEXT_TYPES.has(type) ? "auto" : undefined)}
+      className={mergeClassOverrides(`${CONTROL} w-full h-10 px-3 text-sm`, className)}
+      {...props}
+    />
+  );
 }
 
 export type TextareaProps = ComponentPropsWithRef<"textarea">;
 
-export function Textarea({ className, rows = 3, ...props }: TextareaProps) {
-  return <textarea rows={rows} className={mergeClassOverrides(`${CONTROL} w-full px-3 py-2 text-sm`, className)} {...props} />;
+export function Textarea({ className, rows = 3, dir = "auto", ...props }: TextareaProps) {
+  return (
+    <textarea rows={rows} dir={dir} className={mergeClassOverrides(`${CONTROL} w-full px-3 py-2 text-sm`, className)} {...props} />
+  );
 }
 
 export type SelectProps = ComponentPropsWithRef<"select">;

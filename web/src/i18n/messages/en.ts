@@ -137,6 +137,7 @@ export const en = {
     countryDefaultsHint: "Picked from the country. You can change the languages now and the rest later in settings.",
     currency: "Currency",
     timezone: "Time zone",
+    timezoneHint: "Opening hours, bookings and reminders use this time zone. You can change it later in settings.",
     languages: "Languages the assistant speaks",
     languagesHint: "Customers are answered in their language if it is on this list.",
     languagesOnRequest: "More languages",

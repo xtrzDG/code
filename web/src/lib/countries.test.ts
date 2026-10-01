@@ -16,6 +16,7 @@ import {
   isCountryAvailable,
   looksLikeEmail,
   looksLikePhoneNumber,
+  pickInitialTimezone,
   toAsciiDigits,
 } from "./countries";
 
@@ -169,5 +170,18 @@ describe("phone input in any script", () => {
   it("still rejects text and too few digits", () => {
     expect(looksLikePhoneNumber("call me")).toBe(false);
     expect(looksLikePhoneNumber("١٢٣")).toBe(false);
+  });
+});
+
+describe("pickInitialTimezone", () => {
+  const RUSSIA = ["Europe/Kaliningrad", "Europe/Moscow", "Asia/Yekaterinburg", "Asia/Vladivostok"];
+
+  it("takes the browser zone when the country has it", () => {
+    expect(pickInitialTimezone(RUSSIA, "Europe/Moscow", "Asia/Vladivostok")).toBe("Asia/Vladivostok");
+  });
+
+  it("keeps the country default for a browser elsewhere", () => {
+    expect(pickInitialTimezone(RUSSIA, "Europe/Moscow", "Asia/Tbilisi")).toBe("Europe/Moscow");
+    expect(pickInitialTimezone(RUSSIA, "Europe/Moscow", null)).toBe("Europe/Moscow");
   });
 });

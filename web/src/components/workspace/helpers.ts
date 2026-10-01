@@ -119,9 +119,16 @@ function zoneOffsetMs(instantMs: number, timeZone: string): number {
   return asUtc - Math.floor(instantMs / 1000) * 1000;
 }
 
+const DAY_MS = 24 * 60 * 60 * 1000;
+
 /**
  * The first moment of a local calendar day ("2026-10-01") in a time zone, as
  * UNIX microseconds (the API's timestamps); null for text that is not a day.
+ *
+ * Clock changes happen at most once around a midnight, so the offsets a day
+ * before and a day after bracket it. Local midnight is the earliest instant
+ * that one of them maps to it exactly; where clocks jump over midnight
+ * (Santiago, Havana) the day starts at the jump.
  */
 export function zonedDayStartUs(day: string, timeZone: string): number | null {
   const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(day);
@@ -132,7 +139,11 @@ export function zonedDayStartUs(day: string, timeZone: string): number | null {
   if (Number.isNaN(midnightUtc)) {
     return null;
   }
-  const firstGuess = midnightUtc - zoneOffsetMs(midnightUtc, timeZone);
-  const instant = midnightUtc - zoneOffsetMs(firstGuess, timeZone);
+  const offsetBefore = zoneOffsetMs(midnightUtc - DAY_MS, timeZone);
+  const offsetAfter = zoneOffsetMs(midnightUtc + DAY_MS, timeZone);
+  const exact = [offsetBefore, offsetAfter]
+    .map((offset) => midnightUtc - offset)
+    .filter((instant) => midnightUtc - zoneOffsetMs(instant, timeZone) === instant);
+  const instant = exact.length > 0 ? Math.min(...exact) : midnightUtc - offsetBefore;
   return instant * 1000;
 }

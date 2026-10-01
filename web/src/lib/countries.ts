@@ -111,6 +111,19 @@ export function guessCountryCode(
   return available[0]?.toUpperCase() ?? null;
 }
 
+/**
+ * The time zone a new business starts with: the browser's own zone when it
+ * is one of the country's zones (an owner in Vladivostok or Los Angeles),
+ * else the country's default.
+ */
+export function pickInitialTimezone(
+  countryZones: readonly string[],
+  defaultZone: string,
+  browserZone: string | null | undefined,
+): string {
+  return browserZone && countryZones.includes(browserZone) ? browserZone : defaultZone;
+}
+
 /** "+995 …" or "00995 …": the number carries its country code. */
 export function hasInternationalPrefix(rawPhoneNumber: string): boolean {
   const trimmed = rawPhoneNumber.trim();

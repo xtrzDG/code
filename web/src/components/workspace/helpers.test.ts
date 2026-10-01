@@ -81,6 +81,17 @@ describe("zonedDayStartUs", () => {
     expect(zonedDayStartUs("2026-07-01", "America/New_York")).toBe(Date.UTC(2026, 6, 1, 4) * 1000);
     expect(zonedDayStartUs("yesterday", "UTC")).toBeNull();
   });
+
+  it("starts the day at the clock jump where midnight does not exist", () => {
+    // Chile and Cuba move their clocks from 00:00 to 01:00.
+    expect(zonedDayStartUs("2026-09-06", "America/Santiago")).toBe(Date.UTC(2026, 8, 6, 4) * 1000);
+    expect(zonedDayStartUs("2026-03-08", "America/Havana")).toBe(Date.UTC(2026, 2, 8, 5) * 1000);
+  });
+
+  it("takes the midnight after the clocks went back", () => {
+    // Santiago goes from 24:00 back to 23:00: the day starts at the later offset.
+    expect(zonedDayStartUs("2026-04-05", "America/Santiago")).toBe(Date.UTC(2026, 3, 5, 4) * 1000);
+  });
 });
 
 describe("decodeHash", () => {

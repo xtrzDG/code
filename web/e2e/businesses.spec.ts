@@ -41,6 +41,24 @@ test("creates a business in another country with its languages", async ({ page, 
   await expect(page.getByRole("heading", { name: "Kuaför Güneş" })).toBeVisible();
 });
 
+test("a business in a country with several time zones starts in the one chosen", async ({ page, account }) => {
+  expect(account.token).toBeTruthy();
+  await page.goto("/businesses");
+  const dialog = page.getByRole("dialog", { name: en.businesses.createTitle });
+  await dialog.getByLabel(en.businesses.name).fill("Bar Teide");
+  await dialog.getByLabel(en.businesses.niche).selectOption("restaurant");
+  await dialog.getByLabel(en.businesses.country).selectOption("ES");
+
+  // The browser runs in Berlin, which is not a Spanish zone: Madrid first.
+  const zone = dialog.getByLabel(en.businesses.timezone);
+  await expect(zone).toHaveValue("Europe/Madrid");
+  await zone.selectOption("Atlantic/Canary");
+  await dialog.getByRole("button", { name: en.businesses.submit }).click();
+
+  await expect(dialog.getByText(en.businesses.createdTitle)).toBeVisible();
+  await expect(dialog.getByText(/Canary/)).toBeVisible();
+});
+
 test("shows a failed save above the open form and keeps the form", async ({ page, account, consoleErrors }) => {
   expect(account.token).toBeTruthy();
   consoleErrors.allow(/Failed to load resource: the server responded with a status of 503/);

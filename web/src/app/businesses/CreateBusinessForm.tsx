@@ -25,7 +25,7 @@ import {
 } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import type { MessageKey } from "@/i18n/translate";
-import { countryName, guessCountryCode, isCountryAvailable } from "@/lib/countries";
+import { countryName, guessCountryCode, isCountryAvailable, pickInitialTimezone } from "@/lib/countries";
 import { capitalizeFirst, languageName } from "@/lib/format";
 import { businessPath } from "@/lib/navigation";
 import { fieldErrors, messageKey } from "@/lib/validation";
@@ -80,6 +80,7 @@ export function CreateBusinessForm({
   const [city, setCity] = useState("");
   const [languagesByCountry, setLanguagesByCountry] = useState<Record<string, string[]>>({});
   const [defaultByCountry, setDefaultByCountry] = useState<Record<string, string>>({});
+  const [zoneByCountry, setZoneByCountry] = useState<Record<string, string>>({});
   const [errors, setErrors] = useState<Partial<Record<string, MessageKey>>>({});
   const [created, setCreated] = useState<BusinessView | null>(null);
 
@@ -103,9 +104,27 @@ export function CreateBusinessForm({
   const chosenDefault = countryCode ? defaultByCountry[countryCode] : undefined;
   const defaultLanguage = chosenDefault && languages.includes(chosenDefault) ? chosenDefault : languages[0];
   const niche = niches.data?.niches.find((item) => item.key === nicheKey);
+  const countryZones = countryDefaults?.timezones ?? [];
+  const timezone =
+    (countryCode ? zoneByCountry[countryCode] : undefined) ??
+    (countryDefaults
+      ? pickInitialTimezone(
+          countryZones.map((zone) => zone.name),
+          countryDefaults.default_timezone.name,
+          typeof Intl !== "undefined" ? Intl.DateTimeFormat().resolvedOptions().timeZone : null,
+        )
+      : undefined);
 
   const create = useApiMutation(
-    (body: { name: string; niche_key: NicheKey; country_code: string; city?: string; languages: string[]; default_language?: string }) =>
+    (body: {
+      name: string;
+      niche_key: NicheKey;
+      country_code: string;
+      city?: string;
+      timezone?: string;
+      languages: string[];
+      default_language?: string;
+    }) =>
       api.POST("/v1/businesses", { body }),
     { errorMessages: { access_denied: "businesses.errors.countryRestricted" } },
   );
@@ -138,6 +157,7 @@ export function CreateBusinessForm({
       niche_key: parsed.data.niche_key as NicheKey,
       country_code: parsed.data.country_code,
       ...(parsed.data.city ? { city: parsed.data.city } : {}),
+      ...(timezone ? { timezone } : {}),
       languages: parsed.data.languages,
       ...(defaultLanguage ? { default_language: defaultLanguage } : {}),
     });
@@ -245,11 +265,38 @@ export function CreateBusinessForm({
                   {countryDefaults.currency_display_name} ({countryDefaults.profile.currency_code})
                 </dd>
               </div>
-              <div>
-                <dt className="text-ink-subtle">{t("businesses.timezone")}</dt>
-                <dd className="mt-0.5 font-medium text-ink">{countryDefaults.default_timezone.display_name}</dd>
-              </div>
+              {countryZones.length > 1 ? null : (
+                <div>
+                  <dt className="text-ink-subtle">{t("businesses.timezone")}</dt>
+                  <dd className="mt-0.5 font-medium text-ink">{countryDefaults.default_timezone.display_name}</dd>
+                </div>
+              )}
             </dl>
+
+            {countryZones.length > 1 ? (
+              // A country spanning several zones: the owner picks theirs
+              // (opening hours, bookings and reminders are counted in it).
+              <Field label={t("businesses.timezone")} hint={t("businesses.timezoneHint")}>
+                {(control) => (
+                  <Select
+                    {...control}
+                    value={timezone}
+                    onChange={(event) => {
+                      const value = event.target.value;
+                      if (countryCode) {
+                        setZoneByCountry((current) => ({ ...current, [countryCode]: value }));
+                      }
+                    }}
+                  >
+                    {countryZones.map((zone) => (
+                      <option key={zone.name} value={zone.name}>
+                        {zone.display_name}
+                      </option>
+                    ))}
+                  </Select>
+                )}
+              </Field>
+            ) : null}
 
             <Fieldset
               legend={t("businesses.languages")}
