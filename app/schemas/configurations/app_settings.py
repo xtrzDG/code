@@ -29,6 +29,7 @@ from app.schemas.typings.platform.booleans import IsLlmContentTraced
 from app.schemas.typings.platform.constrained_integers import WorkerPollSeconds
 from app.schemas.typings.platform.strings import (
     DatabaseUrl,
+    LocalDirectoryPath,
     PlatformIdentifier,
     PlatformSecret,
 )
@@ -97,3 +98,4 @@ class AppSettings(ImmutableDTO):
     cors_allowed_origins: list[PublicBaseUrl]
     worker_poll_seconds: WorkerPollSeconds
     sentry_dsn: PlatformSecret | None = None
+    recordings_directory: LocalDirectoryPath = LocalDirectoryPath("var/recordings")

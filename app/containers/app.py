@@ -18,7 +18,22 @@ from app.containers.utilities import UtilitiesContainer
 
 
 class AppContainer(containers.DeclarativeContainer):
+    """
+    The composition root of the API and the worker.
+
+    Edges follow the role direction: operators -> pipelines -> orchestrators
+    -> use cases -> repositories, registries, facilitators, transformers,
+    utilities -> adapters -> clients. Tests override providers at the edges
+    (settings, LLM adapter, external clients, OTP delivery).
+    """
+
     config: ConfigContainer = Container(ConfigContainer)  # type: ignore[assignment]
+    time_provider: TimeProviderContainer = Container(  # type: ignore[assignment]
+        TimeProviderContainer
+    )
+    utilities: UtilitiesContainer = Container(  # type: ignore[assignment]
+        UtilitiesContainer
+    )
     clients: ClientsContainer = Container(  # type: ignore[assignment]
         ClientsContainer,
         config=config,
@@ -27,6 +42,8 @@ class AppContainer(containers.DeclarativeContainer):
         AdaptersContainer,
         clients=clients,
         config=config,
+        time_provider=time_provider,
+        utilities=utilities,
     )
     repositories: RepositoriesContainer = Container(  # type: ignore[assignment]
         RepositoriesContainer,
@@ -34,24 +51,29 @@ class AppContainer(containers.DeclarativeContainer):
     )
     registries: RegistriesContainer = Container(  # type: ignore[assignment]
         RegistriesContainer,
+        config=config,
         repositories=repositories,
+        time_provider=time_provider,
     )
-    utilities: UtilitiesContainer = Container(  # type: ignore[assignment]
-        UtilitiesContainer
+    transformers: TransformersContainer = Container(  # type: ignore[assignment]
+        TransformersContainer,
+        utilities=utilities,
     )
     facilitators: FacilitatorsContainer = Container(  # type: ignore[assignment]
         FacilitatorsContainer,
         adapters=adapters,
+        clients=clients,
         config=config,
-    )
-    transformers: TransformersContainer = Container(  # type: ignore[assignment]
-        TransformersContainer
-    )
-    time_provider: TimeProviderContainer = Container(  # type: ignore[assignment]
-        TimeProviderContainer
+        repositories=repositories,
+        time_provider=time_provider,
+        transformers=transformers,
+        utilities=utilities,
     )
     use_cases: UseCasesContainer = Container(  # type: ignore[assignment]
         UseCasesContainer,
+        adapters=adapters,
+        clients=clients,
+        config=config,
         facilitators=facilitators,
         registries=registries,
         repositories=repositories,
@@ -61,16 +83,26 @@ class AppContainer(containers.DeclarativeContainer):
     )
     orchestrators: OrchestratorsContainer = Container(  # type: ignore[assignment]
         OrchestratorsContainer,
+        adapters=adapters,
+        config=config,
+        repositories=repositories,
         use_cases=use_cases,
+        utilities=utilities,
     )
     pipelines: PipelinesContainer = Container(  # type: ignore[assignment]
         PipelinesContainer,
         orchestrators=orchestrators,
+        use_cases=use_cases,
     )
     operators: OperatorsContainer = Container(  # type: ignore[assignment]
         OperatorsContainer,
         pipelines=pipelines,
     )
     gateways: GatewaysContainer = Container(  # type: ignore[assignment]
-        GatewaysContainer
+        GatewaysContainer,
+        config=config,
+        facilitators=facilitators,
+        operators=operators,
+        repositories=repositories,
+        time_provider=time_provider,
     )

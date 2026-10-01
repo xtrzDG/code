@@ -6,6 +6,9 @@ import pytest
 from base_pydantic_schemas import PersistentDocument
 from dependency_injector import providers
 
+from app.adapters.storage.postgres.document_collection_factory import (
+    build_document_collection,
+)
 from app.containers.adapters import AdaptersContainer
 from app.schemas.constants.compliance import AuditAction
 from app.schemas.constants.storage import CollectionIsolation
@@ -59,11 +62,20 @@ PLATFORM_DOCUMENT_TYPES: frozenset[type[PersistentDocument]] = frozenset(
 
 
 def container_document_types() -> list[type[PersistentDocument]]:
+    """Document types of the collection providers of AdaptersContainer."""
+
     document_types: list[type[PersistentDocument]] = []
     for provider in AdaptersContainer.providers.values():
         if not isinstance(provider, providers.Singleton):
             continue
 
+        if "document_type" not in provider.kwargs:
+            # Adapters that are not document collections (LLM, channels...).
+            continue
+
+        # Every collection goes through the storage factory, so DATABASE_URL
+        # switches all of them to Postgres.
+        assert provider.provides is build_document_collection
         document_type: object = provider.kwargs.get("document_type")
         assert isinstance(document_type, type)
         assert issubclass(document_type, PersistentDocument)
@@ -88,6 +100,28 @@ def test_every_container_collection_has_a_catalog_entry() -> None:
     catalog_types = {definition.document_type for definition in DOCUMENT_COLLECTIONS}
 
     assert set(container_document_types()) <= catalog_types
+
+
+def test_every_catalog_entry_is_wired_in_the_container_once() -> None:
+    catalog_types = {definition.document_type for definition in DOCUMENT_COLLECTIONS}
+    wired_types = container_document_types()
+
+    assert set(wired_types) == catalog_types
+    assert len(wired_types) == len(set(wired_types))
+
+
+def test_container_collection_names_match_the_catalog() -> None:
+    for provider in AdaptersContainer.providers.values():
+        if not isinstance(provider, providers.Singleton):
+            continue
+
+        if "document_type" not in provider.kwargs:
+            continue
+
+        document_type: object = provider.kwargs["document_type"]
+        assert isinstance(document_type, type)
+        assert issubclass(document_type, PersistentDocument)
+        assert provider.kwargs["collection_name"] == collection_name_for(document_type)
 
 
 def test_catalog_names_and_types_are_unique() -> None:

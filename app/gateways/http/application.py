@@ -4,10 +4,11 @@ import uuid
 from collections.abc import Awaitable, Callable, Sequence
 
 from fastapi import APIRouter, FastAPI, Request, Response
-from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from starlette.types import Lifespan
 
 from app.contracts.observability import ErrorReportingFacilitatorContract
+from app.gateways.http.cabinet_cors_middleware import CabinetCorsMiddleware
 from app.gateways.http.error_responses import install_error_handlers
 from app.schemas.typings.channels.constrained_strings import PublicBaseUrl
 
@@ -21,16 +22,19 @@ def build_http_application(
     routers: Sequence[APIRouter],
     error_reporter: ErrorReportingFacilitatorContract,
     cors_allowed_origins: Sequence[PublicBaseUrl],
+    lifespan: Lifespan[FastAPI] | None = None,
 ) -> FastAPI:
     """
     Build the HTTP application.
 
     Application errors map to their status codes; anything else becomes a 500
     without internals and is sent to the error reporter. Every response carries
-    an X-Request-ID (taken from the request when present).
+    an X-Request-ID (taken from the request when present). CORS allows the
+    cabinet origins; the public widget routes answer CORS themselves.
+    `lifespan` runs startup and shutdown work (see `app.main`).
     """
 
-    http_application = FastAPI(title=API_TITLE, version=API_VERSION)
+    http_application = FastAPI(title=API_TITLE, version=API_VERSION, lifespan=lifespan)
     install_error_handlers(http_application)
 
     async def handle_unexpected_error(request: Request, error: Exception) -> Response:
@@ -48,7 +52,7 @@ def build_http_application(
 
     if cors_allowed_origins:
         http_application.add_middleware(
-            CORSMiddleware,
+            CabinetCorsMiddleware,
             allow_origins=[str(origin).rstrip("/") for origin in cors_allowed_origins],
             allow_credentials=False,
             allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],

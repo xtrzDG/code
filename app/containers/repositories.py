@@ -22,6 +22,15 @@ from app.repositories.business_repositories import (
     BusinessRepository,
     ChannelRepository,
 )
+from app.repositories.calendar_repositories import (
+    CalendarAuthorizationStateRepository,
+    CalendarConnectionRepository,
+    CalendarEventLinkRepository,
+)
+from app.repositories.channel_repositories import (
+    ChannelMessageReceiptRepository,
+    ManagerTelegramLinkRepository,
+)
 from app.repositories.compliance_repositories import (
     AuditLogRepository,
     DpaAcceptanceRepository,
@@ -33,10 +42,15 @@ from app.repositories.conversation_repositories import (
     LlmTurnRepository,
     MessageRepository,
 )
+from app.repositories.job_repositories import QueuedJobRepository
 from app.repositories.knowledge_repositories import (
     KnowledgeItemRepository,
     ResourceRepository,
     ScheduleExceptionRepository,
+)
+from app.repositories.payment_repositories import (
+    PackageUsageWarningRepository,
+    PaymentOrderRepository,
 )
 from app.repositories.user_repositories import (
     OtpChallengeRepository,
@@ -147,4 +161,40 @@ class RepositoriesContainer(containers.DeclarativeContainer):
     dpa_acceptance_repo: Singleton[DpaAcceptanceRepository] = Singleton(
         DpaAcceptanceRepository,
         collection=adapters.dpa_acceptance_collection,
+    )
+    queued_job_repo: Singleton[QueuedJobRepository] = Singleton(
+        QueuedJobRepository,
+        collection=adapters.queued_job_collection,
+    )
+    channel_message_receipt_repo: Singleton[ChannelMessageReceiptRepository] = (
+        Singleton(
+            ChannelMessageReceiptRepository,
+            collection=adapters.channel_message_receipt_collection,
+        )
+    )
+    manager_telegram_link_repo: Singleton[ManagerTelegramLinkRepository] = Singleton(
+        ManagerTelegramLinkRepository,
+        collection=adapters.manager_telegram_link_collection,
+    )
+    calendar_connection_repo: Singleton[CalendarConnectionRepository] = Singleton(
+        CalendarConnectionRepository,
+        collection=adapters.calendar_connection_collection,
+    )
+    calendar_authorization_state_repo: Singleton[
+        CalendarAuthorizationStateRepository
+    ] = Singleton(
+        CalendarAuthorizationStateRepository,
+        collection=adapters.calendar_authorization_state_collection,
+    )
+    calendar_event_link_repo: Singleton[CalendarEventLinkRepository] = Singleton(
+        CalendarEventLinkRepository,
+        collection=adapters.calendar_event_link_collection,
+    )
+    payment_order_repo: Singleton[PaymentOrderRepository] = Singleton(
+        PaymentOrderRepository,
+        collection=adapters.payment_order_collection,
+    )
+    package_usage_warning_repo: Singleton[PackageUsageWarningRepository] = Singleton(
+        PackageUsageWarningRepository,
+        collection=adapters.package_usage_warning_collection,
     )

@@ -34,6 +34,7 @@ from app.schemas.typings.platform.booleans import IsLlmContentTraced
 from app.schemas.typings.platform.constrained_integers import WorkerPollSeconds
 from app.schemas.typings.platform.strings import (
     DatabaseUrl,
+    LocalDirectoryPath,
     PlatformIdentifier,
     PlatformSecret,
 )
@@ -63,6 +64,9 @@ DEFAULT_ELEVENLABS_API_BASE_URL: str = "https://api.elevenlabs.io"
 # (comma-separated, an empty value disables the restriction).
 DEFAULT_RESTRICTED_COUNTRY_CODES: str = "CU,IR,KP,SY"
 DEFAULT_DPA_DOCUMENT_VERSION: str = "2026-10-01"
+# Call recordings kept on this server (development or a single server);
+# recordings of ElevenLabs calls stay in ElevenLabs storage.
+DEFAULT_RECORDINGS_DIRECTORY: str = "var/recordings"
 TRUE_VALUES: frozenset[str] = frozenset({"1", "true", "yes", "on"})
 FALSE_VALUES: frozenset[str] = frozenset({"0", "false", "no", "off"})
 
@@ -222,6 +226,13 @@ def assemble_app_settings(environment_variables: Mapping[str, str]) -> AppSettin
         ],
         worker_poll_seconds=WorkerPollSeconds(
             read_integer(environment_variables, "WORKER_POLL_SECONDS", 15)
+        ),
+        recordings_directory=LocalDirectoryPath(
+            read_text(
+                environment_variables,
+                "RECORDINGS_DIRECTORY",
+                DEFAULT_RECORDINGS_DIRECTORY,
+            )
         ),
     )
 

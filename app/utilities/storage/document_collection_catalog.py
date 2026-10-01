@@ -18,6 +18,12 @@ from app.schemas.domain.billing import (
 )
 from app.schemas.domain.bookings import BookingDocument, LeadDocument
 from app.schemas.domain.businesses import BusinessDocument
+from app.schemas.domain.calendar import (
+    CalendarAuthorizationStateDocument,
+    CalendarConnectionDocument,
+    CalendarEventLinkDocument,
+)
+from app.schemas.domain.channel_receipts import ChannelMessageReceiptDocument
 from app.schemas.domain.channels import ChannelDocument
 from app.schemas.domain.compliance import AuditLogEntryDocument, DpaAcceptanceDocument
 from app.schemas.domain.contacts import ContactDocument
@@ -30,6 +36,9 @@ from app.schemas.domain.conversations import (
 from app.schemas.domain.handoffs import HandoffDocument, UnansweredQuestionDocument
 from app.schemas.domain.jobs import QueuedJobDocument
 from app.schemas.domain.knowledge import KnowledgeItemDocument
+from app.schemas.domain.manager_links import ManagerTelegramLinkDocument
+from app.schemas.domain.package_usage import PackageUsageWarningDocument
+from app.schemas.domain.payments import PaymentOrderDocument
 from app.schemas.domain.profiles import BusinessProfileDocument
 from app.schemas.domain.resources import ResourceDocument, ScheduleExceptionDocument
 from app.schemas.domain.users import (
@@ -114,6 +123,34 @@ DOCUMENT_COLLECTIONS: tuple[DocumentCollectionDefinition, ...] = (
     # Background work.
     DocumentCollectionDefinition(
         DocumentCollectionName("queued_jobs"), QueuedJobDocument
+    ),
+    # Channels: webhook redelivery receipts and staff Telegram links (0002).
+    DocumentCollectionDefinition(
+        DocumentCollectionName("channel_message_receipts"),
+        ChannelMessageReceiptDocument,
+    ),
+    DocumentCollectionDefinition(
+        DocumentCollectionName("manager_telegram_links"),
+        ManagerTelegramLinkDocument,
+    ),
+    # Google Calendar: connection, OAuth state, event per booking (0002).
+    DocumentCollectionDefinition(
+        DocumentCollectionName("calendar_connections"), CalendarConnectionDocument
+    ),
+    DocumentCollectionDefinition(
+        DocumentCollectionName("calendar_authorization_states"),
+        CalendarAuthorizationStateDocument,
+    ),
+    DocumentCollectionDefinition(
+        DocumentCollectionName("calendar_event_links"), CalendarEventLinkDocument
+    ),
+    # Payments: checkout orders and package usage warnings (0003).
+    DocumentCollectionDefinition(
+        DocumentCollectionName("payment_orders"), PaymentOrderDocument
+    ),
+    DocumentCollectionDefinition(
+        DocumentCollectionName("package_usage_warnings"),
+        PackageUsageWarningDocument,
     ),
 )
 

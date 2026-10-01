@@ -138,3 +138,6 @@ Desktop.ini
 
 # Claude Code local state and agent worktrees
 .claude/
+
+# Local call recordings (RECORDINGS_DIRECTORY default)
+var/
