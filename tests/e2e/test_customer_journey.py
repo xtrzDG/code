@@ -444,3 +444,83 @@ def test_telegram_customer_books_and_the_worker_sends_the_reminder(
     assert "«Salobie Bia»" in reminder_text
     assert "19:00" in reminder_text
     assert "Бесплатная отмена за 2 часа." in reminder_text
+
+
+def test_staff_reply_from_the_cabinet_reaches_the_website_widget(
+    workshop: Workshop,
+) -> None:
+    client = workshop.client
+    restaurant = open_restaurant(workshop)
+    web_chat = client.put(
+        f"{restaurant.base}/channels/web", json={}, headers=restaurant.headers
+    )
+    assert web_chat.json()["status"] == "connected"
+    widget_messages = f"/v1/widget/{restaurant.business_id}/messages"
+
+    # A website visitor asks for a person; the assistant hands off.
+    handed_off: JsonObject = client.post(
+        widget_messages,
+        json={"session_key": WIDGET_SESSION, "text": "Позовите, пожалуйста, менеджера"},
+    ).json()
+    assert handed_off["is_handed_off"] is True
+    caught_up = client.get(
+        widget_messages,
+        params={"session_key": WIDGET_SESSION, "after": handed_off["cursor"]},
+    ).json()
+    assert [item["id"] for item in caught_up["items"]] == [handed_off["message_id"]]
+
+    # The owner answers from the conversation card: the message is kept for
+    # the widget, nothing goes through Telegram and the model is not asked.
+    conversation_id = handed_off["conversation_id"]
+    card = client.get(
+        f"{restaurant.base}/conversations/{conversation_id}",
+        headers=restaurant.headers,
+    ).json()
+    assert card["reply"] == {
+        "is_available": True,
+        "block": None,
+        "delivery": "stored_for_widget",
+        "window_closes_at": None,
+    }
+    model_calls_before = workshop.model.assistant_calls
+    telegram_sends_before = len(workshop.telegram.bodies("sendMessage"))
+    sent = client.post(
+        f"{restaurant.base}/conversations/{conversation_id}/messages",
+        json={"text": "Здравствуйте, это Гиорги. Чем могу помочь?"},
+        headers=restaurant.headers,
+    )
+    assert sent.status_code == 201, sent.text
+    assert sent.json()["delivery"] == "stored_for_widget"
+    staff_message: JsonObject = sent.json()["message"]
+    assert staff_message["author"] == "staff"
+    assert staff_message["direction"] == "outbound"
+    assert staff_message["sent_by"] == restaurant.owner_id
+    assert workshop.model.assistant_calls == model_calls_before
+    assert len(workshop.telegram.bodies("sendMessage")) == telegram_sends_before
+
+    # The widget's next poll brings the staff reply, once.
+    polled = client.get(
+        widget_messages,
+        params={"session_key": WIDGET_SESSION, "after": caught_up["cursor"]},
+        headers={"Origin": "https://salobie.example"},
+    )
+    assert polled.status_code == 200, polled.text
+    assert polled.headers["access-control-allow-origin"] == "*"
+    body: JsonObject = polled.json()
+    assert body["items"] == [
+        {
+            "id": staff_message["id"],
+            "author": "staff",
+            "text": "Здравствуйте, это Гиорги. Чем могу помочь?",
+            "language": "ru",
+            "direction": "ltr",
+            "created_at": staff_message["created_at"],
+        }
+    ]
+    assert body["cursor"] == staff_message["id"]
+    assert body["is_handed_off"] is True
+    again = client.get(
+        widget_messages,
+        params={"session_key": WIDGET_SESSION, "after": body["cursor"]},
+    ).json()
+    assert again["items"] == []
