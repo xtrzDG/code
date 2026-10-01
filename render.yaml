@@ -82,6 +82,9 @@ services:
         sync: false
       - key: PLATFORM_ADMIN_PHONE_NUMBERS
         sync: false
+      # openai (default: gpt-5-mini in an EU data-residency project) or anthropic
+      - key: LLM_PROVIDER
+        sync: false
       - key: OPENAI_API_KEY
         sync: false
       - key: OPENAI_PROJECT_ID
@@ -144,6 +147,9 @@ services:
         sync: false
       - key: WHATSAPP_NOTIFICATION_TEMPLATE
         sync: false
+      # booking reminders after the customer's 24-hour WhatsApp window
+      - key: WHATSAPP_REMINDER_TEMPLATE
+        sync: false
       - key: TELEGRAM_PLATFORM_BOT_TOKEN
         sync: false
       # Google Calendar
@@ -188,6 +194,16 @@ services:
           type: web
           name: workshop-api
           envVarKey: APP_BASE_URL
+      - key: CABINET_BASE_URL
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: CABINET_BASE_URL
+      - key: CORS_ALLOWED_ORIGINS
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: CORS_ALLOWED_ORIGINS
       - key: PLATFORM_ADMIN_EMAILS
         fromService:
           type: web
@@ -198,6 +214,11 @@ services:
           type: web
           name: workshop-api
           envVarKey: PLATFORM_ADMIN_PHONE_NUMBERS
+      - key: LLM_PROVIDER
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: LLM_PROVIDER
       - key: OPENAI_API_KEY
         fromService:
           type: web
@@ -338,6 +359,11 @@ services:
           type: web
           name: workshop-api
           envVarKey: WHATSAPP_NOTIFICATION_TEMPLATE
+      - key: WHATSAPP_REMINDER_TEMPLATE
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: WHATSAPP_REMINDER_TEMPLATE
       - key: TELEGRAM_PLATFORM_BOT_TOKEN
         fromService:
           type: web
