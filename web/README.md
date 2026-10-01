@@ -94,6 +94,9 @@ web/
       shell/                   ShellFrame (sidebar + mobile drawer), BusinessShell, AdminShell, TopBar
       business/                BusinessContext (useBusiness, useBusinessFormat), status badges,
                                SectionPlaceholder
+      workspace/               shared by channels, billing, settings and admin: ConfirmDialog, Tabs,
+                               useCursorList (paged API lists with "show more"), MarkdownDocument
+                               (renders the DPA text without HTML), helpers (zoned dates, usage)
       BusinessSwitcher.tsx LanguageSwitcher.tsx CountrySelect.tsx icons.tsx
     lib/                       pure helpers (unit-tested): navigation, format (Intl), countries
                                (phone/country), hours (opening hours), wizard, validation (zod), cn

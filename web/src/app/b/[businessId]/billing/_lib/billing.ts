@@ -24,10 +24,12 @@ export type QuotedMoney = Schema<"QuotedMoney">;
 export type BillingPeriod = Schema<"BillingPeriod">;
 export type SubscriptionStatus = Schema<"SubscriptionStatus">;
 export type InvoiceStatus = Schema<"InvoiceStatus">;
+export type CheckoutSession = Schema<"CheckoutSessionView">;
 
 const MICROSECONDS_PER_DAY = 86_400_000_000;
 
 export const SUBSCRIPTION_STATUS_TONES: Record<SubscriptionStatus, BadgeTone> = {
+  incomplete: "warning",
   trialing: "info",
   active: "success",
   past_due: "danger",
@@ -70,13 +72,26 @@ export function canPay(overview: BillingOverview): boolean {
   return hasOpenInvoices || !(subscription.status === "active" && subscription.has_auto_debit);
 }
 
+/** A subscription that is not cancelled yet and was ever started (a trial or a payment). */
 export function canCancel(overview: BillingOverview): boolean {
-  return overview.subscription !== null && overview.subscription !== undefined && overview.subscription.status !== "cancelled";
+  const status = overview.subscription?.status;
+  return status !== undefined && status !== "cancelled" && status !== "incomplete";
+}
+
+/**
+ * Whether choosing a plan means paying for it now (POST …/billing/subscribe):
+ * no subscription, one waiting for its first payment, an overdue one or a
+ * cancelled one. A trial or an active subscription switches plans instead.
+ */
+export function needsSubscription(overview: BillingOverview): boolean {
+  const status = overview.subscription?.status;
+  return status === undefined || status === "incomplete" || status === "past_due" || status === "cancelled";
 }
 
 /** Something the owner should know, most urgent first. */
 export type BillingNotice =
   | { kind: "leadsOnly" }
+  | { kind: "incomplete" }
   | { kind: "pastDue"; graceUntil: number | null }
   | { kind: "cancelled"; until: number }
   | { kind: "unpaid"; count: number }
@@ -95,8 +110,11 @@ export function billingNotices(overview: BillingOverview, nowUs: number): Billin
   if (subscription?.status === "cancelled") {
     notices.push({ kind: "cancelled", until: subscription.period_end });
   }
+  if (subscription?.status === "incomplete") {
+    notices.push({ kind: "incomplete" });
+  }
   const unpaid = (overview.invoices ?? []).filter(isInvoiceOpen).length;
-  if (unpaid > 0 && subscription?.status !== "past_due") {
+  if (unpaid > 0 && subscription?.status !== "past_due" && subscription?.status !== "incomplete") {
     notices.push({ kind: "unpaid", count: unpaid });
   }
   if (subscription?.status === "trialing") {
@@ -146,15 +164,31 @@ export function hasEstimatedPrices(quotes: readonly PlanQuote[], period: Billing
   );
 }
 
-export type PlanAction = "current" | "switch" | "trial" | "unavailable";
+export type PlanAction = "switch" | "trial" | "subscribe";
 
-/** What the owner can do with a plan card in the chosen billing period. */
-export function planAction(quote: PlanQuote, period: BillingPeriod, overview: BillingOverview): PlanAction {
+export interface PlanCardActions {
+  /** The subscription is on this plan and billing period. */
+  isCurrent: boolean;
+  /** Buttons of the card, the main one first (empty: nothing to do). */
+  actions: PlanAction[];
+}
+
+/**
+ * What the owner can do with a plan card in the chosen billing period.
+ *
+ * A running trial or an active subscription switches plans. Otherwise (no
+ * subscription, one waiting for its first payment, overdue or cancelled) the
+ * owner subscribes and pays now; the free trial comes first while it is
+ * still available and the plan has one.
+ */
+export function planActions(quote: PlanQuote, period: BillingPeriod, overview: BillingOverview): PlanCardActions {
   const subscription = overview.subscription;
-  if (subscription) {
-    return subscription.plan_key === quote.plan_key && subscription.billing_period === period ? "current" : "switch";
+  const isCurrent = subscription?.plan_key === quote.plan_key && subscription?.billing_period === period;
+  if (subscription && !needsSubscription(overview)) {
+    return { isCurrent, actions: isCurrent ? [] : ["switch"] };
   }
-  return overview.is_trial_available && quote.trial_days > 0 ? "trial" : "unavailable";
+  const canTrial = overview.is_trial_available && quote.trial_days > 0;
+  return { isCurrent, actions: canTrial ? ["trial", "subscribe"] : ["subscribe"] };
 }
 
 /** The largest yearly discount of the plans (for "Yearly −15 %"). */

@@ -9,6 +9,7 @@ import {
   usageBarWidth,
   usageLevel,
   usagePercent,
+  zonedDayStartUs,
 } from "./helpers";
 
 describe("isConfirmationTyped", () => {
@@ -68,5 +69,15 @@ describe("ids and files", () => {
     expect(safeFileName("contact data/ნინო 2026.json")).toBe("contact-data-2026.json");
     expect(safeFileName("///")).toBe("download");
     expect(isoDay(new Date(Date.UTC(2026, 9, 1, 23, 0)))).toBe("2026-10-01");
+  });
+});
+
+describe("zonedDayStartUs", () => {
+  it("finds local midnight in any time zone", () => {
+    expect(zonedDayStartUs("2026-10-01", "Asia/Tbilisi")).toBe(Date.UTC(2026, 8, 30, 20) * 1000);
+    expect(zonedDayStartUs("2026-10-01", "UTC")).toBe(Date.UTC(2026, 9, 1) * 1000);
+    expect(zonedDayStartUs("2026-03-29", "Europe/Berlin")).toBe(Date.UTC(2026, 2, 28, 23) * 1000);
+    expect(zonedDayStartUs("2026-07-01", "America/New_York")).toBe(Date.UTC(2026, 6, 1, 4) * 1000);
+    expect(zonedDayStartUs("yesterday", "UTC")).toBeNull();
   });
 });

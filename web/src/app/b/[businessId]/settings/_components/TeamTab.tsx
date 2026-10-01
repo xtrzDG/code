@@ -17,9 +17,11 @@ import { IconUsers } from "@/components/workspace/icons";
 import { DANGER_GHOST } from "@/components/workspace/styles";
 import { useI18n } from "@/i18n/client";
 import { countryFlag } from "@/lib/countries";
+import { cn } from "@/lib/cn";
 import { HOME_PATH } from "@/lib/navigation";
 
 import {
+  allowedRoles,
   buildInviteBody,
   canRemoveMember,
   memberInitials,
@@ -29,9 +31,23 @@ import {
   type InviteBody,
   type InviteError,
   type InviteForm,
+  type MemberRole,
 } from "../_lib/settings";
 
-/** Team members with roles; the owner invites staff by phone or e-mail and removes members. */
+const ROLE_NAMES: Record<MemberRole, "settings.roles.owner" | "settings.roles.staff"> = {
+  owner: "settings.roles.owner",
+  staff: "settings.roles.staff",
+};
+
+interface RoleChange {
+  member: BusinessMember;
+  role: MemberRole;
+}
+
+/**
+ * Team members with roles. Owners invite staff or other owners by phone or
+ * e-mail, change roles and remove members; the last owner stays an owner.
+ */
 export function TeamTab() {
   const { t } = useI18n();
   const toast = useToast();
@@ -41,6 +57,33 @@ export function TeamTab() {
   const [isInviting, setInviting] = useState(false);
   const [removing, setRemoving] = useState<BusinessMember | null>(null);
   const [removeError, setRemoveError] = useState<ApiError | null>(null);
+  const [roleChange, setRoleChange] = useState<RoleChange | null>(null);
+  const [roleError, setRoleError] = useState<ApiError | null>(null);
+
+  const changeRole = useApiMutation(
+    (change: RoleChange) =>
+      api.PATCH("/v1/businesses/{business_id}/members/{user_id}", {
+        params: { path: { business_id: business.id, user_id: change.member.user_id } },
+        body: { role: change.role },
+      }),
+    { errorToast: false },
+  );
+
+  const onChangeRole = async () => {
+    if (!roleChange) {
+      return;
+    }
+    const result = await changeRole.run(roleChange);
+    if (!result.ok) {
+      setRoleError(result.error);
+      return;
+    }
+    toast.success(t("settings.roles.changed", { name: memberLabel(roleChange.member), role: t(ROLE_NAMES[roleChange.role]) }));
+    setMembers(result.data.members);
+    setRoleChange(null);
+    // The layout knows the viewer's role; it changes when owners demote themselves.
+    router.refresh();
+  };
 
   const remove = useApiMutation(
     (userId: string) =>
@@ -113,7 +156,29 @@ export function TeamTab() {
               </div>
               <div className="flex flex-wrap items-center gap-2">
                 {!member.is_verified ? <Badge tone="warning">{t("settings.team.notSignedIn")}</Badge> : null}
-                <MemberRoleBadge role={member.role} />
+                {isOwner ? (
+                  <Select
+                    aria-label={t("settings.roles.roleOf", { name })}
+                    className="w-auto min-w-28"
+                    value={member.role}
+                    title={allowedRoles(member, members).length === 1 ? t("settings.roles.lastOwner") : undefined}
+                    onChange={(event) => {
+                      const role = event.target.value as MemberRole;
+                      if (role !== member.role) {
+                        setRoleError(null);
+                        setRoleChange({ member, role });
+                      }
+                    }}
+                  >
+                    {(["owner", "staff"] as const).map((role) => (
+                      <option key={role} value={role} disabled={!allowedRoles(member, members).includes(role)}>
+                        {t(ROLE_NAMES[role])}
+                      </option>
+                    ))}
+                  </Select>
+                ) : (
+                  <MemberRoleBadge role={member.role} />
+                )}
                 {isOwner ? (
                   <Button
                     variant="ghost"
@@ -146,6 +211,34 @@ export function TeamTab() {
           toast.success(t("settings.team.invited", { name }));
         }}
       />
+
+      <ConfirmDialog
+        open={roleChange !== null}
+        onClose={() => setRoleChange(null)}
+        onConfirm={onChangeRole}
+        tone={roleChange?.role === "owner" ? "primary" : "danger"}
+        isPending={changeRole.isPending}
+        error={roleError}
+        errorOverrides={{ conflict: "settings.roles.lastOwner" }}
+        title={
+          roleChange
+            ? t(roleChange.role === "owner" ? "settings.roles.makeOwnerTitle" : "settings.roles.makeStaffTitle", {
+                name: memberLabel(roleChange.member),
+              })
+            : ""
+        }
+        confirmLabel={roleChange?.role === "owner" ? t("settings.roles.makeOwner") : t("settings.roles.makeStaff")}
+      >
+        {roleChange ? (
+          <p>
+            {roleChange.role === "owner"
+              ? t("settings.roles.makeOwnerDescription")
+              : roleChange.member.user_id === me.user.id
+                ? t("settings.roles.makeSelfStaffDescription")
+                : t("settings.roles.makeStaffDescription")}
+          </p>
+        ) : null}
+      </ConfirmDialog>
 
       <ConfirmDialog
         open={removing !== null}
@@ -196,6 +289,7 @@ function InviteForm({ onClose, onInvited }: { onClose: () => void; onInvited: (m
     countryHint: business.country_code,
     email: "",
     displayName: "",
+    role: "staff",
   });
   const [errors, setErrors] = useState<Partial<Record<"phone" | "email", InviteError>>>({});
   const invite = useApiMutation(
@@ -307,10 +401,26 @@ function InviteForm({ onClose, onInvited }: { onClose: () => void; onInvited: (m
         )}
       </Field>
 
-      <div className="rounded-xl bg-surface-muted/70 p-3 text-sm">
-        <p className="font-medium text-ink">{t("settings.team.role")}</p>
-        <p className="mt-0.5 text-ink-muted">{t("settings.team.roleStaff")}</p>
-      </div>
+      <fieldset className="space-y-2">
+        <legend className="text-sm font-medium text-ink">{t("settings.team.role")}</legend>
+        <div className="space-y-2">
+          {(["staff", "owner"] as const).map((role) => (
+            <Radio
+              key={role}
+              id={`invite-role-${role}`}
+              name="invite-role"
+              checked={form.role === role}
+              onChange={() => update({ role })}
+              className={cn(
+                "rounded-xl border p-3 transition-colors",
+                form.role === role ? "border-accent-solid bg-accent-soft/40" : "border-line hover:bg-surface-muted/60",
+              )}
+              label={<span className="font-medium">{t(ROLE_NAMES[role])}</span>}
+              description={t(role === "owner" ? "settings.roles.ownerDescription" : "settings.team.roleStaff")}
+            />
+          ))}
+        </div>
+      </fieldset>
 
       <InlineError error={invite.error} overrides={{ conflict: "settings.team.errors.alreadyMember" }} />
 

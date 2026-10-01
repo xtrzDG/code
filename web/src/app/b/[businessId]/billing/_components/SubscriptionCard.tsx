@@ -11,6 +11,7 @@ import type { MessageKey } from "@/i18n/translate";
 import { SUBSCRIPTION_STATUS_TONES, quotedMoneyText, type BillingOverview, type SubscriptionStatus } from "../_lib/billing";
 
 export const SUBSCRIPTION_STATUS_LABELS: Record<SubscriptionStatus, MessageKey> = {
+  incomplete: "billing.subscribe.statusIncomplete",
   trialing: "billing.status.trialing",
   active: "billing.status.active",
   past_due: "billing.status.past_due",
@@ -48,11 +49,9 @@ export function SubscriptionCard({
           title={t("billing.noSubscriptionTitle")}
           description={overview.is_trial_available ? t("billing.noSubscriptionDescription") : t("billing.noSubscriptionNoTrial")}
           action={
-            overview.is_trial_available ? (
-              <a href="#billing-plans" className={buttonClasses({ variant: "secondary", size: "sm" })}>
-                {t("billing.plans.title")}
-              </a>
-            ) : undefined
+            <a href="#billing-plans" className={buttonClasses({ variant: "secondary", size: "sm" })}>
+              {t("billing.plans.title")}
+            </a>
           }
         />
       </Card>
@@ -95,10 +94,12 @@ export function SubscriptionCard({
         </div>
         <Facts
           items={[
-            {
-              label: t("billing.facts.currentPeriod"),
-              value: t("billing.dateRange", { start: format.date(subscription.period_start), end: format.date(subscription.period_end) }),
-            },
+            subscription.status === "incomplete"
+              ? { label: t("billing.facts.currentPeriod"), value: t("billing.subscribe.waitingForPayment") }
+              : {
+                  label: t("billing.facts.currentPeriod"),
+                  value: t("billing.dateRange", { start: format.date(subscription.period_start), end: format.date(subscription.period_end) }),
+                },
             subscription.status === "trialing" && subscription.trial_ends_at
               ? { label: t("billing.facts.trialEnds"), value: format.date(subscription.trial_ends_at) }
               : null,

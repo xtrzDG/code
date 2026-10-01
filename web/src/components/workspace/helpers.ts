@@ -91,3 +91,38 @@ export function downloadJson(data: unknown, fileName: string): void {
   link.remove();
   window.setTimeout(() => URL.revokeObjectURL(url), 1_000);
 }
+
+/** Offset of a time zone from UTC at an instant, in milliseconds (Tbilisi: +4 h). */
+function zoneOffsetMs(instantMs: number, timeZone: string): number {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone,
+    hourCycle: "h23",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  }).formatToParts(new Date(instantMs));
+  const part = (type: Intl.DateTimeFormatPartTypes) => Number(parts.find((item) => item.type === type)?.value ?? 0);
+  const asUtc = Date.UTC(part("year"), part("month") - 1, part("day"), part("hour"), part("minute"), part("second"));
+  return asUtc - Math.floor(instantMs / 1000) * 1000;
+}
+
+/**
+ * The first moment of a local calendar day ("2026-10-01") in a time zone, as
+ * UNIX microseconds (the API's timestamps); null for text that is not a day.
+ */
+export function zonedDayStartUs(day: string, timeZone: string): number | null {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(day);
+  if (!match) {
+    return null;
+  }
+  const midnightUtc = Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
+  if (Number.isNaN(midnightUtc)) {
+    return null;
+  }
+  const firstGuess = midnightUtc - zoneOffsetMs(midnightUtc, timeZone);
+  const instant = midnightUtc - zoneOffsetMs(firstGuess, timeZone);
+  return instant * 1000;
+}

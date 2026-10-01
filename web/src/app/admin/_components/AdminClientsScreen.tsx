@@ -1,61 +1,88 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { useNiches } from "@/api/catalog";
 import { api } from "@/api/client";
-import { useApiQuery } from "@/api/hooks";
 import { IconChevronRight, IconShield } from "@/components/icons";
 import { Badge, Button, Card, EmptyState, ErrorState, Field, Input, LoadingBlock, PageHeader, Select, Table, TBody, Td, Th, THead, Tr } from "@/components/ui";
 import { usageLevel } from "@/components/workspace/helpers";
 import { IconRefresh, IconSearch } from "@/components/workspace/icons";
+import { InlineError } from "@/components/workspace/InlineError";
+import { useCursorList } from "@/components/workspace/useCursorList";
 import { useI18n } from "@/i18n/client";
 import { cn } from "@/lib/cn";
 import { countryFlag, countryName } from "@/lib/countries";
 import { formatDateTime, formatMoney, formatNumber } from "@/lib/format";
 
 import {
+  ADMIN_PAGE_SIZE,
   CLIENT_SORTS,
   EMPTY_FILTERS,
   adminClientPath,
   clientUsagePercent,
-  filterClients,
+  clientsQuery,
   hasFilters,
-  sortClients,
-  summarizeClients,
+  type AdminClientPage,
   type AdminClientSummary,
   type BusinessStatus,
   type ClientFilters,
   type ClientHealthStatus,
   type ClientSort,
+  type NicheKey,
 } from "../_lib/clients";
 import { HealthBadge, IssueChips, Margin, ProviderCost } from "./ClientBits";
 import { BUSINESS_STATUS_LABELS, HEALTH_LABELS, PLAN_LABELS, SORT_LABELS, SUBSCRIPTION_LABELS } from "./labels";
 
 const HEALTH_VALUES: readonly ClientHealthStatus[] = ["critical", "attention", "healthy"];
 const STATUS_VALUES: readonly BusinessStatus[] = ["onboarding", "testing", "live", "paused"];
+const SEARCH_DELAY_MS = 300;
 
-/** /admin: every client with health, package use, cost and margin; filters and sorting. */
+/**
+ * /admin: clients with health, package use, cost and margin. Filters,
+ * sorting and paging run on the server; the tiles count every client.
+ */
 export function AdminClientsScreen() {
   const { t, tp, locale } = useI18n();
   const niches = useNiches();
   const [filters, setFilters] = useState<ClientFilters>(EMPTY_FILTERS);
+  const [search, setSearch] = useState<string | undefined>(undefined);
   const [sort, setSort] = useState<ClientSort>("health");
-  const list = useApiQuery(() => api.GET("/v1/admin/clients"), []);
+
+  useEffect(() => {
+    const trimmed = filters.query.trim().slice(0, 100);
+    const timer = window.setTimeout(() => setSearch(trimmed === "" ? undefined : trimmed), SEARCH_DELAY_MS);
+    return () => window.clearTimeout(timer);
+  }, [filters.query]);
+
+  const list = useCursorList<AdminClientSummary, AdminClientPage>(
+    (cursor) =>
+      api.GET("/v1/admin/clients", {
+        params: {
+          query: { ...clientsQuery(filters, search, sort), limit: String(ADMIN_PAGE_SIZE), ...(cursor ? { cursor } : {}) },
+        },
+      }),
+    (client) => client.business_id,
+    [search, filters.health, filters.status, filters.country, filters.niche, sort],
+  );
 
   const nicheName = (key: string) => niches.data?.niches.find((niche) => niche.key === key)?.name ?? key;
-  const data = list.data;
-  const clients = data ? sortClients(filterClients(data.clients, filters), sort, locale) : [];
-  const summary = data ? summarizeClients(data.clients) : null;
+  const data = list.firstPage;
+  const clients = list.items;
+  const totals = data?.totals;
 
-  const tiles: { label: string; value: number; health?: ClientHealthStatus; tone: string }[] = summary
+  const tiles: { label: string; value: number; health?: ClientHealthStatus; tone: string }[] = totals
     ? [
-        { label: t("admin.summary.clients"), value: summary.total, tone: "text-ink" },
-        { label: t("admin.summary.critical"), value: summary.critical, health: "critical", tone: "text-danger" },
-        { label: t("admin.summary.attention"), value: summary.attention, health: "attention", tone: "text-warning" },
-        { label: t("admin.summary.healthy"), value: summary.healthy, health: "healthy", tone: "text-success" },
-        { label: t("admin.summary.losingMoney"), value: summary.losingMoney, tone: summary.losingMoney > 0 ? "text-danger" : "text-ink" },
+        { label: t("admin.summary.clients"), value: totals.client_count, tone: "text-ink" },
+        { label: t("admin.summary.critical"), value: totals.critical_count, health: "critical", tone: "text-danger" },
+        { label: t("admin.summary.attention"), value: totals.attention_count, health: "attention", tone: "text-warning" },
+        { label: t("admin.summary.healthy"), value: totals.healthy_count, health: "healthy", tone: "text-success" },
+        {
+          label: t("admin.summary.losingMoney"),
+          value: totals.losing_money_count,
+          tone: totals.losing_money_count > 0 ? "text-danger" : "text-ink",
+        },
       ]
     : [];
 
@@ -88,7 +115,7 @@ export function AdminClientsScreen() {
         <Card>
           <ErrorState error={list.error} onRetry={list.reload} />
         </Card>
-      ) : !data ? (
+      ) : !data || !totals ? (
         <Card>
           <LoadingBlock label={t("common.loading")} />
         </Card>
@@ -126,7 +153,7 @@ export function AdminClientsScreen() {
           </ul>
 
           <Card padded={false}>
-            <div role="search" aria-label={t("admin.filtersLabel")} className="grid gap-4 border-b border-line px-5 py-4 sm:grid-cols-2 sm:px-6 lg:grid-cols-4">
+            <div role="search" aria-label={t("admin.filtersLabel")} className="grid gap-4 border-b border-line px-5 py-4 sm:grid-cols-2 sm:px-6 lg:grid-cols-3 xl:grid-cols-[minmax(0,2fr)_repeat(5,minmax(0,1fr))]">
               <Field label={t("admin.search")}>
                 {(control) => (
                   <div className="relative">
@@ -175,6 +202,34 @@ export function AdminClientsScreen() {
                   </Select>
                 )}
               </Field>
+              <Field label={t("admin.serverList.country")}>
+                {(control) => (
+                  <Select {...control} value={filters.country} onChange={(event) => setFilters((current) => ({ ...current, country: event.target.value }))}>
+                    <option value="">{t("admin.all")}</option>
+                    {(data.countries ?? []).map((code) => (
+                      <option key={code} value={code}>
+                        {`${countryFlag(code)} ${countryName(code, locale)}`}
+                      </option>
+                    ))}
+                  </Select>
+                )}
+              </Field>
+              <Field label={t("admin.serverList.niche")}>
+                {(control) => (
+                  <Select
+                    {...control}
+                    value={filters.niche}
+                    onChange={(event) => setFilters((current) => ({ ...current, niche: event.target.value as NicheKey | "" }))}
+                  >
+                    <option value="">{t("admin.all")}</option>
+                    {(data.niches ?? []).map((key) => (
+                      <option key={key} value={key}>
+                        {nicheName(key)}
+                      </option>
+                    ))}
+                  </Select>
+                )}
+              </Field>
               <Field label={t("admin.sort")}>
                 {(control) => (
                   <Select {...control} value={sort} onChange={(event) => setSort(event.target.value as ClientSort)}>
@@ -189,7 +244,7 @@ export function AdminClientsScreen() {
             </div>
 
             <div className="flex flex-wrap items-center justify-between gap-2 px-5 py-3 text-sm text-ink-muted sm:px-6" aria-live="polite">
-              <span>{tp("admin.count", clients.length)}</span>
+              <span>{tp("admin.count", data.matching_count)}</span>
               {hasFilters(filters) ? (
                 <Button variant="ghost" size="sm" onClick={() => setFilters(EMPTY_FILTERS)}>
                   {t("admin.clearFilters")}
@@ -197,12 +252,16 @@ export function AdminClientsScreen() {
               ) : null}
             </div>
 
-            {data.clients.length === 0 ? (
+            {totals.client_count === 0 ? (
               <EmptyState icon={<IconShield className="size-6" />} title={t("admin.emptyTitle")} description={t("admin.emptyDescription")} />
             ) : clients.length === 0 ? (
-              <EmptyState icon={<IconSearch className="size-6" />} title={t("admin.emptyFiltered")} />
+              list.isLoading ? (
+                <LoadingBlock label={t("common.loading")} />
+              ) : (
+                <EmptyState icon={<IconSearch className="size-6" />} title={t("admin.emptyFiltered")} />
+              )
             ) : (
-              <>
+              <div aria-busy={list.isLoading}>
                 <div className="hidden border-t border-line lg:block">
                   <Table caption={t("pages.admin.title")}>
                     <THead>
@@ -309,7 +368,17 @@ export function AdminClientsScreen() {
                     </li>
                   ))}
                 </ul>
-              </>
+                {list.hasMore || list.moreError ? (
+                  <div className="space-y-2 border-t border-line px-5 py-3 sm:px-6">
+                    <InlineError error={list.moreError} />
+                    {list.hasMore ? (
+                      <Button variant="secondary" size="sm" isLoading={list.isLoadingMore} onClick={list.loadMore}>
+                        {t("workspace.loadMore")}
+                      </Button>
+                    ) : null}
+                  </div>
+                ) : null}
+              </div>
             )}
           </Card>
         </div>

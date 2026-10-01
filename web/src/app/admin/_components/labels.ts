@@ -11,6 +11,7 @@ export const HEALTH_LABELS: Record<ClientHealthStatus, MessageKey> = {
 
 export const ISSUE_LABELS: Record<ClientHealthIssue, MessageKey> = {
   no_subscription: "admin.issues.no_subscription",
+  first_payment_pending: "admin.serverList.firstPaymentPending",
   payment_past_due: "admin.issues.payment_past_due",
   subscription_cancelled: "admin.issues.subscription_cancelled",
   leads_only_mode: "admin.issues.leads_only_mode",
@@ -39,6 +40,7 @@ export const PLAN_LABELS: Record<Schema<"PlanKey">, MessageKey> = {
 };
 
 export const SUBSCRIPTION_LABELS: Record<Schema<"SubscriptionStatus">, MessageKey> = {
+  incomplete: "billing.subscribe.statusIncomplete",
   trialing: "billing.status.trialing",
   active: "billing.status.active",
   past_due: "billing.status.past_due",

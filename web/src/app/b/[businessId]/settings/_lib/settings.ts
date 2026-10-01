@@ -13,7 +13,6 @@ export type ManagerContact = Schema<"ManagerContactView">;
 export type ManagerContactChannel = Schema<"ManagerContactChannel">;
 export type AuditLogEntry = Schema<"AuditLogEntryView">;
 export type AuditAction = Schema<"AuditAction">;
-export type ConversationSummary = Schema<"ConversationSummaryView">;
 export type SettingsChanges = RequestBody<"/v1/businesses/{business_id}", "patch">;
 
 export const MAX_BUSINESS_NAME_LENGTH = 200;
@@ -174,12 +173,19 @@ export function sortMembers(members: readonly BusinessMember[]): BusinessMember[
   });
 }
 
-/** A business always keeps one owner: the last owner cannot be removed. */
+/** A business always keeps one owner: the last owner can be neither removed nor made staff. */
 export function canRemoveMember(member: BusinessMember, members: readonly BusinessMember[]): boolean {
   if (member.role !== "owner") {
     return true;
   }
   return members.filter((item) => item.role === "owner").length > 1;
+}
+
+export type MemberRole = BusinessMember["role"];
+
+/** The roles a member may get now: staff only while another owner remains. */
+export function allowedRoles(member: BusinessMember, members: readonly BusinessMember[]): MemberRole[] {
+  return canRemoveMember(member, members) ? ["owner", "staff"] : ["owner"];
 }
 
 export type InviteMethod = "phone" | "email";
@@ -190,6 +196,7 @@ export interface InviteForm {
   countryHint: string;
   email: string;
   displayName: string;
+  role: MemberRole;
 }
 
 export type InviteBody = RequestBody<"/v1/businesses/{business_id}/members", "post">;
@@ -202,7 +209,7 @@ export function buildInviteBody(
   form: InviteForm,
 ): { ok: true; body: InviteBody } | { ok: false; errors: Partial<Record<"phone" | "email", InviteError>> } {
   const displayName = form.displayName.trim();
-  const named = displayName ? { display_name: displayName } : {};
+  const named = { ...(displayName ? { display_name: displayName } : {}), role: form.role };
   if (form.method === "phone") {
     const phone = form.phone.trim();
     if (phone === "") {
@@ -291,81 +298,73 @@ export function contactFromForm(form: ContactForm): ManagerContactInput {
 
 // --- Customer data requests ------------------------------------------------
 
-export interface CustomerContact {
-  contactId: string;
-  name: string | null;
-  phoneNumber: string | null;
-  lastMessageAt: number;
-  conversationCount: number;
-  channels: ConversationSummary["channel"][];
-}
+export type ContactSummary = Schema<"ContactSummaryView">;
+export type ContactPage = Schema<"ContactPage">;
+export type ErasureResult = Schema<"ContactErasureResult">;
 
-/** One row per customer from the conversation list, latest activity first. */
-export function contactsFromConversations(conversations: readonly ConversationSummary[]): CustomerContact[] {
-  const byId = new Map<string, CustomerContact>();
-  for (const conversation of conversations) {
-    const existing = byId.get(conversation.contact_id);
-    if (!existing) {
-      byId.set(conversation.contact_id, {
-        contactId: conversation.contact_id,
-        name: conversation.contact_name ?? null,
-        phoneNumber: conversation.contact_phone_number ?? null,
-        lastMessageAt: conversation.last_message_at,
-        conversationCount: 1,
-        channels: [conversation.channel],
-      });
-      continue;
-    }
-    existing.conversationCount += 1;
-    existing.name ??= conversation.contact_name ?? null;
-    existing.phoneNumber ??= conversation.contact_phone_number ?? null;
-    existing.lastMessageAt = Math.max(existing.lastMessageAt, conversation.last_message_at);
-    if (!existing.channels.includes(conversation.channel)) {
-      existing.channels.push(conversation.channel);
-    }
-  }
-  return [...byId.values()].sort((left, right) => right.lastMessageAt - left.lastMessageAt);
-}
-
-/** Customers matching a search by name, phone digits or id. */
-export function filterCustomers(customers: readonly CustomerContact[], query: string): CustomerContact[] {
-  const needle = query.trim().toLocaleLowerCase();
-  if (needle === "") {
-    return [...customers];
-  }
-  const digits = needle.replace(/\D/g, "");
-  return customers.filter(
-    (customer) =>
-      (customer.name ?? "").toLocaleLowerCase().includes(needle) ||
-      customer.contactId.toLocaleLowerCase().includes(needle) ||
-      (digits.length >= 3 && (customer.phoneNumber ?? "").replace(/\D/g, "").includes(digits)),
-  );
-}
+export const CONTACTS_PAGE_SIZE = 20;
 
 /** What the owner types to confirm an erasure: the name, else the phone, else the id. */
-export function erasureConfirmation(customer: Pick<CustomerContact, "contactId" | "name" | "phoneNumber">): string {
-  return customer.name?.trim() || customer.phoneNumber || customer.contactId;
+export function erasureConfirmation(contact: Pick<ContactSummary, "id" | "name" | "phone_number">): string {
+  return contact.name?.trim() || contact.phone_number || contact.id;
 }
 
-/** A contact id typed or pasted by the owner ("contact_…"), or null. */
-export function parseContactId(text: string): string | null {
-  const trimmed = text.trim();
-  return /^contact_[0-9a-f-]{8,}$/i.test(trimmed) ? trimmed : null;
+/** The customer as the list shows them after an erasure (nothing personal left). */
+export function markErased(contact: ContactSummary, erasedAt: number): ContactSummary {
+  return { ...contact, name: null, phone_number: null, is_phone_verified: false, language: null, erased_at: erasedAt };
+}
+
+/** The search sent to the API: trimmed, at most 100 characters, nothing for an empty box. */
+export function contactSearchParam(text: string): string | undefined {
+  const trimmed = text.trim().slice(0, 100);
+  return trimmed === "" ? undefined : trimmed;
 }
 
 // --- Audit log --------------------------------------------------------------
 
-export const AUDIT_PAGE_SIZE = 50;
-export const AUDIT_MAX_LIMIT = 1000;
+export type AuditLogPage = Schema<"AuditLogPage">;
 
-/** The next "show more" limit (the API returns the newest N entries). */
-export function nextAuditLimit(current: number): number {
-  return Math.min(AUDIT_MAX_LIMIT, current + AUDIT_PAGE_SIZE);
+export const AUDIT_PAGE_SIZE = 50;
+
+export interface AuditFilters {
+  action: AuditAction | "";
+  entity: string;
+  actorId: string;
+  /** Business-local days "YYYY-MM-DD" (inclusive), or "". */
+  from: string;
+  to: string;
 }
 
-/** Whether more entries may exist beyond those loaded. */
-export function hasMoreAudit(loaded: number, limit: number): boolean {
-  return loaded >= limit && limit < AUDIT_MAX_LIMIT;
+export const EMPTY_AUDIT_FILTERS: AuditFilters = { action: "", entity: "", actorId: "", from: "", to: "" };
+
+export function hasAuditFilters(filters: AuditFilters): boolean {
+  return Object.values(filters).some((value) => value !== "");
+}
+
+/**
+ * The query of GET …/audit-log for the filters: business-local days become
+ * UTC microseconds, `until` is the start of the day after `to`.
+ */
+export function auditQuery(
+  filters: AuditFilters,
+  dayStartUs: (day: string) => number | null,
+): { action?: AuditAction; entity?: string; actor_id?: string; since?: string; until?: string } {
+  const since = filters.from ? dayStartUs(filters.from) : null;
+  const until = filters.to ? dayStartUs(nextDay(filters.to)) : null;
+  return {
+    ...(filters.action ? { action: filters.action } : {}),
+    ...(filters.entity ? { entity: filters.entity } : {}),
+    ...(filters.actorId ? { actor_id: filters.actorId } : {}),
+    ...(since !== null ? { since: String(since) } : {}),
+    ...(until !== null ? { until: String(until) } : {}),
+  };
+}
+
+/** "2026-02-28" -> "2026-03-01" (calendar arithmetic, no time zone). */
+export function nextDay(day: string): string {
+  const [year = 1970, month = 1, date = 1] = day.split("-").map(Number);
+  const next = new Date(Date.UTC(year, month - 1, date + 1));
+  return next.toISOString().slice(0, 10);
 }
 
 export const AUDIT_ACTION_TONES: Record<AuditAction, BadgeTone> = {
