@@ -29,17 +29,21 @@ class ActivateAssistantVersionUseCase(
     Make an already authorized and checked version the live one (shared by
     publishing and rollback).
 
-    With voice enabled, the business's voice agent is created or updated
-    first from the same version: its instruction, a greeting in every
-    language, the chat's tool definitions and the public base URL for the
-    tool webhooks. The agent id of earlier versions is reused (one agent
-    per business). If that fails, ExternalServiceError is raised and
-    nothing is published. Then the previously published version is
-    archived, this one is published, and the business goes live with it.
+    First every launch condition is checked (trial or subscription, the
+    data processing agreement, nothing blocking in the profile); a missing
+    one is a ConflictError and nothing changes. With voice enabled, the
+    business's voice agent is created or updated first from the same
+    version: its instruction, a greeting in every language, the chat's tool
+    definitions and the public base URL for the tool webhooks. The agent id
+    of earlier versions is reused (one agent per business). If that fails,
+    ExternalServiceError is raised and nothing is published. Then the
+    previously published version is archived, this one is published, and
+    the business goes live with it.
     """
 
     def __init__(
         self,
+        check_go_live_readiness: UseCaseContract[BusinessDocument, None],
         business_repo: BusinessRepoContract,
         assistant_version_repo: AssistantVersionRepoContract,
         voice_agent_provisioner: VoiceAgentProvisionerAdapterContract,
@@ -48,6 +52,9 @@ class ActivateAssistantVersionUseCase(
         app_settings: AppSettings,
         wall_clock: WallClock[Microseconds],
     ) -> None:
+        self._check_go_live_readiness: UseCaseContract[BusinessDocument, None] = (
+            check_go_live_readiness
+        )
         self._business_repo: BusinessRepoContract = business_repo
         self._assistant_version_repo: AssistantVersionRepoContract = (
             assistant_version_repo
@@ -68,6 +75,7 @@ class ActivateAssistantVersionUseCase(
     def run(self, input_data: AssistantVersionActivation) -> AssistantVersionDocument:
         business: BusinessDocument = input_data.business
         version: AssistantVersionDocument = input_data.version
+        self._check_go_live_readiness.run(business)
         versions: list[AssistantVersionDocument] = (
             self._assistant_version_repo.list_by_business(business.id)
         )

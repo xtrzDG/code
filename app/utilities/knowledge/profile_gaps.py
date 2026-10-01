@@ -1,9 +1,10 @@
 """Find what is missing in a business profile (concept section 4, "what to add").
 
-Blocking gaps stop assembly because the assistant cannot work without them:
-required niche answers, opening hours, a way to reach a person, and for
-niches that take bookings also the address, the booking rules and at least
-one active resource. Missing prices and FAQ only make the assistant weaker.
+Blocking gaps stop going live because the assistant cannot work without
+them: required niche answers, opening hours, a manager contact that gets
+handoffs, bookings and leads, and for niches that take bookings also the
+address, the booking rules and at least one active resource. Missing prices
+and FAQ only make the assistant weaker.
 """
 
 from collections.abc import Sequence
@@ -65,10 +66,9 @@ def find_profile_gaps(
             )
         )
 
-    has_handoff_phone: bool = (
-        profile is not None and profile.contacts.handoff_phone_number is not None
-    )
-    if business.manager_contacts == [] and not has_handoff_phone:
+    # Handoffs, bookings and leads reach staff only through manager contacts;
+    # the profile's handoff phone is told to customers but notifies nobody.
+    if business.manager_contacts == []:
         findings.append(
             ProfileGapFinding(
                 kind=ProfileGapKind.NO_HANDOFF_CONTACT,

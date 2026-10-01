@@ -117,25 +117,32 @@ def test_autotests_can_be_narrowed_over_http() -> None:
     ]
 
 
-def test_failed_version_is_published_only_with_acceptance() -> None:
+def test_failed_version_is_published_only_by_an_admin_with_acceptance() -> None:
     testbed = AssemblyTestbed()
     business = seed_italian_restaurant(testbed)
     testbed.judge_raw_answers["booking__it"] = "not a verdict"
     client = testbed.build_client()
     owner = testbed.bearer(testbed.owner_id)
+    admin = testbed.bearer(testbed.add_platform_admin())
     version = assemble(client, owner, business.id)
     publish_url = f"{versions_url(business.id)}/{version['id']}/publish"
 
     refused = client.post(publish_url, headers=owner)
-    accepted = client.post(
+    forced_by_owner = client.post(
         publish_url,
         headers=owner,
+        json={"accept_failed_tests": True},
+    )
+    accepted = client.post(
+        publish_url,
+        headers=admin,
         json={"accept_failed_tests": True},
     )
 
     assert version["status"] == "tests_failed"
     assert refused.status_code == 409
     assert refused.json()["error"] == "conflict"
+    assert forced_by_owner.status_code == 403
     assert accepted.status_code == 200
     assert accepted.json()["status"] == "published"
 

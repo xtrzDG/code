@@ -108,12 +108,13 @@ GAP_TEXTS: dict[ProfileGapKind, LocalizedText] = {
         ka="მიუთითეთ მისამართი და რუკის ბმული.",
     ),
     ProfileGapKind.NO_HANDOFF_CONTACT: build_localized_text(
-        en="Add a manager contact or a handoff phone so the assistant can pass "
-        "difficult cases to a person.",
-        ru="Добавьте контакт менеджера или телефон для передачи, чтобы помощник "
-        "мог передавать сложные случаи человеку.",
-        ka="დაამატეთ მენეჯერის კონტაქტი ან ტელეფონი, რათა ასისტენტმა რთული "
-        "შემთხვევები ადამიანს გადასცეს.",
+        en="Add a manager contact: handoffs, new bookings and requests are sent "
+        "to it, so the assistant can pass difficult cases to a person.",
+        ru="Добавьте контакт менеджера: туда приходят передачи, новые брони и "
+        "заявки, чтобы помощник мог передавать сложные случаи человеку.",
+        ka="დაამატეთ მენეჯერის კონტაქტი: მასზე მოდის გადაცემები, ახალი "
+        "ჯავშნები და მოთხოვნები, რათა ასისტენტმა რთული შემთხვევები ადამიანს "
+        "გადასცეს.",
     ),
     ProfileGapKind.NO_BOOKING_RULES: build_localized_text(
         en="Set the booking rules: slot length, maximum party size and minimum notice.",

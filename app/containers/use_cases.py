@@ -278,6 +278,9 @@ from app.use_cases.assistants.activate_assistant_version_use_case import (
 from app.use_cases.assistants.assemble_assistant_version_use_case import (
     AssembleAssistantVersionUseCase,
 )
+from app.use_cases.assistants.check_go_live_readiness_use_case import (
+    CheckGoLiveReadinessUseCase,
+)
 from app.use_cases.assistants.get_assistant_version_use_case import (
     GetAssistantVersionUseCase,
 )
@@ -1436,10 +1439,24 @@ class UseCasesContainer(containers.DeclarativeContainer):
         autotest_run_repo=repositories.autotest_run_repo,
         autotest_run_view_transformer=transformers.autotest_run_view_transformer,
     )
+    check_go_live_readiness_use_case: Factory[
+        UseCaseContract[BusinessDocument, None]
+    ] = Factory(
+        CheckGoLiveReadinessUseCase,
+        subscription_repo=repositories.subscription_repo,
+        dpa_acceptance_repo=repositories.dpa_acceptance_repo,
+        business_profile_repo=repositories.business_profile_repo,
+        knowledge_item_repo=repositories.knowledge_item_repo,
+        resource_repo=repositories.resource_repo,
+        niche_template_registry=registries.niche_template_registry,
+        app_settings=config.app_settings,
+        wall_clock=time_provider.microsecond_wall_clock,
+    )
     activate_assistant_version_use_case: Factory[
         UseCaseContract[AssistantVersionActivation, AssistantVersionDocument]
     ] = Factory(
         ActivateAssistantVersionUseCase,
+        check_go_live_readiness=check_go_live_readiness_use_case,
         business_repo=repositories.business_repo,
         assistant_version_repo=repositories.assistant_version_repo,
         voice_agent_provisioner=adapters.voice_agent_provisioner,
@@ -1456,6 +1473,9 @@ class UseCasesContainer(containers.DeclarativeContainer):
         assistant_version_repo=repositories.assistant_version_repo,
         activate_assistant_version=activate_assistant_version_use_case,
         version_details_transformer=transformers.assistant_version_details_transformer,
+        user_repo=repositories.user_repo,
+        audit_log_repo=repositories.audit_log_repo,
+        wall_clock=time_provider.microsecond_wall_clock,
     )
     rollback_assistant_version_use_case: Factory[
         UseCaseContract[RollbackAssistantVersionCommand, AssistantVersionDetails]

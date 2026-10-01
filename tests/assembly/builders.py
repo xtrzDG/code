@@ -5,14 +5,23 @@ units), Israel (ILS, Hebrew and Arabic written right to left) and an online
 shop in the United States that takes orders instead of bookings.
 """
 
-from app.schemas.constants.billing import PlanKey
+from typed_time_provider import Microseconds
+
+from app.schemas.constants.billing import BillingPeriod, PlanKey, SubscriptionStatus
 from app.schemas.constants.bookings import ResourceKind
 from app.schemas.constants.businesses import BusinessLinkKind, Weekday
+from app.schemas.constants.handoffs import ManagerContactChannel
 from app.schemas.constants.knowledge import KnowledgeItemKind
 from app.schemas.constants.localization import DataRegion
 from app.schemas.constants.niches import NicheKey
 from app.schemas.constants.users import BusinessMemberRole
-from app.schemas.domain.businesses import BusinessDocument, BusinessMember
+from app.schemas.domain.billing import SubscriptionDocument
+from app.schemas.domain.businesses import (
+    BusinessDocument,
+    BusinessMember,
+    ManagerContact,
+)
+from app.schemas.domain.compliance import DpaAcceptanceDocument
 from app.schemas.domain.knowledge import KnowledgeAttribute, KnowledgeItemDocument
 from app.schemas.domain.profiles import (
     BookingRules,
@@ -40,6 +49,7 @@ from app.schemas.typings.businesses.constrained_integers import (
 )
 from app.schemas.typings.businesses.constrained_strings import WebLink
 from app.schemas.typings.businesses.strings import AddressText, BusinessName, CityName
+from app.schemas.typings.handoffs.strings import ManagerContactAddress, ManagerName
 from app.schemas.typings.knowledge.constrained_integers import ServiceDurationMinutes
 from app.schemas.typings.knowledge.constrained_strings import (
     KnowledgeAttributeKey,
@@ -80,6 +90,9 @@ def interval(weekday: Weekday, opens: str, closes: str) -> OpeningInterval:
     )
 
 
+TRIAL_SECONDS: int = 14 * 24 * 60 * 60
+
+
 def build_business(
     testbed: AssemblyTestbed,
     *,
@@ -91,7 +104,14 @@ def build_business(
     currency_code: str,
     languages: list[str],
     plan_key: PlanKey = PlanKey.CHAT,
+    is_launch_ready: bool = True,
 ) -> BusinessDocument:
+    """
+    A business with its owner and a staff member. A launch-ready one also
+    has a manager contact, a running trial and the current DPA accepted,
+    so only its profile and versions decide whether it may go live.
+    """
+
     business = BusinessDocument(
         name=BusinessName(name),
         niche_key=niche_key,
@@ -110,7 +130,50 @@ def build_business(
         ],
     )
     testbed.business_repo.save(business)
+    if is_launch_ready:
+        make_launch_ready(testbed, business)
+
     return business
+
+
+def make_launch_ready(testbed: AssemblyTestbed, business: BusinessDocument) -> None:
+    """A manager contact, a running trial and the current DPA accepted."""
+
+    now = testbed.wall_clock.now_unix()
+    business.manager_contacts = [
+        ManagerContact(
+            name=ManagerName("Nino"),
+            channel=ManagerContactChannel.TELEGRAM,
+            address=ManagerContactAddress("70001"),
+            language=business.owner_language,
+        )
+    ]
+    testbed.business_repo.save(business)
+    testbed.subscription_repo.save(
+        SubscriptionDocument(
+            business_id=business.id,
+            plan_key=business.plan_key,
+            billing_period=BillingPeriod.MONTHLY,
+            price_minor=MoneyAmountMinor(0),
+            currency_code=business.currency_code,
+            status=SubscriptionStatus.TRIALING,
+            trial_ends_at=Microseconds(int(now) + TRIAL_SECONDS * 1_000_000),
+            period_start=now,
+            period_end=Microseconds(int(now) + TRIAL_SECONDS * 1_000_000),
+            created_at=now,
+            updated_at=now,
+        )
+    )
+    testbed.dpa_repo.save(
+        DpaAcceptanceDocument(
+            business_id=business.id,
+            document_version=testbed.settings.dpa_document_version,
+            accepted_by=testbed.owner_id,
+            accepted_at=now,
+            created_at=now,
+            updated_at=now,
+        )
+    )
 
 
 def build_menu_item(
@@ -323,11 +386,15 @@ def seed_georgian_restaurant(
     return business
 
 
-def seed_italian_restaurant(testbed: AssemblyTestbed) -> BusinessDocument:
+def seed_italian_restaurant(
+    testbed: AssemblyTestbed,
+    is_launch_ready: bool = True,
+) -> BusinessDocument:
     """Milan trattoria: it, en; prices in euros with cents."""
 
     business = build_business(
         testbed,
+        is_launch_ready=is_launch_ready,
         name="Trattoria Milano",
         niche_key=NicheKey.RESTAURANT,
         country_code="IT",
@@ -463,8 +530,14 @@ def seed_israeli_clinic(testbed: AssemblyTestbed) -> BusinessDocument:
     return business
 
 
-def seed_online_shop(testbed: AssemblyTestbed) -> BusinessDocument:
-    """New York online shop: no resources, no booking rules, no links."""
+def seed_online_shop(
+    testbed: AssemblyTestbed,
+    has_opening_hours: bool = True,
+) -> BusinessDocument:
+    """
+    New York online shop: no resources, no booking rules, no links; order
+    questions are answered on weekdays.
+    """
 
     business = build_business(
         testbed,
@@ -481,6 +554,11 @@ def seed_online_shop(testbed: AssemblyTestbed) -> BusinessDocument:
             business_id=business.id,
             niche_key=NicheKey.ONLINE_SHOP,
             answers_language=LanguageTag("en"),
+            hours=[
+                interval(weekday, "09:00", "18:00")
+                for weekday in (Weekday.MONDAY, Weekday.TUESDAY, Weekday.WEDNESDAY)
+                if has_opening_hours
+            ],
         )
     )
     testbed.knowledge_repo.save(

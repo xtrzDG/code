@@ -36,11 +36,15 @@ from app.repositories.assistant_repositories import (
     AssistantVersionRepository,
     AutotestRunRepository,
 )
+from app.repositories.billing_repositories import SubscriptionRepository
 from app.repositories.business_repositories import (
     BusinessProfileRepository,
     BusinessRepository,
 )
-from app.repositories.compliance_repositories import AuditLogRepository
+from app.repositories.compliance_repositories import (
+    AuditLogRepository,
+    DpaAcceptanceRepository,
+)
 from app.repositories.conversation_repositories import MessageRepository
 from app.repositories.knowledge_repositories import (
     KnowledgeItemRepository,
@@ -50,12 +54,17 @@ from app.repositories.knowledge_repositories import (
 from app.repositories.user_repositories import UserRepository
 from app.schemas.configurations.app_settings import AppSettings
 from app.schemas.constants.assistants import AutotestScenarioKind
+from app.schemas.constants.users import LoginMethod
 from app.schemas.domain.assistants import (
     AssistantVersionDocument,
     AutotestRunDocument,
 )
+from app.schemas.domain.billing import SubscriptionDocument
 from app.schemas.domain.businesses import BusinessDocument
-from app.schemas.domain.compliance import AuditLogEntryDocument
+from app.schemas.domain.compliance import (
+    AuditLogEntryDocument,
+    DpaAcceptanceDocument,
+)
 from app.schemas.domain.conversations import MessageDocument
 from app.schemas.domain.knowledge import KnowledgeItemDocument
 from app.schemas.domain.profiles import BusinessProfileDocument
@@ -105,6 +114,9 @@ from app.use_cases.assistants.activate_assistant_version_use_case import (
 )
 from app.use_cases.assistants.assemble_assistant_version_use_case import (
     AssembleAssistantVersionUseCase,
+)
+from app.use_cases.assistants.check_go_live_readiness_use_case import (
+    CheckGoLiveReadinessUseCase,
 )
 from app.use_cases.assistants.get_assistant_version_use_case import (
     GetAssistantVersionUseCase,
@@ -330,6 +342,12 @@ class AssemblyTestbed:
         self.audit_repo = AuditLogRepository(
             InMemoryDocumentCollectionAdapter(AuditLogEntryDocument)
         )
+        self.subscription_repo = SubscriptionRepository(
+            InMemoryDocumentCollectionAdapter(SubscriptionDocument)
+        )
+        self.dpa_repo = DpaAcceptanceRepository(
+            InMemoryDocumentCollectionAdapter(DpaAcceptanceDocument)
+        )
 
         self.niche_registry = FakeNicheTemplateRegistry()
         self.country_registry = FakeCountryRegistry()
@@ -445,6 +463,16 @@ class AssemblyTestbed:
             self.finish_autotest_run_use_case,
         )
         activate = ActivateAssistantVersionUseCase(
+            check_go_live_readiness=CheckGoLiveReadinessUseCase(
+                subscription_repo=self.subscription_repo,
+                dpa_acceptance_repo=self.dpa_repo,
+                business_profile_repo=self.profile_repo,
+                knowledge_item_repo=self.knowledge_repo,
+                resource_repo=self.resource_repo,
+                niche_template_registry=self.niche_registry,
+                app_settings=self.settings,
+                wall_clock=self.wall_clock,
+            ),
             business_repo=self.business_repo,
             assistant_version_repo=self.version_repo,
             voice_agent_provisioner=self.voice_provisioner,
@@ -458,6 +486,9 @@ class AssemblyTestbed:
             self.version_repo,
             activate,
             details_transformer,
+            self.user_repo,
+            self.audit_repo,
+            self.wall_clock,
         )
         self.rollback_use_case = RollbackAssistantVersionUseCase(
             authorize,
@@ -513,16 +544,27 @@ class AssemblyTestbed:
         business_id: BusinessId,
         version_id: AssistantVersionId,
         accept_failed_tests: bool = False,
+        user_id: UserId | None = None,
     ) -> AssistantVersionDetails:
         self.advance(60)
         return self.publish_use_case.run(
             PublishAssistantVersionCommand(
-                user_id=self.owner_id,
+                user_id=user_id or self.owner_id,
                 business_id=business_id,
                 version_id=version_id,
                 accept_failed_tests=accept_failed_tests,
             )
         )
+
+    def add_platform_admin(self) -> UserId:
+        admin = UserDocument(
+            login_method=LoginMethod.EMAIL,
+            locale=LanguageTag("en"),
+            is_verified=True,
+            is_platform_admin=True,
+        )
+        self.user_repo.save(admin)
+        return admin.id
 
     def version(
         self,

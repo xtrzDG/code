@@ -130,7 +130,8 @@ class RunAutotestsCommand(ImmutableDTO):
 class PublishAssistantVersionRequest(ImmutableDTO):
     """
     HTTP body of publishing. A version that did not pass the autotests is
-    published only with `accept_failed_tests` set.
+    published only by a platform admin with `accept_failed_tests` set (the
+    decision is written to the audit log).
     """
 
     accept_failed_tests: AcceptsFailedAutotests = False

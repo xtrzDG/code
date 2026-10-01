@@ -107,11 +107,6 @@ def test_georgian_restaurant_from_sign_in_to_a_booked_and_handed_off_chat(
         headers=headers,
     )
     assert holiday.status_code == 201, holiday.text
-    gaps = client.get(
-        f"{base}/profile/gaps", params={"language": "en"}, headers=headers
-    )
-    assert gaps.json()["is_ready_for_assembly"] is True
-
     # Staff get notifications in the platform Telegram bot; the widget is on.
     settings = client.patch(
         base,
@@ -128,6 +123,12 @@ def test_georgian_restaurant_from_sign_in_to_a_booked_and_handed_off_chat(
         headers=headers,
     )
     assert settings.status_code == 200, settings.text
+    # Nothing blocking is left: the manager contact gets handoffs, bookings
+    # and leads (the profile's handoff phone alone would reach nobody).
+    gaps = client.get(
+        f"{base}/profile/gaps", params={"language": "en"}, headers=headers
+    )
+    assert gaps.json()["is_ready_for_assembly"] is True
     web_chat = client.put(f"{base}/channels/web", json={}, headers=headers)
     assert web_chat.json()["status"] == "connected"
     dpa = client.post(f"{base}/dpa", json={}, headers=headers)

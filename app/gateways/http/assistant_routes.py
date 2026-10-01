@@ -110,7 +110,9 @@ def build_assistant_router(
         POST .../assistant-versions/{version_id}/autotests
              run the autotests again, optionally narrowed
         POST .../assistant-versions/{version_id}/publish
-             make the version live (accept_failed_tests for untested ones)
+             make a READY version live once the trial or subscription,
+             the DPA and the profile allow it (accept_failed_tests forces an
+             untested one, platform admins only)
         POST .../assistant-versions/{version_id}/rollback
              make an earlier, archived version live again
     """

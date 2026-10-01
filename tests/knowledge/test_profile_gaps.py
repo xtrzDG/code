@@ -190,7 +190,7 @@ def test_gap_texts_follow_the_requested_language_with_english_fallback() -> None
 
 def test_complete_profile_is_ready_and_only_advice_remains() -> None:
     harness = KnowledgeHarness()
-    business = harness.add_business()
+    business = harness.add_business(has_manager_contact=True)
     complete_restaurant(harness, business.id)
 
     view = harness.compute_profile_gaps.run(ProfileGapsQuery(business_id=business.id))
@@ -203,7 +203,7 @@ def test_complete_profile_is_ready_and_only_advice_remains() -> None:
 
 def test_priced_items_and_faq_close_the_advice_gaps() -> None:
     harness = KnowledgeHarness()
-    business = harness.add_business()
+    business = harness.add_business(has_manager_contact=True)
     complete_restaurant(harness, business.id)
     for item in (
         KnowledgeItemInput(
@@ -225,6 +225,23 @@ def test_priced_items_and_faq_close_the_advice_gaps() -> None:
 
     assert view.gaps == []
     assert view.is_ready_for_assembly is True
+
+
+def test_a_handoff_phone_alone_reaches_nobody_and_stays_blocking() -> None:
+    # Handoffs, bookings and leads are sent only to manager contacts; with
+    # just the profile's handoff phone every staff notification is lost.
+    harness = KnowledgeHarness()
+    business = harness.add_business()
+    complete_restaurant(harness, business.id)
+
+    view = harness.compute_profile_gaps.run(
+        ProfileGapsQuery(business_id=business.id, language=LanguageTag("en"))
+    )
+
+    assert kinds(view)[0] is ProfileGapKind.NO_HANDOFF_CONTACT
+    assert view.gaps[0].is_blocking is True
+    assert view.gaps[0].description.startswith("Add a manager contact")
+    assert view.is_ready_for_assembly is False
 
 
 def test_inactive_items_and_resources_do_not_count() -> None:

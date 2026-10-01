@@ -289,7 +289,7 @@ def test_israeli_clinic_keeps_right_to_left_texts_untouched() -> None:
 
 def test_minimal_profile_gives_only_known_facts() -> None:
     testbed = AssemblyTestbed()
-    business = seed_online_shop(testbed)
+    business = seed_online_shop(testbed, has_opening_hours=False)
 
     facts = BusinessFactsTransformer().transform(build_source(testbed, business))
 

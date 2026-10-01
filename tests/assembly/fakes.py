@@ -242,6 +242,7 @@ def build_online_shop_template() -> NicheTemplate:
         recommended_plans=[PlanKey.CHAT],
         resource_kind=ResourceKind.SLOT,
         booking_unit=BookingUnit.TIME_SLOT,
+        takes_bookings=False,
         resource_nouns=text(en="", ru=""),
         knowledge_kinds=[KnowledgeItemKind.PRODUCT],
         questions=[],

@@ -3,7 +3,11 @@
 from typed_time_provider import Microseconds
 
 from app.contracts.repositories import InvoiceRepoContract, SubscriptionRepoContract
-from app.schemas.constants.billing import InvoiceKind, InvoiceStatus
+from app.schemas.constants.billing import (
+    InvoiceKind,
+    InvoiceStatus,
+    SubscriptionStatus,
+)
 from app.schemas.domain.billing import InvoiceDocument, SubscriptionDocument
 from app.schemas.dto.billing import Money
 from app.schemas.exceptions.application_errors import (
@@ -53,6 +57,32 @@ def require_current_subscription(
         raise NotFoundError("The business has no subscription; start the trial first.")
 
     return subscription
+
+
+def is_service_paid_for(
+    subscription: SubscriptionDocument | None,
+    now: Microseconds,
+) -> bool:
+    """
+    True while the business is entitled to the assistant (concept section 9):
+    a running trial, an active subscription, a missed payment still within
+    its grace, or a cancelled subscription inside the period already paid.
+    """
+
+    if subscription is None:
+        return False
+
+    match subscription.status:
+        case SubscriptionStatus.ACTIVE:
+            return True
+        case SubscriptionStatus.TRIALING:
+            return (
+                subscription.trial_ends_at is None or now < subscription.trial_ends_at
+            )
+        case SubscriptionStatus.PAST_DUE:
+            return subscription.grace_until is None or now < subscription.grace_until
+        case SubscriptionStatus.CANCELLED:
+            return now < subscription.period_end
 
 
 def list_subscription_invoices(

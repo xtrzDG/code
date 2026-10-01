@@ -496,7 +496,12 @@ def test_restricted_states_and_access() -> None:
     with pytest.raises(NotFoundError):
         testbed.run_autotests(business.id, AssistantVersionId())
 
-    testbed.publish(business.id, version.id, accept_failed_tests=True)
+    testbed.publish(
+        business.id,
+        version.id,
+        accept_failed_tests=True,
+        user_id=testbed.add_platform_admin(),
+    )
     with pytest.raises(ConflictError, match="published"):
         testbed.run_autotests(business.id, version.id)
 
