@@ -3,7 +3,6 @@
 import { useBusinessFormat } from "@/components/business/BusinessContext";
 import { Badge, Button, Card, EmptyState, buttonClasses } from "@/components/ui";
 import { Facts } from "@/components/workspace/Facts";
-import { DANGER_GHOST } from "@/components/workspace/styles";
 import { IconCard } from "@/components/icons";
 import { useI18n } from "@/i18n/client";
 import type { MessageKey } from "@/i18n/translate";
@@ -67,7 +66,7 @@ export function SubscriptionCard({
         canManage ? (
           <>
             {canCancel ? (
-              <Button variant="ghost" size="sm" className={DANGER_GHOST} onClick={onCancel}>
+              <Button variant="danger-ghost" size="sm" onClick={onCancel}>
                 {t("billing.cancel")}
               </Button>
             ) : null}

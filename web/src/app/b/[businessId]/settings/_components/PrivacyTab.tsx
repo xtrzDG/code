@@ -16,7 +16,6 @@ import { IconDownload, IconFile, IconSearch, IconUsers } from "@/components/work
 import { InlineError } from "@/components/workspace/InlineError";
 import { MarkdownDocument } from "@/components/workspace/MarkdownDocument";
 import { OwnerOnlyState } from "@/components/workspace/OwnerOnly";
-import { DANGER_GHOST } from "@/components/workspace/styles";
 import { useCursorList } from "@/components/workspace/useCursorList";
 import { useI18n } from "@/i18n/client";
 import { languageName } from "@/lib/format";
@@ -394,9 +393,8 @@ function DataRequestsCard() {
                           {t("settings.requests.export")}
                         </Button>
                         <Button
-                          variant="ghost"
+                          variant="danger-ghost"
                           size="sm"
-                          className={DANGER_GHOST}
                           aria-label={t("settings.requests.deleteLabel", { name })}
                           onClick={() => {
                             setErasureError(null);

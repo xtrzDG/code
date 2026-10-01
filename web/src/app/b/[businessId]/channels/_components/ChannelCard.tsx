@@ -2,7 +2,6 @@
 
 import { useBusiness, useBusinessFormat } from "@/components/business/BusinessContext";
 import { Alert, Badge, Button, ButtonLink } from "@/components/ui";
-import { DANGER_GHOST } from "@/components/workspace/styles";
 import { useI18n } from "@/i18n/client";
 import { cn } from "@/lib/cn";
 import { businessPath } from "@/lib/navigation";
@@ -136,9 +135,8 @@ export function ChannelCard({
           </Button>
           {isOn ? (
             <Button
-              variant="ghost"
+              variant="danger-ghost"
               size="sm"
-              className={DANGER_GHOST}
               onClick={() => onDisconnect(kind)}
               disabled={isBusy}
               aria-label={`${t("channels.disconnect")} — ${name}`}

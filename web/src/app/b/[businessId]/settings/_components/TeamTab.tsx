@@ -14,7 +14,6 @@ import { Badge, Button, Card, Field, Input, Modal, Radio, Select, useToast } fro
 import { ConfirmDialog } from "@/components/workspace/ConfirmDialog";
 import { InlineError } from "@/components/workspace/InlineError";
 import { IconUsers } from "@/components/workspace/icons";
-import { DANGER_GHOST } from "@/components/workspace/styles";
 import { useI18n } from "@/i18n/client";
 import { countryFlag } from "@/lib/countries";
 import { cn } from "@/lib/cn";
@@ -181,9 +180,8 @@ export function TeamTab() {
                 )}
                 {isOwner ? (
                   <Button
-                    variant="ghost"
+                    variant="danger-ghost"
                     size="sm"
-                    className={DANGER_GHOST}
                     disabled={!removable}
                     title={!removable ? t("settings.team.lastOwner") : undefined}
                     aria-label={t("settings.team.removeLabel", { name })}

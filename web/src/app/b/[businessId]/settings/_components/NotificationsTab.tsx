@@ -12,7 +12,6 @@ import { Badge, Button, ButtonLink, Card, EmptyState, Field, Input, Modal, Selec
 import { ConfirmDialog } from "@/components/workspace/ConfirmDialog";
 import { IconBell } from "@/components/workspace/icons";
 import { InlineError } from "@/components/workspace/InlineError";
-import { DANGER_GHOST } from "@/components/workspace/styles";
 import { useI18n } from "@/i18n/client";
 import type { MessageKey } from "@/i18n/translate";
 import { languageName } from "@/lib/format";
@@ -187,9 +186,8 @@ export function NotificationsTab() {
                       {t("settings.contacts.edit")}
                     </Button>
                     <Button
-                      variant="ghost"
+                      variant="danger-ghost"
                       size="sm"
-                      className={DANGER_GHOST}
                       aria-label={t("settings.contacts.removeLabel", { name: contact.name })}
                       onClick={() => {
                         setDialogError(null);

@@ -9,7 +9,6 @@ import { IconCalendar, IconExternal } from "@/components/icons";
 import { Alert, Badge, Button, Card, ErrorState, LoadingBlock, useToast } from "@/components/ui";
 import { ConfirmDialog } from "@/components/workspace/ConfirmDialog";
 import { Facts } from "@/components/workspace/Facts";
-import { DANGER_GHOST } from "@/components/workspace/styles";
 import { useI18n } from "@/i18n/client";
 
 /**
@@ -152,9 +151,8 @@ export function GoogleCalendarCard({ canManage }: { canManage: boolean }) {
                   </Button>
                   {isConnected ? (
                     <Button
-                      variant="ghost"
+                      variant="danger-ghost"
                       size="sm"
-                      className={DANGER_GHOST}
                       onClick={() => {
                         setDisconnectError(null);
                         setConfirming(true);
