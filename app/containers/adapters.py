@@ -39,6 +39,7 @@ from app.containers.factories import (
 from app.containers.time_provider import TimeProviderContainer
 from app.containers.utilities import UtilitiesContainer
 from app.contracts.document_store import DocumentCollectionAdapterContract
+from app.contracts.llm import LlmAdapterContract
 from app.contracts.observability import LlmTraceFacilitatorContract
 from app.schemas.domain.assistants import (
     AssistantVersionDocument,
@@ -551,7 +552,8 @@ class AdaptersContainer(containers.DeclarativeContainer):
         AnthropicLlmAdapter,
         client=clients.anthropic_messages_client,
     )
-    routing_llm_adapter: Singleton[RoutingLlmAdapter] = Singleton(
+    # Typed by its contract: tests replace it with the scripted model.
+    routing_llm_adapter: Singleton[LlmAdapterContract] = Singleton(
         RoutingLlmAdapter,
         openai_adapter=openai_llm_adapter,
         anthropic_adapter=anthropic_llm_adapter,

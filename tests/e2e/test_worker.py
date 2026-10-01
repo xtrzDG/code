@@ -1,0 +1,79 @@
+"""The background worker built from the real container."""
+
+import signal
+import threading
+from collections.abc import Iterator
+from typing import cast
+
+import pytest
+
+from app.containers.gateways import (
+    CHECK_PACKAGE_USAGE_JOB,
+    END_TRIALS_JOB,
+    ENFORCE_GRACE_PERIODS_JOB,
+    FLUSH_LLM_TRACES_JOB,
+    PURGE_EXPIRED_RECORDINGS_JOB,
+    SEND_BOOKING_REMINDERS_JOB,
+)
+from app.gateways.worker.background_worker import PeriodicJobSpec
+from app.worker_main import STOP_SIGNALS, install_stop_signal_handlers, main
+from tests.e2e.harness import start_workshop
+
+
+def test_worker_ticks_once_with_every_job_registered() -> None:
+    workshop = start_workshop()
+    container = workshop.container
+    jobs = cast(list[PeriodicJobSpec], container.gateways.periodic_jobs())
+    worker = container.gateways.background_worker()
+
+    first = worker.run_once()
+    right_after = worker.run_once()
+    workshop.clock.advance(60)
+    a_minute_later = worker.run_once()
+    workshop.clock.advance(60 * 60)
+    an_hour_later = worker.run_once()
+
+    assert [(job.name, int(job.interval_seconds)) for job in jobs] == [
+        (PURGE_EXPIRED_RECORDINGS_JOB, 86_400),
+        (END_TRIALS_JOB, 3_600),
+        (ENFORCE_GRACE_PERIODS_JOB, 3_600),
+        (CHECK_PACKAGE_USAGE_JOB, 86_400),
+        (SEND_BOOKING_REMINDERS_JOB, 900),
+        (FLUSH_LLM_TRACES_JOB, 60),
+    ]
+    assert (first.periodic_runs, first.queued_runs, first.failures) == (6, 0, 0)
+    assert right_after.periodic_runs == 0
+    assert a_minute_later.periodic_runs == 1  # the trace flush
+    # Trials, grace periods, reminders and the trace flush.
+    assert (an_hour_later.periodic_runs, an_hour_later.failures) == (4, 0)
+
+
+@pytest.fixture
+def restored_signal_handlers() -> Iterator[None]:
+    previous = {
+        stop_signal: signal.getsignal(stop_signal) for stop_signal in STOP_SIGNALS
+    }
+    yield
+    for stop_signal, handler in previous.items():
+        signal.signal(stop_signal, handler)
+
+
+@pytest.mark.usefixtures("restored_signal_handlers")
+def test_sigterm_asks_the_worker_to_stop() -> None:
+    stop_event = threading.Event()
+
+    install_stop_signal_handlers(stop_event)
+    signal.raise_signal(signal.SIGTERM)
+
+    assert stop_event.is_set()
+
+
+@pytest.mark.usefixtures("restored_signal_handlers")
+def test_worker_main_runs_until_stopped_and_shuts_down() -> None:
+    workshop = start_workshop()
+    stop_event = threading.Event()
+    stop_event.set()
+
+    exit_code = main(app_container=workshop.container, stop_event=stop_event)
+
+    assert exit_code == 0

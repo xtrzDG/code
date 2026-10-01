@@ -8,6 +8,7 @@ from app.containers.repositories import RepositoriesContainer
 from app.containers.time_provider import TimeProviderContainer
 from app.containers.transformers import TransformersContainer
 from app.containers.utilities import UtilitiesContainer
+from app.contracts.facilitators import OtpDeliveryFacilitatorContract
 from app.facilitators.calendar.google_calendar_sync_facilitator import (
     GoogleCalendarSyncFacilitator,
 )
@@ -48,7 +49,7 @@ class FacilitatorsContainer(containers.DeclarativeContainer):
     )
     # Sign-in codes are logged outside production; real SMS, WhatsApp,
     # Telegram and e-mail providers replace this facilitator.
-    otp_delivery_facilitator: Singleton[LoggingOtpDeliveryFacilitator] = Singleton(
+    otp_delivery_facilitator: Singleton[OtpDeliveryFacilitatorContract] = Singleton(
         LoggingOtpDeliveryFacilitator,
         app_settings=config.app_settings,
     )
