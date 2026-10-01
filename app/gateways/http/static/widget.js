@@ -4,9 +4,10 @@
  * Embed (the cabinet gives this snippet; GET /v1/businesses/{id}/channels/web/snippet):
  *   <script src="https://<api>/widget.js" data-tenant="<business id>" async></script>
  *
- * Optional attributes of the script tag:
- *   data-color="#4f46e5"   accent colour (hex)
- *   data-position="left"   launcher in the bottom-left corner (default: right)
+ * Optional attributes of the script tag (they win over the cabinet's choices):
+ *   data-color="#4f46e5"   accent colour (hex; default: the cabinet's colour)
+ *   data-position="left"   launcher in the bottom-left corner (default: the
+ *                          cabinet's corner, else right)
  *   data-language="ka"     interface language (default: the visitor's browser
  *                          language among the business languages)
  *   data-open="true"       open the chat panel on load
@@ -16,6 +17,11 @@
  * No dependencies and no cookies. The visitor is identified by a random
  * session key kept in localStorage; the widget renders inside a shadow root,
  * so the host page's styles and the widget's styles never mix.
+ *
+ * After a handoff to staff the widget polls GET .../messages for staff
+ * replies while the handoff is open (and while the panel stays open after
+ * it): every few seconds at first, slower while nothing new arrives, and
+ * not at all while the page is hidden.
  * window.AssistantWorkshopChat.open() / .close() / .toggle() control it.
  */
 (function () {
@@ -37,6 +43,15 @@
   var STORAGE_PREFIX = "aw-chat:";
   var RTL_LANGUAGES = ["ar", "he", "fa", "ur", "yi", "ps", "sd", "ug", "ckb", "dv"];
   var URL_PATTERN = /\bhttps?:\/\/[^\s<>"']+/g;
+  var POSITIONS = ["left", "right"];
+  // Polling for staff replies: fast after activity, slower while idle.
+  var POLL_FIRST_DELAY_MS = 4000;
+  var POLL_BACKOFF_FACTOR = 1.6;
+  var POLL_MAX_DELAY_OPEN_MS = 30000;
+  var POLL_MAX_DELAY_CLOSED_MS = 60000;
+  var POLL_MORE_DELAY_MS = 500;
+  // A handoff seen in the last 24 hours keeps an open panel polling.
+  var HANDOFF_MEMORY_MS = 24 * 60 * 60 * 1000;
   var SVG_NS = "http://www.w3.org/2000/svg";
   // Fallback when the browser blocks localStorage / sessionStorage.
   var memoryStorage = {};
@@ -60,7 +75,8 @@
       handedOff: "Your request has been passed to our team. They will contact you soon.",
       language: "Language",
       preview: "Preview: this chat is switched off. Turn it on in the cabinet (Channels).",
-      newReply: "New reply"
+      newReply: "New reply",
+      staff: "Our team"
     },
     ru: {
       open: "Открыть чат",
@@ -78,7 +94,8 @@
       handedOff: "Ваш запрос передан сотрудникам. С вами скоро свяжутся.",
       language: "Язык",
       preview: "Предпросмотр: чат выключен. Включите его в кабинете (Каналы).",
-      newReply: "Новый ответ"
+      newReply: "Новый ответ",
+      staff: "Наша команда"
     },
     ka: {
       open: "ჩატის გახსნა",
@@ -96,7 +113,8 @@
       handedOff: "თქვენი მოთხოვნა გადაეცა ჩვენს გუნდს. მალე დაგიკავშირდებიან.",
       language: "ენა",
       preview: "წინასწარი ხედი: ჩატი გამორთულია. ჩართეთ კაბინეტში (არხები).",
-      newReply: "ახალი პასუხი"
+      newReply: "ახალი პასუხი",
+      staff: "ჩვენი გუნდი"
     },
     uk: {
       open: "Відкрити чат",
@@ -113,7 +131,8 @@
       tooLong: "Повідомлення задовге.",
       handedOff: "Ваш запит передано працівникам. З вами незабаром зв'яжуться.",
       language: "Мова",
-      newReply: "Нова відповідь"
+      newReply: "Нова відповідь",
+      staff: "Наша команда"
     },
     tr: {
       open: "Sohbeti aç",
@@ -130,7 +149,8 @@
       tooLong: "Mesaj çok uzun.",
       handedOff: "Talebiniz ekibimize iletildi. Kısa süre içinde sizinle iletişime geçecekler.",
       language: "Dil",
-      newReply: "Yeni yanıt"
+      newReply: "Yeni yanıt",
+      staff: "Ekibimiz"
     },
     he: {
       open: "פתיחת הצ'אט",
@@ -147,7 +167,8 @@
       tooLong: "ההודעה ארוכה מדי.",
       handedOff: "הפנייה שלכם הועברה לצוות שלנו. ניצור איתכם קשר בקרוב.",
       language: "שפה",
-      newReply: "תשובה חדשה"
+      newReply: "תשובה חדשה",
+      staff: "הצוות שלנו"
     },
     ar: {
       open: "فتح المحادثة",
@@ -164,7 +185,8 @@
       tooLong: "الرسالة طويلة جدًا.",
       handedOff: "تم تحويل طلبك إلى فريقنا. سيتواصلون معك قريبًا.",
       language: "اللغة",
-      newReply: "رد جديد"
+      newReply: "رد جديد",
+      staff: "فريقنا"
     },
     de: {
       open: "Chat öffnen",
@@ -181,7 +203,8 @@
       tooLong: "Die Nachricht ist zu lang.",
       handedOff: "Ihre Anfrage wurde an unser Team weitergeleitet. Wir melden uns bald.",
       language: "Sprache",
-      newReply: "Neue Antwort"
+      newReply: "Neue Antwort",
+      staff: "Unser Team"
     },
     fr: {
       open: "Ouvrir le chat",
@@ -198,7 +221,8 @@
       tooLong: "Le message est trop long.",
       handedOff: "Votre demande a été transmise à notre équipe. Elle vous contactera bientôt.",
       language: "Langue",
-      newReply: "Nouvelle réponse"
+      newReply: "Nouvelle réponse",
+      staff: "Notre équipe"
     },
     es: {
       open: "Abrir el chat",
@@ -215,7 +239,8 @@
       tooLong: "El mensaje es demasiado largo.",
       handedOff: "Su solicitud se ha enviado a nuestro equipo. Le contactarán pronto.",
       language: "Idioma",
-      newReply: "Nueva respuesta"
+      newReply: "Nueva respuesta",
+      staff: "Nuestro equipo"
     },
     it: {
       open: "Apri la chat",
@@ -232,7 +257,8 @@
       tooLong: "Il messaggio è troppo lungo.",
       handedOff: "La sua richiesta è stata inoltrata al nostro team. La contatteranno presto.",
       language: "Lingua",
-      newReply: "Nuova risposta"
+      newReply: "Nuova risposta",
+      staff: "Il nostro team"
     },
     pt: {
       open: "Abrir o chat",
@@ -249,7 +275,8 @@
       tooLong: "A mensagem é longa demais.",
       handedOff: "Seu pedido foi encaminhado à nossa equipe. Eles entrarão em contato em breve.",
       language: "Idioma",
-      newReply: "Nova resposta"
+      newReply: "Nova resposta",
+      staff: "Nossa equipe"
     },
     pl: {
       open: "Otwórz czat",
@@ -266,7 +293,8 @@
       tooLong: "Wiadomość jest za długa.",
       handedOff: "Twoja prośba została przekazana naszemu zespołowi. Wkrótce się z Tobą skontaktujemy.",
       language: "Język",
-      newReply: "Nowa odpowiedź"
+      newReply: "Nowa odpowiedź",
+      staff: "Nasz zespół"
     },
     zh: {
       open: "打开聊天",
@@ -283,7 +311,8 @@
       tooLong: "消息太长。",
       handedOff: "您的请求已转交给我们的团队，他们会尽快与您联系。",
       language: "语言",
-      newReply: "新回复"
+      newReply: "新回复",
+      staff: "我们的团队"
     },
     ja: {
       open: "チャットを開く",
@@ -300,7 +329,8 @@
       tooLong: "メッセージが長すぎます。",
       handedOff: "お問い合わせを担当者に引き継ぎました。まもなくご連絡します。",
       language: "言語",
-      newReply: "新しい返信"
+      newReply: "新しい返信",
+      staff: "スタッフ"
     }
   };
 
@@ -357,11 +387,14 @@
     ".aw-message{max-width:85%;padding:9px 13px;border-radius:16px;white-space:pre-wrap;",
     "overflow-wrap:anywhere;text-align:start;}",
     ".aw-assistant{align-self:flex-start;background:var(--aw-bubble);border-end-start-radius:4px;}",
+    ".aw-staff{align-self:flex-start;background:var(--aw-bubble);border-end-start-radius:4px;",
+    "border-inline-start:3px solid var(--aw-accent);}",
+    ".aw-author{display:block;font-size:12px;font-weight:600;color:var(--aw-muted);margin-bottom:2px;}",
     ".aw-visitor{align-self:flex-end;background:var(--aw-accent);color:var(--aw-on-accent);",
     "border-end-end-radius:4px;}",
     ".aw-visitor a{color:inherit;}",
     ".aw-message a{text-decoration:underline;overflow-wrap:anywhere;}",
-    ".aw-assistant a{color:var(--aw-accent);}",
+    ".aw-assistant a,.aw-staff a{color:var(--aw-accent);}",
     ".aw-pending{opacity:.7;}",
     ".aw-notice{align-self:center;max-width:92%;text-align:center;font-size:13px;color:var(--aw-muted);",
     "padding:4px 8px;}",
@@ -479,19 +512,27 @@
       isOpen: false,
       isSending: false,
       pendingItem: null,
-      handoffNoticeShown: false
+      handoffNoticeShown: false,
+      // Polling for staff replies (see the header comment).
+      cursor: storageGet(localStorageOrNull(), storagePrefix + "cursor"),
+      isHandedOff: storageGet(localStorageOrNull(), storagePrefix + "handoff") === "1",
+      handoffAt: Number(storageGet(localStorageOrNull(), storagePrefix + "handoff-at")) || 0,
+      pollTimer: null,
+      pollDelay: POLL_FIRST_DELAY_MS,
+      isPolling: false,
+      pollStopped: false
     };
     state.handoffNoticeShown = state.history.some(function (item) {
       return item.role === "notice";
     });
 
-    var accent = (script.getAttribute("data-color") || "").trim();
+    var accent = chooseAccent(script.getAttribute("data-color"), config.accent_color);
     var wrapper = el("div", "aw");
-    if (COLOR_PATTERN.test(accent)) {
+    if (accent) {
       wrapper.style.setProperty("--aw-accent", accent);
       wrapper.style.setProperty("--aw-on-accent", readableTextColor(accent));
     }
-    if (script.getAttribute("data-position") === "left") {
+    if (choosePosition(script.getAttribute("data-position"), config.position) === "left") {
       wrapper.className += " aw-left";
     }
 
@@ -625,6 +666,14 @@
     ) {
       setOpen(true, true);
     }
+    document.addEventListener("visibilitychange", function () {
+      if (document.visibilityState === "hidden") {
+        stopPolling();
+      } else {
+        schedulePoll(0);
+      }
+    });
+    schedulePoll(0);
 
     function applyLanguage() {
       var direction = languageDirection(config, state.language);
@@ -665,6 +714,8 @@
         if (!keepFocus) {
           input.focus();
         }
+        state.pollDelay = POLL_FIRST_DELAY_MS;
+        schedulePoll(0);
       } else if (!keepFocus) {
         launcher.focus();
       }
@@ -701,6 +752,7 @@
     }
 
     function send(item) {
+      stopPolling();
       state.isSending = true;
       state.pendingItem = item;
       item.failed = false;
@@ -722,6 +774,14 @@
             markFailed(item, errorTextFor(result.status), previewDetail(result));
           }
           updateSendButton();
+          state.pollDelay = POLL_FIRST_DELAY_MS;
+          if (result.ok) {
+            // Catch up once: the answer again (skipped by id) and any staff
+            // message written while the assistant was answering.
+            poll(true);
+          } else {
+            schedulePoll(POLL_FIRST_DELAY_MS);
+          }
         },
         function () {
           showTyping(false);
@@ -729,6 +789,7 @@
           state.pendingItem = null;
           markFailed(item, text("failed"), "");
           updateSendButton();
+          schedulePoll(POLL_FIRST_DELAY_MS);
         }
       );
     }
@@ -737,6 +798,7 @@
       if (typeof reply.text === "string" && reply.text) {
         state.history.push({
           role: "assistant",
+          id: typeof reply.message_id === "string" ? reply.message_id : undefined,
           text: reply.text,
           direction: reply.direction === "rtl" ? "rtl" : "ltr"
         });
@@ -749,8 +811,146 @@
         state.history.push({ role: "notice", key: "handedOff" });
         announce(text("handedOff"));
       }
+      // The position only moves forward by polling (right after this reply),
+      // so staff messages written meanwhile are never skipped.
+      if (!state.cursor && typeof reply.cursor === "string" && reply.cursor) {
+        saveCursor(reply.cursor);
+      }
+      setHandedOff(reply.is_handed_off === true);
       saveHistory();
       renderLog();
+    }
+
+    // --- staff replies after a handoff ------------------------------------
+
+    function shouldPoll() {
+      if (state.pollStopped || document.visibilityState === "hidden") {
+        return false;
+      }
+      if (state.isHandedOff) {
+        return true;
+      }
+      return state.isOpen && state.handoffAt > 0 && Date.now() - state.handoffAt < HANDOFF_MEMORY_MS;
+    }
+
+    function schedulePoll(delay) {
+      stopPolling();
+      if (!shouldPoll() || state.isSending) {
+        return;
+      }
+      state.pollTimer = window.setTimeout(function () {
+        poll(false);
+      }, delay);
+    }
+
+    function stopPolling() {
+      if (state.pollTimer !== null) {
+        window.clearTimeout(state.pollTimer);
+        state.pollTimer = null;
+      }
+    }
+
+    function nextDelay() {
+      var limit = state.isOpen ? POLL_MAX_DELAY_OPEN_MS : POLL_MAX_DELAY_CLOSED_MS;
+      state.pollDelay = Math.min(Math.round(state.pollDelay * POLL_BACKOFF_FACTOR), limit);
+      return state.pollDelay;
+    }
+
+    function poll(isCatchUp) {
+      state.pollTimer = null;
+      if (state.isPolling || state.isSending || state.pollStopped) {
+        return;
+      }
+      if (isCatchUp !== true && !shouldPoll()) {
+        return;
+      }
+      state.isPolling = true;
+      var url = messagesUrl + "?session_key=" + encodeURIComponent(state.sessionKey);
+      if (state.cursor) {
+        url += "&after=" + encodeURIComponent(state.cursor);
+      }
+      requestJson(url, null).then(
+        function (result) {
+          state.isPolling = false;
+          if (result.status === 404) {
+            // The chat was switched off: stop asking.
+            state.pollStopped = true;
+            return;
+          }
+          if (!result.ok || !result.body || !Array.isArray(result.body.items)) {
+            schedulePoll(nextDelay());
+            return;
+          }
+          var added = receiveMessages(result.body);
+          if (result.body.has_more === true) {
+            schedulePoll(POLL_MORE_DELAY_MS);
+          } else if (added > 0) {
+            state.pollDelay = POLL_FIRST_DELAY_MS;
+            schedulePoll(POLL_FIRST_DELAY_MS);
+          } else {
+            schedulePoll(nextDelay());
+          }
+        },
+        function () {
+          state.isPolling = false;
+          schedulePoll(nextDelay());
+        }
+      );
+    }
+
+    function receiveMessages(page) {
+      var known = {};
+      state.history.forEach(function (item) {
+        if (item.id) {
+          known[item.id] = true;
+        }
+      });
+      var added = 0;
+      var lastText = "";
+      page.items.forEach(function (message) {
+        if (!message || typeof message.id !== "string" || typeof message.text !== "string") {
+          return;
+        }
+        if (known[message.id] || !message.text) {
+          return;
+        }
+        known[message.id] = true;
+        state.history.push({
+          role: message.author === "staff" ? "staff" : "assistant",
+          id: message.id,
+          text: message.text,
+          direction: message.direction === "rtl" ? "rtl" : "ltr"
+        });
+        lastText = message.text;
+        added += 1;
+      });
+      if (typeof page.cursor === "string" && page.cursor) {
+        saveCursor(page.cursor);
+      }
+      setHandedOff(page.is_handed_off === true);
+      if (added > 0) {
+        saveHistory();
+        renderLog();
+        announce(lastText);
+        if (!state.isOpen) {
+          wrapper.classList.add("aw-unread");
+        }
+      }
+      return added;
+    }
+
+    function saveCursor(cursor) {
+      state.cursor = cursor;
+      storageSet(localStorageOrNull(), storagePrefix + "cursor", cursor);
+    }
+
+    function setHandedOff(isHandedOff) {
+      state.isHandedOff = isHandedOff;
+      storageSet(localStorageOrNull(), storagePrefix + "handoff", isHandedOff ? "1" : "0");
+      if (isHandedOff) {
+        state.handoffAt = Date.now();
+        storageSet(localStorageOrNull(), storagePrefix + "handoff-at", String(state.handoffAt));
+      }
     }
 
     function markFailed(item, message, detail) {
@@ -786,8 +986,11 @@
       while (log.firstChild) {
         log.removeChild(log.firstChild);
       }
+      var greeting = configGreeting(config, state.language);
       log.appendChild(
-        messageRow("assistant", text("greeting").split("{business}").join(config.business_name || ""))
+        greeting
+          ? messageRow("assistant", greeting.text, greeting.direction)
+          : messageRow("assistant", text("greeting").split("{business}").join(config.business_name || ""))
       );
       state.history.forEach(function (item) {
         if (item.role === "notice") {
@@ -796,7 +999,7 @@
           log.appendChild(notice);
           return;
         }
-        var row = messageRow(item.role, item.text, item.direction);
+        var row = messageRow(item.role, item.text, item.direction, item.role === "staff" ? text("staff") : "");
         if (item === state.pendingItem) {
           row.className += " aw-pending";
         }
@@ -887,7 +1090,13 @@
         })
         .slice(-MAX_STORED_MESSAGES)
         .map(function (item) {
-          return { role: item.role, text: item.text, direction: item.direction, key: item.key };
+          return {
+            role: item.role,
+            id: item.id,
+            text: item.text,
+            direction: item.direction,
+            key: item.key
+          };
         });
       storageSet(localStorageOrNull(), storagePrefix + "history", JSON.stringify(stored));
     }
@@ -961,6 +1170,45 @@
       }
     }
     return RTL_LANGUAGES.indexOf(baseLanguage(tag)) !== -1 ? "rtl" : "ltr";
+  }
+
+  // The business's greeting for the language (exact tag, then base language).
+  function configGreeting(config, tag) {
+    var greetings = Array.isArray(config.greetings) ? config.greetings : [];
+    var base = null;
+    for (var index = 0; index < greetings.length; index += 1) {
+      var greeting = greetings[index];
+      if (!greeting || typeof greeting.text !== "string" || !greeting.text) {
+        continue;
+      }
+      if (String(greeting.language).toLowerCase() === String(tag).toLowerCase()) {
+        return { text: greeting.text, direction: greeting.direction };
+      }
+      if (!base && baseLanguage(greeting.language) === baseLanguage(tag)) {
+        base = { text: greeting.text, direction: greeting.direction };
+      }
+    }
+    return base;
+  }
+
+  // The script tag's data-color wins over the colour chosen in the cabinet.
+  function chooseAccent(attribute, configured) {
+    var candidates = [String(attribute || "").trim(), String(configured || "").trim()];
+    for (var index = 0; index < candidates.length; index += 1) {
+      if (COLOR_PATTERN.test(candidates[index])) {
+        return candidates[index];
+      }
+    }
+    return "";
+  }
+
+  function choosePosition(attribute, configured) {
+    var fromTag = String(attribute || "").trim().toLowerCase();
+    if (POSITIONS.indexOf(fromTag) !== -1) {
+      return fromTag;
+    }
+    var fromConfig = String(configured || "").trim().toLowerCase();
+    return POSITIONS.indexOf(fromConfig) !== -1 ? fromConfig : "right";
   }
 
   function translate(tag, key) {
@@ -1052,7 +1300,7 @@
           return (
             item &&
             (item.role === "notice" ||
-              ((item.role === "visitor" || item.role === "assistant") &&
+              ((item.role === "visitor" || item.role === "assistant" || item.role === "staff") &&
                 typeof item.text === "string"))
           );
         })
@@ -1060,6 +1308,7 @@
         .map(function (item) {
           return {
             role: item.role,
+            id: typeof item.id === "string" ? item.id : undefined,
             text: item.text,
             direction: item.direction === "rtl" ? "rtl" : "ltr",
             key: item.key,
@@ -1180,15 +1429,24 @@
     root.appendChild(style);
   }
 
-  function messageRow(role, messageText, direction) {
+  function messageRow(role, messageText, direction, authorLabel) {
     var row = el("div", "aw-message aw-" + role);
+    if (authorLabel) {
+      // The label is in the interface language; the message keeps its own
+      // direction below it.
+      var author = el("span", "aw-author");
+      author.textContent = authorLabel;
+      row.appendChild(author);
+    }
+    var body = el("div", "");
     // Each message finds its own direction (a Hebrew reply in an English
     // interface, a phone number in an Arabic one).
-    row.setAttribute("dir", "auto");
+    body.setAttribute("dir", "auto");
     if (direction === "rtl" || direction === "ltr") {
-      row.setAttribute("data-language-direction", direction);
+      body.setAttribute("data-language-direction", direction);
     }
-    appendLinkedText(row, messageText);
+    appendLinkedText(body, messageText);
+    row.appendChild(body);
     return row;
   }
 
