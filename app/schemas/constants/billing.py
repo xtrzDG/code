@@ -44,3 +44,28 @@ class UsageKind(StrEnum):
     WHATSAPP_REPLY = "whatsapp_reply"
     WHATSAPP_TEMPLATE = "whatsapp_template"
     TRANSFER_SECONDS = "transfer_seconds"
+
+
+class InvoiceKind(StrEnum):
+    """What an invoice charges for."""
+
+    SERVICE_PERIOD = "service_period"
+    SETUP_FEE = "setup_fee"
+
+
+class PackageMetric(StrEnum):
+    """Included package quantity of a plan that is metered per period."""
+
+    VOICE_MINUTES = "voice_minutes"
+    DIALOGS = "dialogs"
+
+
+class BillingNoticeKind(StrEnum):
+    """Billing message sent to the owners of a business."""
+
+    PAYMENT_FAILED = "payment_failed"
+    TRIAL_ENDED_UNPAID = "trial_ended_unpaid"
+    RENEWAL_MISSED = "renewal_missed"
+    LEADS_ONLY_STARTED = "leads_only_started"
+    SUBSCRIPTION_ENDED = "subscription_ended"
+    PACKAGE_USAGE_WARNING = "package_usage_warning"
