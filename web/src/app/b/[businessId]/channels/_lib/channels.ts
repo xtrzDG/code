@@ -278,7 +278,8 @@ export function readableTextColor(hexColor: string): "#111827" | "#ffffff" {
     return value <= 0.03928 ? value / 12.92 : Math.pow((value + 0.055) / 1.055, 2.4);
   });
   const luminance = 0.2126 * (red ?? 0) + 0.7152 * (green ?? 0) + 0.0722 * (blue ?? 0);
-  return luminance > 0.45 ? "#111827" : "#ffffff";
+  // The higher WCAG contrast: with white 1.05/(L+0.05), with #111827 (L≈0.0093) (L+0.05)/0.0593.
+  return 1.05 / (luminance + 0.05) >= (luminance + 0.05) / 0.0593 ? "#ffffff" : "#111827";
 }
 
 export interface WidgetLook {

@@ -3,6 +3,8 @@
 from contextlib import AbstractContextManager
 from typing import Protocol
 
+from typed_time_provider import Microseconds
+
 from app.contracts.registry_contract import RegistryContract
 from app.schemas.constants.billing import PlanKey
 from app.schemas.constants.niches import NicheKey
@@ -71,5 +73,21 @@ class LoginCodeSendLockRegistryContract(RegistryContract, Protocol):
         """
         Lock serializing the check-and-reserve step of login code sends in
         this process, so parallel requests cannot all pass the limits.
+        """
+        raise NotImplementedError
+
+
+class RequestRateLimitRegistryContract(RegistryContract, Protocol):
+    def try_acquire(
+        self,
+        key: str,
+        limit: int,
+        window_seconds: int,
+        now: Microseconds,
+    ) -> bool:
+        """
+        Count one request for `key` (a technical key, e.g. "widget-poll:ip:…")
+        and tell whether it stays within `limit` requests per sliding window
+        of `window_seconds` in this process. A refused request is not counted.
         """
         raise NotImplementedError

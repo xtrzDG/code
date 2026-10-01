@@ -103,6 +103,7 @@ class PostgresDocumentCollectionAdapter[StoredDocument: PersistentDocument](
             "select document::text from {table} where business_id = %s "
             "order by created_at, row_sequence"
         ).format(table=table)
+        self._table: sql.Identifier = table
         self._delete_query: sql.Composed = sql.SQL(
             "delete from {table} where document_key = %s"
         ).format(table=table)
@@ -160,6 +161,36 @@ class PostgresDocumentCollectionAdapter[StoredDocument: PersistentDocument](
                 rows = connection.execute(
                     self._list_in_business_query,
                     (scoped_business_id,),
+                ).fetchall()
+
+        return [
+            self._document_type.model_validate_json(self._read_text(row))
+            for row in rows
+        ]
+
+    def list_by_field(self, field_name: str, value: str) -> list[StoredDocument]:
+        # The field is a literal (not a bind parameter), so the expression
+        # matches an index on (document ->> 'field').
+        field: sql.Composable = sql.SQL("document ->> {field}").format(
+            field=sql.Literal(field_name)
+        )
+        with self._transaction() as (connection, scoped_business_id):
+            if scoped_business_id is None:
+                rows: list[TupleRow] = connection.execute(
+                    sql.SQL(
+                        "select document::text from {table} where {field} = %s "
+                        "order by created_at, row_sequence"
+                    ).format(table=self._table, field=field),
+                    (value,),
+                ).fetchall()
+            else:
+                rows = connection.execute(
+                    sql.SQL(
+                        "select document::text from {table} "
+                        "where business_id = %s and {field} = %s "
+                        "order by created_at, row_sequence"
+                    ).format(table=self._table, field=field),
+                    (scoped_business_id, value),
                 ).fetchall()
 
         return [

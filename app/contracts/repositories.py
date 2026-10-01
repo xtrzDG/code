@@ -275,6 +275,18 @@ class ConversationRepoContract(RepoContract, Protocol):
         """Return conversations ordered by last_message_at descending."""
         raise NotImplementedError
 
+    def list_by_channel_user(
+        self,
+        business_id: BusinessId,
+        channel: ChannelKind,
+        channel_user_id: ChannelUserId,
+    ) -> list[ConversationDocument]:
+        """
+        One customer's conversations in a channel (indexed lookup), ordered
+        by last_message_at descending.
+        """
+        raise NotImplementedError
+
 
 class MessageRepoContract(RepoContract, Protocol):
     def save(self, message: MessageDocument) -> None:

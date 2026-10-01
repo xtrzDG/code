@@ -3,6 +3,9 @@
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
 WIDGET_PATH_PREFIX: str = "/v1/widget/"
+# The widget's polls carry the visitor key in this header, not in the URL,
+# so access logs and proxies never record it.
+WIDGET_SESSION_KEY_HEADER: str = "X-Widget-Session-Key"
 # The website widget runs on every business's own site, so its public routes
 # allow any origin. It may post with Content-Type text/plain (the body is
 # still JSON) to avoid a CORS preflight when an application restricts
@@ -10,7 +13,7 @@ WIDGET_PATH_PREFIX: str = "/v1/widget/"
 WIDGET_CORS_HEADERS: dict[str, str] = {
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type",
+    "Access-Control-Allow-Headers": f"Content-Type, {WIDGET_SESSION_KEY_HEADER}",
     "Access-Control-Max-Age": "86400",
 }
 

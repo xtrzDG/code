@@ -39,6 +39,20 @@ class BusinessScopedRepository[StoredDocument: PersistentDocument]:
             if read_business_id(document) == business_id
         ]
 
+    def _list_by_field(
+        self,
+        business_id: BusinessId,
+        field_name: str,
+        value: str,
+    ) -> list[StoredDocument]:
+        """The business's documents whose field has this value (indexed)."""
+
+        return [
+            document
+            for document in self._collection.list_by_field(field_name, value)
+            if read_business_id(document) == business_id
+        ]
+
     def _remove(self, business_id: BusinessId, document_id: str) -> None:
         if self._load(business_id, document_id) is not None:
             self._collection.delete(document_id)

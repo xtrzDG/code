@@ -1,4 +1,9 @@
-from app.contracts.registries import LanguageRegistryContract
+from typed_time_provider import Microseconds, WallClock
+
+from app.contracts.registries import (
+    LanguageRegistryContract,
+    RequestRateLimitRegistryContract,
+)
 from app.contracts.repositories import (
     BusinessRepoContract,
     ChannelRepoContract,
@@ -19,9 +24,11 @@ from app.schemas.dto.channels import (
 )
 from app.schemas.exceptions.application_errors import (
     NotFoundError,
+    RateLimitedError,
     UnsupportedLanguageError,
 )
 from app.schemas.typings.conversations.prefixed_id import MessageId
+from app.schemas.typings.conversations.strings import ChannelUserId
 from app.utilities.channels.delivery_targets import find_business_channel
 
 # Messages the widget shows besides the visitor's own.
@@ -29,6 +36,11 @@ WIDGET_MESSAGE_AUTHORS: frozenset[MessageAuthor] = frozenset(
     {MessageAuthor.ASSISTANT, MessageAuthor.STAFF}
 )
 WIDGET_MESSAGE_PAGE_SIZE: int = 50
+# The widget polls every 4 s at the fastest (15 a minute per tab): room for a
+# few tabs of one visitor, and for many visitors behind one address.
+POLLS_PER_VISITOR_PER_MINUTE: int = 60
+POLLS_PER_ADDRESS_PER_MINUTE: int = 300
+RATE_WINDOW_SECONDS: int = 60
 
 
 class GetWidgetMessagesUseCase(
@@ -43,9 +55,15 @@ class GetWidgetMessagesUseCase(
 
     The business must exist and have the widget switched on, else the chat
     is unavailable (the same answer for both). A visitor without a
-    conversation gets nothing and no position; without `after`, or with a
-    position the visitor does not have (erased data), only the current
-    position is returned, so nothing already shown comes twice.
+    conversation gets nothing and no position. Without `after`, or with a
+    position the visitor does not have (erased data), no messages come but
+    a position: the visitor's latest own message, so an answer the widget
+    missed (the page was left while it was being written) comes with the
+    next poll; the widget skips answers it already shows by id.
+
+    The endpoint is public, so polls are limited per visitor and per client
+    address (429), and only the visitor's own conversations and messages
+    are read (indexed lookups, not the whole business).
     """
 
     def __init__(
@@ -55,21 +73,30 @@ class GetWidgetMessagesUseCase(
         conversation_repo: ConversationRepoContract,
         message_repo: MessageRepoContract,
         language_registry: LanguageRegistryContract,
+        rate_limit_registry: RequestRateLimitRegistryContract,
+        wall_clock: WallClock[Microseconds],
     ) -> None:
         self._business_repo: BusinessRepoContract = business_repo
         self._channel_repo: ChannelRepoContract = channel_repo
         self._conversation_repo: ConversationRepoContract = conversation_repo
         self._message_repo: MessageRepoContract = message_repo
         self._language_registry: LanguageRegistryContract = language_registry
+        self._rate_limit_registry: RequestRateLimitRegistryContract = (
+            rate_limit_registry
+        )
+        self._wall_clock: WallClock[Microseconds] = wall_clock
 
     def run(self, input_data: WidgetMessagesQuery) -> WidgetMessagesView:
+        self._refuse_too_frequent_polls(input_data)
         business: BusinessDocument = self._require_open_chat(input_data)
         conversations: list[ConversationDocument] = [
             conversation
-            for conversation in self._conversation_repo.list_by_business(business.id)
-            if conversation.channel is ChannelKind.WEB_CHAT
-            and str(conversation.channel_user_id) == str(input_data.session_key)
-            and not conversation.is_sandbox
+            for conversation in self._conversation_repo.list_by_channel_user(
+                business.id,
+                ChannelKind.WEB_CHAT,
+                ChannelUserId(str(input_data.session_key)),
+            )
+            if not conversation.is_sandbox
         ]
         if not conversations:
             return WidgetMessagesView(items=[])
@@ -90,7 +117,9 @@ class GetWidgetMessagesUseCase(
         start: int | None = find_position_after(messages, input_data.after)
         if start is None:
             return WidgetMessagesView(
-                items=[], cursor=latest_id, is_handed_off=is_handed_off
+                items=[],
+                cursor=find_latest_visitor_message_id(messages) or latest_id,
+                is_handed_off=is_handed_off,
             )
 
         shown: list[MessageDocument] = [
@@ -106,6 +135,28 @@ class GetWidgetMessagesUseCase(
             has_more=has_more,
             is_handed_off=is_handed_off,
         )
+
+    def _refuse_too_frequent_polls(self, input_data: WidgetMessagesQuery) -> None:
+        now: Microseconds = self._wall_clock.now_unix()
+        keys: list[tuple[str, int]] = [
+            (
+                f"widget-poll:visitor:{input_data.business_id}:{input_data.session_key}",
+                POLLS_PER_VISITOR_PER_MINUTE,
+            )
+        ]
+        if input_data.client_ip_address is not None:
+            keys.append(
+                (
+                    f"widget-poll:address:{input_data.client_ip_address}",
+                    POLLS_PER_ADDRESS_PER_MINUTE,
+                )
+            )
+
+        for key, limit in keys:
+            if not self._rate_limit_registry.try_acquire(
+                key, limit, RATE_WINDOW_SECONDS, now
+            ):
+                raise RateLimitedError("Too many requests; ask less often.")
 
     def _require_open_chat(self, input_data: WidgetMessagesQuery) -> BusinessDocument:
         business: BusinessDocument | None = self._business_repo.get(
@@ -157,5 +208,17 @@ def find_position_after(
     for index, message in enumerate(messages):
         if message.id == after:
             return index + 1
+
+    return None
+
+
+def find_latest_visitor_message_id(
+    messages: list[MessageDocument],
+) -> MessageId | None:
+    """The visitor's latest own message: the answers after it are new."""
+
+    for message in reversed(messages):
+        if message.author is MessageAuthor.CUSTOMER:
+            return message.id
 
     return None

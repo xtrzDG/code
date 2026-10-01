@@ -20587,15 +20587,6 @@
           },
           {
             "in": "query",
-            "name": "session_key",
-            "required": true,
-            "schema": {
-              "title": "Session Key",
-              "type": "string"
-            }
-          },
-          {
-            "in": "query",
             "name": "after",
             "required": false,
             "schema": {
@@ -20608,6 +20599,15 @@
                 }
               ],
               "title": "After"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Widget-Session-Key",
+            "required": true,
+            "schema": {
+              "title": "X-Widget-Session-Key",
+              "type": "string"
             }
           }
         ],

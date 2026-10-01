@@ -467,7 +467,8 @@ def test_staff_reply_from_the_cabinet_reaches_the_website_widget(
     # share a time; poll after the answer itself.
     caught_up = client.get(
         widget_messages,
-        params={"session_key": WIDGET_SESSION, "after": handed_off["message_id"]},
+        params={"after": handed_off["message_id"]},
+        headers={"X-Widget-Session-Key": WIDGET_SESSION},
     ).json()
     assert caught_up["items"] == []
     assert caught_up["is_handed_off"] is True
@@ -505,8 +506,11 @@ def test_staff_reply_from_the_cabinet_reaches_the_website_widget(
     # The widget's next poll brings the staff reply, once.
     polled = client.get(
         widget_messages,
-        params={"session_key": WIDGET_SESSION, "after": caught_up["cursor"]},
-        headers={"Origin": "https://salobie.example"},
+        params={"after": caught_up["cursor"]},
+        headers={
+            "X-Widget-Session-Key": WIDGET_SESSION,
+            "Origin": "https://salobie.example",
+        },
     )
     assert polled.status_code == 200, polled.text
     assert polled.headers["access-control-allow-origin"] == "*"
@@ -525,6 +529,7 @@ def test_staff_reply_from_the_cabinet_reaches_the_website_widget(
     assert body["is_handed_off"] is True
     again = client.get(
         widget_messages,
-        params={"session_key": WIDGET_SESSION, "after": body["cursor"]},
+        params={"after": body["cursor"]},
+        headers={"X-Widget-Session-Key": WIDGET_SESSION},
     ).json()
     assert again["items"] == []

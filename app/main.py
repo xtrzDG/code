@@ -17,6 +17,7 @@ from app.clients.postgres.postgres_connection_pool_client import (
 )
 from app.containers.app import AppContainer
 from app.contracts.observability import LlmTraceFacilitatorContract
+from app.gateways.http.access_log_redaction import install_access_log_redaction
 from app.gateways.http.application import build_http_application
 from app.gateways.http.router_assembly import build_application_routers
 from app.schemas.configurations.app_settings import AppSettings
@@ -34,6 +35,7 @@ TRACE_FLUSH_INTERVAL_SECONDS: float = 60.0
 def create_application() -> FastAPI:
     """The API with settings from the environment (uvicorn factory)."""
 
+    install_access_log_redaction()
     return build_application(AppContainer())
 
 

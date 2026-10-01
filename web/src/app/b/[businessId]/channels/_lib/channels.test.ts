@@ -18,6 +18,7 @@ import {
   notificationLanguages,
   readCalendarReturn,
   readableTextColor,
+  WIDGET_COLOR_PRESETS,
   savedWidgetLook,
   sortForwardingCodes,
   startCommand,
@@ -183,6 +184,13 @@ describe("website chat look", () => {
     expect(readableTextColor("#4f46e5")).toBe("#ffffff");
     expect(readableTextColor("#fde047")).toBe("#111827");
     expect(readableTextColor("not a colour")).toBe("#ffffff");
+    // Mid-tone brand colours: dark text has the higher contrast.
+    for (const accent of ["#f97316", "#f59e0b", "#22c55e", "#06b6d4"]) {
+      expect(readableTextColor(accent)).toBe("#111827");
+    }
+    for (const preset of WIDGET_COLOR_PRESETS) {
+      expect(readableTextColor(preset)).toBe("#ffffff");
+    }
   });
 
   it("fills the widget defaults into the saved look", () => {

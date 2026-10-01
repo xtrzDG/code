@@ -65,6 +65,9 @@ from app.orchestrators.channels.widget_message_orchestrator import (
 from app.orchestrators.use_case_orchestrator import UseCaseOrchestrator
 from app.pipelines.orchestrator_pipeline import OrchestratorPipeline
 from app.registries.billing.plan_registry import PlanRegistry
+from app.registries.limits.request_rate_limit_registry import (
+    RequestRateLimitRegistry,
+)
 from app.registries.localization.language_registry import LanguageRegistry
 from app.repositories.assistant_repositories import AssistantVersionRepository
 from app.repositories.billing_repositories import UsageEventRepository
@@ -614,6 +617,7 @@ class ChannelsTestbed:
         )
 
         self.secret_cipher = FakeSecretCipher()
+        self.widget_rate_limits = RequestRateLimitRegistry()
         self.phone_number_parser = PhoneNumberParser()
         self.language_registry = LanguageRegistry()
         self.text_resolver = LocalizedTextResolver()
@@ -808,6 +812,8 @@ class ChannelsTestbed:
                         self.conversation_repo,
                         self.message_repo,
                         self.language_registry,
+                        self.widget_rate_limits,
+                        self.wall_clock,
                     )
                 ),
             )

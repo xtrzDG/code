@@ -291,3 +291,21 @@ def test_concurrent_threads_keep_their_own_scope(
     assert seen_business_ids == {
         business_id: {business_id} for business_id in business_ids
     }
+
+
+def test_field_lookups_keep_to_the_business_scope(
+    postgres_collections: PostgresCollectionFactory,
+    storage_scope: StorageScopeContext,
+) -> None:
+    first_business_id, _, first_contact, second_contact = save_two_businesses_contacts(
+        postgres_collections
+    )
+    contacts = postgres_collections(ContactDocument, "contacts")
+    first_phone = str(first_contact.phone_number)
+    second_phone = str(second_contact.phone_number)
+
+    with storage_scope.scoped_to_business(first_business_id):
+        assert [c.id for c in contacts.list_by_field("phone_number", first_phone)] == [
+            first_contact.id
+        ]
+        assert contacts.list_by_field("phone_number", second_phone) == []

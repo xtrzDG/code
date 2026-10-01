@@ -15,10 +15,17 @@ from app.gateways.http.application import build_http_application
 from app.gateways.http.cabinet_cors_middleware import is_self_cors_path
 from app.gateways.http.channel_routes import WIDGET_CONFIG_PATH, WIDGET_MESSAGES_PATH
 from app.gateways.http.error_responses import install_error_handlers
+from app.gateways.http.widget_cors_middleware import (
+    WIDGET_CORS_HEADERS,
+    WIDGET_SESSION_KEY_HEADER,
+)
 from app.gateways.http.widget_script_routes import (
     STATIC_DIRECTORY,
     WIDGET_SCRIPT_FILE_NAME,
     build_widget_script_router,
+)
+from app.registries.localization.curated_country_languages import (
+    CURATED_CUSTOMER_LANGUAGES,
 )
 from app.schemas.typings.channels.constrained_strings import (
     PublicBaseUrl,
@@ -30,6 +37,7 @@ from app.utilities.channels.channel_endpoints import (
     WIDGET_DEMO_PATH,
     WIDGET_SCRIPT_PATH,
 )
+from app.utilities.localization.language_tags import base_language_code
 from tests.channels.testbed import ChannelsTestbed, bearer
 from tests.e2e.harness import start_workshop
 
@@ -181,6 +189,23 @@ class TestScriptAgreesWithTheApi:
         assert served.status_code == 200
         assert served.text == SCRIPT_SOURCE
 
+    def test_the_visitor_key_header_is_the_one_the_api_reads(self) -> None:
+        assert read_script_constant("SESSION_KEY_HEADER") == WIDGET_SESSION_KEY_HEADER
+        assert (
+            WIDGET_SESSION_KEY_HEADER
+            in WIDGET_CORS_HEADERS["Access-Control-Allow-Headers"]
+        )
+        assert "?session_key=" not in SCRIPT_SOURCE
+
+    def test_the_status_region_is_not_inside_the_hideable_panel(self) -> None:
+        # A display:none panel would silence the screen-reader announcements.
+        assert "panel.appendChild(status)" not in SCRIPT_SOURCE
+        assert "wrapper.appendChild(status)" in SCRIPT_SOURCE
+        assert 'text("newReply")' in SCRIPT_SOURCE
+
+    def test_links_in_answers_keep_the_bubble_text_colour(self) -> None:
+        assert ".aw-assistant a,.aw-staff a{color:inherit;}" in SCRIPT_SOURCE
+
     @pytest.mark.skipif(shutil.which("node") is None, reason="node is not installed")
     def test_script_parses_with_node(self) -> None:
         node = shutil.which("node")
@@ -260,3 +285,78 @@ class TestWidgetDemoPage:
 class _SilentErrorReporter:
     def capture_exception(self, error: BaseException) -> None:
         del error
+
+
+def read_script_texts() -> dict[str, set[str]]:
+    """The interface languages of the script and the keys each one has."""
+
+    block: str = SCRIPT_SOURCE[SCRIPT_SOURCE.index("var TEXTS = {") :]
+    block = block[: block.index("\n  };")]
+    texts: dict[str, set[str]] = {}
+    for match in re.finditer(r"\n    ([a-z]+): \{(.*?)\n    \}", block, re.S):
+        texts[match.group(1)] = set(re.findall(r"\n      ([A-Za-z]+):", match.group(2)))
+    return texts
+
+
+def run_script_function(function_name: str, call: str) -> str:
+    """Run one function of the script in node and return what it prints."""
+
+    node = shutil.which("node")
+    assert node is not None
+    match = re.search(
+        rf"\n  function {function_name}\(.*?\n  \}}\n", SCRIPT_SOURCE, re.S
+    )
+    assert match is not None, function_name
+    result = subprocess.run(
+        [node, "-e", f"{match.group(0)}\nconsole.log({call});"],
+        capture_output=True,
+        text=True,
+        timeout=60,
+        check=False,
+    )
+    assert result.returncode == 0, result.stderr
+    return result.stdout.strip()
+
+
+class TestWidgetTexts:
+    def test_every_curated_customer_language_has_complete_interface_texts(
+        self,
+    ) -> None:
+        texts = read_script_texts()
+        english_keys = texts["en"]
+        curated = {
+            base_language_code(tag).lower()
+            for tags in CURATED_CUSTOMER_LANGUAGES.values()
+            for tag in tags
+        }
+
+        assert sorted(code for code in curated if code not in texts) == []
+        for code in curated:
+            assert texts[code] == english_keys, code
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node is not installed")
+class TestWidgetColours:
+    @pytest.mark.parametrize(
+        ("accent", "text_colour"),
+        [
+            # Mid-tone brand colours: dark text reads better than white.
+            ("#f59e0b", "#111827"),
+            ("#22c55e", "#111827"),
+            ("#06b6d4", "#111827"),
+            ("#f97316", "#111827"),
+            ("#fde047", "#111827"),
+            # Dark colours and the cabinet's presets keep white text.
+            ("#4f46e5", "#ffffff"),
+            ("#111827", "#ffffff"),
+            ("#1d4ed8", "#ffffff"),
+            ("#15803d", "#ffffff"),
+        ],
+    )
+    def test_text_on_the_accent_takes_the_higher_contrast(
+        self, accent: str, text_colour: str
+    ) -> None:
+        assert (
+            run_script_function("readableTextColor", f'readableTextColor("{accent}")')
+            == text_colour
+        )

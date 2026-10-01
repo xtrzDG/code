@@ -106,6 +106,24 @@ class ConversationRepository(
             reverse=True,
         )
 
+    def list_by_channel_user(
+        self,
+        business_id: BusinessId,
+        channel: ChannelKind,
+        channel_user_id: ChannelUserId,
+    ) -> list[ConversationDocument]:
+        return sorted(
+            (
+                conversation
+                for conversation in self._list_by_field(
+                    business_id, "channel_user_id", str(channel_user_id)
+                )
+                if conversation.channel is channel
+            ),
+            key=lambda conversation: conversation.last_message_at,
+            reverse=True,
+        )
+
 
 class MessageRepository(
     BusinessScopedRepository[MessageDocument],
@@ -121,7 +139,9 @@ class MessageRepository(
     ) -> list[MessageDocument]:
         messages: list[MessageDocument] = [
             message
-            for message in self._list(business_id)
+            for message in self._list_by_field(
+                business_id, "conversation_id", str(conversation_id)
+            )
             if message.conversation_id == conversation_id
         ]
         return sorted(messages, key=lambda message: message.created_at)

@@ -361,6 +361,7 @@ class WidgetMessagesQuery(ImmutableDTO):
     business_id: BusinessId
     session_key: WidgetSessionKey
     after: MessageId | None = None
+    client_ip_address: ClientIpAddress | None = None
 
 
 class WidgetMessageView(ImmutableDTO):

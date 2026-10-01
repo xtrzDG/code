@@ -7,6 +7,9 @@ from app.containers.time_provider import TimeProviderContainer
 from app.registries.billing.exchange_rate_registry import ExchangeRateRegistry
 from app.registries.billing.plan_registry import PlanRegistry
 from app.registries.legal.legal_document_registry import LegalDocumentRegistry
+from app.registries.limits.request_rate_limit_registry import (
+    RequestRateLimitRegistry,
+)
 from app.registries.localization.call_forwarding_guide_registry import (
     CallForwardingGuideRegistry,
 )
@@ -57,6 +60,10 @@ class RegistriesContainer(containers.DeclarativeContainer):
     # One lock per business shared by every booking use case of the process.
     business_lock_registry: Singleton[BusinessLockRegistry] = Singleton(
         BusinessLockRegistry
+    )
+    # Request counters of public endpoints (the website widget's polling).
+    request_rate_limit_registry: Singleton[RequestRateLimitRegistry] = Singleton(
+        RequestRateLimitRegistry
     )
     # One lock for reserving login code sends (the hourly limits).
     login_code_send_lock_registry: Singleton[LoginCodeSendLockRegistry] = Singleton(

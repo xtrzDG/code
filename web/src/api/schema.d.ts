@@ -9539,11 +9539,12 @@ export interface operations {
     };
     list_widget_messages_v1_widget__business_id__messages_get: {
         parameters: {
-            query: {
-                session_key: string;
+            query?: {
                 after?: string | null;
             };
-            header?: never;
+            header: {
+                "X-Widget-Session-Key": string;
+            };
             path: {
                 business_id: string;
             };

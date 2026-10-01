@@ -10,7 +10,9 @@
  *                          cabinet's corner, else right)
  *   data-language="ka"     interface language (default: the visitor's browser
  *                          language among the business languages)
- *   data-open="true"       open the chat panel on load
+ *   data-open="true"       open the chat panel on the first page of a visit
+ *                          (once the visitor opens or closes it, that choice
+ *                          is kept on the next pages)
  *   data-preview="true"    show the widget even while the chat is switched off
  *   data-api-base="https://<api>"   API origin (default: the script's origin)
  *
@@ -18,10 +20,13 @@
  * session key kept in localStorage; the widget renders inside a shadow root,
  * so the host page's styles and the widget's styles never mix.
  *
- * After a handoff to staff the widget polls GET .../messages for staff
- * replies while the handoff is open (and while the panel stays open after
- * it): every few seconds at first, slower while nothing new arrives, and
- * not at all while the page is hidden.
+ * The widget polls GET .../messages for answers it has not shown: while a
+ * handoff to staff is open, while the panel is open within 24 hours of the
+ * visitor's last exchange (staff can write to any website chat), and after
+ * a page was left while an answer was being written. Every few seconds at
+ * first, slower while nothing new arrives, and not at all while the page is
+ * hidden. The visitor key travels in a request header, never in the URL.
+ * Tabs of one site share one history: each tab adopts what the others saved.
  * window.AssistantWorkshopChat.open() / .close() / .toggle() control it.
  */
 (function () {
@@ -43,6 +48,9 @@
   var STORAGE_PREFIX = "aw-chat:";
   var RTL_LANGUAGES = ["ar", "he", "fa", "ur", "yi", "ps", "sd", "ug", "ckb", "dv"];
   var URL_PATTERN = /\bhttps?:\/\/[^\s<>"']+/g;
+  // Hebrew, Arabic, Syriac, Thaana, NKo and their presentation forms.
+  var RTL_CHARACTER_PATTERN = /[\u0590-\u08FF\uFB1D-\uFDFF\uFE70-\uFEFC]/;
+  var SESSION_KEY_HEADER = "X-Widget-Session-Key";
   var POSITIONS = ["left", "right"];
   // Polling for staff replies: fast after activity, slower while idle.
   var POLL_FIRST_DELAY_MS = 4000;
@@ -50,7 +58,8 @@
   var POLL_MAX_DELAY_OPEN_MS = 30000;
   var POLL_MAX_DELAY_CLOSED_MS = 60000;
   var POLL_MORE_DELAY_MS = 500;
-  // A handoff seen in the last 24 hours keeps an open panel polling.
+  // A handoff or an exchange in the last 24 hours keeps an open panel
+  // polling: staff can write to any website chat.
   var HANDOFF_MEMORY_MS = 24 * 60 * 60 * 1000;
   var SVG_NS = "http://www.w3.org/2000/svg";
   // Fallback when the browser blocks localStorage / sessionStorage.
@@ -131,6 +140,7 @@
       tooLong: "Повідомлення задовге.",
       handedOff: "Ваш запит передано працівникам. З вами незабаром зв'яжуться.",
       language: "Мова",
+      preview: "Попередній перегляд: чат вимкнено. Увімкніть його в кабінеті (Канали).",
       newReply: "Нова відповідь",
       staff: "Наша команда"
     },
@@ -149,6 +159,7 @@
       tooLong: "Mesaj çok uzun.",
       handedOff: "Talebiniz ekibimize iletildi. Kısa süre içinde sizinle iletişime geçecekler.",
       language: "Dil",
+      preview: "Önizleme: bu sohbet kapalı. Panelden (Kanallar) açın.",
       newReply: "Yeni yanıt",
       staff: "Ekibimiz"
     },
@@ -167,6 +178,7 @@
       tooLong: "ההודעה ארוכה מדי.",
       handedOff: "הפנייה שלכם הועברה לצוות שלנו. ניצור איתכם קשר בקרוב.",
       language: "שפה",
+      preview: "תצוגה מקדימה: הצ'אט כבוי. הפעילו אותו בלוח הניהול (ערוצים).",
       newReply: "תשובה חדשה",
       staff: "הצוות שלנו"
     },
@@ -185,6 +197,7 @@
       tooLong: "الرسالة طويلة جدًا.",
       handedOff: "تم تحويل طلبك إلى فريقنا. سيتواصلون معك قريبًا.",
       language: "اللغة",
+      preview: "معاينة: هذه المحادثة متوقفة. فعّلها في لوحة التحكم (القنوات).",
       newReply: "رد جديد",
       staff: "فريقنا"
     },
@@ -203,6 +216,7 @@
       tooLong: "Die Nachricht ist zu lang.",
       handedOff: "Ihre Anfrage wurde an unser Team weitergeleitet. Wir melden uns bald.",
       language: "Sprache",
+      preview: "Vorschau: Dieser Chat ist ausgeschaltet. Schalten Sie ihn im Kundenbereich ein (Kanäle).",
       newReply: "Neue Antwort",
       staff: "Unser Team"
     },
@@ -221,6 +235,7 @@
       tooLong: "Le message est trop long.",
       handedOff: "Votre demande a été transmise à notre équipe. Elle vous contactera bientôt.",
       language: "Langue",
+      preview: "Aperçu : ce chat est désactivé. Activez-le dans l’espace client (Canaux).",
       newReply: "Nouvelle réponse",
       staff: "Notre équipe"
     },
@@ -239,6 +254,7 @@
       tooLong: "El mensaje es demasiado largo.",
       handedOff: "Su solicitud se ha enviado a nuestro equipo. Le contactarán pronto.",
       language: "Idioma",
+      preview: "Vista previa: este chat está desactivado. Actívalo en el panel (Canales).",
       newReply: "Nueva respuesta",
       staff: "Nuestro equipo"
     },
@@ -257,6 +273,7 @@
       tooLong: "Il messaggio è troppo lungo.",
       handedOff: "La sua richiesta è stata inoltrata al nostro team. La contatteranno presto.",
       language: "Lingua",
+      preview: "Anteprima: questa chat è disattivata. Attivala nel pannello (Canali).",
       newReply: "Nuova risposta",
       staff: "Il nostro team"
     },
@@ -275,6 +292,7 @@
       tooLong: "A mensagem é longa demais.",
       handedOff: "Seu pedido foi encaminhado à nossa equipe. Eles entrarão em contato em breve.",
       language: "Idioma",
+      preview: "Pré-visualização: este chat está desativado. Ative-o no painel (Canais).",
       newReply: "Nova resposta",
       staff: "Nossa equipe"
     },
@@ -293,6 +311,7 @@
       tooLong: "Wiadomość jest za długa.",
       handedOff: "Twoja prośba została przekazana naszemu zespołowi. Wkrótce się z Tobą skontaktujemy.",
       language: "Język",
+      preview: "Podgląd: ten czat jest wyłączony. Włącz go w panelu (Kanały).",
       newReply: "Nowa odpowiedź",
       staff: "Nasz zespół"
     },
@@ -311,6 +330,7 @@
       tooLong: "消息太长。",
       handedOff: "您的请求已转交给我们的团队，他们会尽快与您联系。",
       language: "语言",
+      preview: "预览：此聊天已关闭。请在管理后台（渠道）中开启。",
       newReply: "新回复",
       staff: "我们的团队"
     },
@@ -329,8 +349,275 @@
       tooLong: "メッセージが長すぎます。",
       handedOff: "お問い合わせを担当者に引き継ぎました。まもなくご連絡します。",
       language: "言語",
+      preview: "プレビュー：このチャットはオフです。管理画面（チャネル）でオンにしてください。",
       newReply: "新しい返信",
       staff: "スタッフ"
+    },
+    hy: {
+      open: "Բացել զրույցը",
+      close: "Փակել զրույցը",
+      subtitle: "AI օգնական",
+      greeting: "Բարև ձեզ։ Ես {business}-ի AI օգնականն եմ։ Ինչո՞վ կարող եմ օգնել։",
+      placeholder: "Գրեք հաղորդագրություն…",
+      send: "Ուղարկել",
+      typing: "Օգնականը գրում է…",
+      failed: "Հաղորդագրությունը չուղարկվեց։",
+      retry: "Կրկնել",
+      unavailable: "Զրույցը հիմա հասանելի չէ։ Փորձեք ավելի ուշ։",
+      rateLimited: "Չափազանց շատ հաղորդագրություններ։ Մի փոքր սպասեք և նորից փորձեք։",
+      tooLong: "Հաղորդագրությունը չափազանց երկար է։",
+      handedOff: "Ձեր հարցումը փոխանցվել է մեր թիմին։ Նրանք շուտով կկապվեն ձեզ հետ։",
+      language: "Լեզու",
+      preview: "Նախադիտում. զրույցն անջատված է։ Միացրեք այն կաբինետում (Ալիքներ)։",
+      newReply: "Նոր պատասխան",
+      staff: "Մեր թիմը"
+    },
+    kk: {
+      open: "Чатты ашу",
+      close: "Чатты жабу",
+      subtitle: "AI көмекші",
+      greeting: "Сәлеметсіз бе! Мен {business} AI көмекшісімін. Қалай көмектесе аламын?",
+      placeholder: "Хабарлама жазыңыз…",
+      send: "Жіберу",
+      typing: "Көмекші жазып жатыр…",
+      failed: "Хабарлама жіберілмеді.",
+      retry: "Қайталау",
+      unavailable: "Чат қазір қолжетімсіз. Кейінірек қайталап көріңіз.",
+      rateLimited: "Хабарламалар тым көп. Біраз күтіп, қайталап көріңіз.",
+      tooLong: "Хабарлама тым ұзын.",
+      handedOff: "Сұрауыңыз біздің командаға жіберілді. Олар сізбен жақын арада байланысады.",
+      language: "Тіл",
+      preview: "Алдын ала қарау: чат өшірулі. Оны кабинетте қосыңыз (Арналар).",
+      newReply: "Жаңа жауап",
+      staff: "Біздің команда"
+    },
+    az: {
+      open: "Söhbəti aç",
+      close: "Söhbəti bağla",
+      subtitle: "AI köməkçi",
+      greeting: "Salam! Mən {business} AI köməkçisiyəm. Sizə necə kömək edə bilərəm?",
+      placeholder: "Mesaj yazın…",
+      send: "Göndər",
+      typing: "Köməkçi yazır…",
+      failed: "Mesaj göndərilmədi.",
+      retry: "Yenidən cəhd et",
+      unavailable: "Söhbət hazırda əlçatan deyil. Bir az sonra yenidən cəhd edin.",
+      rateLimited: "Həddindən çox mesaj. Bir az gözləyin və yenidən cəhd edin.",
+      tooLong: "Mesaj çox uzundur.",
+      handedOff: "Sorğunuz komandamıza ötürüldü. Tezliklə sizinlə əlaqə saxlayacaqlar.",
+      language: "Dil",
+      preview: "Önizləmə: söhbət söndürülüb. Onu kabinetdə (Kanallar) aktiv edin.",
+      newReply: "Yeni cavab",
+      staff: "Komandamız"
+    },
+    lt: {
+      open: "Atidaryti pokalbį",
+      close: "Uždaryti pokalbį",
+      subtitle: "DI asistentas",
+      greeting: "Sveiki! Esu „{business}“ DI asistentas. Kuo galiu padėti?",
+      placeholder: "Parašykite žinutę…",
+      send: "Siųsti",
+      typing: "Asistentas rašo…",
+      failed: "Žinutė neišsiųsta.",
+      retry: "Bandyti dar kartą",
+      unavailable: "Pokalbis šiuo metu nepasiekiamas. Bandykite vėliau.",
+      rateLimited: "Per daug žinučių. Šiek tiek palaukite ir bandykite dar kartą.",
+      tooLong: "Žinutė per ilga.",
+      handedOff: "Jūsų užklausa perduota mūsų komandai. Netrukus su jumis susisieks.",
+      language: "Kalba",
+      preview: "Peržiūra: pokalbis išjungtas. Įjunkite jį kabinete (Kanalai).",
+      newReply: "Naujas atsakymas",
+      staff: "Mūsų komanda"
+    },
+    lv: {
+      open: "Atvērt tērzēšanu",
+      close: "Aizvērt tērzēšanu",
+      subtitle: "MI asistents",
+      greeting: "Sveiki! Esmu “{business}” MI asistents. Kā varu palīdzēt?",
+      placeholder: "Rakstiet ziņu…",
+      send: "Sūtīt",
+      typing: "Asistents raksta…",
+      failed: "Ziņa netika nosūtīta.",
+      retry: "Mēģināt vēlreiz",
+      unavailable: "Tērzēšana pašlaik nav pieejama. Mēģiniet vēlāk.",
+      rateLimited: "Pārāk daudz ziņu. Mazliet uzgaidiet un mēģiniet vēlreiz.",
+      tooLong: "Ziņa ir pārāk gara.",
+      handedOff: "Jūsu pieprasījums ir nodots mūsu komandai. Drīzumā ar jums sazināsies.",
+      language: "Valoda",
+      preview: "Priekšskatījums: tērzēšana ir izslēgta. Ieslēdziet to kabinetā (Kanāli).",
+      newReply: "Jauna atbilde",
+      staff: "Mūsu komanda"
+    },
+    et: {
+      open: "Ava vestlus",
+      close: "Sulge vestlus",
+      subtitle: "AI-assistent",
+      greeting: "Tere! Olen ettevõtte {business} AI-assistent. Kuidas saan aidata?",
+      placeholder: "Kirjutage sõnum…",
+      send: "Saada",
+      typing: "Assistent kirjutab…",
+      failed: "Sõnumit ei saadetud.",
+      retry: "Proovi uuesti",
+      unavailable: "Vestlus pole praegu saadaval. Proovige hiljem uuesti.",
+      rateLimited: "Liiga palju sõnumeid. Oodake veidi ja proovige uuesti.",
+      tooLong: "Sõnum on liiga pikk.",
+      handedOff: "Teie päring edastati meie meeskonnale. Nad võtavad teiega peagi ühendust.",
+      language: "Keel",
+      preview: "Eelvaade: vestlus on välja lülitatud. Lülitage see sisse kabinetis (Kanalid).",
+      newReply: "Uus vastus",
+      staff: "Meie meeskond"
+    },
+    fa: {
+      open: "باز کردن گفتگو",
+      close: "بستن گفتگو",
+      subtitle: "دستیار هوش مصنوعی",
+      greeting: "سلام! من دستیار هوش مصنوعی {business} هستم. چطور می‌توانم کمک کنم؟",
+      placeholder: "پیام خود را بنویسید…",
+      send: "ارسال",
+      typing: "دستیار در حال نوشتن است…",
+      failed: "پیام ارسال نشد.",
+      retry: "تلاش دوباره",
+      unavailable: "گفتگو در حال حاضر در دسترس نیست. لطفاً بعداً دوباره تلاش کنید.",
+      rateLimited: "پیام‌ها بیش از حد زیاد است. لطفاً کمی صبر کنید و دوباره تلاش کنید.",
+      tooLong: "پیام بیش از حد طولانی است.",
+      handedOff: "درخواست شما به تیم ما ارسال شد. به‌زودی با شما تماس می‌گیرند.",
+      language: "زبان",
+      preview: "پیش‌نمایش: گفتگو خاموش است. آن را در کابینت (کانال‌ها) روشن کنید.",
+      newReply: "پاسخ جدید",
+      staff: "تیم ما"
+    },
+    ur: {
+      open: "چیٹ کھولیں",
+      close: "چیٹ بند کریں",
+      subtitle: "AI معاون",
+      greeting: "السلام علیکم! میں {business} کا AI معاون ہوں۔ میں آپ کی کیا مدد کر سکتا ہوں؟",
+      placeholder: "پیغام لکھیں…",
+      send: "بھیجیں",
+      typing: "معاون لکھ رہا ہے…",
+      failed: "پیغام نہیں بھیجا گیا۔",
+      retry: "دوبارہ کوشش کریں",
+      unavailable: "چیٹ اس وقت دستیاب نہیں ہے۔ براہ کرم بعد میں کوشش کریں۔",
+      rateLimited: "بہت زیادہ پیغامات۔ تھوڑا انتظار کریں اور دوبارہ کوشش کریں۔",
+      tooLong: "پیغام بہت لمبا ہے۔",
+      handedOff: "آپ کی درخواست ہماری ٹیم کو بھیج دی گئی ہے۔ وہ جلد آپ سے رابطہ کریں گے۔",
+      language: "زبان",
+      preview: "پیش نظارہ: چیٹ بند ہے۔ اسے کیبنٹ (چینلز) میں آن کریں۔",
+      newReply: "نیا جواب",
+      staff: "ہماری ٹیم"
+    },
+    fi: {
+      open: "Avaa chat",
+      close: "Sulje chat",
+      subtitle: "Tekoälyavustaja",
+      greeting: "Hei! Olen yrityksen {business} tekoälyavustaja. Miten voin auttaa?",
+      placeholder: "Kirjoita viesti…",
+      send: "Lähetä",
+      typing: "Avustaja kirjoittaa…",
+      failed: "Viestiä ei lähetetty.",
+      retry: "Yritä uudelleen",
+      unavailable: "Chat ei ole juuri nyt käytettävissä. Yritä myöhemmin uudelleen.",
+      rateLimited: "Liian monta viestiä. Odota hetki ja yritä uudelleen.",
+      tooLong: "Viesti on liian pitkä.",
+      handedOff: "Pyyntösi on välitetty tiimillemme. He ottavat sinuun pian yhteyttä.",
+      language: "Kieli",
+      preview: "Esikatselu: chat on pois päältä. Ota se käyttöön hallintapaneelissa (Kanavat).",
+      newReply: "Uusi vastaus",
+      staff: "Tiimimme"
+    },
+    hi: {
+      open: "चैट खोलें",
+      close: "चैट बंद करें",
+      subtitle: "AI सहायक",
+      greeting: "नमस्ते! मैं {business} का AI सहायक हूँ। मैं आपकी क्या मदद कर सकता हूँ?",
+      placeholder: "संदेश लिखें…",
+      send: "भेजें",
+      typing: "सहायक लिख रहा है…",
+      failed: "संदेश नहीं भेजा गया।",
+      retry: "फिर से कोशिश करें",
+      unavailable: "चैट अभी उपलब्ध नहीं है। कृपया बाद में कोशिश करें।",
+      rateLimited: "बहुत अधिक संदेश। कृपया थोड़ा रुकें और फिर से कोशिश करें।",
+      tooLong: "संदेश बहुत लंबा है।",
+      handedOff: "आपका अनुरोध हमारी टीम को भेज दिया गया है। वे जल्द ही आपसे संपर्क करेंगे।",
+      language: "भाषा",
+      preview: "पूर्वावलोकन: यह चैट बंद है। इसे कैबिनेट (चैनल) में चालू करें।",
+      newReply: "नया जवाब",
+      staff: "हमारी टीम"
+    },
+    ko: {
+      open: "채팅 열기",
+      close: "채팅 닫기",
+      subtitle: "AI 어시스턴트",
+      greeting: "안녕하세요! {business}의 AI 어시스턴트입니다. 무엇을 도와드릴까요?",
+      placeholder: "메시지를 입력하세요…",
+      send: "보내기",
+      typing: "어시스턴트가 입력 중…",
+      failed: "메시지를 보내지 못했습니다.",
+      retry: "다시 시도",
+      unavailable: "지금은 채팅을 이용할 수 없습니다. 나중에 다시 시도해 주세요.",
+      rateLimited: "메시지가 너무 많습니다. 잠시 후 다시 시도해 주세요.",
+      tooLong: "메시지가 너무 깁니다.",
+      handedOff: "요청이 담당 팀에 전달되었습니다. 곧 연락드리겠습니다.",
+      language: "언어",
+      preview: "미리보기: 채팅이 꺼져 있습니다. 관리 화면(채널)에서 켜 주세요.",
+      newReply: "새 답변",
+      staff: "담당 팀"
+    },
+    nb: {
+      open: "Åpne chat",
+      close: "Lukk chat",
+      subtitle: "KI-assistent",
+      greeting: "Hei! Jeg er KI-assistenten til {business}. Hvordan kan jeg hjelpe?",
+      placeholder: "Skriv en melding…",
+      send: "Send",
+      typing: "Assistenten skriver…",
+      failed: "Meldingen ble ikke sendt.",
+      retry: "Prøv igjen",
+      unavailable: "Chatten er ikke tilgjengelig akkurat nå. Prøv igjen senere.",
+      rateLimited: "For mange meldinger. Vent litt og prøv igjen.",
+      tooLong: "Meldingen er for lang.",
+      handedOff: "Forespørselen din er sendt videre til teamet vårt. De tar snart kontakt.",
+      language: "Språk",
+      preview: "Forhåndsvisning: chatten er slått av. Slå den på i kontrollpanelet (Kanaler).",
+      newReply: "Nytt svar",
+      staff: "Teamet vårt"
+    },
+    uz: {
+      open: "Chatni ochish",
+      close: "Chatni yopish",
+      subtitle: "AI yordamchi",
+      greeting: "Assalomu alaykum! Men {business} AI yordamchisiman. Qanday yordam bera olaman?",
+      placeholder: "Xabar yozing…",
+      send: "Yuborish",
+      typing: "Yordamchi yozmoqda…",
+      failed: "Xabar yuborilmadi.",
+      retry: "Qayta urinish",
+      unavailable: "Chat hozir mavjud emas. Keyinroq qayta urinib ko‘ring.",
+      rateLimited: "Xabarlar juda ko‘p. Biroz kuting va qayta urinib ko‘ring.",
+      tooLong: "Xabar juda uzun.",
+      handedOff: "So‘rovingiz jamoamizga yuborildi. Tez orada siz bilan bog‘lanishadi.",
+      language: "Til",
+      preview: "Oldindan ko‘rish: chat o‘chirilgan. Uni kabinetda (Kanallar) yoqing.",
+      newReply: "Yangi javob",
+      staff: "Jamoamiz"
+    },
+    vi: {
+      open: "Mở trò chuyện",
+      close: "Đóng trò chuyện",
+      subtitle: "Trợ lý AI",
+      greeting: "Xin chào! Tôi là trợ lý AI của {business}. Tôi có thể giúp gì cho bạn?",
+      placeholder: "Nhập tin nhắn…",
+      send: "Gửi",
+      typing: "Trợ lý đang soạn tin…",
+      failed: "Không gửi được tin nhắn.",
+      retry: "Thử lại",
+      unavailable: "Hiện không thể trò chuyện. Vui lòng thử lại sau.",
+      rateLimited: "Quá nhiều tin nhắn. Vui lòng đợi một chút rồi thử lại.",
+      tooLong: "Tin nhắn quá dài.",
+      handedOff: "Yêu cầu của bạn đã được chuyển cho đội ngũ của chúng tôi. Họ sẽ sớm liên hệ với bạn.",
+      language: "Ngôn ngữ",
+      preview: "Xem trước: trò chuyện đang tắt. Hãy bật trong bảng quản lý (Kênh).",
+      newReply: "Phản hồi mới",
+      staff: "Đội ngũ của chúng tôi"
     }
   };
 
@@ -394,7 +681,9 @@
     "border-end-end-radius:4px;}",
     ".aw-visitor a{color:inherit;}",
     ".aw-message a{text-decoration:underline;overflow-wrap:anywhere;}",
-    ".aw-assistant a,.aw-staff a{color:var(--aw-accent);}",
+    // Links keep the bubble's text colour (and the underline): the accent can
+    // be unreadable on the bubble, in dark mode above all.
+    ".aw-assistant a,.aw-staff a{color:inherit;}",
     ".aw-pending{opacity:.7;}",
     ".aw-notice{align-self:center;max-width:92%;text-align:center;font-size:13px;color:var(--aw-muted);",
     "padding:4px 8px;}",
@@ -517,6 +806,10 @@
       cursor: storageGet(localStorageOrNull(), storagePrefix + "cursor"),
       isHandedOff: storageGet(localStorageOrNull(), storagePrefix + "handoff") === "1",
       handoffAt: Number(storageGet(localStorageOrNull(), storagePrefix + "handoff-at")) || 0,
+      // The visitor's last exchange (an answer or new messages), any tab.
+      activityAt: Number(storageGet(localStorageOrNull(), storagePrefix + "activity-at")) || 0,
+      // The history as this tab last read or wrote it (other tabs change it).
+      storedHistory: storageGet(localStorageOrNull(), storagePrefix + "history"),
       pollTimer: null,
       pollDelay: POLL_FIRST_DELAY_MS,
       isPolling: false,
@@ -602,10 +895,10 @@
     log.tabIndex = 0;
     panel.appendChild(log);
 
+    // Outside the panel: a hidden (display:none) panel would silence it.
     var status = el("p", "aw-sr");
     status.setAttribute("role", "status");
     status.setAttribute("aria-live", "polite");
-    panel.appendChild(status);
 
     var composer = el("form", "aw-composer");
     composer.setAttribute("novalidate", "");
@@ -629,6 +922,7 @@
 
     wrapper.appendChild(panel);
     wrapper.appendChild(launcher);
+    wrapper.appendChild(status);
     root.appendChild(wrapper);
     document.body.appendChild(host);
 
@@ -660,12 +954,18 @@
 
     applyLanguage();
     exposeApi();
-    if (
-      script.getAttribute("data-open") === "true" ||
-      storageGet(sessionStorageOrNull(), storagePrefix + "open") === "1"
-    ) {
+    // data-open only sets the first view of the tab session: once the visitor
+    // has opened or closed the chat, their choice is kept on every page (a
+    // full-screen panel on a phone must not come back on each page).
+    var savedOpen = storageGet(sessionStorageOrNull(), storagePrefix + "open");
+    if (savedOpen === "1" || (savedOpen === null && script.getAttribute("data-open") === "true")) {
       setOpen(true, true);
     }
+    window.addEventListener("storage", function (event) {
+      if (event.key === storagePrefix + "history" || event.key === storagePrefix + "cursor") {
+        adoptStoredState();
+      }
+    });
     document.addEventListener("visibilitychange", function () {
       if (document.visibilityState === "hidden") {
         stopPolling();
@@ -679,8 +979,7 @@
       var direction = languageDirection(config, state.language);
       wrapper.setAttribute("dir", direction);
       wrapper.setAttribute("lang", state.language);
-      launcher.setAttribute("aria-label", text(state.isOpen ? "close" : "open"));
-      launcher.title = text(state.isOpen ? "close" : "open");
+      updateLauncherLabel();
       panel.setAttribute("aria-label", config.business_name || text("subtitle"));
       log.setAttribute("aria-label", config.business_name || text("subtitle"));
       subtitle.textContent = text("subtitle");
@@ -703,13 +1002,14 @@
       state.isOpen = isOpen;
       panel.hidden = !isOpen;
       launcher.setAttribute("aria-expanded", isOpen ? "true" : "false");
-      launcher.setAttribute("aria-label", text(isOpen ? "close" : "open"));
-      launcher.title = text(isOpen ? "close" : "open");
+      if (isOpen) {
+        wrapper.classList.remove("aw-unread");
+      }
+      updateLauncherLabel();
       launcher.replaceChild(isOpen ? closeIcon() : chatIcon(), launcher.firstChild);
       wrapper.classList.toggle("aw-open", isOpen);
       storageSet(sessionStorageOrNull(), storagePrefix + "open", isOpen ? "1" : "0");
       if (isOpen) {
-        wrapper.classList.remove("aw-unread");
         scrollToEnd();
         if (!keepFocus) {
           input.focus();
@@ -719,6 +1019,28 @@
       } else if (!keepFocus) {
         launcher.focus();
       }
+    }
+
+    // The launcher's name also tells a screen reader about an unread reply.
+    function updateLauncherLabel() {
+      var label = text(state.isOpen ? "close" : "open");
+      if (!state.isOpen && wrapper.classList.contains("aw-unread")) {
+        label += " (" + text("newReply") + ")";
+      }
+      launcher.setAttribute("aria-label", label);
+      launcher.title = label;
+    }
+
+    // A reply arrived: read it out when the panel is open, else mark the
+    // launcher unread and say that a reply came.
+    function noteReply(replyText) {
+      if (state.isOpen) {
+        announce(replyText);
+        return;
+      }
+      wrapper.classList.add("aw-unread");
+      updateLauncherLabel();
+      announce(text("newReply"));
     }
 
     function exposeApi() {
@@ -746,6 +1068,7 @@
       }
       input.value = "";
       autoSize();
+      adoptStoredState();
       var item = { role: "visitor", text: messageText, failed: false };
       state.history.push(item);
       send(item);
@@ -757,6 +1080,11 @@
       state.pendingItem = item;
       item.failed = false;
       item.error = "";
+      // Stored before sending: if the visitor leaves while the answer is
+      // being written, the next page shows the question and fetches it.
+      item.pending = true;
+      item.sentAt = Date.now();
+      saveHistory();
       updateSendButton();
       renderLog();
       showTyping(true);
@@ -787,7 +1115,7 @@
           showTyping(false);
           state.isSending = false;
           state.pendingItem = null;
-          markFailed(item, text("failed"), "");
+          markFailed(item, text("failed"), "", true);
           updateSendButton();
           schedulePoll(POLL_FIRST_DELAY_MS);
         }
@@ -795,6 +1123,7 @@
     }
 
     function receiveReply(reply) {
+      clearPending();
       if (typeof reply.text === "string" && reply.text) {
         state.history.push({
           role: "assistant",
@@ -802,10 +1131,7 @@
           text: reply.text,
           direction: reply.direction === "rtl" ? "rtl" : "ltr"
         });
-        announce(reply.text);
-        if (!state.isOpen) {
-          wrapper.classList.add("aw-unread");
-        }
+        noteReply(reply.text);
       } else if (reply.is_handed_off && !state.handoffNoticeShown) {
         state.handoffNoticeShown = true;
         state.history.push({ role: "notice", key: "handedOff" });
@@ -817,11 +1143,12 @@
         saveCursor(reply.cursor);
       }
       setHandedOff(reply.is_handed_off === true);
+      markActivity();
       saveHistory();
       renderLog();
     }
 
-    // --- staff replies after a handoff ------------------------------------
+    // --- answers the widget has not shown yet -----------------------------
 
     function shouldPoll() {
       if (state.pollStopped || document.visibilityState === "hidden") {
@@ -830,7 +1157,69 @@
       if (state.isHandedOff) {
         return true;
       }
-      return state.isOpen && state.handoffAt > 0 && Date.now() - state.handoffAt < HANDOFF_MEMORY_MS;
+      if (awaitingAnswer() && !state.isSending) {
+        return true;
+      }
+      var lastAt = Math.max(state.handoffAt, state.activityAt);
+      return state.isOpen && lastAt > 0 && Date.now() - lastAt < HANDOFF_MEMORY_MS;
+    }
+
+    // The visitor's last message was sent (maybe from a page since left) and
+    // its answer has not been shown yet.
+    function awaitingAnswer() {
+      for (var index = state.history.length - 1; index >= 0; index -= 1) {
+        var item = state.history[index];
+        if (item.role === "visitor") {
+          return isAwaiting(item);
+        }
+      }
+      return false;
+    }
+
+    function isAwaiting(item) {
+      return item.pending === true && Date.now() - (item.sentAt || 0) < REQUEST_TIMEOUT_MS;
+    }
+
+    function clearPending() {
+      state.history.forEach(function (item) {
+        if (item.role === "visitor") {
+          item.pending = false;
+        }
+      });
+    }
+
+    function markActivity() {
+      state.activityAt = Date.now();
+      storageSet(localStorageOrNull(), storagePrefix + "activity-at", String(state.activityAt));
+    }
+
+    // The history and position another tab saved; this tab's unsent and
+    // failed messages stay at the end.
+    function adoptStoredState() {
+      if (state.isSending) {
+        // Adopted after the answer: the message being sent is in the history.
+        return;
+      }
+      var raw = storageGet(localStorageOrNull(), storagePrefix + "history");
+      if (raw !== state.storedHistory) {
+        var unsaved = state.history.filter(function (item) {
+          return item.failed;
+        });
+        state.history = loadHistory().concat(unsaved);
+        state.storedHistory = raw;
+        state.handoffNoticeShown = state.history.some(function (item) {
+          return item.role === "notice";
+        });
+        renderLog();
+      }
+      var cursor = storageGet(localStorageOrNull(), storagePrefix + "cursor");
+      if (cursor) {
+        state.cursor = cursor;
+      }
+      state.activityAt = Math.max(
+        state.activityAt,
+        Number(storageGet(localStorageOrNull(), storagePrefix + "activity-at")) || 0
+      );
     }
 
     function schedulePoll(delay) {
@@ -864,12 +1253,15 @@
       if (isCatchUp !== true && !shouldPoll()) {
         return;
       }
+      // Start from the shared position, so another tab's answers are not
+      // appended out of order.
+      adoptStoredState();
       state.isPolling = true;
-      var url = messagesUrl + "?session_key=" + encodeURIComponent(state.sessionKey);
+      var url = messagesUrl;
       if (state.cursor) {
-        url += "&after=" + encodeURIComponent(state.cursor);
+        url += "?after=" + encodeURIComponent(state.cursor);
       }
-      requestJson(url, null).then(
+      requestJson(url, null, state.sessionKey).then(
         function (result) {
           state.isPolling = false;
           if (result.status === 404) {
@@ -929,12 +1321,11 @@
       }
       setHandedOff(page.is_handed_off === true);
       if (added > 0) {
+        clearPending();
+        markActivity();
         saveHistory();
         renderLog();
-        announce(lastText);
-        if (!state.isOpen) {
-          wrapper.classList.add("aw-unread");
-        }
+        noteReply(lastText);
       }
       return added;
     }
@@ -953,10 +1344,18 @@
       }
     }
 
-    function markFailed(item, message, detail) {
+    // `mayHaveArrived`: the request broke off (network, or the visitor left
+    // the page): the API may have the message, so the stored copy stays and
+    // the next page looks for its answer. A refused message (an HTTP error)
+    // is kept on this page only, for Retry.
+    function markFailed(item, message, detail, mayHaveArrived) {
+      item.pending = false;
       item.failed = true;
       item.error = message;
       item.detail = detail;
+      if (!mayHaveArrived) {
+        saveHistory();
+      }
       announce(message);
       renderLog();
     }
@@ -1000,7 +1399,7 @@
           return;
         }
         var row = messageRow(item.role, item.text, item.direction, item.role === "staff" ? text("staff") : "");
-        if (item === state.pendingItem) {
+        if (item === state.pendingItem || (item.role === "visitor" && isAwaiting(item))) {
           row.className += " aw-pending";
         }
         log.appendChild(row);
@@ -1086,7 +1485,7 @@
       }
       var stored = state.history
         .filter(function (item) {
-          return !item.failed && item !== state.pendingItem;
+          return !item.failed;
         })
         .slice(-MAX_STORED_MESSAGES)
         .map(function (item) {
@@ -1095,10 +1494,14 @@
             id: item.id,
             text: item.text,
             direction: item.direction,
-            key: item.key
+            key: item.key,
+            pending: item.pending === true ? true : undefined,
+            sentAt: item.pending === true ? item.sentAt : undefined
           };
         });
-      storageSet(localStorageOrNull(), storagePrefix + "history", JSON.stringify(stored));
+      // Remembered so this tab does not take its own write for another tab's.
+      state.storedHistory = JSON.stringify(stored);
+      storageSet(localStorageOrNull(), storagePrefix + "history", state.storedHistory);
     }
 
     function text(key) {
@@ -1225,7 +1628,7 @@
 
   // --- network -----------------------------------------------------------
 
-  function requestJson(url, body) {
+  function requestJson(url, body, sessionKey) {
     var controller = typeof AbortController === "function" ? new AbortController() : null;
     var timer = controller
       ? window.setTimeout(function () {
@@ -1244,6 +1647,10 @@
       // reads the body as JSON whatever its content type.
       options.headers = { "Content-Type": "text/plain;charset=UTF-8" };
       options.body = JSON.stringify(body);
+    } else if (sessionKey) {
+      // In a header, so access logs and proxies never record the key.
+      options.headers = {};
+      options.headers[SESSION_KEY_HEADER] = sessionKey;
     }
     if (controller) {
       options.signal = controller.signal;
@@ -1312,6 +1719,8 @@
             text: item.text,
             direction: item.direction === "rtl" ? "rtl" : "ltr",
             key: item.key,
+            pending: item.pending === true,
+            sentAt: typeof item.sentAt === "number" ? item.sentAt : 0,
             failed: false
           };
         });
@@ -1440,8 +1849,14 @@
     }
     var body = el("div", "");
     // Each message finds its own direction (a Hebrew reply in an English
-    // interface, a phone number in an Arabic one).
-    body.setAttribute("dir", "auto");
+    // interface, a phone number in an Arabic one). A business message the
+    // API marks right-to-left stays right-to-left even when it opens with a
+    // Latin name ("Pizza Roma مفتوح ..."), as long as it has right-to-left
+    // letters; "ltr" is never forced (the API also sends it for unknown
+    // languages).
+    var isRightToLeft =
+      role !== "visitor" && direction === "rtl" && RTL_CHARACTER_PATTERN.test(messageText);
+    body.setAttribute("dir", isRightToLeft ? "rtl" : "auto");
     if (direction === "rtl" || direction === "ltr") {
       body.setAttribute("data-language-direction", direction);
     }
@@ -1516,7 +1931,9 @@
       return value <= 0.03928 ? value / 12.92 : Math.pow((value + 0.055) / 1.055, 2.4);
     });
     var luminance = 0.2126 * channels[0] + 0.7152 * channels[1] + 0.0722 * channels[2];
-    return luminance > 0.45 ? "#111827" : "#ffffff";
+    // The higher WCAG contrast: with white 1.05/(L+0.05), with #111827
+    // (L about 0.0093) (L+0.05)/0.0593.
+    return 1.05 / (luminance + 0.05) >= (luminance + 0.05) / 0.0593 ? "#ffffff" : "#111827";
   }
 
   function warn(message) {

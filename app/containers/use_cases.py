@@ -1831,6 +1831,8 @@ class UseCasesContainer(containers.DeclarativeContainer):
         conversation_repo=repositories.conversation_repo,
         message_repo=repositories.message_repo,
         language_registry=registries.language_registry,
+        rate_limit_registry=registries.request_rate_limit_registry,
+        wall_clock=time_provider.microsecond_wall_clock,
     )
     accept_widget_message_use_case: Factory[
         UseCaseContract[WidgetMessageCommand, InboundMessage]

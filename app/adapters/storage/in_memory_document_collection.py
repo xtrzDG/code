@@ -1,3 +1,4 @@
+import json
 import threading
 
 from base_pydantic_schemas import PersistentDocument
@@ -46,6 +47,33 @@ class InMemoryDocumentCollectionAdapter[StoredDocument: PersistentDocument](
             for serialized_document in serialized_documents
         ]
 
+    def list_by_field(self, field_name: str, value: str) -> list[StoredDocument]:
+        with self._lock:
+            serialized_documents: list[str] = list(self._serialized_documents.values())
+
+        return [
+            self._document_type.model_validate_json(serialized_document)
+            for serialized_document in serialized_documents
+            if read_field_text(serialized_document, field_name) == value
+        ]
+
     def delete(self, document_key: str) -> None:
         with self._lock:
             self._serialized_documents.pop(document_key, None)
+
+
+def read_field_text(serialized_document: str, field_name: str) -> str | None:
+    """A top-level field as Postgres `document ->> field` gives it (text)."""
+
+    document: object = json.loads(serialized_document)
+    if not isinstance(document, dict):
+        return None
+
+    field_value: object = document.get(field_name)  # pyright: ignore[reportUnknownMemberType, reportUnknownVariableType]
+    if field_value is None:
+        return None
+
+    if isinstance(field_value, str):
+        return field_value
+
+    return json.dumps(field_value)

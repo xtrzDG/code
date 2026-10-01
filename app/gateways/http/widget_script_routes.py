@@ -213,8 +213,8 @@ def render_embed_code(business_id: BusinessId) -> str:
         "left</li>\n"
         '      <li><code>data-language="ka"</code> &mdash; interface '
         "language</li>\n"
-        '      <li><code>data-open="true"</code> &mdash; open the chat on '
-        "load</li>\n"
+        '      <li><code>data-open="true"</code> &mdash; open the chat on the '
+        "first page of a visit</li>\n"
         "    </ul>\n"
         "  </section>\n"
     )

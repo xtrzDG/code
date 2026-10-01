@@ -27,5 +27,13 @@ class DocumentCollectionAdapterContract(AdapterContract, Protocol[StoredDocument
     def list_all(self) -> list[StoredDocument]:
         raise NotImplementedError
 
+    def list_by_field(self, field_name: str, value: str) -> list[StoredDocument]:
+        """
+        Documents whose top-level field has this text value, in first-write
+        order (an indexed lookup instead of reading the whole collection).
+        Field name and value are technical storage values.
+        """
+        raise NotImplementedError
+
     def delete(self, document_key: str) -> None:
         raise NotImplementedError

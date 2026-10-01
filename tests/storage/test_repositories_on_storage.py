@@ -425,3 +425,27 @@ def test_collections_return_fresh_copies_in_first_write_order(
     reloaded = businesses.get(str(stored[1].id))
     assert reloaded is not None
     assert len(reloaded.members) == 1
+
+
+def test_field_lookups_find_documents_by_a_top_level_value(
+    collections: CollectionFactory,
+) -> None:
+    contacts = collections(ContactDocument, "contacts")
+    business_id = BusinessId()
+    first = ContactDocument(
+        business_id=business_id, phone_number=E164PhoneNumber("+995555123456")
+    )
+    second = ContactDocument(
+        business_id=business_id, phone_number=E164PhoneNumber("+995555000000")
+    )
+    third = ContactDocument(
+        business_id=BusinessId(), phone_number=E164PhoneNumber("+995555123456")
+    )
+    for contact in (first, second, third):
+        contacts.upsert(str(contact.id), contact)
+
+    found = contacts.list_by_field("phone_number", "+995555123456")
+
+    assert [contact.id for contact in found] == [first.id, third.id]
+    assert contacts.list_by_field("phone_number", "+1") == []
+    assert contacts.list_by_field("no_such_field", "+995555123456") == []

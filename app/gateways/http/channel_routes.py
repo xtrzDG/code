@@ -10,8 +10,12 @@ from app.gateways.http.strict_request_parsing import (
     build_json_body_dependency,
     describe_json_body,
     parse_path_identifier,
+    read_client_ip_address,
 )
-from app.gateways.http.widget_cors_middleware import WIDGET_CORS_HEADERS
+from app.gateways.http.widget_cors_middleware import (
+    WIDGET_CORS_HEADERS,
+    WIDGET_SESSION_KEY_HEADER,
+)
 from app.schemas.dto.channels import (
     ChannelWebhookOutcome,
     ChannelWebhookPayload,
@@ -89,8 +93,9 @@ def build_channel_router(
         GET  /v1/widget/{business_id}/config              public widget config
         POST /v1/widget/{business_id}/messages            widget visitor message
         GET  /v1/widget/{business_id}/messages            new assistant and staff
-                                                          messages (?session_key=
-                                                          &after=<message id>)
+                                                          messages (header
+                                                          X-Widget-Session-Key,
+                                                          ?after=<message id>)
     """
 
     router = APIRouter(tags=["channels"])
@@ -190,9 +195,10 @@ def build_channel_router(
 
     @router.get(WIDGET_MESSAGES_PATH)
     def list_widget_messages(
+        request: Request,
         business_id: str,
         response: Response,
-        session_key: Annotated[str, Query()],
+        session_key: Annotated[str, Header(alias=WIDGET_SESSION_KEY_HEADER)],
         after: Annotated[str | None, Query()] = None,
     ) -> WidgetMessagesView:
         response.headers.update(WIDGET_CORS_HEADERS)
@@ -201,6 +207,7 @@ def build_channel_router(
                 business_id=parse_path_identifier(business_id, BusinessId, "Chat"),
                 session_key=parse_session_key(session_key),
                 after=parse_message_cursor(after),
+                client_ip_address=read_client_ip_address(request),
             )
         )
 
@@ -212,7 +219,7 @@ def parse_session_key(raw_session_key: str) -> WidgetSessionKey:
         return WidgetSessionKey(raw_session_key)
     except ValueError as error:
         raise ValidationFailedError(
-            "session_key must be the widget's visitor key."
+            "X-Widget-Session-Key must be the widget's visitor key."
         ) from error
 
 
