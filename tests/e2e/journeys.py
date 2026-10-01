@@ -84,6 +84,19 @@ def sign_in_and_create_restaurant(workshop: Workshop) -> tuple[str, str, str]:
     return token, str(session["user"]["id"]), str(created.json()["id"])
 
 
+def start_trial_and_accept_dpa(
+    workshop: Workshop,
+    base: str,
+    headers: dict[str, str],
+) -> None:
+    """The two conditions of going live besides tested versions."""
+
+    trial = workshop.client.post(f"{base}/billing/trial", json={}, headers=headers)
+    assert trial.status_code == 201, trial.text
+    dpa = workshop.client.post(f"{base}/dpa", json={}, headers=headers)
+    assert dpa.status_code == 201, dpa.text
+
+
 def open_restaurant(workshop: Workshop) -> OpenRestaurant:
     """Sign in, fill the profile, add a table, assemble, test and publish."""
 
@@ -116,6 +129,7 @@ def open_restaurant(workshop: Workshop) -> OpenRestaurant:
         headers=headers,
     )
     assert settings.status_code == 200, settings.text
+    start_trial_and_accept_dpa(workshop, base, headers)
     version = client.post(
         f"{base}/assistant-versions",
         json={"run_autotests": False},

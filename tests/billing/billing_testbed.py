@@ -155,6 +155,9 @@ from app.use_cases.billing.enforce_grace_periods_use_case import (
 from app.use_cases.billing.get_billing_overview_use_case import (
     GetBillingOverviewUseCase,
 )
+from app.use_cases.billing.invoice_usage_overage_use_case import (
+    InvoiceUsageOverageUseCase,
+)
 from app.use_cases.billing.issue_due_invoices_use_case import (
     IssueDueInvoicesUseCase,
 )
@@ -591,6 +594,19 @@ class BillingTestbed:
             user_repo=self.user_repo,
             plan_registry=self.plan_registry,
             exchange_rate_registry=self.exchange_rate_registry,
+            manager_notifier=self.notifier,
+            billing_notice_transformer=self.notice_transformer,
+            wall_clock=wall_clock,
+        )
+        self.invoice_usage_overage = InvoiceUsageOverageUseCase(
+            business_repo=self.business_repo,
+            subscription_repo=self.subscription_repo,
+            invoice_repo=self.invoice_repo,
+            usage_event_repo=self.usage_event_repo,
+            user_repo=self.user_repo,
+            plan_registry=self.plan_registry,
+            exchange_rate_registry=self.exchange_rate_registry,
+            invoice_description_transformer=self.invoice_description_transformer,
             manager_notifier=self.notifier,
             billing_notice_transformer=self.notice_transformer,
             wall_clock=wall_clock,

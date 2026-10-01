@@ -1,6 +1,7 @@
 from datetime import date, timedelta
 
 from babel.dates import format_date
+from babel.numbers import format_decimal
 
 from app.contracts.localization_utilities import LocalizedTextResolverContract
 from app.contracts.transformer_contract import TransformerContract
@@ -13,6 +14,7 @@ from app.transformers.billing.billing_texts import (
     SERVICE_NAME,
     SERVICE_PERIOD_LINE,
     SETUP_FEE_LINE,
+    USAGE_OVERAGE_LINE,
     fill_placeholders,
     select_text_language,
 )
@@ -32,7 +34,8 @@ class InvoiceDescriptionTransformer(
     Always the service wording of the concept's tax rule:
     "Call and message handling service — Voice + chat, monthly,
     Oct 1, 2026 – Oct 31, 2026"; the setup fee reads "... — setup". The
-    period shows the local calendar days it covers, the last one inclusive.
+    period shows the local calendar days it covers, the last one inclusive;
+    an overage line names the minutes above the package of its month.
     """
 
     def __init__(self, localized_text_resolver: LocalizedTextResolverContract) -> None:
@@ -64,6 +67,37 @@ class InvoiceDescriptionTransformer(
             - timedelta(microseconds=1)
         ).date()
         babel_locale = require_babel_locale(language)
+        start_text: str = format_date(
+            first_day,
+            format=DATE_FORMAT,
+            locale=babel_locale,
+        )
+        end_text: str = format_date(
+            max(last_day, first_day),
+            format=DATE_FORMAT,
+            locale=babel_locale,
+        )
+        if input_data.kind is InvoiceKind.USAGE_OVERAGE:
+            return InvoiceDescription(
+                fill_placeholders(
+                    str(
+                        self._localized_text_resolver.resolve(
+                            USAGE_OVERAGE_LINE,
+                            language,
+                        )
+                    ),
+                    {
+                        "service": service,
+                        "minutes": format_decimal(
+                            int(input_data.overage_voice_minutes or 0),
+                            locale=babel_locale,
+                        ),
+                        "start": start_text,
+                        "end": end_text,
+                    },
+                )
+            )
+
         return InvoiceDescription(
             fill_placeholders(
                 str(
@@ -83,16 +117,8 @@ class InvoiceDescriptionTransformer(
                             language,
                         )
                     ),
-                    "start": format_date(
-                        first_day,
-                        format=DATE_FORMAT,
-                        locale=babel_locale,
-                    ),
-                    "end": format_date(
-                        max(last_day, first_day),
-                        format=DATE_FORMAT,
-                        locale=babel_locale,
-                    ),
+                    "start": start_text,
+                    "end": end_text,
                 },
             )
         )

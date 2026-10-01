@@ -2,7 +2,7 @@ from base_pydantic_schemas import BaseDocument
 from pydantic import Field
 
 from app.schemas.constants.payments import PaymentProvider, PaymentStatus
-from app.schemas.typings.billing.booleans import IsInitialPaymentSettled
+from app.schemas.typings.billing.booleans import IsInitialPaymentSettled, IsRefundDue
 from app.schemas.typings.billing.constrained_integers import (
     BillingIntervalMonths,
     MoneyAmountMinor,
@@ -30,6 +30,10 @@ class PaymentOrderDocument(BaseDocument):
     The document id is sent as the provider order id. `recurring_amount_minor`
     is what every later automatic charge is expected to be. Processed
     notification keys make repeated provider notifications harmless.
+    `is_refund_due` marks money the provider took that pays for nothing:
+    a second payment of bills already paid, or an automatic charge of a
+    schedule the subscription no longer uses; the platform admin refunds
+    it.
     """
 
     id: PaymentOrderId = Field(default_factory=PaymentOrderId)
@@ -44,6 +48,7 @@ class PaymentOrderDocument(BaseDocument):
     status: PaymentStatus = PaymentStatus.CREATED
     checkout_url: PaymentCheckoutUrl | None = None
     is_initial_payment_settled: IsInitialPaymentSettled = False
+    is_refund_due: IsRefundDue = False
     last_payment_reference: PaymentProviderReference | None = None
     last_failure_reason: PaymentFailureReason | None = None
     processed_notification_keys: list[PaymentNotificationKey] = Field(

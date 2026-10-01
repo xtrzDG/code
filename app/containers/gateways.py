@@ -18,6 +18,7 @@ PURGE_EXPIRED_RECORDINGS_JOB: JobName = JobName("purge_expired_recordings")
 END_TRIALS_JOB: JobName = JobName("end_trials")
 ENFORCE_GRACE_PERIODS_JOB: JobName = JobName("enforce_grace_periods")
 CHECK_PACKAGE_USAGE_JOB: JobName = JobName("check_package_usage")
+INVOICE_USAGE_OVERAGE_JOB: JobName = JobName("invoice_usage_overage")
 SEND_BOOKING_REMINDERS_JOB: JobName = JobName("send_booking_reminders")
 FLUSH_LLM_TRACES_JOB: JobName = JobName("flush_llm_traces")
 
@@ -37,7 +38,8 @@ class GatewaysContainer(containers.DeclarativeContainer):
 
     # Periodic jobs in the order they run within a tick: trials end before
     # grace periods are enforced, so an expired trial and its grace period
-    # are handled in the same hour.
+    # are handled in the same hour; minutes above the package are billed
+    # before the grace job looks for unpaid bills.
     periodic_jobs: List = List(
         Factory(
             PeriodicJobSpec,
@@ -50,6 +52,12 @@ class GatewaysContainer(containers.DeclarativeContainer):
             name=END_TRIALS_JOB,
             interval_seconds=JobIntervalSeconds(HOUR_SECONDS),
             operator=operators.end_trials_operator,
+        ),
+        Factory(
+            PeriodicJobSpec,
+            name=INVOICE_USAGE_OVERAGE_JOB,
+            interval_seconds=JobIntervalSeconds(HOUR_SECONDS),
+            operator=operators.invoice_usage_overage_operator,
         ),
         Factory(
             PeriodicJobSpec,

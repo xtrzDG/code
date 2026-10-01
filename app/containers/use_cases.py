@@ -312,6 +312,9 @@ from app.use_cases.billing.enforce_grace_periods_use_case import (
 from app.use_cases.billing.get_billing_overview_use_case import (
     GetBillingOverviewUseCase,
 )
+from app.use_cases.billing.invoice_usage_overage_use_case import (
+    InvoiceUsageOverageUseCase,
+)
 from app.use_cases.billing.issue_due_invoices_use_case import IssueDueInvoicesUseCase
 from app.use_cases.billing.process_payment_webhook_use_case import (
     ProcessPaymentWebhookUseCase,
@@ -1776,6 +1779,24 @@ class UseCasesContainer(containers.DeclarativeContainer):
             user_repo=repositories.user_repo,
             plan_registry=registries.plan_registry,
             exchange_rate_registry=registries.exchange_rate_registry,
+            manager_notifier=facilitators.manager_notification_facilitator,
+            billing_notice_transformer=transformers.billing_notice_transformer,
+            wall_clock=time_provider.microsecond_wall_clock,
+        )
+    )
+    invoice_usage_overage_use_case: Factory[UseCaseContract[JobTick, JobReport]] = (
+        Factory(
+            InvoiceUsageOverageUseCase,
+            business_repo=repositories.business_repo,
+            subscription_repo=repositories.subscription_repo,
+            invoice_repo=repositories.invoice_repo,
+            usage_event_repo=repositories.usage_event_repo,
+            user_repo=repositories.user_repo,
+            plan_registry=registries.plan_registry,
+            exchange_rate_registry=registries.exchange_rate_registry,
+            invoice_description_transformer=(
+                transformers.invoice_description_transformer
+            ),
             manager_notifier=facilitators.manager_notification_facilitator,
             billing_notice_transformer=transformers.billing_notice_transformer,
             wall_clock=time_provider.microsecond_wall_clock,

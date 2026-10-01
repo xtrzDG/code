@@ -252,6 +252,9 @@ class OperatorsContainer(containers.DeclarativeContainer):
     check_package_usage_operator = pipeline_operator(
         pipelines.check_package_usage_pipeline
     )
+    invoice_usage_overage_operator = pipeline_operator(
+        pipelines.invoice_usage_overage_pipeline
+    )
     send_booking_reminders_operator = pipeline_operator(
         pipelines.send_booking_reminders_pipeline
     )

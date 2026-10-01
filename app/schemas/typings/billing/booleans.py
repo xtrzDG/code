@@ -7,6 +7,7 @@ Example:
 IsAutoDebitActive = bool
 IsInitialPaymentSettled = bool
 IsPriceEstimated = bool
+IsRefundDue = bool
 IsSetupFeeIncluded = bool
 IsTrialAvailable = bool
 # Keep abc order for all non example types, if possible.

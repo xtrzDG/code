@@ -2,6 +2,7 @@ import pytest
 
 from app.schemas.constants.billing import (
     BillingPeriod,
+    InvoiceKind,
     InvoiceStatus,
     PlanKey,
     SubscriptionStatus,
@@ -16,6 +17,8 @@ from app.schemas.dto.billing_cabinet import (
     CancelSubscriptionCommand,
     ChangePlanCommand,
     ChangePlanRequest,
+    StartCheckoutCommand,
+    StartCheckoutRequest,
     StartTrialCommand,
     StartTrialRequest,
 )
@@ -321,5 +324,38 @@ def test_cancel_ends_the_trial_at_its_end_and_is_idempotent() -> None:
     assert second == first
     assert all(
         invoice.status is InvoiceStatus.VOID
+        for invoice in testbed.invoices(business.id)
+    )
+
+
+def test_switching_from_paid_annual_to_monthly_bills_no_setup_fee() -> None:
+    testbed = BillingTestbed()
+    owner = testbed.add_user(phone_number="+995599123456", locale="ka")
+    business = testbed.add_business(owner, GEORGIA)
+    start_trial(testbed, owner, business, billing_period=BillingPeriod.ANNUAL)
+    first = testbed.start_checkout.run(
+        StartCheckoutCommand(
+            user_id=owner.id,
+            business_id=business.id,
+            request=StartCheckoutRequest(),
+        )
+    )
+    order = testbed.payment_order_repo.get(first.payment_order_id)
+    assert order is not None
+    testbed.deliver_flitt_callback(testbed.callback_parameters(order, "approved"))
+    testbed.clock.advance(days=300)
+
+    change_plan(testbed, owner, business, PlanKey.VOICE_AND_CHAT, BillingPeriod.MONTHLY)
+    session = testbed.start_checkout.run(
+        StartCheckoutCommand(
+            user_id=owner.id,
+            business_id=business.id,
+            request=StartCheckoutRequest(),
+        )
+    )
+
+    assert session.amount.text == "517,00\xa0₾"
+    assert all(
+        invoice.kind is not InvoiceKind.SETUP_FEE
         for invoice in testbed.invoices(business.id)
     )

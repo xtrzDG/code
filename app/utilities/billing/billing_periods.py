@@ -104,30 +104,85 @@ def to_local_calendar_day(
     return AutoDebitStartDate(to_local_datetime(instant, timezone).date().isoformat())
 
 
+def find_package_window(
+    anchor: Microseconds,
+    now: Microseconds,
+    timezone: TimezoneName,
+    boundary: Microseconds | None = None,
+) -> tuple[Microseconds, Microseconds]:
+    """
+    Calendar month counted from `anchor` that contains `now`, cut at
+    `boundary` when given. Months are counted from the anchor each time
+    (never chained), so a period from 31 January keeps its day.
+    """
+
+    for month_index in range(MAX_WINDOW_STEPS):
+        window_start: Microseconds = add_calendar_months(anchor, month_index, timezone)
+        window_end: Microseconds = add_calendar_months(
+            anchor,
+            month_index + 1,
+            timezone,
+        )
+        if boundary is not None and window_end > boundary:
+            window_end = boundary
+
+        if now < window_end or window_end <= window_start:
+            return window_start, window_end
+
+    return anchor, anchor
+
+
+def list_package_windows(
+    period_start: Microseconds,
+    period_end: Microseconds,
+    timezone: TimezoneName,
+) -> list[tuple[Microseconds, Microseconds]]:
+    """Back-to-back calendar months of a service period, the last one cut."""
+
+    windows: list[tuple[Microseconds, Microseconds]] = []
+    for month_index in range(MAX_WINDOW_STEPS):
+        window_start: Microseconds = add_calendar_months(
+            period_start,
+            month_index,
+            timezone,
+        )
+        if window_start >= period_end:
+            break
+
+        window_end: Microseconds = min(
+            add_calendar_months(period_start, month_index + 1, timezone),
+            period_end,
+        )
+        windows.append((window_start, window_end))
+
+    return windows
+
+
 def find_usage_window(
     subscription: SubscriptionDocument,
     now: Microseconds,
     timezone: TimezoneName,
 ) -> tuple[Microseconds, Microseconds]:
     """
-    Billing window that contains `now`.
+    Package window that contains `now`.
 
-    Within the stored period it is the period itself. After it (an unpaid
-    or not yet renewed subscription) the windows continue back to back with
-    the subscription's billing period, so usage keeps being metered.
+    Packages are monthly whatever the billing interval (concept: minutes
+    and dialogs "a month"; annual billing is only a discount), so within
+    the stored period the window is the calendar month counted from the
+    period start, cut at the period end. After the period (an unpaid or
+    not yet renewed subscription) monthly windows continue from its end,
+    so usage keeps being metered.
     """
 
-    window_start: Microseconds = subscription.period_start
-    window_end: Microseconds = subscription.period_end
-    for _ in range(MAX_WINDOW_STEPS):
-        if now < window_end or window_end <= window_start:
-            break
+    if subscription.period_end <= subscription.period_start:
+        return subscription.period_start, subscription.period_end
 
-        window_start = window_end
-        window_end = add_billing_period(
-            window_start,
-            subscription.billing_period,
+    if now < subscription.period_end:
+        return find_package_window(
+            subscription.period_start,
+            now,
             timezone,
+            boundary=subscription.period_end,
         )
 
-    return window_start, window_end
+    return find_package_window(subscription.period_end, now, timezone)

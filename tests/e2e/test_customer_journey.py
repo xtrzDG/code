@@ -132,6 +132,9 @@ def test_georgian_restaurant_from_sign_in_to_a_booked_and_handed_off_chat(
     assert web_chat.json()["status"] == "connected"
     dpa = client.post(f"{base}/dpa", json={}, headers=headers)
     assert dpa.json()["is_current_version_accepted"] is True
+    trial = client.post(f"{base}/billing/trial", json={}, headers=headers)
+    assert trial.status_code == 201, trial.text
+    assert trial.json()["subscription"]["status"] == "trialing"
 
     # Assemble a version: every tool, the business languages, voice included.
     assembled = client.post(
@@ -389,7 +392,7 @@ def test_telegram_customer_books_and_the_worker_sends_the_reminder(
     workshop.clock.advance(15 * 60)
     again = worker.run_once()
 
-    assert too_early.periodic_runs == 6
+    assert too_early.periodic_runs == 7
     assert [too_early.failures, due.failures, again.failures] == [0, 0, 0]
     assert len(reminders()) == 1
     reminder_text = str(reminders()[0]["text"])

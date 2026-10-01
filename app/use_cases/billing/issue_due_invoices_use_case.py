@@ -25,9 +25,11 @@ class IssueDueInvoicesUseCase(
 
     The one-time setup fee is invoiced together with the first monthly
     period; an annual subscription includes it (concept: the setup fee is
-    credited to an annual payment). Issuing is idempotent: an existing
-    invoice of the same period is reused, and an open one takes the
-    requested PAID or FAILED status. VAT is not applied yet; after VAT
+    credited to an annual payment), so a business that has already paid
+    any service period (an annual one included) never gets it again, for
+    example after switching from annual to monthly. Issuing is idempotent:
+    an existing invoice of the same period is reused, and an open one takes
+    the requested PAID or FAILED status. VAT is not applied yet; after VAT
     registration (Georgia: 18 % on top) a VAT line will be added here.
     """
 
@@ -75,8 +77,14 @@ class IssueDueInvoicesUseCase(
             return False
 
         return not any(
-            invoice.kind is InvoiceKind.SETUP_FEE
-            and invoice.status is not InvoiceStatus.VOID
+            (
+                invoice.kind is InvoiceKind.SETUP_FEE
+                and invoice.status is not InvoiceStatus.VOID
+            )
+            or (
+                invoice.kind is InvoiceKind.SERVICE_PERIOD
+                and invoice.status is InvoiceStatus.PAID
+            )
             for invoice in business_invoices
         )
 

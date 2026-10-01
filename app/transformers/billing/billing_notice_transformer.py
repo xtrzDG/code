@@ -56,6 +56,7 @@ class BillingNoticeTransformer(TransformerContract[BillingNotice, MessageText]):
             BillingNoticeKind.PAYMENT_FAILED,
             BillingNoticeKind.TRIAL_ENDED_UNPAID,
             BillingNoticeKind.RENEWAL_MISSED,
+            BillingNoticeKind.OVERAGE_INVOICED,
         }:
             deadline_day: str = format_date(
                 to_local_datetime(input_data.deadline, input_data.timezone).date(),

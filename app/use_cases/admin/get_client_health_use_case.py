@@ -98,6 +98,7 @@ class GetClientHealthUseCase(UseCaseContract[AdminClientQuery, ClientHealthView]
                     ),
                     created_at=payment_order.created_at,
                     failure_reason=payment_order.last_failure_reason,
+                    is_refund_due=payment_order.is_refund_due,
                 )
                 for payment_order in self._payment_order_repo.list_by_business(
                     business.id

@@ -647,13 +647,22 @@ def test_a_second_payment_for_paid_bills_keeps_them_paid() -> None:
     second = checkout(world)
     pay(world, first, payment_id=1)
 
-    pay(world, second, payment_id=2)
+    receipt = world.testbed.deliver_flitt_callback(
+        world.testbed.callback_parameters(
+            payment_order(world, second), "approved", payment_id=2
+        )
+    )
 
     invoices = world.testbed.invoices(world.business.id)
     assert {str(invoice.provider_reference) for invoice in invoices} == {"1"}
     assert str(world.testbed.subscription(world.business.id).provider_reference) == (
         str(second.payment_order_id)
     )
+    # Only one schedule keeps running, and the money paid twice is refunded.
+    assert world.testbed.flitt.stopped_orders == [str(first.payment_order_id)]
+    assert receipt.outcome is PaymentWebhookOutcome.REFUND_DUE
+    assert payment_order(world, second).is_refund_due
+    assert not payment_order(world, first).is_refund_due
 
 
 def test_a_decline_after_a_plan_change_leaves_voided_bills_alone() -> None:
@@ -690,3 +699,131 @@ def test_payment_for_a_missing_subscription_is_not_found() -> None:
         world.testbed.deliver_flitt_callback(
             world.testbed.callback_parameters(orphan, "approved")
         )
+
+
+def test_a_trial_paid_ahead_is_never_billed_again() -> None:
+    world = build_trial()
+    pay(world, checkout(world))
+
+    with pytest.raises(ConflictError):
+        checkout(world)
+
+    assert len(world.testbed.flitt.checkout_orders) == 1
+    assert all(
+        invoice.status is InvoiceStatus.PAID
+        for invoice in world.testbed.invoices(world.business.id)
+    )
+
+
+def test_paying_with_a_new_checkout_stops_the_previous_schedule() -> None:
+    world, first_order = build_active_subscription()
+    period_end = world.testbed.subscription(world.business.id).period_end
+    world.testbed.clock.move_to(period_end)
+    world.testbed.deliver_flitt_callback(
+        world.testbed.callback_parameters(
+            first_order, "declined", payment_id=3, amount=51700
+        )
+    )
+    assert world.testbed.subscription(world.business.id).status is (
+        SubscriptionStatus.PAST_DUE
+    )
+
+    retry = checkout(world)
+    pay(world, retry, payment_id=4)
+
+    assert world.testbed.flitt.stopped_orders == [str(first_order.id)]
+    subscription = world.testbed.subscription(world.business.id)
+    assert subscription.status is SubscriptionStatus.ACTIVE
+    assert str(subscription.provider_reference) == str(retry.payment_order_id)
+
+
+def test_charges_of_a_replaced_schedule_are_refunded_not_booked() -> None:
+    world, first_order = build_active_subscription()
+    period_end = world.testbed.subscription(world.business.id).period_end
+    world.testbed.clock.move_to(period_end)
+    world.testbed.deliver_flitt_callback(
+        world.testbed.callback_parameters(
+            first_order, "declined", payment_id=3, amount=51700
+        )
+    )
+    retry = checkout(world)
+    pay(world, retry, payment_id=4)
+    world.testbed.cancel_subscription.run(
+        CancelSubscriptionCommand(user_id=world.owner.id, business_id=world.business.id)
+    )
+    invoice_count = len(world.testbed.invoices(world.business.id))
+    world.testbed.clock.advance(days=31)
+
+    receipt = world.testbed.deliver_flitt_callback(
+        {
+            **world.testbed.callback_parameters(
+                first_order, "approved", payment_id=5, amount=51700
+            ),
+            "order_id": f"{first_order.id}_5",
+            "parent_order_id": str(first_order.id),
+        }
+    )
+
+    assert receipt.outcome is PaymentWebhookOutcome.REFUND_DUE
+    subscription = world.testbed.subscription(world.business.id)
+    assert subscription.status is SubscriptionStatus.CANCELLED
+    assert len(world.testbed.invoices(world.business.id)) == invoice_count
+    stored = world.testbed.payment_order_repo.get(first_order.id)
+    assert stored is not None
+    assert stored.is_refund_due
+    assert world.testbed.flitt.stopped_orders == [
+        str(first_order.id),
+        str(retry.payment_order_id),
+        str(first_order.id),
+    ]
+    assert world.testbed.business(world.business.id).service_mode is ServiceMode.FULL
+
+
+def test_a_declined_charge_of_a_replaced_schedule_changes_nothing() -> None:
+    world, first_order = build_active_subscription()
+    world.testbed.change_plan.run(
+        ChangePlanCommand(
+            user_id=world.owner.id,
+            business_id=world.business.id,
+            request=ChangePlanRequest(
+                plan_key=PlanKey.PLUS,
+                billing_period=BillingPeriod.MONTHLY,
+            ),
+        )
+    )
+    world.testbed.clock.move_to(
+        world.testbed.subscription(world.business.id).period_end
+    )
+    invoice_count = len(world.testbed.invoices(world.business.id))
+
+    receipt = world.testbed.deliver_flitt_callback(
+        world.testbed.callback_parameters(
+            first_order, "declined", payment_id=6, amount=51700
+        )
+    )
+
+    assert receipt.outcome is PaymentWebhookOutcome.IGNORED
+    assert len(world.testbed.invoices(world.business.id)) == invoice_count
+    assert world.testbed.subscription(world.business.id).status is (
+        SubscriptionStatus.ACTIVE
+    )
+    assert world.testbed.notifier.sent == []
+
+
+def test_paying_after_cancelling_in_the_trial_resumes_it() -> None:
+    world = build_trial()
+    world.testbed.cancel_subscription.run(
+        CancelSubscriptionCommand(user_id=world.owner.id, business_id=world.business.id)
+    )
+
+    pay(world, checkout(world))
+
+    subscription = world.testbed.subscription(world.business.id)
+    assert subscription.status is SubscriptionStatus.TRIALING
+    world.testbed.clock.advance(days=14, hours=1)
+    world.testbed.run_job(world.testbed.end_trials, "end_trials")
+    world.testbed.run_job(world.testbed.enforce_grace_periods, "enforce_grace_periods")
+    assert world.testbed.subscription(world.business.id).status is (
+        SubscriptionStatus.ACTIVE
+    )
+    assert world.testbed.business(world.business.id).service_mode is ServiceMode.FULL

@@ -29,3 +29,4 @@ class PaymentWebhookOutcome(StrEnum):
     APPLIED = "applied"
     DUPLICATE = "duplicate"
     IGNORED = "ignored"
+    REFUND_DUE = "refund_due"

@@ -429,6 +429,9 @@ class OrchestratorsContainer(containers.DeclarativeContainer):
     check_package_usage_orchestrator = use_case_orchestrator(
         use_cases.check_package_usage_use_case
     )
+    invoice_usage_overage_orchestrator = use_case_orchestrator(
+        use_cases.invoice_usage_overage_use_case
+    )
     send_booking_reminders_orchestrator = use_case_orchestrator(
         use_cases.send_booking_reminders_use_case
     )

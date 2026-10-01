@@ -22,6 +22,7 @@ from app.utilities.billing.billing_periods import (
     add_local_days,
     find_usage_window,
     get_interval_months,
+    list_package_windows,
     to_local_calendar_day,
     to_local_datetime,
     to_microseconds,
@@ -169,3 +170,58 @@ def test_usage_window_of_an_empty_period_does_not_loop() -> None:
         Microseconds(int(instant) + DAY),
         TimezoneName("UTC"),
     ) == (instant, instant)
+
+
+def test_usage_window_of_an_annual_period_is_one_calendar_month() -> None:
+    timezone = TimezoneName("Asia/Tbilisi")
+    start: Microseconds = local("Asia/Tbilisi", 2026, 1, 31, 10, 0)
+    end: Microseconds = local("Asia/Tbilisi", 2027, 1, 31, 10, 0)
+    subscription = build_subscription(start, end, BillingPeriod.ANNUAL)
+
+    february = find_usage_window(
+        subscription,
+        local("Asia/Tbilisi", 2026, 3, 1, 0, 0),
+        timezone,
+    )
+    april = find_usage_window(
+        subscription,
+        local("Asia/Tbilisi", 2026, 4, 15, 0, 0),
+        timezone,
+    )
+
+    assert february == (
+        local("Asia/Tbilisi", 2026, 2, 28, 10, 0),
+        local("Asia/Tbilisi", 2026, 3, 31, 10, 0),
+    )
+    assert april == (
+        local("Asia/Tbilisi", 2026, 3, 31, 10, 0),
+        local("Asia/Tbilisi", 2026, 4, 30, 10, 0),
+    )
+
+
+def test_a_trial_shorter_than_a_month_is_one_window() -> None:
+    timezone = TimezoneName("Asia/Tbilisi")
+    start: Microseconds = local("Asia/Tbilisi", 2026, 10, 1, 9, 0)
+    end: Microseconds = local("Asia/Tbilisi", 2026, 10, 15, 9, 0)
+
+    assert find_usage_window(
+        build_subscription(start, end),
+        Microseconds(int(start) + DAY),
+        timezone,
+    ) == (start, end)
+
+
+def test_package_windows_split_a_year_into_twelve_months() -> None:
+    timezone = TimezoneName("Europe/Rome")
+    start: Microseconds = local("Europe/Rome", 2026, 10, 15, 9, 0)
+    end: Microseconds = local("Europe/Rome", 2027, 10, 15, 9, 0)
+
+    windows = list_package_windows(start, end, timezone)
+
+    assert len(windows) == 12
+    assert windows[0][0] == start
+    assert windows[-1][1] == end
+    assert all(
+        previous[1] == following[0]
+        for previous, following in zip(windows, windows[1:], strict=False)
+    )

@@ -23,6 +23,7 @@ from app.schemas.typings.billing.constrained_integers import (
     CostMicroUsd,
     IncludedDialogs,
     IncludedVoiceMinutes,
+    OverageVoiceMinutes,
     PackageUsagePercent,
     UsageQuantityTotal,
     UsedDialogs,
@@ -57,7 +58,10 @@ class DueInvoicesRequest(ImmutableDTO):
 
 
 class InvoiceDescriptionInput(ImmutableDTO):
-    """What an invoice line says, in the reader's language."""
+    """
+    What an invoice line says, in the reader's language. An overage line
+    names the minutes above the package of its window.
+    """
 
     kind: InvoiceKind
     language: LanguageTag
@@ -66,6 +70,7 @@ class InvoiceDescriptionInput(ImmutableDTO):
     billing_period: BillingPeriod
     period_start: Microseconds
     period_end: Microseconds
+    overage_voice_minutes: OverageVoiceMinutes | None = None
 
 
 class PackageUsageTotals(ImmutableDTO):

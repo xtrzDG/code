@@ -7,7 +7,11 @@ from app.contracts.billing import (
 from app.contracts.repositories import InvoiceRepoContract, SubscriptionRepoContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.configurations.app_settings import AppSettings
-from app.schemas.constants.billing import InvoiceKind, SubscriptionStatus
+from app.schemas.constants.billing import (
+    InvoiceKind,
+    InvoiceStatus,
+    SubscriptionStatus,
+)
 from app.schemas.constants.payments import PaymentProvider
 from app.schemas.constants.users import BusinessMemberRole
 from app.schemas.domain.billing import InvoiceDocument, SubscriptionDocument
@@ -30,9 +34,13 @@ from app.schemas.exceptions.application_errors import (
     ValidationFailedError,
 )
 from app.schemas.typings.billing.constrained_strings import PaymentReturnUrl
+from app.schemas.typings.billing.prefixed_id import InvoiceId
 from app.schemas.typings.billing.strings import InvoiceDescription
 from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.use_cases.billing.billing_records import (
+    OPEN_INVOICE_STATUSES,
+    find_covering_paid_invoice,
+    find_next_period_start,
     list_open_invoices,
     list_subscription_invoices,
     require_current_subscription,
@@ -53,11 +61,16 @@ class StartCheckoutUseCase(UseCaseContract[StartCheckoutCommand, CheckoutSession
 
     Without open invoices the next service period is invoiced first: during
     the trial it starts when the trial ends (paid ahead, the trial is kept),
-    otherwise at the end of the current period, or now if that has passed;
-    the first monthly invoice brings the one-time setup fee. Automatic
-    charges of the subscription price start on the local day the paid
-    period ends. Every checkout is a new provider order, so a payment
-    declined earlier can be retried.
+    otherwise at the end of the current period or of a period already paid
+    ahead, or now if that has passed; the first monthly invoice brings the
+    one-time setup fee. A bill that is already paid is never collected
+    again, and while automatic charges run (in the trial too) there is
+    nothing to pay. An unpaid period that has already ended is voided and
+    a fresh period starting now is billed instead, so a late payment buys
+    service from today. Automatic charges of the subscription price start
+    on the local day the paid period ends, never in the past. Every
+    checkout is a new provider order, so a payment declined earlier can be
+    retried.
     """
 
     def __init__(
@@ -118,8 +131,12 @@ class StartCheckoutUseCase(UseCaseContract[StartCheckoutCommand, CheckoutSession
                 for invoice in invoices
                 if invoice.kind is InvoiceKind.SERVICE_PERIOD
             ],
-            default=max(subscription.period_end, self._wall_clock.now_unix()),
+            default=find_next_period_start(
+                subscription,
+                list_subscription_invoices(self._invoice_repo, subscription),
+            ),
         )
+        paid_until = max(paid_until, self._wall_clock.now_unix())
         payment_order = PaymentOrderDocument(
             business_id=business.id,
             subscription_id=subscription.id,
@@ -165,28 +182,136 @@ class StartCheckoutUseCase(UseCaseContract[StartCheckoutCommand, CheckoutSession
         business: BusinessDocument,
         subscription: SubscriptionDocument,
     ) -> list[InvoiceDocument]:
-        open_invoices: list[InvoiceDocument] = list_open_invoices(
-            list_subscription_invoices(self._invoice_repo, subscription)
+        now: Microseconds = self._wall_clock.now_unix()
+        invoices: list[InvoiceDocument] = list_subscription_invoices(
+            self._invoice_repo,
+            subscription,
         )
+        open_invoices: list[InvoiceDocument] = list_open_invoices(invoices)
+        ended_periods: list[InvoiceDocument] = [
+            invoice
+            for invoice in open_invoices
+            if invoice.kind is InvoiceKind.SERVICE_PERIOD and invoice.period_end <= now
+        ]
+        if ended_periods != []:
+            return self._rebill_from_now(
+                business,
+                subscription,
+                open_invoices,
+                ended_periods,
+                now,
+            )
+
         if open_invoices != []:
+            if self._is_service_unpaid(subscription, invoices, open_invoices, now):
+                open_ids: set[InvoiceId] = {invoice.id for invoice in open_invoices}
+                return open_invoices + [
+                    invoice
+                    for invoice in self._issue_payable(
+                        business,
+                        subscription,
+                        max(find_next_period_start(subscription, invoices), now),
+                    )
+                    if invoice.id not in open_ids
+                ]
+
             return open_invoices
 
-        if (
-            subscription.status is SubscriptionStatus.ACTIVE
-            and subscription.provider_reference is not None
-        ):
+        if subscription.provider_reference is not None:
             raise ConflictError(
                 "Automatic payments are already on and nothing is due now."
             )
 
-        return self._issue_due_invoices.run(
-            DueInvoicesRequest(
-                business=business,
-                subscription=subscription,
-                period_start=max(subscription.period_end, self._wall_clock.now_unix()),
-                is_setup_fee_included=True,
+        return self._issue_payable(
+            business,
+            subscription,
+            max(find_next_period_start(subscription, invoices), now),
+        )
+
+    def _is_service_unpaid(
+        self,
+        subscription: SubscriptionDocument,
+        invoices: list[InvoiceDocument],
+        open_invoices: list[InvoiceDocument],
+        now: Microseconds,
+    ) -> bool:
+        """
+        Only other bills (e.g. minutes above the package) are open while the
+        subscription is not active and no paid period or running trial
+        covers now: the service itself must be paid too, or paying would
+        not restore it. An active subscription is renewed by its automatic
+        charges instead.
+        """
+
+        is_trial_running: bool = (
+            subscription.trial_ends_at is not None and now < subscription.trial_ends_at
+        )
+        return (
+            subscription.status is not SubscriptionStatus.ACTIVE
+            and not is_trial_running
+            and find_covering_paid_invoice(invoices, now) is None
+            and all(
+                invoice.kind is not InvoiceKind.SERVICE_PERIOD
+                for invoice in open_invoices
             )
         )
+
+    def _rebill_from_now(
+        self,
+        business: BusinessDocument,
+        subscription: SubscriptionDocument,
+        open_invoices: list[InvoiceDocument],
+        ended_periods: list[InvoiceDocument],
+        now: Microseconds,
+    ) -> list[InvoiceDocument]:
+        """
+        Void unpaid periods that are already over and bill a fresh period
+        from now, keeping the other open bills (setup fee, overage).
+        """
+
+        for invoice in ended_periods:
+            invoice.status = InvoiceStatus.VOID
+            invoice.updated_at = now
+            self._invoice_repo.save(invoice)
+
+        voided_ids: set[InvoiceId] = {invoice.id for invoice in ended_periods}
+        kept: list[InvoiceDocument] = [
+            invoice for invoice in open_invoices if invoice.id not in voided_ids
+        ]
+        kept_ids: set[InvoiceId] = {invoice.id for invoice in kept}
+        fresh: list[InvoiceDocument] = self._issue_payable(business, subscription, now)
+        return kept + [invoice for invoice in fresh if invoice.id not in kept_ids]
+
+    def _issue_payable(
+        self,
+        business: BusinessDocument,
+        subscription: SubscriptionDocument,
+        period_start: Microseconds,
+    ) -> list[InvoiceDocument]:
+        """
+        Bills of the period starting then; a period already paid is never
+        collected again.
+
+        Raises:
+            ConflictError: the period is already paid.
+        """
+
+        payable: list[InvoiceDocument] = [
+            invoice
+            for invoice in self._issue_due_invoices.run(
+                DueInvoicesRequest(
+                    business=business,
+                    subscription=subscription,
+                    period_start=period_start,
+                    is_setup_fee_included=True,
+                )
+            )
+            if invoice.status in OPEN_INVOICE_STATUSES
+        ]
+        if payable == []:
+            raise ConflictError("There is nothing to pay.")
+
+        return payable
 
     def _require_allowed_return_url(self, return_url: PaymentReturnUrl | None) -> None:
         if return_url is None:

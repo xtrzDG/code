@@ -68,11 +68,17 @@ class ProcessPaymentWebhookUseCase(
     repeated notifications answer DUPLICATE and change nothing.
 
     - approved, first payment of a checkout: its invoices become PAID and
-      the card's automatic charges are remembered; the subscription becomes
-      ACTIVE for the paid period that has started (a trial paid ahead stays
-      in trial until it ends), grace ends and the assistant serves in full.
-    - approved, later automatic charge: the next period is invoiced as PAID
-      and becomes current once it starts.
+      the card's automatic charges are remembered; the automatic charges of
+      an earlier checkout are stopped, so only one schedule ever runs. The
+      subscription becomes ACTIVE for the paid period that has started (a
+      trial paid ahead stays in trial until it ends; a cancelled one is
+      resumed), grace ends and the assistant serves in full. A payment that
+      settles no bill (the bills were already paid) is marked for refund.
+    - approved, later automatic charge of the current schedule: the next
+      period is invoiced as PAID and becomes current once it starts.
+    - an automatic charge of any other schedule (replaced, stopped, or of a
+      cancelled subscription) is never booked as service: its schedule is
+      stopped and an approved charge is marked for refund (REFUND_DUE).
     - declined: first payment - its invoices become FAILED; automatic
       charge - the next period is invoiced as FAILED and an active
       subscription becomes PAST_DUE with grace until now + the plan's grace
@@ -192,11 +198,19 @@ class ProcessPaymentWebhookUseCase(
         match notification.status:
             case PaymentStatus.APPROVED:
                 self._require_expected_amount(notification, payment_order)
-                self._apply_approval(
+                if self._is_stray_charge(payment_order, subscription):
+                    self._stop_stray_schedule(payment_order)
+                    payment_order.is_refund_due = True
+                    return PaymentWebhookOutcome.REFUND_DUE
+
+                return self._apply_approval(
                     notification, payment_order, subscription, business
                 )
-                return PaymentWebhookOutcome.APPLIED
             case PaymentStatus.DECLINED:
+                if self._is_stray_charge(payment_order, subscription):
+                    self._stop_stray_schedule(payment_order)
+                    return PaymentWebhookOutcome.IGNORED
+
                 self._apply_decline(notification, payment_order, subscription, business)
                 return PaymentWebhookOutcome.APPLIED
             case PaymentStatus.REVERSED:
@@ -230,14 +244,34 @@ class ProcessPaymentWebhookUseCase(
                 "The approved amount does not match the payment order."
             )
 
+    def _is_stray_charge(
+        self,
+        payment_order: PaymentOrderDocument,
+        subscription: SubscriptionDocument,
+    ) -> bool:
+        """
+        An automatic charge of a schedule the subscription no longer uses:
+        replaced by a later checkout, stopped by a plan change, or of a
+        cancelled subscription.
+        """
+
+        return payment_order.is_initial_payment_settled and (
+            subscription.status is SubscriptionStatus.CANCELLED
+            or subscription.provider_reference != build_order_reference(payment_order)
+        )
+
+    def _stop_stray_schedule(self, payment_order: PaymentOrderDocument) -> None:
+        self._payment_gateway.stop_recurring(build_order_reference(payment_order))
+
     def _apply_approval(
         self,
         notification: PaymentNotification,
         payment_order: PaymentOrderDocument,
         subscription: SubscriptionDocument,
         business: BusinessDocument,
-    ) -> None:
+    ) -> PaymentWebhookOutcome:
         now: Microseconds = self._wall_clock.now_unix()
+        outcome: PaymentWebhookOutcome = PaymentWebhookOutcome.APPLIED
         if payment_order.is_initial_payment_settled:
             self._record_renewal(
                 business,
@@ -247,16 +281,28 @@ class ProcessPaymentWebhookUseCase(
                 now,
             )
         else:
-            self._settle_order_invoices(
+            order_reference: PaymentProviderReference = build_order_reference(
+                payment_order
+            )
+            previous_reference: PaymentProviderReference | None = (
+                subscription.provider_reference
+            )
+            if previous_reference is not None and previous_reference != order_reference:
+                self._payment_gateway.stop_recurring(previous_reference)
+
+            settled_count: int = self._settle_order_invoices(
                 payment_order,
                 InvoiceStatus.PAID,
                 notification.payment_reference,
                 now,
             )
+            if settled_count == 0:
+                payment_order.is_refund_due = True
+                outcome = PaymentWebhookOutcome.REFUND_DUE
+
             payment_order.is_initial_payment_settled = True
-            subscription.provider_reference = PaymentProviderReference(
-                str(payment_order.id)
-            )
+            subscription.provider_reference = order_reference
+            self._resume_cancelled(subscription, now)
 
         payment_order.status = PaymentStatus.APPROVED
         self._activate_paid_period(subscription, now)
@@ -269,6 +315,24 @@ class ProcessPaymentWebhookUseCase(
             business.service_mode = ServiceMode.FULL
             business.updated_at = now
             self._business_repo.save(business)
+
+        return outcome
+
+    def _resume_cancelled(
+        self,
+        subscription: SubscriptionDocument,
+        now: Microseconds,
+    ) -> None:
+        """
+        A checkout paid after cancelling resumes the subscription: the trial
+        while it still runs, otherwise the paid period (see below).
+        """
+
+        if subscription.status is not SubscriptionStatus.CANCELLED:
+            return
+
+        if subscription.trial_ends_at is not None and now < subscription.trial_ends_at:
+            subscription.status = SubscriptionStatus.TRIALING
 
     def _activate_paid_period(
         self,
@@ -415,13 +479,14 @@ class ProcessPaymentWebhookUseCase(
         status: InvoiceStatus,
         payment_reference: PaymentProviderReference | None,
         now: Microseconds,
-    ) -> None:
+    ) -> int:
         """
-        Mark the checkout's invoices. A payment is money received, so an
-        approved payment marks even a voided invoice as paid; a decline
-        touches open invoices only.
+        Mark the checkout's invoices and return how many changed. A payment
+        is money received, so an approved payment marks even a voided
+        invoice as paid; a decline touches open invoices only.
         """
 
+        changed_count: int = 0
         for invoice_id in payment_order.invoice_ids:
             invoice: InvoiceDocument | None = self._invoice_repo.get(
                 payment_order.business_id,
@@ -441,6 +506,9 @@ class ProcessPaymentWebhookUseCase(
 
             invoice.updated_at = now
             self._invoice_repo.save(invoice)
+            changed_count += 1
+
+        return changed_count
 
     def _notify_owners(self, business: BusinessDocument, notice: BillingNotice) -> None:
         notify_business_owners(
@@ -449,6 +517,14 @@ class ProcessPaymentWebhookUseCase(
             self._manager_notifier,
             self._billing_notice_transformer.transform(notice),
         )
+
+
+def build_order_reference(
+    payment_order: PaymentOrderDocument,
+) -> PaymentProviderReference:
+    """Provider reference of the automatic charges a checkout started."""
+
+    return PaymentProviderReference(str(payment_order.id))
 
 
 def parse_payment_order_id(

@@ -12,6 +12,7 @@ from app.containers.gateways import (
     END_TRIALS_JOB,
     ENFORCE_GRACE_PERIODS_JOB,
     FLUSH_LLM_TRACES_JOB,
+    INVOICE_USAGE_OVERAGE_JOB,
     PURGE_EXPIRED_RECORDINGS_JOB,
     SEND_BOOKING_REMINDERS_JOB,
 )
@@ -36,16 +37,17 @@ def test_worker_ticks_once_with_every_job_registered() -> None:
     assert [(job.name, int(job.interval_seconds)) for job in jobs] == [
         (PURGE_EXPIRED_RECORDINGS_JOB, 86_400),
         (END_TRIALS_JOB, 3_600),
+        (INVOICE_USAGE_OVERAGE_JOB, 3_600),
         (ENFORCE_GRACE_PERIODS_JOB, 3_600),
         (CHECK_PACKAGE_USAGE_JOB, 86_400),
         (SEND_BOOKING_REMINDERS_JOB, 900),
         (FLUSH_LLM_TRACES_JOB, 60),
     ]
-    assert (first.periodic_runs, first.queued_runs, first.failures) == (6, 0, 0)
+    assert (first.periodic_runs, first.queued_runs, first.failures) == (7, 0, 0)
     assert right_after.periodic_runs == 0
     assert a_minute_later.periodic_runs == 1  # the trace flush
-    # Trials, grace periods, reminders and the trace flush.
-    assert (an_hour_later.periodic_runs, an_hour_later.failures) == (4, 0)
+    # Trials, overage, grace periods, reminders and the trace flush.
+    assert (an_hour_later.periodic_runs, an_hour_later.failures) == (5, 0)
 
 
 @pytest.fixture

@@ -400,6 +400,9 @@ class PipelinesContainer(containers.DeclarativeContainer):
     check_package_usage_pipeline = orchestrator_pipeline(
         orchestrators.check_package_usage_orchestrator
     )
+    invoice_usage_overage_pipeline = orchestrator_pipeline(
+        orchestrators.invoice_usage_overage_orchestrator
+    )
     send_booking_reminders_pipeline = orchestrator_pipeline(
         orchestrators.send_booking_reminders_orchestrator
     )

@@ -51,6 +51,7 @@ class InvoiceKind(StrEnum):
 
     SERVICE_PERIOD = "service_period"
     SETUP_FEE = "setup_fee"
+    USAGE_OVERAGE = "usage_overage"
 
 
 class PackageMetric(StrEnum):
@@ -69,3 +70,4 @@ class BillingNoticeKind(StrEnum):
     LEADS_ONLY_STARTED = "leads_only_started"
     SUBSCRIPTION_ENDED = "subscription_ended"
     PACKAGE_USAGE_WARNING = "package_usage_warning"
+    OVERAGE_INVOICED = "overage_invoiced"

@@ -27,6 +27,11 @@ SETUP_FEE_LINE: LocalizedText = build_localized_text(
     ru="{service} — подключение",
     ka="{service} — ჩართვა",
 )
+USAGE_OVERAGE_LINE: LocalizedText = build_localized_text(
+    en="{service} — {minutes} call minutes above the package, {start} – {end}",
+    ru="{service} — {minutes} мин. звонков сверх пакета, {start} – {end}",
+    ka="{service} — პაკეტს ზემოთ {minutes} წუთი ზარი, {start} – {end}",
+)
 SERVICE_PERIOD_LINE: LocalizedText = build_localized_text(
     en="{service} — {plan}, {billing_period}, {start} – {end}",
     ru="{service} — {plan}, {billing_period}, {start} – {end}",
@@ -80,6 +85,16 @@ NOTICE_TEXTS: dict[BillingNoticeKind, LocalizedText] = {
         ka="{business}: გამოწერა გადაუხდელია, ამიტომ ასისტენტი ახლა მხოლოდ "
         "მოთხოვნებს იღებს და თქვენს გუნდს გადასცემს. სრული რეჟიმის "
         "აღსადგენად გადაიხადეთ განყოფილებაში „ბილინგი“.",
+    ),
+    BillingNoticeKind.OVERAGE_INVOICED: build_localized_text(
+        en="{business}: calls went over the minutes in your plan last month. "
+        "The bill for the extra minutes is {amount}; please pay it in Billing.",
+        ru="{business}: в прошлом месяце звонки превысили минуты тарифа. Счёт "
+        "за минуты сверх пакета — {amount}; оплатите его в разделе «Тариф и "
+        "счета».",
+        ka="{business}: გასულ თვეში ზარებმა ტარიფის წუთებს გადააჭარბა. "
+        "პაკეტს ზემოთ წუთების ანგარიშია {amount}; გთხოვთ, გადაიხადოთ "
+        "განყოფილებაში „ბილინგი“.",
     ),
     BillingNoticeKind.SUBSCRIPTION_ENDED: build_localized_text(
         en="{business}: the subscription has ended, so the assistant now only "

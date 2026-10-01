@@ -29,7 +29,7 @@ from app.schemas.typings.assistants.constrained_integers import (
 )
 from app.schemas.typings.assistants.constrained_strings import AutotestScenarioKey
 from app.schemas.typings.assistants.strings import JudgeNote
-from app.schemas.typings.billing.booleans import IsAutoDebitActive
+from app.schemas.typings.billing.booleans import IsAutoDebitActive, IsRefundDue
 from app.schemas.typings.billing.constrained_integers import (
     IncludedDialogs,
     IncludedVoiceMinutes,
@@ -159,6 +159,7 @@ class AdminPaymentView(ImmutableDTO):
     amount: Money
     created_at: Microseconds
     failure_reason: PaymentFailureReason | None = None
+    is_refund_due: IsRefundDue = False
 
 
 class ClientHealthView(ImmutableDTO):
