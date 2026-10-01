@@ -48,6 +48,31 @@ class RequestRateLimitRegistry(RequestRateLimitRegistryContract):
             moments.append(int(now))
             return True
 
+    def seconds_until_free(
+        self,
+        key: str,
+        limit: int,
+        window_seconds: int,
+        now: Microseconds,
+    ) -> int:
+        window: int = window_seconds * MICROSECONDS_PER_SECOND
+        window_start: int = int(now) - window
+        with self._lock:
+            moments: list[int] = [
+                moment
+                for moment in self._requests.get(key, deque())
+                if moment > window_start
+            ]
+
+        if len(moments) < limit:
+            return 0
+
+        # The request that frees a place is the one `limit` places from the
+        # newest; it leaves the window `window` after it was made.
+        freeing_moment: int = moments[len(moments) - limit]
+        wait: int = freeing_moment + window - int(now)
+        return max(1, -(-wait // MICROSECONDS_PER_SECOND))
+
     def _sweep(self, window_start: int) -> None:
         for key in [
             key

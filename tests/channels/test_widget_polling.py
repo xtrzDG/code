@@ -335,6 +335,7 @@ class TestWidgetPollingCost:
         assert other_visitor.status_code == 200
         limited = poll(client, business.id, after=reply["cursor"])
         assert limited.json()["error"] == "rate_limited"
+        assert limited.headers["Retry-After"] == "60"
         testbed.clock.advance(61)
         assert poll(client, business.id, after=reply["cursor"]).status_code == 200
 

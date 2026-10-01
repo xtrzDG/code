@@ -6,7 +6,9 @@ text>"}. When the error carries machine-readable reasons
 (`ApplicationError.reasons`), the body also has "reasons": [{"code",
 "message", "details"}, ...], e.g. the failed go-live checks of a refused
 publish (409) or why a menu link could not be read (422). The field is
-absent otherwise, and clients that do not know it ignore it.
+absent otherwise, and clients that do not know it ignore it. A 429 whose
+error knows how long to wait (`RateLimitedError.retry_after_seconds`) carries
+a Retry-After header.
 """
 
 from fastapi import FastAPI, Request
@@ -56,6 +58,8 @@ async def handle_application_error(request: Request, error: Exception) -> JSONRe
     headers: dict[str, str] = {}
     if status_code == 401:
         headers["WWW-Authenticate"] = "Bearer"
+    if isinstance(error, RateLimitedError) and error.retry_after_seconds is not None:
+        headers["Retry-After"] = str(int(error.retry_after_seconds))
 
     body = ErrorBody(
         error=error_code,

@@ -1,3 +1,6 @@
+from typed_time_provider import Microseconds, WallClock
+
+from app.contracts.registries import RequestRateLimitRegistryContract
 from app.contracts.repositories import BusinessRepoContract, ChannelRepoContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.channels import ChannelKind, ChannelStatus
@@ -13,6 +16,10 @@ from app.schemas.typings.channels.strings import WidgetContactNameInput
 from app.schemas.typings.contacts.strings import ContactName
 from app.schemas.typings.conversations.strings import ChannelUserId, MessageText
 from app.utilities.channels.delivery_targets import find_business_channel
+from app.utilities.channels.widget_rate_limits import (
+    WIDGET_MESSAGE_LIMITS,
+    refuse_too_frequent_widget_requests,
+)
 
 MAX_CONTACT_NAME_LENGTH: int = 100
 
@@ -25,17 +32,35 @@ class AcceptWidgetMessageUseCase(UseCaseContract[WidgetMessageCommand, InboundMe
     chat is reported as unavailable (the same answer for both, so business
     ids cannot be probed). The visitor is identified by the widget's random
     session key.
+
+    The endpoint is public and every message costs a model call, so
+    messages are limited per visitor and per client address before anything
+    is read (429 with Retry-After, `WIDGET_MESSAGE_LIMITS`).
     """
 
     def __init__(
         self,
         business_repo: BusinessRepoContract,
         channel_repo: ChannelRepoContract,
+        rate_limit_registry: RequestRateLimitRegistryContract,
+        wall_clock: WallClock[Microseconds],
     ) -> None:
         self._business_repo: BusinessRepoContract = business_repo
         self._channel_repo: ChannelRepoContract = channel_repo
+        self._rate_limit_registry: RequestRateLimitRegistryContract = (
+            rate_limit_registry
+        )
+        self._wall_clock: WallClock[Microseconds] = wall_clock
 
     def run(self, input_data: WidgetMessageCommand) -> InboundMessage:
+        refuse_too_frequent_widget_requests(
+            self._rate_limit_registry,
+            WIDGET_MESSAGE_LIMITS,
+            business_id=input_data.business_id,
+            session_key=input_data.request.session_key,
+            client_ip_address=input_data.client_ip_address,
+            now=self._wall_clock.now_unix(),
+        )
         business: BusinessDocument | None = self._business_repo.get(
             input_data.business_id
         )

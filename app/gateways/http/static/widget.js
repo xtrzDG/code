@@ -26,6 +26,8 @@
  * a page was left while an answer was being written. Every few seconds at
  * first, slower while nothing new arrives, and not at all while the page is
  * hidden. The visitor key travels in a request header, never in the URL.
+ * When the API says "too many messages" (429), sending and Retry wait for
+ * its Retry-After, and polls slow down to it.
  * Tabs of one site share one history: each tab adopts what the others saved.
  * window.AssistantWorkshopChat.open() / .close() / .toggle() control it.
  */
@@ -61,6 +63,10 @@
   // A handoff or an exchange in the last 24 hours keeps an open panel
   // polling: staff can write to any website chat.
   var HANDOFF_MEMORY_MS = 24 * 60 * 60 * 1000;
+  // A 429 without a readable Retry-After waits this long; a longer one is
+  // capped (the API asks for at most a minute).
+  var RATE_LIMIT_DEFAULT_WAIT_MS = 10000;
+  var RATE_LIMIT_MAX_WAIT_MS = 10 * 60 * 1000;
   var SVG_NS = "http://www.w3.org/2000/svg";
   // Fallback when the browser blocks localStorage / sessionStorage.
   var memoryStorage = {};
@@ -813,7 +819,9 @@
       pollTimer: null,
       pollDelay: POLL_FIRST_DELAY_MS,
       isPolling: false,
-      pollStopped: false
+      pollStopped: false,
+      // Sending waits until then after a 429 (Date.now() milliseconds).
+      sendHeldUntil: 0
     };
     state.handoffNoticeShown = state.history.some(function (item) {
       return item.role === "notice";
@@ -1062,6 +1070,10 @@
       if (!messageText || state.isSending) {
         return;
       }
+      if (isSendingHeld()) {
+        announce(text("rateLimited"));
+        return;
+      }
       if (messageText.length > MAX_MESSAGE_LENGTH) {
         announce(text("tooLong"));
         return;
@@ -1099,6 +1111,9 @@
           if (result.ok && result.body) {
             receiveReply(result.body);
           } else {
+            if (result.status === 429) {
+              holdSending(result.retryAfterMs);
+            }
             markFailed(item, errorTextFor(result.status), previewDetail(result));
           }
           updateSendButton();
@@ -1108,7 +1123,7 @@
             // message written while the assistant was answering.
             poll(true);
           } else {
-            schedulePoll(POLL_FIRST_DELAY_MS);
+            schedulePoll(Math.max(POLL_FIRST_DELAY_MS, waitAfter(result)));
           }
         },
         function () {
@@ -1270,7 +1285,7 @@
             return;
           }
           if (!result.ok || !result.body || !Array.isArray(result.body.items)) {
-            schedulePoll(nextDelay());
+            schedulePoll(Math.max(nextDelay(), waitAfter(result)));
             return;
           }
           var added = receiveMessages(result.body);
@@ -1360,6 +1375,28 @@
       renderLog();
     }
 
+    // After a 429 the send button and Retry wait for the API's Retry-After,
+    // then come back by themselves.
+    function holdSending(waitMs) {
+      var wait = waitMs > 0 ? waitMs : RATE_LIMIT_DEFAULT_WAIT_MS;
+      state.sendHeldUntil = Date.now() + wait;
+      window.setTimeout(function () {
+        updateSendButton();
+        renderLog();
+      }, wait + 50);
+    }
+
+    function isSendingHeld() {
+      return Date.now() < state.sendHeldUntil;
+    }
+
+    function waitAfter(result) {
+      if (result.status !== 429) {
+        return 0;
+      }
+      return result.retryAfterMs > 0 ? result.retryAfterMs : RATE_LIMIT_DEFAULT_WAIT_MS;
+    }
+
     function errorTextFor(statusCode) {
       // 404: unknown business or chat switched off; 409: assistant not live.
       if (statusCode === 404 || statusCode === 409) {
@@ -1429,9 +1466,9 @@
       var retry = el("button", "aw-retry");
       retry.type = "button";
       retry.textContent = text("retry");
-      retry.disabled = state.isSending;
+      retry.disabled = state.isSending || isSendingHeld();
       retry.addEventListener("click", function () {
-        if (!state.isSending) {
+        if (!state.isSending && !isSendingHeld()) {
           send(item);
           input.focus();
         }
@@ -1460,7 +1497,7 @@
     }
 
     function updateSendButton() {
-      sendButton.disabled = state.isSending || input.value.trim() === "";
+      sendButton.disabled = state.isSending || isSendingHeld() || input.value.trim() === "";
     }
 
     function autoSize() {
@@ -1667,7 +1704,12 @@
           } catch (error) {
             parsed = null;
           }
-          return { ok: response.ok, status: response.status, body: parsed };
+          return {
+            ok: response.ok,
+            status: response.status,
+            body: parsed,
+            retryAfterMs: readRetryAfterMs(response)
+          };
         });
       },
       function (error) {
@@ -1677,6 +1719,18 @@
         throw error;
       }
     );
+  }
+
+  // Retry-After of a 429 in milliseconds (the API exposes the header to
+  // other sites); 0 when absent or not a number of seconds.
+  function readRetryAfterMs(response) {
+    var raw = response.headers && typeof response.headers.get === "function"
+      ? response.headers.get("Retry-After")
+      : null;
+    if (!raw || !/^\s*\d+\s*$/.test(raw)) {
+      return 0;
+    }
+    return Math.min(Number(raw) * 1000, RATE_LIMIT_MAX_WAIT_MS);
   }
 
   // --- visitor identity and history (localStorage, never cookies) ---------

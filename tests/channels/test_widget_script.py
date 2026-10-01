@@ -1,5 +1,6 @@
 """The website chat widget script, its demo page and their agreement with the API."""
 
+import json
 import re
 import shutil
 import subprocess
@@ -32,11 +33,13 @@ from app.schemas.typings.channels.constrained_strings import (
     WidgetMessageText,
     WidgetSessionKey,
 )
+from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.utilities.channels.channel_endpoints import (
     WIDGET_BUSINESS_ATTRIBUTE,
     WIDGET_DEMO_PATH,
     WIDGET_SCRIPT_PATH,
 )
+from app.utilities.channels.widget_texts import WIDGET_GREETING, build_widget_greeting
 from app.utilities.localization.language_tags import base_language_code
 from tests.channels.testbed import ChannelsTestbed, bearer
 from tests.e2e.harness import start_workshop
@@ -298,6 +301,19 @@ def read_script_texts() -> dict[str, set[str]]:
     return texts
 
 
+def read_script_greetings() -> dict[str, str]:
+    """The script's own greeting in each of its interface languages."""
+
+    block: str = SCRIPT_SOURCE[SCRIPT_SOURCE.index("var TEXTS = {") :]
+    block = block[: block.index("\n  };")]
+    greetings: dict[str, str] = {}
+    for match in re.finditer(r"\n    ([a-z]+): \{(.*?)\n    \}", block, re.S):
+        greeting = re.search(r'\n      greeting: ("(?:[^"\\]|\\.)*")', match.group(2))
+        assert greeting is not None, match.group(1)
+        greetings[match.group(1)] = json.loads(greeting.group(1))
+    return greetings
+
+
 def run_script_function(function_name: str, call: str) -> str:
     """Run one function of the script in node and return what it prints."""
 
@@ -333,6 +349,20 @@ class TestWidgetTexts:
         assert sorted(code for code in curated if code not in texts) == []
         for code in curated:
             assert texts[code] == english_keys, code
+
+    def test_the_api_greets_in_every_interface_language_of_the_script(
+        self,
+    ) -> None:
+        script_greetings = read_script_greetings()
+        api_languages = {str(tag) for tag in WIDGET_GREETING.values}
+
+        assert api_languages == set(script_greetings)
+        for language, script_greeting in script_greetings.items():
+            # The API's greeting (sent with the widget config) wins over the
+            # script's own one, so both say the same thing.
+            assert build_widget_greeting(LanguageTag(language), "{business}") == (
+                script_greeting
+            ), language
 
 
 @pytest.mark.skipif(shutil.which("node") is None, reason="node is not installed")

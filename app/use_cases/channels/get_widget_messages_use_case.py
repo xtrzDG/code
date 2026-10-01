@@ -24,23 +24,21 @@ from app.schemas.dto.channels import (
 )
 from app.schemas.exceptions.application_errors import (
     NotFoundError,
-    RateLimitedError,
     UnsupportedLanguageError,
 )
 from app.schemas.typings.conversations.prefixed_id import MessageId
 from app.schemas.typings.conversations.strings import ChannelUserId
 from app.utilities.channels.delivery_targets import find_business_channel
+from app.utilities.channels.widget_rate_limits import (
+    WIDGET_POLL_LIMITS,
+    refuse_too_frequent_widget_requests,
+)
 
 # Messages the widget shows besides the visitor's own.
 WIDGET_MESSAGE_AUTHORS: frozenset[MessageAuthor] = frozenset(
     {MessageAuthor.ASSISTANT, MessageAuthor.STAFF}
 )
 WIDGET_MESSAGE_PAGE_SIZE: int = 50
-# The widget polls every 4 s at the fastest (15 a minute per tab): room for a
-# few tabs of one visitor, and for many visitors behind one address.
-POLLS_PER_VISITOR_PER_MINUTE: int = 60
-POLLS_PER_ADDRESS_PER_MINUTE: int = 300
-RATE_WINDOW_SECONDS: int = 60
 
 
 class GetWidgetMessagesUseCase(
@@ -62,8 +60,9 @@ class GetWidgetMessagesUseCase(
     next poll; the widget skips answers it already shows by id.
 
     The endpoint is public, so polls are limited per visitor and per client
-    address (429), and only the visitor's own conversations and messages
-    are read (indexed lookups, not the whole business).
+    address (429 with Retry-After, `WIDGET_POLL_LIMITS`), and only the
+    visitor's own conversations and messages are read (indexed lookups, not
+    the whole business).
     """
 
     def __init__(
@@ -137,26 +136,14 @@ class GetWidgetMessagesUseCase(
         )
 
     def _refuse_too_frequent_polls(self, input_data: WidgetMessagesQuery) -> None:
-        now: Microseconds = self._wall_clock.now_unix()
-        keys: list[tuple[str, int]] = [
-            (
-                f"widget-poll:visitor:{input_data.business_id}:{input_data.session_key}",
-                POLLS_PER_VISITOR_PER_MINUTE,
-            )
-        ]
-        if input_data.client_ip_address is not None:
-            keys.append(
-                (
-                    f"widget-poll:address:{input_data.client_ip_address}",
-                    POLLS_PER_ADDRESS_PER_MINUTE,
-                )
-            )
-
-        for key, limit in keys:
-            if not self._rate_limit_registry.try_acquire(
-                key, limit, RATE_WINDOW_SECONDS, now
-            ):
-                raise RateLimitedError("Too many requests; ask less often.")
+        refuse_too_frequent_widget_requests(
+            self._rate_limit_registry,
+            WIDGET_POLL_LIMITS,
+            business_id=input_data.business_id,
+            session_key=input_data.session_key,
+            client_ip_address=input_data.client_ip_address,
+            now=self._wall_clock.now_unix(),
+        )
 
     def _require_open_chat(self, input_data: WidgetMessagesQuery) -> BusinessDocument:
         business: BusinessDocument | None = self._business_repo.get(

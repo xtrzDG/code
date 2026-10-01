@@ -37,6 +37,8 @@ class FakeWidgetApi {
   isHandedOff = false;
   /** POSTs are recorded and answered on the server, but the page never gets the reply. */
   holdPosts = false;
+  /** The next POSTs are refused with 429 and this Retry-After (seconds). */
+  refusePostsFor: number | null = null;
   polls: { url: string; sessionKey: string | null }[] = [];
   private nextId = 1;
 
@@ -53,6 +55,18 @@ class FakeWidgetApi {
         business_name: "Cafe Batumi",
         languages: [{ tag: "en", direction: "ltr", native_name: "English" }],
         default_language: "en",
+      });
+      return;
+    }
+    if (request.method() === "POST" && this.refusePostsFor !== null) {
+      await route.fulfill({
+        status: 429,
+        headers: {
+          ...CORS_HEADERS,
+          "access-control-expose-headers": "Retry-After",
+          "retry-after": String(this.refusePostsFor),
+        },
+        json: { error: "rate_limited", message: "Too many messages; wait a moment before sending another." },
       });
       return;
     }
@@ -153,6 +167,33 @@ test("an open chat shows a staff message written without a handoff", async ({ pa
     expect(poll.url).not.toContain("session_key");
     expect(poll.sessionKey).toMatch(/^v1_/);
   }
+});
+
+test("a message refused as too fast can be retried once the API's wait is over", async ({ page, consoleErrors }) => {
+  consoleErrors.allow(/status of 429/);
+  const api = new FakeWidgetApi();
+  api.refusePostsFor = 8;
+  await page.clock.install();
+  await serveSite(page.context(), api, { dataOpen: true });
+  await page.goto(`${SITE}/`);
+
+  await ask(page, "Table for two?");
+
+  await expect(chat(page).getByText("Too many messages. Please wait a moment and try again.")).toBeVisible();
+  const retry = chat(page).getByRole("button", { name: "Retry" });
+  await expect(retry).toBeDisabled();
+  await page.getByRole("textbox").fill("Hello?");
+  await expect(chat(page).getByRole("button", { name: "Send" })).toBeDisabled();
+  expect(api.messages).toEqual([]);
+
+  api.refusePostsFor = null;
+  await page.clock.runFor(8_100);
+  await expect(retry).toBeEnabled();
+  await expect(chat(page).getByRole("button", { name: "Send" })).toBeEnabled();
+  await retry.click();
+
+  await expect(chat(page).getByText("Answer to Table for two?")).toBeVisible();
+  await expect(chat(page).getByText("Too many messages. Please wait a moment and try again.")).toBeHidden();
 });
 
 test("a closed chat without any exchange does not poll", async ({ page }) => {

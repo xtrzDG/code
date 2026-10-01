@@ -181,6 +181,7 @@ def build_channel_router(
         openapi_extra=describe_json_body(WidgetMessageRequest),
     )
     def send_widget_message(
+        request: Request,
         business_id: str,
         response: Response,
         body: Annotated[WidgetMessageRequest, Depends(read_widget_message_body)],
@@ -190,6 +191,7 @@ def build_channel_router(
             WidgetMessageCommand(
                 business_id=parse_path_identifier(business_id, BusinessId, "Chat"),
                 request=body,
+                client_ip_address=read_client_ip_address(request),
             )
         )
 

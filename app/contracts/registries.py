@@ -91,3 +91,17 @@ class RequestRateLimitRegistryContract(RegistryContract, Protocol):
         of `window_seconds` in this process. A refused request is not counted.
         """
         raise NotImplementedError
+
+    def seconds_until_free(
+        self,
+        key: str,
+        limit: int,
+        window_seconds: int,
+        now: Microseconds,
+    ) -> int:
+        """
+        Whole seconds until `key` may make a request again under `limit`
+        per `window_seconds` (0 when it may now): the Retry-After of a
+        refused request.
+        """
+        raise NotImplementedError

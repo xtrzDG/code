@@ -1,8 +1,10 @@
 """
 The website chat's first message. It discloses the AI assistant (as every
-chat reply does) and offers help; where the widget's own greeting is not
-translated, the AI disclosure of the conversation engine is used alone.
-`{business}` is replaced with the business name.
+chat reply does) and offers help. It is translated into every interface
+language of `widget.js` (the same text as the script's own greeting; a test
+keeps the two in sync); in another language the AI disclosure of the
+conversation engine is used alone. `{business}` is replaced with the
+business name.
 """
 
 from app.schemas.dto.localization import LocalizedText
@@ -34,6 +36,22 @@ WIDGET_GREETING: LocalizedText = build_localized_text(
     pl="Dzień dobry! Jestem asystentem AI w {business}. W czym mogę pomóc?",
     zh="您好！我是{business}的AI助手。有什么可以帮您？",
     ja="こんにちは！{business}のAIアシスタントです。ご用件をどうぞ。",
+    hy="Բարև ձեզ։ Ես {business}-ի AI օգնականն եմ։ Ինչո՞վ կարող եմ օգնել։",
+    kk="Сәлеметсіз бе! Мен {business} AI көмекшісімін. Қалай көмектесе аламын?",
+    az="Salam! Mən {business} AI köməkçisiyəm. Sizə necə kömək edə bilərəm?",
+    lt="Sveiki! Esu „{business}“ DI asistentas. Kuo galiu padėti?",
+    lv="Sveiki! Esmu “{business}” MI asistents. Kā varu palīdzēt?",
+    et="Tere! Olen ettevõtte {business} AI-assistent. Kuidas saan aidata?",
+    fa="سلام! من دستیار هوش مصنوعی {business} هستم. چطور می‌توانم کمک کنم؟",
+    ur=("السلام علیکم! میں {business} کا AI معاون ہوں۔ میں آپ کی کیا مدد کر سکتا ہوں؟"),
+    fi="Hei! Olen yrityksen {business} tekoälyavustaja. Miten voin auttaa?",
+    hi="नमस्ते! मैं {business} का AI सहायक हूँ। मैं आपकी क्या मदद कर सकता हूँ?",
+    ko="안녕하세요! {business}의 AI 어시스턴트입니다. 무엇을 도와드릴까요?",
+    nb="Hei! Jeg er KI-assistenten til {business}. Hvordan kan jeg hjelpe?",
+    uz=(
+        "Assalomu alaykum! Men {business} AI yordamchisiman. Qanday yordam bera olaman?"
+    ),
+    vi="Xin chào! Tôi là trợ lý AI của {business}. Tôi có thể giúp gì cho bạn?",
 )
 
 

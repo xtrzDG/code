@@ -317,10 +317,11 @@ class WidgetMessageRequest(ImmutableDTO):
 
 
 class WidgetMessageCommand(ImmutableDTO):
-    """A visitor message for one business's widget."""
+    """A visitor message for one business's widget, and where it came from."""
 
     business_id: BusinessId
     request: WidgetMessageRequest
+    client_ip_address: ClientIpAddress | None = None
 
 
 class WidgetReplyView(ImmutableDTO):
