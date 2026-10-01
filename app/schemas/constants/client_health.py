@@ -31,6 +31,24 @@ class ClientHealthIssue(StrEnum):
     NEGATIVE_MARGIN = "negative_margin"
 
 
+class AdminClientSort(StrEnum):
+    """
+    Order of the platform admin's client list.
+
+    HEALTH: critical first, then more issues first. NAME: A to Z. USAGE: the
+    fullest package first. MARGIN: the lowest margin first. COST: the
+    largest provider cost first. REVENUE: the largest revenue first, per
+    currency. Unknown values go last; ties keep health, then name order.
+    """
+
+    HEALTH = "health"
+    NAME = "name"
+    USAGE = "usage"
+    MARGIN = "margin"
+    COST = "cost"
+    REVENUE = "revenue"
+
+
 class CabinetSection(StrEnum):
     """Cabinet page of a business (concept section 8)."""
 

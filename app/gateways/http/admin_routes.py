@@ -5,13 +5,18 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, Request
 
 from app.contracts.operator_contract import OperatorContract
+from app.gateways.http.paging_query import parse_page_request
+from app.gateways.http.query_parsing import parse_optional
 from app.gateways.http.strict_request_parsing import (
     parse_path_identifier,
     read_client_ip_address,
 )
 from app.gateways.http.user_authentication import CurrentUserDependency
+from app.schemas.constants.businesses import BusinessStatus
+from app.schemas.constants.client_health import AdminClientSort, ClientHealthStatus
+from app.schemas.constants.niches import NicheKey
 from app.schemas.dto.admin import (
-    AdminClientList,
+    AdminClientPage,
     AdminClientQuery,
     AdminClientsQuery,
     ClientCabinetAccess,
@@ -19,9 +24,11 @@ from app.schemas.dto.admin import (
     OpenClientCabinetCommand,
 )
 from app.schemas.typings.businesses.prefixed_id import BusinessId
+from app.schemas.typings.client_health.constrained_strings import ClientSearchText
+from app.schemas.typings.localization.constrained_strings import CountryCode
 from app.schemas.typings.users.prefixed_id import UserId
 
-type ListClientsOperator = OperatorContract[AdminClientsQuery, AdminClientList]
+type ListClientsOperator = OperatorContract[AdminClientsQuery, AdminClientPage]
 type GetClientHealthOperator = OperatorContract[AdminClientQuery, ClientHealthView]
 type OpenClientCabinetOperator = OperatorContract[
     OpenClientCabinetCommand,
@@ -37,7 +44,8 @@ def build_admin_router(
 ) -> APIRouter:
     """
     Routes (bearer token of a platform admin; others get 403):
-        GET  /v1/admin/clients                          every client
+        GET  /v1/admin/clients                          clients, one page
+             ?limit=&cursor=&status=&health=&country=&niche=&search=&sort=
         GET  /v1/admin/clients/{business_id}            one client in detail
         POST /v1/admin/clients/{business_id}/open       enter the cabinet
                                                         (audited)
@@ -48,8 +56,36 @@ def build_admin_router(
     @router.get("/v1/admin/clients")
     def list_clients(
         user_id: Annotated[UserId, Depends(current_user)],
-    ) -> AdminClientList:
-        return list_clients_operator.operate(AdminClientsQuery(user_id=user_id))
+        limit: str | None = None,
+        cursor: str | None = None,
+        status: str | None = None,
+        health: str | None = None,
+        country: str | None = None,
+        niche: str | None = None,
+        search: str | None = None,
+        sort: str | None = None,
+    ) -> AdminClientPage:
+        return list_clients_operator.operate(
+            AdminClientsQuery(
+                user_id=user_id,
+                page=parse_page_request(limit, cursor),
+                status=parse_optional(status, BusinessStatus, "status"),
+                health=parse_optional(health, ClientHealthStatus, "health"),
+                country_code=parse_optional(
+                    None if country is None else country.strip().upper(),
+                    CountryCode,
+                    "country",
+                ),
+                niche_key=parse_optional(niche, NicheKey, "niche"),
+                search=parse_optional(
+                    None if search is None else search.strip(),
+                    ClientSearchText,
+                    "search",
+                ),
+                sort=parse_optional(sort, AdminClientSort, "sort")
+                or AdminClientSort.HEALTH,
+            )
+        )
 
     @router.get("/v1/admin/clients/{business_id}")
     def get_client_health(

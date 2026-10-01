@@ -270,8 +270,9 @@ def test_an_erased_customer_stays_in_the_list_marked_erased() -> None:
     )
 
     erased = next(item for item in page.items if item.id == giorgi.contact.id)
-    assert erased.erased_at == customers.testbed.clock.now_microseconds()
-    assert erased.last_activity_at >= erased.erased_at
+    erased_at = customers.testbed.clock.now_microseconds()
+    assert erased.erased_at == erased_at
+    assert erased.last_activity_at >= erased_at
     assert (erased.name, erased.phone_number, erased.language) == (None, None, None)
     assert erased.conversation_count == 2
     assert detail.contact.erased_at == erased.erased_at

@@ -226,8 +226,8 @@ DOM (стили сайта и виджета не смешиваются), яз�
 | Здоровье | `GET /healthz` |
 | Вход и профиль | `POST /v1/auth/otp/start`, `POST /v1/auth/otp/verify`, `POST /v1/auth/logout`, `GET·PATCH /v1/me` |
 | Каталог | `GET /v1/catalog/countries[/{code}]`, `GET /v1/catalog/languages`, `GET /v1/catalog/plans`, `GET /v1/catalog/niches[/{niche}]`, `POST /v1/phone-numbers/parse` |
-| Бизнесы и команда | `POST·GET /v1/businesses`, `GET·PATCH /v1/businesses/{id}`, `POST …/members`, `DELETE …/members/{user_id}`, `GET …/call-forwarding-instructions` |
-| Данные и договор | `GET·POST …/dpa`, `GET …/audit-log`, `GET …/contacts/{contact_id}/export`, `DELETE …/contacts/{contact_id}` |
+| Бизнесы и команда | `POST·GET /v1/businesses`, `GET·PATCH /v1/businesses/{id}`, `POST …/members` (роль `owner` или `staff`), `PATCH·DELETE …/members/{user_id}` (последнего владельца нельзя ни удалить, ни сделать сотрудником), `GET …/call-forwarding-instructions` |
+| Данные и договор | `GET·POST …/dpa`, `GET /v1/legal/dpa/{version}?language=` (текст DPA, без токена), `GET …/audit-log` (страницы, фильтры `action`, `entity`, `actor_id`, `since`, `until`), `GET …/contacts` (страницы, `search`), `GET·DELETE …/contacts/{contact_id}`, `GET …/contacts/{contact_id}/export` |
 | Анкета | `GET …/profile/wizard`, `GET·PUT …/profile`, `PUT …/profile/steps/{step}`, `GET …/profile/gaps` |
 | Знания | `GET·POST …/knowledge`, `GET·PATCH·DELETE …/knowledge/{item_id}`, `POST …/knowledge/search`, `POST …/knowledge/import[/confirm]` |
 | Ресурсы и расписание | `GET·POST …/resources`, `PATCH …/resources/{id}`, `GET·POST …/schedule-exceptions`, `DELETE …/schedule-exceptions/{id}` |
@@ -238,8 +238,8 @@ DOM (стили сайта и виджета не смешиваются), яз�
 | Каналы (кабинет) | `GET …/channels`, `PUT·DELETE …/channels/{channel}`, `GET …/channels/web/snippet`, `POST …/manager-contacts/telegram-link` |
 | Вебхуки и виджет | `POST /v1/channels/telegram/{channel_id}/webhook`, `GET·POST /v1/channels/meta/webhook`, `POST /v1/channels/telegram-platform/webhook`, `GET /v1/widget/{id}/config`, `POST /v1/widget/{id}/messages`, `GET /widget.js`, `GET /widget/demo` |
 | Голос | `POST /v1/voice/tools/{tool}`, `POST /v1/voice/webhooks/conversation-initiation`, `POST /v1/voice/webhooks/post-call` |
-| Оплата | `GET …/billing`, `POST …/billing/trial`, `POST …/billing/plan`, `POST …/billing/cancel`, `POST …/billing/checkout`, `POST /v1/payments/flitt/webhook` |
-| Админка платформы | `GET /v1/admin/clients[/{business_id}]`, `POST /v1/admin/clients/{business_id}/open` |
+| Оплата | `GET …/billing`, `POST …/billing/trial`, `POST …/billing/plan`, `POST …/billing/cancel`, `POST …/billing/checkout`, `POST …/billing/subscribe` (тариф и период с оплатой сразу: после пробного периода, после отмены или без него), `POST /v1/payments/flitt/webhook` |
+| Админка платформы | `GET /v1/admin/clients` (страницы, фильтры `status`, `health`, `country`, `niche`, `search`, сортировка `sort`), `GET /v1/admin/clients/{business_id}`, `POST /v1/admin/clients/{business_id}/open` |
 
 `…` — это `/v1/businesses/{business_id}`.
 
@@ -250,6 +250,21 @@ DOM (стили сайта и виджета не смешиваются), яз�
 даёт только прогон по всем языкам и сценариям версии. Выйти в эфир можно с
 пробным периодом или оплаченной подпиской, принятым DPA, контактом менеджера и
 без блокирующих пробелов анкеты.
+
+## Договор об обработке данных (DPA)
+
+Текст DPA лежит в [`docs/legal/`](docs/legal/README.md): `dpa-<версия>.<язык>.md`
+на английском, русском и грузинском. API отдаёт его по
+`GET /v1/legal/dpa/{version}?language=` (язык, затем базовый язык, затем
+английский), статус `GET …/dpa` ссылается на него в `document_url`, кабинет
+показывает его перед кнопкой «Принять». Действующая версия — `DPA_DOCUMENT_VERSION`;
+версию без текста принять нельзя.
+
+> **Это шаблон.** До запуска в работу оператор должен показать его юристу своей
+> юрисдикции и стран клиентов, заполнить поля в квадратных скобках (реквизиты,
+> места обработки у субобработчиков, сроки, резервные копии, применимое право) и
+> выпускать изменения новой версией (новые файлы и новое `DPA_DOCUMENT_VERSION`),
+> чтобы владельцы приняли её заново.
 
 ## Проверки
 

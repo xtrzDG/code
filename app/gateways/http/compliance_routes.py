@@ -1,14 +1,13 @@
 """Data processing agreement, audit log, customers and their data rights."""
 
-from collections.abc import Callable
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, Request, status
-from pydantic import ValidationError
 from typed_time_provider import Microseconds
 
 from app.contracts.operator_contract import OperatorContract
 from app.gateways.http.paging_query import parse_page_request
+from app.gateways.http.query_parsing import parse_optional
 from app.gateways.http.strict_request_parsing import (
     parse_path_identifier,
     read_client_ip_address,
@@ -236,22 +235,6 @@ def build_contact_data_command(
         contact_id=parse_path_identifier(contact_id, ContactId, "Contact"),
         client_ip_address=read_client_ip_address(request),
     )
-
-
-def parse_optional[Value](
-    raw_value: str | None,
-    value_type: Callable[[str], Value],
-    parameter_name: str,
-) -> Value | None:
-    """A query parameter as a typed value; empty means absent, invalid is 422."""
-
-    if raw_value is None or raw_value == "":
-        return None
-
-    try:
-        return value_type(raw_value)
-    except (ValueError, TypeError, ValidationError) as error:
-        raise ValidationFailedError(f"{parameter_name} is not valid.") from error
 
 
 def parse_optional_moment(

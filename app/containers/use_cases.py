@@ -17,7 +17,7 @@ from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.users import UserDocument
 from app.schemas.dto.access import BusinessAccessRequest
 from app.schemas.dto.admin import (
-    AdminClientList,
+    AdminClientPage,
     AdminClientQuery,
     AdminClientsQuery,
     AdminClientSummary,
@@ -2037,7 +2037,7 @@ class UseCasesContainer(containers.DeclarativeContainer):
         wall_clock=time_provider.microsecond_wall_clock,
     )
     list_clients_use_case: Factory[
-        UseCaseContract[AdminClientsQuery, AdminClientList]
+        UseCaseContract[AdminClientsQuery, AdminClientPage]
     ] = Factory(
         ListClientsUseCase,
         authorize_platform_admin=authorize_platform_admin_use_case,
