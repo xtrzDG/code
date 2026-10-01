@@ -387,6 +387,9 @@ class PipelinesContainer(containers.DeclarativeContainer):
     disable_channel_pipeline = orchestrator_pipeline(
         orchestrators.disable_channel_orchestrator
     )
+    set_whatsapp_staff_template_pipeline = orchestrator_pipeline(
+        orchestrators.set_whatsapp_staff_template_orchestrator
+    )
     get_widget_snippet_pipeline = orchestrator_pipeline(
         orchestrators.get_widget_snippet_orchestrator
     )

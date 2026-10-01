@@ -1,4 +1,5 @@
 import logging
+from collections.abc import Callable
 
 from typed_time_provider import Microseconds, WallClock
 
@@ -57,7 +58,8 @@ class ChannelMessageSenderFacilitator(ChannelMessageSenderFacilitatorContract):
     WhatsApp accepts free-form text only within 24 hours of the customer's
     last message; later messages need an approved template, sent from the
     business's own WhatsApp number in the customer's language (English
-    when the template has no such translation). Every delivery is metered
+    when the template has no such translation) or in the one language the
+    owner named for it. Every delivery is metered
     once: free-form WhatsApp text as WHATSAPP_REPLY, a template as
     WHATSAPP_TEMPLATE. Phone, web chat and other channels cannot carry
     proactive messages. A platform that refuses the channel's credential
@@ -142,6 +144,52 @@ class ChannelMessageSenderFacilitator(ChannelMessageSenderFacilitatorContract):
         language: LanguageTag,
         body_parameters: list[MessageText],
     ) -> None:
+        language_code: WhatsAppTemplateLanguageCode = to_whatsapp_template_language(
+            language
+        )
+        self._deliver_template(
+            business_id,
+            channel_user_id,
+            lambda phone_number_id: self._send_template(
+                phone_number_id,
+                channel_user_id,
+                template_name,
+                language_code,
+                body_parameters,
+            ),
+        )
+
+    def send_whatsapp_template_in_language(
+        self,
+        business_id: BusinessId,
+        channel_user_id: ChannelUserId,
+        template_name: WhatsAppTemplateName,
+        language_code: WhatsAppTemplateLanguageCode,
+        body_parameters: list[MessageText],
+    ) -> None:
+        self._deliver_template(
+            business_id,
+            channel_user_id,
+            lambda phone_number_id: self._whatsapp_templates.send_template(
+                phone_number_id,
+                channel_user_id,
+                template_name,
+                language_code,
+                body_parameters,
+            ),
+        )
+
+    def _deliver_template(
+        self,
+        business_id: BusinessId,
+        channel_user_id: ChannelUserId,
+        send: Callable[[MetaObjectId], None],
+    ) -> None:
+        """
+        Send a template from the business's WhatsApp number, keep the
+        channel's health and meter one WHATSAPP_TEMPLATE usage event.
+        """
+
         channel_document: ChannelDocument | None = find_business_channel(
             self._channel_repo,
             business_id,
@@ -164,17 +212,8 @@ class ChannelMessageSenderFacilitator(ChannelMessageSenderFacilitatorContract):
                 "The WhatsApp number of this business is not connected."
             ) from error
 
-        language_code: WhatsAppTemplateLanguageCode = to_whatsapp_template_language(
-            language
-        )
         try:
-            self._send_template(
-                phone_number_id,
-                channel_user_id,
-                template_name,
-                language_code,
-                body_parameters,
-            )
+            send(phone_number_id)
         except ChannelCredentialRejectedError as error:
             self._record_health(channel_document, str(error))
             raise

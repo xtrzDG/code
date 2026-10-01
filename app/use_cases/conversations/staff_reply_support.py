@@ -31,7 +31,7 @@ def assess_conversation_reply(
     connected (a channel in ERROR still gets every delivery attempt, and a
     working one clears the error), and for windowed channels the customer's
     last message in that channel (in this or a later conversation) sets the
-    window.
+    window; after it, WhatsApp offers the channel's staff template.
     """
 
     channel: ChannelDocument | None = find_business_channel(
@@ -42,6 +42,7 @@ def assess_conversation_reply(
         channel is not None and is_channel_active(channel),
         last_customer_message_at(conversation, conversation_repo, message_repo, now),
         now,
+        None if channel is None else channel.whatsapp_staff_template,
     )
 
 

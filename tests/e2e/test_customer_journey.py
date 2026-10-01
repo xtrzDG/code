@@ -485,6 +485,7 @@ def test_staff_reply_from_the_cabinet_reaches_the_website_widget(
         "block": None,
         "delivery": "stored_for_widget",
         "window_closes_at": None,
+        "template": None,
     }
     model_calls_before = workshop.model.assistant_calls
     telegram_sends_before = len(workshop.telegram.bodies("sendMessage"))

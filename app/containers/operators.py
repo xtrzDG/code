@@ -330,6 +330,9 @@ class OperatorsContainer(containers.DeclarativeContainer):
     disable_channel_operator = pipeline_operator(
         pipelines.disable_channel_pipeline, storage_scope
     )
+    set_whatsapp_staff_template_operator = pipeline_operator(
+        pipelines.set_whatsapp_staff_template_pipeline, storage_scope
+    )
     get_widget_snippet_operator = pipeline_operator(
         pipelines.get_widget_snippet_pipeline, storage_scope
     )

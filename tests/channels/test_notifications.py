@@ -15,7 +15,10 @@ from app.schemas.constants.channels import ChannelKind, ChannelStatus
 from app.schemas.constants.handoffs import ManagerContactChannel
 from app.schemas.domain.businesses import ManagerContact
 from app.schemas.exceptions.application_errors import ExternalServiceError
-from app.schemas.typings.channels.constrained_strings import WhatsAppTemplateName
+from app.schemas.typings.channels.constrained_strings import (
+    WhatsAppTemplateLanguageCode,
+    WhatsAppTemplateName,
+)
 from app.schemas.typings.channels.strings import EncryptedChannelSecret
 from app.schemas.typings.conversations.strings import ChannelUserId, MessageText
 from app.schemas.typings.handoffs.strings import ManagerContactAddress, ManagerName
@@ -244,6 +247,55 @@ class TestChannelMessageSender:
         assert body["type"] == "template"
         assert body["template"]["name"] == "booking_reminder"
         assert body["template"]["language"]["code"] == "ka"
+        usage = testbed.usage_event_repo.list_by_business_between(
+            business.id,
+            testbed.clock.now_microseconds(),
+            Microseconds(testbed.clock.now_microseconds() + 1),
+        )
+        assert [(event.kind, event.quantity) for event in usage] == [
+            (UsageKind.WHATSAPP_TEMPLATE, 1)
+        ]
+
+    def test_a_staff_template_goes_in_its_own_language_without_fallback(
+        self,
+    ) -> None:
+        testbed = ChannelsTestbed()
+        owner = testbed.add_user("owner")
+        business = testbed.add_business(owner)
+        testbed.add_channel(business.id, ChannelKind.WHATSAPP, "106540352242922")
+        testbed.meta_transport.respond("POST", r"/messages$", {"messages": []})
+        sender = testbed.channel_message_sender
+
+        sender.send_whatsapp_template_in_language(
+            business.id,
+            ChannelUserId("995599123456"),
+            WhatsAppTemplateName("staff_reply"),
+            WhatsAppTemplateLanguageCode("pt_BR"),
+            [MessageText("Sua mesa está pronta.")],
+        )
+        testbed.meta_transport.respond(
+            "POST",
+            r"/messages$",
+            {"error": {"message": "Template name does not exist", "code": 132001}},
+            status_code=400,
+        )
+        with pytest.raises(ExternalServiceError):
+            sender.send_whatsapp_template_in_language(
+                business.id,
+                ChannelUserId("995599123456"),
+                WhatsAppTemplateName("staff_reply"),
+                WhatsAppTemplateLanguageCode("pt_BR"),
+                [MessageText("Again")],
+            )
+
+        sent, refused = testbed.meta_transport.requests
+        body = json.loads(sent.body)
+        assert body["template"]["name"] == "staff_reply"
+        assert body["template"]["language"]["code"] == "pt_BR"
+        assert body["template"]["components"][0]["parameters"] == [
+            {"type": "text", "text": "Sua mesa está pronta."}
+        ]
+        assert json.loads(refused.body)["template"]["language"]["code"] == "pt_BR"
         usage = testbed.usage_event_repo.list_by_business_between(
             business.id,
             testbed.clock.now_microseconds(),

@@ -93,9 +93,11 @@ class StaffReplyBlock(StrEnum):
 class StaffMessageDelivery(StrEnum):
     """
     How a staff message reaches the customer: sent through the messenger
-    right away, or kept for the website chat, which shows it when the
+    right away, sent in the owner's WhatsApp message template (after the
+    24-hour window), or kept for the website chat, which shows it when the
     visitor's widget asks for new messages.
     """
 
     SENT = "sent"
+    SENT_AS_TEMPLATE = "sent_as_template"
     STORED_FOR_WIDGET = "stored_for_widget"

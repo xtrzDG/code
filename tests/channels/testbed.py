@@ -182,6 +182,9 @@ from app.use_cases.channels.receive_meta_webhook_use_case import (
 from app.use_cases.channels.receive_telegram_webhook_use_case import (
     ReceiveTelegramWebhookUseCase,
 )
+from app.use_cases.channels.set_whatsapp_staff_template_use_case import (
+    SetWhatsAppStaffTemplateUseCase,
+)
 from app.use_cases.channels.verify_meta_webhook_use_case import (
     VerifyMetaWebhookUseCase,
 )
@@ -716,6 +719,12 @@ class ChannelsTestbed:
             self.wall_clock,
             RecordingVoiceAgentRemoval(self.voice_agent_removals),
         )
+        self.set_whatsapp_staff_template = SetWhatsAppStaffTemplateUseCase(
+            self.authorize_business_access,
+            self.channel_repo,
+            self.audit_log_repo,
+            self.wall_clock,
+        )
         self.list_channels = ListChannelsUseCase(
             self.authorize_business_access, self.channel_repo
         )
@@ -830,6 +839,9 @@ class ChannelsTestbed:
                 ),
                 create_telegram_link_operator=wrap_use_case(self.create_telegram_link),
                 current_user=build_current_user_dependency(self.authentication),
+                set_whatsapp_staff_template_operator=wrap_use_case(
+                    self.set_whatsapp_staff_template
+                ),
             )
         )
         http_application.include_router(

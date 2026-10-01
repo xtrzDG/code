@@ -34,4 +34,10 @@ class LlmTurnSequenceNumber(BaseConstrainedTypedInt):
     ge = 0
 
 
+class StaffTemplateReplyMaxLength(BaseConstrainedTypedInt):
+    """Most characters a staff reply sent as a WhatsApp template may have."""
+
+    ge = 1
+
+
 # Keep abc order for all non example types, if possible.

@@ -1,8 +1,13 @@
 """Cabinet view of a channel; credentials never leave the server."""
 
 from app.schemas.constants.channels import ChannelKind
-from app.schemas.domain.channels import ChannelDocument, WebChatAppearance
+from app.schemas.domain.channels import (
+    ChannelDocument,
+    WebChatAppearance,
+    WhatsAppStaffTemplate,
+)
 from app.schemas.dto.channels import ChannelView
+from app.schemas.dto.staff_reply_templates import WhatsAppStaffTemplateView
 
 # Order of channels in the cabinet: free messengers first (concept: cheap
 # channels are shown to customers first), then WhatsApp, web and phone.
@@ -20,6 +25,7 @@ CHANNEL_DISPLAY_ORDER: tuple[ChannelKind, ...] = (
 
 def build_channel_view(channel: ChannelDocument) -> ChannelView:
     appearance: WebChatAppearance | None = channel.web_chat_appearance
+    staff_template: WhatsAppStaffTemplate | None = channel.whatsapp_staff_template
     return ChannelView(
         id=channel.id,
         business_id=channel.business_id,
@@ -32,6 +38,14 @@ def build_channel_view(channel: ChannelDocument) -> ChannelView:
         last_error_at=channel.last_error_at,
         widget_color=None if appearance is None else appearance.accent_color,
         widget_position=None if appearance is None else appearance.position,
+        staff_reply_template=(
+            None
+            if staff_template is None
+            else WhatsAppStaffTemplateView(
+                name=staff_template.name,
+                language_code=staff_template.language_code,
+            )
+        ),
     )
 
 

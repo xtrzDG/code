@@ -54,7 +54,10 @@ from app.schemas.exceptions.application_errors import (
     ExternalServiceError,
 )
 from app.schemas.typings.businesses.prefixed_id import BusinessId
-from app.schemas.typings.channels.constrained_strings import WhatsAppTemplateName
+from app.schemas.typings.channels.constrained_strings import (
+    WhatsAppTemplateLanguageCode,
+    WhatsAppTemplateName,
+)
 from app.schemas.typings.conversations.constrained_strings import RecordingMediaType
 from app.schemas.typings.conversations.strings import (
     ChannelUserId,
@@ -118,6 +121,7 @@ class RecordingChannelSender(ChannelMessageSenderFacilitatorContract):
 
     def __init__(self) -> None:
         self.sent: list[tuple[ChannelKind, str, str]] = []
+        self.templates: list[tuple[str, str, str, list[str]]] = []
         self.failure: str | None = None
 
     def send(
@@ -140,7 +144,27 @@ class RecordingChannelSender(ChannelMessageSenderFacilitatorContract):
         language: LanguageTag,
         body_parameters: list[MessageText],
     ) -> None:
-        raise AssertionError("Staff replies never use templates.")
+        raise AssertionError("Staff templates are sent in their own language.")
+
+    def send_whatsapp_template_in_language(
+        self,
+        business_id: BusinessId,
+        channel_user_id: ChannelUserId,
+        template_name: WhatsAppTemplateName,
+        language_code: WhatsAppTemplateLanguageCode,
+        body_parameters: list[MessageText],
+    ) -> None:
+        if self.failure is not None:
+            raise ExternalServiceError(self.failure)
+
+        self.templates.append(
+            (
+                str(channel_user_id),
+                str(template_name),
+                str(language_code),
+                [str(parameter) for parameter in body_parameters],
+            )
+        )
 
 
 class InMemoryRecordingStorage(RecordingStorageAdapterContract):

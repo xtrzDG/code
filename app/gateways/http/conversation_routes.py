@@ -201,6 +201,7 @@ def build_conversation_router(
                     "Conversation",
                 ),
                 text=body.text,
+                as_template=body.as_template,
                 client_ip_address=read_client_ip_address(request),
             )
         )

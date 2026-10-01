@@ -7,7 +7,10 @@ from app.schemas.constants.channels import ChannelKind
 from app.schemas.constants.localization import OtpDeliveryChannel
 from app.schemas.domain.businesses import ManagerContact
 from app.schemas.typings.businesses.prefixed_id import BusinessId
-from app.schemas.typings.channels.constrained_strings import WhatsAppTemplateName
+from app.schemas.typings.channels.constrained_strings import (
+    WhatsAppTemplateLanguageCode,
+    WhatsAppTemplateName,
+)
 from app.schemas.typings.conversations.strings import ChannelUserId, MessageText
 from app.schemas.typings.localization.constrained_strings import (
     E164PhoneNumber,
@@ -70,6 +73,24 @@ class ChannelMessageSenderFacilitatorContract(FacilitatorContract, Protocol):
         Send a Meta-approved template from the business's WhatsApp number
         (needed outside the 24-hour customer service window); metered as one
         WHATSAPP_TEMPLATE usage event.
+
+        Raises ExternalServiceError when the channel is not connected or fails.
+        """
+        raise NotImplementedError
+
+    def send_whatsapp_template_in_language(
+        self,
+        business_id: BusinessId,
+        channel_user_id: ChannelUserId,
+        template_name: WhatsAppTemplateName,
+        language_code: WhatsAppTemplateLanguageCode,
+        body_parameters: list[MessageText],
+    ) -> None:
+        """
+        Send a Meta-approved template in exactly the language it was approved
+        in (one the owner named, so there is no English fallback) from the
+        business's WhatsApp number; metered as one WHATSAPP_TEMPLATE usage
+        event.
 
         Raises ExternalServiceError when the channel is not connected or fails.
         """

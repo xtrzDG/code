@@ -12,5 +12,6 @@ IsLlmToolError = bool
 IsNewConversation = bool
 IsSandboxConversation = bool
 IsStaffReplyAvailable = bool
+SendAsTemplate = bool
 ShouldEndCall = bool
 # Keep abc order for all non example types, if possible.

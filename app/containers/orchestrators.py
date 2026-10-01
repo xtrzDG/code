@@ -451,6 +451,9 @@ class OrchestratorsContainer(containers.DeclarativeContainer):
     disable_channel_orchestrator = use_case_orchestrator(
         use_cases.disable_channel_use_case
     )
+    set_whatsapp_staff_template_orchestrator = use_case_orchestrator(
+        use_cases.set_whatsapp_staff_template_use_case
+    )
     get_widget_snippet_orchestrator = use_case_orchestrator(
         use_cases.get_widget_snippet_use_case
     )

@@ -36,7 +36,10 @@ from app.schemas.typings.bookings.prefixed_id import BookingId, ResourceId
 from app.schemas.typings.bookings.strings import ResourceName
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.businesses.strings import BusinessName
-from app.schemas.typings.channels.constrained_strings import WhatsAppTemplateName
+from app.schemas.typings.channels.constrained_strings import (
+    WhatsAppTemplateLanguageCode,
+    WhatsAppTemplateName,
+)
 from app.schemas.typings.contacts.prefixed_id import ContactId
 from app.schemas.typings.contacts.strings import ContactName
 from app.schemas.typings.conversations.strings import ChannelUserId, MessageText
@@ -114,6 +117,16 @@ class RecordingChannelSender(ChannelMessageSenderFacilitatorContract):
                 [str(parameter) for parameter in body_parameters],
             )
         )
+
+    def send_whatsapp_template_in_language(
+        self,
+        business_id: BusinessId,
+        channel_user_id: ChannelUserId,
+        template_name: WhatsAppTemplateName,
+        language_code: WhatsAppTemplateLanguageCode,
+        body_parameters: list[MessageText],
+    ) -> None:
+        raise AssertionError("Reminders follow the customer's language.")
 
 
 class ReminderScene:

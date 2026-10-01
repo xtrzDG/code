@@ -274,6 +274,7 @@ from app.schemas.dto.resources import (
     ScheduleExceptionView,
     UpdateResourceCommand,
 )
+from app.schemas.dto.staff_reply_templates import SetWhatsAppStaffTemplateCommand
 from app.schemas.dto.users import (
     CurrentUserView,
     LoginSessionView,
@@ -449,6 +450,9 @@ from app.use_cases.channels.receive_meta_webhook_use_case import (
 )
 from app.use_cases.channels.receive_telegram_webhook_use_case import (
     ReceiveTelegramWebhookUseCase,
+)
+from app.use_cases.channels.set_whatsapp_staff_template_use_case import (
+    SetWhatsAppStaffTemplateUseCase,
 )
 from app.use_cases.channels.verify_meta_webhook_use_case import VerifyMetaWebhookUseCase
 from app.use_cases.compliance.accept_dpa_use_case import AcceptDpaUseCase
@@ -1807,6 +1811,15 @@ class UseCasesContainer(containers.DeclarativeContainer):
         app_settings=config.app_settings,
         wall_clock=time_provider.microsecond_wall_clock,
         storage_scope=utilities.storage_scope,
+    )
+    set_whatsapp_staff_template_use_case: Factory[
+        UseCaseContract[SetWhatsAppStaffTemplateCommand, ChannelView]
+    ] = Factory(
+        SetWhatsAppStaffTemplateUseCase,
+        authorize_business_access=authorize_business_access_use_case,
+        channel_repo=repositories.channel_repo,
+        audit_log_repo=repositories.audit_log_repo,
+        wall_clock=time_provider.microsecond_wall_clock,
     )
     disable_channel_use_case: Factory[
         UseCaseContract[DisableChannelCommand, ChannelView]

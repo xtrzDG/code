@@ -7,6 +7,7 @@ from app.schemas.constants.channels import ChannelKind, ChannelStatus, WidgetPos
 from app.schemas.constants.conversations import MessageAuthor
 from app.schemas.constants.localization import TextDirection
 from app.schemas.dto.conversations import AssistantReply, InboundMessage
+from app.schemas.dto.staff_reply_templates import WhatsAppStaffTemplateView
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.businesses.strings import BusinessName
 from app.schemas.typings.channels.booleans import (
@@ -251,7 +252,9 @@ class ChannelView(ImmutableDTO):
     number of the assistant line. With status ERROR, `last_error` is the
     platform's short reason (no secrets) and `last_error_at` its time. The
     website chat also reports its saved colour and launcher corner (None:
-    the widget's defaults).
+    the widget's defaults). WhatsApp reports the template staff replies use
+    once the 24-hour window has closed (None: no template, such replies are
+    refused).
     """
 
     id: ChannelId
@@ -265,6 +268,7 @@ class ChannelView(ImmutableDTO):
     last_error_at: Microseconds | None = None
     widget_color: WidgetAccentColor | None = None
     widget_position: WidgetPosition | None = None
+    staff_reply_template: WhatsAppStaffTemplateView | None = None
 
 
 # --- Website chat widget ---------------------------------------------------

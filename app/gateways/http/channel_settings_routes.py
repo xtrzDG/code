@@ -25,6 +25,10 @@ from app.schemas.dto.channels import (
     WidgetSnippetQuery,
     WidgetSnippetView,
 )
+from app.schemas.dto.staff_reply_templates import (
+    SetWhatsAppStaffTemplateCommand,
+    WhatsAppStaffTemplateRequest,
+)
 from app.schemas.exceptions.application_errors import NotFoundError
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.users.prefixed_id import UserId
@@ -34,6 +38,7 @@ CHANNEL_PATH_ALIASES: dict[str, ChannelKind] = {"web": ChannelKind.WEB_CHAT}
 
 read_connect_channel_body = build_json_body_dependency(ConnectChannelRequest)
 read_telegram_link_body = build_json_body_dependency(TelegramLinkRequest)
+read_staff_template_body = build_json_body_dependency(WhatsAppStaffTemplateRequest)
 
 
 def build_channel_settings_router(
@@ -46,6 +51,10 @@ def build_channel_settings_router(
         TelegramLinkView,
     ],
     current_user: CurrentUserDependency,
+    set_whatsapp_staff_template_operator: OperatorContract[
+        SetWhatsAppStaffTemplateCommand,
+        ChannelView,
+    ],
 ) -> APIRouter:
     """
     Routes (all require a bearer token):
@@ -53,6 +62,10 @@ def build_channel_settings_router(
         PUT    /v1/businesses/{business_id}/channels/{channel}     owner: connect
         DELETE /v1/businesses/{business_id}/channels/{channel}     owner: disable
         GET    /v1/businesses/{business_id}/channels/web/snippet   widget code
+        PUT    /v1/businesses/{business_id}/channels/whatsapp/staff-template
+                                                     owner: {name, language_code}
+                                                     of the template for staff
+                                                     replies after 24 hours
         POST   /v1/businesses/{business_id}/manager-contacts/telegram-link
                                                      owner: staff Telegram code
 
@@ -102,6 +115,27 @@ def build_channel_settings_router(
                 user_id=user_id,
                 business_id=parse_path_identifier(business_id, BusinessId, "Business"),
                 channel=parse_channel_kind(channel),
+                request=body,
+                client_ip_address=read_client_ip_address(request),
+            )
+        )
+
+    @router.put(
+        "/v1/businesses/{business_id}/channels/whatsapp/staff-template",
+        openapi_extra=describe_json_body(WhatsAppStaffTemplateRequest),
+    )
+    def set_whatsapp_staff_template(
+        request: Request,
+        business_id: str,
+        user_id: Annotated[UserId, Depends(current_user)],
+        body: Annotated[
+            WhatsAppStaffTemplateRequest, Depends(read_staff_template_body)
+        ],
+    ) -> ChannelView:
+        return set_whatsapp_staff_template_operator.operate(
+            SetWhatsAppStaffTemplateCommand(
+                user_id=user_id,
+                business_id=parse_path_identifier(business_id, BusinessId, "Business"),
                 request=body,
                 client_ip_address=read_client_ip_address(request),
             )

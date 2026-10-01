@@ -57,4 +57,19 @@ class StaffReplyText(BaseConstrainedTypedString):
     pattern = r"\S"
 
 
+class StaffTemplateReplyText(BaseConstrainedTypedString):
+    """
+    A staff reply as the single body parameter of a WhatsApp message
+    template: one line (WhatsApp refuses line breaks, tabs and more than
+    four spaces in a row in template parameters), at most 1024 characters.
+
+    Example:
+        reply = StaffTemplateReplyText("Your table for Saturday is confirmed.")
+    """
+
+    min_length = 1
+    max_length = 1024
+    pattern = r"\A(?!.* {5})[^\t\n\r]*\S[^\t\n\r]*\Z"
+
+
 # Keep abc order for all non example types, if possible.

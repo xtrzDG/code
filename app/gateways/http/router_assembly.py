@@ -201,6 +201,9 @@ def build_application_routers(app_container: AppContainer) -> list[APIRouter]:
             widget_snippet_operator=operators.get_widget_snippet_operator(),
             create_telegram_link_operator=operators.create_telegram_link_operator(),
             current_user=current_user,
+            set_whatsapp_staff_template_operator=(
+                operators.set_whatsapp_staff_template_operator()
+            ),
         ),
         build_voice_router(
             voice_tool_operator=operators.voice_tool_webhook_operator(),

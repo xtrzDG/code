@@ -22,6 +22,7 @@ from app.schemas.domain.conversations import (
 from app.schemas.dto.bookings import BookingView
 from app.schemas.dto.operations import HandoffListItem, LeadListItem
 from app.schemas.dto.paging import PageRequest
+from app.schemas.dto.staff_reply_templates import StaffReplyTemplateView
 from app.schemas.typings.assistants.constrained_strings import LlmModelId
 from app.schemas.typings.assistants.prefixed_id import AssistantVersionId
 from app.schemas.typings.billing.constrained_integers import CostMicroUsd
@@ -36,6 +37,7 @@ from app.schemas.typings.conversations.booleans import (
     IsLlmToolError,
     IsSandboxConversation,
     IsStaffReplyAvailable,
+    SendAsTemplate,
 )
 from app.schemas.typings.conversations.constrained_integers import (
     CallDurationSeconds,
@@ -186,13 +188,16 @@ class StaffReplyView(ImmutableDTO):
     """
     Whether staff can write to the customer from the card now, why not
     (`block`), how the message would travel, and until when a 24-hour
-    messaging window stays open (WhatsApp, Instagram, Messenger).
+    messaging window stays open (WhatsApp, Instagram, Messenger). When the
+    WhatsApp window has closed and the owner set a message template for
+    staff replies, `template` offers sending the text in it instead.
     """
 
     is_available: IsStaffReplyAvailable
     block: StaffReplyBlock | None = None
     delivery: StaffMessageDelivery | None = None
     window_closes_at: Microseconds | None = None
+    template: StaffReplyTemplateView | None = None
 
 
 class ConversationDetailView(ImmutableDTO):
@@ -227,9 +232,15 @@ class RateConversationCommand(ImmutableDTO):
 
 
 class StaffMessageRequest(ImmutableDTO):
-    """HTTP body of a staff message to the customer of a conversation."""
+    """
+    HTTP body of a staff message to the customer of a conversation;
+    `as_template` sends it in the WhatsApp template the card offers once the
+    24-hour window has closed (while the window is open it travels as an
+    ordinary message).
+    """
 
     text: StaffReplyText
+    as_template: SendAsTemplate = False
 
 
 class SendStaffMessageCommand(ImmutableDTO):
@@ -239,6 +250,7 @@ class SendStaffMessageCommand(ImmutableDTO):
     business_id: BusinessId
     conversation_id: ConversationId
     text: StaffReplyText
+    as_template: SendAsTemplate = False
     client_ip_address: ClientIpAddress | None = None
 
 

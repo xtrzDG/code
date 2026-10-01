@@ -9,6 +9,9 @@ from app.schemas.domain.conversations import ConversationDocument
 from app.schemas.typings.assistants.prefixed_id import AssistantVersionId
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.contacts.prefixed_id import ContactId
+from app.schemas.typings.conversations.constrained_strings import (
+    StaffTemplateReplyText,
+)
 from app.schemas.typings.conversations.strings import ChannelUserId, MessageText
 from app.utilities.conversations.conversation_search import (
     digits_of,
@@ -22,8 +25,10 @@ from app.utilities.conversations.message_previews import (
 )
 from app.utilities.conversations.staff_replies import (
     CUSTOMER_SERVICE_WINDOW_MICROSECONDS,
+    STAFF_TEMPLATE_MAX_LENGTH,
     assess_staff_reply,
     describe_block,
+    to_template_parameter,
 )
 
 NOW: Microseconds = Microseconds(1_790_000_000_000_000)
@@ -155,3 +160,15 @@ def test_phone_search_drops_the_national_prefix_of_the_phone_country(
 def test_phone_search_with_a_national_prefix_still_needs_the_digits() -> None:
     assert not matches_search("8 916 000", None, "+79161234567", [])
     assert not matches_search("8 701 123 4567", None, "+995599123456", [])
+
+
+def test_staff_template_text_is_one_line_within_the_parameter_limit() -> None:
+    assert StaffTemplateReplyText.max_length == STAFF_TEMPLATE_MAX_LENGTH
+    assert to_template_parameter("  Ready.\n\n\tSee you\r\n at  8 ") == (
+        "Ready. See you at 8"
+    )
+    assert len(to_template_parameter("a\n" * 512)) == 1023
+    with pytest.raises(ValueError):
+        to_template_parameter("a" * 1025)
+    with pytest.raises(ValueError):
+        to_template_parameter(" \n ")

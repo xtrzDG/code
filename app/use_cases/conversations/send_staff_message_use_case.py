@@ -26,16 +26,27 @@ from app.schemas.dto.conversation_feed import (
     StaffMessageResult,
     StaffReplyView,
 )
-from app.schemas.exceptions.application_errors import ConflictError, NotFoundError
+from app.schemas.dto.staff_reply_templates import StaffReplyTemplateView
+from app.schemas.exceptions.application_errors import (
+    ConflictError,
+    NotFoundError,
+    ValidationFailedError,
+)
 from app.schemas.typings.compliance.strings import (
     AuditEntityName,
     AuditEntityReference,
+)
+from app.schemas.typings.conversations.constrained_strings import (
+    StaffTemplateReplyText,
 )
 from app.schemas.typings.conversations.strings import MessageText
 from app.use_cases.conversations.staff_reply_support import (
     assess_conversation_reply,
 )
-from app.utilities.conversations.staff_replies import describe_block
+from app.utilities.conversations.staff_replies import (
+    describe_block,
+    to_template_parameter,
+)
 
 MESSAGE_ENTITY: AuditEntityName = AuditEntityName("message")
 
@@ -51,6 +62,10 @@ class SendStaffMessageUseCase(
     Telegram, WhatsApp, Instagram and Messenger messages are sent through
     the business's connected channel right away; WhatsApp, Instagram and
     Messenger only within 24 hours of the customer's last message there.
+    After that, a WhatsApp message asked to go `as_template` travels in the
+    message template the owner set for staff replies, in its approved
+    language, as its single body parameter: one line (line breaks become
+    spaces) of at most 1024 characters, else ValidationFailedError.
     Website chat messages are kept for the visitor's widget. Phone and test
     conversations cannot be written to; every refusal is a ConflictError
     that says why. The message is stored in the transcript as a STAFF
@@ -105,18 +120,30 @@ class SendStaffMessageUseCase(
             self._channel_repo,
             now,
         )
-        if not reply.is_available or reply.delivery is None:
-            raise ConflictError(
-                describe_block(reply.block or StaffReplyBlock.UNSUPPORTED_CHANNEL)
+        delivery: StaffMessageDelivery
+        text: MessageText
+        if reply.is_available and reply.delivery is not None:
+            delivery = reply.delivery
+            text = MessageText(str(input_data.text).strip())
+            if delivery is StaffMessageDelivery.SENT:
+                self._channel_message_sender.send(
+                    business.id,
+                    conversation.channel,
+                    conversation.channel_user_id,
+                    text,
+                )
+        elif input_data.as_template and reply.template is not None:
+            delivery = StaffMessageDelivery.SENT_AS_TEMPLATE
+            text = self._send_as_template(
+                business, conversation, reply.template, input_data
             )
-
-        text: MessageText = MessageText(str(input_data.text).strip())
-        if reply.delivery is StaffMessageDelivery.SENT:
-            self._channel_message_sender.send(
-                business.id,
-                conversation.channel,
-                conversation.channel_user_id,
-                text,
+        else:
+            raise ConflictError(
+                describe_block(
+                    reply.block or StaffReplyBlock.UNSUPPORTED_CHANNEL,
+                    conversation.channel,
+                    offers_template=reply.template is not None,
+                )
             )
 
         message: MessageDocument = MessageDocument(
@@ -146,8 +173,36 @@ class SendStaffMessageUseCase(
         )
         return StaffMessageResult(
             message=self._message_transformer.transform(message),
-            delivery=reply.delivery,
+            delivery=delivery,
         )
+
+    def _send_as_template(
+        self,
+        business: BusinessDocument,
+        conversation: ConversationDocument,
+        template: StaffReplyTemplateView,
+        command: SendStaffMessageCommand,
+    ) -> MessageText:
+        """Send the staff text in the owner's template; returns what was sent."""
+
+        try:
+            parameter: StaffTemplateReplyText = to_template_parameter(str(command.text))
+        except ValueError as error:
+            raise ValidationFailedError(
+                "A message sent as a WhatsApp template may have at most "
+                f"{template.max_text_length} characters (line breaks are sent "
+                "as spaces)."
+            ) from error
+
+        text: MessageText = MessageText(str(parameter))
+        self._channel_message_sender.send_whatsapp_template_in_language(
+            business.id,
+            conversation.channel_user_id,
+            template.name,
+            template.language_code,
+            [text],
+        )
+        return text
 
     def _require_conversation(
         self,
