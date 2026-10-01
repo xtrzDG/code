@@ -206,6 +206,12 @@ export const en = {
       readyDescription: "Everything required is filled in. You can assemble and test the assistant.",
       notReady: { one: "{count} required item is missing", other: "{count} required items are missing" },
       toAssistant: "Go to the assistant",
+      adviceCount: { one: "{count} recommendation", other: "{count} recommendations" },
+      showList: "Show the list",
+      drawerDescription:
+        "Required items must be answered before the assistant can be assembled; recommended ones make its answers better. Choose an item to open its step.",
+      checking: "Checking the profile…",
+      loadFailed: "Could not check what is missing.",
     },
     niche: {
       niche: "Niche",

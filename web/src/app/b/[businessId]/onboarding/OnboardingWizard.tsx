@@ -1,5 +1,6 @@
 "use client";
 
+import { useSearchParams } from "next/navigation";
 import { useEffect, useState, type ComponentType } from "react";
 
 import { api } from "@/api/client";
@@ -9,7 +10,7 @@ import { useBusiness } from "@/components/business/BusinessContext";
 import { ErrorState, LoadingBlock, PageHeader, useToast } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 
-import { GapsPanel } from "./_components/GapsPanel";
+import { GapsDrawer, GapsSummary } from "./_components/GapsPanel";
 import { StepNavigation } from "./_components/StepNavigation";
 import { BookingStep } from "./_components/steps/BookingStep";
 import { ChannelsStep } from "./_components/steps/ChannelsStep";
@@ -32,15 +33,27 @@ const STEP_COMPONENTS: Record<ProfileWizardStep, ComponentType<StepProps>> = {
 const KNOWLEDGE_STEPS: ReadonlySet<ProfileWizardStep> = new Set(["offer", "faq_and_handoff"]);
 
 function isWizardStep(value: string | null | undefined): value is ProfileWizardStep {
-  return value !== null && value !== undefined && value in STEP_COMPONENTS;
+  return value !== null && value !== undefined && Object.hasOwn(STEP_COMPONENTS, value);
+}
+
+/**
+ * Shows the step in the address (`?step=offer`) without a navigation. The
+ * null state lets Next.js sync useSearchParams (its own history state would
+ * make the router skip the update).
+ */
+function showStepInUrl(step: ProfileWizardStep): void {
+  const query = new URLSearchParams(window.location.search);
+  query.set("step", step);
+  window.history.replaceState(null, "", `${window.location.pathname}?${query.toString()}`);
 }
 
 /**
  * The six-step profile wizard (concept section 3), driven by
  * GET …/profile/wizard. Each step is saved on its own with
  * PUT …/profile/steps/{step}; "what to add" comes from GET …/profile/gaps.
+ * The open step is the `step` query parameter, else the first incomplete one.
  */
-export function OnboardingWizard({ initialStep }: { initialStep: string | null }) {
+export function OnboardingWizard() {
   const { t, locale } = useI18n();
   const toast = useToast();
   const { business, isOwner } = useBusiness();
@@ -68,8 +81,12 @@ export function OnboardingWizard({ initialStep }: { initialStep: string | null }
     [businessId, locale],
   );
 
-  const [chosenStep, setChosenStep] = useState<ProfileWizardStep | null>(isWizardStep(initialStep) ? initialStep : null);
-  const [isDirty, setDirty] = useState(false);
+  const searchParams = useSearchParams();
+  const requestedStep = searchParams.get("step");
+  const chosenStep = isWizardStep(requestedStep) ? requestedStep : null;
+  // The step whose form has unsaved edits (a link to another step drops them).
+  const [dirtyStep, setDirtyStep] = useState<ProfileWizardStep | null>(null);
+  const [isGapsListOpen, setGapsListOpen] = useState(false);
 
   const saveStep = useApiMutation((step: ProfileWizardStep, body: ProfileStepBody) =>
     api.PUT("/v1/businesses/{business_id}/profile/steps/{step}", {
@@ -77,6 +94,13 @@ export function OnboardingWizard({ initialStep }: { initialStep: string | null }
       body,
     }),
   );
+
+  const steps = [...(wizard.data?.steps ?? [])].sort((left, right) => left.number - right.number);
+  const firstIncomplete = steps.find((step) => !step.is_complete)?.step;
+  const activeStep: ProfileWizardStep | undefined = chosenStep ?? firstIncomplete ?? steps[0]?.step;
+  const activeIndex = steps.findIndex((step) => step.step === activeStep);
+  const active = steps[activeIndex];
+  const isDirty = dirtyStep !== null && dirtyStep === activeStep;
 
   useEffect(() => {
     if (!isDirty) {
@@ -87,16 +111,9 @@ export function OnboardingWizard({ initialStep }: { initialStep: string | null }
     return () => window.removeEventListener("beforeunload", warn);
   }, [isDirty]);
 
-  const steps = [...(wizard.data?.steps ?? [])].sort((left, right) => left.number - right.number);
-  const firstIncomplete = steps.find((step) => !step.is_complete)?.step;
-  const activeStep: ProfileWizardStep | undefined = chosenStep ?? firstIncomplete ?? steps[0]?.step;
-  const activeIndex = steps.findIndex((step) => step.step === activeStep);
-  const active = steps[activeIndex];
-
   const openStep = (step: ProfileWizardStep) => {
-    setDirty(false);
-    setChosenStep(step);
-    window.history.replaceState(window.history.state, "", `?step=${step}`);
+    setDirtyStep(null);
+    showStepInUrl(step);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
@@ -118,9 +135,11 @@ export function OnboardingWizard({ initialStep }: { initialStep: string | null }
     if (!result.ok) {
       return null;
     }
-    setDirty(false);
+    setDirtyStep(null);
     // Stay on this step when the reloaded wizard marks it complete.
-    setChosenStep(activeStep);
+    if (chosenStep !== activeStep) {
+      showStepInUrl(activeStep);
+    }
     toast.success(t("onboarding.savedStep"));
     wizard.reload();
     gaps.reload();
@@ -151,9 +170,16 @@ export function OnboardingWizard({ initialStep }: { initialStep: string | null }
           <LoadingBlock label={t("common.loading")} />
         )
       ) : (
-        <div className="grid gap-6 lg:grid-cols-[16rem_minmax(0,1fr)] xl:grid-cols-[16rem_minmax(0,1fr)_20rem]">
-          <div className="lg:sticky lg:top-6 lg:self-start">
+        <div className="grid gap-6 lg:grid-cols-[15rem_minmax(0,1fr)] lg:gap-8">
+          <div className="min-w-0 space-y-4 lg:sticky lg:top-6 lg:self-start">
             {activeStep ? <StepNavigation steps={steps} activeStep={activeStep} onSelect={goTo} /> : null}
+            <GapsSummary
+              gaps={gaps.data}
+              error={gaps.error}
+              isLoading={gaps.isLoading}
+              onShowList={() => setGapsListOpen(true)}
+              onRetry={gaps.reload}
+            />
           </div>
 
           <div className="min-w-0 space-y-4">
@@ -172,7 +198,7 @@ export function OnboardingWizard({ initialStep }: { initialStep: string | null }
                 isSaving={saveStep.isPending}
                 isLastStep={activeIndex === steps.length - 1}
                 onSave={onSave}
-                onChange={() => setDirty(true)}
+                onChange={() => setDirtyStep(activeStep)}
                 onProgressChanged={() => {
                   wizard.reload();
                   gaps.reload();
@@ -181,16 +207,16 @@ export function OnboardingWizard({ initialStep }: { initialStep: string | null }
             ) : null}
           </div>
 
-          <aside className="lg:col-span-2 xl:col-span-1 xl:sticky xl:top-6 xl:self-start">
-            <GapsPanel
-              gaps={gaps.data}
-              error={gaps.error}
-              isLoading={gaps.isLoading}
-              steps={steps}
-              onOpenStep={goTo}
-              onRetry={gaps.reload}
-            />
-          </aside>
+          <GapsDrawer
+            open={isGapsListOpen}
+            onClose={() => setGapsListOpen(false)}
+            gaps={gaps.data}
+            steps={steps}
+            onOpenStep={(step) => {
+              setGapsListOpen(false);
+              goTo(step);
+            }}
+          />
         </div>
       )}
     </>
