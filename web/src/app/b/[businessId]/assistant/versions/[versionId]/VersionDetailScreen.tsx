@@ -68,19 +68,22 @@ export function VersionDetailScreen({ versionId }: { versionId: string }) {
       }),
     [business.id, versionId],
   );
+  // A version built without autotests has no run yet (the API answers 404).
+  const hasRun = Boolean(version.data?.autotest_run_id) || version.data?.status === "testing";
   const run = useApiQuery(
     () =>
       api.GET("/v1/businesses/{business_id}/assistant-versions/{version_id}/autotest-run", {
         params: { path: { business_id: business.id, version_id: versionId } },
       }),
     [business.id, versionId],
+    { enabled: hasRun },
   );
 
   const [tab, setTab] = useState<DetailTab>("autotests");
   const [dialog, setDialog] = useState<Dialog>(null);
 
   const details = version.data;
-  const runData = run.error?.code === "not_found" ? null : (run.data ?? null);
+  const runData = !hasRun || run.error?.code === "not_found" ? null : (run.data ?? null);
   const isRunning = isRunInProgress(details?.status, runData);
 
   // While the worker plays the autotests, refresh the version and its run.
@@ -130,6 +133,11 @@ export function VersionDetailScreen({ versionId }: { versionId: string }) {
     versions.reload();
     // The business goes live and its published version changes.
     router.refresh();
+  };
+
+  const refreshState = () => {
+    version.reload();
+    versions.reload();
   };
 
   const copyInstruction = async () => {
@@ -240,7 +248,7 @@ export function VersionDetailScreen({ versionId }: { versionId: string }) {
           ]}
         >
           {tab === "autotests" ? (
-            run.isLoading && !run.data && !run.error ? (
+            hasRun && run.isLoading && !run.data && !run.error ? (
               <LoadingBlock label={t("common.loading")} />
             ) : run.error && run.error.code !== "not_found" && !run.data ? (
               <ErrorState error={run.error} onRetry={run.reload} />
@@ -349,10 +357,17 @@ export function VersionDetailScreen({ versionId }: { versionId: string }) {
           onClose={() => setDialog(null)}
           onPublished={afterGoLive}
           onRunAutotests={() => setDialog("autotests")}
+          onRefused={refreshState}
         />
       ) : null}
       {dialog === "rollback" ? (
-        <RollbackDialog version={details} liveNumber={liveNumber} onClose={() => setDialog(null)} onRolledBack={afterGoLive} />
+        <RollbackDialog
+          version={details}
+          liveNumber={liveNumber}
+          onClose={() => setDialog(null)}
+          onRolledBack={afterGoLive}
+          onRefused={refreshState}
+        />
       ) : null}
     </div>
   );

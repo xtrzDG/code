@@ -13,7 +13,6 @@ import { Card, Spinner } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import type { MessageKey } from "@/i18n/translate";
 import type { AssistantVersionStatus, PublishRefusal, PublishRefusalReason } from "@/lib/assistant";
-import { cn } from "@/lib/cn";
 import { businessPath } from "@/lib/navigation";
 
 type ProfileGapKind = Schema<"ProfileGapKind">;
@@ -57,14 +56,16 @@ function CheckRow({ state, title, detail, action }: { state: CheckState; title: 
   return (
     <li className="flex items-start gap-3 py-3">
       <span className="mt-0.5 shrink-0">{icon}</span>
-      <div className="min-w-0 flex-1">
-        <p className={cn("text-sm font-medium", state === "ok" ? "text-ink" : "text-ink")}>
-          {title}
-          <span className="sr-only">: {t(stateLabel[state])}</span>
-        </p>
-        {detail ? <div className="mt-0.5 text-sm text-ink-muted">{detail}</div> : null}
+      <div className="min-w-0 flex-1 sm:flex sm:items-center sm:justify-between sm:gap-4">
+        <div className="min-w-0">
+          <p className="text-sm font-medium text-ink">
+            {title}
+            <span className="sr-only">: {t(stateLabel[state])}</span>
+          </p>
+          {detail ? <div className="mt-0.5 text-sm text-ink-muted">{detail}</div> : null}
+        </div>
+        {action ? <div className="mt-1.5 sm:mt-0 sm:shrink-0">{action}</div> : null}
       </div>
-      {action ? <div className="shrink-0 self-center">{action}</div> : null}
     </li>
   );
 }
@@ -256,8 +257,8 @@ export function RefusalReasons({
                 ))}
               </ul>
             ) : null}
+            {links[reason] ? <div className="mt-1">{links[reason]}</div> : null}
           </div>
-          {links[reason] ? <div className="shrink-0">{links[reason]}</div> : null}
         </li>
       ))}
     </ul>

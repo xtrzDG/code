@@ -47,16 +47,18 @@ export function AssistantFrame({ children }: { children: ReactNode }) {
         }
       />
       {versions.data ? (
-        <p className="-mt-2 mb-5 flex flex-wrap items-center gap-2 text-sm text-ink-muted" aria-live="polite">
+        <p className="-mt-2 mb-5 flex items-start gap-2 text-sm text-ink-muted" aria-live="polite">
           <span
             aria-hidden
-            className={live ? "size-2.5 rounded-full bg-success" : "size-2.5 rounded-full bg-warning"}
+            className={live ? "mt-1.5 size-2.5 shrink-0 rounded-full bg-success" : "mt-1.5 size-2.5 shrink-0 rounded-full bg-warning"}
           />
-          {live
+          <span>
+            {live
             ? live.published_at
               ? t("assistant.liveSince", { number: live.version_number, date: format.dateTime(live.published_at) })
               : t("assistant.live", { number: live.version_number })
             : t("assistant.notLive")}
+          </span>
         </p>
       ) : null}
       <SectionTabs
@@ -67,10 +69,15 @@ export function AssistantFrame({ children }: { children: ReactNode }) {
         ]}
       />
       {children}
-      {isBuilding ? <BuildVersionDialog onClose={() => setBuilding(false)} onBuilt={() => {
-        setBuilding(false);
-        versions.reload();
-      }} /> : null}
+      {isBuilding ? (
+        <BuildVersionDialog
+          onClose={() => setBuilding(false)}
+          onBuilt={() => {
+            setBuilding(false);
+            versions.reload();
+          }}
+        />
+      ) : null}
     </AssistantContext.Provider>
   );
 }

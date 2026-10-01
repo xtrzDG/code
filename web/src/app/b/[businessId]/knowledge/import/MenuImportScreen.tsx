@@ -261,7 +261,9 @@ export function MenuImportScreen() {
     );
 
   const readFailure = readError
-    ? describeError(readError, t, { external_service_error: "knowledge.import.errors.service" })
+    ? describeError(readError, t, {
+        external_service_error: source === "link" ? "knowledge.import.errors.link" : "knowledge.import.errors.service",
+      })
     : null;
 
   if (done) {
@@ -357,14 +359,20 @@ export function MenuImportScreen() {
               name="menu-source"
               label={t("knowledge.import.sourceFile")}
               checked={source === "file"}
-              onChange={() => setSource("file")}
+              onChange={() => {
+                setSource("file");
+                setReadError(null);
+              }}
             />
             <Radio
               id={`${inputId}-source-link`}
               name="menu-source"
               label={t("knowledge.import.sourceLink")}
               checked={source === "link"}
-              onChange={() => setSource("link")}
+              onChange={() => {
+                setSource("link");
+                setReadError(null);
+              }}
             />
           </div>
         </fieldset>

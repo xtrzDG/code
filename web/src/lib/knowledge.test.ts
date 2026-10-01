@@ -53,12 +53,10 @@ describe("kinds", () => {
   });
 
   it("sorts by title in the UI language", () => {
-    expect(sortByTitle([{ title: "Хинкали" }, { title: "apple" }, { title: "Banana" }, { title: "Аджика" }], "ru").map((item) => item.title)).toEqual([
-      "apple",
-      "Banana",
-      "Аджика",
-      "Хинкали",
-    ]);
+    const items = [{ title: "Хинкали" }, { title: "apple" }, { title: "Banana" }, { title: "Аджика" }];
+    expect(sortByTitle(items, "en").map((item) => item.title)).toEqual(["apple", "Banana", "Аджика", "Хинкали"]);
+    // Russian collation puts Cyrillic first.
+    expect(sortByTitle(items, "ru").map((item) => item.title)).toEqual(["Аджика", "Хинкали", "apple", "Banana"]);
   });
 
   it("filters by kind and by whether the assistant uses the item", () => {

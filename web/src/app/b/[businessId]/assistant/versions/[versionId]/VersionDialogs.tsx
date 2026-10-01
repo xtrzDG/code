@@ -146,6 +146,7 @@ export function PublishDialog({
   onClose,
   onPublished,
   onRunAutotests,
+  onRefused,
 }: {
   version: AssistantVersionDetails;
   liveNumber: number | null;
@@ -153,6 +154,8 @@ export function PublishDialog({
   onClose: () => void;
   onPublished: (version: AssistantVersionDetails) => void;
   onRunAutotests: () => void;
+  /** The API refused: what the page shows may be out of date. */
+  onRefused: () => void;
 }) {
   const { t } = useI18n();
   const toast = useToast();
@@ -180,6 +183,7 @@ export function PublishDialog({
     const reasons = refusalOf(result.error);
     if (reasons) {
       setRefusal({ refusal: reasons, detail: result.error.detail });
+      onRefused();
     } else {
       toast.error(result.error);
     }
@@ -238,11 +242,13 @@ export function RollbackDialog({
   liveNumber,
   onClose,
   onRolledBack,
+  onRefused,
 }: {
   version: AssistantVersionDetails;
   liveNumber: number | null;
   onClose: () => void;
   onRolledBack: (version: AssistantVersionDetails) => void;
+  onRefused: () => void;
 }) {
   const { t } = useI18n();
   const toast = useToast();
@@ -268,6 +274,7 @@ export function RollbackDialog({
     const reasons = refusalOf(result.error);
     if (reasons) {
       setRefusal({ refusal: reasons, detail: result.error.detail });
+      onRefused();
     } else {
       toast.error(result.error);
     }

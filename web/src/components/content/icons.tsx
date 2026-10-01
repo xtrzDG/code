@@ -60,13 +60,6 @@ export const IconRefresh = (props: IconProps) => (
   </Icon>
 );
 
-export const IconQuestion = (props: IconProps) => (
-  <Icon {...props}>
-    <circle cx="12" cy="12" r="9" />
-    <path d="M9.5 9.5a2.5 2.5 0 114 2c-.9.6-1.5 1.2-1.5 2.2M12 16.8v.01" />
-  </Icon>
-);
-
 export const IconWrench = (props: IconProps) => (
   <Icon {...props}>
     <path d="M14.5 6.5a4 4 0 015.2 5.2l-1.5-1.5-2.3.6-.6 2.3 1.5 1.5a4 4 0 01-5.2-5.2L4 17.5 6.5 20l7.6-7.6" />

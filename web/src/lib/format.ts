@@ -135,7 +135,11 @@ export function weekdayName(weekday: number, locale: string, width: "long" | "sh
 
 /** "русский" -> "Русский" (names used as labels start with a capital). */
 export function capitalizeFirst(text: string, locale?: string): string {
-  return text.length > 0 ? text.charAt(0).toLocaleUpperCase(locale) + text.slice(1) : text;
+  // Georgian (Mkhedruli) has no capitals: uppercasing would give Mtavruli ("Ქართული").
+  if (text.length === 0 || /^[\u10D0-\u10FF]/.test(text)) {
+    return text;
+  }
+  return text.charAt(0).toLocaleUpperCase(locale) + text.slice(1);
 }
 
 /** A language tag as a label in the locale: languageName("ka", "ru") -> "Грузинский". */

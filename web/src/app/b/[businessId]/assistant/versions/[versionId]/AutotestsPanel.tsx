@@ -78,7 +78,13 @@ export function AutotestsPanel({
       <EmptyState
         icon={isRunning ? <Spinner size="md" /> : <IconFlask className="size-6" />}
         title={isRunning ? t("assistant.autotests.startingTitle") : t("assistant.autotests.noRunTitle")}
-        description={isRunning ? t("assistant.autotests.runningHint") : t("assistant.autotests.noRunDescription")}
+        description={
+          isRunning
+            ? t("assistant.autotests.runningHint")
+            : canRun
+              ? t("assistant.autotests.noRunDescription")
+              : t("assistant.autotests.noRunStaff")
+        }
         action={
           canRun && !isRunning ? (
             <Button leadingIcon={<IconFlask className="size-4" aria-hidden />} onClick={onRun}>
