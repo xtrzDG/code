@@ -1,0 +1,137 @@
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyc
+*.pyo
+*.pyd
+
+# C extensions
+*.so
+
+# Virtual environments
+.venv/
+.venv-*/
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+__pypackages__/
+
+# Python build and packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.ruff_cache/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+*.egg
+*.whl
+*.tar.gz
+.installed.cfg
+MANIFEST
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Testing and coverage
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache/
+htmlcov/
+coverage/
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+.playwright-cli/
+.playwright/
+playwright-report/
+test-results/
+output/
+
+# Type checkers and linters
+.mypy_cache/
+.dmypy.json
+dmypy.json
+.pyre/
+.pyright/
+.pytest_cache/
+.ruff_cache/
+
+# Python tools and frameworks
+instance/
+.webassets-cache/
+.scrapy/
+docs/_build/
+target/
+.ipynb_checkpoints/
+profile_default/
+ipython_config.py
+.python-version
+celerybeat-schedule
+celerybeat.pid
+*.sage.py
+*.mo
+*.pot
+
+# Local databases and logs
+*.log
+db.sqlite3
+db.sqlite3-journal
+mongodb/
+
+# Node and frontend
+node_modules/
+.pnpm-store/
+.yarn/
+.next/
+.nuxt/
+.svelte-kit/
+.vite/
+.turbo/
+.vercel/
+.parcel-cache/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Editor and local workspace
+.dev_tools/
+.vscode/
+.idea/
+*.code-workspace
+
+# Environment and secrets
+.env
+.env.*
+*.env
+llm.env
+mongo.env
+mongo.agent.env
+!.env.example
+!.env.*.example
+!*env.example
+
+# OS artifacts
+.DS_Store
+Thumbs.db
+Desktop.ini
