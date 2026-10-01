@@ -61,7 +61,7 @@ web/
     proxy.ts                   runs before pages: sign-in redirects, current path header, language cookie
     app/                       routes (App Router)
       layout.tsx               <html lang>, I18nProvider, ToastProvider
-      login/                   sign-in by phone (country picker) or e-mail, 6-digit code
+      login/                   sign-in by phone (country picker, only the code channels that work now) or e-mail, 6-digit code
       businesses/              list and creation of businesses
       b/[businessId]/          one business: layout.tsx loads it + the user and renders the sidebar
         onboarding/            the six-step profile wizard (+ _components/)
@@ -234,6 +234,21 @@ Tailwind CSS v4 with semantic tokens defined in `src/app/globals.css`
 They follow the system light/dark scheme, so `dark:` variants are rarely
 needed. Layouts are mobile-first: the sidebar becomes a drawer below `lg`.
 Use semantic HTML, visible focus, and labels for icon-only buttons.
+
+## Channels and sign-in
+
+- `/b/[businessId]/channels`: channel cards (a channel in `error` shows when it
+  stopped and what the platform said), the website chat's look (colour, corner,
+  a sketch and a link to the API's `/widget/demo` with the unsaved choices) and
+  embed code, call forwarding, Google Calendar (connection, calendar, last sync
+  and its error) and staff Telegram links. Google's consent page returns to
+  `?calendar=connected` or `?calendar=error&reason=…`; `page.tsx` reads it, the
+  screen shows it once and removes it from the address. The API needs
+  `CABINET_BASE_URL` set to this cabinet's public address for that return.
+- `/login` asks `GET /v1/auth/login-options` for the chosen country: the method
+  switch hides e-mail when it cannot deliver codes, the phone form offers a
+  channel choice when several work, and explains when none does. Helpers with
+  tests are in `src/app/login/_lib/loginOptions.ts`.
 
 ## Security notes
 

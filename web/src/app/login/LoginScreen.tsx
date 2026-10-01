@@ -5,10 +5,12 @@ import { z } from "zod";
 
 import { startLogin, verifyLogin } from "@/api/auth";
 import { useCountries } from "@/api/catalog";
+import { api } from "@/api/client";
 import { errorMessageKey, toApiError } from "@/api/errors";
+import { useApiQuery } from "@/api/hooks";
 import type { OtpChallengeView, OtpDeliveryChannel } from "@/api/types";
 import { CountrySelect } from "@/components/CountrySelect";
-import { Alert, Button, Card, Field, Input, Spinner, useToast } from "@/components/ui";
+import { Alert, Button, Card, Field, Fieldset, Input, Spinner, useToast } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import type { MessageKey } from "@/i18n/translate";
 import { cn } from "@/lib/cn";
@@ -24,6 +26,15 @@ import {
   type LoginMethod,
 } from "@/lib/countries";
 import { messageKey } from "@/lib/validation";
+
+import {
+  chooseDeliveryChannel,
+  effectiveLoginMethod,
+  isEmailLoginOffered,
+  isSignInUnavailable,
+  phoneLoginBlock,
+  withDeliveryChannel,
+} from "./_lib/loginOptions";
 
 /** The API refuses a second code for the same destination within 30 s. */
 const RESEND_INTERVAL_MS = 30_000;
@@ -64,7 +75,8 @@ export function LoginScreen({ next, sessionExpired }: { next: string; sessionExp
   const toast = useToast();
   const countries = useCountries();
 
-  const [method, setMethod] = useState<LoginMethod>("phone");
+  const [chosenMethod, setMethod] = useState<LoginMethod>("phone");
+  const [chosenChannel, setChosenChannel] = useState<OtpDeliveryChannel | null>(null);
   const [chosenCountry, setChosenCountry] = useState<string | null>(null);
   const [phoneNumber, setPhoneNumber] = useState("");
   const [email, setEmail] = useState("");
@@ -89,6 +101,21 @@ export function LoginScreen({ next, sessionExpired }: { next: string; sessionExp
   const countryCode = chosenCountry ?? guessedCountry;
   const country = countryList.find((item) => item.country_code === countryCode);
 
+  // Which ways can deliver a code right now (for the chosen country). The
+  // page works without it: a failed check offers everything, as before.
+  const loginOptions = useApiQuery(
+    () => api.GET("/v1/auth/login-options", { params: { query: countryCode ? { country_code: countryCode } : {} } }),
+    [countryCode],
+  );
+  const options = loginOptions.data;
+  const method = effectiveLoginMethod(chosenMethod, options);
+  const isEmailOffered = isEmailLoginOffered(options);
+  const phoneBlock = phoneLoginBlock(options);
+  const phoneChannels = options?.phone_channels ?? [];
+  const deliveryChannel = chooseDeliveryChannel(phoneChannels, chosenChannel);
+  const isUnavailable = isSignInUnavailable(options);
+  const canSend = !isUnavailable && (method === "email" || phoneBlock === null);
+
   const resendAt = codeStage ? codeStage.sentAt + RESEND_INTERVAL_MS : 0;
   const secondsUntilResend = Math.max(0, Math.ceil((resendAt - now) / 1000));
 
@@ -105,7 +132,12 @@ export function LoginScreen({ next, sessionExpired }: { next: string; sessionExp
     setSending(true);
     try {
       const challenge = await startLogin(
-        buildOtpStartBody({ method, phoneNumber, email, countryCode, locale }),
+        withDeliveryChannel(
+          buildOtpStartBody({ method, phoneNumber, email, countryCode, locale }),
+          method,
+          phoneChannels,
+          deliveryChannel,
+        ),
       );
       const sentAt = Date.now();
       setNow(sentAt);
@@ -130,6 +162,9 @@ export function LoginScreen({ next, sessionExpired }: { next: string; sessionExp
 
   async function onSubmitDestination(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (!canSend) {
+      return;
+    }
     const parsed = (method === "phone" ? PhoneSchema : EmailSchema).safeParse(
       method === "phone" ? phoneNumber : email,
     );
@@ -258,8 +293,14 @@ export function LoginScreen({ next, sessionExpired }: { next: string; sessionExp
         </Alert>
       ) : null}
 
+      {isUnavailable ? (
+        <Alert tone="warning" className="mb-5">
+          {t("loginOptions.nothingAvailable")}
+        </Alert>
+      ) : null}
+
       <form noValidate className="space-y-5" onSubmit={onSubmitDestination}>
-        <fieldset>
+        <fieldset hidden={!isEmailOffered}>
           <legend className="sr-only">{t("auth.methodLabel")}</legend>
           <div className="grid grid-cols-2 gap-1 rounded-xl bg-surface-muted p-1">
             {(["phone", "email"] as const).map((option) => (
@@ -352,6 +393,51 @@ export function LoginScreen({ next, sessionExpired }: { next: string; sessionExp
                 </div>
               )}
             </Field>
+            {phoneBlock !== null && !isUnavailable ? (
+              <Alert tone="warning">
+                <p>{phoneBlock === "restricted" ? t("loginOptions.restricted") : t("loginOptions.noPhoneChannels")}</p>
+                {isEmailOffered ? (
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    className="mt-3"
+                    onClick={() => {
+                      setMethod("email");
+                      setDestinationError(null);
+                    }}
+                  >
+                    {t("loginOptions.useEmail")}
+                  </Button>
+                ) : null}
+              </Alert>
+            ) : null}
+            {phoneBlock === null && phoneChannels.length > 1 ? (
+              <Fieldset legend={t("loginOptions.channelLabel")}>
+                <div className="flex flex-wrap gap-2">
+                  {phoneChannels.map((channel) => (
+                    <label
+                      key={channel}
+                      className={cn(
+                        "flex cursor-pointer items-center rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-focus",
+                        deliveryChannel === channel
+                          ? "border-accent bg-accent-soft text-accent"
+                          : "border-line text-ink-muted hover:text-ink",
+                      )}
+                    >
+                      <input
+                        type="radio"
+                        name="delivery-channel"
+                        value={channel}
+                        checked={deliveryChannel === channel}
+                        onChange={() => setChosenChannel(channel)}
+                        className="sr-only"
+                      />
+                      {t(DELIVERY_CHANNEL_LABELS[channel])}
+                    </label>
+                  ))}
+                </div>
+              </Fieldset>
+            ) : null}
           </>
         ) : (
           <Field label={t("auth.email")} error={destinationError ? t(destinationError) : undefined}>
@@ -372,7 +458,14 @@ export function LoginScreen({ next, sessionExpired }: { next: string; sessionExp
           </Field>
         )}
 
-        <Button type="submit" fullWidth size="lg" isLoading={isSending} loadingText={t("auth.sendingCode")}>
+        <Button
+          type="submit"
+          fullWidth
+          size="lg"
+          isLoading={isSending}
+          loadingText={t("auth.sendingCode")}
+          disabled={!canSend}
+        >
           {t("auth.sendCode")}
         </Button>
       </form>

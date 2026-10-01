@@ -2119,29 +2119,98 @@
         "title": "CalendarConnectUrlView",
         "type": "object"
       },
-      "CalendarConnectionView": {
+      "CalendarConnectionStatusView": {
         "additionalProperties": false,
-        "description": "A connected calendar of a business.",
+        "description": "Whether Google Calendar is connected and how syncing goes. Tokens are\nnever returned.\n\n`is_configured` tells whether this server can connect Google Calendar\nat all (Google OAuth credentials and APP_BASE_URL are set). The sync\nerror is a short provider reason; it clears after the next booking that\nsyncs.",
         "properties": {
           "business_id": {
             "title": "Business Id",
             "type": "string"
           },
           "calendar_id": {
-            "title": "Calendar Id",
-            "type": "string"
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Calendar Id"
+          },
+          "calendar_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Calendar Name"
           },
           "connected_at": {
-            "title": "Connected At",
-            "type": "integer"
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Connected At"
+          },
+          "is_configured": {
+            "title": "Is Configured",
+            "type": "boolean"
+          },
+          "is_connected": {
+            "title": "Is Connected",
+            "type": "boolean"
+          },
+          "last_sync_error": {
+            "anyOf": [
+              {
+                "maxLength": 300,
+                "minLength": 1,
+                "pattern": "\\S",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Sync Error"
+          },
+          "last_sync_error_at": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Sync Error At"
+          },
+          "last_synced_at": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Synced At"
           }
         },
         "required": [
           "business_id",
-          "calendar_id",
-          "connected_at"
+          "is_configured",
+          "is_connected"
         ],
-        "title": "CalendarConnectionView",
+        "title": "CalendarConnectionStatusView",
         "type": "object"
       },
       "CalendarDisconnectResult": {
@@ -2604,7 +2673,7 @@
       },
       "ChannelView": {
         "additionalProperties": false,
-        "description": "A channel as the cabinet shows it; credentials are never returned.\n\n`account_id` is the public account inside the channel: bot username,\nWhatsApp phone number id, page id, Instagram account id, or the E.164\nnumber of the assistant line.",
+        "description": "A channel as the cabinet shows it; credentials are never returned.\n\n`account_id` is the public account inside the channel: bot username,\nWhatsApp phone number id, page id, Instagram account id, or the E.164\nnumber of the assistant line. With status ERROR, `last_error` is the\nplatform's short reason (no secrets) and `last_error_at` its time. The\nwebsite chat also reports its saved colour and launcher corner (None:\nthe widget's defaults).",
         "properties": {
           "account_id": {
             "anyOf": [
@@ -2632,12 +2701,61 @@
             "title": "Id",
             "type": "string"
           },
+          "last_error": {
+            "anyOf": [
+              {
+                "maxLength": 300,
+                "minLength": 1,
+                "pattern": "\\S",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Error"
+          },
+          "last_error_at": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Error At"
+          },
           "status": {
             "$ref": "#/components/schemas/ChannelStatus"
           },
           "updated_at": {
             "title": "Updated At",
             "type": "integer"
+          },
+          "widget_color": {
+            "anyOf": [
+              {
+                "maxLength": 7,
+                "minLength": 7,
+                "pattern": "^#[0-9a-fA-F]{6}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Widget Color"
+          },
+          "widget_position": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/WidgetPosition"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "required": [
@@ -5481,6 +5599,61 @@
         "title": "LoginMethod",
         "type": "string"
       },
+      "LoginOptionsView": {
+        "additionalProperties": false,
+        "description": "The login-code channels that work right now: the country's channels\nthat have a configured provider (all configured phone channels when no\ncountry is given), in the order they are tried, and whether e-mail\nsign-in works. `is_sign_up_restricted` is true for a country whose\nnumbers cannot sign in at all. `configured_channels` are all channels\nwith a provider, for any country (empty: sign-in is down everywhere).",
+        "properties": {
+          "configured_channels": {
+            "items": {
+              "$ref": "#/components/schemas/OtpDeliveryChannel"
+            },
+            "title": "Configured Channels",
+            "type": "array"
+          },
+          "country_code": {
+            "anyOf": [
+              {
+                "maxLength": 2,
+                "minLength": 2,
+                "pattern": "^[A-Z]{2}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Country Code"
+          },
+          "is_email_login_available": {
+            "title": "Is Email Login Available",
+            "type": "boolean"
+          },
+          "is_phone_login_available": {
+            "title": "Is Phone Login Available",
+            "type": "boolean"
+          },
+          "is_sign_up_restricted": {
+            "default": false,
+            "title": "Is Sign Up Restricted",
+            "type": "boolean"
+          },
+          "phone_channels": {
+            "items": {
+              "$ref": "#/components/schemas/OtpDeliveryChannel"
+            },
+            "title": "Phone Channels",
+            "type": "array"
+          }
+        },
+        "required": [
+          "phone_channels",
+          "configured_channels",
+          "is_phone_login_available",
+          "is_email_login_available"
+        ],
+        "title": "LoginOptionsView",
+        "type": "object"
+      },
       "LoginSessionView": {
         "additionalProperties": false,
         "description": "A new session. The bearer token is shown only here; the server keeps\nnothing but its hash.",
@@ -7722,8 +7895,22 @@
       },
       "WidgetConfigView": {
         "additionalProperties": false,
-        "description": "Public configuration the widget script loads before it shows itself.",
+        "description": "Public configuration the widget script loads before it shows itself.\n\n`business_name` is the name visitors see in the widget header.\n`greetings` holds the first message in the languages the live assistant\nanswers in (the business languages before anything is published) where\na text exists; the widget uses its own text for the others. `accent_color`\nand `position` are the owner's choices (None: the widget's defaults); the\nembed tag's data-color and data-position still win.",
         "properties": {
+          "accent_color": {
+            "anyOf": [
+              {
+                "maxLength": 7,
+                "minLength": 7,
+                "pattern": "^#[0-9a-fA-F]{6}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Accent Color"
+          },
           "business_id": {
             "title": "Business Id",
             "type": "string"
@@ -7739,6 +7926,13 @@
             "title": "Default Language",
             "type": "string"
           },
+          "greetings": {
+            "items": {
+              "$ref": "#/components/schemas/WidgetGreetingView"
+            },
+            "title": "Greetings",
+            "type": "array"
+          },
           "is_enabled": {
             "title": "Is Enabled",
             "type": "boolean"
@@ -7749,6 +7943,16 @@
             },
             "title": "Languages",
             "type": "array"
+          },
+          "position": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/WidgetPosition"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "required": [
@@ -7756,9 +7960,37 @@
           "business_name",
           "is_enabled",
           "default_language",
-          "languages"
+          "languages",
+          "greetings"
         ],
         "title": "WidgetConfigView",
+        "type": "object"
+      },
+      "WidgetGreetingView": {
+        "additionalProperties": false,
+        "description": "The widget's first message in one customer language.",
+        "properties": {
+          "direction": {
+            "$ref": "#/components/schemas/TextDirection"
+          },
+          "language": {
+            "maxLength": 16,
+            "minLength": 2,
+            "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$",
+            "title": "Language",
+            "type": "string"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "language",
+          "text",
+          "direction"
+        ],
+        "title": "WidgetGreetingView",
         "type": "object"
       },
       "WidgetLanguageView": {
@@ -7788,13 +8020,119 @@
         "title": "WidgetLanguageView",
         "type": "object"
       },
+      "WidgetMessageView": {
+        "additionalProperties": false,
+        "description": "An assistant or staff message as the widget shows it.",
+        "properties": {
+          "author": {
+            "$ref": "#/components/schemas/MessageAuthor"
+          },
+          "created_at": {
+            "title": "Created At",
+            "type": "integer"
+          },
+          "direction": {
+            "$ref": "#/components/schemas/TextDirection"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "language": {
+            "anyOf": [
+              {
+                "maxLength": 16,
+                "minLength": 2,
+                "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Language"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "author",
+          "text",
+          "direction",
+          "created_at"
+        ],
+        "title": "WidgetMessageView",
+        "type": "object"
+      },
+      "WidgetMessagesView": {
+        "additionalProperties": false,
+        "description": "New assistant and staff messages, oldest first (at most a page; poll\nagain with `cursor` while `has_more`). `cursor` is the position to poll\nafter next time (None while the visitor has no conversation);\n`is_handed_off` tells whether staff currently handle the conversation.",
+        "properties": {
+          "cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cursor"
+          },
+          "has_more": {
+            "default": false,
+            "title": "Has More",
+            "type": "boolean"
+          },
+          "is_handed_off": {
+            "default": false,
+            "title": "Is Handed Off",
+            "type": "boolean"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/WidgetMessageView"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "WidgetMessagesView",
+        "type": "object"
+      },
+      "WidgetPosition": {
+        "description": "Corner of the page where the website chat launcher sits.",
+        "enum": [
+          "left",
+          "right"
+        ],
+        "title": "WidgetPosition",
+        "type": "string"
+      },
       "WidgetReplyView": {
         "additionalProperties": false,
-        "description": "The assistant's answer in the widget.\n\n`text` is None while staff handle the conversation; `direction` tells the\nwidget how to lay the answer out (right-to-left for Hebrew, Arabic, ...).",
+        "description": "The assistant's answer in the widget.\n\n`text` is None while staff handle the conversation; `direction` tells the\nwidget how to lay the answer out (right-to-left for Hebrew, Arabic, ...).\n`message_id` is the stored answer (None without one); `cursor` is the\nvisitor's message, so polling GET .../messages?after=<cursor> returns\nthe answer again (skip it by id) and every staff message written since.",
         "properties": {
           "conversation_id": {
             "title": "Conversation Id",
             "type": "string"
+          },
+          "cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cursor"
           },
           "direction": {
             "$ref": "#/components/schemas/TextDirection"
@@ -7809,6 +8147,17 @@
             "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$",
             "title": "Language",
             "type": "string"
+          },
+          "message_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message Id"
           },
           "text": {
             "anyOf": [
@@ -7834,10 +8183,17 @@
       },
       "WidgetSnippetView": {
         "additionalProperties": false,
-        "description": "Embed code the owner pastes into the website.",
+        "description": "Embed code the owner pastes into the website, and the page that shows\nthe widget as visitors see it (it accepts `color`, `position` and\n`language` to preview unsaved choices).",
         "properties": {
           "business_id": {
             "title": "Business Id",
+            "type": "string"
+          },
+          "demo_url": {
+            "maxLength": 2048,
+            "minLength": 14,
+            "pattern": "^https?://[^\\s/]+(/[^\\s]*)?/widget/demo\\?business_id=[^\\s&]+$",
+            "title": "Demo Url",
             "type": "string"
           },
           "script_url": {
@@ -7855,7 +8211,8 @@
         "required": [
           "business_id",
           "script_url",
-          "snippet"
+          "snippet",
+          "demo_url"
         ],
         "title": "WidgetSnippetView",
         "type": "object"
@@ -8108,6 +8465,55 @@
         "summary": "Open Client Cabinet",
         "tags": [
           "admin"
+        ]
+      }
+    },
+    "/v1/auth/login-options": {
+      "get": {
+        "operationId": "get_login_options_v1_auth_login_options_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "country_code",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Country Code"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginOptionsView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Login Options",
+        "tags": [
+          "auth"
         ]
       }
     },
@@ -10900,7 +11306,7 @@
             "application/json": {
               "schema": {
                 "additionalProperties": false,
-                "description": "HTTP body that connects a channel; the fields needed depend on the kind.\n\n- telegram: `bot_token` from @BotFather.\n- whatsapp: `phone_number_id` from Embedded Signup and, to subscribe the\n  app to its webhooks, `whatsapp_business_account_id`.\n- messenger, instagram: `page_id` and `page_access_token` (Facebook\n  Login); Instagram uses the professional account linked to the page.\n- phone: `phone_number` of the assistant line (any country; national\n  formats are read in `country_hint` or the business country).\n- web_chat: nothing.",
+                "description": "HTTP body that connects a channel; the fields needed depend on the kind.\n\n- telegram: `bot_token` from @BotFather.\n- whatsapp: `phone_number_id` from Embedded Signup and, to subscribe the\n  app to its webhooks, `whatsapp_business_account_id`.\n- messenger, instagram: `page_id` and `page_access_token` (Facebook\n  Login); Instagram uses the professional account linked to the page.\n- phone: `phone_number` of the assistant line (any country; national\n  formats are read in `country_hint` or the business country).\n- web_chat: nothing to switch it on; optionally `widget_color` (hex brand\n  colour) and `widget_position` (left or right) for the widget. Fields\n  left out keep their saved values.",
                 "properties": {
                   "bot_token": {
                     "anyOf": [
@@ -10990,6 +11396,36 @@
                       }
                     ],
                     "title": "Whatsapp Business Account Id"
+                  },
+                  "widget_color": {
+                    "anyOf": [
+                      {
+                        "maxLength": 7,
+                        "minLength": 7,
+                        "pattern": "^#[0-9a-fA-F]{6}$",
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Widget Color"
+                  },
+                  "widget_position": {
+                    "anyOf": [
+                      {
+                        "description": "Corner of the page where the website chat launcher sits.",
+                        "enum": [
+                          "left",
+                          "right"
+                        ],
+                        "title": "WidgetPosition",
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
                   }
                 },
                 "title": "ConnectChannelRequest",
@@ -11837,6 +12273,62 @@
           }
         },
         "summary": "Delete Google Calendar",
+        "tags": [
+          "operations"
+        ]
+      },
+      "get": {
+        "operationId": "get_google_calendar_v1_businesses__business_id__integrations_google_calendar_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CalendarConnectionStatusView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Google Calendar",
         "tags": [
           "operations"
         ]
@@ -16494,15 +16986,8 @@
           }
         ],
         "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CalendarConnectionView"
-                }
-              }
-            },
-            "description": "Successful Response"
+          "303": {
+            "description": "Back to the cabinet: /b/{business_id}/channels?calendar=connected, or ?calendar=error&reason=<reason>."
           },
           "422": {
             "content": {
@@ -17008,6 +17493,71 @@
       }
     },
     "/v1/widget/{business_id}/messages": {
+      "get": {
+        "operationId": "list_widget_messages_v1_widget__business_id__messages_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "session_key",
+            "required": true,
+            "schema": {
+              "title": "Session Key",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "after",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "After"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WidgetMessagesView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Widget Messages",
+        "tags": [
+          "channels"
+        ]
+      },
       "post": {
         "operationId": "send_widget_message_v1_widget__business_id__messages_post",
         "parameters": [
