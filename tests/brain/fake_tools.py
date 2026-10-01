@@ -167,6 +167,9 @@ class FakeBookings:
             source_channel=command.source_channel,
             notes=command.notes,
             is_sandbox=command.is_sandbox,
+            conversation_id=command.conversation_id,
+            language=command.language,
+            created_at=Microseconds(1_790_000_000_000_000),
         )
         self.bookings[booking.id] = booking
         return BookingResult(

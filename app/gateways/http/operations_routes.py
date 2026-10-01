@@ -3,18 +3,29 @@ handoffs, unanswered questions, dashboard and Google Calendar.
 
 Path and query parameters arrive as raw strings and are converted to typed
 primitives here (the transport boundary). JSON bodies are validated in JSON
-mode, so enum values and typed strings parse strictly from their wire form.
+mode, so enum values and typed strings parse strictly from their wire form,
+and are described for OpenAPI so the cabinet's generated client knows them.
+Lists are paged with `?limit=N&cursor=…`.
 """
 
-from collections.abc import Awaitable, Callable
+from collections.abc import Callable
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Query, Request
-from pydantic import BaseModel, ValidationError
+from fastapi import APIRouter, Depends, Query
 
 from app.contracts.operator_contract import OperatorContract
+from app.gateways.http.paging_query import parse_page_request
+from app.gateways.http.strict_request_parsing import (
+    build_json_body_dependency,
+    describe_json_body,
+)
 from app.gateways.http.user_authentication import CurrentUserDependency
-from app.schemas.constants.bookings import BookingStatus, LeadStatus, ResourceKind
+from app.schemas.constants.bookings import (
+    BookingOrder,
+    BookingStatus,
+    LeadStatus,
+    ResourceKind,
+)
 from app.schemas.constants.handoffs import HandoffStatus
 from app.schemas.constants.users import BusinessMemberRole
 from app.schemas.domain.businesses import BusinessDocument
@@ -32,7 +43,7 @@ from app.schemas.dto.operations import (
     AnsweredQuestionResult,
     AnswerUnansweredQuestionCommand,
     AnswerUnansweredQuestionRequest,
-    BookingListView,
+    BookingPage,
     CalendarConnectionView,
     CalendarConnectUrlView,
     CalendarDisconnectResult,
@@ -41,8 +52,8 @@ from app.schemas.dto.operations import (
     DashboardStatsQuery,
     DisconnectCalendarCommand,
     HandoffListItem,
-    HandoffListView,
-    LeadListView,
+    HandoffPage,
+    LeadPage,
     ListBookingsQuery,
     ListHandoffsQuery,
     ListLeadsQuery,
@@ -53,8 +64,8 @@ from app.schemas.dto.operations import (
     ResolveHandoffCommand,
     StartCalendarConnectionCommand,
     UnansweredQuestionListView,
-    UpdateBookingStatusCommand,
-    UpdateBookingStatusRequest,
+    UpdateBookingCommand,
+    UpdateBookingRequest,
     UpdateLeadStatusCommand,
     UpdateLeadStatusRequest,
 )
@@ -85,6 +96,12 @@ FALSE_QUERY_VALUES: frozenset[str] = frozenset({"0", "false", "no", "off"})
 
 type OptionalQuery = Annotated[str | None, Query()]
 
+read_manual_booking_body = build_json_body_dependency(ManualBookingRequest)
+read_reschedule_body = build_json_body_dependency(RescheduleBookingRequest)
+read_booking_update_body = build_json_body_dependency(UpdateBookingRequest)
+read_lead_status_body = build_json_body_dependency(UpdateLeadStatusRequest)
+read_answer_body = build_json_body_dependency(AnswerUnansweredQuestionRequest)
+
 
 def build_operations_router(
     *,
@@ -93,14 +110,14 @@ def build_operations_router(
         BusinessAccessRequest, BusinessDocument
     ],
     check_availability: OperatorContract[AvailabilityQuery, AvailabilityResult],
-    list_bookings: OperatorContract[ListBookingsQuery, BookingListView],
+    list_bookings: OperatorContract[ListBookingsQuery, BookingPage],
     create_manual_booking: OperatorContract[ManualBookingCommand, BookingResult],
     cancel_booking: OperatorContract[CancelBookingCommand, BookingResult],
     reschedule_booking: OperatorContract[RescheduleBookingCommand, BookingResult],
-    update_booking_status: OperatorContract[UpdateBookingStatusCommand, BookingView],
-    list_leads: OperatorContract[ListLeadsQuery, LeadListView],
+    update_booking: OperatorContract[UpdateBookingCommand, BookingView],
+    list_leads: OperatorContract[ListLeadsQuery, LeadPage],
     update_lead_status: OperatorContract[UpdateLeadStatusCommand, LeadView],
-    list_handoffs: OperatorContract[ListHandoffsQuery, HandoffListView],
+    list_handoffs: OperatorContract[ListHandoffsQuery, HandoffPage],
     resolve_handoff: OperatorContract[ResolveHandoffCommand, HandoffListItem],
     list_unanswered_questions: OperatorContract[
         ListUnansweredQuestionsQuery, UnansweredQuestionListView
@@ -150,6 +167,7 @@ def build_operations_router(
         resource_kind: OptionalQuery = None,
         duration_minutes: OptionalQuery = None,
         nights: OptionalQuery = None,
+        full_day: OptionalQuery = None,
     ) -> AvailabilityResult:
         business: BusinessDocument = authorize(user_id, business_id)
         return check_availability.operate(
@@ -166,6 +184,7 @@ def build_operations_router(
                     duration_minutes, BookingDurationMinutes, "duration_minutes"
                 ),
                 nights=parse_optional_integer(nights, NightCount, "nights"),
+                full_day=parse_flag(full_day, "full_day"),
             )
         )
 
@@ -176,8 +195,12 @@ def build_operations_router(
         date_from: Annotated[str | None, Query(alias="from")] = None,
         date_to: Annotated[str | None, Query(alias="to")] = None,
         status: OptionalQuery = None,
+        resource_id: OptionalQuery = None,
         include_sandbox: OptionalQuery = None,
-    ) -> BookingListView:
+        order: OptionalQuery = None,
+        limit: OptionalQuery = None,
+        cursor: OptionalQuery = None,
+    ) -> BookingPage:
         business: BusinessDocument = authorize(user_id, business_id)
         return list_bookings.operate(
             ListBookingsQuery(
@@ -186,17 +209,23 @@ def build_operations_router(
                 date_from=parse_optional_text(date_from, LocalDate, "from"),
                 date_to=parse_optional_text(date_to, LocalDate, "to"),
                 status=parse_optional_text(status, BookingStatus, "status"),
+                resource_id=parse_optional_text(resource_id, ResourceId, "resource_id"),
                 include_sandbox=parse_flag(include_sandbox, "include_sandbox"),
+                order=parse_optional_text(order, BookingOrder, "order")
+                or BookingOrder.EARLIEST_FIRST,
+                page=parse_page_request(limit, cursor),
             )
         )
 
-    @router.post(f"{BUSINESS_PREFIX}/bookings", status_code=201)
+    @router.post(
+        f"{BUSINESS_PREFIX}/bookings",
+        status_code=201,
+        openapi_extra=describe_json_body(ManualBookingRequest),
+    )
     def post_booking(
         business_id: str,
         user_id: Annotated[UserId, Depends(current_user)],
-        body: Annotated[
-            ManualBookingRequest, Depends(json_body_reader(ManualBookingRequest))
-        ],
+        body: Annotated[ManualBookingRequest, Depends(read_manual_booking_body)],
     ) -> BookingResult:
         business: BusinessDocument = authorize(user_id, business_id)
         return create_manual_booking.operate(
@@ -215,6 +244,8 @@ def build_operations_router(
                 notes=body.notes,
                 source_channel=body.source_channel,
                 language=body.language,
+                country_hint=body.country_hint,
+                conversation_id=body.conversation_id,
             )
         )
 
@@ -235,15 +266,15 @@ def build_operations_router(
             )
         )
 
-    @router.post(f"{BUSINESS_PREFIX}/bookings/{{booking_id}}/reschedule")
+    @router.post(
+        f"{BUSINESS_PREFIX}/bookings/{{booking_id}}/reschedule",
+        openapi_extra=describe_json_body(RescheduleBookingRequest),
+    )
     def post_booking_reschedule(
         business_id: str,
         booking_id: str,
         user_id: Annotated[UserId, Depends(current_user)],
-        body: Annotated[
-            RescheduleBookingRequest,
-            Depends(json_body_reader(RescheduleBookingRequest)),
-        ],
+        body: Annotated[RescheduleBookingRequest, Depends(read_reschedule_body)],
         language: OptionalQuery = None,
     ) -> BookingResult:
         business: BusinessDocument = authorize(user_id, business_id)
@@ -258,23 +289,27 @@ def build_operations_router(
             )
         )
 
-    @router.patch(f"{BUSINESS_PREFIX}/bookings/{{booking_id}}")
+    @router.patch(
+        f"{BUSINESS_PREFIX}/bookings/{{booking_id}}",
+        openapi_extra=describe_json_body(UpdateBookingRequest),
+    )
     def patch_booking(
         business_id: str,
         booking_id: str,
         user_id: Annotated[UserId, Depends(current_user)],
-        body: Annotated[
-            UpdateBookingStatusRequest,
-            Depends(json_body_reader(UpdateBookingStatusRequest)),
-        ],
+        body: Annotated[UpdateBookingRequest, Depends(read_booking_update_body)],
     ) -> BookingView:
         business: BusinessDocument = authorize(user_id, business_id)
-        return update_booking_status.operate(
-            UpdateBookingStatusCommand(
+        return update_booking.operate(
+            UpdateBookingCommand(
                 business_id=business.id,
                 actor_id=user_id,
                 booking_id=parse_path_id(booking_id, BookingId, "Booking"),
                 status=body.status,
+                party_size=body.party_size,
+                resource_id=body.resource_id,
+                notes=body.notes,
+                contact_name=body.contact_name,
             )
         )
 
@@ -284,7 +319,9 @@ def build_operations_router(
         user_id: Annotated[UserId, Depends(current_user)],
         status: OptionalQuery = None,
         include_sandbox: OptionalQuery = None,
-    ) -> LeadListView:
+        limit: OptionalQuery = None,
+        cursor: OptionalQuery = None,
+    ) -> LeadPage:
         business: BusinessDocument = authorize(user_id, business_id)
         return list_leads.operate(
             ListLeadsQuery(
@@ -292,17 +329,19 @@ def build_operations_router(
                 actor_id=user_id,
                 status=parse_optional_text(status, LeadStatus, "status"),
                 include_sandbox=parse_flag(include_sandbox, "include_sandbox"),
+                page=parse_page_request(limit, cursor),
             )
         )
 
-    @router.patch(f"{BUSINESS_PREFIX}/leads/{{lead_id}}")
+    @router.patch(
+        f"{BUSINESS_PREFIX}/leads/{{lead_id}}",
+        openapi_extra=describe_json_body(UpdateLeadStatusRequest),
+    )
     def patch_lead(
         business_id: str,
         lead_id: str,
         user_id: Annotated[UserId, Depends(current_user)],
-        body: Annotated[
-            UpdateLeadStatusRequest, Depends(json_body_reader(UpdateLeadStatusRequest))
-        ],
+        body: Annotated[UpdateLeadStatusRequest, Depends(read_lead_status_body)],
     ) -> LeadView:
         business: BusinessDocument = authorize(user_id, business_id)
         return update_lead_status.operate(
@@ -318,15 +357,20 @@ def build_operations_router(
         business_id: str,
         user_id: Annotated[UserId, Depends(current_user)],
         status: OptionalQuery = None,
+        is_open: OptionalQuery = None,
         include_sandbox: OptionalQuery = None,
-    ) -> HandoffListView:
+        limit: OptionalQuery = None,
+        cursor: OptionalQuery = None,
+    ) -> HandoffPage:
         business: BusinessDocument = authorize(user_id, business_id)
         return list_handoffs.operate(
             ListHandoffsQuery(
                 business_id=business.id,
                 actor_id=user_id,
                 status=parse_optional_text(status, HandoffStatus, "status"),
+                is_open=parse_optional_flag(is_open, "is_open"),
                 include_sandbox=parse_flag(include_sandbox, "include_sandbox"),
+                page=parse_page_request(limit, cursor),
             )
         )
 
@@ -360,15 +404,15 @@ def build_operations_router(
             )
         )
 
-    @router.post(f"{BUSINESS_PREFIX}/unanswered-questions/{{question_id}}/answer")
+    @router.post(
+        f"{BUSINESS_PREFIX}/unanswered-questions/{{question_id}}/answer",
+        openapi_extra=describe_json_body(AnswerUnansweredQuestionRequest),
+    )
     def post_unanswered_question_answer(
         business_id: str,
         question_id: str,
         user_id: Annotated[UserId, Depends(current_user)],
-        body: Annotated[
-            AnswerUnansweredQuestionRequest,
-            Depends(json_body_reader(AnswerUnansweredQuestionRequest)),
-        ],
+        body: Annotated[AnswerUnansweredQuestionRequest, Depends(read_answer_body)],
     ) -> AnsweredQuestionResult:
         business: BusinessDocument = authorize(
             user_id, business_id, BusinessMemberRole.OWNER
@@ -448,28 +492,6 @@ def build_operations_router(
     return router
 
 
-def json_body_reader[Body: BaseModel](
-    body_type: type[Body],
-) -> Callable[[Request], Awaitable[Body]]:
-    """
-    FastAPI dependency that validates the raw JSON body in JSON mode (strict
-    DTOs accept enum values and typed strings in their wire form there).
-    """
-
-    async def read_json_body(request: Request) -> Body:
-        raw_body: bytes = await request.body()
-        try:
-            return body_type.model_validate_json(raw_body)
-        except ValidationError as error:
-            details: str = "; ".join(
-                f"{'.'.join(str(part) for part in item['loc'])}: {item['msg']}"
-                for item in error.errors()
-            )
-            raise ValidationFailedError(f"Invalid request body: {details}") from error
-
-    return read_json_body
-
-
 def parse_path_id[Value](
     raw_value: str,
     id_type: Callable[[str], Value],
@@ -520,8 +542,14 @@ def parse_optional_integer[Value](
 
 
 def parse_flag(raw_value: str | None, name: str) -> bool:
+    return parse_optional_flag(raw_value, name) or False
+
+
+def parse_optional_flag(raw_value: str | None, name: str) -> bool | None:
+    """True, False, or None when the parameter is missing or empty."""
+
     if raw_value is None or raw_value == "":
-        return False
+        return None
 
     normalized: str = raw_value.strip().lower()
     if normalized in TRUE_QUERY_VALUES:

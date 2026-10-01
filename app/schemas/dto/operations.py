@@ -11,6 +11,7 @@ from pydantic import Field
 from typed_time_provider import Microseconds
 
 from app.schemas.constants.bookings import (
+    BookingOrder,
     BookingStatus,
     BookingUnit,
     LeadStatus,
@@ -21,6 +22,17 @@ from app.schemas.constants.channels import ChannelKind
 from app.schemas.constants.handoffs import HandoffReason, HandoffStatus, HandoffUrgency
 from app.schemas.domain.businesses import ManagerContact
 from app.schemas.dto.bookings import BookingView, LeadView
+from app.schemas.dto.paging import PageRequest
+from app.schemas.typings.billing.constrained_integers import (
+    IncludedDialogs,
+    IncludedVoiceMinutes,
+    OverageVoiceMinutes,
+    PackageUsagePercent,
+    UsedDialogs,
+)
+from app.schemas.typings.billing.constrained_integers import (
+    UsedVoiceMinutes as PackageUsedVoiceMinutes,
+)
 from app.schemas.typings.bookings.booleans import (
     IsSandboxIncluded,
     WasCalendarConnected,
@@ -59,6 +71,7 @@ from app.schemas.typings.conversations.booleans import IsSandboxConversation
 from app.schemas.typings.conversations.prefixed_id import ConversationId
 from app.schemas.typings.conversations.strings import MessageText
 from app.schemas.typings.handoffs.booleans import (
+    IsHandoffOpen,
     IsResolvedIncluded,
     IsUnansweredQuestionResolved,
     RequiresAssistantReassembly,
@@ -77,6 +90,7 @@ from app.schemas.typings.insights.constrained_integers import (
 from app.schemas.typings.knowledge.prefixed_id import KnowledgeItemId
 from app.schemas.typings.knowledge.strings import KnowledgeBody, KnowledgeTitle
 from app.schemas.typings.localization.constrained_strings import (
+    CountryCode,
     E164PhoneNumber,
     LanguageTag,
     TimezoneName,
@@ -85,6 +99,8 @@ from app.schemas.typings.localization.strings import (
     FormattedPhoneNumber,
     RawPhoneNumberInput,
 )
+from app.schemas.typings.platform.constrained_integers import ListItemCount
+from app.schemas.typings.platform.constrained_strings import PageCursor
 from app.schemas.typings.profiles.strings import CancellationPolicyText
 from app.schemas.typings.users.prefixed_id import UserId
 
@@ -93,8 +109,9 @@ from app.schemas.typings.users.prefixed_id import UserId
 
 class ListBookingsQuery(ImmutableDTO):
     """
-    Bookings of a business for the cabinet, filtered by the local start date
-    (inclusive range in the business time zone) and status.
+    One page of the bookings of a business for the cabinet, filtered by the
+    local start date (inclusive range in the business time zone), status
+    and resource, ordered by start time (earliest first by default).
     """
 
     business_id: BusinessId
@@ -102,13 +119,17 @@ class ListBookingsQuery(ImmutableDTO):
     date_from: LocalDate | None = None
     date_to: LocalDate | None = None
     status: BookingStatus | None = None
+    resource_id: ResourceId | None = None
     include_sandbox: IsSandboxIncluded = False
+    order: BookingOrder = BookingOrder.EARLIEST_FIRST
+    page: PageRequest = PageRequest()
 
 
-class BookingListView(ImmutableDTO):
-    """Bookings ordered by start time."""
+class BookingPage(ImmutableDTO):
+    """One page of bookings; `next_cursor` is None on the last page."""
 
     items: list[BookingView] = Field(default_factory=list[BookingView])
+    next_cursor: PageCursor | None = None
 
 
 class ManualBookingRequest(ImmutableDTO):
@@ -116,8 +137,10 @@ class ManualBookingRequest(ImmutableDTO):
     Body of a booking added by staff in the cabinet.
 
     The phone may be typed in any national or international format; it is
-    parsed with the business country as a hint. `language` is the customer's
-    language for the confirmation text (business default when omitted).
+    parsed with `country_hint` (the business country when omitted).
+    `language` is the customer's language for the confirmation text
+    (business default when omitted). `conversation_id` books for the
+    customer of that conversation and links the booking to it.
     """
 
     contact_name: ContactName
@@ -132,6 +155,8 @@ class ManualBookingRequest(ImmutableDTO):
     notes: BookingNote | None = None
     source_channel: ChannelKind = ChannelKind.PHONE
     language: LanguageTag | None = None
+    country_hint: CountryCode | None = None
+    conversation_id: ConversationId | None = None
 
 
 class ManualBookingCommand(ImmutableDTO):
@@ -155,6 +180,8 @@ class ManualBookingCommand(ImmutableDTO):
     notes: BookingNote | None = None
     source_channel: ChannelKind = ChannelKind.PHONE
     language: LanguageTag | None = None
+    country_hint: CountryCode | None = None
+    conversation_id: ConversationId | None = None
 
 
 class RescheduleBookingRequest(ImmutableDTO):
@@ -164,34 +191,48 @@ class RescheduleBookingRequest(ImmutableDTO):
     new_time: LocalTimeOfDay | None = None
 
 
-class UpdateBookingStatusRequest(ImmutableDTO):
-    """Body of a cabinet booking status change."""
-
-    status: BookingStatus
-
-
-class UpdateBookingStatusCommand(ImmutableDTO):
+class UpdateBookingRequest(ImmutableDTO):
     """
-    Staff marks a booking COMPLETED, NO_SHOW or CANCELLED, or confirms a
-    PENDING booking.
+    Body of a cabinet booking change; omitted fields stay as they are.
+
+    `status`: COMPLETED, NO_SHOW or CANCELLED, or CONFIRMED for a PENDING
+    booking. `party_size` and `resource_id` must fit the booked time (the
+    resource seats the party, is open and has a free unit then). An empty
+    `notes` text removes the notes. `contact_name` renames the customer.
+    The time is changed by rescheduling.
     """
+
+    status: BookingStatus | None = None
+    party_size: PartySize | None = None
+    resource_id: ResourceId | None = None
+    notes: BookingNote | None = None
+    contact_name: ContactName | None = None
+
+
+class UpdateBookingCommand(ImmutableDTO):
+    """Staff changes the status or the details of a booking."""
 
     business_id: BusinessId
     actor_id: UserId
     booking_id: BookingId
-    status: BookingStatus
+    status: BookingStatus | None = None
+    party_size: PartySize | None = None
+    resource_id: ResourceId | None = None
+    notes: BookingNote | None = None
+    contact_name: ContactName | None = None
 
 
 # Leads in the cabinet
 
 
 class ListLeadsQuery(ImmutableDTO):
-    """Leads of a business for the cabinet, newest first."""
+    """One page of the leads of a business for the cabinet, newest first."""
 
     business_id: BusinessId
     actor_id: UserId
     status: LeadStatus | None = None
     include_sandbox: IsSandboxIncluded = False
+    page: PageRequest = PageRequest()
 
 
 class LeadListItem(ImmutableDTO):
@@ -214,10 +255,22 @@ class LeadListItem(ImmutableDTO):
     created_at: Microseconds
 
 
-class LeadListView(ImmutableDTO):
-    """Leads ordered newest first."""
+class LeadStatusCount(ImmutableDTO):
+    """How many leads have one status (for the status tabs)."""
+
+    status: LeadStatus
+    count: ListItemCount
+
+
+class LeadPage(ImmutableDTO):
+    """
+    One page of leads, newest first, and how many leads of each status
+    there are (the status filter aside), for the tabs.
+    """
 
     items: list[LeadListItem] = Field(default_factory=list[LeadListItem])
+    next_cursor: PageCursor | None = None
+    status_counts: list[LeadStatusCount] = Field(default_factory=list[LeadStatusCount])
 
 
 class UpdateLeadStatusRequest(ImmutableDTO):
@@ -238,12 +291,21 @@ class UpdateLeadStatusCommand(ImmutableDTO):
 
 
 class ListHandoffsQuery(ImmutableDTO):
-    """Handoffs of a business for the cabinet, newest first."""
+    """
+    One page of the handoffs of a business for the cabinet.
+
+    `is_open` True keeps the ones still waiting for a person (any status but
+    RESOLVED), False the resolved ones. Open handoffs come first, the most
+    urgent first, then the one waiting longest; resolved ones follow, the
+    most recently resolved first.
+    """
 
     business_id: BusinessId
     actor_id: UserId
     status: HandoffStatus | None = None
+    is_open: IsHandoffOpen | None = None
     include_sandbox: IsSandboxIncluded = False
+    page: PageRequest = PageRequest()
 
 
 class HandoffListItem(ImmutableDTO):
@@ -264,10 +326,16 @@ class HandoffListItem(ImmutableDTO):
     resolved_at: Microseconds | None = None
 
 
-class HandoffListView(ImmutableDTO):
-    """Handoffs ordered newest first."""
+class HandoffPage(ImmutableDTO):
+    """
+    One page of handoffs and how many are open and resolved (the status
+    filters aside), for the tabs.
+    """
 
     items: list[HandoffListItem] = Field(default_factory=list[HandoffListItem])
+    next_cursor: PageCursor | None = None
+    open_count: ListItemCount
+    resolved_count: ListItemCount
 
 
 class ResolveHandoffCommand(ImmutableDTO):
@@ -390,14 +458,43 @@ class ChannelCount(ImmutableDTO):
     count: PeriodItemCount
 
 
+class DashboardDay(ImmutableDTO):
+    """What started on one local day of the dashboard period."""
+
+    date: LocalDate
+    conversation_count: PeriodItemCount
+    booking_count: PeriodItemCount
+    handoff_count: PeriodItemCount
+
+
+class DashboardPackageUsage(ImmutableDTO):
+    """
+    Use of the plan package in the current billing window, for owners and
+    staff alike (no prices). Percents are empty for a package of zero.
+    """
+
+    period_start: Microseconds
+    period_end: Microseconds
+    used_voice_minutes: PackageUsedVoiceMinutes
+    included_voice_minutes: IncludedVoiceMinutes
+    voice_usage_percent: PackageUsagePercent | None = None
+    overage_voice_minutes: OverageVoiceMinutes
+    used_dialogs: UsedDialogs
+    included_dialogs: IncludedDialogs
+    dialog_usage_percent: PackageUsagePercent | None = None
+
+
 class DashboardStats(ImmutableDTO):
     """
     Cabinet dashboard (concept /dashboard): conversations, customer messages,
     share started outside opening hours, bookings, leads, handoffs, languages,
-    channels, open unanswered questions and package minutes used.
+    channels, open unanswered questions, package minutes used in the period,
+    a series per local day, and the package of the current billing window
+    (None without a subscription).
 
     Sandbox (owner test and autotest) activity is excluded. Breakdown lists
-    are ordered by count descending.
+    are ordered by count descending; `daily` has every date of the period,
+    oldest first.
     """
 
     business_id: BusinessId
@@ -424,6 +521,8 @@ class DashboardStats(ImmutableDTO):
     channels: list[ChannelCount] = Field(default_factory=list[ChannelCount])
     open_unanswered_question_count: PeriodItemCount
     used_voice_minutes: UsedVoiceMinutes
+    daily: list[DashboardDay] = Field(default_factory=list[DashboardDay])
+    package: DashboardPackageUsage | None = None
 
 
 # Google Calendar

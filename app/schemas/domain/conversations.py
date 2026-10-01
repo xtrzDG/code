@@ -83,7 +83,12 @@ class ToolCallRecord(PersistentDocument):
 
 
 class MessageDocument(BaseDocument):
-    """Stored message with model usage and cost (concept table `messages`)."""
+    """
+    Stored message with model usage and cost (concept table `messages`).
+
+    `sent_by` is the owner or staff member who wrote a STAFF message from
+    the cabinet.
+    """
 
     id: MessageId = Field(default_factory=MessageId)
     conversation_id: ConversationId
@@ -92,6 +97,7 @@ class MessageDocument(BaseDocument):
     author: MessageAuthor
     text: MessageText
     language: LanguageTag | None = None
+    sent_by: UserId | None = None
     tool_calls: list[ToolCallRecord] = Field(default_factory=list[ToolCallRecord])
     model_id: LlmModelId | None = None
     input_tokens: LlmTokenCount = LlmTokenCount(0)

@@ -1,3 +1,7 @@
+from collections import defaultdict
+from datetime import date, timedelta
+from zoneinfo import ZoneInfo
+
 from app.contracts.repositories import (
     ContactRepoContract,
     ConversationRepoContract,
@@ -6,21 +10,42 @@ from app.contracts.repositories import (
 from app.contracts.transformer_contract import TransformerContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.domain.businesses import BusinessDocument
+from app.schemas.domain.contacts import ContactDocument
+from app.schemas.domain.conversations import ConversationDocument, MessageDocument
 from app.schemas.dto.access import BusinessAccessRequest
 from app.schemas.dto.conversation_feed import (
     ConversationListQuery,
+    ConversationPage,
     ConversationSummaryView,
     ConversationViewSource,
+)
+from app.schemas.exceptions.application_errors import ValidationFailedError
+from app.schemas.typings.contacts.prefixed_id import ContactId
+from app.schemas.typings.conversations.prefixed_id import ConversationId
+from app.schemas.typings.platform.constrained_strings import PageCursor
+from app.utilities.conversations.conversation_search import matches_search
+from app.utilities.paging.cursor_paging import take_page
+from app.utilities.scheduling.zoned_time import (
+    load_time_zone,
+    local_day_start_microseconds,
+    parse_local_date,
 )
 
 
 class ListConversationsUseCase(
-    UseCaseContract[ConversationListQuery, list[ConversationSummaryView]]
+    UseCaseContract[ConversationListQuery, ConversationPage]
 ):
     """
-    Conversation feed of a business for owners and staff (concept section 8,
-    /conversations), newest first, optionally of one channel. Sandbox
-    conversations (owner test chat, autotests) appear only on request.
+    One page of the conversation feed of a business for owners and staff
+    (concept section 8, /conversations), the latest message first.
+
+    Filters run before paging: channel, status, a period of local dates in
+    the business time zone (conversations going on then: started before its
+    end, last message after its start), and a search over the customer's
+    name, the phone by its digits in any format, and the words of every
+    message in any script. Sandbox conversations (owner test chat,
+    autotests) appear only on request. Rows carry counts and a preview of
+    the last message, not the messages themselves.
     """
 
     def __init__(
@@ -45,35 +70,136 @@ class ListConversationsUseCase(
             ConversationViewSource, ConversationSummaryView
         ] = summary_transformer
 
-    def run(self, input_data: ConversationListQuery) -> list[ConversationSummaryView]:
+    def run(self, input_data: ConversationListQuery) -> ConversationPage:
         business: BusinessDocument = self._authorize_business_access.run(
             BusinessAccessRequest(
                 user_id=input_data.user_id,
                 business_id=input_data.business_id,
             )
         )
-        summaries: list[ConversationSummaryView] = []
-        for conversation in self._conversation_repo.list_by_business(business.id):
-            if conversation.is_sandbox and not input_data.include_sandbox:
-                continue
+        period_start, period_end = self._period(business, input_data)
+        candidates: list[ConversationDocument] = [
+            conversation
+            for conversation in self._conversation_repo.list_by_business(business.id)
+            if (input_data.include_sandbox or not conversation.is_sandbox)
+            and (
+                input_data.channel is None or conversation.channel is input_data.channel
+            )
+            and (input_data.status is None or conversation.status is input_data.status)
+            and (
+                period_start is None
+                or int(conversation.last_message_at) >= period_start
+            )
+            and (period_end is None or int(conversation.created_at) < period_end)
+        ]
+        messages_by_conversation: dict[ConversationId, list[MessageDocument]] | None = (
+            None
+        )
+        contacts: dict[ContactId, ContactDocument] | None = None
+        if input_data.search is not None:
+            messages_by_conversation = self._messages_by_conversation(business)
+            contacts = {
+                contact.id: contact
+                for contact in self._contact_repo.list_by_business(business.id)
+            }
+            candidates = [
+                conversation
+                for conversation in candidates
+                if self._matches(
+                    str(input_data.search),
+                    conversation,
+                    contacts.get(conversation.contact_id),
+                    messages_by_conversation.get(conversation.id, []),
+                )
+            ]
 
-            if input_data.channel is not None and conversation.channel is not (
-                input_data.channel
-            ):
-                continue
-
-            summaries.append(
+        page: list[ConversationDocument]
+        next_cursor: PageCursor | None
+        page, next_cursor = take_page(
+            candidates,
+            input_data.page,
+            sort_key=lambda conversation: int(conversation.last_message_at),
+            item_id=lambda conversation: str(conversation.id),
+        )
+        return ConversationPage(
+            items=[
                 self._summary_transformer.transform(
                     ConversationViewSource(
                         conversation=conversation,
-                        contact=self._contact_repo.get(
-                            business.id, conversation.contact_id
+                        contact=(
+                            self._contact_repo.get(business.id, conversation.contact_id)
+                            if contacts is None
+                            else contacts.get(conversation.contact_id)
                         ),
-                        messages=self._message_repo.list_by_conversation(
-                            business.id, conversation.id
+                        messages=(
+                            self._message_repo.list_by_conversation(
+                                business.id, conversation.id
+                            )
+                            if messages_by_conversation is None
+                            else messages_by_conversation.get(conversation.id, [])
                         ),
                     )
                 )
-            )
+                for conversation in page
+            ],
+            next_cursor=next_cursor,
+        )
 
-        return summaries
+    def _period(
+        self,
+        business: BusinessDocument,
+        query: ConversationListQuery,
+    ) -> tuple[int | None, int | None]:
+        """UTC microseconds of the period's start and end (exclusive)."""
+
+        zone: ZoneInfo = load_time_zone(business.timezone)
+        date_from: date | None = (
+            None if query.date_from is None else parse_local_date(query.date_from)
+        )
+        date_to: date | None = (
+            None if query.date_to is None else parse_local_date(query.date_to)
+        )
+        if date_from is not None and date_to is not None and date_from > date_to:
+            raise ValidationFailedError("The start date is after the end date.")
+
+        return (
+            None
+            if date_from is None
+            else local_day_start_microseconds(date_from, zone),
+            None
+            if date_to is None
+            else local_day_start_microseconds(date_to + timedelta(days=1), zone),
+        )
+
+    def _messages_by_conversation(
+        self,
+        business: BusinessDocument,
+    ) -> dict[ConversationId, list[MessageDocument]]:
+        """Every message of the business by conversation, oldest first."""
+
+        grouped: defaultdict[ConversationId, list[MessageDocument]] = defaultdict(
+            list[MessageDocument]
+        )
+        for message in sorted(
+            self._message_repo.list_by_business(business.id),
+            key=lambda message: (int(message.created_at), str(message.id)),
+        ):
+            grouped[message.conversation_id].append(message)
+
+        return dict(grouped)
+
+    def _matches(
+        self,
+        search: str,
+        conversation: ConversationDocument,
+        contact: ContactDocument | None,
+        messages: list[MessageDocument],
+    ) -> bool:
+        return matches_search(
+            search,
+            None if contact is None or contact.name is None else str(contact.name),
+            None
+            if contact is None or contact.phone_number is None
+            else str(contact.phone_number),
+            [str(message.text) for message in messages],
+        )

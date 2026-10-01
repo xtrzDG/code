@@ -327,8 +327,8 @@ class OrchestratorsContainer(containers.DeclarativeContainer):
     reschedule_booking_orchestrator = use_case_orchestrator(
         use_cases.reschedule_booking_use_case
     )
-    update_booking_status_orchestrator = use_case_orchestrator(
-        use_cases.update_booking_status_use_case
+    update_booking_orchestrator = use_case_orchestrator(
+        use_cases.update_booking_use_case
     )
     list_leads_orchestrator = use_case_orchestrator(use_cases.list_leads_use_case)
     update_lead_status_orchestrator = use_case_orchestrator(
@@ -366,6 +366,9 @@ class OrchestratorsContainer(containers.DeclarativeContainer):
     )
     rate_conversation_orchestrator = use_case_orchestrator(
         use_cases.rate_conversation_use_case
+    )
+    send_staff_message_orchestrator = use_case_orchestrator(
+        use_cases.send_staff_message_use_case
     )
     import_menu_orchestrator = use_case_orchestrator(use_cases.import_menu_use_case)
     confirm_imported_items_orchestrator = use_case_orchestrator(

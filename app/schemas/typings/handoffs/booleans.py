@@ -4,6 +4,7 @@ Example:
     is_resolved: IsUnansweredQuestionResolved = False
 """
 
+IsHandoffOpen = bool
 IsResolvedIncluded = bool
 IsUnansweredQuestionResolved = bool
 RequiresAssistantReassembly = bool

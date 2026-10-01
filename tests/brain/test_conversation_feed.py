@@ -69,16 +69,20 @@ def test_feed_lists_conversations_with_filters() -> None:
     telegram = client.get(f"{base_url}?channel=telegram", headers=bearer("owner"))
 
     assert everything.status_code == 200
-    rows: list[dict[str, Any]] = everything.json()
+    rows: list[dict[str, Any]] = everything.json()["items"]
+    assert everything.json()["next_cursor"] is None
     assert {row["channel"] for row in rows} == {"whatsapp", "telegram"}
     whatsapp_row = next(row for row in rows if row["channel"] == "whatsapp")
     assert whatsapp_row["contact_name"] == "Нино"
     assert whatsapp_row["contact_phone_number"] == "+995555123456"
     assert whatsapp_row["message_count"] == 2
+    assert whatsapp_row["customer_message_count"] == 1
+    assert whatsapp_row["last_message_author"] == "assistant"
     assert whatsapp_row["language"] == "ru"
     assert whatsapp_row["last_message_text"].endswith("Да, есть.")
-    assert len(with_sandbox.json()) == 3
-    assert [row["channel"] for row in telegram.json()] == ["telegram"]
+    assert "messages" not in whatsapp_row
+    assert len(with_sandbox.json()["items"]) == 3
+    assert [row["channel"] for row in telegram.json()["items"]] == ["telegram"]
 
 
 def test_conversation_card_shows_tool_calls_and_is_audited() -> None:
@@ -181,7 +185,7 @@ def test_owners_and_staff_rate_a_conversation_good_or_bad() -> None:
 
     assert bad.status_code == 200, bad.text
     assert bad.json()["rating"] == "bad"
-    assert feed.json()[0]["rating"] == "bad"
+    assert feed.json()["items"][0]["rating"] == "bad"
     assert stored.rated_by == world.staff_id
     assert stored.rated_at is not None
     assert cleared.json()["rating"] is None

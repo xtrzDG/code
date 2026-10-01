@@ -11,5 +11,6 @@ IsFirstAssistantReply = bool
 IsLlmToolError = bool
 IsNewConversation = bool
 IsSandboxConversation = bool
+IsStaffReplyAvailable = bool
 ShouldEndCall = bool
 # Keep abc order for all non example types, if possible.

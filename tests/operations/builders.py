@@ -9,8 +9,12 @@ from app.contracts.operations import BookingCalendarSyncFacilitatorContract
 from app.facilitators.staff.manager_broadcast_facilitator import (
     ManagerBroadcastFacilitator,
 )
+from app.registries.billing.plan_registry import PlanRegistry
 from app.registries.locks.business_lock_registry import BusinessLockRegistry
-from app.repositories.billing_repositories import UsageEventRepository
+from app.repositories.billing_repositories import (
+    SubscriptionRepository,
+    UsageEventRepository,
+)
 from app.repositories.booking_repositories import (
     BookingRepository,
     HandoffRepository,
@@ -41,7 +45,7 @@ from app.schemas.constants.handoffs import ManagerContactChannel
 from app.schemas.constants.localization import DataRegion
 from app.schemas.constants.niches import NicheKey
 from app.schemas.constants.users import BusinessMemberRole
-from app.schemas.domain.billing import UsageEventDocument
+from app.schemas.domain.billing import SubscriptionDocument, UsageEventDocument
 from app.schemas.domain.bookings import BookingDocument, LeadDocument
 from app.schemas.domain.businesses import (
     BusinessDocument,
@@ -134,9 +138,7 @@ from app.use_cases.bookings.list_bookings_use_case import ListBookingsUseCase
 from app.use_cases.bookings.reschedule_booking_use_case import (
     RescheduleBookingUseCase,
 )
-from app.use_cases.bookings.update_booking_status_use_case import (
-    UpdateBookingStatusUseCase,
-)
+from app.use_cases.bookings.update_booking_use_case import UpdateBookingUseCase
 from app.use_cases.handoffs.answer_unanswered_question_use_case import (
     AnswerUnansweredQuestionUseCase,
 )
@@ -262,6 +264,12 @@ class OperationsWorld:
         self.usage_repo = UsageEventRepository(
             InMemoryDocumentCollectionAdapter[UsageEventDocument](UsageEventDocument)
         )
+        self.subscription_repo = SubscriptionRepository(
+            InMemoryDocumentCollectionAdapter[SubscriptionDocument](
+                SubscriptionDocument
+            )
+        )
+        self.plan_registry = PlanRegistry()
         self.audit_repo = AuditLogRepository(
             InMemoryDocumentCollectionAdapter[AuditLogEntryDocument](
                 AuditLogEntryDocument
@@ -578,6 +586,7 @@ class OperationsWorld:
             schedule_exception_repo=self.exception_repo,
             booking_repo=self.booking_repo,
             contact_repo=self.contact_repo,
+            conversation_repo=self.conversation_repo,
             audit_log_repo=self.audit_repo,
             lock_registry=self.lock_registry,
             phone_number_parser=self.phone_parser,
@@ -586,9 +595,11 @@ class OperationsWorld:
             wall_clock=self.clock.wall_clock,
         )
 
-    def update_booking_status(self) -> UpdateBookingStatusUseCase:
-        return UpdateBookingStatusUseCase(
+    def update_booking(self) -> UpdateBookingUseCase:
+        return UpdateBookingUseCase(
             business_repo=self.business_repo,
+            business_profile_repo=self.profile_repo,
+            schedule_exception_repo=self.exception_repo,
             booking_repo=self.booking_repo,
             resource_repo=self.resource_repo,
             contact_repo=self.contact_repo,
@@ -694,5 +705,7 @@ class OperationsWorld:
             handoff_repo=self.handoff_repo,
             unanswered_question_repo=self.question_repo,
             usage_event_repo=self.usage_repo,
+            subscription_repo=self.subscription_repo,
+            plan_registry=self.plan_registry,
             wall_clock=self.clock.wall_clock,
         )

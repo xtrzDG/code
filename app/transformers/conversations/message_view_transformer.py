@@ -13,6 +13,7 @@ class MessageViewTransformer(TransformerContract[MessageDocument, MessageView]):
             author=input_data.author,
             text=input_data.text,
             language=input_data.language,
+            sent_by=input_data.sent_by,
             tool_calls=[
                 ToolCallView(
                     tool_name=record.tool_name,

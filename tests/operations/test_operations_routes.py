@@ -137,7 +137,7 @@ class Api:
                 create_manual_booking=operator(world.create_manual_booking()),
                 cancel_booking=operator(world.cancel_booking()),
                 reschedule_booking=operator(world.reschedule_booking()),
-                update_booking_status=operator(world.update_booking_status()),
+                update_booking=operator(world.update_booking()),
                 list_leads=operator(world.list_leads()),
                 update_lead_status=operator(world.update_lead_status()),
                 list_handoffs=operator(world.list_handoffs()),
@@ -232,6 +232,23 @@ def test_openapi_schema_lists_every_route() -> None:
     assert GOOGLE_CALENDAR_CALLBACK_PATH in paths
 
 
+def test_openapi_schema_describes_every_json_body() -> None:
+    api = Api()
+    paths = api.application.openapi()["paths"]
+    prefix = "/v1/businesses/{business_id}"
+
+    bodies = {
+        (f"{prefix}/bookings", "post"): "contact_name",
+        (f"{prefix}/bookings/{{booking_id}}/reschedule", "post"): "new_date",
+        (f"{prefix}/bookings/{{booking_id}}", "patch"): "party_size",
+        (f"{prefix}/leads/{{lead_id}}", "patch"): "status",
+        (f"{prefix}/unanswered-questions/{{question_id}}/answer", "post"): "answer",
+    }
+    for (path, method), field in bodies.items():
+        schema = paths[path][method]["requestBody"]["content"]["application/json"]
+        assert field in schema["schema"]["properties"], (path, method)
+
+
 def test_availability_query_parameters_are_typed() -> None:
     api = Api()
 
@@ -261,6 +278,9 @@ def test_availability_query_parameters_are_typed() -> None:
         assert bad.json()["error"] == "validation_failed"
 
     assert api.get("/availability").status_code == 422
+    full_day = api.get("/availability", date="2026-10-06", full_day="true").json()
+    assert len(full_day["slots"]) > 10
+    assert api.get("/availability", date="2026-10-06", full_day="x").status_code == 422
 
 
 def test_booking_lifecycle_through_the_cabinet() -> None:
@@ -303,6 +323,8 @@ def test_booking_lifecycle_through_the_cabinet() -> None:
     assert refused.status_code == 409
 
     assert api.send("POST", "/bookings/booking_nope/cancel").status_code == 404
+    noted = api.send("PATCH", f"/bookings/{booking['id']}", {"notes": "Paid"})
+    assert noted.json()["notes"] == "Paid"
     invalid = api.send("PATCH", f"/bookings/{booking['id']}", {"status": "maybe"})
     assert invalid.status_code == 422
     assert "status" in invalid.json()["message"]
@@ -310,6 +332,41 @@ def test_booking_lifecycle_through_the_cabinet() -> None:
         "POST", f"/bookings/{booking['id']}/reschedule", {"new_date": "x", "a": 1}
     )
     assert extra.status_code == 422
+
+
+def test_booking_list_pages_and_filters_by_resource() -> None:
+    api = Api()
+    hall = api.world.add_resource(api.business, "Hall", capacity=40)
+    for time, resource_id in (("13:00", None), ("19:00", None), ("19:00", hall.id)):
+        created = api.send(
+            "POST",
+            "/bookings",
+            {
+                "contact_name": "Levan",
+                "date": "2026-10-06",
+                "time": time,
+                "party_size": 2,
+                "resource_id": None if resource_id is None else str(resource_id),
+                "country_hint": "IT",
+                "contact_phone_number": "333 123 4567",
+            },
+        )
+        assert created.status_code == 201, created.text
+        assert created.json()["booking"]["contact_phone_number"] == "+393331234567"
+
+    first = api.get("/bookings", limit="2").json()
+    rest = api.get("/bookings", limit="2", cursor=first["next_cursor"]).json()
+    in_hall = api.get("/bookings", resource_id=str(hall.id)).json()
+    latest = api.get("/bookings", order="latest_first", limit="1").json()
+
+    assert [item["time"] for item in first["items"]] == ["13:00", "19:00"]
+    assert len(rest["items"]) == 1
+    assert rest["next_cursor"] is None
+    assert [item["resource_name"] for item in in_hall["items"]] == ["Hall"]
+    assert latest["items"][0]["time"] == "19:00"
+    assert api.get("/bookings", limit="0").status_code == 422
+    assert api.get("/bookings", cursor="not a cursor").status_code == 422
+    assert api.get("/bookings", order="sideways").status_code == 422
 
 
 def test_cabinet_cancel_uses_the_requested_language() -> None:
@@ -360,12 +417,25 @@ def test_leads_handoffs_and_questions() -> None:
         )
     )
 
-    assert api.get("/leads").json() == {"items": []}
+    leads = api.get("/leads").json()
+    assert leads["items"] == []
+    assert leads["next_cursor"] is None
+    assert {count["status"]: count["count"] for count in leads["status_counts"]} == {
+        "new": 0,
+        "in_progress": 0,
+        "won": 0,
+        "lost": 0,
+    }
     assert api.get("/leads", status="won").status_code == 200
     handoffs = api.get("/handoffs", status="notified").json()["items"]
     assert [item["id"] for item in handoffs] == [str(handoff.id)]
+    waiting = api.get("/handoffs", is_open="true").json()
+    assert (waiting["open_count"], waiting["resolved_count"]) == (1, 0)
     resolved = api.send("POST", f"/handoffs/{handoff.id}/resolve")
     assert resolved.json()["status"] == "resolved"
+    assert api.get("/handoffs", is_open="true").json()["items"] == []
+    assert len(api.get("/handoffs", is_open="false").json()["items"]) == 1
+    assert api.get("/handoffs", is_open="maybe").status_code == 422
 
     questions = api.get("/unanswered-questions").json()["items"]
     assert questions[0]["question"] == "Do you have a kids menu?"
@@ -396,6 +466,8 @@ def test_dashboard_route() -> None:
     assert response.status_code == 200
     assert response.json()["date_from"] == "2026-10-01"
     assert response.json()["conversation_count"] == 0
+    assert len(response.json()["daily"]) == 5
+    assert response.json()["package"] is None
     assert default.json()["date_to"] == "2026-10-05"
     assert (
         api.get("/dashboard", **{"from": "2026-10-05", "to": "2026-10-01"}).status_code

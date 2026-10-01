@@ -48,3 +48,13 @@ class LeadStatus(StrEnum):
     IN_PROGRESS = "in_progress"
     WON = "won"
     LOST = "lost"
+
+
+class BookingOrder(StrEnum):
+    """
+    Order of the cabinet's booking list by start time: upcoming bookings
+    read earliest first, past ones latest first.
+    """
+
+    EARLIEST_FIRST = "earliest_first"
+    LATEST_FIRST = "latest_first"

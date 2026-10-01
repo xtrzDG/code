@@ -276,7 +276,7 @@ def test_georgian_restaurant_from_sign_in_to_a_booked_and_handed_off_chat(
     assert workshop.model.assistant_calls == model_calls_before
 
     # Cabinet: the conversation, the handoff and the dashboard.
-    conversations = client.get(f"{base}/conversations", headers=headers).json()
+    conversations = client.get(f"{base}/conversations", headers=headers).json()["items"]
     assert [item["status"] for item in conversations] == ["handoff"]
     handoffs = client.get(f"{base}/handoffs", headers=headers).json()["items"]
     assert [item["reason"] for item in handoffs] == ["customer_request"]

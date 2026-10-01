@@ -1,5 +1,6 @@
 from base_pydantic_schemas import ImmutableDTO
 from pydantic import Field
+from typed_time_provider import Microseconds
 
 from app.schemas.constants.bookings import (
     BookingStatus,
@@ -9,7 +10,7 @@ from app.schemas.constants.bookings import (
     ResourceKind,
 )
 from app.schemas.constants.channels import ChannelKind
-from app.schemas.typings.bookings.booleans import IsOpenOnDate
+from app.schemas.typings.bookings.booleans import IsFullDayAvailability, IsOpenOnDate
 from app.schemas.typings.bookings.constrained_integers import (
     BookingDurationMinutes,
     NightCount,
@@ -46,6 +47,10 @@ class AvailabilityQuery(ImmutableDTO):
     Time-slot resources use `time` and `duration_minutes`; night resources
     use `nights`. Times are in the business time zone, with schedule
     exceptions (holidays) applied.
+
+    `full_day` is the staff view: every free slot of the date for every
+    matching resource (no nearest-time or count limit), by the cabinet's
+    rules (no minimum notice, no online party-size limit).
     """
 
     business_id: BusinessId
@@ -57,6 +62,7 @@ class AvailabilityQuery(ImmutableDTO):
     duration_minutes: BookingDurationMinutes | None = None
     nights: NightCount | None = None
     is_sandbox: IsSandboxConversation = False
+    full_day: IsFullDayAvailability = False
 
 
 class AvailableSlot(ImmutableDTO):
@@ -142,7 +148,14 @@ class CancelBookingCommand(ImmutableDTO):
 
 
 class BookingView(ImmutableDTO):
-    """Booking rendered in the business time zone."""
+    """
+    Booking rendered in the business time zone.
+
+    `conversation_id` is the conversation it was made in (the assistant's
+    tools, or staff booking from a conversation card). `language` is the
+    customer's language for texts about it. `reminder_sent_at` is when the
+    customer's reminder went out (None: not yet).
+    """
 
     id: BookingId
     business_id: BusinessId
@@ -161,6 +174,10 @@ class BookingView(ImmutableDTO):
     source_channel: ChannelKind
     notes: BookingNote | None = None
     is_sandbox: IsSandboxConversation = False
+    conversation_id: ConversationId | None = None
+    language: LanguageTag | None = None
+    reminder_sent_at: Microseconds | None = None
+    created_at: Microseconds
 
 
 class BookingResult(ImmutableDTO):

@@ -69,3 +69,33 @@ class ReplyGuardVerdict(StrEnum):
     CLEAN = "clean"
     REWRITTEN = "rewritten"
     HANDED_OFF = "handed_off"
+
+
+class StaffReplyBlock(StrEnum):
+    """
+    Why staff cannot write to a customer from the cabinet right now.
+
+    VOICE_CALL: phone conversations have no written way back.
+    TEST_CONVERSATION: owner test chats and autotests have no customer.
+    WINDOW_CLOSED: WhatsApp, Instagram and Messenger accept free-form
+    messages only within 24 hours of the customer's last message.
+    UNSUPPORTED_CHANNEL: the channel has no outgoing messages here.
+    CHANNEL_DISCONNECTED: the business's channel is no longer connected.
+    """
+
+    VOICE_CALL = "voice_call"
+    TEST_CONVERSATION = "test_conversation"
+    WINDOW_CLOSED = "window_closed"
+    UNSUPPORTED_CHANNEL = "unsupported_channel"
+    CHANNEL_DISCONNECTED = "channel_disconnected"
+
+
+class StaffMessageDelivery(StrEnum):
+    """
+    How a staff message reaches the customer: sent through the messenger
+    right away, or kept for the website chat, which shows it when the
+    visitor's widget asks for new messages.
+    """
+
+    SENT = "sent"
+    STORED_FOR_WIDGET = "stored_for_widget"
