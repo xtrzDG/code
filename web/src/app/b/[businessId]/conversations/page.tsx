@@ -1,8 +1,10 @@
-import { SectionPlaceholder, sectionMetadata } from "@/components/business/SectionPlaceholder";
+import { sectionMetadata } from "@/components/business/SectionPlaceholder";
+
+import { NoConversationSelected } from "./_components/NoConversationSelected";
 
 export const generateMetadata = sectionMetadata("conversations");
 
-/** Placeholder: replace with the real conversations page (see web/README.md, "Adding a page"). */
-export default function Page() {
-  return <SectionPlaceholder section="conversations" />;
+/** The feed (in the layout); on wide screens a hint fills the card column. */
+export default function ConversationsPage() {
+  return <NoConversationSelected />;
 }

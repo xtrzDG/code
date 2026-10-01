@@ -1,8 +1,11 @@
-import { SectionPlaceholder, sectionMetadata } from "@/components/business/SectionPlaceholder";
+import { sectionMetadata } from "@/components/business/SectionPlaceholder";
+
+import { parseHandoffFilters } from "./_components/handoffModel";
+import { HandoffsScreen } from "./HandoffsScreen";
 
 export const generateMetadata = sectionMetadata("handoffs");
 
-/** Placeholder: replace with the real handoffs page (see web/README.md, "Adding a page"). */
-export default function Page() {
-  return <SectionPlaceholder section="handoffs" />;
+/** Handoffs; open ones by default, `?tab=resolved|all`, `&test=1` for test activity. */
+export default async function HandoffsPage({ searchParams }: PageProps<"/b/[businessId]/handoffs">) {
+  return <HandoffsScreen initialFilters={parseHandoffFilters(await searchParams)} />;
 }
