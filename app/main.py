@@ -20,6 +20,7 @@ from app.contracts.observability import LlmTraceFacilitatorContract
 from app.gateways.http.access_log_redaction import install_access_log_redaction
 from app.gateways.http.application import build_http_application
 from app.gateways.http.router_assembly import build_application_routers
+from app.gateways.worker.background_worker import BackgroundWorker
 from app.schemas.configurations.app_settings import AppSettings
 from app.schemas.constants.environment import DeploymentEnvironment
 from app.schemas.constants.localization import OtpDeliveryChannel
@@ -30,6 +31,10 @@ LOGGER: logging.Logger = logging.getLogger(__name__)
 # Buffered model-call traces of the API process go to Langfuse this often
 # (the worker flushes its own buffer as a periodic job).
 TRACE_FLUSH_INTERVAL_SECONDS: float = 60.0
+# On shutdown the embedded worker finishes its current tick; a tick still
+# running after this long (a long autotest run) is abandoned with a warning.
+EMBEDDED_WORKER_STOP_SECONDS: float = 30.0
+EMBEDDED_WORKER_THREAD_NAME: str = "embedded-background-worker"
 
 
 def create_application() -> FastAPI:
@@ -55,8 +60,10 @@ def build_lifespan(app_container: AppContainer) -> Lifespan[FastAPI]:
     """
     Startup: warm the country catalog (every country's profile is built
     once), report the login code channels, point the platform Telegram bot
-    at this API when it is configured, and start flushing model-call
-    traces. Shutdown: flush the remaining traces and close the Postgres pool.
+    at this API when it is configured, start flushing model-call traces and,
+    with EMBEDDED_WORKER, start the background worker in a thread. Shutdown:
+    stop the worker after its current tick, flush the remaining traces and
+    close the Postgres pool.
     """
 
     @asynccontextmanager
@@ -70,10 +77,15 @@ def build_lifespan(app_container: AppContainer) -> Lifespan[FastAPI]:
         )
         stop_event = threading.Event()
         flush_thread = start_trace_flushing(trace_facilitator, stop_event)
+        worker_thread: threading.Thread | None = start_embedded_worker(
+            app_container, stop_event
+        )
         try:
             yield
         finally:
             stop_event.set()
+            if worker_thread is not None:
+                stop_embedded_worker(worker_thread)
             flush_thread.join(timeout=TRACE_FLUSH_INTERVAL_SECONDS)
             trace_facilitator.flush()
             close_postgres_pool(app_container)
@@ -153,6 +165,50 @@ def start_trace_flushing(
     )
     flush_thread.start()
     return flush_thread
+
+
+def start_embedded_worker(
+    app_container: AppContainer,
+    stop_event: threading.Event,
+) -> threading.Thread | None:
+    """
+    With EMBEDDED_WORKER, run the background worker (the same periodic jobs
+    and job queue as `app.worker_main`) in a daemon thread until
+    `stop_event` is set; otherwise nothing is started.
+    """
+
+    settings: AppSettings = app_container.config.app_settings()
+    if not settings.is_embedded_worker_enabled:
+        return None
+
+    worker: BackgroundWorker = app_container.gateways.background_worker()
+    worker_thread = threading.Thread(
+        target=worker.run_forever,
+        args=(stop_event,),
+        name=EMBEDDED_WORKER_THREAD_NAME,
+        daemon=True,
+    )
+    worker_thread.start()
+    LOGGER.info(
+        "Background worker runs inside the API (EMBEDDED_WORKER); do not start "
+        "app.worker_main next to it"
+    )
+    return worker_thread
+
+
+def stop_embedded_worker(worker_thread: threading.Thread) -> None:
+    """Wait for the worker's current tick (its stop event is already set)."""
+
+    worker_thread.join(timeout=EMBEDDED_WORKER_STOP_SECONDS)
+    if worker_thread.is_alive():
+        LOGGER.warning(
+            "Embedded background worker did not finish its tick within %.0f s; "
+            "abandoning it",
+            EMBEDDED_WORKER_STOP_SECONDS,
+        )
+        return
+
+    LOGGER.info("Embedded background worker stopped")
 
 
 def close_postgres_pool(app_container: AppContainer) -> None:

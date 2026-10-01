@@ -63,3 +63,39 @@ def test_cabinet_address_defaults_to_the_development_server() -> None:
     assert production.cabinet_base_url is None
     with pytest.raises(ValueError, match="CabinetBaseUrl"):
         assemble_app_settings({"CABINET_BASE_URL": "cabinet.example.com"})
+
+
+@pytest.mark.parametrize(
+    ("environment", "expected"),
+    [
+        ({}, True),
+        ({"EMBEDDED_WORKER": "auto"}, True),
+        ({"DATABASE_URL": "postgresql://localhost/workshop"}, False),
+        ({"APP_ENV": "test"}, False),
+        ({"APP_ENV": "production"}, False),
+        ({"EMBEDDED_WORKER": "false"}, False),
+        ({"EMBEDDED_WORKER": "TRUE", "APP_ENV": "test"}, True),
+        (
+            {
+                "EMBEDDED_WORKER": "true",
+                "DATABASE_URL": "postgresql://localhost/workshop",
+            },
+            True,
+        ),
+    ],
+)
+def test_embedded_worker_runs_by_default_only_over_in_memory_development_data(
+    environment: dict[str, str],
+    expected: bool,
+) -> None:
+    settings = assemble_app_settings(environment)
+
+    assert settings.is_embedded_worker_enabled is expected
+
+
+def test_embedded_worker_is_refused_in_production_and_for_unknown_values() -> None:
+    with pytest.raises(ValidationFailedError, match="workshop worker"):
+        assemble_app_settings({"APP_ENV": "production", "EMBEDDED_WORKER": "true"})
+
+    with pytest.raises(ValidationFailedError, match="auto, true or false"):
+        assemble_app_settings({"EMBEDDED_WORKER": "sometimes"})

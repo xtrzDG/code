@@ -42,7 +42,10 @@ from app.schemas.typings.messaging.constrained_strings import (
     TwilioMessagingServiceSid,
 )
 from app.schemas.typings.messaging.strings import SmtpUsername
-from app.schemas.typings.platform.booleans import IsLlmContentTraced
+from app.schemas.typings.platform.booleans import (
+    IsEmbeddedWorkerEnabled,
+    IsLlmContentTraced,
+)
 from app.schemas.typings.platform.constrained_integers import WorkerPollSeconds
 from app.schemas.typings.platform.constrained_strings import CabinetBaseUrl
 from app.schemas.typings.platform.strings import (
@@ -111,6 +114,8 @@ SMTP_VARIABLES: tuple[str, ...] = (
     "SMTP_USERNAME",
     "SMTP_PASSWORD",
 )
+# EMBEDDED_WORKER: "auto" decides by the environment (see read_embedded_worker).
+EMBEDDED_WORKER_AUTO: str = "auto"
 TRUE_VALUES: frozenset[str] = frozenset({"1", "true", "yes", "on"})
 FALSE_VALUES: frozenset[str] = frozenset({"0", "false", "no", "off"})
 
@@ -152,6 +157,9 @@ def assemble_app_settings(environment_variables: Mapping[str, str]) -> AppSettin
     smtp_security = SmtpSecurity(
         read_text(environment_variables, "SMTP_SECURITY", SmtpSecurity.STARTTLS)
     )
+    database_url: DatabaseUrl | None = optional_text(
+        environment_variables, "DATABASE_URL", DatabaseUrl
+    )
 
     return AppSettings(
         environment=environment,
@@ -161,7 +169,7 @@ def assemble_app_settings(environment_variables: Mapping[str, str]) -> AppSettin
             PublicBaseUrl,
         ),
         cabinet_base_url=read_cabinet_base_url(environment_variables, is_development),
-        database_url=optional_text(environment_variables, "DATABASE_URL", DatabaseUrl),
+        database_url=database_url,
         encryption_key=secret("ENCRYPTION_KEY"),
         llm_provider=llm_provider,
         llm_model_id=LlmModelId(
@@ -349,6 +357,13 @@ def assemble_app_settings(environment_variables: Mapping[str, str]) -> AppSettin
         worker_poll_seconds=WorkerPollSeconds(
             read_integer(environment_variables, "WORKER_POLL_SECONDS", 15)
         ),
+        is_embedded_worker_enabled=IsEmbeddedWorkerEnabled(
+            read_embedded_worker(
+                environment_variables,
+                environment=environment,
+                has_database=database_url is not None,
+            )
+        ),
         recordings_directory=LocalDirectoryPath(
             read_text(
                 environment_variables,
@@ -409,6 +424,52 @@ def check_login_code_providers(environment_variables: Mapping[str, str]) -> None
             "SMTP_USERNAME together with SMTP_PASSWORD when the server needs a "
             "login."
         )
+
+
+def read_embedded_worker(
+    environment_variables: Mapping[str, str],
+    environment: DeploymentEnvironment,
+    has_database: bool,
+) -> bool:
+    """
+    EMBEDDED_WORKER: whether the API runs the background worker (periodic
+    jobs and the job queue: autotests, reminders) in a thread of its own
+    process.
+
+    - `auto` (default): on in development without DATABASE_URL. In-memory
+      storage lives inside one process, so a separate worker would never
+      see the API's data: autotests would stay "running" and reminders
+      would never go out.
+    - `true`: on (e.g. development against a local Postgres without the
+      separate worker). Refused in production: the worker assumes it is
+      the only one, and a production API may run in several processes or
+      instances next to `workshop worker`, so jobs would run twice.
+    - `false`: off; run `python -m app.worker_main` (`workshop worker`).
+
+    Raises:
+        ValidationFailedError: an unknown value, or `true` in production.
+    """
+
+    raw_value: str = environment_variables.get("EMBEDDED_WORKER", "").strip().lower()
+    if raw_value in {"", EMBEDDED_WORKER_AUTO}:
+        return environment is DeploymentEnvironment.DEVELOPMENT and not has_database
+
+    if raw_value in FALSE_VALUES:
+        return False
+
+    if raw_value not in TRUE_VALUES:
+        raise ValidationFailedError(
+            f"EMBEDDED_WORKER must be auto, true or false, got {raw_value!r}."
+        )
+
+    if environment is DeploymentEnvironment.PRODUCTION:
+        raise ValidationFailedError(
+            "EMBEDDED_WORKER cannot be true in production: run the background "
+            "worker as its own single process (`workshop worker`), or jobs run "
+            "once per API process."
+        )
+
+    return True
 
 
 def read_cabinet_base_url(

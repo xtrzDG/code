@@ -154,4 +154,6 @@ repositories ─ adapters (app/adapters/) ─ clients (app/clients/)  внешн
   фасилитаторы сами зависят от адаптеров.
 - HTTP: `app/main.py` (фабрика uvicorn) и `app/gateways/http/router_assembly.py`.
   Фоновый воркер: `app/worker_main.py`, задачи перечислены в
-  `app/containers/gateways.py`.
+  `app/containers/gateways.py`. В разработке без Postgres тот же воркер идёт
+  потоком внутри API (`EMBEDDED_WORKER`, жизненный цикл в `app/main.py`): данные в
+  памяти видны только своему процессу.
