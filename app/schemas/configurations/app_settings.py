@@ -21,6 +21,8 @@ from app.schemas.typings.localization.constrained_strings import (
     CountryCode,
     E164PhoneNumber,
 )
+from app.schemas.typings.platform.booleans import IsLlmContentTraced
+from app.schemas.typings.platform.constrained_integers import WorkerPollSeconds
 from app.schemas.typings.platform.strings import (
     DatabaseUrl,
     PlatformIdentifier,
@@ -83,4 +85,8 @@ class AppSettings(ImmutableDTO):
     flitt_secret_key: PlatformSecret | None = None
     langfuse_public_key: PlatformIdentifier | None = None
     langfuse_secret_key: PlatformSecret | None = None
+    langfuse_host: PublicBaseUrl
+    is_llm_content_traced: IsLlmContentTraced
+    cors_allowed_origins: list[PublicBaseUrl]
+    worker_poll_seconds: WorkerPollSeconds
     sentry_dsn: PlatformSecret | None = None

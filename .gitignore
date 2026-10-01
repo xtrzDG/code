@@ -135,3 +135,6 @@ mongo.agent.env
 .DS_Store
 Thumbs.db
 Desktop.ini
+
+# Claude Code local state and agent worktrees
+.claude/

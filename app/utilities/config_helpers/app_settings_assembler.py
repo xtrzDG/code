@@ -26,6 +26,8 @@ from app.schemas.typings.localization.constrained_strings import (
     CountryCode,
     E164PhoneNumber,
 )
+from app.schemas.typings.platform.booleans import IsLlmContentTraced
+from app.schemas.typings.platform.constrained_integers import WorkerPollSeconds
 from app.schemas.typings.platform.strings import (
     DatabaseUrl,
     PlatformIdentifier,
@@ -47,6 +49,8 @@ DEFAULT_MODEL_IDS: dict[str, str] = {
     LlmProvider.SCRIPTED: "scripted",
 }
 DEFAULT_OPENAI_BASE_URL: str = "https://eu.api.openai.com/v1"
+# Langfuse Cloud EU region (the concept keeps data in the EU).
+DEFAULT_LANGFUSE_HOST: str = "https://cloud.langfuse.com"
 # Comprehensively sanctioned jurisdictions for a US-person founder. Confirm the
 # list with a lawyer before launch; override with RESTRICTED_COUNTRY_CODES
 # (comma-separated, an empty value disables the restriction).
@@ -182,6 +186,19 @@ def assemble_app_settings(environment_variables: Mapping[str, str]) -> AppSettin
         langfuse_public_key=identifier("LANGFUSE_PUBLIC_KEY"),
         langfuse_secret_key=secret("LANGFUSE_SECRET_KEY"),
         sentry_dsn=secret("SENTRY_DSN"),
+        langfuse_host=PublicBaseUrl(
+            read_text(environment_variables, "LANGFUSE_HOST", DEFAULT_LANGFUSE_HOST)
+        ),
+        is_llm_content_traced=IsLlmContentTraced(
+            read_boolean(environment_variables, "LANGFUSE_CAPTURE_CONTENT", False)
+        ),
+        cors_allowed_origins=[
+            PublicBaseUrl(origin)
+            for origin in read_raw_list(environment_variables, "CORS_ALLOWED_ORIGINS")
+        ],
+        worker_poll_seconds=WorkerPollSeconds(
+            read_integer(environment_variables, "WORKER_POLL_SECONDS", 15)
+        ),
     )
 
 
