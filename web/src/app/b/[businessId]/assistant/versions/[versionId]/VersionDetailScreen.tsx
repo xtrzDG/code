@@ -81,6 +81,7 @@ export function VersionDetailScreen({ versionId }: { versionId: string }) {
 
   const [tab, setTab] = useState<DetailTab>("autotests");
   const [dialog, setDialog] = useState<Dialog>(null);
+  const [checklistKey, setChecklistKey] = useState(0);
 
   const details = version.data;
   const runData = !hasRun || run.error?.code === "not_found" ? null : (run.data ?? null);
@@ -97,6 +98,7 @@ export function VersionDetailScreen({ versionId }: { versionId: string }) {
       const timer = window.setInterval(() => {
         reloadVersion();
         reloadRun();
+        setChecklistKey((key) => key + 1);
       }, POLL_INTERVAL_MS);
       return () => window.clearInterval(timer);
     }
@@ -138,6 +140,7 @@ export function VersionDetailScreen({ versionId }: { versionId: string }) {
   const refreshState = () => {
     version.reload();
     versions.reload();
+    setChecklistKey((key) => key + 1);
   };
 
   const copyInstruction = async () => {
@@ -232,7 +235,12 @@ export function VersionDetailScreen({ versionId }: { versionId: string }) {
       </Card>
 
       {(isOwner || isPlatformAdmin) && details.status !== "published" && details.status !== "archived" ? (
-        <GoLiveChecklist status={details.status} canRunAutotests={canRunAutotests} onRunAutotests={() => setDialog("autotests")} />
+        <GoLiveChecklist
+          versionId={details.id}
+          refreshKey={`${details.status}:${checklistKey}`}
+          canRunAutotests={canRunAutotests}
+          onRunAutotests={() => setDialog("autotests")}
+        />
       ) : null}
 
       <Card>

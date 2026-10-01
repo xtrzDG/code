@@ -20,6 +20,7 @@ from app.schemas.dto.assistants import (
     AssistantVersionDetails,
     AssistantVersionQuery,
     AutotestRunCompletion,
+    AutotestRunProgress,
     AutotestRunView,
     AutotestScenarioResultView,
     LlmTokenPrice,
@@ -727,6 +728,7 @@ def test_a_run_the_worker_cannot_finish_does_not_leave_the_version_testing() -> 
                         testbed.run_scenario_use_case,
                         UnfinishableRun(),
                         testbed.abandon_autotest_run_use_case,
+                        testbed.record_autotest_progress_use_case,
                     )
                 )
             )
@@ -761,3 +763,94 @@ def test_a_run_the_worker_cannot_finish_does_not_leave_the_version_testing() -> 
     )
     rerun = testbed.run_autotests(business.id, version.id)
     assert rerun.status is AutotestRunStatus.FINISHED
+
+
+class ProgressSnapshots:
+    """Records what the cabinet would see after every played scenario."""
+
+    def __init__(self, testbed: AssemblyTestbed) -> None:
+        self._testbed: AssemblyTestbed = testbed
+        self.snapshots: list[tuple[str, int, int]] = []
+
+    def run(self, input_data: AutotestRunProgress) -> None:
+        self._testbed.record_autotest_progress_use_case.run(input_data)
+        view = self._testbed.get_autotest_run_use_case.run(
+            AssistantVersionQuery(
+                user_id=self._testbed.owner_id,
+                business_id=input_data.business_id,
+                version_id=self._version_id(input_data),
+            )
+        )
+        self.snapshots.append(
+            (view.status.value, len(view.results), int(view.scenario_count))
+        )
+
+    def _version_id(self, input_data: AutotestRunProgress) -> AssistantVersionId:
+        stored = self._testbed.run_repo.get(input_data.business_id, input_data.run_id)
+        assert stored is not None
+        return stored.assistant_version_id
+
+
+def test_a_running_run_shows_its_progress_scenario_by_scenario() -> None:
+    testbed = AssemblyTestbed()
+    business, version = start(testbed)
+    progress = ProgressSnapshots(testbed)
+    worker = BackgroundWorker(
+        periodic_jobs=[],
+        queued_job_operators={
+            RUN_AUTOTESTS_JOB: PipelineOperator(
+                OrchestratorPipeline(
+                    RunQueuedAutotestsOrchestrator(
+                        testbed.resume_autotest_run_use_case,
+                        testbed.run_scenario_use_case,
+                        testbed.finish_autotest_run_use_case,
+                        testbed.abandon_autotest_run_use_case,
+                        progress,
+                    )
+                )
+            )
+        },
+        job_repo=testbed.job_repo,
+        wall_clock=testbed.wall_clock,
+        error_reporter=testbed.worker_errors,
+        poll_seconds=WorkerPollSeconds(5),
+        storage_scope=StorageScopeContext(),
+    )
+    started = testbed.queue_autotest_run_orchestrator.execute(
+        RunAutotestsCommand(
+            user_id=testbed.owner_id,
+            business_id=business.id,
+            version_id=version.id,
+            languages=[LanguageTag("en")],
+        )
+    )
+    planned = int(started.scenario_count)
+    assert planned > 2
+    assert started.results == []
+
+    worker.run_once()
+
+    assert progress.snapshots == [
+        ("running", done, planned) for done in range(1, planned)
+    ]
+    finished = testbed.get_autotest_run_use_case.run(
+        AssistantVersionQuery(
+            user_id=testbed.owner_id, business_id=business.id, version_id=version.id
+        )
+    )
+    assert finished.status is AutotestRunStatus.FINISHED
+    assert len(finished.results) == planned == int(finished.scenario_count)
+
+
+def test_progress_is_not_written_into_a_run_that_already_ended() -> None:
+    testbed = AssemblyTestbed()
+    business, version = start(testbed)
+    finished = testbed.run_autotests(business.id, version.id)
+
+    testbed.record_autotest_progress_use_case.run(
+        AutotestRunProgress(business_id=business.id, run_id=finished.id, results=[])
+    )
+
+    stored = testbed.run_repo.get(business.id, finished.id)
+    assert stored is not None
+    assert len(stored.results) == int(finished.scenario_count) > 0

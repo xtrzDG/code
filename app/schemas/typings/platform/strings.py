@@ -11,6 +11,14 @@ class DatabaseUrl(BaseTypedString):
     """Postgres connection string (contains credentials; never logged)."""
 
 
+class ErrorMessageText(BaseTypedString):
+    """English text of a failed API request (the "message" of an error body)."""
+
+
+class ErrorReasonMessage(BaseTypedString):
+    """English sentence explaining one refusal reason (for logs and API users)."""
+
+
 class PlatformIdentifier(BaseTypedString):
     """Non-secret identifier at a provider (app id, project id, merchant id)."""
 

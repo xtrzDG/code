@@ -1,7 +1,10 @@
 from app.contracts.repositories import AssistantVersionRepoContract
 from app.contracts.transformer_contract import TransformerContract
 from app.contracts.use_case_contract import UseCaseContract
-from app.schemas.constants.assistants import AssistantVersionStatus
+from app.schemas.constants.assistants import (
+    AssistantVersionRefusalCode,
+    AssistantVersionStatus,
+)
 from app.schemas.constants.users import BusinessMemberRole
 from app.schemas.domain.assistants import AssistantVersionDocument
 from app.schemas.domain.businesses import BusinessDocument
@@ -12,6 +15,7 @@ from app.schemas.dto.assistants import (
     RollbackAssistantVersionCommand,
 )
 from app.schemas.exceptions.application_errors import ConflictError, NotFoundError
+from app.utilities.assembly.go_live_refusals import build_version_reason
 
 
 class RollbackAssistantVersionUseCase(
@@ -20,7 +24,9 @@ class RollbackAssistantVersionUseCase(
     """
     Owner publishes an earlier version again with one button (concept
     section 4). Only an ARCHIVED version, one that was live before, can be
-    rolled back to; the current live version is archived in its place.
+    rolled back to (else the refusal reason is "version_not_archived"); the
+    current live version is archived in its place. The go-live checks of
+    activation apply, except the autotests.
     """
 
     def __init__(
@@ -75,9 +81,19 @@ class RollbackAssistantVersionUseCase(
             )
 
         if version.status is not AssistantVersionStatus.ARCHIVED:
-            raise ConflictError(
+            message: str = (
                 f"Only an earlier live version can be rolled back to; version "
                 f"{version.version_number} is {version.status.value}."
+            )
+            raise ConflictError(
+                message,
+                reasons=[
+                    build_version_reason(
+                        AssistantVersionRefusalCode.VERSION_NOT_ARCHIVED,
+                        message,
+                        [version.status.value],
+                    )
+                ],
             )
 
         published_version: AssistantVersionDocument = (

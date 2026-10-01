@@ -144,6 +144,7 @@ class OrchestratorsContainer(containers.DeclarativeContainer):
         run_autotest_scenario=run_autotest_scenario_use_case,
         finish_autotest_run=use_cases.finish_autotest_run_use_case,
         abandon_autotest_run=use_cases.abandon_autotest_run_use_case,
+        record_autotest_progress=use_cases.record_autotest_progress_use_case,
     )
 
     # --- Call forwarding instructions (access check, then the instructions).
@@ -374,6 +375,9 @@ class OrchestratorsContainer(containers.DeclarativeContainer):
     confirm_imported_items_orchestrator = use_case_orchestrator(
         use_cases.confirm_imported_items_use_case
     )
+    discard_import_batch_orchestrator = use_case_orchestrator(
+        use_cases.discard_import_batch_use_case
+    )
 
     # --- Assistant versions and autotests.
     assemble_assistant_version_orchestrator = use_case_orchestrator(
@@ -387,6 +391,9 @@ class OrchestratorsContainer(containers.DeclarativeContainer):
     )
     get_autotest_run_orchestrator = use_case_orchestrator(
         use_cases.get_autotest_run_use_case
+    )
+    get_go_live_readiness_orchestrator = use_case_orchestrator(
+        use_cases.get_go_live_readiness_use_case
     )
     publish_assistant_version_orchestrator = use_case_orchestrator(
         use_cases.publish_assistant_version_use_case

@@ -120,10 +120,12 @@ web/
                                slots (whole-day mode), details, edit, move, cancel
         leads/                 server-paged requests by status with tab counts, status changes, details
         handoffs/              server-paged open/resolved handoffs by urgency, resolve
-        knowledge/             items (layout.tsx: tabs) + questions/ (unanswered), import/ (menu
-                               photo, PDF or link), resources/ (bookable resources, special days)
+        knowledge/             items (layout.tsx: tabs; server-paged, filtered by the API) + questions/
+                               (unanswered, server-paged), import/ (menu photo, PDF or link; discard a
+                               whole batch), resources/ (bookable resources, special days)
         assistant/             test chat (layout.tsx: live version + tabs), versions/,
-                               versions/[versionId]/ (go-live checklist, autotests, publish, rollback)
+                               versions/[versionId]/ (go-live checklist, autotests with live progress,
+                               publish, rollback)
         channels/              chat channels, website chat code, call forwarding, Google Calendar,
                                staff Telegram link
         billing/               plan, trial, usage, plans of the country, invoices, payment
@@ -164,7 +166,8 @@ web/
                                paging with "show more" that keeps its length on reload), LoadMore,
                                refresh, business-local dates, replaceUrlQuery, useAutoReload
       content/                 shared by knowledge and assistant: SectionTabs (route tabs), Tabs,
-                               ConfirmDialog, Switch, icons, subPageMetadata
+                               ConfirmDialog, Switch, icons, subPageMetadata, usePagedList
+                               ({items, next_cursor} lists with "show more")
       workspace/               shared by channels, billing, settings, admin: CopyButton, ConfirmDialog
                                with typed confirmation, InlineError, hash Tabs (useHashTab), UsageMeter,
                                Facts, OwnerOnly notes, channel names, helpers
@@ -185,8 +188,8 @@ web/
 | Bookings | `bookings` | Server-paged day groups with place and order filters, manual booking with free slots (whole day), edit, confirm / complete / no-show / move / cancel and the customer text |
 | Leads | `leads` | Server-paged status tabs with counts, inline status change, details |
 | Handoffs | `handoffs` | Open first by urgency, resolve, call and conversation links |
-| Knowledge | `knowledge`, `/questions`, `/import`, `/resources` | Items and search, unanswered questions to FAQ, menu import with review, resources and special days |
-| Assistant | `assistant`, `/versions`, `/versions/{id}` | Test chat, versions, go-live checklist, autotests, publish and rollback |
+| Knowledge | `knowledge`, `/questions`, `/import`, `/resources` | Server-paged items and search, unanswered questions to FAQ, menu import with review and batch discard, resources and special days |
+| Assistant | `assistant`, `/versions`, `/versions/{id}` | Test chat with tool calls, versions, go-live checklist with fix links, autotests with live progress, publish and rollback with reasons |
 | Channels | `channels` | Connect messengers, website chat snippet, call forwarding codes, Google Calendar, staff Telegram link |
 | Billing | `billing` | Trial, plan change, usage meters, invoices, payment (owners only) |
 | Settings | `settings#general`, `#team`, `#notifications`, `#privacy`, `#audit` | Business settings and pause, team, manager contacts, data processing agreement and customer data, audit log |
@@ -304,6 +307,15 @@ the localized text of the code (`errors.codes.*`): `toast.error(error)` or
 pass overrides: `toast.error(error, { access_denied: "auth.errors.countryRestricted" })`.
 The English backend message is shown as a detail only for `validation_failed`
 and `conflict`.
+
+Some refusals also carry machine-readable reasons, kept as
+`ApiError.reasons` (`[{code, message, details}]`): a refused publish or
+rollback names the failed go-live checks (`subscription_or_trial`, `dpa`,
+`profile_gaps`, `staff_contact`, `autotests`, `voice_configuration`) or the
+version state, and a menu link the API cannot read is `menu_link_invalid`,
+`menu_link_unreachable` or `menu_link_unreadable`. Screens map these codes to
+their own texts (`refusalReasons` in `src/lib/assistant.ts`, `menuLinkProblem`
+in `src/lib/knowledge.ts`); never match the English message.
 
 ### Translations
 

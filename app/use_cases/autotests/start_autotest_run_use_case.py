@@ -21,6 +21,7 @@ from app.schemas.exceptions.application_errors import (
     NotFoundError,
     ValidationFailedError,
 )
+from app.schemas.typings.assistants.constrained_integers import AutotestScenarioCount
 from app.schemas.typings.assistants.prefixed_id import AutotestRunId
 from app.utilities.assembly.fact_formatting import find_example_mobile_number
 
@@ -120,6 +121,7 @@ class StartAutotestRunUseCase(UseCaseContract[RunAutotestsCommand, AutotestRunPl
             languages=input_data.languages,
             kinds=input_data.kinds,
             is_full_coverage=planning.is_full_coverage,
+            planned_scenario_count=AutotestScenarioCount(len(planning.scenarios)),
             previous_version_status=previous_status,
             created_at=now,
             updated_at=now,

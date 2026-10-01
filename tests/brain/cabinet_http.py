@@ -42,6 +42,8 @@ from app.schemas.dto.conversations import AssistantReply
 from app.schemas.dto.menu_import import (
     ConfirmImportedItemsCommand,
     ConfirmImportedItemsResult,
+    DiscardedImportBatch,
+    DiscardImportBatchCommand,
     ImportMenuCommand,
     MenuImportResult,
 )
@@ -79,6 +81,9 @@ from app.use_cases.conversations.send_staff_message_use_case import (
 )
 from app.use_cases.menu_import.confirm_imported_items_use_case import (
     ConfirmImportedItemsUseCase,
+)
+from app.use_cases.menu_import.discard_import_batch_use_case import (
+    DiscardImportBatchUseCase,
 )
 from app.use_cases.menu_import.import_menu_use_case import ImportMenuUseCase
 from tests.brain.brain_world import BrainWorld
@@ -164,6 +169,9 @@ class CabinetOperators:
     import_menu: OperatorContract[ImportMenuCommand, MenuImportResult]
     confirm_imported_items: OperatorContract[
         ConfirmImportedItemsCommand, ConfirmImportedItemsResult
+    ]
+    discard_import_batch: OperatorContract[
+        DiscardImportBatchCommand, DiscardedImportBatch
     ]
 
 
@@ -274,6 +282,16 @@ def build_cabinet_operators(
                 )
             )
         ),
+        discard_import_batch=PipelineOperator(
+            OrchestratorPipeline(
+                UseCaseOrchestrator(
+                    DiscardImportBatchUseCase(
+                        authorize_business_access=world.authorize,
+                        knowledge_item_repo=world.knowledge_item_repo,
+                    )
+                )
+            )
+        ),
     )
 
 
@@ -305,6 +323,7 @@ def build_cabinet_client(
         build_menu_import_router(
             import_menu_operator=operators.import_menu,
             confirm_imported_items_operator=operators.confirm_imported_items,
+            discard_import_batch_operator=operators.discard_import_batch,
             current_user=current_user,
         )
     )

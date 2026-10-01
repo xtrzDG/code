@@ -75,8 +75,9 @@ export function OnboardingWizard() {
   );
   const knowledge = useApiQuery(
     () =>
+      // The offer and FAQ steps edit the whole list: the largest page the API serves.
       api.GET("/v1/businesses/{business_id}/knowledge", {
-        params: { path: { business_id: businessId }, query: { language: locale } },
+        params: { path: { business_id: businessId }, query: { language: locale, limit: "200" } },
       }),
     [businessId, locale],
   );

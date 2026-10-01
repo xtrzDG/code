@@ -2,16 +2,21 @@ from app.contracts.repositories import BusinessRepoContract, KnowledgeItemRepoCo
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.knowledge import KnowledgeItemDocument
-from app.schemas.dto.knowledge_admin import KnowledgeItemList, KnowledgeItemListQuery
+from app.schemas.dto.knowledge_admin import KnowledgeItemListQuery, KnowledgeItemPage
 from app.schemas.exceptions.application_errors import NotFoundError
 from app.schemas.typings.localization.constrained_strings import LanguageTag
-from app.utilities.knowledge.knowledge_items import item_sort_key, to_item_details
+from app.utilities.knowledge.knowledge_items import to_item_details
+from app.utilities.paging.cursor_paging import take_page
 
 
 class ListKnowledgeItemsUseCase(
-    UseCaseContract[KnowledgeItemListQuery, KnowledgeItemList]
+    UseCaseContract[KnowledgeItemListQuery, KnowledgeItemPage]
 ):
-    """List the knowledge base of a business, optionally by kind and active flag."""
+    """
+    One page of the knowledge base of a business, newest first, optionally
+    only one kind and only active or inactive items (filters apply before
+    paging).
+    """
 
     def __init__(
         self,
@@ -21,7 +26,7 @@ class ListKnowledgeItemsUseCase(
         self._business_repo: BusinessRepoContract = business_repo
         self._knowledge_item_repo: KnowledgeItemRepoContract = knowledge_item_repo
 
-    def run(self, input_data: KnowledgeItemListQuery) -> KnowledgeItemList:
+    def run(self, input_data: KnowledgeItemListQuery) -> KnowledgeItemPage:
         business: BusinessDocument | None = self._business_repo.get(
             input_data.business_id
         )
@@ -35,9 +40,16 @@ class ListKnowledgeItemsUseCase(
             if (input_data.kind is None or item.kind is input_data.kind)
             and (input_data.is_active is None or item.is_active == input_data.is_active)
         ]
-        return KnowledgeItemList(
+        page_items, next_cursor = take_page(
+            items,
+            input_data.page,
+            sort_key=lambda item: int(item.created_at),
+            item_id=lambda item: str(item.id),
+        )
+        return KnowledgeItemPage(
             items=[
                 to_item_details(item, business.currency_code, language)
-                for item in sorted(items, key=item_sort_key)
-            ]
+                for item in page_items
+            ],
+            next_cursor=next_cursor,
         )

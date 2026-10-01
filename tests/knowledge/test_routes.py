@@ -326,6 +326,7 @@ def test_knowledge_crud_search_and_tenant_isolation(fixture: RoutesFixture) -> N
     assert created.json()["formatted_price"] == "18,00\xa0₾"
     assert created.json()["currency_code"] == "GEL"
     assert [item["id"] for item in listed.json()["items"]] == [item_id]
+    assert listed.json()["next_cursor"] is None
     assert patched.status_code == 200
     assert patched.json()["body"] == "Сыр и яйцо"
     assert found.status_code == 200
@@ -349,6 +350,9 @@ def test_knowledge_crud_search_and_tenant_isolation(fixture: RoutesFixture) -> N
         ("post", "/knowledge", {"json": {"kind": "room_type", "title": "X"}}, 422),
         ("get", "/knowledge", {"params": {"kind": "spaceship"}}, 422),
         ("get", "/knowledge", {"params": {"is_active": "maybe"}}, 422),
+        ("get", "/knowledge", {"params": {"limit": "0"}}, 422),
+        ("get", "/knowledge", {"params": {"limit": "many"}}, 422),
+        ("get", "/knowledge", {"params": {"cursor": "!!"}}, 422),
         ("get", "/knowledge/not-an-id", {}, 404),
         ("post", "/knowledge/search", {"json": {"query": "x", "limit": 50}}, 422),
     ],

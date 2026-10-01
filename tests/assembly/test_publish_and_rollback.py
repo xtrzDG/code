@@ -19,10 +19,12 @@ from app.schemas.exceptions.application_errors import (
     ExternalServiceError,
     NotFoundError,
 )
+from app.schemas.exceptions.base_exception import ApplicationError
 from app.schemas.typings.assistants.prefixed_id import AssistantVersionId
 from app.schemas.typings.assistants.strings import VoiceAgentId
 from app.schemas.typings.compliance.constrained_strings import DpaDocumentVersion
 from app.schemas.typings.localization.constrained_strings import LanguageTag
+from app.schemas.typings.platform.constrained_strings import EnvironmentVariableName
 from app.use_cases.assistants.resume_assistant_use_case import ResumeAssistantUseCase
 from app.use_cases.voice.remove_voice_agent_use_case import RemoveVoiceAgentUseCase
 from tests.assembly.builders import (
@@ -33,6 +35,15 @@ from tests.assembly.builders import (
     seed_online_shop,
 )
 from tests.assembly.testbed import AssemblyTestbed
+
+
+def reason_codes(error: ApplicationError) -> list[tuple[str, list[str]]]:
+    """Codes and details of the machine-readable reasons of a refusal."""
+
+    return [
+        (str(reason.code), [str(detail) for detail in reason.details])
+        for reason in error.reasons
+    ]
 
 
 def ready_version(
@@ -110,12 +121,22 @@ def test_untested_or_failed_versions_go_live_only_when_an_admin_forces_them(
         version = testbed.assemble(business.id)
         assert version.status is AssistantVersionStatus.DRAFT
 
-    with pytest.raises(ConflictError, match="has not passed the autotests"):
+    with pytest.raises(ConflictError, match="has not passed the autotests") as (
+        refused
+    ):
         testbed.publish(business.id, version.id)
 
+    assert reason_codes(refused.value) == [
+        (
+            "autotests",
+            ["tests_failed", "finished"] if make_failed else ["draft"],
+        )
+    ]
     # "A broken version does not reach customers": the owner cannot force it.
-    with pytest.raises(AccessDeniedError, match="platform admin"):
+    with pytest.raises(AccessDeniedError, match="platform admin") as denied:
         testbed.publish(business.id, version.id, accept_failed_tests=True)
+
+    assert reason_codes(denied.value) == [("force_publish_admin_only", [])]
 
     assert testbed.business(business.id).status is BusinessStatus.TESTING
     published = testbed.publish(
@@ -147,14 +168,18 @@ def test_versions_under_test_live_or_archived_cannot_be_published() -> None:
     stored_third.status = AssistantVersionStatus.TESTING
     testbed.version_repo.save(stored_third)
 
-    with pytest.raises(ConflictError, match="already live"):
+    with pytest.raises(ConflictError, match="already live") as live:
         testbed.publish(business.id, second.id)
 
-    with pytest.raises(ConflictError, match="rollback"):
+    with pytest.raises(ConflictError, match="rollback") as archived:
         testbed.publish(business.id, first.id, accept_failed_tests=True)
 
-    with pytest.raises(ConflictError, match="being tested"):
+    with pytest.raises(ConflictError, match="being tested") as testing:
         testbed.publish(business.id, third.id, accept_failed_tests=True)
+
+    assert reason_codes(live.value) == [("version_already_live", [])]
+    assert reason_codes(archived.value) == [("version_archived", [])]
+    assert reason_codes(testing.value) == [("autotests", ["testing"])]
 
 
 def test_only_the_owner_publishes() -> None:
@@ -284,15 +309,44 @@ def test_greeting_failure_is_reported_as_a_voice_failure() -> None:
     )
 
 
-def test_voice_needs_a_public_base_url() -> None:
-    testbed = AssemblyTestbed(environment={"APP_BASE_URL": ""})
+def test_voice_needs_its_settings_in_production() -> None:
+    testbed = AssemblyTestbed(environment={"APP_BASE_URL": "", "APP_ENV": "production"})
+    testbed.voice_provisioner.missing_settings = [
+        EnvironmentVariableName("ELEVENLABS_API_KEY")
+    ]
     business = seed_georgian_restaurant(testbed)
     version = ready_version(testbed, business)
 
-    with pytest.raises(ExternalServiceError, match="APP_BASE_URL"):
+    with pytest.raises(ConflictError, match="APP_BASE_URL, ELEVENLABS_API_KEY") as (
+        refused
+    ):
         testbed.publish(business.id, version.id)
 
+    assert reason_codes(refused.value) == [
+        ("voice_configuration", ["APP_BASE_URL", "ELEVENLABS_API_KEY"])
+    ]
     assert testbed.voice_provisioner.specs == []
+    assert_nothing_went_live(testbed, business, version)
+
+
+def test_voice_versions_go_live_without_an_agent_when_development_lacks_voice(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    testbed = AssemblyTestbed()
+    testbed.voice_provisioner.missing_settings = [
+        EnvironmentVariableName("ELEVENLABS_API_KEY"),
+        EnvironmentVariableName("ELEVENLABS_WEBHOOK_SECRET"),
+    ]
+    business = seed_georgian_restaurant(testbed)
+    version = ready_version(testbed, business)
+    assert version.is_voice_enabled
+
+    published = testbed.publish(business.id, version.id)
+
+    assert published.status is AssistantVersionStatus.PUBLISHED
+    assert published.voice_agent_id is None
+    assert testbed.voice_provisioner.specs == []
+    assert "goes live without a voice agent" in caplog.text
 
 
 def test_rollback_publishes_an_archived_version_again() -> None:
@@ -321,11 +375,14 @@ def test_rollback_needs_an_archived_version_and_the_owner() -> None:
     testbed.publish(business.id, first.id)
     draft = testbed.assemble(business.id)
 
-    with pytest.raises(ConflictError, match="is published"):
+    with pytest.raises(ConflictError, match="is published") as published:
         rollback(testbed, business, first.id)
 
-    with pytest.raises(ConflictError, match="is draft"):
+    with pytest.raises(ConflictError, match="is draft") as drafted:
         rollback(testbed, business, draft.id)
+
+    assert reason_codes(published.value) == [("version_not_archived", ["published"])]
+    assert reason_codes(drafted.value) == [("version_not_archived", ["draft"])]
 
     with pytest.raises(AccessDeniedError):
         rollback(testbed, business, first.id, as_staff=True)
@@ -380,14 +437,14 @@ def test_going_live_needs_a_running_trial_or_a_paid_subscription() -> None:
     subscription.trial_ends_at = testbed.wall_clock.now_unix()
     testbed.subscription_repo.save(subscription)
 
-    with pytest.raises(ConflictError, match="start the trial or pay"):
+    with pytest.raises(ConflictError, match="Start the trial or pay"):
         testbed.publish(business.id, version.id)
 
     assert_nothing_went_live(testbed, business, version)
     subscription.status = SubscriptionStatus.PAST_DUE
     subscription.grace_until = testbed.wall_clock.now_unix()
     testbed.subscription_repo.save(subscription)
-    with pytest.raises(ConflictError, match="start the trial or pay"):
+    with pytest.raises(ConflictError, match="Start the trial or pay"):
         testbed.publish(business.id, version.id)
 
     subscription.status = SubscriptionStatus.CANCELLED
@@ -408,9 +465,14 @@ def test_a_business_that_never_started_the_trial_cannot_go_live() -> None:
         testbed.publish(business.id, version.id)
 
     message = str(refused.value)
-    assert "start the trial or pay for the subscription" in message
-    assert "accept the data processing agreement (version 2026-10-01)" in message
-    assert "no_handoff_contact" in message
+    assert "Start the trial or pay for the subscription." in message
+    assert "Accept the data processing agreement (version 2026-10-01)." in message
+    assert "Add a staff contact" in message
+    assert reason_codes(refused.value) == [
+        ("subscription_or_trial", ["none"]),
+        ("dpa", ["2026-10-01"]),
+        ("staff_contact", ["no_handoff_contact"]),
+    ]
     assert_nothing_went_live(testbed, business, version)
     make_launch_ready(testbed, business)
     published = testbed.publish(business.id, version.id)
@@ -445,11 +507,15 @@ def test_going_live_needs_a_manager_contact_and_no_blocking_gap() -> None:
 
     with pytest.raises(
         ConflictError,
-        match=r"complete the profile \(see what to add: no_opening_hours, "
-        r"no_handoff_contact\)",
-    ):
+        match=r"Complete the profile \(see what to add: no_opening_hours\)\. "
+        r"Add a staff contact who receives handoffs, bookings and leads\.",
+    ) as refused:
         testbed.publish(business.id, version.id)
 
+    assert reason_codes(refused.value) == [
+        ("profile_gaps", ["no_opening_hours"]),
+        ("staff_contact", ["no_handoff_contact"]),
+    ]
     assert_nothing_went_live(testbed, business, version)
 
 
@@ -465,7 +531,7 @@ def test_rollback_is_refused_once_the_service_is_no_longer_paid() -> None:
     subscription.period_end = testbed.wall_clock.now_unix()
     testbed.subscription_repo.save(subscription)
 
-    with pytest.raises(ConflictError, match="start the trial or pay"):
+    with pytest.raises(ConflictError, match="Start the trial or pay"):
         rollback(testbed, business, first.id)
 
     assert testbed.business(business.id).published_assistant_version_id == second.id
@@ -526,6 +592,9 @@ def test_a_voice_platform_outage_does_not_block_switching_voice_off() -> None:
 class UnreachableVoicePlatform:
     def __init__(self) -> None:
         self.attempts: list[VoiceAgentId] = []
+
+    def list_missing_settings(self) -> list[EnvironmentVariableName]:
+        return []
 
     def upsert_agent(self, spec: VoiceAgentSpec) -> VoiceAgentId:
         raise ExternalServiceError(f"down for {spec.business_id}")

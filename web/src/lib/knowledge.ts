@@ -1,11 +1,13 @@
 /**
  * Pure helpers of the Knowledge section (app/b/[businessId]/knowledge):
- * kinds and grouping, the item form and its API bodies, menu-import drafts.
+ * kinds and grouping, the item form and its API bodies, menu-import drafts
+ * and why a menu link could not be read.
  *
  * Prices are typed in major units ("18,50") and sent in minor units of the
  * business currency (1850).
  */
 
+import { isApiError } from "@/api/errors";
 import type { KnowledgeItemDetails, KnowledgeItemKind, RequestBody, Schema } from "@/api/types";
 import type { MessageKey } from "@/i18n/translate";
 
@@ -345,4 +347,32 @@ export function formatFileSize(bytes: number, locale: string): string {
   }
   const number = new Intl.NumberFormat(locale, { maximumFractionDigits: unit === 0 ? 0 : 1 }).format(value);
   return `${number} ${units[unit]}`;
+}
+
+/** Why the API could not read a menu link (`reasons[].code` of its 422). */
+export type MenuLinkProblemCode = "menu_link_invalid" | "menu_link_unreachable" | "menu_link_unreadable";
+
+const MENU_LINK_PROBLEM_CODES: readonly MenuLinkProblemCode[] = ["menu_link_invalid", "menu_link_unreachable", "menu_link_unreadable"];
+
+export interface MenuLinkProblem {
+  code: MenuLinkProblemCode;
+  /** The page's HTTP error status ("http_status:404"), when it answered with one. */
+  status: number | null;
+}
+
+/** The link problem named by a failed import, or null for other errors (an unavailable reader, a bad file). */
+export function menuLinkProblem(error: unknown): MenuLinkProblem | null {
+  if (!isApiError(error) || error.status !== 422) {
+    return null;
+  }
+  for (const reason of error.reasons) {
+    const code = MENU_LINK_PROBLEM_CODES.find((known) => known === reason.code);
+    if (code) {
+      const status = reason.details
+        .map((detail) => /^http_status:(\d{3})$/.exec(detail)?.[1])
+        .find((value): value is string => value !== undefined);
+      return { code, status: status ? Number(status) : null };
+    }
+  }
+  return null;
 }

@@ -2,18 +2,21 @@ import { describe, expect, it } from "vitest";
 
 import {
   applicableAutotestKinds,
-  classifyPublishRefusal,
+  blockingChecks,
+  checkState,
   criterionScore,
   defaultTestVersionId,
   filterResults,
   formatScore,
   isRunInProgress,
   isSessionKey,
+  isTestingRefusal,
   liveVersion,
   narrowedSelection,
   newSessionKey,
   parseStoredTestChat,
   prettyJson,
+  refusalReasons,
   resultLanguages,
   scenarioAverage,
   scenarioNumber,
@@ -24,6 +27,7 @@ import {
   versionActions,
   type AutotestRunView,
   type AutotestScenarioResult,
+  type GoLiveCheck,
 } from "./assistant";
 
 const version = (id: string, versionNumber: number, status: "draft" | "testing" | "ready" | "tests_failed" | "published" | "archived") => ({
@@ -71,11 +75,12 @@ describe("versions", () => {
   });
 
   it("chooses the version the test chat talks to", () => {
-    expect(defaultTestVersionId([version("a", 1, "published"), version("b", 2, "ready")])).toBe("a");
-    expect(defaultTestVersionId([version("a", 1, "ready"), version("b", 2, "draft"), version("c", 3, "ready")])).toBe("c");
-    expect(defaultTestVersionId([version("a", 1, "draft"), version("b", 2, "tests_failed")])).toBe("a");
-    expect(defaultTestVersionId([version("a", 1, "tests_failed"), version("b", 2, "archived")])).toBe("a");
-    expect(defaultTestVersionId([version("a", 1, "archived")])).toBe("a");
+    // The newest version that is not archived, as the API picks it.
+    expect(defaultTestVersionId([version("a", 1, "published"), version("b", 2, "ready")])).toBe("b");
+    expect(defaultTestVersionId([version("a", 1, "ready"), version("b", 2, "published")])).toBe("b");
+    expect(defaultTestVersionId([version("a", 1, "draft"), version("b", 2, "tests_failed")])).toBe("b");
+    expect(defaultTestVersionId([version("a", 1, "testing"), version("b", 2, "archived")])).toBe("a");
+    expect(defaultTestVersionId([version("a", 1, "archived"), version("b", 2, "archived")])).toBe("b");
     expect(defaultTestVersionId([])).toBeNull();
   });
 
@@ -159,33 +164,57 @@ describe("autotests", () => {
   });
 });
 
-describe("publish refusals", () => {
-  it("lists every go-live condition the API names", () => {
-    const refusal = classifyPublishRefusal(
-      "The assistant cannot go live yet: start the trial or pay for the subscription; accept the data processing agreement " +
-        "(version 2026-10-01); complete the profile (see what to add: no_address, no_handoff_contact).",
+describe("going live", () => {
+  const refusal = (status: number, reasons: { code: string; message?: string; details?: string[] }[]) => ({
+    status,
+    reasons: reasons.map((reason) => ({ message: "", details: [], ...reason })),
+  });
+
+  it("reads the reason codes of a refused publish or rollback", () => {
+    const reasons = refusalReasons(
+      refusal(409, [
+        { code: "subscription_or_trial", details: ["none"] },
+        { code: "profile_gaps", details: ["no_address", "no_opening_hours"] },
+        { code: "something_new", message: "A reason the cabinet does not know." },
+      ]),
     );
-    expect(refusal).toEqual({ reasons: ["subscription", "dpa", "profile"], gapKinds: ["no_address", "no_handoff_contact"] });
+    expect(reasons).toEqual([
+      { code: "subscription_or_trial", message: "", details: ["none"] },
+      { code: "profile_gaps", message: "", details: ["no_address", "no_opening_hours"] },
+      { code: null, message: "A reason the cabinet does not know.", details: [] },
+    ]);
+    expect(refusalReasons(refusal(403, [{ code: "force_publish_admin_only" }]))[0]?.code).toBe("force_publish_admin_only");
   });
 
-  it("recognizes version state conflicts", () => {
-    expect(classifyPublishRefusal("Version 2 has not passed the autotests (status tests_failed). Run the autotests…").reasons).toEqual([
-      "autotests",
-    ]);
-    expect(classifyPublishRefusal("Version 2 is being tested; publish it when the autotests finish.").reasons).toEqual(["testing"]);
-    expect(classifyPublishRefusal("Version 2 is already live.").reasons).toEqual(["alreadyLive"]);
-    expect(classifyPublishRefusal("Version 1 is archived; use rollback to publish it again.").reasons).toEqual(["archived"]);
-    expect(classifyPublishRefusal("Only an earlier live version can be rolled back to; version 3 is ready.").reasons).toEqual([
-      "notArchived",
-    ]);
+  it("ignores other errors and answers without reasons", () => {
+    expect(refusalReasons(refusal(502, [{ code: "dpa" }]))).toEqual([]);
+    expect(refusalReasons(refusal(409, []))).toEqual([]);
+    expect(refusalReasons(null)).toEqual([]);
+  });
+
+  it("tells a version under test from an untested one", () => {
+    expect(isTestingRefusal({ code: "autotests", details: ["testing", "running"] })).toBe(true);
+    expect(isTestingRefusal({ code: "autotests", details: ["tests_failed", "finished"] })).toBe(false);
+    expect(isTestingRefusal({ code: "dpa", details: ["testing"] })).toBe(false);
+  });
+
+  it("shows each check as done, missing, a warning or in progress", () => {
+    const check = (code: GoLiveCheck["code"], isOk: boolean, isBlocking: boolean, details: string[] = []) => ({
+      code,
+      is_ok: isOk,
+      is_blocking: isBlocking,
+      details,
+    });
+    expect(checkState(check("dpa", true, true))).toBe("ok");
+    expect(checkState(check("dpa", false, true))).toBe("missing");
+    expect(checkState(check("voice_configuration", false, false))).toBe("warning");
+    expect(checkState(check("autotests", false, true, ["testing", "running"]))).toBe("pending");
+    expect(checkState(check("autotests", false, true, ["draft"]))).toBe("missing");
     expect(
-      classifyPublishRefusal("Only a platform admin may publish a version that has not passed the autotests (accept_failed_tests).").reasons,
-    ).toEqual(["adminOnly"]);
-  });
-
-  it("returns nothing for messages it does not know", () => {
-    expect(classifyPublishRefusal("Something else.")).toEqual({ reasons: [], gapKinds: [] });
-    expect(classifyPublishRefusal(null)).toEqual({ reasons: [], gapKinds: [] });
+      blockingChecks([check("dpa", false, true), check("voice_configuration", false, false), check("staff_contact", true, true)]).map(
+        (item) => item.code,
+      ),
+    ).toEqual(["dpa"]);
   });
 });
 

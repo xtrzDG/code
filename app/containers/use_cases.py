@@ -42,6 +42,7 @@ from app.schemas.dto.assistants import (
     AutotestRunCompletion,
     AutotestRunFailure,
     AutotestRunPlan,
+    AutotestRunProgress,
     AutotestRunView,
     AutotestScenarioPlanning,
     PublishAssistantVersionCommand,
@@ -155,6 +156,7 @@ from app.schemas.dto.conversations import (
     VoiceToolCallRequest,
     VoiceToolCallResult,
 )
+from app.schemas.dto.go_live import GoLiveReadiness, GoLiveReadinessRequest
 from app.schemas.dto.handoffs import (
     HandoffCommand,
     HandoffResult,
@@ -181,6 +183,7 @@ from app.schemas.dto.knowledge_admin import (
     KnowledgeItemDetails,
     KnowledgeItemList,
     KnowledgeItemListQuery,
+    KnowledgeItemPage,
     KnowledgeItemQuery,
     UpdateKnowledgeItemCommand,
     UpsertKnowledgeItemsCommand,
@@ -189,6 +192,8 @@ from app.schemas.dto.localization import PhoneNumberDetails
 from app.schemas.dto.menu_import import (
     ConfirmImportedItemsCommand,
     ConfirmImportedItemsResult,
+    DiscardedImportBatch,
+    DiscardImportBatchCommand,
     ImportMenuCommand,
     MenuImportResult,
 )
@@ -213,7 +218,7 @@ from app.schemas.dto.operations import (
     ManualBookingCommand,
     ResolveHandoffCommand,
     StartCalendarConnectionCommand,
-    UnansweredQuestionListView,
+    UnansweredQuestionPage,
     UpdateBookingCommand,
     UpdateLeadStatusCommand,
 )
@@ -292,6 +297,9 @@ from app.use_cases.assistants.check_go_live_readiness_use_case import (
 from app.use_cases.assistants.get_assistant_version_use_case import (
     GetAssistantVersionUseCase,
 )
+from app.use_cases.assistants.get_go_live_readiness_use_case import (
+    GetGoLiveReadinessUseCase,
+)
 from app.use_cases.assistants.list_assistant_versions_use_case import (
     ListAssistantVersionsUseCase,
 )
@@ -319,6 +327,9 @@ from app.use_cases.autotests.finish_autotest_run_use_case import (
 from app.use_cases.autotests.get_autotest_run_use_case import GetAutotestRunUseCase
 from app.use_cases.autotests.plan_autotest_scenarios_use_case import (
     PlanAutotestScenariosUseCase,
+)
+from app.use_cases.autotests.record_autotest_progress_use_case import (
+    RecordAutotestProgressUseCase,
 )
 from app.use_cases.autotests.resume_autotest_run_use_case import (
     ResumeAutotestRunUseCase,
@@ -501,6 +512,9 @@ from app.use_cases.localization.parse_phone_number_use_case import (
 )
 from app.use_cases.menu_import.confirm_imported_items_use_case import (
     ConfirmImportedItemsUseCase,
+)
+from app.use_cases.menu_import.discard_import_batch_use_case import (
+    DiscardImportBatchUseCase,
 )
 from app.use_cases.menu_import.import_menu_use_case import ImportMenuUseCase
 from app.use_cases.observability.flush_llm_traces_use_case import FlushLlmTracesUseCase
@@ -900,7 +914,7 @@ class UseCasesContainer(containers.DeclarativeContainer):
         knowledge_item_repo=repositories.knowledge_item_repo,
     )
     list_knowledge_items_use_case: Factory[
-        UseCaseContract[KnowledgeItemListQuery, KnowledgeItemList]
+        UseCaseContract[KnowledgeItemListQuery, KnowledgeItemPage]
     ] = Factory(
         ListKnowledgeItemsUseCase,
         business_repo=repositories.business_repo,
@@ -1202,7 +1216,7 @@ class UseCasesContainer(containers.DeclarativeContainer):
         wall_clock=time_provider.microsecond_wall_clock,
     )
     list_unanswered_questions_use_case: Factory[
-        UseCaseContract[ListUnansweredQuestionsQuery, UnansweredQuestionListView]
+        UseCaseContract[ListUnansweredQuestionsQuery, UnansweredQuestionPage]
     ] = Factory(
         ListUnansweredQuestionsUseCase,
         unanswered_question_repo=repositories.unanswered_question_repo,
@@ -1425,6 +1439,13 @@ class UseCasesContainer(containers.DeclarativeContainer):
         knowledge_item_repo=repositories.knowledge_item_repo,
         wall_clock=time_provider.microsecond_wall_clock,
     )
+    discard_import_batch_use_case: Factory[
+        UseCaseContract[DiscardImportBatchCommand, DiscardedImportBatch]
+    ] = Factory(
+        DiscardImportBatchUseCase,
+        authorize_business_access=authorize_business_access_use_case,
+        knowledge_item_repo=repositories.knowledge_item_repo,
+    )
 
     # --- Assistant assembly, autotests and publishing (the autotest scenario
     #     runner needs the conversation orchestrator: OrchestratorsContainer).
@@ -1509,6 +1530,13 @@ class UseCasesContainer(containers.DeclarativeContainer):
         autotest_run_repo=repositories.autotest_run_repo,
         wall_clock=time_provider.microsecond_wall_clock,
     )
+    record_autotest_progress_use_case: Factory[
+        UseCaseContract[AutotestRunProgress, None]
+    ] = Factory(
+        RecordAutotestProgressUseCase,
+        autotest_run_repo=repositories.autotest_run_repo,
+        wall_clock=time_provider.microsecond_wall_clock,
+    )
     finish_autotest_run_use_case: Factory[
         UseCaseContract[AutotestRunCompletion, AutotestRunView]
     ] = Factory(
@@ -1528,7 +1556,7 @@ class UseCasesContainer(containers.DeclarativeContainer):
         autotest_run_view_transformer=transformers.autotest_run_view_transformer,
     )
     check_go_live_readiness_use_case: Factory[
-        UseCaseContract[BusinessDocument, None]
+        UseCaseContract[GoLiveReadinessRequest, GoLiveReadiness]
     ] = Factory(
         CheckGoLiveReadinessUseCase,
         subscription_repo=repositories.subscription_repo,
@@ -1536,9 +1564,19 @@ class UseCasesContainer(containers.DeclarativeContainer):
         business_profile_repo=repositories.business_profile_repo,
         knowledge_item_repo=repositories.knowledge_item_repo,
         resource_repo=repositories.resource_repo,
+        autotest_run_repo=repositories.autotest_run_repo,
         niche_template_registry=registries.niche_template_registry,
+        voice_agent_provisioner=adapters.voice_agent_provisioner,
         app_settings=config.app_settings,
         wall_clock=time_provider.microsecond_wall_clock,
+    )
+    get_go_live_readiness_use_case: Factory[
+        UseCaseContract[AssistantVersionQuery, GoLiveReadiness]
+    ] = Factory(
+        GetGoLiveReadinessUseCase,
+        authorize_business_access=authorize_business_access_use_case,
+        assistant_version_repo=repositories.assistant_version_repo,
+        check_go_live_readiness=check_go_live_readiness_use_case,
     )
     activate_assistant_version_use_case: Factory[
         UseCaseContract[AssistantVersionActivation, AssistantVersionDocument]
@@ -1584,6 +1622,7 @@ class UseCasesContainer(containers.DeclarativeContainer):
         PublishAssistantVersionUseCase,
         authorize_business_access=authorize_business_access_use_case,
         assistant_version_repo=repositories.assistant_version_repo,
+        check_go_live_readiness=check_go_live_readiness_use_case,
         activate_assistant_version=activate_assistant_version_use_case,
         version_details_transformer=transformers.assistant_version_details_transformer,
         user_repo=repositories.user_repo,

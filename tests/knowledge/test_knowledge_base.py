@@ -1,4 +1,4 @@
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 
 import pytest
 
@@ -25,6 +25,7 @@ from app.schemas.dto.knowledge_admin import (
     UpdateKnowledgeItemCommand,
     UpsertKnowledgeItemsCommand,
 )
+from app.schemas.dto.paging import PageRequest
 from app.schemas.dto.profiles import (
     ChannelsStepInput,
     ContactsAndHoursStepInput,
@@ -58,8 +59,9 @@ from app.schemas.typings.localization.constrained_strings import (
     CurrencyCode,
     LanguageTag,
 )
+from app.schemas.typings.platform.constrained_integers import PageSize
 from app.schemas.typings.users.prefixed_id import UserId
-from tests.knowledge.harness import KnowledgeHarness
+from tests.knowledge.harness import DEFAULT_NOW, KnowledgeHarness
 
 
 def add_item(
@@ -365,13 +367,19 @@ def test_patch_keeps_a_price_set_before_a_currency_change() -> None:
     assert renamed.formatted_price == "GEL5.00"
 
 
-def test_list_filters_by_kind_and_active_flag_and_orders_by_title() -> None:
+def test_list_filters_by_kind_and_active_flag_and_pages_newest_first() -> None:
     harness = KnowledgeHarness()
     business = harness.add_business()
-    add_item(harness, business, "Khinkali", price_minor=120)
-    add_item(harness, business, "adjarian khachapuri", price_minor=1800)
-    add_item(harness, business, "Old dish", is_active=False)
-    add_item(harness, business, "Parking?", kind=KnowledgeItemKind.FAQ)
+    for minute, (title, kind, is_active) in enumerate(
+        [
+            ("Khinkali", KnowledgeItemKind.MENU_ITEM, True),
+            ("adjarian khachapuri", KnowledgeItemKind.MENU_ITEM, True),
+            ("Old dish", KnowledgeItemKind.MENU_ITEM, False),
+            ("Parking?", KnowledgeItemKind.FAQ, True),
+        ]
+    ):
+        harness.clock_source.set(DEFAULT_NOW + timedelta(minutes=minute))
+        add_item(harness, business, title, kind=kind, is_active=is_active)
 
     everything = harness.list_knowledge_items.run(
         KnowledgeItemListQuery(business_id=business.id)
@@ -383,17 +391,37 @@ def test_list_filters_by_kind_and_active_flag_and_orders_by_title() -> None:
             is_active=True,
         )
     )
+    first_page = harness.list_knowledge_items.run(
+        KnowledgeItemListQuery(
+            business_id=business.id, page=PageRequest(size=PageSize(3))
+        )
+    )
+    assert first_page.next_cursor is not None
+    second_page = harness.list_knowledge_items.run(
+        KnowledgeItemListQuery(
+            business_id=business.id,
+            page=PageRequest(size=PageSize(3), cursor=first_page.next_cursor),
+        )
+    )
 
     assert [item.title for item in everything.items] == [
         "Parking?",
+        "Old dish",
         "adjarian khachapuri",
         "Khinkali",
-        "Old dish",
     ]
+    assert everything.next_cursor is None
     assert [item.title for item in active_menu.items] == [
         "adjarian khachapuri",
         "Khinkali",
     ]
+    assert [item.title for item in first_page.items] == [
+        "Parking?",
+        "Old dish",
+        "adjarian khachapuri",
+    ]
+    assert [item.title for item in second_page.items] == ["Khinkali"]
+    assert second_page.next_cursor is None
 
 
 def test_other_businesses_cannot_read_change_or_delete_an_item() -> None:

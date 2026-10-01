@@ -11,6 +11,7 @@ from typed_time_provider import Microseconds
 
 from app.schemas.constants.knowledge import KnowledgeItemKind, KnowledgeItemSource
 from app.schemas.domain.knowledge import KnowledgeAttribute
+from app.schemas.dto.paging import PageRequest
 from app.schemas.typings.billing.constrained_integers import MoneyAmountMinor
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.knowledge.booleans import IsKnowledgeItemActive
@@ -30,6 +31,7 @@ from app.schemas.typings.localization.constrained_strings import (
     LanguageTag,
 )
 from app.schemas.typings.localization.strings import FormattedMoneyText
+from app.schemas.typings.platform.constrained_strings import PageCursor
 
 
 class KnowledgeItemInput(ImmutableDTO):
@@ -131,7 +133,7 @@ class KnowledgeItemQuery(ImmutableDTO):
 
 class KnowledgeItemListQuery(ImmutableDTO):
     """
-    List items of the business, optionally filtered.
+    List items of the business, optionally filtered, one page at a time.
 
     `is_active` None lists active and inactive items.
     """
@@ -140,6 +142,7 @@ class KnowledgeItemListQuery(ImmutableDTO):
     kind: KnowledgeItemKind | None = None
     is_active: IsKnowledgeItemActive | None = None
     language: LanguageTag | None = None
+    page: PageRequest = Field(default_factory=PageRequest)
 
 
 class KnowledgeSearchInput(ImmutableDTO):
@@ -183,6 +186,18 @@ class KnowledgeItemList(ImmutableDTO):
     items: list[KnowledgeItemDetails] = Field(
         default_factory=list[KnowledgeItemDetails]
     )
+
+
+class KnowledgeItemPage(ImmutableDTO):
+    """
+    One page of the knowledge base, newest first (by creation time, ties by
+    id); `next_cursor` asks for the next page and is None on the last one.
+    """
+
+    items: list[KnowledgeItemDetails] = Field(
+        default_factory=list[KnowledgeItemDetails]
+    )
+    next_cursor: PageCursor | None = None
 
 
 class KnowledgeItemDeletion(ImmutableDTO):

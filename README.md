@@ -198,7 +198,7 @@ DOM (стили сайта и виджета не смешиваются), яз�
 | `CORS_ALLOWED_ORIGINS` | CORS выключен (виджет сайта разрешает любой источник сам) |
 | `LLM_PROVIDER`, `LLM_MODEL_ID`, `OPENAI_API_KEY`, `OPENAI_PROJECT_ID` | ответы модели — ошибка 502 при первом вызове |
 | `PLATFORM_ADMIN_EMAILS`, `PLATFORM_ADMIN_PHONE_NUMBERS` | нет админов платформы |
-| `ELEVENLABS_API_KEY`, `ELEVENLABS_WEBHOOK_SECRET`, `ELEVENLABS_API_BASE_URL` | голосовой агент не создаётся (502 при публикации версии с голосом) |
+| `ELEVENLABS_API_KEY`, `ELEVENLABS_WEBHOOK_SECRET`, `ELEVENLABS_API_BASE_URL` | голосовой агент не создаётся: в `production` публикация версии с голосом отклоняется (409, причина `voice_configuration`), в `development`/`test` версия выходит без голосового агента (предупреждение в логе) |
 | `META_APP_SECRET`, `META_VERIFY_TOKEN`, `WHATSAPP_SYSTEM_USER_TOKEN` | WhatsApp, Instagram и Messenger не принимают вебхуки |
 | `TELEGRAM_PLATFORM_BOT_TOKEN`, `WHATSAPP_NOTIFICATION_*` | уведомления сотрудникам только пишутся в лог |
 | `GOOGLE_OAUTH_CLIENT_ID`, `GOOGLE_OAUTH_CLIENT_SECRET` | нет синхронизации с Google Calendar |
@@ -227,12 +227,12 @@ DOM (стили сайта и виджета не смешиваются), яз�
 | Бизнесы и команда | `POST·GET /v1/businesses`, `GET·PATCH /v1/businesses/{id}`, `POST …/members`, `DELETE …/members/{user_id}`, `GET …/call-forwarding-instructions` |
 | Данные и договор | `GET·POST …/dpa`, `GET …/audit-log`, `GET …/contacts/{contact_id}/export`, `DELETE …/contacts/{contact_id}` |
 | Анкета | `GET …/profile/wizard`, `GET·PUT …/profile`, `PUT …/profile/steps/{step}`, `GET …/profile/gaps` |
-| Знания | `GET·POST …/knowledge`, `GET·PATCH·DELETE …/knowledge/{item_id}`, `POST …/knowledge/search`, `POST …/knowledge/import[/confirm]` |
+| Знания | `GET·POST …/knowledge`, `GET·PATCH·DELETE …/knowledge/{item_id}`, `POST …/knowledge/search`, `POST …/knowledge/import[/confirm]`, `DELETE …/knowledge/import/{batch_id}` |
 | Ресурсы и расписание | `GET·POST …/resources`, `PATCH …/resources/{id}`, `GET·POST …/schedule-exceptions`, `DELETE …/schedule-exceptions/{id}` |
 | Брони, заявки, передачи | `GET …/availability` (`full_day=true` — весь день для сотрудников), `GET·POST …/bookings`, `PATCH …/bookings/{id}` (статус, гости, место, примечание, имя), `POST …/bookings/{id}/cancel`, `POST …/bookings/{id}/reschedule`, `GET …/leads`, `PATCH …/leads/{id}`, `GET …/handoffs`, `POST …/handoffs/{id}/resolve`, `GET …/unanswered-questions`, `POST …/unanswered-questions/{id}/answer`, `GET …/dashboard` |
 | Google Calendar | `GET …/integrations/google-calendar/connect-url`, `DELETE …/integrations/google-calendar`, `GET /v1/integrations/google-calendar/callback` |
 | Разговоры | `GET …/conversations` (страницы, фильтры `channel`, `status`, `from`/`to`, `search`), `GET …/conversations/{id}` (расшифровка, звонки, брони, заявки, передачи), `PUT …/conversations/{id}/rating`, `POST …/conversations/{id}/messages` (ответ сотрудника клиенту), `POST …/test-chat` |
-| Сборка помощника | `POST·GET …/assistant-versions`, `GET …/assistant-versions/{id}[/autotest-run]`, `POST …/assistant-versions/{id}/autotests`, `POST …/assistant-versions/{id}/publish`, `POST …/assistant-versions/{id}/rollback` |
+| Сборка помощника | `POST·GET …/assistant-versions`, `GET …/assistant-versions/{id}[/autotest-run]`, `GET …/assistant-versions/{id}/go-live-readiness`, `POST …/assistant-versions/{id}/autotests`, `POST …/assistant-versions/{id}/publish`, `POST …/assistant-versions/{id}/rollback` |
 | Каналы (кабинет) | `GET …/channels`, `PUT·DELETE …/channels/{channel}`, `GET …/channels/web/snippet`, `POST …/manager-contacts/telegram-link` |
 | Вебхуки и виджет | `POST /v1/channels/telegram/{channel_id}/webhook`, `GET·POST /v1/channels/meta/webhook`, `POST /v1/channels/telegram-platform/webhook`, `GET /v1/widget/{id}/config`, `POST /v1/widget/{id}/messages`, `GET /widget.js`, `GET /widget/demo` |
 | Голос | `POST /v1/voice/tools/{tool}`, `POST /v1/voice/webhooks/conversation-initiation`, `POST /v1/voice/webhooks/post-call` |
@@ -244,10 +244,31 @@ DOM (стили сайта и виджета не смешиваются), яз�
 Автотесты не выполняются внутри запроса: `POST …/assistant-versions` и
 `POST …/assistant-versions/{id}/autotests` запускают прогон (версия — `testing`,
 прогон — `running`, ответ `202` для повторного прогона), а играет его фоновый воркер.
-Ход прогона виден в `GET …/assistant-versions/{id}/autotest-run`. Статус `ready`
+Ход прогона виден в `GET …/assistant-versions/{id}/autotest-run`: пока прогон
+`running`, `scenario_count` — число запланированных сценариев, а `results` —
+уже сыгранные (воркер сохраняет их после каждого сценария). Статус `ready`
 даёт только прогон по всем языкам и сценариям версии. Выйти в эфир можно с
 пробным периодом или оплаченной подпиской, принятым DPA, контактом менеджера и
 без блокирующих пробелов анкеты.
+
+Чек-лист запуска — `GET …/assistant-versions/{id}/go-live-readiness`: пункты
+`subscription_or_trial`, `dpa`, `profile_gaps` (виды пробелов), `staff_contact`,
+`autotests` (статус версии и прогона) и для версий с голосом
+`voice_configuration`, у каждого `is_ok`, `is_blocking` и `details`. Те же коды
+приходят в отказах публикации и отката: тело ошибки может содержать
+`"reasons": [{"code", "message", "details"}]` (ещё `version_already_live`,
+`version_archived`, `version_not_archived`, `force_publish_admin_only`).
+Нечитаемая ссылка на меню — `422` с причиной `menu_link_invalid`,
+`menu_link_unreachable` или `menu_link_unreadable`; недоступная модель — `502`.
+Тело без причин остаётся прежним `{"error", "message"}`.
+
+Ответ `POST …/test-chat` содержит версию, которая ответила
+(`assistant_version_id`, `assistant_version_number`), и вызовы инструментов хода
+(`tool_calls`); без `assistant_version_id` отвечает самая новая не архивная
+версия. Списки `GET …/knowledge` и `GET …/unanswered-questions` постраничные:
+`?limit=&cursor=`, ответ `{"items", "next_cursor"}`, фильтры применяются до
+разбиения на страницы. Импорт меню возвращает `batch_id`; `DELETE
+…/knowledge/import/{batch_id}` удаляет неподтверждённые черновики этого импорта.
 
 ## Проверки
 

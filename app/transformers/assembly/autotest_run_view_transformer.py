@@ -10,6 +10,7 @@ from app.schemas.dto.assistants import (
 )
 from app.schemas.typings.assistants.constrained_integers import AutotestScenarioCount
 from app.schemas.typings.billing.constrained_integers import CostMicroUsd
+from app.utilities.assembly.autotest_evaluation import count_run_scenarios
 
 
 class AutotestRunViewTransformer(
@@ -26,7 +27,7 @@ class AutotestRunViewTransformer(
             status=run.status,
             is_full_coverage=run.is_full_coverage,
             version_status=input_data.version.status,
-            scenario_count=AutotestScenarioCount(len(run.results)),
+            scenario_count=count_run_scenarios(run),
             passed_count=AutotestScenarioCount(
                 sum(
                     1

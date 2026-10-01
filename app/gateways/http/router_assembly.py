@@ -103,6 +103,7 @@ def build_application_routers(app_container: AppContainer) -> list[APIRouter]:
         build_menu_import_router(
             import_menu_operator=operators.import_menu_operator(),
             confirm_imported_items_operator=operators.confirm_imported_items_operator(),
+            discard_import_batch_operator=operators.discard_import_batch_operator(),
             current_user=current_user,
         ),
         build_resource_router(
@@ -162,6 +163,7 @@ def build_application_routers(app_container: AppContainer) -> list[APIRouter]:
             ),
             get_assistant_version_operator=operators.get_assistant_version_operator(),
             get_autotest_run_operator=operators.get_autotest_run_operator(),
+            get_go_live_readiness_operator=operators.get_go_live_readiness_operator(),
             run_autotests_operator=operators.run_autotests_operator(),
             publish_assistant_version_operator=(
                 operators.publish_assistant_version_operator()

@@ -87,6 +87,7 @@ from app.schemas.typings.localization.strings import (
     LanguageDisplayName,
     LocalizedTextValue,
 )
+from app.schemas.typings.platform.constrained_strings import EnvironmentVariableName
 from app.schemas.typings.profiles.constrained_strings import (
     FactKey,
     QuestionChoiceKey,
@@ -435,7 +436,11 @@ class FakeVoiceAgentProvisioner(VoiceAgentProvisionerAdapterContract):
         self.specs: list[VoiceAgentSpec] = []
         self.removed_agent_ids: list[VoiceAgentId] = []
         self.error: ExternalServiceError | None = None
+        self.missing_settings: list[EnvironmentVariableName] = []
         self._created_count: int = 0
+
+    def list_missing_settings(self) -> list[EnvironmentVariableName]:
+        return list(self.missing_settings)
 
     def remove_agent(self, agent_id: VoiceAgentId) -> None:
         self.removed_agent_ids.append(agent_id)

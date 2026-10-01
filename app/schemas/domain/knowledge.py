@@ -20,6 +20,7 @@ from app.schemas.typings.localization.constrained_strings import (
     CurrencyCode,
     LanguageTag,
 )
+from app.schemas.typings.menu_import.prefixed_id import MenuImportBatchId
 
 
 class KnowledgeAttribute(PersistentDocument):
@@ -34,7 +35,9 @@ class KnowledgeItemDocument(BaseDocument):
     One fact the assistant may use (concept table `knowledge_items`).
 
     Prices are integers in minor units of the business currency, so the
-    assistant can name a price only if it is stored here.
+    assistant can name a price only if it is stored here. A menu import
+    draft carries the `import_batch_id` of its import until the owner
+    confirms it, so a whole import can be discarded at once.
     """
 
     id: KnowledgeItemId = Field(default_factory=KnowledgeItemId)
@@ -52,3 +55,4 @@ class KnowledgeItemDocument(BaseDocument):
     languages: list[LanguageTag] = Field(default_factory=list[LanguageTag])
     source: KnowledgeItemSource = KnowledgeItemSource.OWNER
     is_active: IsKnowledgeItemActive = True
+    import_batch_id: MenuImportBatchId | None = None

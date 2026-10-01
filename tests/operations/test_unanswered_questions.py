@@ -11,12 +11,14 @@ from app.schemas.dto.operations import (
     AnswerUnansweredQuestionCommand,
     ListUnansweredQuestionsQuery,
 )
+from app.schemas.dto.paging import PageRequest
 from app.schemas.exceptions.application_errors import ConflictError, NotFoundError
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.handoffs.prefixed_id import UnansweredQuestionId
 from app.schemas.typings.handoffs.strings import UnansweredQuestionText
 from app.schemas.typings.knowledge.strings import KnowledgeBody, KnowledgeTitle
 from app.schemas.typings.localization.constrained_strings import LanguageTag
+from app.schemas.typings.platform.constrained_integers import PageSize
 from tests.operations.builders import OperationsWorld
 
 
@@ -80,6 +82,37 @@ def test_list_orders_by_frequency_and_hides_sandbox_and_resolved() -> None:
     assert [item.id for item in listed.items][0] == parking.id
     assert [item.occurrence_count for item in listed.items] == [2, 1]
     assert len(everything.items) == 3
+
+
+def test_list_pages_most_asked_first_then_most_recent() -> None:
+    questions = QuestionsFixture()
+    clock = questions.world.clock
+    clock.move_to(datetime.fromisoformat("2026-10-02T09:00:00+00:00"))
+    older = questions.record("Do you deliver?", language="en")
+    clock.move_to(datetime.fromisoformat("2026-10-03T09:00:00+00:00"))
+    newer = questions.record("Is there a terrace?", language="en")
+    clock.move_to(datetime.fromisoformat("2026-10-04T09:00:00+00:00"))
+    frequent = questions.record("Can I bring a dog?", language="en")
+    questions.record("can i bring a dog?", language="en")
+    list_questions = questions.world.list_unanswered_questions()
+
+    first = list_questions.run(
+        ListUnansweredQuestionsQuery(
+            business_id=questions.business.id,
+            page=PageRequest(size=PageSize(2)),
+        )
+    )
+    assert first.next_cursor is not None
+    second = list_questions.run(
+        ListUnansweredQuestionsQuery(
+            business_id=questions.business.id,
+            page=PageRequest(size=PageSize(2), cursor=first.next_cursor),
+        )
+    )
+
+    assert [item.id for item in first.items] == [frequent.id, newer.id]
+    assert [item.id for item in second.items] == [older.id]
+    assert second.next_cursor is None
 
 
 def test_answer_becomes_an_active_faq_and_asks_for_reassembly() -> None:

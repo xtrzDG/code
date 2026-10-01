@@ -431,9 +431,3 @@ def to_item_details(
         created_at=item.created_at,
         updated_at=item.updated_at,
     )
-
-
-def item_sort_key(item: KnowledgeItemDocument) -> tuple[str, str, str]:
-    """Order items by kind, then folded title, then id."""
-
-    return (item.kind.value, fold_words(item.title), str(item.id))

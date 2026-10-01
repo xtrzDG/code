@@ -28,7 +28,8 @@ class MenuExtractionAdapterContract(AdapterContract, Protocol):
         Read menu or price-list lines from a photo, PDF, text or web page.
 
         Raises:
-            ExternalServiceError: the model or the page is unavailable.
-            ValidationFailedError: the source cannot be read as a menu.
+            ExternalServiceError: the model is unavailable.
+            ValidationFailedError: the source cannot be read as a menu; for
+                a link, the reasons name a MenuLinkProblem.
         """
         raise NotImplementedError

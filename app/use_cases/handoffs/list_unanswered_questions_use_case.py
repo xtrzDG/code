@@ -3,17 +3,23 @@ from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.domain.handoffs import UnansweredQuestionDocument
 from app.schemas.dto.operations import (
     ListUnansweredQuestionsQuery,
-    UnansweredQuestionListView,
+    UnansweredQuestionPage,
 )
 from app.use_cases.handoffs.handoff_views import build_unanswered_question_details
+from app.utilities.paging.cursor_paging import take_page
+
+# The occurrence count sits above every possible timestamp (64 bits), so one
+# integer key orders by count first and by the last time asked second.
+OCCURRENCE_RANK_SHIFT: int = 64
 
 
 class ListUnansweredQuestionsUseCase(
-    UseCaseContract[ListUnansweredQuestionsQuery, UnansweredQuestionListView]
+    UseCaseContract[ListUnansweredQuestionsQuery, UnansweredQuestionPage]
 ):
     """
-    Questions without an answer for the cabinet: open ones by default, most
-    asked first, then the most recently asked.
+    Questions without an answer for the cabinet, one page at a time: open
+    ones by default, most asked first, then the most recently asked (ties
+    by id). The resolved and sandbox filters apply before paging.
     """
 
     def __init__(
@@ -26,7 +32,7 @@ class ListUnansweredQuestionsUseCase(
     def run(
         self,
         input_data: ListUnansweredQuestionsQuery,
-    ) -> UnansweredQuestionListView:
+    ) -> UnansweredQuestionPage:
         questions: list[UnansweredQuestionDocument] = [
             question
             for question in self._unanswered_question_repo.list_by_business(
@@ -35,14 +41,23 @@ class ListUnansweredQuestionsUseCase(
             if (input_data.include_resolved or not question.is_resolved)
             and (input_data.include_sandbox or not question.is_sandbox)
         ]
-        questions.sort(
-            key=lambda question: (
-                -int(question.occurrence_count),
-                -int(question.last_seen_at),
-            )
+        page_items, next_cursor = take_page(
+            questions,
+            input_data.page,
+            sort_key=rank_question,
+            item_id=lambda question: str(question.id),
         )
-        return UnansweredQuestionListView(
+        return UnansweredQuestionPage(
             items=[
-                build_unanswered_question_details(question) for question in questions
-            ]
+                build_unanswered_question_details(question) for question in page_items
+            ],
+            next_cursor=next_cursor,
         )
+
+
+def rank_question(question: UnansweredQuestionDocument) -> int:
+    """Paging key: occurrence count first, then the last time it was asked."""
+
+    return (int(question.occurrence_count) << OCCURRENCE_RANK_SHIFT) + int(
+        question.last_seen_at
+    )

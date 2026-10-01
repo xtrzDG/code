@@ -18,6 +18,10 @@ class GapDescription(BaseTypedString):
     """One item of the owner's "what to add" list."""
 
 
+class GoLiveCheckMessage(BaseTypedString):
+    """English sentence saying what one go-live check found (for API users)."""
+
+
 class JudgeNote(BaseTypedString):
     """One reason the judge gave for its scores."""
 

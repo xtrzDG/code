@@ -87,3 +87,32 @@ class LlmEffort(StrEnum):
     LOW = "low"
     MEDIUM = "medium"
     HIGH = "high"
+
+
+class GoLiveCheckCode(StrEnum):
+    """
+    One launch condition of the go-live checklist (concept section 4,
+    "Проверка"). The same codes name the reasons of a refused publish or
+    rollback (`reasons[].code` of the 409), so clients branch on them
+    instead of the English message.
+    """
+
+    SUBSCRIPTION_OR_TRIAL = "subscription_or_trial"
+    DPA = "dpa"
+    PROFILE_GAPS = "profile_gaps"
+    STAFF_CONTACT = "staff_contact"
+    AUTOTESTS = "autotests"
+    VOICE_CONFIGURATION = "voice_configuration"
+
+
+class AssistantVersionRefusalCode(StrEnum):
+    """
+    Why a version cannot be published or rolled back in its current state
+    (besides the go-live checklist, whose "autotests" check covers versions
+    that are untested or under test): `reasons[].code` of the 409 or 403.
+    """
+
+    VERSION_ALREADY_LIVE = "version_already_live"
+    VERSION_ARCHIVED = "version_archived"
+    VERSION_NOT_ARCHIVED = "version_not_archived"
+    FORCE_PUBLISH_ADMIN_ONLY = "force_publish_admin_only"

@@ -5,6 +5,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, Query, Request, status
 
 from app.contracts.operator_contract import OperatorContract
+from app.gateways.http.paging_query import parse_page_request
 from app.gateways.http.user_authentication import CurrentUserDependency
 from app.schemas.constants.knowledge import KnowledgeItemKind
 from app.schemas.domain.businesses import BusinessDocument
@@ -16,8 +17,8 @@ from app.schemas.dto.knowledge_admin import (
     KnowledgeItemDeletion,
     KnowledgeItemDetails,
     KnowledgeItemInput,
-    KnowledgeItemList,
     KnowledgeItemListQuery,
+    KnowledgeItemPage,
     KnowledgeItemPatch,
     KnowledgeItemQuery,
     KnowledgeSearchInput,
@@ -48,7 +49,7 @@ def build_knowledge_router(
     current_user: CurrentUserDependency,
     business_access_operator: BusinessAccessOperator,
     list_knowledge_items_operator: OperatorContract[
-        KnowledgeItemListQuery, KnowledgeItemList
+        KnowledgeItemListQuery, KnowledgeItemPage
     ],
     create_knowledge_item_operator: OperatorContract[
         CreateKnowledgeItemCommand, KnowledgeItemDetails
@@ -71,8 +72,10 @@ def build_knowledge_router(
 
     Owners and staff may read and edit it. Prices are integers in minor units
     of the business currency; `?language=` formats them (owner language by
-    default). POST .../knowledge/search runs the same search as the
-    assistant's search_knowledge tool, so the owner can test it.
+    default). GET .../knowledge pages newest first (`?limit=&cursor=`, with
+    `kind` and `is_active` filters) and answers {items, next_cursor}.
+    POST .../knowledge/search runs the same search as the assistant's
+    search_knowledge tool, so the owner can test it.
     """
 
     router: APIRouter = APIRouter(tags=["knowledge"])
@@ -94,7 +97,9 @@ def build_knowledge_router(
         kind: Annotated[str | None, Query()] = None,
         is_active: Annotated[str | None, Query()] = None,
         language: Annotated[str | None, Query()] = None,
-    ) -> KnowledgeItemList:
+        limit: Annotated[str | None, Query()] = None,
+        cursor: Annotated[str | None, Query()] = None,
+    ) -> KnowledgeItemPage:
         business: BusinessDocument = authorize(user_id, business_id)
         return list_knowledge_items_operator.operate(
             KnowledgeItemListQuery(
@@ -102,6 +107,7 @@ def build_knowledge_router(
                 kind=parse_query_value(KnowledgeItemKind, kind, "kind"),
                 is_active=parse_query_value(parse_boolean_text, is_active, "is_active"),
                 language=parse_language_parameter(language),
+                page=parse_page_request(limit, cursor),
             )
         )
 

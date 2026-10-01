@@ -34,8 +34,10 @@ import {
   formatFileSize,
   initialImportSelection,
   MENU_UPLOAD_ACCEPT,
+  menuLinkProblem,
   type ConfidenceLevel,
   type ImportedMenuItem,
+  type MenuLinkProblemCode,
 } from "@/lib/knowledge";
 import { businessPath } from "@/lib/navigation";
 import { webLinkSchema } from "@/lib/validation";
@@ -47,10 +49,18 @@ import { ReassemblyNotice } from "../_components/ReassemblyNotice";
 type Source = "file" | "link";
 
 interface ImportReview {
+  /** The import: discarding it deletes every draft not confirmed. */
+  batchId: string;
   items: ImportedMenuItem[];
   skipped: number;
   selected: ReadonlySet<string>;
 }
+
+const LINK_PROBLEM_TEXTS: Record<MenuLinkProblemCode, MessageKey> = {
+  menu_link_invalid: "knowledge.import.errors.linkInvalid",
+  menu_link_unreachable: "knowledge.import.errors.linkUnreachable",
+  menu_link_unreadable: "knowledge.import.errors.linkUnreadable",
+};
 
 const CONFIDENCE: Record<ConfidenceLevel, { tone: BadgeTone; label: MessageKey }> = {
   high: { tone: "success", label: "knowledge.import.confidence.high" },
@@ -71,7 +81,9 @@ function readAsBase64(file: File): Promise<string> {
 /**
  * Knowledge -> Import a menu: a photo, PDF, text file or link is read into
  * draft items (switched off); the owner checks them, fixes what is wrong and
- * adds the chosen ones. Unchosen drafts are discarded.
+ * adds the chosen ones. The rest of the import is discarded in one request
+ * (DELETE …/knowledge/import/{batch_id}). A link the API cannot read is
+ * explained by its reason code (not public, unreachable, unreadable).
  */
 export function MenuImportScreen() {
   const { t, tp, locale } = useI18n();
@@ -91,7 +103,6 @@ export function MenuImportScreen() {
   const [readError, setReadError] = useState<unknown>(null);
   const [review, setReview] = useState<ImportReview | null>(null);
   const [editor, setEditor] = useState<{ key: number; target: KnowledgeEditorTarget } | null>(null);
-  const [isDiscarding, setDiscarding] = useState(false);
   const [confirmDiscard, setConfirmDiscard] = useState(false);
   const [done, setDone] = useState<{ added: number } | null>(null);
 
@@ -108,6 +119,13 @@ export function MenuImportScreen() {
       params: { path: { business_id: business.id } },
       body: { item_ids: itemIds },
     }),
+  );
+  const discardBatch = useApiMutation(
+    (batchId: string) =>
+      api.DELETE("/v1/businesses/{business_id}/knowledge/import/{batch_id}", {
+        params: { path: { business_id: business.id, batch_id: batchId } },
+      }),
+    { errorToast: false },
   );
 
   // Leaving mid-review keeps the drafts switched off in the knowledge base: warn first.
@@ -175,24 +193,12 @@ export function MenuImportScreen() {
       return;
     }
     const items = result.data.items ?? [];
-    setReview({ items, skipped: result.data.skipped_line_count ?? 0, selected: initialImportSelection(items) });
-  };
-
-  const discardDrafts = async (ids: readonly string[]): Promise<number> => {
-    let failed = 0;
-    for (const id of ids) {
-      try {
-        const { response } = await api.DELETE("/v1/businesses/{business_id}/knowledge/{item_id}", {
-          params: { path: { business_id: business.id, item_id: id } },
-        });
-        if (!response.ok && response.status !== 404) {
-          failed += 1;
-        }
-      } catch {
-        failed += 1;
-      }
-    }
-    return failed;
+    setReview({
+      batchId: result.data.batch_id,
+      items,
+      skipped: result.data.skipped_line_count ?? 0,
+      selected: initialImportSelection(items),
+    });
   };
 
   const addSelected = async () => {
@@ -200,16 +206,16 @@ export function MenuImportScreen() {
       return;
     }
     const chosen = review.items.filter((item) => review.selected.has(item.item.id)).map((item) => item.item.id);
-    const rest = review.items.filter((item) => !review.selected.has(item.item.id)).map((item) => item.item.id);
     const result = await confirm.run(chosen);
     if (!result.ok) {
       return;
     }
-    setDiscarding(true);
-    const failed = await discardDrafts(rest);
-    setDiscarding(false);
-    if (failed > 0) {
-      toast.show({ tone: "info", title: tp("knowledge.import.someDraftsLeft", failed) });
+    // The confirmed items left the import; discarding it deletes the unticked rest.
+    if (chosen.length < review.items.length) {
+      const discarded = await discardBatch.run(review.batchId);
+      if (!discarded.ok) {
+        toast.show({ tone: "info", title: t("knowledge.import.someDraftsLeft") });
+      }
     }
     toast.success(tp("knowledge.import.added", (result.data.activated_items ?? []).length));
     setDone({ added: (result.data.activated_items ?? []).length });
@@ -220,12 +226,10 @@ export function MenuImportScreen() {
     if (!review) {
       return;
     }
-    setDiscarding(true);
-    const failed = await discardDrafts(review.items.map((item) => item.item.id));
-    setDiscarding(false);
+    const result = await discardBatch.run(review.batchId);
     setConfirmDiscard(false);
-    if (failed > 0) {
-      toast.show({ tone: "error", title: tp("knowledge.import.discardFailed", failed) });
+    if (!result.ok) {
+      toast.show({ tone: "error", title: t("knowledge.import.discardFailed") });
       return;
     }
     toast.success(t("knowledge.import.discarded"));
@@ -271,11 +275,11 @@ export function MenuImportScreen() {
         : current,
     );
 
-  const readFailure = readError
-    ? describeError(readError, t, {
-        external_service_error: source === "link" ? "knowledge.import.errors.link" : "knowledge.import.errors.service",
-      })
-    : null;
+  const linkProblem = source === "link" ? menuLinkProblem(readError) : null;
+  const readFailure =
+    readError && !linkProblem
+      ? describeError(readError, t, { external_service_error: "knowledge.import.errors.service" })
+      : null;
 
   if (done) {
     return (
@@ -303,7 +307,7 @@ export function MenuImportScreen() {
       <>
         <ImportReviewCard
           review={review}
-          isSaving={confirm.isPending || isDiscarding}
+          isSaving={confirm.isPending || discardBatch.isPending}
           onToggle={(id, checked) =>
             setReview((current) => {
               if (!current) {
@@ -351,7 +355,7 @@ export function MenuImportScreen() {
           title={t("knowledge.import.discardTitle")}
           description={tp("knowledge.import.discardDescription", review.items.length)}
           confirmLabel={t("knowledge.import.discard")}
-          isPending={isDiscarding}
+          isPending={discardBatch.isPending}
           onConfirm={() => void discardAll()}
           onClose={() => setConfirmDiscard(false)}
         />
@@ -458,6 +462,13 @@ export function MenuImportScreen() {
           </Field>
         )}
 
+        {linkProblem ? (
+          <Alert tone="danger" title={t("knowledge.import.errors.readFailed")}>
+            {linkProblem.status !== null
+              ? t("knowledge.import.errors.linkHttpStatus", { status: linkProblem.status })
+              : t(LINK_PROBLEM_TEXTS[linkProblem.code])}
+          </Alert>
+        ) : null}
         {readFailure ? (
           <Alert tone="danger" title={t("knowledge.import.errors.readFailed")}>
             {[readFailure.title, readFailure.detail, readFailure.requestId ? t("common.requestId", { id: readFailure.requestId }) : null]

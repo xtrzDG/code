@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 
+import { ApiError } from "@/api/errors";
+
 import {
   base64FromDataUrl,
   checkMenuFile,
@@ -17,6 +19,7 @@ import {
   knowledgeFormFromItem,
   knowledgePatchBody,
   MENU_UPLOAD_MAX_BYTES,
+  menuLinkProblem,
   menuMediaType,
   orderKinds,
   sortByTitle,
@@ -187,5 +190,30 @@ describe("menu import", () => {
     expect(formatFileSize(512, "en")).toBe("512 B");
     expect(formatFileSize(1536, "en")).toBe("1.5 KB");
     expect(formatFileSize(3 * 1024 * 1024, "ru")).toBe("3 MB");
+  });
+});
+
+describe("menu link problems", () => {
+  const refused = (status: number, code: string, details: string[] = []) =>
+    new ApiError({ status, code: "validation_failed", reasons: [{ code, message: "", details }] });
+
+  it("reads the reason code of a link the API could not read", () => {
+    expect(menuLinkProblem(refused(422, "menu_link_invalid", ["not_public"]))).toEqual({ code: "menu_link_invalid", status: null });
+    expect(menuLinkProblem(refused(422, "menu_link_unreachable", ["timeout"]))).toEqual({ code: "menu_link_unreachable", status: null });
+    expect(menuLinkProblem(refused(422, "menu_link_unreachable", ["http_status:404"]))).toEqual({
+      code: "menu_link_unreachable",
+      status: 404,
+    });
+    expect(menuLinkProblem(refused(422, "menu_link_unreadable", ["media_type:application/zip"]))).toEqual({
+      code: "menu_link_unreadable",
+      status: null,
+    });
+  });
+
+  it("leaves other failures to the generic message", () => {
+    expect(menuLinkProblem(new ApiError({ status: 502, code: "external_service_error" }))).toBeNull();
+    expect(menuLinkProblem(new ApiError({ status: 422, code: "validation_failed" }))).toBeNull();
+    expect(menuLinkProblem(refused(422, "something_else"))).toBeNull();
+    expect(menuLinkProblem(new Error("network"))).toBeNull();
   });
 });

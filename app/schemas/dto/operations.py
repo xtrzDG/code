@@ -349,11 +349,15 @@ class ResolveHandoffCommand(ImmutableDTO):
 
 
 class ListUnansweredQuestionsQuery(ImmutableDTO):
-    """Questions the assistant could not answer, most frequent first."""
+    """
+    Questions the assistant could not answer, most frequent first, one page
+    at a time.
+    """
 
     business_id: BusinessId
     include_resolved: IsResolvedIncluded = False
     include_sandbox: IsSandboxIncluded = False
+    page: PageRequest = Field(default_factory=PageRequest)
 
 
 class UnansweredQuestionDetails(ImmutableDTO):
@@ -370,12 +374,16 @@ class UnansweredQuestionDetails(ImmutableDTO):
     is_sandbox: IsSandboxConversation = False
 
 
-class UnansweredQuestionListView(ImmutableDTO):
-    """Questions ordered by occurrence count, then most recent."""
+class UnansweredQuestionPage(ImmutableDTO):
+    """
+    One page of questions, the most asked first, then the most recently
+    asked; `next_cursor` asks for the next page (None on the last one).
+    """
 
     items: list[UnansweredQuestionDetails] = Field(
         default_factory=list[UnansweredQuestionDetails]
     )
+    next_cursor: PageCursor | None = None
 
 
 class AnswerUnansweredQuestionRequest(ImmutableDTO):

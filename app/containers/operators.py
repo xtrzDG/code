@@ -263,6 +263,9 @@ class OperatorsContainer(containers.DeclarativeContainer):
     confirm_imported_items_operator = pipeline_operator(
         pipelines.confirm_imported_items_pipeline, storage_scope
     )
+    discard_import_batch_operator = pipeline_operator(
+        pipelines.discard_import_batch_pipeline, storage_scope
+    )
 
     # --- Assistant versions and autotests.
     list_assistant_versions_operator = pipeline_operator(
@@ -273,6 +276,9 @@ class OperatorsContainer(containers.DeclarativeContainer):
     )
     get_autotest_run_operator = pipeline_operator(
         pipelines.get_autotest_run_pipeline, storage_scope
+    )
+    get_go_live_readiness_operator = pipeline_operator(
+        pipelines.get_go_live_readiness_pipeline, storage_scope
     )
     publish_assistant_version_operator = pipeline_operator(
         pipelines.publish_assistant_version_pipeline, storage_scope

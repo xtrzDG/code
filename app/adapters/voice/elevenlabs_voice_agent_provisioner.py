@@ -11,6 +11,7 @@ from app.schemas.exceptions.base_exception import ApplicationError
 from app.schemas.typings.assistants.strings import VoiceAgentId
 from app.schemas.typings.channels.constrained_strings import VoiceToolSecret
 from app.schemas.typings.channels.strings import VoicePlatformToolId
+from app.schemas.typings.platform.constrained_strings import EnvironmentVariableName
 from app.schemas.typings.platform.strings import PlatformSecret
 from app.utilities.channels.channel_endpoints import (
     VOICE_BUSINESS_ID_HEADER,
@@ -87,6 +88,18 @@ class ElevenLabsVoiceAgentProvisioner(VoiceAgentProvisionerAdapterContract):
     ) -> None:
         self._elevenlabs_client: ElevenLabsApiClientContract = elevenlabs_client
         self._app_settings: AppSettings = app_settings
+
+    def list_missing_settings(self) -> list[EnvironmentVariableName]:
+        """ELEVENLABS_API_KEY and ELEVENLABS_WEBHOOK_SECRET, when not set."""
+
+        missing: list[EnvironmentVariableName] = []
+        if self._app_settings.elevenlabs_api_key is None:
+            missing.append(EnvironmentVariableName("ELEVENLABS_API_KEY"))
+
+        if self._app_settings.elevenlabs_webhook_secret is None:
+            missing.append(EnvironmentVariableName("ELEVENLABS_WEBHOOK_SECRET"))
+
+        return missing
 
     def upsert_agent(self, spec: VoiceAgentSpec) -> VoiceAgentId:
         webhook_secret: PlatformSecret | None = (

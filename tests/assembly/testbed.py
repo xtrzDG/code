@@ -132,6 +132,9 @@ from app.use_cases.assistants.check_go_live_readiness_use_case import (
 from app.use_cases.assistants.get_assistant_version_use_case import (
     GetAssistantVersionUseCase,
 )
+from app.use_cases.assistants.get_go_live_readiness_use_case import (
+    GetGoLiveReadinessUseCase,
+)
 from app.use_cases.assistants.list_assistant_versions_use_case import (
     ListAssistantVersionsUseCase,
 )
@@ -157,6 +160,9 @@ from app.use_cases.autotests.finish_autotest_run_use_case import (
 from app.use_cases.autotests.get_autotest_run_use_case import GetAutotestRunUseCase
 from app.use_cases.autotests.plan_autotest_scenarios_use_case import (
     PlanAutotestScenariosUseCase,
+)
+from app.use_cases.autotests.record_autotest_progress_use_case import (
+    RecordAutotestProgressUseCase,
 )
 from app.use_cases.autotests.resume_autotest_run_use_case import (
     ResumeAutotestRunUseCase,
@@ -524,11 +530,16 @@ class AssemblyTestbed:
             self.run_repo,
             self.wall_clock,
         )
+        self.record_autotest_progress_use_case = RecordAutotestProgressUseCase(
+            self.run_repo,
+            self.wall_clock,
+        )
         self.run_queued_autotests_orchestrator = RunQueuedAutotestsOrchestrator(
             self.resume_autotest_run_use_case,
             self.run_scenario_use_case,
             self.finish_autotest_run_use_case,
             self.abandon_autotest_run_use_case,
+            self.record_autotest_progress_use_case,
         )
         self.worker = BackgroundWorker(
             periodic_jobs=[],
@@ -543,17 +554,25 @@ class AssemblyTestbed:
             poll_seconds=WorkerPollSeconds(5),
             storage_scope=StorageScopeContext(),
         )
+        check_readiness = self.check_readiness_use_case = CheckGoLiveReadinessUseCase(
+            subscription_repo=self.subscription_repo,
+            dpa_acceptance_repo=self.dpa_repo,
+            business_profile_repo=self.profile_repo,
+            knowledge_item_repo=self.knowledge_repo,
+            resource_repo=self.resource_repo,
+            autotest_run_repo=self.run_repo,
+            niche_template_registry=self.niche_registry,
+            voice_agent_provisioner=self.voice_provisioner,
+            app_settings=self.settings,
+            wall_clock=self.wall_clock,
+        )
+        self.get_readiness_use_case = GetGoLiveReadinessUseCase(
+            authorize,
+            self.version_repo,
+            check_readiness,
+        )
         activate = self.activate_use_case = ActivateAssistantVersionUseCase(
-            check_go_live_readiness=CheckGoLiveReadinessUseCase(
-                subscription_repo=self.subscription_repo,
-                dpa_acceptance_repo=self.dpa_repo,
-                business_profile_repo=self.profile_repo,
-                knowledge_item_repo=self.knowledge_repo,
-                resource_repo=self.resource_repo,
-                niche_template_registry=self.niche_registry,
-                app_settings=self.settings,
-                wall_clock=self.wall_clock,
-            ),
+            check_go_live_readiness=check_readiness,
             remove_voice_agent=RemoveVoiceAgentUseCase(
                 self.version_repo,
                 self.voice_provisioner,
@@ -570,6 +589,7 @@ class AssemblyTestbed:
         self.publish_use_case = PublishAssistantVersionUseCase(
             authorize,
             self.version_repo,
+            check_readiness,
             activate,
             details_transformer,
             self.user_repo,
@@ -704,6 +724,11 @@ class AssemblyTestbed:
                 get_autotest_run_operator=PipelineOperator(
                     OrchestratorPipeline(
                         UseCaseOrchestrator(self.get_autotest_run_use_case)
+                    )
+                ),
+                get_go_live_readiness_operator=PipelineOperator(
+                    OrchestratorPipeline(
+                        UseCaseOrchestrator(self.get_readiness_use_case)
                     )
                 ),
                 run_autotests_operator=PipelineOperator(

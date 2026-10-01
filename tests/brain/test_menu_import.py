@@ -1,5 +1,6 @@
 import base64
 import json
+from collections.abc import Callable
 from typing import Any
 
 import httpx
@@ -233,7 +234,7 @@ def test_links_to_private_addresses_are_refused(
 
     adapter = build_adapter(ScriptedHttp([]), never, addresses)
 
-    with pytest.raises(ValidationFailedError, match="public address"):
+    with pytest.raises(ValidationFailedError, match="public address") as refused:
         adapter.extract(
             extraction_request(
                 media_type=MenuSourceMediaType("text/html"),
@@ -241,6 +242,8 @@ def test_links_to_private_addresses_are_refused(
                 url=WebLink(url),
             )
         )
+
+    assert link_reasons(refused.value) == [("menu_link_invalid", ["not_public"])]
 
 
 def test_redirects_to_private_addresses_are_refused_too() -> None:
@@ -257,6 +260,140 @@ def test_redirects_to_private_addresses_are_refused_too() -> None:
                 url=WebLink("https://cafe.example/menu"),
             )
         )
+
+
+def link_reasons(error: ValidationFailedError) -> list[tuple[str, list[str]]]:
+    return [
+        (str(reason.code), [str(detail) for detail in reason.details])
+        for reason in error.reasons
+    ]
+
+
+def link_request(url: str = "https://cafe.example/menu") -> MenuExtractionRequest:
+    return extraction_request(
+        media_type=MenuSourceMediaType("text/html"),
+        data_base64=None,
+        url=WebLink(url),
+    )
+
+
+def respond(
+    status_code: int,
+    headers: dict[str, str] | None = None,
+    content: bytes = b"",
+) -> Callable[[httpx.Request], httpx.Response]:
+    """A page handler that answers every request the same way."""
+
+    def serve(request: httpx.Request) -> httpx.Response:
+        del request
+        return httpx.Response(status_code, headers=headers, content=content)
+
+    return serve
+
+
+def fail_with(error: httpx.HTTPError) -> Any:
+    def serve(request: httpx.Request) -> httpx.Response:
+        raise error
+
+    return serve
+
+
+@pytest.mark.parametrize(
+    ("page_handler", "addresses", "url", "expected"),
+    [
+        (
+            respond(404),
+            None,
+            "https://cafe.example/menu",
+            ("menu_link_unreachable", ["http_status:404"]),
+        ),
+        (
+            fail_with(httpx.ConnectTimeout("slow")),
+            None,
+            "https://cafe.example/menu",
+            ("menu_link_unreachable", ["timeout"]),
+        ),
+        (
+            fail_with(httpx.ConnectError("refused")),
+            None,
+            "https://cafe.example/menu",
+            ("menu_link_unreachable", ["connection_failed"]),
+        ),
+        (
+            fail_with(httpx.RemoteProtocolError("garbled")),
+            None,
+            "https://cafe.example/menu",
+            ("menu_link_unreachable", ["request_failed"]),
+        ),
+        (
+            respond(302),
+            None,
+            "https://cafe.example/menu",
+            ("menu_link_unreachable", ["redirect_without_location"]),
+        ),
+        (
+            respond(302, {"location": "/again"}),
+            None,
+            "https://cafe.example/menu",
+            ("menu_link_unreachable", ["too_many_redirects"]),
+        ),
+        (
+            respond(200, {"content-type": "application/zip"}, b"PK"),
+            None,
+            "https://cafe.example/menu.zip",
+            ("menu_link_unreadable", ["media_type:application/zip"]),
+        ),
+        (
+            respond(302, {"location": "ftp://cafe.example/menu"}),
+            None,
+            "https://cafe.example/menu",
+            ("menu_link_invalid", ["not_http"]),
+        ),
+    ],
+)
+def test_links_that_cannot_be_read_name_a_distinct_problem(
+    page_handler: Any,
+    addresses: list[str] | None,
+    url: str,
+    expected: tuple[str, list[str]],
+) -> None:
+    http = ScriptedHttp([])
+    adapter = build_adapter(http, page_handler, addresses)
+
+    with pytest.raises(ValidationFailedError) as refused:
+        adapter.extract(link_request(url))
+
+    assert link_reasons(refused.value) == [expected]
+    assert http.requests == []
+
+
+def test_unknown_hosts_and_huge_pages_name_their_problem(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def unknown(host: str) -> list[str]:
+        raise OSError(f"no such host {host}")
+
+    adapter = MenuExtractionAdapter(
+        client=build_openai_client(ScriptedHttp([])),
+        model_id=LlmModelId("gpt-5-mini"),
+        page_transport=httpx.MockTransport(respond(200)),
+        host_resolver=unknown,
+    )
+    with pytest.raises(ValidationFailedError) as unknown_host:
+        adapter.extract(link_request())
+
+    monkeypatch.setattr("app.adapters.llm.menu_extraction_adapter.MAX_PAGE_BYTES", 8)
+    huge = build_adapter(
+        ScriptedHttp([]),
+        respond(200, {"content-type": "text/html"}, b"<p>long menu</p>"),
+    )
+    with pytest.raises(ValidationFailedError) as too_large:
+        huge.extract(link_request())
+
+    assert link_reasons(unknown_host.value) == [
+        ("menu_link_unreachable", ["unknown_host"])
+    ]
+    assert link_reasons(too_large.value) == [("menu_link_unreadable", ["too_large"])]
 
 
 @pytest.mark.parametrize(
@@ -361,6 +498,10 @@ def test_import_creates_inactive_drafts_and_confirm_activates_them() -> None:
     assert all(item.is_active is False for item in stored)
     assert all(item.source is KnowledgeItemSource.MENU_IMPORT for item in stored)
 
+    batch_id: str = imported.json()["batch_id"]
+    assert batch_id.startswith("menu_import_")
+    assert {str(item.import_batch_id) for item in stored} == {batch_id}
+
     chosen_ids = [rows[0]["item"]["id"], rows[1]["item"]["id"]]
     confirmed = client.post(
         f"{base_url}/confirm",
@@ -372,6 +513,58 @@ def test_import_creates_inactive_drafts_and_confirm_activates_them() -> None:
     assert [item["id"] for item in confirmed.json()["activated_items"]] == chosen_ids
     active_titles = {str(item.title) for item in items_of(world) if item.is_active}
     assert active_titles == {"Adjarian khachapuri", "Lemonade"}
+
+    # The rest of the import is discarded at once; confirmed items stay,
+    # even when they are switched off later.
+    lemonade = next(item for item in items_of(world) if item.title == "Lemonade")
+    lemonade.is_active = False
+    world.knowledge_item_repo.save(lemonade)
+    discarded = client.delete(f"{base_url}/{batch_id}", headers=bearer("staff"))
+
+    assert discarded.status_code == 200, discarded.text
+    assert discarded.json()["batch_id"] == batch_id
+    assert sorted(discarded.json()["discarded_item_ids"]) == sorted(
+        [rows[2]["item"]["id"], rows[3]["item"]["id"]]
+    )
+    assert sorted(str(item.title) for item in items_of(world)) == [
+        "Adjarian khachapuri",
+        "Lemonade",
+    ]
+    again = client.delete(f"{base_url}/{batch_id}", headers=bearer("owner"))
+    assert again.json()["discarded_item_ids"] == []
+
+
+def test_discarding_an_import_touches_only_its_own_drafts() -> None:
+    world = build_world(scripted())
+    extractor = FakeMenuExtractor([extracted("Tea", "3", None)])
+    client = build_cabinet_client(
+        world, extractor, {"owner": world.owner_id, "stranger": UserId()}
+    )
+    base_url = f"/v1/businesses/{world.business.id}/knowledge/import"
+    body = {"media_type": "text/plain", "data_base64": "VGVh"}
+    first = client.post(base_url, json=body, headers=bearer("owner")).json()
+    second = client.post(base_url, json=body, headers=bearer("owner")).json()
+    owner_draft = KnowledgeItemDocument(
+        business_id=world.business.id,
+        kind=KnowledgeItemKind.SERVICE,
+        title=KnowledgeTitle("Switched off by the owner"),
+        is_active=False,
+    )
+    world.knowledge_item_repo.save(owner_draft)
+
+    stranger = client.delete(
+        f"{base_url}/{first['batch_id']}", headers=bearer("stranger")
+    )
+    malformed = client.delete(f"{base_url}/not-a-batch", headers=bearer("owner"))
+    discarded = client.delete(
+        f"{base_url}/{first['batch_id']}", headers=bearer("owner")
+    )
+
+    assert (stranger.status_code, malformed.status_code) == (404, 404)
+    assert discarded.json()["discarded_item_ids"] == [first["items"][0]["item"]["id"]]
+    assert sorted(item.id for item in items_of(world)) == sorted(
+        [KnowledgeItemId(second["items"][0]["item"]["id"]), owner_draft.id]
+    )
 
 
 def test_prices_follow_the_currency_precision_of_any_business() -> None:
