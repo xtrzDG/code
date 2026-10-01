@@ -31,6 +31,9 @@ x-backend: &backend
     # client controls. Without TRUSTED_PROXY_HOPS the cabinet forwards no
     # client address, so the API logs the cabinet container's address.
     FORWARDED_ALLOW_IPS: "172.16.0.0/12"
+    # Every sign-in through the cabinet comes from its container's address
+    # here (see above), so the per-address cap of login codes is higher.
+    OTP_SENDS_PER_IP_PER_HOUR: ${OTP_SENDS_PER_IP_PER_HOUR:-100}
   volumes:
     - recordings:/app/var/recordings
   restart: unless-stopped

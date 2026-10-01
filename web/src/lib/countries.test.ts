@@ -16,6 +16,7 @@ import {
   isCountryAvailable,
   looksLikeEmail,
   looksLikePhoneNumber,
+  toAsciiDigits,
 } from "./countries";
 
 function country(overrides: Partial<CountryListItem>): CountryListItem {
@@ -142,5 +143,31 @@ describe("OTP error classification", () => {
     expect(classifyOtpVerifyError(error(401, "authentication_required"))).toBe("wrongCode");
     expect(classifyOtpVerifyError(error(429, "rate_limited"))).toBe("tooManyAttempts");
     expect(classifyOtpVerifyError(error(0, "network_error"))).toBeNull();
+  });
+});
+
+describe("phone input in any script", () => {
+  it.each([
+    "٠٥٠١٢٣٤٥٦٧",
+    "۰۹۱۲۳۴۵۶۷۸۹",
+    "\u202A+995 555 12 34 56\u202C",
+    "\u200E+995 555 12 34 56",
+    "+995\u2011555\u201112\u201134\u201156",
+    "＋９９５ ５５５ １２ ３４ ５６",
+  ])("accepts %j", (raw) => {
+    expect(looksLikePhoneNumber(raw)).toBe(true);
+  });
+
+  it("maps digits of any script to ASCII", () => {
+    expect(toAsciiDigits("١٢٣٤٥٦")).toBe("123456");
+    expect(toAsciiDigits("۱۲۳۴۵۶")).toBe("123456");
+    expect(toAsciiDigits("１２３４５６")).toBe("123456");
+    expect(toAsciiDigits("०९८७६५")).toBe("098765");
+    expect(toAsciiDigits("\u202A+995 555\u202C")).toBe("+995 555");
+  });
+
+  it("still rejects text and too few digits", () => {
+    expect(looksLikePhoneNumber("call me")).toBe(false);
+    expect(looksLikePhoneNumber("١٢٣")).toBe(false);
   });
 });

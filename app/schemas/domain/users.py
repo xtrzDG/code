@@ -4,6 +4,7 @@ from typed_time_provider import Microseconds
 
 from app.schemas.constants.localization import OtpDeliveryChannel
 from app.schemas.constants.users import LoginMethod
+from app.schemas.typings.compliance.strings import ClientIpAddress
 from app.schemas.typings.localization.constrained_strings import (
     CountryCode,
     E164PhoneNumber,
@@ -61,6 +62,7 @@ class OtpChallengeDocument(BaseDocument):
     expires_at: Microseconds
     failed_attempts: OtpAttemptCount = OtpAttemptCount(0)
     is_consumed: IsOtpChallengeConsumed = False
+    requested_from_ip: ClientIpAddress | None = None
 
 
 class UserSessionDocument(BaseDocument):

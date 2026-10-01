@@ -55,6 +55,7 @@ from app.schemas.typings.users.booleans import IsOtpCodeLoggingEnabled
 from app.schemas.typings.users.constrained_integers import (
     OtpAttemptCount,
     OtpLifetimeSeconds,
+    OtpSendLimit,
     SessionLifetimeSeconds,
 )
 from app.schemas.typings.users.constrained_strings import EmailAddress
@@ -193,6 +194,15 @@ def assemble_app_settings(environment_variables: Mapping[str, str]) -> AppSettin
         ),
         otp_max_failed_attempts=OtpAttemptCount(
             read_integer(environment_variables, "OTP_MAX_FAILED_ATTEMPTS", 5)
+        ),
+        otp_sends_per_destination_per_hour=OtpSendLimit(
+            read_integer(environment_variables, "OTP_SENDS_PER_DESTINATION_PER_HOUR", 5)
+        ),
+        otp_sends_per_ip_per_hour=OtpSendLimit(
+            read_integer(environment_variables, "OTP_SENDS_PER_IP_PER_HOUR", 10)
+        ),
+        otp_sends_per_hour=OtpSendLimit(
+            read_integer(environment_variables, "OTP_SENDS_PER_HOUR", 300)
         ),
         is_otp_code_logging_enabled=IsOtpCodeLoggingEnabled(
             is_otp_code_logging_enabled

@@ -2336,9 +2336,10 @@ export interface components {
          * CalendarConnectionOutcome
          * @description How the OAuth callback ended: the new connection, or why it failed.
          *
-         *     `business_id` is known whenever the callback carried a state we issued
-         *     (even an expired or used one), so the owner can be sent back to that
-         *     business's Channels page; it is None for an unknown state.
+         *     `business_id` is known whenever the callback carried a state the caller
+         *     was issued (even an expired or used one), so the owner can be sent back
+         *     to that business's Channels page; it is None for an unknown state or
+         *     another user's state.
          */
         CalendarConnectionOutcome: {
             /** Business Id */
@@ -2352,7 +2353,8 @@ export interface components {
          *     never returned.
          *
          *     `is_configured` tells whether this server can connect Google Calendar
-         *     at all (Google OAuth credentials and APP_BASE_URL are set). The sync
+         *     at all (Google OAuth credentials, APP_BASE_URL and CABINET_BASE_URL are
+         *     set). The sync
          *     error is a short provider reason; it clears after the next booking that
          *     syncs.
          */

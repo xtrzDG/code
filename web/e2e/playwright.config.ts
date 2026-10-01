@@ -92,6 +92,8 @@ export default defineConfig({
         ...UNSET_FOR_API,
         APP_ENV: "development",
         OTP_LOG_CODES: "true",
+        // Every test signs in from 127.0.0.1: lift the per-address cap.
+        OTP_SENDS_PER_IP_PER_HOUR: "100000",
         PYTHONUNBUFFERED: "1",
       },
       reuseExistingServer: false,

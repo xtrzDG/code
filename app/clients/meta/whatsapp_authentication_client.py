@@ -23,6 +23,9 @@ from app.utilities.channels.json_values import (
 
 REQUEST_TIMEOUT_SECONDS: float = 10.0
 # Graph error codes worth a sentence in the log; others are reported by code.
+# 131026 (the number is not on WhatsApp) normally arrives later in the
+# "failed" status webhook, not in this response: the API accepts the send,
+# so the sign-in page offers another channel ("send by SMS instead").
 KNOWN_ERRORS: dict[int, str] = {
     190: "the access token is invalid or expired",
     131026: "the number cannot receive WhatsApp messages",

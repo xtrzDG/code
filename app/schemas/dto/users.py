@@ -33,14 +33,16 @@ from app.schemas.typings.users.strings import (
 )
 
 
-class StartOtpLoginCommand(ImmutableDTO):
+class StartOtpLoginRequest(ImmutableDTO):
     """
     Ask for a one-time login code by phone number or e-mail.
 
     Exactly one of `phone_number` (any country, any format) and `email` is
     set. `country_hint` is needed only for national phone formats without
     "+"; `locale` is the language of the code message and of a new account.
-    `preferred_delivery_channel` is used when the phone's country allows it.
+    `preferred_delivery_channel` is used when the phone's country allows it;
+    asking for another channel right after a code was sent ("send by SMS
+    instead") is allowed once per channel.
     """
 
     phone_number: RawPhoneNumberInput | None = None
@@ -48,6 +50,17 @@ class StartOtpLoginCommand(ImmutableDTO):
     country_hint: CountryCode | None = None
     locale: LanguageTag | None = None
     preferred_delivery_channel: OtpDeliveryChannel | None = None
+
+
+class StartOtpLoginCommand(ImmutableDTO):
+    """A login code request with the caller's address (hourly limits)."""
+
+    phone_number: RawPhoneNumberInput | None = None
+    email: RawEmailAddressInput | None = None
+    country_hint: CountryCode | None = None
+    locale: LanguageTag | None = None
+    preferred_delivery_channel: OtpDeliveryChannel | None = None
+    client_ip_address: ClientIpAddress | None = None
 
 
 class OtpChallengeView(ImmutableDTO):

@@ -17,6 +17,16 @@ class OtpLifetimeSeconds(BaseConstrainedTypedInt):
     le = 3600
 
 
+class OtpSendLimit(BaseConstrainedTypedInt):
+    """
+    How many login codes may be sent in an hour (per destination, per
+    client address, or in total).
+    """
+
+    ge = 1
+    le = 1_000_000
+
+
 class SessionLifetimeSeconds(BaseConstrainedTypedInt):
     """How long a session stays valid, in seconds."""
 

@@ -5,6 +5,7 @@ import {
   effectiveLoginMethod,
   isEmailLoginOffered,
   isSignInUnavailable,
+  otherDeliveryChannels,
   phoneLoginBlock,
   withDeliveryChannel,
   type LoginOptions,
@@ -75,5 +76,12 @@ describe("login options", () => {
       email: "a@b.ge",
       locale: "en",
     });
+  });
+});
+
+describe("otherDeliveryChannels", () => {
+  it("offers the country's other channels on the code screen", () => {
+    expect(otherDeliveryChannels(["whatsapp", "sms"], "whatsapp")).toEqual(["sms"]);
+    expect(otherDeliveryChannels(["sms"], "sms")).toEqual([]);
   });
 });

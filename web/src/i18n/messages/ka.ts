@@ -89,6 +89,7 @@ export const ka: Messages = {
     resendIn: "ახალი კოდის მოთხოვნა შეგიძლიათ {seconds} წამში",
     resend: "ახალი კოდის გაგზავნა",
     codeResent: "ახალი კოდი უკვე გზაშია",
+    sendByChannelInstead: "კოდი არ მოვიდა? გაგზავნა {channel}",
     changeDestination: "სხვა ნომრის ან ელფოსტის მითითება",
     welcome: "კეთილი იყოს თქვენი მობრძანება!",
     sessionExpired: "სესია დასრულდა. გთხოვთ, ხელახლა შეხვიდეთ.",

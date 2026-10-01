@@ -3,7 +3,9 @@ Texts of login code messages (SMS and e-mail), resolved with the
 LocalizedText fallback: requested tag -> base language -> English.
 
 `{code}` and `{minutes}` are replaced with plain string replacement. SMS
-texts stay short: Cyrillic and Georgian SMS fit 70 characters per part.
+texts name the service and stay in one part: 70 characters for texts
+outside the GSM 7-bit alphabet (Cyrillic, Georgian, Hebrew, Arabic, Turkish
+and Spanish letters), 160 otherwise.
 Telegram Gateway and WhatsApp authentication templates are written by the
 platforms themselves and need no text here.
 """
@@ -21,18 +23,22 @@ CODE_PLACEHOLDER: str = "{code}"
 MINUTES_PLACEHOLDER: str = "{minutes}"
 SECONDS_PER_MINUTE: int = 60
 
+# Every text names the service, so a recipient can tell which sign-in the
+# code is for (code-relay phishing), and stays within one SMS part.
 LOGIN_CODE_SMS: LocalizedText = build_localized_text(
     en="Assistant Workshop sign-in code: {code}. Valid for {minutes} min. "
     "Do not share it.",
-    ru="Код входа: {code}. Действует {minutes} мин. Никому его не сообщайте.",
-    ka="შესვლის კოდი: {code}. მოქმედებს {minutes} წთ. არავის გაუზიაროთ.",
-    uk="Код входу: {code}. Дійсний {minutes} хв. Нікому його не повідомляйте.",
-    tr="Giriş kodunuz: {code}. {minutes} dk geçerlidir. Kimseyle paylaşmayın.",
-    he="קוד הכניסה: {code}. בתוקף {minutes} דק'. אין למסור אותו לאיש.",
-    ar="رمز الدخول: {code}. صالح لمدة {minutes} دقيقة. لا تشاركه مع أحد.",
-    de="Anmeldecode: {code}. Gültig {minutes} Min. Geben Sie ihn nicht weiter.",
-    fr="Code de connexion : {code}. Valable {minutes} min. Ne le partagez pas.",
-    es="Código de acceso: {code}. Válido {minutes} min. No lo compartas.",
+    ru="Assistant Workshop: код входа {code}, {minutes} мин. Никому не сообщайте.",
+    ka="Assistant Workshop: შესვლის კოდი {code}, {minutes} წთ. არავის უთხრათ.",
+    uk="Assistant Workshop: код входу {code}, {minutes} хв. Нікому не кажіть.",
+    tr="Assistant Workshop giriş kodu: {code}, {minutes} dk. Kimseye söylemeyin.",
+    he="Assistant Workshop: קוד כניסה {code}. בתוקף {minutes} דק'. אין למסור לאיש.",
+    ar="Assistant Workshop: رمز الدخول {code}، {minutes} دقيقة. لا تشاركه.",
+    de="Assistant Workshop Anmeldecode: {code}. Gültig {minutes} Min. "
+    "Nicht weitergeben.",
+    fr="Code de connexion Assistant Workshop : {code}. Valable {minutes} min. "
+    "Ne le partagez pas.",
+    es="Assistant Workshop: código {code}, válido {minutes} min. No lo compartas.",
 )
 
 LOGIN_CODE_EMAIL_SUBJECT: LocalizedText = build_localized_text(

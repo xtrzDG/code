@@ -117,13 +117,38 @@ export function hasInternationalPrefix(rawPhoneNumber: string): boolean {
   return trimmed.startsWith("+") || trimmed.startsWith("00");
 }
 
+// Direction marks that chat apps and contact books wrap around copied numbers.
+const BIDI_CONTROL_CHARACTERS = /[\u061C\u200E\u200F\u202A-\u202E\u2066-\u2069]/g;
+const NON_ASCII_DECIMAL_DIGIT = /(?![0-9])\p{Nd}/gu;
+const DECIMAL_DIGIT = /^\p{Nd}$/u;
+
+/**
+ * Full-width forms folded (NFKC), direction marks dropped and every Unicode
+ * decimal digit (Arabic-Indic, Persian, Devanagari, full-width …) as ASCII.
+ * Unicode encodes each digit set as a run of ten starting at zero.
+ */
+export function toAsciiDigits(value: string): string {
+  return value
+    .normalize("NFKC")
+    .replace(BIDI_CONTROL_CHARACTERS, "")
+    .replace(NON_ASCII_DECIMAL_DIGIT, (digit) => {
+      const codePoint = digit.codePointAt(0) ?? 0;
+      let runStart = codePoint;
+      while (DECIMAL_DIGIT.test(String.fromCodePoint(runStart - 1))) {
+        runStart -= 1;
+      }
+      return String((codePoint - runStart) % 10);
+    });
+}
+
 /**
  * A quick plausibility check before asking the API: phone characters only
- * and 4–17 digits. The API does the real parsing for the chosen country.
+ * (digits of any script, hyphens of any kind) and 4–17 digits. The API does
+ * the real parsing for the chosen country.
  */
 export function looksLikePhoneNumber(rawPhoneNumber: string): boolean {
-  const trimmed = rawPhoneNumber.trim();
-  if (!/^\+?[\d\s().\-/]+$/.test(trimmed)) {
+  const trimmed = toAsciiDigits(rawPhoneNumber).trim();
+  if (!/^\+?[\d\s().\-/\u2010-\u2015\u2212]+$/.test(trimmed)) {
     return false;
   }
   const digits = trimmed.replace(/\D/g, "").length;

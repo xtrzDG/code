@@ -61,3 +61,11 @@ export function withDeliveryChannel(
   }
   return { ...body, preferred_delivery_channel: channel };
 }
+
+/** The phone channels to offer on the code screen besides the one used ("no code? send by SMS"). */
+export function otherDeliveryChannels(
+  channels: readonly OtpDeliveryChannel[],
+  current: OtpDeliveryChannel,
+): OtpDeliveryChannel[] {
+  return channels.filter((channel) => channel !== current);
+}

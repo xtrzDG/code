@@ -7,6 +7,7 @@ from app.contracts.localization_utilities import PhoneNumberParserContract
 from app.contracts.registries import (
     CountryRegistryContract,
     LanguageRegistryContract,
+    LoginCodeSendLockRegistryContract,
 )
 from app.contracts.repositories import OtpChallengeRepoContract
 from app.contracts.use_case_contract import UseCaseContract
@@ -25,6 +26,7 @@ from app.schemas.exceptions.application_errors import (
     RateLimitedError,
     ValidationFailedError,
 )
+from app.schemas.typings.compliance.strings import ClientIpAddress
 from app.schemas.typings.localization.constrained_strings import (
     CountryCode,
     E164PhoneNumber,
@@ -49,6 +51,13 @@ logger: logging.Logger = logging.getLogger(__name__)
 
 FALLBACK_LANGUAGE: LanguageTag = LanguageTag("en")
 RESEND_INTERVAL_SECONDS: int = 30
+LIMIT_WINDOW_SECONDS: int = 60 * 60
+# Provider details (names, settings, credentials) stay in the server log.
+LOGIN_CODE_DELIVERY_FAILED_MESSAGE: str = (
+    "We could not send a login code right now. Try another way to sign in "
+    "or try again later."
+)
+TOO_MANY_CODES_MESSAGE: str = "Too many login codes were requested. Try again later."
 # Lines that cannot receive a text message with the code.
 NON_MESSAGING_PHONE_KINDS: frozenset[PhoneNumberKind] = frozenset(
     {PhoneNumberKind.FIXED_LINE, PhoneNumberKind.TOLL_FREE}
@@ -66,8 +75,17 @@ class StartOtpLoginUseCase(UseCaseContract[StartOtpLoginCommand, OtpChallengeVie
     through the next channel of the list. E-mail login needs an e-mail
     provider. The code message (and a new account) uses the requested
     language, else the country's owner language, else English. Only a keyed
-    hash of the code is stored. A second request for the same destination
-    within 30 seconds is refused.
+    hash of the code is stored.
+
+    Every code is a paid message, so sends are limited: a second request
+    for the same destination and channel within 30 seconds is refused (one
+    immediate switch to another channel is allowed, for a number that is
+    not on WhatsApp), and so is a send over the hourly caps per
+    destination, per client address and in total. The check and the
+    reservation of the send happen under one lock, before any provider is
+    called, so parallel requests cannot all pass; a failed delivery drops
+    its reservation. When every provider fails, the details are logged and
+    the caller gets a generic message.
     """
 
     def __init__(
@@ -79,6 +97,7 @@ class StartOtpLoginUseCase(UseCaseContract[StartOtpLoginCommand, OtpChallengeVie
         otp_delivery_facilitator: OtpDeliveryFacilitatorContract,
         app_settings: AppSettings,
         wall_clock: WallClock[Microseconds],
+        send_lock_registry: LoginCodeSendLockRegistryContract,
     ) -> None:
         self._otp_challenge_repo: OtpChallengeRepoContract = otp_challenge_repo
         self._phone_number_parser: PhoneNumberParserContract = phone_number_parser
@@ -89,6 +108,7 @@ class StartOtpLoginUseCase(UseCaseContract[StartOtpLoginCommand, OtpChallengeVie
         )
         self._app_settings: AppSettings = app_settings
         self._wall_clock: WallClock[Microseconds] = wall_clock
+        self._send_lock_registry: LoginCodeSendLockRegistryContract = send_lock_registry
 
     def run(self, input_data: StartOtpLoginCommand) -> OtpChallengeView:
         if input_data.locale is not None:
@@ -118,7 +138,6 @@ class StartOtpLoginUseCase(UseCaseContract[StartOtpLoginCommand, OtpChallengeVie
             )
 
         country: CountryProfile = self._load_allowed_country(phone_number.country_code)
-        self._refuse_repeated_request(phone_number.e164, None)
         delivery_channels: list[OtpDeliveryChannel] = (
             self._choose_phone_delivery_channels(
                 country,
@@ -133,6 +152,8 @@ class StartOtpLoginUseCase(UseCaseContract[StartOtpLoginCommand, OtpChallengeVie
             country_code=phone_number.country_code,
             delivery_channels=delivery_channels,
             locale=locale,
+            requested_channel=input_data.preferred_delivery_channel,
+            client_ip_address=input_data.client_ip_address,
         )
         return OtpChallengeView(
             challenge_id=challenge.id,
@@ -167,7 +188,6 @@ class StartOtpLoginUseCase(UseCaseContract[StartOtpLoginCommand, OtpChallengeVie
             )
             locale = input_data.locale or country.default_owner_language
 
-        self._refuse_repeated_request(None, email)
         masked_destination: MaskedLoginDestination = mask_email_address(email)
         challenge: OtpChallengeDocument = self._send_code(
             login_method=LoginMethod.EMAIL,
@@ -176,6 +196,8 @@ class StartOtpLoginUseCase(UseCaseContract[StartOtpLoginCommand, OtpChallengeVie
             country_code=input_data.country_hint,
             delivery_channels=[OtpDeliveryChannel.EMAIL],
             locale=locale,
+            requested_channel=None,
+            client_ip_address=input_data.client_ip_address,
         )
         return OtpChallengeView(
             challenge_id=challenge.id,
@@ -196,24 +218,67 @@ class StartOtpLoginUseCase(UseCaseContract[StartOtpLoginCommand, OtpChallengeVie
 
         return country
 
-    def _refuse_repeated_request(
+    def _refuse_over_limits(
         self,
         phone_number: E164PhoneNumber | None,
         email: EmailAddress | None,
+        requested_channel: OtpDeliveryChannel | None,
+        client_ip_address: ClientIpAddress | None,
     ) -> None:
-        window_start: Microseconds = self._wall_clock.now_unix_with_delta(
-            Seconds(-RESEND_INTERVAL_SECONDS)
+        """
+        Refuse a send within 30 seconds of the last one to the same
+        destination and channel (a phone may switch to another channel at
+        once), or over the hourly caps per destination, per client address
+        and in total.
+        """
+
+        settings: AppSettings = self._app_settings
+        resend_start: int = int(
+            self._wall_clock.now_unix_with_delta(Seconds(-RESEND_INTERVAL_SECONDS))
         )
-        for challenge in self._otp_challenge_repo.list_created_since(window_start):
-            is_same_phone: bool = (
-                phone_number is not None and challenge.phone_number == phone_number
+        recent: list[OtpChallengeDocument] = (
+            self._otp_challenge_repo.list_created_since(
+                self._wall_clock.now_unix_with_delta(Seconds(-LIMIT_WINDOW_SECONDS))
             )
-            is_same_email: bool = email is not None and challenge.email == email
-            if is_same_phone or is_same_email:
-                raise RateLimitedError(
-                    f"A code was just sent. Wait {RESEND_INTERVAL_SECONDS} seconds "
-                    "before asking for another one."
-                )
+        )
+        same_destination: list[OtpChallengeDocument] = [
+            challenge
+            for challenge in recent
+            if (phone_number is not None and challenge.phone_number == phone_number)
+            or (email is not None and challenge.email == email)
+        ]
+        if any(
+            int(challenge.created_at) > resend_start
+            and (
+                phone_number is None
+                or requested_channel is None
+                or challenge.delivery_channel == requested_channel
+            )
+            for challenge in same_destination
+        ):
+            raise RateLimitedError(
+                f"A code was just sent. Wait {RESEND_INTERVAL_SECONDS} seconds "
+                "before asking for another one."
+            )
+
+        if len(same_destination) >= int(settings.otp_sends_per_destination_per_hour):
+            raise RateLimitedError(TOO_MANY_CODES_MESSAGE)
+
+        if client_ip_address is not None and len(
+            [
+                challenge
+                for challenge in recent
+                if challenge.requested_from_ip == client_ip_address
+            ]
+        ) >= int(settings.otp_sends_per_ip_per_hour):
+            raise RateLimitedError(TOO_MANY_CODES_MESSAGE)
+
+        if len(recent) >= int(settings.otp_sends_per_hour):
+            logger.warning(
+                "The hourly cap of %s login codes is reached; sends are refused.",
+                int(settings.otp_sends_per_hour),
+            )
+            raise RateLimitedError(TOO_MANY_CODES_MESSAGE)
 
     def _choose_phone_delivery_channels(
         self,
@@ -252,34 +317,54 @@ class StartOtpLoginUseCase(UseCaseContract[StartOtpLoginCommand, OtpChallengeVie
         country_code: CountryCode | None,
         delivery_channels: list[OtpDeliveryChannel],
         locale: LanguageTag,
+        requested_channel: OtpDeliveryChannel | None,
+        client_ip_address: ClientIpAddress | None,
     ) -> OtpChallengeDocument:
         now: Microseconds = self._wall_clock.now_unix()
         challenge_id: OtpChallengeId = OtpChallengeId()
         code: OtpCode = generate_otp_code()
-        # Deliver before saving: a failed delivery leaves nothing to throttle.
-        delivery_channel: OtpDeliveryChannel = self._deliver(
-            delivery_channels=delivery_channels,
-            phone_number=phone_number,
-            email=email,
-            code=code,
-            locale=locale,
-        )
         challenge = OtpChallengeDocument(
             id=challenge_id,
             login_method=login_method,
             phone_number=phone_number,
             email=email,
             country_code=country_code,
-            delivery_channel=delivery_channel,
+            delivery_channel=delivery_channels[0],
             locale=locale,
             code_hash=hash_otp_code(challenge_id, code),
             expires_at=self._wall_clock.now_unix_with_delta(
                 Seconds(int(self._app_settings.otp_lifetime_seconds))
             ),
+            requested_from_ip=client_ip_address,
             created_at=now,
             updated_at=now,
         )
-        self._otp_challenge_repo.save(challenge)
+        # Check and reserve together, before any (slow, paid) provider call.
+        with self._send_lock_registry.lock():
+            self._refuse_over_limits(
+                phone_number, email, requested_channel, client_ip_address
+            )
+            self._otp_challenge_repo.save(challenge)
+
+        try:
+            delivery_channel: OtpDeliveryChannel = self._deliver(
+                delivery_channels=delivery_channels,
+                phone_number=phone_number,
+                email=email,
+                code=code,
+                locale=locale,
+            )
+        except ExternalServiceError:
+            # A failed delivery leaves nothing to throttle.
+            self._otp_challenge_repo.delete(challenge_id)
+            raise
+
+        if delivery_channel is not challenge.delivery_channel:
+            challenge = challenge.model_copy(
+                update={"delivery_channel": delivery_channel}
+            )
+            self._otp_challenge_repo.save(challenge)
+
         return challenge
 
     def _deliver(
@@ -290,9 +375,11 @@ class StartOtpLoginUseCase(UseCaseContract[StartOtpLoginCommand, OtpChallengeVie
         code: OtpCode,
         locale: LanguageTag,
     ) -> OtpDeliveryChannel:
-        """Send the code through the first channel whose provider accepts it."""
+        """
+        Send the code through the first channel whose provider accepts it.
+        Provider failures are logged; the caller gets a generic message.
+        """
 
-        last_error: ExternalServiceError | None = None
         for delivery_channel in delivery_channels:
             try:
                 self._otp_delivery_facilitator.deliver(
@@ -308,12 +395,8 @@ class StartOtpLoginUseCase(UseCaseContract[StartOtpLoginCommand, OtpChallengeVie
                     delivery_channel.value,
                     error,
                 )
-                last_error = error
                 continue
 
             return delivery_channel
 
-        if last_error is not None:
-            raise last_error
-
-        raise ExternalServiceError("No channel can deliver the login code.")
+        raise ExternalServiceError(LOGIN_CODE_DELIVERY_FAILED_MESSAGE)

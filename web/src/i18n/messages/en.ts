@@ -95,6 +95,7 @@ export const en = {
     resendIn: "You can ask for a new code in {seconds} s",
     resend: "Send a new code",
     codeResent: "A new code is on its way",
+    sendByChannelInstead: "No code? Send by {channel} instead",
     changeDestination: "Use another number or e-mail",
     welcome: "Welcome!",
     sessionExpired: "Your session has ended. Please sign in again.",

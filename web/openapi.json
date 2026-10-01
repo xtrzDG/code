@@ -2367,7 +2367,7 @@
       },
       "CalendarConnectionOutcome": {
         "additionalProperties": false,
-        "description": "How the OAuth callback ended: the new connection, or why it failed.\n\n`business_id` is known whenever the callback carried a state we issued\n(even an expired or used one), so the owner can be sent back to that\nbusiness's Channels page; it is None for an unknown state.",
+        "description": "How the OAuth callback ended: the new connection, or why it failed.\n\n`business_id` is known whenever the callback carried a state the caller\nwas issued (even an expired or used one), so the owner can be sent back\nto that business's Channels page; it is None for an unknown state or\nanother user's state.",
         "properties": {
           "business_id": {
             "anyOf": [
@@ -2406,7 +2406,7 @@
       },
       "CalendarConnectionStatusView": {
         "additionalProperties": false,
-        "description": "Whether Google Calendar is connected and how syncing goes. Tokens are\nnever returned.\n\n`is_configured` tells whether this server can connect Google Calendar\nat all (Google OAuth credentials and APP_BASE_URL are set). The sync\nerror is a short provider reason; it clears after the next booking that\nsyncs.",
+        "description": "Whether Google Calendar is connected and how syncing goes. Tokens are\nnever returned.\n\n`is_configured` tells whether this server can connect Google Calendar\nat all (Google OAuth credentials, APP_BASE_URL and CABINET_BASE_URL are\nset). The sync\nerror is a short provider reason; it clears after the next booking that\nsyncs.",
         "properties": {
           "business_id": {
             "title": "Business Id",
@@ -10038,7 +10038,7 @@
             "application/json": {
               "schema": {
                 "additionalProperties": false,
-                "description": "Ask for a one-time login code by phone number or e-mail.\n\nExactly one of `phone_number` (any country, any format) and `email` is\nset. `country_hint` is needed only for national phone formats without\n\"+\"; `locale` is the language of the code message and of a new account.\n`preferred_delivery_channel` is used when the phone's country allows it.",
+                "description": "Ask for a one-time login code by phone number or e-mail.\n\nExactly one of `phone_number` (any country, any format) and `email` is\nset. `country_hint` is needed only for national phone formats without\n\"+\"; `locale` is the language of the code message and of a new account.\n`preferred_delivery_channel` is used when the phone's country allows it;\nasking for another channel right after a code was sent (\"send by SMS\ninstead\") is allowed once per channel.",
                 "properties": {
                   "country_hint": {
                     "anyOf": [
@@ -10109,7 +10109,7 @@
                     ]
                   }
                 },
-                "title": "StartOtpLoginCommand",
+                "title": "StartOtpLoginRequest",
                 "type": "object"
               }
             }
@@ -12881,7 +12881,7 @@
             "application/json": {
               "schema": {
                 "additionalProperties": false,
-                "description": "Body of a cabinet booking change; omitted fields stay as they are.\n\n`status`: COMPLETED, NO_SHOW or CANCELLED, or CONFIRMED for a PENDING\nbooking. `party_size` and `resource_id` must fit the booked time (the\nresource seats the party, is open and has a free unit then). An empty\n`notes` text removes the notes. `contact_name` renames the customer.\nThe time is changed by rescheduling.",
+                "description": "Body of a cabinet booking change; omitted fields stay as they are.\n\n`status`: COMPLETED, NO_SHOW or CANCELLED, or CONFIRMED for a PENDING\nbooking. `party_size` and `resource_id` must fit the booked time (the\nresource seats the party, is open and has a free unit then). An empty or blank\n`notes` text removes the notes. `contact_name` renames the customer.\nThe time is changed by rescheduling.",
                 "properties": {
                   "contact_name": {
                     "anyOf": [

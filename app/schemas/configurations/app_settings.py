@@ -49,6 +49,7 @@ from app.schemas.typings.users.booleans import IsOtpCodeLoggingEnabled
 from app.schemas.typings.users.constrained_integers import (
     OtpAttemptCount,
     OtpLifetimeSeconds,
+    OtpSendLimit,
     SessionLifetimeSeconds,
 )
 from app.schemas.typings.users.constrained_strings import EmailAddress
@@ -81,6 +82,9 @@ class AppSettings(ImmutableDTO):
     autotest_turn_limit: AutotestTurnLimit
     otp_lifetime_seconds: OtpLifetimeSeconds
     otp_max_failed_attempts: OtpAttemptCount
+    otp_sends_per_destination_per_hour: OtpSendLimit = OtpSendLimit(5)
+    otp_sends_per_ip_per_hour: OtpSendLimit = OtpSendLimit(10)
+    otp_sends_per_hour: OtpSendLimit = OtpSendLimit(300)
     is_otp_code_logging_enabled: IsOtpCodeLoggingEnabled
     session_lifetime_seconds: SessionLifetimeSeconds
     restricted_country_codes: list[CountryCode]

@@ -1,6 +1,7 @@
 from typing import Any
 
 from app.schemas.constants.compliance import AuditAction
+from app.schemas.constants.localization import OtpDeliveryChannel
 from tests.users.accounts_testbed import (
     GEORGIA_MOBILE,
     ISRAEL_MOBILE,
@@ -198,3 +199,38 @@ def test_openapi_documents_bodies_read_by_the_strict_parser() -> None:
     assert "requestBody" in paths["/v1/me"]["patch"]
     assert "requestBody" in paths["/v1/businesses/{business_id}/members"]["post"]
     assert "requestBody" in paths["/v1/businesses"]["post"]
+
+
+def test_code_requests_over_the_address_limit_are_refused_over_http() -> None:
+    testbed = build_accounts_testbed({"OTP_SENDS_PER_IP_PER_HOUR": "1"})
+    client = testbed.build_http_client()
+
+    first = client.post("/v1/auth/otp/start", json={"phone_number": GEORGIA_MOBILE})
+    second = client.post(
+        "/v1/auth/otp/start",
+        # The address comes from the connection, never from the body.
+        json={"phone_number": "+995 555 12 34 99", "client_ip_address": "1.2.3.4"},
+    )
+    third = client.post(
+        "/v1/auth/otp/start", json={"phone_number": "+995 555 12 34 99"}
+    )
+
+    assert first.status_code == 200, first.text
+    assert second.status_code == 422
+    assert third.status_code == 429
+    assert third.json()["error"] == "rate_limited"
+
+
+def test_failed_code_delivery_hides_provider_details_over_http() -> None:
+    testbed = build_accounts_testbed()
+    testbed.otp_delivery.failing_channels = set(OtpDeliveryChannel)
+
+    response = testbed.build_http_client().post(
+        "/v1/auth/otp/start",
+        json={"phone_number": "555 12 34 56", "country_hint": "GE"},
+    )
+
+    assert response.status_code == 502
+    assert response.json()["error"] == "external_service_error"
+    assert "could not send a login code" in response.json()["message"]
+    assert "provider is down" not in response.json()["message"]

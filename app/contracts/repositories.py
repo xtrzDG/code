@@ -97,6 +97,10 @@ class OtpChallengeRepoContract(RepoContract, Protocol):
         """Challenges created after a moment (throttling of repeated logins)."""
         raise NotImplementedError
 
+    def delete(self, challenge_id: OtpChallengeId) -> None:
+        """Drop a challenge whose code could not be delivered."""
+        raise NotImplementedError
+
 
 class UserSessionRepoContract(RepoContract, Protocol):
     def save(self, session: UserSessionDocument) -> None:

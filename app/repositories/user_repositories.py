@@ -77,6 +77,9 @@ class OtpChallengeRepository(OtpChallengeRepoContract):
             if challenge.created_at > created_after
         ]
 
+    def delete(self, challenge_id: OtpChallengeId) -> None:
+        self._collection.delete(str(challenge_id))
+
 
 class UserSessionRepository(UserSessionRepoContract):
     def __init__(

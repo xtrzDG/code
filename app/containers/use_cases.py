@@ -693,6 +693,7 @@ class UseCasesContainer(containers.DeclarativeContainer):
         otp_delivery_facilitator=facilitators.otp_delivery_facilitator,
         app_settings=config.app_settings,
         wall_clock=time_provider.microsecond_wall_clock,
+        send_lock_registry=registries.login_code_send_lock_registry,
     )
     get_login_options_use_case: Factory[
         UseCaseContract[LoginOptionsQuery, LoginOptionsView]

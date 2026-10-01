@@ -89,6 +89,7 @@ export const ru: Messages = {
     resendIn: "Новый код можно запросить через {seconds} с",
     resend: "Отправить новый код",
     codeResent: "Новый код уже в пути",
+    sendByChannelInstead: "Код не пришёл? Отправить через {channel}",
     changeDestination: "Указать другой номер или почту",
     welcome: "Добро пожаловать!",
     sessionExpired: "Сессия закончилась. Войдите снова.",

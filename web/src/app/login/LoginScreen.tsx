@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent, type MouseEvent } from "react";
 import { z } from "zod";
 
 import { startLogin, verifyLogin } from "@/api/auth";
@@ -23,6 +23,7 @@ import {
   isCountryAvailable,
   looksLikeEmail,
   looksLikePhoneNumber,
+  toAsciiDigits,
   type LoginMethod,
 } from "@/lib/countries";
 import { messageKey } from "@/lib/validation";
@@ -32,6 +33,7 @@ import {
   effectiveLoginMethod,
   isEmailLoginOffered,
   isSignInUnavailable,
+  otherDeliveryChannels,
   phoneLoginBlock,
   withDeliveryChannel,
 } from "./_lib/loginOptions";
@@ -128,7 +130,7 @@ export function LoginScreen({ next, sessionExpired }: { next: string; sessionExp
     return () => window.clearInterval(timer);
   }, [codeStage]);
 
-  async function sendCode(): Promise<boolean> {
+  async function sendCode(channelOverride?: OtpDeliveryChannel): Promise<boolean> {
     setSending(true);
     try {
       const challenge = await startLogin(
@@ -136,7 +138,7 @@ export function LoginScreen({ next, sessionExpired }: { next: string; sessionExp
           buildOtpStartBody({ method, phoneNumber, email, countryCode, locale }),
           method,
           phoneChannels,
-          deliveryChannel,
+          channelOverride ?? deliveryChannel,
         ),
       );
       const sentAt = Date.now();
@@ -208,6 +210,24 @@ export function LoginScreen({ next, sessionExpired }: { next: string; sessionExp
     }
   }
 
+  /**
+   * The code went by a channel the number may not use (a number without
+   * WhatsApp gets nothing, and WhatsApp reports that only later): the API
+   * lets the visitor switch channel at once, without the resend wait.
+   */
+  async function sendByOtherChannel(channel: OtpDeliveryChannel) {
+    setChosenChannel(channel);
+    setCode("");
+    setCodeError(null);
+    if (await sendCode(channel)) {
+      toast.success(t("auth.codeResent"));
+    }
+  }
+
+  function onOtherChannelClick(event: MouseEvent<HTMLButtonElement>) {
+    void sendByOtherChannel(event.currentTarget.value as OtpDeliveryChannel);
+  }
+
   function changeDestination() {
     setCodeStage(null);
     setCode("");
@@ -248,7 +268,8 @@ export function LoginScreen({ next, sessionExpired }: { next: string; sessionExp
                 maxLength={CODE_LENGTH}
                 className="h-12 text-center font-mono text-2xl tracking-[0.5em]"
                 onChange={(event) => {
-                  const digits = event.target.value.replace(/\D/g, "").slice(0, CODE_LENGTH);
+                  // Codes typed with an Arabic, Persian or full-width keyboard count too.
+                  const digits = toAsciiDigits(event.target.value).replace(/\D/g, "").slice(0, CODE_LENGTH);
                   setCode(digits);
                   setCodeError(null);
                   if (digits.length === CODE_LENGTH && !isVerifying) {
@@ -271,6 +292,20 @@ export function LoginScreen({ next, sessionExpired }: { next: string; sessionExp
                 {t("auth.resend")}
               </Button>
             )}
+            {challenge.login_method === "phone"
+              ? otherDeliveryChannels(phoneChannels, challenge.delivery_channel).map((channel) => (
+                  <Button
+                    key={channel}
+                    variant="ghost"
+                    size="sm"
+                    value={channel}
+                    onClick={onOtherChannelClick}
+                    disabled={isSending}
+                  >
+                    {t("auth.sendByChannelInstead", { channel: t(DELIVERY_CHANNEL_LABELS[channel]) })}
+                  </Button>
+                ))
+              : null}
             <Button variant="ghost" size="sm" onClick={changeDestination}>
               {t("auth.changeDestination")}
             </Button>

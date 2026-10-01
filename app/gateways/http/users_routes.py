@@ -21,6 +21,7 @@ from app.schemas.dto.users import (
     LogoutCommand,
     OtpChallengeView,
     StartOtpLoginCommand,
+    StartOtpLoginRequest,
     UpdateCurrentUserCommand,
     UpdateCurrentUserRequest,
     UserView,
@@ -31,7 +32,7 @@ from app.schemas.exceptions.application_errors import ValidationFailedError
 from app.schemas.typings.localization.constrained_strings import CountryCode
 from app.schemas.typings.users.prefixed_id import UserId
 
-read_start_otp_login_body = build_json_body_dependency(StartOtpLoginCommand)
+read_start_otp_login_body = build_json_body_dependency(StartOtpLoginRequest)
 read_verify_otp_login_body = build_json_body_dependency(VerifyOtpLoginRequest)
 read_update_current_user_body = build_json_body_dependency(UpdateCurrentUserRequest)
 
@@ -74,12 +75,22 @@ def build_users_router(
     @router.post(
         "/v1/auth/otp/start",
         status_code=status.HTTP_200_OK,
-        openapi_extra=describe_json_body(StartOtpLoginCommand),
+        openapi_extra=describe_json_body(StartOtpLoginRequest),
     )
     def start_otp_login(
-        body: Annotated[StartOtpLoginCommand, Depends(read_start_otp_login_body)],
+        request: Request,
+        body: Annotated[StartOtpLoginRequest, Depends(read_start_otp_login_body)],
     ) -> OtpChallengeView:
-        return start_otp_login_operator.operate(body)
+        return start_otp_login_operator.operate(
+            StartOtpLoginCommand(
+                phone_number=body.phone_number,
+                email=body.email,
+                country_hint=body.country_hint,
+                locale=body.locale,
+                preferred_delivery_channel=body.preferred_delivery_channel,
+                client_ip_address=read_client_ip_address(request),
+            )
+        )
 
     @router.post(
         "/v1/auth/otp/verify",

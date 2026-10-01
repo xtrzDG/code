@@ -35,6 +35,9 @@ from app.operators.pipeline_operator import PipelineOperator
 from app.orchestrators.use_case_orchestrator import UseCaseOrchestrator
 from app.pipelines.orchestrator_pipeline import OrchestratorPipeline
 from app.registries.legal.legal_document_registry import LegalDocumentRegistry
+from app.registries.locks.login_code_send_lock_registry import (
+    LoginCodeSendLockRegistry,
+)
 from app.repositories.billing_repositories import SubscriptionRepository
 from app.repositories.booking_repositories import (
     BookingRepository,
@@ -669,6 +672,7 @@ class AccountsTestbed:
             otp_delivery_facilitator=self.otp_delivery,
             app_settings=self.settings,
             wall_clock=wall_clock,
+            send_lock_registry=LoginCodeSendLockRegistry(),
         )
         self.get_login_options = GetLoginOptionsUseCase(
             country_registry=self.country_registry,

@@ -157,12 +157,19 @@ def deliver(
     )
 
 
+# The GSM 7-bit default alphabet: a text only of these fits 160 per SMS part.
+GSM_7BIT_CHARACTERS: frozenset[str] = frozenset(
+    "@£$¥èéùìòÇ\nØø\rÅåΔ_ΦΓΛΩΠΨΣΘΞÆæßÉ !\"#¤%&'()*+,-./0123456789:;<=>?¡"
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZÄÖÑÜ§¿abcdefghijklmnopqrstuvwxyzäöñüà"
+)
+
+
 class TestChannelFacilitators:
     @pytest.mark.parametrize(
         ("language", "expected_start"),
         [
-            ("ka", "შესვლის კოდი: 042317. მოქმედებს 10 წთ."),
-            ("ru-RU", "Код входа: 042317. Действует 10 мин."),
+            ("ka", "Assistant Workshop: შესვლის კოდი 042317, 10 წთ."),
+            ("ru-RU", "Assistant Workshop: код входа 042317, 10 мин."),
             ("pt-BR", "Assistant Workshop sign-in code: 042317. Valid for 10 min."),
         ],
     )
@@ -180,6 +187,21 @@ class TestChannelFacilitators:
         assert recipient == PHONE
         assert str(text).startswith(expected_start)
         assert facilitator.available_channels() == {OtpDeliveryChannel.SMS}
+
+    @pytest.mark.parametrize(
+        "language", ["en", "ru", "ka", "uk", "tr", "he", "ar", "de", "fr", "es"]
+    )
+    def test_sms_names_the_service_and_fits_one_part(self, language: str) -> None:
+        sms = FakeSms()
+        facilitator = SmsOtpDeliveryFacilitator(
+            sms, LocalizedTextResolver(), settings(OTP_LIFETIME_SECONDS="3600")
+        )
+
+        deliver(facilitator, OtpDeliveryChannel.SMS, language)
+
+        text = str(sms.sent[0][1])
+        assert "Assistant Workshop" in text
+        assert len(text) <= (160 if set(text) <= GSM_7BIT_CHARACTERS else 70)
 
     def test_sms_minutes_round_up(self) -> None:
         sms = FakeSms()

@@ -1,7 +1,7 @@
 /**
  * POST /api/auth/start — send a one-time login code.
  *
- * Body: the API's StartOtpLoginCommand ({"phone_number", "country_hint"} or
+ * Body: the API's StartOtpLoginRequest ({"phone_number", "country_hint"} or
  * {"email"}, plus "locale"). Answers the API's OtpChallengeView or error.
  */
 

@@ -394,8 +394,13 @@ Use semantic HTML, visible focus, and labels for icon-only buttons.
   address, so the browser repeats it as a GET that carries the session.
 - `/login` asks `GET /v1/auth/login-options` for the chosen country: the method
   switch hides e-mail when it cannot deliver codes, the phone form offers a
-  channel choice when several work, and explains when none does. Helpers with
-  tests are in `src/app/login/_lib/loginOptions.ts`.
+  channel choice when several work, and explains when none does. The code
+  screen offers the country's other channels ("No code? Send by SMS instead":
+  a number without WhatsApp is reported only later), which the API allows at
+  once. Phone numbers and codes typed in any script (Arabic-Indic, Persian,
+  full-width digits, direction marks of copied numbers) are read as ASCII
+  digits (`toAsciiDigits`). Helpers with tests are in
+  `src/app/login/_lib/loginOptions.ts` and `src/lib/countries.ts`.
 
 ## Security notes
 

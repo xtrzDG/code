@@ -1,5 +1,6 @@
-"""Read-only catalogs: countries, languages, niche templates, plans."""
+"""Read-only catalogs (countries, languages, niches, plans) and process locks."""
 
+from contextlib import AbstractContextManager
 from typing import Protocol
 
 from app.contracts.registry_contract import RegistryContract
@@ -62,4 +63,13 @@ class PlanRegistryContract(RegistryContract, Protocol):
         plan_key: PlanKey,
         currency_code: CurrencyCode,
     ) -> Money | None:
+        raise NotImplementedError
+
+
+class LoginCodeSendLockRegistryContract(RegistryContract, Protocol):
+    def lock(self) -> AbstractContextManager[object]:
+        """
+        Lock serializing the check-and-reserve step of login code sends in
+        this process, so parallel requests cannot all pass the limits.
+        """
         raise NotImplementedError
