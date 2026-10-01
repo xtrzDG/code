@@ -106,7 +106,14 @@ class CreateBookingCommand(ImmutableDTO):
 
 
 class RescheduleBookingCommand(ImmutableDTO):
-    """Move a booking found by id, or by contact phone and old date."""
+    """
+    Move a booking found by id, or by contact phone and old date.
+
+    A customer request (contact or phone given) reaches only bookings of
+    the same sandbox mode: owner tests never touch real bookings and real
+    customers never touch test bookings. `is_sandbox` None (cabinet) does
+    not filter.
+    """
 
     business_id: BusinessId
     contact_id: ContactId | None = None
@@ -116,10 +123,14 @@ class RescheduleBookingCommand(ImmutableDTO):
     new_date: LocalDate
     new_time: LocalTimeOfDay | None = None
     language: LanguageTag
+    is_sandbox: IsSandboxConversation | None = None
 
 
 class CancelBookingCommand(ImmutableDTO):
-    """Cancel a booking found by id, or by contact phone and date."""
+    """
+    Cancel a booking found by id, or by contact phone and date (sandbox
+    rule as for rescheduling).
+    """
 
     business_id: BusinessId
     contact_id: ContactId | None = None
@@ -127,6 +138,7 @@ class CancelBookingCommand(ImmutableDTO):
     contact_phone_number: E164PhoneNumber | None = None
     date: LocalDate | None = None
     language: LanguageTag
+    is_sandbox: IsSandboxConversation | None = None
 
 
 class BookingView(ImmutableDTO):

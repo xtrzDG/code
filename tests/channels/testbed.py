@@ -542,6 +542,7 @@ class ChannelsTestbed:
             self.whatsapp_adapter,
             self.messenger_adapter,
             self.instagram_adapter,
+            self.whatsapp_adapter,
             self.usage_event_repo,
             self.wall_clock,
         )

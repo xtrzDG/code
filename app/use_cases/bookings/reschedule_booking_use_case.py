@@ -153,6 +153,7 @@ class RescheduleBookingUseCase(
                 input_data.contact_phone_number,
                 old_date,
                 now_seconds,
+                is_sandbox=input_data.is_sandbox,
             )
             if booking.status not in BLOCKING_BOOKING_STATUSES:
                 raise ConflictError(

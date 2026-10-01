@@ -112,6 +112,7 @@ class OpenVoiceConversationUseCase(
             contact_id=contact.id,
             contact_name=contact.name,
             contact_phone_number=contact.phone_number,
+            verified_phone_number=input_data.caller_phone_number,
             conversation_id=conversation.id,
             channel=ChannelKind.PHONE,
             language=language,
@@ -146,7 +147,8 @@ class OpenVoiceConversationUseCase(
             contact = self._contact_repo.get(business.id, conversation.contact_id)
 
         if contact is None and request.caller_phone_number is not None:
-            contact = self._contact_repo.find_by_phone_number(
+            # Only a contact whose phone a channel proved is the caller.
+            contact = self._contact_repo.find_by_verified_phone_number(
                 business.id, request.caller_phone_number
             )
 
@@ -167,10 +169,18 @@ class OpenVoiceConversationUseCase(
             contact = ContactDocument(
                 business_id=business.id,
                 phone_number=request.caller_phone_number,
+                verified_phone_number=request.caller_phone_number,
                 channel_identities=[identity],
                 created_at=now,
                 updated_at=now,
             )
+            self._contact_repo.save(contact)
+        elif (
+            request.caller_phone_number is not None
+            and contact.verified_phone_number != request.caller_phone_number
+        ):
+            contact.verified_phone_number = request.caller_phone_number
+            contact.updated_at = now
             self._contact_repo.save(contact)
 
         return contact

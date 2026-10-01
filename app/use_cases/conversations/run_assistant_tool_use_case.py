@@ -45,6 +45,7 @@ from app.schemas.dto.knowledge import (
     SendLinkQuery,
     SendLinkResult,
 )
+from app.schemas.exceptions.application_errors import AccessDeniedError
 from app.schemas.exceptions.base_exception import ApplicationError
 from app.schemas.typings.conversations.strings import LlmToolResultJson
 from app.schemas.typings.localization.constrained_strings import E164PhoneNumber
@@ -76,8 +77,12 @@ class RunAssistantToolUseCase(
     conversation, channel, language and sandbox flag come from the context,
     never from the model. Phones the model passes are parsed with the
     business country as the hint; a missing phone falls back to the
-    contact's phone. A tool not offered in the conversation, invalid input
-    or a business rule error (slot taken, unknown booking) becomes an error
+    contact's phone. Cancelling or moving a booking is a customer request
+    for the customer's own bookings only: they are found by the contact and
+    by the phone the channel proved, never by a phone the customer typed
+    (anyone can type someone else's number), and only in the conversation's
+    sandbox mode. A tool not offered in the conversation, invalid input or
+    a business rule error (slot taken, unknown booking) becomes an error
     result the model can act on instead of an exception.
     """
 
@@ -266,9 +271,12 @@ class RunAssistantToolUseCase(
                 business_id=context.business_id,
                 contact_id=context.contact_id,
                 booking_id=tool_input.booking_id,
-                contact_phone_number=self._resolve_phone(tool_input.phone, context),
+                contact_phone_number=self._require_verified_phone(
+                    tool_input.phone, context
+                ),
                 date=tool_input.date,
                 language=context.language,
+                is_sandbox=context.is_sandbox,
             )
         )
         return success_outcome(call, render_booking(result))
@@ -284,7 +292,10 @@ class RunAssistantToolUseCase(
                 business_id=context.business_id,
                 contact_id=context.contact_id,
                 booking_id=tool_input.booking_id,
-                contact_phone_number=self._resolve_phone(tool_input.phone, context),
+                contact_phone_number=self._require_verified_phone(
+                    tool_input.phone, context
+                ),
+                is_sandbox=context.is_sandbox,
                 old_date=tool_input.old_date,
                 new_date=tool_input.new_date,
                 new_time=tool_input.new_time,
@@ -371,6 +382,40 @@ class RunAssistantToolUseCase(
             )
         )
         return success_outcome(call, render_unanswered_question(question))
+
+    def _require_verified_phone(
+        self,
+        raw_phone_number: RawPhoneNumberInput | None,
+        context: AssistantToolContext,
+    ) -> E164PhoneNumber | None:
+        """
+        The phone the channel proved for this customer. A different phone
+        the model passes on is refused: it would let anyone manage someone
+        else's bookings just by typing their number.
+
+        Raises:
+            AccessDeniedError: the model passed another phone.
+            InvalidPhoneNumberError: the model passed something that is not
+                a phone number of any country.
+        """
+
+        if raw_phone_number is None or str(raw_phone_number).strip() == "":
+            return context.verified_phone_number
+
+        claimed: E164PhoneNumber = self._phone_number_parser.parse(
+            raw_phone_number,
+            context.business_country_code,
+        ).e164
+        if claimed != context.verified_phone_number:
+            raise AccessDeniedError(
+                "This phone number is not confirmed for this conversation, so "
+                "its bookings cannot be changed from here. Only bookings made "
+                "in this conversation, or under the number the customer is "
+                "writing or calling from, can be cancelled or moved; otherwise "
+                "offer to pass the request to a colleague."
+            )
+
+        return claimed
 
     def _resolve_phone(
         self,

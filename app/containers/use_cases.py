@@ -1089,10 +1089,17 @@ class UseCasesContainer(containers.DeclarativeContainer):
             booking_repo=repositories.booking_repo,
             resource_repo=repositories.resource_repo,
             contact_repo=repositories.contact_repo,
-            usage_event_repo=repositories.usage_event_repo,
+            conversation_repo=repositories.conversation_repo,
+            message_repo=repositories.message_repo,
             channel_message_sender=facilitators.channel_message_sender,
             reminder_transformer=transformers.booking_reminder_transformer,
+            reminder_template_transformer=(
+                transformers.booking_reminder_template_transformer
+            ),
             wall_clock=time_provider.microsecond_wall_clock,
+            whatsapp_reminder_template=(
+                config.app_settings.provided.whatsapp_reminder_template_name
+            ),
         )
     )
 

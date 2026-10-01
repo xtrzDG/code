@@ -119,6 +119,7 @@ class CancelBookingUseCase(UseCaseContract[CancelBookingCommand, BookingResult])
                 input_data.contact_phone_number,
                 local_date,
                 microseconds_to_seconds(int(now)),
+                is_sandbox=input_data.is_sandbox,
             )
             is_newly_cancelled: bool = booking.status is not BookingStatus.CANCELLED
             if is_newly_cancelled:

@@ -227,6 +227,74 @@ class TestCancel:
         assert restaurant.world.notifier.sent == []
         assert restaurant.world.calendar_sync.synced == []
 
+    def test_an_owner_test_never_reaches_a_real_booking(self) -> None:
+        restaurant = BookedRestaurant()
+        tester = restaurant.world.add_contact(restaurant.business, "Owner", PHONE)
+
+        for command in (
+            CancelBookingCommand(
+                business_id=restaurant.business.id,
+                contact_id=tester.id,
+                contact_phone_number=E164PhoneNumber(PHONE),
+                date=LocalDate("2026-10-06"),
+                language=LanguageTag("en"),
+                is_sandbox=True,
+            ),
+            CancelBookingCommand(
+                business_id=restaurant.business.id,
+                contact_id=tester.id,
+                booking_id=restaurant.dinner.id,
+                contact_phone_number=E164PhoneNumber(PHONE),
+                language=LanguageTag("en"),
+                is_sandbox=True,
+            ),
+        ):
+            with pytest.raises(NotFoundError):
+                restaurant.world.cancel_booking().run(command)
+
+        with pytest.raises(NotFoundError):
+            restaurant.world.reschedule_booking().run(
+                RescheduleBookingCommand(
+                    business_id=restaurant.business.id,
+                    contact_id=tester.id,
+                    contact_phone_number=E164PhoneNumber(PHONE),
+                    old_date=LocalDate("2026-10-06"),
+                    new_date=LocalDate("2026-10-07"),
+                    new_time=LocalTimeOfDay("20:00"),
+                    language=LanguageTag("en"),
+                    is_sandbox=True,
+                )
+            )
+
+        assert restaurant.stored(restaurant.dinner).status is BookingStatus.CONFIRMED
+        assert restaurant.world.notifier.sent == []
+        assert restaurant.world.calendar_sync.synced == []
+
+    def test_a_real_customer_never_reaches_a_test_booking(self) -> None:
+        restaurant = BookedRestaurant()
+        test_booking = restaurant.world.add_booking(
+            restaurant.business,
+            restaurant.table_for_eight,
+            restaurant.customer,
+            "2026-10-09T19:00:00+04:00",
+            "2026-10-09T21:00:00+04:00",
+            is_sandbox=True,
+        )
+
+        with pytest.raises(NotFoundError):
+            restaurant.world.cancel_booking().run(
+                CancelBookingCommand(
+                    business_id=restaurant.business.id,
+                    contact_id=restaurant.customer.id,
+                    contact_phone_number=E164PhoneNumber(PHONE),
+                    date=LocalDate("2026-10-09"),
+                    language=LanguageTag("en"),
+                    is_sandbox=False,
+                )
+            )
+
+        assert restaurant.stored(test_booking).status is BookingStatus.CONFIRMED
+
 
 class TestReschedule:
     def test_customer_moves_a_booking_keeping_its_length(self) -> None:

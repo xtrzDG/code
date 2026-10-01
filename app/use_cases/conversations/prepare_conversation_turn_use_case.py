@@ -53,8 +53,10 @@ class PrepareConversationTurnUseCase(UseCaseContract[InboundMessage, PreparedTur
 
     1. The business; real messages need a LIVE business (sandbox and owner
        test messages do not).
-    2. The contact by channel identity, then by phone (never for sandbox
-       messages), else a new one; missing name, phone and identity are added.
+    2. The contact by channel identity, then by a phone the channel proved
+       (only a contact whose own phone is proved the same way; never for
+       sandbox messages), else a new one; missing name, phone and identity
+       are added, and a phone the channel proved is remembered as verified.
     3. The conversation of the contact in this channel and sandbox mode with
        a message in the last 24 hours, pinned to its assistant version; a
        message asking for another version, or no open conversation, starts a
@@ -213,6 +215,12 @@ class PrepareConversationTurnUseCase(UseCaseContract[InboundMessage, PreparedTur
                 contact_id=contact.id,
                 contact_name=contact.name,
                 contact_phone_number=contact.phone_number,
+                verified_phone_number=(
+                    None
+                    if conversation.is_sandbox
+                    else input_data.contact_phone_number
+                    or contact.verified_phone_number
+                ),
                 conversation_id=conversation.id,
                 channel=conversation.channel,
                 language=language,
@@ -237,7 +245,9 @@ class PrepareConversationTurnUseCase(UseCaseContract[InboundMessage, PreparedTur
             and not is_sandbox
             and message.contact_phone_number is not None
         ):
-            contact = self._contact_repo.find_by_phone_number(
+            # Only a contact whose phone a channel proved is the same person;
+            # a phone someone typed into a chat proves nothing.
+            contact = self._contact_repo.find_by_verified_phone_number(
                 business.id, message.contact_phone_number
             )
 
@@ -250,6 +260,9 @@ class PrepareConversationTurnUseCase(UseCaseContract[InboundMessage, PreparedTur
                 business_id=business.id,
                 name=message.contact_name,
                 phone_number=message.contact_phone_number,
+                verified_phone_number=(
+                    None if is_sandbox else message.contact_phone_number
+                ),
                 channel_identities=[identity],
                 created_at=now,
                 updated_at=now,
@@ -268,6 +281,14 @@ class PrepareConversationTurnUseCase(UseCaseContract[InboundMessage, PreparedTur
 
         if contact.phone_number is None and message.contact_phone_number is not None:
             contact.phone_number = message.contact_phone_number
+            is_changed = True
+
+        if (
+            not is_sandbox
+            and message.contact_phone_number is not None
+            and contact.verified_phone_number != message.contact_phone_number
+        ):
+            contact.verified_phone_number = message.contact_phone_number
             is_changed = True
 
         if is_changed:

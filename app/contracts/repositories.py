@@ -238,6 +238,14 @@ class ContactRepoContract(RepoContract, Protocol):
     ) -> ContactDocument | None:
         raise NotImplementedError
 
+    def find_by_verified_phone_number(
+        self,
+        business_id: BusinessId,
+        phone_number: E164PhoneNumber,
+    ) -> ContactDocument | None:
+        """A contact whose phone a channel proved (never a typed phone)."""
+        raise NotImplementedError
+
     def list_by_business(self, business_id: BusinessId) -> list[ContactDocument]:
         raise NotImplementedError
 

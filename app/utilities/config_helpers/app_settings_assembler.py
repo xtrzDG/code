@@ -206,6 +206,11 @@ def assemble_app_settings(environment_variables: Mapping[str, str]) -> AppSettin
             "WHATSAPP_NOTIFICATION_TEMPLATE",
             WhatsAppTemplateName,
         ),
+        whatsapp_reminder_template_name=optional_text(
+            environment_variables,
+            "WHATSAPP_REMINDER_TEMPLATE",
+            WhatsAppTemplateName,
+        ),
         telegram_platform_bot_token=secret("TELEGRAM_PLATFORM_BOT_TOKEN"),
         google_oauth_client_id=identifier("GOOGLE_OAUTH_CLIENT_ID"),
         google_oauth_client_secret=secret("GOOGLE_OAUTH_CLIENT_SECRET"),

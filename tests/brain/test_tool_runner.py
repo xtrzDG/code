@@ -20,7 +20,11 @@ from app.schemas.dto.assistant_tools import (
     SearchKnowledgeToolInput,
     SendLinkToolInput,
 )
-from app.schemas.dto.bookings import CreateBookingCommand
+from app.schemas.dto.bookings import (
+    CancelBookingCommand,
+    CreateBookingCommand,
+    RescheduleBookingCommand,
+)
 from app.schemas.dto.conversations import LlmToolCall
 from app.schemas.typings.contacts.prefixed_id import ContactId
 from app.schemas.typings.conversations.prefixed_id import ConversationId
@@ -363,3 +367,76 @@ def test_every_tool_runs_end_to_end_with_the_fakes() -> None:
     assert world.create_lead.commands[0].contact_phone_number == "+995577000111"
     assert world.record_question.commands[0].language == LanguageTag("ka")
     assert world.business.country_code == CountryCode("GE")
+
+
+@pytest.mark.parametrize(
+    ("tool_name", "arguments"),
+    [
+        (
+            AssistantToolName.CANCEL_BOOKING,
+            {"booking_id": None, "phone": "+995599765432", "date": "2026-10-06"},
+        ),
+        (
+            AssistantToolName.RESCHEDULE_BOOKING,
+            {
+                "booking_id": None,
+                "phone": "+995 599 76 54 32",
+                "old_date": "2026-10-06",
+                "new_date": "2026-10-07",
+                "new_time": "20:00",
+            },
+        ),
+    ],
+)
+def test_a_typed_phone_never_proves_whose_booking_it_is(
+    tool_name: AssistantToolName,
+    arguments: dict[str, Any],
+) -> None:
+    world = build_world(scripted())
+    stranger = build_context(
+        world, contact_phone_number=E164PhoneNumber("+995599765432")
+    )
+
+    result, is_error = run_tool(world, tool_name, arguments, stranger)
+
+    assert is_error is True
+    assert "not confirmed" in result["error"]
+    assert world.bookings.commands == []
+
+
+def test_bookings_are_found_by_the_phone_the_channel_proved() -> None:
+    world = build_world(scripted())
+    whatsapp = build_context(
+        world,
+        channel=ChannelKind.WHATSAPP,
+        verified_phone_number=E164PhoneNumber("+995577000111"),
+        is_sandbox=True,
+    )
+
+    run_tool(
+        world,
+        AssistantToolName.CANCEL_BOOKING,
+        {"booking_id": None, "phone": "577 00 01 11", "date": "2026-10-02"},
+        whatsapp,
+    )
+    run_tool(
+        world,
+        AssistantToolName.RESCHEDULE_BOOKING,
+        {
+            "booking_id": None,
+            "phone": None,
+            "old_date": "2026-10-02",
+            "new_date": "2026-10-03",
+            "new_time": None,
+        },
+        build_context(world),
+    )
+
+    cancel_command, reschedule_command = world.bookings.commands
+    assert isinstance(cancel_command, CancelBookingCommand)
+    assert isinstance(reschedule_command, RescheduleBookingCommand)
+    assert cancel_command.contact_phone_number == "+995577000111"
+    assert cancel_command.is_sandbox is True
+    # Without a proved phone only the conversation's own contact counts.
+    assert reschedule_command.contact_phone_number is None
+    assert reschedule_command.is_sandbox is False

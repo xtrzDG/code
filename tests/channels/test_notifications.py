@@ -15,6 +15,7 @@ from app.schemas.constants.channels import ChannelKind, ChannelStatus
 from app.schemas.constants.handoffs import ManagerContactChannel
 from app.schemas.domain.businesses import ManagerContact
 from app.schemas.exceptions.application_errors import ExternalServiceError
+from app.schemas.typings.channels.constrained_strings import WhatsAppTemplateName
 from app.schemas.typings.channels.strings import EncryptedChannelSecret
 from app.schemas.typings.conversations.strings import ChannelUserId, MessageText
 from app.schemas.typings.handoffs.strings import ManagerContactAddress, ManagerName
@@ -214,6 +215,42 @@ class TestChannelMessageSender:
         )
         assert [(event.kind, event.quantity) for event in usage] == [
             (UsageKind.WHATSAPP_REPLY, 1)
+        ]
+
+    def test_a_reminder_template_is_sent_from_the_business_number_once(
+        self,
+    ) -> None:
+        testbed = ChannelsTestbed()
+        owner = testbed.add_user("owner")
+        business = testbed.add_business(owner)
+        testbed.add_channel(business.id, ChannelKind.WHATSAPP, "106540352242922")
+        testbed.meta_transport.respond("POST", r"/messages$", {"messages": []})
+
+        testbed.channel_message_sender.send_whatsapp_template(
+            business.id,
+            ChannelUserId("995599123456"),
+            WhatsAppTemplateName("booking_reminder"),
+            LanguageTag("ka"),
+            [
+                MessageText("Salobie Bia"),
+                MessageText("6 October"),
+                MessageText("19:00"),
+            ],
+        )
+
+        [request] = testbed.meta_transport.requests
+        assert request.path == "/v23.0/106540352242922/messages"
+        body = json.loads(request.body)
+        assert body["type"] == "template"
+        assert body["template"]["name"] == "booking_reminder"
+        assert body["template"]["language"]["code"] == "ka"
+        usage = testbed.usage_event_repo.list_by_business_between(
+            business.id,
+            testbed.clock.now_microseconds(),
+            Microseconds(testbed.clock.now_microseconds() + 1),
+        )
+        assert [(event.kind, event.quantity) for event in usage] == [
+            (UsageKind.WHATSAPP_TEMPLATE, 1)
         ]
 
     def test_unsupported_or_missing_channels_raise(self) -> None:

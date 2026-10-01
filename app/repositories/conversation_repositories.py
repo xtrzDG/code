@@ -64,6 +64,17 @@ class ContactRepository(
 
         return None
 
+    def find_by_verified_phone_number(
+        self,
+        business_id: BusinessId,
+        phone_number: E164PhoneNumber,
+    ) -> ContactDocument | None:
+        for contact in self._list(business_id):
+            if contact.verified_phone_number == phone_number:
+                return contact
+
+        return None
+
     def list_by_business(self, business_id: BusinessId) -> list[ContactDocument]:
         return self._list(business_id)
 

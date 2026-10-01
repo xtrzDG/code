@@ -20,12 +20,22 @@ class ChannelIdentity(PersistentDocument):
 
 
 class ContactDocument(BaseDocument):
-    """A customer of one business (concept table `contacts`)."""
+    """
+    A customer of one business (concept table `contacts`).
+
+    `phone_number` may come from what the customer typed (the model passes
+    it to booking and lead tools); `verified_phone_number` only ever comes
+    from a channel that proves it (WhatsApp sender, a contact the Telegram
+    user shared about themselves, the caller ID of a call). Only the
+    verified phone proves that bookings under that phone are the
+    customer's own.
+    """
 
     id: ContactId = Field(default_factory=ContactId)
     business_id: BusinessId
     name: ContactName | None = None
     phone_number: E164PhoneNumber | None = None
+    verified_phone_number: E164PhoneNumber | None = None
     language: LanguageTag | None = None
     channel_identities: list[ChannelIdentity] = Field(
         default_factory=list[ChannelIdentity]

@@ -170,6 +170,7 @@ def find_target_booking(
     phone_number: E164PhoneNumber | None,
     local_date: date | None,
     now_seconds: int,
+    is_sandbox: bool | None = None,
 ) -> BookingDocument:
     """
     The booking a cancel or reschedule refers to.
@@ -178,6 +179,9 @@ def find_target_booking(
     command carries the customer's contact or phone (the model cannot reach
     someone else's booking). Otherwise the customer's active bookings on the
     local date (or all upcoming ones without a date) must match exactly one.
+    The phone must be one the channel proved for the customer (the caller
+    passes only such a phone). With `is_sandbox` set, only bookings of that
+    sandbox mode count, so an owner test never reaches a real booking.
 
     Raises:
         NotFoundError: no such booking for this customer.
@@ -191,8 +195,10 @@ def find_target_booking(
     if booking_id is not None:
         booking: BookingDocument | None = booking_repo.get(business_id, booking_id)
         is_customer_request: bool = contact_id is not None or phone_number is not None
-        if booking is None or (
-            is_customer_request and booking.contact_id not in customer_contact_ids
+        if (
+            booking is None
+            or (is_customer_request and booking.contact_id not in customer_contact_ids)
+            or (is_sandbox is not None and booking.is_sandbox != is_sandbox)
         ):
             raise NotFoundError(f"Booking {booking_id} was not found.")
 
@@ -208,6 +214,7 @@ def find_target_booking(
         for booking in booking_repo.list_by_business(business_id)
         if booking.contact_id in customer_contact_ids
         and booking.status in BLOCKING_BOOKING_STATUSES
+        and (is_sandbox is None or booking.is_sandbox == is_sandbox)
     ]
     if local_date is None:
         candidates = [

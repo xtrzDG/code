@@ -18,8 +18,9 @@ from app.schemas.constants.conversations import (
 )
 from app.schemas.constants.handoffs import HandoffReason
 from app.schemas.domain.assistants import AssistantVersionDocument
+from app.schemas.domain.contacts import ContactDocument
 from app.schemas.domain.resources import ScheduleExceptionDocument
-from app.schemas.dto.bookings import CreateBookingCommand
+from app.schemas.dto.bookings import CancelBookingCommand, CreateBookingCommand
 from app.schemas.dto.conversations import (
     LlmRequest,
     LlmResponse,
@@ -37,9 +38,13 @@ from app.schemas.typings.assistants.constrained_strings import LlmModelId
 from app.schemas.typings.assistants.prefixed_id import AssistantVersionId
 from app.schemas.typings.assistants.strings import SystemPromptText
 from app.schemas.typings.bookings.constrained_strings import LocalDate
+from app.schemas.typings.contacts.strings import ContactName
 from app.schemas.typings.conversations.constrained_integers import LlmTokenCount
 from app.schemas.typings.conversations.strings import LlmProviderPayload, MessageText
-from app.schemas.typings.localization.constrained_strings import LanguageTag
+from app.schemas.typings.localization.constrained_strings import (
+    E164PhoneNumber,
+    LanguageTag,
+)
 from tests.brain.brain_world import (
     ARMENIA,
     BRAZIL,
@@ -626,3 +631,58 @@ def test_open_hours_are_not_flagged() -> None:
 
     assert world.conversations()[0].is_after_hours is False
     assert reply.language == LanguageTag("ru")
+
+
+def test_only_a_phone_the_channel_proved_reaches_bookings_by_phone() -> None:
+    victim_phone = E164PhoneNumber("+995599765432")
+    cancel_by_date = call_tool(
+        AssistantToolName.CANCEL_BOOKING,
+        json.dumps({"booking_id": None, "phone": None, "date": "2026-10-06"}),
+    )
+    world = build_world(
+        scripted(
+            cancel_by_date,
+            say("Sorry, I could not find it."),
+            cancel_by_date,
+            say("Your booking is cancelled."),
+        )
+    )
+    typed_contact = ContactDocument(
+        business_id=world.business.id,
+        name=ContactName("Typed by someone"),
+        phone_number=victim_phone,
+    )
+    world.contact_repo.save(typed_contact)
+
+    world.send(
+        "Cancel my booking for 6 October",
+        channel=ChannelKind.TELEGRAM,
+        user_id="777",
+        phone=None,
+    )
+    world.send(
+        "Cancel my booking for 6 October", user_id="995599765432", phone=victim_phone
+    )
+
+    stranger_command, owner_command = [
+        command
+        for command in world.bookings.commands
+        if isinstance(command, CancelBookingCommand)
+    ]
+    assert stranger_command.contact_phone_number is None
+    assert owner_command.contact_phone_number == victim_phone
+    whatsapp_contact = next(
+        contact
+        for contact in world.contacts()
+        if any(
+            identity.channel is ChannelKind.WHATSAPP
+            for identity in contact.channel_identities
+        )
+    )
+    # A typed phone proves nothing, so the WhatsApp sender is not merged
+    # into the contact that only typed that number.
+    assert whatsapp_contact.id != typed_contact.id
+    assert whatsapp_contact.verified_phone_number == victim_phone
+    stored_typed = world.contact_repo.get(world.business.id, typed_contact.id)
+    assert stored_typed is not None
+    assert stored_typed.verified_phone_number is None

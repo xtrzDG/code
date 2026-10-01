@@ -149,7 +149,10 @@ class AssistantToolContext(ImmutableDTO):
 
     `available_tools` are the tools offered in this conversation; a call of
     any other tool is answered with an error result. Phones the model passes
-    are parsed with the business country as the hint.
+    are parsed with the business country as the hint. `verified_phone_number`
+    is the phone the channel proved for this customer (never one the model
+    or the customer typed); only it can prove that a booking made under a
+    phone belongs to the customer.
     """
 
     business_id: BusinessId
@@ -157,6 +160,7 @@ class AssistantToolContext(ImmutableDTO):
     contact_id: ContactId
     contact_name: ContactName | None = None
     contact_phone_number: E164PhoneNumber | None = None
+    verified_phone_number: E164PhoneNumber | None = None
     conversation_id: ConversationId
     channel: ChannelKind
     language: LanguageTag

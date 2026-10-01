@@ -9,16 +9,15 @@ from app.contracts.repositories import (
     BusinessProfileRepoContract,
     BusinessRepoContract,
     ContactRepoContract,
+    ConversationRepoContract,
+    MessageRepoContract,
     ResourceRepoContract,
-    UsageEventRepoContract,
 )
 from app.contracts.transformer_contract import TransformerContract
 from app.contracts.use_case_contract import UseCaseContract
-from app.schemas.constants.billing import UsageKind
 from app.schemas.constants.bookings import BookingStatus
 from app.schemas.constants.businesses import BusinessStatus, ServiceMode
-from app.schemas.constants.channels import ChannelKind
-from app.schemas.domain.billing import UsageEventDocument
+from app.schemas.constants.channels import ChannelKind, MessageDirection
 from app.schemas.domain.bookings import BookingDocument
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.contacts import ChannelIdentity, ContactDocument
@@ -27,10 +26,10 @@ from app.schemas.domain.resources import ResourceDocument
 from app.schemas.dto.jobs import JobReport, JobTick
 from app.schemas.dto.operations import BookingMessageInput
 from app.schemas.exceptions.base_exception import ApplicationError
-from app.schemas.typings.billing.constrained_integers import UsageQuantity
 from app.schemas.typings.bookings.constrained_integers import (
     BookingReminderLeadSeconds,
 )
+from app.schemas.typings.channels.constrained_strings import WhatsAppTemplateName
 from app.schemas.typings.conversations.strings import MessageText
 from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.schemas.typings.platform.constrained_integers import ProcessedItemCount
@@ -43,6 +42,7 @@ from app.utilities.scheduling.zoned_time import (
 )
 
 logger: logging.Logger = logging.getLogger(__name__)
+MICROSECONDS_PER_SECOND: int = 1_000_000
 
 # The concept's reminder goes out the day before (configurable per process).
 DEFAULT_REMINDER_LEAD: BookingReminderLeadSeconds = BookingReminderLeadSeconds(
@@ -57,9 +57,13 @@ MESSAGING_CHANNELS: tuple[ChannelKind, ...] = (
     ChannelKind.MESSENGER,
     ChannelKind.INSTAGRAM,
 )
-# WhatsApp reminders are template messages (concept section 6), metered as
-# such: one per reminder.
-WHATSAPP_REMINDER_QUANTITY: UsageQuantity = UsageQuantity(1)
+# Free-form messages are allowed within 24 hours of the customer's last
+# message in WhatsApp, Messenger and Instagram (concept section 6); later
+# a WhatsApp reminder is an approved template, and the other two skip.
+CUSTOMER_SERVICE_WINDOW_SECONDS: int = 24 * 60 * 60
+WINDOWED_CHANNELS: frozenset[ChannelKind] = frozenset(
+    {ChannelKind.WHATSAPP, ChannelKind.MESSENGER, ChannelKind.INSTAGRAM}
+)
 
 
 class SendBookingRemindersUseCase(UseCaseContract[JobTick, JobReport]):
@@ -75,6 +79,17 @@ class SendBookingRemindersUseCase(UseCaseContract[JobTick, JobReport]):
     that identity is missing) use another messenger the customer is known
     in. Customers known only by phone or web chat are skipped.
 
+    WhatsApp, Messenger and Instagram accept free-form text only within 24
+    hours of the customer's last message there (concept section 6). Later,
+    a WhatsApp reminder is the approved template WHATSAPP_REMINDER_TEMPLATE
+    (business, date, time, name), and Messenger and Instagram are skipped
+    for the next messenger. The channel sender meters each delivery once.
+
+    The booking is read again right before it is reminded and before it is
+    marked, and only `reminder_sent_at` is changed on that fresh copy, so a
+    cancellation or a move made meanwhile is never undone (and a booking
+    cancelled or moved meanwhile is not reminded with stale details).
+
     A delivery failure is logged and the booking stays unreminded, so the
     next run tries again until the booking starts. Businesses the owner
     paused, and businesses whose unpaid subscription switched the assistant
@@ -88,10 +103,15 @@ class SendBookingRemindersUseCase(UseCaseContract[JobTick, JobReport]):
         booking_repo: BookingRepoContract,
         resource_repo: ResourceRepoContract,
         contact_repo: ContactRepoContract,
-        usage_event_repo: UsageEventRepoContract,
+        conversation_repo: ConversationRepoContract,
+        message_repo: MessageRepoContract,
         channel_message_sender: ChannelMessageSenderFacilitatorContract,
         reminder_transformer: TransformerContract[BookingMessageInput, MessageText],
+        reminder_template_transformer: TransformerContract[
+            BookingMessageInput, list[MessageText]
+        ],
         wall_clock: WallClock[Microseconds],
+        whatsapp_reminder_template: WhatsAppTemplateName | None = None,
         reminder_lead: BookingReminderLeadSeconds = DEFAULT_REMINDER_LEAD,
     ) -> None:
         self._business_repo: BusinessRepoContract = business_repo
@@ -99,14 +119,21 @@ class SendBookingRemindersUseCase(UseCaseContract[JobTick, JobReport]):
         self._booking_repo: BookingRepoContract = booking_repo
         self._resource_repo: ResourceRepoContract = resource_repo
         self._contact_repo: ContactRepoContract = contact_repo
-        self._usage_event_repo: UsageEventRepoContract = usage_event_repo
+        self._conversation_repo: ConversationRepoContract = conversation_repo
+        self._message_repo: MessageRepoContract = message_repo
         self._channel_message_sender: ChannelMessageSenderFacilitatorContract = (
             channel_message_sender
         )
         self._reminder_transformer: TransformerContract[
             BookingMessageInput, MessageText
         ] = reminder_transformer
+        self._reminder_template_transformer: TransformerContract[
+            BookingMessageInput, list[MessageText]
+        ] = reminder_template_transformer
         self._wall_clock: WallClock[Microseconds] = wall_clock
+        self._whatsapp_reminder_template: WhatsAppTemplateName | None = (
+            whatsapp_reminder_template
+        )
         self._reminder_lead: BookingReminderLeadSeconds = reminder_lead
 
     def run(self, input_data: JobTick) -> JobReport:
@@ -131,11 +158,36 @@ class SendBookingRemindersUseCase(UseCaseContract[JobTick, JobReport]):
             cancellation_policy: CancellationPolicyText | None = (
                 self._read_cancellation_policy(business)
             )
-            for booking in due_bookings:
-                if self._remind(business, zone, cancellation_policy, booking, now):
+            for due_booking in due_bookings:
+                booking: BookingDocument | None = self._reread_if_still_due(
+                    due_booking,
+                    window_end_seconds,
+                )
+                if booking is not None and self._remind(
+                    business, zone, cancellation_policy, booking
+                ):
                     reminded += 1
 
         return JobReport(processed_count=ProcessedItemCount(reminded))
+
+    def _reread_if_still_due(
+        self,
+        booking: BookingDocument,
+        window_end_seconds: int,
+    ) -> BookingDocument | None:
+        """The booking as stored now, if it still needs this reminder."""
+
+        current: BookingDocument | None = self._booking_repo.get(
+            booking.business_id,
+            booking.id,
+        )
+        now_seconds: int = microseconds_to_seconds(int(self._wall_clock.now_unix()))
+        if current is None or not is_reminder_due(
+            current, now_seconds, window_end_seconds
+        ):
+            return None
+
+        return current
 
     def _remind(
         self,
@@ -143,7 +195,6 @@ class SendBookingRemindersUseCase(UseCaseContract[JobTick, JobReport]):
         zone: ZoneInfo,
         cancellation_policy: CancellationPolicyText | None,
         booking: BookingDocument,
-        now: Microseconds,
     ) -> bool:
         contact: ContactDocument | None = self._contact_repo.get(
             business.id,
@@ -163,29 +214,23 @@ class SendBookingRemindersUseCase(UseCaseContract[JobTick, JobReport]):
             business.id,
             booking.resource_id,
         )
-        text: MessageText = self._reminder_transformer.transform(
-            BookingMessageInput(
-                business_name=business.name,
-                booking=build_booking_view(
-                    booking,
-                    business.timezone,
-                    zone,
-                    resource,
-                    contact,
-                ),
-                booking_unit=booking_unit_of(resource),
-                language=choose_reminder_language(contact, business),
-                cancellation_policy=cancellation_policy,
-            )
+        message_input = BookingMessageInput(
+            business_name=business.name,
+            booking=build_booking_view(
+                booking,
+                business.timezone,
+                zone,
+                resource,
+                contact,
+            ),
+            booking_unit=booking_unit_of(resource),
+            language=choose_reminder_language(contact, business),
+            cancellation_policy=cancellation_policy,
         )
         for identity in identities:
             try:
-                self._channel_message_sender.send(
-                    business.id,
-                    identity.channel,
-                    identity.channel_user_id,
-                    text,
-                )
+                if not self._deliver(business, contact, identity, message_input):
+                    continue
             except ApplicationError as error:
                 logger.warning(
                     "Reminder of booking %s through %s failed: %s",
@@ -195,34 +240,108 @@ class SendBookingRemindersUseCase(UseCaseContract[JobTick, JobReport]):
                 )
                 continue
 
-            self._record_delivery(business, booking, identity.channel, now)
+            self._mark_reminded(booking)
             return True
 
         return False
 
-    def _record_delivery(
+    def _deliver(
         self,
         business: BusinessDocument,
-        booking: BookingDocument,
-        channel: ChannelKind,
-        now: Microseconds,
-    ) -> None:
-        if channel is ChannelKind.WHATSAPP:
-            self._usage_event_repo.append(
-                UsageEventDocument(
-                    business_id=business.id,
-                    conversation_id=booking.conversation_id,
-                    kind=UsageKind.WHATSAPP_TEMPLATE,
-                    quantity=WHATSAPP_REMINDER_QUANTITY,
-                    occurred_at=now,
-                    created_at=now,
-                    updated_at=now,
-                )
-            )
+        contact: ContactDocument,
+        identity: ChannelIdentity,
+        message_input: BookingMessageInput,
+    ) -> bool:
+        """Send through one identity; False when that channel cannot carry it."""
 
-        booking.reminder_sent_at = now
-        booking.updated_at = now
-        self._booking_repo.save(booking)
+        if identity.channel not in WINDOWED_CHANNELS or self._is_window_open(
+            business, contact, identity.channel
+        ):
+            self._channel_message_sender.send(
+                business.id,
+                identity.channel,
+                identity.channel_user_id,
+                self._reminder_transformer.transform(message_input),
+            )
+            return True
+
+        if (
+            identity.channel is not ChannelKind.WHATSAPP
+            or self._whatsapp_reminder_template is None
+        ):
+            logger.info(
+                "Reminder through %s skipped: the customer wrote there more than "
+                "24 hours ago%s.",
+                identity.channel.value,
+                (
+                    " and WHATSAPP_REMINDER_TEMPLATE is not configured"
+                    if identity.channel is ChannelKind.WHATSAPP
+                    else ""
+                ),
+            )
+            return False
+
+        self._channel_message_sender.send_whatsapp_template(
+            business.id,
+            identity.channel_user_id,
+            self._whatsapp_reminder_template,
+            message_input.language,
+            self._reminder_template_transformer.transform(message_input),
+        )
+        return True
+
+    def _is_window_open(
+        self,
+        business: BusinessDocument,
+        contact: ContactDocument,
+        channel: ChannelKind,
+    ) -> bool:
+        """Did the customer write in this channel within the last 24 hours?"""
+
+        window_start: int = int(self._wall_clock.now_unix()) - (
+            CUSTOMER_SERVICE_WINDOW_SECONDS * MICROSECONDS_PER_SECOND
+        )
+        for conversation in self._conversation_repo.list_by_business(business.id):
+            if (
+                conversation.contact_id != contact.id
+                or conversation.channel is not channel
+                or conversation.is_sandbox
+                or int(conversation.last_message_at) < window_start
+            ):
+                continue
+
+            for message in self._message_repo.list_by_conversation(
+                business.id, conversation.id
+            ):
+                if (
+                    message.direction is MessageDirection.INBOUND
+                    and int(message.created_at) >= window_start
+                ):
+                    return True
+
+        return False
+
+    def _mark_reminded(self, booking: BookingDocument) -> None:
+        """
+        Set only `reminder_sent_at` on the booking as stored now; a booking
+        cancelled or moved during the send keeps that change.
+        """
+
+        current: BookingDocument | None = self._booking_repo.get(
+            booking.business_id,
+            booking.id,
+        )
+        if (
+            current is None
+            or current.status is not BookingStatus.CONFIRMED
+            or current.starts_at != booking.starts_at
+        ):
+            return
+
+        now: Microseconds = self._wall_clock.now_unix()
+        current.reminder_sent_at = now
+        current.updated_at = now
+        self._booking_repo.save(current)
 
     def _read_cancellation_policy(
         self,

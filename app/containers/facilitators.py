@@ -75,6 +75,7 @@ class FacilitatorsContainer(containers.DeclarativeContainer):
         whatsapp_adapter=adapters.whatsapp_channel_adapter,
         messenger_adapter=adapters.messenger_channel_adapter,
         instagram_adapter=adapters.instagram_channel_adapter,
+        whatsapp_templates=adapters.whatsapp_channel_adapter,
         usage_event_repo=repositories.usage_event_repo,
         wall_clock=time_provider.microsecond_wall_clock,
     )

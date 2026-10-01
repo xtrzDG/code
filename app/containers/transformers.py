@@ -41,6 +41,9 @@ from app.transformers.notifications.booking_confirmation_transformer import (
 from app.transformers.notifications.booking_moved_notification_transformer import (
     BookingMovedNotificationTransformer,
 )
+from app.transformers.notifications.booking_reminder_template_transformer import (
+    BookingReminderTemplateTransformer,
+)
 from app.transformers.notifications.booking_reminder_transformer import (
     BookingReminderTransformer,
 )
@@ -139,6 +142,9 @@ class TransformersContainer(containers.DeclarativeContainer):
         BookingReminderTransformer,
         text_resolver=utilities.localized_text_resolver,
     )
+    booking_reminder_template_transformer: Singleton[
+        BookingReminderTemplateTransformer
+    ] = Singleton(BookingReminderTemplateTransformer)
     new_booking_notification_transformer: Singleton[
         NewBookingNotificationTransformer
     ] = Singleton(

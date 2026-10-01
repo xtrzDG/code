@@ -139,8 +139,10 @@ TOOL_SPECIFICATIONS: dict[AssistantToolName, tuple[str, JsonSchema]] = {
         ),
     ),
     AssistantToolName.CANCEL_BOOKING: (
-        "Cancel a booking by its id, or by the customer's phone and the "
-        "booking date, following the cancellation policy.",
+        "Cancel one of the customer's own bookings, found by its id or by the "
+        "booking date, following the cancellation policy. Only bookings made "
+        "in this conversation or under the number the customer writes or "
+        "calls from can be found; a number the customer types is not proof.",
         object_schema(
             {
                 "booking_id": nullable(string_property("Booking id, if known.")),
@@ -150,8 +152,10 @@ TOOL_SPECIFICATIONS: dict[AssistantToolName, tuple[str, JsonSchema]] = {
         ),
     ),
     AssistantToolName.RESCHEDULE_BOOKING: (
-        "Move a booking, found by its id or by the customer's phone and old "
-        "date, to a new date and time. Check availability first.",
+        "Move one of the customer's own bookings, found by its id or by its "
+        "old date, to a new date and time. Check availability first. Only "
+        "bookings made in this conversation or under the number the customer "
+        "writes or calls from can be found.",
         object_schema(
             {
                 "booking_id": nullable(string_property("Booking id, if known.")),

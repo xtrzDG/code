@@ -86,6 +86,7 @@ class AppSettings(ImmutableDTO):
     whatsapp_system_user_token: PlatformSecret | None = None
     whatsapp_notification_phone_number_id: MetaObjectId | None = None
     whatsapp_notification_template_name: WhatsAppTemplateName | None = None
+    whatsapp_reminder_template_name: WhatsAppTemplateName | None = None
     telegram_platform_bot_token: PlatformSecret | None = None
     google_oauth_client_id: PlatformIdentifier | None = None
     google_oauth_client_secret: PlatformSecret | None = None

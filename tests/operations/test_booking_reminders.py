@@ -1,26 +1,31 @@
 """Booking reminders: the periodic job and the reminder text."""
 
 import logging
+from collections.abc import Callable
 from datetime import datetime
 
 import pytest
+from typed_time_provider import Microseconds
 
 from app.contracts.facilitators import ChannelMessageSenderFacilitatorContract
-from app.schemas.constants.billing import UsageKind
 from app.schemas.constants.bookings import BookingStatus, BookingUnit, ResourceKind
 from app.schemas.constants.businesses import BusinessStatus, ServiceMode
-from app.schemas.constants.channels import ChannelKind
+from app.schemas.constants.channels import ChannelKind, MessageDirection
+from app.schemas.constants.conversations import MessageAuthor
 from app.schemas.constants.niches import NicheKey
 from app.schemas.domain.bookings import BookingDocument
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.contacts import ChannelIdentity, ContactDocument
+from app.schemas.domain.conversations import ConversationDocument, MessageDocument
 from app.schemas.domain.resources import ResourceDocument
 from app.schemas.dto.bookings import BookingView, RescheduleBookingCommand
 from app.schemas.dto.jobs import JobReport, JobTick
 from app.schemas.dto.operations import BookingMessageInput
 from app.schemas.exceptions.application_errors import ExternalServiceError
+from app.schemas.typings.assistants.prefixed_id import AssistantVersionId
 from app.schemas.typings.bookings.constrained_integers import (
     BookingReminderLeadSeconds,
+    BookingStartsAtUnixSeconds,
     PartySize,
 )
 from app.schemas.typings.bookings.constrained_strings import (
@@ -31,6 +36,7 @@ from app.schemas.typings.bookings.prefixed_id import BookingId, ResourceId
 from app.schemas.typings.bookings.strings import ResourceName
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.businesses.strings import BusinessName
+from app.schemas.typings.channels.constrained_strings import WhatsAppTemplateName
 from app.schemas.typings.contacts.prefixed_id import ContactId
 from app.schemas.typings.contacts.strings import ContactName
 from app.schemas.typings.conversations.strings import ChannelUserId, MessageText
@@ -40,6 +46,9 @@ from app.schemas.typings.localization.constrained_strings import (
 )
 from app.schemas.typings.platform.constrained_strings import JobName
 from app.schemas.typings.profiles.strings import CancellationPolicyText
+from app.transformers.notifications.booking_reminder_template_transformer import (
+    BookingReminderTemplateTransformer,
+)
 from app.transformers.notifications.booking_reminder_transformer import (
     BookingReminderTransformer,
 )
@@ -65,6 +74,8 @@ class RecordingChannelSender(ChannelMessageSenderFacilitatorContract):
         self.failing_channels: set[ChannelKind] = set(failing_channels)
         self.attempts: list[ChannelKind] = []
         self.sent: list[tuple[BusinessId, ChannelKind, ChannelUserId, MessageText]] = []
+        self.templates: list[tuple[BusinessId, ChannelUserId, str, str, list[str]]] = []
+        self.on_send: Callable[[], None] | None = None
 
     def send(
         self,
@@ -74,10 +85,35 @@ class RecordingChannelSender(ChannelMessageSenderFacilitatorContract):
         text: MessageText,
     ) -> None:
         self.attempts.append(channel)
+        if self.on_send is not None:
+            self.on_send()
+
         if channel in self.failing_channels:
             raise ExternalServiceError(f"The {channel.value} channel is not connected.")
 
         self.sent.append((business_id, channel, channel_user_id, text))
+
+    def send_whatsapp_template(
+        self,
+        business_id: BusinessId,
+        channel_user_id: ChannelUserId,
+        template_name: WhatsAppTemplateName,
+        language: LanguageTag,
+        body_parameters: list[MessageText],
+    ) -> None:
+        self.attempts.append(ChannelKind.WHATSAPP)
+        if ChannelKind.WHATSAPP in self.failing_channels:
+            raise ExternalServiceError("The whatsapp channel is not connected.")
+
+        self.templates.append(
+            (
+                business_id,
+                channel_user_id,
+                str(template_name),
+                str(language),
+                [str(parameter) for parameter in body_parameters],
+            )
+        )
 
 
 class ReminderScene:
@@ -87,6 +123,7 @@ class ReminderScene:
         self,
         failing_channels: frozenset[ChannelKind] = frozenset(),
         reminder_lead: BookingReminderLeadSeconds | None = None,
+        reminder_template: str | None = "booking_reminder",
     ) -> None:
         self.world = OperationsWorld()
         self.business: BusinessDocument = self.world.add_business()
@@ -99,11 +136,54 @@ class ReminderScene:
             booking_repo=self.world.booking_repo,
             resource_repo=self.world.resource_repo,
             contact_repo=self.world.contact_repo,
-            usage_event_repo=self.world.usage_repo,
+            conversation_repo=self.world.conversation_repo,
+            message_repo=self.world.message_repo,
             channel_message_sender=self.sender,
             reminder_transformer=BookingReminderTransformer(LocalizedTextResolver()),
+            reminder_template_transformer=BookingReminderTemplateTransformer(),
             wall_clock=self.world.clock.wall_clock,
+            whatsapp_reminder_template=(
+                None
+                if reminder_template is None
+                else WhatsAppTemplateName(reminder_template)
+            ),
             **({} if reminder_lead is None else {"reminder_lead": reminder_lead}),
+        )
+
+    def customer_wrote(
+        self,
+        contact: ContactDocument,
+        channel: ChannelKind,
+        hours_ago: float,
+        business: BusinessDocument | None = None,
+    ) -> None:
+        """The customer's last message in a channel, some hours before now."""
+
+        moment = Microseconds(
+            int(to_microseconds(DEFAULT_NOW)) - int(hours_ago * 3_600_000_000)
+        )
+        owner = business or self.business
+        conversation = ConversationDocument(
+            business_id=owner.id,
+            contact_id=contact.id,
+            assistant_version_id=AssistantVersionId(),
+            channel=channel,
+            channel_user_id=contact.channel_identities[0].channel_user_id,
+            last_message_at=moment,
+            created_at=moment,
+            updated_at=moment,
+        )
+        self.world.conversation_repo.save(conversation)
+        self.world.message_repo.save(
+            MessageDocument(
+                conversation_id=conversation.id,
+                business_id=owner.id,
+                direction=MessageDirection.INBOUND,
+                author=MessageAuthor.CUSTOMER,
+                text=MessageText("Hi"),
+                created_at=moment,
+                updated_at=moment,
+            )
         )
 
     def add_customer(
@@ -158,21 +238,22 @@ class ReminderScene:
         assert stored is not None
         return stored
 
-    def template_events(self) -> int:
-        return sum(
-            int(event.quantity)
-            for event in self.world.usage_repo.list_by_business_between(
+    def usage_events(self) -> int:
+        """Usage the job itself recorded (the channel sender meters sends)."""
+
+        return len(
+            self.world.usage_repo.list_by_business_between(
                 self.business.id,
                 to_microseconds(datetime.fromisoformat("2026-01-01T00:00:00+00:00")),
                 to_microseconds(datetime.fromisoformat("2027-01-01T00:00:00+00:00")),
             )
-            if event.kind is UsageKind.WHATSAPP_TEMPLATE
         )
 
 
 def test_whatsapp_booking_is_reminded_in_georgian_in_the_business_time_zone() -> None:
     scene = ReminderScene()
     contact = scene.add_customer({ChannelKind.WHATSAPP: "995555123456"})
+    scene.customer_wrote(contact, ChannelKind.WHATSAPP, hours_ago=3)
     booking = scene.add_booking(contact, "2026-10-05T15:00:00+00:00")
 
     report = scene.run()
@@ -189,7 +270,115 @@ def test_whatsapp_booking_is_reminded_in_georgian_in_the_business_time_zone() ->
     assert "უპასუხეთ ამ შეტყობინებას" in str(text)  # how to cancel or move it
     assert "Free cancellation up to 2 hours before." in str(text)
     assert scene.stored(booking).reminder_sent_at == to_microseconds(DEFAULT_NOW)
-    assert scene.template_events() == 1
+    assert scene.sender.templates == []
+    assert scene.usage_events() == 0  # metered once, by the channel sender
+
+
+def test_a_whatsapp_customer_silent_for_a_day_gets_the_approved_template() -> None:
+    scene = ReminderScene()
+    contact = scene.add_customer({ChannelKind.WHATSAPP: "995555123456"})
+    scene.customer_wrote(contact, ChannelKind.WHATSAPP, hours_ago=72)
+    booking = scene.add_booking(contact, "2026-10-05T15:00:00+00:00")
+
+    report = scene.run()
+
+    assert report.processed_count == 1
+    assert scene.sender.sent == []
+    [(business_id, user_id, template, language, parameters)] = scene.sender.templates
+    assert (business_id, user_id, template, language) == (
+        scene.business.id,
+        "995555123456",
+        "booking_reminder",
+        "ka",
+    )
+    business_name, date_text, time_text, name = parameters
+    assert business_name == "Salobie Bia"
+    assert "2026" in date_text
+    assert time_text == "19:00"
+    assert name == "Nino"
+    assert scene.stored(booking).reminder_sent_at is not None
+    assert scene.usage_events() == 0
+
+
+def test_without_a_template_whatsapp_waits_for_another_messenger() -> None:
+    scene = ReminderScene(reminder_template=None)
+    only_whatsapp = scene.add_customer({ChannelKind.WHATSAPP: "995555123456"})
+    silent = scene.add_booking(only_whatsapp, "2026-10-05T15:00:00+00:00")
+    both = scene.add_customer(
+        {ChannelKind.WHATSAPP: "995555000000", ChannelKind.TELEGRAM: "7001"}
+    )
+    scene.add_booking(both, "2026-10-05T16:00:00+00:00")
+
+    report = scene.run()
+
+    assert report.processed_count == 1
+    assert [channel for _, channel, _, _ in scene.sender.sent] == [ChannelKind.TELEGRAM]
+    assert scene.stored(silent).reminder_sent_at is None
+
+
+def test_messenger_outside_its_window_is_not_written_to() -> None:
+    scene = ReminderScene()
+    contact = scene.add_customer({ChannelKind.MESSENGER: "psid-1"})
+    scene.customer_wrote(contact, ChannelKind.MESSENGER, hours_ago=30)
+    booking = scene.add_booking(
+        contact, "2026-10-05T15:00:00+00:00", ChannelKind.MESSENGER
+    )
+
+    assert scene.run().processed_count == 0
+    assert scene.sender.attempts == []
+    assert scene.stored(booking).reminder_sent_at is None
+
+
+def test_a_cancellation_during_the_job_is_never_undone() -> None:
+    scene = ReminderScene()
+    contact = scene.add_customer({ChannelKind.TELEGRAM: "7001"})
+    first = scene.add_booking(
+        contact, "2026-10-05T15:00:00+00:00", ChannelKind.TELEGRAM
+    )
+    second = scene.add_booking(
+        contact, "2026-10-05T17:00:00+00:00", ChannelKind.TELEGRAM
+    )
+
+    def cancel_both_while_sending() -> None:
+        for booking in (first, second):
+            stored = scene.stored(booking)
+            stored.status = BookingStatus.CANCELLED
+            scene.world.booking_repo.save(stored)
+
+    scene.sender.on_send = cancel_both_while_sending
+
+    report = scene.run()
+
+    # Only the first reminder was already on its way; the second booking is
+    # read again before its turn and is no longer due.
+    assert report.processed_count == 1
+    assert len(scene.sender.sent) == 1
+    for booking in (first, second):
+        stored = scene.stored(booking)
+        assert stored.status is BookingStatus.CANCELLED
+        assert stored.reminder_sent_at is None
+
+
+def test_a_move_during_the_send_keeps_the_new_time() -> None:
+    scene = ReminderScene()
+    contact = scene.add_customer({ChannelKind.TELEGRAM: "7001"})
+    booking = scene.add_booking(
+        contact, "2026-10-05T15:00:00+00:00", ChannelKind.TELEGRAM
+    )
+    moved_start = BookingStartsAtUnixSeconds(int(booking.starts_at) + 3600)
+
+    def move_while_sending() -> None:
+        stored = scene.stored(booking)
+        stored.starts_at = moved_start
+        scene.world.booking_repo.save(stored)
+
+    scene.sender.on_send = move_while_sending
+
+    scene.run()
+
+    stored = scene.stored(booking)
+    assert stored.starts_at == moved_start
+    assert stored.reminder_sent_at is None  # the next run reminds the new time
 
 
 def test_a_second_run_does_not_remind_again() -> None:
@@ -270,7 +459,7 @@ def test_phone_booking_falls_back_to_a_messenger_the_customer_uses() -> None:
     assert [(channel, user_id) for _, channel, user_id, _ in scene.sender.sent] == [
         (ChannelKind.TELEGRAM, "7001")
     ]
-    assert scene.template_events() == 0  # Telegram is not a WhatsApp template
+    assert scene.sender.templates == []  # Telegram is not a WhatsApp template
 
 
 @pytest.mark.parametrize("source", [ChannelKind.PHONE, ChannelKind.WEB_CHAT])
@@ -295,13 +484,14 @@ def test_failed_channel_falls_back_to_the_next_messenger() -> None:
     contact = scene.add_customer(
         {ChannelKind.WHATSAPP: "995555123456", ChannelKind.INSTAGRAM: "ig-1"}
     )
+    scene.customer_wrote(contact, ChannelKind.INSTAGRAM, hours_ago=1)
     scene.add_booking(contact, "2026-10-05T15:00:00+00:00", ChannelKind.WHATSAPP)
 
     report = scene.run()
 
     assert report.processed_count == 1
     assert scene.sender.attempts == [ChannelKind.WHATSAPP, ChannelKind.INSTAGRAM]
-    assert scene.template_events() == 0
+    assert scene.sender.templates == []
 
 
 def test_delivery_failure_is_logged_and_retried_on_the_next_run(
@@ -316,7 +506,7 @@ def test_delivery_failure_is_logged_and_retried_on_the_next_run(
 
     assert failed.processed_count == 0
     assert scene.stored(booking).reminder_sent_at is None
-    assert scene.template_events() == 0
+    assert scene.sender.templates == []
     assert "whatsapp" in caplog.text
 
     scene.sender.failing_channels.clear()
@@ -324,7 +514,7 @@ def test_delivery_failure_is_logged_and_retried_on_the_next_run(
 
     assert retried.processed_count == 1
     assert scene.stored(booking).reminder_sent_at is not None
-    assert scene.template_events() == 1
+    assert len(scene.sender.templates) == 1
 
 
 @pytest.mark.parametrize(
@@ -366,6 +556,7 @@ def test_business_time_zone_of_another_country_is_used() -> None:
     contact = scene.add_customer(
         {ChannelKind.MESSENGER: "psid-1"}, language="en", business=rome
     )
+    scene.customer_wrote(contact, ChannelKind.MESSENGER, hours_ago=5, business=rome)
     scene.add_booking(
         contact,
         "2026-10-05T18:00:00+00:00",
