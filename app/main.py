@@ -77,10 +77,9 @@ def build_lifespan(app_container: AppContainer) -> Lifespan[FastAPI]:
         )
         stop_event = threading.Event()
         flush_thread = start_trace_flushing(trace_facilitator, stop_event)
-        worker_thread: threading.Thread | None = start_embedded_worker(
-            app_container, stop_event
-        )
+        worker_thread: threading.Thread | None = None
         try:
+            worker_thread = start_embedded_worker(app_container, stop_event)
             yield
         finally:
             stop_event.set()
