@@ -1,5 +1,6 @@
 from base_pydantic_schemas import BaseDocument
 from pydantic import Field
+from typed_time_provider import Microseconds
 
 from app.schemas.constants.bookings import BookingStatus, LeadStatus, LeadType
 from app.schemas.constants.channels import ChannelKind
@@ -36,6 +37,8 @@ class BookingDocument(BaseDocument):
     source_channel: ChannelKind
     notes: BookingNote | None = None
     is_sandbox: IsSandboxConversation = False
+    # When the customer's reminder went out (UTC microseconds); None = not yet.
+    reminder_sent_at: Microseconds | None = None
 
 
 class LeadDocument(BaseDocument):

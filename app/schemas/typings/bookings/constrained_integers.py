@@ -16,6 +16,13 @@ class BookingEndsAtUnixSeconds(BaseConstrainedTypedInt):
     ge = 0
 
 
+class BookingReminderLeadSeconds(BaseConstrainedTypedInt):
+    """How long before a booking starts its reminder is sent (1 min to 7 days)."""
+
+    ge = 60
+    le = 604800
+
+
 class BookingStartsAtUnixSeconds(BaseConstrainedTypedInt):
     """UTC UNIX timestamp (seconds) when a booking starts."""
 

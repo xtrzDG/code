@@ -208,6 +208,8 @@ class RescheduleBookingUseCase(
             booking.resource_id = placement.resource.id
             booking.starts_at = BookingStartsAtUnixSeconds(placement.starts_at)
             booking.ends_at = BookingEndsAtUnixSeconds(placement.ends_at)
+            # The new time gets its own reminder.
+            booking.reminder_sent_at = None
             booking.updated_at = now
             self._booking_repo.save(booking)
 
