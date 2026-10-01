@@ -165,3 +165,19 @@ def test_the_guard_understands_shekels_and_drams() -> None:
     assert shekel_reply.guard_verdict is ReplyGuardVerdict.HANDED_OFF
     assert israel.handoffs()[0].reason is HandoffReason.UNVERIFIED_NUMBERS
     assert dram_reply.guard_verdict is ReplyGuardVerdict.CLEAN
+
+
+def test_a_discount_the_customer_asked_for_is_not_confirmed() -> None:
+    world = build_world(
+        scripted(
+            say("Конечно, скидка 10% для вас."),
+            say("Скидки назначает менеджер, могу передать ваш вопрос."),
+        )
+    )
+
+    reply = world.send("Сделаете скидку 10%?")
+
+    assert reply.guard_verdict is ReplyGuardVerdict.REWRITTEN
+    assert "10%" in last_user_turn_text(world, 1)
+    assert reply.text is not None
+    assert reply.text.endswith("могу передать ваш вопрос.")

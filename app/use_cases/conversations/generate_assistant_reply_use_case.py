@@ -80,9 +80,10 @@ class GenerateAssistantReplyUseCase(UseCaseContract[PreparedTurn, GeneratedReply
     sequence number and is only ever appended.
 
     The final text passes the invented-numbers guard: values missing from the
-    facts, the conversation's tool results, the customer's messages and the
-    context are sent back once with a request to rewrite; a reply that still
-    has them is replaced by a handoff (failure UNVERIFIED_NUMBERS). A refusal,
+    facts, the conversation's tool results and the context (and, except for
+    prices and percentages, from the customer's messages) are sent back once
+    with a request to rewrite; a reply that still has them is replaced by a
+    handoff (failure UNVERIFIED_NUMBERS). A refusal,
     a provider error or no answer within the round limit are failures too;
     the engine then passes the conversation to a colleague.
     """
@@ -290,22 +291,25 @@ class GenerateAssistantReplyUseCase(UseCaseContract[PreparedTurn, GeneratedReply
         progress: _TurnProgress,
         text: MessageText,
     ) -> list[UnverifiedReplyValue]:
+        # Trusted: what the business and the server said.
         evidence: list[str] = [
             str(turn.business.name),
             str(turn.context_line),
             *(f"{fact.label}: {fact.value}" for fact in turn.version.facts),
             *progress.tool_results,
         ]
+        # What the customer wrote, and earlier replies (which may repeat it):
+        # they back times, dates, phones and counts, never a price.
+        customer_texts: list[str] = []
         for message in self._message_repo.list_by_conversation(
             turn.business.id, turn.conversation.id
         ):
             if message.direction is MessageDirection.INBOUND:
-                evidence.append(str(message.text))
+                customer_texts.append(str(message.text))
                 continue
 
             if message.author is MessageAuthor.ASSISTANT:
-                # Earlier replies passed this guard.
-                evidence.append(str(message.text))
+                customer_texts.append(str(message.text))
 
             # Tool results of earlier replies and of voice-agent calls count.
             evidence.extend(
@@ -319,6 +323,7 @@ class GenerateAssistantReplyUseCase(UseCaseContract[PreparedTurn, GeneratedReply
             evidence,
             [*turn.version.languages, turn.language],
             [turn.business.currency_code],
+            customer_texts=customer_texts,
         )
 
     def _append(

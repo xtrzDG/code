@@ -1,4 +1,5 @@
 import re
+import unicodedata
 from collections import Counter
 from functools import cache
 
@@ -17,6 +18,7 @@ from app.utilities.localization.language_tags import (
 
 WORD_PATTERN: re.Pattern[str] = re.compile(r"[^\W\d_]+")
 KANA_SCRIPT: str = "Kana"
+COMBINING_MARK_CATEGORIES: frozenset[str] = frozenset({"Mn", "Mc"})
 HAN_SCRIPT: str = "Hani"
 FREQUENT_WORD_WEIGHT: int = 2
 DISTINCTIVE_LETTER_WEIGHT: int = 3
@@ -28,8 +30,10 @@ class LanguageDetector(LanguageDetectorContract):
     Pick the candidate language a customer message is written in.
 
     1. The dominant writing system is found from Unicode blocks (Georgian,
-       Armenian, Hebrew, Arabic, Cyrillic, Greek, Thai, Devanagari, Han,
-       Kana, Hangul, Latin). Kana makes Han text Japanese.
+       Armenian, Hebrew, Arabic, Cyrillic, Greek, Thai, Lao, Khmer, Myanmar,
+       Devanagari, Bengali and the other Indic scripts, Sinhala, Ethiopic,
+       Thaana, Tibetan, Han, Kana, Hangul, Latin), counting the vowel signs
+       of a script with its letters. Kana makes Han text Japanese.
     2. Candidates written in that script (CLDR likely script of each tag)
        remain; one candidate wins at once.
     3. Several candidates are scored by frequent words, letters only their
@@ -83,7 +87,11 @@ def find_dominant_script(lowered_text: str) -> str | None:
 
     script_counts: Counter[str] = Counter()
     for character in lowered_text:
-        if not character.isalpha():
+        # Vowel signs of Indic, Thai and similar scripts are combining marks,
+        # not letters, yet they are written in that script.
+        if not character.isalpha() and unicodedata.category(character) not in (
+            COMBINING_MARK_CATEGORIES
+        ):
             continue
 
         script: str | None = classify_script(character)

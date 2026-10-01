@@ -23,6 +23,7 @@ from app.schemas.typings.assistants.strings import (
     AutotestScenarioGoal,
 )
 from app.schemas.typings.conversations.constrained_integers import LlmTokenCount
+from app.schemas.typings.conversations.strings import MessageText
 from app.schemas.typings.localization.constrained_strings import (
     LanguageTag,
     ScriptCode,
@@ -253,6 +254,65 @@ def test_replies_must_be_written_in_the_scenario_script() -> None:
         "Reply 1 is not written in Italian (it)."
     ]
     assert check_conversation(unknown_script, [russian_reply]) == []
+
+
+@pytest.mark.parametrize(
+    ("language", "script", "name", "disclosure", "answer"),
+    [
+        (
+            "ko",
+            "Kore",
+            "Korean",
+            "안녕하세요! 저는 Seoul Kitchen의 AI 어시스턴트입니다.",
+            "김치찌개는 ₩12,000입니다.",
+        ),
+        (
+            "th",
+            "Thai",
+            "Thai",
+            "สวัสดี! ฉันคือผู้ช่วย AI ของ Bangkok Garden",
+            "ข้าวผัดราคา 70 บาทค่ะ มีอะไรให้ช่วยอีกไหมคะ",
+        ),
+        (
+            "hi",
+            "Deva",
+            "Hindi",
+            "Hello! I am the AI assistant of Delhi Darbar.",
+            "पनीर टिक्का की कीमत ₹350 है। क्या आप टेबल बुक करना चाहेंगे?",
+        ),
+    ],
+)
+def test_the_server_disclosure_is_not_judged_as_the_models_language(
+    language: str,
+    script: str,
+    name: str,
+    disclosure: str,
+    answer: str,
+) -> None:
+    price_question = scenario(
+        AutotestScenarioKind.PRICE_QUESTION,
+        language=language,
+        script=script,
+        name=name,
+    )
+    reply = build_reply(language, text=f"{disclosure}\n{answer}").model_copy(
+        update={"disclosure_text": MessageText(disclosure)}
+    )
+
+    assert check_conversation(price_question, [reply]) == []
+
+
+@pytest.mark.parametrize(
+    ("text", "script"),
+    [
+        ("ข้าวผัดราคา 70 บาทค่ะ มีอะไรให้ช่วยอีกไหมคะ", "Thai"),
+        ("पनीर टिक्का की कीमत ₹350 है। क्या आप टेबल बुक करना चाहेंगे?", "Deva"),
+        ("আমি আপনাকে কিভাবে সাহায্য করতে পারি?", "Beng"),
+        ("நாளை இரவு மேசை தயார்", "Taml"),
+    ],
+)
+def test_vowel_signs_count_as_letters_of_their_script(text: str, script: str) -> None:
+    assert is_written_in_script(f"Table at Sakhli. {text}", ScriptCode(script)) is True
 
 
 def test_silent_replies_are_not_checked_for_language() -> None:

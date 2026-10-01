@@ -61,7 +61,12 @@ class RecordAssistantReplyUseCase(UseCaseContract[ReplyRecord, AssistantReply]):
     def run(self, input_data: ReplyRecord) -> AssistantReply:
         turn: PreparedTurn = input_data.turn
         now: Microseconds = self._wall_clock.now_unix()
-        text: MessageText | None = self._add_disclosure(turn, input_data.text)
+        disclosure: MessageText | None = self._find_disclosure(turn, input_data.text)
+        text: MessageText | None = (
+            input_data.text
+            if disclosure is None or input_data.text is None
+            else MessageText(f"{disclosure}{DISCLOSURE_SEPARATOR}{input_data.text}")
+        )
         cost: LlmCallCost = (
             LlmCallCost(CostMicroUsd(0), CostMicroUsd(0))
             if input_data.model_id is None
@@ -108,6 +113,7 @@ class RecordAssistantReplyUseCase(UseCaseContract[ReplyRecord, AssistantReply]):
         return AssistantReply(
             conversation_id=conversation.id,
             text=text,
+            disclosure_text=disclosure,
             language=turn.language,
             is_handed_off=is_handed_off,
             guard_verdict=input_data.guard_verdict,
@@ -117,23 +123,26 @@ class RecordAssistantReplyUseCase(UseCaseContract[ReplyRecord, AssistantReply]):
             created_handoff_ids=list(input_data.created_handoff_ids),
         )
 
-    def _add_disclosure(
+    def _find_disclosure(
         self,
         turn: PreparedTurn,
         text: MessageText | None,
     ) -> MessageText | None:
+        """The AI disclosure that opens the first chat reply, if due."""
+
         if (
             text is None
             or not turn.is_first_reply
             or turn.conversation.channel is ChannelKind.PHONE
         ):
-            return text
+            return None
 
-        disclosure: str = fill_business_name(
-            self._localized_text_resolver.resolve(AI_DISCLOSURE, turn.language),
-            str(turn.business.name),
+        return MessageText(
+            fill_business_name(
+                self._localized_text_resolver.resolve(AI_DISCLOSURE, turn.language),
+                str(turn.business.name),
+            )
         )
-        return MessageText(f"{disclosure}{DISCLOSURE_SEPARATOR}{text}")
 
     def _record_usage(
         self,

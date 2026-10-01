@@ -8,13 +8,16 @@ sharing a script (Italian and English) are left to the judge.
 """
 
 import re
+import unicodedata
+from collections.abc import Iterator
 
 from app.schemas.typings.localization.constrained_strings import ScriptCode
 
 type CodePointRange = tuple[int, int]
 
-# Runs of letters: Unicode word characters without digits and underscores.
-WORD_PATTERN: re.Pattern[str] = re.compile(r"[^\W\d_]+")
+# Vowel signs of Thai, Devanagari, Bengali and similar scripts are
+# combining marks: they are part of the words of their script.
+COMBINING_MARK_CATEGORIES: frozenset[str] = frozenset({"Mn", "Mc"})
 ACRONYM_PATTERN: re.Pattern[str] = re.compile(r"[A-Z]{2,5}")
 MIN_SCRIPT_SHARE_NUMERATOR: int = 1
 MIN_SCRIPT_SHARE_DENOMINATOR: int = 2
@@ -49,9 +52,22 @@ SCRIPT_RANGES: dict[str, tuple[CodePointRange, ...]] = {
         (0xFE70, 0xFEFF),
     ),
     "Thai": ((0x0E00, 0x0E7F),),
-    "Deva": ((0x0900, 0x097F),),
+    "Laoo": ((0x0E80, 0x0EFF),),
+    "Khmr": ((0x1780, 0x17FF),),
+    "Mymr": ((0x1000, 0x109F),),
+    "Tibt": ((0x0F00, 0x0FFF),),
+    "Deva": ((0x0900, 0x097F), (0xA8E0, 0xA8FF)),
     "Beng": ((0x0980, 0x09FF),),
-    "Ethi": ((0x1200, 0x139F),),
+    "Guru": ((0x0A00, 0x0A7F),),
+    "Gujr": ((0x0A80, 0x0AFF),),
+    "Orya": ((0x0B00, 0x0B7F),),
+    "Taml": ((0x0B80, 0x0BFF),),
+    "Telu": ((0x0C00, 0x0C7F),),
+    "Knda": ((0x0C80, 0x0CFF),),
+    "Mlym": ((0x0D00, 0x0D7F),),
+    "Sinh": ((0x0D80, 0x0DFF),),
+    "Thaa": ((0x0780, 0x07BF),),
+    "Ethi": ((0x1200, 0x139F), (0x2D80, 0x2DDF)),
     "Hans": CJK_IDEOGRAPHS,
     "Hant": CJK_IDEOGRAPHS,
     "Hani": CJK_IDEOGRAPHS,
@@ -85,14 +101,20 @@ def is_written_in_script(text: str, script_code: ScriptCode | None) -> bool | No
 
     letter_count: int = 0
     script_letter_count: int = 0
-    for word in WORD_PATTERN.findall(text):
+    for word in iter_words(text):
         if ACRONYM_PATTERN.fullmatch(word):
             continue
 
         for character in word:
-            letter_count += 1
             code_point: int = ord(character)
-            if any(start <= code_point <= end for start, end in ranges):
+            is_in_script: bool = any(
+                start <= code_point <= end for start, end in ranges
+            )
+            if not character.isalpha() and not is_in_script:
+                continue  # a mark of another script tells nothing
+
+            letter_count += 1
+            if is_in_script:
                 script_letter_count += 1
 
     if letter_count == 0:
@@ -102,3 +124,22 @@ def is_written_in_script(text: str, script_code: ScriptCode | None) -> bool | No
         script_letter_count * MIN_SCRIPT_SHARE_DENOMINATOR
         >= letter_count * MIN_SCRIPT_SHARE_NUMERATOR
     )
+
+
+def iter_words(text: str) -> Iterator[str]:
+    """Runs of letters together with their combining marks (vowel signs)."""
+
+    word: list[str] = []
+    for character in text:
+        if character.isalpha() or (
+            word != [] and unicodedata.category(character) in COMBINING_MARK_CATEGORIES
+        ):
+            word.append(character)
+            continue
+
+        if word:
+            yield "".join(word)
+            word = []
+
+    if word:
+        yield "".join(word)

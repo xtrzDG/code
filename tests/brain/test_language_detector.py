@@ -138,3 +138,37 @@ def test_serbian_in_latin_script_is_not_judged_by_cyrillic_letters() -> None:
         DETECTOR.detect("Hvala, sto za sutra", candidates, LanguageTag("en"))
         in candidates
     )
+
+
+@pytest.mark.parametrize(
+    ("text", "candidates", "fallback", "expected"),
+    [
+        (
+            "நாளை இரவு 7 மணிக்கு இரண்டு பேருக்கு மேசை வேண்டும்",
+            ("si", "ta", "en"),
+            "si",
+            "ta",
+        ),
+        ("හෙට රෑ 7ට මේසයක් ඕනේ", ("ta", "si", "en"), "ta", "si"),
+        ("আমি কাল 7pm এ table বুক করতে চাই", ("bn", "en"), "en", "bn"),
+        ("আমি কাল একটি টেবিল বুক করতে চাই", ("bn", "en"), "en", "bn"),
+        ("ነገ ጠረጴዛ ማስያዝ እፈልጋለሁ", ("am", "en"), "en", "am"),
+        ("ខ្ញុំចង់កក់តុមួយ", ("km", "en"), "en", "km"),
+        ("ຂ້ອຍຢາກຈອງໂຕະ", ("lo", "en"), "en", "lo"),
+        ("မနက်ဖြန် စားပွဲ ကြိုတင်မှာချင်ပါတယ်", ("my", "en"), "en", "my"),
+        ("ข้าวผัดราคาเท่าไหร่ table", ("th", "en"), "en", "th"),
+    ],
+)
+def test_scripts_of_south_and_southeast_asia_and_ethiopia_are_recognized(
+    text: str,
+    candidates: tuple[str, ...],
+    fallback: str,
+    expected: str,
+) -> None:
+    detected = LanguageDetector().detect(
+        text,
+        [LanguageTag(tag) for tag in candidates],
+        LanguageTag(fallback),
+    )
+
+    assert detected == expected

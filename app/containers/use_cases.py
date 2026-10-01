@@ -1316,8 +1316,6 @@ class UseCasesContainer(containers.DeclarativeContainer):
     ] = Factory(
         BuildCallGreetingUseCase,
         business_repo=repositories.business_repo,
-        business_profile_repo=repositories.business_profile_repo,
-        country_registry=registries.country_registry,
         localized_text_resolver=utilities.localized_text_resolver,
     )
 

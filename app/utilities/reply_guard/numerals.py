@@ -5,6 +5,9 @@ from decimal import Decimal, InvalidOperation
 from functools import cache
 
 ASCII_DIGITS: str = "0123456789"
+# The Arabic decimal and thousands separators written with Arabic-Indic
+# digits ("١٫٢٥٠", "١٬٥٠٠") read as "." and ",".
+SEPARATOR_REPLACEMENTS: dict[str, str] = {"\u066b": ".", "\u066c": ","}
 DECIMAL_MARKS: frozenset[str] = frozenset({".", ","})
 THOUSANDS_GROUP_LENGTH: int = 3
 
@@ -12,7 +15,8 @@ THOUSANDS_GROUP_LENGTH: int = 3
 def normalize_digits(text: str) -> str:
     """
     Replace every Unicode decimal digit (Arabic-Indic, Persian, Devanagari,
-    full-width, ...) with its ASCII digit; other characters are kept, so
+    full-width, ...) with its ASCII digit and the Arabic decimal and
+    thousands separators with "." and ","; other characters are kept, so
     positions in the text do not change.
     """
 
@@ -23,6 +27,10 @@ def normalize_digits(text: str) -> str:
 def normalize_digit(character: str) -> str:
     if character in ASCII_DIGITS:
         return character
+
+    replacement: str | None = SEPARATOR_REPLACEMENTS.get(character)
+    if replacement is not None:
+        return replacement
 
     value: int | None = unicodedata.decimal(character, None)
     return character if value is None else ASCII_DIGITS[value]

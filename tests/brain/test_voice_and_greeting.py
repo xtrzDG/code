@@ -2,6 +2,7 @@ import json
 
 import pytest
 
+from app.registries.localization.language_support_data import TEXT_SUPPORTED_LANGUAGES
 from app.schemas.constants.assistants import AssistantToolName
 from app.schemas.constants.businesses import ServiceMode
 from app.schemas.constants.channels import ChannelKind, MessageDirection
@@ -9,6 +10,7 @@ from app.schemas.constants.conversations import MessageAuthor
 from app.schemas.domain.profiles import BusinessProfileDocument
 from app.schemas.dto.bookings import CreateBookingCommand
 from app.schemas.dto.conversations import CallGreetingRequest, VoiceToolCallRequest
+from app.schemas.dto.localization import LocalizedText
 from app.schemas.exceptions.application_errors import ConflictError, NotFoundError
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.conversations.strings import (
@@ -19,6 +21,12 @@ from app.schemas.typings.localization.constrained_strings import (
     CountryCode,
     E164PhoneNumber,
     LanguageTag,
+)
+from app.utilities.conversations.assistant_texts import (
+    AI_DISCLOSURE,
+    CALL_GREETING,
+    CALL_OPERATOR_HINT,
+    CALL_RECORDING_NOTICE,
 )
 from tests.brain.brain_world import (
     BrainWorld,
@@ -217,8 +225,13 @@ def test_phone_conversation_from_voice_calls_continues_in_chat_turns() -> None:
         ),
         (
             "sw",
-            "Hello! This is the AI assistant of Sakhli. The call is recorded. "
-            'To talk to a staff member, say "operator".',
+            "Habari! Huyu ni msaidizi wa AI wa Sakhli. Simu hii inarekodiwa. "
+            "Ili kuzungumza na mfanyakazi, sema “opereta”.",
+        ),
+        (
+            "ko",
+            "안녕하세요! Sakhli의 AI 어시스턴트입니다. 이 통화는 녹음됩니다. "
+            "직원과 통화하시려면 “상담원”이라고 말씀해 주세요.",
         ),
     ],
 )
@@ -239,13 +252,20 @@ def test_call_greeting_discloses_the_ai_recording_and_the_operator(
     assert greeting.language == (language or "ka")
 
 
-@pytest.mark.parametrize(
-    ("country", "says_recording"),
-    [("GE", False), ("DE", True), ("US", True), ("ZZ", True)],
-)
-def test_recording_sentence_follows_profile_and_country_law(
+def test_a_language_without_a_greeting_is_greeted_and_labelled_in_english() -> None:
+    world = build_world(scripted())
+
+    greeting = world.greeting.run(
+        CallGreetingRequest(business_id=world.business.id, language=LanguageTag("yo"))
+    )
+
+    assert greeting.text.startswith("Hello! This is the AI assistant of Sakhli.")
+    assert greeting.language == "en"
+
+
+@pytest.mark.parametrize("country", ["GE", "DE", "US", "ZZ"])
+def test_recorded_calls_always_say_so_whatever_the_profile_says(
     country: str,
-    says_recording: bool,
 ) -> None:
     world = build_world(
         scripted(),
@@ -263,7 +283,7 @@ def test_recording_sentence_follows_profile_and_country_law(
         CallGreetingRequest(business_id=world.business.id, language=LanguageTag("en"))
     )
 
-    assert ("The call is recorded." in greeting.text) is says_recording
+    assert "The call is recorded." in greeting.text
 
 
 def test_greeting_of_an_unknown_business_is_not_found() -> None:
@@ -271,3 +291,17 @@ def test_greeting_of_an_unknown_business_is_not_found() -> None:
 
     with pytest.raises(NotFoundError):
         world.greeting.run(CallGreetingRequest(business_id=BusinessId()))
+
+
+@pytest.mark.parametrize(
+    "text",
+    [AI_DISCLOSURE, CALL_GREETING, CALL_RECORDING_NOTICE, CALL_OPERATOR_HINT],
+)
+def test_customer_facing_openers_exist_in_every_supported_text_language(
+    text: LocalizedText,
+) -> None:
+    missing = sorted(
+        str(tag) for tag in TEXT_SUPPORTED_LANGUAGES if tag not in text.values
+    )
+
+    assert missing == []

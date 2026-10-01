@@ -63,11 +63,15 @@ class AssistantReply(ImmutableDTO):
     What the assistant answered and what happened during the turn.
 
     `text` is None when the assistant stays silent because staff took over the
-    conversation (open handoff in a chat channel).
+    conversation (open handoff in a chat channel). `disclosure_text` is the
+    "I am an AI assistant" sentence the server put in front of the first
+    reply (part of `text`), so checks of what the model wrote can leave it
+    out.
     """
 
     conversation_id: ConversationId
     text: MessageText | None
+    disclosure_text: MessageText | None = None
     language: LanguageTag
     is_handed_off: IsConversationHandedOff
     guard_verdict: ReplyGuardVerdict = ReplyGuardVerdict.CLEAN

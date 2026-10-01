@@ -140,7 +140,6 @@ from app.use_cases.conversations.run_assistant_tool_use_case import (
 from app.utilities.conversations.language_detector import LanguageDetector
 from app.utilities.localization.localized_text_resolver import LocalizedTextResolver
 from app.utilities.localization.phone_number_parser import PhoneNumberParser
-from tests.brain.fake_registries import FIXED_COUNTRY_REGISTRY
 from tests.brain.fake_tools import (
     FakeBookings,
     FakeCancelBooking,
@@ -621,8 +620,6 @@ def build_world(
         voice_orchestrator=voice_orchestrator,
         greeting=BuildCallGreetingUseCase(
             business_repo=business_repo,
-            business_profile_repo=profile_repo,
-            country_registry=FIXED_COUNTRY_REGISTRY,
             localized_text_resolver=texts,
         ),
         texts=texts,
