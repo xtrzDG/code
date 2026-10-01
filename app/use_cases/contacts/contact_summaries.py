@@ -89,13 +89,20 @@ def summarize_contact(
     contact: ContactDocument,
     activity: ContactActivity,
 ) -> ContactSummaryView:
-    """The list row of a customer; test chats are left out of the counts."""
+    """
+    The list row of a customer; test chats are left out of the counts. The
+    channels are those the customer wrote, called or booked through.
+    """
 
     channels: set[ChannelKind] = {
         identity.channel
         for identity in contact.channel_identities
         if identity.channel is not ChannelKind.OWNER_TEST
-    } | {conversation.channel for conversation in activity.conversations}
+    } | {
+        *(conversation.channel for conversation in activity.conversations),
+        *(booking.source_channel for booking in activity.bookings),
+        *(lead.source_channel for lead in activity.leads),
+    }
     moments: list[Microseconds] = [
         contact.created_at,
         *(conversation.last_message_at for conversation in activity.conversations),
