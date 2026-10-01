@@ -22,6 +22,12 @@ class BookingStartsAtUnixSeconds(BaseConstrainedTypedInt):
     ge = 0
 
 
+class CalendarTokenLifetimeSeconds(BaseConstrainedTypedInt):
+    """Seconds an OAuth access token of a connected calendar stays valid."""
+
+    ge = 0
+
+
 class MinNoticeMinutes(BaseConstrainedTypedInt):
     """How long before the start a booking must be made (concept min_notice)."""
 

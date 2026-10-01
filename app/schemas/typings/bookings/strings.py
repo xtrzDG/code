@@ -7,6 +7,48 @@ class BookingNote(BaseTypedString):
     """Free-form wish attached to a booking ("high chair", "late arrival")."""
 
 
+class CalendarAccessToken(BaseTypedString):
+    """Short-lived OAuth access token of a connected calendar. Never logged."""
+
+
+class CalendarAuthorizationCode(BaseTypedString):
+    """One-time OAuth authorization code returned to the calendar callback."""
+
+
+class CalendarAuthorizationState(BaseTypedString):
+    """
+    Random OAuth `state` value that binds a calendar callback to the business
+    and the owner who started the connection. Only its hash is stored.
+    """
+
+
+class CalendarAuthorizationStateHash(BaseTypedString):
+    """SHA-256 hex digest of a calendar OAuth state, the only stored form."""
+
+
+class CalendarEventDescription(BaseTypedString):
+    """Body text of a calendar event created for a booking."""
+
+
+class CalendarEventId(BaseTypedString):
+    """Identifier of an event at the calendar provider."""
+
+
+class CalendarEventTitle(BaseTypedString):
+    """Title of a calendar event created for a booking."""
+
+
+class CalendarRefreshToken(BaseTypedString):
+    """Long-lived OAuth refresh token of a connected calendar. Never logged."""
+
+
+class ExternalCalendarId(BaseTypedString):
+    """
+    Calendar identifier at the provider, e.g. "primary" or a shared calendar
+    address such as "abc123@group.calendar.google.com".
+    """
+
+
 class LeadBudgetText(BaseTypedString):
     """Budget exactly as the customer stated it, in any currency or words."""
 

@@ -3,6 +3,36 @@
 from base_typed_string import BaseConstrainedTypedString
 
 
+class CalendarAuthorizationUrl(BaseConstrainedTypedString):
+    """
+    Provider consent page an owner opens to connect a calendar.
+
+    Example:
+        url = CalendarAuthorizationUrl(
+            "https://accounts.google.com/o/oauth2/v2/auth?client_id=..."
+        )
+    """
+
+    min_length = 10
+    max_length = 4096
+    pattern = r"^https://[^\s/]+(/[^\s]*)?$"
+
+
+class CalendarRedirectUrl(BaseConstrainedTypedString):
+    """
+    OAuth redirect URI of this backend registered at the calendar provider.
+
+    Example:
+        url = CalendarRedirectUrl(
+            "https://api.example.com/v1/integrations/google-calendar/callback"
+        )
+    """
+
+    min_length = 10
+    max_length = 2048
+    pattern = r"^https?://[^\s/]+(/[^\s]*)?$"
+
+
 class LocalDate(BaseConstrainedTypedString):
     """
     Calendar date in the business time zone, ISO 8601 "YYYY-MM-DD".
