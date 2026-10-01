@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useRef, useState, type DragEvent, type FormEvent } from "react";
+import { useEffect, useId, useRef, useState, type DragEvent, type FormEvent } from "react";
 
 import { api } from "@/api/client";
 import { describeError } from "@/api/errors";
@@ -109,6 +109,17 @@ export function MenuImportScreen() {
       body: { item_ids: itemIds },
     }),
   );
+
+  // Leaving mid-review keeps the drafts switched off in the knowledge base: warn first.
+  const isReviewing = review !== null && review.items.length > 0;
+  useEffect(() => {
+    if (!isReviewing) {
+      return;
+    }
+    const warn = (event: BeforeUnloadEvent) => event.preventDefault();
+    window.addEventListener("beforeunload", warn);
+    return () => window.removeEventListener("beforeunload", warn);
+  }, [isReviewing]);
 
   const chooseFile = (chosen: File | undefined) => {
     setReadError(null);
