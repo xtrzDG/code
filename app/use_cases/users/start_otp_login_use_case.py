@@ -12,7 +12,6 @@ from app.contracts.repositories import OtpChallengeRepoContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.configurations.app_settings import AppSettings
 from app.schemas.constants.localization import (
-    CountryOnboardingStatus,
     OtpDeliveryChannel,
     PhoneNumberKind,
 )
@@ -35,6 +34,11 @@ from app.schemas.typings.users.constrained_strings import EmailAddress, OtpCode
 from app.schemas.typings.users.prefixed_id import OtpChallengeId
 from app.schemas.typings.users.strings import MaskedLoginDestination
 from app.utilities.security.email_addresses import parse_email_address
+from app.utilities.security.login_code_channels import (
+    is_sign_up_restricted,
+    list_country_phone_channels,
+    list_usable_phone_channels,
+)
 from app.utilities.security.login_destination_masking import (
     mask_email_address,
     mask_phone_number,
@@ -45,13 +49,6 @@ logger: logging.Logger = logging.getLogger(__name__)
 
 FALLBACK_LANGUAGE: LanguageTag = LanguageTag("en")
 RESEND_INTERVAL_SECONDS: int = 30
-PHONE_DELIVERY_CHANNELS: frozenset[OtpDeliveryChannel] = frozenset(
-    {
-        OtpDeliveryChannel.SMS,
-        OtpDeliveryChannel.WHATSAPP,
-        OtpDeliveryChannel.TELEGRAM,
-    }
-)
 # Lines that cannot receive a text message with the code.
 NON_MESSAGING_PHONE_KINDS: frozenset[PhoneNumberKind] = frozenset(
     {PhoneNumberKind.FIXED_LINE, PhoneNumberKind.TOLL_FREE}
@@ -192,10 +189,7 @@ class StartOtpLoginUseCase(UseCaseContract[StartOtpLoginCommand, OtpChallengeVie
 
     def _load_allowed_country(self, country_code: CountryCode) -> CountryProfile:
         country: CountryProfile = self._country_registry.get(country_code)
-        if (
-            country.onboarding_status is CountryOnboardingStatus.RESTRICTED
-            or country_code in self._app_settings.restricted_country_codes
-        ):
+        if is_sign_up_restricted(country, self._app_settings):
             raise CountryRestrictedError(
                 f"Sign-up is not available in country {str(country_code)}."
             )
@@ -228,23 +222,15 @@ class StartOtpLoginUseCase(UseCaseContract[StartOtpLoginCommand, OtpChallengeVie
     ) -> list[OtpDeliveryChannel]:
         """The country's phone channels that have a provider, preferred first."""
 
-        allowed_channels: list[OtpDeliveryChannel] = [
-            channel
-            for channel in country.otp_delivery_channels
-            if channel in PHONE_DELIVERY_CHANNELS
-        ]
-        if not allowed_channels:
+        if not list_country_phone_channels(country):
             raise ValidationFailedError(
                 "Login codes cannot be sent to phones in "
                 f"{str(country.country_code)}; sign in with e-mail."
             )
 
-        available_channels: frozenset[OtpDeliveryChannel] = (
-            self._otp_delivery_facilitator.available_channels()
+        usable_channels: list[OtpDeliveryChannel] = list_usable_phone_channels(
+            country, self._otp_delivery_facilitator.available_channels()
         )
-        usable_channels: list[OtpDeliveryChannel] = [
-            channel for channel in allowed_channels if channel in available_channels
-        ]
         if not usable_channels:
             raise ExternalServiceError(
                 "Login codes cannot be sent to phones in "

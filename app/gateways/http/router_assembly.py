@@ -54,6 +54,7 @@ def build_application_routers(app_container: AppContainer) -> list[APIRouter]:
         ),
         build_users_router(
             start_otp_login_operator=operators.start_otp_login_operator(),
+            get_login_options_operator=operators.get_login_options_operator(),
             verify_otp_login_operator=operators.verify_otp_login_operator(),
             logout_operator=operators.logout_operator(),
             get_current_user_operator=operators.get_current_user_operator(),
@@ -145,6 +146,10 @@ def build_application_routers(app_container: AppContainer) -> list[APIRouter]:
                 operators.complete_google_calendar_connection_operator()
             ),
             disconnect_calendar=operators.disconnect_google_calendar_operator(),
+            get_calendar_connection=(
+                operators.get_google_calendar_connection_operator()
+            ),
+            cabinet_base_url=app_container.config.app_settings().cabinet_base_url,
         ),
         build_conversation_router(
             list_conversations_operator=operators.list_conversations_operator(),
@@ -182,6 +187,7 @@ def build_application_routers(app_container: AppContainer) -> list[APIRouter]:
             ),
             widget_config_operator=operators.get_widget_config_operator(),
             widget_message_operator=operators.widget_message_operator(),
+            widget_messages_operator=operators.get_widget_messages_operator(),
         ),
         build_channel_settings_router(
             list_channels_operator=operators.list_channels_operator(),

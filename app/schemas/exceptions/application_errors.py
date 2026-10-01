@@ -35,6 +35,14 @@ class ExternalServiceError(ApplicationError):
     """A provider (LLM, messaging, telephony) failed or is unavailable."""
 
 
+class ChannelCredentialRejectedError(ExternalServiceError):
+    """
+    A messaging platform refused a business's channel credential (a revoked
+    bot token, an expired page token, lost permissions): the channel stops
+    working until the owner reconnects it.
+    """
+
+
 class InvalidPhoneNumberError(ValidationFailedError):
     """Text is not a valid phone number for the given or detected country."""
 

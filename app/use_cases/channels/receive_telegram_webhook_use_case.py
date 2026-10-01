@@ -7,7 +7,7 @@ from app.contracts.channels import (
 from app.contracts.repositories import ChannelRepoContract
 from app.contracts.secret_cipher import SecretCipherAdapterContract
 from app.contracts.use_case_contract import UseCaseContract
-from app.schemas.constants.channels import ChannelKind, ChannelStatus
+from app.schemas.constants.channels import ChannelKind
 from app.schemas.domain.channels import ChannelDocument
 from app.schemas.dto.channels import (
     ChannelInboundDelivery,
@@ -17,6 +17,7 @@ from app.schemas.dto.channels import (
 from app.schemas.exceptions.application_errors import NotFoundError
 from app.schemas.typings.channels.strings import ChannelSecret
 from app.use_cases.channels.channel_webhook_support import accept_inbound_message
+from app.utilities.channels.channel_health import is_channel_active
 from app.utilities.channels.delivery_targets import decrypt_channel_secret
 
 
@@ -51,7 +52,7 @@ class ReceiveTelegramWebhookUseCase(
         if (
             channel is None
             or channel.kind is not ChannelKind.TELEGRAM
-            or channel.status is not ChannelStatus.CONNECTED
+            or not is_channel_active(channel)
         ):
             raise NotFoundError("This Telegram channel is not connected.")
 

@@ -23,9 +23,13 @@ from app.schemas.dto.channels import (
     WidgetConfigView,
     WidgetMessageCommand,
     WidgetMessageRequest,
+    WidgetMessagesQuery,
+    WidgetMessagesView,
     WidgetReplyView,
 )
+from app.schemas.exceptions.application_errors import ValidationFailedError
 from app.schemas.typings.businesses.prefixed_id import BusinessId
+from app.schemas.typings.channels.constrained_strings import WidgetSessionKey
 from app.schemas.typings.channels.prefixed_id import ChannelId
 from app.schemas.typings.channels.strings import (
     MetaWebhookChallenge,
@@ -33,6 +37,7 @@ from app.schemas.typings.channels.strings import (
     PresentedWebhookSecret,
     WebhookSignatureHeader,
 )
+from app.schemas.typings.conversations.prefixed_id import MessageId
 from app.utilities.channels.channel_endpoints import (
     META_SIGNATURE_HEADER,
     META_WEBHOOK_PATH,
@@ -69,6 +74,10 @@ def build_channel_router(
     ],
     widget_config_operator: OperatorContract[BusinessId, WidgetConfigView],
     widget_message_operator: OperatorContract[WidgetMessageCommand, WidgetReplyView],
+    widget_messages_operator: OperatorContract[
+        WidgetMessagesQuery,
+        WidgetMessagesView,
+    ],
 ) -> APIRouter:
     """
     Routes (no bearer token; each is authenticated by its platform):
@@ -79,6 +88,9 @@ def build_channel_router(
         POST /v1/channels/telegram-platform/webhook       staff bot updates
         GET  /v1/widget/{business_id}/config              public widget config
         POST /v1/widget/{business_id}/messages            widget visitor message
+        GET  /v1/widget/{business_id}/messages            new assistant and staff
+                                                          messages (?session_key=
+                                                          &after=<message id>)
     """
 
     router = APIRouter(tags=["channels"])
@@ -176,7 +188,46 @@ def build_channel_router(
             )
         )
 
+    @router.get(WIDGET_MESSAGES_PATH)
+    def list_widget_messages(
+        business_id: str,
+        response: Response,
+        session_key: Annotated[str, Query()],
+        after: Annotated[str | None, Query()] = None,
+    ) -> WidgetMessagesView:
+        response.headers.update(WIDGET_CORS_HEADERS)
+        return widget_messages_operator.operate(
+            WidgetMessagesQuery(
+                business_id=parse_path_identifier(business_id, BusinessId, "Chat"),
+                session_key=parse_session_key(session_key),
+                after=parse_message_cursor(after),
+            )
+        )
+
     return router
+
+
+def parse_session_key(raw_session_key: str) -> WidgetSessionKey:
+    try:
+        return WidgetSessionKey(raw_session_key)
+    except ValueError as error:
+        raise ValidationFailedError(
+            "session_key must be the widget's visitor key."
+        ) from error
+
+
+def parse_message_cursor(raw_after: str | None) -> MessageId | None:
+    """`after` is a message id the widget got from the API; blank means none."""
+
+    if raw_after is None or raw_after.strip() == "":
+        return None
+
+    try:
+        return MessageId(raw_after.strip())
+    except ValueError as error:
+        raise ValidationFailedError(
+            "after must be a message id from an earlier answer."
+        ) from error
 
 
 def build_payload(body: bytes, signature_header: str | None) -> ChannelWebhookPayload:

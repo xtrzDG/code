@@ -1,23 +1,14 @@
 "use client";
 
-import { api } from "@/api/client";
-import { useApiQuery } from "@/api/hooks";
-import { useBusiness } from "@/components/business/BusinessContext";
+import type { ApiQuery } from "@/api/hooks";
+import type { Schema } from "@/api/types";
 import { Card, ErrorState, LoadingBlock } from "@/components/ui";
 import { CopyButton } from "@/components/workspace/CopyButton";
 import { useI18n } from "@/i18n/client";
 
 /** The website chat's embed code with a copy button and three steps. */
-export function WidgetSnippetCard() {
+export function WidgetSnippetCard({ snippet }: { snippet: ApiQuery<Schema<"WidgetSnippetView">> }) {
   const { t } = useI18n();
-  const { business } = useBusiness();
-  const snippet = useApiQuery(
-    () =>
-      api.GET("/v1/businesses/{business_id}/channels/web/snippet", {
-        params: { path: { business_id: business.id } },
-      }),
-    [business.id],
-  );
 
   return (
     <Card

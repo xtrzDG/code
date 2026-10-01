@@ -210,6 +210,9 @@ class OrchestratorsContainer(containers.DeclarativeContainer):
     start_otp_login_orchestrator = use_case_orchestrator(
         use_cases.start_otp_login_use_case
     )
+    get_login_options_orchestrator = use_case_orchestrator(
+        use_cases.get_login_options_use_case
+    )
     verify_otp_login_orchestrator = use_case_orchestrator(
         use_cases.verify_otp_login_use_case
     )
@@ -357,6 +360,9 @@ class OrchestratorsContainer(containers.DeclarativeContainer):
     disconnect_google_calendar_orchestrator = use_case_orchestrator(
         use_cases.disconnect_google_calendar_use_case
     )
+    get_google_calendar_connection_orchestrator = use_case_orchestrator(
+        use_cases.get_google_calendar_connection_use_case
+    )
 
     # --- Conversation feed and menu import.
     list_conversations_orchestrator = use_case_orchestrator(
@@ -411,6 +417,9 @@ class OrchestratorsContainer(containers.DeclarativeContainer):
     )
     get_widget_config_orchestrator = use_case_orchestrator(
         use_cases.get_widget_config_use_case
+    )
+    get_widget_messages_orchestrator = use_case_orchestrator(
+        use_cases.get_widget_messages_use_case
     )
     list_channels_orchestrator = use_case_orchestrator(use_cases.list_channels_use_case)
     connect_channel_orchestrator = use_case_orchestrator(

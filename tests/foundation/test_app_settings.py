@@ -49,3 +49,17 @@ def test_production_disables_code_logging_and_reads_concept_variables() -> None:
 def test_invalid_integer_is_reported_with_variable_name() -> None:
     with pytest.raises(ValidationFailedError, match="LLM_TOOL_ROUND_LIMIT"):
         assemble_app_settings({"LLM_TOOL_ROUND_LIMIT": "many"})
+
+
+def test_cabinet_address_defaults_to_the_development_server() -> None:
+    development = assemble_app_settings({})
+    configured = assemble_app_settings(
+        {"APP_ENV": "production", "CABINET_BASE_URL": " https://app.example.com/ "}
+    )
+    production = assemble_app_settings({"APP_ENV": "production"})
+
+    assert development.cabinet_base_url == "http://localhost:3000"
+    assert configured.cabinet_base_url == "https://app.example.com"
+    assert production.cabinet_base_url is None
+    with pytest.raises(ValueError, match="CabinetBaseUrl"):
+        assemble_app_settings({"CABINET_BASE_URL": "cabinet.example.com"})

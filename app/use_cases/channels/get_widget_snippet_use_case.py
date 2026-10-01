@@ -1,4 +1,5 @@
 import html
+from urllib.parse import urlencode
 
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.configurations.app_settings import AppSettings
@@ -6,10 +7,15 @@ from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.dto.access import BusinessAccessRequest
 from app.schemas.dto.channels import WidgetSnippetQuery, WidgetSnippetView
 from app.schemas.exceptions.application_errors import ExternalServiceError
-from app.schemas.typings.channels.constrained_strings import WidgetScriptUrl
+from app.schemas.typings.channels.constrained_strings import (
+    WidgetDemoUrl,
+    WidgetScriptUrl,
+)
 from app.schemas.typings.channels.strings import WidgetEmbedSnippet
 from app.utilities.channels.channel_endpoints import (
+    DEMO_BUSINESS_PARAMETER,
     WIDGET_BUSINESS_ATTRIBUTE,
+    WIDGET_DEMO_PATH,
     WIDGET_SCRIPT_PATH,
     join_public_url,
 )
@@ -18,8 +24,9 @@ from app.utilities.channels.channel_endpoints import (
 class GetWidgetSnippetUseCase(UseCaseContract[WidgetSnippetQuery, WidgetSnippetView]):
     """
     Embed code of the website chat widget (concept section 6):
-    <script src="<APP_BASE_URL>/widget.js" data-tenant="<business id>" async>.
-    Owners and staff may read it.
+    <script src="<APP_BASE_URL>/widget.js" data-tenant="<business id>" async>,
+    and the address of the page that previews it. Owners and staff may read
+    them.
     """
 
     def __init__(
@@ -56,8 +63,14 @@ class GetWidgetSnippetUseCase(UseCaseContract[WidgetSnippetQuery, WidgetSnippetV
             f'{WIDGET_BUSINESS_ATTRIBUTE}="{escaped_business_id}" '
             "async></script>"
         )
+        demo_url = WidgetDemoUrl(
+            join_public_url(str(base_url), WIDGET_DEMO_PATH)
+            + "?"
+            + urlencode({DEMO_BUSINESS_PARAMETER: str(business.id)})
+        )
         return WidgetSnippetView(
             business_id=business.id,
             script_url=script_url,
             snippet=WidgetEmbedSnippet(snippet),
+            demo_url=demo_url,
         )

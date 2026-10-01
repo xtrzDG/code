@@ -34,6 +34,8 @@ class TestWidgetConfig:
         body = response.json()
         assert body["business_name"] == "Jaffa Port Café"
         assert body["is_enabled"] is True
+        assert body["accent_color"] is None
+        assert body["position"] is None
         assert body["default_language"] == "he"
         assert [(item["tag"], item["direction"]) for item in body["languages"]] == [
             ("he", "rtl"),
@@ -97,12 +99,17 @@ class TestWidgetMessages:
 
         assert response.status_code == 200
         assert response.headers["Access-Control-Allow-Origin"] == "*"
+        visitor_message, answer = testbed.message_repo.list_by_conversation(
+            business.id, testbed.pipeline.conversation_id
+        )
         assert response.json() == {
             "conversation_id": str(testbed.pipeline.conversation_id),
             "text": "Reply: יש מקום לשניים?",
             "language": "he",
             "direction": "rtl",
             "is_handed_off": False,
+            "message_id": str(answer.id),
+            "cursor": str(visitor_message.id),
         }
         [inbound] = testbed.pipeline.messages
         assert inbound.business_id == business.id
@@ -138,6 +145,11 @@ class TestWidgetMessages:
 
         assert body["text"] is None
         assert body["is_handed_off"] is True
+        assert body["message_id"] is None
+        [visitor_message] = testbed.message_repo.list_by_conversation(
+            business.id, testbed.pipeline.conversation_id
+        )
+        assert body["cursor"] == str(visitor_message.id)
 
     def test_disabled_widget_and_unknown_business_are_unavailable(self) -> None:
         testbed = ChannelsTestbed()
@@ -198,6 +210,9 @@ class TestWidgetSnippet:
             assert body["snippet"] == (
                 '<script src="https://api.workshop.test/widget.js" '
                 f'data-tenant="{business.id}" async></script>'
+            )
+            assert body["demo_url"] == (
+                f"https://api.workshop.test/widget/demo?business_id={business.id}"
             )
 
     def test_strangers_and_anonymous_users_get_nothing(self) -> None:

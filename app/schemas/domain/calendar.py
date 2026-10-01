@@ -3,6 +3,7 @@ from pydantic import Field
 from typed_time_provider import Microseconds
 
 from app.schemas.typings.bookings.booleans import IsCalendarAuthorizationStateConsumed
+from app.schemas.typings.bookings.constrained_strings import CalendarSyncErrorSummary
 from app.schemas.typings.bookings.prefixed_id import (
     BookingId,
     CalendarAuthorizationStateId,
@@ -11,6 +12,7 @@ from app.schemas.typings.bookings.prefixed_id import (
 )
 from app.schemas.typings.bookings.strings import (
     CalendarAuthorizationStateHash,
+    CalendarDisplayName,
     CalendarEventId,
     ExternalCalendarId,
 )
@@ -25,15 +27,22 @@ class CalendarConnectionDocument(BaseDocument):
 
     Tokens are stored only encrypted with the platform key. The access token
     is a cache: it is refreshed from the refresh token when it expires.
+    `calendar_name` is the calendar's title at connection time (None when
+    the provider did not tell). The sync fields record the last booking
+    mirrored and the last failure (cleared by the next success).
     """
 
     id: CalendarConnectionId = Field(default_factory=CalendarConnectionId)
     business_id: BusinessId
     calendar_id: ExternalCalendarId
+    calendar_name: CalendarDisplayName | None = None
     encrypted_refresh_token: EncryptedChannelSecret
     encrypted_access_token: EncryptedChannelSecret | None = None
     access_token_expires_at: Microseconds | None = None
     connected_by: UserId
+    last_synced_at: Microseconds | None = None
+    last_sync_error: CalendarSyncErrorSummary | None = None
+    last_sync_error_at: Microseconds | None = None
 
 
 class CalendarAuthorizationStateDocument(BaseDocument):

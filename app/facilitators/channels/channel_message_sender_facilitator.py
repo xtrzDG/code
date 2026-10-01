@@ -14,7 +14,10 @@ from app.schemas.constants.channels import ChannelKind
 from app.schemas.domain.billing import UsageEventDocument
 from app.schemas.domain.channels import ChannelDocument
 from app.schemas.dto.channels import ChannelDeliveryTarget
-from app.schemas.exceptions.application_errors import ExternalServiceError
+from app.schemas.exceptions.application_errors import (
+    ChannelCredentialRejectedError,
+    ExternalServiceError,
+)
 from app.schemas.typings.billing.constrained_integers import UsageQuantity
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.channels.constrained_integers import DeliveredMessageCount
@@ -25,6 +28,10 @@ from app.schemas.typings.channels.constrained_strings import (
 )
 from app.schemas.typings.conversations.strings import ChannelUserId, MessageText
 from app.schemas.typings.localization.constrained_strings import LanguageTag
+from app.utilities.channels.channel_health import (
+    mark_channel_failing,
+    mark_channel_working,
+)
 from app.utilities.channels.delivery_targets import (
     build_delivery_target,
     build_whatsapp_usage_event,
@@ -52,7 +59,9 @@ class ChannelMessageSenderFacilitator(ChannelMessageSenderFacilitatorContract):
     when the template has no such translation). Every delivery is metered
     once: free-form WhatsApp text as WHATSAPP_REPLY, a template as
     WHATSAPP_TEMPLATE. Phone, web chat and other channels cannot carry
-    proactive messages.
+    proactive messages. A platform that refuses the channel's credential
+    puts the channel in ERROR (the error is raised again); a delivered
+    message clears that state.
     """
 
     def __init__(
@@ -107,7 +116,13 @@ class ChannelMessageSenderFacilitator(ChannelMessageSenderFacilitatorContract):
             channel_user_id,
             self._secret_cipher,
         )
-        delivered: DeliveredMessageCount = adapter.send(target, text)
+        try:
+            delivered: DeliveredMessageCount = adapter.send(target, text)
+        except ChannelCredentialRejectedError as error:
+            self._record_health(channel_document, str(error))
+            raise
+
+        self._record_health(channel_document, None)
         if channel is ChannelKind.WHATSAPP and delivered > 0:
             self._usage_event_repo.append(
                 build_whatsapp_usage_event(
@@ -152,6 +167,41 @@ class ChannelMessageSenderFacilitator(ChannelMessageSenderFacilitatorContract):
             language
         )
         try:
+            self._send_template(
+                phone_number_id,
+                channel_user_id,
+                template_name,
+                language_code,
+                body_parameters,
+            )
+        except ChannelCredentialRejectedError as error:
+            self._record_health(channel_document, str(error))
+            raise
+
+        self._record_health(channel_document, None)
+        now: Microseconds = self._wall_clock.now_unix()
+        self._usage_event_repo.append(
+            UsageEventDocument(
+                business_id=business_id,
+                kind=UsageKind.WHATSAPP_TEMPLATE,
+                quantity=ONE_TEMPLATE,
+                occurred_at=now,
+                created_at=now,
+                updated_at=now,
+            )
+        )
+
+    def _send_template(
+        self,
+        phone_number_id: MetaObjectId,
+        channel_user_id: ChannelUserId,
+        template_name: WhatsAppTemplateName,
+        language_code: WhatsAppTemplateLanguageCode,
+        body_parameters: list[MessageText],
+    ) -> None:
+        """The template in the customer's language, else in English."""
+
+        try:
             self._whatsapp_templates.send_template(
                 phone_number_id,
                 channel_user_id,
@@ -159,6 +209,8 @@ class ChannelMessageSenderFacilitator(ChannelMessageSenderFacilitatorContract):
                 language_code,
                 body_parameters,
             )
+        except ChannelCredentialRejectedError:
+            raise
         except ExternalServiceError:
             if language_code == FALLBACK_TEMPLATE_LANGUAGE:
                 raise
@@ -176,14 +228,13 @@ class ChannelMessageSenderFacilitator(ChannelMessageSenderFacilitatorContract):
                 body_parameters,
             )
 
+    def _record_health(
+        self,
+        channel_document: ChannelDocument,
+        failure: str | None,
+    ) -> None:
         now: Microseconds = self._wall_clock.now_unix()
-        self._usage_event_repo.append(
-            UsageEventDocument(
-                business_id=business_id,
-                kind=UsageKind.WHATSAPP_TEMPLATE,
-                quantity=ONE_TEMPLATE,
-                occurred_at=now,
-                created_at=now,
-                updated_at=now,
-            )
-        )
+        if failure is None:
+            mark_channel_working(self._channel_repo, channel_document, now)
+        else:
+            mark_channel_failing(self._channel_repo, channel_document, failure, now)

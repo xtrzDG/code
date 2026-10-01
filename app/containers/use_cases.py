@@ -83,6 +83,11 @@ from app.schemas.dto.businesses import (
     RemoveMemberCommand,
     UpdateBusinessSettingsCommand,
 )
+from app.schemas.dto.calendar import (
+    CalendarConnectionOutcome,
+    CalendarConnectionStatusQuery,
+    CalendarConnectionStatusView,
+)
 from app.schemas.dto.catalog import (
     CallForwardingInstructions,
     CallForwardingInstructionsQuery,
@@ -114,6 +119,9 @@ from app.schemas.dto.channels import (
     TelegramWebhookRequest,
     WidgetConfigView,
     WidgetMessageCommand,
+    WidgetMessagesQuery,
+    WidgetMessagesView,
+    WidgetReplyInput,
     WidgetReplyView,
     WidgetSnippetQuery,
     WidgetSnippetView,
@@ -189,6 +197,7 @@ from app.schemas.dto.knowledge_admin import (
     UpsertKnowledgeItemsCommand,
 )
 from app.schemas.dto.localization import PhoneNumberDetails
+from app.schemas.dto.login_options import LoginOptionsQuery, LoginOptionsView
 from app.schemas.dto.menu_import import (
     ConfirmImportedItemsCommand,
     ConfirmImportedItemsResult,
@@ -201,7 +210,6 @@ from app.schemas.dto.operations import (
     AnsweredQuestionResult,
     AnswerUnansweredQuestionCommand,
     BookingPage,
-    CalendarConnectionView,
     CalendarConnectUrlView,
     CalendarDisconnectResult,
     CompleteCalendarConnectionCommand,
@@ -384,6 +392,9 @@ from app.use_cases.calendar.complete_google_calendar_connection_use_case import 
 from app.use_cases.calendar.disconnect_google_calendar_use_case import (
     DisconnectGoogleCalendarUseCase,
 )
+from app.use_cases.calendar.get_google_calendar_connection_use_case import (
+    GetGoogleCalendarConnectionUseCase,
+)
 from app.use_cases.calendar.start_google_calendar_connection_use_case import (
     StartGoogleCalendarConnectionUseCase,
 )
@@ -407,6 +418,9 @@ from app.use_cases.channels.deliver_channel_reply_use_case import (
 )
 from app.use_cases.channels.disable_channel_use_case import DisableChannelUseCase
 from app.use_cases.channels.get_widget_config_use_case import GetWidgetConfigUseCase
+from app.use_cases.channels.get_widget_messages_use_case import (
+    GetWidgetMessagesUseCase,
+)
 from app.use_cases.channels.get_widget_snippet_use_case import GetWidgetSnippetUseCase
 from app.use_cases.channels.handle_platform_bot_update_use_case import (
     HandlePlatformBotUpdateUseCase,
@@ -545,6 +559,7 @@ from app.use_cases.resources.list_schedule_exceptions_use_case import (
 from app.use_cases.resources.update_resource_use_case import UpdateResourceUseCase
 from app.use_cases.users.authenticate_user_use_case import AuthenticateUserUseCase
 from app.use_cases.users.get_current_user_use_case import GetCurrentUserUseCase
+from app.use_cases.users.get_login_options_use_case import GetLoginOptionsUseCase
 from app.use_cases.users.logout_use_case import LogoutUseCase
 from app.use_cases.users.start_otp_login_use_case import StartOtpLoginUseCase
 from app.use_cases.users.update_current_user_use_case import UpdateCurrentUserUseCase
@@ -656,6 +671,14 @@ class UseCasesContainer(containers.DeclarativeContainer):
         otp_delivery_facilitator=facilitators.otp_delivery_facilitator,
         app_settings=config.app_settings,
         wall_clock=time_provider.microsecond_wall_clock,
+    )
+    get_login_options_use_case: Factory[
+        UseCaseContract[LoginOptionsQuery, LoginOptionsView]
+    ] = Factory(
+        GetLoginOptionsUseCase,
+        country_registry=registries.country_registry,
+        otp_delivery_facilitator=facilitators.otp_delivery_facilitator,
+        app_settings=config.app_settings,
     )
     verify_otp_login_use_case: Factory[
         UseCaseContract[VerifyOtpLoginCommand, LoginSessionView]
@@ -1259,7 +1282,7 @@ class UseCasesContainer(containers.DeclarativeContainer):
         wall_clock=time_provider.microsecond_wall_clock,
     )
     complete_google_calendar_connection_use_case: Factory[
-        UseCaseContract[CompleteCalendarConnectionCommand, CalendarConnectionView]
+        UseCaseContract[CompleteCalendarConnectionCommand, CalendarConnectionOutcome]
     ] = Factory(
         CompleteGoogleCalendarConnectionUseCase,
         authorization_state_repo=repositories.calendar_authorization_state_repo,
@@ -1276,6 +1299,13 @@ class UseCasesContainer(containers.DeclarativeContainer):
         event_link_repo=repositories.calendar_event_link_repo,
         calendar_client=clients.google_calendar_client,
         secret_cipher=adapters.secret_cipher,
+    )
+    get_google_calendar_connection_use_case: Factory[
+        UseCaseContract[CalendarConnectionStatusQuery, CalendarConnectionStatusView]
+    ] = Factory(
+        GetGoogleCalendarConnectionUseCase,
+        connection_repo=repositories.calendar_connection_repo,
+        calendar_client=clients.google_calendar_client,
     )
 
     # --- Conversation engine: the ten tools, then prepare, generate, record.
@@ -1671,6 +1701,7 @@ class UseCasesContainer(containers.DeclarativeContainer):
         messenger_adapter=adapters.messenger_channel_adapter,
         instagram_adapter=adapters.instagram_channel_adapter,
         usage_event_repo=repositories.usage_event_repo,
+        channel_repo=repositories.channel_repo,
         wall_clock=time_provider.microsecond_wall_clock,
     )
     verify_meta_webhook_use_case: Factory[
@@ -1719,6 +1750,17 @@ class UseCasesContainer(containers.DeclarativeContainer):
         GetWidgetConfigUseCase,
         business_repo=repositories.business_repo,
         channel_repo=repositories.channel_repo,
+        assistant_version_repo=repositories.assistant_version_repo,
+        language_registry=registries.language_registry,
+    )
+    get_widget_messages_use_case: Factory[
+        UseCaseContract[WidgetMessagesQuery, WidgetMessagesView]
+    ] = Factory(
+        GetWidgetMessagesUseCase,
+        business_repo=repositories.business_repo,
+        channel_repo=repositories.channel_repo,
+        conversation_repo=repositories.conversation_repo,
+        message_repo=repositories.message_repo,
         language_registry=registries.language_registry,
     )
     accept_widget_message_use_case: Factory[
@@ -1729,9 +1771,10 @@ class UseCasesContainer(containers.DeclarativeContainer):
         channel_repo=repositories.channel_repo,
     )
     build_widget_reply_use_case: Factory[
-        UseCaseContract[AssistantReply, WidgetReplyView]
+        UseCaseContract[WidgetReplyInput, WidgetReplyView]
     ] = Factory(
         BuildWidgetReplyUseCase,
+        message_repo=repositories.message_repo,
         language_registry=registries.language_registry,
     )
     get_widget_snippet_use_case: Factory[

@@ -80,6 +80,9 @@ class OperatorsContainer(containers.DeclarativeContainer):
     start_otp_login_operator = pipeline_operator(
         pipelines.start_otp_login_pipeline, storage_scope
     )
+    get_login_options_operator = pipeline_operator(
+        pipelines.get_login_options_pipeline, storage_scope
+    )
     verify_otp_login_operator = pipeline_operator(
         pipelines.verify_otp_login_pipeline, storage_scope
     )
@@ -243,6 +246,9 @@ class OperatorsContainer(containers.DeclarativeContainer):
     disconnect_google_calendar_operator = pipeline_operator(
         pipelines.disconnect_google_calendar_pipeline, storage_scope
     )
+    get_google_calendar_connection_operator = pipeline_operator(
+        pipelines.get_google_calendar_connection_pipeline, storage_scope
+    )
 
     # --- Conversation feed and menu import.
     list_conversations_operator = pipeline_operator(
@@ -296,6 +302,9 @@ class OperatorsContainer(containers.DeclarativeContainer):
     )
     get_widget_config_operator = pipeline_operator(
         pipelines.get_widget_config_pipeline, storage_scope
+    )
+    get_widget_messages_operator = pipeline_operator(
+        pipelines.get_widget_messages_pipeline, storage_scope
     )
     list_channels_operator = pipeline_operator(
         pipelines.list_channels_pipeline, storage_scope

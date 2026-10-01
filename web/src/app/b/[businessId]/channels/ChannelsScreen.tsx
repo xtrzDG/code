@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { api } from "@/api/client";
 import type { ApiError, ErrorMessageOverrides } from "@/api/errors";
@@ -11,6 +11,7 @@ import { ConfirmDialog } from "@/components/workspace/ConfirmDialog";
 import { IconRefresh } from "@/components/workspace/icons";
 import { OwnerOnlyNote } from "@/components/workspace/OwnerOnly";
 import { useI18n } from "@/i18n/client";
+import type { MessageKey } from "@/i18n/translate";
 
 import { CallForwardingCard } from "./_components/CallForwardingCard";
 import { ChannelCard } from "./_components/ChannelCard";
@@ -18,7 +19,7 @@ import { CHANNEL_NAMES } from "./_components/channelMeta";
 import { ConnectChannelModal } from "./_components/ConnectChannelModal";
 import { GoogleCalendarCard } from "./_components/GoogleCalendarCard";
 import { StaffTelegramCard } from "./_components/StaffTelegramCard";
-import { WidgetSnippetCard } from "./_components/WidgetSnippetCard";
+import { WebChatSection } from "./_components/WebChatSection";
 import {
   CONNECTABLE_CHANNELS,
   channelPathName,
@@ -26,18 +27,43 @@ import {
   isChannelInPlan,
   isChannelOn,
   upsertChannel,
+  withoutCalendarReturn,
+  type CalendarFailureReason,
+  type CalendarReturn,
   type ConnectChannelBody,
   type ConnectableChannel,
 } from "./_lib/channels";
+
+const CALENDAR_RETURN_REASONS: Record<CalendarFailureReason, MessageKey> = {
+  access_denied: "channels.calendar.returnReasons.access_denied",
+  link_expired: "channels.calendar.returnReasons.link_expired",
+  no_offline_access: "channels.calendar.returnReasons.no_offline_access",
+  provider_error: "channels.calendar.returnReasons.provider_error",
+  unknown: "channels.calendar.returnReasons.unknown",
+};
 
 const CONNECT_ERRORS: ErrorMessageOverrides = {
   conflict: "channels.errors.accountTaken",
   external_service_error: "channels.errors.provider",
 };
 
-/** /channels: customer channels, the widget code, call forwarding, calendar and staff notifications. */
-export function ChannelsScreen() {
+/**
+ * /channels: customer channels, the website chat's look and code, call
+ * forwarding, calendar and staff notifications. `calendarReturn` is what
+ * Google's consent page sent back (shown once, then removed from the URL).
+ */
+export function ChannelsScreen({ calendarReturn: initialCalendarReturn }: { calendarReturn: CalendarReturn | null }) {
   const { t, locale } = useI18n();
+  const [calendarReturn, setCalendarReturn] = useState(initialCalendarReturn);
+  useEffect(() => {
+    if (initialCalendarReturn === null) {
+      return;
+    }
+    // A reload or a shared link must not show the notice again. A null state
+    // keeps Next's router in sync with the new address.
+    const query = withoutCalendarReturn(window.location.search);
+    window.history.replaceState(null, "", `${window.location.pathname}${query ? `?${query}` : ""}`);
+  }, [initialCalendarReturn]);
   const toast = useToast();
   const { business, isOwner } = useBusiness();
   const [connecting, setConnecting] = useState<ConnectableChannel | null>(null);
@@ -121,7 +147,8 @@ export function ChannelsScreen() {
 
   const list = channels.data;
   const hasAnyChannel = CONNECTABLE_CHANNELS.some((kind) => isChannelOn(findChannel(list, kind)));
-  const isWebChatOn = isChannelOn(findChannel(list, "web_chat"));
+  const webChat = findChannel(list, "web_chat");
+  const isWebChatOn = isChannelOn(webChat);
   const isPhoneOn = isChannelOn(findChannel(list, "phone"));
 
   return (
@@ -143,6 +170,24 @@ export function ChannelsScreen() {
       />
 
       {!isOwner ? <OwnerOnlyNote className="mb-6" /> : null}
+
+      {calendarReturn ? (
+        <div role={calendarReturn.kind === "connected" ? "status" : undefined} className="mb-6">
+          <Alert
+            tone={calendarReturn.kind === "connected" ? "success" : "danger"}
+            title={calendarReturn.kind === "connected" ? t("channels.calendar.title") : t("channels.calendar.returnErrorTitle")}
+          >
+            <p>
+              {calendarReturn.kind === "connected"
+                ? t("channels.calendar.returnConnected")
+                : t(CALENDAR_RETURN_REASONS[calendarReturn.reason])}
+            </p>
+            <Button variant="ghost" size="sm" className="mt-2 -ml-2" onClick={() => setCalendarReturn(null)}>
+              {t("channels.calendar.dismiss")}
+            </Button>
+          </Alert>
+        </div>
+      ) : null}
 
       {channels.error && !list ? (
         <Card>
@@ -182,7 +227,13 @@ export function ChannelsScreen() {
             </div>
           </section>
 
-          {isWebChatOn ? <WidgetSnippetCard /> : null}
+          {isWebChatOn && webChat ? (
+            <WebChatSection
+              channel={webChat}
+              canManage={isOwner}
+              onSaved={(updated) => channels.setData((current) => upsertChannel(current, updated))}
+            />
+          ) : null}
           {isPhoneOn ? <CallForwardingCard /> : null}
 
           <section aria-labelledby="channels-tools" className="space-y-4">

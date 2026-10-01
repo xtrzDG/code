@@ -11,7 +11,8 @@ Lists are paged with `?limit=N&cursor=…`.
 from collections.abc import Callable
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, status
+from fastapi.responses import HTMLResponse, RedirectResponse, Response
 
 from app.contracts.operator_contract import OperatorContract
 from app.gateways.http.paging_query import parse_page_request
@@ -39,12 +40,16 @@ from app.schemas.dto.bookings import (
     LeadView,
     RescheduleBookingCommand,
 )
+from app.schemas.dto.calendar import (
+    CalendarConnectionOutcome,
+    CalendarConnectionStatusQuery,
+    CalendarConnectionStatusView,
+)
 from app.schemas.dto.operations import (
     AnsweredQuestionResult,
     AnswerUnansweredQuestionCommand,
     AnswerUnansweredQuestionRequest,
     BookingPage,
-    CalendarConnectionView,
     CalendarConnectUrlView,
     CalendarDisconnectResult,
     CompleteCalendarConnectionCommand,
@@ -83,14 +88,19 @@ from app.schemas.typings.bookings.prefixed_id import BookingId, LeadId, Resource
 from app.schemas.typings.bookings.strings import (
     CalendarAuthorizationCode,
     CalendarAuthorizationState,
+    CalendarProviderErrorCode,
 )
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.handoffs.prefixed_id import HandoffId, UnansweredQuestionId
 from app.schemas.typings.localization.constrained_strings import LanguageTag
+from app.schemas.typings.platform.constrained_strings import CabinetBaseUrl
 from app.schemas.typings.users.prefixed_id import UserId
+from app.utilities.calendar.calendar_return_urls import build_calendar_return_url
 
 BUSINESS_PREFIX: str = "/v1/businesses/{business_id}"
 GOOGLE_CALENDAR_CALLBACK_PATH: str = "/v1/integrations/google-calendar/callback"
+# Google's `error` and `state` values are short; longer ones are cut.
+MAX_CALLBACK_VALUE_LENGTH: int = 512
 TRUE_QUERY_VALUES: frozenset[str] = frozenset({"1", "true", "yes", "on"})
 FALSE_QUERY_VALUES: frozenset[str] = frozenset({"0", "false", "no", "off"})
 
@@ -130,15 +140,20 @@ def build_operations_router(
         StartCalendarConnectionCommand, CalendarConnectUrlView
     ],
     complete_calendar_connection: OperatorContract[
-        CompleteCalendarConnectionCommand, CalendarConnectionView
+        CompleteCalendarConnectionCommand, CalendarConnectionOutcome
     ],
     disconnect_calendar: OperatorContract[
         DisconnectCalendarCommand, CalendarDisconnectResult
     ],
+    get_calendar_connection: OperatorContract[
+        CalendarConnectionStatusQuery, CalendarConnectionStatusView
+    ],
+    cabinet_base_url: CabinetBaseUrl | None,
 ) -> APIRouter:
     """
     Cabinet routes under /v1/businesses/{business_id} (Bearer auth; owners
-    and staff, owner only where noted) plus the public Google OAuth callback.
+    and staff, owner only where noted) plus the public Google OAuth callback,
+    which sends the owner back to the cabinet (CABINET_BASE_URL).
     """
 
     router = APIRouter(tags=["operations"])
@@ -459,25 +474,47 @@ def build_operations_router(
             StartCalendarConnectionCommand(business_id=business.id, user_id=user_id)
         )
 
-    @router.get(GOOGLE_CALENDAR_CALLBACK_PATH)
+    @router.get(f"{BUSINESS_PREFIX}/integrations/google-calendar")
+    def get_google_calendar(
+        business_id: str,
+        user_id: Annotated[UserId, Depends(current_user)],
+    ) -> CalendarConnectionStatusView:
+        business: BusinessDocument = authorize(user_id, business_id)
+        return get_calendar_connection.operate(
+            CalendarConnectionStatusQuery(business_id=business.id)
+        )
+
+    @router.get(
+        GOOGLE_CALENDAR_CALLBACK_PATH,
+        response_class=RedirectResponse,
+        status_code=status.HTTP_303_SEE_OTHER,
+        responses={
+            status.HTTP_303_SEE_OTHER: {
+                "description": (
+                    "Back to the cabinet: /b/{business_id}/channels?calendar="
+                    "connected, or ?calendar=error&reason=<reason>."
+                )
+            }
+        },
+    )
     def get_google_calendar_callback(
         code: OptionalQuery = None,
         state: OptionalQuery = None,
         error: OptionalQuery = None,
-    ) -> CalendarConnectionView:
-        if error is not None:
-            raise ValidationFailedError(
-                f"Google Calendar access was not granted ({error[:64]})."
-            )
-
-        if not code or not state:
-            raise ValidationFailedError("The Google callback has no code or state.")
-
-        return complete_calendar_connection.operate(
+    ) -> Response:
+        outcome: CalendarConnectionOutcome = complete_calendar_connection.operate(
             CompleteCalendarConnectionCommand(
-                state=CalendarAuthorizationState(state),
-                code=CalendarAuthorizationCode(code),
+                state=read_callback_value(state, CalendarAuthorizationState),
+                code=read_callback_value(code, CalendarAuthorizationCode),
+                provider_error=read_callback_value(error, CalendarProviderErrorCode),
             )
+        )
+        if cabinet_base_url is None:
+            return render_calendar_outcome_page(outcome)
+
+        return RedirectResponse(
+            str(build_calendar_return_url(cabinet_base_url, outcome)),
+            status_code=status.HTTP_303_SEE_OTHER,
         )
 
     @router.delete(f"{BUSINESS_PREFIX}/integrations/google-calendar")
@@ -493,6 +530,47 @@ def build_operations_router(
         )
 
     return router
+
+
+def read_callback_value[Value: str](
+    raw_value: str | None,
+    value_type: Callable[[str], Value],
+) -> Value | None:
+    """A value of Google's callback query; blank means absent."""
+
+    if raw_value is None or raw_value.strip() == "":
+        return None
+
+    return value_type(raw_value.strip()[:MAX_CALLBACK_VALUE_LENGTH])
+
+
+def render_calendar_outcome_page(outcome: CalendarConnectionOutcome) -> HTMLResponse:
+    """
+    A plain page for the end of Google's consent when CABINET_BASE_URL is
+    not configured (the owner returns to the cabinet by hand).
+    """
+
+    is_connected: bool = outcome.failure is None and outcome.connection is not None
+    message: str = (
+        "Google Calendar is connected. You can close this tab and return to "
+        "the cabinet."
+        if is_connected
+        else "Google Calendar was not connected ("
+        + (outcome.failure.value if outcome.failure is not None else "error")
+        + "). Return to the cabinet and try again."
+    )
+    return HTMLResponse(
+        content=(
+            '<!doctype html><html lang="en"><head><meta charset="utf-8">'
+            '<meta name="viewport" content="width=device-width, initial-scale=1">'
+            "<title>Google Calendar</title></head>"
+            f"<body><p>{message}</p></body></html>"
+        ),
+        status_code=(
+            status.HTTP_200_OK if is_connected else status.HTTP_400_BAD_REQUEST
+        ),
+        headers={"Cache-Control": "no-store", "X-Robots-Tag": "noindex"},
+    )
 
 
 def parse_path_id[Value](

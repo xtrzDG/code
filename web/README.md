@@ -107,7 +107,8 @@ web/
     proxy.ts                   runs before pages: sign-in redirects, current path header, language cookie
     app/                       routes (App Router)
       layout.tsx               <html lang>, I18nProvider, ToastProvider
-      login/                   sign-in by phone (country picker) or e-mail, 6-digit code
+      login/                   sign-in by phone (country picker, only the code channels that work now)
+                               or e-mail, 6-digit code
       businesses/              list and creation of businesses (a new account gets the form at once)
       b/[businessId]/          one business: layout.tsx loads it + the user and renders the sidebar
         onboarding/            the six-step profile wizard (?step=…) and "what to add" (+ _components/)
@@ -126,8 +127,9 @@ web/
         assistant/             test chat (layout.tsx: live version + tabs), versions/,
                                versions/[versionId]/ (go-live checklist, autotests with live progress,
                                publish, rollback)
-        channels/              chat channels, website chat code, call forwarding, Google Calendar,
-                               staff Telegram link
+        channels/              chat channels (with the platform's last error), website chat code and
+                               look, call forwarding, Google Calendar (state, last sync), staff
+                               Telegram link
         billing/               plan, trial, usage, plans of the country, invoices, payment
         settings/              tabs in the URL hash: general, team, notifications, privacy, audit
       admin/                   platform admin: clients (filters, sorts) and clients/[businessId]/
@@ -190,7 +192,7 @@ web/
 | Handoffs | `handoffs` | Open first by urgency, resolve, call and conversation links |
 | Knowledge | `knowledge`, `/questions`, `/import`, `/resources` | Server-paged items and search, unanswered questions to FAQ, menu import with review and batch discard, resources and special days |
 | Assistant | `assistant`, `/versions`, `/versions/{id}` | Test chat with tool calls, versions, go-live checklist with fix links, autotests with live progress, publish and rollback with reasons |
-| Channels | `channels` | Connect messengers, website chat snippet, call forwarding codes, Google Calendar, staff Telegram link |
+| Channels | `channels` | Connect messengers and see why one stopped, website chat snippet, colour and corner, call forwarding codes, Google Calendar state and last sync, staff Telegram link |
 | Billing | `billing` | Trial, plan change, usage meters, invoices, payment (owners only) |
 | Settings | `settings#general`, `#team`, `#notifications`, `#privacy`, `#audit` | Business settings and pause, team, manager contacts, data processing agreement and customer data, audit log |
 | Admin | `/admin`, `/admin/clients/{id}` | Platform admins: all clients, health, opening a client's cabinet |
@@ -368,6 +370,21 @@ Tailwind CSS v4 with semantic tokens defined in `src/app/globals.css`
 They follow the system light/dark scheme, so `dark:` variants are rarely
 needed. Layouts are mobile-first: the sidebar becomes a drawer below `lg`.
 Use semantic HTML, visible focus, and labels for icon-only buttons.
+
+## Channels and sign-in
+
+- `/b/[businessId]/channels`: channel cards (a channel in `error` shows when it
+  stopped and what the platform said), the website chat's look (colour, corner,
+  a sketch and a link to the API's `/widget/demo` with the unsaved choices) and
+  embed code, call forwarding, Google Calendar (connection, calendar, last sync
+  and its error) and staff Telegram links. Google's consent page returns to
+  `?calendar=connected` or `?calendar=error&reason=…`; `page.tsx` reads it, the
+  screen shows it once and removes it from the address. The API needs
+  `CABINET_BASE_URL` set to this cabinet's public address for that return.
+- `/login` asks `GET /v1/auth/login-options` for the chosen country: the method
+  switch hides e-mail when it cannot deliver codes, the phone form offers a
+  channel choice when several work, and explains when none does. Helpers with
+  tests are in `src/app/login/_lib/loginOptions.ts`.
 
 ## Security notes
 

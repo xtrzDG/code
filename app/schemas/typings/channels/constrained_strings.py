@@ -3,6 +3,20 @@
 from base_typed_string import BaseConstrainedTypedString
 
 
+class ChannelErrorSummary(BaseConstrainedTypedString):
+    """
+    Short reason a connected channel stopped working, as the platform gave
+    it, without tokens or customer data.
+
+    Example:
+        reason = ChannelErrorSummary("Telegram rejected the bot token (401).")
+    """
+
+    min_length = 1
+    max_length = 300
+    pattern = r"\S"
+
+
 class ChannelWebhookUrl(BaseConstrainedTypedString):
     """
     Public HTTPS address a messaging platform delivers webhooks to.
@@ -134,6 +148,35 @@ class WhatsAppTemplateName(BaseConstrainedTypedString):
     min_length = 1
     max_length = 512
     pattern = r"^[a-z0-9_]{1,512}$"
+
+
+class WidgetAccentColor(BaseConstrainedTypedString):
+    """
+    Brand colour of the website chat widget as a six-digit hex colour.
+
+    Example:
+        color = WidgetAccentColor("#0f766e")
+    """
+
+    min_length = 7
+    max_length = 7
+    pattern = r"^#[0-9a-fA-F]{6}$"
+
+
+class WidgetDemoUrl(BaseConstrainedTypedString):
+    """
+    Address of the page that shows a business's website chat widget as
+    visitors see it (a preview for owners).
+
+    Example:
+        demo_url = WidgetDemoUrl(
+            "https://api.example.com/widget/demo?business_id=business_1"
+        )
+    """
+
+    min_length = 14
+    max_length = 2048
+    pattern = r"^https?://[^\s/]+(/[^\s]*)?/widget/demo\?business_id=[^\s&]+$"
 
 
 class WidgetMessageText(BaseConstrainedTypedString):

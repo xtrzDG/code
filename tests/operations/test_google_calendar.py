@@ -170,6 +170,26 @@ class TestGoogleCalendarClient:
                 ACCESS, ExternalCalendarId("primary"), CalendarEventId("event1")
             )
 
+    def test_calendar_title_comes_from_an_events_listing(self) -> None:
+        google = FakeGoogle()
+
+        title = google.client().get_calendar_name(ACCESS, ExternalCalendarId("primary"))
+
+        assert title == "owner@example.com"
+        [request] = google.requests
+        assert request.method == "GET"
+        assert request.url.path == "/calendar/v3/calendars/primary/events"
+        assert request.url.params["fields"] == "summary"
+        assert request.headers["authorization"] == "Bearer access-xyz"
+
+        google.calendar_name = None
+        assert (
+            google.client().get_calendar_name(ACCESS, ExternalCalendarId("p")) is None
+        )
+        google.failure_status = 401
+        with pytest.raises(ExternalServiceError, match="HTTP 401"):
+            google.client().get_calendar_name(ACCESS, ExternalCalendarId("primary"))
+
     def test_missing_configuration(self) -> None:
         unconfigured = GoogleCalendarClient(
             client_id=PlatformIdentifier("client"),
@@ -179,6 +199,9 @@ class TestGoogleCalendarClient:
 
         with pytest.raises(ExternalServiceError, match="not configured"):
             unconfigured.build_authorization_url(CalendarAuthorizationState("s"))
+
+        assert not unconfigured.is_configured()
+        assert FakeGoogle().client().is_configured()
 
         assert build_google_calendar_redirect_url(None) is None
         assert build_google_calendar_redirect_url(

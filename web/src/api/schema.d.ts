@@ -55,6 +55,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/auth/login-options": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Login Options */
+        get: operations["get_login_options_v1_auth_login_options_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/auth/logout": {
         parameters: {
             query?: never;
@@ -697,7 +714,8 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /** Get Google Calendar */
+        get: operations["get_google_calendar_v1_businesses__business_id__integrations_google_calendar_get"];
         put?: never;
         post?: never;
         /** Delete Google Calendar */
@@ -1402,7 +1420,8 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /** List Widget Messages */
+        get: operations["list_widget_messages_v1_widget__business_id__messages_get"];
         put?: never;
         /** Send Widget Message */
         post: operations["send_widget_message_v1_widget__business_id__messages_post"];
@@ -2189,16 +2208,34 @@ export interface components {
             expires_at: number;
         };
         /**
-         * CalendarConnectionView
-         * @description A connected calendar of a business.
+         * CalendarConnectionStatusView
+         * @description Whether Google Calendar is connected and how syncing goes. Tokens are
+         *     never returned.
+         *
+         *     `is_configured` tells whether this server can connect Google Calendar
+         *     at all (Google OAuth credentials and APP_BASE_URL are set). The sync
+         *     error is a short provider reason; it clears after the next booking that
+         *     syncs.
          */
-        CalendarConnectionView: {
+        CalendarConnectionStatusView: {
             /** Business Id */
             business_id: string;
             /** Calendar Id */
-            calendar_id: string;
+            calendar_id?: string | null;
+            /** Calendar Name */
+            calendar_name?: string | null;
             /** Connected At */
-            connected_at: number;
+            connected_at?: number | null;
+            /** Is Configured */
+            is_configured: boolean;
+            /** Is Connected */
+            is_connected: boolean;
+            /** Last Sync Error */
+            last_sync_error?: string | null;
+            /** Last Sync Error At */
+            last_sync_error_at?: number | null;
+            /** Last Synced At */
+            last_synced_at?: number | null;
         };
         /**
          * CalendarDisconnectResult
@@ -2385,7 +2422,10 @@ export interface components {
          *
          *     `account_id` is the public account inside the channel: bot username,
          *     WhatsApp phone number id, page id, Instagram account id, or the E.164
-         *     number of the assistant line.
+         *     number of the assistant line. With status ERROR, `last_error` is the
+         *     platform's short reason (no secrets) and `last_error_at` its time. The
+         *     website chat also reports its saved colour and launcher corner (None:
+         *     the widget's defaults).
          */
         ChannelView: {
             /** Account Id */
@@ -2397,9 +2437,16 @@ export interface components {
             has_credential: boolean;
             /** Id */
             id: string;
+            /** Last Error */
+            last_error?: string | null;
+            /** Last Error At */
+            last_error_at?: number | null;
             status: components["schemas"]["ChannelStatus"];
             /** Updated At */
             updated_at: number;
+            /** Widget Color */
+            widget_color?: string | null;
+            widget_position?: components["schemas"]["WidgetPosition"] | null;
         };
         /**
          * ChannelWebhookOutcome
@@ -3739,6 +3786,32 @@ export interface components {
          */
         LoginMethod: "phone" | "email";
         /**
+         * LoginOptionsView
+         * @description The login-code channels that work right now: the country's channels
+         *     that have a configured provider (all configured phone channels when no
+         *     country is given), in the order they are tried, and whether e-mail
+         *     sign-in works. `is_sign_up_restricted` is true for a country whose
+         *     numbers cannot sign in at all. `configured_channels` are all channels
+         *     with a provider, for any country (empty: sign-in is down everywhere).
+         */
+        LoginOptionsView: {
+            /** Configured Channels */
+            configured_channels: components["schemas"]["OtpDeliveryChannel"][];
+            /** Country Code */
+            country_code?: string | null;
+            /** Is Email Login Available */
+            is_email_login_available: boolean;
+            /** Is Phone Login Available */
+            is_phone_login_available: boolean;
+            /**
+             * Is Sign Up Restricted
+             * @default false
+             */
+            is_sign_up_restricted: boolean;
+            /** Phone Channels */
+            phone_channels: components["schemas"]["OtpDeliveryChannel"][];
+        };
+        /**
          * LoginSessionView
          * @description A new session. The bearer token is shown only here; the server keeps
          *     nothing but its hash.
@@ -4664,18 +4737,41 @@ export interface components {
         /**
          * WidgetConfigView
          * @description Public configuration the widget script loads before it shows itself.
+         *
+         *     `business_name` is the name visitors see in the widget header.
+         *     `greetings` holds the first message in the languages the live assistant
+         *     answers in (the business languages before anything is published) where
+         *     a text exists; the widget uses its own text for the others. `accent_color`
+         *     and `position` are the owner's choices (None: the widget's defaults); the
+         *     embed tag's data-color and data-position still win.
          */
         WidgetConfigView: {
+            /** Accent Color */
+            accent_color?: string | null;
             /** Business Id */
             business_id: string;
             /** Business Name */
             business_name: string;
             /** Default Language */
             default_language: string;
+            /** Greetings */
+            greetings: components["schemas"]["WidgetGreetingView"][];
             /** Is Enabled */
             is_enabled: boolean;
             /** Languages */
             languages: components["schemas"]["WidgetLanguageView"][];
+            position?: components["schemas"]["WidgetPosition"] | null;
+        };
+        /**
+         * WidgetGreetingView
+         * @description The widget's first message in one customer language.
+         */
+        WidgetGreetingView: {
+            direction: components["schemas"]["TextDirection"];
+            /** Language */
+            language: string;
+            /** Text */
+            text: string;
         };
         /**
          * WidgetLanguageView
@@ -4689,30 +4785,86 @@ export interface components {
             tag: string;
         };
         /**
+         * WidgetMessageView
+         * @description An assistant or staff message as the widget shows it.
+         */
+        WidgetMessageView: {
+            author: components["schemas"]["MessageAuthor"];
+            /** Created At */
+            created_at: number;
+            direction: components["schemas"]["TextDirection"];
+            /** Id */
+            id: string;
+            /** Language */
+            language?: string | null;
+            /** Text */
+            text: string;
+        };
+        /**
+         * WidgetMessagesView
+         * @description New assistant and staff messages, oldest first (at most a page; poll
+         *     again with `cursor` while `has_more`). `cursor` is the position to poll
+         *     after next time (None while the visitor has no conversation);
+         *     `is_handed_off` tells whether staff currently handle the conversation.
+         */
+        WidgetMessagesView: {
+            /** Cursor */
+            cursor?: string | null;
+            /**
+             * Has More
+             * @default false
+             */
+            has_more: boolean;
+            /**
+             * Is Handed Off
+             * @default false
+             */
+            is_handed_off: boolean;
+            /** Items */
+            items: components["schemas"]["WidgetMessageView"][];
+        };
+        /**
+         * WidgetPosition
+         * @description Corner of the page where the website chat launcher sits.
+         * @enum {string}
+         */
+        WidgetPosition: "left" | "right";
+        /**
          * WidgetReplyView
          * @description The assistant's answer in the widget.
          *
          *     `text` is None while staff handle the conversation; `direction` tells the
          *     widget how to lay the answer out (right-to-left for Hebrew, Arabic, ...).
+         *     `message_id` is the stored answer (None without one); `cursor` is the
+         *     visitor's message, so polling GET .../messages?after=<cursor> returns
+         *     the answer again (skip it by id) and every staff message written since.
          */
         WidgetReplyView: {
             /** Conversation Id */
             conversation_id: string;
+            /** Cursor */
+            cursor?: string | null;
             direction: components["schemas"]["TextDirection"];
             /** Is Handed Off */
             is_handed_off: boolean;
             /** Language */
             language: string;
+            /** Message Id */
+            message_id?: string | null;
             /** Text */
             text: string | null;
         };
         /**
          * WidgetSnippetView
-         * @description Embed code the owner pastes into the website.
+         * @description Embed code the owner pastes into the website, and the page that shows
+         *     the widget as visitors see it (it accepts `color`, `position` and
+         *     `language` to preview unsaved choices).
          */
         WidgetSnippetView: {
             /** Business Id */
             business_id: string;
+            /** Demo Url */
+            demo_url: string;
             /** Script Url */
             script_url: string;
             /** Snippet */
@@ -4841,6 +4993,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ClientCabinetAccess"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_login_options_v1_auth_login_options_get: {
+        parameters: {
+            query?: {
+                country_code?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LoginOptionsView"];
                 };
             };
             /** @description Validation Error */
@@ -6135,6 +6318,9 @@ export interface operations {
                     phone_number_id?: string | null;
                     /** Whatsapp Business Account Id */
                     whatsapp_business_account_id?: string | null;
+                    /** Widget Color */
+                    widget_color?: string | null;
+                    widget_position?: ("left" | "right") | null;
                 };
             };
         };
@@ -6580,6 +6766,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HandoffListItem"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_google_calendar_v1_businesses__business_id__integrations_google_calendar_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CalendarConnectionStatusView"];
                 };
             };
             /** @description Validation Error */
@@ -8479,14 +8698,12 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Successful Response */
-            200: {
+            /** @description Back to the cabinet: /b/{business_id}/channels?calendar=connected, or ?calendar=error&reason=<reason>. */
+            303: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content: {
-                    "application/json": components["schemas"]["CalendarConnectionView"];
-                };
+                content?: never;
             };
             /** @description Validation Error */
             422: {
@@ -8753,6 +8970,40 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["WidgetConfigView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_widget_messages_v1_widget__business_id__messages_get: {
+        parameters: {
+            query: {
+                session_key: string;
+                after?: string | null;
+            };
+            header?: never;
+            path: {
+                business_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WidgetMessagesView"];
                 };
             };
             /** @description Validation Error */

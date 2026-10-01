@@ -95,7 +95,17 @@ export function ChannelCard({
 
       {state === "error" ? (
         <Alert tone="danger" title={t("channels.errorTitle")} className="mt-4">
-          {t("channels.errorDescription")}
+          {channel?.last_error_at ? <p>{t("channels.errorSince", { date: format.dateTime(channel.last_error_at) })}</p> : null}
+          <p>{t("channels.errorDescription")}</p>
+          {channel?.last_error ? (
+            <p className="mt-1 text-xs break-words">
+              {t("channels.errorReason")}{" "}
+              <span dir="auto" className="font-mono">
+                {channel.last_error}
+              </span>
+            </p>
+          ) : null}
+          <p className="mt-1 text-xs">{t("channels.errorHeals")}</p>
         </Alert>
       ) : null}
       {state === "pending" ? (

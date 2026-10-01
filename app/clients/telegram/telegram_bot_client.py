@@ -3,6 +3,7 @@ import httpx
 from app.contracts.channel_clients import ProviderToken, TelegramBotApiClientContract
 from app.schemas.dto.channels import TelegramBotProfile
 from app.schemas.exceptions.application_errors import (
+    ChannelCredentialRejectedError,
     ExternalServiceError,
     ValidationFailedError,
 )
@@ -23,7 +24,9 @@ from app.utilities.channels.json_values import (
 
 TELEGRAM_API_BASE_URL: str = "https://api.telegram.org"
 REQUEST_TIMEOUT_SECONDS: float = 10.0
-# Telegram answers getMe with 401 or 404 when the token is wrong or revoked.
+# Telegram answers 401 or 404 when the token is wrong or revoked (getMe while
+# connecting; any later call means the bot stopped working). 403 is about
+# one chat (the customer blocked the bot), not the bot.
 REJECTED_TOKEN_ERROR_CODES: frozenset[int] = frozenset({401, 404})
 # Only customer messages are handled; edits, callbacks and the rest are not.
 ALLOWED_UPDATES: tuple[str, ...] = ("message",)
@@ -129,6 +132,12 @@ class TelegramBotClient(TelegramBotApiClientContract):
         if method_name == "getMe" and error_code in REJECTED_TOKEN_ERROR_CODES:
             raise ValidationFailedError(
                 "Telegram rejected the bot token; copy it again from @BotFather."
+            )
+
+        if error_code in REJECTED_TOKEN_ERROR_CODES:
+            raise ChannelCredentialRejectedError(
+                f"Telegram {method_name} rejected the bot token ({error_code}: "
+                f"{description})."
             )
 
         raise ExternalServiceError(

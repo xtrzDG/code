@@ -2,8 +2,10 @@ import { describe, expect, it } from "vitest";
 
 import {
   EMPTY_CONNECT_FORM,
+  WIDGET_DEFAULT_COLOR,
   accountLabel,
   buildConnectBody,
+  buildWidgetPreviewUrl,
   channelPathName,
   channelState,
   dialHref,
@@ -11,10 +13,16 @@ import {
   formatLinkCode,
   isChannelInPlan,
   isChannelOn,
+  isSameWidgetLook,
+  normalizeHexColor,
   notificationLanguages,
+  readCalendarReturn,
+  readableTextColor,
+  savedWidgetLook,
   sortForwardingCodes,
   startCommand,
   upsertChannel,
+  withoutCalendarReturn,
   type ChannelView,
 } from "./channels";
 
@@ -158,5 +166,63 @@ describe("plans", () => {
     expect(isChannelInPlan(["telegram", "web_chat"], "phone")).toBe(false);
     expect(isChannelInPlan(["phone"], "phone")).toBe(true);
     expect(isChannelInPlan(undefined, "phone")).toBe(true);
+  });
+});
+
+describe("website chat look", () => {
+  it("normalizes hex colours to the API's six-digit form", () => {
+    expect(normalizeHexColor("#0F766E")).toBe("#0f766e");
+    expect(normalizeHexColor(" 0f766e ")).toBe("#0f766e");
+    expect(normalizeHexColor("#abc")).toBe("#aabbcc");
+    expect(normalizeHexColor("red")).toBeNull();
+    expect(normalizeHexColor("#12345")).toBeNull();
+    expect(normalizeHexColor("")).toBeNull();
+  });
+
+  it("picks readable text on the accent like the widget does", () => {
+    expect(readableTextColor("#4f46e5")).toBe("#ffffff");
+    expect(readableTextColor("#fde047")).toBe("#111827");
+    expect(readableTextColor("not a colour")).toBe("#ffffff");
+  });
+
+  it("fills the widget defaults into the saved look", () => {
+    expect(savedWidgetLook(undefined)).toEqual({ color: WIDGET_DEFAULT_COLOR, position: "right" });
+    expect(savedWidgetLook(channel({ channel: "web_chat", widget_color: "#0F766E", widget_position: "left" }))).toEqual({
+      color: "#0f766e",
+      position: "left",
+    });
+    expect(isSameWidgetLook({ color: "#0F766E", position: "left" }, { color: "#0f766e", position: "left" })).toBe(true);
+    expect(isSameWidgetLook({ color: "#0f766e", position: "left" }, { color: "#0f766e", position: "right" })).toBe(false);
+  });
+
+  it("builds the live preview link with unsaved choices", () => {
+    const url = buildWidgetPreviewUrl(
+      "https://api.example.com/widget/demo?business_id=business_1",
+      { color: "#0F766E", position: "left" },
+      "ka",
+    );
+    const parsed = new URL(url);
+
+    expect(parsed.origin + parsed.pathname).toBe("https://api.example.com/widget/demo");
+    expect(parsed.searchParams.get("business_id")).toBe("business_1");
+    expect(parsed.searchParams.get("color")).toBe("#0f766e");
+    expect(parsed.searchParams.get("position")).toBe("left");
+    expect(parsed.searchParams.get("language")).toBe("ka");
+  });
+});
+
+describe("Google Calendar return", () => {
+  it("reads the outcome the API's callback put in the address", () => {
+    expect(readCalendarReturn("?calendar=connected")).toEqual({ kind: "connected" });
+    expect(readCalendarReturn("?calendar=error&reason=access_denied")).toEqual({ kind: "error", reason: "access_denied" });
+    expect(readCalendarReturn("?calendar=error&reason=whatever")).toEqual({ kind: "error", reason: "unknown" });
+    expect(readCalendarReturn("?calendar=error")).toEqual({ kind: "error", reason: "unknown" });
+    expect(readCalendarReturn("")).toBeNull();
+    expect(readCalendarReturn("?tab=x")).toBeNull();
+  });
+
+  it("removes only the notice from the query", () => {
+    expect(withoutCalendarReturn("?calendar=error&reason=link_expired&tab=x")).toBe("tab=x");
+    expect(withoutCalendarReturn("?calendar=connected")).toBe("");
   });
 });

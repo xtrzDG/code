@@ -26,6 +26,7 @@ from app.schemas.typings.bookings.strings import (
     CalendarAuthorizationCode,
     CalendarAuthorizationState,
     CalendarAuthorizationStateHash,
+    CalendarDisplayName,
     CalendarEventId,
     CalendarRefreshToken,
     ExternalCalendarId,
@@ -115,6 +116,10 @@ class BookingCalendarSyncFacilitatorContract(FacilitatorContract, Protocol):
 class GoogleCalendarClientContract(ClientContract, Protocol):
     """Google OAuth 2.0 and Calendar API v3 calls; raises ExternalServiceError."""
 
+    def is_configured(self) -> bool:
+        """Whether the OAuth client id, secret and redirect URI are set."""
+        raise NotImplementedError
+
     def build_authorization_url(
         self,
         state: CalendarAuthorizationState,
@@ -132,6 +137,14 @@ class GoogleCalendarClientContract(ClientContract, Protocol):
         raise NotImplementedError
 
     def revoke_token(self, refresh_token: CalendarRefreshToken) -> None:
+        raise NotImplementedError
+
+    def get_calendar_name(
+        self,
+        access_token: CalendarAccessToken,
+        calendar_id: ExternalCalendarId,
+    ) -> CalendarDisplayName | None:
+        """The calendar's title (for a primary calendar, the account e-mail)."""
         raise NotImplementedError
 
     def insert_event(

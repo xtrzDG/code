@@ -91,4 +91,8 @@ class WidgetEmbedSnippet(BaseTypedString):
     """HTML snippet the owner pastes into the website to show the chat widget."""
 
 
+class WidgetGreetingText(BaseTypedString):
+    """First message the website chat widget shows a visitor, in one language."""
+
+
 # Keep abc order for all non example types, if possible.

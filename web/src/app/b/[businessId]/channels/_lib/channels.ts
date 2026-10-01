@@ -242,3 +242,111 @@ export function notificationLanguages(ownerLanguage: string, languages: readonly
 export function isChannelInPlan(planChannels: readonly ChannelKind[] | undefined, kind: ChannelKind): boolean {
   return planChannels === undefined || planChannels.includes(kind);
 }
+
+// --- Website chat look -----------------------------------------------------------
+
+export type WidgetPosition = Schema<"WidgetPosition">;
+
+/** The widget's own accent colour (widget.js DEFAULT_ACCENT). */
+export const WIDGET_DEFAULT_COLOR = "#4f46e5";
+
+/** Brand colours offered as one-click choices (each readable with white or dark text). */
+export const WIDGET_COLOR_PRESETS = ["#4f46e5", "#0f766e", "#15803d", "#b91c1c", "#c2410c", "#be185d", "#1d4ed8", "#111827"] as const;
+
+export const WIDGET_POSITIONS: readonly WidgetPosition[] = ["right", "left"];
+
+/**
+ * "#0F766E", "0f766e" or "#abc" as the API's six-digit form ("#0f766e");
+ * null when it is not a hex colour.
+ */
+export function normalizeHexColor(value: string): string | null {
+  const text = value.trim().replace(/^#/, "");
+  if (/^[0-9a-fA-F]{6}$/.test(text)) {
+    return `#${text.toLowerCase()}`;
+  }
+  if (/^[0-9a-fA-F]{3}$/.test(text)) {
+    return `#${[...text.toLowerCase()].map((digit) => digit + digit).join("")}`;
+  }
+  return null;
+}
+
+/** Text colour that stays readable on the accent (the widget uses the same rule). */
+export function readableTextColor(hexColor: string): "#111827" | "#ffffff" {
+  const hex = normalizeHexColor(hexColor) ?? WIDGET_DEFAULT_COLOR;
+  const [red, green, blue] = [1, 3, 5].map((offset) => {
+    const value = parseInt(hex.slice(offset, offset + 2), 16) / 255;
+    return value <= 0.03928 ? value / 12.92 : Math.pow((value + 0.055) / 1.055, 2.4);
+  });
+  const luminance = 0.2126 * (red ?? 0) + 0.7152 * (green ?? 0) + 0.0722 * (blue ?? 0);
+  return luminance > 0.45 ? "#111827" : "#ffffff";
+}
+
+export interface WidgetLook {
+  color: string;
+  position: WidgetPosition;
+}
+
+/** The saved look of the website chat, with the widget's defaults filled in. */
+export function savedWidgetLook(channel: Pick<ChannelView, "widget_color" | "widget_position"> | undefined): WidgetLook {
+  return {
+    color: normalizeHexColor(channel?.widget_color ?? "") ?? WIDGET_DEFAULT_COLOR,
+    position: channel?.widget_position ?? "right",
+  };
+}
+
+export function isSameWidgetLook(left: WidgetLook, right: WidgetLook): boolean {
+  return normalizeHexColor(left.color) === normalizeHexColor(right.color) && left.position === right.position;
+}
+
+/**
+ * The demo page with the chosen (maybe unsaved) colour, corner and the
+ * interface language: /widget/demo?business_id=…&color=…&position=…&language=…
+ */
+export function buildWidgetPreviewUrl(demoUrl: string, look: WidgetLook, language: string): string {
+  const url = new URL(demoUrl);
+  const color = normalizeHexColor(look.color);
+  if (color) {
+    url.searchParams.set("color", color);
+  }
+  url.searchParams.set("position", look.position);
+  url.searchParams.set("language", language);
+  return url.toString();
+}
+
+// --- Google Calendar return ------------------------------------------------------
+
+export const CALENDAR_FAILURE_REASONS = ["access_denied", "link_expired", "no_offline_access", "provider_error"] as const;
+
+export type CalendarFailureReason = (typeof CALENDAR_FAILURE_REASONS)[number] | "unknown";
+
+export type CalendarReturn = { kind: "connected" } | { kind: "error"; reason: CalendarFailureReason };
+
+/**
+ * What the API's Google callback said when it sent the owner back here
+ * (?calendar=connected or ?calendar=error&reason=…); null otherwise.
+ */
+export function readCalendarReturn(search: string): CalendarReturn | null {
+  const params = new URLSearchParams(search);
+  const calendar = params.get("calendar");
+  if (calendar === "connected") {
+    return { kind: "connected" };
+  }
+  if (calendar !== "error") {
+    return null;
+  }
+  const reason = params.get("reason");
+  return {
+    kind: "error",
+    reason: (CALENDAR_FAILURE_REASONS as readonly string[]).includes(reason ?? "")
+      ? (reason as CalendarFailureReason)
+      : "unknown",
+  };
+}
+
+/** The query without the calendar notice, to put back into the address bar. */
+export function withoutCalendarReturn(search: string): string {
+  const params = new URLSearchParams(search);
+  params.delete("calendar");
+  params.delete("reason");
+  return params.toString();
+}

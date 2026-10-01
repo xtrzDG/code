@@ -17,7 +17,7 @@ from app.schemas.constants.channels import ChannelKind, ChannelStatus
 from app.schemas.constants.compliance import AuditAction
 from app.schemas.constants.users import BusinessMemberRole
 from app.schemas.domain.businesses import BusinessDocument
-from app.schemas.domain.channels import ChannelDocument
+from app.schemas.domain.channels import ChannelDocument, WebChatAppearance
 from app.schemas.domain.compliance import AuditLogEntryDocument
 from app.schemas.dto.access import BusinessAccessRequest
 from app.schemas.dto.channels import (
@@ -96,7 +96,8 @@ class ConnectChannelUseCase(UseCaseContract[ConnectChannelCommand, ChannelView])
     - Messenger / Instagram: the page token must open the page; the app is
       subscribed to the page; Instagram uses the linked professional account.
     - Phone: the assistant line (bought from Zadarma by hand) as E.164.
-    - Web chat: switched on, nothing to check.
+    - Web chat: switched on, nothing to check; the widget's colour and
+      launcher corner are saved (fields left out keep their values).
 
     Tokens are stored only encrypted. An account already connected to
     another business is refused. Every change is written to the audit log.
@@ -145,6 +146,14 @@ class ConnectChannelUseCase(UseCaseContract[ConnectChannelCommand, ChannelView])
                 f"The {input_data.channel.value} channel cannot be connected yet."
             )
 
+        if input_data.channel is not ChannelKind.WEB_CHAT and (
+            input_data.request.widget_color is not None
+            or input_data.request.widget_position is not None
+        ):
+            raise ValidationFailedError(
+                "widget_color and widget_position are settings of the website chat."
+            )
+
         now: Microseconds = self._wall_clock.now_unix()
         existing_channel: ChannelDocument | None = find_business_channel(
             self._channel_repo,
@@ -170,6 +179,13 @@ class ConnectChannelUseCase(UseCaseContract[ConnectChannelCommand, ChannelView])
             else self._secret_cipher.encrypt(connection.secret)
         )
         channel.status = ChannelStatus.CONNECTED
+        channel.last_error = None
+        channel.last_error_at = None
+        if input_data.channel is ChannelKind.WEB_CHAT:
+            channel.web_chat_appearance = merge_web_chat_appearance(
+                channel.web_chat_appearance, input_data.request
+            )
+
         channel.updated_at = now
         self._channel_repo.save(channel)
         self._audit_log_repo.append(
@@ -345,6 +361,30 @@ class ConnectChannelUseCase(UseCaseContract[ConnectChannelCommand, ChannelView])
                 f"This {channel_kind.value} account is already connected to "
                 "another business."
             )
+
+
+def merge_web_chat_appearance(
+    saved: WebChatAppearance | None,
+    request: ConnectChannelRequest,
+) -> WebChatAppearance:
+    """The saved widget look with the request's new colour or corner."""
+
+    return WebChatAppearance(
+        accent_color=(
+            request.widget_color
+            if request.widget_color is not None
+            else None
+            if saved is None
+            else saved.accent_color
+        ),
+        position=(
+            request.widget_position
+            if request.widget_position is not None
+            else None
+            if saved is None
+            else saved.position
+        ),
+    )
 
 
 def read_bot_token(raw_token: RawChannelSecretInput | None) -> ChannelSecret:

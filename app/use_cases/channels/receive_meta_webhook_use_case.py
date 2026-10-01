@@ -9,7 +9,6 @@ from app.contracts.channels import (
 from app.contracts.repositories import ChannelRepoContract
 from app.contracts.secret_cipher import SecretCipherAdapterContract
 from app.contracts.use_case_contract import UseCaseContract
-from app.schemas.constants.channels import ChannelStatus
 from app.schemas.domain.channels import ChannelDocument
 from app.schemas.dto.channels import (
     ChannelInboundDelivery,
@@ -18,6 +17,7 @@ from app.schemas.dto.channels import (
 )
 from app.schemas.exceptions.application_errors import ExternalServiceError
 from app.use_cases.channels.channel_webhook_support import accept_inbound_message
+from app.utilities.channels.channel_health import is_channel_active
 from app.utilities.channels.json_values import JsonObject, parse_json_object, read_text
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -95,7 +95,7 @@ class ReceiveMetaWebhookUseCase(
             message.channel,
             message.account_id,
         )
-        if channel is None or channel.status is not ChannelStatus.CONNECTED:
+        if channel is None or not is_channel_active(channel):
             logger.info(
                 "Dropped a %s message for account %s: no connected channel.",
                 message.channel.value,

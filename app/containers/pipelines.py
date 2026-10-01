@@ -145,6 +145,9 @@ class PipelinesContainer(containers.DeclarativeContainer):
     start_otp_login_pipeline = orchestrator_pipeline(
         orchestrators.start_otp_login_orchestrator
     )
+    get_login_options_pipeline = orchestrator_pipeline(
+        orchestrators.get_login_options_orchestrator
+    )
     verify_otp_login_pipeline = orchestrator_pipeline(
         orchestrators.verify_otp_login_orchestrator
     )
@@ -304,6 +307,9 @@ class PipelinesContainer(containers.DeclarativeContainer):
     disconnect_google_calendar_pipeline = orchestrator_pipeline(
         orchestrators.disconnect_google_calendar_orchestrator
     )
+    get_google_calendar_connection_pipeline = orchestrator_pipeline(
+        orchestrators.get_google_calendar_connection_orchestrator
+    )
 
     # --- Conversation feed and menu import.
     list_conversations_pipeline = orchestrator_pipeline(
@@ -355,6 +361,9 @@ class PipelinesContainer(containers.DeclarativeContainer):
     )
     get_widget_config_pipeline = orchestrator_pipeline(
         orchestrators.get_widget_config_orchestrator
+    )
+    get_widget_messages_pipeline = orchestrator_pipeline(
+        orchestrators.get_widget_messages_orchestrator
     )
     list_channels_pipeline = orchestrator_pipeline(
         orchestrators.list_channels_orchestrator

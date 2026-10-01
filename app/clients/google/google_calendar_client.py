@@ -20,6 +20,7 @@ from app.schemas.typings.bookings.strings import (
     CalendarAccessToken,
     CalendarAuthorizationCode,
     CalendarAuthorizationState,
+    CalendarDisplayName,
     CalendarEventId,
     CalendarRefreshToken,
     ExternalCalendarId,
@@ -36,6 +37,7 @@ GOOGLE_CALENDAR_EVENTS_SCOPE: str = "https://www.googleapis.com/auth/calendar.ev
 GOOGLE_CALENDAR_CALLBACK_PATH: str = "/v1/integrations/google-calendar/callback"
 REQUEST_TIMEOUT_SECONDS: float = 10.0
 GONE_STATUS_CODES: frozenset[int] = frozenset({404, 410})
+MAX_CALENDAR_NAME_LENGTH: int = 200
 
 
 def build_google_calendar_redirect_url(
@@ -54,7 +56,8 @@ def build_google_calendar_redirect_url(
 class GoogleCalendarClient(GoogleCalendarClientContract):
     """
     Minimal Google client: consent URL with offline access, code exchange,
-    token refresh and revocation, and event insert, patch and delete.
+    token refresh and revocation, the calendar's title, and event insert,
+    patch and delete.
 
     Missing credentials (GOOGLE_OAUTH_CLIENT_ID, GOOGLE_OAUTH_CLIENT_SECRET,
     APP_BASE_URL) make every call raise ExternalServiceError, as do network
@@ -74,6 +77,13 @@ class GoogleCalendarClient(GoogleCalendarClientContract):
         self._http_client: httpx.Client = httpx.Client(
             timeout=REQUEST_TIMEOUT_SECONDS,
             transport=transport,
+        )
+
+    def is_configured(self) -> bool:
+        return (
+            self._client_id is not None
+            and self._client_secret is not None
+            and self._redirect_url is not None
         )
 
     def build_authorization_url(
@@ -135,6 +145,29 @@ class GoogleCalendarClient(GoogleCalendarClientContract):
             data={"token": str(refresh_token)},
         )
         ensure_success(response, "Google token revocation")
+
+    def get_calendar_name(
+        self,
+        access_token: CalendarAccessToken,
+        calendar_id: ExternalCalendarId,
+    ) -> CalendarDisplayName | None:
+        # The events scope cannot read calendar metadata, but an events list
+        # carries the calendar's title ("summary"); one field, no events.
+        response: httpx.Response = self._send(
+            "GET",
+            events_url(calendar_id),
+            "Google Calendar title lookup",
+            headers=bearer(access_token),
+            params={"maxResults": "1", "fields": "summary"},
+        )
+        ensure_success(response, "Google Calendar title lookup")
+        summary: object = read_json_object(
+            response, "Google Calendar title lookup"
+        ).get("summary")
+        if not isinstance(summary, str) or summary.strip() == "":
+            return None
+
+        return CalendarDisplayName(summary.strip()[:MAX_CALENDAR_NAME_LENGTH])
 
     def insert_event(
         self,
@@ -223,6 +256,7 @@ class GoogleCalendarClient(GoogleCalendarClientContract):
         headers: dict[str, str] | None = None,
         data: dict[str, str] | None = None,
         json: dict[str, object] | None = None,
+        params: dict[str, str] | None = None,
     ) -> httpx.Response:
         try:
             return self._http_client.request(
@@ -231,6 +265,7 @@ class GoogleCalendarClient(GoogleCalendarClientContract):
                 headers=headers,
                 data=data,
                 json=json,
+                params=params,
             )
         except httpx.HTTPError as error:
             raise ExternalServiceError(

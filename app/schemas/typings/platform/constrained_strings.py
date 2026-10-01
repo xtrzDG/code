@@ -3,6 +3,20 @@
 from base_typed_string import BaseConstrainedTypedString
 
 
+class CabinetBaseUrl(BaseConstrainedTypedString):
+    """
+    Public address of the owner cabinet (the web app), where the backend
+    sends owners back after a provider's consent page.
+
+    Example:
+        cabinet_url = CabinetBaseUrl("https://app.example.com")
+    """
+
+    min_length = 10
+    max_length = 2048
+    pattern = r"^https?://[^\s/?#]+(/[^\s?#]*)?$"
+
+
 class EnvironmentVariableName(BaseConstrainedTypedString):
     """
     Name of a server setting read from the environment, e.g. "APP_BASE_URL";

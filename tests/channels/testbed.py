@@ -87,12 +87,14 @@ from app.repositories.conversation_repositories import (
     CallRepository,
     ContactRepository,
     ConversationRepository,
+    MessageRepository,
 )
 from app.repositories.knowledge_repositories import ScheduleExceptionRepository
 from app.repositories.user_repositories import UserRepository
 from app.schemas.configurations.app_settings import AppSettings
 from app.schemas.constants.billing import PlanKey
-from app.schemas.constants.channels import ChannelKind, ChannelStatus
+from app.schemas.constants.channels import ChannelKind, ChannelStatus, MessageDirection
+from app.schemas.constants.conversations import ConversationStatus, MessageAuthor
 from app.schemas.constants.localization import DataRegion
 from app.schemas.constants.niches import NicheKey
 from app.schemas.constants.users import BusinessMemberRole, LoginMethod
@@ -104,7 +106,11 @@ from app.schemas.domain.channel_receipts import ChannelMessageReceiptDocument
 from app.schemas.domain.channels import ChannelDocument
 from app.schemas.domain.compliance import AuditLogEntryDocument
 from app.schemas.domain.contacts import ContactDocument
-from app.schemas.domain.conversations import CallDocument, ConversationDocument
+from app.schemas.domain.conversations import (
+    CallDocument,
+    ConversationDocument,
+    MessageDocument,
+)
 from app.schemas.domain.handoffs import HandoffDocument
 from app.schemas.domain.manager_links import ManagerTelegramLinkDocument
 from app.schemas.domain.profiles import BusinessProfileDocument
@@ -123,6 +129,7 @@ from app.schemas.exceptions.application_errors import (
     ValidationFailedError,
 )
 from app.schemas.exceptions.base_exception import ApplicationError
+from app.schemas.typings.assistants.prefixed_id import AssistantVersionId
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.businesses.strings import BusinessName
 from app.schemas.typings.channels.strings import (
@@ -130,6 +137,7 @@ from app.schemas.typings.channels.strings import (
     ChannelSecret,
     EncryptedChannelSecret,
 )
+from app.schemas.typings.contacts.prefixed_id import ContactId
 from app.schemas.typings.conversations.prefixed_id import ConversationId
 from app.schemas.typings.conversations.strings import LlmToolResultJson, MessageText
 from app.schemas.typings.localization.constrained_strings import (
@@ -157,6 +165,9 @@ from app.use_cases.channels.deliver_channel_reply_use_case import (
 )
 from app.use_cases.channels.disable_channel_use_case import DisableChannelUseCase
 from app.use_cases.channels.get_widget_config_use_case import GetWidgetConfigUseCase
+from app.use_cases.channels.get_widget_messages_use_case import (
+    GetWidgetMessagesUseCase,
+)
 from app.use_cases.channels.get_widget_snippet_use_case import GetWidgetSnippetUseCase
 from app.use_cases.channels.handle_platform_bot_update_use_case import (
     HandlePlatformBotUpdateUseCase,
@@ -251,6 +262,9 @@ class AdjustableClock:
     def advance(self, seconds: int) -> None:
         self.nanoseconds += seconds * NANOSECONDS_PER_SECOND
 
+    def advance_microseconds(self, microseconds: int) -> None:
+        self.nanoseconds += microseconds * 1000
+
     def build_wall_clock(self) -> WallClock[Microseconds]:
         return WallClock(
             preferred_time_unit_type=Microseconds,
@@ -281,15 +295,28 @@ class FakeSecretCipher(SecretCipherAdapterContract):
 
 
 class ScriptedCustomerPipeline(CustomerMessagePipelineContract):
-    """Engine stand-in: answers "Reply: <text>", stays silent or fails."""
+    """
+    Engine stand-in: answers "Reply: <text>", stays silent or fails. Like the
+    engine it stores the conversation of each customer (the first one gets
+    `conversation_id`) with the customer's message and the answer.
+    """
 
-    def __init__(self) -> None:
+    def __init__(
+        self,
+        conversation_repo: ConversationRepository,
+        message_repo: MessageRepository,
+        clock: AdjustableClock,
+    ) -> None:
         self.messages: list[InboundMessage] = []
         self.is_silent: bool = False
         self.failure: ApplicationError | None = None
         self.language: LanguageTag = LanguageTag("en")
         self.reply_text: str | None = None
         self.conversation_id: ConversationId = ConversationId()
+        self._conversation_repo: ConversationRepository = conversation_repo
+        self._message_repo: MessageRepository = message_repo
+        self._clock: AdjustableClock = clock
+        self._is_first_used: bool = False
 
     def start(self, input_data: InboundMessage) -> AssistantReply:
         self.messages.append(input_data)
@@ -300,12 +327,77 @@ class ScriptedCustomerPipeline(CustomerMessagePipelineContract):
         if not self.is_silent:
             text = MessageText(self.reply_text or f"Reply: {input_data.text}")
 
+        conversation: ConversationDocument = self._conversation_of(input_data)
+        self._store(conversation, MessageAuthor.CUSTOMER, input_data.text)
+        if text is not None:
+            self._store(conversation, MessageAuthor.ASSISTANT, text)
+
         return AssistantReply(
-            conversation_id=self.conversation_id,
+            conversation_id=conversation.id,
             text=text,
             language=self.language,
             is_handed_off=self.is_silent,
         )
+
+    def _conversation_of(self, message: InboundMessage) -> ConversationDocument:
+        now: Microseconds = self._clock.now_microseconds()
+        status: ConversationStatus = (
+            ConversationStatus.HANDOFF if self.is_silent else ConversationStatus.OPEN
+        )
+        for conversation in self._conversation_repo.list_by_business(
+            message.business_id
+        ):
+            if (
+                conversation.channel is message.channel
+                and conversation.channel_user_id == message.channel_user_id
+            ):
+                conversation.status = status
+                conversation.last_message_at = now
+                self._conversation_repo.save(conversation)
+                return conversation
+
+        conversation = ConversationDocument(
+            id=ConversationId() if self._is_first_used else self.conversation_id,
+            business_id=message.business_id,
+            contact_id=ContactId(),
+            assistant_version_id=AssistantVersionId(),
+            channel=message.channel,
+            channel_user_id=message.channel_user_id,
+            language=self.language,
+            status=status,
+            last_message_at=now,
+            created_at=now,
+            updated_at=now,
+        )
+        self._is_first_used = True
+        self._conversation_repo.save(conversation)
+        return conversation
+
+    def _store(
+        self,
+        conversation: ConversationDocument,
+        author: MessageAuthor,
+        text: MessageText,
+    ) -> None:
+        now: Microseconds = self._clock.now_microseconds()
+        self._message_repo.save(
+            MessageDocument(
+                conversation_id=conversation.id,
+                business_id=conversation.business_id,
+                direction=(
+                    MessageDirection.INBOUND
+                    if author is MessageAuthor.CUSTOMER
+                    else MessageDirection.OUTBOUND
+                ),
+                author=author,
+                text=text,
+                language=self.language,
+                created_at=now,
+                updated_at=now,
+            )
+        )
+        # Each stored message gets its own instant, like real traffic.
+        self._clock.advance_microseconds(1)
 
 
 class FakeVoiceToolCallOrchestrator(VoiceToolCallOrchestratorContract):
@@ -488,6 +580,9 @@ class ChannelsTestbed:
         self.conversation_repo = ConversationRepository(
             InMemoryDocumentCollectionAdapter(ConversationDocument)
         )
+        self.message_repo = MessageRepository(
+            InMemoryDocumentCollectionAdapter(MessageDocument)
+        )
         self.call_repo = CallRepository(InMemoryDocumentCollectionAdapter(CallDocument))
         self.booking_repo = BookingRepository(
             InMemoryDocumentCollectionAdapter(BookingDocument)
@@ -522,7 +617,9 @@ class ChannelsTestbed:
         self.phone_number_parser = PhoneNumberParser()
         self.language_registry = LanguageRegistry()
         self.text_resolver = LocalizedTextResolver()
-        self.pipeline = ScriptedCustomerPipeline()
+        self.pipeline = ScriptedCustomerPipeline(
+            self.conversation_repo, self.message_repo, self.clock
+        )
         self.voice_tool_orchestrator = FakeVoiceToolCallOrchestrator()
         self.call_greeting = FakeCallGreetingUseCase(self.business_repo)
         self.authentication = FakeAuthenticationOperator()
@@ -574,6 +671,7 @@ class ChannelsTestbed:
             self.messenger_adapter,
             self.instagram_adapter,
             self.usage_event_repo,
+            self.channel_repo,
             self.wall_clock,
         )
         self.receive_telegram_webhook = ReceiveTelegramWebhookUseCase(
@@ -688,6 +786,7 @@ class ChannelsTestbed:
                     GetWidgetConfigUseCase(
                         self.business_repo,
                         self.channel_repo,
+                        self.assistant_version_repo,
                         self.language_registry,
                     )
                 ),
@@ -697,7 +796,18 @@ class ChannelsTestbed:
                             self.business_repo, self.channel_repo
                         ),
                         self.pipeline,
-                        BuildWidgetReplyUseCase(self.language_registry),
+                        BuildWidgetReplyUseCase(
+                            self.message_repo, self.language_registry
+                        ),
+                    )
+                ),
+                widget_messages_operator=wrap_use_case(
+                    GetWidgetMessagesUseCase(
+                        self.business_repo,
+                        self.channel_repo,
+                        self.conversation_repo,
+                        self.message_repo,
+                        self.language_registry,
                     )
                 ),
             )
