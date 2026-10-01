@@ -10,18 +10,21 @@ import { CustomerName, RefreshButton, RefreshFailed } from "@/components/insight
 import { ConfirmDialog } from "@/components/insights/ConfirmDialog";
 import { CustomerMessageModal } from "@/components/insights/CustomerMessageModal";
 import { todayIn } from "@/components/insights/dates";
-import { withJsonBody } from "@/components/insights/requestBody";
-import type { BookingStatus, BookingStatusBody, BookingView } from "@/components/insights/types";
+import type { BookingPage, BookingStatus, BookingView } from "@/components/insights/types";
 import { replaceUrlQuery } from "@/components/insights/urlQuery";
+import { usePagedQuery } from "@/components/insights/usePagedQuery";
 import { Button, Card, EmptyState, ErrorState, LoadingBlock, Modal, PageHeader, useToast } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 
+import { BookingEditForm } from "./_components/BookingEditForm";
 import { BookingFiltersBar } from "./_components/BookingFiltersBar";
 import { BookingForm } from "./_components/BookingForm";
 import { BookingDays, BookingDetails, useBookingWhen } from "./_components/BookingList";
 import {
   bookingActions,
+  bookingApiQuery,
   bookingFiltersQuery,
+  customerLanguage,
   isRangeValid,
   nightsOf,
   rangeDates,
@@ -33,13 +36,14 @@ import { RescheduleForm } from "./_components/RescheduleForm";
 type Dialog =
   | { kind: "none" }
   | { kind: "create" }
-  | { kind: "details" | "reschedule" | "cancel" | "noShow"; booking: BookingView }
+  | { kind: "details" | "edit" | "reschedule" | "cancel" | "noShow"; booking: BookingView }
   | { kind: "message"; title: string; text: string };
 
 /**
  * Bookings in the business time zone (concept /bookings): filters by dates,
- * status and place, a booking added by hand with free slots, status
- * changes, moving and cancelling with the text for the customer.
+ * status and place (applied and paged by the API), a booking added by hand
+ * with free slots, status changes, edits (party, place, notes, name),
+ * moving and cancelling with the text for the customer.
  */
 export function BookingsScreen({ initialFilters }: { initialFilters: BookingFilters }) {
   const { t } = useI18n();
@@ -55,20 +59,15 @@ export function BookingsScreen({ initialFilters }: { initialFilters: BookingFilt
   const range = rangeDates(filters, today);
   const rangeValid = isRangeValid(range);
 
-  const bookings = useApiQuery(
-    () =>
+  const bookings = usePagedQuery<BookingView, BookingPage>(
+    ({ cursor, limit }) =>
       api.GET("/v1/businesses/{business_id}/bookings", {
         params: {
           path: { business_id: businessId },
-          query: {
-            from: range.from ?? undefined,
-            to: range.to ?? undefined,
-            status: filters.status ?? undefined,
-            include_sandbox: filters.includeTest ? "true" : undefined,
-          },
+          query: { ...bookingApiQuery(filters, range), limit: String(limit), cursor: cursor ?? undefined },
         },
       }),
-    [businessId, range.from, range.to, filters.status, filters.includeTest],
+    [businessId, range.from, range.to, filters.status, filters.resourceId, filters.includeTest, filters.range],
     { enabled: rangeValid },
   );
   const resources = useApiQuery(
@@ -78,12 +77,10 @@ export function BookingsScreen({ initialFilters }: { initialFilters: BookingFilt
 
   const changeStatus = useApiMutation(
     (booking: BookingView, status: BookingStatus) =>
-      api.PATCH(
-        "/v1/businesses/{business_id}/bookings/{booking_id}",
-        withJsonBody({ params: { path: { business_id: businessId, booking_id: booking.id } } }, {
-          status,
-        } satisfies BookingStatusBody),
-      ),
+      api.PATCH("/v1/businesses/{business_id}/bookings/{booking_id}", {
+        params: { path: { business_id: businessId, booking_id: booking.id } },
+        body: { status },
+      }),
     { errorMessages: { conflict: "bookings.errors.conflict" } },
   );
   const cancel = useApiMutation(
@@ -100,9 +97,7 @@ export function BookingsScreen({ initialFilters }: { initialFilters: BookingFilt
   };
 
   const replaceBooking = (updated: BookingView) =>
-    bookings.setData((current) => ({
-      items: (current?.items ?? []).map((item) => (item.id === updated.id ? updated : item)),
-    }));
+    bookings.updateItems((items) => items.map((item) => (item.id === updated.id ? updated : item)));
 
   const resourceUnits = new Map((resources.data?.items ?? []).map((resource) => [resource.id, resource.booking_unit]));
   const isStay = (booking: BookingView) =>
@@ -126,9 +121,11 @@ export function BookingsScreen({ initialFilters }: { initialFilters: BookingFilt
     }
   };
 
-  const items = (bookings.data?.items ?? []).filter(
-    (booking) => filters.resourceId === null || booking.resource_id === filters.resourceId,
-  );
+  const items = bookings.items ?? [];
+  const openCancel = (booking: BookingView) => {
+    setCancelLanguage(customerLanguage(booking, business));
+    setDialog({ kind: "cancel", booking });
+  };
   const close = () => setDialog({ kind: "none" });
   // Modal also reports a close when another dialog replaces it: only close the current one.
   const closeIf = (kind: Dialog["kind"]) => () =>
@@ -143,7 +140,7 @@ export function BookingsScreen({ initialFilters }: { initialFilters: BookingFilt
         description={t("pages.bookings.description")}
         actions={
           <>
-            <RefreshButton onClick={bookings.reload} isRefreshing={bookings.isLoading && bookings.data !== undefined} />
+            <RefreshButton onClick={bookings.reload} isRefreshing={bookings.isLoading && bookings.items !== undefined} />
             <Button leadingIcon={<IconPlus className="size-4" aria-hidden />} onClick={() => setDialog({ kind: "create" })}>
               {t("bookings.newBooking")}
             </Button>
@@ -159,9 +156,9 @@ export function BookingsScreen({ initialFilters }: { initialFilters: BookingFilt
           onChange={setFilters}
         />
         <p className="text-xs text-ink-subtle">{t("bookings.timeZoneNote", { timezone: business.timezone })}</p>
-        {bookings.error && bookings.data ? <RefreshFailed error={bookings.error} onRetry={bookings.reload} /> : null}
+        {bookings.error && bookings.items ? <RefreshFailed error={bookings.error} onRetry={bookings.reload} /> : null}
 
-        {!rangeValid ? null : bookings.data === undefined ? (
+        {!rangeValid ? null : bookings.items === undefined ? (
           <Card>
             {bookings.error ? (
               <ErrorState error={bookings.error} onRetry={bookings.reload} />
@@ -169,7 +166,7 @@ export function BookingsScreen({ initialFilters }: { initialFilters: BookingFilt
               <LoadingBlock label={t("bookings.loading")} />
             )}
           </Card>
-        ) : items.length === 0 ? (
+        ) : items.length === 0 && !bookings.isLoading ? (
           <Card>
             <EmptyState
               icon={<IconCalendar className="size-6" />}
@@ -183,13 +180,20 @@ export function BookingsScreen({ initialFilters }: { initialFilters: BookingFilt
             />
           </Card>
         ) : (
-          <BookingDays
-            key={bookingFiltersQuery(filters)}
-            bookings={items}
-            newestFirst={filters.range === "past"}
-            isStay={isStay}
-            onOpen={(booking) => setDialog({ kind: "details", booking })}
-          />
+          <div className={bookings.isLoading ? "opacity-60 transition-opacity" : undefined} aria-busy={bookings.isLoading || undefined}>
+            <BookingDays
+              bookings={items}
+              newestFirst={filters.range === "past"}
+              isStay={isStay}
+              onOpen={(booking) => setDialog({ kind: "details", booking })}
+              paging={{
+                hasMore: bookings.hasMore,
+                isLoading: bookings.isLoadingMore,
+                error: bookings.moreError,
+                onMore: bookings.loadMore,
+              }}
+            />
+          </div>
         )}
       </div>
 
@@ -220,6 +224,35 @@ export function BookingsScreen({ initialFilters }: { initialFilters: BookingFilt
         footer={dialogBooking ? detailActions(dialogBooking) : undefined}
       >
         {dialogBooking ? <BookingDetails booking={dialogBooking} isStay={isStay(dialogBooking)} /> : null}
+      </Modal>
+
+      <Modal
+        open={dialog.kind === "edit"}
+        onClose={closeIf("edit")}
+        title={t("bookings.edit.title")}
+        description={
+          dialogBooking
+            ? t("bookings.reschedule.description", {
+                name: dialogBooking.contact_name ?? t("insights.unknownCustomer"),
+                when: when.full(dialogBooking, isStay(dialogBooking)),
+              })
+            : undefined
+        }
+      >
+        {dialog.kind === "edit" ? (
+          <BookingEditForm
+            booking={dialog.booking}
+            resources={resources.data?.items ?? []}
+            onCancel={() => setDialog({ kind: "details", booking: dialog.booking })}
+            onSaved={(updated) => {
+              if (updated) {
+                replaceBooking(updated);
+                toast.success(t("bookings.updated"));
+              }
+              setDialog({ kind: "details", booking: updated ?? dialog.booking });
+            }}
+          />
+        ) : null}
       </Modal>
 
       <Modal
@@ -304,20 +337,29 @@ export function BookingsScreen({ initialFilters }: { initialFilters: BookingFilt
 
   function detailActions(booking: BookingView) {
     const actions = bookingActions(booking.status);
+    const editButton = (
+      <Button variant="secondary" size="sm" onClick={() => setDialog({ kind: "edit", booking })}>
+        {t("bookings.actions.edit")}
+      </Button>
+    );
     if (!Object.values(actions).some(Boolean)) {
       return (
-        <Button variant="secondary" onClick={close}>
-          {t("common.close")}
-        </Button>
+        <div className="flex w-full flex-wrap justify-end gap-2">
+          {editButton}
+          <Button variant="secondary" size="sm" onClick={close}>
+            {t("common.close")}
+          </Button>
+        </div>
       );
     }
     return (
       <div className="flex w-full flex-wrap justify-end gap-2" role="group" aria-label={t("bookings.actions.label")}>
         {actions.cancel ? (
-          <Button variant="ghost" size="sm" className="text-danger! sm:mr-auto" onClick={() => setDialog({ kind: "cancel", booking })}>
+          <Button variant="ghost" size="sm" className="text-danger! sm:mr-auto" onClick={() => openCancel(booking)}>
             {t("bookings.actions.cancel")}
           </Button>
         ) : null}
+        {editButton}
         {actions.noShow ? (
           <Button variant="secondary" size="sm" onClick={() => setDialog({ kind: "noShow", booking })}>
             {t("bookings.actions.noShow")}

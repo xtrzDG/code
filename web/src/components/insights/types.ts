@@ -3,7 +3,7 @@
  * sections (aliases of the generated schema, see src/api/types.ts).
  */
 
-import type { Schema } from "@/api/types";
+import type { RequestBody, Schema } from "@/api/types";
 
 export type DashboardStats = Schema<"DashboardStats">;
 export type BillingOverview = Schema<"BillingOverview">;
@@ -36,33 +36,28 @@ export type HandoffReason = Schema<"HandoffReason">;
 export type HandoffStatus = Schema<"HandoffStatus">;
 export type HandoffUrgency = Schema<"HandoffUrgency">;
 
-/**
- * Bodies the backend reads itself (operations_routes.py `json_body_reader`),
- * so openapi.json has no request body for them. They mirror
- * app/schemas/dto/operations.py.
- */
-export interface ManualBookingBody {
-  contact_name: string;
-  contact_phone_number?: string | null;
-  resource_id?: string | null;
-  date: string;
-  time?: string | null;
-  nights?: number | null;
-  party_size: number;
-  notes?: string | null;
-  source_channel?: ChannelKind;
-  language?: string | null;
-}
+// Pages of the cabinet lists ({items, next_cursor}).
+export type ConversationPage = Schema<"ConversationPage">;
+export type BookingPage = Schema<"BookingPage">;
+export type LeadPage = Schema<"LeadPage">;
+export type HandoffPage = Schema<"HandoffPage">;
 
-export interface RescheduleBookingBody {
-  new_date: string;
-  new_time?: string | null;
-}
+export type CallView = Schema<"CallView">;
+export type CallOutcome = Schema<"CallOutcome">;
+export type ConversationRating = Schema<"ConversationRating">;
+export type StaffReplyView = Schema<"StaffReplyView">;
+export type StaffReplyBlock = Schema<"StaffReplyBlock">;
+export type StaffMessageResult = Schema<"StaffMessageResult">;
 
-export interface BookingStatusBody {
-  status: BookingStatus;
-}
+export type DashboardDay = Schema<"DashboardDay">;
+export type DashboardPackageUsage = Schema<"DashboardPackageUsage">;
 
-export interface LeadStatusBody {
-  status: LeadStatus;
-}
+// Request bodies (described in openapi.json).
+export type ManualBookingBody = RequestBody<"/v1/businesses/{business_id}/bookings", "post">;
+export type RescheduleBookingBody = RequestBody<"/v1/businesses/{business_id}/bookings/{booking_id}/reschedule", "post">;
+export type BookingUpdateBody = RequestBody<"/v1/businesses/{business_id}/bookings/{booking_id}", "patch">;
+export type LeadStatusBody = RequestBody<"/v1/businesses/{business_id}/leads/{lead_id}", "patch">;
+export type StaffMessageBody = RequestBody<
+  "/v1/businesses/{business_id}/conversations/{conversation_id}/messages",
+  "post"
+>;

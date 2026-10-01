@@ -6,12 +6,12 @@ import { api } from "@/api/client";
 import { useApiMutation } from "@/api/hooks";
 import { useBusiness } from "@/components/business/BusinessContext";
 import { isLocalDate, isLocalTime } from "@/components/insights/dates";
-import { withJsonBody } from "@/components/insights/requestBody";
 import type { BookingResult, BookingView, RescheduleBookingBody } from "@/components/insights/types";
 import { Button, Field, Input } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import type { MessageKey } from "@/i18n/translate";
 
+import { customerLanguage } from "./bookingModel";
 import { CustomerLanguageSelect } from "./CustomerLanguageSelect";
 import { SlotPicker } from "./SlotPicker";
 
@@ -31,20 +31,17 @@ export function RescheduleForm({
   const { t } = useI18n();
   const { business } = useBusiness();
   const businessId = business.id;
-  const [language, setLanguage] = useState(business.default_language);
+  const [language, setLanguage] = useState(customerLanguage(booking, business));
   const [date, setDate] = useState(booking.date);
   const [time, setTime] = useState(booking.time ?? "");
   const [errors, setErrors] = useState<{ date?: MessageKey; time?: MessageKey }>({});
 
   const reschedule = useApiMutation(
     (body: RescheduleBookingBody) =>
-      api.POST(
-        "/v1/businesses/{business_id}/bookings/{booking_id}/reschedule",
-        withJsonBody(
-          { params: { path: { business_id: businessId, booking_id: booking.id }, query: { language } } },
-          body,
-        ),
-      ),
+      api.POST("/v1/businesses/{business_id}/bookings/{booking_id}/reschedule", {
+        params: { path: { business_id: businessId, booking_id: booking.id }, query: { language } },
+        body,
+      }),
     { errorMessages: { conflict: "bookings.errors.conflict" } },
   );
 

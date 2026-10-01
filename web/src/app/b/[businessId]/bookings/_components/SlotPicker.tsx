@@ -12,6 +12,8 @@ import { Button, ErrorState, Spinner } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { cn } from "@/lib/cn";
 
+import { groupSlotsByResource } from "./bookingModel";
+
 export interface SlotRequest {
   date: string;
   partySize: number | null;
@@ -23,9 +25,17 @@ export interface SlotRequest {
   isStay: boolean;
 }
 
+type SlotMode = "nearest" | "day";
+
+interface AskedSlots extends SlotRequest {
+  mode: SlotMode;
+}
+
 /**
  * "Show free times": asks GET …/availability for the date (and party,
- * place, preferred time) and offers the free slots as choices.
+ * place, preferred time) and offers the free slots as choices. "Whole day"
+ * lists every free slot of the date for every place (the staff view: no
+ * advance notice, no online party limit).
  */
 export function SlotPicker({
   request,
@@ -39,8 +49,8 @@ export function SlotPicker({
   const { t, tp, locale } = useI18n();
   const { business } = useBusiness();
   const businessId = business.id;
-  // The request the shown slots answer; null until the button is pressed.
-  const [asked, setAsked] = useState<SlotRequest | null>(null);
+  // The request the shown slots answer; null until a button is pressed.
+  const [asked, setAsked] = useState<AskedSlots | null>(null);
   const canAsk = isLocalDate(request.date);
   const isStay = request.isStay;
 
@@ -53,8 +63,9 @@ export function SlotPicker({
             date: asked?.date ?? "",
             party_size: asked?.partySize ? String(asked.partySize) : undefined,
             resource_id: asked?.resourceId || undefined,
-            time: asked?.time && isLocalTime(asked.time) ? asked.time : undefined,
+            time: asked?.mode === "nearest" && asked.time && isLocalTime(asked.time) ? asked.time : undefined,
             nights: asked?.nights ? String(asked.nights) : undefined,
+            full_day: asked?.mode === "day" ? "true" : undefined,
           },
         },
       }),
@@ -66,20 +77,41 @@ export function SlotPicker({
     asked !== null &&
     (asked.date !== request.date ||
       asked.partySize !== request.partySize ||
-      asked.resourceId !== request.resourceId ||
+      (asked.resourceId !== null && asked.resourceId !== request.resourceId) ||
       asked.nights !== request.nights);
+
+  const ask = (mode: SlotMode) =>
+    asked && !isStale && asked.mode === mode && (mode === "day" || asked.time === request.time)
+      ? availability.reload()
+      : setAsked({ ...request, mode });
+  const slots = availability.data?.slots ?? [];
+  const isDay = asked?.mode === "day";
 
   return (
     <div className="space-y-3">
-      <Button
-        variant="secondary"
-        size="sm"
-        leadingIcon={<IconClock className="size-4" aria-hidden />}
-        disabled={!canAsk}
-        onClick={() => (asked && !isStale && asked.time === request.time ? availability.reload() : setAsked(request))}
-      >
-        {t(isStay ? "bookings.form.findPlaces" : "bookings.form.findSlots")}
-      </Button>
+      <div className="flex flex-wrap gap-2">
+        <Button
+          variant="secondary"
+          size="sm"
+          leadingIcon={<IconClock className="size-4" aria-hidden />}
+          disabled={!canAsk}
+          aria-pressed={asked !== null ? asked.mode === "nearest" : undefined}
+          onClick={() => ask("nearest")}
+        >
+          {t(isStay ? "bookings.form.findPlaces" : "bookings.form.findSlots")}
+        </Button>
+        {isStay ? null : (
+          <Button
+            variant="ghost"
+            size="sm"
+            disabled={!canAsk}
+            aria-pressed={asked !== null ? asked.mode === "day" : undefined}
+            onClick={() => ask("day")}
+          >
+            {t("bookings.form.wholeDay")}
+          </Button>
+        )}
+      </div>
 
       {asked === null ? null : availability.isLoading ? (
         <Spinner size="sm" label={t("common.loading")} className="text-ink-subtle" />
@@ -96,12 +128,16 @@ export function SlotPicker({
           </p>
           {!availability.data.is_open_on_date ? (
             <p className="text-sm text-ink-muted">{t("bookings.form.closedOnDate")}</p>
-          ) : (availability.data.slots ?? []).length === 0 ? (
-            <p className="text-sm text-ink-muted">{t(isStay ? "bookings.form.noPlaces" : "bookings.form.noSlots")}</p>
+          ) : slots.length === 0 ? (
+            <p className="text-sm text-ink-muted">
+              {t(isStay ? "bookings.form.noPlaces" : isDay ? "bookings.form.noSlotsDay" : "bookings.form.noSlots")}
+            </p>
+          ) : isDay ? (
+            <DaySlots slots={slots} selected={selected} onPick={onPick} />
           ) : (
             <>
               <ul className="flex flex-wrap gap-2">
-                {(availability.data.slots ?? []).map((slot) => {
+                {slots.map((slot) => {
                   const isSelected = slot.time === selected.time && slot.resource_id === selected.resourceId;
                   return (
                     <li key={`${slot.resource_id}-${slot.time}`}>
@@ -139,6 +175,61 @@ export function SlotPicker({
           )}
         </div>
       ) : null}
+    </div>
+  );
+}
+
+/** Every free slot of the day, one row of times per place. */
+function DaySlots({
+  slots,
+  selected,
+  onPick,
+}: {
+  slots: readonly AvailableSlot[];
+  selected: { time: string | null; resourceId: string | null };
+  onPick: (slot: AvailableSlot) => void;
+}) {
+  const { t, tp, locale } = useI18n();
+  const byResource = groupSlotsByResource(slots);
+  return (
+    <div className="space-y-3">
+      {byResource.map((group) => (
+        <section key={group.resourceId} aria-label={group.resourceName}>
+          <h4 className="mb-1.5 flex items-baseline gap-2 text-sm">
+            <span dir="auto" className="font-medium text-ink">
+              {group.resourceName}
+            </span>
+            <span className="text-xs text-ink-subtle">{tp("bookings.form.freeTimes", group.slots.length)}</span>
+          </h4>
+          <ul className="flex max-h-40 flex-wrap gap-1.5 overflow-y-auto">
+            {group.slots.map((slot) => {
+              const isSelected = slot.time === selected.time && slot.resource_id === selected.resourceId;
+              return (
+                <li key={slot.time}>
+                  <button
+                    type="button"
+                    aria-pressed={isSelected}
+                    aria-label={t("bookings.form.pickSlot", {
+                      time: slot.time ? formatLocalTime(slot.time, locale) : "",
+                      place: group.resourceName,
+                    })}
+                    onClick={() => onPick(slot)}
+                    className={cn(
+                      "min-w-16 rounded-lg border px-2.5 py-1 text-sm tabular-nums transition-colors",
+                      isSelected
+                        ? "border-accent bg-accent-soft text-accent-ink"
+                        : "border-line-strong bg-surface text-ink hover:bg-surface-muted",
+                    )}
+                  >
+                    {slot.time ? formatLocalTime(slot.time, locale) : ""}
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      ))}
+      <p className="text-xs text-ink-subtle">{t("bookings.form.wholeDayHint")}</p>
     </div>
   );
 }

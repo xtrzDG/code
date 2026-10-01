@@ -47,17 +47,43 @@ export function RefreshButton({ onClick, isRefreshing }: { onClick: () => void; 
   );
 }
 
-/** "Showing 20 of 45" and a button that shows the next page. */
-export function ShowMore({ shown, total, onMore }: { shown: number; total: number; onMore: () => void }) {
+/**
+ * The end of a server-paged list: "show more" while the API has another
+ * page, a spinner while it loads, and a retry when it failed.
+ */
+export function LoadMore({
+  hasMore,
+  isLoading,
+  error,
+  onMore,
+  shownText,
+}: {
+  hasMore: boolean;
+  isLoading: boolean;
+  error: unknown;
+  onMore: () => void;
+  /** "Showing 50 of 120" when the total is known. */
+  shownText?: string;
+}) {
   const { t } = useI18n();
+  if (!hasMore && !shownText) {
+    return null;
+  }
   return (
     <div className="flex flex-col items-center gap-2 py-4">
-      <p className="text-xs text-ink-subtle" aria-live="polite">
-        {t("insights.shownOf", { shown, total })}
-      </p>
-      {shown < total ? (
-        <Button variant="secondary" size="sm" onClick={onMore}>
-          {t("insights.showMore")}
+      {shownText ? (
+        <p className="text-xs text-ink-subtle" aria-live="polite">
+          {shownText}
+        </p>
+      ) : null}
+      {error ? (
+        <p className="text-xs text-danger" role="alert">
+          {describeError(error, t).title}
+        </p>
+      ) : null}
+      {hasMore ? (
+        <Button variant="secondary" size="sm" onClick={onMore} isLoading={isLoading} loadingText={t("insights.loadingMore")}>
+          {error ? t("common.retry") : t("insights.showMore")}
         </Button>
       ) : null}
     </div>

@@ -1,43 +1,28 @@
 import { describe, expect, it } from "vitest";
 
-import type { ConversationSummaryView, MessageView } from "@/components/insights/types";
+import { en } from "@/i18n/messages/en";
+import { lookupMessage } from "@/i18n/translate";
+import type { MessageView } from "@/components/insights/types";
 
 import {
+  CALL_OUTCOMES,
+  conversationApiQuery,
   conversationFiltersQuery,
   DEFAULT_CONVERSATION_FILTERS,
-  filterConversations,
+  formatCallDuration,
   groupMessagesByDay,
   initialsOf,
-  matchesSearch,
+  isSendableReply,
+  isWindowClosingSoon,
+  MAX_REPLY_LENGTH,
   messageSide,
   parseConversationFilters,
   prettyJson,
+  REPLY_BLOCKS,
   usageTotals,
 } from "./conversationModel";
 
-const US_PER_HOUR = 3_600_000_000;
 const NOON_OCT_1_TBILISI = Date.UTC(2026, 9, 1, 8) * 1000;
-
-function conversation(overrides: Partial<ConversationSummaryView>): ConversationSummaryView {
-  return {
-    id: "conversation_1",
-    business_id: "business_1",
-    contact_id: "contact_1",
-    contact_name: null,
-    contact_phone_number: null,
-    assistant_version_id: "assistant_version_1",
-    channel: "whatsapp",
-    language: "ka",
-    status: "open",
-    is_after_hours: false,
-    is_sandbox: false,
-    message_count: 2,
-    last_message_text: null,
-    last_message_at: NOON_OCT_1_TBILISI,
-    created_at: NOON_OCT_1_TBILISI,
-    ...overrides,
-  };
-}
 
 function message(overrides: Partial<MessageView>): MessageView {
   return {
@@ -72,38 +57,45 @@ describe("conversation filters in the URL", () => {
   });
 });
 
-describe("search", () => {
-  const item = conversation({ contact_name: "Ninó Beridze", contact_phone_number: "+995599112233", last_message_text: "Столик на субботу" });
-
-  it("matches names without accents and case, and message text in any script", () => {
-    expect(matchesSearch(item, "nino")).toBe(true);
-    expect(matchesSearch(item, "СУББОТУ")).toBe(true);
-    expect(matchesSearch(item, "giorgi")).toBe(false);
-    expect(matchesSearch(item, "  ")).toBe(true);
-  });
-
-  it("matches phone digits whatever the formatting", () => {
-    expect(matchesSearch(item, "599 11 22")).toBe(true);
-    expect(matchesSearch(item, "(599) 112-233")).toBe(true);
-    expect(matchesSearch(item, "12")).toBe(false);
+describe("feed query", () => {
+  it("sends every filter to the API, the period as local dates", () => {
+    expect(conversationApiQuery(DEFAULT_CONVERSATION_FILTERS, "2026-10-01")).toEqual({});
+    expect(
+      conversationApiQuery(
+        { channel: "telegram", status: "handoff", period: "7d", search: "  599 11 ", includeTest: true },
+        "2026-10-01",
+      ),
+    ).toEqual({ channel: "telegram", status: "handoff", from: "2026-09-25", search: "599 11", include_sandbox: "true" });
+    expect(conversationApiQuery({ ...DEFAULT_CONVERSATION_FILTERS, period: "today" }, "2026-10-01")).toEqual({
+      from: "2026-10-01",
+    });
   });
 });
 
-describe("client-side filtering", () => {
-  const context = { today: "2026-10-01", timeZone: "Asia/Tbilisi" };
-  const items = [
-    conversation({ id: "today", status: "open" }),
-    conversation({ id: "handoff-3-days", status: "handoff", last_message_at: NOON_OCT_1_TBILISI - 72 * US_PER_HOUR }),
-    conversation({ id: "old", status: "closed", last_message_at: NOON_OCT_1_TBILISI - 40 * 24 * US_PER_HOUR }),
-  ];
+describe("calls and replies", () => {
+  it("formats call durations", () => {
+    expect(formatCallDuration(95)).toBe("1:35");
+    expect(formatCallDuration(5)).toBe("0:05");
+    expect(formatCallDuration(3723)).toBe("1:02:03");
+  });
 
-  it("filters by status and by the local date of the last message", () => {
-    const ids = (filters: Partial<typeof DEFAULT_CONVERSATION_FILTERS>) =>
-      filterConversations(items, { ...DEFAULT_CONVERSATION_FILTERS, ...filters }, context).map((item) => item.id);
-    expect(ids({})).toEqual(["today", "handoff-3-days", "old"]);
-    expect(ids({ period: "today" })).toEqual(["today"]);
-    expect(ids({ period: "7d" })).toEqual(["today", "handoff-3-days"]);
-    expect(ids({ status: "handoff" })).toEqual(["handoff-3-days"]);
+  it("has a text for every call outcome and reply block", () => {
+    const keys = [...Object.values(CALL_OUTCOMES), ...Object.values(REPLY_BLOCKS)];
+    expect(keys.filter((key) => typeof lookupMessage(en, key) !== "string")).toEqual([]);
+  });
+
+  it("accepts visible text within the limit", () => {
+    expect(isSendableReply("Hi")).toBe(true);
+    expect(isSendableReply("  \n ")).toBe(false);
+    expect(isSendableReply("x".repeat(MAX_REPLY_LENGTH + 1))).toBe(false);
+  });
+
+  it("warns in the last hour of the 24-hour window", () => {
+    const now = Date.UTC(2026, 9, 1, 12);
+    expect(isWindowClosingSoon((now + 30 * 60_000) * 1000, now)).toBe(true);
+    expect(isWindowClosingSoon((now + 3 * 3_600_000) * 1000, now)).toBe(false);
+    expect(isWindowClosingSoon((now - 1000) * 1000, now)).toBe(false);
+    expect(isWindowClosingSoon(null, now)).toBe(false);
   });
 });
 

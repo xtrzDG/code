@@ -183,8 +183,7 @@ function AnswerDialog({
   const save = useApiMutation((body: { answer: string; title: string | null }) =>
     api.POST("/v1/businesses/{business_id}/unanswered-questions/{question_id}/answer", {
       params: { path: { business_id: business.id, question_id: question.id } },
-      // The route reads its JSON body itself, so openapi.json does not describe it.
-      body: body as never,
+      body,
     }),
   );
 

@@ -1,16 +1,18 @@
 /**
- * Pure rules of the conversation feed and card: filters (some sent to the
- * API, the rest applied here), search, transcript grouping and usage totals.
+ * Pure rules of the conversation feed and card: filters (all applied by the
+ * API), transcript grouping, usage totals, calls and the staff reply box.
  */
 
 import { addDays, localDateOf, type LocalDateText } from "@/components/insights/dates";
 import type {
+  CallOutcome,
   ChannelKind,
   ConversationStatus,
-  ConversationSummaryView,
   MessageAuthor,
   MessageView,
+  StaffReplyBlock,
 } from "@/components/insights/types";
+import type { MessageKey } from "@/i18n/translate";
 
 export const CONVERSATION_PERIODS = ["all", "today", "7d", "30d"] as const;
 export type ConversationPeriod = (typeof CONVERSATION_PERIODS)[number];
@@ -28,9 +30,8 @@ const CHANNELS: readonly ChannelKind[] = [
 const STATUSES: readonly ConversationStatus[] = ["open", "handoff", "closed"];
 
 export interface ConversationFilters {
-  /** Sent to the API. */
   channel: ChannelKind | null;
-  /** Sent to the API (`include_sandbox`). */
+  /** `include_sandbox`: the test chat and autotests. */
   includeTest: boolean;
   status: ConversationStatus | null;
   period: ConversationPeriod;
@@ -75,32 +76,6 @@ export function hasActiveFilters(filters: ConversationFilters): boolean {
   return conversationFiltersQuery(filters) !== "";
 }
 
-/** Lower case without accents, for matching typed text in any script. */
-export function normalizeText(text: string): string {
-  return text
-    .normalize("NFKD")
-    .replace(/\p{M}/gu, "")
-    .toLocaleLowerCase()
-    .trim();
-}
-
-/** Name, phone (by digits, any formatting) or the last message contains the query. */
-export function matchesSearch(
-  conversation: Pick<ConversationSummaryView, "contact_name" | "contact_phone_number" | "last_message_text">,
-  query: string,
-): boolean {
-  const needle = normalizeText(query);
-  if (!needle) {
-    return true;
-  }
-  const haystack = normalizeText([conversation.contact_name ?? "", conversation.last_message_text ?? ""].join(" "));
-  if (haystack.includes(needle)) {
-    return true;
-  }
-  const digits = query.replace(/\D/g, "");
-  return digits.length >= 3 && (conversation.contact_phone_number ?? "").replace(/\D/g, "").includes(digits);
-}
-
 /** The first local date of a period ending today, or null for all time. */
 export function periodStart(period: ConversationPeriod, today: LocalDateText): LocalDateText | null {
   switch (period) {
@@ -115,19 +90,20 @@ export function periodStart(period: ConversationPeriod, today: LocalDateText): L
   }
 }
 
-/** The filters the API does not apply: status, period (by last message) and search. */
-export function filterConversations<T extends ConversationSummaryView>(
-  conversations: readonly T[],
+/** The API query of the feed filters (the period as local dates of the business). */
+export function conversationApiQuery(
   filters: ConversationFilters,
-  context: { today: LocalDateText; timeZone: string },
-): T[] {
-  const from = periodStart(filters.period, context.today);
-  return conversations.filter(
-    (conversation) =>
-      (filters.status === null || conversation.status === filters.status) &&
-      (from === null || localDateOf(conversation.last_message_at, context.timeZone) >= from) &&
-      matchesSearch(conversation, filters.search),
-  );
+  today: LocalDateText,
+): { channel?: ChannelKind; status?: ConversationStatus; from?: LocalDateText; search?: string; include_sandbox?: "true" } {
+  const from = periodStart(filters.period, today);
+  const search = filters.search.trim();
+  return {
+    ...(filters.channel ? { channel: filters.channel } : {}),
+    ...(filters.status ? { status: filters.status } : {}),
+    ...(from ? { from } : {}),
+    ...(search ? { search } : {}),
+    ...(filters.includeTest ? { include_sandbox: "true" as const } : {}),
+  };
 }
 
 export interface MessageDay {
@@ -204,4 +180,47 @@ export function initialsOf(name: string | null | undefined): string {
 function capitalLetter(letter: string): string {
   const upper = letter.toLocaleUpperCase();
   return /[\u1C90-\u1CBF]/u.test(upper) ? letter : upper;
+}
+
+/** "1:35" for a call of 95 seconds, "1:02:03" past an hour. */
+export function formatCallDuration(seconds: number): string {
+  const whole = Math.max(0, Math.round(seconds));
+  const hours = Math.floor(whole / 3600);
+  const minutes = Math.floor((whole % 3600) / 60);
+  const rest = String(whole % 60).padStart(2, "0");
+  return hours > 0 ? `${hours}:${String(minutes).padStart(2, "0")}:${rest}` : `${minutes}:${rest}`;
+}
+
+export const CALL_OUTCOMES: Record<CallOutcome, MessageKey> = {
+  booking: "conversations.calls.outcomes.booking",
+  lead: "conversations.calls.outcomes.lead",
+  handoff: "conversations.calls.outcomes.handoff",
+  unanswered_question: "conversations.calls.outcomes.unanswered_question",
+  information: "conversations.calls.outcomes.information",
+  abandoned: "conversations.calls.outcomes.abandoned",
+};
+
+export const REPLY_BLOCKS: Record<StaffReplyBlock, MessageKey> = {
+  voice_call: "conversations.reply.blocked.voice_call",
+  test_conversation: "conversations.reply.blocked.test_conversation",
+  window_closed: "conversations.reply.blocked.window_closed",
+  unsupported_channel: "conversations.reply.blocked.unsupported_channel",
+  channel_disconnected: "conversations.reply.blocked.channel_disconnected",
+};
+
+/** The longest staff message the API accepts. */
+export const MAX_REPLY_LENGTH = 4000;
+
+/** A staff reply worth sending: some visible text within the limit. */
+export function isSendableReply(text: string): boolean {
+  return text.trim().length > 0 && text.length <= MAX_REPLY_LENGTH;
+}
+
+/** Whether the 24-hour window closes within the hour (warn staff to hurry). */
+export function isWindowClosingSoon(closesAt: number | null | undefined, nowMs: number): boolean {
+  if (closesAt === null || closesAt === undefined) {
+    return false;
+  }
+  const leftMs = closesAt / 1000 - nowMs;
+  return leftMs > 0 && leftMs <= 60 * 60 * 1000;
 }

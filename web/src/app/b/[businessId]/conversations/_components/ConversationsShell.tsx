@@ -4,11 +4,12 @@ import { useSearchParams, useSelectedLayoutSegment } from "next/navigation";
 import { useMemo, useState, type ReactNode } from "react";
 
 import { api } from "@/api/client";
-import { useApiQuery } from "@/api/hooks";
 import { useBusiness } from "@/components/business/BusinessContext";
 import { RefreshButton, RefreshFailed } from "@/components/insights/common";
 import { todayIn } from "@/components/insights/dates";
+import type { ConversationPage, ConversationSummaryView } from "@/components/insights/types";
 import { useAutoReload } from "@/components/insights/useAutoReload";
+import { usePagedQuery } from "@/components/insights/usePagedQuery";
 import { replaceUrlQuery } from "@/components/insights/urlQuery";
 import { PageHeader } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
@@ -17,8 +18,9 @@ import { cn } from "@/lib/cn";
 import { ConversationFiltersBar } from "./ConversationFiltersBar";
 import { ConversationList } from "./ConversationList";
 import {
+  conversationApiQuery,
   conversationFiltersQuery,
-  filterConversations,
+  hasActiveFilters,
   parseConversationFilters,
   type ConversationFilters,
 } from "./conversationModel";
@@ -28,8 +30,8 @@ import {
  * screens (instead of it on phones), the open conversation.
  *
  * Filters live in the URL query so they survive opening a conversation,
- * going back and reloading; channel and test activity are filtered by the
- * API, status, period and search here.
+ * going back and reloading. The API filters and pages the feed; "show
+ * more" loads the next page.
  */
 export function ConversationsShell({ children }: { children: ReactNode }) {
   const { t } = useI18n();
@@ -42,18 +44,15 @@ export function ConversationsShell({ children }: { children: ReactNode }) {
   const filters = useMemo(() => parseConversationFilters(new URLSearchParams(searchParams.toString())), [searchParams]);
   const query = conversationFiltersQuery(filters);
 
-  const conversations = useApiQuery(
-    () =>
+  const conversations = usePagedQuery<ConversationSummaryView, ConversationPage>(
+    ({ cursor, limit }) =>
       api.GET("/v1/businesses/{business_id}/conversations", {
         params: {
           path: { business_id: businessId },
-          query: {
-            channel: filters.channel ?? undefined,
-            include_sandbox: filters.includeTest ? "true" : undefined,
-          },
+          query: { ...conversationApiQuery(filters, today), limit: String(limit), cursor: cursor ?? undefined },
         },
       }),
-    [businessId, filters.channel, filters.includeTest],
+    [businessId, query, today],
   );
   useAutoReload(conversations.reload);
 
@@ -61,8 +60,6 @@ export function ConversationsShell({ children }: { children: ReactNode }) {
     replaceUrlQuery(conversationFiltersQuery(next));
   };
 
-  const all = conversations.data ?? [];
-  const visible = filterConversations(all, filters, { today, timeZone: business.timezone });
   const isOpen = selectedId !== null;
 
   return (
@@ -75,7 +72,7 @@ export function ConversationsShell({ children }: { children: ReactNode }) {
           actions={
             <RefreshButton
               onClick={conversations.reload}
-              isRefreshing={conversations.isLoading && conversations.data !== undefined}
+              isRefreshing={conversations.isLoading && conversations.items !== undefined}
             />
           }
         />
@@ -90,17 +87,16 @@ export function ConversationsShell({ children }: { children: ReactNode }) {
           )}
         >
           <ConversationFiltersBar filters={filters} onChange={setFilters} />
-          {conversations.error && conversations.data ? (
+          {conversations.error && conversations.items ? (
             <RefreshFailed error={conversations.error} onRetry={conversations.reload} />
           ) : null}
           <ConversationList
-            key={query}
             query={conversations}
-            items={visible}
-            totalLoaded={all.length}
+            isFiltered={hasActiveFilters(filters)}
             selectedId={selectedId}
             linkQuery={query}
             onClearFilters={() => setFilters({ ...filters, status: null, period: "all", search: "", channel: null })}
+            isStale={conversations.isLoading}
           />
         </section>
 

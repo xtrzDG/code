@@ -112,3 +112,44 @@ export function toBars<Key>(items: readonly { key: Key; count: number }[]): Bar<
     .sort((left, right) => right.count - left.count)
     .map((item) => ({ key: item.key, count: item.count, percent: sharePercent(item.count, total) }));
 }
+
+/** The daily series of the trend chart, in the fixed color order. */
+export const TREND_SERIES = ["conversation_count", "booking_count", "handoff_count"] as const;
+export type TrendSeries = (typeof TREND_SERIES)[number];
+
+const TICK_COUNT = 4;
+
+/**
+ * A clean y-axis for whole counts: four equal steps of 1, 2 or 5 × 10ⁿ
+ * reaching at least the largest value (0 to 4 for an empty period).
+ */
+export function trendAxis(maxValue: number): { max: number; ticks: number[] } {
+  let step = 1;
+  for (let magnitude = 1; step * TICK_COUNT < maxValue; magnitude *= 10) {
+    step = [1, 2, 5, 10].map((factor) => factor * magnitude).find((candidate) => candidate * TICK_COUNT >= maxValue) ?? 10 * magnitude;
+  }
+  return { max: step * TICK_COUNT, ticks: Array.from({ length: TICK_COUNT + 1 }, (_, index) => index * step) };
+}
+
+/** An SVG path through the values, spread over the width, 0 at the bottom. */
+export function trendPath(values: readonly number[], max: number, width: number, height: number): string {
+  if (values.length === 0 || max <= 0) {
+    return "";
+  }
+  const stepX = values.length > 1 ? width / (values.length - 1) : 0;
+  return values
+    .map((value, index) => {
+      const x = Math.round(index * stepX * 100) / 100;
+      const y = Math.round((height - (value / max) * height) * 100) / 100;
+      return `${index === 0 ? "M" : "L"}${x} ${y}`;
+    })
+    .join(" ");
+}
+
+/** The day nearest to a pointer at `fraction` (0–1) of the plot width. */
+export function nearestDayIndex(fraction: number, count: number): number {
+  if (count <= 1) {
+    return 0;
+  }
+  return Math.min(count - 1, Math.max(0, Math.round(fraction * (count - 1))));
+}

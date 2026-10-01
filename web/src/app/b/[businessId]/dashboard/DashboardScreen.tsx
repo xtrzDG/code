@@ -8,7 +8,6 @@ import { useBusiness, useBusinessFormat } from "@/components/business/BusinessCo
 import { BusinessStatusBadge } from "@/components/business/BusinessStatusBadge";
 import { IconBook, IconHandoff } from "@/components/icons";
 import { formatLocalDateRange, todayIn } from "@/components/insights/dates";
-import { isOpenHandoff } from "@/components/insights/handoffs";
 import { BOOKING_STATUS, CHANNEL_LABELS, HANDOFF_REASONS } from "@/components/insights/labels";
 import { formatPercent } from "@/components/insights/numbers";
 import { SegmentedControl } from "@/components/insights/SegmentedControl";
@@ -29,6 +28,7 @@ import {
   type DashboardPeriod,
 } from "./_components/dashboardModel";
 import { PackageCard } from "./_components/PackageCard";
+import { TrendChart } from "./_components/TrendChart";
 
 /**
  * The dashboard (concept /dashboard): what to do next, what waits for a
@@ -51,8 +51,12 @@ export function DashboardScreen({ initialPeriod }: { initialPeriod: DashboardPer
       }),
     [businessId, range.from, range.to],
   );
-  const handoffs = useApiQuery(
-    () => api.GET("/v1/businesses/{business_id}/handoffs", { params: { path: { business_id: businessId } } }),
+  // Only the count of open handoffs is needed: one item, the totals come along.
+  const openHandoffs = useApiQuery(
+    () =>
+      api.GET("/v1/businesses/{business_id}/handoffs", {
+        params: { path: { business_id: businessId }, query: { is_open: "true", limit: "1" } },
+      }),
     [businessId],
   );
   const gaps = useApiQuery(
@@ -71,7 +75,7 @@ export function DashboardScreen({ initialPeriod }: { initialPeriod: DashboardPer
 
   const step = nextStep(business);
   const missingCount = (gaps.data?.gaps ?? []).filter((gap) => gap.is_blocking).length ?? 0;
-  const openHandoffCount = handoffs.data ? (handoffs.data.items ?? []).filter(isOpenHandoff).length : undefined;
+  const openHandoffCount = openHandoffs.data?.open_count;
   const data = stats.data;
   const hasActivity =
     data !== undefined &&
@@ -169,8 +173,10 @@ export function DashboardScreen({ initialPeriod }: { initialPeriod: DashboardPer
               <StatTile label={t("dashboard.kpi.handoffs")} value={format.number(data.handoff_count)} />
             </dl>
 
+            {hasActivity && (data.daily ?? []).length > 1 ? <TrendChart days={data.daily ?? []} /> : null}
+
             <div className="grid gap-4 lg:grid-cols-3">
-              <PackageCard periodVoiceMinutes={data.used_voice_minutes} />
+              <PackageCard usage={data.package ?? null} periodVoiceMinutes={data.used_voice_minutes} />
               {hasActivity ? (
                 <div className="grid gap-4 sm:grid-cols-2 lg:col-span-2">
                   <BarList
