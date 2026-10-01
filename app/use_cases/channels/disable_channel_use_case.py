@@ -16,6 +16,7 @@ from app.schemas.dto.access import BusinessAccessRequest
 from app.schemas.dto.channels import ChannelView, DisableChannelCommand
 from app.schemas.exceptions.application_errors import NotFoundError
 from app.schemas.exceptions.base_exception import ApplicationError
+from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.channels.strings import ChannelSecret
 from app.schemas.typings.compliance.strings import (
     AuditEntityName,
@@ -36,7 +37,9 @@ class DisableChannelUseCase(UseCaseContract[DisableChannelCommand, ChannelView])
 
     The credential is erased and the account released (another business may
     connect it later); messages that still arrive for it are dropped. A
-    Telegram bot's webhook is removed when Telegram can be reached.
+    Telegram bot's webhook is removed when Telegram can be reached. Turning
+    the phone number off removes the voice agent; publishing again sets it
+    up anew.
     """
 
     def __init__(
@@ -50,6 +53,7 @@ class DisableChannelUseCase(UseCaseContract[DisableChannelCommand, ChannelView])
         telegram_client: TelegramBotApiClientContract,
         audit_log_repo: AuditLogRepoContract,
         wall_clock: WallClock[Microseconds],
+        remove_voice_agent: UseCaseContract[BusinessId, None],
     ) -> None:
         self._authorize_business_access: UseCaseContract[
             BusinessAccessRequest,
@@ -60,6 +64,7 @@ class DisableChannelUseCase(UseCaseContract[DisableChannelCommand, ChannelView])
         self._telegram_client: TelegramBotApiClientContract = telegram_client
         self._audit_log_repo: AuditLogRepoContract = audit_log_repo
         self._wall_clock: WallClock[Microseconds] = wall_clock
+        self._remove_voice_agent: UseCaseContract[BusinessId, None] = remove_voice_agent
 
     def run(self, input_data: DisableChannelCommand) -> ChannelView:
         business: BusinessDocument = self._authorize_business_access.run(
@@ -81,6 +86,9 @@ class DisableChannelUseCase(UseCaseContract[DisableChannelCommand, ChannelView])
 
         if channel.kind is ChannelKind.TELEGRAM:
             self._remove_telegram_webhook(channel)
+
+        if channel.kind is ChannelKind.PHONE:
+            self._remove_voice_agent.run(business.id)
 
         now: Microseconds = self._wall_clock.now_unix()
         channel.status = ChannelStatus.DISABLED

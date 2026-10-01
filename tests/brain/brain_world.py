@@ -26,6 +26,7 @@ from app.orchestrators.conversations.voice_tool_call_orchestrator import (
 from app.pipelines.conversations.customer_message_pipeline import (
     CustomerMessagePipeline,
 )
+from app.registries.billing.plan_registry import PlanRegistry
 from app.registries.tools.assistant_tool_registry import AssistantToolRegistry
 from app.repositories.assistant_repositories import AssistantVersionRepository
 from app.repositories.billing_repositories import UsageEventRepository
@@ -33,9 +34,11 @@ from app.repositories.booking_repositories import HandoffRepository
 from app.repositories.business_repositories import (
     BusinessProfileRepository,
     BusinessRepository,
+    ChannelRepository,
 )
 from app.repositories.compliance_repositories import AuditLogRepository
 from app.repositories.conversation_repositories import (
+    CallRepository,
     ContactRepository,
     ConversationRepository,
     LlmTurnRepository,
@@ -53,7 +56,7 @@ from app.schemas.constants.assistants import (
 )
 from app.schemas.constants.billing import PlanKey
 from app.schemas.constants.businesses import BusinessLinkKind, BusinessStatus, Weekday
-from app.schemas.constants.channels import ChannelKind
+from app.schemas.constants.channels import ChannelKind, ChannelStatus
 from app.schemas.constants.knowledge import KnowledgeItemKind
 from app.schemas.constants.localization import DataRegion
 from app.schemas.constants.niches import NicheKey
@@ -61,9 +64,11 @@ from app.schemas.constants.users import BusinessMemberRole, LoginMethod
 from app.schemas.domain.assistants import AssistantVersionDocument, BusinessFact
 from app.schemas.domain.billing import UsageEventDocument
 from app.schemas.domain.businesses import BusinessDocument, BusinessMember
+from app.schemas.domain.channels import ChannelDocument
 from app.schemas.domain.compliance import AuditLogEntryDocument
 from app.schemas.domain.contacts import ContactDocument
 from app.schemas.domain.conversations import (
+    CallDocument,
     ConversationDocument,
     LlmTurnDocument,
     MessageDocument,
@@ -91,6 +96,7 @@ from app.schemas.typings.businesses.constrained_integers import (
 )
 from app.schemas.typings.businesses.constrained_strings import WebLink
 from app.schemas.typings.businesses.strings import BusinessName
+from app.schemas.typings.channels.strings import ChannelExternalId
 from app.schemas.typings.contacts.strings import ContactName
 from app.schemas.typings.conversations.constrained_integers import (
     ContactMessageLimit,
@@ -239,6 +245,8 @@ class BrainWorld:
     llm_turn_repo: LlmTurnRepository
     usage_event_repo: UsageEventRepository
     handoff_repo: HandoffRepository
+    channel_repo: ChannelRepository
+    call_repo: CallRepository
     audit_log_repo: AuditLogRepository
     user_repo: UserRepository
     knowledge_item_repo: KnowledgeItemRepository
@@ -407,6 +415,8 @@ def build_world(
     usage_event_repo = UsageEventRepository(
         InMemoryDocumentCollectionAdapter[UsageEventDocument](UsageEventDocument)
     )
+    channel_repo = ChannelRepository(InMemoryDocumentCollectionAdapter(ChannelDocument))
+    call_repo = CallRepository(InMemoryDocumentCollectionAdapter(CallDocument))
     handoff_repo = HandoffRepository(
         InMemoryDocumentCollectionAdapter[HandoffDocument](HandoffDocument)
     )
@@ -486,6 +496,15 @@ def build_world(
         business.published_assistant_version_id = version.id
 
     business_repo.save(business)
+    # The business's phone number, connected: the phone assistant is on.
+    channel_repo.save(
+        ChannelDocument(
+            business_id=business.id,
+            kind=ChannelKind.PHONE,
+            external_id=ChannelExternalId("+995322000000"),
+            status=ChannelStatus.CONNECTED,
+        )
+    )
     profile_repo.save(
         BusinessProfileDocument(
             business_id=business.id,
@@ -576,6 +595,8 @@ def build_world(
             assistant_version_repo=version_repo,
             contact_repo=contact_repo,
             conversation_repo=conversation_repo,
+            channel_repo=channel_repo,
+            plan_registry=PlanRegistry(),
             wall_clock=wall_clock,
         ),
         run_assistant_tool=run_tool,
@@ -601,6 +622,8 @@ def build_world(
         message_repo=message_repo,
         llm_turn_repo=llm_turn_repo,
         usage_event_repo=usage_event_repo,
+        channel_repo=channel_repo,
+        call_repo=call_repo,
         handoff_repo=handoff_repo,
         audit_log_repo=audit_log_repo,
         user_repo=user_repo,

@@ -312,6 +312,9 @@ class PipelinesContainer(containers.DeclarativeContainer):
     get_conversation_pipeline = orchestrator_pipeline(
         orchestrators.get_conversation_orchestrator
     )
+    rate_conversation_pipeline = orchestrator_pipeline(
+        orchestrators.rate_conversation_orchestrator
+    )
     import_menu_pipeline = orchestrator_pipeline(orchestrators.import_menu_orchestrator)
     confirm_imported_items_pipeline = orchestrator_pipeline(
         orchestrators.confirm_imported_items_orchestrator

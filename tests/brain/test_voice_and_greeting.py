@@ -4,8 +4,9 @@ import pytest
 
 from app.registries.localization.language_support_data import TEXT_SUPPORTED_LANGUAGES
 from app.schemas.constants.assistants import AssistantToolName
-from app.schemas.constants.businesses import ServiceMode
-from app.schemas.constants.channels import ChannelKind, MessageDirection
+from app.schemas.constants.billing import PlanKey
+from app.schemas.constants.businesses import BusinessStatus, ServiceMode
+from app.schemas.constants.channels import ChannelKind, ChannelStatus, MessageDirection
 from app.schemas.constants.conversations import MessageAuthor
 from app.schemas.domain.profiles import BusinessProfileDocument
 from app.schemas.dto.bookings import CreateBookingCommand
@@ -178,6 +179,48 @@ def test_voice_tool_calls_need_a_known_business_with_a_published_version() -> No
     world.business = world.business.model_copy(update={"id": BusinessId()})
     with pytest.raises(NotFoundError):
         voice_call(world, AssistantToolName.CHECK_AVAILABILITY, AVAILABILITY_INPUT)
+
+
+def test_a_paused_business_takes_no_new_calls_but_a_call_in_progress_goes_on() -> None:
+    world = build_world(scripted())
+    first, _ = voice_call(
+        world, AssistantToolName.CHECK_AVAILABILITY, AVAILABILITY_INPUT
+    )
+    world.business.status = BusinessStatus.PAUSED
+    world.save_business(world.business)
+
+    ongoing, ongoing_error = voice_call(
+        world, AssistantToolName.CHECK_AVAILABILITY, AVAILABILITY_INPUT
+    )
+    with pytest.raises(ConflictError, match="not live"):
+        voice_call(
+            world,
+            AssistantToolName.CHECK_AVAILABILITY,
+            AVAILABILITY_INPUT,
+            call_id="el_call_2",
+        )
+
+    assert ongoing_error is False
+    assert ongoing == first
+    assert len(world.conversations()) == 1
+
+
+def test_a_new_call_needs_voice_in_the_plan_and_a_connected_number() -> None:
+    downgraded = build_world(scripted())
+    downgraded.business.plan_key = PlanKey.CHAT
+    downgraded.save_business(downgraded.business)
+    disconnected = build_world(scripted())
+    for channel in disconnected.channel_repo.list_by_business(disconnected.business.id):
+        channel.status = ChannelStatus.DISABLED
+        disconnected.channel_repo.save(channel)
+
+    with pytest.raises(ConflictError, match="plan"):
+        voice_call(downgraded, AssistantToolName.CHECK_AVAILABILITY, AVAILABILITY_INPUT)
+
+    with pytest.raises(ConflictError, match="phone number"):
+        voice_call(
+            disconnected, AssistantToolName.CHECK_AVAILABILITY, AVAILABILITY_INPUT
+        )
 
 
 def test_phone_conversation_from_voice_calls_continues_in_chat_turns() -> None:

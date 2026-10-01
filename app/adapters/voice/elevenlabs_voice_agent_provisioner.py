@@ -21,6 +21,12 @@ from app.utilities.channels.channel_endpoints import (
 )
 from app.utilities.channels.json_values import parse_json_object
 from app.utilities.channels.language_codes import to_voice_platform_language
+from app.utilities.channels.voice_service import (
+    OPEN_NOW_NO,
+    OPEN_NOW_VARIABLE,
+    OPEN_NOW_YES,
+    TRANSFER_TOOL_NAME,
+)
 from app.utilities.channels.voice_tool_schemas import convert_tool_schema
 from app.utilities.channels.webhook_signatures import derive_voice_tool_secret
 
@@ -37,6 +43,21 @@ LANGUAGE_DESCRIPTION: str = (
     "ru, he or pt-BR."
 )
 REQUEST_BODY_DESCRIPTION: str = "Tool call of the business assistant."
+
+
+# Concept sections 1 and 6: during opening hours a caller who asks for a
+# person is put through to staff; outside them the agent hands off and a
+# colleague calls back. The call-initiation webhook sets is_open_now.
+TRANSFER_TOOL_DESCRIPTION: str = (
+    "Put the caller through to a staff member of the business."
+)
+TRANSFER_CONDITION: str = (
+    "The caller asks to talk to a person (an operator, a manager, a staff "
+    "member) and the business is open now: is_open_now is "
+    f"'{{{{{OPEN_NOW_VARIABLE}}}}}' and must be '{OPEN_NOW_YES}'. When it is "
+    f"'{OPEN_NOW_NO}', never transfer: use handoff_to_human so a colleague "
+    "calls back."
+)
 
 
 class ElevenLabsVoiceAgentProvisioner(VoiceAgentProvisionerAdapterContract):
@@ -109,6 +130,13 @@ class ElevenLabsVoiceAgentProvisioner(VoiceAgentProvisionerAdapterContract):
         )
         self._delete_tools(stale_tool_ids)
         return spec.existing_agent_id
+
+    def remove_agent(self, agent_id: VoiceAgentId) -> None:
+        tool_ids: list[VoicePlatformToolId] = (
+            self._elevenlabs_client.get_agent_tool_ids(agent_id) or []
+        )
+        self._elevenlabs_client.delete_agent(agent_id)
+        self._delete_tools(tool_ids)
 
     def _create_agent(
         self,
@@ -245,6 +273,26 @@ def build_agent_config(
             }
         }
 
+    if spec.transfer_phone_number is not None:
+        built_in_tools[TRANSFER_TOOL_NAME] = {
+            "type": "system",
+            "name": TRANSFER_TOOL_NAME,
+            "description": TRANSFER_TOOL_DESCRIPTION,
+            "params": {
+                "system_tool_type": TRANSFER_TOOL_NAME,
+                "transfers": [
+                    {
+                        "transfer_destination": {
+                            "type": "phone",
+                            "phone_number": str(spec.transfer_phone_number),
+                        },
+                        "condition": TRANSFER_CONDITION,
+                    }
+                ],
+                "enable_client_message": True,
+            },
+        }
+
     if len({to_voice_platform_language(tag) for tag in spec.languages}) > 1:
         built_in_tools["language_detection"] = {
             "type": "system",
@@ -258,6 +306,10 @@ def build_agent_config(
             "prompt": str(spec.prompt_text),
             "tool_ids": [str(tool_id) for tool_id in tool_ids],
             "built_in_tools": built_in_tools,
+        },
+        # Set per call by the call-initiation webhook; closed until then.
+        "dynamic_variables": {
+            "dynamic_variable_placeholders": {OPEN_NOW_VARIABLE: OPEN_NOW_NO}
         },
     }
     if default_greeting is not None:

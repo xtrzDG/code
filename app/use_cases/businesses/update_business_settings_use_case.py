@@ -32,6 +32,7 @@ from app.schemas.exceptions.application_errors import (
     ConflictError,
     ValidationFailedError,
 )
+from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.compliance.strings import (
     AuditEntityName,
     AuditEntityReference,
@@ -71,8 +72,10 @@ class UpdateBusinessSettingsUseCase(
     contacts are validated per channel: a numeric Telegram chat id, a phone
     number of any country for WhatsApp and SMS (stored as E.164, national
     formats read in the business country), an e-mail address for e-mail.
-    The owner may only pause a live assistant and resume a paused one;
-    publishing (another module) makes a business live. The plan may be
+    The owner may only pause a live assistant (its voice agent is removed)
+    and resume a paused one (the published version is activated again, with
+    the launch conditions and a new voice agent); publishing (another
+    module) makes a business live. The plan may be
     chosen here until the business has a subscription; after that it is
     changed in billing, which also changes the price. Contact changes are
     audited because they hold staff personal data.
@@ -95,6 +98,8 @@ class UpdateBusinessSettingsUseCase(
             BusinessView,
         ],
         wall_clock: WallClock[Microseconds],
+        remove_voice_agent: UseCaseContract[BusinessId, None],
+        resume_assistant: UseCaseContract[BusinessDocument, None],
     ) -> None:
         self._authorize_business_access: UseCaseContract[
             BusinessAccessRequest,
@@ -111,6 +116,10 @@ class UpdateBusinessSettingsUseCase(
             BusinessView,
         ] = business_view_transformer
         self._wall_clock: WallClock[Microseconds] = wall_clock
+        self._remove_voice_agent: UseCaseContract[BusinessId, None] = remove_voice_agent
+        self._resume_assistant: UseCaseContract[BusinessDocument, None] = (
+            resume_assistant
+        )
 
     def run(self, input_data: UpdateBusinessSettingsCommand) -> BusinessView:
         business: BusinessDocument = self._authorize_business_access.run(
@@ -226,7 +235,15 @@ class UpdateBusinessSettingsUseCase(
                 f"resumed; the business is {business.status.value}."
             )
 
+        if requested_status is BusinessStatus.LIVE:
+            # Resuming re-activates the published version: launch conditions
+            # are checked again and the voice agent is set up anew.
+            self._resume_assistant.run(business)
+            return
+
         business.status = requested_status
+        # A paused assistant answers no calls: its voice agent is removed.
+        self._remove_voice_agent.run(business.id)
 
     def _limit_contacts(
         self,

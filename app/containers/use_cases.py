@@ -142,6 +142,7 @@ from app.schemas.dto.conversation_feed import (
     ConversationQuery,
     ConversationSummaryView,
     OwnerTestChatVersionQuery,
+    RateConversationCommand,
 )
 from app.schemas.dto.conversations import (
     AssistantReply,
@@ -294,6 +295,9 @@ from app.use_cases.assistants.list_assistant_versions_use_case import (
 from app.use_cases.assistants.publish_assistant_version_use_case import (
     PublishAssistantVersionUseCase,
 )
+from app.use_cases.assistants.resume_assistant_use_case import (
+    ResumeAssistantUseCase,
+)
 from app.use_cases.assistants.rollback_assistant_version_use_case import (
     RollbackAssistantVersionUseCase,
 )
@@ -434,6 +438,9 @@ from app.use_cases.conversations.open_voice_conversation_use_case import (
 from app.use_cases.conversations.prepare_conversation_turn_use_case import (
     PrepareConversationTurnUseCase,
 )
+from app.use_cases.conversations.rate_conversation_use_case import (
+    RateConversationUseCase,
+)
 from app.use_cases.conversations.record_assistant_reply_use_case import (
     RecordAssistantReplyUseCase,
 )
@@ -531,6 +538,7 @@ from app.use_cases.voice.authenticate_voice_tool_call_use_case import (
     AuthenticateVoiceToolCallUseCase,
 )
 from app.use_cases.voice.record_finished_call_use_case import RecordFinishedCallUseCase
+from app.use_cases.voice.remove_voice_agent_use_case import RemoveVoiceAgentUseCase
 from app.use_cases.voice.send_call_confirmation_use_case import (
     SendCallConfirmationUseCase,
 )
@@ -564,6 +572,12 @@ class UseCasesContainer(containers.DeclarativeContainer):
         user_repo=repositories.user_repo,
         audit_log_repo=repositories.audit_log_repo,
         wall_clock=time_provider.microsecond_wall_clock,
+    )
+    # Switches the voice agent off when voice leaves the live service.
+    remove_voice_agent_use_case: Factory[UseCaseContract[BusinessId, None]] = Factory(
+        RemoveVoiceAgentUseCase,
+        assistant_version_repo=repositories.assistant_version_repo,
+        voice_agent_provisioner=adapters.voice_agent_provisioner,
     )
 
     # --- Catalog: countries, languages, plans, phone numbers.
@@ -694,20 +708,6 @@ class UseCasesContainer(containers.DeclarativeContainer):
             user_repo=repositories.user_repo,
             business_view_transformer=transformers.business_view_transformer,
         )
-    )
-    update_business_settings_use_case: Factory[
-        UseCaseContract[UpdateBusinessSettingsCommand, BusinessView]
-    ] = Factory(
-        UpdateBusinessSettingsUseCase,
-        authorize_business_access=authorize_business_access_use_case,
-        business_repo=repositories.business_repo,
-        user_repo=repositories.user_repo,
-        subscription_repo=repositories.subscription_repo,
-        language_registry=registries.language_registry,
-        phone_number_parser=utilities.phone_number_parser,
-        audit_log_repo=repositories.audit_log_repo,
-        business_view_transformer=transformers.business_view_transformer,
-        wall_clock=time_provider.microsecond_wall_clock,
     )
     invite_staff_use_case: Factory[
         UseCaseContract[InviteStaffCommand, BusinessView]
@@ -1321,6 +1321,8 @@ class UseCasesContainer(containers.DeclarativeContainer):
         assistant_version_repo=repositories.assistant_version_repo,
         contact_repo=repositories.contact_repo,
         conversation_repo=repositories.conversation_repo,
+        channel_repo=repositories.channel_repo,
+        plan_registry=registries.plan_registry,
         wall_clock=time_provider.microsecond_wall_clock,
     )
     record_voice_tool_call_use_case: Factory[
@@ -1360,6 +1362,19 @@ class UseCasesContainer(containers.DeclarativeContainer):
         audit_log_repo=repositories.audit_log_repo,
         summary_transformer=transformers.conversation_summary_transformer,
         message_transformer=transformers.message_view_transformer,
+        wall_clock=time_provider.microsecond_wall_clock,
+        call_repo=repositories.call_repo,
+        call_transformer=transformers.call_view_transformer,
+    )
+    rate_conversation_use_case: Factory[
+        UseCaseContract[RateConversationCommand, ConversationSummaryView]
+    ] = Factory(
+        RateConversationUseCase,
+        authorize_business_access=authorize_business_access_use_case,
+        conversation_repo=repositories.conversation_repo,
+        contact_repo=repositories.contact_repo,
+        message_repo=repositories.message_repo,
+        summary_transformer=transformers.conversation_summary_transformer,
         wall_clock=time_provider.microsecond_wall_clock,
     )
     resolve_test_chat_version_use_case: Factory[
@@ -1505,6 +1520,8 @@ class UseCasesContainer(containers.DeclarativeContainer):
     ] = Factory(
         ActivateAssistantVersionUseCase,
         check_go_live_readiness=check_go_live_readiness_use_case,
+        remove_voice_agent=remove_voice_agent_use_case,
+        business_profile_repo=repositories.business_profile_repo,
         business_repo=repositories.business_repo,
         assistant_version_repo=repositories.assistant_version_repo,
         voice_agent_provisioner=adapters.voice_agent_provisioner,
@@ -1512,6 +1529,29 @@ class UseCasesContainer(containers.DeclarativeContainer):
         assistant_tool_catalog=registries.assistant_tool_registry,
         app_settings=config.app_settings,
         wall_clock=time_provider.microsecond_wall_clock,
+    )
+    resume_assistant_use_case: Factory[UseCaseContract[BusinessDocument, None]] = (
+        Factory(
+            ResumeAssistantUseCase,
+            assistant_version_repo=repositories.assistant_version_repo,
+            activate_assistant_version=activate_assistant_version_use_case,
+        )
+    )
+    update_business_settings_use_case: Factory[
+        UseCaseContract[UpdateBusinessSettingsCommand, BusinessView]
+    ] = Factory(
+        UpdateBusinessSettingsUseCase,
+        authorize_business_access=authorize_business_access_use_case,
+        business_repo=repositories.business_repo,
+        user_repo=repositories.user_repo,
+        subscription_repo=repositories.subscription_repo,
+        language_registry=registries.language_registry,
+        phone_number_parser=utilities.phone_number_parser,
+        audit_log_repo=repositories.audit_log_repo,
+        business_view_transformer=transformers.business_view_transformer,
+        wall_clock=time_provider.microsecond_wall_clock,
+        remove_voice_agent=remove_voice_agent_use_case,
+        resume_assistant=resume_assistant_use_case,
     )
     publish_assistant_version_use_case: Factory[
         UseCaseContract[PublishAssistantVersionCommand, AssistantVersionDetails]
@@ -1600,6 +1640,7 @@ class UseCasesContainer(containers.DeclarativeContainer):
         telegram_client=clients.telegram_bot_client,
         audit_log_repo=repositories.audit_log_repo,
         wall_clock=time_provider.microsecond_wall_clock,
+        remove_voice_agent=remove_voice_agent_use_case,
     )
     list_channels_use_case: Factory[
         UseCaseContract[ChannelListQuery, list[ChannelView]]
@@ -1683,6 +1724,12 @@ class UseCasesContainer(containers.DeclarativeContainer):
     ] = Factory(
         StartVoiceCallUseCase,
         business_repo=repositories.business_repo,
+        assistant_version_repo=repositories.assistant_version_repo,
+        channel_repo=repositories.channel_repo,
+        plan_registry=registries.plan_registry,
+        business_profile_repo=repositories.business_profile_repo,
+        schedule_exception_repo=repositories.schedule_exception_repo,
+        wall_clock=time_provider.microsecond_wall_clock,
         voice_webhook_adapter=adapters.voice_webhook_adapter,
         phone_number_parser=utilities.phone_number_parser,
         build_call_greeting=build_call_greeting_use_case,
@@ -1776,6 +1823,7 @@ class UseCasesContainer(containers.DeclarativeContainer):
         payment_gateway=adapters.payment_gateway,
         assemble_billing_overview=assemble_billing_overview_use_case,
         wall_clock=time_provider.microsecond_wall_clock,
+        remove_voice_agent=remove_voice_agent_use_case,
     )
     cancel_subscription_use_case: Factory[
         UseCaseContract[CancelSubscriptionCommand, BillingOverview]

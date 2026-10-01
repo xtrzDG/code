@@ -64,6 +64,7 @@ from app.orchestrators.channels.widget_message_orchestrator import (
 )
 from app.orchestrators.use_case_orchestrator import UseCaseOrchestrator
 from app.pipelines.orchestrator_pipeline import OrchestratorPipeline
+from app.registries.billing.plan_registry import PlanRegistry
 from app.registries.localization.language_registry import LanguageRegistry
 from app.repositories.assistant_repositories import AssistantVersionRepository
 from app.repositories.billing_repositories import UsageEventRepository
@@ -73,6 +74,7 @@ from app.repositories.booking_repositories import (
     LeadRepository,
 )
 from app.repositories.business_repositories import (
+    BusinessProfileRepository,
     BusinessRepository,
     ChannelRepository,
 )
@@ -86,6 +88,7 @@ from app.repositories.conversation_repositories import (
     ContactRepository,
     ConversationRepository,
 )
+from app.repositories.knowledge_repositories import ScheduleExceptionRepository
 from app.repositories.user_repositories import UserRepository
 from app.schemas.configurations.app_settings import AppSettings
 from app.schemas.constants.billing import PlanKey
@@ -104,6 +107,8 @@ from app.schemas.domain.contacts import ContactDocument
 from app.schemas.domain.conversations import CallDocument, ConversationDocument
 from app.schemas.domain.handoffs import HandoffDocument
 from app.schemas.domain.manager_links import ManagerTelegramLinkDocument
+from app.schemas.domain.profiles import BusinessProfileDocument
+from app.schemas.domain.resources import ScheduleExceptionDocument
 from app.schemas.domain.users import UserDocument
 from app.schemas.dto.conversations import (
     AssistantReply,
@@ -222,6 +227,16 @@ def build_settings(**overrides: str) -> AppSettings:
     return assemble_app_settings(
         {name: value for name, value in environment.items() if value != ""}
     )
+
+
+class RecordingVoiceAgentRemoval:
+    """Records the businesses whose voice agent was switched off."""
+
+    def __init__(self, business_ids: list[BusinessId]) -> None:
+        self.business_ids: list[BusinessId] = business_ids
+
+    def run(self, input_data: BusinessId) -> None:
+        self.business_ids.append(input_data)
 
 
 class AdjustableClock:
@@ -487,6 +502,12 @@ class ChannelsTestbed:
         self.audit_log_repo = AuditLogRepository(
             InMemoryDocumentCollectionAdapter(AuditLogEntryDocument)
         )
+        self.profile_repo = BusinessProfileRepository(
+            InMemoryDocumentCollectionAdapter(BusinessProfileDocument)
+        )
+        self.exception_repo = ScheduleExceptionRepository(
+            InMemoryDocumentCollectionAdapter(ScheduleExceptionDocument)
+        )
         self.assistant_version_repo = AssistantVersionRepository(
             InMemoryDocumentCollectionAdapter(AssistantVersionDocument)
         )
@@ -583,6 +604,7 @@ class ChannelsTestbed:
             self.wall_clock,
             StorageScopeContext(),
         )
+        self.voice_agent_removals: list[BusinessId] = []
         self.disable_channel = DisableChannelUseCase(
             self.authorize_business_access,
             self.channel_repo,
@@ -590,6 +612,7 @@ class ChannelsTestbed:
             self.telegram_client,
             self.audit_log_repo,
             self.wall_clock,
+            RecordingVoiceAgentRemoval(self.voice_agent_removals),
         )
         self.list_channels = ListChannelsUseCase(
             self.authorize_business_access, self.channel_repo
@@ -709,6 +732,12 @@ class ChannelsTestbed:
                 call_initiation_operator=wrap_use_case(
                     StartVoiceCallUseCase(
                         self.business_repo,
+                        self.assistant_version_repo,
+                        self.channel_repo,
+                        PlanRegistry(),
+                        self.profile_repo,
+                        self.exception_repo,
+                        self.wall_clock,
                         self.voice_webhook_adapter,
                         self.phone_number_parser,
                         self.call_greeting,

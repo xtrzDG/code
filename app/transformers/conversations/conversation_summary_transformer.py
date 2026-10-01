@@ -39,4 +39,5 @@ class ConversationSummaryTransformer(
             last_message_text=None if last_message is None else last_message.text,
             last_message_at=conversation.last_message_at,
             created_at=conversation.created_at,
+            rating=conversation.rating,
         )

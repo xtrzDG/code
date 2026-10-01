@@ -2,6 +2,7 @@
 
 import os
 from collections.abc import Callable, Mapping
+from urllib.parse import urlsplit
 
 from app.schemas.configurations.app_settings import AppSettings
 from app.schemas.constants.assistants import LlmEffort, LlmProvider
@@ -67,9 +68,12 @@ DEFAULT_MODEL_IDS: dict[str, str] = {
 DEFAULT_OPENAI_BASE_URL: str = "https://eu.api.openai.com/v1"
 # Langfuse Cloud EU region (the concept keeps data in the EU).
 DEFAULT_LANGFUSE_HOST: str = "https://cloud.langfuse.com"
-# Global ElevenLabs API; set https://api.eu.residency.elevenlabs.io to keep
-# voice data in the EU (concept section 7).
-DEFAULT_ELEVENLABS_API_BASE_URL: str = "https://api.elevenlabs.io"
+# EU data residency of ElevenLabs: calls, transcripts and recordings stay in
+# the EU (concept sections 7 and 10). Production refuses any other host
+# unless ELEVENLABS_ALLOW_NON_EU_REGION is true.
+DEFAULT_ELEVENLABS_API_BASE_URL: str = "https://api.eu.residency.elevenlabs.io"
+ELEVENLABS_EU_HOST_SUFFIX: str = ".eu.residency.elevenlabs.io"
+DEFAULT_ELEVENLABS_HOST: str = "api.eu.residency.elevenlabs.io"
 # Comprehensively sanctioned jurisdictions for a US-person founder. Confirm the
 # list with a lawyer before launch; override with RESTRICTED_COUNTRY_CODES
 # (comma-separated, an empty value disables the restriction).
@@ -285,12 +289,9 @@ def assemble_app_settings(environment_variables: Mapping[str, str]) -> AppSettin
         ),
         elevenlabs_api_key=secret("ELEVENLABS_API_KEY"),
         elevenlabs_webhook_secret=secret("ELEVENLABS_WEBHOOK_SECRET"),
-        elevenlabs_api_base_url=PublicBaseUrl(
-            read_text(
-                environment_variables,
-                "ELEVENLABS_API_BASE_URL",
-                DEFAULT_ELEVENLABS_API_BASE_URL,
-            )
+        elevenlabs_api_base_url=read_elevenlabs_base_url(
+            environment_variables,
+            is_production=not is_development,
         ),
         zadarma_api_key=secret("ZADARMA_API_KEY"),
         zadarma_api_secret=secret("ZADARMA_API_SECRET"),
@@ -394,6 +395,47 @@ def check_login_code_providers(environment_variables: Mapping[str, str]) -> None
             "SMTP_USERNAME together with SMTP_PASSWORD when the server needs a "
             "login."
         )
+
+
+def read_elevenlabs_base_url(
+    environment_variables: Mapping[str, str],
+    is_production: bool,
+) -> PublicBaseUrl:
+    """
+    The ElevenLabs API host: the EU-residency one by default. In production
+    another host is refused unless ELEVENLABS_ALLOW_NON_EU_REGION is true.
+
+    Raises:
+        ValidationFailedError: a non-EU host in production without the flag.
+    """
+
+    base_url = PublicBaseUrl(
+        read_text(
+            environment_variables,
+            "ELEVENLABS_API_BASE_URL",
+            DEFAULT_ELEVENLABS_API_BASE_URL,
+        )
+    )
+    host: str = (urlsplit(str(base_url)).hostname or "").lower()
+    is_eu_host: bool = host == DEFAULT_ELEVENLABS_HOST or host.endswith(
+        ELEVENLABS_EU_HOST_SUFFIX
+    )
+    if (
+        is_production
+        and not is_eu_host
+        and not read_boolean(
+            environment_variables,
+            "ELEVENLABS_ALLOW_NON_EU_REGION",
+            False,
+        )
+    ):
+        raise ValidationFailedError(
+            f"ELEVENLABS_API_BASE_URL {base_url} keeps voice data outside the EU; "
+            f"use {DEFAULT_ELEVENLABS_API_BASE_URL} or set "
+            "ELEVENLABS_ALLOW_NON_EU_REGION=true."
+        )
+
+    return base_url
 
 
 def read_text(

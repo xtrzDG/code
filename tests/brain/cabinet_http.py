@@ -24,6 +24,7 @@ from app.schemas.dto.conversation_feed import (
     ConversationQuery,
     ConversationSummaryView,
     OwnerTestChatCommand,
+    RateConversationCommand,
 )
 from app.schemas.dto.conversations import AssistantReply
 from app.schemas.dto.menu_import import (
@@ -35,6 +36,7 @@ from app.schemas.dto.menu_import import (
 from app.schemas.exceptions.application_errors import AuthenticationRequiredError
 from app.schemas.typings.users.prefixed_id import UserId
 from app.schemas.typings.users.strings import AccessToken
+from app.transformers.conversations.call_view_transformer import CallViewTransformer
 from app.transformers.conversations.conversation_summary_transformer import (
     ConversationSummaryTransformer,
 )
@@ -46,6 +48,9 @@ from app.use_cases.conversations.get_conversation_use_case import (
 )
 from app.use_cases.conversations.list_conversations_use_case import (
     ListConversationsUseCase,
+)
+from app.use_cases.conversations.rate_conversation_use_case import (
+    RateConversationUseCase,
 )
 from app.use_cases.conversations.resolve_test_chat_version_use_case import (
     ResolveTestChatVersionUseCase,
@@ -77,6 +82,9 @@ class CabinetOperators:
         ConversationListQuery, list[ConversationSummaryView]
     ]
     get_conversation: OperatorContract[ConversationQuery, ConversationDetailView]
+    rate_conversation: OperatorContract[
+        RateConversationCommand, ConversationSummaryView
+    ]
     owner_test_chat: OperatorContract[OwnerTestChatCommand, AssistantReply]
     import_menu: OperatorContract[ImportMenuCommand, MenuImportResult]
     confirm_imported_items: OperatorContract[
@@ -114,6 +122,22 @@ def build_cabinet_operators(
                         audit_log_repo=world.audit_log_repo,
                         summary_transformer=summary_transformer,
                         message_transformer=MessageViewTransformer(),
+                        wall_clock=world.clock.wall_clock(),
+                        call_repo=world.call_repo,
+                        call_transformer=CallViewTransformer(),
+                    )
+                )
+            )
+        ),
+        rate_conversation=PipelineOperator(
+            OrchestratorPipeline(
+                UseCaseOrchestrator(
+                    RateConversationUseCase(
+                        authorize_business_access=world.authorize,
+                        conversation_repo=world.conversation_repo,
+                        contact_repo=world.contact_repo,
+                        message_repo=world.message_repo,
+                        summary_transformer=summary_transformer,
                         wall_clock=world.clock.wall_clock(),
                     )
                 )
@@ -172,6 +196,7 @@ def build_cabinet_client(
             list_conversations_operator=operators.list_conversations,
             get_conversation_operator=operators.get_conversation,
             owner_test_chat_operator=operators.owner_test_chat,
+            rate_conversation_operator=operators.rate_conversation,
             current_user=current_user,
         )
     )

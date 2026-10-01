@@ -12,6 +12,7 @@ from app.schemas.dto.assistants import (
     PublishAssistantVersionCommand,
     RollbackAssistantVersionCommand,
 )
+from app.schemas.dto.voice import VoiceAgentSpec
 from app.schemas.exceptions.application_errors import (
     AccessDeniedError,
     ConflictError,
@@ -22,6 +23,8 @@ from app.schemas.typings.assistants.prefixed_id import AssistantVersionId
 from app.schemas.typings.assistants.strings import VoiceAgentId
 from app.schemas.typings.compliance.constrained_strings import DpaDocumentVersion
 from app.schemas.typings.localization.constrained_strings import LanguageTag
+from app.use_cases.assistants.resume_assistant_use_case import ResumeAssistantUseCase
+from app.use_cases.voice.remove_voice_agent_use_case import RemoveVoiceAgentUseCase
 from tests.assembly.builders import (
     make_launch_ready,
     seed_georgian_restaurant,
@@ -469,3 +472,75 @@ def test_rollback_is_refused_once_the_service_is_no_longer_paid() -> None:
     assert testbed.version(business.id, first.id).status is (
         AssistantVersionStatus.ARCHIVED
     )
+
+
+def test_publishing_a_version_without_voice_removes_the_voice_agent() -> None:
+    testbed = AssemblyTestbed()
+    business = seed_georgian_restaurant(testbed, PlanKey.VOICE_AND_CHAT)
+    with_voice = ready_version(testbed, business)
+    testbed.publish(business.id, with_voice.id)
+    stored = testbed.business(business.id)
+    stored.plan_key = PlanKey.CHAT
+    testbed.business_repo.save(stored)
+    without_voice = ready_version(testbed, business)
+    assert without_voice.is_voice_enabled is False
+
+    testbed.publish(business.id, without_voice.id)
+
+    assert testbed.voice_provisioner.removed_agent_ids == [VoiceAgentId("agent_1")]
+
+
+def test_resuming_activates_the_published_version_and_its_voice_agent_again() -> None:
+    testbed = AssemblyTestbed()
+    business = seed_georgian_restaurant(testbed, PlanKey.VOICE_AND_CHAT)
+    version = ready_version(testbed, business)
+    testbed.publish(business.id, version.id)
+    paused = testbed.business(business.id)
+    paused.status = BusinessStatus.PAUSED
+    testbed.business_repo.save(paused)
+    RemoveVoiceAgentUseCase(testbed.version_repo, testbed.voice_provisioner).run(
+        business.id
+    )
+    resume = ResumeAssistantUseCase(testbed.version_repo, testbed.activate_use_case)
+
+    resume.run(paused)
+
+    assert paused.status is BusinessStatus.LIVE
+    assert testbed.voice_provisioner.removed_agent_ids == [VoiceAgentId("agent_1")]
+    assert len(testbed.voice_provisioner.specs) == 2  # the agent set up anew
+    assert testbed.business(business.id).status is BusinessStatus.LIVE
+
+
+def test_a_voice_platform_outage_does_not_block_switching_voice_off() -> None:
+    testbed = AssemblyTestbed()
+    business = seed_georgian_restaurant(testbed, PlanKey.VOICE_AND_CHAT)
+    version = ready_version(testbed, business)
+    testbed.publish(business.id, version.id)
+    unreachable = UnreachableVoicePlatform()
+
+    RemoveVoiceAgentUseCase(testbed.version_repo, unreachable).run(business.id)
+
+    assert unreachable.attempts == [VoiceAgentId("agent_1")]
+
+
+class UnreachableVoicePlatform:
+    def __init__(self) -> None:
+        self.attempts: list[VoiceAgentId] = []
+
+    def upsert_agent(self, spec: VoiceAgentSpec) -> VoiceAgentId:
+        raise ExternalServiceError(f"down for {spec.business_id}")
+
+    def remove_agent(self, agent_id: VoiceAgentId) -> None:
+        self.attempts.append(agent_id)
+        raise ExternalServiceError("Voice platform is down.")
+
+
+def test_the_voice_agent_can_put_callers_through_to_the_handoff_phone() -> None:
+    testbed = AssemblyTestbed()
+    business = seed_georgian_restaurant(testbed, PlanKey.VOICE_AND_CHAT)
+    version = ready_version(testbed, business)
+
+    testbed.publish(business.id, version.id)
+
+    [spec] = testbed.voice_provisioner.specs
+    assert spec.transfer_phone_number == "+995555123456"

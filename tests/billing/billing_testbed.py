@@ -181,6 +181,16 @@ CABINET_ORIGIN: str = "https://app.assistant.example"
 CHECKOUT_URL: str = "https://pay.flitt.com/merchants/test/default/index.html?token=t1"
 
 
+class RecordingVoiceAgentRemoval:
+    """Records the businesses whose voice agent was switched off."""
+
+    def __init__(self) -> None:
+        self.business_ids: list[BusinessId] = []
+
+    def run(self, input_data: BusinessId) -> None:
+        self.business_ids.append(input_data)
+
+
 @dataclass(frozen=True)
 class CountryPreset:
     """Country defaults a business would get at creation."""
@@ -523,6 +533,7 @@ class BillingTestbed:
             assemble_billing_overview=self.assemble_overview,
             wall_clock=wall_clock,
         )
+        self.voice_agent_removals = RecordingVoiceAgentRemoval()
         self.change_plan = ChangePlanUseCase(
             authorize_business_access=authorize,
             subscription_repo=self.subscription_repo,
@@ -532,6 +543,7 @@ class BillingTestbed:
             payment_gateway=self.payment_gateway,
             assemble_billing_overview=self.assemble_overview,
             wall_clock=wall_clock,
+            remove_voice_agent=self.voice_agent_removals,
         )
         self.cancel_subscription = CancelSubscriptionUseCase(
             authorize_business_access=authorize,

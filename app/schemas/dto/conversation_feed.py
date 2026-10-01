@@ -6,9 +6,17 @@ from typed_time_provider import Microseconds
 
 from app.schemas.constants.assistants import AssistantToolName
 from app.schemas.constants.channels import ChannelKind, MessageDirection
-from app.schemas.constants.conversations import ConversationStatus, MessageAuthor
+from app.schemas.constants.conversations import (
+    CallOutcome,
+    ConversationRating,
+    ConversationStatus,
+    MessageAuthor,
+)
 from app.schemas.domain.contacts import ContactDocument
-from app.schemas.domain.conversations import ConversationDocument, MessageDocument
+from app.schemas.domain.conversations import (
+    ConversationDocument,
+    MessageDocument,
+)
 from app.schemas.typings.assistants.constrained_strings import LlmModelId
 from app.schemas.typings.assistants.prefixed_id import AssistantVersionId
 from app.schemas.typings.billing.constrained_integers import CostMicroUsd
@@ -23,17 +31,24 @@ from app.schemas.typings.conversations.booleans import (
     IsSandboxConversation,
 )
 from app.schemas.typings.conversations.constrained_integers import (
+    CallDurationSeconds,
     ConversationMessageCount,
     LlmTokenCount,
 )
 from app.schemas.typings.conversations.constrained_strings import (
     OwnerTestChatSessionKey,
 )
-from app.schemas.typings.conversations.prefixed_id import ConversationId, MessageId
+from app.schemas.typings.conversations.prefixed_id import (
+    CallId,
+    ConversationId,
+    MessageId,
+)
 from app.schemas.typings.conversations.strings import (
+    CallTranscriptText,
     LlmToolInputJson,
     LlmToolResultJson,
     MessageText,
+    RecordingStoragePath,
 )
 from app.schemas.typings.localization.constrained_strings import (
     E164PhoneNumber,
@@ -81,6 +96,7 @@ class ConversationSummaryView(ImmutableDTO):
     last_message_text: MessageText | None = None
     last_message_at: Microseconds
     created_at: Microseconds
+    rating: ConversationRating | None = None
 
 
 class ToolCallView(ImmutableDTO):
@@ -108,11 +124,47 @@ class MessageView(ImmutableDTO):
     created_at: Microseconds
 
 
+class CallView(ImmutableDTO):
+    """
+    A phone call of the conversation: its transcript, duration, outcome and
+    where its recording is kept (the platform reference; reading it is
+    audited with the card).
+    """
+
+    id: CallId
+    from_phone_number: E164PhoneNumber | None = None
+    to_phone_number: E164PhoneNumber | None = None
+    started_at: Microseconds
+    duration_seconds: CallDurationSeconds
+    outcome: CallOutcome | None = None
+    transcript: CallTranscriptText | None = None
+    recording_path: RecordingStoragePath | None = None
+
+
 class ConversationDetailView(ImmutableDTO):
-    """Conversation card: summary and the full transcript with tool calls."""
+    """
+    Conversation card: summary, the full transcript with tool calls and, for
+    phone conversations, the calls with their transcripts and recordings.
+    """
 
     conversation: ConversationSummaryView
     messages: list[MessageView] = Field(default_factory=list[MessageView])
+    calls: list[CallView] = Field(default_factory=list[CallView])
+
+
+class ConversationRatingRequest(ImmutableDTO):
+    """HTTP body of rating a conversation; null clears the rating."""
+
+    rating: ConversationRating | None
+
+
+class RateConversationCommand(ImmutableDTO):
+    """Owner or staff rates how the assistant handled a conversation."""
+
+    user_id: UserId
+    business_id: BusinessId
+    conversation_id: ConversationId
+    rating: ConversationRating | None
 
 
 class ConversationViewSource(ImmutableDTO):

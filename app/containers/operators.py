@@ -251,6 +251,9 @@ class OperatorsContainer(containers.DeclarativeContainer):
     get_conversation_operator = pipeline_operator(
         pipelines.get_conversation_pipeline, storage_scope
     )
+    rate_conversation_operator = pipeline_operator(
+        pipelines.rate_conversation_pipeline, storage_scope
+    )
     import_menu_operator = pipeline_operator(
         pipelines.import_menu_pipeline, storage_scope
     )

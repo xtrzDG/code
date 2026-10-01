@@ -105,7 +105,9 @@ class AppSettings(ImmutableDTO):
     smtp_sender: EmailSenderAddress | None = None
     elevenlabs_api_key: PlatformSecret | None = None
     elevenlabs_webhook_secret: PlatformSecret | None = None
-    elevenlabs_api_base_url: PublicBaseUrl = PublicBaseUrl("https://api.elevenlabs.io")
+    elevenlabs_api_base_url: PublicBaseUrl = PublicBaseUrl(
+        "https://api.eu.residency.elevenlabs.io"
+    )
     zadarma_api_key: PlatformSecret | None = None
     zadarma_api_secret: PlatformSecret | None = None
     meta_app_id: PlatformIdentifier | None = None

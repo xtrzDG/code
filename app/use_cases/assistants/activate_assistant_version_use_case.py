@@ -3,6 +3,7 @@ from typed_time_provider import Microseconds, WallClock
 from app.contracts.assistant_assembly import AssistantToolCatalogContract
 from app.contracts.repositories import (
     AssistantVersionRepoContract,
+    BusinessProfileRepoContract,
     BusinessRepoContract,
 )
 from app.contracts.use_case_contract import UseCaseContract
@@ -18,8 +19,10 @@ from app.schemas.dto.voice import VoiceAgentSpec, VoiceGreeting
 from app.schemas.exceptions.application_errors import ExternalServiceError
 from app.schemas.exceptions.base_exception import ApplicationError
 from app.schemas.typings.assistants.strings import VoiceAgentId
+from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.channels.constrained_strings import PublicBaseUrl
 from app.utilities.assembly.voice_agents import find_existing_voice_agent_id
+from app.utilities.channels.voice_service import find_transfer_phone_number
 
 
 class ActivateAssistantVersionUseCase(
@@ -35,15 +38,20 @@ class ActivateAssistantVersionUseCase(
     business's voice agent is created or updated first from the same
     version: its instruction, a greeting in every language, the chat's tool
     definitions and the public base URL for the tool webhooks. The agent id
-    of earlier versions is reused (one agent per business). If that fails,
+    of earlier versions is reused (one agent per business). In opening
+    hours a caller may be put through to the profile's handoff phone (or a
+    manager reachable by phone). If that fails,
     ExternalServiceError is raised and nothing is published. Then the
     previously published version is archived, this one is published, and
-    the business goes live with it.
+    the business goes live with it. Activating a version without voice
+    removes the agent of earlier versions.
     """
 
     def __init__(
         self,
         check_go_live_readiness: UseCaseContract[BusinessDocument, None],
+        remove_voice_agent: UseCaseContract[BusinessId, None],
+        business_profile_repo: BusinessProfileRepoContract,
         business_repo: BusinessRepoContract,
         assistant_version_repo: AssistantVersionRepoContract,
         voice_agent_provisioner: VoiceAgentProvisionerAdapterContract,
@@ -55,6 +63,8 @@ class ActivateAssistantVersionUseCase(
         self._check_go_live_readiness: UseCaseContract[BusinessDocument, None] = (
             check_go_live_readiness
         )
+        self._remove_voice_agent: UseCaseContract[BusinessId, None] = remove_voice_agent
+        self._business_profile_repo: BusinessProfileRepoContract = business_profile_repo
         self._business_repo: BusinessRepoContract = business_repo
         self._assistant_version_repo: AssistantVersionRepoContract = (
             assistant_version_repo
@@ -82,6 +92,10 @@ class ActivateAssistantVersionUseCase(
         voice_agent_id: VoiceAgentId | None = version.voice_agent_id
         if version.is_voice_enabled:
             voice_agent_id = self._provision_voice_agent(business, version, versions)
+        elif any(other.voice_agent_id is not None for other in versions):
+            # A version without voice: the agent of an earlier version must
+            # not keep answering calls with the old instruction.
+            self._remove_voice_agent.run(business.id)
 
         now: Microseconds = self._wall_clock.now_unix()
         for other_version in versions:
@@ -129,6 +143,10 @@ class ActivateAssistantVersionUseCase(
                 greetings=self._build_greetings(business, version),
                 tools=self._assistant_tool_catalog.list_definitions(version.tools),
                 tool_webhook_base_url=base_url,
+                transfer_phone_number=find_transfer_phone_number(
+                    business,
+                    self._business_profile_repo.get_by_business(business.id),
+                ),
             )
             return self._voice_agent_provisioner.upsert_agent(spec)
         except ExternalServiceError:

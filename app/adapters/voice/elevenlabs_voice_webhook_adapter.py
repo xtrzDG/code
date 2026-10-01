@@ -40,6 +40,9 @@ from app.utilities.channels.json_values import (
     read_text,
 )
 from app.utilities.channels.language_codes import from_voice_platform_language
+from app.utilities.channels.voice_service import (
+    TRANSFER_TOOL_NAME,
+)
 from app.utilities.channels.webhook_signatures import is_valid_elevenlabs_signature
 
 POST_CALL_TRANSCRIPTION_EVENT: str = "post_call_transcription"
@@ -136,6 +139,7 @@ class ElevenLabsVoiceWebhookAdapter(VoiceWebhookAdapterContract):
             cost_micro_usd=read_cost(metadata),
             language=read_call_language(metadata, data),
             has_recording=data.get("has_audio") is not False,
+            transfer_offset_seconds=read_transfer_offset(transcript_items),
         )
 
     def parse_tool_call(self, body: bytes) -> VoiceToolCallArguments:
@@ -237,6 +241,19 @@ def read_called_tools(items: list[JsonObject]) -> list[AssistantToolName]:
                 tool_names.append(assistant_tool)
 
     return tool_names
+
+
+def read_transfer_offset(items: list[JsonObject]) -> CallOffsetSeconds | None:
+    """Seconds into the call when the agent put the caller through to staff."""
+
+    for item in items:
+        for tool_call in read_objects(item, "tool_calls"):
+            if read_text(tool_call, "tool_name") == TRANSFER_TOOL_NAME:
+                return CallOffsetSeconds(
+                    max(read_integer(item, "time_in_call_secs") or 0, 0)
+                )
+
+    return None
 
 
 def read_cost(metadata: JsonObject) -> CostMicroUsd:

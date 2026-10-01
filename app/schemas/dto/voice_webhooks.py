@@ -8,6 +8,7 @@ from app.schemas.constants.conversations import CallOutcome, MessageAuthor
 from app.schemas.typings.assistants.strings import VoiceAgentId
 from app.schemas.typings.billing.constrained_integers import CostMicroUsd
 from app.schemas.typings.bookings.prefixed_id import BookingId
+from app.schemas.typings.businesses.booleans import IsOpenNow
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.channels.booleans import (
     HasCallRecording,
@@ -82,13 +83,15 @@ class CallInitiationWebhookRequest(ImmutableDTO):
 class CallInitiationData(ImmutableDTO):
     """
     How the agent starts the call: the greeting with the AI disclosure and
-    recording notice, in the business's default language.
+    recording notice, in the business's default language, and whether the
+    business is open now (a call is put through to staff only then).
     """
 
     business_id: BusinessId
     first_message: MessageText
     language: LanguageTag
     caller_phone_number: E164PhoneNumber | None = None
+    is_open_now: IsOpenNow = False
 
 
 # --- Post-call webhook -----------------------------------------------------
@@ -132,6 +135,8 @@ class FinishedCallReport(ImmutableDTO):
     cost_micro_usd: CostMicroUsd = CostMicroUsd(0)
     language: LanguageTag | None = None
     has_recording: HasCallRecording = False
+    # When the agent put the caller through to staff (seconds into the call).
+    transfer_offset_seconds: CallOffsetSeconds | None = None
 
 
 class RecordedCall(ImmutableDTO):

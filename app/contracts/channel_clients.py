@@ -141,6 +141,10 @@ class ElevenLabsApiClientContract(ClientContract, Protocol):
     def update_agent(self, agent_id: VoiceAgentId, agent_config: JsonObject) -> None:
         raise NotImplementedError
 
+    def delete_agent(self, agent_id: VoiceAgentId) -> None:
+        """Delete an agent; a missing one is not an error."""
+        raise NotImplementedError
+
     def create_tool(self, tool_config: JsonObject) -> VoicePlatformToolId:
         raise NotImplementedError
 
