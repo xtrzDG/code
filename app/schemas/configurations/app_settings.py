@@ -12,7 +12,11 @@ from app.schemas.typings.assistants.constrained_strings import LlmModelId
 from app.schemas.typings.businesses.constrained_integers import (
     RecordingRetentionDays,
 )
-from app.schemas.typings.channels.constrained_strings import PublicBaseUrl
+from app.schemas.typings.channels.constrained_strings import (
+    MetaObjectId,
+    PublicBaseUrl,
+    WhatsAppTemplateName,
+)
 from app.schemas.typings.compliance.constrained_strings import DpaDocumentVersion
 from app.schemas.typings.conversations.constrained_integers import (
     ContactMessageLimit,
@@ -72,12 +76,15 @@ class AppSettings(ImmutableDTO):
     platform_admin_phone_numbers: list[E164PhoneNumber]
     elevenlabs_api_key: PlatformSecret | None = None
     elevenlabs_webhook_secret: PlatformSecret | None = None
+    elevenlabs_api_base_url: PublicBaseUrl = PublicBaseUrl("https://api.elevenlabs.io")
     zadarma_api_key: PlatformSecret | None = None
     zadarma_api_secret: PlatformSecret | None = None
     meta_app_id: PlatformIdentifier | None = None
     meta_app_secret: PlatformSecret | None = None
     meta_verify_token: PlatformSecret | None = None
     whatsapp_system_user_token: PlatformSecret | None = None
+    whatsapp_notification_phone_number_id: MetaObjectId | None = None
+    whatsapp_notification_template_name: WhatsAppTemplateName | None = None
     telegram_platform_bot_token: PlatformSecret | None = None
     google_oauth_client_id: PlatformIdentifier | None = None
     google_oauth_client_secret: PlatformSecret | None = None
