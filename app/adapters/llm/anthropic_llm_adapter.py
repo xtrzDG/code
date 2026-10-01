@@ -27,6 +27,10 @@ from app.schemas.typings.conversations.strings import (
     LlmToolInputJson,
     MessageText,
 )
+from app.utilities.conversations.llm_models import (
+    AnthropicModelFeatures,
+    find_anthropic_model_features,
+)
 from app.utilities.conversations.llm_transcript import (
     ASSISTANT_ROLE,
     OPENAI_FUNCTION_CALL_ITEM_TYPE,
@@ -87,6 +91,9 @@ class AnthropicLlmAdapter(LlmAdapterContract):
         return build_tool_results_payload(results)
 
     def complete(self, request: LlmRequest) -> LlmResponse:
+        features: AnthropicModelFeatures = find_anthropic_model_features(
+            str(request.model_id)
+        )
         message: BetaMessage = self._client.create_message(
             model=str(request.model_id),
             max_tokens=int(request.max_output_tokens),
@@ -99,7 +106,10 @@ class AnthropicLlmAdapter(LlmAdapterContract):
             ],
             tools=[build_anthropic_tool(tool) for tool in request.tools],
             messages=build_anthropic_messages(request.transcript),
-            effort=OUTPUT_EFFORTS[request.effort],
+            effort=(
+                OUTPUT_EFFORTS[request.effort] if features.supports_effort else None
+            ),
+            is_fallback_enabled=features.supports_default_fallbacks,
         )
         return parse_anthropic_message(message)
 

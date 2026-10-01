@@ -48,6 +48,7 @@ from app.schemas.typings.conversations.strings import (
 from app.schemas.typings.handoffs.prefixed_id import HandoffId
 from app.utilities.conversations.turn_context import (
     build_rewrite_note,
+    build_text_with_unanswered_messages,
     build_user_turn_text,
 )
 from app.utilities.reply_guard.invented_numbers import find_unverified_values
@@ -74,7 +75,9 @@ class GenerateAssistantReplyUseCase(UseCaseContract[PreparedTurn, GeneratedReply
     Ask the pinned assistant version for a reply (concept sections 1 and 5).
 
     The customer's message is appended to the verbatim transcript as one
-    user turn: the server context line, then the text. The model may call
+    user turn: the server context line, then the text, preceded by what the
+    customer wrote while the assistant stayed silent (a handoff, the hourly
+    limit), so the model never loses those messages. The model may call
     the offered tools for up to `tool_round_limit` rounds; all results of a
     round go back in one tool-results turn. Every turn gets the next
     sequence number and is only ever appended.
@@ -135,7 +138,10 @@ class GenerateAssistantReplyUseCase(UseCaseContract[PreparedTurn, GeneratedReply
                 MessageText(
                     build_user_turn_text(
                         str(input_data.context_line),
-                        str(input_data.customer_text),
+                        build_text_with_unanswered_messages(
+                            self._collect_unanswered_messages(input_data, stored_turns),
+                            str(input_data.customer_text),
+                        ),
                     )
                 )
             ),
@@ -159,6 +165,29 @@ class GenerateAssistantReplyUseCase(UseCaseContract[PreparedTurn, GeneratedReply
             return build_reply(input_data, progress, text=text)
 
         return self._rewrite_once(input_data, tools, progress, unverified_values)
+
+    def _collect_unanswered_messages(
+        self,
+        turn: PreparedTurn,
+        stored_turns: list[LlmTurnDocument],
+    ) -> list[str]:
+        """
+        Customer messages after the last model turn and before this one: the
+        ones the assistant stayed silent on (handoff, hourly limit).
+        """
+
+        last_turn_at: int = int(stored_turns[-1].created_at) if stored_turns else -1
+        return [
+            str(message.text)
+            for message in sorted(
+                self._message_repo.list_by_conversation(
+                    turn.business.id, turn.conversation.id
+                ),
+                key=lambda message: int(message.created_at),
+            )
+            if message.direction is MessageDirection.INBOUND
+            and last_turn_at < int(message.created_at) < int(turn.received_at)
+        ]
 
     def _rewrite_once(
         self,

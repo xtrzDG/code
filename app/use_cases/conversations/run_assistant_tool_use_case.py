@@ -1,3 +1,4 @@
+import logging
 from collections.abc import Callable
 
 from pydantic import ValidationError
@@ -64,6 +65,12 @@ from app.utilities.conversations.tool_payloads import (
 )
 
 type ToolHandler = Callable[[LlmToolCall, AssistantToolContext], AssistantToolOutcome]
+
+logger: logging.Logger = logging.getLogger(__name__)
+UNEXPECTED_TOOL_ERROR: str = (
+    "The tool failed; try again once, otherwise offer to pass the request to a "
+    "colleague."
+)
 
 
 class RunAssistantToolUseCase(
@@ -161,6 +168,11 @@ class RunAssistantToolUseCase(
             return error_outcome(call, describe_tool_input_error(error))
         except ApplicationError as error:
             return error_outcome(call, str(error) or type(error).__name__)
+        except Exception:
+            # A bug must not cost the customer the reply: the model gets an
+            # error result it can act on, and the error is reported.
+            logger.exception("Tool %s failed unexpectedly.", call.tool_name)
+            return error_outcome(call, UNEXPECTED_TOOL_ERROR)
 
     def _run_search_knowledge(
         self,

@@ -10,6 +10,11 @@ from starlette.types import Lifespan
 from app.contracts.observability import ErrorReportingFacilitatorContract
 from app.gateways.http.cabinet_cors_middleware import CabinetCorsMiddleware
 from app.gateways.http.error_responses import install_error_handlers
+from app.gateways.http.widget_cors_middleware import (
+    WIDGET_CORS_HEADERS,
+    WidgetCorsMiddleware,
+    is_widget_path,
+)
 from app.schemas.typings.channels.constrained_strings import PublicBaseUrl
 
 REQUEST_ID_HEADER: str = "X-Request-ID"
@@ -38,7 +43,6 @@ def build_http_application(
     install_error_handlers(http_application)
 
     async def handle_unexpected_error(request: Request, error: Exception) -> Response:
-        del request
         error_reporter.capture_exception(error)
         return JSONResponse(
             status_code=500,
@@ -46,6 +50,7 @@ def build_http_application(
                 "error": "internal_error",
                 "message": "Unexpected server error.",
             },
+            headers=(WIDGET_CORS_HEADERS if is_widget_path(request.url.path) else None),
         )
 
     http_application.add_exception_handler(Exception, handle_unexpected_error)
@@ -58,6 +63,8 @@ def build_http_application(
             allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
             allow_headers=["Authorization", "Content-Type", REQUEST_ID_HEADER],
         )
+
+    http_application.add_middleware(WidgetCorsMiddleware)
 
     @http_application.middleware("http")
     async def attach_request_id(

@@ -440,3 +440,48 @@ def test_bookings_are_found_by_the_phone_the_channel_proved() -> None:
     # Without a proved phone only the conversation's own contact counts.
     assert reschedule_command.contact_phone_number is None
     assert reschedule_command.is_sandbox is False
+
+
+def test_far_away_dates_are_refused_as_input() -> None:
+    world = build_world(scripted())
+
+    result, is_error = run_tool(
+        world,
+        AssistantToolName.CHECK_AVAILABILITY,
+        {
+            "resource_type": None,
+            "date": "0001-01-01",
+            "time": None,
+            "party_size": 2,
+            "duration_minutes": None,
+            "nights": None,
+        },
+    )
+
+    assert is_error is True
+    assert "date" in result["error"]
+
+
+def test_an_unexpected_tool_failure_becomes_an_error_result() -> None:
+    world = build_world(scripted())
+
+    def explode(_: object) -> object:
+        raise OverflowError("date value out of range")
+
+    world.availability.run = explode  # type: ignore[method-assign,assignment]
+
+    result, is_error = run_tool(
+        world,
+        AssistantToolName.CHECK_AVAILABILITY,
+        {
+            "resource_type": None,
+            "date": "2026-10-02",
+            "time": None,
+            "party_size": 2,
+            "duration_minutes": None,
+            "nights": None,
+        },
+    )
+
+    assert is_error is True
+    assert "colleague" in result["error"]

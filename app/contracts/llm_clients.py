@@ -41,7 +41,12 @@ class AnthropicMessagesClientContract(ClientContract, Protocol):
         system: list[dict[str, object]],
         tools: list[dict[str, object]],
         messages: list[dict[str, object]],
-        effort: str,
+        effort: str | None,
+        is_fallback_enabled: bool,
     ) -> BetaMessage:
-        """One Messages API call with server-side refusal fallbacks."""
+        """
+        One Messages API call; `effort` None leaves `output_config` out, and
+        server-side refusal fallbacks are asked for only when enabled (models
+        that do not support an option reject the whole request).
+        """
         raise NotImplementedError

@@ -253,6 +253,8 @@ def test_availability_query_parameters_are_typed() -> None:
         {"date": "2026-10-06", "party_size": "three"},
         {"date": "2026-10-06", "resource_kind": "spaceship"},
         {"date": "2026-10-06", "party_size": "0"},
+        {"date": "0001-01-01"},
+        {"date": "9999-12-31"},
     ):
         bad = api.get("/availability", **params)
         assert bad.status_code == 422, params
@@ -399,6 +401,8 @@ def test_dashboard_route() -> None:
         api.get("/dashboard", **{"from": "2026-10-05", "to": "2026-10-01"}).status_code
         == 422
     )
+    assert api.get("/dashboard", to="9999-12-31").status_code == 422
+    assert api.get("/dashboard", **{"from": "0001-01-01"}).status_code == 422
 
 
 def test_google_calendar_connection_routes() -> None:

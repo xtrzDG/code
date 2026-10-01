@@ -51,6 +51,64 @@ LLM_TOKEN_PRICES: dict[str, LlmTokenPrice] = {
 }
 
 
+class AnthropicModelFeatures(NamedTuple):
+    """
+    Request options an Anthropic model accepts (technical capability record).
+
+    `supports_effort`: `output_config.effort` (rejected by Haiku 4.5, Sonnet
+    4.5 and older models). `supports_default_fallbacks`: the server-side
+    refusal fallback `fallbacks: "default"` (Claude Fable 5.1, Claude Mythos
+    5.1, Claude Opus 5.5, Claude Opus 5 and Claude Sonnet 5.5).
+    """
+
+    supports_effort: bool
+    supports_default_fallbacks: bool
+
+
+ANTHROPIC_MODEL_FEATURES: dict[str, AnthropicModelFeatures] = {
+    "claude-fable-5-1": AnthropicModelFeatures(True, True),
+    "claude-mythos-5-1": AnthropicModelFeatures(True, True),
+    "claude-fable-5": AnthropicModelFeatures(True, False),
+    "claude-opus-5-5": AnthropicModelFeatures(True, True),
+    "claude-opus-5": AnthropicModelFeatures(True, True),
+    "claude-sonnet-5-5": AnthropicModelFeatures(True, True),
+    "claude-sonnet-5": AnthropicModelFeatures(True, False),
+    "claude-opus-4-8": AnthropicModelFeatures(True, False),
+    "claude-opus-4-7": AnthropicModelFeatures(True, False),
+    "claude-opus-4-6": AnthropicModelFeatures(True, False),
+    "claude-sonnet-4-6": AnthropicModelFeatures(True, False),
+    "claude-opus-4-5": AnthropicModelFeatures(True, False),
+    "claude-sonnet-4-5": AnthropicModelFeatures(False, False),
+    "claude-haiku-4-5": AnthropicModelFeatures(False, False),
+    "claude-opus-4-1": AnthropicModelFeatures(False, False),
+    "claude-opus-4": AnthropicModelFeatures(False, False),
+    "claude-sonnet-4": AnthropicModelFeatures(False, False),
+    "claude-3": AnthropicModelFeatures(False, False),
+}
+# A Claude model newer than this table: effort is accepted by every current
+# model; the refusal fallback is asked for only where it is known to work.
+UNKNOWN_ANTHROPIC_MODEL_FEATURES: AnthropicModelFeatures = AnthropicModelFeatures(
+    True, False
+)
+
+
+def find_anthropic_model_features(model_id: str) -> AnthropicModelFeatures:
+    """
+    Features of a model id; dated or regional ids ("claude-haiku-4-5-2025...")
+    use the entry of their longest known prefix.
+    """
+
+    exact: AnthropicModelFeatures | None = ANTHROPIC_MODEL_FEATURES.get(model_id)
+    if exact is not None:
+        return exact
+
+    for known_model in sorted(ANTHROPIC_MODEL_FEATURES, key=len, reverse=True):
+        if model_id.startswith(f"{known_model}-"):
+            return ANTHROPIC_MODEL_FEATURES[known_model]
+
+    return UNKNOWN_ANTHROPIC_MODEL_FEATURES
+
+
 def resolve_llm_provider(model_id: LlmModelId) -> LlmProvider | None:
     """
     Provider of a model id: "gpt-*" and "o<digit>*" are OpenAI, "claude-*"

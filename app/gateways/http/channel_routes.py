@@ -11,6 +11,7 @@ from app.gateways.http.strict_request_parsing import (
     describe_json_body,
     parse_path_identifier,
 )
+from app.gateways.http.widget_cors_middleware import WIDGET_CORS_HEADERS
 from app.schemas.dto.channels import (
     ChannelWebhookOutcome,
     ChannelWebhookPayload,
@@ -42,15 +43,6 @@ from app.utilities.channels.channel_endpoints import (
 
 WIDGET_CONFIG_PATH: str = "/v1/widget/{business_id}/config"
 WIDGET_MESSAGES_PATH: str = "/v1/widget/{business_id}/messages"
-# The widget runs on the businesses' own websites, so any origin may call it.
-# It may post with Content-Type text/plain (the body is still JSON) to avoid
-# a CORS preflight when the application restricts origins globally.
-WIDGET_CORS_HEADERS: dict[str, str] = {
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type",
-    "Access-Control-Max-Age": "86400",
-}
 
 read_widget_message_body = build_json_body_dependency(WidgetMessageRequest)
 

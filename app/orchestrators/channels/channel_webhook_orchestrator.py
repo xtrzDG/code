@@ -30,7 +30,10 @@ class ChannelWebhookOrchestrator[WebhookRequest](
 
     A message that cannot be answered or delivered is logged and counted;
     the delivery is still acknowledged, so the platform does not repeat the
-    messages that were answered.
+    messages that were answered. An unexpected error of one message is
+    reported (logged with its trace, which the error reporter picks up) and
+    never stops the other messages of the same delivery: their receipts are
+    already recorded, so a failed request would lose them for good.
     """
 
     def __init__(
@@ -70,6 +73,14 @@ class ChannelWebhookOrchestrator[WebhookRequest](
                 )
                 failed += 1
                 continue
+            except Exception:
+                logger.exception(
+                    "A %s message of business %s failed unexpectedly.",
+                    delivery.message.channel.value,
+                    delivery.message.business_id,
+                )
+                failed += 1
+                continue
 
             if reply.text is None:
                 silenced += 1
@@ -90,6 +101,14 @@ class ChannelWebhookOrchestrator[WebhookRequest](
                     delivery.target.channel.value,
                     delivery.message.business_id,
                     error,
+                )
+                failed += 1
+                continue
+            except Exception:
+                logger.exception(
+                    "A %s reply of business %s failed unexpectedly.",
+                    delivery.target.channel.value,
+                    delivery.message.business_id,
                 )
                 failed += 1
                 continue

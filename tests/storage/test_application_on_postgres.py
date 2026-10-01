@@ -50,6 +50,17 @@ def test_published_assistant_books_a_table_with_everything_in_postgres(
             json={"session_key": WIDGET_SESSION, "text": BOOKING_REQUEST_RU},
         )
         assert reply.status_code == 200, reply.text
+        # JSONB cannot store NUL; the message is still answered, not dropped.
+        with_nul = client.post(
+            f"/v1/widget/{restaurant.business_id}/messages",
+            json={
+                "session_key": WIDGET_SESSION,
+                "text": "Спасибо\u0000!",
+                "contact_name": "Нино\u0000",
+            },
+        )
+        assert with_nul.status_code == 200, with_nul.text
+        assert with_nul.json()["text"] is not None
         bookings = client.get(
             f"{restaurant.base}/bookings", headers=restaurant.headers
         ).json()["items"]

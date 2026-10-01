@@ -686,3 +686,67 @@ def test_only_a_phone_the_channel_proved_reaches_bookings_by_phone() -> None:
     stored_typed = world.contact_repo.get(world.business.id, typed_contact.id)
     assert stored_typed is not None
     assert stored_typed.verified_phone_number is None
+
+
+def test_the_bot_stays_silent_until_staff_close_the_handoff_however_long() -> None:
+    world = build_world(
+        scripted(
+            call_tool(
+                AssistantToolName.HANDOFF_TO_HUMAN,
+                '{"reason":"customer_request","summary":"Wants a manager",'
+                '"urgency":"normal"}',
+            ),
+            say("A colleague will contact you soon."),
+            say("Hello again! How can I help?"),
+        )
+    )
+    first = world.send("I want to talk to a manager")
+    world.clock.advance(timedelta(hours=25))
+
+    weekend = world.send("hello? any news?")
+
+    assert weekend.text is None
+    assert weekend.is_handed_off is True
+    assert weekend.conversation_id == first.conversation_id
+    assert len(world.handoffs()) == 1
+    assert len(requests_of(world)) == 2
+
+    [conversation] = world.conversations()
+    conversation.status = ConversationStatus.OPEN
+    world.conversation_repo.save(conversation)
+    world.clock.advance(timedelta(hours=25))
+
+    later = world.send("Hi there")
+
+    assert later.conversation_id != first.conversation_id
+    assert later.text is not None
+    assert later.text.endswith("Hello again! How can I help?")
+
+
+def test_messages_written_during_a_handoff_reach_the_model_afterwards() -> None:
+    world = build_world(
+        scripted(
+            call_tool(
+                AssistantToolName.HANDOFF_TO_HUMAN,
+                '{"reason":"customer_request","summary":"Change booking",'
+                '"urgency":"normal"}',
+            ),
+            say("A colleague will contact you soon."),
+            say("Yes, your change to 6 people at 20:00 is noted."),
+        )
+    )
+    world.send("Please change my booking, I need a person")
+    world.clock.advance(timedelta(minutes=5))
+    world.send("make it 6 people instead of 4, at 20:00")
+    [conversation] = world.conversations()
+    conversation.status = ConversationStatus.OPEN
+    world.conversation_repo.save(conversation)
+    world.clock.advance(timedelta(minutes=5))
+
+    world.send("so is my change confirmed?")
+
+    last_request = requests_of(world)[-1]
+    final_user_turn = json.loads(last_request.transcript[-1])
+    text = "".join(str(block.get("text", "")) for block in final_user_turn["content"])
+    assert "make it 6 people instead of 4, at 20:00" in text
+    assert text.rstrip().endswith("so is my change confirmed?")

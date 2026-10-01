@@ -24,6 +24,11 @@ WEEKDAY_NAMES: tuple[str, ...] = (
 UPCOMING_DAY_COUNT: int = 7
 CONTEXT_HEADER: str = "[Context from the platform, not written by the customer]"
 CUSTOMER_HEADER: str = "[Customer message]"
+UNANSWERED_HEADER: str = (
+    "(Earlier messages of the customer, written while a colleague handled the "
+    "conversation and the assistant stayed silent:)"
+)
+LATEST_MESSAGE_HEADER: str = "(The latest message:)"
 LEADS_ONLY_NOTE: str = (
     "Bookings are paused for this business: do not check availability or "
     "book. Take the request with create_lead, or pass the conversation to a "
@@ -107,6 +112,23 @@ def build_user_turn_text(context_line: str, customer_text: str) -> str:
     """The user turn: the context, then the customer's own words."""
 
     return f"{context_line}\n{CUSTOMER_HEADER}\n{customer_text}"
+
+
+def build_text_with_unanswered_messages(
+    unanswered_texts: list[str],
+    customer_text: str,
+) -> str:
+    """
+    The customer's message after what they wrote while the assistant stayed
+    silent (a colleague handled the conversation, or the hourly limit was
+    reached), so the model knows everything the customer said.
+    """
+
+    if not unanswered_texts:
+        return customer_text
+
+    earlier: str = "\n".join(f"- {text}" for text in unanswered_texts)
+    return f"{UNANSWERED_HEADER}\n{earlier}\n{LATEST_MESSAGE_HEADER}\n{customer_text}"
 
 
 def build_rewrite_note(unverified_values: list[str]) -> str:

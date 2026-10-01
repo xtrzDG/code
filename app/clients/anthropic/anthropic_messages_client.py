@@ -30,8 +30,9 @@ class AnthropicMessagesClient(AnthropicMessagesClientContract):
     """
     Minimal client of the Anthropic Messages API (beta surface).
 
-    Every request opts into server-side refusal fallbacks and automatic
-    prompt caching of the conversation prefix. No `thinking` parameter and no
+    Every request opts into automatic prompt caching of the conversation
+    prefix, and into effort and server-side refusal fallbacks where the
+    caller says the model supports them. No `thinking` parameter and no
     forced `tool_choice` are ever sent: the current models think adaptively
     and reject forced tool use. The SDK client is created on first use, so
     the application starts without ANTHROPIC_API_KEY.
@@ -52,7 +53,8 @@ class AnthropicMessagesClient(AnthropicMessagesClientContract):
         system: list[dict[str, object]],
         tools: list[dict[str, object]],
         messages: list[dict[str, object]],
-        effort: str,
+        effort: str | None,
+        is_fallback_enabled: bool,
     ) -> BetaMessage:
         sdk_client: anthropic.Anthropic = self._get_sdk_client()
         try:
@@ -64,10 +66,18 @@ class AnthropicMessagesClient(AnthropicMessagesClientContract):
                     cast(list[BetaToolUnionParam], tools) if tools else anthropic.omit
                 ),
                 messages=cast(list[BetaMessageParam], messages),
-                output_config=cast(BetaOutputConfigParam, {"effort": effort}),
+                output_config=(
+                    cast(BetaOutputConfigParam, {"effort": effort})
+                    if effort is not None
+                    else anthropic.omit
+                ),
                 cache_control={"type": "ephemeral"},
-                betas=[SERVER_SIDE_FALLBACK_BETA],
-                fallbacks=DEFAULT_FALLBACKS,
+                betas=(
+                    [SERVER_SIDE_FALLBACK_BETA]
+                    if is_fallback_enabled
+                    else anthropic.omit
+                ),
+                fallbacks=DEFAULT_FALLBACKS if is_fallback_enabled else anthropic.omit,
             )
         except anthropic.AuthenticationError as error:
             raise ExternalServiceError("Anthropic rejected the API key.") from error

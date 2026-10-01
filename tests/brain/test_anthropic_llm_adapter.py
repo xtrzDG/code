@@ -364,3 +364,30 @@ def test_sdk_construction_failure_is_reported_as_configuration_error() -> None:
         adapter.complete(
             build_request([adapter.build_user_text_turn(MessageText("hi"))])
         )
+
+
+@pytest.mark.parametrize(
+    ("model_id", "has_effort", "has_fallbacks"),
+    [
+        ("claude-opus-5-5", True, True),
+        ("claude-sonnet-5-5", True, True),
+        ("claude-sonnet-4-6", True, False),
+        ("claude-haiku-4-5", False, False),
+        ("claude-haiku-4-5-20251001", False, False),
+    ],
+)
+def test_only_options_the_model_accepts_are_sent(
+    model_id: str,
+    has_effort: bool,
+    has_fallbacks: bool,
+) -> None:
+    http = ScriptedHttp([anthropic_message([{"type": "text", "text": "Hi"}])])
+    adapter = AnthropicLlmAdapter(build_anthropic_client(http))
+    request = build_request([adapter.build_user_text_turn(MessageText("Hi"))])
+
+    adapter.complete(request.model_copy(update={"model_id": LlmModelId(model_id)}))
+
+    body = http.body(0)
+    assert ("output_config" in body) is has_effort
+    assert ("fallbacks" in body) is has_fallbacks
+    assert ("anthropic-beta" in http.requests[0].headers) is has_fallbacks

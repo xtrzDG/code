@@ -29,6 +29,7 @@ from app.schemas.dto.conversation_engine import PreparedTurn
 from app.schemas.dto.conversations import InboundMessage
 from app.schemas.exceptions.application_errors import ConflictError, NotFoundError
 from app.schemas.typings.assistants.prefixed_id import AssistantVersionId
+from app.schemas.typings.contacts.strings import ContactName
 from app.schemas.typings.conversations.booleans import IsAfterHours
 from app.schemas.typings.conversations.constrained_integers import (
     ContactMessageLimit,
@@ -45,6 +46,7 @@ CONTACT_LIMIT_WINDOW: timedelta = timedelta(hours=1)
 # Longer messages are cut: no customer needs more, and tokens cost money.
 MAX_CUSTOMER_TEXT_LENGTH: int = 4000
 UNIX_EPOCH: datetime = datetime(1970, 1, 1, tzinfo=UTC)
+NUL_CHARACTER: str = "\x00"
 
 
 class PrepareConversationTurnUseCase(UseCaseContract[InboundMessage, PreparedTurn]):
@@ -57,11 +59,13 @@ class PrepareConversationTurnUseCase(UseCaseContract[InboundMessage, PreparedTur
        (only a contact whose own phone is proved the same way; never for
        sandbox messages), else a new one; missing name, phone and identity
        are added, and a phone the channel proved is remembered as verified.
-    3. The conversation of the contact in this channel and sandbox mode with
-       a message in the last 24 hours, pinned to its assistant version; a
-       message asking for another version, or no open conversation, starts a
-       new one pinned to the requested or published version (ConflictError
-       when the business has none).
+    3. The conversation of the contact in this channel and sandbox mode that
+       staff still own (HANDOFF, however long ago, so the bot stays silent
+       until the handoff is closed), else one with a message in the last 24
+       hours, pinned to its assistant version; a message asking for another
+       version, or no open conversation, starts a new one pinned to the
+       requested or published version (ConflictError when the business has
+       none).
     4. The gate: staff own a conversation in HANDOFF (silence in chat, a
        call-back promise on the phone); past the hourly per-contact limit the
        assistant answers once with a stop message, then stays silent.
@@ -100,6 +104,7 @@ class PrepareConversationTurnUseCase(UseCaseContract[InboundMessage, PreparedTur
         self._contact_message_limit: ContactMessageLimit = contact_message_limit
 
     def run(self, input_data: InboundMessage) -> PreparedTurn:
+        input_data = remove_nul_characters(input_data)
         now: Microseconds = self._wall_clock.now_unix()
         business: BusinessDocument | None = self._business_repo.get(
             input_data.business_id
@@ -351,17 +356,24 @@ class PrepareConversationTurnUseCase(UseCaseContract[InboundMessage, PreparedTur
         now: Microseconds,
     ) -> ConversationDocument | None:
         window_start: int = int(now) - to_microseconds(CONVERSATION_WINDOW)
+        recent: ConversationDocument | None = None
         for conversation in self._conversation_repo.list_by_business(business.id):
             if (
-                conversation.contact_id == contact.id
-                and conversation.channel is channel
-                and conversation.is_sandbox == is_sandbox
-                and conversation.status is not ConversationStatus.CLOSED
-                and int(conversation.last_message_at) >= window_start
+                conversation.contact_id != contact.id
+                or conversation.channel is not channel
+                or conversation.is_sandbox != is_sandbox
+                or conversation.status is ConversationStatus.CLOSED
             ):
+                continue
+
+            # Staff own it until they close the handoff, however long ago.
+            if conversation.status is ConversationStatus.HANDOFF:
                 return conversation
 
-        return None
+            if recent is None and int(conversation.last_message_at) >= window_start:
+                recent = conversation
+
+        return recent
 
     def _choose_gate(
         self,
@@ -428,6 +440,32 @@ class PrepareConversationTurnUseCase(UseCaseContract[InboundMessage, PreparedTur
                 business.id, conversation.id
             )
         )
+
+
+def remove_nul_characters(message: InboundMessage) -> InboundMessage:
+    """
+    The message without NUL characters in its text and name: no customer
+    means them, and Postgres JSONB cannot store them, so keeping them would
+    answer a message in memory and silently drop it on Postgres.
+    """
+
+    text: str = str(message.text)
+    name: str | None = (
+        None if message.contact_name is None else str(message.contact_name)
+    )
+    if NUL_CHARACTER not in text and (name is None or NUL_CHARACTER not in name):
+        return message
+
+    return message.model_copy(
+        update={
+            "text": MessageText(text.replace(NUL_CHARACTER, "")),
+            "contact_name": (
+                None
+                if name is None or name.replace(NUL_CHARACTER, "").strip() == ""
+                else ContactName(name.replace(NUL_CHARACTER, ""))
+            ),
+        }
+    )
 
 
 def is_sandbox_message(message: InboundMessage) -> bool:
