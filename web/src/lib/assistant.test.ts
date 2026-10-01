@@ -95,6 +95,8 @@ describe("autotests", () => {
     passed_count: results.filter((item) => item.outcome === "passed").length,
     pass_rate: 0,
     is_passed: false,
+    is_full_coverage: false,
+    status: "finished",
     cost_micro_usd: 0,
     created_at: 0,
     updated_at: 0,

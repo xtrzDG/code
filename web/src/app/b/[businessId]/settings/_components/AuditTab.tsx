@@ -32,6 +32,7 @@ const ACTION_LABELS: Record<AuditAction, MessageKey> = {
   admin_access: "settings.audit.actions.admin_access",
   login: "settings.audit.actions.login",
   retention_purge: "settings.audit.actions.retention_purge",
+  publish_untested: "settings.audit.actions.publish_untested",
 };
 
 const ACTIONS = Object.keys(ACTION_LABELS) as AuditAction[];

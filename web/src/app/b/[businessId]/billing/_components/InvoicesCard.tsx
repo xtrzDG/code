@@ -18,6 +18,7 @@ const STATUS_LABELS: Record<InvoiceStatus, MessageKey> = {
 const KIND_LABELS: Record<InvoiceView["kind"], MessageKey> = {
   service_period: "billing.invoices.kinds.service_period",
   setup_fee: "billing.invoices.kinds.setup_fee",
+  usage_overage: "billing.invoices.kinds.usage_overage",
 };
 
 /** Invoices with their status, period and amount in the invoice currency. */

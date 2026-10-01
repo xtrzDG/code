@@ -100,4 +100,5 @@ export const INVOICE_STATUS_LABELS: Record<Schema<"InvoiceStatus">, MessageKey> 
 export const INVOICE_KIND_LABELS: Record<Schema<"InvoiceKind">, MessageKey> = {
   service_period: "billing.invoices.kinds.service_period",
   setup_fee: "billing.invoices.kinds.setup_fee",
+  usage_overage: "billing.invoices.kinds.usage_overage",
 };

@@ -2417,6 +2417,92 @@
         "title": "CallOutcome",
         "type": "string"
       },
+      "CallView": {
+        "additionalProperties": false,
+        "description": "A phone call of the conversation: its transcript, duration, outcome and\nwhere its recording is kept (the platform reference; reading it is\naudited with the card).",
+        "properties": {
+          "duration_seconds": {
+            "minimum": 0.0,
+            "title": "Duration Seconds",
+            "type": "integer"
+          },
+          "from_phone_number": {
+            "anyOf": [
+              {
+                "maxLength": 16,
+                "minLength": 8,
+                "pattern": "^\\+[1-9][0-9]{6,14}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "From Phone Number"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "outcome": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CallOutcome"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "recording_path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recording Path"
+          },
+          "started_at": {
+            "title": "Started At",
+            "type": "integer"
+          },
+          "to_phone_number": {
+            "anyOf": [
+              {
+                "maxLength": 16,
+                "minLength": 8,
+                "pattern": "^\\+[1-9][0-9]{6,14}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "To Phone Number"
+          },
+          "transcript": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Transcript"
+          }
+        },
+        "required": [
+          "id",
+          "started_at",
+          "duration_seconds"
+        ],
+        "title": "CallView",
+        "type": "object"
+      },
       "CarrierForwardingInstructions": {
         "additionalProperties": false,
         "description": "Ready-to-dial codes of one named mobile carrier.",
@@ -3124,8 +3210,15 @@
       },
       "ConversationDetailView": {
         "additionalProperties": false,
-        "description": "Conversation card: summary and the full transcript with tool calls.",
+        "description": "Conversation card: summary, the full transcript with tool calls and, for\nphone conversations, the calls with their transcripts and recordings.",
         "properties": {
+          "calls": {
+            "items": {
+              "$ref": "#/components/schemas/CallView"
+            },
+            "title": "Calls",
+            "type": "array"
+          },
           "conversation": {
             "$ref": "#/components/schemas/ConversationSummaryView"
           },
@@ -3145,7 +3238,7 @@
       },
       "ConversationDocument": {
         "additionalProperties": false,
-        "description": "Customer conversation in one channel (concept table `conversations`).\n\nPinned to one assistant version so its instruction and tools never change\nmid-conversation.",
+        "description": "Customer conversation in one channel (concept table `conversations`).\n\nPinned to one assistant version so its instruction and tools never change\nmid-conversation. `rating` is the owner's or staff's good / bad verdict.",
         "properties": {
           "assistant_version_id": {
             "title": "Assistant Version Id",
@@ -3203,6 +3296,38 @@
             "title": "Last Message At",
             "type": "integer"
           },
+          "rated_at": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rated At"
+          },
+          "rated_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rated By"
+          },
+          "rating": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ConversationRating"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "schema_version": {
             "default": "1",
             "description": "Persistence schema version. This is not the package version or application release version.",
@@ -3229,6 +3354,15 @@
         ],
         "title": "ConversationDocument",
         "type": "object"
+      },
+      "ConversationRating": {
+        "description": "The owner's or staff's verdict on how the assistant handled a\nconversation (concept section 8, \"good / bad\" on the card), used in the\nweekly quality review (section 11).",
+        "enum": [
+          "good",
+          "bad"
+        ],
+        "title": "ConversationRating",
+        "type": "string"
       },
       "ConversationStatus": {
         "description": "State of a customer conversation (concept: open, handoff, closed).\n\nWhile a conversation is in HANDOFF the assistant stays silent in chat\nchannels until staff resolve the handoff.",
@@ -3333,6 +3467,16 @@
             "minimum": 0.0,
             "title": "Message Count",
             "type": "integer"
+          },
+          "rating": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ConversationRating"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "status": {
             "$ref": "#/components/schemas/ConversationStatus"
@@ -11173,6 +11317,107 @@
           }
         },
         "summary": "Get Conversation",
+        "tags": [
+          "conversations"
+        ]
+      }
+    },
+    "/v1/businesses/{business_id}/conversations/{conversation_id}/rating": {
+      "put": {
+        "operationId": "rate_conversation_v1_businesses__business_id__conversations__conversation_id__rating_put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "conversation_id",
+            "required": true,
+            "schema": {
+              "title": "Conversation Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "description": "HTTP body of rating a conversation; null clears the rating.",
+                "properties": {
+                  "rating": {
+                    "anyOf": [
+                      {
+                        "description": "The owner's or staff's verdict on how the assistant handled a\nconversation (concept section 8, \"good / bad\" on the card), used in the\nweekly quality review (section 11).",
+                        "enum": [
+                          "good",
+                          "bad"
+                        ],
+                        "title": "ConversationRating",
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "required": [
+                  "rating"
+                ],
+                "title": "ConversationRatingRequest",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConversationSummaryView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Rate Conversation",
         "tags": [
           "conversations"
         ]

@@ -570,6 +570,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/businesses/{business_id}/conversations/{conversation_id}/rating": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Rate Conversation */
+        put: operations["rate_conversation_v1_businesses__business_id__conversations__conversation_id__rating_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/businesses/{business_id}/dashboard": {
         parameters: {
             query?: never;
@@ -2212,6 +2229,29 @@ export interface components {
          */
         CallOutcome: "booking" | "lead" | "handoff" | "unanswered_question" | "information" | "abandoned";
         /**
+         * CallView
+         * @description A phone call of the conversation: its transcript, duration, outcome and
+         *     where its recording is kept (the platform reference; reading it is
+         *     audited with the card).
+         */
+        CallView: {
+            /** Duration Seconds */
+            duration_seconds: number;
+            /** From Phone Number */
+            from_phone_number?: string | null;
+            /** Id */
+            id: string;
+            outcome?: components["schemas"]["CallOutcome"] | null;
+            /** Recording Path */
+            recording_path?: string | null;
+            /** Started At */
+            started_at: number;
+            /** To Phone Number */
+            to_phone_number?: string | null;
+            /** Transcript */
+            transcript?: string | null;
+        };
+        /**
          * CarrierForwardingInstructions
          * @description Ready-to-dial codes of one named mobile carrier.
          */
@@ -2519,9 +2559,12 @@ export interface components {
         };
         /**
          * ConversationDetailView
-         * @description Conversation card: summary and the full transcript with tool calls.
+         * @description Conversation card: summary, the full transcript with tool calls and, for
+         *     phone conversations, the calls with their transcripts and recordings.
          */
         ConversationDetailView: {
+            /** Calls */
+            calls?: components["schemas"]["CallView"][];
             conversation: components["schemas"]["ConversationSummaryView"];
             /** Messages */
             messages?: components["schemas"]["MessageView"][];
@@ -2531,7 +2574,7 @@ export interface components {
          * @description Customer conversation in one channel (concept table `conversations`).
          *
          *     Pinned to one assistant version so its instruction and tools never change
-         *     mid-conversation.
+         *     mid-conversation. `rating` is the owner's or staff's good / bad verdict.
          */
         ConversationDocument: {
             /** Assistant Version Id */
@@ -2564,6 +2607,11 @@ export interface components {
             language?: string | null;
             /** Last Message At */
             last_message_at: number;
+            /** Rated At */
+            rated_at?: number | null;
+            /** Rated By */
+            rated_by?: string | null;
+            rating?: components["schemas"]["ConversationRating"] | null;
             /**
              * Schema Version
              * @description Persistence schema version. This is not the package version or application release version.
@@ -2578,6 +2626,14 @@ export interface components {
              */
             updated_at?: number;
         };
+        /**
+         * ConversationRating
+         * @description The owner's or staff's verdict on how the assistant handled a
+         *     conversation (concept section 8, "good / bad" on the card), used in the
+         *     weekly quality review (section 11).
+         * @enum {string}
+         */
+        ConversationRating: "good" | "bad";
         /**
          * ConversationStatus
          * @description State of a customer conversation (concept: open, handoff, closed).
@@ -2619,6 +2675,7 @@ export interface components {
             last_message_text?: string | null;
             /** Message Count */
             message_count: number;
+            rating?: components["schemas"]["ConversationRating"] | null;
             status: components["schemas"]["ConversationStatus"];
         };
         /**
@@ -5760,6 +5817,46 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ConversationDetailView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    rate_conversation_v1_businesses__business_id__conversations__conversation_id__rating_put: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+                conversation_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    rating: ("good" | "bad") | null;
+                };
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConversationSummaryView"];
                 };
             };
             /** @description Validation Error */

@@ -309,6 +309,7 @@ export const workspaceEn = {
       kinds: {
         service_period: "Service",
         setup_fee: "Setup",
+        usage_overage: "Usage above the package",
       },
       status: {
         issued: "Unpaid",
@@ -553,6 +554,7 @@ export const workspaceEn = {
         admin_access: "Platform admin access",
         login: "Sign-in",
         retention_purge: "Deleted by retention",
+        publish_untested: "Untested version published",
       },
       entities: {
         contact: "Customer",
@@ -1036,6 +1038,7 @@ export const workspaceRu: Translation<typeof workspaceEn> = {
       kinds: {
         service_period: "Обслуживание",
         setup_fee: "Подключение",
+        usage_overage: "Сверх пакета",
       },
       status: {
         issued: "Не оплачен",
@@ -1285,6 +1288,7 @@ export const workspaceRu: Translation<typeof workspaceEn> = {
         admin_access: "Вход администратора платформы",
         login: "Вход",
         retention_purge: "Удалено по сроку хранения",
+        publish_untested: "Опубликована непроверенная версия",
       },
       entities: {
         contact: "Клиент",
@@ -1758,6 +1762,7 @@ export const workspaceKa: Translation<typeof workspaceEn> = {
       kinds: {
         service_period: "მომსახურება",
         setup_fee: "ჩართვა",
+        usage_overage: "პაკეტის გადაჭარბება",
       },
       status: {
         issued: "გადაუხდელი",
@@ -2002,6 +2007,7 @@ export const workspaceKa: Translation<typeof workspaceEn> = {
         admin_access: "პლატფორმის ადმინისტრატორის შესვლა",
         login: "შესვლა",
         retention_purge: "წაიშალა შენახვის ვადის გამო",
+        publish_untested: "გამოქვეყნდა შეუმოწმებელი ვერსია",
       },
       entities: {
         contact: "მომხმარებელი",
