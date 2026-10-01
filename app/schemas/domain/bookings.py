@@ -20,6 +20,7 @@ from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.contacts.prefixed_id import ContactId
 from app.schemas.typings.conversations.booleans import IsSandboxConversation
 from app.schemas.typings.conversations.prefixed_id import ConversationId
+from app.schemas.typings.localization.constrained_strings import LanguageTag
 
 
 class BookingDocument(BaseDocument):
@@ -39,6 +40,8 @@ class BookingDocument(BaseDocument):
     is_sandbox: IsSandboxConversation = False
     # When the customer's reminder went out (UTC microseconds); None = not yet.
     reminder_sent_at: Microseconds | None = None
+    # The customer's language when the booking was made (texts about it).
+    language: LanguageTag | None = None
 
 
 class LeadDocument(BaseDocument):

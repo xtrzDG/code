@@ -707,6 +707,7 @@ def build_message_input(
             party_size=PartySize(4),
             status=BookingStatus.CONFIRMED,
             source_channel=ChannelKind.WHATSAPP,
+            created_at=Microseconds(1_790_000_000_000_000),
         ),
         booking_unit=unit,
         language=LanguageTag(language),

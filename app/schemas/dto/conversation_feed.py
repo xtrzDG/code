@@ -11,15 +11,21 @@ from app.schemas.constants.conversations import (
     ConversationRating,
     ConversationStatus,
     MessageAuthor,
+    StaffMessageDelivery,
+    StaffReplyBlock,
 )
 from app.schemas.domain.contacts import ContactDocument
 from app.schemas.domain.conversations import (
     ConversationDocument,
     MessageDocument,
 )
+from app.schemas.dto.bookings import BookingView
+from app.schemas.dto.operations import HandoffListItem, LeadListItem
+from app.schemas.dto.paging import PageRequest
 from app.schemas.typings.assistants.constrained_strings import LlmModelId
 from app.schemas.typings.assistants.prefixed_id import AssistantVersionId
 from app.schemas.typings.billing.constrained_integers import CostMicroUsd
+from app.schemas.typings.bookings.constrained_strings import LocalDate
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.compliance.strings import ClientIpAddress
 from app.schemas.typings.contacts.prefixed_id import ContactId
@@ -29,6 +35,7 @@ from app.schemas.typings.conversations.booleans import (
     IsAfterHours,
     IsLlmToolError,
     IsSandboxConversation,
+    IsStaffReplyAvailable,
 )
 from app.schemas.typings.conversations.constrained_integers import (
     CallDurationSeconds,
@@ -36,7 +43,9 @@ from app.schemas.typings.conversations.constrained_integers import (
     LlmTokenCount,
 )
 from app.schemas.typings.conversations.constrained_strings import (
+    ConversationSearchText,
     OwnerTestChatSessionKey,
+    StaffReplyText,
 )
 from app.schemas.typings.conversations.prefixed_id import (
     CallId,
@@ -47,6 +56,7 @@ from app.schemas.typings.conversations.strings import (
     CallTranscriptText,
     LlmToolInputJson,
     LlmToolResultJson,
+    MessagePreview,
     MessageText,
     RecordingStoragePath,
 )
@@ -54,19 +64,31 @@ from app.schemas.typings.localization.constrained_strings import (
     E164PhoneNumber,
     LanguageTag,
 )
+from app.schemas.typings.platform.constrained_strings import PageCursor
 from app.schemas.typings.users.prefixed_id import UserId
 
 
 class ConversationListQuery(ImmutableDTO):
     """
-    Conversations of a business, newest first. Sandbox conversations (owner
-    test chat, autotests) are hidden unless `include_sandbox` is set.
+    One page of the conversations of a business, the latest message first.
+
+    Sandbox conversations (owner test chat, autotests) are hidden unless
+    `include_sandbox` is set. `date_from` / `date_to` are local dates of the
+    business time zone (inclusive) and keep conversations that were going on
+    then (started before the end, last message after the start). `search`
+    matches the customer's name, the phone by its digits in any format, and
+    the words of any message, ignoring case and accents in every script.
     """
 
     user_id: UserId
     business_id: BusinessId
     channel: ChannelKind | None = None
+    status: ConversationStatus | None = None
+    date_from: LocalDate | None = None
+    date_to: LocalDate | None = None
+    search: ConversationSearchText | None = None
     include_sandbox: IncludeSandboxConversations = False
+    page: PageRequest = PageRequest()
 
 
 class ConversationQuery(ImmutableDTO):
@@ -79,7 +101,10 @@ class ConversationQuery(ImmutableDTO):
 
 
 class ConversationSummaryView(ImmutableDTO):
-    """A conversation row in the feed."""
+    """
+    A conversation row in the feed: who, where, flags, how many messages
+    (all and the customer's) and the beginning of the last one.
+    """
 
     id: ConversationId
     business_id: BusinessId
@@ -93,10 +118,21 @@ class ConversationSummaryView(ImmutableDTO):
     is_after_hours: IsAfterHours
     is_sandbox: IsSandboxConversation
     message_count: ConversationMessageCount
-    last_message_text: MessageText | None = None
+    customer_message_count: ConversationMessageCount
+    last_message_text: MessagePreview | None = None
+    last_message_author: MessageAuthor | None = None
     last_message_at: Microseconds
     created_at: Microseconds
     rating: ConversationRating | None = None
+
+
+class ConversationPage(ImmutableDTO):
+    """One page of the feed; `next_cursor` is None on the last page."""
+
+    items: list[ConversationSummaryView] = Field(
+        default_factory=list[ConversationSummaryView]
+    )
+    next_cursor: PageCursor | None = None
 
 
 class ToolCallView(ImmutableDTO):
@@ -109,13 +145,17 @@ class ToolCallView(ImmutableDTO):
 
 
 class MessageView(ImmutableDTO):
-    """A message with the model usage behind it."""
+    """
+    A message with the model usage behind it; `sent_by` is the owner or
+    staff member who wrote a staff message from the cabinet.
+    """
 
     id: MessageId
     direction: MessageDirection
     author: MessageAuthor
     text: MessageText
     language: LanguageTag | None = None
+    sent_by: UserId | None = None
     tool_calls: list[ToolCallView] = Field(default_factory=list[ToolCallView])
     model_id: LlmModelId | None = None
     input_tokens: LlmTokenCount
@@ -141,15 +181,33 @@ class CallView(ImmutableDTO):
     recording_path: RecordingStoragePath | None = None
 
 
+class StaffReplyView(ImmutableDTO):
+    """
+    Whether staff can write to the customer from the card now, why not
+    (`block`), how the message would travel, and until when a 24-hour
+    messaging window stays open (WhatsApp, Instagram, Messenger).
+    """
+
+    is_available: IsStaffReplyAvailable
+    block: StaffReplyBlock | None = None
+    delivery: StaffMessageDelivery | None = None
+    window_closes_at: Microseconds | None = None
+
+
 class ConversationDetailView(ImmutableDTO):
     """
-    Conversation card: summary, the full transcript with tool calls and, for
-    phone conversations, the calls with their transcripts and recordings.
+    Conversation card: summary, the full transcript with tool calls, for
+    phone conversations the calls with their transcripts and recordings,
+    the bookings, leads and handoffs made in it, and whether staff can reply.
     """
 
     conversation: ConversationSummaryView
     messages: list[MessageView] = Field(default_factory=list[MessageView])
     calls: list[CallView] = Field(default_factory=list[CallView])
+    bookings: list[BookingView] = Field(default_factory=list[BookingView])
+    leads: list[LeadListItem] = Field(default_factory=list[LeadListItem])
+    handoffs: list[HandoffListItem] = Field(default_factory=list[HandoffListItem])
+    reply: StaffReplyView | None = None
 
 
 class ConversationRatingRequest(ImmutableDTO):
@@ -165,6 +223,29 @@ class RateConversationCommand(ImmutableDTO):
     business_id: BusinessId
     conversation_id: ConversationId
     rating: ConversationRating | None
+
+
+class StaffMessageRequest(ImmutableDTO):
+    """HTTP body of a staff message to the customer of a conversation."""
+
+    text: StaffReplyText
+
+
+class SendStaffMessageCommand(ImmutableDTO):
+    """An owner or staff member writes to the customer from the cabinet."""
+
+    user_id: UserId
+    business_id: BusinessId
+    conversation_id: ConversationId
+    text: StaffReplyText
+    client_ip_address: ClientIpAddress | None = None
+
+
+class StaffMessageResult(ImmutableDTO):
+    """The stored staff message and how it reaches the customer."""
+
+    message: MessageView
+    delivery: StaffMessageDelivery
 
 
 class ConversationViewSource(ImmutableDTO):

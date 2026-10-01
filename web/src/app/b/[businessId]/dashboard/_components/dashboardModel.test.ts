@@ -1,6 +1,16 @@
 import { describe, expect, it } from "vitest";
 
-import { canTakeStep, isDashboardPeriod, nextStep, periodRange, toBars, usageLevel } from "./dashboardModel";
+import {
+  canTakeStep,
+  isDashboardPeriod,
+  nearestDayIndex,
+  nextStep,
+  periodRange,
+  toBars,
+  trendAxis,
+  trendPath,
+  usageLevel,
+} from "./dashboardModel";
 
 describe("dashboard periods", () => {
   it("end today and include it", () => {
@@ -63,5 +73,29 @@ describe("bars", () => {
       { key: "en", count: 1, percent: 25 },
     ]);
     expect(toBars([])).toEqual([]);
+  });
+});
+
+describe("trend chart", () => {
+  it("picks a clean axis of four steps for whole counts", () => {
+    expect(trendAxis(0)).toEqual({ max: 4, ticks: [0, 1, 2, 3, 4] });
+    expect(trendAxis(4)).toEqual({ max: 4, ticks: [0, 1, 2, 3, 4] });
+    expect(trendAxis(5)).toEqual({ max: 8, ticks: [0, 2, 4, 6, 8] });
+    expect(trendAxis(30).max).toBe(40);
+    expect(trendAxis(300)).toEqual({ max: 400, ticks: [0, 100, 200, 300, 400] });
+    expect(trendAxis(1234).max).toBe(2000);
+  });
+
+  it("draws a path across the plot with zero at the bottom", () => {
+    expect(trendPath([0, 2, 4], 4, 100, 50)).toBe("M0 50 L50 25 L100 0");
+    expect(trendPath([], 4, 100, 50)).toBe("");
+  });
+
+  it("snaps the pointer to the nearest day", () => {
+    expect(nearestDayIndex(0, 30)).toBe(0);
+    expect(nearestDayIndex(0.5, 3)).toBe(1);
+    expect(nearestDayIndex(0.74, 3)).toBe(1);
+    expect(nearestDayIndex(1.2, 3)).toBe(2);
+    expect(nearestDayIndex(0.5, 1)).toBe(0);
   });
 });

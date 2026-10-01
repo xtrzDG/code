@@ -37,6 +37,13 @@ class LlmToolResultJson(BaseTypedString):
     """JSON object returned to the language model as a tool result."""
 
 
+class MessagePreview(BaseTypedString):
+    """
+    The beginning of a message for a list row, cut at a word boundary with
+    an ellipsis when the message is longer.
+    """
+
+
 class MessageText(BaseTypedString):
     """Text of one message."""
 

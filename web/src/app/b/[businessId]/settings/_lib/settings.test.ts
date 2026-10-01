@@ -206,6 +206,7 @@ describe("customer data requests", () => {
     last_message_at: 10,
     last_message_text: null,
     message_count: 1,
+    customer_message_count: 1,
     status: "open",
     ...overrides,
   });

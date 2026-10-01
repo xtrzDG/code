@@ -570,6 +570,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/businesses/{business_id}/conversations/{conversation_id}/messages": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Send Staff Message */
+        post: operations["send_staff_message_v1_businesses__business_id__conversations__conversation_id__messages_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/businesses/{business_id}/conversations/{conversation_id}/rating": {
         parameters: {
             query?: never;
@@ -1800,6 +1817,8 @@ export interface components {
              * @default false
              */
             is_sandbox: boolean;
+            /** Language */
+            language?: string | null;
             /** Notes */
             notes?: string | null;
             /** Party Size */
@@ -1826,12 +1845,14 @@ export interface components {
             updated_at?: number;
         };
         /**
-         * BookingListView
-         * @description Bookings ordered by start time.
+         * BookingPage
+         * @description One page of bookings; `next_cursor` is None on the last page.
          */
-        BookingListView: {
+        BookingPage: {
             /** Items */
             items?: components["schemas"]["BookingView"][];
+            /** Next Cursor */
+            next_cursor?: string | null;
         };
         /**
          * BookingResult
@@ -1891,6 +1912,11 @@ export interface components {
         /**
          * BookingView
          * @description Booking rendered in the business time zone.
+         *
+         *     `conversation_id` is the conversation it was made in (the assistant's
+         *     tools, or staff booking from a conversation card). `language` is the
+         *     customer's language for texts about it. `reminder_sent_at` is when the
+         *     customer's reminder went out (None: not yet).
          */
         BookingView: {
             /** Business Id */
@@ -1901,6 +1927,10 @@ export interface components {
             contact_name?: string | null;
             /** Contact Phone Number */
             contact_phone_number?: string | null;
+            /** Conversation Id */
+            conversation_id?: string | null;
+            /** Created At */
+            created_at: number;
             /** Date */
             date: string;
             /** End Date */
@@ -1914,10 +1944,14 @@ export interface components {
              * @default false
              */
             is_sandbox: boolean;
+            /** Language */
+            language?: string | null;
             /** Notes */
             notes?: string | null;
             /** Party Size */
             party_size: number;
+            /** Reminder Sent At */
+            reminder_sent_at?: number | null;
             /** Resource Id */
             resource_id: string;
             /** Resource Name */
@@ -2559,15 +2593,23 @@ export interface components {
         };
         /**
          * ConversationDetailView
-         * @description Conversation card: summary, the full transcript with tool calls and, for
-         *     phone conversations, the calls with their transcripts and recordings.
+         * @description Conversation card: summary, the full transcript with tool calls, for
+         *     phone conversations the calls with their transcripts and recordings,
+         *     the bookings, leads and handoffs made in it, and whether staff can reply.
          */
         ConversationDetailView: {
+            /** Bookings */
+            bookings?: components["schemas"]["BookingView"][];
             /** Calls */
             calls?: components["schemas"]["CallView"][];
             conversation: components["schemas"]["ConversationSummaryView"];
+            /** Handoffs */
+            handoffs?: components["schemas"]["HandoffListItem"][];
+            /** Leads */
+            leads?: components["schemas"]["LeadListItem"][];
             /** Messages */
             messages?: components["schemas"]["MessageView"][];
+            reply?: components["schemas"]["StaffReplyView"] | null;
         };
         /**
          * ConversationDocument
@@ -2627,6 +2669,16 @@ export interface components {
             updated_at?: number;
         };
         /**
+         * ConversationPage
+         * @description One page of the feed; `next_cursor` is None on the last page.
+         */
+        ConversationPage: {
+            /** Items */
+            items?: components["schemas"]["ConversationSummaryView"][];
+            /** Next Cursor */
+            next_cursor?: string | null;
+        };
+        /**
          * ConversationRating
          * @description The owner's or staff's verdict on how the assistant handled a
          *     conversation (concept section 8, "good / bad" on the card), used in the
@@ -2645,7 +2697,8 @@ export interface components {
         ConversationStatus: "open" | "handoff" | "closed";
         /**
          * ConversationSummaryView
-         * @description A conversation row in the feed.
+         * @description A conversation row in the feed: who, where, flags, how many messages
+         *     (all and the customer's) and the beginning of the last one.
          */
         ConversationSummaryView: {
             /** Assistant Version Id */
@@ -2661,6 +2714,8 @@ export interface components {
             contact_phone_number?: string | null;
             /** Created At */
             created_at: number;
+            /** Customer Message Count */
+            customer_message_count: number;
             /** Id */
             id: string;
             /** Is After Hours */
@@ -2671,6 +2726,7 @@ export interface components {
             language?: string | null;
             /** Last Message At */
             last_message_at: number;
+            last_message_author?: components["schemas"]["MessageAuthor"] | null;
             /** Last Message Text */
             last_message_text?: string | null;
             /** Message Count */
@@ -2782,13 +2838,55 @@ export interface components {
             user: components["schemas"]["UserView"];
         };
         /**
+         * DashboardDay
+         * @description What started on one local day of the dashboard period.
+         */
+        DashboardDay: {
+            /** Booking Count */
+            booking_count: number;
+            /** Conversation Count */
+            conversation_count: number;
+            /** Date */
+            date: string;
+            /** Handoff Count */
+            handoff_count: number;
+        };
+        /**
+         * DashboardPackageUsage
+         * @description Use of the plan package in the current billing window, for owners and
+         *     staff alike (no prices). Percents are empty for a package of zero.
+         */
+        DashboardPackageUsage: {
+            /** Dialog Usage Percent */
+            dialog_usage_percent?: number | null;
+            /** Included Dialogs */
+            included_dialogs: number;
+            /** Included Voice Minutes */
+            included_voice_minutes: number;
+            /** Overage Voice Minutes */
+            overage_voice_minutes: number;
+            /** Period End */
+            period_end: number;
+            /** Period Start */
+            period_start: number;
+            /** Used Dialogs */
+            used_dialogs: number;
+            /** Used Voice Minutes */
+            used_voice_minutes: number;
+            /** Voice Usage Percent */
+            voice_usage_percent?: number | null;
+        };
+        /**
          * DashboardStats
          * @description Cabinet dashboard (concept /dashboard): conversations, customer messages,
          *     share started outside opening hours, bookings, leads, handoffs, languages,
-         *     channels, open unanswered questions and package minutes used.
+         *     channels, open unanswered questions, package minutes used in the period,
+         *     a series per local day, and the package of the current billing window
+         *     (None without a subscription).
          *
          *     Sandbox (owner test and autotest) activity is excluded. Breakdown lists
-         *     are ordered by count descending.
+         *     are ordered by count descending; `daily` has every date of the period,
+         *     oldest first.
          */
         DashboardStats: {
             /** After Hours Conversation Count */
@@ -2807,6 +2905,8 @@ export interface components {
             conversation_count: number;
             /** Customer Message Count */
             customer_message_count: number;
+            /** Daily */
+            daily?: components["schemas"]["DashboardDay"][];
             /** Date From */
             date_from: string;
             /** Date To */
@@ -2823,6 +2923,7 @@ export interface components {
             lead_count: number;
             /** Open Unanswered Question Count */
             open_unanswered_question_count: number;
+            package?: components["schemas"]["DashboardPackageUsage"] | null;
             /** Timezone */
             timezone: string;
             /** Used Voice Minutes */
@@ -2975,12 +3076,19 @@ export interface components {
             urgency: components["schemas"]["HandoffUrgency"];
         };
         /**
-         * HandoffListView
-         * @description Handoffs ordered newest first.
+         * HandoffPage
+         * @description One page of handoffs and how many are open and resolved (the status
+         *     filters aside), for the tabs.
          */
-        HandoffListView: {
+        HandoffPage: {
             /** Items */
             items?: components["schemas"]["HandoffListItem"][];
+            /** Next Cursor */
+            next_cursor?: string | null;
+            /** Open Count */
+            open_count: number;
+            /** Resolved Count */
+            resolved_count: number;
         };
         /**
          * HandoffReason
@@ -3341,12 +3449,17 @@ export interface components {
             status: components["schemas"]["LeadStatus"];
         };
         /**
-         * LeadListView
-         * @description Leads ordered newest first.
+         * LeadPage
+         * @description One page of leads, newest first, and how many leads of each status
+         *     there are (the status filter aside), for the tabs.
          */
-        LeadListView: {
+        LeadPage: {
             /** Items */
             items?: components["schemas"]["LeadListItem"][];
+            /** Next Cursor */
+            next_cursor?: string | null;
+            /** Status Counts */
+            status_counts?: components["schemas"]["LeadStatusCount"][];
         };
         /**
          * LeadStatus
@@ -3354,6 +3467,15 @@ export interface components {
          * @enum {string}
          */
         LeadStatus: "new" | "in_progress" | "won" | "lost";
+        /**
+         * LeadStatusCount
+         * @description How many leads have one status (for the status tabs).
+         */
+        LeadStatusCount: {
+            /** Count */
+            count: number;
+            status: components["schemas"]["LeadStatus"];
+        };
         /**
          * LeadType
          * @description Kind of request passed to a manager.
@@ -3503,6 +3625,9 @@ export interface components {
         /**
          * MessageDocument
          * @description Stored message with model usage and cost (concept table `messages`).
+         *
+         *     `sent_by` is the owner or staff member who wrote a STAFF message from
+         *     the cabinet.
          */
         MessageDocument: {
             author: components["schemas"]["MessageAuthor"];
@@ -3543,6 +3668,8 @@ export interface components {
              * @default 1
              */
             schema_version: string;
+            /** Sent By */
+            sent_by?: string | null;
             /** Text */
             text: string;
             /** Tool Calls */
@@ -3555,7 +3682,8 @@ export interface components {
         };
         /**
          * MessageView
-         * @description A message with the model usage behind it.
+         * @description A message with the model usage behind it; `sent_by` is the owner or
+         *     staff member who wrote a staff message from the cabinet.
          */
         MessageView: {
             author: components["schemas"]["MessageAuthor"];
@@ -3574,6 +3702,8 @@ export interface components {
             model_id?: string | null;
             /** Output Tokens */
             output_tokens: number;
+            /** Sent By */
+            sent_by?: string | null;
             /** Text */
             text: string;
             /** Tool Calls */
@@ -4095,6 +4225,49 @@ export interface components {
          * @enum {string}
          */
         ServiceMode: "full" | "leads_only";
+        /**
+         * StaffMessageDelivery
+         * @description How a staff message reaches the customer: sent through the messenger
+         *     right away, or kept for the website chat, which shows it when the
+         *     visitor's widget asks for new messages.
+         * @enum {string}
+         */
+        StaffMessageDelivery: "sent" | "stored_for_widget";
+        /**
+         * StaffMessageResult
+         * @description The stored staff message and how it reaches the customer.
+         */
+        StaffMessageResult: {
+            delivery: components["schemas"]["StaffMessageDelivery"];
+            message: components["schemas"]["MessageView"];
+        };
+        /**
+         * StaffReplyBlock
+         * @description Why staff cannot write to a customer from the cabinet right now.
+         *
+         *     VOICE_CALL: phone conversations have no written way back.
+         *     TEST_CONVERSATION: owner test chats and autotests have no customer.
+         *     WINDOW_CLOSED: WhatsApp, Instagram and Messenger accept free-form
+         *     messages only within 24 hours of the customer's last message.
+         *     UNSUPPORTED_CHANNEL: the channel has no outgoing messages here.
+         *     CHANNEL_DISCONNECTED: the business's channel is no longer connected.
+         * @enum {string}
+         */
+        StaffReplyBlock: "voice_call" | "test_conversation" | "window_closed" | "unsupported_channel" | "channel_disconnected";
+        /**
+         * StaffReplyView
+         * @description Whether staff can write to the customer from the card now, why not
+         *     (`block`), how the message would travel, and until when a 24-hour
+         *     messaging window stays open (WhatsApp, Instagram, Messenger).
+         */
+        StaffReplyView: {
+            block?: components["schemas"]["StaffReplyBlock"] | null;
+            delivery?: components["schemas"]["StaffMessageDelivery"] | null;
+            /** Is Available */
+            is_available: boolean;
+            /** Window Closes At */
+            window_closes_at?: number | null;
+        };
         /**
          * SubscriptionStatus
          * @description Subscription state driven by the payment provider.
@@ -5084,6 +5257,7 @@ export interface operations {
                 resource_kind?: string | null;
                 duration_minutes?: string | null;
                 nights?: string | null;
+                full_day?: string | null;
             };
             header?: {
                 authorization?: string | null;
@@ -5333,7 +5507,11 @@ export interface operations {
                 from?: string | null;
                 to?: string | null;
                 status?: string | null;
+                resource_id?: string | null;
                 include_sandbox?: string | null;
+                order?: string | null;
+                limit?: string | null;
+                cursor?: string | null;
             };
             header?: {
                 authorization?: string | null;
@@ -5351,7 +5529,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["BookingListView"];
+                    "application/json": components["schemas"]["BookingPage"];
                 };
             };
             /** @description Validation Error */
@@ -5376,7 +5554,44 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Contact Name */
+                    contact_name: string;
+                    /** Contact Phone Number */
+                    contact_phone_number?: string | null;
+                    /** Conversation Id */
+                    conversation_id?: string | null;
+                    /** Country Hint */
+                    country_hint?: string | null;
+                    /** Date */
+                    date: string;
+                    /** Duration Minutes */
+                    duration_minutes?: number | null;
+                    /** Language */
+                    language?: string | null;
+                    /** Nights */
+                    nights?: number | null;
+                    /** Notes */
+                    notes?: string | null;
+                    /** Party Size */
+                    party_size: number;
+                    /** Resource Id */
+                    resource_id?: string | null;
+                    resource_kind?: ("table" | "room" | "staff" | "arena" | "bay" | "vehicle" | "slot") | null;
+                    /**
+                     * ChannelKind
+                     * @description Customer-facing channel the assistant answers in.
+                     * @default phone
+                     * @enum {string}
+                     */
+                    source_channel?: "phone" | "whatsapp" | "instagram" | "messenger" | "telegram" | "web_chat" | "viber" | "owner_test";
+                    /** Time */
+                    time?: string | null;
+                };
+            };
+        };
         responses: {
             /** @description Successful Response */
             201: {
@@ -5410,7 +5625,21 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Contact Name */
+                    contact_name?: string | null;
+                    /** Notes */
+                    notes?: string | null;
+                    /** Party Size */
+                    party_size?: number | null;
+                    /** Resource Id */
+                    resource_id?: string | null;
+                    status?: ("pending" | "confirmed" | "cancelled" | "no_show" | "completed") | null;
+                };
+            };
+        };
         responses: {
             /** @description Successful Response */
             200: {
@@ -5482,7 +5711,16 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** New Date */
+                    new_date: string;
+                    /** New Time */
+                    new_time?: string | null;
+                };
+            };
+        };
         responses: {
             /** @description Successful Response */
             200: {
@@ -5764,7 +6002,13 @@ export interface operations {
         parameters: {
             query?: {
                 channel?: string | null;
+                status?: string | null;
+                from?: string | null;
+                to?: string | null;
+                search?: string | null;
                 include_sandbox?: string | null;
+                limit?: string | null;
+                cursor?: string | null;
             };
             header?: {
                 authorization?: string | null;
@@ -5782,7 +6026,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ConversationSummaryView"][];
+                    "application/json": components["schemas"]["ConversationPage"];
                 };
             };
             /** @description Validation Error */
@@ -5817,6 +6061,47 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ConversationDetailView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    send_staff_message_v1_businesses__business_id__conversations__conversation_id__messages_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+                conversation_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Text */
+                    text: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StaffMessageResult"];
                 };
             };
             /** @description Validation Error */
@@ -5976,7 +6261,10 @@ export interface operations {
         parameters: {
             query?: {
                 status?: string | null;
+                is_open?: string | null;
                 include_sandbox?: string | null;
+                limit?: string | null;
+                cursor?: string | null;
             };
             header?: {
                 authorization?: string | null;
@@ -5994,7 +6282,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["HandoffListView"];
+                    "application/json": components["schemas"]["HandoffPage"];
                 };
             };
             /** @description Validation Error */
@@ -6486,6 +6774,8 @@ export interface operations {
             query?: {
                 status?: string | null;
                 include_sandbox?: string | null;
+                limit?: string | null;
+                cursor?: string | null;
             };
             header?: {
                 authorization?: string | null;
@@ -6503,7 +6793,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["LeadListView"];
+                    "application/json": components["schemas"]["LeadPage"];
                 };
             };
             /** @description Validation Error */
@@ -6529,7 +6819,18 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": {
+                    /**
+                     * LeadStatus
+                     * @description Lifecycle of a lead.
+                     * @enum {string}
+                     */
+                    status: "new" | "in_progress" | "won" | "lost";
+                };
+            };
+        };
         responses: {
             /** @description Successful Response */
             200: {
@@ -7501,7 +7802,16 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Answer */
+                    answer: string;
+                    /** Title */
+                    title?: string | null;
+                };
+            };
+        };
         responses: {
             /** @description Successful Response */
             200: {

@@ -51,14 +51,26 @@ export function Transcript({ messages }: { messages: readonly MessageView[] }) {
 function MessageBubble({ message }: { message: MessageView }) {
   const { t, locale } = useI18n();
   const format = useBusinessFormat();
+  const { business, me } = useBusiness();
   const side = messageSide(message.author);
   const tokens = message.input_tokens + message.output_tokens;
+  const sender = message.sent_by
+    ? message.sent_by === me.user.id
+      ? t("conversations.author.you")
+      : memberName(business.members.find((member) => member.user_id === message.sent_by))
+    : null;
 
   return (
     <li className={cn("flex", side === "end" ? "justify-end" : side === "center" ? "justify-center" : "justify-start")}>
       <div className={cn("min-w-0", side === "center" ? "max-w-full text-center" : "max-w-[88%] sm:max-w-[75%]")}>
         <p className={cn("mb-1 text-xs text-ink-subtle", side === "end" && "text-right")}>
           <span className="font-medium text-ink-muted">{t(MESSAGE_AUTHORS[message.author])}</span>
+          {sender ? (
+            <>
+              {" · "}
+              <span dir="auto">{sender}</span>
+            </>
+          ) : null}
           {" · "}
           <time dateTime={new Date(message.created_at / 1000).toISOString()}>{format.time(message.created_at)}</time>
         </p>
@@ -131,4 +143,10 @@ function JsonBlock({ label, json }: { label: string; json: string }) {
       </pre>
     </div>
   );
+}
+
+function memberName(
+  member: { display_name?: string | null; email?: string | null; phone_number?: string | null } | undefined,
+): string | null {
+  return member ? (member.display_name ?? member.email ?? member.phone_number ?? null) : null;
 }

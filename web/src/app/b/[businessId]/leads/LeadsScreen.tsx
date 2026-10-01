@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 
 import { api } from "@/api/client";
-import { useApiMutation, useApiQuery } from "@/api/hooks";
+import { useApiMutation } from "@/api/hooks";
 import { useBusiness, useBusinessFormat } from "@/components/business/BusinessContext";
 import { IconInbox } from "@/components/icons";
 import { ChannelBadge, LeadStatusBadge, LeadTypeBadge, TestBadge } from "@/components/insights/Badges";
@@ -12,25 +12,29 @@ import {
   CustomerName,
   DetailRow,
   IncludeTestToggle,
+  LoadMore,
   PhoneLink,
   RefreshButton,
   RefreshFailed,
-  ShowMore,
 } from "@/components/insights/common";
 import { formatLocalDate, formatRelative } from "@/components/insights/dates";
 import { LEAD_STATUS, LEAD_STATUSES } from "@/components/insights/labels";
-import { takePage } from "@/components/insights/numbers";
-import { withJsonBody } from "@/components/insights/requestBody";
 import { SegmentedControl } from "@/components/insights/SegmentedControl";
-import type { LeadListItem, LeadStatus, LeadStatusBody } from "@/components/insights/types";
+import type { LeadListItem, LeadPage, LeadStatus } from "@/components/insights/types";
 import { replaceUrlQuery } from "@/components/insights/urlQuery";
+import { usePagedQuery } from "@/components/insights/usePagedQuery";
 import { Button, Card, EmptyState, ErrorState, LoadingBlock, Modal, PageHeader, Select, useToast } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { businessPath } from "@/lib/navigation";
 
-import { countByStatus, leadFiltersQuery, leadsOfTab, withLeadStatus, type LeadFilters, type LeadTab } from "./_components/leadModel";
-
-const PAGE_SIZE = 20;
+import {
+  afterStatusChange,
+  countsByTab,
+  leadFiltersQuery,
+  withStatusCounts,
+  type LeadFilters,
+  type LeadTab,
+} from "./_components/leadModel";
 
 /**
  * Leads (concept /leads): requests the assistant passed to a manager —
@@ -42,31 +46,34 @@ export function LeadsScreen({ initialFilters }: { initialFilters: LeadFilters })
   const { business } = useBusiness();
   const businessId = business.id;
   const [filters, setFiltersState] = useState(initialFilters);
-  const [pages, setPages] = useState(1);
   const [openId, setOpenId] = useState<string | null>(null);
   const [pendingId, setPendingId] = useState<string | null>(null);
 
-  const leads = useApiQuery(
-    () =>
+  const leads = usePagedQuery<LeadListItem, LeadPage>(
+    ({ cursor, limit }) =>
       api.GET("/v1/businesses/{business_id}/leads", {
         params: {
           path: { business_id: businessId },
-          query: { include_sandbox: filters.includeTest ? "true" : undefined },
+          query: {
+            status: filters.tab === "all" ? undefined : filters.tab,
+            include_sandbox: filters.includeTest ? "true" : undefined,
+            limit: String(limit),
+            cursor: cursor ?? undefined,
+          },
         },
       }),
-    [businessId, filters.includeTest],
+    [businessId, filters.tab, filters.includeTest],
   );
 
   const update = useApiMutation((lead: LeadListItem, status: LeadStatus) =>
-    api.PATCH(
-      "/v1/businesses/{business_id}/leads/{lead_id}",
-      withJsonBody({ params: { path: { business_id: businessId, lead_id: lead.id } } }, { status } satisfies LeadStatusBody),
-    ),
+    api.PATCH("/v1/businesses/{business_id}/leads/{lead_id}", {
+      params: { path: { business_id: businessId, lead_id: lead.id } },
+      body: { status },
+    }),
   );
 
   const setFilters = (next: LeadFilters) => {
     setFiltersState(next);
-    setPages(1);
     replaceUrlQuery(leadFiltersQuery(next));
   };
 
@@ -78,16 +85,15 @@ export function LeadsScreen({ initialFilters }: { initialFilters: LeadFilters })
     const result = await update.run(lead, status);
     setPendingId(null);
     if (result.ok) {
-      leads.setData((current) => ({ items: withLeadStatus(current?.items ?? [], lead.id, result.data.status) }));
+      leads.updateItems((items) => afterStatusChange(items, lead.id, result.data.status, filters.tab));
+      leads.updatePage((page) => withStatusCounts(page, lead.status, result.data.status));
       toast.success(t("leads.updated", { status: t(LEAD_STATUS[result.data.status].label) }));
     }
   };
 
-  const all = leads.data?.items ?? [];
-  const counts = countByStatus(all);
-  const items = leadsOfTab(all, filters.tab);
-  const { visible } = takePage(items, pages, PAGE_SIZE);
-  const openLead = all.find((lead) => lead.id === openId) ?? null;
+  const items = leads.items ?? [];
+  const counts = leads.page ? countsByTab(leads.page.status_counts ?? []) : null;
+  const openLead = items.find((lead) => lead.id === openId) ?? null;
   const tabs: LeadTab[] = ["all", ...LEAD_STATUSES];
 
   return (
@@ -95,7 +101,7 @@ export function LeadsScreen({ initialFilters }: { initialFilters: LeadFilters })
       <PageHeader
         title={t("nav.leads")}
         description={t("pages.leads.description")}
-        actions={<RefreshButton onClick={leads.reload} isRefreshing={leads.isLoading && leads.data !== undefined} />}
+        actions={<RefreshButton onClick={leads.reload} isRefreshing={leads.isLoading && leads.items !== undefined} />}
       />
 
       <div className="space-y-5">
@@ -107,29 +113,29 @@ export function LeadsScreen({ initialFilters }: { initialFilters: LeadFilters })
             options={tabs.map((tab) => ({
               value: tab,
               label: tab === "all" ? t("insights.all") : t(LEAD_STATUS[tab].label),
-              count: leads.data ? counts[tab] : undefined,
+              count: counts ? counts[tab] : undefined,
             }))}
           />
           <IncludeTestToggle compact checked={filters.includeTest} onChange={(includeTest) => setFilters({ ...filters, includeTest })} />
         </div>
 
-        {leads.error && leads.data ? <RefreshFailed error={leads.error} onRetry={leads.reload} /> : null}
-        {leads.data === undefined ? (
+        {leads.error && leads.items ? <RefreshFailed error={leads.error} onRetry={leads.reload} /> : null}
+        {leads.items === undefined ? (
           <Card>
             {leads.error ? <ErrorState error={leads.error} onRetry={leads.reload} /> : <LoadingBlock label={t("leads.loading")} />}
           </Card>
-        ) : items.length === 0 ? (
+        ) : items.length === 0 && !leads.isLoading ? (
           <Card>
             <EmptyState
               icon={<IconInbox className="size-6" />}
-              title={all.length === 0 ? t("leads.emptyTitle") : t("insights.noMatchesTitle")}
-              description={all.length === 0 ? t("leads.emptyDescription") : t("insights.noMatchesDescription")}
+              title={counts?.all === 0 ? t("leads.emptyTitle") : t("insights.noMatchesTitle")}
+              description={counts?.all === 0 ? t("leads.emptyDescription") : t("insights.noMatchesDescription")}
             />
           </Card>
         ) : (
-          <>
+          <div className={leads.isLoading ? "opacity-60 transition-opacity" : undefined} aria-busy={leads.isLoading || undefined}>
             <ul className="space-y-3">
-              {visible.map((lead) => (
+              {items.map((lead) => (
                 <LeadCard
                   key={lead.id}
                   lead={lead}
@@ -139,10 +145,18 @@ export function LeadsScreen({ initialFilters }: { initialFilters: LeadFilters })
                 />
               ))}
             </ul>
-            {items.length > PAGE_SIZE ? (
-              <ShowMore shown={visible.length} total={items.length} onMore={() => setPages((value) => value + 1)} />
-            ) : null}
-          </>
+            <LoadMore
+              hasMore={leads.hasMore}
+              isLoading={leads.isLoadingMore}
+              error={leads.moreError}
+              onMore={leads.loadMore}
+              shownText={
+                counts && leads.hasMore
+                  ? t("insights.shownOf", { shown: items.length, total: counts[filters.tab] })
+                  : undefined
+              }
+            />
+          </div>
         )}
       </div>
 

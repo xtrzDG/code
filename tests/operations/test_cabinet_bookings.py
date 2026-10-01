@@ -2,29 +2,38 @@ from datetime import datetime
 
 import pytest
 
-from app.schemas.constants.bookings import BookingStatus
+from app.schemas.constants.bookings import BookingOrder, BookingStatus, BookingUnit
 from app.schemas.constants.channels import ChannelKind
 from app.schemas.constants.compliance import AuditAction
+from app.schemas.domain.profiles import OpeningInterval
 from app.schemas.dto.bookings import AvailabilityQuery, BookingView
 from app.schemas.dto.operations import (
+    BookingPage,
     ListBookingsQuery,
     ManualBookingCommand,
-    UpdateBookingStatusCommand,
+    UpdateBookingCommand,
 )
+from app.schemas.dto.paging import PageRequest
 from app.schemas.exceptions.application_errors import (
     ConflictError,
     InvalidPhoneNumberError,
     NotFoundError,
     ValidationFailedError,
 )
-from app.schemas.typings.bookings.constrained_integers import PartySize
+from app.schemas.typings.bookings.constrained_integers import NightCount, PartySize
 from app.schemas.typings.bookings.constrained_strings import LocalDate, LocalTimeOfDay
-from app.schemas.typings.bookings.prefixed_id import BookingId
+from app.schemas.typings.bookings.prefixed_id import BookingId, ResourceId
+from app.schemas.typings.bookings.strings import BookingNote
 from app.schemas.typings.contacts.strings import ContactName
-from app.schemas.typings.localization.constrained_strings import LanguageTag
+from app.schemas.typings.conversations.prefixed_id import ConversationId
+from app.schemas.typings.localization.constrained_strings import (
+    CountryCode,
+    LanguageTag,
+)
 from app.schemas.typings.localization.strings import RawPhoneNumberInput
+from app.schemas.typings.platform.constrained_integers import PageSize
 from app.schemas.typings.users.prefixed_id import UserId
-from tests.operations.builders import OperationsWorld
+from tests.operations.builders import OperationsWorld, every_day
 
 
 class Cabinet:
@@ -55,6 +64,8 @@ class Cabinet:
         day: str = "2026-10-06",
         party_size: int = 4,
         language: str | None = None,
+        country_hint: str | None = None,
+        conversation_id: ConversationId | None = None,
     ) -> ManualBookingCommand:
         return ManualBookingCommand(
             business_id=self.business.id,
@@ -66,6 +77,28 @@ class Cabinet:
             party_size=PartySize(party_size),
             source_channel=ChannelKind.PHONE,
             language=None if language is None else LanguageTag(language),
+            country_hint=None if country_hint is None else CountryCode(country_hint),
+            conversation_id=conversation_id,
+        )
+
+    def page(
+        self,
+        resource_id: ResourceId | None = None,
+        order: BookingOrder = BookingOrder.EARLIEST_FIRST,
+        size: int = 50,
+        cursor: BookingPage | None = None,
+    ) -> BookingPage:
+        return self.world.list_bookings().run(
+            ListBookingsQuery(
+                business_id=self.business.id,
+                actor_id=self.staff_id,
+                resource_id=resource_id,
+                order=order,
+                page=PageRequest(
+                    size=PageSize(size),
+                    cursor=None if cursor is None else cursor.next_cursor,
+                ),
+            )
         )
 
     def list(
@@ -211,8 +244,8 @@ class TestStatusUpdates:
         booking_id: BookingId,
         status: BookingStatus,
     ) -> BookingView:
-        return cabinet.world.update_booking_status().run(
-            UpdateBookingStatusCommand(
+        return cabinet.world.update_booking().run(
+            UpdateBookingCommand(
                 business_id=cabinet.business.id,
                 actor_id=cabinet.staff_id,
                 booking_id=booking_id,
@@ -291,3 +324,288 @@ def test_clock_is_the_injected_one() -> None:
 
     with pytest.raises(ValidationFailedError, match="too soon"):
         cabinet.world.create_manual_booking().run(cabinet.manual(time="19:00"))
+
+
+def test_list_pages_by_start_time_and_filters_by_resource() -> None:
+    cabinet = Cabinet()
+    for day in ("2026-10-08", "2026-10-06", "2026-10-07"):
+        cabinet.world.add_booking(
+            cabinet.business,
+            cabinet.table,
+            cabinet.customer,
+            f"{day}T19:00:00+04:00",
+            f"{day}T21:00:00+04:00",
+        )
+    cabinet.world.add_booking(
+        cabinet.business,
+        cabinet.hall,
+        cabinet.customer,
+        "2026-10-06T13:00:00+04:00",
+        "2026-10-06T15:00:00+04:00",
+    )
+
+    first = cabinet.page(size=2)
+    second = cabinet.page(size=2, cursor=first)
+    latest = cabinet.page(order=BookingOrder.LATEST_FIRST, size=1)
+    tables = cabinet.page(resource_id=cabinet.table.id)
+
+    assert [(item.date, item.time) for item in first.items] == [
+        ("2026-10-06", "13:00"),
+        ("2026-10-06", "19:00"),
+    ]
+    assert first.next_cursor is not None
+    assert [item.date for item in second.items] == ["2026-10-07", "2026-10-08"]
+    assert second.next_cursor is None
+    assert [item.date for item in latest.items] == ["2026-10-08"]
+    assert {item.resource_name for item in tables.items} == {"Table 4"}
+    assert len(tables.items) == 3
+
+
+def test_booking_view_carries_creation_reminder_and_language() -> None:
+    cabinet = Cabinet()
+    conversation = cabinet.world.add_conversation(cabinet.business, cabinet.customer)
+
+    result = cabinet.world.create_manual_booking().run(
+        cabinet.manual(phone=None, language="ru", conversation_id=conversation.id)
+    )
+    listed = cabinet.page().items[0]
+
+    assert listed.id == result.booking.id
+    assert listed.language == "ru"
+    assert listed.reminder_sent_at is None
+    assert listed.created_at == cabinet.world.clock.now_microseconds()
+    assert listed.conversation_id == conversation.id
+
+
+class TestManualBookingInput:
+    def test_country_hint_reads_a_national_number_of_another_country(self) -> None:
+        cabinet = Cabinet()
+
+        result = cabinet.world.create_manual_booking().run(
+            cabinet.manual(phone="333 123 4567", country_hint="IT")
+        )
+
+        assert result.booking.contact_phone_number == "+393331234567"
+
+    def test_booking_from_a_conversation_is_linked_to_its_customer(self) -> None:
+        cabinet = Cabinet()
+        customer = cabinet.world.add_contact(cabinet.business, "Nino", language="en")
+        conversation = cabinet.world.add_conversation(
+            cabinet.business, customer, channel=ChannelKind.TELEGRAM
+        )
+
+        result = cabinet.world.create_manual_booking().run(
+            cabinet.manual(
+                name="Nino B.", phone="599 11 22 33", conversation_id=conversation.id
+            )
+        )
+
+        booking = result.booking
+        assert booking.conversation_id == conversation.id
+        assert booking.contact_id == customer.id
+        assert booking.contact_name == "Nino B."
+        assert booking.contact_phone_number == "+995599112233"
+        assert booking.source_channel is ChannelKind.TELEGRAM
+        assert booking.language == "en"
+        assert str(result.confirmation_text).startswith("Your booking")
+
+    def test_unknown_conversation_is_not_found(self) -> None:
+        cabinet = Cabinet()
+
+        with pytest.raises(NotFoundError):
+            cabinet.world.create_manual_booking().run(
+                cabinet.manual(conversation_id=ConversationId())
+            )
+
+
+class TestBookingDetails:
+    def booking(self, cabinet: Cabinet, party_size: int = 2) -> BookingView:
+        return (
+            cabinet.world.create_manual_booking()
+            .run(cabinet.manual(phone=None, party_size=party_size))
+            .booking
+        )
+
+    def update(
+        self,
+        cabinet: Cabinet,
+        booking_id: BookingId,
+        party_size: int | None = None,
+        resource_id: ResourceId | None = None,
+        notes: str | None = None,
+        contact_name: str | None = None,
+    ) -> BookingView:
+        return cabinet.world.update_booking().run(
+            UpdateBookingCommand(
+                business_id=cabinet.business.id,
+                actor_id=cabinet.staff_id,
+                booking_id=booking_id,
+                party_size=None if party_size is None else PartySize(party_size),
+                resource_id=resource_id,
+                notes=None if notes is None else BookingNote(notes),
+                contact_name=None
+                if contact_name is None
+                else ContactName(contact_name),
+            )
+        )
+
+    def test_party_size_notes_and_name_change_and_are_audited(self) -> None:
+        cabinet = Cabinet()
+        booking = self.booking(cabinet)
+
+        changed = self.update(
+            cabinet,
+            booking.id,
+            party_size=3,
+            notes="  High chair  ",
+            contact_name="Levan K.",
+        )
+        cleared = self.update(cabinet, booking.id, notes="")
+
+        assert changed.party_size == 3
+        assert changed.notes == "High chair"
+        assert changed.contact_name == "Levan K."
+        assert (changed.date, changed.time) == (booking.date, booking.time)
+        assert cleared.notes is None
+        audited = [
+            (entry.action, str(entry.entity))
+            for entry in cabinet.world.audit_repo.list_by_business(cabinet.business.id)
+        ][2:]
+        assert audited == [
+            (AuditAction.UPDATE, "booking"),
+            (AuditAction.UPDATE, "contact"),
+            (AuditAction.UPDATE, "booking"),
+        ]
+        assert len(cabinet.world.calendar_sync.synced) == 3
+
+    def test_party_size_must_fit_the_resource(self) -> None:
+        cabinet = Cabinet()
+        booking = self.booking(cabinet)
+
+        with pytest.raises(ValidationFailedError, match="seats at most 4"):
+            self.update(cabinet, booking.id, party_size=6)
+
+        moved = self.update(
+            cabinet, booking.id, party_size=6, resource_id=cabinet.hall.id
+        )
+        assert (moved.resource_name, moved.party_size) == ("Banquet hall", 6)
+
+    def test_resource_change_needs_a_free_open_unit_at_the_booked_time(self) -> None:
+        cabinet = Cabinet()
+        booking = self.booking(cabinet)
+        cabinet.world.add_booking(
+            cabinet.business,
+            cabinet.hall,
+            cabinet.customer,
+            "2026-10-06T18:00:00+04:00",
+            "2026-10-06T20:00:00+04:00",
+        )
+        terrace = cabinet.world.add_resource(
+            cabinet.business,
+            "Terrace",
+            capacity=6,
+            schedule=every_day_until("18:00"),
+        )
+        inactive = cabinet.world.add_resource(
+            cabinet.business, "Old table", is_active=False
+        )
+
+        with pytest.raises(ConflictError):
+            self.update(cabinet, booking.id, resource_id=cabinet.hall.id)
+        with pytest.raises(ValidationFailedError, match="closed"):
+            self.update(cabinet, booking.id, resource_id=terrace.id)
+        with pytest.raises(NotFoundError):
+            self.update(cabinet, booking.id, resource_id=inactive.id)
+
+    def test_resource_must_be_booked_the_same_way(self) -> None:
+        cabinet = Cabinet()
+        booking = self.booking(cabinet)
+        room = cabinet.world.add_resource(
+            cabinet.business, "Room 1", booking_unit=BookingUnit.NIGHT
+        )
+
+        with pytest.raises(ValidationFailedError, match="nights"):
+            self.update(cabinet, booking.id, resource_id=room.id)
+
+    def test_finished_booking_keeps_its_place_but_takes_notes(self) -> None:
+        cabinet = Cabinet()
+        booking = self.booking(cabinet)
+        TestStatusUpdates().update(cabinet, booking.id, BookingStatus.COMPLETED)
+
+        with pytest.raises(ConflictError):
+            self.update(cabinet, booking.id, party_size=3)
+
+        assert self.update(cabinet, booking.id, notes="Paid cash").notes == "Paid cash"
+
+    def test_empty_name_is_refused(self) -> None:
+        cabinet = Cabinet()
+        booking = self.booking(cabinet)
+
+        with pytest.raises(ValidationFailedError, match="name"):
+            self.update(cabinet, booking.id, contact_name="  ")
+
+
+class TestFullDayAvailability:
+    def query(self, cabinet: Cabinet, party_size: int, full_day: bool) -> list[str]:
+        result = cabinet.world.check_availability().run(
+            AvailabilityQuery(
+                business_id=cabinet.business.id,
+                date=LocalDate("2026-10-05"),
+                party_size=PartySize(party_size),
+                full_day=full_day,
+            )
+        )
+        return [f"{slot.time} {slot.resource_name}" for slot in result.slots]
+
+    def test_lists_every_slot_of_every_resource_from_now(self) -> None:
+        cabinet = Cabinet()
+        # 12:00 local; the profile asks for 60 minutes of notice online.
+        cabinet.world.clock.move_to(datetime.fromisoformat("2026-10-05T12:00:00+04:00"))
+
+        slots = self.query(cabinet, 2, full_day=True)
+        online = self.query(cabinet, 2, full_day=False)
+
+        assert slots[:4] == [
+            "12:00 Table 4",
+            "12:00 Banquet hall",
+            "12:30 Table 4",
+            "12:30 Banquet hall",
+        ]
+        assert len(slots) > 10
+        assert online[0] == "13:00 Table 4"
+        assert len(online) == 10
+
+    def test_ignores_the_online_party_limit(self) -> None:
+        cabinet = Cabinet()
+
+        assert self.query(cabinet, 30, full_day=True)[0].endswith("Banquet hall")
+        with pytest.raises(ValidationFailedError):
+            self.query(cabinet, 30, full_day=False)
+
+    def test_lists_every_free_stay(self) -> None:
+        cabinet = Cabinet()
+        for number in range(1, 13):
+            cabinet.world.add_resource(
+                cabinet.business,
+                f"Room {number:02d}",
+                kind=cabinet.table.kind,
+                booking_unit=BookingUnit.NIGHT,
+            )
+
+        result = cabinet.world.check_availability().run(
+            AvailabilityQuery(
+                business_id=cabinet.business.id,
+                date=LocalDate("2026-10-06"),
+                nights=NightCount(2),
+                full_day=True,
+            )
+        )
+
+        stays = [
+            slot for slot in result.slots if slot.booking_unit is BookingUnit.NIGHT
+        ]
+        assert len(stays) == 12
+
+
+def every_day_until(closes: str) -> list[OpeningInterval]:
+    return every_day("12:00", closes)

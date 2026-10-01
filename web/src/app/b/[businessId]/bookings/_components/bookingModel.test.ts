@@ -4,15 +4,22 @@ import type { BookingView } from "@/components/insights/types";
 
 import {
   bookingActions,
+  bookingApiQuery,
+  bookingEditValues,
   bookingFiltersQuery,
   bookingUnitFor,
+  canChangePlacement,
+  customerLanguage,
   DEFAULT_BOOKING_FILTERS,
   groupBookingsByDate,
+  groupSlotsByResource,
   isRangeValid,
-  limitDays,
   nightsOf,
   parseBookingFilters,
+  placesForEdit,
   rangeDates,
+  reminderState,
+  validateBookingEdit,
   validateBookingForm,
   type BookingFormValues,
 } from "./bookingModel";
@@ -36,6 +43,7 @@ function booking(id: string, date: string, time: string | null): BookingView {
     source_channel: "phone",
     notes: null,
     is_sandbox: false,
+    created_at: 1_790_000_000_000_000,
   };
 }
 
@@ -86,17 +94,6 @@ describe("grouping", () => {
     );
   });
 
-  it("cuts grouped days to a number of bookings", () => {
-    const days = groupBookingsByDate([
-      booking("a", "2026-10-02", "10:00"),
-      booking("b", "2026-10-02", "11:00"),
-      booking("c", "2026-10-03", "12:00"),
-    ]);
-    expect(limitDays(days, 1).map((day) => day.bookings.map((item) => item.id))).toEqual([["a"]]);
-    expect(limitDays(days, 3).map((day) => day.bookings.map((item) => item.id))).toEqual([["a", "b"], ["c"]]);
-    expect(limitDays(days, 0)).toEqual([]);
-  });
-
   it("counts nights of stays", () => {
     expect(nightsOf({ date: "2026-10-01", end_date: "2026-10-04" })).toBe(3);
     expect(nightsOf({ date: "2026-10-01", end_date: "2026-10-01" })).toBe(0);
@@ -138,6 +135,7 @@ describe("manual booking form", () => {
     notes: "",
     source: "phone",
     language: "ka",
+    country: "IT",
   };
 
   it("builds the API body for a time slot", () => {
@@ -154,6 +152,7 @@ describe("manual booking form", () => {
         notes: null,
         source_channel: "phone",
         language: "ka",
+        country_hint: "IT",
       },
     });
   });
@@ -177,5 +176,97 @@ describe("manual booking form", () => {
         time: "bookings.errors.timeRequired",
       },
     });
+  });
+});
+
+describe("list query", () => {
+  it("sends every filter to the API and reads past ranges latest first", () => {
+    expect(bookingApiQuery(DEFAULT_BOOKING_FILTERS, { from: "2026-10-01", to: null })).toEqual({
+      from: "2026-10-01",
+      order: "earliest_first",
+    });
+    expect(
+      bookingApiQuery(
+        { ...DEFAULT_BOOKING_FILTERS, range: "past", status: "no_show", resourceId: "resource_9", includeTest: true },
+        { from: "2026-09-01", to: "2026-09-30" },
+      ),
+    ).toEqual({
+      from: "2026-09-01",
+      to: "2026-09-30",
+      status: "no_show",
+      resource_id: "resource_9",
+      include_sandbox: "true",
+      order: "latest_first",
+    });
+  });
+});
+
+describe("booking details", () => {
+  it("uses the customer's language when the business speaks it", () => {
+    const business = { languages: ["ka", "en"], default_language: "ka" };
+    expect(customerLanguage({ language: "en" }, business)).toBe("en");
+    expect(customerLanguage({ language: "de" }, business)).toBe("ka");
+    expect(customerLanguage({ language: null }, business)).toBe("ka");
+  });
+
+  it("tells whether the reminder went out or is still to come", () => {
+    const upcoming = { ...booking("a", "2026-10-03", "20:00"), status: "confirmed" as const };
+    expect(reminderState(upcoming, "2026-10-01")).toBe("pending");
+    expect(reminderState({ ...upcoming, reminder_sent_at: 1 }, "2026-10-01")).toBe("sent");
+    expect(reminderState({ ...upcoming, status: "cancelled" }, "2026-10-01")).toBe("none");
+    expect(reminderState(upcoming, "2026-10-04")).toBe("none");
+  });
+
+  it("groups whole-day slots by place in the order they come", () => {
+    const slot = (resource: string, time: string) => ({
+      resource_id: resource,
+      resource_name: resource.toUpperCase(),
+      booking_unit: "time_slot" as const,
+      date: "2026-10-03",
+      time,
+    });
+    const groups = groupSlotsByResource([slot("t2", "12:00"), slot("t4", "12:00"), slot("t2", "12:30")]);
+    expect(groups.map((group) => [group.resourceName, group.slots.map((item) => item.time)])).toEqual([
+      ["T2", ["12:00", "12:30"]],
+      ["T4", ["12:00"]],
+    ]);
+  });
+});
+
+describe("booking edit", () => {
+  const current = { ...booking("a", "2026-10-03", "20:00"), contact_name: "Nino", party_size: 2, notes: "Window" };
+
+  it("sends only what changed", () => {
+    const values = bookingEditValues(current);
+    expect(validateBookingEdit(values, current)).toEqual({ ok: true, body: null });
+    expect(
+      validateBookingEdit({ ...values, partySize: "5", resourceId: "resource_2", notes: "", contactName: " Nino B. " }, current),
+    ).toEqual({
+      ok: true,
+      body: { party_size: 5, resource_id: "resource_2", notes: "", contact_name: "Nino B." },
+    });
+  });
+
+  it("refuses an empty name and a bad party size", () => {
+    expect(validateBookingEdit({ ...bookingEditValues(current), contactName: " " }, current)).toEqual({
+      ok: false,
+      errors: { contactName: "bookings.errors.nameRequired" },
+    });
+    expect(validateBookingEdit({ ...bookingEditValues(current), partySize: "0" }, current)).toEqual({
+      ok: false,
+      errors: { partySize: "bookings.errors.partySize" },
+    });
+  });
+
+  it("offers active places booked the same way and only for upcoming bookings", () => {
+    const places = [
+      { id: "resource_1", name: "Table", booking_unit: "time_slot" as const, is_active: true },
+      { id: "resource_2", name: "Terrace", booking_unit: "time_slot" as const, is_active: true },
+      { id: "room", name: "Room", booking_unit: "night" as const, is_active: true },
+      { id: "old", name: "Old", booking_unit: "time_slot" as const, is_active: false },
+    ];
+    expect(placesForEdit(places, current).map((place) => place.id)).toEqual(["resource_1", "resource_2"]);
+    expect(canChangePlacement("confirmed")).toBe(true);
+    expect(canChangePlacement("completed")).toBe(false);
   });
 });

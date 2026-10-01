@@ -184,6 +184,7 @@ class CreateBookingUseCase(UseCaseContract[CreateBookingCommand, BookingResult])
                 source_channel=input_data.source_channel,
                 notes=input_data.notes,
                 is_sandbox=input_data.is_sandbox,
+                language=input_data.language,
                 created_at=now,
                 updated_at=now,
             )

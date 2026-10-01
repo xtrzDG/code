@@ -8,7 +8,6 @@ import { api } from "@/api/client";
 import { useApiMutation } from "@/api/hooks";
 import { useBusiness } from "@/components/business/BusinessContext";
 import { CHANNEL_LABELS, CUSTOMER_CHANNELS } from "@/components/insights/labels";
-import { withJsonBody } from "@/components/insights/requestBody";
 import type { BookingResult, ChannelKind, ManualBookingBody, ResourceView } from "@/components/insights/types";
 import { Alert, Button, Field, Input, Select, Textarea } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
@@ -22,17 +21,23 @@ import { SlotPicker } from "./SlotPicker";
 /**
  * A booking taken by phone or in person (POST …/bookings). The API checks
  * opening hours and free places; "Show free times" offers slots first.
+ * The phone is read in the chosen country (the business country first).
+ * From a conversation card the form is prefilled and the booking linked.
  */
 export function BookingForm({
   resources,
   defaultDate,
   onCreated,
   onCancel,
+  initialValues,
+  conversationId,
 }: {
   resources: readonly ResourceView[];
   defaultDate: string;
   onCreated: (result: BookingResult) => void;
   onCancel: () => void;
+  initialValues?: Partial<BookingFormValues>;
+  conversationId?: string;
 }) {
   const { t, locale } = useI18n();
   const { business } = useBusiness();
@@ -51,16 +56,15 @@ export function BookingForm({
     notes: "",
     source: "phone",
     language: business.default_language,
+    country: business.country_code,
+    ...initialValues,
   });
   const [errors, setErrors] = useState<BookingFormErrors>({});
   const unit = bookingUnitFor(resources, values.resourceId);
 
   const create = useApiMutation(
     (body: ManualBookingBody) =>
-      api.POST(
-        "/v1/businesses/{business_id}/bookings",
-        withJsonBody({ params: { path: { business_id: businessId } } }, body),
-      ),
+      api.POST("/v1/businesses/{business_id}/bookings", { params: { path: { business_id: businessId } }, body }),
     { errorMessages: { conflict: "bookings.errors.conflict" } },
   );
 
@@ -76,17 +80,19 @@ export function BookingForm({
       setErrors(result.errors);
       return;
     }
-    const created = await create.run(result.body);
+    const created = await create.run(
+      conversationId ? { ...result.body, conversation_id: conversationId } : result.body,
+    );
     if (created.ok) {
       onCreated(created.data);
     }
   };
 
-  const country = countries.data?.countries.find((item) => item.country_code === business.country_code);
+  const country = countries.data?.countries.find((item) => item.country_code === values.country);
   const phoneHint = t("bookings.form.phoneHint", {
     country: [
-      countryFlag(business.country_code),
-      countryName(business.country_code, locale),
+      countryFlag(values.country),
+      countryName(values.country, locale),
       country ? `(${formatCallingCode(country.calling_code)})` : null,
     ]
       .filter(Boolean)
@@ -128,16 +134,34 @@ export function BookingForm({
           optionalLabel={t("common.optional")}
         >
           {(control) => (
-            <Input
-              {...control}
-              type="tel"
-              dir="ltr"
-              inputMode="tel"
-              autoComplete="off"
-              value={values.phone}
-              maxLength={40}
-              onChange={(event) => set("phone", event.target.value)}
-            />
+            <div className="flex gap-2">
+              <Select
+                aria-label={t("bookings.form.phoneCountry")}
+                value={values.country}
+                onChange={(event) => set("country", event.target.value)}
+                className="w-28 shrink-0"
+              >
+                {(countries.data?.countries ?? []).length === 0 ? (
+                  <option value={values.country}>{countryFlag(values.country)}</option>
+                ) : (
+                  (countries.data?.countries ?? []).map((item) => (
+                    <option key={item.country_code} value={item.country_code}>
+                      {`${countryFlag(item.country_code)} ${formatCallingCode(item.calling_code)} ${countryName(item.country_code, locale)}`}
+                    </option>
+                  ))
+                )}
+              </Select>
+              <Input
+                {...control}
+                type="tel"
+                dir="ltr"
+                inputMode="tel"
+                autoComplete="off"
+                value={values.phone}
+                maxLength={40}
+                onChange={(event) => set("phone", event.target.value)}
+              />
+            </div>
           )}
         </Field>
       </div>

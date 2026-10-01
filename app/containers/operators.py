@@ -210,8 +210,8 @@ class OperatorsContainer(containers.DeclarativeContainer):
     reschedule_booking_operator = pipeline_operator(
         pipelines.reschedule_booking_pipeline, storage_scope
     )
-    update_booking_status_operator = pipeline_operator(
-        pipelines.update_booking_status_pipeline, storage_scope
+    update_booking_operator = pipeline_operator(
+        pipelines.update_booking_pipeline, storage_scope
     )
     list_leads_operator = pipeline_operator(
         pipelines.list_leads_pipeline, storage_scope
@@ -253,6 +253,9 @@ class OperatorsContainer(containers.DeclarativeContainer):
     )
     rate_conversation_operator = pipeline_operator(
         pipelines.rate_conversation_pipeline, storage_scope
+    )
+    send_staff_message_operator = pipeline_operator(
+        pipelines.send_staff_message_pipeline, storage_scope
     )
     import_menu_operator = pipeline_operator(
         pipelines.import_menu_pipeline, storage_scope

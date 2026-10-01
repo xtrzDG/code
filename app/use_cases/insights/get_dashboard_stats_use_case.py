@@ -5,6 +5,7 @@ from zoneinfo import ZoneInfo
 
 from typed_time_provider import Microseconds, WallClock
 
+from app.contracts.registries import PlanRegistryContract
 from app.contracts.repositories import (
     BookingRepoContract,
     BusinessProfileRepoContract,
@@ -14,18 +15,24 @@ from app.contracts.repositories import (
     LeadRepoContract,
     MessageRepoContract,
     ScheduleExceptionRepoContract,
+    SubscriptionRepoContract,
     UnansweredQuestionRepoContract,
     UsageEventRepoContract,
 )
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.billing import UsageKind
 from app.schemas.constants.conversations import MessageAuthor
+from app.schemas.domain.billing import SubscriptionDocument
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.conversations import ConversationDocument
 from app.schemas.domain.profiles import BusinessProfileDocument, OpeningInterval
+from app.schemas.dto.billing import PlanDefinition
+from app.schemas.dto.billing_ledger import PackageUsageTotals
 from app.schemas.dto.operations import (
     BookingStatusCount,
     ChannelCount,
+    DashboardDay,
+    DashboardPackageUsage,
     DashboardStats,
     DashboardStatsQuery,
     HandoffReasonCount,
@@ -39,7 +46,14 @@ from app.schemas.typings.insights.constrained_integers import (
     PeriodItemCount,
     UsedVoiceMinutes,
 )
+from app.use_cases.billing.billing_records import find_current_subscription
+from app.use_cases.billing.package_usage import (
+    compute_overage_minutes,
+    compute_usage_percent,
+    summarize_package_usage,
+)
 from app.use_cases.bookings.operations_support import require_business
+from app.utilities.billing.billing_periods import find_usage_window
 from app.utilities.scheduling.opening_hours import (
     DayRanges,
     business_day_ranges,
@@ -68,9 +82,12 @@ class GetDashboardStatsUseCase(UseCaseContract[DashboardStatsQuery, DashboardSta
     Counts what started in the period: conversations, customer messages,
     conversations outside opening hours (flagged by the conversation engine,
     or starting outside the weekly hours with holidays applied), bookings by
-    status, leads, handoffs by reason and urgency, languages and channels.
-    Also the open unanswered questions and the voice package minutes used.
-    Sandbox activity is excluded everywhere.
+    status, leads, handoffs by reason and urgency, languages and channels,
+    and per local day the conversations, bookings and handoffs (for the
+    trend chart). Also the open unanswered questions, the voice package
+    minutes used in the period, and the package of the current billing
+    window (used and included minutes and dialogs, no prices), which staff
+    see too. Sandbox activity is excluded everywhere.
     """
 
     def __init__(
@@ -85,6 +102,8 @@ class GetDashboardStatsUseCase(UseCaseContract[DashboardStatsQuery, DashboardSta
         handoff_repo: HandoffRepoContract,
         unanswered_question_repo: UnansweredQuestionRepoContract,
         usage_event_repo: UsageEventRepoContract,
+        subscription_repo: SubscriptionRepoContract,
+        plan_registry: PlanRegistryContract,
         wall_clock: WallClock[Microseconds],
     ) -> None:
         self._business_repo: BusinessRepoContract = business_repo
@@ -101,6 +120,8 @@ class GetDashboardStatsUseCase(UseCaseContract[DashboardStatsQuery, DashboardSta
             unanswered_question_repo
         )
         self._usage_event_repo: UsageEventRepoContract = usage_event_repo
+        self._subscription_repo: SubscriptionRepoContract = subscription_repo
+        self._plan_registry: PlanRegistryContract = plan_registry
         self._wall_clock: WallClock[Microseconds] = wall_clock
 
     def run(self, input_data: DashboardStatsQuery) -> DashboardStats:
@@ -141,6 +162,19 @@ class GetDashboardStatsUseCase(UseCaseContract[DashboardStatsQuery, DashboardSta
             for handoff in self._handoff_repo.list_by_business(business.id)
             if not handoff.is_sandbox and in_period(handoff.created_at)
         ]
+
+        def local_day(moment: Microseconds) -> date:
+            return to_local_moment(microseconds_to_seconds(int(moment)), zone).date()
+
+        conversations_by_day: Counter[date] = Counter(
+            local_day(conversation.created_at) for conversation in conversations
+        )
+        bookings_by_day: Counter[date] = Counter(
+            local_day(booking.created_at) for booking in bookings
+        )
+        handoffs_by_day: Counter[date] = Counter(
+            local_day(handoff.created_at) for handoff in handoffs
+        )
         return DashboardStats(
             business_id=business.id,
             timezone=business.timezone,
@@ -209,6 +243,59 @@ class GetDashboardStatsUseCase(UseCaseContract[DashboardStatsQuery, DashboardSta
                 period_start,
                 period_end,
                 sandbox_conversation_ids,
+            ),
+            daily=[
+                DashboardDay(
+                    date=to_local_date(day),
+                    conversation_count=PeriodItemCount(conversations_by_day[day]),
+                    booking_count=PeriodItemCount(bookings_by_day[day]),
+                    handoff_count=PeriodItemCount(handoffs_by_day[day]),
+                )
+                for day in (
+                    date_from + timedelta(days=offset)
+                    for offset in range((date_to - date_from).days + 1)
+                )
+            ],
+            package=self._package_usage(business),
+        )
+
+    def _package_usage(
+        self, business: BusinessDocument
+    ) -> DashboardPackageUsage | None:
+        """The current billing window's package; None without a subscription."""
+
+        subscription: SubscriptionDocument | None = find_current_subscription(
+            self._subscription_repo, business.id
+        )
+        if subscription is None:
+            return None
+
+        plan: PlanDefinition = self._plan_registry.get(subscription.plan_key)
+        window_start, window_end = find_usage_window(
+            subscription, self._wall_clock.now_unix(), business.timezone
+        )
+        totals: PackageUsageTotals = summarize_package_usage(
+            self._usage_event_repo.list_by_business_between(
+                business.id, window_start, window_end
+            ),
+            window_start,
+            window_end,
+        )
+        return DashboardPackageUsage(
+            period_start=window_start,
+            period_end=window_end,
+            used_voice_minutes=totals.used_voice_minutes,
+            included_voice_minutes=plan.included_voice_minutes,
+            voice_usage_percent=compute_usage_percent(
+                int(totals.used_voice_minutes), int(plan.included_voice_minutes)
+            ),
+            overage_voice_minutes=compute_overage_minutes(
+                totals.used_voice_minutes, int(plan.included_voice_minutes)
+            ),
+            used_dialogs=totals.used_dialogs,
+            included_dialogs=plan.included_dialogs,
+            dialog_usage_percent=compute_usage_percent(
+                int(totals.used_dialogs), int(plan.included_dialogs)
             ),
         )
 

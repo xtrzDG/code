@@ -137,7 +137,11 @@ function DataRequestsCard() {
   const [lastErasure, setLastErasure] = useState<ErasureResult | null>(null);
 
   const conversations = useApiQuery(
-    () => api.GET("/v1/businesses/{business_id}/conversations", { params: { path: { business_id: business.id } } }),
+    () =>
+      api.GET("/v1/businesses/{business_id}/conversations", {
+        // The feed is paged: the latest 200 conversations name the recent customers.
+        params: { path: { business_id: business.id }, query: { limit: "200" } },
+      }),
     [business.id],
   );
   const erase = useApiMutation(
@@ -148,7 +152,7 @@ function DataRequestsCard() {
     { errorToast: false },
   );
 
-  const customers = contactsFromConversations(conversations.data ?? []);
+  const customers = contactsFromConversations(conversations.data?.items ?? []);
   const matches = filterCustomers(customers, query);
   const shown = matches.slice(0, visible);
   const displayName = (customer: CustomerContact) => customer.name || customer.phoneNumber || t("settings.requests.unnamed");

@@ -273,8 +273,8 @@ class PipelinesContainer(containers.DeclarativeContainer):
     reschedule_booking_pipeline = orchestrator_pipeline(
         orchestrators.reschedule_booking_orchestrator
     )
-    update_booking_status_pipeline = orchestrator_pipeline(
-        orchestrators.update_booking_status_orchestrator
+    update_booking_pipeline = orchestrator_pipeline(
+        orchestrators.update_booking_orchestrator
     )
     list_leads_pipeline = orchestrator_pipeline(orchestrators.list_leads_orchestrator)
     update_lead_status_pipeline = orchestrator_pipeline(
@@ -314,6 +314,9 @@ class PipelinesContainer(containers.DeclarativeContainer):
     )
     rate_conversation_pipeline = orchestrator_pipeline(
         orchestrators.rate_conversation_orchestrator
+    )
+    send_staff_message_pipeline = orchestrator_pipeline(
+        orchestrators.send_staff_message_orchestrator
     )
     import_menu_pipeline = orchestrator_pipeline(orchestrators.import_menu_orchestrator)
     confirm_imported_items_pipeline = orchestrator_pipeline(

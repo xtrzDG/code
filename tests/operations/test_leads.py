@@ -1,10 +1,17 @@
+from datetime import datetime
+
 import pytest
 
 from app.schemas.constants.bookings import LeadStatus, LeadType
 from app.schemas.constants.channels import ChannelKind
 from app.schemas.constants.compliance import AuditAction
 from app.schemas.dto.bookings import CreateLeadCommand, LeadView
-from app.schemas.dto.operations import ListLeadsQuery, UpdateLeadStatusCommand
+from app.schemas.dto.operations import (
+    LeadPage,
+    ListLeadsQuery,
+    UpdateLeadStatusCommand,
+)
+from app.schemas.dto.paging import PageRequest
 from app.schemas.exceptions.application_errors import NotFoundError
 from app.schemas.typings.bookings.constrained_integers import PartySize
 from app.schemas.typings.bookings.constrained_strings import LocalDate
@@ -17,6 +24,8 @@ from app.schemas.typings.localization.constrained_strings import (
     E164PhoneNumber,
     LanguageTag,
 )
+from app.schemas.typings.platform.constrained_integers import PageSize
+from app.schemas.typings.platform.constrained_strings import PageCursor
 from app.schemas.typings.users.prefixed_id import UserId
 from tests.operations.builders import OperationsWorld
 
@@ -130,3 +139,48 @@ def test_list_and_update_leads() -> None:
                 status=LeadStatus.WON,
             )
         )
+
+
+def test_leads_page_newest_first_with_status_counts() -> None:
+    leads = LeadsFixture()
+    created: list[LeadView] = []
+    for minute in range(3):
+        leads.world.clock.move_to(
+            datetime.fromisoformat(f"2026-10-05T10:0{minute}:00+04:00")
+        )
+        created.append(leads.create())
+    leads.world.update_lead_status().run(
+        UpdateLeadStatusCommand(
+            business_id=leads.business.id,
+            lead_id=created[0].id,
+            status=LeadStatus.WON,
+        )
+    )
+    leads.create(is_sandbox=True)
+
+    def page(
+        cursor: PageCursor | None = None, status: LeadStatus | None = None
+    ) -> LeadPage:
+        return leads.world.list_leads().run(
+            ListLeadsQuery(
+                business_id=leads.business.id,
+                actor_id=UserId(),
+                status=status,
+                page=PageRequest(size=PageSize(2), cursor=cursor),
+            )
+        )
+
+    first = page()
+    second = page(first.next_cursor)
+    won = page(status=LeadStatus.WON)
+
+    assert [item.id for item in first.items] == [created[2].id, created[1].id]
+    assert [item.id for item in second.items] == [created[0].id]
+    assert second.next_cursor is None
+    assert [item.id for item in won.items] == [created[0].id]
+    assert {count.status: int(count.count) for count in won.status_counts} == {
+        LeadStatus.NEW: 2,
+        LeadStatus.IN_PROGRESS: 0,
+        LeadStatus.WON: 1,
+        LeadStatus.LOST: 0,
+    }

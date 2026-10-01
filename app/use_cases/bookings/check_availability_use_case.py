@@ -67,6 +67,11 @@ class CheckAvailabilityUseCase(UseCaseContract[AvailabilityQuery, AvailabilityRe
     With a requested time, up to five slots nearest to it are returned;
     otherwise the first ten. For each time the best-fitting resource is
     offered. Real queries count real bookings; sandbox queries count all.
+
+    The full-day view (`full_day`, staff picking a time in the cabinet)
+    lists every free slot of the date for every resource that seats the
+    party, by time, then best fit, and every free stay, with the cabinet's
+    rules: from now on (no minimum notice) and no online party-size limit.
     """
 
     def __init__(
@@ -95,7 +100,7 @@ class CheckAvailabilityUseCase(UseCaseContract[AvailabilityQuery, AvailabilityRe
             self._schedule_exception_repo,
             input_data.business_id,
         )
-        if input_data.party_size is not None:
+        if input_data.party_size is not None and not input_data.full_day:
             ensure_party_size_allowed(input_data.party_size, inputs.rules)
 
         local_date: date = parse_local_date(input_data.date)
@@ -117,14 +122,20 @@ class CheckAvailabilityUseCase(UseCaseContract[AvailabilityQuery, AvailabilityRe
             bookings=self._booking_repo.list_by_business(input_data.business_id),
             rules=inputs.rules,
             stay_times=inputs.stay_times,
-            earliest_start=now_seconds + min_notice_seconds(inputs.rules),
+            earliest_start=(
+                now_seconds
+                if input_data.full_day
+                else now_seconds + min_notice_seconds(inputs.rules)
+            ),
             include_sandbox=input_data.is_sandbox,
         )
         candidates: list[ResourceDocument] = seating_resources(
             matching, input_data.party_size
         )
-        slots: list[AvailableSlot] = self._time_slots(
-            candidates, request, input_data
+        slots: list[AvailableSlot] = (
+            self._all_time_slots(candidates, request, input_data)
+            if input_data.full_day
+            else self._time_slots(candidates, request, input_data)
         ) + self._stays(candidates, request, input_data)
         return AvailabilityResult(
             timezone=inputs.business.timezone,
@@ -169,6 +180,42 @@ class CheckAvailabilityUseCase(UseCaseContract[AvailabilityQuery, AvailabilityRe
 
         return [best_by_minute[minute] for minute in minutes]
 
+    def _all_time_slots(
+        self,
+        candidates: list[ResourceDocument],
+        request: PlacementRequest,
+        query: AvailabilityQuery,
+    ) -> list[AvailableSlot]:
+        """Every free slot of every resource, by time, best fit first."""
+
+        slots: list[tuple[int, int, AvailableSlot]] = []
+        for rank, resource in enumerate(candidates):
+            if resource.booking_unit is not BookingUnit.TIME_SLOT:
+                continue
+
+            duration: BookingDurationMinutes = BookingDurationMinutes(
+                resolve_duration_minutes(
+                    request.duration_minutes, resource, request.rules
+                )
+            )
+            slots.extend(
+                (
+                    slot.minute_of_day,
+                    rank,
+                    AvailableSlot(
+                        resource_id=resource.id,
+                        resource_name=resource.name,
+                        booking_unit=BookingUnit.TIME_SLOT,
+                        date=query.date,
+                        time=to_time_of_day(slot.minute_of_day),
+                        duration_minutes=duration,
+                    ),
+                )
+                for slot in free_time_slots(resource, request)
+            )
+
+        return [slot for _, _, slot in sorted(slots, key=lambda item: item[:2])]
+
     def _stays(
         self,
         candidates: list[ResourceDocument],
@@ -196,7 +243,7 @@ class CheckAvailabilityUseCase(UseCaseContract[AvailabilityQuery, AvailabilityRe
                 )
             )
 
-        return stays[:STAY_OPTION_LIMIT]
+        return stays if query.full_day else stays[:STAY_OPTION_LIMIT]
 
     def _is_open(
         self,

@@ -53,4 +53,8 @@ def build_booking_view(
         source_channel=booking.source_channel,
         notes=booking.notes,
         is_sandbox=booking.is_sandbox,
+        conversation_id=booking.conversation_id,
+        language=booking.language,
+        reminder_sent_at=booking.reminder_sent_at,
+        created_at=booking.created_at,
     )

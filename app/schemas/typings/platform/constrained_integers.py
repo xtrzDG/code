@@ -23,6 +23,12 @@ class JobIntervalSeconds(BaseConstrainedTypedInt):
     le = 7 * 24 * 60 * 60
 
 
+class ListItemCount(BaseConstrainedTypedInt):
+    """How many items of a cabinet list match a filter (all pages together)."""
+
+    ge = 0
+
+
 class PageSize(BaseConstrainedTypedInt):
     """How many items one page of a cabinet list holds."""
 

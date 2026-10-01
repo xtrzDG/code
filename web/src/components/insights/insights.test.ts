@@ -5,8 +5,8 @@ import { lookupMessage } from "@/i18n/translate";
 
 import { isOpenHandoff, sortHandoffs } from "./handoffs";
 import { allLabelKeys, BOOKING_STATUS, HANDOFF_STATUS, HANDOFF_URGENCY, LEAD_STATUS } from "./labels";
-import { formatMicroUsd, formatPercent, sharePercent, takePage } from "./numbers";
-import { withJsonBody } from "./requestBody";
+import { formatMicroUsd, formatPercent, sharePercent } from "./numbers";
+import { appendPage, MAX_PAGE_SIZE, PAGE_SIZE, reloadLimit } from "./paging";
 
 describe("enum labels", () => {
   it("point at texts that exist in the English dictionary", () => {
@@ -38,13 +38,6 @@ describe("numbers", () => {
     expect(sharePercent(5, 4)).toBe(100);
     expect(formatPercent(37.5, "en")).toBe("38%");
   });
-
-  it("pages a loaded list", () => {
-    const items = Array.from({ length: 45 }, (_, index) => index);
-    expect(takePage(items, 1, 20)).toEqual({ visible: items.slice(0, 20), hasMore: true });
-    expect(takePage(items, 3, 20)).toEqual({ visible: items, hasMore: false });
-    expect(takePage([], 0, 20)).toEqual({ visible: [], hasMore: false });
-  });
 });
 
 describe("handoffs", () => {
@@ -73,9 +66,17 @@ describe("handoffs", () => {
   });
 });
 
-describe("request bodies", () => {
-  it("adds a JSON body to an openapi-fetch init", () => {
-    const init = withJsonBody({ params: { path: { id: "x" } } }, { status: "won" });
-    expect(init).toEqual({ params: { path: { id: "x" } }, body: { status: "won" } });
+describe("server paging", () => {
+  it("reloads as many items as are shown, within one API page", () => {
+    expect(reloadLimit(0)).toBe(PAGE_SIZE);
+    expect(reloadLimit(50)).toBe(50);
+    expect(reloadLimit(51)).toBe(100);
+    expect(reloadLimit(1000)).toBe(MAX_PAGE_SIZE);
+  });
+
+  it("appends a page without repeating items that moved", () => {
+    const shown = [{ id: "a" }, { id: "b" }];
+    expect(appendPage(shown, [{ id: "b" }, { id: "c" }]).map((item) => item.id)).toEqual(["a", "b", "c"]);
+    expect(appendPage([], [{ id: "x" }])).toEqual([{ id: "x" }]);
   });
 });

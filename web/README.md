@@ -111,11 +111,15 @@ web/
       businesses/              list and creation of businesses (a new account gets the form at once)
       b/[businessId]/          one business: layout.tsx loads it + the user and renders the sidebar
         onboarding/            the six-step profile wizard (?step=…) and "what to add" (+ _components/)
-        dashboard/             next step, KPI tiles for a period (?period=), package usage, breakdowns
-        conversations/         list + detail side by side (layout.tsx), [conversationId]/ on phones
-        bookings/              bookings by day, manual booking with free slots, details, move, cancel
-        leads/                 requests by status, status changes, details
-        handoffs/              open/resolved handoffs by urgency, resolve
+        dashboard/             next step, KPI tiles for a period (?period=), daily trend chart (plain SVG),
+                               package meters (owners and staff), breakdowns
+        conversations/         server-paged feed with filters + card (calls, rating, linked
+                               bookings/leads/handoffs, staff reply box); layout.tsx keeps the feed
+                               mounted beside the card, [conversationId]/ on phones
+        bookings/              server-paged bookings by day ("show more"), manual booking with free
+                               slots (whole-day mode), details, edit, move, cancel
+        leads/                 server-paged requests by status with tab counts, status changes, details
+        handoffs/              server-paged open/resolved handoffs by urgency, resolve
         knowledge/             items (layout.tsx: tabs) + questions/ (unanswered), import/ (menu
                                photo, PDF or link), resources/ (bookable resources, special days)
         assistant/             test chat (layout.tsx: live version + tabs), versions/,
@@ -156,8 +160,9 @@ web/
       business/                BusinessContext (useBusiness, useBusinessFormat), status badges,
                                sectionMetadata (page titles)
       insights/                shared by dashboard … handoffs: status badges and label maps, segmented
-                               control, confirm and customer-message dialogs, show-more/refresh,
-                               business-local dates, replaceUrlQuery, useAutoReload
+                               control, confirm and customer-message dialogs, usePagedQuery (keyset
+                               paging with "show more" that keeps its length on reload), LoadMore,
+                               refresh, business-local dates, replaceUrlQuery, useAutoReload
       content/                 shared by knowledge and assistant: SectionTabs (route tabs), Tabs,
                                ConfirmDialog, Switch, icons, subPageMetadata
       workspace/               shared by channels, billing, settings, admin: CopyButton, ConfirmDialog
@@ -175,10 +180,10 @@ web/
 | Section | Path | What the owner does there |
 | --- | --- | --- |
 | Profile | `onboarding?step=…` | Six steps (niche and languages, contacts and hours, offer, booking rules, FAQ and handoff, channels), each saved on its own; the "what to add" summary opens the full list in a side panel |
-| Dashboard | `dashboard?period=…` | The next step for the business status, KPI tiles, package minutes and dialogs, languages/channels/handoff reasons |
-| Conversations | `conversations[/{id}]` | Filters kept in the URL, transcript with tool calls, linked bookings, leads and handoffs |
-| Bookings | `bookings` | Day groups, manual booking with free slots, confirm / complete / no-show / move / cancel and the customer text |
-| Leads | `leads` | Status tabs, inline status change, details |
+| Dashboard | `dashboard?period=…` | The next step for the business status, KPI tiles, a daily trend chart with a table view, package minutes and dialogs (staff too, without prices), languages/channels/handoff reasons |
+| Conversations | `conversations[/{id}]` | Server filters and search kept in the URL, transcript with tool calls and calls, rating, linked bookings, leads and handoffs, staff reply, booking for the customer |
+| Bookings | `bookings` | Server-paged day groups with place and order filters, manual booking with free slots (whole day), edit, confirm / complete / no-show / move / cancel and the customer text |
+| Leads | `leads` | Server-paged status tabs with counts, inline status change, details |
 | Handoffs | `handoffs` | Open first by urgency, resolve, call and conversation links |
 | Knowledge | `knowledge`, `/questions`, `/import`, `/resources` | Items and search, unanswered questions to FAQ, menu import with review, resources and special days |
 | Assistant | `assistant`, `/versions`, `/versions/{id}` | Test chat, versions, go-live checklist, autotests, publish and rollback |

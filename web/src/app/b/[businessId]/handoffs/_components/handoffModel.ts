@@ -1,6 +1,5 @@
 /** Pure rules of the handoffs page: tabs, counts and URL filters. */
 
-import { isOpenHandoff, sortHandoffs } from "@/components/insights/handoffs";
 import type { HandoffListItem } from "@/components/insights/types";
 
 export const HANDOFF_TABS = ["open", "resolved", "all"] as const;
@@ -28,17 +27,24 @@ export function handoffFiltersQuery(filters: HandoffFilters): string {
   return params.toString();
 }
 
-export function countHandoffTabs(handoffs: readonly Pick<HandoffListItem, "status">[]): Record<HandoffTab, number> {
-  const open = handoffs.filter(isOpenHandoff).length;
-  return { open, resolved: handoffs.length - open, all: handoffs.length };
+/** The API's `is_open` filter of a tab (the API orders: urgent and long-waiting first). */
+export function isOpenQuery(tab: HandoffTab): "true" | "false" | undefined {
+  return tab === "open" ? "true" : tab === "resolved" ? "false" : undefined;
 }
 
-/** The handoffs of a tab, open and urgent ones first. */
-export function handoffsOfTab<T extends Pick<HandoffListItem, "status" | "urgency" | "created_at" | "resolved_at">>(
-  handoffs: readonly T[],
-  tab: HandoffTab,
-): T[] {
-  const selected =
-    tab === "all" ? handoffs : handoffs.filter((handoff) => (tab === "open" ? isOpenHandoff(handoff) : !isOpenHandoff(handoff)));
-  return sortHandoffs(selected);
+/** Tab counts from the page's totals (the status filters aside). */
+export function handoffTabCounts(page: { open_count: number; resolved_count: number }): Record<HandoffTab, number> {
+  return { open: page.open_count, resolved: page.resolved_count, all: page.open_count + page.resolved_count };
+}
+
+/** The shown list after a handoff was resolved: it leaves the "open" tab. */
+export function afterResolve<T extends Pick<HandoffListItem, "id">>(handoffs: readonly T[], resolved: T, tab: HandoffTab): T[] {
+  return handoffs
+    .map((handoff) => (handoff.id === resolved.id ? resolved : handoff))
+    .filter((handoff) => tab !== "open" || handoff.id !== resolved.id);
+}
+
+/** Totals after one open handoff was resolved. */
+export function withResolvedCounts<Page extends { open_count: number; resolved_count: number }>(page: Page): Page {
+  return { ...page, open_count: Math.max(0, page.open_count - 1), resolved_count: page.resolved_count + 1 };
 }

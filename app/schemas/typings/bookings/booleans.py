@@ -6,6 +6,7 @@ Example:
 
 IsCalendarAuthorizationStateConsumed = bool
 IsClosedAllDay = bool
+IsFullDayAvailability = bool
 IsOpenOnDate = bool
 IsResourceActive = bool
 IsSandboxIncluded = bool

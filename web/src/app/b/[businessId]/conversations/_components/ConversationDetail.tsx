@@ -2,32 +2,51 @@
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import { useState, type ReactNode } from "react";
 
 import { api } from "@/api/client";
-import { useApiQuery } from "@/api/hooks";
+import { useApiMutation, useApiQuery } from "@/api/hooks";
 import { useBusiness, useBusinessFormat } from "@/components/business/BusinessContext";
 import { IconArrowLeft } from "@/components/icons";
 import { AfterHoursBadge, ChannelBadge, ConversationStatusBadge, TestBadge } from "@/components/insights/Badges";
 import { CustomerName, PhoneLink } from "@/components/insights/common";
+import { CustomerMessageModal } from "@/components/insights/CustomerMessageModal";
 import { formatMicroUsd } from "@/components/insights/numbers";
-import type { ConversationSummaryView } from "@/components/insights/types";
-import { Alert, Card, ErrorState, LoadingBlock } from "@/components/ui";
+import type {
+  ConversationDetailView,
+  ConversationRating,
+  ConversationSummaryView,
+  MessageView,
+} from "@/components/insights/types";
+import { Alert, Card, ErrorState, LoadingBlock, useToast } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { languageName } from "@/lib/format";
 import { businessPath } from "@/lib/navigation";
 
+import { BookFromConversation } from "./BookFromConversation";
+import { CallsCard } from "./CallsCard";
 import { initialsOf, usageTotals } from "./conversationModel";
 import { LinkedItems } from "./LinkedItems";
+import { RatingControl } from "./RatingControl";
+import { ReplyBox } from "./ReplyBox";
 import { Transcript } from "./Transcript";
 
-/** The conversation card: who, where, the transcript with actions and what came out of it. */
+/**
+ * The conversation card: who, where, how it was rated, what came out of it
+ * (bookings, leads, handoffs), the calls, the transcript with the
+ * assistant's actions, and a reply box for staff.
+ */
 export function ConversationDetail({ conversationId }: { conversationId: string }) {
   const { t } = useI18n();
+  const toast = useToast();
   const { business } = useBusiness();
   const searchParams = useSearchParams();
   const businessId = business.id;
   const listQuery = searchParams.toString();
   const backHref = `${businessPath(businessId, "conversations")}${listQuery ? `?${listQuery}` : ""}`;
+  const [draft, setDraft] = useState("");
+  const [isBooking, setIsBooking] = useState(false);
+  const [confirmation, setConfirmation] = useState<string | null>(null);
 
   const detail = useApiQuery(
     () =>
@@ -37,6 +56,13 @@ export function ConversationDetail({ conversationId }: { conversationId: string 
     [businessId, conversationId],
   );
   // No auto-refresh here: every card view is written to the audit log.
+
+  const rate = useApiMutation((rating: ConversationRating | null) =>
+    api.PUT("/v1/businesses/{business_id}/conversations/{conversation_id}/rating", {
+      params: { path: { business_id: businessId, conversation_id: conversationId } },
+      body: { rating },
+    }),
+  );
 
   const backLink = (
     <Link
@@ -63,12 +89,48 @@ export function ConversationDetail({ conversationId }: { conversationId: string 
     );
   }
 
-  const { conversation } = detail.data;
-  const messages = detail.data.messages ?? [];
+  const data = detail.data;
+  const { conversation } = data;
+  const messages = data.messages ?? [];
+  const reply = data.reply ?? null;
+
+  const updateDetail = (update: (current: ConversationDetailView) => ConversationDetailView) =>
+    detail.setData((current) => (current ? update(current) : data));
+
+  const changeRating = async (rating: ConversationRating | null) => {
+    const result = await rate.run(rating);
+    if (result.ok) {
+      updateDetail((current) => ({ ...current, conversation: result.data }));
+      toast.success(t(rating === null ? "conversations.rating.cleared" : "conversations.rating.saved"));
+    }
+  };
+
+  const addMessage = (message: MessageView) =>
+    updateDetail((current) => ({
+      ...current,
+      messages: [...(current.messages ?? []), message],
+      conversation: {
+        ...current.conversation,
+        message_count: current.conversation.message_count + 1,
+        last_message_at: Math.max(current.conversation.last_message_at, message.created_at),
+      },
+    }));
+
   return (
     <article className="space-y-4" aria-labelledby="conversation-title">
       {backLink}
-      <ConversationHeader conversation={conversation} messageCount={messages.length} totals={usageTotals(messages)} />
+      <ConversationHeader
+        conversation={conversation}
+        messageCount={messages.length}
+        totals={usageTotals(messages)}
+        rating={
+          <RatingControl
+            value={conversation.rating ?? null}
+            isPending={rate.isPending}
+            onChange={(rating) => void changeRating(rating)}
+          />
+        }
+      />
 
       {conversation.status === "handoff" ? (
         <Alert tone="warning">
@@ -82,11 +144,51 @@ export function ConversationDetail({ conversationId }: { conversationId: string 
         </Alert>
       ) : null}
 
-      <LinkedItems conversation={conversation} />
+      <LinkedItems detail={data} onBook={conversation.is_sandbox ? null : () => setIsBooking(true)} />
+
+      {(data.calls ?? []).length > 0 ? <CallsCard calls={data.calls ?? []} /> : null}
 
       <Card title={t("conversations.transcript")}>
         <Transcript messages={messages} />
       </Card>
+
+      {reply ? (
+        <ReplyBox
+          conversation={conversation}
+          reply={reply}
+          draft={draft}
+          onDraft={setDraft}
+          onSent={(message) => {
+            addMessage(message);
+            setDraft("");
+          }}
+          onRefused={detail.reload}
+        />
+      ) : null}
+
+      <BookFromConversation
+        open={isBooking}
+        conversation={conversation}
+        onClose={() => setIsBooking(false)}
+        onCreated={(result) => {
+          setIsBooking(false);
+          detail.reload();
+          toast.success(t("bookings.created"));
+          if (reply?.is_available) {
+            setDraft(result.confirmation_text);
+            toast.info(t("conversations.reply.confirmationPrefilled"));
+          } else {
+            setConfirmation(result.confirmation_text);
+          }
+        }}
+      />
+
+      <CustomerMessageModal
+        open={confirmation !== null}
+        title={t("bookings.created")}
+        text={confirmation ?? ""}
+        onClose={() => setConfirmation(null)}
+      />
     </article>
   );
 }
@@ -95,10 +197,12 @@ function ConversationHeader({
   conversation,
   messageCount,
   totals,
+  rating,
 }: {
   conversation: ConversationSummaryView;
   messageCount: number;
   totals: ReturnType<typeof usageTotals>;
+  rating: ReactNode;
 }) {
   const { t, tp, locale } = useI18n();
   const format = useBusinessFormat();
@@ -158,6 +262,7 @@ function ConversationHeader({
           <dd className="text-ink tabular-nums">{formatMicroUsd(totals.costMicroUsd, locale)}</dd>
         </div>
       </dl>
+      <div className="mt-4 border-t border-line pt-4">{rating}</div>
       <p className="sr-only">{tp("conversations.messages", messageCount)}</p>
     </Card>
   );

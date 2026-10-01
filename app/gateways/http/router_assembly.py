@@ -129,7 +129,7 @@ def build_application_routers(app_container: AppContainer) -> list[APIRouter]:
             create_manual_booking=operators.create_manual_booking_operator(),
             cancel_booking=operators.cancel_booking_operator(),
             reschedule_booking=operators.reschedule_booking_operator(),
-            update_booking_status=operators.update_booking_status_operator(),
+            update_booking=operators.update_booking_operator(),
             list_leads=operators.list_leads_operator(),
             update_lead_status=operators.update_lead_status_operator(),
             list_handoffs=operators.list_handoffs_operator(),
@@ -151,6 +151,7 @@ def build_application_routers(app_container: AppContainer) -> list[APIRouter]:
             owner_test_chat_operator=operators.owner_test_chat_operator(),
             rate_conversation_operator=operators.rate_conversation_operator(),
             current_user=current_user,
+            send_staff_message_operator=operators.send_staff_message_operator(),
         ),
         build_assistant_router(
             assemble_assistant_version_operator=(

@@ -139,10 +139,13 @@ from app.schemas.dto.conversation_engine import (
 from app.schemas.dto.conversation_feed import (
     ConversationDetailView,
     ConversationListQuery,
+    ConversationPage,
     ConversationQuery,
     ConversationSummaryView,
     OwnerTestChatVersionQuery,
     RateConversationCommand,
+    SendStaffMessageCommand,
+    StaffMessageResult,
 )
 from app.schemas.dto.conversations import (
     AssistantReply,
@@ -192,7 +195,7 @@ from app.schemas.dto.menu_import import (
 from app.schemas.dto.operations import (
     AnsweredQuestionResult,
     AnswerUnansweredQuestionCommand,
-    BookingListView,
+    BookingPage,
     CalendarConnectionView,
     CalendarConnectUrlView,
     CalendarDisconnectResult,
@@ -201,8 +204,8 @@ from app.schemas.dto.operations import (
     DashboardStatsQuery,
     DisconnectCalendarCommand,
     HandoffListItem,
-    HandoffListView,
-    LeadListView,
+    HandoffPage,
+    LeadPage,
     ListBookingsQuery,
     ListHandoffsQuery,
     ListLeadsQuery,
@@ -211,7 +214,7 @@ from app.schemas.dto.operations import (
     ResolveHandoffCommand,
     StartCalendarConnectionCommand,
     UnansweredQuestionListView,
-    UpdateBookingStatusCommand,
+    UpdateBookingCommand,
     UpdateLeadStatusCommand,
 )
 from app.schemas.dto.payments import (
@@ -355,9 +358,7 @@ from app.use_cases.bookings.reschedule_booking_use_case import RescheduleBooking
 from app.use_cases.bookings.send_booking_reminders_use_case import (
     SendBookingRemindersUseCase,
 )
-from app.use_cases.bookings.update_booking_status_use_case import (
-    UpdateBookingStatusUseCase,
-)
+from app.use_cases.bookings.update_booking_use_case import UpdateBookingUseCase
 from app.use_cases.businesses.create_business_use_case import CreateBusinessUseCase
 from app.use_cases.businesses.get_business_use_case import GetBusinessUseCase
 from app.use_cases.businesses.invite_staff_use_case import InviteStaffUseCase
@@ -452,6 +453,9 @@ from app.use_cases.conversations.resolve_test_chat_version_use_case import (
 )
 from app.use_cases.conversations.run_assistant_tool_use_case import (
     RunAssistantToolUseCase,
+)
+from app.use_cases.conversations.send_staff_message_use_case import (
+    SendStaffMessageUseCase,
 )
 from app.use_cases.example_use_case import ExampleUseCase
 from app.use_cases.handoffs.answer_unanswered_question_use_case import (
@@ -1059,16 +1063,16 @@ class UseCasesContainer(containers.DeclarativeContainer):
         calendar_sync=facilitators.calendar_sync_facilitator,
         wall_clock=time_provider.microsecond_wall_clock,
     )
-    list_bookings_use_case: Factory[
-        UseCaseContract[ListBookingsQuery, BookingListView]
-    ] = Factory(
-        ListBookingsUseCase,
-        business_repo=repositories.business_repo,
-        booking_repo=repositories.booking_repo,
-        resource_repo=repositories.resource_repo,
-        contact_repo=repositories.contact_repo,
-        audit_log_repo=repositories.audit_log_repo,
-        wall_clock=time_provider.microsecond_wall_clock,
+    list_bookings_use_case: Factory[UseCaseContract[ListBookingsQuery, BookingPage]] = (
+        Factory(
+            ListBookingsUseCase,
+            business_repo=repositories.business_repo,
+            booking_repo=repositories.booking_repo,
+            resource_repo=repositories.resource_repo,
+            contact_repo=repositories.contact_repo,
+            audit_log_repo=repositories.audit_log_repo,
+            wall_clock=time_provider.microsecond_wall_clock,
+        )
     )
     create_manual_booking_use_case: Factory[
         UseCaseContract[ManualBookingCommand, BookingResult]
@@ -1080,6 +1084,7 @@ class UseCasesContainer(containers.DeclarativeContainer):
         schedule_exception_repo=repositories.schedule_exception_repo,
         booking_repo=repositories.booking_repo,
         contact_repo=repositories.contact_repo,
+        conversation_repo=repositories.conversation_repo,
         audit_log_repo=repositories.audit_log_repo,
         lock_registry=registries.business_lock_registry,
         phone_number_parser=utilities.phone_number_parser,
@@ -1087,11 +1092,13 @@ class UseCasesContainer(containers.DeclarativeContainer):
         calendar_sync=facilitators.calendar_sync_facilitator,
         wall_clock=time_provider.microsecond_wall_clock,
     )
-    update_booking_status_use_case: Factory[
-        UseCaseContract[UpdateBookingStatusCommand, BookingView]
+    update_booking_use_case: Factory[
+        UseCaseContract[UpdateBookingCommand, BookingView]
     ] = Factory(
-        UpdateBookingStatusUseCase,
+        UpdateBookingUseCase,
         business_repo=repositories.business_repo,
+        business_profile_repo=repositories.business_profile_repo,
+        schedule_exception_repo=repositories.schedule_exception_repo,
         booking_repo=repositories.booking_repo,
         resource_repo=repositories.resource_repo,
         contact_repo=repositories.contact_repo,
@@ -1136,15 +1143,13 @@ class UseCasesContainer(containers.DeclarativeContainer):
             wall_clock=time_provider.microsecond_wall_clock,
         )
     )
-    list_leads_use_case: Factory[UseCaseContract[ListLeadsQuery, LeadListView]] = (
-        Factory(
-            ListLeadsUseCase,
-            business_repo=repositories.business_repo,
-            lead_repo=repositories.lead_repo,
-            contact_repo=repositories.contact_repo,
-            audit_log_repo=repositories.audit_log_repo,
-            wall_clock=time_provider.microsecond_wall_clock,
-        )
+    list_leads_use_case: Factory[UseCaseContract[ListLeadsQuery, LeadPage]] = Factory(
+        ListLeadsUseCase,
+        business_repo=repositories.business_repo,
+        lead_repo=repositories.lead_repo,
+        contact_repo=repositories.contact_repo,
+        audit_log_repo=repositories.audit_log_repo,
+        wall_clock=time_provider.microsecond_wall_clock,
     )
     update_lead_status_use_case: Factory[
         UseCaseContract[UpdateLeadStatusCommand, LeadView]
@@ -1178,15 +1183,15 @@ class UseCasesContainer(containers.DeclarativeContainer):
         contact_repo=repositories.contact_repo,
         wall_clock=time_provider.microsecond_wall_clock,
     )
-    list_handoffs_use_case: Factory[
-        UseCaseContract[ListHandoffsQuery, HandoffListView]
-    ] = Factory(
-        ListHandoffsUseCase,
-        business_repo=repositories.business_repo,
-        handoff_repo=repositories.handoff_repo,
-        contact_repo=repositories.contact_repo,
-        audit_log_repo=repositories.audit_log_repo,
-        wall_clock=time_provider.microsecond_wall_clock,
+    list_handoffs_use_case: Factory[UseCaseContract[ListHandoffsQuery, HandoffPage]] = (
+        Factory(
+            ListHandoffsUseCase,
+            business_repo=repositories.business_repo,
+            handoff_repo=repositories.handoff_repo,
+            contact_repo=repositories.contact_repo,
+            audit_log_repo=repositories.audit_log_repo,
+            wall_clock=time_provider.microsecond_wall_clock,
+        )
     )
     record_unanswered_question_use_case: Factory[
         UseCaseContract[RecordUnansweredQuestionCommand, UnansweredQuestionView]
@@ -1224,6 +1229,8 @@ class UseCasesContainer(containers.DeclarativeContainer):
         handoff_repo=repositories.handoff_repo,
         unanswered_question_repo=repositories.unanswered_question_repo,
         usage_event_repo=repositories.usage_event_repo,
+        subscription_repo=repositories.subscription_repo,
+        plan_registry=registries.plan_registry,
         wall_clock=time_provider.microsecond_wall_clock,
     )
 
@@ -1342,7 +1349,7 @@ class UseCasesContainer(containers.DeclarativeContainer):
 
     # --- Conversation feed, owner test chat and menu import.
     list_conversations_use_case: Factory[
-        UseCaseContract[ConversationListQuery, list[ConversationSummaryView]]
+        UseCaseContract[ConversationListQuery, ConversationPage]
     ] = Factory(
         ListConversationsUseCase,
         authorize_business_access=authorize_business_access_use_case,
@@ -1365,6 +1372,24 @@ class UseCasesContainer(containers.DeclarativeContainer):
         wall_clock=time_provider.microsecond_wall_clock,
         call_repo=repositories.call_repo,
         call_transformer=transformers.call_view_transformer,
+        booking_repo=repositories.booking_repo,
+        lead_repo=repositories.lead_repo,
+        handoff_repo=repositories.handoff_repo,
+        resource_repo=repositories.resource_repo,
+        channel_repo=repositories.channel_repo,
+    )
+    send_staff_message_use_case: Factory[
+        UseCaseContract[SendStaffMessageCommand, StaffMessageResult]
+    ] = Factory(
+        SendStaffMessageUseCase,
+        authorize_business_access=authorize_business_access_use_case,
+        conversation_repo=repositories.conversation_repo,
+        message_repo=repositories.message_repo,
+        channel_repo=repositories.channel_repo,
+        audit_log_repo=repositories.audit_log_repo,
+        channel_message_sender=facilitators.channel_message_sender,
+        message_transformer=transformers.message_view_transformer,
+        wall_clock=time_provider.microsecond_wall_clock,
     )
     rate_conversation_use_case: Factory[
         UseCaseContract[RateConversationCommand, ConversationSummaryView]

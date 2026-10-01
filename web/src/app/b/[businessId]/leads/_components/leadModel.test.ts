@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { countByStatus, leadFiltersQuery, leadsOfTab, parseLeadFilters, withLeadStatus } from "./leadModel";
+import { afterStatusChange, countsByTab, leadFiltersQuery, parseLeadFilters, withStatusCounts } from "./leadModel";
 
 const leads = [
   { id: "a", status: "new" as const },
@@ -8,19 +8,29 @@ const leads = [
   { id: "c", status: "new" as const },
 ];
 
+const statusCounts = [
+  { status: "new" as const, count: 2 },
+  { status: "in_progress" as const, count: 0 },
+  { status: "won" as const, count: 1 },
+  { status: "lost" as const, count: 0 },
+];
+
 describe("lead tabs", () => {
-  it("count every status", () => {
-    expect(countByStatus(leads)).toEqual({ all: 3, new: 2, in_progress: 0, won: 1, lost: 0 });
+  it("count every status from the API's counts", () => {
+    expect(countsByTab(statusCounts)).toEqual({ all: 3, new: 2, in_progress: 0, won: 1, lost: 0 });
+    expect(countsByTab([])).toEqual({ all: 0, new: 0, in_progress: 0, won: 0, lost: 0 });
   });
 
-  it("filter by tab", () => {
-    expect(leadsOfTab(leads, "new").map((lead) => lead.id)).toEqual(["a", "c"]);
-    expect(leadsOfTab(leads, "all")).toHaveLength(3);
+  it("move a lead between counts", () => {
+    const moved = withStatusCounts({ status_counts: statusCounts }, "new", "lost");
+    expect(countsByTab(moved.status_counts)).toEqual({ all: 3, new: 1, in_progress: 0, won: 1, lost: 1 });
+    expect(withStatusCounts({ status_counts: statusCounts }, "won", "won").status_counts).toBe(statusCounts);
   });
 
-  it("apply a status change locally", () => {
-    expect(withLeadStatus(leads, "a", "lost")[0]).toEqual({ id: "a", status: "lost" });
-    expect(withLeadStatus(leads, "x", "lost")).toEqual(leads);
+  it("apply a status change locally and drop the lead from another status tab", () => {
+    expect(afterStatusChange(leads, "a", "lost", "all")[0]).toEqual({ id: "a", status: "lost" });
+    expect(afterStatusChange(leads, "a", "lost", "new").map((lead) => lead.id)).toEqual(["b", "c"]);
+    expect(afterStatusChange(leads, "x", "lost", "new")).toEqual(leads);
   });
 });
 

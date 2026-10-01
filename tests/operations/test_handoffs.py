@@ -15,12 +15,19 @@ from app.schemas.constants.handoffs import (
 )
 from app.schemas.domain.conversations import ConversationDocument
 from app.schemas.dto.handoffs import HandoffCommand, HandoffResult
-from app.schemas.dto.operations import ListHandoffsQuery, ResolveHandoffCommand
+from app.schemas.dto.operations import (
+    HandoffPage,
+    ListHandoffsQuery,
+    ResolveHandoffCommand,
+)
+from app.schemas.dto.paging import PageRequest
 from app.schemas.exceptions.application_errors import NotFoundError
 from app.schemas.typings.conversations.prefixed_id import ConversationId
 from app.schemas.typings.handoffs.prefixed_id import HandoffId
 from app.schemas.typings.handoffs.strings import HandoffSummary
 from app.schemas.typings.localization.constrained_strings import LanguageTag
+from app.schemas.typings.platform.constrained_integers import PageSize
+from app.schemas.typings.platform.constrained_strings import PageCursor
 from app.schemas.typings.users.prefixed_id import UserId
 from tests.operations.builders import OperationsWorld, every_day, interval
 from tests.operations.fakes import RecordingManagerNotifier
@@ -64,6 +71,7 @@ class HandoffFixture:
         language: str = "he",
         is_sandbox: bool = False,
         conversation_id: ConversationId | None = None,
+        urgency: HandoffUrgency = HandoffUrgency.HIGH,
     ) -> HandoffResult:
         return self.world.handoff_to_human().run(
             HandoffCommand(
@@ -72,7 +80,7 @@ class HandoffFixture:
                 contact_id=self.contact.id,
                 reason=HandoffReason.COMPLAINT,
                 summary=HandoffSummary("Tooth still hurts after the filling."),
-                urgency=HandoffUrgency.HIGH,
+                urgency=urgency,
                 source_channel=ChannelKind.TELEGRAM,
                 language=LanguageTag(language),
                 is_sandbox=is_sandbox,
@@ -250,3 +258,47 @@ def test_overnight_business_is_open_after_midnight() -> None:
     assert str(result.customer_message) == (
         "თქვენი მოთხოვნა კოლეგას გადაეცა. მალე გიპასუხებენ."
     )
+
+
+def test_handoff_pages_put_urgent_and_long_waiting_ones_first() -> None:
+    fixture = HandoffFixture("2026-10-05T11:00:00+03:00")
+    urgencies = (
+        HandoffUrgency.NORMAL,
+        HandoffUrgency.CRITICAL,
+        HandoffUrgency.NORMAL,
+        HandoffUrgency.HIGH,
+    )
+    created: list[HandoffResult] = []
+    for minute, urgency in enumerate(urgencies):
+        fixture.world.clock.move_to(
+            datetime.fromisoformat(f"2026-10-05T11:0{minute}:00+03:00")
+        )
+        created.append(fixture.hand_off(urgency=urgency))
+    fixture.world.resolve_handoff().run(
+        ResolveHandoffCommand(business_id=fixture.business.id, handoff_id=created[3].id)
+    )
+
+    def page(
+        is_open: bool | None = None, cursor: PageCursor | None = None
+    ) -> HandoffPage:
+        return fixture.world.list_handoffs().run(
+            ListHandoffsQuery(
+                business_id=fixture.business.id,
+                actor_id=UserId(),
+                is_open=is_open,
+                page=PageRequest(size=PageSize(2), cursor=cursor),
+            )
+        )
+
+    first = page()
+    second = page(cursor=first.next_cursor)
+    waiting = page(is_open=True)
+    done = page(is_open=False)
+
+    ids = [result.id for result in created]
+    assert [item.id for item in first.items] == [ids[1], ids[0]]
+    assert [item.id for item in second.items] == [ids[2], ids[3]]
+    assert second.next_cursor is None
+    assert [item.id for item in waiting.items] == [ids[1], ids[0]]
+    assert [item.id for item in done.items] == [ids[3]]
+    assert (int(done.open_count), int(done.resolved_count)) == (3, 1)

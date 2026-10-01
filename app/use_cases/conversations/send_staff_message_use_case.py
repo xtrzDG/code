@@ -1,0 +1,187 @@
+from typed_time_provider import Microseconds, WallClock
+
+from app.contracts.facilitators import ChannelMessageSenderFacilitatorContract
+from app.contracts.repositories import (
+    AuditLogRepoContract,
+    ChannelRepoContract,
+    ConversationRepoContract,
+    MessageRepoContract,
+)
+from app.contracts.transformer_contract import TransformerContract
+from app.contracts.use_case_contract import UseCaseContract
+from app.schemas.constants.channels import MessageDirection
+from app.schemas.constants.compliance import AuditAction
+from app.schemas.constants.conversations import (
+    MessageAuthor,
+    StaffMessageDelivery,
+    StaffReplyBlock,
+)
+from app.schemas.domain.businesses import BusinessDocument
+from app.schemas.domain.compliance import AuditLogEntryDocument
+from app.schemas.domain.conversations import ConversationDocument, MessageDocument
+from app.schemas.dto.access import BusinessAccessRequest
+from app.schemas.dto.conversation_feed import (
+    MessageView,
+    SendStaffMessageCommand,
+    StaffMessageResult,
+    StaffReplyView,
+)
+from app.schemas.exceptions.application_errors import ConflictError, NotFoundError
+from app.schemas.typings.compliance.strings import (
+    AuditEntityName,
+    AuditEntityReference,
+)
+from app.schemas.typings.conversations.strings import MessageText
+from app.use_cases.conversations.staff_reply_support import (
+    assess_conversation_reply,
+)
+from app.utilities.conversations.staff_replies import describe_block
+
+MESSAGE_ENTITY: AuditEntityName = AuditEntityName("message")
+
+
+class SendStaffMessageUseCase(
+    UseCaseContract[SendStaffMessageCommand, StaffMessageResult]
+):
+    """
+    An owner or staff member writes to the customer of a conversation from
+    the cabinet (concept section 6: after a handoff a person answers in the
+    same channel).
+
+    Telegram, WhatsApp, Instagram and Messenger messages are sent through
+    the business's connected channel right away; WhatsApp, Instagram and
+    Messenger only within 24 hours of the customer's last message there.
+    Website chat messages are kept for the visitor's widget. Phone and test
+    conversations cannot be written to; every refusal is a ConflictError
+    that says why. The message is stored in the transcript as a STAFF
+    message with its author, the conversation moves up the feed, the
+    assistant is not asked to answer, and the message (personal data) is
+    written to the audit log.
+    """
+
+    def __init__(
+        self,
+        authorize_business_access: UseCaseContract[
+            BusinessAccessRequest, BusinessDocument
+        ],
+        conversation_repo: ConversationRepoContract,
+        message_repo: MessageRepoContract,
+        channel_repo: ChannelRepoContract,
+        audit_log_repo: AuditLogRepoContract,
+        channel_message_sender: ChannelMessageSenderFacilitatorContract,
+        message_transformer: TransformerContract[MessageDocument, MessageView],
+        wall_clock: WallClock[Microseconds],
+    ) -> None:
+        self._authorize_business_access: UseCaseContract[
+            BusinessAccessRequest, BusinessDocument
+        ] = authorize_business_access
+        self._conversation_repo: ConversationRepoContract = conversation_repo
+        self._message_repo: MessageRepoContract = message_repo
+        self._channel_repo: ChannelRepoContract = channel_repo
+        self._audit_log_repo: AuditLogRepoContract = audit_log_repo
+        self._channel_message_sender: ChannelMessageSenderFacilitatorContract = (
+            channel_message_sender
+        )
+        self._message_transformer: TransformerContract[MessageDocument, MessageView] = (
+            message_transformer
+        )
+        self._wall_clock: WallClock[Microseconds] = wall_clock
+
+    def run(self, input_data: SendStaffMessageCommand) -> StaffMessageResult:
+        business: BusinessDocument = self._authorize_business_access.run(
+            BusinessAccessRequest(
+                user_id=input_data.user_id,
+                business_id=input_data.business_id,
+            )
+        )
+        conversation: ConversationDocument = self._require_conversation(
+            business, input_data
+        )
+        now: Microseconds = self._wall_clock.now_unix()
+        reply: StaffReplyView = assess_conversation_reply(
+            conversation,
+            self._conversation_repo,
+            self._message_repo,
+            self._channel_repo,
+            now,
+        )
+        if not reply.is_available or reply.delivery is None:
+            raise ConflictError(
+                describe_block(reply.block or StaffReplyBlock.UNSUPPORTED_CHANNEL)
+            )
+
+        text: MessageText = MessageText(str(input_data.text).strip())
+        if reply.delivery is StaffMessageDelivery.SENT:
+            self._channel_message_sender.send(
+                business.id,
+                conversation.channel,
+                conversation.channel_user_id,
+                text,
+            )
+
+        message: MessageDocument = MessageDocument(
+            conversation_id=conversation.id,
+            business_id=business.id,
+            direction=MessageDirection.OUTBOUND,
+            author=MessageAuthor.STAFF,
+            text=text,
+            language=conversation.language,
+            sent_by=input_data.user_id,
+            created_at=now,
+            updated_at=now,
+        )
+        self._message_repo.save(message)
+        self._touch_conversation(business, conversation, now)
+        self._audit_log_repo.append(
+            AuditLogEntryDocument(
+                business_id=business.id,
+                actor_id=input_data.user_id,
+                action=AuditAction.CREATE,
+                entity=MESSAGE_ENTITY,
+                entity_id=AuditEntityReference(str(message.id)),
+                ip_address=input_data.client_ip_address,
+                created_at=now,
+                updated_at=now,
+            )
+        )
+        return StaffMessageResult(
+            message=self._message_transformer.transform(message),
+            delivery=reply.delivery,
+        )
+
+    def _require_conversation(
+        self,
+        business: BusinessDocument,
+        command: SendStaffMessageCommand,
+    ) -> ConversationDocument:
+        conversation: ConversationDocument | None = self._conversation_repo.get(
+            business.id, command.conversation_id
+        )
+        if conversation is None:
+            raise NotFoundError(
+                f"Conversation {command.conversation_id} was not found."
+            )
+
+        return conversation
+
+    def _touch_conversation(
+        self,
+        business: BusinessDocument,
+        conversation: ConversationDocument,
+        now: Microseconds,
+    ) -> None:
+        """
+        Move the conversation up the feed, changing only `last_message_at` on
+        the conversation as stored now, so a status the assistant set in the
+        meantime (a handoff) is kept.
+        """
+
+        current: ConversationDocument = (
+            self._conversation_repo.get(business.id, conversation.id) or conversation
+        )
+        if int(current.last_message_at) >= int(now):
+            return
+
+        current.last_message_at = now
+        current.updated_at = now
+        self._conversation_repo.save(current)

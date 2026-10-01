@@ -2,6 +2,7 @@ from datetime import date
 
 import pytest
 from babel.dates import format_date
+from typed_time_provider import Microseconds
 
 from app.schemas.constants.bookings import (
     BookingStatus,
@@ -116,6 +117,7 @@ def booking_view(
         status=BookingStatus.CONFIRMED,
         source_channel=ChannelKind.INSTAGRAM,
         notes=None if notes is None else BookingNote(notes),
+        created_at=Microseconds(1_790_000_000_000_000),
     )
 
 

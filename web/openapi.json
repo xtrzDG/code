@@ -1242,6 +1242,20 @@
             "title": "Is Sandbox",
             "type": "boolean"
           },
+          "language": {
+            "anyOf": [
+              {
+                "maxLength": 16,
+                "minLength": 2,
+                "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Language"
+          },
           "notes": {
             "anyOf": [
               {
@@ -1310,9 +1324,9 @@
         "title": "BookingDocument",
         "type": "object"
       },
-      "BookingListView": {
+      "BookingPage": {
         "additionalProperties": false,
-        "description": "Bookings ordered by start time.",
+        "description": "One page of bookings; `next_cursor` is None on the last page.",
         "properties": {
           "items": {
             "items": {
@@ -1320,9 +1334,23 @@
             },
             "title": "Items",
             "type": "array"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "minLength": 1,
+                "pattern": "^[A-Za-z0-9_-]+$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
           }
         },
-        "title": "BookingListView",
+        "title": "BookingPage",
         "type": "object"
       },
       "BookingResult": {
@@ -1459,7 +1487,7 @@
       },
       "BookingView": {
         "additionalProperties": false,
-        "description": "Booking rendered in the business time zone.",
+        "description": "Booking rendered in the business time zone.\n\n`conversation_id` is the conversation it was made in (the assistant's\ntools, or staff booking from a conversation card). `language` is the\ncustomer's language for texts about it. `reminder_sent_at` is when the\ncustomer's reminder went out (None: not yet).",
         "properties": {
           "business_id": {
             "title": "Business Id",
@@ -1493,6 +1521,21 @@
               }
             ],
             "title": "Contact Phone Number"
+          },
+          "conversation_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Conversation Id"
+          },
+          "created_at": {
+            "title": "Created At",
+            "type": "integer"
           },
           "date": {
             "maxLength": 10,
@@ -1531,6 +1574,20 @@
             "title": "Is Sandbox",
             "type": "boolean"
           },
+          "language": {
+            "anyOf": [
+              {
+                "maxLength": 16,
+                "minLength": 2,
+                "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Language"
+          },
           "notes": {
             "anyOf": [
               {
@@ -1547,6 +1604,17 @@
             "minimum": 1.0,
             "title": "Party Size",
             "type": "integer"
+          },
+          "reminder_sent_at": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reminder Sent At"
           },
           "resource_id": {
             "title": "Resource Id",
@@ -1595,7 +1663,8 @@
           "timezone",
           "party_size",
           "status",
-          "source_channel"
+          "source_channel",
+          "created_at"
         ],
         "title": "BookingView",
         "type": "object"
@@ -3210,8 +3279,15 @@
       },
       "ConversationDetailView": {
         "additionalProperties": false,
-        "description": "Conversation card: summary, the full transcript with tool calls and, for\nphone conversations, the calls with their transcripts and recordings.",
+        "description": "Conversation card: summary, the full transcript with tool calls, for\nphone conversations the calls with their transcripts and recordings,\nthe bookings, leads and handoffs made in it, and whether staff can reply.",
         "properties": {
+          "bookings": {
+            "items": {
+              "$ref": "#/components/schemas/BookingView"
+            },
+            "title": "Bookings",
+            "type": "array"
+          },
           "calls": {
             "items": {
               "$ref": "#/components/schemas/CallView"
@@ -3222,12 +3298,36 @@
           "conversation": {
             "$ref": "#/components/schemas/ConversationSummaryView"
           },
+          "handoffs": {
+            "items": {
+              "$ref": "#/components/schemas/HandoffListItem"
+            },
+            "title": "Handoffs",
+            "type": "array"
+          },
+          "leads": {
+            "items": {
+              "$ref": "#/components/schemas/LeadListItem"
+            },
+            "title": "Leads",
+            "type": "array"
+          },
           "messages": {
             "items": {
               "$ref": "#/components/schemas/MessageView"
             },
             "title": "Messages",
             "type": "array"
+          },
+          "reply": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/StaffReplyView"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "required": [
@@ -3355,6 +3455,35 @@
         "title": "ConversationDocument",
         "type": "object"
       },
+      "ConversationPage": {
+        "additionalProperties": false,
+        "description": "One page of the feed; `next_cursor` is None on the last page.",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ConversationSummaryView"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "minLength": 1,
+                "pattern": "^[A-Za-z0-9_-]+$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          }
+        },
+        "title": "ConversationPage",
+        "type": "object"
+      },
       "ConversationRating": {
         "description": "The owner's or staff's verdict on how the assistant handled a\nconversation (concept section 8, \"good / bad\" on the card), used in the\nweekly quality review (section 11).",
         "enum": [
@@ -3376,7 +3505,7 @@
       },
       "ConversationSummaryView": {
         "additionalProperties": false,
-        "description": "A conversation row in the feed.",
+        "description": "A conversation row in the feed: who, where, flags, how many messages\n(all and the customer's) and the beginning of the last one.",
         "properties": {
           "assistant_version_id": {
             "title": "Assistant Version Id",
@@ -3422,6 +3551,11 @@
             "title": "Created At",
             "type": "integer"
           },
+          "customer_message_count": {
+            "minimum": 0.0,
+            "title": "Customer Message Count",
+            "type": "integer"
+          },
           "id": {
             "title": "Id",
             "type": "string"
@@ -3451,6 +3585,16 @@
           "last_message_at": {
             "title": "Last Message At",
             "type": "integer"
+          },
+          "last_message_author": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MessageAuthor"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "last_message_text": {
             "anyOf": [
@@ -3492,6 +3636,7 @@
           "is_after_hours",
           "is_sandbox",
           "message_count",
+          "customer_message_count",
           "last_message_at",
           "created_at"
         ],
@@ -3800,9 +3945,119 @@
         "title": "CurrentUserView",
         "type": "object"
       },
+      "DashboardDay": {
+        "additionalProperties": false,
+        "description": "What started on one local day of the dashboard period.",
+        "properties": {
+          "booking_count": {
+            "minimum": 0.0,
+            "title": "Booking Count",
+            "type": "integer"
+          },
+          "conversation_count": {
+            "minimum": 0.0,
+            "title": "Conversation Count",
+            "type": "integer"
+          },
+          "date": {
+            "maxLength": 10,
+            "minLength": 10,
+            "pattern": "^(19|20|21)[0-9]{2}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$",
+            "title": "Date",
+            "type": "string"
+          },
+          "handoff_count": {
+            "minimum": 0.0,
+            "title": "Handoff Count",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "date",
+          "conversation_count",
+          "booking_count",
+          "handoff_count"
+        ],
+        "title": "DashboardDay",
+        "type": "object"
+      },
+      "DashboardPackageUsage": {
+        "additionalProperties": false,
+        "description": "Use of the plan package in the current billing window, for owners and\nstaff alike (no prices). Percents are empty for a package of zero.",
+        "properties": {
+          "dialog_usage_percent": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dialog Usage Percent"
+          },
+          "included_dialogs": {
+            "minimum": 0.0,
+            "title": "Included Dialogs",
+            "type": "integer"
+          },
+          "included_voice_minutes": {
+            "minimum": 0.0,
+            "title": "Included Voice Minutes",
+            "type": "integer"
+          },
+          "overage_voice_minutes": {
+            "minimum": 0.0,
+            "title": "Overage Voice Minutes",
+            "type": "integer"
+          },
+          "period_end": {
+            "title": "Period End",
+            "type": "integer"
+          },
+          "period_start": {
+            "title": "Period Start",
+            "type": "integer"
+          },
+          "used_dialogs": {
+            "minimum": 0.0,
+            "title": "Used Dialogs",
+            "type": "integer"
+          },
+          "used_voice_minutes": {
+            "minimum": 0.0,
+            "title": "Used Voice Minutes",
+            "type": "integer"
+          },
+          "voice_usage_percent": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Voice Usage Percent"
+          }
+        },
+        "required": [
+          "period_start",
+          "period_end",
+          "used_voice_minutes",
+          "included_voice_minutes",
+          "overage_voice_minutes",
+          "used_dialogs",
+          "included_dialogs"
+        ],
+        "title": "DashboardPackageUsage",
+        "type": "object"
+      },
       "DashboardStats": {
         "additionalProperties": false,
-        "description": "Cabinet dashboard (concept /dashboard): conversations, customer messages,\nshare started outside opening hours, bookings, leads, handoffs, languages,\nchannels, open unanswered questions and package minutes used.\n\nSandbox (owner test and autotest) activity is excluded. Breakdown lists\nare ordered by count descending.",
+        "description": "Cabinet dashboard (concept /dashboard): conversations, customer messages,\nshare started outside opening hours, bookings, leads, handoffs, languages,\nchannels, open unanswered questions, package minutes used in the period,\na series per local day, and the package of the current billing window\n(None without a subscription).\n\nSandbox (owner test and autotest) activity is excluded. Breakdown lists\nare ordered by count descending; `daily` has every date of the period,\noldest first.",
         "properties": {
           "after_hours_conversation_count": {
             "minimum": 0.0,
@@ -3847,6 +4102,13 @@
             "minimum": 0.0,
             "title": "Customer Message Count",
             "type": "integer"
+          },
+          "daily": {
+            "items": {
+              "$ref": "#/components/schemas/DashboardDay"
+            },
+            "title": "Daily",
+            "type": "array"
           },
           "date_from": {
             "maxLength": 10,
@@ -3897,6 +4159,16 @@
             "minimum": 0.0,
             "title": "Open Unanswered Question Count",
             "type": "integer"
+          },
+          "package": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DashboardPackageUsage"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "timezone": {
             "maxLength": 64,
@@ -4279,9 +4551,9 @@
         "title": "HandoffListItem",
         "type": "object"
       },
-      "HandoffListView": {
+      "HandoffPage": {
         "additionalProperties": false,
-        "description": "Handoffs ordered newest first.",
+        "description": "One page of handoffs and how many are open and resolved (the status\nfilters aside), for the tabs.",
         "properties": {
           "items": {
             "items": {
@@ -4289,9 +4561,37 @@
             },
             "title": "Items",
             "type": "array"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "minLength": 1,
+                "pattern": "^[A-Za-z0-9_-]+$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          },
+          "open_count": {
+            "minimum": 0.0,
+            "title": "Open Count",
+            "type": "integer"
+          },
+          "resolved_count": {
+            "minimum": 0.0,
+            "title": "Resolved Count",
+            "type": "integer"
           }
         },
-        "title": "HandoffListView",
+        "required": [
+          "open_count",
+          "resolved_count"
+        ],
+        "title": "HandoffPage",
         "type": "object"
       },
       "HandoffReason": {
@@ -5253,9 +5553,9 @@
         "title": "LeadListItem",
         "type": "object"
       },
-      "LeadListView": {
+      "LeadPage": {
         "additionalProperties": false,
-        "description": "Leads ordered newest first.",
+        "description": "One page of leads, newest first, and how many leads of each status\nthere are (the status filter aside), for the tabs.",
         "properties": {
           "items": {
             "items": {
@@ -5263,9 +5563,30 @@
             },
             "title": "Items",
             "type": "array"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "minLength": 1,
+                "pattern": "^[A-Za-z0-9_-]+$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          },
+          "status_counts": {
+            "items": {
+              "$ref": "#/components/schemas/LeadStatusCount"
+            },
+            "title": "Status Counts",
+            "type": "array"
           }
         },
-        "title": "LeadListView",
+        "title": "LeadPage",
         "type": "object"
       },
       "LeadStatus": {
@@ -5278,6 +5599,26 @@
         ],
         "title": "LeadStatus",
         "type": "string"
+      },
+      "LeadStatusCount": {
+        "additionalProperties": false,
+        "description": "How many leads have one status (for the status tabs).",
+        "properties": {
+          "count": {
+            "minimum": 0.0,
+            "title": "Count",
+            "type": "integer"
+          },
+          "status": {
+            "$ref": "#/components/schemas/LeadStatus"
+          }
+        },
+        "required": [
+          "status",
+          "count"
+        ],
+        "title": "LeadStatusCount",
+        "type": "object"
       },
       "LeadType": {
         "description": "Kind of request passed to a manager.",
@@ -5626,7 +5967,7 @@
       },
       "MessageDocument": {
         "additionalProperties": false,
-        "description": "Stored message with model usage and cost (concept table `messages`).",
+        "description": "Stored message with model usage and cost (concept table `messages`).\n\n`sent_by` is the owner or staff member who wrote a STAFF message from\nthe cabinet.",
         "properties": {
           "author": {
             "$ref": "#/components/schemas/MessageAuthor"
@@ -5703,6 +6044,17 @@
             "title": "Schema Version",
             "type": "string"
           },
+          "sent_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sent By"
+          },
           "text": {
             "title": "Text",
             "type": "string"
@@ -5732,7 +6084,7 @@
       },
       "MessageView": {
         "additionalProperties": false,
-        "description": "A message with the model usage behind it.",
+        "description": "A message with the model usage behind it; `sent_by` is the owner or\nstaff member who wrote a staff message from the cabinet.",
         "properties": {
           "author": {
             "$ref": "#/components/schemas/MessageAuthor"
@@ -5790,6 +6142,17 @@
             "minimum": 0.0,
             "title": "Output Tokens",
             "type": "integer"
+          },
+          "sent_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sent By"
           },
           "text": {
             "title": "Text",
@@ -7189,6 +7552,91 @@
         ],
         "title": "ServiceMode",
         "type": "string"
+      },
+      "StaffMessageDelivery": {
+        "description": "How a staff message reaches the customer: sent through the messenger\nright away, or kept for the website chat, which shows it when the\nvisitor's widget asks for new messages.",
+        "enum": [
+          "sent",
+          "stored_for_widget"
+        ],
+        "title": "StaffMessageDelivery",
+        "type": "string"
+      },
+      "StaffMessageResult": {
+        "additionalProperties": false,
+        "description": "The stored staff message and how it reaches the customer.",
+        "properties": {
+          "delivery": {
+            "$ref": "#/components/schemas/StaffMessageDelivery"
+          },
+          "message": {
+            "$ref": "#/components/schemas/MessageView"
+          }
+        },
+        "required": [
+          "message",
+          "delivery"
+        ],
+        "title": "StaffMessageResult",
+        "type": "object"
+      },
+      "StaffReplyBlock": {
+        "description": "Why staff cannot write to a customer from the cabinet right now.\n\nVOICE_CALL: phone conversations have no written way back.\nTEST_CONVERSATION: owner test chats and autotests have no customer.\nWINDOW_CLOSED: WhatsApp, Instagram and Messenger accept free-form\nmessages only within 24 hours of the customer's last message.\nUNSUPPORTED_CHANNEL: the channel has no outgoing messages here.\nCHANNEL_DISCONNECTED: the business's channel is no longer connected.",
+        "enum": [
+          "voice_call",
+          "test_conversation",
+          "window_closed",
+          "unsupported_channel",
+          "channel_disconnected"
+        ],
+        "title": "StaffReplyBlock",
+        "type": "string"
+      },
+      "StaffReplyView": {
+        "additionalProperties": false,
+        "description": "Whether staff can write to the customer from the card now, why not\n(`block`), how the message would travel, and until when a 24-hour\nmessaging window stays open (WhatsApp, Instagram, Messenger).",
+        "properties": {
+          "block": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/StaffReplyBlock"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "delivery": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/StaffMessageDelivery"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "is_available": {
+            "title": "Is Available",
+            "type": "boolean"
+          },
+          "window_closes_at": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Window Closes At"
+          }
+        },
+        "required": [
+          "is_available"
+        ],
+        "title": "StaffReplyView",
+        "type": "object"
       },
       "SubscriptionStatus": {
         "description": "Subscription state driven by the payment provider.",
@@ -9666,6 +10114,22 @@
             }
           },
           {
+            "in": "query",
+            "name": "full_day",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Full Day"
+            }
+          },
+          {
             "in": "header",
             "name": "authorization",
             "required": false,
@@ -10252,6 +10716,22 @@
           },
           {
             "in": "query",
+            "name": "resource_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Resource Id"
+            }
+          },
+          {
+            "in": "query",
             "name": "include_sandbox",
             "required": false,
             "schema": {
@@ -10264,6 +10744,54 @@
                 }
               ],
               "title": "Include Sandbox"
+            }
+          },
+          {
+            "in": "query",
+            "name": "order",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Order"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Limit"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
             }
           },
           {
@@ -10288,7 +10816,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/BookingListView"
+                  "$ref": "#/components/schemas/BookingPage"
                 }
               }
             },
@@ -10339,6 +10867,194 @@
             }
           }
         ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "description": "Body of a booking added by staff in the cabinet.\n\nThe phone may be typed in any national or international format; it is\nparsed with `country_hint` (the business country when omitted).\n`language` is the customer's language for the confirmation text\n(business default when omitted). `conversation_id` books for the\ncustomer of that conversation and links the booking to it.",
+                "properties": {
+                  "contact_name": {
+                    "title": "Contact Name",
+                    "type": "string"
+                  },
+                  "contact_phone_number": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Contact Phone Number"
+                  },
+                  "conversation_id": {
+                    "anyOf": [
+                      {
+                        "pattern": "^conversation_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Conversation Id"
+                  },
+                  "country_hint": {
+                    "anyOf": [
+                      {
+                        "maxLength": 2,
+                        "minLength": 2,
+                        "pattern": "^[A-Z]{2}$",
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Country Hint"
+                  },
+                  "date": {
+                    "maxLength": 10,
+                    "minLength": 10,
+                    "pattern": "^(19|20|21)[0-9]{2}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$",
+                    "title": "Date",
+                    "type": "string"
+                  },
+                  "duration_minutes": {
+                    "anyOf": [
+                      {
+                        "maximum": 43200,
+                        "minimum": 5,
+                        "type": "integer"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Duration Minutes"
+                  },
+                  "language": {
+                    "anyOf": [
+                      {
+                        "maxLength": 16,
+                        "minLength": 2,
+                        "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$",
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Language"
+                  },
+                  "nights": {
+                    "anyOf": [
+                      {
+                        "maximum": 365,
+                        "minimum": 1,
+                        "type": "integer"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Nights"
+                  },
+                  "notes": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Notes"
+                  },
+                  "party_size": {
+                    "maximum": 10000,
+                    "minimum": 1,
+                    "title": "Party Size",
+                    "type": "integer"
+                  },
+                  "resource_id": {
+                    "anyOf": [
+                      {
+                        "pattern": "^resource_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Resource Id"
+                  },
+                  "resource_kind": {
+                    "anyOf": [
+                      {
+                        "description": "What is booked, as in the concept's resources table.",
+                        "enum": [
+                          "table",
+                          "room",
+                          "staff",
+                          "arena",
+                          "bay",
+                          "vehicle",
+                          "slot"
+                        ],
+                        "title": "ResourceKind",
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "source_channel": {
+                    "default": "phone",
+                    "description": "Customer-facing channel the assistant answers in.",
+                    "enum": [
+                      "phone",
+                      "whatsapp",
+                      "instagram",
+                      "messenger",
+                      "telegram",
+                      "web_chat",
+                      "viber",
+                      "owner_test"
+                    ],
+                    "title": "ChannelKind",
+                    "type": "string"
+                  },
+                  "time": {
+                    "anyOf": [
+                      {
+                        "maxLength": 5,
+                        "minLength": 5,
+                        "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$",
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Time"
+                  }
+                },
+                "required": [
+                  "contact_name",
+                  "date",
+                  "party_size"
+                ],
+                "title": "ManualBookingRequest",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "201": {
             "content": {
@@ -10406,6 +11122,87 @@
             }
           }
         ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "description": "Body of a cabinet booking change; omitted fields stay as they are.\n\n`status`: COMPLETED, NO_SHOW or CANCELLED, or CONFIRMED for a PENDING\nbooking. `party_size` and `resource_id` must fit the booked time (the\nresource seats the party, is open and has a free unit then). An empty\n`notes` text removes the notes. `contact_name` renames the customer.\nThe time is changed by rescheduling.",
+                "properties": {
+                  "contact_name": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Contact Name"
+                  },
+                  "notes": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Notes"
+                  },
+                  "party_size": {
+                    "anyOf": [
+                      {
+                        "maximum": 10000,
+                        "minimum": 1,
+                        "type": "integer"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Party Size"
+                  },
+                  "resource_id": {
+                    "anyOf": [
+                      {
+                        "pattern": "^resource_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Resource Id"
+                  },
+                  "status": {
+                    "anyOf": [
+                      {
+                        "description": "Lifecycle of a booking.",
+                        "enum": [
+                          "pending",
+                          "confirmed",
+                          "cancelled",
+                          "no_show",
+                          "completed"
+                        ],
+                        "title": "BookingStatus",
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "title": "UpdateBookingRequest",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "content": {
@@ -10572,6 +11369,45 @@
             }
           }
         ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "description": "Body of a cabinet reschedule: new local date and (for slots) time.",
+                "properties": {
+                  "new_date": {
+                    "maxLength": 10,
+                    "minLength": 10,
+                    "pattern": "^(19|20|21)[0-9]{2}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$",
+                    "title": "New Date",
+                    "type": "string"
+                  },
+                  "new_time": {
+                    "anyOf": [
+                      {
+                        "maxLength": 5,
+                        "minLength": 5,
+                        "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$",
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "New Time"
+                  }
+                },
+                "required": [
+                  "new_date"
+                ],
+                "title": "RescheduleBookingRequest",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "content": {
@@ -11192,6 +12028,70 @@
           },
           {
             "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          },
+          {
+            "in": "query",
+            "name": "from",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "From"
+            }
+          },
+          {
+            "in": "query",
+            "name": "to",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "To"
+            }
+          },
+          {
+            "in": "query",
+            "name": "search",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Search"
+            }
+          },
+          {
+            "in": "query",
             "name": "include_sandbox",
             "required": false,
             "schema": {
@@ -11204,6 +12104,38 @@
                 }
               ],
               "title": "Include Sandbox"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Limit"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
             }
           },
           {
@@ -11228,11 +12160,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "items": {
-                    "$ref": "#/components/schemas/ConversationSummaryView"
-                  },
-                  "title": "Response List Conversations V1 Businesses  Business Id  Conversations Get",
-                  "type": "array"
+                  "$ref": "#/components/schemas/ConversationPage"
                 }
               }
             },
@@ -11317,6 +12245,98 @@
           }
         },
         "summary": "Get Conversation",
+        "tags": [
+          "conversations"
+        ]
+      }
+    },
+    "/v1/businesses/{business_id}/conversations/{conversation_id}/messages": {
+      "post": {
+        "operationId": "send_staff_message_v1_businesses__business_id__conversations__conversation_id__messages_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "conversation_id",
+            "required": true,
+            "schema": {
+              "title": "Conversation Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "description": "HTTP body of a staff message to the customer of a conversation.",
+                "properties": {
+                  "text": {
+                    "maxLength": 4000,
+                    "minLength": 1,
+                    "pattern": "\\S",
+                    "title": "Text",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "text"
+                ],
+                "title": "StaffMessageRequest",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StaffMessageResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Send Staff Message",
         "tags": [
           "conversations"
         ]
@@ -11658,6 +12678,22 @@
           },
           {
             "in": "query",
+            "name": "is_open",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Is Open"
+            }
+          },
+          {
+            "in": "query",
             "name": "include_sandbox",
             "required": false,
             "schema": {
@@ -11670,6 +12706,38 @@
                 }
               ],
               "title": "Include Sandbox"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Limit"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
             }
           },
           {
@@ -11694,7 +12762,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/HandoffListView"
+                  "$ref": "#/components/schemas/HandoffPage"
                 }
               }
             },
@@ -12956,6 +14024,38 @@
             }
           },
           {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Limit"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
             "in": "header",
             "name": "authorization",
             "required": false,
@@ -12977,7 +14077,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/LeadListView"
+                  "$ref": "#/components/schemas/LeadPage"
                 }
               }
             },
@@ -13039,6 +14139,35 @@
             }
           }
         ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "description": "Body of a cabinet lead status change.",
+                "properties": {
+                  "status": {
+                    "description": "Lifecycle of a lead.",
+                    "enum": [
+                      "new",
+                      "in_progress",
+                      "won",
+                      "lost"
+                    ],
+                    "title": "LeadStatus",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "status"
+                ],
+                "title": "UpdateLeadStatusRequest",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "content": {
@@ -15860,6 +16989,39 @@
             }
           }
         ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "description": "Body of \"add answer\": the answer and an optional FAQ title.",
+                "properties": {
+                  "answer": {
+                    "title": "Answer",
+                    "type": "string"
+                  },
+                  "title": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Title"
+                  }
+                },
+                "required": [
+                  "answer"
+                ],
+                "title": "AnswerUnansweredQuestionRequest",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "content": {

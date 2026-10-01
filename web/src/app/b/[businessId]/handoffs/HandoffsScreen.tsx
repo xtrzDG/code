@@ -3,26 +3,26 @@
 import { useState } from "react";
 
 import { api } from "@/api/client";
-import { useApiMutation, useApiQuery } from "@/api/hooks";
+import { useApiMutation } from "@/api/hooks";
 import { useBusiness, useBusinessFormat } from "@/components/business/BusinessContext";
 import { IconCheck, IconHandoff } from "@/components/icons";
 import { HandoffStatusBadge, HandoffUrgencyBadge, TestBadge } from "@/components/insights/Badges";
 import {
   CustomerName,
   IncludeTestToggle,
+  LoadMore,
   PhoneLink,
   RefreshButton,
   RefreshFailed,
-  ShowMore,
 } from "@/components/insights/common";
 import { ConfirmDialog } from "@/components/insights/ConfirmDialog";
 import { formatRelative } from "@/components/insights/dates";
 import { isOpenHandoff } from "@/components/insights/handoffs";
 import { HANDOFF_REASONS } from "@/components/insights/labels";
-import { takePage } from "@/components/insights/numbers";
 import { SegmentedControl } from "@/components/insights/SegmentedControl";
-import type { HandoffListItem } from "@/components/insights/types";
+import type { HandoffListItem, HandoffPage } from "@/components/insights/types";
 import { useAutoReload } from "@/components/insights/useAutoReload";
+import { usePagedQuery } from "@/components/insights/usePagedQuery";
 import { replaceUrlQuery } from "@/components/insights/urlQuery";
 import { Button, ButtonLink, Card, EmptyState, ErrorState, LoadingBlock, PageHeader, useToast } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
@@ -30,14 +30,14 @@ import { cn } from "@/lib/cn";
 import { businessPath } from "@/lib/navigation";
 
 import {
-  countHandoffTabs,
+  afterResolve,
   HANDOFF_TABS,
   handoffFiltersQuery,
-  handoffsOfTab,
+  handoffTabCounts,
+  isOpenQuery,
+  withResolvedCounts,
   type HandoffFilters,
 } from "./_components/handoffModel";
-
-const PAGE_SIZE = 20;
 
 const URGENCY_EDGE: Record<HandoffListItem["urgency"], string> = {
   critical: "border-l-danger-solid",
@@ -57,18 +57,22 @@ export function HandoffsScreen({ initialFilters }: { initialFilters: HandoffFilt
   const { business } = useBusiness();
   const businessId = business.id;
   const [filters, setFiltersState] = useState(initialFilters);
-  const [pages, setPages] = useState(1);
   const [resolving, setResolving] = useState<HandoffListItem | null>(null);
 
-  const handoffs = useApiQuery(
-    () =>
+  const handoffs = usePagedQuery<HandoffListItem, HandoffPage>(
+    ({ cursor, limit }) =>
       api.GET("/v1/businesses/{business_id}/handoffs", {
         params: {
           path: { business_id: businessId },
-          query: { include_sandbox: filters.includeTest ? "true" : undefined },
+          query: {
+            is_open: isOpenQuery(filters.tab),
+            include_sandbox: filters.includeTest ? "true" : undefined,
+            limit: String(limit),
+            cursor: cursor ?? undefined,
+          },
         },
       }),
-    [businessId, filters.includeTest],
+    [businessId, filters.tab, filters.includeTest],
   );
   useAutoReload(handoffs.reload);
 
@@ -80,7 +84,6 @@ export function HandoffsScreen({ initialFilters }: { initialFilters: HandoffFilt
 
   const setFilters = (next: HandoffFilters) => {
     setFiltersState(next);
-    setPages(1);
     replaceUrlQuery(handoffFiltersQuery(next));
   };
 
@@ -90,25 +93,25 @@ export function HandoffsScreen({ initialFilters }: { initialFilters: HandoffFilt
     }
     const result = await resolve.run(resolving);
     if (result.ok) {
-      handoffs.setData((current) => ({
-        items: (current?.items ?? []).map((item) => (item.id === result.data.id ? result.data : item)),
-      }));
+      const wasOpen = isOpenHandoff(resolving);
+      handoffs.updateItems((items) => afterResolve(items, result.data, filters.tab));
+      if (wasOpen) {
+        handoffs.updatePage(withResolvedCounts);
+      }
       toast.success(t("handoffs.resolved"));
       setResolving(null);
     }
   };
 
-  const all = handoffs.data?.items ?? [];
-  const counts = countHandoffTabs(all);
-  const items = handoffsOfTab(all, filters.tab);
-  const { visible } = takePage(items, pages, PAGE_SIZE);
+  const items = handoffs.items ?? [];
+  const counts = handoffs.page ? handoffTabCounts(handoffs.page) : null;
 
   return (
     <>
       <PageHeader
         title={t("nav.handoffs")}
         description={t("pages.handoffs.description")}
-        actions={<RefreshButton onClick={handoffs.reload} isRefreshing={handoffs.isLoading && handoffs.data !== undefined} />}
+        actions={<RefreshButton onClick={handoffs.reload} isRefreshing={handoffs.isLoading && handoffs.items !== undefined} />}
       />
 
       <div className="space-y-5">
@@ -120,14 +123,14 @@ export function HandoffsScreen({ initialFilters }: { initialFilters: HandoffFilt
             options={HANDOFF_TABS.map((tab) => ({
               value: tab,
               label: t(`handoffs.tabs.${tab}`),
-              count: handoffs.data ? counts[tab] : undefined,
+              count: counts ? counts[tab] : undefined,
             }))}
           />
           <IncludeTestToggle compact checked={filters.includeTest} onChange={(includeTest) => setFilters({ ...filters, includeTest })} />
         </div>
 
-        {handoffs.error && handoffs.data ? <RefreshFailed error={handoffs.error} onRetry={handoffs.reload} /> : null}
-        {handoffs.data === undefined ? (
+        {handoffs.error && handoffs.items ? <RefreshFailed error={handoffs.error} onRetry={handoffs.reload} /> : null}
+        {handoffs.items === undefined ? (
           <Card>
             {handoffs.error ? (
               <ErrorState error={handoffs.error} onRetry={handoffs.reload} />
@@ -135,7 +138,7 @@ export function HandoffsScreen({ initialFilters }: { initialFilters: HandoffFilt
               <LoadingBlock label={t("handoffs.loading")} />
             )}
           </Card>
-        ) : items.length === 0 ? (
+        ) : items.length === 0 && !handoffs.isLoading ? (
           <Card>
             <EmptyState
               icon={filters.tab === "open" ? <IconCheck className="size-6" /> : <IconHandoff className="size-6" />}
@@ -144,16 +147,24 @@ export function HandoffsScreen({ initialFilters }: { initialFilters: HandoffFilt
             />
           </Card>
         ) : (
-          <>
+          <div className={handoffs.isLoading ? "opacity-60 transition-opacity" : undefined} aria-busy={handoffs.isLoading || undefined}>
             <ul className="space-y-3">
-              {visible.map((handoff) => (
+              {items.map((handoff) => (
                 <HandoffCard key={handoff.id} handoff={handoff} onResolve={() => setResolving(handoff)} />
               ))}
             </ul>
-            {items.length > PAGE_SIZE ? (
-              <ShowMore shown={visible.length} total={items.length} onMore={() => setPages((value) => value + 1)} />
-            ) : null}
-          </>
+            <LoadMore
+              hasMore={handoffs.hasMore}
+              isLoading={handoffs.isLoadingMore}
+              error={handoffs.moreError}
+              onMore={handoffs.loadMore}
+              shownText={
+                counts && handoffs.hasMore
+                  ? t("insights.shownOf", { shown: items.length, total: counts[filters.tab] })
+                  : undefined
+              }
+            />
+          </div>
         )}
       </div>
 
