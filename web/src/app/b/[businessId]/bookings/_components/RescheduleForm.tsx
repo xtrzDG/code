@@ -79,7 +79,14 @@ export function RescheduleForm({
       </div>
       {isStay ? null : (
         <SlotPicker
-          request={{ date, partySize: booking.party_size, resourceId: booking.resource_id, time: time || null, nights: null }}
+          request={{
+            date,
+            partySize: booking.party_size,
+            resourceId: booking.resource_id,
+            time: time || null,
+            nights: null,
+            isStay: false,
+          }}
           selected={{ time: time || null, resourceId: booking.resource_id }}
           onPick={(slot) => {
             setTime(slot.time ?? time);

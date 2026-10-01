@@ -1,6 +1,6 @@
 "use client";
 
-import { usePathname, useSearchParams, useSelectedLayoutSegment } from "next/navigation";
+import { useSearchParams, useSelectedLayoutSegment } from "next/navigation";
 import { useMemo, useState, type ReactNode } from "react";
 
 import { api } from "@/api/client";
@@ -9,6 +9,7 @@ import { useBusiness } from "@/components/business/BusinessContext";
 import { RefreshButton } from "@/components/insights/common";
 import { todayIn } from "@/components/insights/dates";
 import { useAutoReload } from "@/components/insights/useAutoReload";
+import { replaceUrlQuery } from "@/components/insights/urlQuery";
 import { PageHeader } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { cn } from "@/lib/cn";
@@ -33,7 +34,6 @@ import {
 export function ConversationsShell({ children }: { children: ReactNode }) {
   const { t } = useI18n();
   const { business } = useBusiness();
-  const pathname = usePathname();
   const searchParams = useSearchParams();
   const selectedId = useSelectedLayoutSegment();
   const [today] = useState(() => todayIn(business.timezone));
@@ -58,8 +58,7 @@ export function ConversationsShell({ children }: { children: ReactNode }) {
   useAutoReload(conversations.reload);
 
   const setFilters = (next: ConversationFilters) => {
-    const nextQuery = conversationFiltersQuery(next);
-    window.history.replaceState(window.history.state, "", `${pathname}${nextQuery ? `?${nextQuery}` : ""}`);
+    replaceUrlQuery(conversationFiltersQuery(next));
   };
 
   const all = conversations.data ?? [];

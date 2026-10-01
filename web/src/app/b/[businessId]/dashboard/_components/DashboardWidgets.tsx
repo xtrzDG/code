@@ -26,7 +26,8 @@ export function NextStepCard({
 }: {
   step: NextStep;
   status: ReactNode;
-  href: string;
+  /** Null hides the button (the viewer cannot act there). */
+  href: string | null;
   note?: string | null;
 }) {
   const { t } = useI18n();
@@ -47,9 +48,11 @@ export function NextStepCard({
         <p className="text-sm text-ink-muted">{t(step.description)}</p>
         {note ? <p className="text-sm font-medium text-ink">{note}</p> : null}
       </div>
-      <ButtonLink href={href} variant="secondary" className="self-start sm:self-center">
-        {t(step.action)}
-      </ButtonLink>
+      {href ? (
+        <ButtonLink href={href} variant="secondary" className="self-start sm:self-center">
+          {t(step.action)}
+        </ButtonLink>
+      ) : null}
     </section>
   );
 }

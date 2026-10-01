@@ -194,6 +194,7 @@ export function BookingForm({
             resourceId: values.resourceId || null,
             time: unit === "night" ? null : values.time || null,
             nights: unit === "night" && Number.isInteger(nights) && nights > 0 ? nights : null,
+            isStay: unit === "night",
           }}
           selected={{ time: values.time || null, resourceId: values.resourceId || null }}
           onPick={(slot) => {

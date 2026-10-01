@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { isDashboardPeriod, nextStep, periodRange, toBars, usageLevel } from "./dashboardModel";
+import { canTakeStep, isDashboardPeriod, nextStep, periodRange, toBars, usageLevel } from "./dashboardModel";
 
 describe("dashboard periods", () => {
   it("end today and include it", () => {
@@ -29,6 +29,15 @@ describe("next step", () => {
     const step = nextStep({ status: "live", service_mode: "leads_only" });
     expect(step.section).toBe("billing");
     expect(step.tone).toBe("danger");
+  });
+});
+
+describe("who can take the next step", () => {
+  it("keeps billing and settings for owners", () => {
+    expect(canTakeStep({ section: "billing" }, false)).toBe(false);
+    expect(canTakeStep({ section: "settings" }, false)).toBe(false);
+    expect(canTakeStep({ section: "billing" }, true)).toBe(true);
+    expect(canTakeStep({ section: "assistant" }, false)).toBe(true);
   });
 });
 

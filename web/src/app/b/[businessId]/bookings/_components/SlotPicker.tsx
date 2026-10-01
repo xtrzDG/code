@@ -19,6 +19,8 @@ export interface SlotRequest {
   /** Preferred time: the API returns the free slots nearest to it. */
   time: string | null;
   nights: number | null;
+  /** Booked by nights (hotels, rentals): places are offered, not times. */
+  isStay: boolean;
 }
 
 /**
@@ -34,12 +36,13 @@ export function SlotPicker({
   selected: { time: string | null; resourceId: string | null };
   onPick: (slot: AvailableSlot) => void;
 }) {
-  const { t, locale } = useI18n();
+  const { t, tp, locale } = useI18n();
   const { business } = useBusiness();
   const businessId = business.id;
   // The request the shown slots answer; null until the button is pressed.
   const [asked, setAsked] = useState<SlotRequest | null>(null);
   const canAsk = isLocalDate(request.date);
+  const isStay = request.isStay;
 
   const availability = useApiQuery(
     () =>
@@ -75,7 +78,7 @@ export function SlotPicker({
         disabled={!canAsk}
         onClick={() => (asked && !isStale && asked.time === request.time ? availability.reload() : setAsked(request))}
       >
-        {t("bookings.form.findSlots")}
+        {t(isStay ? "bookings.form.findPlaces" : "bookings.form.findSlots")}
       </Button>
 
       {asked === null ? null : availability.isLoading ? (
@@ -85,7 +88,7 @@ export function SlotPicker({
       ) : availability.data ? (
         <div className={cn("space-y-2", isStale && "opacity-50")} aria-live="polite">
           <p className="text-sm font-medium text-ink">
-            {t("bookings.form.slotsTitle")}
+            {t(isStay ? "bookings.form.placesTitle" : "bookings.form.slotsTitle")}
             <span className="font-normal text-ink-muted">
               {" · "}
               {formatLocalDate(asked.date, locale, { weekday: "long", day: "numeric", month: "long" })}
@@ -94,7 +97,7 @@ export function SlotPicker({
           {!availability.data.is_open_on_date ? (
             <p className="text-sm text-ink-muted">{t("bookings.form.closedOnDate")}</p>
           ) : (availability.data.slots ?? []).length === 0 ? (
-            <p className="text-sm text-ink-muted">{t("bookings.form.noSlots")}</p>
+            <p className="text-sm text-ink-muted">{t(isStay ? "bookings.form.noPlaces" : "bookings.form.noSlots")}</p>
           ) : (
             <>
               <ul className="flex flex-wrap gap-2">
@@ -113,15 +116,25 @@ export function SlotPicker({
                             : "border-line-strong bg-surface text-ink hover:bg-surface-muted",
                         )}
                       >
-                        <span className="font-medium tabular-nums">{slot.time ? formatLocalTime(slot.time, locale) : ""}</span>
-                        <span className="text-ink-muted"> · </span>
-                        <span dir="auto">{slot.resource_name}</span>
+                        {slot.booking_unit === "night" ? (
+                          <>
+                            <span dir="auto">{slot.resource_name}</span>
+                            <span className="text-ink-muted"> · </span>
+                            <span className="font-medium">{tp("bookings.nights", slot.nights ?? 1)}</span>
+                          </>
+                        ) : (
+                          <>
+                            <span className="font-medium tabular-nums">{slot.time ? formatLocalTime(slot.time, locale) : ""}</span>
+                            <span className="text-ink-muted"> · </span>
+                            <span dir="auto">{slot.resource_name}</span>
+                          </>
+                        )}
                       </button>
                     </li>
                   );
                 })}
               </ul>
-              <p className="text-xs text-ink-subtle">{t("bookings.form.slotsHint")}</p>
+              <p className="text-xs text-ink-subtle">{t(isStay ? "bookings.form.placesHint" : "bookings.form.slotsHint")}</p>
             </>
           )}
         </div>

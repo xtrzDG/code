@@ -12,6 +12,7 @@ import { CustomerMessageModal } from "@/components/insights/CustomerMessageModal
 import { todayIn } from "@/components/insights/dates";
 import { withJsonBody } from "@/components/insights/requestBody";
 import type { BookingStatus, BookingStatusBody, BookingView } from "@/components/insights/types";
+import { replaceUrlQuery } from "@/components/insights/urlQuery";
 import { Button, Card, EmptyState, ErrorState, LoadingBlock, Modal, PageHeader, useToast } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 
@@ -95,8 +96,7 @@ export function BookingsScreen({ initialFilters }: { initialFilters: BookingFilt
 
   const setFilters = (next: BookingFilters) => {
     setFiltersState(next);
-    const query = bookingFiltersQuery(next);
-    window.history.replaceState(window.history.state, "", `${window.location.pathname}${query ? `?${query}` : ""}`);
+    replaceUrlQuery(bookingFiltersQuery(next));
   };
 
   const replaceBooking = (updated: BookingView) =>

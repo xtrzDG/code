@@ -16,6 +16,7 @@ import { takePage } from "@/components/insights/numbers";
 import { SegmentedControl } from "@/components/insights/SegmentedControl";
 import type { HandoffListItem } from "@/components/insights/types";
 import { useAutoReload } from "@/components/insights/useAutoReload";
+import { replaceUrlQuery } from "@/components/insights/urlQuery";
 import { Button, ButtonLink, Card, EmptyState, ErrorState, LoadingBlock, PageHeader, useToast } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { cn } from "@/lib/cn";
@@ -73,8 +74,7 @@ export function HandoffsScreen({ initialFilters }: { initialFilters: HandoffFilt
   const setFilters = (next: HandoffFilters) => {
     setFiltersState(next);
     setPages(1);
-    const query = handoffFiltersQuery(next);
-    window.history.replaceState(window.history.state, "", `${window.location.pathname}${query ? `?${query}` : ""}`);
+    replaceUrlQuery(handoffFiltersQuery(next));
   };
 
   const runResolve = async () => {

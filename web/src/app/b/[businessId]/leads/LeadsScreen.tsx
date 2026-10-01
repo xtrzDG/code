@@ -15,6 +15,7 @@ import { takePage } from "@/components/insights/numbers";
 import { withJsonBody } from "@/components/insights/requestBody";
 import { SegmentedControl } from "@/components/insights/SegmentedControl";
 import type { LeadListItem, LeadStatus, LeadStatusBody } from "@/components/insights/types";
+import { replaceUrlQuery } from "@/components/insights/urlQuery";
 import { Button, Card, EmptyState, ErrorState, LoadingBlock, Modal, PageHeader, Select, useToast } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { businessPath } from "@/lib/navigation";
@@ -58,8 +59,7 @@ export function LeadsScreen({ initialFilters }: { initialFilters: LeadFilters })
   const setFilters = (next: LeadFilters) => {
     setFiltersState(next);
     setPages(1);
-    const query = leadFiltersQuery(next);
-    window.history.replaceState(window.history.state, "", `${window.location.pathname}${query ? `?${query}` : ""}`);
+    replaceUrlQuery(leadFiltersQuery(next));
   };
 
   const changeStatus = async (lead: LeadListItem, status: LeadStatus) => {

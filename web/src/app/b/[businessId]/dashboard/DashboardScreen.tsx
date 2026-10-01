@@ -12,6 +12,7 @@ import { isOpenHandoff } from "@/components/insights/handoffs";
 import { BOOKING_STATUS, CHANNEL_LABELS, HANDOFF_REASONS } from "@/components/insights/labels";
 import { formatPercent } from "@/components/insights/numbers";
 import { SegmentedControl } from "@/components/insights/SegmentedControl";
+import { replaceUrlQuery } from "@/components/insights/urlQuery";
 import { Button, Card, EmptyState, ErrorState, LoadingBlock, PageHeader } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { languageName } from "@/lib/format";
@@ -19,6 +20,7 @@ import { businessPath } from "@/lib/navigation";
 
 import { AttentionTile, BarList, NextStepCard, StatTile } from "./_components/DashboardWidgets";
 import {
+  canTakeStep,
   DASHBOARD_PERIODS,
   DEFAULT_DASHBOARD_PERIOD,
   nextStep,
@@ -35,7 +37,7 @@ import { PackageCard } from "./_components/PackageCard";
  */
 export function DashboardScreen({ initialPeriod }: { initialPeriod: DashboardPeriod | null }) {
   const { t, tp, locale } = useI18n();
-  const { business } = useBusiness();
+  const { business, isOwner } = useBusiness();
   const format = useBusinessFormat();
   const [period, setPeriod] = useState<DashboardPeriod>(initialPeriod ?? DEFAULT_DASHBOARD_PERIOD);
   const [today] = useState(() => todayIn(business.timezone));
@@ -64,8 +66,7 @@ export function DashboardScreen({ initialPeriod }: { initialPeriod: DashboardPer
 
   const choosePeriod = (value: DashboardPeriod) => {
     setPeriod(value);
-    const query = value === DEFAULT_DASHBOARD_PERIOD ? "" : `?period=${value}`;
-    window.history.replaceState(window.history.state, "", `${window.location.pathname}${query}`);
+    replaceUrlQuery(value === DEFAULT_DASHBOARD_PERIOD ? "" : `period=${value}`);
   };
 
   const step = nextStep(business);
@@ -95,7 +96,7 @@ export function DashboardScreen({ initialPeriod }: { initialPeriod: DashboardPer
         <NextStepCard
           step={step}
           status={<BusinessStatusBadge status={business.status} />}
-          href={businessPath(businessId, step.section)}
+          href={canTakeStep(step, isOwner) ? businessPath(businessId, step.section) : null}
           note={
             business.status === "onboarding" && missingCount > 0
               ? tp("dashboard.status.onboarding.missing", missingCount)

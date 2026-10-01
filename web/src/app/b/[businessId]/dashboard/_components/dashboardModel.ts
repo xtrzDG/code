@@ -76,6 +76,14 @@ export function nextStep(business: Pick<BusinessView, "status" | "service_mode">
   return NEXT_STEPS[business.status];
 }
 
+/** Sections whose API answers owners only (billing overview, settings changes). */
+const OWNER_ONLY_SECTIONS: ReadonlySet<BusinessSection> = new Set(["billing", "settings"]);
+
+/** Whether the next step's button makes sense for the viewer (staff cannot act on billing or settings). */
+export function canTakeStep(step: Pick<NextStep, "section">, isOwner: boolean): boolean {
+  return isOwner || !OWNER_ONLY_SECTIONS.has(step.section);
+}
+
 export type UsageLevel = "ok" | "warning" | "over";
 
 /** 80% of a package triggers the warning (concept: "на 80 % пакета"); 100% is overage. */
