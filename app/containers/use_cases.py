@@ -1867,6 +1867,8 @@ class UseCasesContainer(containers.DeclarativeContainer):
         AcceptWidgetMessageUseCase,
         business_repo=repositories.business_repo,
         channel_repo=repositories.channel_repo,
+        rate_limit_registry=registries.request_rate_limit_registry,
+        wall_clock=time_provider.microsecond_wall_clock,
     )
     build_widget_reply_use_case: Factory[
         UseCaseContract[WidgetReplyInput, WidgetReplyView]

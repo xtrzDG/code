@@ -9,11 +9,13 @@ WIDGET_SESSION_KEY_HEADER: str = "X-Widget-Session-Key"
 # The website widget runs on every business's own site, so its public routes
 # allow any origin. It may post with Content-Type text/plain (the body is
 # still JSON) to avoid a CORS preflight when an application restricts
-# origins globally.
+# origins globally. The Retry-After of a 429 is exposed, so the widget can
+# wait exactly that long.
 WIDGET_CORS_HEADERS: dict[str, str] = {
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
     "Access-Control-Allow-Headers": f"Content-Type, {WIDGET_SESSION_KEY_HEADER}",
+    "Access-Control-Expose-Headers": "Retry-After",
     "Access-Control-Max-Age": "86400",
 }
 

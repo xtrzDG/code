@@ -33,6 +33,7 @@ from tests.channels.testbed import (
 )
 
 NIGERIA = CountrySetup("NG", "Africa/Lagos", "NGN", ("yo", "en"))
+NETHERLANDS = CountrySetup("NL", "Europe/Amsterdam", "EUR", ("nl", "en"))
 
 
 class WebChatSetup:
@@ -136,18 +137,33 @@ class TestWidgetGreetings:
         assert greetings[0]["direction"] == "rtl"
         assert "Funicular VR" in greetings[0]["text"]
 
-    def test_the_ai_disclosure_stands_in_and_unknown_languages_are_left_out(
+    def test_every_interface_language_of_the_widget_gets_the_full_greeting(
         self,
     ) -> None:
         armenian = WebChatSetup(ARMENIA)
-        yoruba = WebChatSetup(NIGERIA)
 
         armenian_greetings = armenian.config()["greetings"]
-        yoruba_greetings = yoruba.config()["greetings"]
 
         assert armenian_greetings[0] == {
             "language": "hy",
-            "text": "Բարև Ձեզ։ Ես Funicular VR-ի AI օգնականն եմ։",
+            "text": (
+                "Բարև ձեզ։ Ես Funicular VR-ի AI օգնականն եմ։ Ինչո՞վ կարող եմ օգնել։"
+            ),
+            "direction": "ltr",
+        }
+
+    def test_the_ai_disclosure_stands_in_and_unknown_languages_are_left_out(
+        self,
+    ) -> None:
+        dutch = WebChatSetup(NETHERLANDS)
+        yoruba = WebChatSetup(NIGERIA)
+
+        dutch_greetings = dutch.config()["greetings"]
+        yoruba_greetings = yoruba.config()["greetings"]
+
+        assert dutch_greetings[0] == {
+            "language": "nl",
+            "text": "Hallo! Ik ben de AI-assistent van Funicular VR.",
             "direction": "ltr",
         }
         assert [item["language"] for item in yoruba_greetings] == ["en"]

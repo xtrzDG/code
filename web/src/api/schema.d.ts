@@ -2305,7 +2305,8 @@ export interface components {
          * @description A business (tenant) as shown in the cabinet.
          *
          *     `viewer_role` is the role of the user who asked; it is None for a
-         *     platform admin who is not a member.
+         *     platform admin who is not a member. `revision` grows with every save:
+         *     send it back as `expected_revision` of a settings change.
          */
         BusinessView: {
             /** City */
@@ -2337,6 +2338,8 @@ export interface components {
             published_assistant_version_id?: string | null;
             /** Recording Retention Days */
             recording_retention_days: number;
+            /** Revision */
+            revision: number;
             service_mode: components["schemas"]["ServiceMode"];
             status: components["schemas"]["BusinessStatus"];
             /** Timezone */
@@ -5628,6 +5631,8 @@ export interface operations {
                     city?: string | null;
                     /** Default Language */
                     default_language?: string | null;
+                    /** Expected Revision */
+                    expected_revision?: number | null;
                     /** Languages */
                     languages?: string[] | null;
                     /** Manager Contacts */

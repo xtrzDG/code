@@ -806,7 +806,10 @@ class ChannelsTestbed:
                 widget_message_operator=wrap(
                     WidgetMessageOrchestrator(
                         AcceptWidgetMessageUseCase(
-                            self.business_repo, self.channel_repo
+                            self.business_repo,
+                            self.channel_repo,
+                            self.widget_rate_limits,
+                            self.wall_clock,
                         ),
                         self.pipeline,
                         BuildWidgetReplyUseCase(

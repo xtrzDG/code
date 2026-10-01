@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 
 import { api } from "@/api/client";
-import type { ApiError } from "@/api/errors";
+import type { ApiError, ErrorMessageOverrides } from "@/api/errors";
 import { useApiMutation, useApiQuery } from "@/api/hooks";
 import { useBusiness } from "@/components/business/BusinessContext";
 import { IconPlus } from "@/components/icons";
@@ -23,8 +23,10 @@ import {
   applyContactChange,
   contactFromForm,
   contactKey,
+  isStaleRevision,
   languageChoices,
   validateContact,
+  type BusinessView,
   type ContactChange,
   type ContactError,
   type ContactField,
@@ -65,12 +67,19 @@ const CONTACT_ERRORS: Record<ContactError, MessageKey> = {
   duplicate: "settings.contacts.errors.duplicate",
 };
 
-type Editing = { index: number | null } | null;
+/** The contact being edited (null while adding one); kept by value, as the list may reload under the dialog. */
+type Editing = { original: ManagerContact | null } | null;
+
+/** The only 409 of a contacts save: the list was saved by someone else after it was shown. */
+const STALE_LIST_MESSAGES: ErrorMessageOverrides = { conflict: "settings.contacts.stale" };
 
 /**
  * Staff who receive handoffs, bookings and leads. The API saves the whole
- * list at once, and the platform bot adds Telegram contacts meanwhile, so
- * the tab loads the list fresh and applies each change to a fresh copy.
+ * list at once, and the list can change meanwhile (another owner, a manager
+ * added by the platform bot), so each change is made to the list as shown
+ * and saved with its revision. When someone saved since, the API refuses;
+ * the tab reloads the list and the open dialog says so, keeping what was
+ * typed for another try.
  */
 export function NotificationsTab() {
   const { t, locale } = useI18n();
@@ -81,36 +90,40 @@ export function NotificationsTab() {
     () => api.GET("/v1/businesses/{business_id}", { params: { path: { business_id: business.id } } }),
     [business.id],
   );
-  const [saved, setSaved] = useState<ManagerContact[] | null>(null);
-  const contacts: ManagerContact[] = saved ?? stored.data?.manager_contacts ?? business.manager_contacts ?? [];
+  const [saved, setSaved] = useState<BusinessView | null>(null);
+  const shown: BusinessView = saved ?? stored.data ?? business;
+  const contacts: ManagerContact[] = shown.manager_contacts ?? [];
   const [editing, setEditing] = useState<Editing>(null);
-  const [removing, setRemoving] = useState<number | null>(null);
+  const [removing, setRemoving] = useState<ManagerContact | null>(null);
   const [dialogError, setDialogError] = useState<ApiError | null>(null);
 
   const save = useApiMutation(
-    async (change: ContactChange) => {
-      const fresh = await api.GET("/v1/businesses/{business_id}", {
+    (change: ContactChange, base: BusinessView) =>
+      api.PATCH("/v1/businesses/{business_id}", {
         params: { path: { business_id: business.id } },
-      });
-      if (!fresh.data) {
-        return fresh;
-      }
-      return api.PATCH("/v1/businesses/{business_id}", {
-        params: { path: { business_id: business.id } },
-        body: { manager_contacts: applyContactChange(fresh.data.manager_contacts ?? [], change) },
-      });
-    },
+        body: {
+          manager_contacts: applyContactChange(base.manager_contacts ?? [], change),
+          expected_revision: base.revision,
+        },
+      }),
     { errorToast: false },
   );
+  const isBusy = save.isPending || (saved === null && stored.isLoading);
 
   const persist = async (change: ContactChange): Promise<boolean> => {
     setDialogError(null);
-    const result = await save.run(change);
+    const result = await save.run(change, shown);
     if (!result.ok) {
       setDialogError(result.error);
+      if (isStaleRevision(result.error)) {
+        // Show what is stored now; the dialog stays open for another try.
+        setSaved(null);
+        stored.reload();
+        router.refresh();
+      }
       return false;
     }
-    setSaved(result.data.manager_contacts ?? []);
+    setSaved(result.data);
     router.refresh();
     toast.success(t("settings.contacts.saved"));
     return true;
@@ -120,9 +133,8 @@ export function NotificationsTab() {
     if (!editing) {
       return;
     }
-    const original = editing.index === null ? undefined : contacts[editing.index];
-    const change: ContactChange = original
-      ? { kind: "edit", original: contactKey(original), contact }
+    const change: ContactChange = editing.original
+      ? { kind: "edit", original: contactKey(editing.original), contact }
       : { kind: "add", contact };
     if (await persist(change)) {
       setEditing(null);
@@ -130,16 +142,15 @@ export function NotificationsTab() {
   };
 
   const onRemove = async () => {
-    const original = removing === null ? undefined : contacts[removing];
-    if (!original) {
+    if (!removing) {
       return;
     }
-    if (await persist({ kind: "remove", original: contactKey(original) })) {
+    if (await persist({ kind: "remove", original: contactKey(removing) })) {
       setRemoving(null);
     }
   };
 
-  const removingContact = removing !== null ? contacts[removing] : undefined;
+  const removingContact = removing ?? undefined;
   const isFull = contacts.length >= MAX_MANAGER_CONTACTS;
 
   return (
@@ -157,7 +168,7 @@ export function NotificationsTab() {
               title={isFull ? t("settings.contacts.limit", { count: MAX_MANAGER_CONTACTS }) : undefined}
               onClick={() => {
                 setDialogError(null);
-                setEditing({ index: null });
+                setEditing({ original: null });
               }}
             >
               {t("settings.contacts.add")}
@@ -174,7 +185,7 @@ export function NotificationsTab() {
           />
         ) : (
           <ul className="divide-y divide-line">
-            {contacts.map((contact, index) => (
+            {contacts.map((contact) => (
               <li key={`${contact.channel}-${contact.address}`} className="flex items-start gap-3 px-5 py-4 sm:px-6">
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-medium text-ink" dir="auto">
@@ -196,7 +207,7 @@ export function NotificationsTab() {
                       aria-label={t("settings.contacts.editLabel", { name: contact.name })}
                       onClick={() => {
                         setDialogError(null);
-                        setEditing({ index });
+                        setEditing({ original: contact });
                       }}
                     >
                       {t("settings.contacts.edit")}
@@ -207,7 +218,7 @@ export function NotificationsTab() {
                       aria-label={t("settings.contacts.removeLabel", { name: contact.name })}
                       onClick={() => {
                         setDialogError(null);
-                        setRemoving(index);
+                        setRemoving(contact);
                       }}
                     >
                       {t("settings.contacts.remove")}
@@ -232,15 +243,15 @@ export function NotificationsTab() {
       <Modal
         open={editing !== null}
         onClose={() => setEditing(null)}
-        title={editing?.index === null ? t("settings.contacts.addTitle") : t("settings.contacts.editTitle")}
+        title={editing?.original ? t("settings.contacts.editTitle") : t("settings.contacts.addTitle")}
       >
         {editing ? (
           <ContactFormView
-            key={editing.index ?? "new"}
-            initial={editing.index === null ? undefined : contacts[editing.index]}
-            others={contacts.filter((_, index) => index !== editing.index)}
+            key={editing.original ? contactId(editing.original) : "new"}
+            initial={editing.original ?? undefined}
+            others={contacts.filter((contact) => !editing.original || contactId(contact) !== contactId(editing.original))}
             languages={languageChoices([business.owner_language], business.languages, ["ka", "ru", "en"])}
-            isPending={save.isPending}
+            isPending={isBusy}
             error={dialogError}
             onCancel={() => setEditing(null)}
             onSubmit={onSaveContact}
@@ -252,8 +263,9 @@ export function NotificationsTab() {
         open={removing !== null}
         onClose={() => setRemoving(null)}
         onConfirm={onRemove}
-        isPending={save.isPending}
+        isPending={isBusy}
         error={dialogError}
+        errorOverrides={STALE_LIST_MESSAGES}
         title={removingContact ? t("settings.contacts.removeTitle", { name: removingContact.name }) : ""}
         confirmLabel={t("settings.contacts.remove")}
       >
@@ -261,6 +273,11 @@ export function NotificationsTab() {
       </ConfirmDialog>
     </div>
   );
+}
+
+/** A contact's identity in the list: its channel and address. */
+function contactId(contact: Pick<ManagerContact, "channel" | "address">): string {
+  return `${contact.channel}:${contact.address}`;
 }
 
 function ContactFormView({
@@ -361,7 +378,7 @@ function ContactFormView({
           />
         )}
       </Field>
-      <InlineError error={error} />
+      <InlineError error={error} overrides={STALE_LIST_MESSAGES} />
       <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
         <Button variant="secondary" onClick={onCancel} disabled={isPending}>
           {t("common.cancel")}

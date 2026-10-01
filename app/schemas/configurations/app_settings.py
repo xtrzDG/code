@@ -36,7 +36,10 @@ from app.schemas.typings.messaging.constrained_strings import (
     TwilioMessagingServiceSid,
 )
 from app.schemas.typings.messaging.strings import SmtpUsername
-from app.schemas.typings.platform.booleans import IsLlmContentTraced
+from app.schemas.typings.platform.booleans import (
+    IsEmbeddedWorkerEnabled,
+    IsLlmContentTraced,
+)
 from app.schemas.typings.platform.constrained_integers import WorkerPollSeconds
 from app.schemas.typings.platform.constrained_strings import CabinetBaseUrl
 from app.schemas.typings.platform.strings import (
@@ -136,5 +139,8 @@ class AppSettings(ImmutableDTO):
     is_llm_content_traced: IsLlmContentTraced
     cors_allowed_origins: list[PublicBaseUrl]
     worker_poll_seconds: WorkerPollSeconds
+    # The API runs the background worker in a thread of its own process
+    # (EMBEDDED_WORKER; see `read_embedded_worker`).
+    is_embedded_worker_enabled: IsEmbeddedWorkerEnabled = IsEmbeddedWorkerEnabled(False)
     sentry_dsn: PlatformSecret | None = None
     recordings_directory: LocalDirectoryPath = LocalDirectoryPath("var/recordings")

@@ -7,8 +7,9 @@ from pydantic import BaseModel
 
 from app.gateways.http.application import build_http_application
 from app.gateways.http.cabinet_cors_middleware import is_self_cors_path
-from app.schemas.exceptions.application_errors import NotFoundError
+from app.schemas.exceptions.application_errors import NotFoundError, RateLimitedError
 from app.schemas.typings.channels.constrained_strings import PublicBaseUrl
+from app.schemas.typings.platform.constrained_integers import RetryAfterSeconds
 
 WIDGET_HEADERS: dict[str, str] = {
     "Access-Control-Allow-Origin": "*",
@@ -121,6 +122,13 @@ def build_failing_widget_client(is_cabinet_listed: bool) -> TestClient:
         del business_id, body
         raise RuntimeError("boom")
 
+    @router.get("/v1/widget/{business_id}/messages")
+    def widget_poll(business_id: str) -> Response:
+        del business_id
+        raise RateLimitedError(
+            "Too many requests.", retry_after_seconds=RetryAfterSeconds(7)
+        )
+
     application = build_http_application(
         routers=[router],
         error_reporter=SilentErrors(),
@@ -143,11 +151,16 @@ def test_widget_errors_carry_cors_headers_so_the_site_can_read_them(
     failed = client.post(
         "/v1/widget/biz_1/messages", json={"text": "Hello"}, headers=origin
     )
+    limited = client.get("/v1/widget/biz_1/messages", headers=origin)
 
-    assert [missing.status_code, invalid.status_code, failed.status_code] == [
-        404,
-        422,
-        500,
-    ]
-    for response in (missing, invalid, failed):
+    assert [
+        missing.status_code,
+        invalid.status_code,
+        failed.status_code,
+        limited.status_code,
+    ] == [404, 422, 500, 429]
+    for response in (missing, invalid, failed, limited):
         assert response.headers["access-control-allow-origin"] == "*"
+    # The widget reads how long to wait (a non-safelisted header).
+    assert limited.headers["retry-after"] == "7"
+    assert limited.headers["access-control-expose-headers"] == "Retry-After"

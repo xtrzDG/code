@@ -12,6 +12,7 @@ from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.users import UserDocument
 from app.schemas.typings.assistants.prefixed_id import AssistantVersionId
 from app.schemas.typings.businesses.constrained_integers import (
+    BusinessRevision,
     RecordingRetentionDays,
 )
 from app.schemas.typings.businesses.prefixed_id import BusinessId
@@ -80,7 +81,8 @@ class BusinessView(ImmutableDTO):
     A business (tenant) as shown in the cabinet.
 
     `viewer_role` is the role of the user who asked; it is None for a
-    platform admin who is not a member.
+    platform admin who is not a member. `revision` grows with every save:
+    send it back as `expected_revision` of a settings change.
     """
 
     id: BusinessId
@@ -104,6 +106,7 @@ class BusinessView(ImmutableDTO):
     )
     published_assistant_version_id: AssistantVersionId | None = None
     viewer_role: BusinessMemberRole | None = None
+    revision: BusinessRevision
     created_at: Microseconds
 
 
@@ -158,8 +161,15 @@ class BusinessSettingsChanges(ImmutableDTO):
 
     An empty `city` clears it. `manager_contacts` replaces the whole list.
     `status` only switches a live assistant to paused and back.
+
+    `expected_revision` is the `revision` of the business the change was
+    made from. When it is given and someone has saved the business since,
+    nothing changes and the answer is 409 with the reason
+    `stale_revision`: reload, then apply the change again. Without it the
+    change applies to whatever is stored (scripts, older clients).
     """
 
+    expected_revision: BusinessRevision | None = None
     name: BusinessName | None = None
     city: CityName | None = None
     timezone: TimezoneName | None = None

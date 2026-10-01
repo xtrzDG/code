@@ -27,6 +27,7 @@ from app.schemas.exceptions.application_errors import (
 )
 from app.schemas.typings.billing.constrained_integers import MoneyAmountMinor
 from app.schemas.typings.businesses.constrained_integers import (
+    BusinessRevision,
     RecordingRetentionDays,
 )
 from app.schemas.typings.businesses.prefixed_id import BusinessId
@@ -468,3 +469,89 @@ def test_platform_admin_can_help_and_is_audited() -> None:
         entry.action for entry in testbed.audit_log_repo.list_by_business(business.id)
     ] == [AuditAction.ADMIN_ACCESS]
     assert owner_id != admin.id
+
+
+def test_settings_changed_since_they_were_opened_are_not_overwritten() -> None:
+    testbed = build_accounts_testbed()
+    owner_id, business = georgian_restaurant(testbed)
+    opened = testbed.get_business.run(
+        BusinessQuery(user_id=owner_id, business_id=business.id)
+    )
+    audit_entries_before = len(testbed.audit_log_collection.list_all())
+
+    first = update(
+        testbed,
+        owner_id,
+        business.id,
+        BusinessSettingsChanges(
+            expected_revision=opened.revision, city=CityName("Batumi")
+        ),
+    )
+    with pytest.raises(ConflictError, match="saved by someone else") as refusal:
+        update(
+            testbed,
+            owner_id,
+            business.id,
+            BusinessSettingsChanges(
+                expected_revision=opened.revision,
+                name=BusinessName("Old tab"),
+                manager_contacts=[contact(ManagerContactChannel.TELEGRAM, "70001")],
+            ),
+        )
+
+    assert first.revision == BusinessRevision(int(opened.revision) + 1)
+    [reason] = refusal.value.reasons
+    assert reason.code == "stale_revision"
+    assert reason.details == [str(int(first.revision))]
+    stored = testbed.business_repo.get(business.id)
+    assert stored is not None
+    assert (stored.name, stored.city) == ("Sakhli", "Batumi")
+    assert stored.manager_contacts == []
+    assert stored.revision == first.revision
+    # The refused contact change is not in the audit log either.
+    assert len(testbed.audit_log_collection.list_all()) == audit_entries_before
+    # From the current revision, or without one (scripts), the change applies.
+    current = update(
+        testbed,
+        owner_id,
+        business.id,
+        BusinessSettingsChanges(
+            expected_revision=first.revision, name=BusinessName("New tab")
+        ),
+    )
+    unchecked = update(
+        testbed, owner_id, business.id, BusinessSettingsChanges(city=CityName("Gori"))
+    )
+    assert (current.name, unchecked.city) == ("New tab", "Gori")
+    assert unchecked.revision == BusinessRevision(int(first.revision) + 2)
+
+
+def test_a_save_between_reading_and_writing_is_not_overwritten(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    testbed = build_accounts_testbed()
+    owner_id, business = georgian_restaurant(testbed)
+    repo = testbed.business_repo
+    save_if_unchanged = repo.save_if_unchanged
+
+    def save_after_a_manager_linked_the_bot(document: BusinessDocument) -> bool:
+        # Another request saves the business after this one read it.
+        meanwhile = repo.get(business.id)
+        assert meanwhile is not None
+        meanwhile.city = CityName("Kutaisi")
+        repo.save(meanwhile)
+        return save_if_unchanged(document)
+
+    monkeypatch.setattr(repo, "save_if_unchanged", save_after_a_manager_linked_the_bot)
+
+    with pytest.raises(ConflictError, match="saved by someone else"):
+        update(
+            testbed,
+            owner_id,
+            business.id,
+            BusinessSettingsChanges(name=BusinessName("Lost update")),
+        )
+
+    stored = repo.get(business.id)
+    assert stored is not None
+    assert (stored.name, stored.city) == ("Sakhli", "Kutaisi")

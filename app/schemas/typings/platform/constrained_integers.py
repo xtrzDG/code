@@ -42,6 +42,13 @@ class ProcessedItemCount(BaseConstrainedTypedInt):
     ge = 0
 
 
+class RetryAfterSeconds(BaseConstrainedTypedInt):
+    """How long a rate-limited caller should wait before asking again."""
+
+    ge = 1
+    le = 24 * 60 * 60
+
+
 class WorkerPollSeconds(BaseConstrainedTypedInt):
     """Pause between scheduler ticks of the background worker, in seconds."""
 

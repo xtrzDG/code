@@ -1,14 +1,18 @@
 import { describe, expect, it } from "vitest";
 
+import { ApiError } from "@/api/errors";
+
 import {
   EMPTY_AUDIT_FILTERS,
   actorLabel,
+  afterStatusSwitch,
   allowedRoles,
   applyContactChange,
   auditQuery,
   buildGeneralChanges,
   buildInviteBody,
   canRemoveMember,
+  changesFromRevision,
   contactFromForm,
   contactSearchParam,
   contactsToInput,
@@ -16,6 +20,7 @@ import {
   generalFormFrom,
   hasAuditFilters,
   hasChanges,
+  isStaleRevision,
   languageChoices,
   markErased,
   memberInitials,
@@ -60,6 +65,7 @@ const business: BusinessView = {
   manager_contacts: [],
   published_assistant_version_id: null,
   viewer_role: "owner",
+  revision: 4,
   created_at: 1,
 };
 
@@ -259,6 +265,37 @@ describe("audit log", () => {
     expect(nextDay("2026-02-28")).toBe("2026-03-01");
     expect(nextDay("2028-02-28")).toBe("2028-02-29");
     expect(nextDay("2026-12-31")).toBe("2027-01-01");
+  });
+});
+
+describe("concurrent saves", () => {
+  it("sends the changes with the revision they were made from", () => {
+    expect(changesFromRevision({ city: "Batumi" }, business)).toEqual({ city: "Batumi", expected_revision: 4 });
+    expect(hasChanges({})).toBe(false);
+  });
+
+  it("recognises a save refused because someone saved since", () => {
+    const stale = new ApiError({
+      status: 409,
+      code: "conflict",
+      reasons: [{ code: "stale_revision", message: "Saved by someone else.", details: ["5"] }],
+    });
+    const otherConflict = new ApiError({ status: 409, code: "conflict", reasons: [{ code: "dpa", message: "", details: [] }] });
+
+    expect(isStaleRevision(stale)).toBe(true);
+    expect(isStaleRevision(otherConflict)).toBe(false);
+    expect(isStaleRevision(new ApiError({ status: 422, code: "validation_failed" }))).toBe(false);
+  });
+
+  it("takes over the revision of the tab's own status switch, not someone else's changes", () => {
+    const paused = { ...business, status: "paused" as const, revision: 5 };
+    const pausedAfterARename = { ...paused, name: "Café Batumi" };
+
+    expect(afterStatusSwitch(business, paused)).toBe(paused);
+    expect(afterStatusSwitch(paused, business)).toBe(paused);
+    expect(afterStatusSwitch(business, null)).toBe(business);
+    // The form would send the old name back as a change: keep the old revision.
+    expect(afterStatusSwitch(business, pausedAfterARename)).toBe(business);
   });
 });
 

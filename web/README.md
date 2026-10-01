@@ -206,7 +206,7 @@ web/
 | Assistant | `assistant`, `/versions`, `/versions/{id}` | Test chat with tool calls, versions, go-live checklist with fix links, autotests with live progress, publish and rollback with reasons |
 | Channels | `channels` | Connect messengers and see why one stopped, WhatsApp's template for staff replies after 24 hours (name and language), website chat snippet, colour and corner, call forwarding codes, Google Calendar state and last sync, staff Telegram link |
 | Billing | `billing` | Trial, subscribe with payment (after the trial, an overdue payment or a cancellation), plan change, usage meters, invoices, payment (owners only) |
-| Settings | `settings#general`, `#team`, `#notifications`, `#privacy`, `#audit` | Business settings and pause, team with owner/staff roles, manager contacts, reading and accepting the data processing agreement, the customer list with export and erasure, the audit log with server filters |
+| Settings | `settings#general`, `#team`, `#notifications`, `#privacy`, `#audit` | Business settings and pause, team with owner/staff roles, manager contacts, reading and accepting the data processing agreement, the customer list with export and erasure, the audit log with server filters. General and Notifications save with the business `revision` they showed (`expected_revision`); when someone saved since (another owner, the Telegram bot adding a manager), the API answers 409 `stale_revision` and the tab reloads and says so instead of overwriting |
 | Admin | `/admin`, `/admin/clients/{id}` | Platform admins: all clients (server filters, sorts and paging, totals), health, opening a client's cabinet |
 
 ## Conventions

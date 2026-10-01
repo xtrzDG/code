@@ -4,7 +4,11 @@ Gateways map these classes to transport status codes in one place; business
 code raises the most specific class and never builds transport responses.
 """
 
+from collections.abc import Sequence
+
+from app.schemas.dto.errors import ErrorReason
 from app.schemas.exceptions.base_exception import ApplicationError
+from app.schemas.typings.platform.constrained_integers import RetryAfterSeconds
 
 
 class NotFoundError(ApplicationError):
@@ -28,7 +32,21 @@ class AccessDeniedError(ApplicationError):
 
 
 class RateLimitedError(ApplicationError):
-    """Too many attempts (wrong one-time codes, repeated requests)."""
+    """
+    Too many attempts (wrong one-time codes, repeated requests).
+
+    `retry_after_seconds`, when known, becomes the response's Retry-After
+    header.
+    """
+
+    def __init__(
+        self,
+        *args: object,
+        reasons: Sequence[ErrorReason] = (),
+        retry_after_seconds: RetryAfterSeconds | None = None,
+    ) -> None:
+        super().__init__(*args, reasons=reasons)
+        self.retry_after_seconds: RetryAfterSeconds | None = retry_after_seconds
 
 
 class ExternalServiceError(ApplicationError):
