@@ -20,6 +20,8 @@ from app.contracts.observability import LlmTraceFacilitatorContract
 from app.gateways.http.application import build_http_application
 from app.gateways.http.router_assembly import build_application_routers
 from app.schemas.configurations.app_settings import AppSettings
+from app.schemas.constants.environment import DeploymentEnvironment
+from app.schemas.constants.localization import OtpDeliveryChannel
 from app.schemas.dto.channels import PlatformBotWebhookSetup, TelegramBotProfile
 from app.schemas.exceptions.base_exception import ApplicationError
 
@@ -50,15 +52,16 @@ def build_application(app_container: AppContainer) -> FastAPI:
 def build_lifespan(app_container: AppContainer) -> Lifespan[FastAPI]:
     """
     Startup: warm the country catalog (every country's profile is built
-    once), point the platform Telegram bot at this API when it is configured,
-    and start flushing model-call traces. Shutdown: flush the remaining
-    traces and close the Postgres pool.
+    once), report the login code channels, point the platform Telegram bot
+    at this API when it is configured, and start flushing model-call
+    traces. Shutdown: flush the remaining traces and close the Postgres pool.
     """
 
     @asynccontextmanager
     async def lifespan(http_application: FastAPI) -> AsyncGenerator[None]:
         del http_application
         app_container.registries.country_registry().list_all()
+        report_login_code_channels(app_container)
         configure_platform_bot(app_container)
         trace_facilitator: LlmTraceFacilitatorContract = (
             app_container.adapters.llm_trace_facilitator()
@@ -74,6 +77,37 @@ def build_lifespan(app_container: AppContainer) -> Lifespan[FastAPI]:
             close_postgres_pool(app_container)
 
     return lifespan
+
+
+def report_login_code_channels(app_container: AppContainer) -> None:
+    """
+    Log which channels can carry login codes. In production without any
+    provider nobody can sign in, so that is logged as an error (each sign-in
+    attempt then fails with HTTP 502 and the same explanation).
+    """
+
+    settings: AppSettings = app_container.config.app_settings()
+    channels: frozenset[OtpDeliveryChannel] = (
+        app_container.facilitators.otp_delivery_facilitator().available_channels()
+    )
+    if channels:
+        LOGGER.info(
+            "Login codes can be sent by: %s",
+            ", ".join(sorted(channel.value for channel in channels)),
+        )
+        return
+
+    log_level: int = (
+        logging.ERROR
+        if settings.environment is DeploymentEnvironment.PRODUCTION
+        else logging.WARNING
+    )
+    LOGGER.log(
+        log_level,
+        "No login code provider is configured, so nobody can sign in. Set "
+        "TWILIO_* (SMS), TELEGRAM_GATEWAY_API_TOKEN, WHATSAPP_OTP_* or SMTP_* "
+        '(see .env.example, "Login codes").',
+    )
 
 
 def configure_platform_bot(app_container: AppContainer) -> None:

@@ -3,6 +3,7 @@ from base_pydantic_schemas import ImmutableDTO
 from app.schemas.constants.assistants import LlmEffort, LlmProvider
 from app.schemas.constants.environment import DeploymentEnvironment
 from app.schemas.constants.localization import DataRegion
+from app.schemas.constants.messaging import SmtpSecurity
 from app.schemas.typings.assistants.constrained_integers import (
     AutotestTurnLimit,
     LlmMaxOutputTokens,
@@ -15,6 +16,7 @@ from app.schemas.typings.businesses.constrained_integers import (
 from app.schemas.typings.channels.constrained_strings import (
     MetaObjectId,
     PublicBaseUrl,
+    WhatsAppTemplateLanguageCode,
     WhatsAppTemplateName,
 )
 from app.schemas.typings.compliance.constrained_strings import DpaDocumentVersion
@@ -25,6 +27,15 @@ from app.schemas.typings.localization.constrained_strings import (
     CountryCode,
     E164PhoneNumber,
 )
+from app.schemas.typings.messaging.constrained_integers import SmtpPort
+from app.schemas.typings.messaging.constrained_strings import (
+    EmailSenderAddress,
+    SmsSenderId,
+    SmtpHost,
+    TwilioAccountSid,
+    TwilioMessagingServiceSid,
+)
+from app.schemas.typings.messaging.strings import SmtpUsername
 from app.schemas.typings.platform.booleans import IsLlmContentTraced
 from app.schemas.typings.platform.constrained_integers import WorkerPollSeconds
 from app.schemas.typings.platform.strings import (
@@ -75,6 +86,23 @@ class AppSettings(ImmutableDTO):
     dpa_document_version: DpaDocumentVersion
     platform_admin_emails: list[EmailAddress]
     platform_admin_phone_numbers: list[E164PhoneNumber]
+    # Login codes: one provider per delivery channel; a channel without a
+    # provider is not offered (see `.env.example`, "Login codes").
+    twilio_account_sid: TwilioAccountSid | None = None
+    twilio_auth_token: PlatformSecret | None = None
+    twilio_sender: SmsSenderId | None = None
+    twilio_messaging_service_sid: TwilioMessagingServiceSid | None = None
+    telegram_gateway_api_token: PlatformSecret | None = None
+    whatsapp_otp_phone_number_id: MetaObjectId | None = None
+    whatsapp_otp_access_token: PlatformSecret | None = None
+    whatsapp_otp_template_name: WhatsAppTemplateName | None = None
+    whatsapp_otp_template_languages: list[WhatsAppTemplateLanguageCode]
+    smtp_host: SmtpHost | None = None
+    smtp_port: SmtpPort = SmtpPort(587)
+    smtp_security: SmtpSecurity = SmtpSecurity.STARTTLS
+    smtp_username: SmtpUsername | None = None
+    smtp_password: PlatformSecret | None = None
+    smtp_sender: EmailSenderAddress | None = None
     elevenlabs_api_key: PlatformSecret | None = None
     elevenlabs_webhook_secret: PlatformSecret | None = None
     elevenlabs_api_base_url: PublicBaseUrl = PublicBaseUrl("https://api.elevenlabs.io")

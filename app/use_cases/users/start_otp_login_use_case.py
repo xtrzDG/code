@@ -1,3 +1,5 @@
+import logging
+
 from typed_time_provider import Microseconds, Seconds, WallClock
 
 from app.contracts.facilitators import OtpDeliveryFacilitatorContract
@@ -20,6 +22,7 @@ from app.schemas.dto.localization import CountryProfile, PhoneNumberDetails
 from app.schemas.dto.users import OtpChallengeView, StartOtpLoginCommand
 from app.schemas.exceptions.application_errors import (
     CountryRestrictedError,
+    ExternalServiceError,
     RateLimitedError,
     ValidationFailedError,
 )
@@ -37,6 +40,8 @@ from app.utilities.security.login_destination_masking import (
     mask_phone_number,
 )
 from app.utilities.security.one_time_codes import generate_otp_code, hash_otp_code
+
+logger: logging.Logger = logging.getLogger(__name__)
 
 FALLBACK_LANGUAGE: LanguageTag = LanguageTag("en")
 RESEND_INTERVAL_SECONDS: int = 30
@@ -58,11 +63,14 @@ class StartOtpLoginUseCase(UseCaseContract[StartOtpLoginCommand, OtpChallengeVie
     Send a one-time login code to a phone number of any country or an e-mail.
 
     The phone's country decides whether sign-up is allowed and which channels
-    can carry the code (SMS, WhatsApp, Telegram); the requested channel wins
-    when the country supports it. The code message (and a new account) uses
-    the requested language, else the country's owner language, else English.
-    Only a keyed hash of the code is stored. A second request for the same
-    destination within 30 seconds is refused.
+    can carry the code (SMS, WhatsApp, Telegram, in its order); only channels
+    with a configured provider are used. The requested channel goes first
+    when it is one of them; when a provider fails, the same code goes
+    through the next channel of the list. E-mail login needs an e-mail
+    provider. The code message (and a new account) uses the requested
+    language, else the country's owner language, else English. Only a keyed
+    hash of the code is stored. A second request for the same destination
+    within 30 seconds is refused.
     """
 
     def __init__(
@@ -114,9 +122,11 @@ class StartOtpLoginUseCase(UseCaseContract[StartOtpLoginCommand, OtpChallengeVie
 
         country: CountryProfile = self._load_allowed_country(phone_number.country_code)
         self._refuse_repeated_request(phone_number.e164, None)
-        delivery_channel: OtpDeliveryChannel = self._choose_phone_delivery_channel(
-            country,
-            input_data.preferred_delivery_channel,
+        delivery_channels: list[OtpDeliveryChannel] = (
+            self._choose_phone_delivery_channels(
+                country,
+                input_data.preferred_delivery_channel,
+            )
         )
         locale: LanguageTag = input_data.locale or country.default_owner_language
         challenge: OtpChallengeDocument = self._send_code(
@@ -124,13 +134,13 @@ class StartOtpLoginUseCase(UseCaseContract[StartOtpLoginCommand, OtpChallengeVie
             phone_number=phone_number.e164,
             email=None,
             country_code=phone_number.country_code,
-            delivery_channel=delivery_channel,
+            delivery_channels=delivery_channels,
             locale=locale,
         )
         return OtpChallengeView(
             challenge_id=challenge.id,
             login_method=LoginMethod.PHONE,
-            delivery_channel=delivery_channel,
+            delivery_channel=challenge.delivery_channel,
             masked_destination=mask_phone_number(phone_number),
             expires_in_seconds=self._app_settings.otp_lifetime_seconds,
             locale=locale,
@@ -144,6 +154,15 @@ class StartOtpLoginUseCase(UseCaseContract[StartOtpLoginCommand, OtpChallengeVie
         input_data: StartOtpLoginCommand,
         email: EmailAddress,
     ) -> OtpChallengeView:
+        if (
+            OtpDeliveryChannel.EMAIL
+            not in self._otp_delivery_facilitator.available_channels()
+        ):
+            raise ExternalServiceError(
+                "Sign-in by e-mail is not available: no e-mail provider is "
+                "configured. Sign in with a phone number."
+            )
+
         locale: LanguageTag = input_data.locale or FALLBACK_LANGUAGE
         if input_data.country_hint is not None:
             country: CountryProfile = self._load_allowed_country(
@@ -158,7 +177,7 @@ class StartOtpLoginUseCase(UseCaseContract[StartOtpLoginCommand, OtpChallengeVie
             phone_number=None,
             email=email,
             country_code=input_data.country_hint,
-            delivery_channel=OtpDeliveryChannel.EMAIL,
+            delivery_channels=[OtpDeliveryChannel.EMAIL],
             locale=locale,
         )
         return OtpChallengeView(
@@ -202,11 +221,13 @@ class StartOtpLoginUseCase(UseCaseContract[StartOtpLoginCommand, OtpChallengeVie
                     "before asking for another one."
                 )
 
-    def _choose_phone_delivery_channel(
+    def _choose_phone_delivery_channels(
         self,
         country: CountryProfile,
         preferred_channel: OtpDeliveryChannel | None,
-    ) -> OtpDeliveryChannel:
+    ) -> list[OtpDeliveryChannel]:
+        """The country's phone channels that have a provider, preferred first."""
+
         allowed_channels: list[OtpDeliveryChannel] = [
             channel
             for channel in country.otp_delivery_channels
@@ -218,10 +239,24 @@ class StartOtpLoginUseCase(UseCaseContract[StartOtpLoginCommand, OtpChallengeVie
                 f"{str(country.country_code)}; sign in with e-mail."
             )
 
-        if preferred_channel is not None and preferred_channel in allowed_channels:
-            return preferred_channel
+        available_channels: frozenset[OtpDeliveryChannel] = (
+            self._otp_delivery_facilitator.available_channels()
+        )
+        usable_channels: list[OtpDeliveryChannel] = [
+            channel for channel in allowed_channels if channel in available_channels
+        ]
+        if not usable_channels:
+            raise ExternalServiceError(
+                "Login codes cannot be sent to phones in "
+                f"{str(country.country_code)} right now: no SMS, WhatsApp or "
+                "Telegram provider is configured for them. Sign in with e-mail."
+            )
 
-        return allowed_channels[0]
+        if preferred_channel is not None and preferred_channel in usable_channels:
+            usable_channels.remove(preferred_channel)
+            usable_channels.insert(0, preferred_channel)
+
+        return usable_channels
 
     def _send_code(
         self,
@@ -229,12 +264,20 @@ class StartOtpLoginUseCase(UseCaseContract[StartOtpLoginCommand, OtpChallengeVie
         phone_number: E164PhoneNumber | None,
         email: EmailAddress | None,
         country_code: CountryCode | None,
-        delivery_channel: OtpDeliveryChannel,
+        delivery_channels: list[OtpDeliveryChannel],
         locale: LanguageTag,
     ) -> OtpChallengeDocument:
         now: Microseconds = self._wall_clock.now_unix()
         challenge_id: OtpChallengeId = OtpChallengeId()
         code: OtpCode = generate_otp_code()
+        # Deliver before saving: a failed delivery leaves nothing to throttle.
+        delivery_channel: OtpDeliveryChannel = self._deliver(
+            delivery_channels=delivery_channels,
+            phone_number=phone_number,
+            email=email,
+            code=code,
+            locale=locale,
+        )
         challenge = OtpChallengeDocument(
             id=challenge_id,
             login_method=login_method,
@@ -250,13 +293,41 @@ class StartOtpLoginUseCase(UseCaseContract[StartOtpLoginCommand, OtpChallengeVie
             created_at=now,
             updated_at=now,
         )
-        # Deliver before saving: a failed delivery leaves nothing to throttle.
-        self._otp_delivery_facilitator.deliver(
-            delivery_channel=delivery_channel,
-            phone_number=phone_number,
-            email=email,
-            code=code,
-            language_tag=locale,
-        )
         self._otp_challenge_repo.save(challenge)
         return challenge
+
+    def _deliver(
+        self,
+        delivery_channels: list[OtpDeliveryChannel],
+        phone_number: E164PhoneNumber | None,
+        email: EmailAddress | None,
+        code: OtpCode,
+        locale: LanguageTag,
+    ) -> OtpDeliveryChannel:
+        """Send the code through the first channel whose provider accepts it."""
+
+        last_error: ExternalServiceError | None = None
+        for delivery_channel in delivery_channels:
+            try:
+                self._otp_delivery_facilitator.deliver(
+                    delivery_channel=delivery_channel,
+                    phone_number=phone_number,
+                    email=email,
+                    code=code,
+                    language_tag=locale,
+                )
+            except ExternalServiceError as error:
+                logger.warning(
+                    "Login code delivery by %s failed: %s",
+                    delivery_channel.value,
+                    error,
+                )
+                last_error = error
+                continue
+
+            return delivery_channel
+
+        if last_error is not None:
+            raise last_error
+
+        raise ExternalServiceError("No channel can deliver the login code.")

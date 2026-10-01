@@ -386,3 +386,78 @@ def test_failed_delivery_stores_nothing_and_allows_an_immediate_retry() -> None:
     challenge = testbed.request_phone_code(GEORGIA_MOBILE)
 
     assert testbed.otp_challenge_repo.get(challenge.challenge_id) is not None
+
+
+def test_only_channels_with_a_provider_are_picked() -> None:
+    testbed = build_accounts_testbed()
+    testbed.otp_delivery.channels = frozenset({OtpDeliveryChannel.TELEGRAM})
+
+    challenge = testbed.request_phone_code(GEORGIA_MOBILE)
+
+    assert challenge.delivery_channel is OtpDeliveryChannel.TELEGRAM
+    assert testbed.otp_delivery.attempted_channels == [OtpDeliveryChannel.TELEGRAM]
+
+
+def test_a_failing_provider_falls_back_along_the_country_list() -> None:
+    testbed = build_accounts_testbed()
+    testbed.otp_delivery.failing_channels = {
+        OtpDeliveryChannel.TELEGRAM,
+        OtpDeliveryChannel.SMS,
+    }
+
+    challenge = testbed.start_otp_login.run(
+        StartOtpLoginCommand(
+            phone_number=RawPhoneNumberInput(GEORGIA_MOBILE),
+            preferred_delivery_channel=OtpDeliveryChannel.TELEGRAM,
+        )
+    )
+
+    assert challenge.delivery_channel is OtpDeliveryChannel.WHATSAPP
+    assert testbed.otp_delivery.attempted_channels == [
+        OtpDeliveryChannel.TELEGRAM,
+        OtpDeliveryChannel.SMS,
+        OtpDeliveryChannel.WHATSAPP,
+    ]
+    stored = testbed.otp_challenge_repo.get(challenge.challenge_id)
+    assert stored is not None
+    assert stored.delivery_channel is OtpDeliveryChannel.WHATSAPP
+    [delivery] = testbed.otp_delivery.deliveries
+    assert stored.code_hash == hash_otp_code(stored.id, delivery.code)
+
+
+def test_when_every_provider_fails_the_last_error_is_reported() -> None:
+    testbed = build_accounts_testbed()
+    testbed.otp_delivery.failing_channels = set(OtpDeliveryChannel)
+
+    with pytest.raises(ExternalServiceError, match="telegram provider is down"):
+        testbed.request_phone_code(GEORGIA_MOBILE)
+
+    assert len(testbed.otp_delivery.attempted_channels) == 3
+    assert (
+        testbed.otp_challenge_repo.list_created_since(
+            testbed.clock.microseconds_ago(60)
+        )
+        == []
+    )
+
+
+def test_phone_login_without_any_phone_provider_suggests_email() -> None:
+    testbed = build_accounts_testbed()
+    testbed.otp_delivery.channels = frozenset({OtpDeliveryChannel.EMAIL})
+
+    with pytest.raises(ExternalServiceError, match="Sign in with e-mail"):
+        testbed.request_phone_code(GERMANY_MOBILE)
+
+    assert testbed.otp_delivery.attempted_channels == []
+
+
+def test_email_login_needs_an_email_provider() -> None:
+    testbed = build_accounts_testbed()
+    testbed.otp_delivery.channels = frozenset({OtpDeliveryChannel.SMS})
+
+    with pytest.raises(ExternalServiceError, match="no e-mail provider"):
+        testbed.start_otp_login.run(
+            StartOtpLoginCommand(email=RawEmailAddressInput("owner@example.com"))
+        )
+
+    assert testbed.otp_delivery.attempted_channels == []
