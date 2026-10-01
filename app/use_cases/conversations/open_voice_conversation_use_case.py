@@ -1,8 +1,10 @@
 from typed_time_provider import Microseconds, WallClock
 
+from app.contracts.registries import PlanRegistryContract
 from app.contracts.repositories import (
     AssistantVersionRepoContract,
     BusinessRepoContract,
+    ChannelRepoContract,
     ContactRepoContract,
     ConversationRepoContract,
 )
@@ -18,6 +20,8 @@ from app.schemas.exceptions.application_errors import ConflictError, NotFoundErr
 from app.schemas.typings.assistants.prefixed_id import AssistantVersionId
 from app.schemas.typings.conversations.strings import ChannelUserId
 from app.schemas.typings.localization.constrained_strings import LanguageTag
+from app.utilities.channels.delivery_targets import find_business_channel
+from app.utilities.channels.voice_service import find_voice_refusal
 from app.utilities.conversations.tool_selection import select_available_tools
 
 
@@ -31,9 +35,10 @@ class OpenVoiceConversationUseCase(
     One conversation per provider call id, pinned to the version published
     when the call started. The caller is the contact with the caller's phone
     (or, for a withheld number, the one known by this call); the business
-    comes from the verified webhook, never from the agent's arguments. The
-    business status is not checked here: a call in progress keeps its tools,
-    and the voice agent itself exists only while the business is live.
+    comes from the verified webhook, never from the agent's arguments. A
+    call in progress keeps its tools; a new call is refused (ConflictError)
+    while the phone assistant is off (business not live, no voice in the
+    live version or the plan, phone number disconnected).
     """
 
     def __init__(
@@ -42,6 +47,8 @@ class OpenVoiceConversationUseCase(
         assistant_version_repo: AssistantVersionRepoContract,
         contact_repo: ContactRepoContract,
         conversation_repo: ConversationRepoContract,
+        channel_repo: ChannelRepoContract,
+        plan_registry: PlanRegistryContract,
         wall_clock: WallClock[Microseconds],
     ) -> None:
         self._business_repo: BusinessRepoContract = business_repo
@@ -50,6 +57,8 @@ class OpenVoiceConversationUseCase(
         )
         self._contact_repo: ContactRepoContract = contact_repo
         self._conversation_repo: ConversationRepoContract = conversation_repo
+        self._channel_repo: ChannelRepoContract = channel_repo
+        self._plan_registry: PlanRegistryContract = plan_registry
         self._wall_clock: WallClock[Microseconds] = wall_clock
 
     def run(self, input_data: VoiceToolCallRequest) -> AssistantToolContext:
@@ -64,6 +73,9 @@ class OpenVoiceConversationUseCase(
         conversation: ConversationDocument | None = self._find_call_conversation(
             business, call_user_id
         )
+        if conversation is None:
+            self._require_voice_service(business)
+
         contact: ContactDocument = self._resolve_contact(
             business, input_data, conversation, call_user_id, now
         )
@@ -184,3 +196,20 @@ class OpenVoiceConversationUseCase(
             self._contact_repo.save(contact)
 
         return contact
+
+    def _require_voice_service(self, business: BusinessDocument) -> None:
+        published_version: AssistantVersionDocument | None = (
+            None
+            if business.published_assistant_version_id is None
+            else self._assistant_version_repo.get(
+                business.id, business.published_assistant_version_id
+            )
+        )
+        refusal: str | None = find_voice_refusal(
+            business,
+            published_version,
+            self._plan_registry.get(business.plan_key),
+            find_business_channel(self._channel_repo, business.id, ChannelKind.PHONE),
+        )
+        if refusal is not None:
+            raise ConflictError(refusal)

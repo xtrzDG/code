@@ -19,6 +19,7 @@ from app.schemas.dto.billing_cabinet import (
     BillingOverviewSource,
     ChangePlanCommand,
 )
+from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.use_cases.billing.billing_records import (
     list_open_invoices,
     list_subscription_invoices,
@@ -37,7 +38,8 @@ class ChangePlanUseCase(UseCaseContract[ChangePlanCommand, BillingOverview]):
     the charge interval changes, automatic charges at the old price are
     stopped at the provider and unpaid invoices at the old price are voided,
     so the owner pays the new price at the next checkout. Moving to annual
-    voids an unpaid setup fee: an annual payment includes it.
+    voids an unpaid setup fee: an annual payment includes it. Moving to a
+    plan without voice removes the voice agent at once.
     """
 
     def __init__(
@@ -56,6 +58,7 @@ class ChangePlanUseCase(UseCaseContract[ChangePlanCommand, BillingOverview]):
             BillingOverview,
         ],
         wall_clock: WallClock[Microseconds],
+        remove_voice_agent: UseCaseContract[BusinessId, None],
     ) -> None:
         self._authorize_business_access: UseCaseContract[
             BusinessAccessRequest,
@@ -71,6 +74,7 @@ class ChangePlanUseCase(UseCaseContract[ChangePlanCommand, BillingOverview]):
             BillingOverview,
         ] = assemble_billing_overview
         self._wall_clock: WallClock[Microseconds] = wall_clock
+        self._remove_voice_agent: UseCaseContract[BusinessId, None] = remove_voice_agent
 
     def run(self, input_data: ChangePlanCommand) -> BillingOverview:
         business: BusinessDocument = self._authorize_business_access.run(
@@ -119,6 +123,9 @@ class ChangePlanUseCase(UseCaseContract[ChangePlanCommand, BillingOverview]):
         business.plan_key = input_data.request.plan_key
         business.updated_at = now
         self._business_repo.save(business)
+        if not self._plan_registry.get(input_data.request.plan_key).is_voice_included:
+            self._remove_voice_agent.run(business.id)
+
         return self._overview(business, input_data)
 
     def _void_outdated_invoices(

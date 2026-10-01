@@ -14,3 +14,10 @@ class VoiceAgentProvisionerAdapterContract(AdapterContract, Protocol):
         `spec.existing_agent_id` is set. Raises ExternalServiceError.
         """
         raise NotImplementedError
+
+    def remove_agent(self, agent_id: VoiceAgentId) -> None:
+        """
+        Delete the agent and its tools so it answers no more calls; a missing
+        agent is not an error. Raises ExternalServiceError.
+        """
+        raise NotImplementedError

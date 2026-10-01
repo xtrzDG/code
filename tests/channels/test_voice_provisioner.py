@@ -298,6 +298,35 @@ class TestAgentUpdate:
 
         assert agent_id == "agent_2"
 
+    def test_removed_agent_and_its_tools_are_deleted(self) -> None:
+        testbed = ChannelsTestbed()
+        transport = testbed.elevenlabs_transport
+        transport.respond(
+            "GET",
+            r"^/v1/convai/agents/agent_1$",
+            {"conversation_config": {"agent": {"prompt": {"tool_ids": ["t_1"]}}}},
+        )
+        transport.respond("DELETE", r"^/v1/convai/agents/agent_1$", {})
+        transport.respond("DELETE", r"^/v1/convai/tools/t_1$", {})
+
+        provisioner(testbed).remove_agent(VoiceAgentId("agent_1"))
+
+        assert [(r.method, r.path) for r in transport.requests] == [
+            ("GET", "/v1/convai/agents/agent_1"),
+            ("DELETE", "/v1/convai/agents/agent_1"),
+            ("DELETE", "/v1/convai/tools/t_1"),
+        ]
+
+    def test_removing_an_agent_that_is_gone_is_not_an_error(self) -> None:
+        testbed = ChannelsTestbed()
+        transport = testbed.elevenlabs_transport
+        transport.respond("GET", r"^/v1/convai/agents/agent_gone$", {}, 404)
+        transport.respond("DELETE", r"^/v1/convai/agents/agent_gone$", {}, 404)
+
+        provisioner(testbed).remove_agent(VoiceAgentId("agent_gone"))
+
+        assert [r.method for r in transport.requests] == ["GET", "DELETE"]
+
     def test_stale_tool_deletion_failures_are_tolerated(self) -> None:
         testbed = ChannelsTestbed()
         transport = testbed.elevenlabs_transport

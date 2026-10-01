@@ -33,6 +33,10 @@ class UnconfiguredElevenLabsClient(ElevenLabsApiClientContract):
         del agent_id, agent_config
         raise ExternalServiceError(NOT_CONFIGURED_MESSAGE)
 
+    def delete_agent(self, agent_id: VoiceAgentId) -> None:
+        del agent_id
+        raise ExternalServiceError(NOT_CONFIGURED_MESSAGE)
+
     def create_tool(self, tool_config: JsonObject) -> VoicePlatformToolId:
         del tool_config
         raise ExternalServiceError(NOT_CONFIGURED_MESSAGE)

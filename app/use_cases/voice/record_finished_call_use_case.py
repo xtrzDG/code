@@ -19,7 +19,7 @@ from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.billing import UsageKind
 from app.schemas.constants.bookings import BookingStatus
 from app.schemas.constants.channel_events import PostCallEventStatus
-from app.schemas.constants.channels import ChannelKind, ChannelStatus
+from app.schemas.constants.channels import ChannelKind
 from app.schemas.constants.compliance import AuditAction
 from app.schemas.constants.conversations import CallOutcome
 from app.schemas.domain.billing import UsageEventDocument
@@ -215,10 +215,10 @@ class RecordFinishedCallUseCase(UseCaseContract[FinishedCallReport, RecordedCall
             ChannelKind.PHONE,
             ChannelExternalId(str(assistant_number)),
         )
+        # A call that ended after the number was turned off (or broke) is
+        # still the business's call: it is stored and its minutes metered.
         business: BusinessDocument | None = (
-            None
-            if channel is None or channel.status is not ChannelStatus.CONNECTED
-            else self._business_repo.get(channel.business_id)
+            None if channel is None else self._business_repo.get(channel.business_id)
         )
         if business is None:
             logger.info(

@@ -167,6 +167,7 @@ from app.use_cases.autotests.run_autotest_scenario_use_case import (
 from app.use_cases.autotests.start_autotest_run_use_case import (
     StartAutotestRunUseCase,
 )
+from app.use_cases.voice.remove_voice_agent_use_case import RemoveVoiceAgentUseCase
 from app.utilities.assembly.llm_costs import DEFAULT_LLM_TOKEN_PRICES
 from app.utilities.config_helpers.app_settings_assembler import assemble_app_settings
 from app.utilities.storage.storage_scope_context import StorageScopeContext
@@ -542,7 +543,7 @@ class AssemblyTestbed:
             poll_seconds=WorkerPollSeconds(5),
             storage_scope=StorageScopeContext(),
         )
-        activate = ActivateAssistantVersionUseCase(
+        activate = self.activate_use_case = ActivateAssistantVersionUseCase(
             check_go_live_readiness=CheckGoLiveReadinessUseCase(
                 subscription_repo=self.subscription_repo,
                 dpa_acceptance_repo=self.dpa_repo,
@@ -552,6 +553,10 @@ class AssemblyTestbed:
                 niche_template_registry=self.niche_registry,
                 app_settings=self.settings,
                 wall_clock=self.wall_clock,
+            ),
+            remove_voice_agent=RemoveVoiceAgentUseCase(
+                self.version_repo,
+                self.voice_provisioner,
             ),
             business_repo=self.business_repo,
             assistant_version_repo=self.version_repo,

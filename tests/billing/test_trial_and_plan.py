@@ -263,6 +263,19 @@ def test_change_plan_during_the_trial_reprices_at_once() -> None:
     assert testbed.flitt.stopped_orders == []
 
 
+def test_moving_to_a_plan_without_voice_switches_the_voice_agent_off() -> None:
+    testbed = BillingTestbed()
+    owner = testbed.add_user(phone_number="+995599123456")
+    business = testbed.add_business(owner, GEORGIA)
+    start_trial(testbed, owner, business)
+
+    change_plan(testbed, owner, business, PlanKey.PLUS, BillingPeriod.MONTHLY)
+    assert testbed.voice_agent_removals.business_ids == []
+    change_plan(testbed, owner, business, PlanKey.CHAT, BillingPeriod.MONTHLY)
+
+    assert testbed.voice_agent_removals.business_ids == [business.id]
+
+
 def test_changing_to_the_same_plan_changes_nothing() -> None:
     testbed = BillingTestbed()
     owner = testbed.add_user(phone_number="+995599123456")

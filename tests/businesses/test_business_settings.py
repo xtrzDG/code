@@ -402,6 +402,10 @@ def test_owner_may_only_pause_and_resume_a_live_assistant() -> None:
     )
     assert paused.status is BusinessStatus.PAUSED
     assert resumed.status is BusinessStatus.LIVE
+    # Pausing switches the voice agent off; resuming re-activates the
+    # published version (launch conditions and a new voice agent).
+    assert testbed.voice_agent_removals.business_ids == [business.id]
+    assert testbed.assistant_resumptions.business_ids == [business.id]
 
     with pytest.raises(ConflictError):
         update(

@@ -433,8 +433,12 @@ class FakeVoiceAgentProvisioner(VoiceAgentProvisionerAdapterContract):
 
     def __init__(self) -> None:
         self.specs: list[VoiceAgentSpec] = []
+        self.removed_agent_ids: list[VoiceAgentId] = []
         self.error: ExternalServiceError | None = None
         self._created_count: int = 0
+
+    def remove_agent(self, agent_id: VoiceAgentId) -> None:
+        self.removed_agent_ids.append(agent_id)
 
     def upsert_agent(self, spec: VoiceAgentSpec) -> VoiceAgentId:
         self.specs.append(spec)

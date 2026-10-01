@@ -110,6 +110,13 @@ class ElevenLabsVoiceAgentProvisioner(VoiceAgentProvisionerAdapterContract):
         self._delete_tools(stale_tool_ids)
         return spec.existing_agent_id
 
+    def remove_agent(self, agent_id: VoiceAgentId) -> None:
+        tool_ids: list[VoicePlatformToolId] = (
+            self._elevenlabs_client.get_agent_tool_ids(agent_id) or []
+        )
+        self._elevenlabs_client.delete_agent(agent_id)
+        self._delete_tools(tool_ids)
+
     def _create_agent(
         self,
         spec: VoiceAgentSpec,

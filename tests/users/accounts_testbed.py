@@ -61,6 +61,7 @@ from app.schemas.configurations.app_settings import AppSettings
 from app.schemas.constants.assistants import AutotestScenarioKind
 from app.schemas.constants.billing import PlanKey
 from app.schemas.constants.bookings import BookingUnit, ResourceKind
+from app.schemas.constants.businesses import BusinessStatus
 from app.schemas.constants.knowledge import KnowledgeItemKind
 from app.schemas.constants.localization import (
     CountryOnboardingStatus,
@@ -112,6 +113,7 @@ from app.schemas.exceptions.application_errors import (
     UnknownCountryError,
     UnsupportedLanguageError,
 )
+from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.businesses.strings import BusinessName
 from app.schemas.typings.conversations.strings import RecordingStoragePath
 from app.schemas.typings.localization.constrained_integers import CountryCallingCode
@@ -192,6 +194,27 @@ JAPAN_MOBILE: str = "+81 90-1234-5678"
 NORTH_KOREA_MOBILE: str = "+850 192 123 4567"
 IRAN_MOBILE: str = "+98 912 345 6789"
 MONACO_MOBILE: str = "+377 6 12 34 56 78"
+
+
+class RecordingVoiceAgentRemoval:
+    """Records the businesses whose voice agent was switched off."""
+
+    def __init__(self) -> None:
+        self.business_ids: list[BusinessId] = []
+
+    def run(self, input_data: BusinessId) -> None:
+        self.business_ids.append(input_data)
+
+
+class RecordingAssistantResumption:
+    """Resumes a paused business the way re-activation would, and records it."""
+
+    def __init__(self) -> None:
+        self.business_ids: list[BusinessId] = []
+
+    def run(self, input_data: BusinessDocument) -> None:
+        self.business_ids.append(input_data.id)
+        input_data.status = BusinessStatus.LIVE
 
 
 class AdjustableClock:
@@ -674,6 +697,8 @@ class AccountsTestbed:
             user_repo=self.user_repo,
             business_view_transformer=business_view_transformer,
         )
+        self.voice_agent_removals = RecordingVoiceAgentRemoval()
+        self.assistant_resumptions = RecordingAssistantResumption()
         self.update_business_settings = UpdateBusinessSettingsUseCase(
             authorize_business_access=self.authorize_business_access,
             business_repo=self.business_repo,
@@ -684,6 +709,8 @@ class AccountsTestbed:
             audit_log_repo=self.audit_log_repo,
             business_view_transformer=business_view_transformer,
             wall_clock=wall_clock,
+            remove_voice_agent=self.voice_agent_removals,
+            resume_assistant=self.assistant_resumptions,
         )
         self.invite_staff = InviteStaffUseCase(
             authorize_business_access=self.authorize_business_access,

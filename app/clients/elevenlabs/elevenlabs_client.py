@@ -28,7 +28,7 @@ class ElevenLabsClient(ElevenLabsApiClientContract):
     """
     Minimal ElevenLabs Agents API client (header `xi-api-key`).
 
-    Agents: POST /v1/convai/agents/create, GET and PATCH
+    Agents: POST /v1/convai/agents/create, GET, PATCH and DELETE
     /v1/convai/agents/{agent_id}. Tools: POST /v1/convai/tools, GET, PATCH and
     DELETE /v1/convai/tools/{tool_id}. Conversations: DELETE
     /v1/convai/conversations/{conversation_id}. The base URL selects the data
@@ -73,6 +73,9 @@ class ElevenLabsClient(ElevenLabsApiClientContract):
 
     def update_agent(self, agent_id: VoiceAgentId, agent_config: JsonObject) -> None:
         self._send("PATCH", f"/v1/convai/agents/{agent_id}", agent_config)
+
+    def delete_agent(self, agent_id: VoiceAgentId) -> None:
+        self._delete(f"/v1/convai/agents/{agent_id}")
 
     def create_tool(self, tool_config: JsonObject) -> VoicePlatformToolId:
         body: JsonObject = self._send(

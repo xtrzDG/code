@@ -6,9 +6,10 @@ import pytest
 from typed_time_provider import Microseconds
 
 from app.schemas.constants.assistants import AssistantToolName
-from app.schemas.constants.billing import UsageKind
+from app.schemas.constants.billing import PlanKey, UsageKind
 from app.schemas.constants.bookings import BookingStatus, LeadType
-from app.schemas.constants.channels import ChannelKind
+from app.schemas.constants.businesses import BusinessStatus
+from app.schemas.constants.channels import ChannelKind, ChannelStatus
 from app.schemas.constants.handoffs import HandoffReason
 from app.schemas.constants.niches import NicheKey
 from app.schemas.domain.assistants import AssistantVersionDocument
@@ -17,6 +18,7 @@ from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.contacts import ChannelIdentity, ContactDocument
 from app.schemas.domain.conversations import CallDocument, ConversationDocument
 from app.schemas.domain.handoffs import HandoffDocument
+from app.schemas.dto.channels import DisableChannelCommand
 from app.schemas.typings.assistants.constrained_integers import AssistantVersionNumber
 from app.schemas.typings.assistants.constrained_strings import LlmModelId
 from app.schemas.typings.assistants.strings import SystemPromptText, VoiceAgentId
@@ -97,6 +99,10 @@ def build_voice_setup(
         voice_agent_id=VoiceAgentId("agent_1"),
     )
     testbed.assistant_version_repo.save(version)
+    # A live business whose published version answers the phone.
+    business.status = BusinessStatus.LIVE
+    business.published_assistant_version_id = version.id
+    testbed.business_repo.save(business)
     contact = ContactDocument(
         business_id=business.id,
         phone_number=E164PhoneNumber(CALLER),
@@ -408,6 +414,44 @@ class TestCallInitiation:
         assert greeting_request.business_id == setup.business.id
         assert greeting_request.language is None
 
+    @pytest.mark.parametrize(
+        "switch_off",
+        ["pause", "chat_plan", "version_without_voice", "number_disconnected"],
+    )
+    def test_no_call_is_answered_while_the_phone_assistant_is_off(
+        self, switch_off: str
+    ) -> None:
+        setup = build_voice_setup()
+        testbed = setup.testbed
+        if switch_off == "pause":
+            setup.business.status = BusinessStatus.PAUSED
+        elif switch_off == "chat_plan":
+            setup.business.plan_key = PlanKey.CHAT
+        elif switch_off == "version_without_voice":
+            version = testbed.assistant_version_repo.get(
+                setup.business.id, setup.conversation.assistant_version_id
+            )
+            assert version is not None
+            version.is_voice_enabled = False
+            testbed.assistant_version_repo.save(version)
+        else:
+            for channel in testbed.channel_repo.list_by_business(setup.business.id):
+                channel.status = ChannelStatus.DISABLED
+                testbed.channel_repo.save(channel)
+
+        testbed.business_repo.save(setup.business)
+        response = testbed.build_http_client().post(
+            "/v1/voice/webhooks/conversation-initiation",
+            content=to_json_bytes({"caller_id": CALLER, "agent_id": "agent_1"}),
+            headers={
+                "X-Assistant-Business-Id": str(setup.business.id),
+                "X-Assistant-Tool-Secret": tool_secret(setup.business.id),
+            },
+        )
+
+        assert response.status_code == 409, response.text
+        assert testbed.call_greeting.requests == []
+
     def test_initiation_needs_the_business_secret(self) -> None:
         setup = build_voice_setup()
 
@@ -627,6 +671,37 @@ class TestPostCallWebhook:
             assert response.json()["status"] == "ignored"
 
         assert stored_calls(setup) == []
+
+    def test_a_call_on_a_number_that_broke_is_still_stored_and_metered(
+        self,
+    ) -> None:
+        setup = build_voice_setup()
+        for channel in setup.testbed.channel_repo.list_by_business(setup.business.id):
+            channel.status = ChannelStatus.ERROR
+            setup.testbed.channel_repo.save(channel)
+
+        response = post_call(setup, post_call_payload())
+
+        assert response.json()["status"] == "recorded"
+        assert len(stored_calls(setup)) == 1
+        [usage] = setup.testbed.usage_event_repo.list_by_business_between(
+            setup.business.id, Microseconds(0), Microseconds(2**62)
+        )
+        assert usage.kind is UsageKind.VOICE_SECONDS
+
+    def test_turning_the_phone_number_off_removes_the_voice_agent(self) -> None:
+        setup = build_voice_setup()
+        owner_id = setup.business.members[0].user_id
+
+        setup.testbed.disable_channel.run(
+            DisableChannelCommand(
+                user_id=owner_id,
+                business_id=setup.business.id,
+                channel=ChannelKind.PHONE,
+            )
+        )
+
+        assert setup.testbed.voice_agent_removals == [setup.business.id]
 
     def test_malformed_reports_are_rejected(self) -> None:
         setup = build_voice_setup()
