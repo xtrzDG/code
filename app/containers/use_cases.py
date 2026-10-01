@@ -188,6 +188,7 @@ from app.schemas.dto.knowledge_admin import (
     UpsertKnowledgeItemsCommand,
 )
 from app.schemas.dto.localization import PhoneNumberDetails
+from app.schemas.dto.login_options import LoginOptionsQuery, LoginOptionsView
 from app.schemas.dto.menu_import import (
     ConfirmImportedItemsCommand,
     ConfirmImportedItemsResult,
@@ -534,6 +535,7 @@ from app.use_cases.resources.list_schedule_exceptions_use_case import (
 from app.use_cases.resources.update_resource_use_case import UpdateResourceUseCase
 from app.use_cases.users.authenticate_user_use_case import AuthenticateUserUseCase
 from app.use_cases.users.get_current_user_use_case import GetCurrentUserUseCase
+from app.use_cases.users.get_login_options_use_case import GetLoginOptionsUseCase
 from app.use_cases.users.logout_use_case import LogoutUseCase
 from app.use_cases.users.start_otp_login_use_case import StartOtpLoginUseCase
 from app.use_cases.users.update_current_user_use_case import UpdateCurrentUserUseCase
@@ -645,6 +647,14 @@ class UseCasesContainer(containers.DeclarativeContainer):
         otp_delivery_facilitator=facilitators.otp_delivery_facilitator,
         app_settings=config.app_settings,
         wall_clock=time_provider.microsecond_wall_clock,
+    )
+    get_login_options_use_case: Factory[
+        UseCaseContract[LoginOptionsQuery, LoginOptionsView]
+    ] = Factory(
+        GetLoginOptionsUseCase,
+        country_registry=registries.country_registry,
+        otp_delivery_facilitator=facilitators.otp_delivery_facilitator,
+        app_settings=config.app_settings,
     )
     verify_otp_login_use_case: Factory[
         UseCaseContract[VerifyOtpLoginCommand, LoginSessionView]

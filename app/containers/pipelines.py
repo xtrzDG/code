@@ -145,6 +145,9 @@ class PipelinesContainer(containers.DeclarativeContainer):
     start_otp_login_pipeline = orchestrator_pipeline(
         orchestrators.start_otp_login_orchestrator
     )
+    get_login_options_pipeline = orchestrator_pipeline(
+        orchestrators.get_login_options_orchestrator
+    )
     verify_otp_login_pipeline = orchestrator_pipeline(
         orchestrators.verify_otp_login_orchestrator
     )

@@ -80,6 +80,9 @@ class OperatorsContainer(containers.DeclarativeContainer):
     start_otp_login_operator = pipeline_operator(
         pipelines.start_otp_login_pipeline, storage_scope
     )
+    get_login_options_operator = pipeline_operator(
+        pipelines.get_login_options_pipeline, storage_scope
+    )
     verify_otp_login_operator = pipeline_operator(
         pipelines.verify_otp_login_pipeline, storage_scope
     )

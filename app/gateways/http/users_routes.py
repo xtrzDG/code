@@ -2,7 +2,7 @@
 
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Header, Request, Response, status
+from fastapi import APIRouter, Depends, Header, Query, Request, Response, status
 
 from app.contracts.operator_contract import OperatorContract
 from app.gateways.http.strict_request_parsing import (
@@ -14,6 +14,7 @@ from app.gateways.http.user_authentication import (
     CurrentUserDependency,
     parse_bearer_token,
 )
+from app.schemas.dto.login_options import LoginOptionsQuery, LoginOptionsView
 from app.schemas.dto.users import (
     CurrentUserView,
     LoginSessionView,
@@ -26,6 +27,8 @@ from app.schemas.dto.users import (
     VerifyOtpLoginCommand,
     VerifyOtpLoginRequest,
 )
+from app.schemas.exceptions.application_errors import ValidationFailedError
+from app.schemas.typings.localization.constrained_strings import CountryCode
 from app.schemas.typings.users.prefixed_id import UserId
 
 read_start_otp_login_body = build_json_body_dependency(StartOtpLoginCommand)
@@ -35,6 +38,7 @@ read_update_current_user_body = build_json_body_dependency(UpdateCurrentUserRequ
 
 def build_users_router(
     start_otp_login_operator: OperatorContract[StartOtpLoginCommand, OtpChallengeView],
+    get_login_options_operator: OperatorContract[LoginOptionsQuery, LoginOptionsView],
     verify_otp_login_operator: OperatorContract[
         VerifyOtpLoginCommand,
         LoginSessionView,
@@ -49,6 +53,7 @@ def build_users_router(
 ) -> APIRouter:
     """
     Routes:
+        GET   /v1/auth/login-options  working login-code channels (?country_code=GE)
         POST  /v1/auth/otp/start   send a login code (phone of any country or e-mail)
         POST  /v1/auth/otp/verify  check the code, return a bearer token once
         POST  /v1/auth/logout      end the current session (204)
@@ -57,6 +62,14 @@ def build_users_router(
     """
 
     router = APIRouter(tags=["auth"])
+
+    @router.get("/v1/auth/login-options")
+    def get_login_options(
+        country_code: Annotated[str | None, Query()] = None,
+    ) -> LoginOptionsView:
+        return get_login_options_operator.operate(
+            LoginOptionsQuery(country_code=parse_country_code(country_code))
+        )
 
     @router.post(
         "/v1/auth/otp/start",
@@ -120,3 +133,17 @@ def build_users_router(
         )
 
     return router
+
+
+def parse_country_code(raw_country_code: str | None) -> CountryCode | None:
+    """`?country_code=ge` as an ISO code; blank means none; 422 when malformed."""
+
+    if raw_country_code is None or raw_country_code.strip() == "":
+        return None
+
+    try:
+        return CountryCode(raw_country_code.strip().upper())
+    except ValueError as error:
+        raise ValidationFailedError(
+            "country_code must be a two-letter ISO 3166-1 code, like GE."
+        ) from error

@@ -170,6 +170,7 @@ from app.use_cases.compliance.purge_expired_recordings_use_case import (
 )
 from app.use_cases.users.authenticate_user_use_case import AuthenticateUserUseCase
 from app.use_cases.users.get_current_user_use_case import GetCurrentUserUseCase
+from app.use_cases.users.get_login_options_use_case import GetLoginOptionsUseCase
 from app.use_cases.users.logout_use_case import LogoutUseCase
 from app.use_cases.users.start_otp_login_use_case import StartOtpLoginUseCase
 from app.use_cases.users.update_current_user_use_case import (
@@ -660,6 +661,11 @@ class AccountsTestbed:
             app_settings=self.settings,
             wall_clock=wall_clock,
         )
+        self.get_login_options = GetLoginOptionsUseCase(
+            country_registry=self.country_registry,
+            otp_delivery_facilitator=self.otp_delivery,
+            app_settings=self.settings,
+        )
         self.verify_otp_login = VerifyOtpLoginUseCase(
             otp_challenge_repo=self.otp_challenge_repo,
             user_repo=self.user_repo,
@@ -868,6 +874,9 @@ class AccountsTestbed:
             build_users_router(
                 start_otp_login_operator=PipelineOperator(
                     OrchestratorPipeline(UseCaseOrchestrator(self.start_otp_login))
+                ),
+                get_login_options_operator=PipelineOperator(
+                    OrchestratorPipeline(UseCaseOrchestrator(self.get_login_options))
                 ),
                 verify_otp_login_operator=PipelineOperator(
                     OrchestratorPipeline(UseCaseOrchestrator(self.verify_otp_login))

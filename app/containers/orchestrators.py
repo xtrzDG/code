@@ -209,6 +209,9 @@ class OrchestratorsContainer(containers.DeclarativeContainer):
     start_otp_login_orchestrator = use_case_orchestrator(
         use_cases.start_otp_login_use_case
     )
+    get_login_options_orchestrator = use_case_orchestrator(
+        use_cases.get_login_options_use_case
+    )
     verify_otp_login_orchestrator = use_case_orchestrator(
         use_cases.verify_otp_login_use_case
     )

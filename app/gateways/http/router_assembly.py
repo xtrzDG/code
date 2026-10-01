@@ -54,6 +54,7 @@ def build_application_routers(app_container: AppContainer) -> list[APIRouter]:
         ),
         build_users_router(
             start_otp_login_operator=operators.start_otp_login_operator(),
+            get_login_options_operator=operators.get_login_options_operator(),
             verify_otp_login_operator=operators.verify_otp_login_operator(),
             logout_operator=operators.logout_operator(),
             get_current_user_operator=operators.get_current_user_operator(),
