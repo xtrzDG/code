@@ -16,6 +16,12 @@ class ContactMessageLimit(BaseConstrainedTypedInt):
     le = 10000
 
 
+class ConversationMessageCount(BaseConstrainedTypedInt):
+    """Number of stored messages in one conversation."""
+
+    ge = 0
+
+
 class LlmTokenCount(BaseConstrainedTypedInt):
     """Number of language-model tokens."""
 

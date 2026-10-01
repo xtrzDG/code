@@ -49,4 +49,12 @@ class RecordingStoragePath(BaseTypedString):
     """Path of a call recording in EU object storage."""
 
 
+class UnverifiedReplyValue(BaseTypedString):
+    """
+    Money amount, time, date, phone or number in an assistant reply, as
+    written, that neither the facts, the tool results nor the customer's
+    messages support (invented-numbers guard).
+    """
+
+
 # Keep abc order for all non example types, if possible.
