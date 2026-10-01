@@ -6,12 +6,14 @@ import type { CallView } from "@/components/insights/types";
 import { Badge, Card } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 
+import { CallRecordingPlayer } from "./CallRecordingPlayer";
 import { CALL_OUTCOMES, formatCallDuration } from "./conversationModel";
 
 /**
  * The phone calls of the conversation: when, how long, what came out of
- * them, the call transcript and where the recording is kept (the voice
- * platform's reference; recordings are deleted after the retention period).
+ * them, the call transcript and a player for the recording (kept by the
+ * voice platform, loaded only on play; recordings are deleted after the
+ * retention period).
  */
 export function CallsCard({ calls }: { calls: readonly CallView[] }) {
   const { t, tp } = useI18n();
@@ -50,11 +52,12 @@ function CallItem({ call }: { call: CallView }) {
       <dl className="mt-3 space-y-2 text-sm">
         <div>
           <dt className="text-ink-muted">{t("conversations.calls.recording")}</dt>
-          <dd className="text-ink">
+          <dd className="mt-1 text-ink">
             {call.recording_path ? (
-              <code dir="ltr" className="text-xs break-all text-ink-muted">
-                {call.recording_path}
-              </code>
+              <CallRecordingPlayer
+                callId={call.id}
+                label={t("conversations.calls.playerLabel", { date: format.dateTime(call.started_at) })}
+              />
             ) : (
               t("conversations.calls.noRecording")
             )}

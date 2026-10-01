@@ -5,6 +5,7 @@ import {
   WIDGET_DEFAULT_COLOR,
   accountLabel,
   buildConnectBody,
+  buildStaffTemplateBody,
   buildWidgetPreviewUrl,
   channelPathName,
   channelState,
@@ -232,5 +233,26 @@ describe("Google Calendar return", () => {
   it("removes only the notice from the query", () => {
     expect(withoutCalendarReturn("?calendar=error&reason=link_expired&tab=x")).toBe("tab=x");
     expect(withoutCalendarReturn("?calendar=connected")).toBe("");
+  });
+});
+
+describe("WhatsApp template for staff replies", () => {
+  it("is saved with its name and approved language", () => {
+    expect(buildStaffTemplateBody(" staff_reply ", "en")).toEqual({
+      ok: true,
+      body: { name: "staff_reply", language_code: "en" },
+    });
+    expect(buildStaffTemplateBody("staff_reply", "pt-br")).toEqual({
+      ok: true,
+      body: { name: "staff_reply", language_code: "pt_BR" },
+    });
+  });
+
+  it("names what is missing or malformed", () => {
+    expect(buildStaffTemplateBody("", "")).toEqual({ ok: false, errors: { name: "required", language: "required" } });
+    expect(buildStaffTemplateBody("Staff Reply", "english")).toEqual({
+      ok: false,
+      errors: { name: "name", language: "language" },
+    });
   });
 });

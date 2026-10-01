@@ -1,5 +1,7 @@
 "use client";
 
+import type { ReactNode } from "react";
+
 import { useBusiness, useBusinessFormat } from "@/components/business/BusinessContext";
 import { Alert, Badge, Button, ButtonLink } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
@@ -16,7 +18,11 @@ import {
 } from "../_lib/channels";
 import { CHANNEL_ACCOUNT_LABELS, CHANNEL_BLURBS, CHANNEL_ICONS, CHANNEL_NAMES, CHANNEL_STATE_LABELS } from "./channelMeta";
 
-/** One customer channel: status, account, and connect / disconnect for the owner. */
+/**
+ * One customer channel: status, account, settings of its own (`children`,
+ * e.g. WhatsApp's template for staff replies) and connect / disconnect for
+ * the owner.
+ */
 export function ChannelCard({
   kind,
   channel,
@@ -25,6 +31,7 @@ export function ChannelCard({
   isBusy,
   onConnect,
   onDisconnect,
+  children,
 }: {
   kind: ConnectableChannel;
   channel: ChannelView | undefined;
@@ -34,6 +41,7 @@ export function ChannelCard({
   isBusy: boolean;
   onConnect: (kind: ConnectableChannel) => void;
   onDisconnect: (kind: ConnectableChannel) => void;
+  children?: ReactNode;
 }) {
   const { t } = useI18n();
   const { business } = useBusiness();
@@ -120,6 +128,8 @@ export function ChannelCard({
           </ButtonLink>
         </Alert>
       ) : null}
+
+      {children}
 
       {canManage ? (
         <div className="mt-auto flex flex-wrap gap-2 pt-5">

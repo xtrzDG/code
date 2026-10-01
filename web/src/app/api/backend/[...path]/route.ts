@@ -2,8 +2,9 @@
  * Backend-for-frontend proxy: /api/backend/v1/... -> BACKEND_URL/v1/...
  *
  * Adds `Authorization: Bearer <token>` from the httpOnly session cookie,
- * streams the JSON answer back with its status and X-Request-ID, and drops
- * the session cookie when the API says the token is no longer valid.
+ * streams the answer back (JSON, or the audio of a call recording) with its
+ * status, content type, caching rule and X-Request-ID, and drops the
+ * session cookie when the API says the token is no longer valid.
  * Only /v1/* paths are forwarded.
  */
 

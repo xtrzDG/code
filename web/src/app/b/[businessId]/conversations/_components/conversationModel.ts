@@ -3,6 +3,7 @@
  * API), transcript grouping, usage totals, calls and the staff reply box.
  */
 
+import { BFF_BASE_PATH } from "@/api/client";
 import { addDays, localDateOf, type LocalDateText } from "@/components/insights/dates";
 import type {
   CallOutcome,
@@ -200,6 +201,15 @@ export const CALL_OUTCOMES: Record<CallOutcome, MessageKey> = {
   abandoned: "conversations.calls.outcomes.abandoned",
 };
 
+/**
+ * Address of a call's recording behind the cabinet's API proxy: the audio
+ * player loads it itself (only when someone presses play), with the session
+ * the proxy adds; every playback is written to the audit log.
+ */
+export function callRecordingUrl(businessId: string, callId: string): string {
+  return `${BFF_BASE_PATH}/v1/businesses/${encodeURIComponent(businessId)}/calls/${encodeURIComponent(callId)}/recording`;
+}
+
 export const REPLY_BLOCKS: Record<StaffReplyBlock, MessageKey> = {
   voice_call: "conversations.reply.blocked.voice_call",
   test_conversation: "conversations.reply.blocked.test_conversation",
@@ -223,4 +233,36 @@ export function isWindowClosingSoon(closesAt: number | null | undefined, nowMs: 
   }
   const leftMs = closesAt / 1000 - nowMs;
   return leftMs > 0 && leftMs <= 60 * 60 * 1000;
+}
+
+/**
+ * The staff text as the WhatsApp template's body parameter, as the API
+ * sends it: one line, runs of spaces and line breaks become single spaces.
+ */
+export function templateReplyText(text: string): string {
+  return text.split(/\s+/u).filter(Boolean).join(" ");
+}
+
+/** Characters (not UTF-16 units) of a template reply, as the API counts them. */
+export function templateReplyLength(text: string): number {
+  return [...templateReplyText(text)].length;
+}
+
+/** A reply that fits the template's single parameter. */
+export function isSendableTemplateReply(text: string, maxLength: number): boolean {
+  const length = templateReplyLength(text);
+  return length > 0 && length <= maxLength;
+}
+
+/**
+ * A WhatsApp template language ("pt_BR") by name in the interface language
+ * ("Brazilian Portuguese (pt_BR)"); the code alone when Intl does not know it.
+ */
+export function templateLanguageName(code: string, locale: string): string {
+  try {
+    const name = new Intl.DisplayNames([locale], { type: "language" }).of(code.replace("_", "-"));
+    return name && name !== code && name !== code.replace("_", "-") ? `${name} (${code})` : code;
+  } catch {
+    return code;
+  }
 }

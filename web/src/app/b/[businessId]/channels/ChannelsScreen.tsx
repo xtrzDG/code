@@ -18,6 +18,7 @@ import { ChannelCard } from "./_components/ChannelCard";
 import { CHANNEL_NAMES } from "./_components/channelMeta";
 import { ConnectChannelModal } from "./_components/ConnectChannelModal";
 import { GoogleCalendarCard } from "./_components/GoogleCalendarCard";
+import { StaffReplyTemplateForm } from "./_components/StaffReplyTemplateForm";
 import { StaffTelegramCard } from "./_components/StaffTelegramCard";
 import { WebChatSection } from "./_components/WebChatSection";
 import {
@@ -212,18 +213,29 @@ export function ChannelsScreen({ calendarReturn: initialCalendarReturn }: { cale
               </Alert>
             ) : null}
             <div className="grid gap-4 md:grid-cols-2 2xl:grid-cols-3">
-              {CONNECTABLE_CHANNELS.map((kind) => (
-                <ChannelCard
-                  key={kind}
-                  kind={kind}
-                  channel={findChannel(list, kind)}
-                  isInPlan={isChannelInPlan(planChannels, kind)}
-                  canManage={isOwner}
-                  isBusy={(connect.isPending && kind === "web_chat" && connecting === null) || (disconnect.isPending && disconnecting === kind)}
-                  onConnect={onConnect}
-                  onDisconnect={askDisconnect}
-                />
-              ))}
+              {CONNECTABLE_CHANNELS.map((kind) => {
+                const channel = findChannel(list, kind);
+                return (
+                  <ChannelCard
+                    key={kind}
+                    kind={kind}
+                    channel={channel}
+                    isInPlan={isChannelInPlan(planChannels, kind)}
+                    canManage={isOwner}
+                    isBusy={(connect.isPending && kind === "web_chat" && connecting === null) || (disconnect.isPending && disconnecting === kind)}
+                    onConnect={onConnect}
+                    onDisconnect={askDisconnect}
+                  >
+                    {kind === "whatsapp" && channel ? (
+                      <StaffReplyTemplateForm
+                        channel={channel}
+                        canManage={isOwner}
+                        onSaved={(updated) => channels.setData((current) => upsertChannel(current, updated))}
+                      />
+                    ) : null}
+                  </ChannelCard>
+                );
+              })}
             </div>
           </section>
 

@@ -161,12 +161,18 @@ const FORWARDED_RESPONSE_HEADERS = [
   "content-disposition",
   "cache-control",
   "retry-after",
+  "x-content-type-options",
   REQUEST_ID_HEADER,
 ] as const;
 
+/** Binary media the API streams (call recordings), passed on byte for byte. */
+const MEDIA_CONTENT_TYPE = /^(audio|video)\//i;
+
 /**
- * Headers of the API response passed to the browser. Length and encoding
- * are dropped: fetch has already decoded the body.
+ * Headers of the API response passed to the browser. Encoding is dropped:
+ * fetch has already decoded the body. So is the length, except for audio
+ * and video the API sent unencoded (the body is then the same bytes), which
+ * lets the browser's player show the duration and progress.
  */
 export function pickResponseHeaders(upstream: Headers, requestId: string): Headers {
   const headers = new Headers();
@@ -175,6 +181,10 @@ export function pickResponseHeaders(upstream: Headers, requestId: string): Heade
     if (value) {
       headers.set(name, value);
     }
+  }
+  const length = upstream.get("content-length");
+  if (length && /^\d+$/.test(length) && !upstream.has("content-encoding") && MEDIA_CONTENT_TYPE.test(upstream.get("content-type") ?? "")) {
+    headers.set("content-length", length);
   }
   if (!headers.has(REQUEST_ID_HEADER)) {
     headers.set(REQUEST_ID_HEADER, requestId);

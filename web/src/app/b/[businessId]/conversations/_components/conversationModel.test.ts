@@ -6,6 +6,7 @@ import type { MessageView } from "@/components/insights/types";
 
 import {
   CALL_OUTCOMES,
+  callRecordingUrl,
   conversationApiQuery,
   conversationFiltersQuery,
   DEFAULT_CONVERSATION_FILTERS,
@@ -13,12 +14,16 @@ import {
   groupMessagesByDay,
   initialsOf,
   isSendableReply,
+  isSendableTemplateReply,
   isWindowClosingSoon,
   MAX_REPLY_LENGTH,
   messageSide,
   parseConversationFilters,
   prettyJson,
   REPLY_BLOCKS,
+  templateLanguageName,
+  templateReplyLength,
+  templateReplyText,
   usageTotals,
 } from "./conversationModel";
 
@@ -139,5 +144,37 @@ describe("transcript", () => {
     expect(initialsOf("алексей петров иванович")).toBe("АП");
     expect(initialsOf(null)).toBe("#");
     expect(initialsOf("+995 599")).toBe("#");
+  });
+});
+
+describe("call recordings", () => {
+  it("are played through the cabinet's API proxy", () => {
+    expect(callRecordingUrl("business_1", "call_9")).toBe("/api/backend/v1/businesses/business_1/calls/call_9/recording");
+    expect(callRecordingUrl("b/1", "c?2")).toBe("/api/backend/v1/businesses/b%2F1/calls/c%3F2/recording");
+  });
+});
+
+describe("replies sent as a WhatsApp template", () => {
+  it("travel as one line, as the API sends them", () => {
+    expect(templateReplyText("  Ready.\n\n\tSee you\r\n at  8 ")).toBe("Ready. See you at 8");
+    expect(templateReplyLength("a\nb")).toBe(3);
+    // Characters, not UTF-16 units: an emoji counts once, like the API counts it.
+    expect(templateReplyLength("🍕🍕")).toBe(2);
+  });
+
+  it("fit the template's single parameter", () => {
+    expect(isSendableTemplateReply("Hello", 1024)).toBe(true);
+    expect(isSendableTemplateReply(" \n ", 1024)).toBe(false);
+    expect(isSendableTemplateReply("x".repeat(1025), 1024)).toBe(false);
+    expect(isSendableTemplateReply("x\n".repeat(512), 1024)).toBe(true);
+  });
+});
+
+describe("template languages", () => {
+  it("are named in the interface language with their code", () => {
+    expect(templateLanguageName("en_US", "en")).toBe("American English (en_US)");
+    expect(templateLanguageName("ka", "en")).toBe("Georgian (ka)");
+    expect(templateLanguageName("ru", "ru")).toBe("русский (ru)");
+    expect(templateLanguageName("zz_ZZ", "en")).toContain("zz_ZZ");
   });
 });

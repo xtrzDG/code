@@ -7,17 +7,29 @@ import { useApiMutation } from "@/api/hooks";
 import { useBusiness, useBusinessFormat } from "@/components/business/BusinessContext";
 import { CHANNEL_LABELS } from "@/components/insights/labels";
 import type { ConversationSummaryView, MessageView, StaffReplyView } from "@/components/insights/types";
-import { Alert, Button, Card, Textarea, useToast } from "@/components/ui";
+import { Alert, Button, ButtonLink, Card, Textarea, useToast } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
+import { businessPath } from "@/lib/navigation";
 
-import { isSendableReply, isWindowClosingSoon, MAX_REPLY_LENGTH, REPLY_BLOCKS } from "./conversationModel";
+import {
+  isSendableReply,
+  isSendableTemplateReply,
+  isWindowClosingSoon,
+  MAX_REPLY_LENGTH,
+  REPLY_BLOCKS,
+  templateLanguageName,
+  templateReplyLength,
+} from "./conversationModel";
 
 /**
  * Staff write to the customer from the card (POST …/messages). The message
  * goes out through the conversation's channel (Telegram, WhatsApp,
  * Instagram, Messenger) or waits in the website chat; the assistant does
  * not answer it. When the channel cannot carry a message now (a call, a
- * test, a closed 24-hour window), the box says why instead.
+ * test, a closed 24-hour window), the box says why instead. After the
+ * WhatsApp window has closed, the owner's approved template (set on the
+ * Channels page) still carries the text: the box offers "Send as template",
+ * or, without a template, points to the Channels page.
  */
 export function ReplyBox({
   conversation,
@@ -35,31 +47,51 @@ export function ReplyBox({
   /** The API refused (the window closed meanwhile): load the card again. */
   onRefused: () => void;
 }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const toast = useToast();
-  const { business } = useBusiness();
+  const { business, isOwner } = useBusiness();
   const format = useBusinessFormat();
   const id = useId();
   const [now] = useState(() => Date.now());
   const channel = t(CHANNEL_LABELS[conversation.channel]);
+  // Offered only once the WhatsApp window has closed and the owner set one.
+  const template = !reply.is_available && reply.block === "window_closed" ? (reply.template ?? null) : null;
 
   const send = useApiMutation(
-    (text: string) =>
+    (text: string, asTemplate: boolean) =>
       api.POST("/v1/businesses/{business_id}/conversations/{conversation_id}/messages", {
         params: { path: { business_id: business.id, conversation_id: conversation.id } },
-        body: { text },
+        body: asTemplate ? { text, as_template: true } : { text },
       }),
     { errorMessages: { conflict: "conversations.reply.refused" } },
   );
 
-  if (!reply.is_available) {
+  const windowClosedAt =
+    reply.block === "window_closed" && reply.window_closes_at ? (
+      <p className="mt-1 text-ink-muted">
+        {t("conversations.reply.windowClosedAt", { date: format.dateTime(reply.window_closes_at) })}
+      </p>
+    ) : null;
+
+  if (!reply.is_available && template === null) {
+    const needsTemplate = reply.block === "window_closed" && conversation.channel === "whatsapp";
     return (
       <Card title={t("conversations.reply.title")}>
-        <Alert tone="info">
+        <Alert
+          tone="info"
+          action={
+            needsTemplate ? (
+              <ButtonLink href={businessPath(business.id, "channels")} variant="secondary" size="sm">
+                {t("conversations.reply.openChannels")}
+              </ButtonLink>
+            ) : undefined
+          }
+        >
           <p>{reply.block ? t(REPLY_BLOCKS[reply.block], { channel }) : t("conversations.reply.unavailable")}</p>
-          {reply.block === "window_closed" && reply.window_closes_at ? (
-            <p className="mt-1 text-ink-muted">
-              {t("conversations.reply.windowClosedAt", { date: format.dateTime(reply.window_closes_at) })}
+          {windowClosedAt}
+          {needsTemplate ? (
+            <p className="mt-1">
+              {t(isOwner ? "conversations.reply.noTemplateOwner" : "conversations.reply.noTemplateStaff")}
             </p>
           ) : null}
         </Alert>
@@ -67,16 +99,28 @@ export function ReplyBox({
     );
   }
 
+  const isSendable = template
+    ? draft.length <= MAX_REPLY_LENGTH && isSendableTemplateReply(draft, template.max_text_length)
+    : isSendableReply(draft);
+
   const submit = async (event?: FormEvent) => {
     event?.preventDefault();
-    if (!isSendableReply(draft) || send.isPending) {
+    if (!isSendable || send.isPending) {
       return;
     }
-    const result = await send.run(draft.trim());
+    const result = await send.run(draft.trim(), template !== null);
     if (result.ok) {
       onSent(result.data.message);
+      const delivery = result.data.delivery;
       toast.success(
-        t(result.data.delivery === "sent" ? "conversations.reply.sent" : "conversations.reply.stored", { channel }),
+        t(
+          delivery === "sent_as_template"
+            ? "conversations.reply.template.sent"
+            : delivery === "sent"
+              ? "conversations.reply.sent"
+              : "conversations.reply.stored",
+          { channel },
+        ),
       );
     } else if (result.error.code === "conflict") {
       onRefused();
@@ -91,9 +135,18 @@ export function ReplyBox({
   };
 
   const closesSoon = isWindowClosingSoon(reply.window_closes_at, now);
-  const tooLong = draft.length > MAX_REPLY_LENGTH;
+  const maxLength = template ? template.max_text_length : MAX_REPLY_LENGTH;
+  const length = template ? templateReplyLength(draft) : draft.length;
+  const tooLong = length > maxLength || draft.length > MAX_REPLY_LENGTH;
   return (
     <Card title={t("conversations.reply.title")}>
+      {template ? (
+        <Alert tone="info" className="mb-3">
+          <p>{t(REPLY_BLOCKS.window_closed, { channel })}</p>
+          {windowClosedAt}
+          <p className="mt-1">{t("conversations.reply.template.intro")}</p>
+        </Alert>
+      ) : null}
       <form onSubmit={(event) => void submit(event)} className="space-y-3">
         <label htmlFor={`${id}-text`} className="sr-only">
           {t("conversations.reply.label")}
@@ -113,27 +166,32 @@ export function ReplyBox({
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div id={`${id}-hint`} className="space-y-1 text-xs text-ink-muted">
             <p>
-              {reply.delivery === "stored_for_widget"
-                ? t("conversations.reply.widgetHint")
-                : t("conversations.reply.channelHint", { channel })}
+              {template
+                ? t("conversations.reply.template.hint", {
+                    name: template.name,
+                    language: templateLanguageName(template.language_code, locale),
+                  })
+                : reply.delivery === "stored_for_widget"
+                  ? t("conversations.reply.widgetHint")
+                  : t("conversations.reply.channelHint", { channel })}
             </p>
-            {reply.window_closes_at ? (
+            {reply.is_available && reply.window_closes_at ? (
               <p className={closesSoon ? "font-medium text-warning" : undefined}>
                 {t("conversations.reply.windowOpenUntil", { channel, date: format.dateTime(reply.window_closes_at) })}
               </p>
             ) : null}
             <p className={tooLong ? "text-danger" : undefined}>
-              {t("conversations.reply.length", { count: draft.length, max: MAX_REPLY_LENGTH })}
+              {t("conversations.reply.length", { count: length, max: maxLength })}
             </p>
           </div>
           <Button
             type="submit"
             className="shrink-0 self-end sm:self-start"
-            disabled={!isSendableReply(draft)}
+            disabled={!isSendable}
             isLoading={send.isPending}
             loadingText={t("conversations.reply.sending")}
           >
-            {t("conversations.reply.send")}
+            {template ? t("conversations.reply.template.send") : t("conversations.reply.send")}
           </Button>
         </div>
       </form>

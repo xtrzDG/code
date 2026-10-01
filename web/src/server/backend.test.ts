@@ -67,6 +67,25 @@ describe("BFF path and headers", () => {
     expect(headers.get("cache-control")).toBe("no-store");
   });
 
+  it("passes audio through with its type, length and caching rule", () => {
+    const upstream = new Headers({
+      "content-type": "audio/mpeg",
+      "content-length": "48213",
+      "cache-control": "private, no-store",
+      "x-content-type-options": "nosniff",
+    });
+    const headers = pickResponseHeaders(upstream, "r3");
+    expect(headers.get("content-type")).toBe("audio/mpeg");
+    expect(headers.get("content-length")).toBe("48213");
+    expect(headers.get("cache-control")).toBe("private, no-store");
+    expect(headers.get("x-content-type-options")).toBe("nosniff");
+
+    const encoded = new Headers({ "content-type": "audio/mpeg", "content-length": "10", "content-encoding": "br" });
+    expect(pickResponseHeaders(encoded, "r4").get("content-length")).toBeNull();
+    const json = new Headers({ "content-type": "application/json", "content-length": "10" });
+    expect(pickResponseHeaders(json, "r5").get("content-length")).toBeNull();
+  });
+
   it("keeps sane request ids and replaces others", () => {
     expect(sanitizeRequestId("abc-123")).toBe("abc-123");
     expect(sanitizeRequestId("bad id\n")).not.toBe("bad id\n");
