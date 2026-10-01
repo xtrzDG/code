@@ -1443,6 +1443,11 @@ export interface components {
             failure_reason?: string | null;
             /** Id */
             id: string;
+            /**
+             * Is Refund Due
+             * @default false
+             */
+            is_refund_due: boolean;
             status: components["schemas"]["PaymentStatus"];
         };
         /**
@@ -1462,7 +1467,10 @@ export interface components {
          * @description What the assistant answered and what happened during the turn.
          *
          *     `text` is None when the assistant stays silent because staff took over the
-         *     conversation (open handoff in a chat channel).
+         *     conversation (open handoff in a chat channel). `disclosure_text` is the
+         *     "I am an AI assistant" sentence the server put in front of the first
+         *     reply (part of `text`), so checks of what the model wrote can leave it
+         *     out.
          */
         AssistantReply: {
             /** Conversation Id */
@@ -1473,6 +1481,8 @@ export interface components {
             created_handoff_ids?: string[];
             /** Created Lead Ids */
             created_lead_ids?: string[];
+            /** Disclosure Text */
+            disclosure_text?: string | null;
             /** @default clean */
             guard_verdict: components["schemas"]["ReplyGuardVerdict"];
             /** Is Handed Off */
@@ -1577,10 +1587,12 @@ export interface components {
         };
         /**
          * AuditAction
-         * @description Operation on personal data recorded in the audit log (concept section 10).
+         * @description Operation on personal data recorded in the audit log (concept section
+         *     10), or a launch decision that must stay traceable (publishing a version
+         *     that has not passed its autotests).
          * @enum {string}
          */
-        AuditAction: "view" | "create" | "update" | "delete" | "export" | "admin_access" | "login" | "retention_purge";
+        AuditAction: "view" | "create" | "update" | "delete" | "export" | "admin_access" | "login" | "retention_purge" | "publish_untested";
         /**
          * AuditLogEntryView
          * @description One operation on personal data.
@@ -1607,11 +1619,21 @@ export interface components {
          */
         AutotestOutcome: "passed" | "failed" | "errored";
         /**
+         * AutotestRunStatus
+         * @description Progress of an autotest run: the worker plays it in the background
+         *     (concept section 13, the job queue), so a run is RUNNING until it is
+         *     FINISHED, or ERRORED when it could not be completed.
+         * @enum {string}
+         */
+        AutotestRunStatus: "running" | "finished" | "errored";
+        /**
          * AutotestRunView
          * @description An autotest run with the status its version got.
          *
-         *     The run passes (version READY) when every price and booking scenario
-         *     passed and the average judge score is at least 4 of 5.
+         *     The run passes when every price and booking scenario passed and the
+         *     average judge score is at least 4 of 5; only a passed run that covered
+         *     every language and scenario kind (`is_full_coverage`) makes the version
+         *     READY. While `status` is RUNNING the worker is still playing it.
          */
         AutotestRunView: {
             /** Assistant Version Id */
@@ -1626,6 +1648,8 @@ export interface components {
             created_at: number;
             /** Id */
             id: string;
+            /** Is Full Coverage */
+            is_full_coverage: boolean;
             /** Is Passed */
             is_passed: boolean;
             /** Pass Rate */
@@ -1636,6 +1660,7 @@ export interface components {
             results: components["schemas"]["AutotestScenarioResultView"][];
             /** Scenario Count */
             scenario_count: number;
+            status: components["schemas"]["AutotestRunStatus"];
             /** Updated At */
             updated_at: number;
             version_status: components["schemas"]["AssistantVersionStatus"];
@@ -2399,6 +2424,13 @@ export interface components {
         /**
          * ContactDocument
          * @description A customer of one business (concept table `contacts`).
+         *
+         *     `phone_number` may come from what the customer typed (the model passes
+         *     it to booking and lead tools); `verified_phone_number` only ever comes
+         *     from a channel that proves it (WhatsApp sender, a contact the Telegram
+         *     user shared about themselves, the caller ID of a call). Only the
+         *     verified phone proves that bookings under that phone are the
+         *     customer's own.
          */
         ContactDocument: {
             /** Business Id */
@@ -2429,6 +2461,8 @@ export interface components {
              * @description Last update wall-clock UNIX timestamp in microseconds.
              */
             updated_at?: number;
+            /** Verified Phone Number */
+            verified_phone_number?: string | null;
         };
         /**
          * ContactErasureResult
@@ -2951,7 +2985,7 @@ export interface components {
          * @description What an invoice charges for.
          * @enum {string}
          */
-        InvoiceKind: "service_period" | "setup_fee";
+        InvoiceKind: "service_period" | "setup_fee" | "usage_overage";
         /**
          * InvoiceStatus
          * @description Invoice state.
@@ -3655,7 +3689,7 @@ export interface components {
          * @description What processing one provider notification did.
          * @enum {string}
          */
-        PaymentWebhookOutcome: "applied" | "duplicate" | "ignored";
+        PaymentWebhookOutcome: "applied" | "duplicate" | "ignored" | "refund_due";
         /**
          * PaymentWebhookReceipt
          * @description Answer to the provider: what the notification changed.
@@ -4851,7 +4885,7 @@ export interface operations {
         };
         responses: {
             /** @description Successful Response */
-            200: {
+            202: {
                 headers: {
                     [name: string]: unknown;
                 };

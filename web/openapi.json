@@ -291,6 +291,11 @@
             "title": "Id",
             "type": "string"
           },
+          "is_refund_due": {
+            "default": false,
+            "title": "Is Refund Due",
+            "type": "boolean"
+          },
           "status": {
             "$ref": "#/components/schemas/PaymentStatus"
           }
@@ -330,7 +335,7 @@
       },
       "AssistantReply": {
         "additionalProperties": false,
-        "description": "What the assistant answered and what happened during the turn.\n\n`text` is None when the assistant stays silent because staff took over the\nconversation (open handoff in a chat channel).",
+        "description": "What the assistant answered and what happened during the turn.\n\n`text` is None when the assistant stays silent because staff took over the\nconversation (open handoff in a chat channel). `disclosure_text` is the\n\"I am an AI assistant\" sentence the server put in front of the first\nreply (part of `text`), so checks of what the model wrote can leave it\nout.",
         "properties": {
           "conversation_id": {
             "title": "Conversation Id",
@@ -356,6 +361,17 @@
             },
             "title": "Created Lead Ids",
             "type": "array"
+          },
+          "disclosure_text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Disclosure Text"
           },
           "guard_verdict": {
             "$ref": "#/components/schemas/ReplyGuardVerdict",
@@ -702,7 +718,7 @@
         "type": "object"
       },
       "AuditAction": {
-        "description": "Operation on personal data recorded in the audit log (concept section 10).",
+        "description": "Operation on personal data recorded in the audit log (concept section\n10), or a launch decision that must stay traceable (publishing a version\nthat has not passed its autotests).",
         "enum": [
           "view",
           "create",
@@ -711,7 +727,8 @@
           "export",
           "admin_access",
           "login",
-          "retention_purge"
+          "retention_purge",
+          "publish_untested"
         ],
         "title": "AuditAction",
         "type": "string"
@@ -788,9 +805,19 @@
         "title": "AutotestOutcome",
         "type": "string"
       },
+      "AutotestRunStatus": {
+        "description": "Progress of an autotest run: the worker plays it in the background\n(concept section 13, the job queue), so a run is RUNNING until it is\nFINISHED, or ERRORED when it could not be completed.",
+        "enum": [
+          "running",
+          "finished",
+          "errored"
+        ],
+        "title": "AutotestRunStatus",
+        "type": "string"
+      },
       "AutotestRunView": {
         "additionalProperties": false,
-        "description": "An autotest run with the status its version got.\n\nThe run passes (version READY) when every price and booking scenario\npassed and the average judge score is at least 4 of 5.",
+        "description": "An autotest run with the status its version got.\n\nThe run passes when every price and booking scenario passed and the\naverage judge score is at least 4 of 5; only a passed run that covered\nevery language and scenario kind (`is_full_coverage`) makes the version\nREADY. While `status` is RUNNING the worker is still playing it.",
         "properties": {
           "assistant_version_id": {
             "title": "Assistant Version Id",
@@ -826,6 +853,10 @@
             "title": "Id",
             "type": "string"
           },
+          "is_full_coverage": {
+            "title": "Is Full Coverage",
+            "type": "boolean"
+          },
           "is_passed": {
             "title": "Is Passed",
             "type": "boolean"
@@ -853,6 +884,9 @@
             "title": "Scenario Count",
             "type": "integer"
           },
+          "status": {
+            "$ref": "#/components/schemas/AutotestRunStatus"
+          },
           "updated_at": {
             "title": "Updated At",
             "type": "integer"
@@ -865,6 +899,8 @@
           "id",
           "business_id",
           "assistant_version_id",
+          "status",
+          "is_full_coverage",
           "version_status",
           "scenario_count",
           "passed_count",
@@ -1026,7 +1062,7 @@
           "date": {
             "maxLength": 10,
             "minLength": 10,
-            "pattern": "^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$",
+            "pattern": "^(19|20|21)[0-9]{2}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$",
             "title": "Date",
             "type": "string"
           },
@@ -1461,14 +1497,14 @@
           "date": {
             "maxLength": 10,
             "minLength": 10,
-            "pattern": "^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$",
+            "pattern": "^(19|20|21)[0-9]{2}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$",
             "title": "Date",
             "type": "string"
           },
           "end_date": {
             "maxLength": 10,
             "minLength": 10,
-            "pattern": "^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$",
+            "pattern": "^(19|20|21)[0-9]{2}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$",
             "title": "End Date",
             "type": "string"
           },
@@ -2869,7 +2905,7 @@
       },
       "ContactDocument": {
         "additionalProperties": false,
-        "description": "A customer of one business (concept table `contacts`).",
+        "description": "A customer of one business (concept table `contacts`).\n\n`phone_number` may come from what the customer typed (the model passes\nit to booking and lead tools); `verified_phone_number` only ever comes\nfrom a channel that proves it (WhatsApp sender, a contact the Telegram\nuser shared about themselves, the caller ID of a call). Only the\nverified phone proves that bookings under that phone are the\ncustomer's own.",
         "properties": {
           "business_id": {
             "title": "Business Id",
@@ -2940,6 +2976,20 @@
             "description": "Last update wall-clock UNIX timestamp in microseconds.",
             "title": "Updated At",
             "type": "integer"
+          },
+          "verified_phone_number": {
+            "anyOf": [
+              {
+                "maxLength": 16,
+                "minLength": 8,
+                "pattern": "^\\+[1-9][0-9]{6,14}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Verified Phone Number"
           }
         },
         "required": [
@@ -3657,14 +3707,14 @@
           "date_from": {
             "maxLength": 10,
             "minLength": 10,
-            "pattern": "^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$",
+            "pattern": "^(19|20|21)[0-9]{2}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$",
             "title": "Date From",
             "type": "string"
           },
           "date_to": {
             "maxLength": 10,
             "minLength": 10,
-            "pattern": "^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$",
+            "pattern": "^(19|20|21)[0-9]{2}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$",
             "title": "Date To",
             "type": "string"
           },
@@ -4236,7 +4286,8 @@
         "description": "What an invoice charges for.",
         "enum": [
           "service_period",
-          "setup_fee"
+          "setup_fee",
+          "usage_overage"
         ],
         "title": "InvoiceKind",
         "type": "string"
@@ -4894,7 +4945,7 @@
               {
                 "maxLength": 10,
                 "minLength": 10,
-                "pattern": "^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$",
+                "pattern": "^(19|20|21)[0-9]{2}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$",
                 "type": "string"
               },
               {
@@ -5029,7 +5080,7 @@
               {
                 "maxLength": 10,
                 "minLength": 10,
-                "pattern": "^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$",
+                "pattern": "^(19|20|21)[0-9]{2}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$",
                 "type": "string"
               },
               {
@@ -5154,7 +5205,7 @@
               {
                 "maxLength": 10,
                 "minLength": 10,
-                "pattern": "^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$",
+                "pattern": "^(19|20|21)[0-9]{2}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$",
                 "type": "string"
               },
               {
@@ -6072,7 +6123,8 @@
         "enum": [
           "applied",
           "duplicate",
-          "ignored"
+          "ignored",
+          "refund_due"
         ],
         "title": "PaymentWebhookOutcome",
         "type": "string"
@@ -6930,7 +6982,7 @@
           "date": {
             "maxLength": 10,
             "minLength": 10,
-            "pattern": "^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$",
+            "pattern": "^(19|20|21)[0-9]{2}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$",
             "title": "Date",
             "type": "string"
           },
@@ -9092,7 +9144,7 @@
           "required": false
         },
         "responses": {
-          "200": {
+          "202": {
             "content": {
               "application/json": {
                 "schema": {
@@ -9163,7 +9215,7 @@
             "application/json": {
               "schema": {
                 "additionalProperties": false,
-                "description": "HTTP body of publishing. A version that did not pass the autotests is\npublished only with `accept_failed_tests` set.",
+                "description": "HTTP body of publishing. A version that did not pass the autotests is\npublished only by a platform admin with `accept_failed_tests` set (the\ndecision is written to the audit log).",
                 "properties": {
                   "accept_failed_tests": {
                     "default": false,
@@ -15154,7 +15206,7 @@
                   "date": {
                     "maxLength": 10,
                     "minLength": 10,
-                    "pattern": "^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$",
+                    "pattern": "^(19|20|21)[0-9]{2}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$",
                     "title": "Date",
                     "type": "string"
                   },
