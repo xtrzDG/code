@@ -19,7 +19,7 @@ from app.contracts.repositories import (
 )
 from app.contracts.transformer_contract import TransformerContract
 from app.contracts.use_case_contract import UseCaseContract
-from app.schemas.constants.bookings import BookingStatus
+from app.schemas.constants.bookings import BookingRefusalCode, BookingStatus
 from app.schemas.domain.bookings import BookingDocument
 from app.schemas.domain.contacts import ContactDocument
 from app.schemas.domain.resources import ResourceDocument
@@ -47,6 +47,7 @@ from app.use_cases.bookings.operations_support import (
 from app.utilities.scheduling.booking_placement import (
     Placement,
     PlacementRequest,
+    booking_refusal_reason,
     ensure_party_size_allowed,
     min_notice_seconds,
     place_booking,
@@ -139,9 +140,19 @@ class CreateBookingUseCase(UseCaseContract[CreateBookingCommand, BookingResult])
             input_data.party_size,
         )
         if not candidates:
-            raise ValidationFailedError(
+            message: str = (
                 f"No bookable resource seats {int(input_data.party_size)} guests; "
                 "pass the request to a manager."
+            )
+            raise ValidationFailedError(
+                message,
+                reasons=[
+                    booking_refusal_reason(
+                        BookingRefusalCode.NO_SEATING_RESOURCE,
+                        message,
+                        [str(int(input_data.party_size))],
+                    )
+                ],
             )
 
         now: Microseconds = self._wall_clock.now_unix()

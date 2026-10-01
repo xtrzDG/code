@@ -10,7 +10,7 @@
  * to their own texts.
  */
 
-import type { MessageKey } from "@/i18n/translate";
+import type { MessageKey, MessageValues } from "@/i18n/translate";
 
 export const API_ERROR_CODES = [
   // Backend (app/gateways/http/error_responses.py)
@@ -232,6 +232,16 @@ const ERROR_MESSAGE_KEYS: Record<ApiErrorCode, MessageKey> = {
 /** Context-specific texts, e.g. `{ access_denied: "auth.errors.countryRestricted" }`. */
 export type ErrorMessageOverrides = Partial<Record<ApiErrorCode, MessageKey>>;
 
+/** The text of one refusal reason: a message key and values from its details. */
+export type ReasonMessage = (reason: ApiErrorReason) => { key: MessageKey; values?: MessageValues };
+
+/**
+ * Localized texts for refusal reason codes, e.g. a booking refused because
+ * the business is closed that day. A matching reason replaces the generic
+ * title and the backend's English detail.
+ */
+export type ReasonMessages = Readonly<Record<string, ReasonMessage>>;
+
 /** Codes whose backend message helps the user fix the input (shown as a detail line). */
 const CODES_WITH_USEFUL_DETAIL: ReadonlySet<ApiErrorCode> = new Set(["validation_failed", "conflict"]);
 
@@ -248,10 +258,18 @@ export interface ErrorDescription {
 /** Localized title (and, where useful, the backend detail) for an error toast. */
 export function describeError(
   error: unknown,
-  t: (key: MessageKey) => string,
+  t: (key: MessageKey, values?: MessageValues) => string,
   overrides?: ErrorMessageOverrides,
+  reasonMessages?: ReasonMessages,
 ): ErrorDescription {
   const apiError = toApiError(error);
+  const known = reasonMessages ? apiError.reasons.find((reason) => Object.hasOwn(reasonMessages, reason.code)) : undefined;
+  if (known && reasonMessages) {
+    const message = reasonMessages[known.code]?.(known);
+    if (message) {
+      return { title: t(message.key, message.values), detail: null, requestId: null };
+    }
+  }
   const overridden = overrides?.[apiError.code] !== undefined;
   return {
     title: t(errorMessageKey(apiError, overrides)),

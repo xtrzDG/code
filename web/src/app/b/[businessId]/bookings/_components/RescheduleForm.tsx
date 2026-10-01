@@ -11,7 +11,7 @@ import { Button, Field, Input } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import type { MessageKey } from "@/i18n/translate";
 
-import { customerLanguage } from "./bookingModel";
+import { BOOKING_REFUSAL_MESSAGES, customerLanguage } from "./bookingModel";
 import { CustomerLanguageSelect } from "./CustomerLanguageSelect";
 import { SlotPicker } from "./SlotPicker";
 
@@ -42,7 +42,7 @@ export function RescheduleForm({
         params: { path: { business_id: businessId, booking_id: booking.id }, query: { language } },
         body,
       }),
-    { errorMessages: { conflict: "bookings.errors.conflict" } },
+    { errorMessages: { conflict: "bookings.errors.conflict" }, reasonMessages: BOOKING_REFUSAL_MESSAGES },
   );
 
   const submit = async (event: FormEvent) => {

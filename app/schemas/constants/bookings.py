@@ -58,3 +58,17 @@ class BookingOrder(StrEnum):
 
     EARLIEST_FIRST = "earliest_first"
     LATEST_FIRST = "latest_first"
+
+
+class BookingRefusalCode(StrEnum):
+    """
+    Why a booking could not be placed, as the `reasons[].code` of the error,
+    so the cabinet shows the reason in the user's language.
+    """
+
+    CLOSED = "closed"
+    TOO_SOON = "too_soon"
+    TIME_REQUIRED = "time_required"
+    TAKEN = "taken"
+    PARTY_TOO_LARGE = "party_too_large"
+    NO_SEATING_RESOURCE = "no_seating_resource"

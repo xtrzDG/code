@@ -10,10 +10,15 @@ from datetime import date
 from typing import NamedTuple
 from zoneinfo import ZoneInfo
 
-from app.schemas.constants.bookings import BookingUnit, ResourceKind
+from app.schemas.constants.bookings import (
+    BookingRefusalCode,
+    BookingUnit,
+    ResourceKind,
+)
 from app.schemas.domain.bookings import BookingDocument
 from app.schemas.domain.profiles import BookingRules, OpeningInterval
 from app.schemas.domain.resources import ResourceDocument, ScheduleExceptionDocument
+from app.schemas.dto.errors import ErrorReason
 from app.schemas.exceptions.application_errors import (
     ConflictError,
     NotFoundError,
@@ -24,6 +29,11 @@ from app.schemas.typings.bookings.constrained_integers import (
     PartySize,
 )
 from app.schemas.typings.bookings.prefixed_id import BookingId, ResourceId
+from app.schemas.typings.platform.constrained_strings import (
+    ErrorReasonCode,
+    ErrorReasonDetail,
+)
+from app.schemas.typings.platform.strings import ErrorReasonMessage
 from app.utilities.scheduling.availability import (
     DEFAULT_SLOT_MINUTES,
     busy_ranges,
@@ -132,10 +142,20 @@ def ensure_party_size_allowed(
     """Online bookings are limited to the profile's maximum party size."""
 
     if rules is not None and int(party_size) > int(rules.max_party_size):
-        raise ValidationFailedError(
+        message: str = (
             f"Online booking is limited to {int(rules.max_party_size)} guests; "
             f"a party of {int(party_size)} is handled by a manager (create a lead "
             "or hand off)."
+        )
+        raise ValidationFailedError(
+            message,
+            reasons=[
+                booking_refusal_reason(
+                    BookingRefusalCode.PARTY_TOO_LARGE,
+                    message,
+                    [str(int(rules.max_party_size))],
+                )
+            ],
         )
 
 
@@ -297,28 +317,67 @@ def place_time_slot(
     return Placement(resource, slot.starts_at, slot.ends_at)
 
 
+def booking_refusal_reason(
+    code: BookingRefusalCode,
+    message: str,
+    details: Sequence[str] = (),
+) -> ErrorReason:
+    """The machine-readable reason of a booking refusal (with its English text)."""
+
+    return ErrorReason(
+        code=ErrorReasonCode(code.value),
+        message=ErrorReasonMessage(message),
+        details=[ErrorReasonDetail(detail) for detail in details],
+    )
+
+
 def placement_error(failures: set[str], local_date: date) -> Exception:
-    """The most useful error for the caller: taken, too soon, no time, closed."""
+    """
+    The most useful error for the caller: taken, too soon, no time, closed.
+    Each carries a reason code (with the day where it matters), so the
+    cabinet can explain it in the user's language.
+    """
 
     day: str = str(to_local_date(local_date))
+    message: str
     if FAILURE_TAKEN in failures:
-        return ConflictError(
+        message = (
             f"That time on {day} is already booked. Check availability for "
             "another time."
         )
+        return ConflictError(
+            message,
+            reasons=[booking_refusal_reason(BookingRefusalCode.TAKEN, message, [day])],
+        )
 
     if FAILURE_TOO_SOON in failures:
+        message = "That time is too soon: bookings need more advance notice."
         return ValidationFailedError(
-            "That time is too soon: bookings need more advance notice."
+            message,
+            reasons=[booking_refusal_reason(BookingRefusalCode.TOO_SOON, message)],
         )
 
     if FAILURE_TIME_REQUIRED in failures:
-        return ValidationFailedError("A time is required for this booking.")
+        message = "A time is required for this booking."
+        return ValidationFailedError(
+            message,
+            reasons=[booking_refusal_reason(BookingRefusalCode.TIME_REQUIRED, message)],
+        )
 
     if failures:
-        return ValidationFailedError(
+        message = (
             f"The business is closed at that time on {day} (outside opening hours "
             "or a holiday)."
         )
+        return ValidationFailedError(
+            message,
+            reasons=[booking_refusal_reason(BookingRefusalCode.CLOSED, message, [day])],
+        )
 
-    return ValidationFailedError("No bookable resource seats a party of this size.")
+    message = "No bookable resource seats a party of this size."
+    return ValidationFailedError(
+        message,
+        reasons=[
+            booking_refusal_reason(BookingRefusalCode.NO_SEATING_RESOURCE, message)
+        ],
+    )

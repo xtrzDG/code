@@ -2,10 +2,15 @@ from datetime import datetime
 
 import pytest
 
-from app.schemas.constants.bookings import BookingOrder, BookingStatus, BookingUnit
+from app.schemas.constants.bookings import (
+    BookingOrder,
+    BookingStatus,
+    BookingUnit,
+    ResourceKind,
+)
 from app.schemas.constants.channels import ChannelKind
 from app.schemas.constants.compliance import AuditAction
-from app.schemas.domain.profiles import OpeningInterval
+from app.schemas.domain.profiles import BookingRules, OpeningInterval
 from app.schemas.dto.bookings import AvailabilityQuery, BookingView
 from app.schemas.dto.operations import (
     BookingPage,
@@ -20,7 +25,12 @@ from app.schemas.exceptions.application_errors import (
     NotFoundError,
     ValidationFailedError,
 )
-from app.schemas.typings.bookings.constrained_integers import NightCount, PartySize
+from app.schemas.exceptions.base_exception import ApplicationError
+from app.schemas.typings.bookings.constrained_integers import (
+    NightCount,
+    PartySize,
+    SlotDurationMinutes,
+)
 from app.schemas.typings.bookings.constrained_strings import LocalDate, LocalTimeOfDay
 from app.schemas.typings.bookings.prefixed_id import BookingId, ResourceId
 from app.schemas.typings.bookings.strings import BookingNote
@@ -33,6 +43,7 @@ from app.schemas.typings.localization.constrained_strings import (
 from app.schemas.typings.localization.strings import RawPhoneNumberInput
 from app.schemas.typings.platform.constrained_integers import PageSize
 from app.schemas.typings.users.prefixed_id import UserId
+from app.utilities.scheduling.booking_placement import ensure_party_size_allowed
 from tests.operations.builders import OperationsWorld, every_day
 
 
@@ -609,3 +620,43 @@ class TestFullDayAvailability:
 
 def every_day_until(closes: str) -> list[OpeningInterval]:
     return every_day("12:00", closes)
+
+
+def refusal(error: pytest.ExceptionInfo[Exception]) -> tuple[str, list[str]]:
+    assert isinstance(error.value, ApplicationError)
+    [reason] = error.value.reasons
+    return str(reason.code), [str(detail) for detail in reason.details]
+
+
+def test_booking_refusals_carry_reason_codes_for_the_cabinet() -> None:
+    cabinet = Cabinet()
+    use_case = cabinet.world.create_manual_booking()
+
+    with pytest.raises(ValidationFailedError) as closed:
+        use_case.run(cabinet.manual(day="2026-10-05", time="11:30", phone=None))
+    with pytest.raises(ValidationFailedError) as no_seat:
+        use_case.run(cabinet.manual(party_size=500, phone=None))
+    use_case.run(cabinet.manual(party_size=30, phone=None))
+    with pytest.raises(ConflictError) as taken:
+        use_case.run(cabinet.manual(party_size=30, phone=None))
+    cabinet.world.clock.move_to(datetime.fromisoformat("2026-10-05T13:00:00+04:00"))
+    with pytest.raises(ValidationFailedError) as too_soon:
+        use_case.run(cabinet.manual(day="2026-10-05", time="12:30", phone=None))
+
+    assert refusal(closed) == ("closed", ["2026-10-05"])
+    assert refusal(no_seat) == ("no_seating_resource", ["500"])
+    assert refusal(taken) == ("taken", ["2026-10-06"])
+    assert refusal(too_soon) == ("too_soon", [])
+
+
+def test_the_online_party_limit_names_the_maximum_in_its_reason() -> None:
+    rules = BookingRules(
+        resource_kind=ResourceKind.TABLE,
+        slot_minutes=SlotDurationMinutes(30),
+        max_party_size=PartySize(8),
+    )
+
+    with pytest.raises(ValidationFailedError) as too_large:
+        ensure_party_size_allowed(PartySize(12), rules)
+
+    assert refusal(too_large) == ("party_too_large", ["8"])

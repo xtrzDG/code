@@ -16,7 +16,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 
-import { describeError, type ErrorMessageOverrides } from "@/api/errors";
+import { describeError, type ErrorMessageOverrides, type ReasonMessages } from "@/api/errors";
 import { useI18n } from "@/i18n/client";
 import { cn } from "@/lib/cn";
 
@@ -35,8 +35,8 @@ export interface ToastApi {
   show: (toast: { tone: ToastTone; title: string; description?: string | null; durationMs?: number }) => void;
   success: (title: string, description?: string) => void;
   info: (title: string, description?: string) => void;
-  /** An ApiError (or anything thrown) as a localized message. */
-  error: (error: unknown, overrides?: ErrorMessageOverrides) => void;
+  /** An ApiError (or anything thrown) as a localized message; known refusal reasons get their own text. */
+  error: (error: unknown, overrides?: ErrorMessageOverrides, reasonMessages?: ReasonMessages) => void;
   dismiss: (id: number) => void;
 }
 
@@ -73,8 +73,8 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       dismiss,
       success: (title, description) => show({ tone: "success", title, description }),
       info: (title, description) => show({ tone: "info", title, description }),
-      error: (error, overrides) => {
-        const { title, detail, requestId } = describeError(error, t, overrides);
+      error: (error, overrides, reasonMessages) => {
+        const { title, detail, requestId } = describeError(error, t, overrides, reasonMessages);
         const lines = [detail, requestId ? t("common.requestId", { id: requestId }) : null].filter(Boolean);
         show({ tone: "error", title, description: lines.join(" · ") || null });
       },

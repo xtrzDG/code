@@ -32,7 +32,7 @@ import {
 
 import { useToast } from "@/components/ui/Toast";
 
-import { toApiError, type ApiError, type ErrorMessageOverrides } from "./errors";
+import { toApiError, type ApiError, type ErrorMessageOverrides, type ReasonMessages } from "./errors";
 import { unwrap, type ApiResult } from "./result";
 
 export interface ApiQuery<T> {
@@ -129,6 +129,8 @@ export function useApiMutation<Args extends unknown[], T>(
     errorToast?: boolean;
     /** Context-specific texts for some error codes. */
     errorMessages?: ErrorMessageOverrides;
+    /** Localized texts for refusal reason codes (they win over `errorMessages`). */
+    reasonMessages?: ReasonMessages;
   } = {},
 ): ApiMutation<Args, T> {
   const toast = useToast();
@@ -153,7 +155,7 @@ export function useApiMutation<Args extends unknown[], T>(
         const apiError = toApiError(caught);
         setError(apiError);
         if (optionsRef.current.errorToast ?? true) {
-          toast.error(apiError, optionsRef.current.errorMessages);
+          toast.error(apiError, optionsRef.current.errorMessages, optionsRef.current.reasonMessages);
         }
         return { ok: false, error: apiError };
       } finally {

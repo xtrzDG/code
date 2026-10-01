@@ -19,7 +19,7 @@ from app.contracts.repositories import (
 )
 from app.contracts.transformer_contract import TransformerContract
 from app.contracts.use_case_contract import UseCaseContract
-from app.schemas.constants.bookings import BookingStatus
+from app.schemas.constants.bookings import BookingRefusalCode, BookingStatus
 from app.schemas.constants.compliance import AuditAction
 from app.schemas.domain.bookings import BookingDocument
 from app.schemas.domain.businesses import BusinessDocument
@@ -57,6 +57,7 @@ from app.use_cases.bookings.operations_support import (
 from app.utilities.scheduling.booking_placement import (
     Placement,
     PlacementRequest,
+    booking_refusal_reason,
     place_booking,
     seating_resources,
     select_resources,
@@ -164,8 +165,18 @@ class CreateManualBookingUseCase(UseCaseContract[ManualBookingCommand, BookingRe
             input_data.party_size,
         )
         if not candidates:
-            raise ValidationFailedError(
+            message: str = (
                 f"No bookable resource seats {int(input_data.party_size)} guests."
+            )
+            raise ValidationFailedError(
+                message,
+                reasons=[
+                    booking_refusal_reason(
+                        BookingRefusalCode.NO_SEATING_RESOURCE,
+                        message,
+                        [str(int(input_data.party_size))],
+                    )
+                ],
             )
 
         now: Microseconds = self._wall_clock.now_unix()

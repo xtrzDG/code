@@ -10,6 +10,7 @@ import { Alert, Button, Field, Input, Select, Textarea } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 
 import {
+  BOOKING_REFUSAL_MESSAGES,
   bookingEditValues,
   canChangePlacement,
   placesForEdit,
@@ -48,7 +49,7 @@ export function BookingEditForm({
         params: { path: { business_id: business.id, booking_id: booking.id } },
         body,
       }),
-    { errorMessages: { conflict: "bookings.errors.placeTaken" } },
+    { errorMessages: { conflict: "bookings.errors.placeTaken" }, reasonMessages: BOOKING_REFUSAL_MESSAGES },
   );
 
   const set = <Key extends keyof BookingEditValues>(key: Key, value: BookingEditValues[Key]) => {

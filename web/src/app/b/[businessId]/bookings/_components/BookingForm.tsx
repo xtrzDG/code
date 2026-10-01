@@ -14,7 +14,13 @@ import { useI18n } from "@/i18n/client";
 import { countryFlag, countryName, formatCallingCode } from "@/lib/countries";
 import { businessPath } from "@/lib/navigation";
 
-import { bookingUnitFor, validateBookingForm, type BookingFormErrors, type BookingFormValues } from "./bookingModel";
+import {
+  BOOKING_REFUSAL_MESSAGES,
+  bookingUnitFor,
+  validateBookingForm,
+  type BookingFormErrors,
+  type BookingFormValues,
+} from "./bookingModel";
 import { CustomerLanguageSelect } from "./CustomerLanguageSelect";
 import { SlotPicker } from "./SlotPicker";
 
@@ -65,7 +71,7 @@ export function BookingForm({
   const create = useApiMutation(
     (body: ManualBookingBody) =>
       api.POST("/v1/businesses/{business_id}/bookings", { params: { path: { business_id: businessId } }, body }),
-    { errorMessages: { conflict: "bookings.errors.conflict" } },
+    { errorMessages: { conflict: "bookings.errors.conflict" }, reasonMessages: BOOKING_REFUSAL_MESSAGES },
   );
 
   const set = <Key extends keyof BookingFormValues>(key: Key, value: BookingFormValues[Key]) => {
