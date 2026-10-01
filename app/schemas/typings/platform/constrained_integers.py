@@ -23,6 +23,12 @@ class JobIntervalSeconds(BaseConstrainedTypedInt):
     le = 7 * 24 * 60 * 60
 
 
+class ProcessedItemCount(BaseConstrainedTypedInt):
+    """How many items one background job run processed."""
+
+    ge = 0
+
+
 class WorkerPollSeconds(BaseConstrainedTypedInt):
     """Pause between scheduler ticks of the background worker, in seconds."""
 
