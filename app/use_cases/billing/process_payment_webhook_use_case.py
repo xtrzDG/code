@@ -46,6 +46,7 @@ from app.use_cases.billing.billing_records import (
     OPEN_INVOICE_STATUSES,
     find_covering_paid_invoice,
     find_next_period_start,
+    is_superseded_period,
     list_subscription_invoices,
 )
 from app.use_cases.billing.owner_notifications import notify_business_owners
@@ -292,11 +293,14 @@ class ProcessPaymentWebhookUseCase(
 
             settled_count: int = self._settle_order_invoices(
                 payment_order,
+                subscription,
                 InvoiceStatus.PAID,
                 notification.payment_reference,
                 now,
             )
-            if settled_count == 0:
+            # Money that books nothing (a bill paid twice, a second setup
+            # fee, a month overlapping a paid one) is owed back.
+            if settled_count < len(payment_order.invoice_ids):
                 payment_order.is_refund_due = True
                 outcome = PaymentWebhookOutcome.REFUND_DUE
 
@@ -385,6 +389,7 @@ class ProcessPaymentWebhookUseCase(
         else:
             self._settle_order_invoices(
                 payment_order,
+                subscription,
                 InvoiceStatus.FAILED,
                 notification.payment_reference,
                 now,
@@ -476,6 +481,7 @@ class ProcessPaymentWebhookUseCase(
     def _settle_order_invoices(
         self,
         payment_order: PaymentOrderDocument,
+        subscription: SubscriptionDocument,
         status: InvoiceStatus,
         payment_reference: PaymentProviderReference | None,
         now: Microseconds,
@@ -483,9 +489,19 @@ class ProcessPaymentWebhookUseCase(
         """
         Mark the checkout's invoices and return how many changed. A payment
         is money received, so an approved payment marks even a voided
-        invoice as paid; a decline touches open invoices only.
+        invoice as paid, except a service period another payment or a trial
+        already covers (two checkout pages paid for nearly the same month,
+        a page paid after the trial started): that one is voided instead,
+        and so is every open period of the subscription the payment covers.
+        A decline touches open invoices only.
         """
 
+        paid_periods: list[InvoiceDocument] = [
+            invoice
+            for invoice in list_subscription_invoices(self._invoice_repo, subscription)
+            if invoice.kind is InvoiceKind.SERVICE_PERIOD
+            and invoice.status is InvoiceStatus.PAID
+        ]
         changed_count: int = 0
         for invoice_id in payment_order.invoice_ids:
             invoice: InvoiceDocument | None = self._invoice_repo.get(
@@ -500,6 +516,12 @@ class ProcessPaymentWebhookUseCase(
             ):
                 continue
 
+            if status is InvoiceStatus.PAID and is_superseded_period(
+                invoice, paid_periods, subscription
+            ):
+                self._void_open(invoice, now)
+                continue
+
             invoice.status = status
             if payment_reference is not None:
                 invoice.provider_reference = payment_reference
@@ -507,8 +529,27 @@ class ProcessPaymentWebhookUseCase(
             invoice.updated_at = now
             self._invoice_repo.save(invoice)
             changed_count += 1
+            if status is InvoiceStatus.PAID and (
+                invoice.kind is InvoiceKind.SERVICE_PERIOD
+            ):
+                paid_periods.append(invoice)
+
+        if status is InvoiceStatus.PAID:
+            for invoice in list_subscription_invoices(self._invoice_repo, subscription):
+                if is_superseded_period(invoice, paid_periods, subscription):
+                    self._void_open(invoice, now)
 
         return changed_count
+
+    def _void_open(self, invoice: InvoiceDocument, now: Microseconds) -> None:
+        """An open invoice nothing should collect any more becomes void."""
+
+        if invoice.status not in OPEN_INVOICE_STATUSES:
+            return
+
+        invoice.status = InvoiceStatus.VOID
+        invoice.updated_at = now
+        self._invoice_repo.save(invoice)
 
     def _notify_owners(self, business: BusinessDocument, notice: BillingNotice) -> None:
         notify_business_owners(

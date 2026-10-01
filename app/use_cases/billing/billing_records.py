@@ -22,6 +22,35 @@ OPEN_INVOICE_STATUSES: frozenset[InvoiceStatus] = frozenset(
 )
 
 
+def is_superseded_period(
+    invoice: InvoiceDocument,
+    paid_periods: list[InvoiceDocument],
+    subscription: SubscriptionDocument,
+) -> bool:
+    """
+    A service period that must not be booked as paid: it overlaps a period
+    already paid (a second checkout page for nearly the same month), or it
+    was voided because a free trial covers it.
+    """
+
+    if invoice.kind is not InvoiceKind.SERVICE_PERIOD:
+        return False
+
+    if any(
+        invoice.period_start < paid.period_end
+        and paid.period_start < invoice.period_end
+        for paid in paid_periods
+        if paid.id != invoice.id
+    ):
+        return True
+
+    return (
+        invoice.status is InvoiceStatus.VOID
+        and subscription.trial_ends_at is not None
+        and invoice.period_start < subscription.trial_ends_at
+    )
+
+
 def find_current_subscription(
     subscription_repo: SubscriptionRepoContract,
     business_id: BusinessId,

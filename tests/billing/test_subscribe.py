@@ -359,3 +359,77 @@ def test_subscribe_route_answers_with_the_payment_page() -> None:
     assert created.json()["checkout_url"]
     assert missing_plan.status_code == 422
     assert staff.status_code == 403
+
+
+def paid_service_periods(world: World) -> int:
+    return len(
+        [
+            invoice
+            for invoice in world.testbed.invoices(world.business.id)
+            if invoice.kind is InvoiceKind.SERVICE_PERIOD
+            and invoice.status is InvoiceStatus.PAID
+        ]
+    )
+
+
+def refund_flags(world: World, *sessions: CheckoutSessionView) -> tuple[bool, ...]:
+    flags: list[bool] = []
+    for session in sessions:
+        order = world.testbed.payment_order_repo.get(session.payment_order_id)
+        assert order is not None
+        flags.append(order.is_refund_due)
+    return tuple(flags)
+
+
+def test_paying_both_checkout_pages_flags_the_second_for_refund() -> None:
+    # The owner returns before the webhook, sees "pay for this plan" again
+    # and pays a second page for nearly the same month and the setup fee.
+    world = World()
+    first = world.subscribe()
+    world.testbed.clock.advance(hours=1)
+    second = world.subscribe()
+
+    world.pay(first, payment_id=1)
+    world.pay(second, payment_id=2)
+
+    assert refund_flags(world, first, second) == (False, True)
+    assert paid_service_periods(world) == 1
+    assert world.open_invoices() == []
+
+
+def test_paying_the_pages_in_reverse_order_still_books_one_month() -> None:
+    world = World()
+    first = world.subscribe()
+    world.testbed.clock.advance(hours=1)
+    second = world.subscribe()
+
+    world.pay(second, payment_id=2)
+    world.pay(first, payment_id=1)
+
+    assert refund_flags(world, first, second) == (True, False)
+    assert paid_service_periods(world) == 1
+    assert world.open_invoices() == []
+
+
+def test_paying_only_the_first_page_leaves_no_overlapping_month_due() -> None:
+    world = World()
+    first = world.subscribe()
+    world.testbed.clock.advance(hours=1)
+    world.subscribe()
+
+    world.pay(first)
+
+    assert refund_flags(world, first) == (False,)
+    assert paid_service_periods(world) == 1
+    assert world.open_invoices() == []
+
+
+def test_a_page_paid_after_the_trial_started_books_no_month_inside_the_trial() -> None:
+    world = World()
+    first = world.subscribe()
+    world.start_trial()
+
+    world.pay(first)
+
+    assert refund_flags(world, first) == (True,)
+    assert paid_service_periods(world) == 0
