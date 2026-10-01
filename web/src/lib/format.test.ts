@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  capitalizeFirst,
   currencyFractionDigits,
   formatDateTime,
   formatMinutesOfDay,
@@ -71,5 +72,13 @@ describe("dates and times", () => {
   it("names ISO weekdays", () => {
     expect(weekdayName(1, "en")).toBe("Monday");
     expect(weekdayName(7, "en", "short")).toBe("Sun");
+  });
+});
+
+describe("labels", () => {
+  it("capitalizes the first letter, but never turns Georgian into Mtavruli", () => {
+    expect(capitalizeFirst("русский", "ru")).toBe("Русский");
+    expect(capitalizeFirst("ქართული", "ka")).toBe("ქართული");
+    expect(capitalizeFirst("", "en")).toBe("");
   });
 });

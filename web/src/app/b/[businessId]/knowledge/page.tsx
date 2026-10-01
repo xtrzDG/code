@@ -1,8 +1,10 @@
-import { SectionPlaceholder, sectionMetadata } from "@/components/business/SectionPlaceholder";
+import { sectionMetadata } from "@/components/business/SectionPlaceholder";
+
+import { KnowledgeItemsScreen } from "./KnowledgeItemsScreen";
 
 export const generateMetadata = sectionMetadata("knowledge");
 
-/** Placeholder: replace with the real knowledge page (see web/README.md, "Adding a page"). */
-export default function Page() {
-  return <SectionPlaceholder section="knowledge" />;
+/** Knowledge: menu, services, prices, questions and rules the assistant answers from. */
+export default function KnowledgePage() {
+  return <KnowledgeItemsScreen />;
 }
