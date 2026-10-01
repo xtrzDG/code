@@ -65,8 +65,11 @@ web/
       businesses/              list and creation of businesses
       b/[businessId]/          one business: layout.tsx loads it + the user and renders the sidebar
         onboarding/            the six-step profile wizard (+ _components/)
-        dashboard/ conversations/ bookings/ leads/ handoffs/
-        knowledge/ assistant/ channels/ billing/ settings/   placeholders to replace
+        dashboard/             KPIs, daily trend chart (plain SVG), package meters (owners and staff)
+        conversations/         server-paged feed with filters + card (calls, rating, linked
+                               bookings/leads/handoffs, staff reply box); layout keeps the feed mounted
+        bookings/ leads/ handoffs/   server-paged lists ("show more"), booking form and edits
+        knowledge/ assistant/ channels/ billing/ settings/
       admin/                   platform admin (404 for everyone else)
       api/
         auth/start|verify|logout|expired   sign-in route handlers (cookie handling)
@@ -94,6 +97,9 @@ web/
       shell/                   ShellFrame (sidebar + mobile drawer), BusinessShell, AdminShell, TopBar
       business/                BusinessContext (useBusiness, useBusinessFormat), status badges,
                                SectionPlaceholder
+      insights/                shared by dashboard/conversations/bookings/leads/handoffs: badges,
+                               labels, dates, usePagedQuery (keyset paging with "show more" that
+                               keeps its length on reload), LoadMore, ConfirmDialog
       BusinessSwitcher.tsx LanguageSwitcher.tsx CountrySelect.tsx icons.tsx
     lib/                       pure helpers (unit-tested): navigation, format (Intl), countries
                                (phone/country), hours (opening hours), wizard, validation (zod), cn

@@ -210,35 +210,32 @@ function ConversationHeader({
 
   return (
     <Card>
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
-        <div className="flex min-w-0 flex-1 items-start gap-4">
-          <span
-            className="flex size-12 shrink-0 items-center justify-center rounded-full bg-accent-soft text-base font-semibold text-accent-ink"
-            aria-hidden
-          >
-            {initialsOf(conversation.contact_name)}
-          </span>
-          <div className="min-w-0 flex-1 space-y-2">
-            <div className="flex flex-wrap items-center gap-2">
-              <h2 id="conversation-title" className="text-lg font-semibold text-ink">
-                <CustomerName name={conversation.contact_name} />
-              </h2>
-              <ConversationStatusBadge status={conversation.status} />
-              {conversation.is_after_hours ? <AfterHoursBadge /> : null}
-              {conversation.is_sandbox ? <TestBadge /> : null}
-            </div>
-            <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-ink-muted">
-              {conversation.contact_phone_number ? (
-                <PhoneLink phone={conversation.contact_phone_number} />
-              ) : (
-                <span>{t("conversations.noPhone")}</span>
-              )}
-              <ChannelBadge channel={conversation.channel} />
-              {conversation.language ? <span>{languageName(conversation.language, locale)}</span> : null}
-            </p>
+      <div className="flex items-start gap-4">
+        <span
+          className="flex size-12 shrink-0 items-center justify-center rounded-full bg-accent-soft text-base font-semibold text-accent-ink"
+          aria-hidden
+        >
+          {initialsOf(conversation.contact_name)}
+        </span>
+        <div className="min-w-0 flex-1 space-y-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <h2 id="conversation-title" className="text-lg font-semibold text-ink">
+              <CustomerName name={conversation.contact_name} />
+            </h2>
+            <ConversationStatusBadge status={conversation.status} />
+            {conversation.is_after_hours ? <AfterHoursBadge /> : null}
+            {conversation.is_sandbox ? <TestBadge /> : null}
           </div>
+          <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-ink-muted">
+            {conversation.contact_phone_number ? (
+              <PhoneLink phone={conversation.contact_phone_number} />
+            ) : (
+              <span>{t("conversations.noPhone")}</span>
+            )}
+            <ChannelBadge channel={conversation.channel} />
+            {conversation.language ? <span>{languageName(conversation.language, locale)}</span> : null}
+          </p>
         </div>
-        <div className="shrink-0">{rating}</div>
       </div>
       <dl className="mt-4 grid grid-cols-2 gap-x-4 gap-y-3 border-t border-line pt-4 text-sm sm:grid-cols-4">
         <div>
@@ -265,6 +262,7 @@ function ConversationHeader({
           <dd className="text-ink tabular-nums">{formatMicroUsd(totals.costMicroUsd, locale)}</dd>
         </div>
       </dl>
+      <div className="mt-4 border-t border-line pt-4">{rating}</div>
       <p className="sr-only">{tp("conversations.messages", messageCount)}</p>
     </Card>
   );

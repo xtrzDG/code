@@ -139,14 +139,14 @@ export function BookingForm({
                 aria-label={t("bookings.form.phoneCountry")}
                 value={values.country}
                 onChange={(event) => set("country", event.target.value)}
-                className="w-24 shrink-0"
+                className="w-28 shrink-0"
               >
                 {(countries.data?.countries ?? []).length === 0 ? (
                   <option value={values.country}>{countryFlag(values.country)}</option>
                 ) : (
                   (countries.data?.countries ?? []).map((item) => (
                     <option key={item.country_code} value={item.country_code}>
-                      {`${countryFlag(item.country_code)} ${countryName(item.country_code, locale)} (${formatCallingCode(item.calling_code)})`}
+                      {`${countryFlag(item.country_code)} ${formatCallingCode(item.calling_code)} ${countryName(item.country_code, locale)}`}
                     </option>
                   ))
                 )}

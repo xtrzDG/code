@@ -151,7 +151,7 @@ function ConversationRow({
               {conversation.last_message_author && conversation.last_message_author !== "customer" ? (
                 <span className="text-ink-subtle">{t(MESSAGE_AUTHORS[conversation.last_message_author])}: </span>
               ) : null}
-              <span dir="auto">{conversation.last_message_text}</span>
+              <bdi>{conversation.last_message_text}</bdi>
             </span>
           ) : null}
           <span className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-ink-subtle">
