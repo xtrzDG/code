@@ -1,13 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
 
 import { useBusiness, useBusinessFormat } from "@/components/business/BusinessContext";
 import { IconChevronRight } from "@/components/icons";
 import { BookingStatusBadge, ChannelBadge, TestBadge } from "@/components/insights/Badges";
 import { CustomerName, DetailRow, LoadMore, PhoneLink } from "@/components/insights/common";
-import { formatLocalDate, formatLocalTime, todayIn } from "@/components/insights/dates";
+import { formatLocalDate, formatLocalTime } from "@/components/insights/dates";
+import { useToday } from "@/components/insights/useToday";
 import { CHANNEL_LABELS } from "@/components/insights/labels";
 import type { BookingView } from "@/components/insights/types";
 import { useI18n } from "@/i18n/client";
@@ -146,7 +146,7 @@ export function BookingDetails({ booking, isStay }: { booking: BookingView; isSt
   const { t, tp, locale } = useI18n();
   const { business } = useBusiness();
   const format = useBusinessFormat();
-  const [today] = useState(() => todayIn(business.timezone));
+  const today = useToday(business.timezone);
   const when = useBookingWhen();
   const reminder = reminderState(booking, today);
   return (

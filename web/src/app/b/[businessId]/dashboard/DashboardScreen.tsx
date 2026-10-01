@@ -7,7 +7,8 @@ import { useApiQuery } from "@/api/hooks";
 import { useBusiness, useBusinessFormat } from "@/components/business/BusinessContext";
 import { BusinessStatusBadge } from "@/components/business/BusinessStatusBadge";
 import { IconBook, IconHandoff } from "@/components/icons";
-import { formatLocalDateRange, todayIn } from "@/components/insights/dates";
+import { formatLocalDateRange } from "@/components/insights/dates";
+import { useToday } from "@/components/insights/useToday";
 import { BOOKING_STATUS, CHANNEL_LABELS, HANDOFF_REASONS } from "@/components/insights/labels";
 import { formatPercent } from "@/components/insights/numbers";
 import { SegmentedControl } from "@/components/insights/SegmentedControl";
@@ -40,7 +41,7 @@ export function DashboardScreen({ initialPeriod }: { initialPeriod: DashboardPer
   const { business, isOwner } = useBusiness();
   const format = useBusinessFormat();
   const [period, setPeriod] = useState<DashboardPeriod>(initialPeriod ?? DEFAULT_DASHBOARD_PERIOD);
-  const [today] = useState(() => todayIn(business.timezone));
+  const today = useToday(business.timezone);
   const range = periodRange(period, today);
   const businessId = business.id;
 

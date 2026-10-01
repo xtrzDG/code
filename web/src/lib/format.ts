@@ -69,12 +69,17 @@ export function formatMoney(minor: number, currency: string, locale: string): st
   return new Intl.NumberFormat(locale, { style: "currency", currency }).format(minorToMajor(minor, currency));
 }
 
-/**
- * A decimal typed by a person ("18,5", "1 200.50") as a number, or null.
- * Both "," and "." work as the decimal separator.
- */
-export function parseDecimalInput(text: string): number | null {
-  const compact = text.replace(/[\s  ']/g, "");
+/** Spaces, thin spaces and apostrophes people type as thousands grouping. */
+function compactDecimal(text: string): string {
+  return text.replace(/[\s  ']/g, "");
+}
+
+/** One separator before exactly three digits: "1,200", "25.000" (grouping in most locales). */
+const LONE_GROUPING_LIKE = /^[1-9]\d{0,2}[.,]\d{3}$/;
+
+/** A decimal typed by a person as canonical text ("1200.5"), or null. */
+function normalizeDecimalInput(text: string, currency: string): string | null {
+  const compact = compactDecimal(text);
   if (compact === "") {
     return null;
   }
@@ -88,14 +93,53 @@ export function parseDecimalInput(text: string): number | null {
   } else {
     const separator = lastComma >= 0 ? "," : ".";
     const count = compact.split(separator).length - 1;
-    // One separator is decimal ("18,5"); several are grouping ("1.200.000").
-    normalized = count > 1 ? compact.split(separator).join("") : compact.replace(separator, ".");
+    // Several separators are grouping ("1.200.000"); so is a lone one before
+    // three digits for a currency without decimals ("1,200" yen). Otherwise
+    // one separator is decimal ("18,5").
+    const isGrouping = count > 1 || (LONE_GROUPING_LIKE.test(compact) && currencyFractionDigits(currency) === 0);
+    normalized = isGrouping ? compact.split(separator).join("") : compact.replace(separator, ".");
   }
-  if (!/^\d+(\.\d+)?$/.test(normalized)) {
-    return null;
-  }
-  return Number(normalized);
+  return /^\d+(\.\d+)?$/.test(normalized) ? normalized : null;
 }
+
+/**
+ * A price typed by a person ("18,5", "1 200.50", "1,200" yen) as a number in
+ * the currency's major unit, or null. Both "," and "." work as the decimal
+ * separator; check the text with `moneyInputProblem` first.
+ */
+export function parseDecimalInput(text: string, currency: string): number | null {
+  const normalized = normalizeDecimalInput(text, currency);
+  return normalized === null ? null : Number(normalized);
+}
+
+export type MoneyInputProblem = "number" | "ambiguous" | "precision";
+
+/**
+ * Why a typed price cannot be stored as it is: not a number; a lone
+ * separator before three digits ("1,200" dollars, "25.000" rupiah) that may be
+ * thousands or decimals, so it is refused rather than stored 1000 times too
+ * low; or more decimals than the currency has. Null when it is fine.
+ */
+export function moneyInputProblem(text: string, currency: string): MoneyInputProblem | null {
+  const normalized = normalizeDecimalInput(text, currency);
+  if (normalized === null) {
+    return "number";
+  }
+  const digits = currencyFractionDigits(currency);
+  if (digits > 0 && digits < 3 && LONE_GROUPING_LIKE.test(compactDecimal(text))) {
+    return "ambiguous";
+  }
+  // Trailing zeros change nothing ("1500.00" yen is 1500).
+  const fraction = normalized.includes(".") ? normalized.slice(normalized.indexOf(".") + 1).replace(/0+$/, "") : "";
+  return fraction.length > digits ? "precision" : null;
+}
+
+/** The message key for a price problem (shared by every price field). */
+export const MONEY_INPUT_MESSAGES = {
+  number: "validation.number",
+  ambiguous: "knowledge.form.priceAmbiguous",
+  precision: "knowledge.form.priceTooPrecise",
+} as const satisfies Record<MoneyInputProblem, string>;
 
 /** A decimal for an input field: 18.5 -> "18.5" (no grouping). */
 export function decimalInputValue(value: number | null | undefined, fractionDigits: number): string {

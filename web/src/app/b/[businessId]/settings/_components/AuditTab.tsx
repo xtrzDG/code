@@ -4,6 +4,7 @@ import { useState } from "react";
 
 import { api } from "@/api/client";
 import { useBusiness, useBusinessFormat } from "@/components/business/BusinessContext";
+import { RefreshFailed } from "@/components/insights/common";
 import { Badge, Button, Card, EmptyState, ErrorState, Field, Input, LoadingBlock, Select, Table, TBody, Td, Th, THead, Tr } from "@/components/ui";
 import { shortId, zonedDayStartUs } from "@/components/workspace/helpers";
 import { InlineError } from "@/components/workspace/InlineError";
@@ -140,6 +141,12 @@ export function AuditTab() {
         </div>
       ) : null}
 
+      {log.error && entries.length > 0 ? (
+        <div className="border-b border-line px-5 py-3 sm:px-6">
+          <RefreshFailed error={log.error} onRetry={log.reload} />
+        </div>
+      ) : null}
+
       {log.error && entries.length === 0 ? (
         <ErrorState error={log.error} onRetry={log.reload} />
       ) : log.isLoading && entries.length === 0 ? (
@@ -204,7 +211,7 @@ export function AuditTab() {
           </ul>
         </div>
       )}
-      {entries.length > 0 ? (
+      {entries.length > 0 && !log.error ? (
         <div className="flex flex-wrap items-center justify-between gap-3 border-t border-line px-5 py-3 sm:px-6">
           <p className="text-xs text-ink-subtle" aria-live="polite">
             {t("settings.auditFilters.shown", { count: entries.length })}

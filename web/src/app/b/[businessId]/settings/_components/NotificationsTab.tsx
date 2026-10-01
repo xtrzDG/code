@@ -5,7 +5,7 @@ import { useState, type FormEvent } from "react";
 
 import { api } from "@/api/client";
 import type { ApiError } from "@/api/errors";
-import { useApiMutation } from "@/api/hooks";
+import { useApiMutation, useApiQuery } from "@/api/hooks";
 import { useBusiness } from "@/components/business/BusinessContext";
 import { IconPlus } from "@/components/icons";
 import { Badge, Button, ButtonLink, Card, EmptyState, Field, Input, Modal, Select, useToast } from "@/components/ui";
@@ -20,10 +20,12 @@ import { businessPath } from "@/lib/navigation";
 import {
   MAX_MANAGER_CONTACTS,
   MAX_MANAGER_NAME_LENGTH,
+  applyContactChange,
   contactFromForm,
-  contactsToInput,
+  contactKey,
   languageChoices,
   validateContact,
+  type ContactChange,
   type ContactError,
   type ContactField,
   type ContactForm,
@@ -65,34 +67,50 @@ const CONTACT_ERRORS: Record<ContactError, MessageKey> = {
 
 type Editing = { index: number | null } | null;
 
-/** Staff who receive handoffs, bookings and leads (the whole list is saved at once). */
+/**
+ * Staff who receive handoffs, bookings and leads. The API saves the whole
+ * list at once, and the platform bot adds Telegram contacts meanwhile, so
+ * the tab loads the list fresh and applies each change to a fresh copy.
+ */
 export function NotificationsTab() {
   const { t, locale } = useI18n();
   const toast = useToast();
   const router = useRouter();
   const { business, isOwner } = useBusiness();
-  const [contacts, setContacts] = useState<ManagerContact[]>(business.manager_contacts ?? []);
+  const stored = useApiQuery(
+    () => api.GET("/v1/businesses/{business_id}", { params: { path: { business_id: business.id } } }),
+    [business.id],
+  );
+  const [saved, setSaved] = useState<ManagerContact[] | null>(null);
+  const contacts: ManagerContact[] = saved ?? stored.data?.manager_contacts ?? business.manager_contacts ?? [];
   const [editing, setEditing] = useState<Editing>(null);
   const [removing, setRemoving] = useState<number | null>(null);
   const [dialogError, setDialogError] = useState<ApiError | null>(null);
 
   const save = useApiMutation(
-    (list: ManagerContactInput[]) =>
-      api.PATCH("/v1/businesses/{business_id}", {
+    async (change: ContactChange) => {
+      const fresh = await api.GET("/v1/businesses/{business_id}", {
         params: { path: { business_id: business.id } },
-        body: { manager_contacts: list },
-      }),
+      });
+      if (!fresh.data) {
+        return fresh;
+      }
+      return api.PATCH("/v1/businesses/{business_id}", {
+        params: { path: { business_id: business.id } },
+        body: { manager_contacts: applyContactChange(fresh.data.manager_contacts ?? [], change) },
+      });
+    },
     { errorToast: false },
   );
 
-  const persist = async (list: ManagerContactInput[]): Promise<boolean> => {
+  const persist = async (change: ContactChange): Promise<boolean> => {
     setDialogError(null);
-    const result = await save.run(list);
+    const result = await save.run(change);
     if (!result.ok) {
       setDialogError(result.error);
       return false;
     }
-    setContacts(result.data.manager_contacts ?? []);
+    setSaved(result.data.manager_contacts ?? []);
     router.refresh();
     toast.success(t("settings.contacts.saved"));
     return true;
@@ -102,23 +120,21 @@ export function NotificationsTab() {
     if (!editing) {
       return;
     }
-    const list = contactsToInput(contacts);
-    if (editing.index === null) {
-      list.push(contact);
-    } else {
-      list[editing.index] = contact;
-    }
-    if (await persist(list)) {
+    const original = editing.index === null ? undefined : contacts[editing.index];
+    const change: ContactChange = original
+      ? { kind: "edit", original: contactKey(original), contact }
+      : { kind: "add", contact };
+    if (await persist(change)) {
       setEditing(null);
     }
   };
 
   const onRemove = async () => {
-    if (removing === null) {
+    const original = removing === null ? undefined : contacts[removing];
+    if (!original) {
       return;
     }
-    const list = contactsToInput(contacts).filter((_, index) => index !== removing);
-    if (await persist(list)) {
+    if (await persist({ kind: "remove", original: contactKey(original) })) {
       setRemoving(null);
     }
   };

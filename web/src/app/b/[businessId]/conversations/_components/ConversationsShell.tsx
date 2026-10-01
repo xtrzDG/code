@@ -1,12 +1,12 @@
 "use client";
 
 import { useSearchParams, useSelectedLayoutSegment } from "next/navigation";
-import { useMemo, useState, type ReactNode } from "react";
+import { useMemo, type ReactNode } from "react";
 
 import { api } from "@/api/client";
 import { useBusiness } from "@/components/business/BusinessContext";
 import { RefreshButton, RefreshFailed } from "@/components/insights/common";
-import { todayIn } from "@/components/insights/dates";
+import { useToday } from "@/components/insights/useToday";
 import type { ConversationPage, ConversationSummaryView } from "@/components/insights/types";
 import { useAutoReload } from "@/components/insights/useAutoReload";
 import { usePagedQuery } from "@/components/insights/usePagedQuery";
@@ -38,7 +38,7 @@ export function ConversationsShell({ children }: { children: ReactNode }) {
   const { business } = useBusiness();
   const searchParams = useSearchParams();
   const selectedId = useSelectedLayoutSegment();
-  const [today] = useState(() => todayIn(business.timezone));
+  const today = useToday(business.timezone);
   const businessId = business.id;
 
   const filters = useMemo(() => parseConversationFilters(new URLSearchParams(searchParams.toString())), [searchParams]);
@@ -54,7 +54,9 @@ export function ConversationsShell({ children }: { children: ReactNode }) {
       }),
     [businessId, query, today],
   );
-  useAutoReload(conversations.reload);
+  // Every load of the feed is audited (a view of personal data): no polling,
+  // a reload when the user comes back to the tab and the Refresh button.
+  useAutoReload(conversations.reload, { intervalMs: null });
 
   const setFilters = (next: ConversationFilters) => {
     replaceUrlQuery(conversationFiltersQuery(next));

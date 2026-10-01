@@ -287,6 +287,43 @@ export function contactsToInput(contacts: readonly ManagerContact[]): ManagerCon
   }));
 }
 
+/** A contact is known by its channel and address (not by its place in a list). */
+export interface ContactKey {
+  channel: ManagerContactChannel;
+  address: string;
+}
+
+export type ContactChange =
+  | { kind: "add"; contact: ManagerContactInput }
+  | { kind: "edit"; original: ContactKey; contact: ManagerContactInput }
+  | { kind: "remove"; original: ContactKey };
+
+export function contactKey(contact: ContactKey): ContactKey {
+  return { channel: contact.channel, address: contact.address };
+}
+
+function isSameContact(a: ContactKey, b: ContactKey): boolean {
+  return a.channel === b.channel && a.address === b.address;
+}
+
+/**
+ * The list to save: one change applied to the contacts stored now. The API
+ * replaces the whole list, and contacts can appear meanwhile (a manager who
+ * opens the Telegram bot link is added on the server), so the change is made
+ * to a fresh copy, by key, never to the list the page loaded earlier.
+ */
+export function applyContactChange(fresh: readonly ManagerContact[], change: ContactChange): ManagerContactInput[] {
+  const list = contactsToInput(fresh);
+  if (change.kind === "add") {
+    return [...list, change.contact];
+  }
+  if (change.kind === "remove") {
+    return list.filter((contact) => !isSameContact(contact, change.original));
+  }
+  const index = list.findIndex((contact) => isSameContact(contact, change.original));
+  return index === -1 ? [...list, change.contact] : list.map((contact, at) => (at === index ? change.contact : contact));
+}
+
 export function contactFromForm(form: ContactForm): ManagerContactInput {
   return {
     name: form.name.trim(),

@@ -126,9 +126,19 @@ describe("offer rows", () => {
   it("skip blank new rows and validate filled ones", () => {
     const blank = newOfferRow("service", "new-1");
     expect(offerItemsPayload([blank], "GEL")).toEqual([]);
-    expect(validateOfferRow(blank)).toEqual({});
-    expect(validateOfferRow({ ...blank, price: "abc" })).toEqual({ title: "validation.required", price: "validation.number" });
-    expect(validateOfferRow({ ...blank, title: "Massage", duration: "0" })).toEqual({ duration: "validation.positive" });
+    expect(validateOfferRow(blank, "GEL")).toEqual({});
+    expect(validateOfferRow({ ...blank, price: "abc" }, "GEL")).toEqual({ title: "validation.required", price: "validation.number" });
+    expect(validateOfferRow({ ...blank, title: "Massage", duration: "0" }, "GEL")).toEqual({ duration: "validation.positive" });
+  });
+
+  it("refuse prices that would be stored at the wrong amount", () => {
+    const row = { ...newOfferRow("service", "new-1"), title: "Massage" };
+    expect(validateOfferRow({ ...row, price: "1,200" }, "USD").price).toBe("knowledge.form.priceAmbiguous");
+    expect(validateOfferRow({ ...row, price: "25.000" }, "IDR").price).toBe("knowledge.form.priceAmbiguous");
+    expect(validateOfferRow({ ...row, price: "1200,5" }, "JPY").price).toBe("knowledge.form.priceTooPrecise");
+    expect(validateOfferRow({ ...row, price: "1200" }, "USD")).toEqual({});
+    expect(validateOfferRow({ ...row, price: "1,200" }, "JPY")).toEqual({});
+    expect(offerItemsPayload([{ ...row, price: "1,200" }], "JPY")[0]?.price_minor).toBe(1200);
   });
 
   it("take the saved ids and become unchanged after a save", () => {

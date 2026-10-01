@@ -9,7 +9,7 @@ import { IconCalendar, IconPlus } from "@/components/icons";
 import { CustomerName, RefreshButton, RefreshFailed } from "@/components/insights/common";
 import { ConfirmDialog } from "@/components/insights/ConfirmDialog";
 import { CustomerMessageModal } from "@/components/insights/CustomerMessageModal";
-import { todayIn } from "@/components/insights/dates";
+import { useToday } from "@/components/insights/useToday";
 import type { BookingPage, BookingStatus, BookingView } from "@/components/insights/types";
 import { replaceUrlQuery } from "@/components/insights/urlQuery";
 import { usePagedQuery } from "@/components/insights/usePagedQuery";
@@ -51,7 +51,7 @@ export function BookingsScreen({ initialFilters }: { initialFilters: BookingFilt
   const { business } = useBusiness();
   const when = useBookingWhen();
   const businessId = business.id;
-  const [today] = useState(() => todayIn(business.timezone));
+  const today = useToday(business.timezone);
   const [filters, setFiltersState] = useState(initialFilters);
   const [dialog, setDialog] = useState<Dialog>({ kind: "none" });
   const [cancelLanguage, setCancelLanguage] = useState(business.default_language);

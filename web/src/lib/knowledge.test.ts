@@ -103,11 +103,20 @@ describe("the item form", () => {
   });
 
   it("refuses more decimals than the currency has", () => {
-    expect(validateKnowledgeForm(form({ title: "x", price: "18.555" }), "GEL").price).toBe("knowledge.form.priceTooPrecise");
+    expect(validateKnowledgeForm(form({ title: "x", price: "18.5555" }), "GEL").price).toBe("knowledge.form.priceTooPrecise");
+    expect(validateKnowledgeForm(form({ title: "x", price: "0.555" }), "GEL").price).toBe("knowledge.form.priceTooPrecise");
     expect(validateKnowledgeForm(form({ title: "x", price: "1500.5" }), "JPY").price).toBe("knowledge.form.priceTooPrecise");
     expect(validateKnowledgeForm(form({ title: "x", price: "1500" }), "JPY")).toEqual({});
     expect(validateKnowledgeForm(form({ title: "x", price: "1.200,50" }), "EUR")).toEqual({});
     expect(validateKnowledgeForm(form({ title: "x", price: "1.255" }), "KWD")).toEqual({});
+  });
+
+  it("refuses a lone separator before three digits instead of storing a price 1000 times too low", () => {
+    expect(validateKnowledgeForm(form({ title: "x", price: "25.000" }), "IDR").price).toBe("knowledge.form.priceAmbiguous");
+    expect(validateKnowledgeForm(form({ title: "x", price: "1,200" }), "USD").price).toBe("knowledge.form.priceAmbiguous");
+    expect(validateKnowledgeForm(form({ title: "x", price: "18.555" }), "GEL").price).toBe("knowledge.form.priceAmbiguous");
+    expect(validateKnowledgeForm(form({ title: "x", price: "10,000" }), "JPY")).toEqual({});
+    expect(knowledgeCreateBody(form({ title: "x", price: "10,000" }), "JPY").price_minor).toBe(10000);
   });
 
   it("ignores the price of questions and rules", () => {

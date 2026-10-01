@@ -4,6 +4,7 @@ import {
   EMPTY_AUDIT_FILTERS,
   actorLabel,
   allowedRoles,
+  applyContactChange,
   auditQuery,
   buildGeneralChanges,
   buildInviteBody,
@@ -258,5 +259,26 @@ describe("audit log", () => {
     expect(nextDay("2026-02-28")).toBe("2026-03-01");
     expect(nextDay("2028-02-28")).toBe("2028-02-29");
     expect(nextDay("2026-12-31")).toBe("2027-01-01");
+  });
+});
+
+describe("applyContactChange", () => {
+  const emailA = { name: "Anna", channel: "email" as const, address: "anna@example.com", language: "en" };
+  const emailB = { name: "Beka", channel: "email" as const, address: "beka@example.com", language: "ka" };
+  // Linked by the manager through the platform bot after the page loaded.
+  const telegram = { name: "Levan", channel: "telegram" as const, address: "777000111", language: "ka" };
+
+  it("keeps contacts added on the server since the page loaded", () => {
+    expect(applyContactChange([emailA, telegram], { kind: "add", contact: emailB })).toEqual([emailA, telegram, emailB]);
+  });
+
+  it("edits and removes by channel and address, wherever the contact is now", () => {
+    const fresh = [telegram, emailA];
+    const original = { channel: "email" as const, address: "anna@example.com" };
+    expect(applyContactChange(fresh, { kind: "remove", original })).toEqual([telegram]);
+    expect(applyContactChange(fresh, { kind: "edit", original, contact: { ...emailA, name: "Anna K." } })).toEqual([
+      telegram,
+      { ...emailA, name: "Anna K." },
+    ]);
   });
 });

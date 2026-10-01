@@ -12,10 +12,12 @@ import type { KnowledgeItemDetails, KnowledgeItemKind, RequestBody, Schema } fro
 import type { MessageKey } from "@/i18n/translate";
 
 import {
+  MONEY_INPUT_MESSAGES,
   currencyFractionDigits,
   decimalInputValue,
   majorToMinor,
   minorToMajor,
+  moneyInputProblem,
   parseDecimalInput,
 } from "./format";
 
@@ -146,20 +148,6 @@ export function knowledgeFormFromItem(item: FormSource, currency: string): Knowl
   };
 }
 
-function decimalPlaces(text: string): number {
-  const compact = text.replace(/[\s  ']/g, "");
-  const separator = Math.max(compact.lastIndexOf(","), compact.lastIndexOf("."));
-  if (separator < 0) {
-    return 0;
-  }
-  // "1,200" or "1.200.000" are groupings, not decimals: parseDecimalInput agrees.
-  const parsed = parseDecimalInput(compact);
-  if (parsed === null || Number.isInteger(parsed)) {
-    return 0;
-  }
-  return compact.length - separator - 1;
-}
-
 export function validateKnowledgeForm(form: KnowledgeForm, currency: string): KnowledgeFormErrors {
   const errors: KnowledgeFormErrors = {};
   const title = form.title.trim();
@@ -175,10 +163,9 @@ export function validateKnowledgeForm(form: KnowledgeForm, currency: string): Kn
     errors.body = "validation.tooLong";
   }
   if (kindHasPrice(form.kind) && form.price.trim() !== "") {
-    if (parseDecimalInput(form.price) === null) {
-      errors.price = "validation.number";
-    } else if (decimalPlaces(form.price) > currencyFractionDigits(currency)) {
-      errors.price = "knowledge.form.priceTooPrecise";
+    const problem = moneyInputProblem(form.price, currency);
+    if (problem) {
+      errors.price = MONEY_INPUT_MESSAGES[problem];
     }
   }
   const duration = form.duration.trim();
@@ -196,7 +183,7 @@ function priceMinor(form: KnowledgeForm, currency: string): number | null {
   if (!kindHasPrice(form.kind)) {
     return null;
   }
-  const price = parseDecimalInput(form.price);
+  const price = parseDecimalInput(form.price, currency);
   return price === null ? null : majorToMinor(price, currency);
 }
 

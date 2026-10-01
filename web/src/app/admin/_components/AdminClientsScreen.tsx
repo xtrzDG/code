@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { useNiches } from "@/api/catalog";
 import { api } from "@/api/client";
 import { IconChevronRight, IconShield } from "@/components/icons";
+import { RefreshFailed } from "@/components/insights/common";
 import { Badge, Button, Card, EmptyState, ErrorState, Field, Input, LoadingBlock, PageHeader, Select, Table, TBody, Td, Th, THead, Tr } from "@/components/ui";
 import { usageLevel } from "@/components/workspace/helpers";
 import { IconRefresh, IconSearch } from "@/components/workspace/icons";
@@ -121,6 +122,7 @@ export function AdminClientsScreen() {
         </Card>
       ) : (
         <div className="space-y-6">
+          {list.error ? <RefreshFailed error={list.error} onRetry={list.reload} /> : null}
           <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
             {tiles.map((tile) => {
               const content = (
@@ -244,7 +246,8 @@ export function AdminClientsScreen() {
             </div>
 
             <div className="flex flex-wrap items-center justify-between gap-2 px-5 py-3 text-sm text-ink-muted sm:px-6" aria-live="polite">
-              <span>{tp("admin.count", data.matching_count)}</span>
+              {/* After a failed reload the count belongs to the earlier filters. */}
+              <span>{list.error ? null : tp("admin.count", data.matching_count)}</span>
               {hasFilters(filters) ? (
                 <Button variant="ghost" size="sm" onClick={() => setFilters(EMPTY_FILTERS)}>
                   {t("admin.clearFilters")}
@@ -255,7 +258,7 @@ export function AdminClientsScreen() {
             {totals.client_count === 0 ? (
               <EmptyState icon={<IconShield className="size-6" />} title={t("admin.emptyTitle")} description={t("admin.emptyDescription")} />
             ) : clients.length === 0 ? (
-              list.isLoading ? (
+              list.error ? null : list.isLoading ? (
                 <LoadingBlock label={t("common.loading")} />
               ) : (
                 <EmptyState icon={<IconSearch className="size-6" />} title={t("admin.emptyFiltered")} />

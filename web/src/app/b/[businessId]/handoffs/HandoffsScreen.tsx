@@ -74,7 +74,9 @@ export function HandoffsScreen({ initialFilters }: { initialFilters: HandoffFilt
       }),
     [businessId, filters.tab, filters.includeTest],
   );
-  useAutoReload(handoffs.reload);
+  // Every load of the list is audited (a view of personal data): no polling,
+  // a reload when the user comes back to the tab and the Refresh button.
+  useAutoReload(handoffs.reload, { intervalMs: null });
 
   const resolve = useApiMutation((handoff: HandoffListItem) =>
     api.POST("/v1/businesses/{business_id}/handoffs/{handoff_id}/resolve", {

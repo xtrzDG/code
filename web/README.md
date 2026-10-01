@@ -169,7 +169,9 @@ web/
       insights/                shared by dashboard … handoffs: status badges and label maps, segmented
                                control, confirm and customer-message dialogs, usePagedQuery (keyset
                                paging with "show more" that keeps its length on reload), LoadMore,
-                               refresh, business-local dates, replaceUrlQuery, useAutoReload
+                               refresh, business-local dates, useToday (moves on at the business's
+                               midnight), replaceUrlQuery, useAutoReload (lists whose every load
+                               is audited pass `intervalMs: null` and reload only on return)
       content/                 shared by knowledge and assistant: SectionTabs (route tabs), Tabs,
                                ConfirmDialog, Switch, icons, subPageMetadata, usePagedList
                                ({items, next_cursor} lists with "show more")
@@ -259,7 +261,9 @@ web/
   component's own width, height, padding, radius, font size and colour
   classes of the same kind (`w-40`, `text-danger`, `hover:bg-…`; see
   `lib/classMerge.ts`). Destructive quiet buttons: `variant="danger-ghost"`.
-- Customer texts (names, messages, questions) get `dir="auto"`.
+- Customer texts (names, messages, questions) get `dir="auto"`; so do
+  `Input` (text and search) and `Textarea`, so a name typed in Arabic reads
+  right to left in any interface language.
 
 ### Calling the API
 
@@ -320,9 +324,12 @@ Some refusals also carry machine-readable reasons, kept as
 rollback names the failed go-live checks (`subscription_or_trial`, `dpa`,
 `profile_gaps`, `staff_contact`, `autotests`, `voice_configuration`) or the
 version state, and a menu link the API cannot read is `menu_link_invalid`,
-`menu_link_unreachable` or `menu_link_unreadable`. Screens map these codes to
-their own texts (`refusalReasons` in `src/lib/assistant.ts`, `menuLinkProblem`
-in `src/lib/knowledge.ts`); never match the English message.
+`menu_link_unreachable` or `menu_link_unreadable`. A refused booking names
+why (`closed`, `too_soon`, `time_required`, `taken`, `party_too_large`,
+`no_seating_resource`; the numbers and days are in `details`). Screens map these
+codes to their own texts (`refusalReasons` in `src/lib/assistant.ts`,
+`menuLinkProblem` in `src/lib/knowledge.ts`, `BOOKING_REFUSAL_MESSAGES` passed
+as `reasonMessages` to `useApiMutation`); never match the English message.
 
 ### Translations
 

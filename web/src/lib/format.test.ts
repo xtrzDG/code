@@ -8,6 +8,7 @@ import {
   formatMoney,
   majorToMinor,
   minorToMajor,
+  moneyInputProblem,
   parseDecimalInput,
   parseTimeOfDay,
   toDate,
@@ -34,15 +35,42 @@ describe("money", () => {
   });
 
   it("reads prices typed with either decimal separator", () => {
-    expect(parseDecimalInput("18,5")).toBe(18.5);
-    expect(parseDecimalInput("18.50")).toBe(18.5);
-    expect(parseDecimalInput("1 200,50")).toBe(1200.5);
-    expect(parseDecimalInput("1,200.50")).toBe(1200.5);
-    expect(parseDecimalInput("1.200,50")).toBe(1200.5);
-    expect(parseDecimalInput("1.200.000")).toBe(1200000);
-    expect(parseDecimalInput("")).toBeNull();
-    expect(parseDecimalInput("abc")).toBeNull();
-    expect(parseDecimalInput("-5")).toBeNull();
+    expect(parseDecimalInput("18,5", "GEL")).toBe(18.5);
+    expect(parseDecimalInput("18.50", "GEL")).toBe(18.5);
+    expect(parseDecimalInput("1 200,50", "GEL")).toBe(1200.5);
+    expect(parseDecimalInput("1,200.50", "GEL")).toBe(1200.5);
+    expect(parseDecimalInput("1.200,50", "GEL")).toBe(1200.5);
+    expect(parseDecimalInput("1.200.000", "GEL")).toBe(1200000);
+    expect(parseDecimalInput("", "GEL")).toBeNull();
+    expect(parseDecimalInput("abc", "GEL")).toBeNull();
+    expect(parseDecimalInput("-5", "GEL")).toBeNull();
+  });
+
+  it("reads one separator before three digits as grouping for currencies without decimals", () => {
+    expect(parseDecimalInput("1,200", "JPY")).toBe(1200);
+    expect(parseDecimalInput("10.000", "KRW")).toBe(10000);
+    expect(parseDecimalInput("1.255", "KWD")).toBe(1.255);
+    expect(parseDecimalInput("0,500", "USD")).toBe(0.5);
+  });
+
+  it("refuses prices that would be stored at the wrong amount", () => {
+    // Thousands or decimals? Refused rather than stored 1000 times too low.
+    expect(moneyInputProblem("25.000", "IDR")).toBe("ambiguous");
+    expect(moneyInputProblem("1.000", "BRL")).toBe("ambiguous");
+    expect(moneyInputProblem("1,200", "USD")).toBe("ambiguous");
+    expect(moneyInputProblem("1.500", "EUR")).toBe("ambiguous");
+    expect(moneyInputProblem("0,505", "USD")).toBe("precision");
+    expect(moneyInputProblem("0,500", "USD")).toBeNull();
+    expect(moneyInputProblem("1200,5", "JPY")).toBe("precision");
+    expect(moneyInputProblem("abc", "USD")).toBe("number");
+    // Unambiguous forms pass.
+    expect(moneyInputProblem("1,500", "JPY")).toBeNull();
+    expect(moneyInputProblem("1.255", "KWD")).toBeNull();
+    expect(moneyInputProblem("25.000,00", "IDR")).toBeNull();
+    expect(moneyInputProblem("1.200.000", "COP")).toBeNull();
+    expect(moneyInputProblem("18,50", "GEL")).toBeNull();
+    expect(moneyInputProblem("1200", "USD")).toBeNull();
+    expect(moneyInputProblem("1500.00", "JPY")).toBeNull();
   });
 });
 

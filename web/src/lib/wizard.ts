@@ -6,7 +6,15 @@
 import type { KnowledgeItemDetails, KnowledgeItemKind, WizardQuestionView } from "@/api/types";
 import type { MessageKey } from "@/i18n/translate";
 
-import { decimalInputValue, majorToMinor, minorToMajor, currencyFractionDigits, parseDecimalInput } from "./format";
+import {
+  MONEY_INPUT_MESSAGES,
+  currencyFractionDigits,
+  decimalInputValue,
+  majorToMinor,
+  minorToMajor,
+  moneyInputProblem,
+  parseDecimalInput,
+} from "./format";
 
 // --- Niche answers ------------------------------------------------------------
 
@@ -189,7 +197,7 @@ export interface OfferRowErrors {
   duration?: MessageKey;
 }
 
-export function validateOfferRow(row: OfferRow): OfferRowErrors {
+export function validateOfferRow(row: OfferRow, currency: string): OfferRowErrors {
   const errors: OfferRowErrors = {};
   const isBlank = row.title.trim() === "" && row.body.trim() === "" && row.price.trim() === "" && row.duration.trim() === "";
   if (isBlank) {
@@ -198,8 +206,9 @@ export function validateOfferRow(row: OfferRow): OfferRowErrors {
   if (row.title.trim() === "") {
     errors.title = "validation.required";
   }
-  if (row.price.trim() !== "" && parseDecimalInput(row.price) === null) {
-    errors.price = "validation.number";
+  const priceProblem = row.price.trim() === "" ? null : moneyInputProblem(row.price, currency);
+  if (priceProblem) {
+    errors.price = MONEY_INPUT_MESSAGES[priceProblem];
   }
   if (row.duration.trim() !== "" && !/^\d+$/.test(row.duration.trim())) {
     errors.duration = "validation.wholeNumber";
@@ -227,7 +236,7 @@ export function offerItemsPayload(rows: readonly OfferRow[], currency: string): 
   return rows
     .filter((row) => row.title.trim() !== "" && isOfferRowChanged(row))
     .map((row) => {
-      const price = parseDecimalInput(row.price);
+      const price = parseDecimalInput(row.price, currency);
       return {
         ...(row.id ? { id: row.id } : {}),
         kind: row.kind,

@@ -5,7 +5,7 @@ import { useCallback, useEffect, useEffectEvent, useRef, useState, type Dependen
 import { toApiError, type ApiError } from "@/api/errors";
 import { unwrap, type ApiResult } from "@/api/result";
 
-import { appendPage, PAGE_SIZE, reloadLimit, type PageShape } from "./paging";
+import { afterFirstPageError, appendPage, PAGE_SIZE, reloadLimit, type PageShape } from "./paging";
 
 export interface PageRequest {
   /** The previous page's `next_cursor`; null for the first page. */
@@ -101,9 +101,7 @@ export function usePagedQuery<Item extends { id: string }, Page extends PageShap
         if (active) {
           setState((previous) => ({
             key: requestKey,
-            page: previous?.page,
-            items: previous?.items,
-            nextCursor: previous?.nextCursor ?? null,
+            ...afterFirstPageError(previous, sameFilters),
             error: toApiError(error),
           }));
         }

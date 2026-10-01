@@ -7,10 +7,12 @@ import { Alert, Field, Input, Select } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import type { MessageKey } from "@/i18n/translate";
 import {
+  MONEY_INPUT_MESSAGES,
   currencyFractionDigits,
   decimalInputValue,
   majorToMinor,
   minorToMajor,
+  moneyInputProblem,
   parseDecimalInput,
 } from "@/lib/format";
 
@@ -92,12 +94,13 @@ export function BookingStep({
     const slot = wholeNumber(slotMinutes, 5, MAX_SLOT_MINUTES);
     const party = wholeNumber(maxPartySize, 1, MAX_PARTY_SIZE);
     const notice = wholeNumber(minNotice || "0", 0, MAX_NOTICE_MINUTES);
-    const depositMajor = deposit.trim() === "" ? null : parseDecimalInput(deposit);
+    const depositProblem = deposit.trim() === "" ? null : moneyInputProblem(deposit, currency);
+    const depositMajor = deposit.trim() === "" || depositProblem ? null : parseDecimalInput(deposit, currency);
     if (slot === null) found.slotMinutes = "validation.positive";
     if (maxPartySize.trim() === "") found.maxPartySize = "validation.required";
     else if (party === null) found.maxPartySize = "validation.positive";
     if (notice === null) found.minNotice = "validation.wholeNumber";
-    if (deposit.trim() !== "" && depositMajor === null) found.deposit = "validation.number";
+    if (depositProblem) found.deposit = MONEY_INPUT_MESSAGES[depositProblem];
     setErrors(found);
     if (Object.keys(found).length > 0 || !answersValid || slot === null || party === null || notice === null) {
       return;

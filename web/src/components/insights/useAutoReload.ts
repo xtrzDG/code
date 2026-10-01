@@ -3,10 +3,16 @@
 import { useEffect, useEffectEvent } from "react";
 
 /**
- * Reloads a live list (conversations, handoffs) every `intervalMs` while the
- * tab is visible, and right away when the user comes back to the tab.
+ * Reloads a live list right away when the user comes back to the tab, and,
+ * with `intervalMs`, also every `intervalMs` while the tab is visible.
+ *
+ * Lists whose every load is written to the audit log (conversations,
+ * handoffs: views of personal data) must not poll: they pass
+ * `intervalMs: null` and reload only on return and with the Refresh button,
+ * so an open tab does not add an audit entry every minute.
  */
-export function useAutoReload(reload: () => void, intervalMs: number = 60_000): void {
+export function useAutoReload(reload: () => void, options: { intervalMs: number | null } = { intervalMs: 60_000 }): void {
+  const { intervalMs } = options;
   const onTick = useEffectEvent(() => {
     if (document.visibilityState === "visible") {
       reload();
@@ -14,7 +20,7 @@ export function useAutoReload(reload: () => void, intervalMs: number = 60_000): 
   });
 
   useEffect(() => {
-    const timer = window.setInterval(onTick, intervalMs);
+    const timer = intervalMs === null ? null : window.setInterval(onTick, intervalMs);
     const onVisible = () => {
       if (document.visibilityState === "visible") {
         onTick();
@@ -22,7 +28,9 @@ export function useAutoReload(reload: () => void, intervalMs: number = 60_000): 
     };
     document.addEventListener("visibilitychange", onVisible);
     return () => {
-      window.clearInterval(timer);
+      if (timer !== null) {
+        window.clearInterval(timer);
+      }
       document.removeEventListener("visibilitychange", onVisible);
     };
   }, [intervalMs]);

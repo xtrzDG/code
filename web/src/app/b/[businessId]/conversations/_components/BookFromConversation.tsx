@@ -1,11 +1,10 @@
 "use client";
 
-import { useState } from "react";
 
 import { api } from "@/api/client";
 import { useApiQuery } from "@/api/hooks";
 import { useBusiness } from "@/components/business/BusinessContext";
-import { todayIn } from "@/components/insights/dates";
+import { useToday } from "@/components/insights/useToday";
 import type { BookingResult, ConversationSummaryView } from "@/components/insights/types";
 import { ErrorState, LoadingBlock, Modal } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
@@ -30,7 +29,7 @@ export function BookFromConversation({
 }) {
   const { t } = useI18n();
   const { business } = useBusiness();
-  const [today] = useState(() => todayIn(business.timezone));
+  const today = useToday(business.timezone);
   const resources = useApiQuery(
     () => api.GET("/v1/businesses/{business_id}/resources", { params: { path: { business_id: business.id } } }),
     [business.id],

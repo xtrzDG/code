@@ -14,7 +14,10 @@
  *
  * The first page reloads when the dependencies change (the old items stay
  * on screen meanwhile, `isLoading` is true); `loadMore` appends the next
- * page and skips items already shown.
+ * page and skips items already shown. When the first page for new filters
+ * fails, the old items go (they would read as the filtered result); when a
+ * reload of the same filters fails, they stay and `error` is set next to
+ * them.
  */
 
 import { useCallback, useEffect, useEffectEvent, useRef, useState, type DependencyList } from "react";
@@ -33,7 +36,7 @@ export interface CursorList<Item, Page> {
   firstPage: Page | undefined;
   /** True until the first page for the current dependencies has arrived. */
   isLoading: boolean;
-  /** The first page failed (for the current dependencies). */
+  /** The first page failed (for the current dependencies); shown items, if any, are from before. */
   error: ApiError | null;
   hasMore: boolean;
   isLoadingMore: boolean;
@@ -54,6 +57,23 @@ interface ListState<Item, Page> {
 
 function sameKey(left: readonly unknown[], right: readonly unknown[]): boolean {
   return left.length === right.length && left.every((value, index) => Object.is(value, right[index]));
+}
+
+/**
+ * The items a list may show. A failed first page for other filters (the
+ * dependencies, without the reload counter) hides the old items: they would
+ * read as the filtered result. A failed reload of the same filters keeps them.
+ */
+export function visibleCursorItems<Item>(
+  items: Item[],
+  shownKey: readonly unknown[] | null,
+  deps: readonly unknown[],
+  isFailed: boolean,
+): Item[] {
+  if (!isFailed || shownKey === null) {
+    return items;
+  }
+  return sameKey(shownKey.slice(0, -1), deps) ? items : [];
 }
 
 export function useCursorList<Item, Page extends CursorPage<Item>>(
@@ -138,7 +158,7 @@ export function useCursorList<Item, Page extends CursorPage<Item>>(
   const isCurrent = state !== null && sameKey(state.key, key);
   const isFailed = failure !== null && sameKey(failure.key, key);
   return {
-    items: state?.items ?? [],
+    items: visibleCursorItems(state?.items ?? [], state?.key ?? null, [...deps], isFailed),
     firstPage: state?.firstPage,
     isLoading: !isCurrent && !isFailed,
     error: isFailed ? failure.error : null,

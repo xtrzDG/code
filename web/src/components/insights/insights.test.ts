@@ -6,7 +6,7 @@ import { lookupMessage } from "@/i18n/translate";
 import { isOpenHandoff, sortHandoffs } from "./handoffs";
 import { allLabelKeys, BOOKING_STATUS, HANDOFF_STATUS, HANDOFF_URGENCY, LEAD_STATUS } from "./labels";
 import { formatMicroUsd, formatPercent, sharePercent } from "./numbers";
-import { appendPage, MAX_PAGE_SIZE, PAGE_SIZE, reloadLimit } from "./paging";
+import { afterFirstPageError, appendPage, MAX_PAGE_SIZE, PAGE_SIZE, reloadLimit } from "./paging";
 
 describe("enum labels", () => {
   it("point at texts that exist in the English dictionary", () => {
@@ -78,5 +78,18 @@ describe("server paging", () => {
     const shown = [{ id: "a" }, { id: "b" }];
     expect(appendPage(shown, [{ id: "b" }, { id: "c" }]).map((item) => item.id)).toEqual(["a", "b", "c"]);
     expect(appendPage([], [{ id: "x" }])).toEqual([{ id: "x" }]);
+  });
+});
+
+describe("afterFirstPageError", () => {
+  const shown = { page: { items: [{ id: "lead_6" }], next_cursor: "6" }, items: [{ id: "lead_6" }], nextCursor: "6" };
+
+  it("keeps the list when a reload of the same filters fails", () => {
+    expect(afterFirstPageError(shown, true)).toEqual(shown);
+  });
+
+  it("drops another filter's list and its cursor, so show more cannot mix the two", () => {
+    expect(afterFirstPageError(shown, false)).toEqual({ page: undefined, items: undefined, nextCursor: null });
+    expect(afterFirstPageError(null, true)).toEqual({ page: undefined, items: undefined, nextCursor: null });
   });
 });

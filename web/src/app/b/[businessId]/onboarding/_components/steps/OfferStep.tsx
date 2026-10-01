@@ -83,7 +83,7 @@ function OfferStepForm({
   const submit = async (advance: boolean) => {
     const errors: Record<string, OfferRowErrors> = {};
     for (const row of rows) {
-      const found = validateOfferRow(row);
+      const found = validateOfferRow(row, currency);
       if (Object.keys(found).length > 0) {
         errors[row.key] = found;
       }

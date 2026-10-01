@@ -8,6 +8,7 @@ import { useApiMutation, useApiQuery } from "@/api/hooks";
 import { unwrap } from "@/api/result";
 import { useBusiness, useBusinessFormat } from "@/components/business/BusinessContext";
 import { IconShield } from "@/components/icons";
+import { RefreshFailed } from "@/components/insights/common";
 import { Alert, Badge, Button, Card, Checkbox, EmptyState, ErrorState, Field, Input, LoadingBlock, Modal, useToast } from "@/components/ui";
 import { CHANNEL_NAMES } from "@/components/workspace/channelNames";
 import { ConfirmDialog } from "@/components/workspace/ConfirmDialog";
@@ -345,6 +346,7 @@ function DataRequestsCard() {
           </p>
         ) : (
           <div className="space-y-3" aria-busy={contacts.isLoading}>
+            {contacts.error ? <RefreshFailed error={contacts.error} onRetry={contacts.reload} /> : null}
             <ul className="divide-y divide-line rounded-xl border border-line">
               {contacts.items.map((contact) => {
                 const name = displayName(contact);

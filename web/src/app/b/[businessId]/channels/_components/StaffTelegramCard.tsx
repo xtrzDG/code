@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useState, type FormEvent } from "react";
+import { useRouter } from "next/navigation";
+import { useEffect, useState, type FormEvent } from "react";
 
 import { api } from "@/api/client";
 import { useApiMutation } from "@/api/hooks";
@@ -28,6 +29,7 @@ type TelegramLink = Schema<"TelegramLinkView">;
 export function StaffTelegramCard({ canManage }: { canManage: boolean }) {
   const { t, locale } = useI18n();
   const { business } = useBusiness();
+  const router = useRouter();
   const [name, setName] = useState("");
   const [language, setLanguage] = useState(business.owner_language);
   const [nameError, setNameError] = useState(false);
@@ -41,6 +43,22 @@ export function StaffTelegramCard({ canManage }: { canManage: boolean }) {
   );
 
   const linked = (business.manager_contacts ?? []).filter((contact) => contact.channel === "telegram");
+
+  // The bot adds the manager on the server when they open the link (often on
+  // another device): reload the business when the owner comes back here.
+  useEffect(() => {
+    const refresh = () => {
+      if (document.visibilityState === "visible") {
+        router.refresh();
+      }
+    };
+    window.addEventListener("focus", refresh);
+    document.addEventListener("visibilitychange", refresh);
+    return () => {
+      window.removeEventListener("focus", refresh);
+      document.removeEventListener("visibilitychange", refresh);
+    };
+  }, [router]);
 
   const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
