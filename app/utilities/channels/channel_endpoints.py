@@ -15,6 +15,10 @@ VOICE_TOOL_PATH_TEMPLATE: str = "/v1/voice/tools/{tool_name}"
 VOICE_CALL_INITIATION_PATH: str = "/v1/voice/webhooks/conversation-initiation"
 VOICE_POST_CALL_PATH: str = "/v1/voice/webhooks/post-call"
 WIDGET_SCRIPT_PATH: str = "/widget.js"
+WIDGET_DEMO_PATH: str = "/widget/demo"
+# Attribute of the embed <script> tag that names the business; widget.js
+# reads the same attribute.
+WIDGET_BUSINESS_ATTRIBUTE: str = "data-tenant"
 
 TELEGRAM_SECRET_HEADER: str = "X-Telegram-Bot-Api-Secret-Token"
 META_SIGNATURE_HEADER: str = "X-Hub-Signature-256"

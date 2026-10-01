@@ -24,6 +24,7 @@ from app.gateways.http.user_authentication import (
 )
 from app.gateways.http.users_routes import build_users_router
 from app.gateways.http.voice_routes import build_voice_router
+from app.gateways.http.widget_script_routes import build_widget_script_router
 
 
 def build_application_routers(app_container: AppContainer) -> list[APIRouter]:
@@ -206,4 +207,5 @@ def build_application_routers(app_container: AppContainer) -> list[APIRouter]:
             open_client_cabinet_operator=operators.open_client_cabinet_operator(),
             current_user=current_user,
         ),
+        build_widget_script_router(),
     ]
