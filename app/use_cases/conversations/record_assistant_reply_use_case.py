@@ -13,6 +13,7 @@ from app.schemas.constants.conversations import ConversationStatus, MessageAutho
 from app.schemas.domain.billing import UsageEventDocument
 from app.schemas.domain.conversations import ConversationDocument, MessageDocument
 from app.schemas.dto.conversation_engine import PreparedTurn, ReplyRecord
+from app.schemas.dto.conversation_feed import ToolCallView
 from app.schemas.dto.conversations import AssistantReply
 from app.schemas.typings.billing.constrained_integers import (
     CostMicroUsd,
@@ -39,7 +40,8 @@ class RecordAssistantReplyUseCase(UseCaseContract[ReplyRecord, AssistantReply]):
     model price table); usage events record input and output tokens and one
     dialog per real conversation. The conversation, re-read because tools
     may have changed it, gets its last message time and the HANDOFF status
-    when staff now own it.
+    when staff now own it. The reply names the version that answered and
+    carries the turn's tool calls.
     """
 
     def __init__(
@@ -121,6 +123,17 @@ class RecordAssistantReplyUseCase(UseCaseContract[ReplyRecord, AssistantReply]):
             created_booking_ids=list(input_data.created_booking_ids),
             created_lead_ids=list(input_data.created_lead_ids),
             created_handoff_ids=list(input_data.created_handoff_ids),
+            assistant_version_id=turn.version.id,
+            assistant_version_number=turn.version.version_number,
+            tool_calls=[
+                ToolCallView(
+                    tool_name=record.tool_name,
+                    input_json=record.input_json,
+                    result_json=record.result_json,
+                    is_error=record.is_error,
+                )
+                for record in input_data.tool_calls
+            ],
         )
 
     def _find_disclosure(

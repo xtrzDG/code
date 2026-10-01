@@ -2,6 +2,7 @@ from typed_time_provider import Microseconds, WallClock
 
 from app.contracts.registries import NicheTemplateRegistryContract
 from app.contracts.repositories import (
+    AutotestRunRepoContract,
     BusinessProfileRepoContract,
     DpaAcceptanceRepoContract,
     KnowledgeItemRepoContract,
@@ -9,27 +10,62 @@ from app.contracts.repositories import (
     SubscriptionRepoContract,
 )
 from app.contracts.use_case_contract import UseCaseContract
+from app.contracts.voice_platform import VoiceAgentProvisionerAdapterContract
 from app.schemas.configurations.app_settings import AppSettings
+from app.schemas.constants.assistants import (
+    AssistantVersionStatus,
+    AutotestOutcome,
+    GoLiveCheckCode,
+)
+from app.schemas.constants.environment import DeploymentEnvironment
+from app.schemas.constants.profiles import ProfileGapKind
+from app.schemas.domain.assistants import AssistantVersionDocument, AutotestRunDocument
+from app.schemas.domain.billing import SubscriptionDocument
 from app.schemas.domain.businesses import BusinessDocument
+from app.schemas.dto.go_live import (
+    GoLiveAutotestRunSummary,
+    GoLiveCheck,
+    GoLiveReadiness,
+    GoLiveReadinessRequest,
+)
 from app.schemas.dto.profiles import ProfileGapFinding
-from app.schemas.exceptions.application_errors import ConflictError
+from app.schemas.typings.assistants.constrained_integers import AutotestScenarioCount
+from app.schemas.typings.assistants.constrained_strings import GoLiveCheckDetail
+from app.schemas.typings.assistants.strings import GoLiveCheckMessage
+from app.schemas.typings.platform.constrained_strings import EnvironmentVariableName
 from app.use_cases.billing.billing_records import (
     find_current_subscription,
     is_service_paid_for,
 )
 from app.utilities.knowledge.profile_gaps import find_profile_gaps
 
+NO_SUBSCRIPTION_DETAIL: str = "none"
+PARTIAL_COVERAGE_DETAIL: str = "partial_coverage"
+APP_BASE_URL_SETTING: str = "APP_BASE_URL"
+# Versions that may go live as far as the autotests are concerned: READY
+# passed them, a PUBLISHED or ARCHIVED one was live already (rollback).
+AUTOTESTS_OK_STATUSES: frozenset[AssistantVersionStatus] = frozenset(
+    {
+        AssistantVersionStatus.READY,
+        AssistantVersionStatus.PUBLISHED,
+        AssistantVersionStatus.ARCHIVED,
+    }
+)
 
-class CheckGoLiveReadinessUseCase(UseCaseContract[BusinessDocument, None]):
+
+class CheckGoLiveReadinessUseCase(
+    UseCaseContract[GoLiveReadinessRequest, GoLiveReadiness]
+):
     """
-    Refuse to make an assistant live while a launch condition is missing
-    (concept: the trial or a paid subscription, the data processing
-    agreement, and section 4 "Проверка" - nothing blocking left in the
-    profile, including a staff contact that receives handoffs, bookings and
-    leads).
+    The go-live checklist of a version (concept: the trial or a paid
+    subscription, the data processing agreement, and section 4 "Проверка" -
+    nothing blocking left in the profile, a staff contact that receives
+    handoffs, bookings and leads, passed autotests, and for voice versions
+    a voice platform the server can set agents up on).
 
-    Raises:
-        ConflictError: listing everything still missing.
+    It only reports; publishing and rollback refuse with the failed blocking
+    checks as reasons. Voice settings missing in development or test are a
+    warning: such a version goes live without a voice agent there.
     """
 
     def __init__(
@@ -39,7 +75,9 @@ class CheckGoLiveReadinessUseCase(UseCaseContract[BusinessDocument, None]):
         business_profile_repo: BusinessProfileRepoContract,
         knowledge_item_repo: KnowledgeItemRepoContract,
         resource_repo: ResourceRepoContract,
+        autotest_run_repo: AutotestRunRepoContract,
         niche_template_registry: NicheTemplateRegistryContract,
+        voice_agent_provisioner: VoiceAgentProvisionerAdapterContract,
         app_settings: AppSettings,
         wall_clock: WallClock[Microseconds],
     ) -> None:
@@ -48,26 +86,90 @@ class CheckGoLiveReadinessUseCase(UseCaseContract[BusinessDocument, None]):
         self._business_profile_repo: BusinessProfileRepoContract = business_profile_repo
         self._knowledge_item_repo: KnowledgeItemRepoContract = knowledge_item_repo
         self._resource_repo: ResourceRepoContract = resource_repo
+        self._autotest_run_repo: AutotestRunRepoContract = autotest_run_repo
         self._niche_template_registry: NicheTemplateRegistryContract = (
             niche_template_registry
+        )
+        self._voice_agent_provisioner: VoiceAgentProvisionerAdapterContract = (
+            voice_agent_provisioner
         )
         self._app_settings: AppSettings = app_settings
         self._wall_clock: WallClock[Microseconds] = wall_clock
 
-    def run(self, input_data: BusinessDocument) -> None:
-        business: BusinessDocument = input_data
-        missing: list[str] = []
-        if not is_service_paid_for(
-            find_current_subscription(self._subscription_repo, business.id),
-            self._wall_clock.now_unix(),
-        ):
-            missing.append("start the trial or pay for the subscription")
+    def run(self, input_data: GoLiveReadinessRequest) -> GoLiveReadiness:
+        business: BusinessDocument = input_data.business
+        version: AssistantVersionDocument = input_data.version
+        subscription: SubscriptionDocument | None = find_current_subscription(
+            self._subscription_repo, business.id
+        )
+        run: AutotestRunDocument | None = (
+            self._autotest_run_repo.get(business.id, version.autotest_run_id)
+            if version.autotest_run_id is not None
+            else None
+        )
+        checks: list[GoLiveCheck] = [
+            self._check_subscription(subscription),
+            self._check_dpa(business),
+            *self._check_profile(business),
+            check_autotests(version, run),
+        ]
+        if version.is_voice_enabled:
+            checks.append(self._check_voice_configuration())
 
-        if not self._is_dpa_accepted(business):
-            missing.append(
-                "accept the data processing agreement (version "
-                f"{self._app_settings.dpa_document_version})"
-            )
+        return GoLiveReadiness(
+            business_id=business.id,
+            assistant_version_id=version.id,
+            version_number=version.version_number,
+            version_status=version.status,
+            is_ready=all(check.is_ok or not check.is_blocking for check in checks),
+            checks=checks,
+            autotest_run=None if run is None else summarize_autotest_run(run),
+            subscription_status=None if subscription is None else subscription.status,
+            dpa_document_version=self._app_settings.dpa_document_version,
+        )
+
+    def _check_subscription(
+        self, subscription: SubscriptionDocument | None
+    ) -> GoLiveCheck:
+        is_paid: bool = is_service_paid_for(subscription, self._wall_clock.now_unix())
+        message: str = "Start the trial or pay for the subscription."
+        if is_paid:
+            message = "The trial or a paid subscription covers the assistant."
+
+        return GoLiveCheck(
+            code=GoLiveCheckCode.SUBSCRIPTION_OR_TRIAL,
+            is_ok=is_paid,
+            is_blocking=True,
+            message=GoLiveCheckMessage(message),
+            details=[
+                GoLiveCheckDetail(
+                    NO_SUBSCRIPTION_DETAIL
+                    if subscription is None
+                    else subscription.status.value
+                )
+            ],
+        )
+
+    def _check_dpa(self, business: BusinessDocument) -> GoLiveCheck:
+        version: str = str(self._app_settings.dpa_document_version)
+        is_accepted: bool = any(
+            str(acceptance.document_version) == version
+            for acceptance in self._dpa_acceptance_repo.list_by_business(business.id)
+        )
+        return GoLiveCheck(
+            code=GoLiveCheckCode.DPA,
+            is_ok=is_accepted,
+            is_blocking=True,
+            message=GoLiveCheckMessage(
+                f"The data processing agreement (version {version}) is accepted."
+                if is_accepted
+                else f"Accept the data processing agreement (version {version})."
+            ),
+            details=[GoLiveCheckDetail(version)],
+        )
+
+    def _check_profile(self, business: BusinessDocument) -> list[GoLiveCheck]:
+        """Blocking profile gaps, with the missing staff contact on its own."""
 
         blocking: list[ProfileGapFinding] = [
             finding
@@ -80,21 +182,133 @@ class CheckGoLiveReadinessUseCase(UseCaseContract[BusinessDocument, None]):
             )
             if finding.is_blocking
         ]
-        if blocking:
-            kinds: list[str] = list(
-                dict.fromkeys(finding.kind.value for finding in blocking)
-            )
-            missing.append(
-                "complete the profile (see what to add: " + ", ".join(kinds) + ")"
-            )
-
-        if missing:
-            raise ConflictError(
-                "The assistant cannot go live yet: " + "; ".join(missing) + "."
-            )
-
-    def _is_dpa_accepted(self, business: BusinessDocument) -> bool:
-        return any(
-            acceptance.document_version == self._app_settings.dpa_document_version
-            for acceptance in self._dpa_acceptance_repo.list_by_business(business.id)
+        has_staff_contact: bool = not any(
+            finding.kind is ProfileGapKind.NO_HANDOFF_CONTACT for finding in blocking
         )
+        gap_kinds: list[str] = list(
+            dict.fromkeys(
+                finding.kind.value
+                for finding in blocking
+                if finding.kind is not ProfileGapKind.NO_HANDOFF_CONTACT
+            )
+        )
+        return [
+            GoLiveCheck(
+                code=GoLiveCheckCode.PROFILE_GAPS,
+                is_ok=gap_kinds == [],
+                is_blocking=True,
+                message=GoLiveCheckMessage(
+                    "Nothing required is missing in the profile."
+                    if gap_kinds == []
+                    else "Complete the profile (see what to add: "
+                    + ", ".join(gap_kinds)
+                    + ")."
+                ),
+                details=[GoLiveCheckDetail(kind) for kind in gap_kinds],
+            ),
+            GoLiveCheck(
+                code=GoLiveCheckCode.STAFF_CONTACT,
+                is_ok=has_staff_contact,
+                is_blocking=True,
+                message=GoLiveCheckMessage(
+                    "A staff contact receives handoffs, bookings and leads."
+                    if has_staff_contact
+                    else "Add a staff contact who receives handoffs, bookings "
+                    "and leads."
+                ),
+                details=(
+                    []
+                    if has_staff_contact
+                    else [GoLiveCheckDetail(ProfileGapKind.NO_HANDOFF_CONTACT.value)]
+                ),
+            ),
+        ]
+
+    def _check_voice_configuration(self) -> GoLiveCheck:
+        missing: list[EnvironmentVariableName] = []
+        if self._app_settings.app_base_url is None:
+            missing.append(EnvironmentVariableName(APP_BASE_URL_SETTING))
+
+        missing.extend(self._voice_agent_provisioner.list_missing_settings())
+        if missing == []:
+            return GoLiveCheck(
+                code=GoLiveCheckCode.VOICE_CONFIGURATION,
+                is_ok=True,
+                is_blocking=True,
+                message=GoLiveCheckMessage("The voice agent can be set up."),
+            )
+
+        names: str = ", ".join(str(name) for name in missing)
+        is_production: bool = (
+            self._app_settings.environment is DeploymentEnvironment.PRODUCTION
+        )
+        return GoLiveCheck(
+            code=GoLiveCheckCode.VOICE_CONFIGURATION,
+            is_ok=False,
+            is_blocking=is_production,
+            message=GoLiveCheckMessage(
+                f"The voice agent cannot be set up: {names} is not configured."
+                if is_production
+                else f"Voice is not configured on this server ({names}); the "
+                "version goes live without a voice agent (development only)."
+            ),
+            details=[GoLiveCheckDetail(str(name)) for name in missing],
+        )
+
+
+def check_autotests(
+    version: AssistantVersionDocument,
+    run: AutotestRunDocument | None,
+) -> GoLiveCheck:
+    """Passed autotests: a READY version (or one that was live already)."""
+
+    details: list[GoLiveCheckDetail] = [GoLiveCheckDetail(version.status.value)]
+    if run is not None:
+        details.append(GoLiveCheckDetail(run.status.value))
+        if not run.is_full_coverage:
+            details.append(GoLiveCheckDetail(PARTIAL_COVERAGE_DETAIL))
+
+    number: int = int(version.version_number)
+    message: str
+    match version.status:
+        case AssistantVersionStatus.READY:
+            message = f"Version {number} passed its autotests."
+        case AssistantVersionStatus.PUBLISHED:
+            message = f"Version {number} is live."
+        case AssistantVersionStatus.ARCHIVED:
+            message = f"Version {number} was live before."
+        case AssistantVersionStatus.TESTING:
+            message = (
+                f"Version {number} is being tested; publish it when the "
+                "autotests finish."
+            )
+        case AssistantVersionStatus.DRAFT | AssistantVersionStatus.TESTS_FAILED:
+            message = (
+                f"Version {number} has not passed the autotests (status "
+                f"{version.status.value}). Run the autotests in every language "
+                "and publish it when it is ready."
+            )
+
+    return GoLiveCheck(
+        code=GoLiveCheckCode.AUTOTESTS,
+        is_ok=version.status in AUTOTESTS_OK_STATUSES,
+        is_blocking=True,
+        message=GoLiveCheckMessage(message),
+        details=details,
+    )
+
+
+def summarize_autotest_run(run: AutotestRunDocument) -> GoLiveAutotestRunSummary:
+    return GoLiveAutotestRunSummary(
+        id=run.id,
+        status=run.status,
+        is_full_coverage=run.is_full_coverage,
+        is_passed=run.is_passed,
+        scenario_count=AutotestScenarioCount(len(run.results)),
+        passed_count=AutotestScenarioCount(
+            sum(1 for result in run.results if result.outcome is AutotestOutcome.PASSED)
+        ),
+        pass_rate=run.pass_rate,
+        average_score=run.average_score,
+        updated_at=run.updated_at,
+    )

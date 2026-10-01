@@ -7,7 +7,10 @@ from app.contracts.repositories import (
 )
 from app.contracts.transformer_contract import TransformerContract
 from app.contracts.use_case_contract import UseCaseContract
-from app.schemas.constants.assistants import AssistantVersionStatus
+from app.schemas.constants.assistants import (
+    AssistantVersionRefusalCode,
+    AssistantVersionStatus,
+)
 from app.schemas.constants.compliance import AuditAction
 from app.schemas.constants.users import BusinessMemberRole
 from app.schemas.domain.assistants import AssistantVersionDocument
@@ -20,6 +23,11 @@ from app.schemas.dto.assistants import (
     AssistantVersionDetails,
     PublishAssistantVersionCommand,
 )
+from app.schemas.dto.go_live import (
+    GoLiveCheck,
+    GoLiveReadiness,
+    GoLiveReadinessRequest,
+)
 from app.schemas.exceptions.application_errors import (
     AccessDeniedError,
     ConflictError,
@@ -30,6 +38,12 @@ from app.schemas.typings.compliance.strings import (
     AuditEntityReference,
 )
 from app.schemas.typings.users.prefixed_id import UserId
+from app.utilities.assembly.go_live_refusals import (
+    build_check_reason,
+    build_version_reason,
+    describe_go_live_refusal,
+    find_blocking_failures,
+)
 
 UNTESTED_STATUSES: frozenset[AssistantVersionStatus] = frozenset(
     {AssistantVersionStatus.DRAFT, AssistantVersionStatus.TESTS_FAILED}
@@ -47,6 +61,11 @@ class PublishAssistantVersionUseCase(
     platform admin may force it with accept_failed_tests, and that decision
     is written to the audit log. A version under test, an already published
     one and an archived one (use rollback) are conflicts.
+
+    Every refusal carries machine-readable reasons: an untested version or
+    one under test is refused with all failed go-live checks at once (the
+    "autotests" check first in line with the others), a live or archived one
+    with an AssistantVersionRefusalCode.
     """
 
     def __init__(
@@ -56,6 +75,9 @@ class PublishAssistantVersionUseCase(
             BusinessDocument,
         ],
         assistant_version_repo: AssistantVersionRepoContract,
+        check_go_live_readiness: UseCaseContract[
+            GoLiveReadinessRequest, GoLiveReadiness
+        ],
         activate_assistant_version: UseCaseContract[
             AssistantVersionActivation,
             AssistantVersionDocument,
@@ -75,6 +97,9 @@ class PublishAssistantVersionUseCase(
         self._assistant_version_repo: AssistantVersionRepoContract = (
             assistant_version_repo
         )
+        self._check_go_live_readiness: UseCaseContract[
+            GoLiveReadinessRequest, GoLiveReadiness
+        ] = check_go_live_readiness
         self._activate_assistant_version: UseCaseContract[
             AssistantVersionActivation,
             AssistantVersionDocument,
@@ -106,7 +131,7 @@ class PublishAssistantVersionUseCase(
                 f"Assistant version {input_data.version_id} was not found."
             )
 
-        is_forced: bool = self._require_publishable(version, input_data)
+        is_forced: bool = self._require_publishable(business, version, input_data)
         published_version: AssistantVersionDocument = (
             self._activate_assistant_version.run(
                 AssistantVersionActivation(business=business, version=version)
@@ -130,6 +155,7 @@ class PublishAssistantVersionUseCase(
 
     def _require_publishable(
         self,
+        business: BusinessDocument,
         version: AssistantVersionDocument,
         command: PublishAssistantVersionCommand,
     ) -> bool:
@@ -138,34 +164,58 @@ class PublishAssistantVersionUseCase(
         if version.status is AssistantVersionStatus.READY:
             return False
 
-        if version.status in UNTESTED_STATUSES:
-            if not command.accept_failed_tests:
-                raise ConflictError(
-                    f"Version {version.version_number} has not passed the "
-                    f"autotests (status {version.status.value}). Run the "
-                    "autotests in every language and publish it when it is ready."
-                )
-
+        if version.status in UNTESTED_STATUSES and command.accept_failed_tests:
             if not self._is_platform_admin(command.user_id):
-                raise AccessDeniedError(
+                message: str = (
                     "Only a platform admin may publish a version that has not "
                     "passed the autotests (accept_failed_tests)."
+                )
+                raise AccessDeniedError(
+                    message,
+                    reasons=[
+                        build_version_reason(
+                            AssistantVersionRefusalCode.FORCE_PUBLISH_ADMIN_ONLY,
+                            message,
+                        )
+                    ],
                 )
 
             return True
 
-        if version.status is AssistantVersionStatus.TESTING:
+        if version.status in UNTESTED_STATUSES or (
+            version.status is AssistantVersionStatus.TESTING
+        ):
+            readiness: GoLiveReadiness = self._check_go_live_readiness.run(
+                GoLiveReadinessRequest(business=business, version=version)
+            )
+            failures: list[GoLiveCheck] = find_blocking_failures(readiness)
             raise ConflictError(
-                f"Version {version.version_number} is being tested; publish it "
-                "when the autotests finish."
+                describe_go_live_refusal(failures),
+                reasons=[build_check_reason(check) for check in failures],
             )
 
         if version.status is AssistantVersionStatus.PUBLISHED:
-            raise ConflictError(f"Version {version.version_number} is already live.")
+            message = f"Version {version.version_number} is already live."
+            raise ConflictError(
+                message,
+                reasons=[
+                    build_version_reason(
+                        AssistantVersionRefusalCode.VERSION_ALREADY_LIVE, message
+                    )
+                ],
+            )
 
-        raise ConflictError(
+        message = (
             f"Version {version.version_number} is archived; use rollback to "
             "publish it again."
+        )
+        raise ConflictError(
+            message,
+            reasons=[
+                build_version_reason(
+                    AssistantVersionRefusalCode.VERSION_ARCHIVED, message
+                )
+            ],
         )
 
     def _is_platform_admin(self, user_id: UserId) -> bool:

@@ -4,7 +4,11 @@ from pydantic import Field
 from app.schemas.constants.assistants import AssistantToolName, LlmEffort
 from app.schemas.constants.channels import ChannelKind
 from app.schemas.constants.conversations import LlmStopReason, ReplyGuardVerdict
-from app.schemas.typings.assistants.constrained_integers import LlmMaxOutputTokens
+from app.schemas.dto.conversation_feed import ToolCallView
+from app.schemas.typings.assistants.constrained_integers import (
+    AssistantVersionNumber,
+    LlmMaxOutputTokens,
+)
 from app.schemas.typings.assistants.constrained_strings import LlmModelId
 from app.schemas.typings.assistants.prefixed_id import AssistantVersionId
 from app.schemas.typings.assistants.strings import (
@@ -66,7 +70,10 @@ class AssistantReply(ImmutableDTO):
     conversation (open handoff in a chat channel). `disclosure_text` is the
     "I am an AI assistant" sentence the server put in front of the first
     reply (part of `text`), so checks of what the model wrote can leave it
-    out.
+    out. `assistant_version_id` and `assistant_version_number` name the
+    version that answered (the one the conversation is pinned to);
+    `tool_calls` are the tools the model called in this turn, with their
+    input and result (the owner's test chat shows them).
     """
 
     conversation_id: ConversationId
@@ -79,6 +86,9 @@ class AssistantReply(ImmutableDTO):
     created_booking_ids: list[BookingId] = Field(default_factory=list[BookingId])
     created_lead_ids: list[LeadId] = Field(default_factory=list[LeadId])
     created_handoff_ids: list[HandoffId] = Field(default_factory=list[HandoffId])
+    assistant_version_id: AssistantVersionId | None = None
+    assistant_version_number: AssistantVersionNumber | None = None
+    tool_calls: list[ToolCallView] = Field(default_factory=list[ToolCallView])
 
 
 class LlmToolDefinition(ImmutableDTO):

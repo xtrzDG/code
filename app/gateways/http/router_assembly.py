@@ -161,6 +161,7 @@ def build_application_routers(app_container: AppContainer) -> list[APIRouter]:
             ),
             get_assistant_version_operator=operators.get_assistant_version_operator(),
             get_autotest_run_operator=operators.get_autotest_run_operator(),
+            get_go_live_readiness_operator=operators.get_go_live_readiness_operator(),
             run_autotests_operator=operators.run_autotests_operator(),
             publish_assistant_version_operator=(
                 operators.publish_assistant_version_operator()

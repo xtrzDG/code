@@ -152,6 +152,7 @@ from app.schemas.dto.conversations import (
     VoiceToolCallRequest,
     VoiceToolCallResult,
 )
+from app.schemas.dto.go_live import GoLiveReadiness, GoLiveReadinessRequest
 from app.schemas.dto.handoffs import (
     HandoffCommand,
     HandoffResult,
@@ -288,6 +289,9 @@ from app.use_cases.assistants.check_go_live_readiness_use_case import (
 )
 from app.use_cases.assistants.get_assistant_version_use_case import (
     GetAssistantVersionUseCase,
+)
+from app.use_cases.assistants.get_go_live_readiness_use_case import (
+    GetGoLiveReadinessUseCase,
 )
 from app.use_cases.assistants.list_assistant_versions_use_case import (
     ListAssistantVersionsUseCase,
@@ -1503,7 +1507,7 @@ class UseCasesContainer(containers.DeclarativeContainer):
         autotest_run_view_transformer=transformers.autotest_run_view_transformer,
     )
     check_go_live_readiness_use_case: Factory[
-        UseCaseContract[BusinessDocument, None]
+        UseCaseContract[GoLiveReadinessRequest, GoLiveReadiness]
     ] = Factory(
         CheckGoLiveReadinessUseCase,
         subscription_repo=repositories.subscription_repo,
@@ -1511,9 +1515,19 @@ class UseCasesContainer(containers.DeclarativeContainer):
         business_profile_repo=repositories.business_profile_repo,
         knowledge_item_repo=repositories.knowledge_item_repo,
         resource_repo=repositories.resource_repo,
+        autotest_run_repo=repositories.autotest_run_repo,
         niche_template_registry=registries.niche_template_registry,
+        voice_agent_provisioner=adapters.voice_agent_provisioner,
         app_settings=config.app_settings,
         wall_clock=time_provider.microsecond_wall_clock,
+    )
+    get_go_live_readiness_use_case: Factory[
+        UseCaseContract[AssistantVersionQuery, GoLiveReadiness]
+    ] = Factory(
+        GetGoLiveReadinessUseCase,
+        authorize_business_access=authorize_business_access_use_case,
+        assistant_version_repo=repositories.assistant_version_repo,
+        check_go_live_readiness=check_go_live_readiness_use_case,
     )
     activate_assistant_version_use_case: Factory[
         UseCaseContract[AssistantVersionActivation, AssistantVersionDocument]
@@ -1559,6 +1573,7 @@ class UseCasesContainer(containers.DeclarativeContainer):
         PublishAssistantVersionUseCase,
         authorize_business_access=authorize_business_access_use_case,
         assistant_version_repo=repositories.assistant_version_repo,
+        check_go_live_readiness=check_go_live_readiness_use_case,
         activate_assistant_version=activate_assistant_version_use_case,
         version_details_transformer=transformers.assistant_version_details_transformer,
         user_repo=repositories.user_repo,

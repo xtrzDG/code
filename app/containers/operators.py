@@ -271,6 +271,9 @@ class OperatorsContainer(containers.DeclarativeContainer):
     get_autotest_run_operator = pipeline_operator(
         pipelines.get_autotest_run_pipeline, storage_scope
     )
+    get_go_live_readiness_operator = pipeline_operator(
+        pipelines.get_go_live_readiness_pipeline, storage_scope
+    )
     publish_assistant_version_operator = pipeline_operator(
         pipelines.publish_assistant_version_pipeline, storage_scope
     )

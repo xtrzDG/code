@@ -27,6 +27,8 @@ from app.schemas.dto.assistants import (
     RunAutotestsCommand,
     RunAutotestsRequest,
 )
+from app.schemas.dto.errors import ErrorBody
+from app.schemas.dto.go_live import GoLiveReadiness
 from app.schemas.exceptions.application_errors import ValidationFailedError
 from app.schemas.typings.assistants.prefixed_id import AssistantVersionId
 from app.schemas.typings.businesses.prefixed_id import BusinessId
@@ -35,6 +37,21 @@ from app.schemas.typings.users.prefixed_id import UserId
 VERSIONS_PATH: str = "/v1/businesses/{business_id}/assistant-versions"
 VERSION_PATH: str = VERSIONS_PATH + "/{version_id}"
 EMPTY_JSON_OBJECT: bytes = b"{}"
+REFUSAL_RESPONSES: dict[int | str, dict[str, Any]] = {
+    status.HTTP_403_FORBIDDEN: {
+        "model": ErrorBody,
+        "description": "Not allowed; reasons[].code force_publish_admin_only.",
+    },
+    status.HTTP_409_CONFLICT: {
+        "model": ErrorBody,
+        "description": (
+            "Refused; reasons[].code names each failed go-live check "
+            "(subscription_or_trial, dpa, profile_gaps, staff_contact, "
+            "autotests, voice_configuration) or the version state "
+            "(version_already_live, version_archived, version_not_archived)."
+        ),
+    },
+}
 
 
 def build_optional_json_body_dependency[Body: BaseModel](
@@ -84,6 +101,10 @@ def build_assistant_router(
         AssistantVersionDetails,
     ],
     get_autotest_run_operator: OperatorContract[AssistantVersionQuery, AutotestRunView],
+    get_go_live_readiness_operator: OperatorContract[
+        AssistantVersionQuery,
+        GoLiveReadiness,
+    ],
     run_autotests_operator: OperatorContract[RunAutotestsCommand, AutotestRunView],
     publish_assistant_version_operator: OperatorContract[
         PublishAssistantVersionCommand,
@@ -108,6 +129,10 @@ def build_assistant_router(
              one version with its instruction and fact table
         GET  .../assistant-versions/{version_id}/autotest-run
              latest autotest run of the version (RUNNING while it plays)
+        GET  .../assistant-versions/{version_id}/go-live-readiness
+             the go-live checklist of the version: subscription_or_trial,
+             dpa, profile_gaps, staff_contact, autotests and (voice
+             versions) voice_configuration, each ok or not, blocking or not
         POST .../assistant-versions/{version_id}/autotests
              start the autotests again, optionally narrowed (202; only a
              run over every language and kind can make a version READY)
@@ -117,6 +142,11 @@ def build_assistant_router(
              untested one, platform admins only)
         POST .../assistant-versions/{version_id}/rollback
              make an earlier, archived version live again
+
+    A refused publish or rollback (409, or 403 for accept_failed_tests by a
+    non-admin) lists machine-readable `reasons`: the failed go-live check
+    codes with their details, or version_already_live, version_archived,
+    version_not_archived, force_publish_admin_only.
     """
 
     router = APIRouter(tags=["assistant"])
@@ -171,6 +201,16 @@ def build_assistant_router(
             build_version_query(user_id, business_id, version_id)
         )
 
+    @router.get(VERSION_PATH + "/go-live-readiness")
+    def get_go_live_readiness(
+        business_id: str,
+        version_id: str,
+        user_id: Annotated[UserId, Depends(current_user)],
+    ) -> GoLiveReadiness:
+        return get_go_live_readiness_operator.operate(
+            build_version_query(user_id, business_id, version_id)
+        )
+
     @router.post(
         VERSION_PATH + "/autotests",
         status_code=status.HTTP_202_ACCEPTED,
@@ -195,6 +235,7 @@ def build_assistant_router(
     @router.post(
         VERSION_PATH + "/publish",
         openapi_extra=describe_optional_json_body(PublishAssistantVersionRequest),
+        responses=REFUSAL_RESPONSES,
     )
     def publish_assistant_version(
         business_id: str,
@@ -211,7 +252,7 @@ def build_assistant_router(
             )
         )
 
-    @router.post(VERSION_PATH + "/rollback")
+    @router.post(VERSION_PATH + "/rollback", responses=REFUSAL_RESPONSES)
     def rollback_assistant_version(
         business_id: str,
         version_id: str,

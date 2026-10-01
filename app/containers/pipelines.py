@@ -330,6 +330,9 @@ class PipelinesContainer(containers.DeclarativeContainer):
     get_autotest_run_pipeline = orchestrator_pipeline(
         orchestrators.get_autotest_run_orchestrator
     )
+    get_go_live_readiness_pipeline = orchestrator_pipeline(
+        orchestrators.get_go_live_readiness_orchestrator
+    )
     publish_assistant_version_pipeline = orchestrator_pipeline(
         orchestrators.publish_assistant_version_orchestrator
     )

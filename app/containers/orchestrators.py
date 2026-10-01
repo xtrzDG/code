@@ -385,6 +385,9 @@ class OrchestratorsContainer(containers.DeclarativeContainer):
     get_autotest_run_orchestrator = use_case_orchestrator(
         use_cases.get_autotest_run_use_case
     )
+    get_go_live_readiness_orchestrator = use_case_orchestrator(
+        use_cases.get_go_live_readiness_use_case
+    )
     publish_assistant_version_orchestrator = use_case_orchestrator(
         use_cases.publish_assistant_version_use_case
     )

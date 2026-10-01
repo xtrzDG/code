@@ -5,9 +5,17 @@ from typing import Protocol
 from app.contracts.adapter_contract import AdapterContract
 from app.schemas.dto.voice import VoiceAgentSpec
 from app.schemas.typings.assistants.strings import VoiceAgentId
+from app.schemas.typings.platform.constrained_strings import EnvironmentVariableName
 
 
 class VoiceAgentProvisionerAdapterContract(AdapterContract, Protocol):
+    def list_missing_settings(self) -> list[EnvironmentVariableName]:
+        """
+        Server settings the voice platform still needs before agents can be
+        set up (empty when it is fully configured).
+        """
+        raise NotImplementedError
+
     def upsert_agent(self, spec: VoiceAgentSpec) -> VoiceAgentId:
         """
         Create the business's voice agent, or update it when
