@@ -21,6 +21,7 @@ from app.schemas.constants.channels import ChannelKind
 from app.schemas.constants.handoffs import HandoffReason, HandoffStatus, HandoffUrgency
 from app.schemas.domain.businesses import ManagerContact
 from app.schemas.dto.bookings import BookingView, LeadView
+from app.schemas.dto.paging import PageRequest
 from app.schemas.typings.bookings.booleans import (
     IsSandboxIncluded,
     WasCalendarConnected,
@@ -85,6 +86,7 @@ from app.schemas.typings.localization.strings import (
     FormattedPhoneNumber,
     RawPhoneNumberInput,
 )
+from app.schemas.typings.platform.constrained_strings import PageCursor
 from app.schemas.typings.profiles.strings import CancellationPolicyText
 from app.schemas.typings.users.prefixed_id import UserId
 
@@ -281,11 +283,15 @@ class ResolveHandoffCommand(ImmutableDTO):
 
 
 class ListUnansweredQuestionsQuery(ImmutableDTO):
-    """Questions the assistant could not answer, most frequent first."""
+    """
+    Questions the assistant could not answer, most frequent first, one page
+    at a time.
+    """
 
     business_id: BusinessId
     include_resolved: IsResolvedIncluded = False
     include_sandbox: IsSandboxIncluded = False
+    page: PageRequest = Field(default_factory=PageRequest)
 
 
 class UnansweredQuestionDetails(ImmutableDTO):
@@ -302,12 +308,16 @@ class UnansweredQuestionDetails(ImmutableDTO):
     is_sandbox: IsSandboxConversation = False
 
 
-class UnansweredQuestionListView(ImmutableDTO):
-    """Questions ordered by occurrence count, then most recent."""
+class UnansweredQuestionPage(ImmutableDTO):
+    """
+    One page of questions, the most asked first, then the most recently
+    asked; `next_cursor` asks for the next page (None on the last one).
+    """
 
     items: list[UnansweredQuestionDetails] = Field(
         default_factory=list[UnansweredQuestionDetails]
     )
+    next_cursor: PageCursor | None = None
 
 
 class AnswerUnansweredQuestionRequest(ImmutableDTO):

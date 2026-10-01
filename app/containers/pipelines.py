@@ -319,6 +319,9 @@ class PipelinesContainer(containers.DeclarativeContainer):
     confirm_imported_items_pipeline = orchestrator_pipeline(
         orchestrators.confirm_imported_items_orchestrator
     )
+    discard_import_batch_pipeline = orchestrator_pipeline(
+        orchestrators.discard_import_batch_orchestrator
+    )
 
     # --- Assistant versions and autotests.
     list_assistant_versions_pipeline = orchestrator_pipeline(

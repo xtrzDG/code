@@ -16,6 +16,8 @@ from pydantic import ValidationError
 from app.contracts.brain import MenuExtractionAdapterContract
 from app.contracts.llm_clients import OpenAiResponsesClientContract
 from app.schemas.constants.knowledge import KnowledgeItemKind
+from app.schemas.constants.menu_import import MenuLinkProblem
+from app.schemas.dto.errors import ErrorReason
 from app.schemas.dto.menu_import import (
     ExtractedMenuItem,
     MenuExtraction,
@@ -33,6 +35,11 @@ from app.schemas.typings.localization.constrained_strings import CurrencyCode
 from app.schemas.typings.menu_import.constrained_floats import ExtractionConfidence
 from app.schemas.typings.menu_import.constrained_integers import MenuLineCount
 from app.schemas.typings.menu_import.constrained_strings import ExtractedPriceAmount
+from app.schemas.typings.platform.constrained_strings import (
+    ErrorReasonCode,
+    ErrorReasonDetail,
+)
+from app.schemas.typings.platform.strings import ErrorReasonMessage
 
 type HostResolver = Callable[[str], list[str]]
 
@@ -41,6 +48,9 @@ IMAGE_MEDIA_TYPES: frozenset[str] = frozenset(
 )
 PDF_MEDIA_TYPE: str = "application/pdf"
 TEXT_MEDIA_TYPES: frozenset[str] = frozenset({"text/plain", "text/csv", "text/html"})
+SUPPORTED_MEDIA_TYPES: frozenset[str] = (
+    IMAGE_MEDIA_TYPES | {PDF_MEDIA_TYPE} | TEXT_MEDIA_TYPES
+)
 HTML_MEDIA_TYPE: str = "text/html"
 PAGE_TIMEOUT_SECONDS: float = 10.0
 MAX_PAGE_BYTES: int = 10 * 1024 * 1024
@@ -131,6 +141,10 @@ class MenuExtractionAdapter(MenuExtractionAdapterContract):
     addresses (no loopback, private or link-local hosts), at most
     10 MB, with up to three checked redirects.
 
+    A link that is not public, cannot be fetched or cannot be read as a
+    menu is a ValidationFailedError (422) with a MenuLinkProblem reason; an
+    unavailable model stays an ExternalServiceError (502).
+
     Lines the model returns in an unusable shape (empty title, unknown kind)
     are skipped and counted; malformed prices, currencies, durations and
     tags are dropped from a line rather than failing the import.
@@ -182,12 +196,26 @@ class MenuExtractionAdapter(MenuExtractionAdapterContract):
 
         if request.url is not None:
             media_type, data = self._fetch_page(str(request.url))
+            if media_type not in SUPPORTED_MEDIA_TYPES:
+                raise link_problem(
+                    MenuLinkProblem.UNREADABLE,
+                    f"The menu link leads to {media_type}, not a photo, PDF, "
+                    "text or web page.",
+                    f"media_type:{media_type}",
+                )
+
             return build_media_content(media_type, data)
 
         raise ValidationFailedError("Upload a menu file or give a link to it.")
 
     def _fetch_page(self, url: str) -> tuple[str, bytes]:
-        """Download a public page; returns its media type and body."""
+        """
+        Download a public page; returns its media type and body.
+
+        Raises:
+            ValidationFailedError: with a MenuLinkProblem reason when the
+                link is not public, cannot be fetched or is too large.
+        """
 
         current_url: str = url
         with httpx.Client(
@@ -202,16 +230,20 @@ class MenuExtractionAdapter(MenuExtractionAdapterContract):
                         if response.is_redirect:
                             location: str | None = response.headers.get("location")
                             if location is None:
-                                raise ValidationFailedError(
-                                    "The menu link redirects to nowhere."
+                                raise link_problem(
+                                    MenuLinkProblem.UNREACHABLE,
+                                    "The menu link redirects to nowhere.",
+                                    "redirect_without_location",
                                 )
 
                             current_url = urljoin(current_url, location)
                             continue
 
                         if response.status_code >= 400:
-                            raise ValidationFailedError(
-                                f"The menu link answered HTTP {response.status_code}."
+                            raise link_problem(
+                                MenuLinkProblem.UNREACHABLE,
+                                f"The menu link answered HTTP {response.status_code}.",
+                                f"http_status:{response.status_code}",
                             )
 
                         return (
@@ -219,30 +251,52 @@ class MenuExtractionAdapter(MenuExtractionAdapterContract):
                             read_limited_body(response),
                         )
                 except httpx.HTTPError as error:
-                    raise ExternalServiceError(
-                        f"The menu link cannot be opened: {type(error).__name__}."
+                    raise link_problem(
+                        MenuLinkProblem.UNREACHABLE,
+                        f"The menu link cannot be opened: {type(error).__name__}.",
+                        describe_fetch_error(error),
                     ) from error
 
-        raise ValidationFailedError("The menu link redirects too many times.")
+        raise link_problem(
+            MenuLinkProblem.UNREACHABLE,
+            "The menu link redirects too many times.",
+            "too_many_redirects",
+        )
 
     def _require_public_url(self, url: str) -> None:
         parts = urlsplit(url)
         host: str = (parts.hostname or "").lower()
         if parts.scheme not in ("http", "https") or host == "":
-            raise ValidationFailedError("The menu link must be an http(s) address.")
+            raise link_problem(
+                MenuLinkProblem.INVALID,
+                "The menu link must be an http(s) address.",
+                "not_http",
+            )
 
         if host == "localhost" or host.endswith(BLOCKED_HOST_SUFFIXES):
-            raise ValidationFailedError("The menu link must be a public address.")
+            raise link_problem(
+                MenuLinkProblem.INVALID,
+                "The menu link must be a public address.",
+                "not_public",
+            )
 
         try:
             addresses: list[str] = self._host_resolver(host)
         except OSError as error:
-            raise ValidationFailedError("The menu link's host is unknown.") from error
+            raise link_problem(
+                MenuLinkProblem.UNREACHABLE,
+                "The menu link's host is unknown.",
+                "unknown_host",
+            ) from error
 
         if not addresses or any(
             not is_public_address(address) for address in addresses
         ):
-            raise ValidationFailedError("The menu link must be a public address.")
+            raise link_problem(
+                MenuLinkProblem.INVALID,
+                "The menu link must be a public address.",
+                "not_public",
+            )
 
 
 def build_media_content(media_type: str, data: bytes) -> list[dict[str, object]]:
@@ -430,11 +484,44 @@ def read_limited_body(response: httpx.Response) -> bytes:
     for chunk in response.iter_bytes():
         body.extend(chunk)
         if len(body) > MAX_PAGE_BYTES:
-            raise ValidationFailedError(
-                "The menu behind the link is larger than 10 MB."
+            raise link_problem(
+                MenuLinkProblem.UNREADABLE,
+                "The menu behind the link is larger than 10 MB.",
+                "too_large",
             )
 
     return bytes(body)
+
+
+def link_problem(
+    problem: MenuLinkProblem,
+    message: str,
+    detail: str,
+) -> ValidationFailedError:
+    """A 422 for a menu link, with the problem as its machine-readable reason."""
+
+    return ValidationFailedError(
+        message,
+        reasons=[
+            ErrorReason(
+                code=ErrorReasonCode(problem.value),
+                message=ErrorReasonMessage(message),
+                details=[ErrorReasonDetail(detail)],
+            )
+        ],
+    )
+
+
+def describe_fetch_error(error: httpx.HTTPError) -> str:
+    """Detail of a failed page download: timeout, connection or other."""
+
+    if isinstance(error, httpx.TimeoutException):
+        return "timeout"
+
+    if isinstance(error, httpx.ConnectError):
+        return "connection_failed"
+
+    return "request_failed"
 
 
 def resolve_host_addresses(host: str) -> list[str]:

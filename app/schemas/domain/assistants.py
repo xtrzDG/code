@@ -22,6 +22,7 @@ from app.schemas.typings.assistants.constrained_floats import (
 )
 from app.schemas.typings.assistants.constrained_integers import (
     AssistantVersionNumber,
+    AutotestScenarioCount,
     JudgeScore,
 )
 from app.schemas.typings.assistants.constrained_strings import (
@@ -124,8 +125,10 @@ class AutotestRunDocument(BaseDocument):
     """
     One autotest run of an assistant version and its scenario results.
 
-    It is stored RUNNING when it starts (the worker plays it) and gets its
-    results when FINISHED. `languages` and `kinds` are what the owner asked
+    It is stored RUNNING when it starts (the worker plays it) with the number
+    of planned scenarios; the worker stores the results so far after every
+    scenario, so the cabinet can show progress, and all of them when
+    FINISHED. `languages` and `kinds` are what the owner asked
     for (None means all); `is_full_coverage` is True when the run covered
     every version language and every applicable scenario kind, the only
     kind of run that can make a version READY. `previous_version_status`
@@ -139,6 +142,7 @@ class AutotestRunDocument(BaseDocument):
     languages: list[LanguageTag] | None = None
     kinds: list[AutotestScenarioKind] | None = None
     is_full_coverage: IsFullAutotestCoverage = False
+    planned_scenario_count: AutotestScenarioCount | None = None
     previous_version_status: AssistantVersionStatus | None = None
     results: list[AutotestScenarioResult] = Field(
         default_factory=list[AutotestScenarioResult]

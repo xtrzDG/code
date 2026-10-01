@@ -69,8 +69,11 @@ class ConfirmImportedItemsUseCase(
 
         now: Microseconds = self._wall_clock.now_unix()
         for item in items:
-            if not item.is_active:
+            if not item.is_active or item.import_batch_id is not None:
+                # A confirmed item no longer belongs to its import's drafts,
+                # so discarding the import later keeps it.
                 item.is_active = True
+                item.import_batch_id = None
                 item.updated_at = now
                 self._knowledge_item_repo.save(item)
 

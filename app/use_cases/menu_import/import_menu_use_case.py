@@ -21,6 +21,7 @@ from app.schemas.exceptions.application_errors import ValidationFailedError
 from app.schemas.typings.billing.constrained_integers import MoneyAmountMinor
 from app.schemas.typings.knowledge.strings import KnowledgeAttributeValue
 from app.schemas.typings.localization.constrained_strings import CurrencyCode
+from app.schemas.typings.menu_import.prefixed_id import MenuImportBatchId
 from app.use_cases.menu_import.imported_item_views import (
     CONFIDENCE_ATTRIBUTE,
     PRINTED_CURRENCY_ATTRIBUTE,
@@ -51,7 +52,8 @@ class ImportMenuUseCase(UseCaseContract[ImportMenuCommand, MenuImportResult]):
     section 3) into knowledge item drafts.
 
     Drafts are inactive (the assistant does not use them) until the owner
-    confirms them, carry the model's confidence, and come from MENU_IMPORT.
+    confirms them, carry the model's confidence and the id of this import
+    (to discard the rest at once), and come from MENU_IMPORT.
     Prices become minor units of the business currency; a line printed in
     another currency keeps its printed price and is flagged instead, because
     exchange rates are never invented.
@@ -93,8 +95,9 @@ class ImportMenuUseCase(UseCaseContract[ImportMenuCommand, MenuImportResult]):
             )
         )
         now: Microseconds = self._wall_clock.now_unix()
+        batch_id: MenuImportBatchId = MenuImportBatchId()
         drafts: list[KnowledgeItemDocument] = [
-            build_draft(business, extracted_item, now)
+            build_draft(business, extracted_item, batch_id, now)
             for extracted_item in extraction.items
         ]
         for draft in drafts:
@@ -102,6 +105,7 @@ class ImportMenuUseCase(UseCaseContract[ImportMenuCommand, MenuImportResult]):
 
         return MenuImportResult(
             business_id=business.id,
+            batch_id=batch_id,
             items=[
                 build_imported_item_view(draft, business.owner_language)
                 for draft in drafts
@@ -133,6 +137,7 @@ def validate_import_request(request: MenuImportRequest) -> None:
 def build_draft(
     business: BusinessDocument,
     extracted_item: ExtractedMenuItem,
+    batch_id: MenuImportBatchId,
     now: Microseconds,
 ) -> KnowledgeItemDocument:
     printed_currency: CurrencyCode = (
@@ -181,6 +186,7 @@ def build_draft(
         attributes=attributes,
         source=KnowledgeItemSource.MENU_IMPORT,
         is_active=False,
+        import_batch_id=batch_id,
         created_at=now,
         updated_at=now,
     )

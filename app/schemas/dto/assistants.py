@@ -230,7 +230,9 @@ class AutotestRunView(ImmutableDTO):
     The run passes when every price and booking scenario passed and the
     average judge score is at least 4 of 5; only a passed run that covered
     every language and scenario kind (`is_full_coverage`) makes the version
-    READY. While `status` is RUNNING the worker is still playing it.
+    READY. While `status` is RUNNING the worker is still playing it:
+    `scenario_count` is then the number of planned scenarios and `results`
+    holds the ones finished so far (progress = results / scenario_count).
     """
 
     id: AutotestRunId
@@ -347,6 +349,14 @@ class AutotestJobPayload(ImmutableDTO):
     """Payload of the queued job that plays a started autotest run."""
 
     run_id: AutotestRunId
+
+
+class AutotestRunProgress(ImmutableDTO):
+    """Results of the scenarios a running autotest run finished so far."""
+
+    business_id: BusinessId
+    run_id: AutotestRunId
+    results: list[AutotestScenarioResult]
 
 
 class AutotestRunFailure(ImmutableDTO):

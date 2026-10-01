@@ -37,6 +37,7 @@ from app.use_cases.billing.billing_records import (
     find_current_subscription,
     is_service_paid_for,
 )
+from app.utilities.assembly.autotest_evaluation import count_run_scenarios
 from app.utilities.knowledge.profile_gaps import find_profile_gaps
 
 NO_SUBSCRIPTION_DETAIL: str = "none"
@@ -304,7 +305,7 @@ def summarize_autotest_run(run: AutotestRunDocument) -> GoLiveAutotestRunSummary
         status=run.status,
         is_full_coverage=run.is_full_coverage,
         is_passed=run.is_passed,
-        scenario_count=AutotestScenarioCount(len(run.results)),
+        scenario_count=count_run_scenarios(run),
         passed_count=AutotestScenarioCount(
             sum(1 for result in run.results if result.outcome is AutotestOutcome.PASSED)
         ),

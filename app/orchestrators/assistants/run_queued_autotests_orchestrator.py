@@ -6,6 +6,7 @@ from app.schemas.dto.assistants import (
     AutotestRunCompletion,
     AutotestRunFailure,
     AutotestRunPlan,
+    AutotestRunProgress,
     AutotestRunView,
     AutotestScenarioRun,
 )
@@ -15,7 +16,8 @@ from app.schemas.typings.platform.constrained_integers import ProcessedItemCount
 
 class RunQueuedAutotestsOrchestrator(OrchestratorContract[QueuedJobInput, JobReport]):
     """
-    Queued job "run_autotests": play every scenario of a started run, then
+    Queued job "run_autotests": play every scenario of a started run (its
+    results so far are stored after each one, for live progress), then
     store the results and set the version's status. A failure is retried
     by the worker; when the last attempt fails too, the run is given up so
     the version does not stay TESTING.
@@ -30,6 +32,7 @@ class RunQueuedAutotestsOrchestrator(OrchestratorContract[QueuedJobInput, JobRep
         ],
         finish_autotest_run: UseCaseContract[AutotestRunCompletion, AutotestRunView],
         abandon_autotest_run: UseCaseContract[AutotestRunFailure, None],
+        record_autotest_progress: UseCaseContract[AutotestRunProgress, None],
     ) -> None:
         self._resume_autotest_run: UseCaseContract[QueuedJobInput, AutotestRunPlan] = (
             resume_autotest_run
@@ -44,6 +47,9 @@ class RunQueuedAutotestsOrchestrator(OrchestratorContract[QueuedJobInput, JobRep
         ] = finish_autotest_run
         self._abandon_autotest_run: UseCaseContract[AutotestRunFailure, None] = (
             abandon_autotest_run
+        )
+        self._record_autotest_progress: UseCaseContract[AutotestRunProgress, None] = (
+            record_autotest_progress
         )
 
     def execute(self, input_data: QueuedJobInput) -> JobReport:
@@ -67,17 +73,27 @@ class RunQueuedAutotestsOrchestrator(OrchestratorContract[QueuedJobInput, JobRep
         if not plan.scenarios:
             return JobReport(processed_count=ProcessedItemCount(0))
 
-        results: list[AutotestScenarioResult] = [
-            self._run_autotest_scenario.run(
-                AutotestScenarioRun(
-                    run_id=plan.run_id,
-                    business=plan.business,
-                    version=plan.version,
-                    scenario=scenario,
-                    customer_phone_number=plan.customer_phone_number,
+        results: list[AutotestScenarioResult] = []
+        for scenario in plan.scenarios:
+            results.append(
+                self._run_autotest_scenario.run(
+                    AutotestScenarioRun(
+                        run_id=plan.run_id,
+                        business=plan.business,
+                        version=plan.version,
+                        scenario=scenario,
+                        customer_phone_number=plan.customer_phone_number,
+                    )
                 )
             )
-            for scenario in plan.scenarios
-        ]
+            if len(results) < len(plan.scenarios):
+                self._record_autotest_progress.run(
+                    AutotestRunProgress(
+                        business_id=plan.business.id,
+                        run_id=plan.run_id,
+                        results=list(results),
+                    )
+                )
+
         self._finish_autotest_run.run(AutotestRunCompletion(plan=plan, results=results))
         return JobReport(processed_count=ProcessedItemCount(len(results)))

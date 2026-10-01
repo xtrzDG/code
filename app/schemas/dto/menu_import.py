@@ -25,6 +25,7 @@ from app.schemas.typings.menu_import.constrained_strings import (
     ExtractedPriceAmount,
     MenuSourceMediaType,
 )
+from app.schemas.typings.menu_import.prefixed_id import MenuImportBatchId
 from app.schemas.typings.menu_import.strings import MenuSourceBase64
 from app.schemas.typings.users.prefixed_id import UserId
 
@@ -100,9 +101,14 @@ class ImportedMenuItemView(ImmutableDTO):
 
 
 class MenuImportResult(ImmutableDTO):
-    """Drafts created by one import, in menu order."""
+    """
+    Drafts created by one import, in menu order. `batch_id` names the
+    import: DELETE .../knowledge/import/{batch_id} discards the drafts that
+    were not confirmed.
+    """
 
     business_id: BusinessId
+    batch_id: MenuImportBatchId
     items: list[ImportedMenuItemView] = Field(
         default_factory=list[ImportedMenuItemView]
     )
@@ -129,4 +135,22 @@ class ConfirmImportedItemsResult(ImmutableDTO):
     business_id: BusinessId
     activated_items: list[KnowledgeItemView] = Field(
         default_factory=list[KnowledgeItemView]
+    )
+
+
+class DiscardImportBatchCommand(ImmutableDTO):
+    """Delete the drafts of one menu import that are still unconfirmed."""
+
+    user_id: UserId
+    business_id: BusinessId
+    batch_id: MenuImportBatchId
+
+
+class DiscardedImportBatch(ImmutableDTO):
+    """Drafts deleted with their import (empty when none were left)."""
+
+    business_id: BusinessId
+    batch_id: MenuImportBatchId
+    discarded_item_ids: list[KnowledgeItemId] = Field(
+        default_factory=list[KnowledgeItemId]
     )

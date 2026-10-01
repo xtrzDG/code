@@ -47,7 +47,9 @@ def test_owner_assembles_tests_publishes_and_rolls_back_over_http() -> None:
     assert started.status_code == 202, started.text
     assert started.json()["status"] == "running"
     assert started.json()["version_status"] == "testing"
-    assert started.json()["scenario_count"] == 0
+    # The planned scenarios are known at once; results arrive as they play.
+    assert started.json()["scenario_count"] == 29
+    assert started.json()["results"] == []
     assert testbed.judge_requests.requests == []
     running = client.get(f"{base}/{draft['id']}/autotest-run", headers=owner)
     assert running.json()["status"] == "running"

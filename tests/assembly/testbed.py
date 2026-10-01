@@ -161,6 +161,9 @@ from app.use_cases.autotests.get_autotest_run_use_case import GetAutotestRunUseC
 from app.use_cases.autotests.plan_autotest_scenarios_use_case import (
     PlanAutotestScenariosUseCase,
 )
+from app.use_cases.autotests.record_autotest_progress_use_case import (
+    RecordAutotestProgressUseCase,
+)
 from app.use_cases.autotests.resume_autotest_run_use_case import (
     ResumeAutotestRunUseCase,
 )
@@ -527,11 +530,16 @@ class AssemblyTestbed:
             self.run_repo,
             self.wall_clock,
         )
+        self.record_autotest_progress_use_case = RecordAutotestProgressUseCase(
+            self.run_repo,
+            self.wall_clock,
+        )
         self.run_queued_autotests_orchestrator = RunQueuedAutotestsOrchestrator(
             self.resume_autotest_run_use_case,
             self.run_scenario_use_case,
             self.finish_autotest_run_use_case,
             self.abandon_autotest_run_use_case,
+            self.record_autotest_progress_use_case,
         )
         self.worker = BackgroundWorker(
             periodic_jobs=[],

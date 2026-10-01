@@ -260,6 +260,9 @@ class OperatorsContainer(containers.DeclarativeContainer):
     confirm_imported_items_operator = pipeline_operator(
         pipelines.confirm_imported_items_pipeline, storage_scope
     )
+    discard_import_batch_operator = pipeline_operator(
+        pipelines.discard_import_batch_pipeline, storage_scope
+    )
 
     # --- Assistant versions and autotests.
     list_assistant_versions_operator = pipeline_operator(

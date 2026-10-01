@@ -103,6 +103,7 @@ def build_application_routers(app_container: AppContainer) -> list[APIRouter]:
         build_menu_import_router(
             import_menu_operator=operators.import_menu_operator(),
             confirm_imported_items_operator=operators.confirm_imported_items_operator(),
+            discard_import_batch_operator=operators.discard_import_batch_operator(),
             current_user=current_user,
         ),
         build_resource_router(

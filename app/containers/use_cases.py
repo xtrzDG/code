@@ -42,6 +42,7 @@ from app.schemas.dto.assistants import (
     AutotestRunCompletion,
     AutotestRunFailure,
     AutotestRunPlan,
+    AutotestRunProgress,
     AutotestRunView,
     AutotestScenarioPlanning,
     PublishAssistantVersionCommand,
@@ -179,6 +180,7 @@ from app.schemas.dto.knowledge_admin import (
     KnowledgeItemDetails,
     KnowledgeItemList,
     KnowledgeItemListQuery,
+    KnowledgeItemPage,
     KnowledgeItemQuery,
     UpdateKnowledgeItemCommand,
     UpsertKnowledgeItemsCommand,
@@ -187,6 +189,8 @@ from app.schemas.dto.localization import PhoneNumberDetails
 from app.schemas.dto.menu_import import (
     ConfirmImportedItemsCommand,
     ConfirmImportedItemsResult,
+    DiscardedImportBatch,
+    DiscardImportBatchCommand,
     ImportMenuCommand,
     MenuImportResult,
 )
@@ -211,7 +215,7 @@ from app.schemas.dto.operations import (
     ManualBookingCommand,
     ResolveHandoffCommand,
     StartCalendarConnectionCommand,
-    UnansweredQuestionListView,
+    UnansweredQuestionPage,
     UpdateBookingStatusCommand,
     UpdateLeadStatusCommand,
 )
@@ -320,6 +324,9 @@ from app.use_cases.autotests.finish_autotest_run_use_case import (
 from app.use_cases.autotests.get_autotest_run_use_case import GetAutotestRunUseCase
 from app.use_cases.autotests.plan_autotest_scenarios_use_case import (
     PlanAutotestScenariosUseCase,
+)
+from app.use_cases.autotests.record_autotest_progress_use_case import (
+    RecordAutotestProgressUseCase,
 )
 from app.use_cases.autotests.resume_autotest_run_use_case import (
     ResumeAutotestRunUseCase,
@@ -501,6 +508,9 @@ from app.use_cases.localization.parse_phone_number_use_case import (
 )
 from app.use_cases.menu_import.confirm_imported_items_use_case import (
     ConfirmImportedItemsUseCase,
+)
+from app.use_cases.menu_import.discard_import_batch_use_case import (
+    DiscardImportBatchUseCase,
 )
 from app.use_cases.menu_import.import_menu_use_case import ImportMenuUseCase
 from app.use_cases.observability.flush_llm_traces_use_case import FlushLlmTracesUseCase
@@ -900,7 +910,7 @@ class UseCasesContainer(containers.DeclarativeContainer):
         knowledge_item_repo=repositories.knowledge_item_repo,
     )
     list_knowledge_items_use_case: Factory[
-        UseCaseContract[KnowledgeItemListQuery, KnowledgeItemList]
+        UseCaseContract[KnowledgeItemListQuery, KnowledgeItemPage]
     ] = Factory(
         ListKnowledgeItemsUseCase,
         business_repo=repositories.business_repo,
@@ -1201,7 +1211,7 @@ class UseCasesContainer(containers.DeclarativeContainer):
         wall_clock=time_provider.microsecond_wall_clock,
     )
     list_unanswered_questions_use_case: Factory[
-        UseCaseContract[ListUnansweredQuestionsQuery, UnansweredQuestionListView]
+        UseCaseContract[ListUnansweredQuestionsQuery, UnansweredQuestionPage]
     ] = Factory(
         ListUnansweredQuestionsUseCase,
         unanswered_question_repo=repositories.unanswered_question_repo,
@@ -1404,6 +1414,13 @@ class UseCasesContainer(containers.DeclarativeContainer):
         knowledge_item_repo=repositories.knowledge_item_repo,
         wall_clock=time_provider.microsecond_wall_clock,
     )
+    discard_import_batch_use_case: Factory[
+        UseCaseContract[DiscardImportBatchCommand, DiscardedImportBatch]
+    ] = Factory(
+        DiscardImportBatchUseCase,
+        authorize_business_access=authorize_business_access_use_case,
+        knowledge_item_repo=repositories.knowledge_item_repo,
+    )
 
     # --- Assistant assembly, autotests and publishing (the autotest scenario
     #     runner needs the conversation orchestrator: OrchestratorsContainer).
@@ -1485,6 +1502,13 @@ class UseCasesContainer(containers.DeclarativeContainer):
     ] = Factory(
         AbandonAutotestRunUseCase,
         assistant_version_repo=repositories.assistant_version_repo,
+        autotest_run_repo=repositories.autotest_run_repo,
+        wall_clock=time_provider.microsecond_wall_clock,
+    )
+    record_autotest_progress_use_case: Factory[
+        UseCaseContract[AutotestRunProgress, None]
+    ] = Factory(
+        RecordAutotestProgressUseCase,
         autotest_run_repo=repositories.autotest_run_repo,
         wall_clock=time_provider.microsecond_wall_clock,
     )

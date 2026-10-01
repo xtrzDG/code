@@ -13,6 +13,7 @@ from fastapi import APIRouter, Depends, Query, Request
 from pydantic import BaseModel, ValidationError
 
 from app.contracts.operator_contract import OperatorContract
+from app.gateways.http.paging_query import parse_page_request
 from app.gateways.http.user_authentication import CurrentUserDependency
 from app.schemas.constants.bookings import BookingStatus, LeadStatus, ResourceKind
 from app.schemas.constants.handoffs import HandoffStatus
@@ -52,7 +53,7 @@ from app.schemas.dto.operations import (
     RescheduleBookingRequest,
     ResolveHandoffCommand,
     StartCalendarConnectionCommand,
-    UnansweredQuestionListView,
+    UnansweredQuestionPage,
     UpdateBookingStatusCommand,
     UpdateBookingStatusRequest,
     UpdateLeadStatusCommand,
@@ -103,7 +104,7 @@ def build_operations_router(
     list_handoffs: OperatorContract[ListHandoffsQuery, HandoffListView],
     resolve_handoff: OperatorContract[ResolveHandoffCommand, HandoffListItem],
     list_unanswered_questions: OperatorContract[
-        ListUnansweredQuestionsQuery, UnansweredQuestionListView
+        ListUnansweredQuestionsQuery, UnansweredQuestionPage
     ],
     answer_unanswered_question: OperatorContract[
         AnswerUnansweredQuestionCommand, AnsweredQuestionResult
@@ -350,13 +351,16 @@ def build_operations_router(
         user_id: Annotated[UserId, Depends(current_user)],
         include_resolved: OptionalQuery = None,
         include_sandbox: OptionalQuery = None,
-    ) -> UnansweredQuestionListView:
+        limit: OptionalQuery = None,
+        cursor: OptionalQuery = None,
+    ) -> UnansweredQuestionPage:
         business: BusinessDocument = authorize(user_id, business_id)
         return list_unanswered_questions.operate(
             ListUnansweredQuestionsQuery(
                 business_id=business.id,
                 include_resolved=parse_flag(include_resolved, "include_resolved"),
                 include_sandbox=parse_flag(include_sandbox, "include_sandbox"),
+                page=parse_page_request(limit, cursor),
             )
         )
 

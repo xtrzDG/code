@@ -11,9 +11,14 @@ from collections.abc import Sequence
 from app.schemas.constants.assistants import (
     AssistantVersionStatus,
     AutotestOutcome,
+    AutotestRunStatus,
     AutotestScenarioKind,
 )
-from app.schemas.domain.assistants import AutotestScenarioResult, JudgeCriterionScore
+from app.schemas.domain.assistants import (
+    AutotestRunDocument,
+    AutotestScenarioResult,
+    JudgeCriterionScore,
+)
 from app.schemas.dto.assistants import AutotestRunSummary, AutotestScenario
 from app.schemas.dto.conversations import AssistantReply
 from app.schemas.typings.assistants.constrained_floats import (
@@ -193,3 +198,14 @@ def decide_version_status(
         return previous_status
 
     return AssistantVersionStatus.DRAFT
+
+
+def count_run_scenarios(run: AutotestRunDocument) -> AutotestScenarioCount:
+    """Planned scenarios while the run plays, else the scenarios played."""
+
+    if run.status is AutotestRunStatus.RUNNING and run.planned_scenario_count:
+        return AutotestScenarioCount(
+            max(int(run.planned_scenario_count), len(run.results))
+        )
+
+    return AutotestScenarioCount(len(run.results))
