@@ -8,6 +8,7 @@
 
 import type { ComponentPropsWithRef, ReactNode } from "react";
 
+import { mergeClassOverrides } from "@/lib/classMerge";
 import { cn } from "@/lib/cn";
 
 import { IconChevronDown } from "../icons";
@@ -19,24 +20,17 @@ const CONTROL =
   "disabled:cursor-not-allowed disabled:bg-surface-muted disabled:text-ink-subtle " +
   "aria-invalid:border-danger aria-invalid:focus:ring-danger/25";
 
-/**
- * Controls fill their container unless the caller sets a width ("w-32"):
- * `cn` does not merge Tailwind classes, so both would apply and `w-full` wins.
- */
-function fullWidthUnlessSized(className: string | undefined): string | false {
-  return !/(^|\s)w-/.test(className ?? "") && "w-full";
-}
-
 export type InputProps = ComponentPropsWithRef<"input">;
 
+/** A text input; it fills its container unless `className` sets a width ("w-32"). */
 export function Input({ className, type = "text", ...props }: InputProps) {
-  return <input type={type} className={cn(CONTROL, fullWidthUnlessSized(className), "h-10 px-3 text-sm", className)} {...props} />;
+  return <input type={type} className={mergeClassOverrides(`${CONTROL} w-full h-10 px-3 text-sm`, className)} {...props} />;
 }
 
 export type TextareaProps = ComponentPropsWithRef<"textarea">;
 
 export function Textarea({ className, rows = 3, ...props }: TextareaProps) {
-  return <textarea rows={rows} className={cn(CONTROL, fullWidthUnlessSized(className), "px-3 py-2 text-sm", className)} {...props} />;
+  return <textarea rows={rows} className={mergeClassOverrides(`${CONTROL} w-full px-3 py-2 text-sm`, className)} {...props} />;
 }
 
 export type SelectProps = ComponentPropsWithRef<"select">;

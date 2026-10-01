@@ -13,6 +13,7 @@
     "typecheck": "next typegen && tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
+    "e2e": "playwright test --config e2e/playwright.config.ts",
     "gen:api": "npm run gen:api:spec && npm run gen:api:types",
     "gen:api:spec": "cd .. && uv run python -m scripts.export_openapi web/openapi.json",
     "gen:api:types": "openapi-typescript openapi.json --output src/api/schema.d.ts"
@@ -26,6 +27,7 @@
     "zod": "4.6.5"
   },
   "devDependencies": {
+    "@playwright/test": "1.56.1",
     "@tailwindcss/postcss": "4.3.3",
     "@types/node": "22.20.4",
     "@types/react": "19.2.18",

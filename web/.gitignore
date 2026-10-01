@@ -25,3 +25,6 @@ next-env.d.ts
 *.pem
 npm-debug.log*
 .vercel
+
+# end-to-end tests (logs, traces, reports)
+/e2e/.artifacts/

@@ -1,11 +1,12 @@
 import Link from "next/link";
 import type { ComponentPropsWithRef, ReactNode } from "react";
 
+import { mergeClassOverrides } from "@/lib/classMerge";
 import { cn } from "@/lib/cn";
 
 import { Spinner } from "./Spinner";
 
-export type ButtonVariant = "primary" | "secondary" | "ghost" | "danger";
+export type ButtonVariant = "primary" | "secondary" | "ghost" | "danger" | "danger-ghost";
 export type ButtonSize = "sm" | "md" | "lg";
 
 const VARIANTS: Record<ButtonVariant, string> = {
@@ -13,6 +14,8 @@ const VARIANTS: Record<ButtonVariant, string> = {
   secondary: "border border-line-strong bg-surface text-ink shadow-sm hover:bg-surface-muted",
   ghost: "text-ink-muted hover:bg-surface-muted hover:text-ink",
   danger: "bg-danger-solid text-white shadow-sm hover:opacity-90",
+  /** A quiet destructive action (remove, disconnect) next to others. */
+  "danger-ghost": "text-danger hover:bg-danger-soft",
 };
 
 const SIZES: Record<ButtonSize, string> = {
@@ -21,18 +24,24 @@ const SIZES: Record<ButtonSize, string> = {
   lg: "h-12 gap-2 rounded-xl px-5 text-base",
 };
 
-/** Classes of a button, for elements that only look like one. */
+/**
+ * Classes of a button, for elements that only look like one. `className`
+ * replaces the variant's own width, height, padding, radius, font size and
+ * colours of the same kind (`w-40`, `hover:bg-…`), see `mergeClassOverrides`.
+ */
 export function buttonClasses(
   options: { variant?: ButtonVariant; size?: ButtonSize; fullWidth?: boolean; className?: string } = {},
 ): string {
   const { variant = "primary", size = "md", fullWidth = false, className } = options;
-  return cn(
-    "inline-flex shrink-0 items-center justify-center font-medium whitespace-nowrap transition-colors",
-    "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus",
-    "disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50",
-    VARIANTS[variant],
-    SIZES[size],
-    fullWidth && "w-full",
+  return mergeClassOverrides(
+    cn(
+      "inline-flex shrink-0 items-center justify-center font-medium whitespace-nowrap transition-colors",
+      "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus",
+      "disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50",
+      VARIANTS[variant],
+      SIZES[size],
+      fullWidth && "w-full",
+    ),
     className,
   );
 }
