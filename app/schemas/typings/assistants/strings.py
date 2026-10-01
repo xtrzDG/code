@@ -3,6 +3,13 @@
 from base_typed_string import BaseTypedString
 
 
+class AutotestCheckNote(BaseTypedString):
+    """
+    Note of the autotest harness: why a deterministic check failed ("No
+    booking was created.") or why a scenario could not be evaluated.
+    """
+
+
 class AutotestScenarioGoal(BaseTypedString):
     """Instruction for the AI customer: what it must try to achieve."""
 

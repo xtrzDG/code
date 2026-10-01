@@ -29,6 +29,7 @@ from app.schemas.typings.assistants.prefixed_id import (
     AutotestRunId,
 )
 from app.schemas.typings.assistants.strings import (
+    AutotestCheckNote,
     JudgeNote,
     SystemPromptText,
     VoiceAgentId,
@@ -91,7 +92,14 @@ class JudgeCriterionScore(PersistentDocument):
 
 
 class AutotestScenarioResult(PersistentDocument):
-    """Result of one scenario in one language (concept table `test_runs`)."""
+    """
+    Result of one scenario in one language (concept table `test_runs`).
+
+    `check_notes` come from the test harness: failed deterministic checks
+    (no booking created, no handoff, reply in another language) and why an
+    ERRORED scenario could not be evaluated. The judge explains its scores
+    in `judge_notes`.
+    """
 
     scenario_key: AutotestScenarioKey
     kind: AutotestScenarioKind
@@ -99,6 +107,9 @@ class AutotestScenarioResult(PersistentDocument):
     outcome: AutotestOutcome
     scores: list[JudgeCriterionScore] = Field(default_factory=list[JudgeCriterionScore])
     judge_notes: list[JudgeNote] = Field(default_factory=list[JudgeNote])
+    check_notes: list[AutotestCheckNote] = Field(
+        default_factory=list[AutotestCheckNote]
+    )
     transcript: list[AutotestTranscriptLine] = Field(
         default_factory=list[AutotestTranscriptLine]
     )
