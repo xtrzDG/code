@@ -13,7 +13,14 @@ from app.schemas.typings.businesses.constrained_integers import (
     RecordingRetentionDays,
 )
 from app.schemas.typings.channels.constrained_strings import PublicBaseUrl
-from app.schemas.typings.localization.constrained_strings import CountryCode
+from app.schemas.typings.compliance.constrained_strings import DpaDocumentVersion
+from app.schemas.typings.conversations.constrained_integers import (
+    ContactMessageLimit,
+)
+from app.schemas.typings.localization.constrained_strings import (
+    CountryCode,
+    E164PhoneNumber,
+)
 from app.schemas.typings.platform.strings import (
     DatabaseUrl,
     PlatformIdentifier,
@@ -25,6 +32,7 @@ from app.schemas.typings.users.constrained_integers import (
     OtpLifetimeSeconds,
     SessionLifetimeSeconds,
 )
+from app.schemas.typings.users.constrained_strings import EmailAddress
 
 
 class AppSettings(ImmutableDTO):
@@ -56,6 +64,10 @@ class AppSettings(ImmutableDTO):
     restricted_country_codes: list[CountryCode]
     default_data_region: DataRegion
     default_recording_retention_days: RecordingRetentionDays
+    contact_message_limit_per_hour: ContactMessageLimit
+    dpa_document_version: DpaDocumentVersion
+    platform_admin_emails: list[EmailAddress]
+    platform_admin_phone_numbers: list[E164PhoneNumber]
     elevenlabs_api_key: PlatformSecret | None = None
     elevenlabs_webhook_secret: PlatformSecret | None = None
     zadarma_api_key: PlatformSecret | None = None

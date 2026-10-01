@@ -18,7 +18,14 @@ from app.schemas.typings.businesses.constrained_integers import (
     RecordingRetentionDays,
 )
 from app.schemas.typings.channels.constrained_strings import PublicBaseUrl
-from app.schemas.typings.localization.constrained_strings import CountryCode
+from app.schemas.typings.compliance.constrained_strings import DpaDocumentVersion
+from app.schemas.typings.conversations.constrained_integers import (
+    ContactMessageLimit,
+)
+from app.schemas.typings.localization.constrained_strings import (
+    CountryCode,
+    E164PhoneNumber,
+)
 from app.schemas.typings.platform.strings import (
     DatabaseUrl,
     PlatformIdentifier,
@@ -30,6 +37,7 @@ from app.schemas.typings.users.constrained_integers import (
     OtpLifetimeSeconds,
     SessionLifetimeSeconds,
 )
+from app.schemas.typings.users.constrained_strings import EmailAddress
 
 # The concept's choice: OpenAI gpt-5-mini in a project with EU data residency.
 DEFAULT_LLM_PROVIDER: str = LlmProvider.OPENAI
@@ -43,6 +51,7 @@ DEFAULT_OPENAI_BASE_URL: str = "https://eu.api.openai.com/v1"
 # list with a lawyer before launch; override with RESTRICTED_COUNTRY_CODES
 # (comma-separated, an empty value disables the restriction).
 DEFAULT_RESTRICTED_COUNTRY_CODES: str = "CU,IR,KP,SY"
+DEFAULT_DPA_DOCUMENT_VERSION: str = "2026-10-01"
 TRUE_VALUES: frozenset[str] = frozenset({"1", "true", "yes", "on"})
 FALSE_VALUES: frozenset[str] = frozenset({"0", "false", "no", "off"})
 
@@ -136,6 +145,27 @@ def assemble_app_settings(environment_variables: Mapping[str, str]) -> AppSettin
         default_recording_retention_days=RecordingRetentionDays(
             read_integer(environment_variables, "RECORDING_RETENTION_DAYS", 90)
         ),
+        contact_message_limit_per_hour=ContactMessageLimit(
+            read_integer(environment_variables, "CONTACT_MESSAGE_LIMIT_PER_HOUR", 60)
+        ),
+        dpa_document_version=DpaDocumentVersion(
+            read_text(
+                environment_variables,
+                "DPA_DOCUMENT_VERSION",
+                DEFAULT_DPA_DOCUMENT_VERSION,
+            )
+        ),
+        platform_admin_emails=[
+            EmailAddress(email.lower())
+            for email in read_raw_list(environment_variables, "PLATFORM_ADMIN_EMAILS")
+        ],
+        platform_admin_phone_numbers=[
+            E164PhoneNumber(phone_number)
+            for phone_number in read_raw_list(
+                environment_variables,
+                "PLATFORM_ADMIN_PHONE_NUMBERS",
+            )
+        ],
         elevenlabs_api_key=secret("ELEVENLABS_API_KEY"),
         elevenlabs_webhook_secret=secret("ELEVENLABS_WEBHOOK_SECRET"),
         zadarma_api_key=secret("ZADARMA_API_KEY"),
@@ -213,6 +243,20 @@ def read_list(
     items: list[str] = []
     for raw_item in raw_value.split(","):
         item: str = raw_item.strip().upper()
+        if item != "":
+            items.append(item)
+
+    return items
+
+
+def read_raw_list(
+    environment_variables: Mapping[str, str],
+    variable_name: str,
+) -> list[str]:
+    raw_value: str = environment_variables.get(variable_name, "")
+    items: list[str] = []
+    for raw_item in raw_value.split(","):
+        item: str = raw_item.strip()
         if item != "":
             items.append(item)
 

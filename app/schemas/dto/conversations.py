@@ -30,6 +30,7 @@ from app.schemas.typings.conversations.strings import (
     LlmToolInputJson,
     LlmToolResultJson,
     MessageText,
+    ProviderCallId,
 )
 from app.schemas.typings.handoffs.prefixed_id import HandoffId
 from app.schemas.typings.localization.constrained_strings import (
@@ -144,3 +145,24 @@ class CallGreeting(ImmutableDTO):
 
     text: MessageText
     language: LanguageTag
+
+
+class VoiceToolCallRequest(ImmutableDTO):
+    """
+    A tool call made by the voice agent during a phone call (concept section 7:
+    tools are our webhooks). The business comes from the verified webhook.
+    """
+
+    business_id: BusinessId
+    provider_call_id: ProviderCallId
+    caller_phone_number: E164PhoneNumber | None = None
+    tool_name: AssistantToolName
+    input_json: LlmToolInputJson
+    language: LanguageTag | None = None
+
+
+class VoiceToolCallResult(ImmutableDTO):
+    """Tool result returned to the voice agent (target: under one second)."""
+
+    result_json: LlmToolResultJson
+    is_error: IsLlmToolError = False
