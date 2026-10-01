@@ -1,0 +1,109 @@
+# Everything on one machine: Postgres 16, migrations, API, worker, cabinet.
+#
+#   cp .env.example .env        # optional: keys of the external services
+#   docker compose up --build   # cabinet http://localhost:3000, API http://localhost:8000
+#
+# Defaults suit a local run: APP_ENV=development (sign-in codes appear in the
+# API log until a provider is configured), APP_BASE_URL=http://localhost:8000,
+# the cabinet's cookies without "Secure" (plain http).
+name: assistant-workshop
+
+x-backend: &backend
+  build:
+    context: .
+    dockerfile: Dockerfile
+  image: assistant-workshop-backend:local
+  env_file:
+    - path: .env
+      required: false
+  environment:
+    APP_ENV: ${APP_ENV:-development}
+    APP_BASE_URL: ${APP_BASE_URL:-http://localhost:8000}
+    DATABASE_URL: postgresql://${WORKSHOP_DB_USER:-workshop}:${WORKSHOP_DB_PASSWORD:-workshop}@postgres:5432/${WORKSHOP_DB_NAME:-workshop}
+    # The cabinet (another container) forwards the visitor's address.
+    FORWARDED_ALLOW_IPS: "*"
+  volumes:
+    - recordings:/app/var/recordings
+  restart: unless-stopped
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: postgres
+      # Application role and database (docker/postgres/init); not a superuser,
+      # so row-level security applies to it.
+      WORKSHOP_DB_USER: ${WORKSHOP_DB_USER:-workshop}
+      WORKSHOP_DB_PASSWORD: ${WORKSHOP_DB_PASSWORD:-workshop}
+      WORKSHOP_DB_NAME: ${WORKSHOP_DB_NAME:-workshop}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./docker/postgres/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - pg_isready -U postgres -d "$${WORKSHOP_DB_NAME:-workshop}"
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+
+  migrate:
+    <<: *backend
+    command: ["migrate"]
+    volumes: []
+    restart: "no"
+    healthcheck:
+      disable: true
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  api:
+    <<: *backend
+    command: ["api"]
+    ports:
+      - "${API_PORT:-8000}:8000"
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/healthz', timeout=4)
+      interval: 10s
+      timeout: 5s
+      start_period: 30s
+      retries: 6
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+
+  worker:
+    <<: *backend
+    command: ["worker"]
+    healthcheck:
+      disable: true
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+
+  web:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+    image: assistant-workshop-web:local
+    environment:
+      BACKEND_URL: http://api:8000
+      COOKIE_SECURE: "false"
+    ports:
+      - "${WEB_PORT:-3000}:3000"
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  postgres-data:
+  recordings:

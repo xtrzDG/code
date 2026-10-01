@@ -90,6 +90,9 @@ class CapturingOtpDelivery(OtpDeliveryFacilitatorContract):
     def __init__(self) -> None:
         self.codes: list[CapturedCode] = []
 
+    def available_channels(self) -> frozenset[OtpDeliveryChannel]:
+        return frozenset(OtpDeliveryChannel)
+
     def deliver(
         self,
         delivery_channel: OtpDeliveryChannel,

@@ -65,3 +65,24 @@ def test_production_without_a_provider_refuses_and_logs_nothing(
         )
 
     assert all("123456" not in record.getMessage() for record in caplog.records)
+
+
+@pytest.mark.parametrize(
+    ("environment", "expected_channels"),
+    [
+        ({}, frozenset(OtpDeliveryChannel)),
+        ({"APP_ENV": "test"}, frozenset(OtpDeliveryChannel)),
+        (
+            {"APP_ENV": "test", "OTP_LOG_CODES": "false"},
+            frozenset[OtpDeliveryChannel](),
+        ),
+        ({"APP_ENV": "production"}, frozenset[OtpDeliveryChannel]()),
+    ],
+)
+def test_channels_are_offered_only_where_codes_may_be_logged(
+    environment: dict[str, str],
+    expected_channels: frozenset[OtpDeliveryChannel],
+) -> None:
+    facilitator = LoggingOtpDeliveryFacilitator(assemble_app_settings(environment))
+
+    assert facilitator.available_channels() == expected_channels

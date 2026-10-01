@@ -17,6 +17,10 @@ from app.schemas.typings.users.constrained_strings import EmailAddress, OtpCode
 
 
 class OtpDeliveryFacilitatorContract(FacilitatorContract, Protocol):
+    def available_channels(self) -> frozenset[OtpDeliveryChannel]:
+        """Channels this facilitator can deliver codes through right now."""
+        raise NotImplementedError
+
     def deliver(
         self,
         delivery_channel: OtpDeliveryChannel,

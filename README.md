@@ -31,6 +31,9 @@ uv, Python 3.14, ruff, mypy и pyright в строгом режиме, pytest, d
 | Фоновый воркер | `python -m app.worker_main` | периодические задачи и очередь задач (автотесты версий помощника) |
 | Миграции | `python -m app.adapters.storage.postgres.migrate` | схема Postgres (ЕС) с изоляцией по бизнесу (RLS) |
 
+Все три собираются в один образ (`Dockerfile`, роли `api`, `worker`, `migrate`);
+кабинет владельца на Next.js — отдельный образ `web/Dockerfile`.
+
 API и воркер собираются из одного контейнера `app/containers/app.py::AppContainer`
 (dependency-injector): клиенты → адаптеры → репозитории, реестры, фасилитаторы,
 трансформеры, утилиты → use case → оркестраторы → пайплайны → операторы. Роутеры
@@ -61,6 +64,58 @@ Telegram (если заданы `TELEGRAM_PLATFORM_BOT_TOKEN`, `ENCRYPTION_KEY` 
 `--proxy-headers --forwarded-allow-ips=<адрес прокси>`: IP клиента пишется в журнал
 аудита.
 
+### Всё сразу в Docker
+
+```bash
+cp .env.example .env            # необязательно: ключи внешних сервисов
+docker compose up --build       # кабинет http://localhost:3000, API http://localhost:8000
+```
+
+`docker-compose.yml` поднимает Postgres 16, одноразовые миграции (`migrate`), API,
+воркер и кабинет (`web`, `BACKEND_URL=http://api:8000`, `COOKIE_SECURE=false` для
+http). По умолчанию `APP_ENV=development`, поэтому коды входа без настроенного
+провайдера появляются в логе API: `docker compose logs -f api`. Приложение
+подключается ролью `workshop` без прав суперпользователя (её создаёт
+`docker/postgres/init`), так что изоляция RLS работает и локально. Задайте в `.env`
+постоянный `ENCRYPTION_KEY` (например, `python -c "import secrets;
+print(secrets.token_urlsafe(32))"`), иначе API и воркер шифруют токены каналов
+разными временными ключами. Порты меняются через `API_PORT` и `WEB_PORT`;
+`docker compose down -v` удаляет и данные.
+
+Образ бэкенда отдельно:
+
+```bash
+docker build -t assistant-workshop-backend .
+docker run --env-file .env -p 8000:8000 assistant-workshop-backend api
+docker run --env-file .env assistant-workshop-backend worker
+docker run --env-file .env assistant-workshop-backend migrate --dry-run
+```
+
+Образ работает от непривилегированного пользователя, по умолчанию `APP_ENV=production`
+(нужен `ENCRYPTION_KEY`), слушает `$PORT` (8000), проверка здоровья — `GET /healthz`.
+API запускается с `--proxy-headers`; адреса доверенных прокси — в
+`FORWARDED_ALLOW_IPS` (по умолчанию 127.0.0.1).
+
+### Деплой на Render (ЕС)
+
+`render.yaml` — Blueprint: в Render нажмите **New → Blueprint** и выберите
+репозиторий. Всё создаётся во Франкфурте:
+
+| Ресурс | Что это |
+| --- | --- |
+| `workshop-db` | управляемый Postgres 16, доступен только изнутри Render |
+| `workshop-api` | API из `Dockerfile`; перед каждым деплоем `workshop migrate`, проверка `/healthz` |
+| `workshop-worker` | фоновый воркер из того же образа |
+| `workshop-cabinet` | кабинет из `web/Dockerfile` |
+
+При создании Render спросит секреты (`sync: false`): ключи модели, провайдеров
+кодов входа, Meta, Telegram, ElevenLabs, Flitt, Langfuse, Sentry — ненужные оставьте
+пустыми. Воркер берёт значения у API, `ENCRYPTION_KEY` генерируется один раз (не
+меняйте его). После первого деплоя укажите `APP_BASE_URL` (публичный адрес API,
+например `https://workshop-api.onrender.com`) и `BACKEND_URL` кабинета (внутренний
+адрес API из Render: `http://<хост>:8000`, или публичный). Адреса вебхуков для
+внешних кабинетов — в разделе «Окружение».
+
 ### Postgres (ЕС)
 
 ```bash
@@ -86,6 +141,49 @@ uv run python -m app.adapters.storage.postgres.migrate             # приме�
 | `send_booking_reminders` | 15 минут | напоминает клиентам о бронях в ближайшие 24 часа |
 | `flush_llm_traces` | минута | отправляет журнал вызовов модели в Langfuse |
 
+## Коды входа
+
+Код приходит через первый канал из списка страны номера (SMS, WhatsApp, Telegram),
+для которого настроен провайдер; запрошенный пользователем канал идёт первым. Если
+провайдер отказал, тот же код уходит следующим каналом, а в ответе указан канал,
+который сработал. Вход по почте требует SMTP.
+
+| Канал | Провайдер | Переменные |
+| --- | --- | --- |
+| SMS | Twilio Programmable Messaging | `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_FROM_NUMBER` или `TWILIO_MESSAGING_SERVICE_SID` |
+| Telegram | Telegram Gateway API (`sendVerificationMessage`, платно за доставленный код) | `TELEGRAM_GATEWAY_API_TOKEN` |
+| WhatsApp | шаблон категории «authentication» в WhatsApp Cloud API (код в тексте и кнопке «скопировать») | `WHATSAPP_OTP_PHONE_NUMBER_ID`, `WHATSAPP_OTP_TEMPLATE`, `WHATSAPP_OTP_TEMPLATE_LANGUAGES`, `WHATSAPP_OTP_ACCESS_TOKEN` (по умолчанию `WHATSAPP_SYSTEM_USER_TOKEN`) |
+| Почта | любой SMTP (STARTTLS или TLS) | `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURITY`, `SMTP_USERNAME`, `SMTP_PASSWORD`, `SMTP_FROM` |
+
+Тексты SMS и писем — на языке пользователя (английский, русский, грузинский,
+украинский, турецкий, иврит, арабский, немецкий, французский, испанский; иначе
+английский); сообщения Telegram и WhatsApp пишут сами платформы. Провайдер
+настраивается целиком или никак: неполные настройки останавливают запуск.
+
+В `development` и `test` каналы без провайдера пишут код в лог (`OTP_LOG_CODES`, по
+умолчанию включено). В `production` коды никогда не пишутся в лог (`OTP_LOG_CODES=true`
+— ошибка запуска), канал без провайдера не предлагается, а без единого провайдера
+API при старте пишет ошибку, и вход отвечает 502 с объяснением.
+
+## Виджет сайта
+
+Кабинет выдаёт код для сайта (`GET …/channels/web/snippet`):
+
+```html
+<script src="https://<APP_BASE_URL>/widget.js" data-tenant="<id бизнеса>" async></script>
+```
+
+`/widget.js` — скрипт без зависимостей и без cookie: кнопка и окно чата в shadow
+DOM (стили сайта и виджета не смешиваются), язык посетителя из браузера среди
+языков бизнеса, письмо справа налево для иврита и арабского, индикатор набора,
+ошибки с повтором, полноэкранное окно на телефоне, управление с клавиатуры.
+Посетителя узнаёт случайный ключ в `localStorage`, там же — последние сообщения.
+Необязательные атрибуты: `data-color="#0f766e"`, `data-position="left"`,
+`data-language="ka"`, `data-open="true"`. Сайту со строгой CSP нужно разрешить
+адрес API в `script-src` и `connect-src`. Страница
+`GET /widget/demo?business_id=…` показывает виджет как на сайте, даже пока чат
+выключен (предпросмотр для владельца и UI-тестов).
+
 ## Окружение
 
 Все переменные с пояснениями — в [`.env.example`](.env.example). Главное:
@@ -93,6 +191,7 @@ uv run python -m app.adapters.storage.postgres.migrate             # приме�
 | Переменная | Без неё |
 | --- | --- |
 | `APP_ENV` | `development`; в `production` обязателен `ENCRYPTION_KEY`, коды входа не пишутся в лог |
+| `TWILIO_*`, `TELEGRAM_GATEWAY_API_TOKEN`, `WHATSAPP_OTP_*`, `SMTP_*` | коды входа только в логе (вне `production`); см. «Коды входа» |
 | `APP_BASE_URL` | нельзя опубликовать голосовую версию, подключить Telegram, принять оплату |
 | `DATABASE_URL` | хранение в памяти |
 | `ENCRYPTION_KEY` | временный ключ: токены каналов не переживут перезапуск |
@@ -135,7 +234,7 @@ uv run python -m app.adapters.storage.postgres.migrate             # приме�
 | Разговоры | `GET …/conversations[/{id}]`, `POST …/test-chat` |
 | Сборка помощника | `POST·GET …/assistant-versions`, `GET …/assistant-versions/{id}[/autotest-run]`, `POST …/assistant-versions/{id}/autotests`, `POST …/assistant-versions/{id}/publish`, `POST …/assistant-versions/{id}/rollback` |
 | Каналы (кабинет) | `GET …/channels`, `PUT·DELETE …/channels/{channel}`, `GET …/channels/web/snippet`, `POST …/manager-contacts/telegram-link` |
-| Вебхуки и виджет | `POST /v1/channels/telegram/{channel_id}/webhook`, `GET·POST /v1/channels/meta/webhook`, `POST /v1/channels/telegram-platform/webhook`, `GET /v1/widget/{id}/config`, `POST /v1/widget/{id}/messages` |
+| Вебхуки и виджет | `POST /v1/channels/telegram/{channel_id}/webhook`, `GET·POST /v1/channels/meta/webhook`, `POST /v1/channels/telegram-platform/webhook`, `GET /v1/widget/{id}/config`, `POST /v1/widget/{id}/messages`, `GET /widget.js`, `GET /widget/demo` |
 | Голос | `POST /v1/voice/tools/{tool}`, `POST /v1/voice/webhooks/conversation-initiation`, `POST /v1/voice/webhooks/post-call` |
 | Оплата | `GET …/billing`, `POST …/billing/trial`, `POST …/billing/plan`, `POST …/billing/cancel`, `POST …/billing/checkout`, `POST /v1/payments/flitt/webhook` |
 | Админка платформы | `GET /v1/admin/clients[/{business_id}]`, `POST /v1/admin/clients/{business_id}/open` |
@@ -159,6 +258,10 @@ uv run mypy .
 uv run pyright
 uv run pytest
 ```
+
+CI (`.github/workflows/ci.yml`) прогоняет те же проверки бэкенда (с Postgres 16 из
+пакетов Ubuntu), линтер, проверку типов, тесты и сборку кабинета (`web/`), собирает
+оба Docker-образа и проверяет `docker-compose.yml`.
 
 Сквозные тесты (`tests/e2e/`) собирают настоящий `AppContainer` и подменяют только
 края: настройки, часы, модель (`ScriptedLlmAdapter`), доставку кодов и внешние

@@ -496,11 +496,20 @@ class DeliveredOtp:
 
 
 class RecordingOtpDelivery(OtpDeliveryFacilitatorContract):
-    """Keeps every delivered code so tests can type it back."""
+    """
+    Keeps every delivered code so tests can type it back. Tests narrow the
+    configured channels and make single channels (or all) fail.
+    """
 
     def __init__(self) -> None:
         self.deliveries: list[DeliveredOtp] = []
+        self.attempted_channels: list[OtpDeliveryChannel] = []
         self.is_failing: bool = False
+        self.failing_channels: set[OtpDeliveryChannel] = set()
+        self.channels: frozenset[OtpDeliveryChannel] = frozenset(OtpDeliveryChannel)
+
+    def available_channels(self) -> frozenset[OtpDeliveryChannel]:
+        return self.channels
 
     def deliver(
         self,
@@ -510,8 +519,9 @@ class RecordingOtpDelivery(OtpDeliveryFacilitatorContract):
         code: OtpCode,
         language_tag: LanguageTag,
     ) -> None:
-        if self.is_failing:
-            raise ExternalServiceError("SMS provider is down.")
+        self.attempted_channels.append(delivery_channel)
+        if self.is_failing or delivery_channel in self.failing_channels:
+            raise ExternalServiceError(f"{delivery_channel.value} provider is down.")
 
         self.deliveries.append(
             DeliveredOtp(

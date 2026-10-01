@@ -2,8 +2,8 @@ from starlette.middleware.cors import CORSMiddleware
 from starlette.types import Receive, Scope, Send
 
 # Public routes that answer CORS themselves for any origin: the website
-# widget runs on every business's own site.
-SELF_CORS_PATH_PREFIXES: tuple[str, ...] = ("/v1/widget/",)
+# widget (its script and its API) runs on every business's own site.
+SELF_CORS_PATH_PREFIXES: tuple[str, ...] = ("/v1/widget/", "/widget.js")
 
 
 class CabinetCorsMiddleware(CORSMiddleware):

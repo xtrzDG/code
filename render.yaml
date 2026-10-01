@@ -1,0 +1,387 @@
+# Render Blueprint (https://render.com/docs/blueprint-spec): everything in
+# Frankfurt (EU), as the concept requires for personal data.
+#
+#   workshop-db       managed Postgres 16, reachable only inside Render
+#   workshop-api      the API (Docker image of ./Dockerfile); migrations run
+#                     before every deploy (`workshop migrate`)
+#   workshop-worker   the background worker (same image)
+#   workshop-cabinet  the owner cabinet (./web/Dockerfile)
+#
+# Secrets are `sync: false`: the dashboard asks for them when the Blueprint is
+# created (leave unused ones empty) and never overwrites them later. The
+# worker copies the API's values. ENCRYPTION_KEY is generated once and shared;
+# never change it, or stored channel credentials become unreadable.
+#
+# The image's ENTRYPOINT is `workshop`; the commands below also name it, so
+# they work whether a platform keeps the ENTRYPOINT or replaces it.
+
+databases:
+  - name: workshop-db
+    region: frankfurt
+    plan: basic-256mb
+    postgresMajorVersion: "16"
+    databaseName: workshop
+    user: workshop
+    # No public access: only services of this account in the region connect.
+    ipAllowList: []
+
+envVarGroups:
+  - name: workshop-backend
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: ENCRYPTION_KEY
+        generateValue: true
+      # Render's proxies set X-Forwarded-For; the audit log keeps client IPs.
+      - key: FORWARDED_ALLOW_IPS
+        value: "*"
+      - key: DEFAULT_DATA_REGION
+        value: eu
+
+services:
+  - type: web
+    name: workshop-api
+    runtime: docker
+    region: frankfurt
+    plan: starter
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    dockerCommand: workshop api
+    preDeployCommand: workshop migrate
+    healthCheckPath: /healthz
+    buildFilter:
+      ignoredPaths:
+        - web/**
+        - docs/**
+        - "**/*.md"
+    envVars:
+      - fromGroup: workshop-backend
+      - key: PORT
+        value: "8000"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: workshop-db
+          property: connectionString
+      # public https address of this API, e.g. https://workshop-api.onrender.com (webhooks, widget)
+      - key: APP_BASE_URL
+        sync: false
+      - key: PLATFORM_ADMIN_EMAILS
+        sync: false
+      - key: PLATFORM_ADMIN_PHONE_NUMBERS
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: OPENAI_PROJECT_ID
+        sync: false
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      # login codes by SMS
+      - key: TWILIO_ACCOUNT_SID
+        sync: false
+      - key: TWILIO_AUTH_TOKEN
+        sync: false
+      - key: TWILIO_FROM_NUMBER
+        sync: false
+      - key: TWILIO_MESSAGING_SERVICE_SID
+        sync: false
+      # login codes by Telegram
+      - key: TELEGRAM_GATEWAY_API_TOKEN
+        sync: false
+      # login codes by WhatsApp
+      - key: WHATSAPP_OTP_PHONE_NUMBER_ID
+        sync: false
+      - key: WHATSAPP_OTP_ACCESS_TOKEN
+        sync: false
+      - key: WHATSAPP_OTP_TEMPLATE
+        sync: false
+      - key: WHATSAPP_OTP_TEMPLATE_LANGUAGES
+        sync: false
+      # login codes by e-mail
+      - key: SMTP_HOST
+        sync: false
+      - key: SMTP_PORT
+        sync: false
+      - key: SMTP_SECURITY
+        sync: false
+      - key: SMTP_USERNAME
+        sync: false
+      - key: SMTP_PASSWORD
+        sync: false
+      - key: SMTP_FROM
+        sync: false
+      # voice
+      - key: ELEVENLABS_API_KEY
+        sync: false
+      - key: ELEVENLABS_WEBHOOK_SECRET
+        sync: false
+      - key: ZADARMA_API_KEY
+        sync: false
+      - key: ZADARMA_API_SECRET
+        sync: false
+      # WhatsApp, Instagram, Messenger
+      - key: META_APP_ID
+        sync: false
+      - key: META_APP_SECRET
+        sync: false
+      - key: META_VERIFY_TOKEN
+        sync: false
+      - key: WHATSAPP_SYSTEM_USER_TOKEN
+        sync: false
+      - key: WHATSAPP_NOTIFICATION_PHONE_NUMBER_ID
+        sync: false
+      - key: WHATSAPP_NOTIFICATION_TEMPLATE
+        sync: false
+      - key: TELEGRAM_PLATFORM_BOT_TOKEN
+        sync: false
+      # Google Calendar
+      - key: GOOGLE_OAUTH_CLIENT_ID
+        sync: false
+      - key: GOOGLE_OAUTH_CLIENT_SECRET
+        sync: false
+      # payments
+      - key: FLITT_MERCHANT_ID
+        sync: false
+      - key: FLITT_SECRET_KEY
+        sync: false
+      # observability
+      - key: LANGFUSE_PUBLIC_KEY
+        sync: false
+      - key: LANGFUSE_SECRET_KEY
+        sync: false
+      - key: SENTRY_DSN
+        sync: false
+
+  - type: worker
+    name: workshop-worker
+    runtime: docker
+    region: frankfurt
+    plan: starter
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    dockerCommand: workshop worker
+    buildFilter:
+      ignoredPaths:
+        - web/**
+        - docs/**
+        - "**/*.md"
+    envVars:
+      - fromGroup: workshop-backend
+      - key: DATABASE_URL
+        fromDatabase:
+          name: workshop-db
+          property: connectionString
+      - key: APP_BASE_URL
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: APP_BASE_URL
+      - key: PLATFORM_ADMIN_EMAILS
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: PLATFORM_ADMIN_EMAILS
+      - key: PLATFORM_ADMIN_PHONE_NUMBERS
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: PLATFORM_ADMIN_PHONE_NUMBERS
+      - key: OPENAI_API_KEY
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: OPENAI_API_KEY
+      - key: OPENAI_PROJECT_ID
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: OPENAI_PROJECT_ID
+      - key: ANTHROPIC_API_KEY
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: ANTHROPIC_API_KEY
+      - key: TWILIO_ACCOUNT_SID
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: TWILIO_ACCOUNT_SID
+      - key: TWILIO_AUTH_TOKEN
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: TWILIO_AUTH_TOKEN
+      - key: TWILIO_FROM_NUMBER
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: TWILIO_FROM_NUMBER
+      - key: TWILIO_MESSAGING_SERVICE_SID
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: TWILIO_MESSAGING_SERVICE_SID
+      - key: TELEGRAM_GATEWAY_API_TOKEN
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: TELEGRAM_GATEWAY_API_TOKEN
+      - key: WHATSAPP_OTP_PHONE_NUMBER_ID
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: WHATSAPP_OTP_PHONE_NUMBER_ID
+      - key: WHATSAPP_OTP_ACCESS_TOKEN
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: WHATSAPP_OTP_ACCESS_TOKEN
+      - key: WHATSAPP_OTP_TEMPLATE
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: WHATSAPP_OTP_TEMPLATE
+      - key: WHATSAPP_OTP_TEMPLATE_LANGUAGES
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: WHATSAPP_OTP_TEMPLATE_LANGUAGES
+      - key: SMTP_HOST
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: SMTP_HOST
+      - key: SMTP_PORT
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: SMTP_PORT
+      - key: SMTP_SECURITY
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: SMTP_SECURITY
+      - key: SMTP_USERNAME
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: SMTP_USERNAME
+      - key: SMTP_PASSWORD
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: SMTP_PASSWORD
+      - key: SMTP_FROM
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: SMTP_FROM
+      - key: ELEVENLABS_API_KEY
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: ELEVENLABS_API_KEY
+      - key: ELEVENLABS_WEBHOOK_SECRET
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: ELEVENLABS_WEBHOOK_SECRET
+      - key: ZADARMA_API_KEY
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: ZADARMA_API_KEY
+      - key: ZADARMA_API_SECRET
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: ZADARMA_API_SECRET
+      - key: META_APP_ID
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: META_APP_ID
+      - key: META_APP_SECRET
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: META_APP_SECRET
+      - key: META_VERIFY_TOKEN
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: META_VERIFY_TOKEN
+      - key: WHATSAPP_SYSTEM_USER_TOKEN
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: WHATSAPP_SYSTEM_USER_TOKEN
+      - key: WHATSAPP_NOTIFICATION_PHONE_NUMBER_ID
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: WHATSAPP_NOTIFICATION_PHONE_NUMBER_ID
+      - key: WHATSAPP_NOTIFICATION_TEMPLATE
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: WHATSAPP_NOTIFICATION_TEMPLATE
+      - key: TELEGRAM_PLATFORM_BOT_TOKEN
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: TELEGRAM_PLATFORM_BOT_TOKEN
+      - key: GOOGLE_OAUTH_CLIENT_ID
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: GOOGLE_OAUTH_CLIENT_ID
+      - key: GOOGLE_OAUTH_CLIENT_SECRET
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: GOOGLE_OAUTH_CLIENT_SECRET
+      - key: FLITT_MERCHANT_ID
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: FLITT_MERCHANT_ID
+      - key: FLITT_SECRET_KEY
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: FLITT_SECRET_KEY
+      - key: LANGFUSE_PUBLIC_KEY
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: LANGFUSE_PUBLIC_KEY
+      - key: LANGFUSE_SECRET_KEY
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: LANGFUSE_SECRET_KEY
+      - key: SENTRY_DSN
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: SENTRY_DSN
+
+  - type: web
+    name: workshop-cabinet
+    runtime: docker
+    region: frankfurt
+    plan: starter
+    dockerfilePath: ./web/Dockerfile
+    dockerContext: ./web
+    healthCheckPath: /login
+    buildFilter:
+      paths:
+        - web/**
+    envVars:
+      # The API as the cabinet's server reaches it: its internal address from
+      # the dashboard (workshop-api -> Connect -> Internal), with http:// and
+      # port 8000, e.g. http://workshop-api:8000; or its public https address.
+      - key: BACKEND_URL
+        sync: false
+      - key: COOKIE_SECURE
+        value: "true"

@@ -4,6 +4,7 @@ from dependency_injector.providers import DependenciesContainer, Singleton
 from app.containers.adapters import AdaptersContainer
 from app.containers.clients import ClientsContainer
 from app.containers.config import ConfigContainer
+from app.containers.factories import build_otp_delivery_facilitator
 from app.containers.repositories import RepositoriesContainer
 from app.containers.time_provider import TimeProviderContainer
 from app.containers.transformers import TransformersContainer
@@ -25,9 +26,6 @@ from app.facilitators.observability.sentry_error_reporting_facilitator import (
 from app.facilitators.staff.manager_broadcast_facilitator import (
     ManagerBroadcastFacilitator,
 )
-from app.facilitators.users.logging_otp_delivery_facilitator import (
-    LoggingOtpDeliveryFacilitator,
-)
 
 
 class FacilitatorsContainer(containers.DeclarativeContainer):
@@ -47,11 +45,17 @@ class FacilitatorsContainer(containers.DeclarativeContainer):
         dsn=config.app_settings.provided.sentry_dsn,
         environment=config.app_settings.provided.environment,
     )
-    # Sign-in codes are logged outside production; real SMS, WhatsApp,
-    # Telegram and e-mail providers replace this facilitator.
+    # Sign-in codes: Twilio SMS, Telegram Gateway, WhatsApp authentication
+    # template and SMTP e-mail, each when configured; in development and test
+    # the other channels write the code to the log.
     otp_delivery_facilitator: Singleton[OtpDeliveryFacilitatorContract] = Singleton(
-        LoggingOtpDeliveryFacilitator,
-        app_settings=config.app_settings,
+        build_otp_delivery_facilitator,
+        settings=config.app_settings,
+        sms_client=clients.twilio_messaging_client,
+        telegram_gateway_client=clients.telegram_gateway_client,
+        whatsapp_client=clients.whatsapp_authentication_client,
+        email_client=clients.smtp_email_client,
+        localized_text_resolver=utilities.localized_text_resolver,
     )
     # Staff notifications: platform Telegram bot, WhatsApp template, e-mail.
     manager_notification_facilitator: Singleton[ManagerNotificationFacilitator] = (

@@ -8,7 +8,11 @@ from app.schemas.dto.channels import WidgetSnippetQuery, WidgetSnippetView
 from app.schemas.exceptions.application_errors import ExternalServiceError
 from app.schemas.typings.channels.constrained_strings import WidgetScriptUrl
 from app.schemas.typings.channels.strings import WidgetEmbedSnippet
-from app.utilities.channels.channel_endpoints import WIDGET_SCRIPT_PATH, join_public_url
+from app.utilities.channels.channel_endpoints import (
+    WIDGET_BUSINESS_ATTRIBUTE,
+    WIDGET_SCRIPT_PATH,
+    join_public_url,
+)
 
 
 class GetWidgetSnippetUseCase(UseCaseContract[WidgetSnippetQuery, WidgetSnippetView]):
@@ -46,9 +50,10 @@ class GetWidgetSnippetUseCase(UseCaseContract[WidgetSnippetQuery, WidgetSnippetV
             )
 
         script_url = WidgetScriptUrl(join_public_url(str(base_url), WIDGET_SCRIPT_PATH))
+        escaped_business_id: str = html.escape(str(business.id), quote=True)
         snippet: str = (
             f'<script src="{html.escape(str(script_url), quote=True)}" '
-            f'data-tenant="{html.escape(str(business.id), quote=True)}" '
+            f'{WIDGET_BUSINESS_ATTRIBUTE}="{escaped_business_id}" '
             "async></script>"
         )
         return WidgetSnippetView(
