@@ -1,8 +1,9 @@
-import { SectionPlaceholder, sectionMetadata } from "@/components/business/SectionPlaceholder";
+import { sectionMetadata } from "@/components/business/SectionPlaceholder";
+
+import { SettingsScreen } from "./SettingsScreen";
 
 export const generateMetadata = sectionMetadata("settings");
 
-/** Placeholder: replace with the real settings page (see web/README.md, "Adding a page"). */
-export default function Page() {
-  return <SectionPlaceholder section="settings" />;
+export default function SettingsPage() {
+  return <SettingsScreen />;
 }

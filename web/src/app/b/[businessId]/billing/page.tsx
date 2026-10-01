@@ -1,8 +1,10 @@
-import { SectionPlaceholder, sectionMetadata } from "@/components/business/SectionPlaceholder";
+import { sectionMetadata } from "@/components/business/SectionPlaceholder";
+
+import { BillingScreen } from "./BillingScreen";
 
 export const generateMetadata = sectionMetadata("billing");
 
-/** Placeholder: replace with the real billing page (see web/README.md, "Adding a page"). */
-export default function Page() {
-  return <SectionPlaceholder section="billing" />;
+export default async function BillingPage({ searchParams }: PageProps<"/b/[businessId]/billing">) {
+  const { checkout } = await searchParams;
+  return <BillingScreen isCheckoutReturn={checkout === "return"} />;
 }

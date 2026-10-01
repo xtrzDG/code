@@ -1,0 +1,93 @@
+/**
+ * Pure helpers shared by the channels, billing, settings and admin pages.
+ */
+
+/** Whether the typed confirmation matches (spaces around it and case are ignored). */
+export function isConfirmationTyped(typed: string, expected: string): boolean {
+  const target = expected.trim();
+  return target !== "" && typed.trim().toLocaleLowerCase() === target.toLocaleLowerCase();
+}
+
+/** The owner is warned when a package is used to this share (concept section 9). */
+export const USAGE_WARNING_PERCENT = 80;
+
+export type UsageLevel = "none" | "ok" | "warning" | "exceeded";
+
+/**
+ * How full a package is: "none" for a package of zero (no percent),
+ * "warning" from 80 %, "exceeded" from 100 %.
+ */
+export function usageLevel(percent: number | null | undefined): UsageLevel {
+  if (percent === null || percent === undefined || !Number.isFinite(percent)) {
+    return "none";
+  }
+  if (percent >= 100) {
+    return "exceeded";
+  }
+  return percent >= USAGE_WARNING_PERCENT ? "warning" : "ok";
+}
+
+/** Used share of a package in whole percent (rounded down), or null for a package of zero. */
+export function usagePercent(used: number, included: number): number | null {
+  if (included <= 0) {
+    return null;
+  }
+  return Math.floor((Math.max(used, 0) * 100) / included);
+}
+
+/** Width of a usage bar in percent, 0..100. */
+export function usageBarWidth(percent: number | null | undefined): number {
+  if (percent === null || percent === undefined || !Number.isFinite(percent)) {
+    return 0;
+  }
+  return Math.min(100, Math.max(0, percent));
+}
+
+/** Provider costs come in micro US dollars: 1_234_567 -> "$1.2346". */
+export function formatMicroUsd(microUsd: number, locale: string): string {
+  const dollars = microUsd / 1_000_000;
+  return new Intl.NumberFormat(locale, {
+    style: "currency",
+    currency: "USD",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: Math.abs(dollars) < 10 ? 4 : 2,
+  }).format(dollars);
+}
+
+/**
+ * The short, recognisable part of a prefixed id:
+ * "contact_639833a1-4f05-440f-bbab-540dca7ac3b8" -> "639833a1".
+ */
+export function shortId(id: string): string {
+  const separator = id.lastIndexOf("_");
+  const body = separator >= 0 ? id.slice(separator + 1) : id;
+  return body.split("-")[0]?.slice(0, 12) || body;
+}
+
+/** "2026-10-01" in UTC for file names. */
+export function isoDay(date: Date): string {
+  return date.toISOString().slice(0, 10);
+}
+
+/** A file name safe on every system: letters, digits, dots, dashes and underscores. */
+export function safeFileName(name: string): string {
+  const cleaned = name
+    .normalize("NFKD")
+    .replace(/[^\w.-]+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "");
+  return cleaned || "download";
+}
+
+/** Save JSON as a file in the browser. */
+export function downloadJson(data: unknown, fileName: string): void {
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = safeFileName(fileName);
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  window.setTimeout(() => URL.revokeObjectURL(url), 1_000);
+}
