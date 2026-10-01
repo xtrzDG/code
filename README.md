@@ -76,11 +76,13 @@ docker compose up --build       # кабинет http://localhost:3000, API http
 http). По умолчанию `APP_ENV=development`, поэтому коды входа без настроенного
 провайдера появляются в логе API: `docker compose logs -f api`. Приложение
 подключается ролью `workshop` без прав суперпользователя (её создаёт
-`docker/postgres/init`), так что изоляция RLS работает и локально. Задайте в `.env`
-постоянный `ENCRYPTION_KEY` (например, `python -c "import secrets;
-print(secrets.token_urlsafe(32))"`), иначе API и воркер шифруют токены каналов
-разными временными ключами. Порты меняются через `API_PORT` и `WEB_PORT`;
-`docker compose down -v` удаляет и данные.
+`docker/postgres/init`), так что изоляция RLS работает и локально. API и воркер
+шифруют токены каналов одним ключом `ENCRYPTION_KEY`; значение по умолчанию в
+`docker-compose.yml` общеизвестно и годится только для этой машины — перед
+подключением настоящих каналов задайте в `.env` свой (например, `python -c "import
+secrets; print(secrets.token_urlsafe(32))"`) и не меняйте его потом. Порты меняются
+через `API_PORT` и `WEB_PORT`; `docker compose down -v` удаляет и данные. Пошагово,
+со входом без SMS, — в [`docs/LAUNCH.md`](docs/LAUNCH.md).
 
 Образ бэкенда отдельно:
 
@@ -101,7 +103,8 @@ API запускается с `--proxy-headers`; адреса доверенны
 ### Деплой на Render (ЕС)
 
 `render.yaml` — Blueprint: в Render нажмите **New → Blueprint** и выберите
-репозиторий. Всё создаётся во Франкфурте:
+репозиторий (пошагово, со списком ключей и адресов вебхуков, — в
+[`docs/LAUNCH.md`](docs/LAUNCH.md)). Всё создаётся во Франкфурте:
 
 | Ресурс | Что это |
 | --- | --- |
@@ -110,10 +113,11 @@ API запускается с `--proxy-headers`; адреса доверенны
 | `workshop-worker` | фоновый воркер из того же образа |
 | `workshop-cabinet` | кабинет из `web/Dockerfile` |
 
-При создании Render спросит секреты (`sync: false`): ключи модели, провайдеров
-кодов входа, Meta, Telegram, ElevenLabs, Flitt, Langfuse, Sentry — ненужные оставьте
-пустыми. Воркер берёт значения у API, `ENCRYPTION_KEY` генерируется один раз (не
-меняйте его). После первого деплоя укажите `APP_BASE_URL` (публичный адрес API,
+При создании Render спросит секреты (`sync: false`): провайдер и ключи модели,
+провайдеров кодов входа, Meta (и шаблоны WhatsApp), Telegram, ElevenLabs, Flitt,
+Langfuse, Sentry — ненужные оставьте пустыми. Воркер берёт все значения у API,
+`ENCRYPTION_KEY` генерируется один раз (не меняйте его). После первого деплоя
+укажите `APP_BASE_URL` (публичный адрес API,
 например `https://workshop-api.onrender.com`), `CABINET_BASE_URL` (публичный адрес
 кабинета, например `https://workshop-cabinet.onrender.com`: туда Google Calendar и
 страница оплаты возвращают владельца), `CORS_ALLOWED_ORIGINS` API (тот же адрес
@@ -220,27 +224,56 @@ UI-тестов); `color`, `position` и `language` в ней показываю
 
 ## Окружение
 
-Все переменные с пояснениями — в [`.env.example`](.env.example). Главное:
+Пошаговый запуск с перечнем всех аккаунтов и ключей — в
+[`docs/LAUNCH.md`](docs/LAUNCH.md). Все переменные с пояснениями — в
+[`.env.example`](.env.example); переменные кабинета (`BACKEND_URL`,
+`COOKIE_SECURE`, `TRUSTED_PROXY_HOPS`) — в [`web/README.md`](web/README.md).
+Таблицу сверяет с кодом тест `tests/platform/test_environment_variables.py`: каждая
+переменная, которую читают настройки или SDK, есть в `.env.example` и здесь.
 
-| Переменная | Без неё |
+| Переменная | Без неё (по умолчанию) |
 | --- | --- |
-| `APP_ENV` | `development`; в `production` обязателен `ENCRYPTION_KEY`, коды входа не пишутся в лог |
-| `TWILIO_*`, `TELEGRAM_GATEWAY_API_TOKEN`, `WHATSAPP_OTP_*`, `SMTP_*` | коды входа только в логе (вне `production`); см. «Коды входа» |
-| `APP_BASE_URL` | нельзя опубликовать голосовую версию, подключить Telegram, принять оплату |
+| `APP_ENV` | `development` (образ Docker — `production`); в `production` обязателен `ENCRYPTION_KEY`, коды входа не пишутся в лог |
+| `APP_BASE_URL` | публичный https-адрес API (вебхуки, виджет, оплата); без него нельзя опубликовать голосовую версию, подключить Telegram, принять оплату |
 | `CABINET_BASE_URL` | вне `production` — `http://localhost:3000`; в `production` после согласия в Google владелец видит простую страницу вместо возврата в кабинет, а страница оплаты возвращает плательщика только на адреса из `CORS_ALLOWED_ORIGINS` |
-| `DATABASE_URL` | хранение в памяти |
-| `ENCRYPTION_KEY` | временный ключ: токены каналов не переживут перезапуск |
 | `CORS_ALLOWED_ORIGINS` | CORS выключен (виджет сайта разрешает любой источник сам); страница оплаты возвращает плательщика только на источник `CABINET_BASE_URL` и `APP_BASE_URL`. Укажите адрес кабинета (`http://localhost:3000` локально; в `docker-compose.yml` он задан) |
-| `LLM_PROVIDER`, `LLM_MODEL_ID`, `OPENAI_API_KEY`, `OPENAI_PROJECT_ID` | ответы модели — ошибка 502 при первом вызове |
-| `PLATFORM_ADMIN_EMAILS`, `PLATFORM_ADMIN_PHONE_NUMBERS` | нет админов платформы |
-| `ELEVENLABS_API_KEY`, `ELEVENLABS_WEBHOOK_SECRET`, `ELEVENLABS_API_BASE_URL` | голосовой агент не создаётся: в `production` публикация версии с голосом отклоняется (409, причина `voice_configuration`), в `development`/`test` версия выходит без голосового агента (предупреждение в логе) |
-| `META_APP_SECRET`, `META_VERIFY_TOKEN`, `WHATSAPP_SYSTEM_USER_TOKEN` | WhatsApp, Instagram и Messenger не принимают вебхуки |
-| `TELEGRAM_PLATFORM_BOT_TOKEN`, `WHATSAPP_NOTIFICATION_*` | уведомления сотрудникам только пишутся в лог |
+| `DATABASE_URL` | хранение в памяти |
+| `ENCRYPTION_KEY` | временный ключ: токены каналов не переживут перезапуск; в `production` — ошибка запуска. Ключ Fernet или любая случайная строка от 32 символов; после первого запуска не меняется |
+| `LLM_PROVIDER`, `LLM_MODEL_ID`, `LLM_JUDGE_MODEL_ID` | `openai` и `gpt-5-mini` (`anthropic` — `claude-opus-5-5`); `LLM_JUDGE_MODEL_ID` — модель клиента и судьи автотестов, по умолчанию та же модель провайдера |
+| `LLM_CHAT_EFFORT`, `LLM_JUDGE_EFFORT` | усилие рассуждений: `low` в чате, `medium` у судьи автотестов (`minimal`, `low`, `medium`, `high`) |
+| `LLM_MAX_OUTPUT_TOKENS`, `LLM_TOOL_ROUND_LIMIT` | 16000 токенов ответа, 8 кругов вызова инструментов на один ответ |
+| `OPENAI_API_KEY`, `OPENAI_PROJECT_ID`, `OPENAI_BASE_URL` | ответы модели — ошибка 502 при первом вызове; ключ читает SDK OpenAI; адрес по умолчанию — `https://eu.api.openai.com/v1` (проект с хранением в ЕС) |
+| `ANTHROPIC_API_KEY` | нужен только при `LLM_PROVIDER=anthropic` (ключ читает SDK Anthropic) |
+| `AUTOTEST_TURN_LIMIT` | 4 сообщения клиента в одном сценарии автотеста |
+| `OTP_LIFETIME_SECONDS`, `OTP_MAX_FAILED_ATTEMPTS` | код входа действует 600 секунд; после 5 неверных попыток нужен новый код |
+| `OTP_SENDS_PER_DESTINATION_PER_HOUR`, `OTP_SENDS_PER_IP_PER_HOUR`, `OTP_SENDS_PER_HOUR` | 5 кодов на номер или почту, 10 с одного адреса и 300 всего за час (см. «Коды входа») |
+| `OTP_LOG_CODES` | вне `production` включено: каналы без провайдера пишут код в лог; в `production` включить нельзя |
+| `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_FROM_NUMBER`, `TWILIO_MESSAGING_SERVICE_SID` | нет кодов входа по SMS |
+| `TELEGRAM_GATEWAY_API_TOKEN` | нет кодов входа в Telegram |
+| `WHATSAPP_OTP_PHONE_NUMBER_ID`, `WHATSAPP_OTP_ACCESS_TOKEN`, `WHATSAPP_OTP_TEMPLATE`, `WHATSAPP_OTP_TEMPLATE_LANGUAGES` | нет кодов входа в WhatsApp; токен по умолчанию — `WHATSAPP_SYSTEM_USER_TOKEN`, язык шаблона — `en` |
+| `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURITY`, `SMTP_USERNAME`, `SMTP_PASSWORD`, `SMTP_FROM` | нет входа по почте; порт по умолчанию — 587 (`starttls`), 465 (`ssl`), 25 (`none`). Без единого провайдера кодов вход работает только вне `production` (коды в логе) |
+| `SESSION_LIFETIME_SECONDS` | сессия кабинета — 30 дней |
+| `PLATFORM_ADMIN_EMAILS`, `PLATFORM_ADMIN_PHONE_NUMBERS` | нет админов платформы (права проверяются при каждом входе) |
+| `RESTRICTED_COUNTRY_CODES` | `CU,IR,KP,SY`: из этих стран нельзя войти по номеру и создать бизнес; пустое значение снимает ограничение (список сверить с юристом) |
+| `DEFAULT_DATA_REGION` | `eu` — регион обработки данных в профилях стран (`eu` или `us`) |
+| `RECORDING_RETENTION_DAYS` | 90 дней хранения записей и расшифровок звонков (бизнес может поменять свой срок) |
+| `RECORDINGS_DIRECTORY` | `var/recordings` (записи звонков на этом сервере; ElevenLabs хранит свои) |
+| `CONTACT_MESSAGE_LIMIT_PER_HOUR` | 60 сообщений одного клиента за последний час во всех каналах: на 60-м помощник предупреждает о лимите, дальше молчит |
+| `DPA_DOCUMENT_VERSION` | `2026-10-01` — действующая версия договора из `docs/legal/` |
+| `ELEVENLABS_API_KEY`, `ELEVENLABS_WEBHOOK_SECRET`, `ELEVENLABS_API_BASE_URL` | голосовой агент не создаётся: в `production` публикация версии с голосом отклоняется (409, причина `voice_configuration`), в `development`/`test` версия выходит без голосового агента (предупреждение в логе). Адрес по умолчанию — `https://api.eu.residency.elevenlabs.io` (хранение в ЕС) |
+| `ELEVENLABS_ALLOW_NON_EU_REGION` | `false`: в `production` другой адрес ElevenLabs, кроме ЕС, — ошибка запуска |
+| `ZADARMA_API_KEY`, `ZADARMA_API_SECRET` | пока не используются: номер помощника покупается в Zadarma вручную и вводится в кабинете (канал «Телефон») |
+| `META_APP_SECRET`, `META_VERIFY_TOKEN`, `WHATSAPP_SYSTEM_USER_TOKEN` | WhatsApp, Instagram и Messenger не принимают вебхуки, WhatsApp не подключается и не отправляет сообщения |
+| `META_APP_ID` | пока не используется |
+| `TELEGRAM_PLATFORM_BOT_TOKEN`, `WHATSAPP_NOTIFICATION_PHONE_NUMBER_ID`, `WHATSAPP_NOTIFICATION_TEMPLATE` | уведомления сотрудникам только пишутся в лог |
+| `WHATSAPP_REMINDER_TEMPLATE` | напоминание о брони в WhatsApp уходит, только если клиент писал туда за последние 24 часа |
 | `GOOGLE_OAUTH_CLIENT_ID`, `GOOGLE_OAUTH_CLIENT_SECRET` | нет синхронизации с Google Calendar |
 | `FLITT_MERCHANT_ID`, `FLITT_SECRET_KEY` | оплата недоступна (502), вебхук оплаты отклоняется |
-| `LANGFUSE_PUBLIC_KEY`, `LANGFUSE_SECRET_KEY` | журнал вызовов модели не ведётся |
+| `LANGFUSE_PUBLIC_KEY`, `LANGFUSE_SECRET_KEY`, `LANGFUSE_HOST` | журнал вызовов модели не ведётся; адрес по умолчанию — `https://cloud.langfuse.com` (ЕС) |
+| `LANGFUSE_CAPTURE_CONTENT` | `false`: тексты сообщений в журнал не пишутся |
 | `SENTRY_DSN` | неожиданные ошибки только в логе |
-| `RECORDINGS_DIRECTORY` | `var/recordings` (записи звонков на этом сервере) |
+| `WORKER_POLL_SECONDS` | фоновый воркер проверяет задачи раз в 15 секунд |
+| `PORT`, `FORWARDED_ALLOW_IPS` | читает запуск образа, а не приложение: порт uvicorn (8000) и адреса доверенных прокси (`127.0.0.1`); их задают `Dockerfile`, `docker-compose.yml` и `render.yaml` |
 
 Адреса для внешних кабинетов (`APP_BASE_URL` + путь):
 вебхук Meta — `/v1/channels/meta/webhook`; post-call вебхук ElevenLabs —

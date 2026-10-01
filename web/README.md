@@ -37,7 +37,6 @@ development the 6-digit code appears in the API log
 | --- | --- | --- |
 | `BACKEND_URL` | `http://localhost:8000` | Base URL of the Python API, used only on the server (route handlers, proxy, Server Components). |
 | `COOKIE_SECURE` | `true` in production | `false` serves the session cookie without `Secure` (a production build over plain HTTP). |
-
 | `TRUSTED_PROXY_HOPS` | `0` | How many right-most `X-Forwarded-For` entries the cabinet's own proxies add (Render: `1`). Only those are forwarded to the API; the rest of the header comes from the browser and could be forged. `0` forwards no client address. |
 
 Behind a reverse proxy, run the API with
