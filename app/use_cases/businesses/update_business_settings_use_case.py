@@ -1,0 +1,277 @@
+import re
+
+from typed_time_provider import Microseconds, WallClock
+
+from app.contracts.localization_utilities import PhoneNumberParserContract
+from app.contracts.registries import LanguageRegistryContract
+from app.contracts.repositories import (
+    AuditLogRepoContract,
+    BusinessRepoContract,
+    UserRepoContract,
+)
+from app.contracts.transformer_contract import TransformerContract
+from app.contracts.use_case_contract import UseCaseContract
+from app.schemas.constants.businesses import BusinessStatus
+from app.schemas.constants.compliance import AuditAction
+from app.schemas.constants.handoffs import ManagerContactChannel
+from app.schemas.constants.users import BusinessMemberRole
+from app.schemas.domain.businesses import BusinessDocument, ManagerContact
+from app.schemas.domain.compliance import AuditLogEntryDocument
+from app.schemas.domain.users import UserDocument
+from app.schemas.dto.access import BusinessAccessRequest
+from app.schemas.dto.businesses import (
+    BusinessSettingsChanges,
+    BusinessView,
+    BusinessViewSource,
+    ManagerContactInput,
+    UpdateBusinessSettingsCommand,
+)
+from app.schemas.dto.localization import PhoneNumberDetails
+from app.schemas.exceptions.application_errors import (
+    ConflictError,
+    ValidationFailedError,
+)
+from app.schemas.typings.compliance.strings import (
+    AuditEntityName,
+    AuditEntityReference,
+)
+from app.schemas.typings.handoffs.strings import ManagerContactAddress
+from app.schemas.typings.localization.constrained_strings import LanguageTag
+from app.schemas.typings.localization.strings import RawPhoneNumberInput
+from app.schemas.typings.users.constrained_strings import EmailAddress
+from app.utilities.businesses.business_settings_validation import (
+    require_existing_timezone,
+    require_valid_business_name,
+    require_valid_city_name,
+    validate_business_languages,
+)
+from app.utilities.security.email_addresses import parse_email_address
+
+MAX_MANAGER_CONTACTS: int = 20
+MAX_MANAGER_NAME_LENGTH: int = 100
+# Telegram chat ids are integers; group and channel chats are negative.
+TELEGRAM_CHAT_ID_PATTERN: re.Pattern[str] = re.compile(r"^-?[0-9]{1,20}$")
+OWNER_STATUS_SWITCHES: frozenset[tuple[BusinessStatus, BusinessStatus]] = frozenset(
+    {
+        (BusinessStatus.LIVE, BusinessStatus.PAUSED),
+        (BusinessStatus.PAUSED, BusinessStatus.LIVE),
+    }
+)
+
+
+class UpdateBusinessSettingsUseCase(
+    UseCaseContract[UpdateBusinessSettingsCommand, BusinessView]
+):
+    """
+    Owner changes business settings; missing fields stay unchanged.
+
+    Languages follow the creation rules; when the default language drops out
+    of a new language list, the first language becomes the default. Manager
+    contacts are validated per channel: a numeric Telegram chat id, a phone
+    number of any country for WhatsApp and SMS (stored as E.164, national
+    formats read in the business country), an e-mail address for e-mail.
+    The owner may only pause a live assistant and resume a paused one;
+    publishing (another module) makes a business live. Contact changes are
+    audited because they hold staff personal data.
+    """
+
+    def __init__(
+        self,
+        authorize_business_access: UseCaseContract[
+            BusinessAccessRequest,
+            BusinessDocument,
+        ],
+        business_repo: BusinessRepoContract,
+        user_repo: UserRepoContract,
+        language_registry: LanguageRegistryContract,
+        phone_number_parser: PhoneNumberParserContract,
+        audit_log_repo: AuditLogRepoContract,
+        business_view_transformer: TransformerContract[
+            BusinessViewSource,
+            BusinessView,
+        ],
+        wall_clock: WallClock[Microseconds],
+    ) -> None:
+        self._authorize_business_access: UseCaseContract[
+            BusinessAccessRequest,
+            BusinessDocument,
+        ] = authorize_business_access
+        self._business_repo: BusinessRepoContract = business_repo
+        self._user_repo: UserRepoContract = user_repo
+        self._language_registry: LanguageRegistryContract = language_registry
+        self._phone_number_parser: PhoneNumberParserContract = phone_number_parser
+        self._audit_log_repo: AuditLogRepoContract = audit_log_repo
+        self._business_view_transformer: TransformerContract[
+            BusinessViewSource,
+            BusinessView,
+        ] = business_view_transformer
+        self._wall_clock: WallClock[Microseconds] = wall_clock
+
+    def run(self, input_data: UpdateBusinessSettingsCommand) -> BusinessView:
+        business: BusinessDocument = self._authorize_business_access.run(
+            BusinessAccessRequest(
+                user_id=input_data.user_id,
+                business_id=input_data.business_id,
+                required_role=BusinessMemberRole.OWNER,
+            )
+        )
+        changes: BusinessSettingsChanges = input_data.changes
+        self._apply_profile_changes(business, changes)
+        self._apply_language_changes(business, changes)
+        self._apply_status_change(business, changes.status)
+
+        now: Microseconds = self._wall_clock.now_unix()
+        if changes.manager_contacts is not None:
+            business.manager_contacts = [
+                self._validate_manager_contact(contact_input, business)
+                for contact_input in self._limit_contacts(changes.manager_contacts)
+            ]
+            self._audit_log_repo.append(
+                AuditLogEntryDocument(
+                    business_id=business.id,
+                    actor_id=input_data.user_id,
+                    action=AuditAction.UPDATE,
+                    entity=AuditEntityName("manager_contacts"),
+                    entity_id=AuditEntityReference(str(business.id)),
+                    ip_address=input_data.client_ip_address,
+                    created_at=now,
+                    updated_at=now,
+                )
+            )
+
+        business.updated_at = now
+        self._business_repo.save(business)
+        member_users: list[UserDocument] = [
+            user
+            for member in business.members
+            if (user := self._user_repo.get(member.user_id)) is not None
+        ]
+        return self._business_view_transformer.transform(
+            BusinessViewSource(
+                business=business,
+                member_users=member_users,
+                viewer_id=input_data.user_id,
+            )
+        )
+
+    def _apply_profile_changes(
+        self,
+        business: BusinessDocument,
+        changes: BusinessSettingsChanges,
+    ) -> None:
+        if changes.name is not None:
+            require_valid_business_name(changes.name)
+            business.name = changes.name
+
+        if changes.city is not None:
+            require_valid_city_name(changes.city)
+            business.city = None if changes.city.strip() == "" else changes.city
+
+        if changes.timezone is not None:
+            require_existing_timezone(changes.timezone)
+            business.timezone = changes.timezone
+
+        if changes.plan_key is not None:
+            business.plan_key = changes.plan_key
+
+        if changes.recording_retention_days is not None:
+            business.recording_retention_days = changes.recording_retention_days
+
+    def _apply_language_changes(
+        self,
+        business: BusinessDocument,
+        changes: BusinessSettingsChanges,
+    ) -> None:
+        if changes.languages is not None:
+            business.languages = validate_business_languages(
+                changes.languages,
+                self._language_registry,
+            )
+
+        if changes.default_language is not None:
+            if changes.default_language not in business.languages:
+                raise ValidationFailedError(
+                    "The default language must be one of the business languages."
+                )
+
+            business.default_language = changes.default_language
+        elif business.default_language not in business.languages:
+            business.default_language = business.languages[0]
+
+        if changes.owner_language is not None:
+            self._language_registry.get(changes.owner_language)
+            business.owner_language = changes.owner_language
+
+    def _apply_status_change(
+        self,
+        business: BusinessDocument,
+        requested_status: BusinessStatus | None,
+    ) -> None:
+        if requested_status is None or requested_status is business.status:
+            return
+
+        if (business.status, requested_status) not in OWNER_STATUS_SWITCHES:
+            raise ConflictError(
+                "Only a live assistant can be paused and only a paused one "
+                f"resumed; the business is {business.status.value}."
+            )
+
+        business.status = requested_status
+
+    def _limit_contacts(
+        self,
+        contact_inputs: list[ManagerContactInput],
+    ) -> list[ManagerContactInput]:
+        if len(contact_inputs) > MAX_MANAGER_CONTACTS:
+            raise ValidationFailedError(
+                f"A business can have at most {MAX_MANAGER_CONTACTS} manager contacts."
+            )
+
+        return contact_inputs
+
+    def _validate_manager_contact(
+        self,
+        contact_input: ManagerContactInput,
+        business: BusinessDocument,
+    ) -> ManagerContact:
+        if contact_input.name.strip() == "":
+            raise ValidationFailedError("Manager name must not be empty.")
+
+        if len(contact_input.name) > MAX_MANAGER_NAME_LENGTH:
+            raise ValidationFailedError(
+                f"Manager name must be at most {MAX_MANAGER_NAME_LENGTH} characters."
+            )
+
+        language: LanguageTag = contact_input.language or business.owner_language
+        self._language_registry.get(language)
+        return ManagerContact(
+            name=contact_input.name,
+            channel=contact_input.channel,
+            address=self._validate_contact_address(contact_input, business),
+            language=language,
+        )
+
+    def _validate_contact_address(
+        self,
+        contact_input: ManagerContactInput,
+        business: BusinessDocument,
+    ) -> ManagerContactAddress:
+        match contact_input.channel:
+            case ManagerContactChannel.TELEGRAM:
+                chat_id: str = contact_input.address.strip()
+                if TELEGRAM_CHAT_ID_PATTERN.fullmatch(chat_id) is None:
+                    raise ValidationFailedError(
+                        "A Telegram contact needs the numeric chat id the platform "
+                        "bot shows after the manager presses Start."
+                    )
+
+                return ManagerContactAddress(chat_id)
+            case ManagerContactChannel.EMAIL:
+                email: EmailAddress = parse_email_address(contact_input.address)
+                return ManagerContactAddress(str(email))
+            case ManagerContactChannel.WHATSAPP | ManagerContactChannel.SMS:
+                phone_number: PhoneNumberDetails = self._phone_number_parser.parse(
+                    RawPhoneNumberInput(str(contact_input.address)),
+                    business.country_code,
+                )
+                return ManagerContactAddress(str(phone_number.e164))

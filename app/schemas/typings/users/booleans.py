@@ -4,6 +4,7 @@ Example:
     is_user_verified: IsUserVerified = True
 """
 
+IsNewUser = bool
 IsOtpChallengeConsumed = bool
 IsOtpCodeLoggingEnabled = bool
 IsPlatformAdmin = bool

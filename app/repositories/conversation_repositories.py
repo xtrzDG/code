@@ -118,6 +118,14 @@ class MessageRepository(
     def list_by_business(self, business_id: BusinessId) -> list[MessageDocument]:
         return sorted(self._list(business_id), key=lambda message: message.created_at)
 
+    def delete_by_conversation(
+        self,
+        business_id: BusinessId,
+        conversation_id: ConversationId,
+    ) -> None:
+        for message in self.list_by_conversation(business_id, conversation_id):
+            self._remove(business_id, str(message.id))
+
 
 class LlmTurnRepository(LlmTurnRepoContract):
     def __init__(
@@ -144,6 +152,10 @@ class LlmTurnRepository(LlmTurnRepoContract):
             if turn.conversation_id == conversation_id
         ]
         return sorted(turns, key=lambda turn: turn.sequence_number)
+
+    def delete_by_conversation(self, conversation_id: ConversationId) -> None:
+        for turn in self.list_by_conversation(conversation_id):
+            self._collection.delete(str(turn.id))
 
 
 class CallRepository(BusinessScopedRepository[CallDocument], CallRepoContract):

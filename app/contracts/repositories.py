@@ -279,10 +279,21 @@ class MessageRepoContract(RepoContract, Protocol):
     def list_by_business(self, business_id: BusinessId) -> list[MessageDocument]:
         raise NotImplementedError
 
+    def delete_by_conversation(
+        self,
+        business_id: BusinessId,
+        conversation_id: ConversationId,
+    ) -> None:
+        """Delete every message of a conversation (visitor data erasure)."""
+        raise NotImplementedError
+
 
 class LlmTurnRepoContract(RepoContract, Protocol):
     def append(self, turn: LlmTurnDocument) -> None:
-        """Store a new turn; turns are never updated or deleted."""
+        """
+        Store a new turn; turns are never updated, and are deleted only when
+        the visitor's data is erased.
+        """
         raise NotImplementedError
 
     def list_by_conversation(
@@ -290,6 +301,10 @@ class LlmTurnRepoContract(RepoContract, Protocol):
         conversation_id: ConversationId,
     ) -> list[LlmTurnDocument]:
         """Return turns ordered by sequence_number ascending."""
+        raise NotImplementedError
+
+    def delete_by_conversation(self, conversation_id: ConversationId) -> None:
+        """Delete the whole transcript of a conversation (visitor data erasure)."""
         raise NotImplementedError
 
 
