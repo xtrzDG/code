@@ -1,0 +1,32 @@
+"""Keep abc order."""
+
+from base_typed_string import BaseConstrainedTypedString
+
+
+class ExtractedPriceAmount(BaseConstrainedTypedString):
+    """
+    Price as printed on a menu, normalized to a plain decimal in major units.
+
+    Example:
+        price = ExtractedPriceAmount("18.50")
+    """
+
+    min_length = 1
+    max_length = 20
+    pattern = r"^[0-9]{1,12}(\.[0-9]{1,4})?$"
+
+
+class MenuSourceMediaType(BaseConstrainedTypedString):
+    """
+    Media type of an uploaded menu, e.g. "image/jpeg" or "application/pdf".
+
+    Example:
+        media_type = MenuSourceMediaType("application/pdf")
+    """
+
+    min_length = 3
+    max_length = 100
+    pattern = r"^[a-z]+/[a-z0-9.+\-]+$"
+
+
+# Keep abc order for all non example types, if possible.
