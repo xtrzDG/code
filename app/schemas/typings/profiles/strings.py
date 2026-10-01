@@ -27,6 +27,15 @@ class ProfileAnswerText(BaseTypedString):
     """Owner's answer to one niche-specific profile question."""
 
 
+class RawProfileAnswerText(BaseTypedString):
+    """
+    Answer to a niche question exactly as the owner typed it, before validation.
+
+    Validation turns it into a canonical ProfileAnswerText (trimmed text,
+    ASCII digits, "yes"/"no", E.164 phone).
+    """
+
+
 class ToneText(BaseTypedString):
     """Desired tone of the assistant ("friendly and short")."""
 
