@@ -10,6 +10,8 @@ Python-бэкенд AI-помощника для бизнеса: помощни�
 - Архитектура и отличия от стека в ТЗ: [`docs/architecture.md`](docs/architecture.md)
 - Правила кода: [`AGENTS.md`](AGENTS.md), [`docs/conventions.md`](docs/conventions.md)
 - План работ: [`docs/PLAN.md`](docs/PLAN.md)
+- Запуск для владельца: аккаунты, ключи, Render, проверка —
+  [`docs/LAUNCH.md`](docs/LAUNCH.md)
 
 Проект сгенерирован из шаблона
 [`copier-template-python-backend`](https://github.com/eldenizfamilyanskicode/copier-template-python-backend):

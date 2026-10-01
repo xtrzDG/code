@@ -11,10 +11,14 @@ Sources of truth:
 - `web/src` (the cabinet's server code) for the cabinet; `web/.env.example`
   and the "Environment" table of `web/README.md` for people;
 - `docker-compose.yml` and `render.yaml` for the deployments.
+
+The owner's launch guide (`docs/LAUNCH.md`) may name only variables, API
+routes and files that exist.
 """
 
 import ast
 import inspect
+import json
 import re
 from collections.abc import Iterator, Mapping
 from pathlib import Path
@@ -26,6 +30,10 @@ import pytest
 from app.adapters.security.secret_cipher_adapter import MIN_DERIVED_SECRET_LENGTH
 from app.clients.anthropic import anthropic_messages_client
 from app.clients.openai import openai_responses_client
+from app.utilities.channels.channel_endpoints import (
+    WIDGET_DEMO_PATH,
+    WIDGET_SCRIPT_PATH,
+)
 from app.utilities.config_helpers.app_settings_assembler import (
     DEFAULT_OPENAI_BASE_URL,
     assemble_app_settings,
@@ -36,6 +44,15 @@ ASSEMBLER: Path = (
     ROOT / "app" / "utilities" / "config_helpers" / "app_settings_assembler.py"
 )
 VARIABLE_NAME: re.Pattern[str] = re.compile(r"[A-Z][A-Z0-9]*(?:_[A-Z0-9]+)+")
+LAUNCH_GUIDE: str = "docs/LAUNCH.md"
+# The API's routes as the cabinet's generated client knows them.
+OPENAPI_DESCRIPTION: str = "web/openapi.json"
+# Routes outside the OpenAPI description (include_in_schema=False).
+UNDESCRIBED_ROUTES: frozenset[str] = frozenset(
+    {"/healthz", WIDGET_SCRIPT_PATH, WIDGET_DEMO_PATH}
+)
+# The guide names the curated country data relative to this folder.
+REGISTRIES: Path = ROOT / "app" / "registries"
 
 # Read by the provider SDKs themselves: the clients never pass the key, so
 # the SDK takes it from the environment. Set like any other variable.
@@ -381,3 +398,28 @@ def test_compose_sets_what_a_local_run_needs() -> None:
         backend["CORS_ALLOWED_ORIGINS"]
     )
     assert web["BACKEND_URL"] == "http://api:8000"
+
+
+def test_the_launch_guide_names_only_what_exists() -> None:
+    guide: str = read(LAUNCH_GUIDE)
+    known: set[str] = (
+        backend_variables()
+        | DEPLOYMENT_VARIABLES
+        | COMPOSE_VARIABLES
+        | cabinet_variables()
+    )
+    described: set[str] = {
+        re.sub(r"\{[^}]*\}", "{}", path)
+        for path in json.loads(read(OPENAPI_DESCRIPTION))["paths"]
+    }
+    routes: set[str] = {
+        re.sub(r"\{[^}]*\}", "{}", route.split("?", 1)[0])
+        for route in re.findall(r"`(/(?:v1/|healthz|widget)[^`\s]*)`", guide)
+    }
+    files: list[str] = re.findall(r"`([\w/.-]+\.(?:py|md|yml|yaml))`", guide)
+
+    assert set(VARIABLE_NAME.findall(guide)) - known == set()
+    assert "/v1/channels/meta/webhook" in routes
+    assert routes - described - UNDESCRIBED_ROUTES == set()
+    for name in files:
+        assert (ROOT / name).exists() or (REGISTRIES / name).exists(), name
