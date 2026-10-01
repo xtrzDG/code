@@ -90,6 +90,13 @@ class TestWidgetScriptRoute:
         assert "set-cookie" not in response.headers
         assert response.text == SCRIPT_SOURCE
 
+    def test_head_answers_with_the_headers_only(self) -> None:
+        response = build_client().head(WIDGET_SCRIPT_PATH)
+
+        assert response.status_code == 200
+        assert response.headers["content-type"] == "text/javascript; charset=utf-8"
+        assert response.content == b""
+
     def test_unchanged_script_is_revalidated_with_its_etag(self) -> None:
         client = build_client()
         etag = client.get(WIDGET_SCRIPT_PATH).headers["etag"]

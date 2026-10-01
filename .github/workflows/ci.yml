@@ -1,0 +1,130 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend:
+    name: Backend (ruff, mypy, pyright, pytest)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      # The storage tests start a throwaway Postgres 16 from these binaries
+      # (tests/storage/postgres_server.py); they are skipped without them, so
+      # the job checks they are present.
+      POSTGRES_BIN_DIRECTORY: /usr/lib/postgresql/16/bin
+      UV_FROZEN: "1"
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv and Python 3.14
+        uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.14"
+          enable-cache: true
+          cache-dependency-glob: uv.lock
+
+      - name: Install PostgreSQL 16 binaries
+        run: |
+          if [ ! -x "$POSTGRES_BIN_DIRECTORY/initdb" ]; then
+            sudo apt-get update
+            sudo apt-get install --yes --no-install-recommends postgresql-16
+          fi
+          "$POSTGRES_BIN_DIRECTORY/postgres" --version
+
+      - name: Install dependencies
+        run: uv sync --frozen
+
+      - name: Lint
+        run: uv run ruff check .
+
+      - name: Format
+        run: uv run ruff format --check .
+
+      - name: Type check (mypy)
+        run: uv run mypy .
+
+      - name: Type check (pyright)
+        run: uv run pyright
+
+      - name: Tests
+        run: uv run pytest -ra
+
+  web:
+    name: Cabinet (lint, typecheck, test, build)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: web
+    env:
+      NEXT_TELEMETRY_DISABLED: "1"
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Type check
+        run: npm run typecheck
+
+      - name: Tests
+        run: npm test
+
+      - name: Build
+        run: npm run build
+
+  images:
+    name: Docker images and Compose file
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate docker-compose.yml
+        run: docker compose config --quiet
+
+      - name: Build the backend image
+        run: docker build --tag assistant-workshop-backend:ci .
+
+      - name: Build the cabinet image
+        run: docker build --tag assistant-workshop-web:ci web
+
+      - name: Smoke test the backend image
+        run: |
+          # Without DATABASE_URL the migration runner refuses with exit code 2.
+          status=0
+          docker run --rm assistant-workshop-backend:ci migrate --dry-run || status=$?
+          test "$status" -eq 2
+          docker run --detach --name api --publish 8000:8000 \
+            --env APP_ENV=development assistant-workshop-backend:ci api
+          for attempt in $(seq 1 30); do
+            if curl --silent --fail http://127.0.0.1:8000/healthz; then
+              curl --silent --fail --output /dev/null http://127.0.0.1:8000/widget.js
+              docker rm --force api
+              exit 0
+            fi
+            sleep 1
+          done
+          docker logs api
+          exit 1

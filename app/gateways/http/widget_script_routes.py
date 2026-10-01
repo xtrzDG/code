@@ -50,7 +50,8 @@ DEMO_FORM_ACTION: str = WIDGET_DEMO_PATH.rsplit("/", 1)[-1]
 def build_widget_script_router(static_directory: Path = STATIC_DIRECTORY) -> APIRouter:
     """
     Routes (public, no bearer token):
-        GET /widget.js                       the chat widget (any site may load it)
+        GET /widget.js                       the chat widget (any site may load
+                                             it; HEAD too)
         GET /widget/demo?business_id=...     a page that embeds the widget;
                                              optional `language` forces the
                                              interface language
@@ -67,7 +68,11 @@ def build_widget_script_router(static_directory: Path = STATIC_DIRECTORY) -> API
     )
     router = APIRouter(tags=["widget"])
 
-    @router.get(WIDGET_SCRIPT_PATH, include_in_schema=False)
+    @router.api_route(
+        WIDGET_SCRIPT_PATH,
+        methods=["GET", "HEAD"],
+        include_in_schema=False,
+    )
     def get_widget_script(
         if_none_match: Annotated[str | None, Header()] = None,
     ) -> Response:
