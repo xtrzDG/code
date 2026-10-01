@@ -1,0 +1,100 @@
+import Link from "next/link";
+import type { ComponentPropsWithRef, ReactNode } from "react";
+
+import { cn } from "@/lib/cn";
+
+import { Spinner } from "./Spinner";
+
+export type ButtonVariant = "primary" | "secondary" | "ghost" | "danger";
+export type ButtonSize = "sm" | "md" | "lg";
+
+const VARIANTS: Record<ButtonVariant, string> = {
+  primary: "bg-accent-solid text-on-accent shadow-sm hover:bg-accent-solid-hover",
+  secondary: "border border-line-strong bg-surface text-ink shadow-sm hover:bg-surface-muted",
+  ghost: "text-ink-muted hover:bg-surface-muted hover:text-ink",
+  danger: "bg-danger-solid text-white shadow-sm hover:opacity-90",
+};
+
+const SIZES: Record<ButtonSize, string> = {
+  sm: "h-8 gap-1.5 rounded-lg px-3 text-sm",
+  md: "h-10 gap-2 rounded-lg px-4 text-sm",
+  lg: "h-12 gap-2 rounded-xl px-5 text-base",
+};
+
+/** Classes of a button, for elements that only look like one. */
+export function buttonClasses(
+  options: { variant?: ButtonVariant; size?: ButtonSize; fullWidth?: boolean; className?: string } = {},
+): string {
+  const { variant = "primary", size = "md", fullWidth = false, className } = options;
+  return cn(
+    "inline-flex shrink-0 items-center justify-center font-medium whitespace-nowrap transition-colors",
+    "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus",
+    "disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50",
+    VARIANTS[variant],
+    SIZES[size],
+    fullWidth && "w-full",
+    className,
+  );
+}
+
+export interface ButtonProps extends ComponentPropsWithRef<"button"> {
+  variant?: ButtonVariant;
+  size?: ButtonSize;
+  fullWidth?: boolean;
+  /** Shows a spinner, disables the button and announces `loadingText`. */
+  isLoading?: boolean;
+  loadingText?: string;
+  leadingIcon?: ReactNode;
+}
+
+export function Button({
+  variant,
+  size,
+  fullWidth,
+  isLoading = false,
+  loadingText,
+  leadingIcon,
+  className,
+  children,
+  disabled,
+  type = "button",
+  ...props
+}: ButtonProps) {
+  return (
+    <button
+      type={type}
+      disabled={disabled || isLoading}
+      aria-busy={isLoading || undefined}
+      className={buttonClasses({ variant, size, fullWidth, className })}
+      {...props}
+    >
+      {isLoading ? <Spinner size="sm" /> : leadingIcon}
+      <span>{isLoading && loadingText ? loadingText : children}</span>
+    </button>
+  );
+}
+
+export interface ButtonLinkProps extends ComponentPropsWithRef<typeof Link> {
+  variant?: ButtonVariant;
+  size?: ButtonSize;
+  fullWidth?: boolean;
+  leadingIcon?: ReactNode;
+}
+
+/** A link styled as a button (navigation, not actions). */
+export function ButtonLink({
+  variant,
+  size,
+  fullWidth,
+  leadingIcon,
+  className,
+  children,
+  ...props
+}: ButtonLinkProps) {
+  return (
+    <Link className={buttonClasses({ variant, size, fullWidth, className })} {...props}>
+      {leadingIcon}
+      <span>{children}</span>
+    </Link>
+  );
+}

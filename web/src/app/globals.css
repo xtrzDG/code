@@ -1,0 +1,134 @@
+@import "tailwindcss";
+
+/*
+ * Design tokens. Components use the semantic utilities below
+ * (bg-surface, text-ink-muted, border-line, bg-accent-solid, text-danger…),
+ * which switch automatically between light and dark color schemes, so
+ * `dark:` variants are rarely needed.
+ */
+:root {
+  color-scheme: light dark;
+
+  --canvas: #f5f6f8;
+  --surface: #ffffff;
+  --surface-muted: #f1f3f6;
+  --ink: #111827;
+  --ink-muted: #4b5563;
+  --ink-subtle: #6b7280;
+  --line: #e4e7ec;
+  --line-strong: #cfd4dc;
+
+  --accent: #4338ca;
+  --accent-solid: #4f46e5;
+  --accent-solid-hover: #4338ca;
+  --on-accent: #ffffff;
+  --accent-soft: #eef2ff;
+  --accent-ink: #3730a3;
+  --focus: #6366f1;
+
+  --success: #047857;
+  --success-soft: #ecfdf5;
+  --warning: #b45309;
+  --warning-soft: #fffbeb;
+  --danger: #b91c1c;
+  --danger-solid: #dc2626;
+  --danger-soft: #fef2f2;
+  --info: #0369a1;
+  --info-soft: #f0f9ff;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --canvas: #0b0d12;
+    --surface: #141821;
+    --surface-muted: #1c2130;
+    --ink: #e6e8ee;
+    --ink-muted: #a7aebd;
+    --ink-subtle: #8a93a5;
+    --line: #262c3b;
+    --line-strong: #39415a;
+
+    --accent: #a5b4fc;
+    --accent-solid: #4f46e5;
+    --accent-solid-hover: #6366f1;
+    --on-accent: #ffffff;
+    --accent-soft: rgb(99 102 241 / 0.18);
+    --accent-ink: #c7d2fe;
+    --focus: #818cf8;
+
+    --success: #34d399;
+    --success-soft: rgb(16 185 129 / 0.15);
+    --warning: #fbbf24;
+    --warning-soft: rgb(245 158 11 / 0.15);
+    --danger: #f87171;
+    --danger-solid: #dc2626;
+    --danger-soft: rgb(239 68 68 / 0.15);
+    --info: #38bdf8;
+    --info-soft: rgb(14 165 233 / 0.15);
+  }
+}
+
+@theme inline {
+  --color-canvas: var(--canvas);
+  --color-surface: var(--surface);
+  --color-surface-muted: var(--surface-muted);
+  --color-ink: var(--ink);
+  --color-ink-muted: var(--ink-muted);
+  --color-ink-subtle: var(--ink-subtle);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-accent: var(--accent);
+  --color-accent-solid: var(--accent-solid);
+  --color-accent-solid-hover: var(--accent-solid-hover);
+  --color-on-accent: var(--on-accent);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-ink: var(--accent-ink);
+  --color-focus: var(--focus);
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
+  --color-danger: var(--danger);
+  --color-danger-solid: var(--danger-solid);
+  --color-danger-soft: var(--danger-soft);
+  --color-info: var(--info);
+  --color-info-soft: var(--info-soft);
+
+  /* System fonts cover Georgian (Mkhedruli), Cyrillic and Latin. */
+  --font-sans:
+    ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", "Noto Sans Georgian",
+    "Helvetica Neue", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  background: var(--canvas);
+  color: var(--ink);
+  font-family: var(--font-sans);
+}
+
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+/* Native dialogs (Modal, mobile navigation). */
+dialog::backdrop {
+  background: rgb(15 23 42 / 0.45);
+  backdrop-filter: blur(2px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
