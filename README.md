@@ -112,7 +112,8 @@ API запускается с `--proxy-headers`; адреса доверенны
 кодов входа, Meta, Telegram, ElevenLabs, Flitt, Langfuse, Sentry — ненужные оставьте
 пустыми. Воркер берёт значения у API, `ENCRYPTION_KEY` генерируется один раз (не
 меняйте его). После первого деплоя укажите `APP_BASE_URL` (публичный адрес API,
-например `https://workshop-api.onrender.com`) и `BACKEND_URL` кабинета (внутренний
+например `https://workshop-api.onrender.com`), `CABINET_BASE_URL` (публичный адрес
+кабинета, туда Google Calendar возвращает владельца) и `BACKEND_URL` кабинета (внутренний
 адрес API из Render: `http://<хост>:8000`, или публичный). Адреса вебхуков для
 внешних кабинетов — в разделе «Окружение».
 
@@ -193,6 +194,7 @@ DOM (стили сайта и виджета не смешиваются), яз�
 | `APP_ENV` | `development`; в `production` обязателен `ENCRYPTION_KEY`, коды входа не пишутся в лог |
 | `TWILIO_*`, `TELEGRAM_GATEWAY_API_TOKEN`, `WHATSAPP_OTP_*`, `SMTP_*` | коды входа только в логе (вне `production`); см. «Коды входа» |
 | `APP_BASE_URL` | нельзя опубликовать голосовую версию, подключить Telegram, принять оплату |
+| `CABINET_BASE_URL` | вне `production` — `http://localhost:3000`; в `production` после согласия в Google владелец видит простую страницу вместо возврата в кабинет |
 | `DATABASE_URL` | хранение в памяти |
 | `ENCRYPTION_KEY` | временный ключ: токены каналов не переживут перезапуск |
 | `CORS_ALLOWED_ORIGINS` | CORS выключен (виджет сайта разрешает любой источник сам) |

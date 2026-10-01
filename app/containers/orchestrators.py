@@ -356,6 +356,9 @@ class OrchestratorsContainer(containers.DeclarativeContainer):
     disconnect_google_calendar_orchestrator = use_case_orchestrator(
         use_cases.disconnect_google_calendar_use_case
     )
+    get_google_calendar_connection_orchestrator = use_case_orchestrator(
+        use_cases.get_google_calendar_connection_use_case
+    )
 
     # --- Conversation feed and menu import.
     list_conversations_orchestrator = use_case_orchestrator(

@@ -243,6 +243,9 @@ class OperatorsContainer(containers.DeclarativeContainer):
     disconnect_google_calendar_operator = pipeline_operator(
         pipelines.disconnect_google_calendar_pipeline, storage_scope
     )
+    get_google_calendar_connection_operator = pipeline_operator(
+        pipelines.get_google_calendar_connection_pipeline, storage_scope
+    )
 
     # --- Conversation feed and menu import.
     list_conversations_operator = pipeline_operator(

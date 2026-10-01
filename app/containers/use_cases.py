@@ -82,6 +82,11 @@ from app.schemas.dto.businesses import (
     RemoveMemberCommand,
     UpdateBusinessSettingsCommand,
 )
+from app.schemas.dto.calendar import (
+    CalendarConnectionOutcome,
+    CalendarConnectionStatusQuery,
+    CalendarConnectionStatusView,
+)
 from app.schemas.dto.catalog import (
     CallForwardingInstructions,
     CallForwardingInstructionsQuery,
@@ -193,7 +198,6 @@ from app.schemas.dto.operations import (
     AnsweredQuestionResult,
     AnswerUnansweredQuestionCommand,
     BookingListView,
-    CalendarConnectionView,
     CalendarConnectUrlView,
     CalendarDisconnectResult,
     CompleteCalendarConnectionCommand,
@@ -371,6 +375,9 @@ from app.use_cases.calendar.complete_google_calendar_connection_use_case import 
 )
 from app.use_cases.calendar.disconnect_google_calendar_use_case import (
     DisconnectGoogleCalendarUseCase,
+)
+from app.use_cases.calendar.get_google_calendar_connection_use_case import (
+    GetGoogleCalendarConnectionUseCase,
 )
 from app.use_cases.calendar.start_google_calendar_connection_use_case import (
     StartGoogleCalendarConnectionUseCase,
@@ -1238,7 +1245,7 @@ class UseCasesContainer(containers.DeclarativeContainer):
         wall_clock=time_provider.microsecond_wall_clock,
     )
     complete_google_calendar_connection_use_case: Factory[
-        UseCaseContract[CompleteCalendarConnectionCommand, CalendarConnectionView]
+        UseCaseContract[CompleteCalendarConnectionCommand, CalendarConnectionOutcome]
     ] = Factory(
         CompleteGoogleCalendarConnectionUseCase,
         authorization_state_repo=repositories.calendar_authorization_state_repo,
@@ -1255,6 +1262,13 @@ class UseCasesContainer(containers.DeclarativeContainer):
         event_link_repo=repositories.calendar_event_link_repo,
         calendar_client=clients.google_calendar_client,
         secret_cipher=adapters.secret_cipher,
+    )
+    get_google_calendar_connection_use_case: Factory[
+        UseCaseContract[CalendarConnectionStatusQuery, CalendarConnectionStatusView]
+    ] = Factory(
+        GetGoogleCalendarConnectionUseCase,
+        connection_repo=repositories.calendar_connection_repo,
+        calendar_client=clients.google_calendar_client,
     )
 
     # --- Conversation engine: the ten tools, then prepare, generate, record.

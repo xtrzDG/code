@@ -46,6 +46,7 @@ from app.schemas.typings.bookings.strings import (
     CalendarAuthorizationState,
     CalendarEventDescription,
     CalendarEventTitle,
+    CalendarProviderErrorCode,
     CalendarRefreshToken,
     ExternalCalendarId,
     LeadBudgetText,
@@ -444,10 +445,14 @@ class CalendarConnectUrlView(ImmutableDTO):
 
 
 class CompleteCalendarConnectionCommand(ImmutableDTO):
-    """OAuth callback values: the state we issued and Google's code."""
+    """
+    OAuth callback values: the state we issued and Google's code, or the
+    error Google reports instead of a code (the owner declined).
+    """
 
-    state: CalendarAuthorizationState
-    code: CalendarAuthorizationCode
+    state: CalendarAuthorizationState | None = None
+    code: CalendarAuthorizationCode | None = None
+    provider_error: CalendarProviderErrorCode | None = None
 
 
 class CalendarConnectionView(ImmutableDTO):

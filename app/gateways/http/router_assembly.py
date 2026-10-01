@@ -144,6 +144,10 @@ def build_application_routers(app_container: AppContainer) -> list[APIRouter]:
                 operators.complete_google_calendar_connection_operator()
             ),
             disconnect_calendar=operators.disconnect_google_calendar_operator(),
+            get_calendar_connection=(
+                operators.get_google_calendar_connection_operator()
+            ),
+            cabinet_base_url=app_container.config.app_settings().cabinet_base_url,
         ),
         build_conversation_router(
             list_conversations_operator=operators.list_conversations_operator(),

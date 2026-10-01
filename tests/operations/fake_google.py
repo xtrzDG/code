@@ -24,6 +24,7 @@ class FakeGoogle:
         self.grants_refresh_token: bool = True
         self.refresh_count: int = 0
         self.revoked_tokens: list[str] = []
+        self.calendar_name: str | None = "owner@example.com"
         self._next_event_number: int = 1
 
     def client(self) -> GoogleCalendarClient:
@@ -94,6 +95,12 @@ class FakeGoogle:
         parts: list[str] = request.url.raw_path.decode().split("?")[0].split("/")
         # /calendar/v3/calendars/{calendar_id}/events[/{event_id}]
         event_id: str | None = unquote(parts[6]) if len(parts) > 6 else None
+        if request.method == "GET" and event_id is None:
+            listing: dict[str, object] = {"items": []}
+            if self.calendar_name is not None:
+                listing["summary"] = self.calendar_name
+            return httpx.Response(200, json=listing)
+
         if request.method == "POST":
             new_id = f"event{self._next_event_number}"
             self._next_event_number += 1

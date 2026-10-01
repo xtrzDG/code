@@ -39,6 +39,7 @@ from app.schemas.typings.handoffs.strings import (
     UnansweredQuestionText,
 )
 from app.schemas.typings.localization.constrained_strings import LanguageTag
+from app.schemas.typings.platform.constrained_strings import CabinetBaseUrl
 from app.schemas.typings.users.prefixed_id import UserId
 from app.schemas.typings.users.strings import AccessToken
 from app.use_cases.authorize_business_access_use_case import (
@@ -50,6 +51,9 @@ from app.use_cases.calendar.complete_google_calendar_connection_use_case import 
 from app.use_cases.calendar.disconnect_google_calendar_use_case import (
     DisconnectGoogleCalendarUseCase,
 )
+from app.use_cases.calendar.get_google_calendar_connection_use_case import (
+    GetGoogleCalendarConnectionUseCase,
+)
 from app.use_cases.calendar.start_google_calendar_connection_use_case import (
     StartGoogleCalendarConnectionUseCase,
 )
@@ -60,6 +64,7 @@ from tests.operations.fakes import ReversingSecretCipher
 OWNER_TOKEN: str = "owner-token"
 STAFF_TOKEN: str = "staff-token"
 STRANGER_TOKEN: str = "stranger-token"
+CABINET_URL: str = "https://cabinet.example.com"
 
 
 def operator[InputData, OutputData](
@@ -83,7 +88,7 @@ class TokenAuthenticator(OperatorContract[AccessToken, UserId]):
 class Api:
     """The operations router over an in-memory Tbilisi restaurant."""
 
-    def __init__(self) -> None:
+    def __init__(self, cabinet_base_url: str | None = CABINET_URL) -> None:
         self.world = OperationsWorld()
         self.owner_id, self.staff_id = UserId(), UserId()
         self.business = self.world.add_business(
@@ -169,6 +174,17 @@ class Api:
                         calendar_client=google_client,
                         secret_cipher=cipher,
                     )
+                ),
+                get_calendar_connection=operator(
+                    GetGoogleCalendarConnectionUseCase(
+                        connection_repo=self.connection_repo,
+                        calendar_client=google_client,
+                    )
+                ),
+                cabinet_base_url=(
+                    None
+                    if cabinet_base_url is None
+                    else CabinetBaseUrl(cabinet_base_url)
                 ),
             )
         )
@@ -405,27 +421,66 @@ def test_dashboard_route() -> None:
     assert api.get("/dashboard", **{"from": "0001-01-01"}).status_code == 422
 
 
+def start_consent(api: Api) -> str:
+    connect = api.get("/integrations/google-calendar/connect-url", token=OWNER_TOKEN)
+    assert connect.status_code == 200
+    authorization_url = str(connect.json()["authorization_url"])
+    return parse_qs(urlsplit(authorization_url).query)["state"][0]
+
+
+def callback(api: Api, **params: str) -> Response:
+    return api.client.get(ROUTE_CALLBACK_PATH, params=params, follow_redirects=False)
+
+
 def test_google_calendar_connection_routes() -> None:
     api = Api()
+    channels_url = f"{CABINET_URL}/b/{api.business.id}/channels"
 
     assert ROUTE_CALLBACK_PATH == GOOGLE_CALENDAR_CALLBACK_PATH
     staff = api.get("/integrations/google-calendar/connect-url")
     assert staff.status_code == 403
-    connect = api.get("/integrations/google-calendar/connect-url", token=OWNER_TOKEN)
-    assert connect.status_code == 200
-    authorization_url = str(connect.json()["authorization_url"])
-    state = parse_qs(urlsplit(authorization_url).query)["state"][0]
+    before = api.get("/integrations/google-calendar")
+    assert before.status_code == 200
+    assert before.json() == {
+        "business_id": str(api.business.id),
+        "is_configured": True,
+        "is_connected": False,
+        "calendar_id": None,
+        "calendar_name": None,
+        "connected_at": None,
+        "last_synced_at": None,
+        "last_sync_error": None,
+        "last_sync_error_at": None,
+    }
 
-    denied = api.client.get(ROUTE_CALLBACK_PATH, params={"error": "access_denied"})
-    assert denied.status_code == 422
-    assert "access_denied" in denied.json()["message"]
-    assert api.client.get(ROUTE_CALLBACK_PATH).status_code == 422
-    callback = api.client.get(
-        ROUTE_CALLBACK_PATH, params={"code": "good-code", "state": state}
+    denied = callback(api, error="access_denied", state=start_consent(api))
+    assert denied.status_code == 303
+    assert denied.headers["location"] == (
+        f"{channels_url}?calendar=error&reason=access_denied"
     )
-    assert callback.status_code == 200, callback.text
-    assert callback.json()["calendar_id"] == "primary"
+    unknown = callback(api)
+    assert unknown.status_code == 303
+    assert unknown.headers["location"] == (
+        f"{CABINET_URL}/businesses?calendar=error&reason=link_expired"
+    )
+    state = start_consent(api)
+    connected = callback(api, code="good-code", state=state)
+    assert connected.status_code == 303, connected.text
+    assert connected.headers["location"] == f"{channels_url}?calendar=connected"
     assert api.connection_repo.get_by_business(api.business.id) is not None
+    replayed = callback(api, code="good-code", state=state)
+    assert replayed.headers["location"] == (
+        f"{channels_url}?calendar=error&reason=link_expired"
+    )
+
+    status = api.get("/integrations/google-calendar").json()
+    assert status["is_connected"] is True
+    assert status["calendar_id"] == "primary"
+    assert status["calendar_name"] == "owner@example.com"
+    assert status["connected_at"] == int(api.world.clock.now_microseconds())
+    assert "token" not in str(status).lower()
+    stranger = api.get("/integrations/google-calendar", token=STRANGER_TOKEN)
+    assert stranger.status_code == 404
 
     assert (
         api.send(
@@ -440,3 +495,17 @@ def test_google_calendar_connection_routes() -> None:
         "business_id": str(api.business.id),
         "was_connected": True,
     }
+    assert api.get("/integrations/google-calendar").json()["is_connected"] is False
+
+
+def test_google_calendar_callback_without_a_cabinet_address_shows_a_page() -> None:
+    api = Api(cabinet_base_url=None)
+
+    connected = callback(api, code="good-code", state=start_consent(api))
+    declined = callback(api, error="access_denied", state=start_consent(api))
+
+    assert connected.status_code == 200
+    assert connected.headers["content-type"].startswith("text/html")
+    assert "Google Calendar is connected" in connected.text
+    assert declined.status_code == 400
+    assert "access_denied" in declined.text

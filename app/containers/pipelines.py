@@ -304,6 +304,9 @@ class PipelinesContainer(containers.DeclarativeContainer):
     disconnect_google_calendar_pipeline = orchestrator_pipeline(
         orchestrators.disconnect_google_calendar_orchestrator
     )
+    get_google_calendar_connection_pipeline = orchestrator_pipeline(
+        orchestrators.get_google_calendar_connection_orchestrator
+    )
 
     # --- Conversation feed and menu import.
     list_conversations_pipeline = orchestrator_pipeline(

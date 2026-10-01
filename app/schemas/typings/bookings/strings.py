@@ -26,6 +26,13 @@ class CalendarAuthorizationStateHash(BaseTypedString):
     """SHA-256 hex digest of a calendar OAuth state, the only stored form."""
 
 
+class CalendarDisplayName(BaseTypedString):
+    """
+    Title of a connected calendar as the provider shows it (for a primary
+    Google calendar usually the account's e-mail address).
+    """
+
+
 class CalendarEventDescription(BaseTypedString):
     """Body text of a calendar event created for a booking."""
 
@@ -36,6 +43,13 @@ class CalendarEventId(BaseTypedString):
 
 class CalendarEventTitle(BaseTypedString):
     """Title of a calendar event created for a booking."""
+
+
+class CalendarProviderErrorCode(BaseTypedString):
+    """
+    Error code the calendar provider puts on the OAuth callback instead of
+    a code, e.g. "access_denied" when the owner declines.
+    """
 
 
 class CalendarRefreshToken(BaseTypedString):

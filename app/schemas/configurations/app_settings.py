@@ -38,6 +38,7 @@ from app.schemas.typings.messaging.constrained_strings import (
 from app.schemas.typings.messaging.strings import SmtpUsername
 from app.schemas.typings.platform.booleans import IsLlmContentTraced
 from app.schemas.typings.platform.constrained_integers import WorkerPollSeconds
+from app.schemas.typings.platform.constrained_strings import CabinetBaseUrl
 from app.schemas.typings.platform.strings import (
     DatabaseUrl,
     LocalDirectoryPath,
@@ -63,6 +64,9 @@ class AppSettings(ImmutableDTO):
 
     environment: DeploymentEnvironment
     app_base_url: PublicBaseUrl | None = None
+    # Public address of the owner cabinet; provider consent pages (Google
+    # Calendar) send owners back there.
+    cabinet_base_url: CabinetBaseUrl | None = None
     database_url: DatabaseUrl | None = None
     encryption_key: PlatformSecret | None = None
     llm_provider: LlmProvider

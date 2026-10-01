@@ -33,6 +33,38 @@ class CalendarRedirectUrl(BaseConstrainedTypedString):
     pattern = r"^https?://[^\s/]+(/[^\s]*)?$"
 
 
+class CalendarReturnUrl(BaseConstrainedTypedString):
+    """
+    Cabinet page an owner is sent back to after the calendar consent page,
+    with the outcome in its query.
+
+    Example:
+        url = CalendarReturnUrl(
+            "https://app.example.com/b/business_1/channels?calendar=connected"
+        )
+    """
+
+    min_length = 10
+    max_length = 4096
+    pattern = r"^https?://[^\s/?#]+(/[^\s]*)?$"
+
+
+class CalendarSyncErrorSummary(BaseConstrainedTypedString):
+    """
+    Short reason the last calendar sync failed, without tokens or personal
+    data (the provider's error code and HTTP status).
+
+    Example:
+        reason = CalendarSyncErrorSummary(
+            "Google Calendar event insert returned HTTP 401 (UNAUTHENTICATED)."
+        )
+    """
+
+    min_length = 1
+    max_length = 300
+    pattern = r"\S"
+
+
 class LocalDate(BaseConstrainedTypedString):
     """
     Calendar date in the business time zone, ISO 8601 "YYYY-MM-DD", in the

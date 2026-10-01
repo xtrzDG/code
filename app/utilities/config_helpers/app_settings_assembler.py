@@ -44,6 +44,7 @@ from app.schemas.typings.messaging.constrained_strings import (
 from app.schemas.typings.messaging.strings import SmtpUsername
 from app.schemas.typings.platform.booleans import IsLlmContentTraced
 from app.schemas.typings.platform.constrained_integers import WorkerPollSeconds
+from app.schemas.typings.platform.constrained_strings import CabinetBaseUrl
 from app.schemas.typings.platform.strings import (
     DatabaseUrl,
     LocalDirectoryPath,
@@ -66,6 +67,8 @@ DEFAULT_MODEL_IDS: dict[str, str] = {
     LlmProvider.SCRIPTED: "scripted",
 }
 DEFAULT_OPENAI_BASE_URL: str = "https://eu.api.openai.com/v1"
+# The cabinet's development server (web/README.md, `npm run dev`).
+DEVELOPMENT_CABINET_BASE_URL: str = "http://localhost:3000"
 # Langfuse Cloud EU region (the concept keeps data in the EU).
 DEFAULT_LANGFUSE_HOST: str = "https://cloud.langfuse.com"
 # EU data residency of ElevenLabs: calls, transcripts and recordings stay in
@@ -156,6 +159,7 @@ def assemble_app_settings(environment_variables: Mapping[str, str]) -> AppSettin
             "APP_BASE_URL",
             PublicBaseUrl,
         ),
+        cabinet_base_url=read_cabinet_base_url(environment_variables, is_development),
         database_url=optional_text(environment_variables, "DATABASE_URL", DatabaseUrl),
         encryption_key=secret("ENCRYPTION_KEY"),
         llm_provider=llm_provider,
@@ -395,6 +399,23 @@ def check_login_code_providers(environment_variables: Mapping[str, str]) -> None
             "SMTP_USERNAME together with SMTP_PASSWORD when the server needs a "
             "login."
         )
+
+
+def read_cabinet_base_url(
+    environment_variables: Mapping[str, str],
+    is_development: bool,
+) -> CabinetBaseUrl | None:
+    """
+    CABINET_BASE_URL, the owner cabinet's public address (without a trailing
+    slash). Development and tests default to the cabinet's development
+    server; production has no default.
+    """
+
+    raw_value: str = environment_variables.get("CABINET_BASE_URL", "").strip()
+    if raw_value != "":
+        return CabinetBaseUrl(raw_value.rstrip("/"))
+
+    return CabinetBaseUrl(DEVELOPMENT_CABINET_BASE_URL) if is_development else None
 
 
 def read_elevenlabs_base_url(

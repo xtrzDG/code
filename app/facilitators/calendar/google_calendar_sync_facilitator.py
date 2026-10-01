@@ -32,6 +32,7 @@ from app.schemas.dto.operations import (
 )
 from app.schemas.exceptions.application_errors import InvalidPhoneNumberError
 from app.schemas.exceptions.base_exception import ApplicationError
+from app.schemas.typings.bookings.constrained_strings import CalendarSyncErrorSummary
 from app.schemas.typings.bookings.strings import (
     CalendarAccessToken,
     CalendarEventId,
@@ -53,6 +54,9 @@ from app.utilities.scheduling.zoned_time import (
 LOGGER: logging.Logger = logging.getLogger(__name__)
 # Refresh a cached access token this long before Google expires it.
 ACCESS_TOKEN_SAFETY_SECONDS: int = 60
+UNEXPECTED_SYNC_ERROR: str = "Unexpected error while syncing a booking."
+# CalendarSyncErrorSummary holds at most this many characters.
+MAX_SYNC_ERROR_LENGTH: int = 300
 
 
 class GoogleCalendarSyncFacilitator(BookingCalendarSyncFacilitatorContract):
@@ -63,7 +67,9 @@ class GoogleCalendarSyncFacilitator(BookingCalendarSyncFacilitatorContract):
     one; a cancelled booking deletes it; completed and no-show bookings keep
     theirs. The event is described in the owner's language. Sandbox bookings
     and businesses without a connection are skipped. Every failure is logged
-    and swallowed: the calendar never breaks a booking.
+    and swallowed: the calendar never breaks a booking. The connection keeps
+    the time of the last sync and the last failure's short reason (cleared
+    by the next sync), so the cabinet can show that syncing stopped.
     """
 
     def __init__(
@@ -99,18 +105,23 @@ class GoogleCalendarSyncFacilitator(BookingCalendarSyncFacilitatorContract):
             return
 
         try:
-            self._sync(booking)
+            if self._sync(booking):
+                self._record_outcome(booking, None)
         except ApplicationError as error:
             LOGGER.warning("Calendar sync of booking %s failed: %s", booking.id, error)
+            self._record_outcome(booking, str(error))
         except Exception:  # noqa: BLE001 - the calendar must never break a booking
             LOGGER.exception("Calendar sync of booking %s raised.", booking.id)
+            self._record_outcome(booking, UNEXPECTED_SYNC_ERROR)
 
-    def _sync(self, booking: BookingDocument) -> None:
+    def _sync(self, booking: BookingDocument) -> bool:
+        """Mirror the booking; False when the business has no calendar."""
+
         connection: CalendarConnectionDocument | None = (
             self._connection_repo.get_by_business(booking.business_id)
         )
         if connection is None:
-            return
+            return False
 
         link: CalendarEventLinkDocument | None = self._event_link_repo.find_by_booking(
             booking.business_id, booking.id
@@ -122,6 +133,36 @@ class GoogleCalendarSyncFacilitator(BookingCalendarSyncFacilitatorContract):
                 self._access_token(connection), link.calendar_id, link.event_id
             )
             self._event_link_repo.delete_by_booking(booking.business_id, booking.id)
+
+        return True
+
+    def _record_outcome(self, booking: BookingDocument, failure: str | None) -> None:
+        """
+        Remember the sync time or the failure's reason on the connection (as
+        stored now: a token refresh may have saved it meanwhile). Recording
+        never raises.
+        """
+
+        try:
+            connection: CalendarConnectionDocument | None = (
+                self._connection_repo.get_by_business(booking.business_id)
+            )
+            if connection is None:
+                return
+
+            now: Microseconds = self._wall_clock.now_unix()
+            if failure is None:
+                connection.last_synced_at = now
+                connection.last_sync_error = None
+                connection.last_sync_error_at = None
+            else:
+                connection.last_sync_error = summarize_sync_failure(failure)
+                connection.last_sync_error_at = now
+
+            connection.updated_at = now
+            self._connection_repo.save(connection)
+        except Exception:  # noqa: BLE001 - the calendar must never break a booking
+            LOGGER.exception("Recording the calendar sync of %s failed.", booking.id)
 
     def _upsert_event(
         self,
@@ -234,3 +275,13 @@ class GoogleCalendarSyncFacilitator(BookingCalendarSyncFacilitatorContract):
         connection.updated_at = now
         self._connection_repo.save(connection)
         return grant.access_token
+
+
+def summarize_sync_failure(failure: str) -> CalendarSyncErrorSummary:
+    """A provider error message cut to the stored length (it has no tokens)."""
+
+    text: str = " ".join(failure.split())
+    if len(text) > MAX_SYNC_ERROR_LENGTH:
+        text = text[: MAX_SYNC_ERROR_LENGTH - 1].rstrip() + "…"
+
+    return CalendarSyncErrorSummary(text or UNEXPECTED_SYNC_ERROR)

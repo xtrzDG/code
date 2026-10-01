@@ -12,6 +12,7 @@ from app.adapters.storage.in_memory_document_collection import (
 )
 from app.facilitators.calendar.google_calendar_sync_facilitator import (
     GoogleCalendarSyncFacilitator,
+    summarize_sync_failure,
 )
 from app.repositories.calendar_repositories import (
     CalendarAuthorizationStateRepository,
@@ -19,6 +20,7 @@ from app.repositories.calendar_repositories import (
     CalendarEventLinkRepository,
 )
 from app.schemas.constants.bookings import BookingStatus
+from app.schemas.constants.calendar import CalendarConnectionFailure
 from app.schemas.constants.channels import ChannelKind
 from app.schemas.domain.bookings import BookingDocument
 from app.schemas.domain.calendar import (
@@ -27,6 +29,7 @@ from app.schemas.domain.calendar import (
     CalendarEventLinkDocument,
 )
 from app.schemas.dto.bookings import CreateBookingCommand
+from app.schemas.dto.calendar import CalendarConnectionOutcome
 from app.schemas.dto.operations import (
     CalendarConnectUrlView,
     CompleteCalendarConnectionCommand,
@@ -34,9 +37,7 @@ from app.schemas.dto.operations import (
     StartCalendarConnectionCommand,
 )
 from app.schemas.exceptions.application_errors import (
-    ExternalServiceError,
     NotFoundError,
-    ValidationFailedError,
 )
 from app.schemas.typings.bookings.constrained_integers import (
     BookingEndsAtUnixSeconds,
@@ -48,6 +49,7 @@ from app.schemas.typings.bookings.strings import (
     CalendarAuthorizationCode,
     CalendarAuthorizationState,
     CalendarAuthorizationStateHash,
+    CalendarProviderErrorCode,
 )
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.channels.strings import EncryptedChannelSecret
@@ -135,10 +137,11 @@ class CalendarWorld:
 
     def complete(
         self,
-        state: CalendarAuthorizationState,
-        code: str = "good-code",
-    ) -> None:
-        CompleteGoogleCalendarConnectionUseCase(
+        state: CalendarAuthorizationState | None,
+        code: str | None = "good-code",
+        provider_error: str | None = None,
+    ) -> CalendarConnectionOutcome:
+        return CompleteGoogleCalendarConnectionUseCase(
             authorization_state_repo=self.state_repo,
             connection_repo=self.connection_repo,
             calendar_client=self.client,
@@ -146,7 +149,13 @@ class CalendarWorld:
             wall_clock=self.world.clock.wall_clock,
         ).run(
             CompleteCalendarConnectionCommand(
-                state=state, code=CalendarAuthorizationCode(code)
+                state=state,
+                code=None if code is None else CalendarAuthorizationCode(code),
+                provider_error=(
+                    None
+                    if provider_error is None
+                    else CalendarProviderErrorCode(provider_error)
+                ),
             )
         )
 
@@ -178,10 +187,12 @@ class CalendarWorld:
         return self.connection_repo.get_by_business(self.business.id)
 
     def calendar_requests(self) -> list[httpx.Request]:
+        """Event requests (the title lookup while connecting is a GET)."""
+
         return [
             request
             for request in self.google.requests
-            if request.url.host == "www.googleapis.com"
+            if request.url.host == "www.googleapis.com" and request.method != "GET"
         ]
 
 
@@ -203,18 +214,24 @@ class TestConnection:
             10 * 60 * 1_000_000
         )
 
-        calendar.complete(state)
+        outcome = calendar.complete(state)
 
+        assert outcome.failure is None
+        assert outcome.business_id == calendar.business.id
+        assert outcome.connection is not None
         connection = calendar.connection()
         assert connection is not None
         assert connection.calendar_id == "primary"
+        assert connection.calendar_name == "owner@example.com"
         assert connection.connected_by == calendar.owner_id
         assert "refresh-initial" not in str(connection.encrypted_refresh_token)
         assert calendar.cipher.decrypt(connection.encrypted_refresh_token) == (
             "refresh-initial"
         )
-        with pytest.raises(ValidationFailedError, match="already used"):
-            calendar.complete(state)
+        replayed = calendar.complete(state)
+        assert replayed.failure is CalendarConnectionFailure.LINK_EXPIRED
+        assert replayed.business_id == calendar.business.id
+        assert replayed.connection is None
 
     def test_expired_forged_and_refused_authorizations(self) -> None:
         calendar = CalendarWorld()
@@ -223,23 +240,46 @@ class TestConnection:
             datetime.fromisoformat("2026-10-05T08:11:00+00:00")
         )
 
-        with pytest.raises(ValidationFailedError, match="expired"):
-            calendar.complete(state)
+        expired = calendar.complete(state)
+        assert expired.failure is CalendarConnectionFailure.LINK_EXPIRED
+        assert expired.business_id == calendar.business.id
 
-        with pytest.raises(ValidationFailedError):
-            calendar.complete(CalendarAuthorizationState("forged-state"))
+        forged = calendar.complete(CalendarAuthorizationState("forged-state"))
+        assert forged.failure is CalendarConnectionFailure.LINK_EXPIRED
+        assert forged.business_id is None
+        assert calendar.complete(None, code=None).business_id is None
 
-        with pytest.raises(ExternalServiceError, match="invalid_grant"):
-            calendar.complete(calendar.start(), code="bad-code")
+        declined = calendar.complete(
+            calendar.start(), code=None, provider_error="access_denied"
+        )
+        assert declined.failure is CalendarConnectionFailure.ACCESS_DENIED
+        assert declined.business_id == calendar.business.id
+        odd_error = calendar.complete(
+            calendar.start(), code=None, provider_error="server_error"
+        )
+        assert odd_error.failure is CalendarConnectionFailure.PROVIDER_ERROR
+
+        bad_code = calendar.complete(calendar.start(), code="bad-code")
+        assert bad_code.failure is CalendarConnectionFailure.PROVIDER_ERROR
 
         calendar.google.grants_refresh_token = False
-        with pytest.raises(ExternalServiceError, match="offline access"):
-            calendar.complete(calendar.start())
+        no_offline = calendar.complete(calendar.start())
+        assert no_offline.failure is CalendarConnectionFailure.NO_OFFLINE_ACCESS
 
         with pytest.raises(NotFoundError):
             calendar.start_view(BusinessId())
 
         assert calendar.connection() is None
+
+    def test_a_failed_title_lookup_does_not_stop_the_connection(self) -> None:
+        calendar = CalendarWorld()
+        calendar.google.calendar_name = None
+
+        assert calendar.complete(calendar.start()).failure is None
+
+        connection = calendar.connection()
+        assert connection is not None
+        assert connection.calendar_name is None
 
     def test_disconnect_revokes_the_token_and_forgets_events(self) -> None:
         calendar = CalendarWorld()
@@ -343,6 +383,11 @@ class TestSync:
         )
         connection = calendar.connection()
         assert connection is not None
+        assert connection.last_sync_error == (
+            "Google Calendar event insert returned HTTP 503 (UNAVAILABLE)."
+        )
+        assert connection.last_sync_error_at == calendar.world.clock.now_microseconds()
+        assert connection.last_synced_at is None
         connection.encrypted_access_token = None
         connection.encrypted_refresh_token = EncryptedChannelSecret("corrupted")
         calendar.connection_repo.save(connection)
@@ -352,6 +397,35 @@ class TestSync:
         calendar.sync.sync(booking)
 
         assert len(calendar.google.requests) == requests_before
+        broken = calendar.connection()
+        assert broken is not None
+        assert broken.last_sync_error is not None
+        assert "corrupted" not in str(broken.last_sync_error)
+
+    def test_a_successful_sync_clears_the_last_error(self) -> None:
+        calendar = CalendarWorld()
+        calendar.complete(calendar.start())
+        calendar.google.failure_status = 401
+        calendar.sync.sync(calendar.booking())
+        failed = calendar.connection()
+        assert failed is not None
+        assert failed.last_sync_error is not None
+
+        calendar.google.failure_status = None
+        calendar.sync.sync(calendar.booking())
+
+        healed = calendar.connection()
+        assert healed is not None
+        assert healed.last_sync_error is None
+        assert healed.last_sync_error_at is None
+        assert healed.last_synced_at == calendar.world.clock.now_microseconds()
+
+    def test_long_provider_errors_are_shortened(self) -> None:
+        summary = summarize_sync_failure("x" * 1000)
+
+        assert len(str(summary)) == 300
+        assert str(summary).endswith("…")
+        assert summarize_sync_failure("  a \n b ") == "a b"
 
     def test_create_booking_pushes_the_event(self) -> None:
         calendar = CalendarWorld()

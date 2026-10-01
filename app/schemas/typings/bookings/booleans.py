@@ -5,6 +5,8 @@ Example:
 """
 
 IsCalendarAuthorizationStateConsumed = bool
+IsCalendarConnected = bool
+IsCalendarIntegrationConfigured = bool
 IsClosedAllDay = bool
 IsOpenOnDate = bool
 IsResourceActive = bool
