@@ -29,14 +29,16 @@ export function UsageCard({ usage }: { usage: BillingOverview["usage"] }) {
       className="h-full"
     >
       <div className="space-y-5">
-        <UsageMeter
-          label={t("billing.usage.voice")}
-          usedText={t("billing.usage.minutesOf", {
-            used: format.number(usage.used_voice_minutes),
-            included: format.number(usage.included_voice_minutes),
-          })}
-          percent={usage.voice_usage_percent}
-        />
+        {usage.included_voice_minutes > 0 || usage.used_voice_minutes > 0 ? (
+          <UsageMeter
+            label={t("billing.usage.voice")}
+            usedText={t("billing.usage.minutesOf", {
+              used: format.number(usage.used_voice_minutes),
+              included: format.number(usage.included_voice_minutes),
+            })}
+            percent={usage.voice_usage_percent}
+          />
+        ) : null}
         <UsageMeter
           label={t("billing.usage.dialogs")}
           usedText={t("billing.usage.dialogsOf", {
