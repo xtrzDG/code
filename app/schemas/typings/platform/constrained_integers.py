@@ -23,6 +23,13 @@ class JobIntervalSeconds(BaseConstrainedTypedInt):
     le = 7 * 24 * 60 * 60
 
 
+class PageSize(BaseConstrainedTypedInt):
+    """How many items one page of a cabinet list holds."""
+
+    ge = 1
+    le = 200
+
+
 class ProcessedItemCount(BaseConstrainedTypedInt):
     """How many items one background job run processed."""
 

@@ -61,6 +61,15 @@ Every HTTP endpoint runs `operator.operate` -> `pipeline.start` ->
 - Errors are raised as `app/schemas/exceptions/application_errors.py` classes;
   `install_error_handlers` maps them to status codes. Never raise
   `HTTPException` for business errors.
+- Paged lists take `?limit=N&cursor=…` (`parse_page_request` in
+  `app/gateways/http/paging_query.py` → `PageRequest`) and answer
+  `{"items": [...], "next_cursor": … | null}` with a concrete page DTO per list
+  (e.g. `BookingPage`). Use cases page with `take_page`
+  (`app/utilities/paging/cursor_paging.py`): newest first by a timestamp, ties
+  by id. Filters run before paging.
+- Request bodies read with `build_json_body_dependency` must also be described
+  for OpenAPI (`openapi_extra=describe_json_body(...)`), so the cabinet's
+  generated client knows them.
 - Router tests build a small `FastAPI()` with `install_error_handlers` and the
   module router, and call it with `fastapi.testclient.TestClient`.
 
