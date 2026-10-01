@@ -448,6 +448,8 @@ export const workspaceEn = {
       saved: "Settings saved",
       noChanges: "Nothing has changed",
       unsaved: "You have unsaved changes.",
+      staleTitle: "Someone else saved these settings while you were editing",
+      staleDescription: "Your changes were not saved. The current settings are shown now: check them and make your changes again.",
       errors: {
         required: "Fill in this field",
         tooLong: "The text is too long",
@@ -545,6 +547,7 @@ export const workspaceEn = {
       language: "Language of notifications",
       saved: "Notification contacts saved",
       limit: "You can add up to {count} contacts.",
+      stale: "The list was changed while you were editing (by another owner or the Telegram bot). It is up to date now: check it and save again.",
       errors: {
         required: "Fill in this field",
         tooLong: "The text is too long",
@@ -1287,6 +1290,8 @@ export const workspaceRu: Translation<typeof workspaceEn> = {
       saved: "Настройки сохранены",
       noChanges: "Ничего не изменилось",
       unsaved: "Есть несохранённые изменения.",
+      staleTitle: "Пока вы редактировали, настройки сохранил кто-то другой",
+      staleDescription: "Ваши изменения не сохранены. Сейчас показаны актуальные настройки: проверьте их и внесите изменения ещё раз.",
       errors: {
         required: "Заполните это поле",
         tooLong: "Слишком длинный текст",
@@ -1384,6 +1389,7 @@ export const workspaceRu: Translation<typeof workspaceEn> = {
       language: "Язык уведомлений",
       saved: "Контакты для уведомлений сохранены",
       limit: "Можно добавить до {count} контактов.",
+      stale: "Пока вы редактировали, список изменился (другой владелец или бот в Telegram). Список обновлён: проверьте его и сохраните ещё раз.",
       errors: {
         required: "Заполните это поле",
         tooLong: "Слишком длинный текст",
@@ -2131,6 +2137,8 @@ export const workspaceKa: Translation<typeof workspaceEn> = {
       saved: "პარამეტრები შენახულია",
       noChanges: "არაფერი შეცვლილა",
       unsaved: "გაქვთ შეუნახავი ცვლილებები.",
+      staleTitle: "სანამ არედაქტირებდით, ეს პარამეტრები სხვამ შეინახა",
+      staleDescription: "თქვენი ცვლილებები არ შენახულა. ახლა ნაჩვენებია მიმდინარე პარამეტრები: გადაამოწმეთ და ცვლილებები ხელახლა შეიტანეთ.",
       errors: {
         required: "შეავსეთ ეს ველი",
         tooLong: "ტექსტი ძალიან გრძელია",
@@ -2228,6 +2236,7 @@ export const workspaceKa: Translation<typeof workspaceEn> = {
       language: "შეტყობინებების ენა",
       saved: "შეტყობინებების კონტაქტები შენახულია",
       limit: "შეგიძლიათ დაამატოთ {count} კონტაქტამდე.",
+      stale: "სანამ არედაქტირებდით, სია შეიცვალა (სხვა მფლობელმა ან Telegram-ის ბოტმა). სია განახლდა: გადაამოწმეთ და ხელახლა შეინახეთ.",
       errors: {
         required: "შეავსეთ ეს ველი",
         tooLong: "ტექსტი ძალიან გრძელია",

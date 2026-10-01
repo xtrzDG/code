@@ -27,9 +27,12 @@ import {
   MAX_CITY_LENGTH,
   MAX_RETENTION_DAYS,
   MIN_RETENTION_DAYS,
+  afterStatusSwitch,
   buildGeneralChanges,
+  changesFromRevision,
   generalFormFrom,
   hasChanges,
+  isStaleRevision,
   languageChoices,
   toggleLanguage,
   type BusinessView,
@@ -61,31 +64,44 @@ function allTimeZones(): string[] {
   }
 }
 
-/** Business details, languages and time, recording retention; and the assistant's live/paused switch. */
+/**
+ * Business details, languages and time, recording retention; and the
+ * assistant's live/paused switch. Saves carry the business revision they
+ * were made from: a save after someone else's is refused, and the form
+ * reloads and says so instead of overwriting it.
+ */
 export function GeneralTab() {
   const { business } = useBusiness();
+  // The business as the status switch last saved it: the form takes over
+  // its revision, so its next save is not refused for this tab's own change.
+  const [switched, setSwitched] = useState<BusinessView | null>(null);
   return (
     <div className="space-y-6">
-      <AssistantStatusCard />
-      <GeneralSettingsForm key={business.id} />
+      <AssistantStatusCard onSaved={setSwitched} />
+      <GeneralSettingsForm key={business.id} switched={switched} />
     </div>
   );
 }
 
-function GeneralSettingsForm() {
+function GeneralSettingsForm({ switched }: { switched: BusinessView | null }) {
   const { t, locale } = useI18n();
   const toast = useToast();
   const router = useRouter();
   const { business, isOwner } = useBusiness();
-  const [baseline, setBaseline] = useState<BusinessView>(business);
+  const [loaded, setLoaded] = useState<BusinessView>(business);
   const [form, setForm] = useState<GeneralForm>(() => generalFormFrom(business));
   const [errors, setErrors] = useState<Partial<Record<GeneralField, GeneralError>>>({});
+  const [isStale, setStale] = useState(false);
+  // The status switch changes no field of this form, only the revision.
+  const baseline = afterStatusSwitch(loaded, switched);
 
   const isClient = useIsClient();
   const profile = useCountryProfile(business.country_code);
   const catalog = useApiQuery(() => api.GET("/v1/catalog/languages", { params: { query: { language: locale } } }), [locale]);
-  const save = useApiMutation((changes: SettingsChanges) =>
-    api.PATCH("/v1/businesses/{business_id}", { params: { path: { business_id: business.id } }, body: changes }),
+  const save = useApiMutation(
+    (changes: SettingsChanges) =>
+      api.PATCH("/v1/businesses/{business_id}", { params: { path: { business_id: business.id } }, body: changes }),
+    { errorToast: false },
   );
 
   const catalogNames = useMemo(() => {
@@ -132,19 +148,48 @@ function GeneralSettingsForm() {
       toast.info(t("settings.general.noChanges"));
       return;
     }
-    const saved = await save.run(result.changes);
+    setStale(false);
+    const saved = await save.run(changesFromRevision(result.changes, baseline));
     if (saved.ok) {
-      setBaseline(saved.data);
+      setLoaded(saved.data);
       setForm(generalFormFrom(saved.data));
       router.refresh();
       toast.success(t("settings.general.saved"));
+      return;
     }
+    if (!isStaleRevision(saved.error)) {
+      toast.error(saved.error);
+      return;
+    }
+    // Someone saved since this form was loaded: show what is stored now.
+    const latest = await api.GET("/v1/businesses/{business_id}", { params: { path: { business_id: business.id } } });
+    if (latest.data) {
+      setLoaded(latest.data);
+      setForm(generalFormFrom(latest.data));
+      setErrors({});
+    }
+    setStale(true);
+    router.refresh();
+    toast.show({ tone: "error", title: t("settings.general.staleTitle") });
   };
 
   const errorText = (field: GeneralField) => (errors[field] ? t(GENERAL_ERRORS[errors[field]]) : undefined);
 
   return (
     <form onSubmit={onSubmit} noValidate className="space-y-6">
+      {isStale ? (
+        <Alert
+          tone="warning"
+          title={t("settings.general.staleTitle")}
+          action={
+            <Button variant="secondary" size="sm" onClick={() => setStale(false)}>
+              {t("common.close")}
+            </Button>
+          }
+        >
+          {t("settings.general.staleDescription")}
+        </Alert>
+      ) : null}
       <Card title={t("settings.general.businessTitle")}>
         <div className="space-y-6">
           <div className="grid gap-6 sm:grid-cols-2">
@@ -353,7 +398,7 @@ function GeneralSettingsForm() {
   );
 }
 
-function AssistantStatusCard() {
+function AssistantStatusCard({ onSaved }: { onSaved: (business: BusinessView) => void }) {
   const { t } = useI18n();
   const toast = useToast();
   const router = useRouter();
@@ -368,9 +413,11 @@ function AssistantStatusCard() {
   );
 
   const run = async (next: "live" | "paused") => {
+    // Only the status is sent: pausing or resuming overwrites no other setting.
     const result = await switchStatus.run(next);
     if (result.ok) {
       setStatus(result.data.status);
+      onSaved(result.data);
       setConfirmingPause(false);
       router.refresh();
       toast.success(t(next === "paused" ? "settings.status.pausedToast" : "settings.status.resumedToast"));

@@ -4,6 +4,7 @@
  * audit log.
  */
 
+import type { ApiError } from "@/api/errors";
 import type { RequestBody, Schema } from "@/api/types";
 import type { BadgeTone } from "@/components/ui";
 
@@ -122,6 +123,40 @@ export function buildGeneralChanges(business: BusinessView, form: GeneralForm): 
 
 export function hasChanges(changes: SettingsChanges): boolean {
   return Object.keys(changes).length > 0;
+}
+
+// --- Concurrent saves ----------------------------------------------------------
+
+/** The API's reason for a settings save made from an older revision of the business. */
+export const STALE_REVISION_REASON = "stale_revision";
+
+/**
+ * The PATCH body for changes made to `business` as it was shown: the API
+ * applies them only while nobody has saved the business since (another
+ * owner, another tab, a manager added by the Telegram bot).
+ */
+export function changesFromRevision(changes: SettingsChanges, business: Pick<BusinessView, "revision">): SettingsChanges {
+  return { ...changes, expected_revision: business.revision };
+}
+
+/** True when a save was refused because the business changed after it was shown. */
+export function isStaleRevision(error: ApiError): boolean {
+  return error.status === 409 && error.reasons.some((reason) => reason.code === STALE_REVISION_REASON);
+}
+
+/**
+ * The business the General form edits after this tab's own status switch
+ * (`switched`: the view that save returned). The switch changes no field of
+ * the form, so the form takes over its newer revision. If form fields differ
+ * too, someone else saved in between: the form keeps what it loaded, and its
+ * next save is refused as stale (it then reloads) instead of overwriting.
+ */
+export function afterStatusSwitch(loaded: BusinessView, switched: BusinessView | null): BusinessView {
+  if (!switched || switched.revision <= loaded.revision) {
+    return loaded;
+  }
+  const isSameForm = JSON.stringify(generalFormFrom(switched)) === JSON.stringify(generalFormFrom(loaded));
+  return isSameForm ? switched : loaded;
 }
 
 /** Languages to offer: the business's own first, then the others, without repeats. */
@@ -307,13 +342,14 @@ function isSameContact(a: ContactKey, b: ContactKey): boolean {
 }
 
 /**
- * The list to save: one change applied to the contacts stored now. The API
- * replaces the whole list, and contacts can appear meanwhile (a manager who
- * opens the Telegram bot link is added on the server), so the change is made
- * to a fresh copy, by key, never to the list the page loaded earlier.
+ * The list to save: one change applied, by key, to the contacts as the tab
+ * shows them. The API replaces the whole list, and contacts can change
+ * meanwhile (another owner, a manager who opens the Telegram bot link is
+ * added on the server), so the list is saved with the revision it was
+ * shown at: a newer save is never overwritten; the tab reloads instead.
  */
-export function applyContactChange(fresh: readonly ManagerContact[], change: ContactChange): ManagerContactInput[] {
-  const list = contactsToInput(fresh);
+export function applyContactChange(shown: readonly ManagerContact[], change: ContactChange): ManagerContactInput[] {
+  const list = contactsToInput(shown);
   if (change.kind === "add") {
     return [...list, change.contact];
   }
