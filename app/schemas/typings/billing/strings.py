@@ -3,6 +3,15 @@
 from base_typed_string import BaseTypedString
 
 
+class ExchangeRateSourceName(BaseTypedString):
+    """
+    Who published an exchange rate, e.g. "National Bank of Georgia".
+
+    Example:
+        source = ExchangeRateSourceName("National Bank of Georgia")
+    """
+
+
 class InvoiceDescription(BaseTypedString):
     """
     Invoice line text. Always a service ("call and message handling service"),

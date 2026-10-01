@@ -6,6 +6,33 @@ Constrained localization primitives shared by every country and language.
 from base_typed_string import BaseConstrainedTypedString
 
 
+class CallForwardingDialCode(BaseConstrainedTypedString):
+    """
+    GSM supplementary-service code a person dials to set or cancel forwarding.
+
+    Example:
+        no_answer = CallForwardingDialCode("**61*+995322123456#")
+        cancel_all = CallForwardingDialCode("##002#")
+    """
+
+    min_length = 4
+    max_length = 32
+    pattern = r"^[*#]{1,2}[0-9]{2,3}(\*\+?[0-9]{4,15})?(\*\*[0-9]{1,2})?#$"
+
+
+class CallForwardingDialCodeTemplate(BaseConstrainedTypedString):
+    """
+    Dial code with an optional "{number}" placeholder for the target number.
+
+    Example:
+        no_answer = CallForwardingDialCodeTemplate("**61*{number}#")
+    """
+
+    min_length = 4
+    max_length = 32
+    pattern = r"^[*#]{1,2}[0-9]{2,3}(\*\{number\})?(\*\*[0-9]{1,2})?#$"
+
+
 class CountryCode(BaseConstrainedTypedString):
     """
     ISO 3166-1 alpha-2 country code in upper case.
