@@ -31,6 +31,7 @@ from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.utilities.channels.channel_health import (
     mark_channel_failing,
     mark_channel_working,
+    reload_same_connection,
 )
 from app.utilities.channels.delivery_targets import (
     build_delivery_target,
@@ -230,11 +231,23 @@ class ChannelMessageSenderFacilitator(ChannelMessageSenderFacilitatorContract):
 
     def _record_health(
         self,
-        channel_document: ChannelDocument,
+        sent_with: ChannelDocument,
         failure: str | None,
     ) -> None:
+        """
+        Mark the channel as it is stored now, not the copy read before the
+        network call: a reconnect (or disable) while the message was in
+        flight is kept, and the outcome of the old credential is ignored.
+        """
+
+        channel: ChannelDocument | None = reload_same_connection(
+            self._channel_repo, sent_with
+        )
+        if channel is None:
+            return
+
         now: Microseconds = self._wall_clock.now_unix()
         if failure is None:
-            mark_channel_working(self._channel_repo, channel_document, now)
+            mark_channel_working(self._channel_repo, channel, now)
         else:
-            mark_channel_failing(self._channel_repo, channel_document, failure, now)
+            mark_channel_failing(self._channel_repo, channel, failure, now)

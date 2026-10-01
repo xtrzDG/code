@@ -39,6 +39,28 @@ def summarize_channel_error(reason: str) -> ChannelErrorSummary:
     return ChannelErrorSummary(text or UNKNOWN_CHANNEL_ERROR)
 
 
+def reload_same_connection(
+    channel_repo: ChannelRepoContract,
+    sent_with: ChannelDocument,
+) -> ChannelDocument | None:
+    """
+    The stored channel when it still has the account and credential a
+    message was sent with; None when it was reconnected or disabled while
+    the message was in flight (that outcome says nothing about the channel
+    as it is now, and saving the old copy would undo the change).
+    """
+
+    current: ChannelDocument | None = channel_repo.get(sent_with.id)
+    if (
+        current is None
+        or current.encrypted_secret != sent_with.encrypted_secret
+        or current.external_id != sent_with.external_id
+    ):
+        return None
+
+    return current
+
+
 def mark_channel_failing(
     channel_repo: ChannelRepoContract,
     channel: ChannelDocument,
