@@ -6,6 +6,7 @@ Example:
 
 HasCallRecording = bool
 HasChannelCredential = bool
+HasMoreWidgetMessages = bool
 IsCallConfirmationSent = bool
 IsDuplicateWebhookDelivery = bool
 IsWebChatEnabled = bool

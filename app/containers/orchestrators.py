@@ -408,6 +408,9 @@ class OrchestratorsContainer(containers.DeclarativeContainer):
     get_widget_config_orchestrator = use_case_orchestrator(
         use_cases.get_widget_config_use_case
     )
+    get_widget_messages_orchestrator = use_case_orchestrator(
+        use_cases.get_widget_messages_use_case
+    )
     list_channels_orchestrator = use_case_orchestrator(use_cases.list_channels_use_case)
     connect_channel_orchestrator = use_case_orchestrator(
         use_cases.connect_channel_use_case

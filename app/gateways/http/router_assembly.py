@@ -184,6 +184,7 @@ def build_application_routers(app_container: AppContainer) -> list[APIRouter]:
             ),
             widget_config_operator=operators.get_widget_config_operator(),
             widget_message_operator=operators.widget_message_operator(),
+            widget_messages_operator=operators.get_widget_messages_operator(),
         ),
         build_channel_settings_router(
             list_channels_operator=operators.list_channels_operator(),

@@ -118,6 +118,9 @@ from app.schemas.dto.channels import (
     TelegramWebhookRequest,
     WidgetConfigView,
     WidgetMessageCommand,
+    WidgetMessagesQuery,
+    WidgetMessagesView,
+    WidgetReplyInput,
     WidgetReplyView,
     WidgetSnippetQuery,
     WidgetSnippetView,
@@ -403,6 +406,9 @@ from app.use_cases.channels.deliver_channel_reply_use_case import (
 )
 from app.use_cases.channels.disable_channel_use_case import DisableChannelUseCase
 from app.use_cases.channels.get_widget_config_use_case import GetWidgetConfigUseCase
+from app.use_cases.channels.get_widget_messages_use_case import (
+    GetWidgetMessagesUseCase,
+)
 from app.use_cases.channels.get_widget_snippet_use_case import GetWidgetSnippetUseCase
 from app.use_cases.channels.handle_platform_bot_update_use_case import (
     HandlePlatformBotUpdateUseCase,
@@ -1680,6 +1686,17 @@ class UseCasesContainer(containers.DeclarativeContainer):
         GetWidgetConfigUseCase,
         business_repo=repositories.business_repo,
         channel_repo=repositories.channel_repo,
+        assistant_version_repo=repositories.assistant_version_repo,
+        language_registry=registries.language_registry,
+    )
+    get_widget_messages_use_case: Factory[
+        UseCaseContract[WidgetMessagesQuery, WidgetMessagesView]
+    ] = Factory(
+        GetWidgetMessagesUseCase,
+        business_repo=repositories.business_repo,
+        channel_repo=repositories.channel_repo,
+        conversation_repo=repositories.conversation_repo,
+        message_repo=repositories.message_repo,
         language_registry=registries.language_registry,
     )
     accept_widget_message_use_case: Factory[
@@ -1690,9 +1707,10 @@ class UseCasesContainer(containers.DeclarativeContainer):
         channel_repo=repositories.channel_repo,
     )
     build_widget_reply_use_case: Factory[
-        UseCaseContract[AssistantReply, WidgetReplyView]
+        UseCaseContract[WidgetReplyInput, WidgetReplyView]
     ] = Factory(
         BuildWidgetReplyUseCase,
+        message_repo=repositories.message_repo,
         language_registry=registries.language_registry,
     )
     get_widget_snippet_use_case: Factory[

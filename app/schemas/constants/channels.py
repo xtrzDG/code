@@ -28,3 +28,10 @@ class MessageDirection(StrEnum):
 
     INBOUND = "inbound"
     OUTBOUND = "outbound"
+
+
+class WidgetPosition(StrEnum):
+    """Corner of the page where the website chat launcher sits."""
+
+    LEFT = "left"
+    RIGHT = "right"

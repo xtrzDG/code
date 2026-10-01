@@ -3,13 +3,15 @@ from pydantic import Field
 from typed_time_provider import Microseconds
 
 from app.schemas.constants.channel_events import PlatformBotCommandResult
-from app.schemas.constants.channels import ChannelKind, ChannelStatus
+from app.schemas.constants.channels import ChannelKind, ChannelStatus, WidgetPosition
+from app.schemas.constants.conversations import MessageAuthor
 from app.schemas.constants.localization import TextDirection
-from app.schemas.dto.conversations import InboundMessage
+from app.schemas.dto.conversations import AssistantReply, InboundMessage
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.businesses.strings import BusinessName
 from app.schemas.typings.channels.booleans import (
     HasChannelCredential,
+    HasMoreWidgetMessages,
     IsWebChatEnabled,
 )
 from app.schemas.typings.channels.constrained_integers import WebhookMessageCount
@@ -19,6 +21,8 @@ from app.schemas.typings.channels.constrained_strings import (
     MetaObjectId,
     TelegramBotUsername,
     TelegramDeepLink,
+    WidgetAccentColor,
+    WidgetDemoUrl,
     WidgetMessageText,
     WidgetScriptUrl,
     WidgetSessionKey,
@@ -37,11 +41,12 @@ from app.schemas.typings.channels.strings import (
     WhatsAppDisplayPhoneNumber,
     WidgetContactNameInput,
     WidgetEmbedSnippet,
+    WidgetGreetingText,
 )
 from app.schemas.typings.compliance.strings import ClientIpAddress
 from app.schemas.typings.contacts.strings import ContactName
 from app.schemas.typings.conversations.booleans import IsConversationHandedOff
-from app.schemas.typings.conversations.prefixed_id import ConversationId
+from app.schemas.typings.conversations.prefixed_id import ConversationId, MessageId
 from app.schemas.typings.conversations.strings import ChannelUserId, MessageText
 from app.schemas.typings.handoffs.strings import ManagerName
 from app.schemas.typings.localization.constrained_strings import (
@@ -195,7 +200,9 @@ class ConnectChannelRequest(ImmutableDTO):
       Login); Instagram uses the professional account linked to the page.
     - phone: `phone_number` of the assistant line (any country; national
       formats are read in `country_hint` or the business country).
-    - web_chat: nothing.
+    - web_chat: nothing to switch it on; optionally `widget_color` (hex brand
+      colour) and `widget_position` (left or right) for the widget. Fields
+      left out keep their saved values.
     """
 
     bot_token: RawChannelSecretInput | None = Field(default=None, repr=False)
@@ -205,6 +212,8 @@ class ConnectChannelRequest(ImmutableDTO):
     page_access_token: RawChannelSecretInput | None = Field(default=None, repr=False)
     phone_number: RawPhoneNumberInput | None = None
     country_hint: CountryCode | None = None
+    widget_color: WidgetAccentColor | None = None
+    widget_position: WidgetPosition | None = None
 
 
 class ConnectChannelCommand(ImmutableDTO):
@@ -240,7 +249,9 @@ class ChannelView(ImmutableDTO):
     `account_id` is the public account inside the channel: bot username,
     WhatsApp phone number id, page id, Instagram account id, or the E.164
     number of the assistant line. With status ERROR, `last_error` is the
-    platform's short reason (no secrets) and `last_error_at` its time.
+    platform's short reason (no secrets) and `last_error_at` its time. The
+    website chat also reports its saved colour and launcher corner (None:
+    the widget's defaults).
     """
 
     id: ChannelId
@@ -252,6 +263,8 @@ class ChannelView(ImmutableDTO):
     updated_at: Microseconds
     last_error: ChannelErrorSummary | None = None
     last_error_at: Microseconds | None = None
+    widget_color: WidgetAccentColor | None = None
+    widget_position: WidgetPosition | None = None
 
 
 # --- Website chat widget ---------------------------------------------------
@@ -265,14 +278,34 @@ class WidgetLanguageView(ImmutableDTO):
     direction: TextDirection
 
 
+class WidgetGreetingView(ImmutableDTO):
+    """The widget's first message in one customer language."""
+
+    language: LanguageTag
+    text: WidgetGreetingText
+    direction: TextDirection
+
+
 class WidgetConfigView(ImmutableDTO):
-    """Public configuration the widget script loads before it shows itself."""
+    """
+    Public configuration the widget script loads before it shows itself.
+
+    `business_name` is the name visitors see in the widget header.
+    `greetings` holds the first message in the languages the live assistant
+    answers in (the business languages before anything is published) where
+    a text exists; the widget uses its own text for the others. `accent_color`
+    and `position` are the owner's choices (None: the widget's defaults); the
+    embed tag's data-color and data-position still win.
+    """
 
     business_id: BusinessId
     business_name: BusinessName
     is_enabled: IsWebChatEnabled
     default_language: LanguageTag
     languages: list[WidgetLanguageView]
+    greetings: list[WidgetGreetingView]
+    accent_color: WidgetAccentColor | None = None
+    position: WidgetPosition | None = None
 
 
 class WidgetMessageRequest(ImmutableDTO):
@@ -296,6 +329,9 @@ class WidgetReplyView(ImmutableDTO):
 
     `text` is None while staff handle the conversation; `direction` tells the
     widget how to lay the answer out (right-to-left for Hebrew, Arabic, ...).
+    `message_id` is the stored answer (None without one); `cursor` is the
+    visitor's message, so polling GET .../messages?after=<cursor> returns
+    the answer again (skip it by id) and every staff message written since.
     """
 
     conversation_id: ConversationId
@@ -303,6 +339,53 @@ class WidgetReplyView(ImmutableDTO):
     language: LanguageTag
     direction: TextDirection
     is_handed_off: IsConversationHandedOff
+    message_id: MessageId | None = None
+    cursor: MessageId | None = None
+
+
+class WidgetReplyInput(ImmutableDTO):
+    """The assistant's answer to a widget visitor of one business."""
+
+    business_id: BusinessId
+    reply: AssistantReply
+
+
+class WidgetMessagesQuery(ImmutableDTO):
+    """
+    A widget polls for new answers of its visitor's conversations: the
+    assistant's and staff's messages after the message `after`. Without
+    `after` nothing is returned but the current position (a widget that has
+    shown everything starts from there).
+    """
+
+    business_id: BusinessId
+    session_key: WidgetSessionKey
+    after: MessageId | None = None
+
+
+class WidgetMessageView(ImmutableDTO):
+    """An assistant or staff message as the widget shows it."""
+
+    id: MessageId
+    author: MessageAuthor
+    text: MessageText
+    language: LanguageTag | None = None
+    direction: TextDirection
+    created_at: Microseconds
+
+
+class WidgetMessagesView(ImmutableDTO):
+    """
+    New assistant and staff messages, oldest first (at most a page; poll
+    again with `cursor` while `has_more`). `cursor` is the position to poll
+    after next time (None while the visitor has no conversation);
+    `is_handed_off` tells whether staff currently handle the conversation.
+    """
+
+    items: list[WidgetMessageView]
+    cursor: MessageId | None = None
+    has_more: HasMoreWidgetMessages = False
+    is_handed_off: IsConversationHandedOff = False
 
 
 class WidgetSnippetQuery(ImmutableDTO):
@@ -313,11 +396,16 @@ class WidgetSnippetQuery(ImmutableDTO):
 
 
 class WidgetSnippetView(ImmutableDTO):
-    """Embed code the owner pastes into the website."""
+    """
+    Embed code the owner pastes into the website, and the page that shows
+    the widget as visitors see it (it accepts `color`, `position` and
+    `language` to preview unsaved choices).
+    """
 
     business_id: BusinessId
     script_url: WidgetScriptUrl
     snippet: WidgetEmbedSnippet
+    demo_url: WidgetDemoUrl
 
 
 # --- Staff notifications through the platform Telegram bot ----------------

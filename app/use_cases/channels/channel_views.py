@@ -1,7 +1,7 @@
 """Cabinet view of a channel; credentials never leave the server."""
 
 from app.schemas.constants.channels import ChannelKind
-from app.schemas.domain.channels import ChannelDocument
+from app.schemas.domain.channels import ChannelDocument, WebChatAppearance
 from app.schemas.dto.channels import ChannelView
 
 # Order of channels in the cabinet: free messengers first (concept: cheap
@@ -19,6 +19,7 @@ CHANNEL_DISPLAY_ORDER: tuple[ChannelKind, ...] = (
 
 
 def build_channel_view(channel: ChannelDocument) -> ChannelView:
+    appearance: WebChatAppearance | None = channel.web_chat_appearance
     return ChannelView(
         id=channel.id,
         business_id=channel.business_id,
@@ -29,6 +30,8 @@ def build_channel_view(channel: ChannelDocument) -> ChannelView:
         updated_at=channel.updated_at,
         last_error=channel.last_error,
         last_error_at=channel.last_error_at,
+        widget_color=None if appearance is None else appearance.accent_color,
+        widget_position=None if appearance is None else appearance.position,
     )
 
 

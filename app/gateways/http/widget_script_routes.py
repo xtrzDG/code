@@ -10,7 +10,9 @@ from fastapi import APIRouter, Header, Query, Response, status
 from fastapi.responses import HTMLResponse
 
 from app.gateways.http.strict_request_parsing import parse_path_identifier
+from app.schemas.constants.channels import WidgetPosition
 from app.schemas.typings.businesses.prefixed_id import BusinessId
+from app.schemas.typings.channels.constrained_strings import WidgetAccentColor
 from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.utilities.channels.channel_endpoints import (
     WIDGET_BUSINESS_ATTRIBUTE,
@@ -54,7 +56,9 @@ def build_widget_script_router(static_directory: Path = STATIC_DIRECTORY) -> API
                                              it; HEAD too)
         GET /widget/demo?business_id=...     a page that embeds the widget;
                                              optional `language` forces the
-                                             interface language
+                                             interface language, `color`
+                                             (hex) and `position` (left or
+                                             right) preview unsaved choices
 
     The script is read once, when the router is built, and served with an
     ETag; the demo page shows the widget even while the chat is switched off
@@ -90,6 +94,8 @@ def build_widget_script_router(static_directory: Path = STATIC_DIRECTORY) -> API
     def get_widget_demo(
         business_id: Annotated[str | None, Query()] = None,
         language: Annotated[str | None, Query()] = None,
+        color: Annotated[str | None, Query()] = None,
+        position: Annotated[str | None, Query()] = None,
     ) -> HTMLResponse:
         page: str
         if business_id is None or business_id.strip() == "":
@@ -105,6 +111,8 @@ def build_widget_script_router(static_directory: Path = STATIC_DIRECTORY) -> API
                 widget=render_widget_tag(
                     parsed_business_id,
                     parse_language(language),
+                    parse_accent_color(color),
+                    parse_position(position),
                 ),
             )
 
@@ -134,7 +142,36 @@ def parse_language(raw_language: str | None) -> LanguageTag | None:
         return None
 
 
-def render_widget_tag(business_id: BusinessId, language: LanguageTag | None) -> str:
+def parse_accent_color(raw_color: str | None) -> WidgetAccentColor | None:
+    """A previewed brand colour ("#0f766e"); anything else is ignored."""
+
+    if raw_color is None:
+        return None
+
+    try:
+        return WidgetAccentColor(raw_color.strip())
+    except ValueError:
+        return None
+
+
+def parse_position(raw_position: str | None) -> WidgetPosition | None:
+    """A previewed launcher corner; anything else is ignored."""
+
+    if raw_position is None:
+        return None
+
+    try:
+        return WidgetPosition(raw_position.strip().lower())
+    except ValueError:
+        return None
+
+
+def render_widget_tag(
+    business_id: BusinessId,
+    language: LanguageTag | None,
+    color: WidgetAccentColor | None = None,
+    position: WidgetPosition | None = None,
+) -> str:
     """The embed tag of the cabinet snippet, plus the demo's preview options."""
 
     attributes: list[str] = [
@@ -145,6 +182,12 @@ def render_widget_tag(business_id: BusinessId, language: LanguageTag | None) -> 
     ]
     if language is not None:
         attributes.append(f'data-language="{html.escape(str(language), quote=True)}"')
+
+    if color is not None:
+        attributes.append(f'data-color="{html.escape(str(color), quote=True)}"')
+
+    if position is not None:
+        attributes.append(f'data-position="{position.value}"')
 
     return f"<script {' '.join(attributes)} async></script>"
 

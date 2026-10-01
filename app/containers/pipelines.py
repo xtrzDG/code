@@ -353,6 +353,9 @@ class PipelinesContainer(containers.DeclarativeContainer):
     get_widget_config_pipeline = orchestrator_pipeline(
         orchestrators.get_widget_config_orchestrator
     )
+    get_widget_messages_pipeline = orchestrator_pipeline(
+        orchestrators.get_widget_messages_orchestrator
+    )
     list_channels_pipeline = orchestrator_pipeline(
         orchestrators.list_channels_orchestrator
     )

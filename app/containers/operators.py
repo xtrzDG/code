@@ -294,6 +294,9 @@ class OperatorsContainer(containers.DeclarativeContainer):
     get_widget_config_operator = pipeline_operator(
         pipelines.get_widget_config_pipeline, storage_scope
     )
+    get_widget_messages_operator = pipeline_operator(
+        pipelines.get_widget_messages_pipeline, storage_scope
+    )
     list_channels_operator = pipeline_operator(
         pipelines.list_channels_pipeline, storage_scope
     )
