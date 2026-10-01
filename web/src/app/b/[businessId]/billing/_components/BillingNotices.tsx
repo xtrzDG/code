@@ -29,10 +29,12 @@ export function BillingNotices({
     new Intl.NumberFormat(locale, { style: "percent", maximumFractionDigits: 0 }).format(value / 100);
   const overagePrice = overview.usage ? quotedMoneyText(overview.usage.overage_price_per_minute, format.money) : "";
   const payAction = canPay ? (
-    <Button size="sm" onClick={onPay} isLoading={isPaying}>
-      {t("billing.pay")}
-    </Button>
-  ) : undefined;
+    <div className="mt-3">
+      <Button size="sm" onClick={onPay} isLoading={isPaying}>
+        {t("billing.pay")}
+      </Button>
+    </div>
+  ) : null;
 
   return (
     <div className="space-y-3">
@@ -40,34 +42,39 @@ export function BillingNotices({
         switch (notice.kind) {
           case "leadsOnly":
             return (
-              <Alert key="leadsOnly" tone="danger" title={t("billing.notices.leadsOnlyTitle")} action={payAction}>
+              <Alert key="leadsOnly" tone="danger" title={t("billing.notices.leadsOnlyTitle")}>
                 {t("billing.notices.leadsOnly")}
+                {payAction}
               </Alert>
             );
           case "pastDue":
             return (
-              <Alert key="pastDue" tone="danger" title={t("billing.notices.pastDueTitle")} action={payAction}>
+              <Alert key="pastDue" tone="danger" title={t("billing.notices.pastDueTitle")}>
                 {notice.graceUntil
                   ? t("billing.notices.pastDue", { date: format.date(notice.graceUntil) })
                   : t("billing.notices.pastDueNoDate")}
+                {payAction}
               </Alert>
             );
           case "cancelled":
             return (
-              <Alert key="cancelled" tone="warning" title={t("billing.notices.cancelledTitle")} action={payAction}>
+              <Alert key="cancelled" tone="warning" title={t("billing.notices.cancelledTitle")}>
                 {t("billing.notices.cancelled", { date: format.date(notice.until) })}
+                {payAction}
               </Alert>
             );
           case "unpaid":
             return (
-              <Alert key="unpaid" tone="warning" title={tp("billing.notices.unpaidTitle", notice.count)} action={payAction}>
+              <Alert key="unpaid" tone="warning" title={tp("billing.notices.unpaidTitle", notice.count)}>
                 {t("billing.notices.unpaid")}
+                {payAction}
               </Alert>
             );
           case "trial":
             return (
-              <Alert key="trial" tone="info" title={tp("billing.notices.trialTitle", notice.daysLeft)} action={payAction}>
+              <Alert key="trial" tone="info" title={tp("billing.notices.trialTitle", notice.daysLeft)}>
                 {t("billing.notices.trial", { date: format.date(notice.endsAt) })}
+                {payAction}
               </Alert>
             );
           case "usage": {

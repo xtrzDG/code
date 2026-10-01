@@ -184,10 +184,9 @@ export function BillingScreen({ isCheckoutReturn }: { isCheckoutReturn: boolean 
       ) : (
         <div className="space-y-8">
           {showReturnNotice ? (
-            <Alert
-              tone="success"
-              title={t("billing.notices.checkoutReturnTitle")}
-              action={
+            <Alert tone="success" title={t("billing.notices.checkoutReturnTitle")}>
+              <p>{t("billing.notices.checkoutReturn")}</p>
+              <div className="mt-3">
                 <Button
                   size="sm"
                   variant="secondary"
@@ -199,9 +198,7 @@ export function BillingScreen({ isCheckoutReturn }: { isCheckoutReturn: boolean 
                 >
                   {t("workspace.refresh")}
                 </Button>
-              }
-            >
-              {t("billing.notices.checkoutReturn")}
+              </div>
             </Alert>
           ) : null}
 

@@ -104,16 +104,11 @@ export function ChannelCard({
         </Alert>
       ) : null}
       {!isInPlan ? (
-        <Alert
-          tone="warning"
-          className="mt-4"
-          action={
-            <ButtonLink href={businessPath(business.id, "billing")} variant="secondary" size="sm">
-              {t("channels.openBilling")}
-            </ButtonLink>
-          }
-        >
-          {t("channels.notInPlanHint")}
+        <Alert tone="warning" className="mt-4">
+          <p>{t("channels.notInPlanHint")}</p>
+          <ButtonLink href={businessPath(business.id, "billing")} variant="secondary" size="sm" className="mt-3">
+            {t("channels.openBilling")}
+          </ButtonLink>
         </Alert>
       ) : null}
 

@@ -14,6 +14,7 @@ import { Alert, Badge, Button, ButtonLink, Card, Checkbox, Field, Fieldset, Inpu
 import { ConfirmDialog } from "@/components/workspace/ConfirmDialog";
 import { Facts } from "@/components/workspace/Facts";
 import { IconPause, IconPlay } from "@/components/workspace/icons";
+import { useIsClient } from "@/components/workspace/useIsClient";
 import { useI18n } from "@/i18n/client";
 import type { MessageKey } from "@/i18n/translate";
 import { countryFlag, countryName } from "@/lib/countries";
@@ -80,6 +81,7 @@ function GeneralSettingsForm() {
   const [form, setForm] = useState<GeneralForm>(() => generalFormFrom(business));
   const [errors, setErrors] = useState<Partial<Record<GeneralField, GeneralError>>>({});
 
+  const isClient = useIsClient();
   const profile = useCountryProfile(business.country_code);
   const catalog = useApiQuery(() => api.GET("/v1/catalog/languages", { params: { query: { language: locale } } }), [locale]);
   const save = useApiMutation((changes: SettingsChanges) =>
@@ -108,7 +110,8 @@ function GeneralSettingsForm() {
   const ownerLanguages = languageChoices(["ka", "ru", "en"], [baseline.owner_language], form.languages);
 
   const countryZones = countryProfile?.timezones ?? [];
-  const otherZones = allTimeZones().filter((zone) => !countryZones.some((option) => option.name === zone));
+  const browserZones = useMemo(() => (isClient ? allTimeZones() : []), [isClient]);
+  const otherZones = browserZones.filter((zone) => !countryZones.some((option) => option.name === zone));
 
   const result = buildGeneralChanges(baseline, form);
   const isDirty = !result.ok || hasChanges(result.changes);
@@ -419,15 +422,11 @@ function AssistantStatusCard() {
           </Badge>
         </div>
         {business.service_mode === "leads_only" ? (
-          <Alert
-            tone="warning"
-            action={
-              <ButtonLink href={businessPath(business.id, "billing")} size="sm" variant="secondary">
-                {t("channels.openBilling")}
-              </ButtonLink>
-            }
-          >
-            {t("settings.status.leadsOnlyHint")}
+          <Alert tone="warning">
+            <p>{t("settings.status.leadsOnlyHint")}</p>
+            <ButtonLink href={businessPath(business.id, "billing")} size="sm" variant="secondary" className="mt-3">
+              {t("channels.openBilling")}
+            </ButtonLink>
           </Alert>
         ) : null}
       </div>
