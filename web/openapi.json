@@ -2983,7 +2983,7 @@
       },
       "ChannelView": {
         "additionalProperties": false,
-        "description": "A channel as the cabinet shows it; credentials are never returned.\n\n`account_id` is the public account inside the channel: bot username,\nWhatsApp phone number id, page id, Instagram account id, or the E.164\nnumber of the assistant line. With status ERROR, `last_error` is the\nplatform's short reason (no secrets) and `last_error_at` its time. The\nwebsite chat also reports its saved colour and launcher corner (None:\nthe widget's defaults).",
+        "description": "A channel as the cabinet shows it; credentials are never returned.\n\n`account_id` is the public account inside the channel: bot username,\nWhatsApp phone number id, page id, Instagram account id, or the E.164\nnumber of the assistant line. With status ERROR, `last_error` is the\nplatform's short reason (no secrets) and `last_error_at` its time. The\nwebsite chat also reports its saved colour and launcher corner (None:\nthe widget's defaults). WhatsApp reports the template staff replies use\nonce the 24-hour window has closed (None: no template, such replies are\nrefused).",
         "properties": {
           "account_id": {
             "anyOf": [
@@ -3035,6 +3035,16 @@
               }
             ],
             "title": "Last Error At"
+          },
+          "staff_reply_template": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/WhatsAppStaffTemplateView"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "status": {
             "$ref": "#/components/schemas/ChannelStatus"
@@ -8607,9 +8617,10 @@
         "type": "string"
       },
       "StaffMessageDelivery": {
-        "description": "How a staff message reaches the customer: sent through the messenger\nright away, or kept for the website chat, which shows it when the\nvisitor's widget asks for new messages.",
+        "description": "How a staff message reaches the customer: sent through the messenger\nright away, sent in the owner's WhatsApp message template (after the\n24-hour window), or kept for the website chat, which shows it when the\nvisitor's widget asks for new messages.",
         "enum": [
           "sent",
+          "sent_as_template",
           "stored_for_widget"
         ],
         "title": "StaffMessageDelivery",
@@ -8645,9 +8656,41 @@
         "title": "StaffReplyBlock",
         "type": "string"
       },
+      "StaffReplyTemplateView": {
+        "additionalProperties": false,
+        "description": "The template the card offers when the WhatsApp window has closed; the\nstaff text becomes its single body parameter, one line of at most\n`max_text_length` characters (line breaks are sent as spaces).",
+        "properties": {
+          "language_code": {
+            "maxLength": 8,
+            "minLength": 2,
+            "pattern": "^[a-z]{2,3}(_[A-Z]{2})?$",
+            "title": "Language Code",
+            "type": "string"
+          },
+          "max_text_length": {
+            "minimum": 1.0,
+            "title": "Max Text Length",
+            "type": "integer"
+          },
+          "name": {
+            "maxLength": 512,
+            "minLength": 1,
+            "pattern": "^[a-z0-9_]{1,512}$",
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "language_code",
+          "max_text_length"
+        ],
+        "title": "StaffReplyTemplateView",
+        "type": "object"
+      },
       "StaffReplyView": {
         "additionalProperties": false,
-        "description": "Whether staff can write to the customer from the card now, why not\n(`block`), how the message would travel, and until when a 24-hour\nmessaging window stays open (WhatsApp, Instagram, Messenger).",
+        "description": "Whether staff can write to the customer from the card now, why not\n(`block`), how the message would travel, and until when a 24-hour\nmessaging window stays open (WhatsApp, Instagram, Messenger). When the\nWhatsApp window has closed and the owner set a message template for\nstaff replies, `template` offers sending the text in it instead.",
         "properties": {
           "block": {
             "anyOf": [
@@ -8672,6 +8715,16 @@
           "is_available": {
             "title": "Is Available",
             "type": "boolean"
+          },
+          "template": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/StaffReplyTemplateView"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "window_closes_at": {
             "anyOf": [
@@ -9235,6 +9288,32 @@
         ],
         "title": "Weekday",
         "type": "integer"
+      },
+      "WhatsAppStaffTemplateView": {
+        "additionalProperties": false,
+        "description": "The approved template staff replies use once the window has closed.",
+        "properties": {
+          "language_code": {
+            "maxLength": 8,
+            "minLength": 2,
+            "pattern": "^[a-z]{2,3}(_[A-Z]{2})?$",
+            "title": "Language Code",
+            "type": "string"
+          },
+          "name": {
+            "maxLength": 512,
+            "minLength": 1,
+            "pattern": "^[a-z0-9_]{1,512}$",
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "language_code"
+        ],
+        "title": "WhatsAppStaffTemplateView",
+        "type": "object"
       },
       "WidgetConfigView": {
         "additionalProperties": false,
@@ -13261,6 +13340,74 @@
         "summary": "Get Call Forwarding Instructions"
       }
     },
+    "/v1/businesses/{business_id}/calls/{call_id}/recording": {
+      "get": {
+        "operationId": "get_call_recording_v1_businesses__business_id__calls__call_id__recording_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "call_id",
+            "required": true,
+            "schema": {
+              "title": "Call Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "audio/*": {
+                "schema": {
+                  "format": "binary",
+                  "type": "string"
+                }
+              }
+            },
+            "description": "The call recording (audio/mpeg from the voice platform)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Call Recording",
+        "tags": [
+          "conversations"
+        ]
+      }
+    },
     "/v1/businesses/{business_id}/channels": {
       "get": {
         "operationId": "list_channels_v1_businesses__business_id__channels_get",
@@ -13376,6 +13523,107 @@
           }
         },
         "summary": "Get Widget Snippet",
+        "tags": [
+          "channels"
+        ]
+      }
+    },
+    "/v1/businesses/{business_id}/channels/whatsapp/staff-template": {
+      "put": {
+        "operationId": "set_whatsapp_staff_template_v1_businesses__business_id__channels_whatsapp_staff_template_put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "description": "HTTP body that sets the template for staff replies (a name and its\napproved language, e.g. \"staff_reply\" in \"en_US\"); both left out or null\nremove it.",
+                "properties": {
+                  "language_code": {
+                    "anyOf": [
+                      {
+                        "maxLength": 8,
+                        "minLength": 2,
+                        "pattern": "^[a-z]{2,3}(_[A-Z]{2})?$",
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Language Code"
+                  },
+                  "name": {
+                    "anyOf": [
+                      {
+                        "maxLength": 512,
+                        "minLength": 1,
+                        "pattern": "^[a-z0-9_]{1,512}$",
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Name"
+                  }
+                },
+                "title": "WhatsAppStaffTemplateRequest",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChannelView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Set Whatsapp Staff Template",
         "tags": [
           "channels"
         ]
@@ -14249,8 +14497,13 @@
             "application/json": {
               "schema": {
                 "additionalProperties": false,
-                "description": "HTTP body of a staff message to the customer of a conversation.",
+                "description": "HTTP body of a staff message to the customer of a conversation;\n`as_template` sends it in the WhatsApp template the card offers once the\n24-hour window has closed (while the window is open it travels as an\nordinary message).",
                 "properties": {
+                  "as_template": {
+                    "default": false,
+                    "title": "As Template",
+                    "type": "boolean"
+                  },
                   "text": {
                     "maxLength": 4000,
                     "minLength": 1,

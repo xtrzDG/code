@@ -501,6 +501,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/businesses/{business_id}/calls/{call_id}/recording": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Call Recording */
+        get: operations["get_call_recording_v1_businesses__business_id__calls__call_id__recording_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/businesses/{business_id}/channels": {
         parameters: {
             query?: never;
@@ -528,6 +545,23 @@ export interface paths {
         /** Get Widget Snippet */
         get: operations["get_widget_snippet_v1_businesses__business_id__channels_web_snippet_get"];
         put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/businesses/{business_id}/channels/whatsapp/staff-template": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Set Whatsapp Staff Template */
+        put: operations["set_whatsapp_staff_template_v1_businesses__business_id__channels_whatsapp_staff_template_put"];
         post?: never;
         delete?: never;
         options?: never;
@@ -2578,7 +2612,9 @@ export interface components {
          *     number of the assistant line. With status ERROR, `last_error` is the
          *     platform's short reason (no secrets) and `last_error_at` its time. The
          *     website chat also reports its saved colour and launcher corner (None:
-         *     the widget's defaults).
+         *     the widget's defaults). WhatsApp reports the template staff replies use
+         *     once the 24-hour window has closed (None: no template, such replies are
+         *     refused).
          */
         ChannelView: {
             /** Account Id */
@@ -2594,6 +2630,7 @@ export interface components {
             last_error?: string | null;
             /** Last Error At */
             last_error_at?: number | null;
+            staff_reply_template?: components["schemas"]["WhatsAppStaffTemplateView"] | null;
             status: components["schemas"]["ChannelStatus"];
             /** Updated At */
             updated_at: number;
@@ -4774,11 +4811,12 @@ export interface components {
         /**
          * StaffMessageDelivery
          * @description How a staff message reaches the customer: sent through the messenger
-         *     right away, or kept for the website chat, which shows it when the
+         *     right away, sent in the owner's WhatsApp message template (after the
+         *     24-hour window), or kept for the website chat, which shows it when the
          *     visitor's widget asks for new messages.
          * @enum {string}
          */
-        StaffMessageDelivery: "sent" | "stored_for_widget";
+        StaffMessageDelivery: "sent" | "sent_as_template" | "stored_for_widget";
         /**
          * StaffMessageResult
          * @description The stored staff message and how it reaches the customer.
@@ -4801,16 +4839,33 @@ export interface components {
          */
         StaffReplyBlock: "voice_call" | "test_conversation" | "window_closed" | "unsupported_channel" | "channel_disconnected";
         /**
+         * StaffReplyTemplateView
+         * @description The template the card offers when the WhatsApp window has closed; the
+         *     staff text becomes its single body parameter, one line of at most
+         *     `max_text_length` characters (line breaks are sent as spaces).
+         */
+        StaffReplyTemplateView: {
+            /** Language Code */
+            language_code: string;
+            /** Max Text Length */
+            max_text_length: number;
+            /** Name */
+            name: string;
+        };
+        /**
          * StaffReplyView
          * @description Whether staff can write to the customer from the card now, why not
          *     (`block`), how the message would travel, and until when a 24-hour
-         *     messaging window stays open (WhatsApp, Instagram, Messenger).
+         *     messaging window stays open (WhatsApp, Instagram, Messenger). When the
+         *     WhatsApp window has closed and the owner set a message template for
+         *     staff replies, `template` offers sending the text in it instead.
          */
         StaffReplyView: {
             block?: components["schemas"]["StaffReplyBlock"] | null;
             delivery?: components["schemas"]["StaffMessageDelivery"] | null;
             /** Is Available */
             is_available: boolean;
+            template?: components["schemas"]["StaffReplyTemplateView"] | null;
             /** Window Closes At */
             window_closes_at?: number | null;
         };
@@ -5020,6 +5075,16 @@ export interface components {
          * @enum {integer}
          */
         Weekday: 1 | 2 | 3 | 4 | 5 | 6 | 7;
+        /**
+         * WhatsAppStaffTemplateView
+         * @description The approved template staff replies use once the window has closed.
+         */
+        WhatsAppStaffTemplateView: {
+            /** Language Code */
+            language_code: string;
+            /** Name */
+            name: string;
+        };
         /**
          * WidgetConfigView
          * @description Public configuration the widget script loads before it shows itself.
@@ -6579,6 +6644,40 @@ export interface operations {
             };
         };
     };
+    get_call_recording_v1_businesses__business_id__calls__call_id__recording_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+                call_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The call recording (audio/mpeg from the voice platform). */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "audio/*": string;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     list_channels_v1_businesses__business_id__channels_get: {
         parameters: {
             query?: never;
@@ -6632,6 +6731,48 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["WidgetSnippetView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    set_whatsapp_staff_template_v1_businesses__business_id__channels_whatsapp_staff_template_put: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Language Code */
+                    language_code?: string | null;
+                    /** Name */
+                    name?: string | null;
+                };
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChannelView"];
                 };
             };
             /** @description Validation Error */
@@ -6965,6 +7106,11 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": {
+                    /**
+                     * As Template
+                     * @default false
+                     */
+                    as_template?: boolean;
                     /** Text */
                     text: string;
                 };
