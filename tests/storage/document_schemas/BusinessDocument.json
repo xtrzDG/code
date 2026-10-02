@@ -1,0 +1,228 @@
+{
+  "collection": "businesses",
+  "document_type": "BusinessDocument",
+  "schema_version": 1,
+  "shape": {
+    "additionalProperties": false,
+    "properties": {
+      "city": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "country_code": {
+        "maxLength": 2,
+        "minLength": 2,
+        "pattern": "^[A-Z]{2}$",
+        "type": "string"
+      },
+      "created_at": {
+        "type": "integer"
+      },
+      "currency_code": {
+        "maxLength": 3,
+        "minLength": 3,
+        "pattern": "^[A-Z]{3}$",
+        "type": "string"
+      },
+      "data_region": {
+        "enum": [
+          "eu",
+          "us"
+        ],
+        "type": "string"
+      },
+      "default_language": {
+        "maxLength": 16,
+        "minLength": 2,
+        "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$",
+        "type": "string"
+      },
+      "id": {
+        "pattern": "^business_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "languages": {
+        "items": {
+          "maxLength": 16,
+          "minLength": 2,
+          "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$",
+          "type": "string"
+        },
+        "type": "array"
+      },
+      "manager_contacts": {
+        "items": {
+          "additionalProperties": false,
+          "properties": {
+            "address": {
+              "type": "string"
+            },
+            "channel": {
+              "enum": [
+                "telegram",
+                "whatsapp",
+                "email",
+                "sms"
+              ],
+              "type": "string"
+            },
+            "language": {
+              "maxLength": 16,
+              "minLength": 2,
+              "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$",
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "name",
+            "channel",
+            "address",
+            "language"
+          ],
+          "type": "object"
+        },
+        "type": "array"
+      },
+      "members": {
+        "items": {
+          "additionalProperties": false,
+          "properties": {
+            "role": {
+              "enum": [
+                "owner",
+                "staff"
+              ],
+              "type": "string"
+            },
+            "user_id": {
+              "pattern": "^user_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+              "type": "string"
+            }
+          },
+          "required": [
+            "user_id",
+            "role"
+          ],
+          "type": "object"
+        },
+        "type": "array"
+      },
+      "name": {
+        "type": "string"
+      },
+      "niche_key": {
+        "enum": [
+          "restaurant",
+          "hotel",
+          "entertainment",
+          "beauty_salon",
+          "clinic",
+          "fitness",
+          "short_term_rental",
+          "car_service",
+          "car_rental_and_tours",
+          "event_venue",
+          "real_estate",
+          "education",
+          "online_shop",
+          "veterinary",
+          "home_services",
+          "b2b_supply"
+        ],
+        "type": "string"
+      },
+      "owner_language": {
+        "maxLength": 16,
+        "minLength": 2,
+        "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$",
+        "type": "string"
+      },
+      "plan_key": {
+        "enum": [
+          "chat",
+          "voice_and_chat",
+          "plus"
+        ],
+        "type": "string"
+      },
+      "published_assistant_version_id": {
+        "anyOf": [
+          {
+            "pattern": "^assistant_version_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "recording_retention_days": {
+        "default": 90,
+        "maximum": 3650,
+        "minimum": 1,
+        "type": "integer"
+      },
+      "revision": {
+        "default": 0,
+        "minimum": 0,
+        "type": "integer"
+      },
+      "schema_version": {
+        "default": "1",
+        "type": "string"
+      },
+      "service_mode": {
+        "default": "full",
+        "enum": [
+          "full",
+          "leads_only"
+        ],
+        "type": "string"
+      },
+      "status": {
+        "default": "onboarding",
+        "enum": [
+          "onboarding",
+          "testing",
+          "live",
+          "paused"
+        ],
+        "type": "string"
+      },
+      "timezone": {
+        "maxLength": 64,
+        "minLength": 2,
+        "pattern": "^[A-Za-z][A-Za-z0-9_+\\-]*(/[A-Za-z0-9_+\\-]+){0,2}$",
+        "type": "string"
+      },
+      "updated_at": {
+        "type": "integer"
+      }
+    },
+    "required": [
+      "name",
+      "niche_key",
+      "country_code",
+      "timezone",
+      "currency_code",
+      "languages",
+      "default_language",
+      "owner_language",
+      "plan_key",
+      "data_region",
+      "members"
+    ],
+    "type": "object"
+  }
+}

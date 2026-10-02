@@ -1,0 +1,98 @@
+{
+  "collection": "invoices",
+  "document_type": "InvoiceDocument",
+  "schema_version": 1,
+  "shape": {
+    "additionalProperties": false,
+    "properties": {
+      "amount_minor": {
+        "minimum": 0,
+        "type": "integer"
+      },
+      "business_id": {
+        "pattern": "^business_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "created_at": {
+        "type": "integer"
+      },
+      "currency_code": {
+        "maxLength": 3,
+        "minLength": 3,
+        "pattern": "^[A-Z]{3}$",
+        "type": "string"
+      },
+      "description": {
+        "type": "string"
+      },
+      "id": {
+        "pattern": "^invoice_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "kind": {
+        "default": "service_period",
+        "enum": [
+          "service_period",
+          "setup_fee",
+          "usage_overage"
+        ],
+        "type": "string"
+      },
+      "period_end": {
+        "type": "integer"
+      },
+      "period_start": {
+        "type": "integer"
+      },
+      "provider_reference": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "schema_version": {
+        "default": "1",
+        "type": "string"
+      },
+      "status": {
+        "default": "issued",
+        "enum": [
+          "issued",
+          "paid",
+          "failed",
+          "void"
+        ],
+        "type": "string"
+      },
+      "subscription_id": {
+        "anyOf": [
+          {
+            "pattern": "^subscription_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "updated_at": {
+        "type": "integer"
+      }
+    },
+    "required": [
+      "business_id",
+      "description",
+      "amount_minor",
+      "currency_code",
+      "period_start",
+      "period_end"
+    ],
+    "type": "object"
+  }
+}

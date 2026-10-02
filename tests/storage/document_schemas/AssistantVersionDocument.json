@@ -1,0 +1,200 @@
+{
+  "collection": "assistant_versions",
+  "document_type": "AssistantVersionDocument",
+  "schema_version": 1,
+  "shape": {
+    "additionalProperties": false,
+    "properties": {
+      "autotest_run_id": {
+        "anyOf": [
+          {
+            "pattern": "^autotest_run_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "business_id": {
+        "pattern": "^business_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "created_at": {
+        "type": "integer"
+      },
+      "default_language": {
+        "maxLength": 16,
+        "minLength": 2,
+        "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$",
+        "type": "string"
+      },
+      "facts": {
+        "items": {
+          "additionalProperties": false,
+          "properties": {
+            "key": {
+              "maxLength": 64,
+              "minLength": 2,
+              "pattern": "^[a-z][a-z0-9_]*$",
+              "type": "string"
+            },
+            "label": {
+              "type": "string"
+            },
+            "value": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "key",
+            "label",
+            "value"
+          ],
+          "type": "object"
+        },
+        "type": "array"
+      },
+      "id": {
+        "pattern": "^assistant_version_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "is_voice_enabled": {
+        "type": "boolean"
+      },
+      "languages": {
+        "items": {
+          "maxLength": 16,
+          "minLength": 2,
+          "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$",
+          "type": "string"
+        },
+        "type": "array"
+      },
+      "model_id": {
+        "maxLength": 128,
+        "minLength": 3,
+        "pattern": "^[a-z0-9][a-z0-9.\\-:@_]*$",
+        "type": "string"
+      },
+      "niche_key": {
+        "enum": [
+          "restaurant",
+          "hotel",
+          "entertainment",
+          "beauty_salon",
+          "clinic",
+          "fitness",
+          "short_term_rental",
+          "car_service",
+          "car_rental_and_tours",
+          "event_venue",
+          "real_estate",
+          "education",
+          "online_shop",
+          "veterinary",
+          "home_services",
+          "b2b_supply"
+        ],
+        "type": "string"
+      },
+      "profile_revision": {
+        "type": "integer"
+      },
+      "prompt_text": {
+        "type": "string"
+      },
+      "published_at": {
+        "anyOf": [
+          {
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "schema_version": {
+        "default": "1",
+        "type": "string"
+      },
+      "status": {
+        "default": "draft",
+        "enum": [
+          "draft",
+          "testing",
+          "ready",
+          "tests_failed",
+          "published",
+          "archived"
+        ],
+        "type": "string"
+      },
+      "test_score": {
+        "anyOf": [
+          {
+            "maximum": 5.0,
+            "minimum": 1.0,
+            "type": "number"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "tools": {
+        "items": {
+          "enum": [
+            "search_knowledge",
+            "get_price",
+            "check_availability",
+            "create_booking",
+            "cancel_booking",
+            "reschedule_booking",
+            "create_lead",
+            "handoff_to_human",
+            "send_link",
+            "record_unanswered_question"
+          ],
+          "type": "string"
+        },
+        "type": "array"
+      },
+      "updated_at": {
+        "type": "integer"
+      },
+      "version_number": {
+        "minimum": 1,
+        "type": "integer"
+      },
+      "voice_agent_id": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      }
+    },
+    "required": [
+      "business_id",
+      "version_number",
+      "niche_key",
+      "model_id",
+      "prompt_text",
+      "tools",
+      "languages",
+      "default_language",
+      "is_voice_enabled",
+      "facts",
+      "profile_revision"
+    ],
+    "type": "object"
+  }
+}

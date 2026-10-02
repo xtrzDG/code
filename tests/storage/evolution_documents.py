@@ -43,6 +43,27 @@ class NoteV1(BaseDocument):
     labels: list[NoteLabelV1] = Field(default_factory=list[NoteLabelV1])
 
 
+class NoteV1Changed(BaseDocument):
+    """NoteV1 with a new field but without a version bump (refused)."""
+
+    id: KnowledgeItemId = Field(default_factory=KnowledgeItemId)
+    business_id: BusinessId
+    title: KnowledgeTitle
+    labels: list[NoteLabelV1] = Field(default_factory=list[NoteLabelV1])
+    pin_order: ExampleInt | None = None
+
+
+class NoteV1Described(BaseDocument):
+    """NoteV1 with only prose changed: the same stored shape."""
+
+    id: KnowledgeItemId = Field(
+        default_factory=KnowledgeItemId, description="The note's id."
+    )
+    business_id: BusinessId
+    title: KnowledgeTitle = Field(description="What the note is about.")
+    labels: list[NoteLabelV1] = Field(default_factory=list[NoteLabelV1])
+
+
 class NoteLabelV2(PersistentDocument):
     key: KnowledgeAttributeKey
     caption: KnowledgeAttributeValue | None = None

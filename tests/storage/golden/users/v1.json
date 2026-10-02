@@ -1,0 +1,14 @@
+{
+  "country_code": "GE",
+  "created_at": 1790000000000000,
+  "display_name": "Sample UserDisplayName",
+  "email": "owner@example.com",
+  "id": "user_ea72dfea-08f0-438f-8531-8ba0df13dff2",
+  "is_platform_admin": true,
+  "is_verified": true,
+  "locale": "ka",
+  "login_method": "phone",
+  "phone_number": "+995599123456",
+  "schema_version": "1",
+  "updated_at": 1790000000000000
+}
