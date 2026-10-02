@@ -19,7 +19,7 @@ from app.schemas.exceptions.base_exception import ApplicationError
 from app.schemas.typings.conversations.strings import MessageText
 from app.schemas.typings.handoffs.prefixed_id import HandoffId
 from app.schemas.typings.handoffs.strings import HandoffSummary
-from app.utilities.conversations.assistant_texts import (
+from app.utilities.conversations.assistant_texts.notice_texts import (
     COLLEAGUE_TAKES_OVER,
     COLLEAGUE_WILL_CALL_BACK,
     CONTACT_LIMIT_NOTICE,

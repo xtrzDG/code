@@ -5,11 +5,15 @@ from functools import cache
 
 from app.contracts.localization_utilities import LanguageDetectorContract
 from app.schemas.typings.localization.constrained_strings import LanguageTag
-from app.utilities.conversations.language_evidence import (
-    COMPATIBLE_TAG_SCRIPTS,
-    LANGUAGE_EVIDENCE,
-    SCRIPT_RANGES,
+from app.utilities.conversations.language_evidence.language_evidence import (
     LanguageEvidence,
+)
+from app.utilities.conversations.language_evidence.language_evidence_table import (
+    LANGUAGE_EVIDENCE,
+)
+from app.utilities.conversations.language_evidence.writing_scripts import (
+    COMPATIBLE_TAG_SCRIPTS,
+    SCRIPT_RANGES,
 )
 from app.utilities.localization.language_tags import (
     base_language_code,

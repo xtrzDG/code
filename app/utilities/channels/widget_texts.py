@@ -10,8 +10,10 @@ business name.
 from app.schemas.dto.localization import LocalizedText
 from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.schemas.typings.localization.strings import LocalizedTextValue
-from app.utilities.conversations.assistant_texts import (
+from app.utilities.conversations.assistant_texts.ai_disclosure_texts import (
     AI_DISCLOSURE,
+)
+from app.utilities.conversations.assistant_texts.business_name_placeholder import (
     fill_business_name,
 )
 from app.utilities.localization.language_tags import base_language_code

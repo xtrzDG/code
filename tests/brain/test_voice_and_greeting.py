@@ -23,8 +23,10 @@ from app.schemas.typings.localization.constrained_strings import (
     E164PhoneNumber,
     LanguageTag,
 )
-from app.utilities.conversations.assistant_texts import (
+from app.utilities.conversations.assistant_texts.ai_disclosure_texts import (
     AI_DISCLOSURE,
+)
+from app.utilities.conversations.assistant_texts.call_texts import (
     CALL_GREETING,
     CALL_OPERATOR_HINT,
     CALL_RECORDING_NOTICE,

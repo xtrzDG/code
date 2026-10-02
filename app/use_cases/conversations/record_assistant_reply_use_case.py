@@ -20,8 +20,10 @@ from app.schemas.typings.billing.constrained_integers import (
     UsageQuantity,
 )
 from app.schemas.typings.conversations.strings import MessageText
-from app.utilities.conversations.assistant_texts import (
+from app.utilities.conversations.assistant_texts.ai_disclosure_texts import (
     AI_DISCLOSURE,
+)
+from app.utilities.conversations.assistant_texts.business_name_placeholder import (
     fill_business_name,
 )
 from app.utilities.conversations.llm_models import LlmCallCost, compute_llm_call_cost
