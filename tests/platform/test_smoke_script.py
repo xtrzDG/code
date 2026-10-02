@@ -62,8 +62,9 @@ def test_a_healthy_deployment_passes_every_check() -> None:
         )
 
     assert result.returncode == 0, result.stdout + result.stderr
-    assert result.stdout.splitlines()[:5] == [
+    assert result.stdout.splitlines()[:6] == [
         "ok    GET /healthz",
+        "ok    GET /readyz",
         "ok    GET /widget.js",
         "ok    GET /v1/auth/login-options",
         "ok    GET cabinet /login",
@@ -94,6 +95,7 @@ def test_without_a_business_the_chat_is_skipped() -> None:
 @pytest.mark.parametrize(
     ("deployment", "expected_reply", "message"),
     [
+        (FakeDeployment(is_ready=False), "", "GET /readyz answered 503"),
         (FakeDeployment(widget_script="<html></html>"), "", "/widget.js is not"),
         (FakeDeployment(configured_channels=[]), "", "no configured_channels"),
         (FakeDeployment(reply_text="Hello"), "staging server", "without"),

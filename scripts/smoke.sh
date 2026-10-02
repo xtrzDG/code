@@ -5,7 +5,9 @@
 #
 # Checks, in order (the first failure stops it with exit code 1):
 #   1. GET  /healthz                    answers {"status": "ok"} (retried while
-#                                       the instance starts, SMOKE_WAIT_SECONDS)
+#                                       the instance starts, SMOKE_WAIT_SECONDS),
+#      GET  /readyz                     then {"status": "ready"} (database,
+#                                       migrations and pool are fine)
 #   2. GET  /widget.js                  serves the website widget
 #   3. GET  /v1/auth/login-options      sign-in works and names its channels
 #   4. GET  <cabinet>/login             the cabinet answers (if its URL is given)
@@ -22,7 +24,7 @@
 set -euo pipefail
 
 if [ "$#" -lt 1 ] || [ "$#" -gt 2 ]; then
-  sed -n '2,21p' "$0" >&2
+  sed -n '2,23p' "$0" >&2
   exit 2
 fi
 
@@ -98,6 +100,11 @@ until [ "$(request GET "$api_url/healthz")" = "200" ] \
   sleep 2
 done
 pass "GET /healthz"
+
+status="$(request GET "$api_url/readyz")"
+[ "$status" = "200" ] && [ "$(json_field status)" = "ready" ] \
+  || fail "GET /readyz answered $status (database, migrations or pool)"
+pass "GET /readyz"
 
 # 2. The widget script every business site loads.
 status="$(request GET "$api_url/widget.js")"

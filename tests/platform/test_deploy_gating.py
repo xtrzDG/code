@@ -25,7 +25,9 @@ SERVICE_BLOCK: re.Pattern[str] = re.compile(
     r"(?=^  - |\Z)",
     re.MULTILINE,
 )
-ROUTES_WITHOUT_DESCRIPTION: frozenset[str] = frozenset({"/healthz", "/widget.js"})
+ROUTES_WITHOUT_DESCRIPTION: frozenset[str] = frozenset(
+    {"/healthz", "/readyz", "/widget.js"}
+)
 
 
 def services_of(blueprint_path: str) -> dict[str, str]:
@@ -61,7 +63,9 @@ def test_staging_mirrors_production_on_main_with_the_scripted_model() -> None:
         assert "    autoDeployTrigger: checksPass\n" in body, name
     assert set(re.findall(r"region: (\w+)", blueprint)) == {"frankfurt"}
     assert "preDeployCommand: workshop migrate" in staging["workshop-staging-api"]
-    assert "healthCheckPath: /healthz" in staging["workshop-staging-api"]
+    assert "healthCheckPath: /readyz" in staging["workshop-staging-api"]
+    assert "maxShutdownDelaySeconds: 30" in staging["workshop-staging-api"]
+    assert "maxShutdownDelaySeconds: 60" in staging["workshop-staging-worker"]
     assert re.search(r"- key: LLM_PROVIDER\n\s+value: scripted\n", blueprint)
     # Its own database and env group: nothing of production is shared.
     assert "workshop-db" not in blueprint.replace("workshop-staging-db", "")
@@ -108,7 +112,7 @@ def test_the_smoke_script_calls_only_routes_that_exist() -> None:
         for path in re.findall(r'"\$widget_url(/[\w/.-]+)', script)
     }
 
-    assert {"/healthz", "/widget.js", "/v1/auth/login-options"} <= called
+    assert {"/healthz", "/readyz", "/widget.js", "/v1/auth/login-options"} <= called
     assert {"/v1/widget/{}/config", "/v1/widget/{}/messages"} <= called
     assert called - described - ROUTES_WITHOUT_DESCRIPTION == set()
     assert (ROOT / "scripts" / "smoke.sh").stat().st_mode & 0o111

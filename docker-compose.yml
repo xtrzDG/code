@@ -89,6 +89,8 @@ services:
   api:
     <<: *backend
     command: ["api"]
+    # uvicorn finishes open requests for 25 s after SIGTERM.
+    stop_grace_period: 30s
     ports:
       - "${API_PORT:-8000}:8000"
     healthcheck:
@@ -108,6 +110,8 @@ services:
   worker:
     <<: *backend
     command: ["worker"]
+    # Running jobs get 25 s after SIGTERM before the worker exits.
+    stop_grace_period: 60s
     healthcheck:
       disable: true
     depends_on:
