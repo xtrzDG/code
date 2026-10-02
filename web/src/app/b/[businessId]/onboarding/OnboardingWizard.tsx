@@ -4,14 +4,17 @@ import { useSearchParams } from "next/navigation";
 import { useEffect, useState, type ComponentType } from "react";
 
 import { api } from "@/api/client";
-import { useApiMutation, useApiQuery } from "@/api/hooks";
+import { queryKeys } from "@/api/queryKeys";
+import { useMutation } from "@/api/useMutation";
+import { useQuery } from "@/api/useQuery";
 import type { ProfileStepBody, ProfileWizardStep } from "@/api/types";
 import { useBusiness } from "@/components/business/BusinessContext";
-import { ErrorState, LoadingBlock, PageHeader, useToast } from "@/components/ui";
+import { ErrorState, LoadingRegion, PageHeader, useToast } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 
 import { GapsDrawer, GapsSummary } from "./_components/GapsPanel";
 import { StepNavigation } from "./_components/StepNavigation";
+import { WizardSkeleton } from "./_components/WizardSkeleton";
 import { BookingStep } from "./_components/steps/BookingStep";
 import { ChannelsStep } from "./_components/steps/ChannelsStep";
 import { ContactsStep } from "./_components/steps/ContactsStep";
@@ -59,27 +62,28 @@ export function OnboardingWizard() {
   const { business, isOwner } = useBusiness();
   const businessId = business.id;
 
-  const wizard = useApiQuery(
+  // The steps' forms start from these and save them back: never from a cached copy.
+  const wizard = useQuery(
+    queryKeys.profile.wizard(businessId, locale),
     () =>
       api.GET("/v1/businesses/{business_id}/profile/wizard", {
         params: { path: { business_id: businessId }, query: { language: locale } },
       }),
-    [businessId, locale],
+    { requireFresh: true },
   );
-  const gaps = useApiQuery(
-    () =>
-      api.GET("/v1/businesses/{business_id}/profile/gaps", {
-        params: { path: { business_id: businessId }, query: { language: locale } },
-      }),
-    [businessId, locale],
+  const gaps = useQuery(queryKeys.profile.gaps(businessId, locale), () =>
+    api.GET("/v1/businesses/{business_id}/profile/gaps", {
+      params: { path: { business_id: businessId }, query: { language: locale } },
+    }),
   );
-  const knowledge = useApiQuery(
+  const knowledge = useQuery(
+    queryKeys.knowledge.wizardItems(businessId, locale),
     () =>
       // The offer and FAQ steps edit the whole list: the largest page the API serves.
       api.GET("/v1/businesses/{business_id}/knowledge", {
         params: { path: { business_id: businessId }, query: { language: locale, limit: "200" } },
       }),
-    [businessId, locale],
+    { requireFresh: true },
   );
 
   const searchParams = useSearchParams();
@@ -89,11 +93,22 @@ export function OnboardingWizard() {
   const [dirtyStep, setDirtyStep] = useState<ProfileWizardStep | null>(null);
   const [isGapsListOpen, setGapsListOpen] = useState(false);
 
-  const saveStep = useApiMutation((step: ProfileWizardStep, body: ProfileStepBody) =>
-    api.PUT("/v1/businesses/{business_id}/profile/steps/{step}", {
-      params: { path: { business_id: businessId, step } },
-      body,
-    }),
+  const saveStep = useMutation(
+    (step: ProfileWizardStep, body: ProfileStepBody) =>
+      api.PUT("/v1/businesses/{business_id}/profile/steps/{step}", {
+        params: { path: { business_id: businessId, step } },
+        body,
+      }),
+    {
+      // Everything built from the profile follows when shown next.
+      stale: [
+        queryKeys.business.all(businessId),
+        queryKeys.knowledge.all(businessId),
+        queryKeys.resources.all(businessId),
+        queryKeys.assistant.all(businessId),
+        queryKeys.dashboard.all(businessId),
+      ],
+    },
   );
 
   const steps = [...(wizard.data?.steps ?? [])].sort((left, right) => left.number - right.number);
@@ -168,7 +183,9 @@ export function OnboardingWizard() {
         wizard.error ? (
           <ErrorState error={wizard.error} onRetry={wizard.reload} />
         ) : (
-          <LoadingBlock label={t("common.loading")} />
+          <LoadingRegion label={t("common.loading")}>
+            <WizardSkeleton />
+          </LoadingRegion>
         )
       ) : (
         <div className="grid gap-6 lg:grid-cols-[15rem_minmax(0,1fr)] lg:gap-8">

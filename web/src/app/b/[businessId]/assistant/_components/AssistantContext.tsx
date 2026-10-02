@@ -2,12 +2,12 @@
 
 import { createContext, useContext } from "react";
 
-import type { ApiQuery } from "@/api/hooks";
+import type { Query } from "@/api/useQuery";
 import type { AssistantVersionSummary } from "@/lib/assistant/versions";
 
 export interface AssistantContextValue {
   /** The version history (newest first), shared by every Assistant sub-page. */
-  versions: ApiQuery<AssistantVersionSummary[]>;
+  versions: Query<AssistantVersionSummary[]>;
   /** Opens "Build a new version" (owners). */
   openBuild: () => void;
 }

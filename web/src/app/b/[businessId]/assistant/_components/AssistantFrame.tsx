@@ -2,8 +2,8 @@
 
 import { useMemo, useState, type ReactNode } from "react";
 
-import { api } from "@/api/client";
-import { useApiQuery } from "@/api/hooks";
+import { sectionQueries } from "@/api/sectionQueries";
+import { useQuery } from "@/api/useQuery";
 import { useBusiness, useBusinessFormat } from "@/components/business/BusinessContext";
 import { SectionTabs } from "@/components/content/SectionTabs";
 import { IconSparkles } from "@/components/icons";
@@ -23,11 +23,8 @@ export function AssistantFrame({ children }: { children: ReactNode }) {
   const base = businessPath(business.id, "assistant");
   const [isBuilding, setBuilding] = useState(false);
 
-  const versions = useApiQuery(
-    () =>
-      api.GET("/v1/businesses/{business_id}/assistant-versions", { params: { path: { business_id: business.id } } }),
-    [business.id],
-  );
+  const versionsQuery = sectionQueries.assistantVersions(business.id);
+  const versions = useQuery(versionsQuery.key, versionsQuery.fetch);
   const value = useMemo<AssistantContextValue>(() => ({ versions, openBuild: () => setBuilding(true) }), [versions]);
 
   const live = liveVersion(sortVersions(versions.data ?? []));
@@ -72,10 +69,8 @@ export function AssistantFrame({ children }: { children: ReactNode }) {
       {isBuilding ? (
         <BuildVersionDialog
           onClose={() => setBuilding(false)}
-          onBuilt={() => {
-            setBuilding(false);
-            versions.reload();
-          }}
+          // The new version reaches the list through the build's invalidation.
+          onBuilt={() => setBuilding(false)}
         />
       ) : null}
     </AssistantContext.Provider>

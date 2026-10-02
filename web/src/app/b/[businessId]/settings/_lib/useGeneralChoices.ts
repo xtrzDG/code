@@ -4,7 +4,9 @@ import { useMemo } from "react";
 
 import { useCountryProfile } from "@/api/catalog";
 import { api } from "@/api/client";
-import { useApiQuery } from "@/api/hooks";
+import { CATALOG_STALE_MS } from "@/api/catalog";
+import { queryKeys } from "@/api/queryKeys";
+import { useQuery } from "@/api/useQuery";
 import { useBusiness } from "@/components/business/BusinessContext";
 import { useIsClient } from "@/components/workspace/useIsClient";
 import { useI18n } from "@/i18n/client";
@@ -31,7 +33,11 @@ export function useGeneralChoices(baseline: BusinessView, form: GeneralForm) {
   const { business } = useBusiness();
   const isClient = useIsClient();
   const profile = useCountryProfile(business.country_code);
-  const catalog = useApiQuery(() => api.GET("/v1/catalog/languages", { params: { query: { language: locale } } }), [locale]);
+  const catalog = useQuery(
+    queryKeys.catalog.languages(locale),
+    () => api.GET("/v1/catalog/languages", { params: { query: { language: locale } } }),
+    { staleMs: CATALOG_STALE_MS },
+  );
 
   const catalogNames = useMemo(() => {
     const names = new Map<string, string>();

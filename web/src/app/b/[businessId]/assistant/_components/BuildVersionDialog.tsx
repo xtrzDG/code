@@ -4,10 +4,11 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { api } from "@/api/client";
-import { useApiMutation, useApiQuery } from "@/api/hooks";
+import { queryKeys } from "@/api/queryKeys";
+import { useMutation } from "@/api/useMutation";
+import { useQuery } from "@/api/useQuery";
 import { useBusiness } from "@/components/business/BusinessContext";
-import { Alert, ButtonLink, Checkbox, Spinner, useToast } from "@/components/ui";
-import { ConfirmDialog } from "@/components/ui";
+import { Alert, ButtonLink, Checkbox, ConfirmDialog, Spinner, useToast } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { businessPath } from "@/lib/navigation";
 
@@ -22,18 +23,21 @@ export function BuildVersionDialog({ onClose, onBuilt }: { onClose: () => void; 
   const { business } = useBusiness();
   const [runAutotests, setRunAutotests] = useState(true);
 
-  const gaps = useApiQuery(
+  const gaps = useQuery(
+    queryKeys.profile.gaps(business.id, locale),
     () =>
       api.GET("/v1/businesses/{business_id}/profile/gaps", {
         params: { path: { business_id: business.id }, query: { language: locale } },
       }),
-    [business.id, locale],
+    { staleMs: 0 },
   );
-  const build = useApiMutation((run: boolean) =>
-    api.POST("/v1/businesses/{business_id}/assistant-versions", {
-      params: { path: { business_id: business.id } },
-      body: { run_autotests: run },
-    }),
+  const build = useMutation(
+    (run: boolean) =>
+      api.POST("/v1/businesses/{business_id}/assistant-versions", {
+        params: { path: { business_id: business.id } },
+        body: { run_autotests: run },
+      }),
+    { invalidate: [queryKeys.assistant.all(business.id)], stale: [queryKeys.dashboard.all(business.id)] },
   );
 
   const blocking = (gaps.data?.gaps ?? []).filter((gap) => gap.is_blocking);

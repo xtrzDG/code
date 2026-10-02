@@ -3,10 +3,12 @@
 import { useState, type KeyboardEvent } from "react";
 
 import { api } from "@/api/client";
-import { useApiMutation, useApiQuery } from "@/api/hooks";
+import { queryKeys } from "@/api/queryKeys";
+import { useMutation } from "@/api/useMutation";
+import { useQuery } from "@/api/useQuery";
 import type { ResourceKind } from "@/api/types";
 import { IconPlus } from "@/components/icons";
-import { Badge, Button, Field, Input, Spinner, useToast } from "@/components/ui";
+import { Badge, Button, Field, Input, LoadingRegion, SkeletonRows, useToast } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import type { MessageKey } from "@/i18n/translate";
 
@@ -39,12 +41,13 @@ export function ResourcesSection({
 }) {
   const { t } = useI18n();
   const toast = useToast();
-  const resources = useApiQuery(
-    () => api.GET("/v1/businesses/{business_id}/resources", { params: { path: { business_id: businessId } } }),
-    [businessId],
+  const resources = useQuery(queryKeys.resources.list(businessId), () =>
+    api.GET("/v1/businesses/{business_id}/resources", { params: { path: { business_id: businessId } } }),
   );
-  const create = useApiMutation((body: { name: string; capacity: number; unit_count: number; kind: ResourceKind }) =>
-    api.POST("/v1/businesses/{business_id}/resources", { params: { path: { business_id: businessId } }, body }),
+  const create = useMutation(
+    (body: { name: string; capacity: number; unit_count: number; kind: ResourceKind }) =>
+      api.POST("/v1/businesses/{business_id}/resources", { params: { path: { business_id: businessId } }, body }),
+    { invalidate: [queryKeys.resources.all(businessId)], stale: [queryKeys.assistant.all(businessId)] },
   );
 
   const [name, setName] = useState("");
@@ -70,7 +73,6 @@ export function ResourcesSection({
       setName("");
       setCapacity("");
       setUnits("1");
-      resources.reload();
       onChanged();
     }
   };
@@ -88,7 +90,9 @@ export function ResourcesSection({
   return (
     <StepSection title={t("onboarding.resources.title")} hint={t("onboarding.resources.hint", { noun: resourceNoun })}>
       {resources.isLoading && !resources.data ? (
-        <Spinner label={t("common.loading")} />
+        <LoadingRegion label={t("common.loading")}>
+          <SkeletonRows rows={2} />
+        </LoadingRegion>
       ) : items.length === 0 ? (
         <p className="text-sm text-ink-muted">{t("onboarding.resources.empty")}</p>
       ) : (

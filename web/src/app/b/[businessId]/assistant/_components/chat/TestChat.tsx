@@ -1,6 +1,6 @@
 "use client";
 
-import { Alert, Button, Card, LoadingBlock, Spinner } from "@/components/ui";
+import { Alert, Button, Card, LoadingRegion, Spinner } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import type { AssistantVersionSummary } from "@/lib/assistant/versions";
 
@@ -9,6 +9,7 @@ import { ChatComposer } from "./ChatComposer";
 import { ChatEmpty } from "./ChatEmpty";
 import { ChatLine } from "./ChatLine";
 import { ChatVersionBar } from "./ChatVersionBar";
+import { ChatBubblesSkeleton } from "../AssistantSkeletons";
 
 /** The test conversation with one version: its log, a handoff notice and the message box. */
 export function TestChat({ versions, initialVersionId }: { versions: AssistantVersionSummary[]; initialVersionId: string | null }) {
@@ -34,7 +35,9 @@ export function TestChat({ versions, initialVersionId }: { versions: AssistantVe
         className="h-[min(60vh,36rem)] min-h-72 space-y-4 overflow-y-auto px-4 py-5 sm:px-6"
       >
         {isRestoring ? (
-          <LoadingBlock label={t("common.loading")} />
+          <LoadingRegion label={t("common.loading")}>
+            <ChatBubblesSkeleton />
+          </LoadingRegion>
         ) : entries.length === 0 ? (
           <ChatEmpty onSuggest={(message) => void deliver(message)} />
         ) : (

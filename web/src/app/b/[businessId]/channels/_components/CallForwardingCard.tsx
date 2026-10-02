@@ -1,7 +1,8 @@
 "use client";
 
 import { api } from "@/api/client";
-import { useApiQuery } from "@/api/hooks";
+import { queryKeys } from "@/api/queryKeys";
+import { useQuery } from "@/api/useQuery";
 import type { Schema } from "@/api/types";
 import { useBusiness } from "@/components/business/BusinessContext";
 import { IconChevronDown, IconInfo, IconPhone } from "@/components/icons";
@@ -26,12 +27,10 @@ const CONDITION_LABELS: Record<CallForwardingCondition, MessageKey> = {
 export function CallForwardingCard() {
   const { t, locale } = useI18n();
   const { business } = useBusiness();
-  const instructions = useApiQuery(
-    () =>
-      api.GET("/v1/businesses/{business_id}/call-forwarding-instructions", {
-        params: { path: { business_id: business.id }, query: { language: locale } },
-      }),
-    [business.id, locale],
+  const instructions = useQuery(queryKeys.channels.callForwarding(business.id, locale), () =>
+    api.GET("/v1/businesses/{business_id}/call-forwarding-instructions", {
+      params: { path: { business_id: business.id }, query: { language: locale } },
+    }),
   );
   const data = instructions.data;
 

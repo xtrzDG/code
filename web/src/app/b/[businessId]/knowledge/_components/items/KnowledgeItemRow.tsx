@@ -4,20 +4,18 @@ import type { KnowledgeItemDetails } from "@/api/types";
 import { useBusinessFormat } from "@/components/business/BusinessContext";
 import { IconPencil, IconTrash } from "@/components/icons";
 import { Switch } from "@/components/content/Switch";
-import { Badge, Button, Spinner } from "@/components/ui";
+import { Badge, Button } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { languageName } from "@/lib/format";
 
 /** One item: title, draft or off badges, price, duration and languages; switch, edit and delete. */
 export function KnowledgeItemRow({
   item,
-  isToggling,
   onToggle,
   onEdit,
   onDelete,
 }: {
   item: KnowledgeItemDetails;
-  isToggling: boolean;
   onToggle: (isActive: boolean) => void;
   onEdit: () => void;
   onDelete: () => void;
@@ -53,10 +51,8 @@ export function KnowledgeItemRow({
       </div>
       <div className="flex shrink-0 items-center gap-1 sm:pt-0.5">
         <span className="mr-2 flex items-center gap-2 text-sm text-ink-muted">
-          {isToggling ? <Spinner size="sm" /> : null}
           <Switch
             checked={item.is_active}
-            disabled={isToggling}
             label={t("knowledge.items.useToggle", { title: item.title })}
             onChange={onToggle}
           />

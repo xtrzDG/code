@@ -3,6 +3,7 @@
 import { useState } from "react";
 
 import { api } from "@/api/client";
+import { queryKeys } from "@/api/queryKeys";
 import { useMutation } from "@/api/useMutation";
 import { useBusiness } from "@/components/business/BusinessContext";
 import { ConfirmDialog } from "@/components/ui";
@@ -49,7 +50,8 @@ export function PublishDialog({
         params: { path: { business_id: business.id, version_id: version.id } },
         body: { accept_failed_tests: acceptFailedTests },
       }),
-    { errorToast: false },
+    // The live version changes: the version list, the go-live checks, the business status and the dashboard follow.
+    { errorToast: false, invalidate: [queryKeys.assistant.all(business.id)], stale: [queryKeys.dashboard.all(business.id)] },
   );
 
   const submit = async () => {

@@ -7,11 +7,7 @@ const eslintConfig = defineConfig([
   ...nextTs,
   {
     rules: {
-      // useApiQuery(fetcher, deps) takes a dependency list like useEffect.
-      "react-hooks/exhaustive-deps": [
-        "error",
-        { additionalHooks: "(useApiQuery)" },
-      ],
+      "react-hooks/exhaustive-deps": "error",
       "@typescript-eslint/consistent-type-imports": "error",
       "@typescript-eslint/no-unused-vars": [
         "error",

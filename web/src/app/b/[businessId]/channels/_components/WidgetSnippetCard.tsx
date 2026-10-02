@@ -1,13 +1,13 @@
 "use client";
 
-import type { ApiQuery } from "@/api/hooks";
+import type { Query } from "@/api/useQuery";
 import type { Schema } from "@/api/types";
 import { Card, ErrorState, LoadingBlock } from "@/components/ui";
 import { CopyButton } from "@/components/workspace/CopyButton";
 import { useI18n } from "@/i18n/client";
 
 /** The website chat's embed code with a copy button and three steps. */
-export function WidgetSnippetCard({ snippet }: { snippet: ApiQuery<Schema<"WidgetSnippetView">> }) {
+export function WidgetSnippetCard({ snippet }: { snippet: Query<Schema<"WidgetSnippetView">> }) {
   const { t } = useI18n();
 
   return (

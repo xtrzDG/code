@@ -6,14 +6,16 @@ import { useState } from "react";
 import { useNiches } from "@/api/catalog";
 import { api } from "@/api/client";
 import type { ApiError } from "@/api/errors";
-import { useApiMutation, useApiQuery } from "@/api/hooks";
+import { queryKeys } from "@/api/queryKeys";
+import { useMutation } from "@/api/useMutation";
+import { useQuery } from "@/api/useQuery";
 import { IconArrowLeft, IconExternal } from "@/components/icons";
-import { Button, ButtonLink, Card, ErrorState, LoadingBlock, PageHeader } from "@/components/ui";
-import { ConfirmDialog } from "@/components/ui";
+import { Button, ButtonLink, Card, ConfirmDialog, ErrorState, LoadingRegion, PageHeader } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { countryFlag, countryName } from "@/lib/countries";
 import { ADMIN_PATH, businessPath } from "@/lib/navigation";
 
+import { AdminClientSkeleton } from "./AdminSkeletons";
 import { ClientUsageCard } from "./client/ClientUsageCard";
 import { CostCard } from "./client/CostCard";
 import { FailedAutotestsCard } from "./client/FailedAutotestsCard";
@@ -30,11 +32,10 @@ export function AdminClientScreen({ businessId }: { businessId: string }) {
   const [isConfirming, setConfirming] = useState(false);
   const [openError, setOpenError] = useState<ApiError | null>(null);
 
-  const detail = useApiQuery(
-    () => api.GET("/v1/admin/clients/{business_id}", { params: { path: { business_id: businessId } } }),
-    [businessId],
+  const detail = useQuery(queryKeys.admin.client(businessId), () =>
+    api.GET("/v1/admin/clients/{business_id}", { params: { path: { business_id: businessId } } }),
   );
-  const open = useApiMutation(
+  const open = useMutation(
     () => api.POST("/v1/admin/clients/{business_id}/open", { params: { path: { business_id: businessId } } }),
     { errorToast: false },
   );
@@ -63,9 +64,9 @@ export function AdminClientScreen({ businessId }: { businessId: string }) {
           <ErrorState error={detail.error} onRetry={detail.reload} />
         </Card>
       ) : !data || !summary ? (
-        <Card>
-          <LoadingBlock label={t("common.loading")} />
-        </Card>
+        <LoadingRegion label={t("common.loading")}>
+          <AdminClientSkeleton />
+        </LoadingRegion>
       ) : (
         <>
           <PageHeader

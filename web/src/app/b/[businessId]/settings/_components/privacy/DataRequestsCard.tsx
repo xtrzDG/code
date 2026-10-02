@@ -3,9 +3,19 @@
 import { IconSearch, IconShield, IconUsers } from "@/components/icons";
 import { RefreshFailed } from "@/components/insights/common";
 import { useBusinessFormat } from "@/components/business/BusinessContext";
-import { Alert, Button, Card, EmptyState, ErrorState, Field, Input, LoadingBlock } from "@/components/ui";
-import { ConfirmDialog } from "@/components/ui";
-import { InlineError } from "@/components/ui/InlineError";
+import {
+  Alert,
+  Button,
+  Card,
+  ConfirmDialog,
+  EmptyState,
+  ErrorState,
+  Field,
+  InlineError,
+  Input,
+  LoadingRegion,
+  SkeletonRows,
+} from "@/components/ui";
 import { OwnerOnlyState } from "@/components/workspace/OwnerOnly";
 import { useI18n } from "@/i18n/client";
 
@@ -28,7 +38,8 @@ export function DataRequestsCard() {
     );
   }
 
-  const isEmpty = contacts.items.length === 0;
+  const items = contacts.items ?? [];
+  const isEmpty = items.length === 0;
 
   return (
     <Card title={t("settings.requests.title")} description={t("settings.requests.description")}>
@@ -67,7 +78,9 @@ export function DataRequestsCard() {
         {contacts.error && isEmpty ? (
           <ErrorState error={contacts.error} onRetry={contacts.reload} className="py-6" />
         ) : contacts.isLoading && isEmpty ? (
-          <LoadingBlock label={t("common.loading")} className="min-h-24" />
+          <LoadingRegion label={t("common.loading")}>
+            <SkeletonRows rows={3} avatar />
+          </LoadingRegion>
         ) : isEmpty && search === undefined ? (
           <EmptyState
             className="py-6"
@@ -80,10 +93,10 @@ export function DataRequestsCard() {
             {t("settings.requests.noMatches")}
           </p>
         ) : (
-          <div className="space-y-3" aria-busy={contacts.isLoading}>
+          <div className="space-y-3" aria-busy={contacts.isPlaceholder || contacts.isFetching}>
             {contacts.error ? <RefreshFailed error={contacts.error} onRetry={contacts.reload} /> : null}
             <ul className="divide-y divide-line rounded-xl border border-line">
-              {contacts.items.map((contact) => (
+              {items.map((contact) => (
                 <CustomerRow
                   key={contact.id}
                   contact={contact}

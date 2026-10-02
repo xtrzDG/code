@@ -3,7 +3,9 @@
 import { useState } from "react";
 
 import { api } from "@/api/client";
-import { useApiMutation, useApiQuery } from "@/api/hooks";
+import { queryKeys } from "@/api/queryKeys";
+import { useMutation } from "@/api/useMutation";
+import { useQuery } from "@/api/useQuery";
 import { useBusiness, useBusinessFormat } from "@/components/business/BusinessContext";
 import { IconCalendar, IconExternal } from "@/components/icons";
 import { Alert, Badge, Button, Card, ErrorState, LoadingBlock, useToast } from "@/components/ui";
@@ -26,19 +28,17 @@ export function GoogleCalendarCard({ canManage }: { canManage: boolean }) {
   const [isConfirming, setConfirming] = useState(false);
   const [disconnectError, setDisconnectError] = useState<unknown>(null);
 
-  const status = useApiQuery(
-    () =>
-      api.GET("/v1/businesses/{business_id}/integrations/google-calendar", {
-        params: { path: { business_id: business.id } },
-      }),
-    [business.id],
+  const status = useQuery(queryKeys.channels.calendar(business.id), () =>
+    api.GET("/v1/businesses/{business_id}/integrations/google-calendar", {
+      params: { path: { business_id: business.id } },
+    }),
   );
-  const connectUrl = useApiMutation(() =>
+  const connectUrl = useMutation(() =>
     api.GET("/v1/businesses/{business_id}/integrations/google-calendar/connect-url", {
       params: { path: { business_id: business.id } },
     }),
   );
-  const disconnect = useApiMutation(
+  const disconnect = useMutation(
     () =>
       api.DELETE("/v1/businesses/{business_id}/integrations/google-calendar", {
         params: { path: { business_id: business.id } },

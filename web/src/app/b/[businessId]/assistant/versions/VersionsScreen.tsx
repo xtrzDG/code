@@ -4,7 +4,7 @@ import Link from "next/link";
 
 import { useBusiness, useBusinessFormat } from "@/components/business/BusinessContext";
 import { IconChevronRight, IconSparkles } from "@/components/icons";
-import { Button, Card, EmptyState, ErrorState, LoadingBlock } from "@/components/ui";
+import { Button, Card, EmptyState, ErrorState, LoadingRegion } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { sortVersions } from "@/lib/assistant/versions";
 import { formatScore } from "@/lib/assistant/autotests";
@@ -14,6 +14,7 @@ import { businessPath } from "@/lib/navigation";
 
 import { useAssistant } from "../_components/AssistantContext";
 import { VersionStatusBadge } from "../_components/VersionStatusBadge";
+import { VersionsSkeleton } from "../_components/AssistantSkeletons";
 
 /** Assistant -> Versions: every assembled version, newest first. */
 export function VersionsScreen() {
@@ -26,9 +27,9 @@ export function VersionsScreen() {
 
   if (versions.isLoading && !versions.data) {
     return (
-      <Card>
-        <LoadingBlock label={t("common.loading")} />
-      </Card>
+      <LoadingRegion label={t("common.loading")}>
+        <VersionsSkeleton />
+      </LoadingRegion>
     );
   }
   if (versions.error && !versions.data) {

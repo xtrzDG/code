@@ -5,7 +5,9 @@ import { useState } from "react";
 
 import { api } from "@/api/client";
 import type { ApiError } from "@/api/errors";
-import { useApiMutation, useApiQuery } from "@/api/hooks";
+import { queryKeys } from "@/api/queryKeys";
+import { useMutation } from "@/api/useMutation";
+import { useQuery } from "@/api/useQuery";
 import { useBusiness } from "@/components/business/BusinessContext";
 import { useToast } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
@@ -34,9 +36,11 @@ export function useManagerContacts() {
   const toast = useToast();
   const router = useRouter();
   const { business } = useBusiness();
-  const stored = useApiQuery(
+  // Saved with the revision it shows: start from the business as stored now.
+  const stored = useQuery(
+    queryKeys.business.detail(business.id),
     () => api.GET("/v1/businesses/{business_id}", { params: { path: { business_id: business.id } } }),
-    [business.id],
+    { requireFresh: true },
   );
   const [saved, setSaved] = useState<BusinessView | null>(null);
   const shown: BusinessView = saved ?? stored.data ?? business;
@@ -45,7 +49,7 @@ export function useManagerContacts() {
   const [removing, setRemoving] = useState<ManagerContact | null>(null);
   const [dialogError, setDialogError] = useState<ApiError | null>(null);
 
-  const save = useApiMutation(
+  const save = useMutation(
     (change: ContactChange, base: BusinessView) =>
       api.PATCH("/v1/businesses/{business_id}", {
         params: { path: { business_id: business.id } },

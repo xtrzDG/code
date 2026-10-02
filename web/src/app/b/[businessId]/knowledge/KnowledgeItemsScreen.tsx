@@ -1,9 +1,8 @@
 "use client";
 
 import { useBusiness } from "@/components/business/BusinessContext";
-import { ConfirmDialog } from "@/components/ui";
 import { IconBook, IconPlus } from "@/components/icons";
-import { Alert, Button, ButtonLink, Card, EmptyState, ErrorState, LoadingBlock } from "@/components/ui";
+import { Alert, Button, ButtonLink, Card, ConfirmDialog, EmptyState, ErrorState, LoadingRegion } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { businessPath } from "@/lib/navigation";
 
@@ -11,6 +10,7 @@ import { KnowledgeGroups } from "./_components/items/KnowledgeGroups";
 import { KnowledgeSearch } from "./_components/items/KnowledgeSearch";
 import { KnowledgeToolbar } from "./_components/items/KnowledgeToolbar";
 import { KnowledgeItemEditor } from "./_components/KnowledgeItemEditor";
+import { KnowledgeRowsSkeleton } from "./_components/KnowledgeSkeleton";
 import { ReassemblyNotice } from "./_components/ReassemblyNotice";
 import { useKnowledgeItems } from "./_lib/useKnowledgeItems";
 
@@ -25,7 +25,7 @@ export function KnowledgeItemsScreen() {
   const list = useKnowledgeItems();
   const { items, kinds, openQuestions, editor, deleting } = list;
   const base = businessPath(business.id, "knowledge");
-  const all = items.items;
+  const all = items.items ?? [];
 
   return (
     <div className="space-y-6">
@@ -54,7 +54,9 @@ export function KnowledgeItemsScreen() {
         <KnowledgeToolbar list={list} />
 
         {items.isLoading ? (
-          <LoadingBlock label={t("common.loading")} />
+          <LoadingRegion label={t("common.loading")}>
+            <KnowledgeRowsSkeleton />
+          </LoadingRegion>
         ) : items.error ? (
           <ErrorState error={items.error} onRetry={items.reload} />
         ) : all.length === 0 && !list.isFiltered ? (
@@ -84,7 +86,9 @@ export function KnowledgeItemsScreen() {
             }
           />
         ) : (
-          <KnowledgeGroups list={list} />
+          <div className={items.isPlaceholder ? "opacity-60 transition-opacity" : "animate-settle"} aria-busy={items.isPlaceholder || undefined}>
+            <KnowledgeGroups list={list} />
+          </div>
         )}
       </Card>
 

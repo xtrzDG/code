@@ -3,9 +3,10 @@
 import { useEffect, useRef, type ReactNode } from "react";
 
 import { api } from "@/api/client";
-import { useApiQuery } from "@/api/hooks";
+import { queryKeys } from "@/api/queryKeys";
+import { useQuery } from "@/api/useQuery";
 import { useBusiness } from "@/components/business/BusinessContext";
-import { Card, ErrorState, LoadingBlock } from "@/components/ui";
+import { Card, ErrorState, LoadingRegion, SkeletonText } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import type { MessageKey } from "@/i18n/translate";
 import { blockingChecks, checkState, type GoLiveCheckCode } from "@/lib/assistant/goLive";
@@ -46,12 +47,14 @@ export function GoLiveChecklist({
   const { business } = useBusiness();
   const fixLinks = useFixLinks();
 
-  const readiness = useApiQuery(
+  // Depends on everything the go-live checks read: always asked again when shown.
+  const readiness = useQuery(
+    queryKeys.assistant.readiness(business.id, versionId),
     () =>
       api.GET("/v1/businesses/{business_id}/assistant-versions/{version_id}/go-live-readiness", {
         params: { path: { business_id: business.id, version_id: versionId } },
       }),
-    [business.id, versionId],
+    { staleMs: 0 },
   );
   const data = readiness.data;
   const { reload } = readiness;
@@ -65,7 +68,11 @@ export function GoLiveChecklist({
 
   let body: ReactNode;
   if (!data && readiness.isLoading) {
-    body = <LoadingBlock label={t("common.loading")} />;
+    body = (
+      <LoadingRegion label={t("common.loading")}>
+        <SkeletonText lines={5} />
+      </LoadingRegion>
+    );
   } else if (!data) {
     body = <ErrorState error={readiness.error} onRetry={readiness.reload} />;
   } else {
