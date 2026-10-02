@@ -4,6 +4,7 @@ from app.contracts.repositories.assistant_repositories import (
 )
 from app.contracts.transformer_contract import TransformerContract
 from app.contracts.use_case_contract import UseCaseContract
+from app.schemas.constants.assistants import AutotestRunStatus
 from app.schemas.domain.assistants import (
     AssistantVersionDocument,
     AutotestRunDocument,
@@ -69,6 +70,14 @@ class GetAutotestRunUseCase(UseCaseContract[AssistantVersionQuery, AutotestRunVi
         if run is None:
             raise NotFoundError(
                 f"Version {version.version_number} has no autotest run yet."
+            )
+
+        if run.status is AutotestRunStatus.FINISHED:
+            # The worker saves the version's final status before it marks
+            # the run finished; read the version again so a run that
+            # finished between the two reads never shows it still testing.
+            version = (
+                self._assistant_version_repo.get(business.id, version.id) or version
             )
 
         return self._autotest_run_view_transformer.transform(

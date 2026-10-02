@@ -88,7 +88,6 @@ class FinishAutotestRunUseCase(UseCaseContract[AutotestRunCompletion, AutotestRu
         run.average_score = summary.average_score
         run.is_passed = summary.is_passed
         run.updated_at = now
-        self._autotest_run_repo.save(run)
 
         version.status = decide_version_status(
             is_passed=summary.is_passed,
@@ -100,7 +99,12 @@ class FinishAutotestRunUseCase(UseCaseContract[AutotestRunCompletion, AutotestRu
 
         version.autotest_run_id = run.id
         version.updated_at = now
+        # The version first: whoever sees the run finished (the cabinet
+        # polls it) also sees the version's final status. A crash between
+        # the two writes leaves the run RUNNING, so the job's retry plays
+        # it again and lands on the same status.
         self._assistant_version_repo.save(version)
+        self._autotest_run_repo.save(run)
         return self._autotest_run_view_transformer.transform(
             AutotestRunViewSource(run=run, version=version)
         )
