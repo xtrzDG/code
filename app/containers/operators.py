@@ -399,3 +399,8 @@ class OperatorsContainer(containers.DeclarativeContainer):
     flush_llm_traces_operator = pipeline_operator(
         pipelines.flush_llm_traces_pipeline, storage_scope
     )
+
+    # --- Development demo data (SEED_DEMO_DATA, API startup).
+    seed_demo_data_operator = pipeline_operator(
+        pipelines.seed_demo_data_pipeline, storage_scope
+    )

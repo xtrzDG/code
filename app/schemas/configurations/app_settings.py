@@ -37,6 +37,7 @@ from app.schemas.typings.messaging.constrained_strings import (
 )
 from app.schemas.typings.messaging.strings import SmtpUsername
 from app.schemas.typings.platform.booleans import (
+    IsDemoDataSeedingEnabled,
     IsEmbeddedWorkerEnabled,
     IsLlmContentTraced,
 )
@@ -142,5 +143,10 @@ class AppSettings(ImmutableDTO):
     # The API runs the background worker in a thread of its own process
     # (EMBEDDED_WORKER; see `read_embedded_worker`).
     is_embedded_worker_enabled: IsEmbeddedWorkerEnabled = IsEmbeddedWorkerEnabled(False)
+    # Development only: the API fills an empty instance with demo businesses
+    # at startup (SEED_DEMO_DATA; refused in production).
+    is_demo_data_seeding_enabled: IsDemoDataSeedingEnabled = IsDemoDataSeedingEnabled(
+        False
+    )
     sentry_dsn: PlatformSecret | None = None
     recordings_directory: LocalDirectoryPath = LocalDirectoryPath("var/recordings")

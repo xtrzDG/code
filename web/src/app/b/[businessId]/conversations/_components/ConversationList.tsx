@@ -159,7 +159,10 @@ function ConversationRow({
               {[
                 t(CHANNEL_LABELS[conversation.channel]),
                 conversation.language ? languageName(conversation.language, locale) : null,
-                tp("conversations.customerMessages", conversation.customer_message_count),
+                // A call lives in its transcript, not in messages: "0 messages" would mislead.
+                conversation.channel === "phone" && conversation.customer_message_count === 0
+                  ? null
+                  : tp("conversations.customerMessages", conversation.customer_message_count),
               ]
                 .filter(Boolean)
                 .join(" · ")}

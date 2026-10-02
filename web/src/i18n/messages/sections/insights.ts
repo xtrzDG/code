@@ -263,6 +263,7 @@ export const insightsEn = {
       assistant: "Assistant",
       staff: "Staff",
       system: "System",
+      voiceAgent: "Voice agent",
     },
     actions: { one: "{count} action", other: "{count} actions" },
     toolInput: "Request",
@@ -789,6 +790,7 @@ export const insightsRu: Translation<typeof insightsEn> = {
       assistant: "Помощник",
       staff: "Сотрудник",
       system: "Система",
+      voiceAgent: "Голосовой агент",
     },
     actions: {
       one: "{count} действие",
@@ -1311,6 +1313,7 @@ export const insightsKa: Translation<typeof insightsEn> = {
       assistant: "ასისტენტი",
       staff: "თანამშრომელი",
       system: "სისტემა",
+      voiceAgent: "ხმოვანი აგენტი",
     },
     actions: { one: "{count} მოქმედება", other: "{count} მოქმედება" },
     toolInput: "მოთხოვნა",

@@ -53,6 +53,10 @@ function MessageBubble({ message }: { message: MessageView }) {
   const format = useBusinessFormat();
   const { business, me } = useBusiness();
   const side = messageSide(message.author);
+  // A system note with tool calls is an action of the voice agent during a
+  // call ("Voice agent called check_availability."): the actions below say
+  // it in the interface language, so the note itself is not shown.
+  const isVoiceAction = message.author === "system" && (message.tool_calls?.length ?? 0) > 0;
   const tokens = message.input_tokens + message.output_tokens;
   const sender = message.sent_by
     ? message.sent_by === me.user.id
@@ -62,9 +66,18 @@ function MessageBubble({ message }: { message: MessageView }) {
 
   return (
     <li className={cn("flex", side === "end" ? "justify-end" : side === "center" ? "justify-center" : "justify-start")}>
-      <div className={cn("min-w-0", side === "center" ? "max-w-full text-center" : "max-w-[88%] sm:max-w-[75%]")}>
+      <div
+        className={cn(
+          "min-w-0",
+          side === "center" ? "max-w-full text-center" : "max-w-[88%] sm:max-w-[75%]",
+          // The voice agent's actions in one even column under each other.
+          isVoiceAction && "w-full sm:w-[75%]",
+        )}
+      >
         <p className={cn("mb-1 text-xs text-ink-subtle", side === "end" && "text-right")}>
-          <span className="font-medium text-ink-muted">{t(MESSAGE_AUTHORS[message.author])}</span>
+          <span className="font-medium text-ink-muted">
+            {isVoiceAction ? t("conversations.author.voiceAgent") : t(MESSAGE_AUTHORS[message.author])}
+          </span>
           {sender ? (
             <>
               {" · "}
@@ -74,12 +87,14 @@ function MessageBubble({ message }: { message: MessageView }) {
           {" · "}
           <time dateTime={new Date(message.created_at / 1000).toISOString()}>{format.time(message.created_at)}</time>
         </p>
-        <div
-          dir="auto"
-          className={cn("rounded-2xl px-4 py-2.5 text-sm break-words whitespace-pre-wrap", BUBBLE[message.author])}
-        >
-          {message.text}
-        </div>
+        {isVoiceAction ? null : (
+          <div
+            dir="auto"
+            className={cn("rounded-2xl px-4 py-2.5 text-sm break-words whitespace-pre-wrap", BUBBLE[message.author])}
+          >
+            {message.text}
+          </div>
+        )}
         {message.tool_calls && message.tool_calls.length > 0 ? <ToolCalls calls={message.tool_calls} /> : null}
         {tokens > 0 ? (
           <p className={cn("mt-1 text-xs text-ink-subtle", side === "end" && "text-right")}>
@@ -101,7 +116,7 @@ function ToolCalls({ calls }: { calls: readonly ToolCallView[] }) {
   const { t, tp } = useI18n();
   const failed = calls.some((call) => call.is_error);
   return (
-    <details className="group mt-1.5 rounded-xl border border-line bg-surface text-sm">
+    <details className="group mt-1.5 rounded-xl border border-line bg-surface text-start text-sm">
       <summary className="flex cursor-pointer list-none items-center gap-2 rounded-xl px-3 py-2 text-ink-muted hover:text-ink [&::-webkit-details-marker]:hidden">
         <IconChevronRight className="size-4 shrink-0 transition-transform group-open:rotate-90" aria-hidden />
         <span className="font-medium whitespace-nowrap">{tp("conversations.actions", calls.length)}</span>

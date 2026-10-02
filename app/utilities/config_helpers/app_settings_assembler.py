@@ -43,6 +43,7 @@ from app.schemas.typings.messaging.constrained_strings import (
 )
 from app.schemas.typings.messaging.strings import SmtpUsername
 from app.schemas.typings.platform.booleans import (
+    IsDemoDataSeedingEnabled,
     IsEmbeddedWorkerEnabled,
     IsLlmContentTraced,
 )
@@ -364,6 +365,9 @@ def assemble_app_settings(environment_variables: Mapping[str, str]) -> AppSettin
                 has_database=database_url is not None,
             )
         ),
+        is_demo_data_seeding_enabled=IsDemoDataSeedingEnabled(
+            read_demo_data_seeding(environment_variables, environment)
+        ),
         recordings_directory=LocalDirectoryPath(
             read_text(
                 environment_variables,
@@ -470,6 +474,30 @@ def read_embedded_worker(
         )
 
     return True
+
+
+def read_demo_data_seeding(
+    environment_variables: Mapping[str, str],
+    environment: DeploymentEnvironment,
+) -> bool:
+    """
+    SEED_DEMO_DATA (default false): the API fills the instance with demo
+    businesses at startup, once (a Tbilisi restaurant and a Berlin salon
+    with a demo owner, a staff member and a month of activity). Refused in
+    production: the demo accounts would be real accounts there.
+
+    Raises:
+        ValidationFailedError: not a boolean, or true in production.
+    """
+
+    is_enabled: bool = read_boolean(environment_variables, "SEED_DEMO_DATA", False)
+    if is_enabled and environment is DeploymentEnvironment.PRODUCTION:
+        raise ValidationFailedError(
+            "SEED_DEMO_DATA cannot be enabled in production: it creates demo "
+            "accounts and businesses. Use it in development only."
+        )
+
+    return is_enabled
 
 
 def read_cabinet_base_url(

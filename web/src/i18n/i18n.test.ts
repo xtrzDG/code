@@ -59,6 +59,13 @@ describe("translator", () => {
   it("interpolates placeholders and keeps unknown ones", () => {
     expect(interpolate("Step {number} of {total}", { number: 2, total: 6 })).toBe("Step 2 of 6");
     expect(interpolate("Hi {name}", {})).toBe("Hi {name}");
+    expect(interpolate("Hi {name}.", {})).toBe("Hi {name}.");
+  });
+
+  it("does not double the full stop after a value that ends with one", () => {
+    expect(interpolate("До {date}. Оплатите", { date: "4 окт. 2026 г." })).toBe("До 4 окт. 2026 г. Оплатите");
+    expect(interpolate("Until {date}. Pay", { date: "Oct 4, 2026" })).toBe("Until Oct 4, 2026. Pay");
+    expect(interpolate("{a}.{b}", { a: "x.", b: "y" })).toBe("x.y");
   });
 
   it("picks plural forms by language rules", () => {

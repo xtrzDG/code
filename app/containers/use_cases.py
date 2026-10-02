@@ -176,6 +176,12 @@ from app.schemas.dto.conversations import (
     VoiceToolCallRequest,
     VoiceToolCallResult,
 )
+from app.schemas.dto.demo_data import (
+    DemoActivityStorage,
+    DemoBusinessFoundation,
+    DemoSeedPlan,
+    SeedDemoDataCommand,
+)
 from app.schemas.dto.go_live import GoLiveReadiness, GoLiveReadinessRequest
 from app.schemas.dto.handoffs import (
     HandoffCommand,
@@ -511,6 +517,13 @@ from app.use_cases.conversations.run_assistant_tool_use_case import (
 )
 from app.use_cases.conversations.send_staff_message_use_case import (
     SendStaffMessageUseCase,
+)
+from app.use_cases.demo.prepare_demo_accounts_use_case import (
+    PrepareDemoAccountsUseCase,
+)
+from app.use_cases.demo.store_demo_activity_use_case import StoreDemoActivityUseCase
+from app.use_cases.demo.store_demo_foundation_use_case import (
+    StoreDemoFoundationUseCase,
 )
 from app.use_cases.example_use_case import ExampleUseCase
 from app.use_cases.handoffs.answer_unanswered_question_use_case import (
@@ -2213,6 +2226,53 @@ class UseCasesContainer(containers.DeclarativeContainer):
     flush_llm_traces_use_case: Factory[UseCaseContract[JobTick, JobReport]] = Factory(
         FlushLlmTracesUseCase,
         trace_facilitator=adapters.llm_trace_facilitator,
+    )
+
+    # --- Development demo data (SEED_DEMO_DATA).
+    prepare_demo_accounts_use_case: Factory[
+        UseCaseContract[SeedDemoDataCommand, DemoSeedPlan]
+    ] = Factory(
+        PrepareDemoAccountsUseCase,
+        demo_dataset_registry=registries.demo_dataset_registry,
+        user_repo=repositories.user_repo,
+        business_repo=repositories.business_repo,
+        wall_clock=time_provider.microsecond_wall_clock,
+    )
+    store_demo_foundation_use_case: Factory[
+        UseCaseContract[DemoBusinessFoundation, BusinessId]
+    ] = Factory(
+        StoreDemoFoundationUseCase,
+        business_repo=repositories.business_repo,
+        business_profile_repo=repositories.business_profile_repo,
+        knowledge_item_repo=repositories.knowledge_item_repo,
+        resource_repo=repositories.resource_repo,
+        schedule_exception_repo=repositories.schedule_exception_repo,
+        channel_repo=repositories.channel_repo,
+        secret_cipher=adapters.secret_cipher,
+    )
+    store_demo_activity_use_case: Factory[
+        UseCaseContract[DemoActivityStorage, BusinessId]
+    ] = Factory(
+        StoreDemoActivityUseCase,
+        demo_dataset_registry=registries.demo_dataset_registry,
+        business_repo=repositories.business_repo,
+        assistant_version_repo=repositories.assistant_version_repo,
+        autotest_run_repo=repositories.autotest_run_repo,
+        contact_repo=repositories.contact_repo,
+        conversation_repo=repositories.conversation_repo,
+        message_repo=repositories.message_repo,
+        call_repo=repositories.call_repo,
+        booking_repo=repositories.booking_repo,
+        lead_repo=repositories.lead_repo,
+        handoff_repo=repositories.handoff_repo,
+        unanswered_question_repo=repositories.unanswered_question_repo,
+        subscription_repo=repositories.subscription_repo,
+        invoice_repo=repositories.invoice_repo,
+        usage_event_repo=repositories.usage_event_repo,
+        package_usage_warning_repo=repositories.package_usage_warning_repo,
+        dpa_acceptance_repo=repositories.dpa_acceptance_repo,
+        audit_log_repo=repositories.audit_log_repo,
+        app_settings=config.app_settings,
     )
 
     # --- Template example (keeps its concrete type).

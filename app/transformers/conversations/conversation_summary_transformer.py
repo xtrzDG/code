@@ -16,14 +16,20 @@ class ConversationSummaryTransformer(
 ):
     """
     A conversation row of the feed: contact, channel, status, flags, how
-    many messages (all and the customer's) and the beginning of the last one.
+    many messages (all and the customer's) and the beginning of the last
+    message someone wrote. System notes (the voice agent's "Voice agent
+    called check_availability.") are not previews: a phone conversation
+    shows no message line rather than an English technical note.
     """
 
     def transform(self, input_data: ConversationViewSource) -> ConversationSummaryView:
         conversation: ConversationDocument = input_data.conversation
-        last_message: MessageDocument | None = (
-            input_data.messages[-1] if input_data.messages else None
-        )
+        written: list[MessageDocument] = [
+            message
+            for message in input_data.messages
+            if message.author is not MessageAuthor.SYSTEM
+        ]
+        last_message: MessageDocument | None = written[-1] if written else None
         return ConversationSummaryView(
             id=conversation.id,
             business_id=conversation.business_id,

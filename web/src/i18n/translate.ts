@@ -84,15 +84,24 @@ export function lookupMessage(
   return node;
 }
 
-/** Replace `{name}` placeholders; unknown placeholders stay as they are. */
+/**
+ * Replace `{name}` placeholders; unknown placeholders stay as they are. A
+ * value that already ends with a full stop (a Russian date "4 окт. 2026 г.")
+ * takes the place of the template's own full stop right after it.
+ */
 export function interpolate(template: string, values?: MessageValues): string {
   if (!values) {
     return template;
   }
 
-  return template.replace(/\{(\w+)\}/g, (placeholder, name: string) => {
+  return template.replace(/\{(\w+)\}(\.?)/g, (placeholder, name: string, stop: string) => {
     const value = values[name];
-    return value === undefined ? placeholder : String(value);
+    if (value === undefined) {
+      return placeholder;
+    }
+
+    const text = String(value);
+    return text.endsWith(".") ? text : text + stop;
   });
 }
 

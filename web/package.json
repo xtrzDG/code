@@ -14,10 +14,11 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "e2e": "playwright test --config e2e/playwright.config.ts",
-    "gen:api": "npm run gen:api:spec && npm run gen:api:types && npm run gen:currencies",
+    "gen:api": "npm run gen:api:spec && npm run gen:api:types && npm run gen:currencies && npm run gen:names",
     "gen:api:spec": "cd .. && uv run python -m scripts.export_openapi web/openapi.json",
     "gen:api:types": "openapi-typescript openapi.json --output src/api/schema.d.ts",
-    "gen:currencies": "cd .. && uv run python -m scripts.export_currency_digits web/src/lib/currencyDigits.generated.ts"
+    "gen:currencies": "cd .. && uv run python -m scripts.export_currency_digits web/src/lib/currencyDigits.generated.ts",
+    "gen:names": "cd .. && uv run python -m scripts.export_display_names web/src/lib/displayNames.generated.ts"
   },
   "dependencies": {
     "clsx": "2.1.1",
