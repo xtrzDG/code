@@ -13,7 +13,6 @@ export const workspaceCommonRu: Translation<typeof workspaceCommonEn> = {
   ownerOnlyChange: "Изменять это может только владелец. Смотреть можно.",
   ownerOnlyTitle: "Только для владельца",
   ownerOnlyDescription: "Этот раздел видит только владелец бизнеса.",
-  typeToConfirm: "Введите {text} для подтверждения",
   refresh: "Обновить",
   loadMore: "Показать ещё",
   usage: {

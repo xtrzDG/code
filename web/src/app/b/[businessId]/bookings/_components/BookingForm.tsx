@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useState, type FormEvent } from "react";
 
 import { api } from "@/api/client";
-import { useApiMutation } from "@/api/hooks";
+import { useMutation } from "@/api/useMutation";
 import { useBusiness } from "@/components/business/BusinessContext";
 import { CHANNEL_LABELS, CUSTOMER_CHANNELS } from "@/components/insights/labels";
 import type { BookingResult, ChannelKind, ManualBookingBody, ResourceView } from "@/components/insights/types";
@@ -66,7 +66,7 @@ export function BookingForm({
   const [errors, setErrors] = useState<BookingFormErrors>({});
   const unit = bookingUnitFor(resources, values.resourceId);
 
-  const create = useApiMutation(
+  const create = useMutation(
     (body: ManualBookingBody) =>
       api.POST("/v1/businesses/{business_id}/bookings", { params: { path: { business_id: businessId } }, body }),
     { errorMessages: { conflict: "bookings.errors.conflict" }, reasonMessages: BOOKING_REFUSAL_MESSAGES },

@@ -3,7 +3,9 @@
 import { useState } from "react";
 
 import { api } from "@/api/client";
-import { useApiQuery } from "@/api/hooks";
+import { queryKeys } from "@/api/queryKeys";
+import { sectionQueries } from "@/api/sectionQueries";
+import { useQuery } from "@/api/useQuery";
 import { useBusiness, useBusinessFormat } from "@/components/business/BusinessContext";
 import { BusinessStatusBadge } from "@/components/business/BusinessStatusBadge";
 import { IconBook, IconHandoff } from "@/components/icons";
@@ -13,11 +15,12 @@ import { BOOKING_STATUS, CHANNEL_LABELS, HANDOFF_REASONS } from "@/components/in
 import { formatPercent } from "@/components/insights/numbers";
 import { SegmentedControl } from "@/components/insights/SegmentedControl";
 import { replaceUrlQuery } from "@/components/insights/urlQuery";
-import { Button, Card, EmptyState, ErrorState, LoadingBlock, PageHeader } from "@/components/ui";
+import { Button, Card, EmptyState, ErrorState, LoadingRegion, PageHeader } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { languageName } from "@/lib/format";
 import { businessPath } from "@/lib/navigation";
 
+import { DashboardPeriodSkeleton } from "./_components/DashboardSkeleton";
 import { AttentionTile, BarList, NextStepCard, StatTile } from "./_components/DashboardWidgets";
 import {
   canTakeStep,
@@ -45,27 +48,21 @@ export function DashboardScreen({ initialPeriod }: { initialPeriod: DashboardPer
   const range = periodRange(period, today);
   const businessId = business.id;
 
-  const stats = useApiQuery(
-    () =>
-      api.GET("/v1/businesses/{business_id}/dashboard", {
-        params: { path: { business_id: businessId }, query: { from: range.from, to: range.to } },
-      }),
-    [businessId, range.from, range.to],
-  );
+  const statsQuery = sectionQueries.dashboardStats(businessId, range.from, range.to);
+  // Another period keeps the shown tiles (dimmed) until its numbers arrive.
+  const stats = useQuery(statsQuery.key, statsQuery.fetch, { keepPreviousData: true });
   // Only the count of open handoffs is needed: one item, the totals come along.
-  const openHandoffs = useApiQuery(
-    () =>
-      api.GET("/v1/businesses/{business_id}/handoffs", {
-        params: { path: { business_id: businessId }, query: { is_open: "true", limit: "1" } },
-      }),
-    [businessId],
+  const openHandoffs = useQuery(queryKeys.handoffs.openCount(businessId), () =>
+    api.GET("/v1/businesses/{business_id}/handoffs", {
+      params: { path: { business_id: businessId }, query: { is_open: "true", limit: "1" } },
+    }),
   );
-  const gaps = useApiQuery(
+  const gaps = useQuery(
+    queryKeys.profile.gaps(businessId, locale),
     () =>
       api.GET("/v1/businesses/{business_id}/profile/gaps", {
         params: { path: { business_id: businessId }, query: { language: locale } },
       }),
-    [businessId, locale],
     { enabled: business.status === "onboarding" },
   );
 
@@ -138,11 +135,14 @@ export function DashboardScreen({ initialPeriod }: { initialPeriod: DashboardPer
             <ErrorState error={stats.error} onRetry={stats.reload} />
           </Card>
         ) : !data ? (
-          <Card>
-            <LoadingBlock label={t("dashboard.loading")} />
-          </Card>
+          <LoadingRegion label={t("dashboard.loading")}>
+            <DashboardPeriodSkeleton />
+          </LoadingRegion>
         ) : (
-          <section aria-labelledby="dashboard-period" className="space-y-4">
+          <section
+            aria-labelledby="dashboard-period"
+            className={stats.isPlaceholder ? "animate-settle space-y-4 opacity-60 transition-opacity" : "animate-settle space-y-4 transition-opacity"}
+          >
             <div className="flex flex-wrap items-center justify-between gap-2">
               <h2 id="dashboard-period" className="text-sm font-semibold tracking-wide text-ink-muted uppercase">
                 {t("dashboard.periodRange", { range: formatLocalDateRange(data.date_from, data.date_to, locale) })}
@@ -154,7 +154,7 @@ export function DashboardScreen({ initialPeriod }: { initialPeriod: DashboardPer
               ) : null}
             </div>
 
-            <dl className="grid grid-cols-2 gap-3 sm:grid-cols-3" aria-busy={stats.isLoading || undefined}>
+            <dl className="grid grid-cols-2 gap-3 sm:grid-cols-3" aria-busy={stats.isPlaceholder || undefined}>
               <StatTile
                 label={t("dashboard.kpi.conversations")}
                 value={format.number(data.conversation_count)}

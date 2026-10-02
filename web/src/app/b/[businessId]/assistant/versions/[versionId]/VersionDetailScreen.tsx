@@ -7,7 +7,7 @@ import { useState } from "react";
 import { useBusiness } from "@/components/business/BusinessContext";
 import { Tabs } from "@/components/content/Tabs";
 import { IconArrowLeft } from "@/components/icons";
-import { Card, ErrorState, LoadingBlock } from "@/components/ui";
+import { Card, ErrorState, LoadingRegion, SkeletonText } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { liveVersion, versionActions, type AssistantVersionDetails } from "@/lib/assistant/versions";
 import { businessPath } from "@/lib/navigation";
@@ -21,6 +21,7 @@ import { FactsPanel, InstructionPanel, ToolsPanel } from "./_components/VersionP
 import { useVersionDetail } from "./_lib/useVersionDetail";
 import { AutotestsPanel } from "./_components/AutotestsPanel";
 import { GoLiveChecklist } from "./_components/GoLiveChecklist";
+import { VersionDetailSkeleton } from "../../_components/AssistantSkeletons";
 
 type DetailTab = "autotests" | "facts" | "instruction" | "tools";
 
@@ -39,9 +40,9 @@ export function VersionDetailScreen({ versionId }: { versionId: string }) {
 
   if (version.isLoading && !details) {
     return (
-      <Card>
-        <LoadingBlock label={t("common.loading")} />
-      </Card>
+      <LoadingRegion label={t("common.loading")}>
+        <VersionDetailSkeleton />
+      </LoadingRegion>
     );
   }
   if (!details) {
@@ -103,7 +104,9 @@ export function VersionDetailScreen({ versionId }: { versionId: string }) {
         >
           {tab === "autotests" ? (
             hasRun && run.isLoading && !run.data && !run.error ? (
-              <LoadingBlock label={t("common.loading")} />
+              <LoadingRegion label={t("common.loading")}>
+                <SkeletonText lines={4} />
+              </LoadingRegion>
             ) : run.error && run.error.code !== "not_found" && !run.data ? (
               <ErrorState error={run.error} onRetry={run.reload} />
             ) : (

@@ -3,32 +3,24 @@
 import { useState } from "react";
 
 import { api } from "@/api/client";
-import { useApiMutation, useApiQuery } from "@/api/hooks";
+import { queryKeys } from "@/api/queryKeys";
 import { unwrap } from "@/api/result";
-import type { KnowledgeItemDetails, KnowledgeItemKind } from "@/api/types";
+import { sectionQueries } from "@/api/sectionQueries";
+import type { KnowledgeItemDetails, KnowledgeItemKind, Schema } from "@/api/types";
+import { useCursorPage } from "@/api/useCursorPage";
+import { useMutation } from "@/api/useMutation";
+import { useQuery } from "@/api/useQuery";
 import { useBusiness } from "@/components/business/BusinessContext";
-import { usePagedList } from "@/components/content/usePagedList";
 import { useToast } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
-import {
-  filterKnowledgeItems,
-  groupByKind,
-  sortByTitle,
-  type KnowledgeFilter,
-  type KnowledgeStatusFilter,
-} from "@/lib/knowledge/kinds";
+import { groupByKind, sortByTitle, type KnowledgeFilter } from "@/lib/knowledge/kinds";
 
 import { useKnowledgeKinds } from "../_components/hooks";
 import type { KnowledgeEditorTarget } from "../_components/KnowledgeItemEditor";
+import { useKnowledgeToggle } from "./useKnowledgeToggle";
 
-/** Items per request; "show more" loads the next page (newest first). */
-const ITEMS_PAGE_SIZE = 100;
 /** Open questions counted for the warning; more are shown as "more than". */
 const QUESTIONS_ALERT_LIMIT = 100;
-
-function statusQuery(status: KnowledgeStatusFilter): "true" | "false" | undefined {
-  return status === "all" ? undefined : status === "active" ? "true" : "false";
-}
 
 /**
  * The knowledge items list: paged and filtered by the API, grouped by kind
@@ -42,64 +34,38 @@ export function useKnowledgeItems() {
   const kinds = useKnowledgeKinds();
 
   const [filter, setFilter] = useState<KnowledgeFilter>({ kind: "all", status: "all" });
-  const items = usePagedList(
-    (cursor) =>
-      api.GET("/v1/businesses/{business_id}/knowledge", {
-        params: {
-          path: { business_id: business.id },
-          query: {
-            language: locale,
-            kind: filter.kind === "all" ? undefined : filter.kind,
-            is_active: statusQuery(filter.status),
-            limit: String(ITEMS_PAGE_SIZE),
-            cursor: cursor ?? undefined,
-          },
-        },
-      }),
-    [business.id, locale, filter.kind, filter.status],
-  );
-  const questions = useApiQuery(
-    () =>
-      api.GET("/v1/businesses/{business_id}/unanswered-questions", {
-        params: { path: { business_id: business.id }, query: { limit: String(QUESTIONS_ALERT_LIMIT) } },
-      }),
-    [business.id],
+  const itemsQuery = sectionQueries.knowledgeItems(business.id, locale, filter.kind, filter.status);
+  const items = useCursorPage<KnowledgeItemDetails, Schema<"KnowledgeItemPage">>(itemsQuery.key, itemsQuery.fetchPage, {
+    pageSize: itemsQuery.pageSize,
+  });
+  const questions = useQuery(queryKeys.knowledge.questionsAlert(business.id), () =>
+    api.GET("/v1/businesses/{business_id}/unanswered-questions", {
+      params: { path: { business_id: business.id }, query: { limit: String(QUESTIONS_ALERT_LIMIT) } },
+    }),
   );
 
   const [expanded, setExpanded] = useState<ReadonlySet<KnowledgeItemKind>>(new Set());
   const [editor, setEditor] = useState<{ key: number; target: KnowledgeEditorTarget } | null>(null);
   const [deleting, setDeleting] = useState<KnowledgeItemDetails | null>(null);
-  const [toggling, setToggling] = useState<ReadonlySet<string>>(new Set());
   const [hasChanges, setHasChanges] = useState(false);
 
-  const toggle = useApiMutation((itemId: string, isActive: boolean) =>
-    api.PATCH("/v1/businesses/{business_id}/knowledge/{item_id}", {
-      params: { path: { business_id: business.id, item_id: itemId }, query: { language: locale } },
-      body: { is_active: isActive },
-    }),
-  );
-  const remove = useApiMutation((itemId: string) =>
-    api.DELETE("/v1/businesses/{business_id}/knowledge/{item_id}", {
-      params: { path: { business_id: business.id, item_id: itemId } },
-    }),
+  const toggle = useKnowledgeToggle(() => setHasChanges(true));
+  const remove = useMutation(
+    (itemId: string) =>
+      api.DELETE("/v1/businesses/{business_id}/knowledge/{item_id}", {
+        params: { path: { business_id: business.id, item_id: itemId } },
+      }),
+    { stale: [queryKeys.knowledge.all(business.id), queryKeys.profile.all(business.id), queryKeys.assistant.all(business.id)] },
   );
 
-  const all = items.items;
+  const all = items.items ?? [];
   const isFiltered = filter.kind !== "all" || filter.status !== "all";
   const groups = groupByKind(sortByTitle(all, locale), kinds);
   const openQuestions = (questions.data?.items ?? []).filter((question) => !question.is_resolved).length;
   const hasMoreQuestions = Boolean(questions.data?.next_cursor);
 
-  // A saved item stays in the list only while it matches the filters.
-  const replaceItem = (saved: KnowledgeItemDetails) =>
-    items.update((list) => {
-      const others = list.filter((item) => item.id !== saved.id);
-      if (filterKnowledgeItems([saved], filter).length === 0) {
-        return others;
-      }
-      const exists = others.length < list.length;
-      return exists ? list.map((item) => (item.id === saved.id ? saved : item)) : [saved, ...list];
-    });
+  // A saved item stays in each list only while it matches the list's filters.
+  const replaceItem = (saved: KnowledgeItemDetails) => toggle.saveIntoLists(saved);
 
   const openEditor = (target: KnowledgeEditorTarget) => setEditor((current) => ({ key: (current?.key ?? 0) + 1, target }));
 
@@ -121,21 +87,6 @@ export function useKnowledgeItems() {
     );
   };
 
-  const setActive = async (item: KnowledgeItemDetails, isActive: boolean) => {
-    setToggling((current) => new Set(current).add(item.id));
-    const result = await toggle.run(item.id, isActive);
-    setToggling((current) => {
-      const next = new Set(current);
-      next.delete(item.id);
-      return next;
-    });
-    if (result.ok) {
-      replaceItem(result.data);
-      setHasChanges(true);
-      toast.success(isActive ? t("knowledge.items.switchedOn", { title: item.title }) : t("knowledge.items.switchedOff", { title: item.title }));
-    }
-  };
-
   const confirmDelete = async () => {
     if (!deleting) {
       return;
@@ -143,7 +94,7 @@ export function useKnowledgeItems() {
     const result = await remove.run(deleting.id);
     if (result.ok) {
       const deletedId = deleting.id;
-      items.update((list) => list.filter((item) => item.id !== deletedId));
+      items.updateItems((list) => list.filter((item) => item.id !== deletedId));
       toast.success(t("knowledge.items.deleted", { title: deleting.title }));
       setHasChanges(true);
       setDeleting(null);
@@ -176,8 +127,7 @@ export function useKnowledgeItems() {
     setDeleting,
     isDeleting: remove.isPending,
     confirmDelete,
-    toggling,
-    setActive,
+    setActive: toggle.setActive,
     hasChanges,
     defaultKind: filter.kind !== "all" ? filter.kind : (kinds[0] ?? "service"),
   };

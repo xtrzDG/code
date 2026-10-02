@@ -5,7 +5,9 @@ import { useState } from "react";
 
 import { api } from "@/api/client";
 import { toApiError, type ApiError } from "@/api/errors";
-import { useApiMutation, type ApiQuery } from "@/api/hooks";
+import { queryKeys } from "@/api/queryKeys";
+import { useMutation } from "@/api/useMutation";
+import type { Query } from "@/api/useQuery";
 import { unwrap, type ApiResult } from "@/api/result";
 import { useBusiness } from "@/components/business/BusinessContext";
 import { useToast } from "@/components/ui";
@@ -20,7 +22,7 @@ import { checkoutReturnUrl, type BillingOverview, type BillingPeriod, type Check
  * the payment page), switch plans, cancel, and pay what is due. Each
  * choice is confirmed in a dialog that shows a refusal.
  */
-export function useBillingActions(overview: ApiQuery<BillingOverview>) {
+export function useBillingActions(overview: Query<BillingOverview>) {
   const { t, locale } = useI18n();
   const toast = useToast();
   const router = useRouter();
@@ -32,18 +34,21 @@ export function useBillingActions(overview: ApiQuery<BillingOverview>) {
   const [isSubscribing, setSubscribing] = useState(false);
 
   const pathParams = { path: { business_id: business.id }, query: { language: locale } };
-  const startTrial = useApiMutation(
+  // The package on the dashboard and the plan's channels follow a billing change.
+  const settled = { stale: [queryKeys.dashboard.all(business.id), queryKeys.billing.all(business.id)] };
+  const startTrial = useMutation(
     (body: { plan_key: PlanChoice["quote"]["plan_key"]; billing_period: BillingPeriod }) =>
       api.POST("/v1/businesses/{business_id}/billing/trial", { params: pathParams, body }),
-    { errorToast: false },
+    { errorToast: false, ...settled },
   );
-  const changePlan = useApiMutation(
+  const changePlan = useMutation(
     (body: { plan_key: PlanChoice["quote"]["plan_key"]; billing_period: BillingPeriod }) =>
       api.POST("/v1/businesses/{business_id}/billing/plan", { params: pathParams, body }),
-    { errorToast: false },
+    { errorToast: false, ...settled },
   );
-  const cancel = useApiMutation(() => api.POST("/v1/businesses/{business_id}/billing/cancel", { params: pathParams }), {
+  const cancel = useMutation(() => api.POST("/v1/businesses/{business_id}/billing/cancel", { params: pathParams }), {
     errorToast: false,
+    ...settled,
   });
 
   const applyOverview = (data: BillingOverview, message: string) => {

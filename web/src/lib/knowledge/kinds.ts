@@ -86,3 +86,21 @@ export function countByKind(items: readonly Pick<KnowledgeItemDetails, "kind">[]
   }
   return counts;
 }
+
+/**
+ * A list after one item was saved (edited, switched on or off, or added):
+ * it stays, in place, only while it matches the list's filter; a new one
+ * that matches goes first.
+ */
+export function withSavedItem<T extends Pick<KnowledgeItemDetails, "id" | "kind" | "is_active">>(
+  list: readonly T[],
+  saved: T,
+  filter: KnowledgeFilter,
+): T[] {
+  const others = list.filter((item) => item.id !== saved.id);
+  if (filterKnowledgeItems([saved], filter).length === 0) {
+    return others;
+  }
+  const exists = others.length < list.length;
+  return exists ? list.map((item) => (item.id === saved.id ? saved : item)) : [saved, ...list];
+}

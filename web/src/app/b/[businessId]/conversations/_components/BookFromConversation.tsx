@@ -2,11 +2,12 @@
 
 
 import { api } from "@/api/client";
-import { useApiQuery } from "@/api/hooks";
+import { queryKeys } from "@/api/queryKeys";
+import { useQuery } from "@/api/useQuery";
 import { useBusiness } from "@/components/business/BusinessContext";
 import { useToday } from "@/components/insights/useToday";
 import type { BookingResult, ConversationSummaryView } from "@/components/insights/types";
-import { ErrorState, LoadingBlock, Modal } from "@/components/ui";
+import { ErrorState, LoadingRegion, Modal, SkeletonText } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 
 import { BookingForm } from "../../bookings/_components/BookingForm";
@@ -30,9 +31,9 @@ export function BookFromConversation({
   const { t } = useI18n();
   const { business } = useBusiness();
   const today = useToday(business.timezone);
-  const resources = useApiQuery(
+  const resources = useQuery(
+    queryKeys.resources.list(business.id),
     () => api.GET("/v1/businesses/{business_id}/resources", { params: { path: { business_id: business.id } } }),
-    [business.id],
     { enabled: open },
   );
   const language =
@@ -65,7 +66,9 @@ export function BookFromConversation({
       ) : resources.error ? (
         <ErrorState error={resources.error} onRetry={resources.reload} />
       ) : (
-        <LoadingBlock label={t("common.loading")} />
+        <LoadingRegion label={t("common.loading")}>
+          <SkeletonText lines={6} />
+        </LoadingRegion>
       )}
     </Modal>
   );

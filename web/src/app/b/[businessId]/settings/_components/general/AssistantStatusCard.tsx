@@ -5,12 +5,12 @@ import { useState } from "react";
 
 import { api } from "@/api/client";
 import type { ApiError } from "@/api/errors";
-import { useApiMutation } from "@/api/hooks";
+import { useMutation } from "@/api/useMutation";
 import { BusinessStatusBadge } from "@/components/business/BusinessStatusBadge";
 import { useBusiness } from "@/components/business/BusinessContext";
 import { Alert, Badge, Button, ButtonLink, Card, useToast } from "@/components/ui";
-import { ConfirmDialog } from "@/components/workspace/ConfirmDialog";
-import { IconPause, IconPlay } from "@/components/workspace/icons";
+import { ConfirmDialog } from "@/components/ui";
+import { IconPause, IconPlay } from "@/components/icons";
 import { useI18n } from "@/i18n/client";
 import { businessPath } from "@/lib/navigation";
 
@@ -25,7 +25,7 @@ export function AssistantStatusCard({ onSaved }: { onSaved: (business: BusinessV
   const [isConfirmingPause, setConfirmingPause] = useState(false);
   const [pauseError, setPauseError] = useState<ApiError | null>(null);
   const [status, setStatus] = useState(business.status);
-  const switchStatus = useApiMutation(
+  const switchStatus = useMutation(
     (next: "live" | "paused") =>
       api.PATCH("/v1/businesses/{business_id}", { params: { path: { business_id: business.id } }, body: { status: next } }),
     { errorToast: false },

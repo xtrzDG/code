@@ -1,8 +1,8 @@
 "use client";
 
-import { IconPencil } from "@/components/content/icons";
+import { IconPencil } from "@/components/icons";
 import { Switch } from "@/components/content/Switch";
-import { Badge, Button, Spinner } from "@/components/ui";
+import { Badge, Button } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import type { ResourceView } from "@/lib/resources";
 
@@ -11,12 +11,10 @@ import { BOOKING_UNIT_LABELS, RESOURCE_KIND_LABELS } from "../ResourceEditor";
 /** One bookable resource: name, kind, capacity, units, slot and hours; switch and edit. */
 export function ResourceRow({
   resource,
-  isToggling,
   onToggle,
   onEdit,
 }: {
   resource: ResourceView;
-  isToggling: boolean;
   onToggle: (isActive: boolean) => void;
   onEdit: () => void;
 }) {
@@ -45,10 +43,8 @@ export function ResourceRow({
       </div>
       <div className="flex shrink-0 items-center gap-1">
         <span className="mr-2 flex items-center gap-2">
-          {isToggling ? <Spinner size="sm" /> : null}
           <Switch
             checked={resource.is_active}
-            disabled={isToggling}
             label={t("knowledge.resources.toggle", { name: resource.name })}
             onChange={onToggle}
           />

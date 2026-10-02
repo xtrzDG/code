@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from "react";
 
 import { api } from "@/api/client";
-import { useApiMutation } from "@/api/hooks";
+import { useMutation } from "@/api/useMutation";
 import { unwrap } from "@/api/result";
 import { useBusiness } from "@/components/business/BusinessContext";
 import { useI18n } from "@/i18n/client";
@@ -45,7 +45,7 @@ export function useTestChat(versions: AssistantVersionSummary[], initialVersionI
   const [isHandedOff, setHandedOff] = useState(false);
   const [text, setText] = useState("");
 
-  const send = useApiMutation(
+  const send = useMutation(
     (message: string) =>
       api.POST("/v1/businesses/{business_id}/test-chat", {
         params: { path: { business_id: business.id } },

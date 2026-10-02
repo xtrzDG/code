@@ -43,8 +43,18 @@ export function userDisplayName(user: { display_name?: string | null; phone_numb
   return user.display_name || user.phone_number || user.email || "";
 }
 
-/** Sidebar of /b/[businessId]/*: the sections of concept section 8. */
-export function BusinessShell({ children }: { children: ReactNode }) {
+/**
+ * Sidebar of /b/[businessId]/*: the sections of concept section 8.
+ * `prefetch` loads a section's first data while its link is under the
+ * pointer or focused, so the section opens with it.
+ */
+export function BusinessShell({
+  children,
+  prefetch = {},
+}: {
+  children: ReactNode;
+  prefetch?: Partial<Record<BusinessSection, () => void>>;
+}) {
   const { t } = useI18n();
   const { business, me, isPlatformAdmin } = useBusiness();
 
@@ -52,6 +62,7 @@ export function BusinessShell({ children }: { children: ReactNode }) {
     href: businessPath(business.id, section),
     label: t(BUSINESS_SECTION_LABELS[section]),
     icon: SECTION_ICONS[section],
+    onPrefetch: prefetch[section],
   }));
   if (isPlatformAdmin) {
     items.push({ href: ADMIN_PATH, label: t("nav.admin"), icon: IconShield, secondary: true });

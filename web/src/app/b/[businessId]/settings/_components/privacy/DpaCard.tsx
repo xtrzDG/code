@@ -3,10 +3,12 @@
 import { useState, type FormEvent } from "react";
 
 import { api } from "@/api/client";
-import { useApiMutation, useApiQuery } from "@/api/hooks";
+import { queryKeys } from "@/api/queryKeys";
+import { useMutation } from "@/api/useMutation";
+import { useQuery } from "@/api/useQuery";
 import { useBusiness, useBusinessFormat } from "@/components/business/BusinessContext";
-import { Alert, Badge, Button, Card, Checkbox, ErrorState, LoadingBlock, useToast } from "@/components/ui";
-import { IconFile } from "@/components/workspace/icons";
+import { Alert, Badge, Button, Card, Checkbox, ErrorState, LoadingRegion, SkeletonText, useToast } from "@/components/ui";
+import { IconFile } from "@/components/icons";
 import { OwnerOnlyState } from "@/components/workspace/OwnerOnly";
 import { useI18n } from "@/i18n/client";
 
@@ -22,11 +24,14 @@ export function DpaCard() {
   const [isAgreed, setAgreed] = useState(false);
   const [isReading, setReading] = useState(false);
   const [hasRead, setHasRead] = useState(false);
-  const dpa = useApiQuery(
-    () => api.GET("/v1/businesses/{business_id}/dpa", { params: { path: { business_id: business.id } } }),
-    [business.id],
+  const dpa = useQuery(queryKeys.settings.dpa(business.id), () =>
+    api.GET("/v1/businesses/{business_id}/dpa", { params: { path: { business_id: business.id } } }),
   );
-  const accept = useApiMutation(() => api.POST("/v1/businesses/{business_id}/dpa", { params: { path: { business_id: business.id } } }));
+  // Accepting it is a go-live check of the assistant.
+  const accept = useMutation(
+    () => api.POST("/v1/businesses/{business_id}/dpa", { params: { path: { business_id: business.id } } }),
+    { stale: [queryKeys.assistant.all(business.id)] },
+  );
 
   const onAccept = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -56,7 +61,7 @@ export function DpaCard() {
       ) : dpa.error && !data ? (
         <ErrorState error={dpa.error} onRetry={dpa.reload} className="py-6" />
       ) : !data ? (
-        <LoadingBlock label={t("common.loading")} className="min-h-24" />
+        <LoadingRegion label={t("common.loading")} className="py-1"><SkeletonText lines={3} /></LoadingRegion>
       ) : (
         <div className="space-y-5">
           <dl className="grid gap-4 text-sm sm:grid-cols-2">

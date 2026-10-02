@@ -3,19 +3,22 @@
 import { useState } from "react";
 
 import { api } from "@/api/client";
-import { useApiMutation, useApiQuery } from "@/api/hooks";
+import type { PagedData } from "@/api/paging";
+import { queryCache } from "@/api/queryCache";
+import { queryKeys } from "@/api/queryKeys";
+import { useCursorPage } from "@/api/useCursorPage";
+import { useMutation } from "@/api/useMutation";
+import { useQuery } from "@/api/useQuery";
 import { useBusiness } from "@/components/business/BusinessContext";
 import { useToday } from "@/components/insights/useToday";
-import type { BookingPage, BookingStatus, BookingView } from "@/components/insights/types";
+import type { BookingPage, BookingView } from "@/components/insights/types";
 import { replaceUrlQuery } from "@/components/insights/urlQuery";
-import { usePagedQuery } from "@/components/insights/usePagedQuery";
 import { useToast } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 
 import { bookingApiQuery, bookingFiltersQuery, isRangeValid, rangeDates, type BookingFilters } from "./bookingFilters";
 import { customerLanguage, nightsOf } from "./bookingList";
-
-
+import { useBookingStatus, withBooking } from "./useBookingStatus";
 export type BookingDialog =
   | { kind: "none" }
   | { kind: "create" }
@@ -40,7 +43,15 @@ export function useBookingsPage(initialFilters: BookingFilters) {
   const range = rangeDates(filters, today);
   const rangeValid = isRangeValid(range);
 
-  const bookings = usePagedQuery<BookingView, BookingPage>(
+  const listKey = queryKeys.bookings.list(businessId, {
+    ...range,
+    range: filters.range,
+    status: filters.status,
+    resourceId: filters.resourceId,
+    includeTest: filters.includeTest,
+  });
+  const bookings = useCursorPage<BookingView, BookingPage>(
+    listKey,
     ({ cursor, limit }) =>
       api.GET("/v1/businesses/{business_id}/bookings", {
         params: {
@@ -48,28 +59,30 @@ export function useBookingsPage(initialFilters: BookingFilters) {
           query: { ...bookingApiQuery(filters, range), limit: String(limit), cursor: cursor ?? undefined },
         },
       }),
-    [businessId, range.from, range.to, filters.status, filters.resourceId, filters.includeTest, filters.range],
     { enabled: rangeValid },
   );
-  const resources = useApiQuery(
-    () => api.GET("/v1/businesses/{business_id}/resources", { params: { path: { business_id: businessId } } }),
-    [businessId],
+  const resources = useQuery(queryKeys.resources.list(businessId), () =>
+    api.GET("/v1/businesses/{business_id}/resources", { params: { path: { business_id: businessId } } }),
   );
 
-  const changeStatus = useApiMutation(
-    (booking: BookingView, status: BookingStatus) =>
-      api.PATCH("/v1/businesses/{business_id}/bookings/{booking_id}", {
-        params: { path: { business_id: businessId, booking_id: booking.id } },
-        body: { status },
-      }),
-    { errorMessages: { conflict: "bookings.errors.conflict" } },
-  );
-  const cancel = useApiMutation(
+  // The open details follow a status change (and go back with it).
+  const showDetails = (booking: BookingView) =>
+    setDialog((current) =>
+      "booking" in current && current.booking.id === booking.id && (current.kind === "details" || current.kind === "noShow")
+        ? { kind: "details", booking }
+        : current,
+    );
+  const changeStatus = useBookingStatus(listKey, showDetails);
+  const cancel = useMutation(
     (booking: BookingView, language: string) =>
       api.POST("/v1/businesses/{business_id}/bookings/{booking_id}/cancel", {
         params: { path: { business_id: businessId, booking_id: booking.id }, query: { language } },
       }),
-    { errorMessages: { conflict: "bookings.errors.conflict" } },
+    {
+      errorMessages: { conflict: "bookings.errors.conflict" },
+      stale: [queryKeys.bookings.all(businessId), queryKeys.conversations.all(businessId)],
+      invalidate: [queryKeys.dashboard.all(businessId)],
+    },
   );
 
   const setFilters = (next: BookingFilters) => {
@@ -78,20 +91,11 @@ export function useBookingsPage(initialFilters: BookingFilters) {
   };
 
   const replaceBooking = (updated: BookingView) =>
-    bookings.updateItems((items) => items.map((item) => (item.id === updated.id ? updated : item)));
+    queryCache.update<PagedData<BookingView, BookingPage>>(listKey, (data) => withBooking(data, updated));
 
   const resourceUnits = new Map((resources.data?.items ?? []).map((resource) => [resource.id, resource.booking_unit]));
   const isStay = (booking: BookingView) =>
     resourceUnits.get(booking.resource_id) === "night" || (booking.time === null && nightsOf(booking) > 0);
-
-  const runStatus = async (booking: BookingView, status: BookingStatus) => {
-    const result = await changeStatus.run(booking, status);
-    if (result.ok) {
-      replaceBooking(result.data);
-      toast.success(t("bookings.updated"));
-      setDialog({ kind: "details", booking: result.data });
-    }
-  };
 
   const runCancel = async (booking: BookingView) => {
     const result = await cancel.run(booking, cancelLanguage);
@@ -129,8 +133,7 @@ export function useBookingsPage(initialFilters: BookingFilters) {
     closeIf,
     isStay,
     replaceBooking,
-    runStatus,
-    isChangingStatus: changeStatus.isPending,
+    runStatus: changeStatus.run,
     cancelLanguage,
     setCancelLanguage,
     openCancel,

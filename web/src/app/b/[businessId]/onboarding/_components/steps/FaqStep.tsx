@@ -4,7 +4,7 @@ import { useRef, useState } from "react";
 
 import type { KnowledgeItemDetails } from "@/api/types";
 import { IconPlus, IconTrash } from "@/components/icons";
-import { Button, Field, Input, LoadingBlock, Textarea } from "@/components/ui";
+import { Button, Field, Input, LoadingRegion, SkeletonRows, Textarea } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import type { MessageKey } from "@/i18n/translate";
 import {
@@ -26,7 +26,7 @@ import type { StepProps } from "../types";
 export function FaqStep(props: StepProps) {
   const { t } = useI18n();
   if (!props.knowledge) {
-    return <LoadingBlock label={t("common.loading")} />;
+    return <LoadingRegion label={t("common.loading")} className="py-1"><SkeletonRows rows={3} /></LoadingRegion>;
   }
   return <FaqStepForm {...props} knowledge={props.knowledge} />;
 }

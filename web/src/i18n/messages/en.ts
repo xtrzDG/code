@@ -43,6 +43,8 @@ export const en = {
     comingSoon: "This section is being built and will appear here soon.",
     details: "Details",
     requestId: "Request ID: {id}",
+    typeToConfirm: "Type {text} to confirm",
+    undo: "Undo",
   },
   language: {
     label: "Interface language",

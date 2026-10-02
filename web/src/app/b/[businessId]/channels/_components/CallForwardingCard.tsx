@@ -1,13 +1,13 @@
 "use client";
 
 import { api } from "@/api/client";
-import { useApiQuery } from "@/api/hooks";
+import { queryKeys } from "@/api/queryKeys";
+import { useQuery } from "@/api/useQuery";
 import type { Schema } from "@/api/types";
 import { useBusiness } from "@/components/business/BusinessContext";
-import { IconChevronDown, IconInfo } from "@/components/icons";
-import { Card, ErrorState, LoadingBlock } from "@/components/ui";
+import { IconChevronDown, IconInfo, IconPhone } from "@/components/icons";
+import { Card, ErrorState, LoadingRegion, SkeletonText } from "@/components/ui";
 import { CopyButton } from "@/components/workspace/CopyButton";
-import { IconPhone } from "@/components/workspace/icons";
 import { useI18n } from "@/i18n/client";
 import type { MessageKey } from "@/i18n/translate";
 
@@ -27,12 +27,10 @@ const CONDITION_LABELS: Record<CallForwardingCondition, MessageKey> = {
 export function CallForwardingCard() {
   const { t, locale } = useI18n();
   const { business } = useBusiness();
-  const instructions = useApiQuery(
-    () =>
-      api.GET("/v1/businesses/{business_id}/call-forwarding-instructions", {
-        params: { path: { business_id: business.id }, query: { language: locale } },
-      }),
-    [business.id, locale],
+  const instructions = useQuery(queryKeys.channels.callForwarding(business.id, locale), () =>
+    api.GET("/v1/businesses/{business_id}/call-forwarding-instructions", {
+      params: { path: { business_id: business.id }, query: { language: locale } },
+    }),
   );
   const data = instructions.data;
 
@@ -41,7 +39,7 @@ export function CallForwardingCard() {
       {instructions.error && !data ? (
         <ErrorState error={instructions.error} onRetry={instructions.reload} className="py-6" />
       ) : !data ? (
-        <LoadingBlock label={t("common.loading")} className="min-h-24" />
+        <LoadingRegion label={t("common.loading")} className="py-1"><SkeletonText lines={4} /></LoadingRegion>
       ) : (
         <div className="space-y-6" lang={data.display_language}>
           <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-line bg-surface-muted/60 px-4 py-3">

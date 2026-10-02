@@ -2,19 +2,23 @@
 
 import { useEffect, useState } from "react";
 
+import { usePlans } from "@/api/catalog";
 import { api } from "@/api/client";
 import type { ApiError, ErrorMessageOverrides } from "@/api/errors";
-import { useApiMutation, useApiQuery } from "@/api/hooks";
+import { queryKeys } from "@/api/queryKeys";
+import { sectionQueries } from "@/api/sectionQueries";
+import { useMutation } from "@/api/useMutation";
+import { useQuery } from "@/api/useQuery";
 import { useBusiness } from "@/components/business/BusinessContext";
-import { Alert, Button, Card, ErrorState, LoadingBlock, PageHeader, useToast } from "@/components/ui";
-import { ConfirmDialog } from "@/components/workspace/ConfirmDialog";
-import { IconRefresh } from "@/components/workspace/icons";
+import { IconRefresh } from "@/components/icons";
+import { Alert, Button, Card, ConfirmDialog, ErrorState, LoadingRegion, PageHeader, useToast } from "@/components/ui";
 import { OwnerOnlyNote } from "@/components/workspace/OwnerOnly";
 import { useI18n } from "@/i18n/client";
 import type { MessageKey } from "@/i18n/translate";
 
 import { CallForwardingCard } from "./_components/CallForwardingCard";
 import { ChannelCard } from "./_components/ChannelCard";
+import { ChannelsSkeleton } from "./_components/ChannelsSkeleton";
 import { CHANNEL_NAMES } from "./_components/channelMeta";
 import { ConnectChannelModal } from "./_components/ConnectChannelModal";
 import { GoogleCalendarCard } from "./_components/GoogleCalendarCard";
@@ -52,7 +56,7 @@ const CONNECT_ERRORS: ErrorMessageOverrides = {
  * Google's consent page sent back (shown once, then removed from the URL).
  */
 export function ChannelsScreen({ calendarReturn: initialCalendarReturn }: { calendarReturn: CalendarReturn | null }) {
-  const { t, locale } = useI18n();
+  const { t } = useI18n();
   const [calendarReturn, setCalendarReturn] = useState(initialCalendarReturn);
   useEffect(() => {
     if (initialCalendarReturn === null) {
@@ -71,31 +75,26 @@ export function ChannelsScreen({ calendarReturn: initialCalendarReturn }: { cale
   const [connectError, setConnectError] = useState<ApiError | null>(null);
   const [disconnectError, setDisconnectError] = useState<ApiError | null>(null);
 
-  const channels = useApiQuery(
-    () => api.GET("/v1/businesses/{business_id}/channels", { params: { path: { business_id: business.id } } }),
-    [business.id],
-  );
+  const channelsQuery = sectionQueries.channels(business.id);
+  const channels = useQuery(channelsQuery.key, channelsQuery.fetch);
   // Only to mark channels the plan does not include; the page works without it.
-  const plans = useApiQuery(
-    () => api.GET("/v1/catalog/plans", { params: { query: { country_code: business.country_code, language: locale } } }),
-    [business.country_code, locale],
-  );
+  const plans = usePlans(business.country_code);
   const planChannels = plans.data?.quotes.find((quote) => quote.plan_key === business.plan_key)?.channels;
 
-  const connect = useApiMutation(
+  const connect = useMutation(
     (kind: ConnectableChannel, body: ConnectChannelBody) =>
       api.PUT("/v1/businesses/{business_id}/channels/{channel}", {
         params: { path: { business_id: business.id, channel: channelPathName(kind) } },
         body,
       }),
-    { errorToast: false },
+    { errorToast: false, stale: [queryKeys.assistant.all(business.id)] },
   );
-  const disconnect = useApiMutation(
+  const disconnect = useMutation(
     (kind: ConnectableChannel) =>
       api.DELETE("/v1/businesses/{business_id}/channels/{channel}", {
         params: { path: { business_id: business.id, channel: channelPathName(kind) } },
       }),
-    { errorToast: false },
+    { errorToast: false, stale: [queryKeys.assistant.all(business.id)] },
   );
 
   const runConnect = async (kind: ConnectableChannel, body: ConnectChannelBody): Promise<boolean> => {
@@ -160,7 +159,7 @@ export function ChannelsScreen({ calendarReturn: initialCalendarReturn }: { cale
             variant="secondary"
             size="sm"
             onClick={channels.reload}
-            disabled={channels.isLoading}
+            disabled={channels.isFetching}
             leadingIcon={<IconRefresh className="size-4" aria-hidden />}
           >
             {t("workspace.refresh")}
@@ -193,9 +192,9 @@ export function ChannelsScreen({ calendarReturn: initialCalendarReturn }: { cale
           <ErrorState error={channels.error} onRetry={channels.reload} />
         </Card>
       ) : !list ? (
-        <Card>
-          <LoadingBlock label={t("common.loading")} />
-        </Card>
+        <LoadingRegion label={t("common.loading")}>
+          <ChannelsSkeleton />
+        </LoadingRegion>
       ) : (
         <div className="space-y-8">
           <section aria-labelledby="channels-customer" className="space-y-4">

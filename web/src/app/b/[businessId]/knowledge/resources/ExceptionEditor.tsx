@@ -3,7 +3,7 @@
 import { useId, useRef, useState, type FormEvent } from "react";
 
 import { api } from "@/api/client";
-import { useApiMutation } from "@/api/hooks";
+import { useMutation } from "@/api/useMutation";
 import { useBusiness, useBusinessFormat } from "@/components/business/BusinessContext";
 import { IconPlus, IconTrash } from "@/components/icons";
 import { Button, Field, Fieldset, Input, Modal, Radio, Select, useToast } from "@/components/ui";
@@ -48,7 +48,7 @@ export function ExceptionEditor({
   const [note, setNote] = useState("");
   const [errors, setErrors] = useState<{ date?: MessageKey; hours?: MessageKey }>({});
 
-  const create = useApiMutation((body: ScheduleExceptionCreateBody) =>
+  const create = useMutation((body: ScheduleExceptionCreateBody) =>
     api.POST("/v1/businesses/{business_id}/schedule-exceptions", { params: { path: { business_id: business.id } }, body }),
   );
 

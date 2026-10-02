@@ -24,6 +24,8 @@ export interface ShellNavItem {
   icon: ComponentType<IconProps>;
   /** Shown after the main list, separated (e.g. platform admin). */
   secondary?: boolean;
+  /** Loads the section's first data when the pointer or the focus reaches the link. */
+  onPrefetch?: () => void;
 }
 
 export function isActiveItem(pathname: string, href: string): boolean {
@@ -44,6 +46,8 @@ function NavList({ items, onNavigate }: { items: readonly ShellNavItem[]; onNavi
         <Link
           href={item.href}
           onClick={onNavigate}
+          onPointerEnter={active ? undefined : item.onPrefetch}
+          onFocus={active ? undefined : item.onPrefetch}
           aria-current={active ? "page" : undefined}
           className={cn(
             "flex h-9 items-center gap-3 rounded-lg px-2.5 text-sm transition-colors",

@@ -2,7 +2,7 @@
 
 import { useBusinessFormat } from "@/components/business/BusinessContext";
 import { IconCheck } from "@/components/icons";
-import { Badge, Button, Card, ErrorState, LoadingBlock } from "@/components/ui";
+import { Badge, Button, Card, ErrorState, LoadingRegion, SkeletonCard } from "@/components/ui";
 import { CHANNEL_NAMES } from "@/components/workspace/channelNames";
 import { useI18n } from "@/i18n/client";
 import type { ApiError } from "@/api/errors";
@@ -108,7 +108,11 @@ export function PlansSection({
         </Card>
       ) : !quotes ? (
         <Card>
-          <LoadingBlock label={t("common.loading")} />
+          <LoadingRegion label={t("common.loading")} className="py-1"><div className="grid gap-4 md:grid-cols-3">
+            <SkeletonCard lines={4} header={false} />
+            <SkeletonCard lines={4} header={false} />
+            <SkeletonCard lines={4} header={false} />
+          </div></LoadingRegion>
         </Card>
       ) : quotes.length === 0 ? (
         <Card>

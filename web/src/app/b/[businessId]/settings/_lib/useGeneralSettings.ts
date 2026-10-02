@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 
 import { api } from "@/api/client";
-import { useApiMutation } from "@/api/hooks";
+import { useMutation } from "@/api/useMutation";
 import { useBusiness } from "@/components/business/BusinessContext";
 import { useToast } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
@@ -49,13 +49,13 @@ export function useGeneralSettings(initial: BusinessView, switched: BusinessView
   // The status switch changes no field of this form, only the revision.
   const baseline = afterStatusSwitch(loaded, switched);
 
-  const save = useApiMutation(
+  const save = useMutation(
     (changes: SettingsChanges) =>
       api.PATCH("/v1/businesses/{business_id}", { params: { path: { business_id: business.id } }, body: changes }),
     { errorToast: false },
   );
   // Both a refused answer and a network failure come back as a result.
-  const reload = useApiMutation(
+  const reload = useMutation(
     () => api.GET("/v1/businesses/{business_id}", { params: { path: { business_id: business.id } } }),
     { errorToast: false },
   );

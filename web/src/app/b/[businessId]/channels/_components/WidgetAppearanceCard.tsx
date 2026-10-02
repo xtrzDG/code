@@ -3,7 +3,7 @@
 import { useState, type FormEvent } from "react";
 
 import { api } from "@/api/client";
-import { useApiMutation } from "@/api/hooks";
+import { useMutation } from "@/api/useMutation";
 import { useBusiness } from "@/components/business/BusinessContext";
 import { IconExternal } from "@/components/icons";
 import { Badge, Button, Card, Field, Fieldset, Input, Radio, buttonClasses, useToast } from "@/components/ui";
@@ -52,7 +52,7 @@ export function WidgetAppearanceCard({
   const draft: WidgetLook = { color: color ?? saved.color, position };
   const isChanged = color === null || !isSameWidgetLook(draft, saved);
 
-  const save = useApiMutation((look: WidgetLook) =>
+  const save = useMutation((look: WidgetLook) =>
     api.PUT("/v1/businesses/{business_id}/channels/{channel}", {
       params: { path: { business_id: business.id, channel: "web" } },
       body: { widget_color: look.color, widget_position: look.position },

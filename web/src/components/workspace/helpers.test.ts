@@ -3,7 +3,6 @@ import { describe, expect, it } from "vitest";
 import {
   decodeHash,
   formatMicroUsd,
-  isConfirmationTyped,
   isoDay,
   safeFileName,
   shortId,
@@ -12,18 +11,6 @@ import {
   usagePercent,
   zonedDayStartUs,
 } from "./helpers";
-
-describe("isConfirmationTyped", () => {
-  it("ignores case and surrounding spaces", () => {
-    expect(isConfirmationTyped(" delete ", "DELETE")).toBe(true);
-    expect(isConfirmationTyped("Нино", "нино")).toBe(true);
-    expect(isConfirmationTyped("delet", "DELETE")).toBe(false);
-  });
-
-  it("never unlocks an empty expectation", () => {
-    expect(isConfirmationTyped("", "  ")).toBe(false);
-  });
-});
 
 describe("usage", () => {
   it("warns from 80 % and flags 100 %", () => {

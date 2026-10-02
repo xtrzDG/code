@@ -1,6 +1,6 @@
 "use client";
 
-import { IconFile, IconUpload } from "@/components/content/icons";
+import { IconFile, IconUpload } from "@/components/icons";
 import { useI18n } from "@/i18n/client";
 import { cn } from "@/lib/cn";
 import { formatFileSize, MENU_UPLOAD_ACCEPT } from "@/lib/knowledge/menuImport";

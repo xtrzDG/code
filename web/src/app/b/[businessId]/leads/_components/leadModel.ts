@@ -72,3 +72,18 @@ export function afterStatusChange<T extends Pick<LeadListItem, "id" | "status">>
     .map((lead) => (lead.id === id ? { ...lead, status } : lead))
     .filter((lead) => lead.id !== id || tab === "all" || lead.status === tab);
 }
+
+/** A cached leads list (one tab) after one lead's status changed: its items and its tab counts. */
+export function withLeadStatus<Page extends { status_counts?: { status: LeadStatus; count: number }[] }, T extends Pick<LeadListItem, "id" | "status">>(
+  data: { page: Page; items: T[]; nextCursor: string | null },
+  leadId: string,
+  from: LeadStatus,
+  to: LeadStatus,
+  tab: LeadTab,
+): { page: Page; items: T[]; nextCursor: string | null } {
+  return {
+    ...data,
+    items: afterStatusChange(data.items, leadId, to, tab),
+    page: withStatusCounts(data.page, from, to),
+  };
+}

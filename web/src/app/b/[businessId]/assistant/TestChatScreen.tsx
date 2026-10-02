@@ -4,11 +4,12 @@ import { useSyncExternalStore } from "react";
 
 import { useBusiness } from "@/components/business/BusinessContext";
 import { IconChat, IconSparkles } from "@/components/icons";
-import { Button, Card, EmptyState, ErrorState, LoadingBlock } from "@/components/ui";
+import { Button, Card, EmptyState, ErrorState, LoadingRegion } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { sortVersions } from "@/lib/assistant/versions";
 
 import { useAssistant } from "./_components/AssistantContext";
+import { TestChatSkeleton } from "./_components/AssistantSkeletons";
 import { TestChat } from "./_components/chat/TestChat";
 
 const subscribeNever = () => () => {};
@@ -28,9 +29,9 @@ export function TestChatScreen({ initialVersionId }: { initialVersionId: string 
 
   if (!isBrowser || (versions.isLoading && !versions.data)) {
     return (
-      <Card>
-        <LoadingBlock label={t("common.loading")} />
-      </Card>
+      <LoadingRegion label={t("common.loading")}>
+        <TestChatSkeleton />
+      </LoadingRegion>
     );
   }
   if (versions.error && !versions.data) {

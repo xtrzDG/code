@@ -3,9 +3,11 @@
 import { useState } from "react";
 
 import { api } from "@/api/client";
-import { useApiMutation, useApiQuery } from "@/api/hooks";
+import { useNiche } from "@/api/catalog";
+import { queryKeys } from "@/api/queryKeys";
+import { useMutation } from "@/api/useMutation";
 import { useBusiness } from "@/components/business/BusinessContext";
-import { ConfirmDialog } from "@/components/content/ConfirmDialog";
+import { ConfirmDialog } from "@/components/ui";
 import { Alert, Checkbox, Fieldset, Spinner, useToast } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import {
@@ -32,22 +34,18 @@ export function RunAutotestsDialog({
   const { t, locale } = useI18n();
   const toast = useToast();
   const { business } = useBusiness();
-  const niche = useApiQuery(
-    () =>
-      api.GET("/v1/catalog/niches/{niche_key}", {
-        params: { path: { niche_key: version.niche_key }, query: { language: locale } },
-      }),
-    [version.niche_key, locale],
-  );
+  const niche = useNiche(version.niche_key);
   const kinds = applicableAutotestKinds(niche.data?.autotest_kinds ?? [], version.tools);
   const [languages, setLanguages] = useState<string[]>(version.languages);
   const [excludedKinds, setExcludedKinds] = useState<ReadonlySet<AutotestScenarioKind>>(new Set());
 
-  const start = useApiMutation((body: { languages: string[] | null; kinds: AutotestScenarioKind[] | null }) =>
-    api.POST("/v1/businesses/{business_id}/assistant-versions/{version_id}/autotests", {
-      params: { path: { business_id: business.id, version_id: version.id } },
-      body,
-    }),
+  const start = useMutation(
+    (body: { languages: string[] | null; kinds: AutotestScenarioKind[] | null }) =>
+      api.POST("/v1/businesses/{business_id}/assistant-versions/{version_id}/autotests", {
+        params: { path: { business_id: business.id, version_id: version.id } },
+        body,
+      }),
+    { stale: [queryKeys.assistant.all(business.id)] },
   );
 
   const chosenKinds = kinds.filter((kind) => !excludedKinds.has(kind));
@@ -67,7 +65,7 @@ export function RunAutotestsDialog({
   return (
     <ConfirmDialog
       open
-      variant="primary"
+      tone="primary"
       title={t("assistant.autotests.runTitle", { number: version.version_number })}
       description={t("assistant.autotests.runDescription")}
       confirmLabel={t("assistant.autotests.run")}

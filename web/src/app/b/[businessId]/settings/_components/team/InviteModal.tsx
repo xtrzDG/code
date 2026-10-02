@@ -4,10 +4,10 @@ import { useState, type FormEvent } from "react";
 
 import { useCountries } from "@/api/catalog";
 import { api } from "@/api/client";
-import { useApiMutation } from "@/api/hooks";
+import { useMutation } from "@/api/useMutation";
 import { useBusiness } from "@/components/business/BusinessContext";
 import { Button, Field, Input, Modal, Radio, Select } from "@/components/ui";
-import { InlineError } from "@/components/workspace/InlineError";
+import { InlineError } from "@/components/ui/InlineError";
 import { useI18n } from "@/i18n/client";
 import { countryFlag } from "@/lib/countries";
 import { cn } from "@/lib/cn";
@@ -57,7 +57,7 @@ function InviteForm({ onClose, onInvited }: { onClose: () => void; onInvited: (m
     role: "staff",
   });
   const [errors, setErrors] = useState<Partial<Record<"phone" | "email", InviteError>>>({});
-  const invite = useApiMutation(
+  const invite = useMutation(
     (body: InviteBody) => api.POST("/v1/businesses/{business_id}/members", { params: { path: { business_id: business.id } }, body }),
     { errorToast: false },
   );

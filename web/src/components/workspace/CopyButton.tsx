@@ -2,11 +2,10 @@
 
 import { useEffect, useRef, useState } from "react";
 
-import { IconCheck } from "@/components/icons";
+import { IconCheck, IconCopy } from "@/components/icons";
 import { Button, useToast, type ButtonSize, type ButtonVariant } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 
-import { IconCopy } from "./icons";
 
 const COPIED_FEEDBACK_MS = 2_000;
 

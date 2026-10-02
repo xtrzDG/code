@@ -5,7 +5,7 @@ import { useState } from "react";
 
 import { api } from "@/api/client";
 import type { ApiError } from "@/api/errors";
-import { useApiMutation } from "@/api/hooks";
+import { useMutation } from "@/api/useMutation";
 import { useBusiness } from "@/components/business/BusinessContext";
 import { useToast } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
@@ -35,7 +35,7 @@ export function useTeam() {
   const [roleChange, setRoleChange] = useState<RoleChange | null>(null);
   const [roleError, setRoleError] = useState<ApiError | null>(null);
 
-  const changeRole = useApiMutation(
+  const changeRole = useMutation(
     (change: RoleChange) =>
       api.PATCH("/v1/businesses/{business_id}/members/{user_id}", {
         params: { path: { business_id: business.id, user_id: change.member.user_id } },
@@ -60,7 +60,7 @@ export function useTeam() {
     router.refresh();
   };
 
-  const remove = useApiMutation(
+  const remove = useMutation(
     (userId: string) =>
       api.DELETE("/v1/businesses/{business_id}/members/{user_id}", {
         params: { path: { business_id: business.id, user_id: userId } },

@@ -5,13 +5,12 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState, type FormEvent } from "react";
 
 import { api } from "@/api/client";
-import { useApiMutation } from "@/api/hooks";
+import { useMutation } from "@/api/useMutation";
 import type { Schema } from "@/api/types";
 import { useBusiness, useBusinessFormat } from "@/components/business/BusinessContext";
-import { IconExternal } from "@/components/icons";
+import { IconBell, IconExternal } from "@/components/icons";
 import { Button, Card, Field, Input, Select, buttonClasses } from "@/components/ui";
 import { CopyButton } from "@/components/workspace/CopyButton";
-import { IconBell } from "@/components/workspace/icons";
 import { useI18n } from "@/i18n/client";
 import { languageName } from "@/lib/format";
 import { businessPath } from "@/lib/navigation";
@@ -35,7 +34,7 @@ export function StaffTelegramCard({ canManage }: { canManage: boolean }) {
   const [nameError, setNameError] = useState(false);
   const [created, setCreated] = useState<{ name: string; link: TelegramLink } | null>(null);
 
-  const create = useApiMutation((body: { name: string; language: string }) =>
+  const create = useMutation((body: { name: string; language: string }) =>
     api.POST("/v1/businesses/{business_id}/manager-contacts/telegram-link", {
       params: { path: { business_id: business.id } },
       body,

@@ -1,7 +1,7 @@
 "use client";
 
 import { useBusinessFormat } from "@/components/business/BusinessContext";
-import { IconPencil } from "@/components/content/icons";
+import { IconPencil } from "@/components/icons";
 import { Badge, Button, type BadgeTone } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import type { MessageKey } from "@/i18n/translate";

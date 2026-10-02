@@ -4,12 +4,13 @@ import { useEffect, useState } from "react";
 
 import { api } from "@/api/client";
 import type { ApiError } from "@/api/errors";
-import { useApiMutation } from "@/api/hooks";
+import { queryKeys } from "@/api/queryKeys";
 import { unwrap } from "@/api/result";
+import { useCursorPage } from "@/api/useCursorPage";
+import { useMutation } from "@/api/useMutation";
 import { useBusiness } from "@/components/business/BusinessContext";
 import { useToast } from "@/components/ui";
 import { downloadJson, isoDay } from "@/components/workspace/helpers";
-import { useCursorList } from "@/components/workspace/useCursorList";
 import { useI18n } from "@/i18n/client";
 
 import {
@@ -43,23 +44,32 @@ export function useDataRequests() {
     return () => window.clearTimeout(timer);
   }, [query]);
 
-  const contacts = useCursorList<ContactSummary, ContactPage>(
-    (cursor) =>
+  const contacts = useCursorPage<ContactSummary, ContactPage>(
+    queryKeys.settings.contacts(business.id, search ?? null),
+    ({ cursor, limit }) =>
       api.GET("/v1/businesses/{business_id}/contacts", {
         params: {
           path: { business_id: business.id },
-          query: { search, limit: String(CONTACTS_PAGE_SIZE), ...(cursor ? { cursor } : {}) },
+          query: { search, limit: String(limit), ...(cursor ? { cursor } : {}) },
         },
       }),
-    (contact) => contact.id,
-    [business.id, search],
+    { pageSize: CONTACTS_PAGE_SIZE },
   );
-  const erase = useApiMutation(
+  const erase = useMutation(
     (contactId: string) =>
       api.DELETE("/v1/businesses/{business_id}/contacts/{contact_id}", {
         params: { path: { business_id: business.id, contact_id: contactId } },
       }),
-    { errorToast: false },
+    {
+      errorToast: false,
+      // The customer's name and phone go from every list that showed them.
+      stale: [
+        queryKeys.conversations.all(business.id),
+        queryKeys.bookings.all(business.id),
+        queryKeys.leads.all(business.id),
+        queryKeys.handoffs.all(business.id),
+      ],
+    },
   );
 
   const displayName = (contact: ContactSummary) => contact.name || contact.phone_number || t("settings.requests.unnamed");

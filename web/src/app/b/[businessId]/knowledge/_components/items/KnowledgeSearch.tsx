@@ -3,11 +3,10 @@
 import { useState, type FormEvent } from "react";
 
 import { api } from "@/api/client";
-import { useApiMutation } from "@/api/hooks";
+import { useMutation } from "@/api/useMutation";
 import type { Schema } from "@/api/types";
 import { useBusiness, useBusinessFormat } from "@/components/business/BusinessContext";
-import { IconPencil, IconSearch } from "@/components/content/icons";
-import { IconX } from "@/components/icons";
+import { IconPencil, IconSearch, IconX } from "@/components/icons";
 import { Button, Card, Field, Input, Select } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { languageName } from "@/lib/format";
@@ -30,7 +29,7 @@ export function KnowledgeSearch({ onOpen }: { onOpen: (itemId: string) => void }
   const [language, setLanguage] = useState(business.default_language);
   const [searched, setSearched] = useState<{ query: string; items: KnowledgeItemView[] } | null>(null);
 
-  const search = useApiMutation((text: string, searchLanguage: string) =>
+  const search = useMutation((text: string, searchLanguage: string) =>
     api.POST("/v1/businesses/{business_id}/knowledge/search", {
       params: { path: { business_id: business.id } },
       body: { query: text, language: searchLanguage, limit: SEARCH_LIMIT },

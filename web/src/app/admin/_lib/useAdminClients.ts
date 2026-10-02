@@ -4,7 +4,8 @@ import { useEffect, useState } from "react";
 
 import { useNiches } from "@/api/catalog";
 import { api } from "@/api/client";
-import { useCursorList } from "@/components/workspace/useCursorList";
+import { queryKeys } from "@/api/queryKeys";
+import { useCursorPage } from "@/api/useCursorPage";
 
 import {
   ADMIN_PAGE_SIZE,
@@ -31,15 +32,14 @@ export function useAdminClients() {
     return () => window.clearTimeout(timer);
   }, [filters.query]);
 
-  const list = useCursorList<AdminClientSummary, AdminClientPage>(
-    (cursor) =>
+  const query = clientsQuery(filters, search, sort);
+  const list = useCursorPage<AdminClientSummary, AdminClientPage>(
+    queryKeys.admin.clients(JSON.stringify(query)),
+    ({ cursor, limit }) =>
       api.GET("/v1/admin/clients", {
-        params: {
-          query: { ...clientsQuery(filters, search, sort), limit: String(ADMIN_PAGE_SIZE), ...(cursor ? { cursor } : {}) },
-        },
+        params: { query: { ...query, limit: String(limit), ...(cursor ? { cursor } : {}) } },
       }),
-    (client) => client.business_id,
-    [search, filters.health, filters.status, filters.country, filters.niche, sort],
+    { pageSize: ADMIN_PAGE_SIZE, itemKey: (client) => client.business_id },
   );
 
   const nicheName = (key: string) => niches.data?.niches.find((niche) => niche.key === key)?.name ?? key;

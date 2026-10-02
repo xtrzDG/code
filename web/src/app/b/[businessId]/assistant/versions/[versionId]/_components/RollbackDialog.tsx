@@ -3,9 +3,10 @@
 import { useState } from "react";
 
 import { api } from "@/api/client";
-import { useApiMutation } from "@/api/hooks";
+import { queryKeys } from "@/api/queryKeys";
+import { useMutation } from "@/api/useMutation";
 import { useBusiness } from "@/components/business/BusinessContext";
-import { ConfirmDialog } from "@/components/content/ConfirmDialog";
+import { ConfirmDialog } from "@/components/ui";
 import { useToast } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import type { AssistantVersionDetails } from "@/lib/assistant/versions";
@@ -32,12 +33,13 @@ export function RollbackDialog({
   const { business } = useBusiness();
   const [refusal, setRefusal] = useState<RefusalState | null>(null);
 
-  const rollback = useApiMutation(
+  const rollback = useMutation(
     () =>
       api.POST("/v1/businesses/{business_id}/assistant-versions/{version_id}/rollback", {
         params: { path: { business_id: business.id, version_id: version.id } },
       }),
-    { errorToast: false },
+    // The live version changes: the version list, the go-live checks, the business status and the dashboard follow.
+    { errorToast: false, invalidate: [queryKeys.assistant.all(business.id)], stale: [queryKeys.dashboard.all(business.id)] },
   );
 
   const submit = async () => {
@@ -60,7 +62,7 @@ export function RollbackDialog({
   return (
     <ConfirmDialog
       open
-      variant="danger"
+      tone="danger"
       title={t("assistant.rollback.title", { number: version.version_number })}
       description={
         liveNumber !== null

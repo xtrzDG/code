@@ -1,10 +1,9 @@
 "use client";
 
 import { useBusiness } from "@/components/business/BusinessContext";
-import { IconPlus } from "@/components/icons";
+import { IconBell, IconPlus } from "@/components/icons";
 import { Button, ButtonLink, Card, EmptyState, Modal } from "@/components/ui";
-import { ConfirmDialog } from "@/components/workspace/ConfirmDialog";
-import { IconBell } from "@/components/workspace/icons";
+import { ConfirmDialog } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { businessPath } from "@/lib/navigation";
 

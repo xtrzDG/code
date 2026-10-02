@@ -3,9 +3,10 @@
 import { useState } from "react";
 
 import { api } from "@/api/client";
-import { useApiQuery } from "@/api/hooks";
+import { queryKeys } from "@/api/queryKeys";
+import { useQuery } from "@/api/useQuery";
 import { useBusiness } from "@/components/business/BusinessContext";
-import { ErrorState, LoadingBlock } from "@/components/ui";
+import { ErrorState, LoadingRegion, SkeletonCard } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 
 import type { BusinessView } from "../_lib/general";
@@ -29,9 +30,11 @@ export function GeneralTab() {
   // made since (platform bot, billing, another owner) leaves its revision
   // behind: start from the business as stored now, else the first save is
   // refused as stale.
-  const stored = useApiQuery(
+  // The form saves with the revision it starts from: the business as stored now, not a cached copy.
+  const stored = useQuery(
+    queryKeys.business.detail(business.id),
     () => api.GET("/v1/businesses/{business_id}", { params: { path: { business_id: business.id } } }),
-    [business.id],
+    { requireFresh: true },
   );
   // The business as the status switch last saved it: the form takes over
   // its revision, so its next save is not refused for this tab's own change.
@@ -44,7 +47,7 @@ export function GeneralTab() {
       ) : stored.error ? (
         <ErrorState error={stored.error} onRetry={stored.reload} className="py-6" />
       ) : (
-        <LoadingBlock label={t("common.loading")} className="min-h-48" />
+        <LoadingRegion label={t("common.loading")} className="py-1"><SkeletonCard lines={6} /></LoadingRegion>
       )}
     </div>
   );

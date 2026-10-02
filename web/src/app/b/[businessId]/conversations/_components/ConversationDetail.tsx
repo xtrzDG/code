@@ -5,7 +5,8 @@ import { useSearchParams } from "next/navigation";
 import { useState, type ReactNode } from "react";
 
 import { api } from "@/api/client";
-import { useApiMutation, useApiQuery } from "@/api/hooks";
+import { queryKeys } from "@/api/queryKeys";
+import { useQuery } from "@/api/useQuery";
 import { useBusiness, useBusinessFormat } from "@/components/business/BusinessContext";
 import { IconArrowLeft } from "@/components/icons";
 import { AfterHoursBadge, ChannelBadge, ConversationStatusBadge, TestBadge } from "@/components/insights/Badges";
@@ -14,11 +15,10 @@ import { CustomerMessageModal } from "@/components/insights/CustomerMessageModal
 import { formatMicroUsd } from "@/components/insights/numbers";
 import type {
   ConversationDetailView,
-  ConversationRating,
   ConversationSummaryView,
   MessageView,
 } from "@/components/insights/types";
-import { Alert, Card, ErrorState, LoadingBlock, useToast } from "@/components/ui";
+import { Alert, Card, ErrorState, useToast } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { languageName } from "@/lib/format";
 import { businessPath } from "@/lib/navigation";
@@ -26,8 +26,10 @@ import { businessPath } from "@/lib/navigation";
 import { BookFromConversation } from "./BookFromConversation";
 import { CallsCard } from "./CallsCard";
 import { canReplyFromCard, initialsOf, usageTotals } from "./conversationModel";
+import { ConversationDetailSkeleton } from "./ConversationDetailSkeleton";
 import { LinkedItems } from "./LinkedItems";
 import { RatingControl } from "./RatingControl";
+import { useConversationRating } from "./useConversationRating";
 import { ReplyBox } from "./ReplyBox";
 import { Transcript } from "./Transcript";
 
@@ -48,21 +50,13 @@ export function ConversationDetail({ conversationId }: { conversationId: string 
   const [isBooking, setIsBooking] = useState(false);
   const [confirmation, setConfirmation] = useState<string | null>(null);
 
-  const detail = useApiQuery(
-    () =>
-      api.GET("/v1/businesses/{business_id}/conversations/{conversation_id}", {
-        params: { path: { business_id: businessId, conversation_id: conversationId } },
-      }),
-    [businessId, conversationId],
-  );
-  // No auto-refresh here: every card view is written to the audit log.
-
-  const rate = useApiMutation((rating: ConversationRating | null) =>
-    api.PUT("/v1/businesses/{business_id}/conversations/{conversation_id}/rating", {
+  const detail = useQuery(queryKeys.conversations.detail(businessId, conversationId), () =>
+    api.GET("/v1/businesses/{business_id}/conversations/{conversation_id}", {
       params: { path: { business_id: businessId, conversation_id: conversationId } },
-      body: { rating },
     }),
   );
+  // No auto-refresh here: every card view is written to the audit log.
+  const rate = useConversationRating(conversationId);
 
   const backLink = (
     <Link
@@ -78,13 +72,13 @@ export function ConversationDetail({ conversationId }: { conversationId: string 
     return (
       <>
         {backLink}
-        <Card>
-          {detail.error ? (
+        {detail.error ? (
+          <Card>
             <ErrorState error={detail.error} onRetry={detail.reload} />
-          ) : (
-            <LoadingBlock label={t("conversations.loadingOne")} />
-          )}
-        </Card>
+          </Card>
+        ) : (
+          <ConversationDetailSkeleton label={t("conversations.loadingOne")} />
+        )}
       </>
     );
   }
@@ -96,14 +90,6 @@ export function ConversationDetail({ conversationId }: { conversationId: string 
 
   const updateDetail = (update: (current: ConversationDetailView) => ConversationDetailView) =>
     detail.setData((current) => (current ? update(current) : data));
-
-  const changeRating = async (rating: ConversationRating | null) => {
-    const result = await rate.run(rating);
-    if (result.ok) {
-      updateDetail((current) => ({ ...current, conversation: result.data }));
-      toast.success(t(rating === null ? "conversations.rating.cleared" : "conversations.rating.saved"));
-    }
-  };
 
   const addMessage = (message: MessageView) =>
     updateDetail((current) => ({
@@ -127,7 +113,7 @@ export function ConversationDetail({ conversationId }: { conversationId: string 
           <RatingControl
             value={conversation.rating ?? null}
             isPending={rate.isPending}
-            onChange={(rating) => void changeRating(rating)}
+            onChange={(rating) => void rate.change(rating)}
           />
         }
       />

@@ -2,7 +2,7 @@
 
 import { useBusinessFormat } from "@/components/business/BusinessContext";
 import { Badge, Card, EmptyState } from "@/components/ui";
-import { IconFile } from "@/components/workspace/icons";
+import { IconFile } from "@/components/icons";
 import { useI18n } from "@/i18n/client";
 import type { MessageKey } from "@/i18n/translate";
 

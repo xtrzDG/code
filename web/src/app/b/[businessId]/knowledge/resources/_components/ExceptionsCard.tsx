@@ -2,10 +2,10 @@
 
 import { useState } from "react";
 
-import type { ApiQuery } from "@/api/hooks";
+import type { Query } from "@/api/useQuery";
 import { useBusinessFormat } from "@/components/business/BusinessContext";
 import { IconCalendar, IconPlus } from "@/components/icons";
-import { Button, Card, EmptyState, ErrorState, LoadingBlock } from "@/components/ui";
+import { Button, Card, EmptyState, ErrorState, LoadingRegion, SkeletonText } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import type { ScheduleExceptionView } from "@/lib/resources";
 
@@ -20,7 +20,7 @@ export function ExceptionsCard({
   onAdd,
   onDelete,
 }: {
-  exceptions: Pick<ApiQuery<{ items?: ScheduleExceptionView[] }>, "data" | "error" | "isLoading" | "reload">;
+  exceptions: Pick<Query<{ items?: ScheduleExceptionView[] }>, "data" | "error" | "isLoading" | "reload">;
   upcoming: ScheduleExceptionView[];
   past: ScheduleExceptionView[];
   resourceName: (id: string | null | undefined) => string | null;
@@ -46,7 +46,9 @@ export function ExceptionsCard({
       }
     >
       {exceptions.isLoading && !exceptions.data ? (
-        <LoadingBlock label={t("common.loading")} />
+        <LoadingRegion label={t("common.loading")} className="p-5">
+          <SkeletonText lines={3} />
+        </LoadingRegion>
       ) : exceptions.error && !exceptions.data ? (
         <ErrorState error={exceptions.error} onRetry={exceptions.reload} />
       ) : upcoming.length === 0 && past.length === 0 ? (

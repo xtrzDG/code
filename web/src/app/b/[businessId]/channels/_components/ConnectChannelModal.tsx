@@ -6,7 +6,7 @@ import { useCountries } from "@/api/catalog";
 import type { ErrorMessageOverrides } from "@/api/errors";
 import { useBusiness } from "@/components/business/BusinessContext";
 import { Button, Field, Input, Modal, Select } from "@/components/ui";
-import { InlineError } from "@/components/workspace/InlineError";
+import { InlineError } from "@/components/ui/InlineError";
 import { useI18n } from "@/i18n/client";
 import { countryFlag } from "@/lib/countries";
 

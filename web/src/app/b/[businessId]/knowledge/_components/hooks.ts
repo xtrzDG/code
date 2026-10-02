@@ -2,25 +2,16 @@
 
 import { useMemo } from "react";
 
-import { api } from "@/api/client";
-import { useApiQuery } from "@/api/hooks";
+import { useNiche } from "@/api/catalog";
 import type { KnowledgeItemKind } from "@/api/types";
 import { useBusiness } from "@/components/business/BusinessContext";
-import { useI18n } from "@/i18n/client";
 import type { MessageKey } from "@/i18n/translate";
 import { orderKinds } from "@/lib/knowledge/kinds";
 
 /** The business niche (knowledge kinds, resource kind, booking unit), in the UI language. */
 export function useNicheDetails() {
   const { business } = useBusiness();
-  const { locale } = useI18n();
-  return useApiQuery(
-    () =>
-      api.GET("/v1/catalog/niches/{niche_key}", {
-        params: { path: { niche_key: business.niche_key }, query: { language: locale } },
-      }),
-    [business.niche_key, locale],
-  );
+  return useNiche(business.niche_key);
 }
 
 /** Knowledge kinds with the niche's own kinds first. */

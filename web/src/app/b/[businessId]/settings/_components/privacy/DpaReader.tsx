@@ -1,8 +1,10 @@
 "use client";
 
 import { api } from "@/api/client";
-import { useApiQuery } from "@/api/hooks";
-import { Alert, Button, ErrorState, LoadingBlock, Modal } from "@/components/ui";
+import { CATALOG_STALE_MS } from "@/api/catalog";
+import { queryKeys } from "@/api/queryKeys";
+import { useQuery } from "@/api/useQuery";
+import { Alert, Button, ErrorState, LoadingRegion, Modal, SkeletonText } from "@/components/ui";
 import { MarkdownDocument } from "@/components/workspace/MarkdownDocument";
 import { useI18n } from "@/i18n/client";
 import { languageName } from "@/lib/format";
@@ -22,10 +24,10 @@ export function DpaReader({
   onConfirm: () => void;
 }) {
   const { t, locale } = useI18n();
-  const document = useApiQuery(
+  const document = useQuery(
+    queryKeys.catalog.dpa(version, locale),
     () => api.GET("/v1/legal/dpa/{version}", { params: { path: { version }, query: { language: locale } } }),
-    [version, locale],
-    { enabled: open && version !== "" },
+    { enabled: open && version !== "", staleMs: CATALOG_STALE_MS },
   );
   const data = document.data;
 
@@ -47,7 +49,7 @@ export function DpaReader({
       {document.error && !data ? (
         <ErrorState error={document.error} onRetry={document.reload} className="py-6" />
       ) : !data ? (
-        <LoadingBlock label={t("common.loading")} className="min-h-48" />
+        <LoadingRegion label={t("common.loading")} className="py-1"><SkeletonText lines={10} /></LoadingRegion>
       ) : (
         <div className="space-y-4">
           {data.language !== locale ? (

@@ -3,7 +3,7 @@
 import { MemberRoleBadge } from "@/components/business/BusinessStatusBadge";
 import { useBusiness } from "@/components/business/BusinessContext";
 import { Badge, Button, Select } from "@/components/ui";
-import { IconUsers } from "@/components/workspace/icons";
+import { IconUsers } from "@/components/icons";
 import { useI18n } from "@/i18n/client";
 
 import {

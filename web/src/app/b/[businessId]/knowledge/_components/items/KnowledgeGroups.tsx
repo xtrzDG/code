@@ -12,7 +12,7 @@ const GROUP_PAGE_SIZE = 20;
 /** The loaded items by kind (the first ones of a long group, then "show all") and "show more". */
 export function KnowledgeGroups({ list }: { list: KnowledgeItemsState }) {
   const { t } = useI18n();
-  const { items, groups, expanded, toggling } = list;
+  const { items, groups, expanded } = list;
   return (
     <div className="divide-y divide-line">
       {groups.map((group) => {
@@ -30,7 +30,6 @@ export function KnowledgeGroups({ list }: { list: KnowledgeItemsState }) {
                 <KnowledgeItemRow
                   key={item.id}
                   item={item}
-                  isToggling={toggling.has(item.id)}
                   onToggle={(isActive) => void list.setActive(item, isActive)}
                   onEdit={() => list.openEditor({ mode: "edit", id: item.id, item })}
                   onDelete={() => list.setDeleting(item)}
@@ -49,15 +48,15 @@ export function KnowledgeGroups({ list }: { list: KnowledgeItemsState }) {
           </section>
         );
       })}
-      {items.hasMore || items.loadMoreError ? (
+      {items.hasMore || items.moreError ? (
         <div className="flex flex-col items-center gap-2 px-4 py-4 text-center sm:px-6">
-          {items.loadMoreError ? (
+          {items.moreError ? (
             <p className="text-sm text-danger" role="alert">
               {t("knowledge.paging.failed")}
             </p>
           ) : null}
           <Button variant="secondary" isLoading={items.isLoadingMore} loadingText={t("common.loading")} onClick={items.loadMore}>
-            {items.loadMoreError ? t("common.retry") : t("knowledge.paging.more")}
+            {items.moreError ? t("common.retry") : t("knowledge.paging.more")}
           </Button>
         </div>
       ) : null}

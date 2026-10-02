@@ -3,14 +3,32 @@
 import { useState } from "react";
 
 import { api } from "@/api/client";
+import { queryKeys } from "@/api/queryKeys";
+import { useCursorPage } from "@/api/useCursorPage";
 import { useBusiness, useBusinessFormat } from "@/components/business/BusinessContext";
 import { RefreshFailed } from "@/components/insights/common";
-import { Badge, Button, Card, EmptyState, ErrorState, Field, Input, LoadingBlock, Select, Table, TBody, Td, Th, THead, Tr } from "@/components/ui";
+import {
+  Badge,
+  Button,
+  Card,
+  EmptyState,
+  ErrorState,
+  Field,
+  InlineError,
+  Input,
+  LoadingRegion,
+  Select,
+  SkeletonText,
+  Table,
+  TBody,
+  Td,
+  Th,
+  THead,
+  Tr,
+} from "@/components/ui";
 import { shortId, zonedDayStartUs } from "@/components/workspace/helpers";
-import { InlineError } from "@/components/workspace/InlineError";
-import { IconList } from "@/components/workspace/icons";
+import { IconList } from "@/components/icons";
 import { OwnerOnlyState } from "@/components/workspace/OwnerOnly";
-import { useCursorList } from "@/components/workspace/useCursorList";
 import { useI18n } from "@/i18n/client";
 import type { MessageKey } from "@/i18n/translate";
 
@@ -49,16 +67,16 @@ export function AuditTab() {
   const [filters, setFilters] = useState<AuditFilters>(EMPTY_AUDIT_FILTERS);
   const query = auditQuery(filters, (day) => zonedDayStartUs(day, format.timeZone));
 
-  const log = useCursorList<AuditLogEntry, AuditLogPage>(
-    (cursor) =>
+  const log = useCursorPage<AuditLogEntry, AuditLogPage>(
+    queryKeys.settings.audit(business.id, JSON.stringify(query)),
+    ({ cursor, limit }) =>
       api.GET("/v1/businesses/{business_id}/audit-log", {
         params: {
           path: { business_id: business.id },
-          query: { ...query, limit: String(AUDIT_PAGE_SIZE), ...(cursor ? { cursor } : {}) },
+          query: { ...query, limit: String(limit), ...(cursor ? { cursor } : {}) },
         },
       }),
-    (entry) => entry.id,
-    [business.id, filters.action, filters.entity, filters.actorId, filters.from, filters.to, format.timeZone],
+    { pageSize: AUDIT_PAGE_SIZE, staleMs: 0 },
   );
 
   const update = (patch: Partial<AuditFilters>) => setFilters((current) => ({ ...current, ...patch }));
@@ -66,8 +84,8 @@ export function AuditTab() {
   const actorName = (actorId: string | null | undefined, action?: AuditAction) =>
     actorLabel(actorId, business.members) ??
     (action === "admin_access" ? t("settings.audit.platform") : actorId ? shortId(actorId) : t("settings.audit.system"));
-  const entries = log.items;
-  const page = log.firstPage;
+  const entries = log.items ?? [];
+  const page = log.page;
   const isFiltered = hasAuditFilters(filters);
 
   if (log.error?.code === "access_denied") {
@@ -150,14 +168,16 @@ export function AuditTab() {
       {log.error && entries.length === 0 ? (
         <ErrorState error={log.error} onRetry={log.reload} />
       ) : log.isLoading && entries.length === 0 ? (
-        <LoadingBlock label={t("common.loading")} />
+        <LoadingRegion label={t("common.loading")} className="p-5">
+          <SkeletonText lines={6} />
+        </LoadingRegion>
       ) : entries.length === 0 ? (
         <EmptyState
           icon={<IconList className="size-6" />}
           title={isFiltered ? t("settings.auditFilters.emptyFiltered") : t("settings.audit.empty")}
         />
       ) : (
-        <div aria-busy={log.isLoading}>
+        <div aria-busy={log.isPlaceholder || log.isFetching}>
           <div className="hidden md:block">
             <Table caption={t("settings.audit.title")}>
               <THead>

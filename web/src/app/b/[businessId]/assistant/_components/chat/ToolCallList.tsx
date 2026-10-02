@@ -1,6 +1,6 @@
 "use client";
 
-import { IconWrench } from "@/components/content/icons";
+import { IconWrench } from "@/components/icons";
 import { Badge } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { prettyJson } from "@/lib/assistant/testChat";

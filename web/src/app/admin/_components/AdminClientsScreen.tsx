@@ -1,15 +1,14 @@
 "use client";
 
-import { IconShield } from "@/components/icons";
+import { IconRefresh, IconSearch, IconShield } from "@/components/icons";
 import { RefreshFailed } from "@/components/insights/common";
-import { Button, Card, EmptyState, ErrorState, LoadingBlock, PageHeader } from "@/components/ui";
-import { IconRefresh, IconSearch } from "@/components/workspace/icons";
-import { InlineError } from "@/components/workspace/InlineError";
+import { Button, Card, EmptyState, ErrorState, InlineError, LoadingRegion, PageHeader, SkeletonRows } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { formatDateTime } from "@/lib/format";
 
 import { EMPTY_FILTERS, hasFilters } from "../_lib/clients";
 import { useAdminClients } from "../_lib/useAdminClients";
+import { AdminClientsSkeleton } from "./AdminSkeletons";
 import { ClientCards } from "./clients/ClientCards";
 import { ClientFiltersBar } from "./clients/ClientFiltersBar";
 import { ClientsTable } from "./clients/ClientsTable";
@@ -22,8 +21,8 @@ import { SummaryTiles } from "./clients/SummaryTiles";
 export function AdminClientsScreen() {
   const { t, tp, locale } = useI18n();
   const { filters, setFilters, sort, setSort, list, nicheName } = useAdminClients();
-  const data = list.firstPage;
-  const clients = list.items;
+  const data = list.page;
+  const clients = list.items ?? [];
   const totals = data?.totals;
 
   return (
@@ -42,7 +41,7 @@ export function AdminClientsScreen() {
               variant="secondary"
               size="sm"
               onClick={list.reload}
-              disabled={list.isLoading}
+              disabled={list.isFetching}
               leadingIcon={<IconRefresh className="size-4" aria-hidden />}
             >
               {t("workspace.refresh")}
@@ -56,9 +55,9 @@ export function AdminClientsScreen() {
           <ErrorState error={list.error} onRetry={list.reload} />
         </Card>
       ) : !data || !totals ? (
-        <Card>
-          <LoadingBlock label={t("common.loading")} />
-        </Card>
+        <LoadingRegion label={t("common.loading")}>
+          <AdminClientsSkeleton />
+        </LoadingRegion>
       ) : (
         <div className="space-y-6">
           {list.error ? <RefreshFailed error={list.error} onRetry={list.reload} /> : null}
@@ -80,13 +79,15 @@ export function AdminClientsScreen() {
             {totals.client_count === 0 ? (
               <EmptyState icon={<IconShield className="size-6" />} title={t("admin.emptyTitle")} description={t("admin.emptyDescription")} />
             ) : clients.length === 0 ? (
-              list.error ? null : list.isLoading ? (
-                <LoadingBlock label={t("common.loading")} />
+              list.error ? null : list.isLoading || list.isPlaceholder ? (
+                <LoadingRegion label={t("common.loading")} className="px-5 pb-5 sm:px-6">
+                  <SkeletonRows rows={4} />
+                </LoadingRegion>
               ) : (
                 <EmptyState icon={<IconSearch className="size-6" />} title={t("admin.emptyFiltered")} />
               )
             ) : (
-              <div aria-busy={list.isLoading}>
+              <div aria-busy={list.isPlaceholder || list.isFetching}>
                 <ClientsTable clients={clients} nicheName={nicheName} />
                 <ClientCards clients={clients} nicheName={nicheName} />
                 {list.hasMore || list.moreError ? (

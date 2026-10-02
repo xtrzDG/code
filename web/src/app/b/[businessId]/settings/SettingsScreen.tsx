@@ -1,8 +1,7 @@
 "use client";
 
-import { IconSettings, IconShield } from "@/components/icons";
+import { IconBell, IconList, IconSettings, IconShield, IconUsers } from "@/components/icons";
 import { PageHeader } from "@/components/ui";
-import { IconBell, IconList, IconUsers } from "@/components/workspace/icons";
 import { TabPanel, Tabs, useHashTab, type TabItem } from "@/components/workspace/Tabs";
 import { useI18n } from "@/i18n/client";
 

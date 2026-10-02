@@ -3,7 +3,7 @@
 import { useId, useState, type FormEvent, type KeyboardEvent } from "react";
 
 import { api } from "@/api/client";
-import { useApiMutation } from "@/api/hooks";
+import { useMutation } from "@/api/useMutation";
 import { useBusiness, useBusinessFormat } from "@/components/business/BusinessContext";
 import { CHANNEL_LABELS } from "@/components/insights/labels";
 import type { ConversationSummaryView, MessageView, StaffReplyView } from "@/components/insights/types";
@@ -61,7 +61,7 @@ export function ReplyBox({
   // Offered only once the WhatsApp window has closed and the owner set one.
   const template = offeredTemplate(reply);
 
-  const send = useApiMutation(
+  const send = useMutation(
     (text: string, asTemplate: boolean) =>
       api.POST("/v1/businesses/{business_id}/conversations/{conversation_id}/messages", {
         params: { path: { business_id: business.id, conversation_id: conversation.id } },

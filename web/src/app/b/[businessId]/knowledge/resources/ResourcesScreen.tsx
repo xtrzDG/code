@@ -3,11 +3,14 @@
 import { useMemo, useState } from "react";
 
 import { api } from "@/api/client";
-import { useApiMutation, useApiQuery } from "@/api/hooks";
+import { queryCache } from "@/api/queryCache";
+import { queryKeys } from "@/api/queryKeys";
+import { useMutation } from "@/api/useMutation";
+import { useQuery } from "@/api/useQuery";
 import { useBusiness, useBusinessFormat } from "@/components/business/BusinessContext";
-import { ConfirmDialog } from "@/components/content/ConfirmDialog";
+import { ConfirmDialog } from "@/components/ui";
 import { IconCalendar, IconPlus } from "@/components/icons";
-import { Alert, Button, Card, EmptyState, ErrorState, LoadingBlock, useToast } from "@/components/ui";
+import { Alert, Button, Card, EmptyState, ErrorState, LoadingRegion, SkeletonRows, useToast } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import {
   formatLocalDate,
@@ -34,32 +37,38 @@ export function ResourcesScreen() {
   const niche = useNicheDetails();
   const today = useMemo(() => todayInTimeZone(new Date(), format.timeZone), [format.timeZone]);
 
-  const resources = useApiQuery(
-    () => api.GET("/v1/businesses/{business_id}/resources", { params: { path: { business_id: business.id } } }),
-    [business.id],
+  const resourcesKey = queryKeys.resources.list(business.id);
+  const resources = useQuery(resourcesKey, () =>
+    api.GET("/v1/businesses/{business_id}/resources", { params: { path: { business_id: business.id } } }),
   );
-  const exceptions = useApiQuery(
-    () => api.GET("/v1/businesses/{business_id}/schedule-exceptions", { params: { path: { business_id: business.id } } }),
-    [business.id],
+  const exceptions = useQuery(queryKeys.resources.exceptions(business.id), () =>
+    api.GET("/v1/businesses/{business_id}/schedule-exceptions", { params: { path: { business_id: business.id } } }),
   );
-  const profile = useApiQuery(
-    () => api.GET("/v1/businesses/{business_id}/profile", { params: { path: { business_id: business.id } } }),
-    [business.id],
+  const profile = useQuery(queryKeys.profile.stored(business.id), () =>
+    api.GET("/v1/businesses/{business_id}/profile", { params: { path: { business_id: business.id } } }),
   );
 
   const [resourceEditor, setResourceEditor] = useState<{ key: number; resource: ResourceView | null } | null>(null);
   const [exceptionEditor, setExceptionEditor] = useState<number | null>(null);
   const [deleting, setDeleting] = useState<ScheduleExceptionView | null>(null);
-  const [toggling, setToggling] = useState<ReadonlySet<string>>(new Set());
   const [hasChanges, setHasChanges] = useState(false);
 
-  const toggle = useApiMutation((resourceId: string, isActive: boolean) =>
-    api.PATCH("/v1/businesses/{business_id}/resources/{resource_id}", {
-      params: { path: { business_id: business.id, resource_id: resourceId } },
-      body: { is_active: isActive },
-    }),
+  // The switch moves at once and goes back if the API refuses.
+  const toggle = useMutation(
+    (resource: ResourceView, isActive: boolean) =>
+      api.PATCH("/v1/businesses/{business_id}/resources/{resource_id}", {
+        params: { path: { business_id: business.id, resource_id: resource.id } },
+        body: { is_active: isActive },
+      }),
+    {
+      optimistic: (resource, isActive) =>
+        queryCache.update<{ items?: ResourceView[] }>(resourcesKey, (data) => ({
+          items: (data.items ?? []).map((item) => (item.id === resource.id ? { ...item, is_active: isActive } : item)),
+        })),
+      stale: [queryKeys.bookings.all(business.id), queryKeys.assistant.all(business.id)],
+    },
   );
-  const removeException = useApiMutation((exceptionId: string) =>
+  const removeException = useMutation((exceptionId: string) =>
     api.DELETE("/v1/businesses/{business_id}/schedule-exceptions/{exception_id}", {
       params: { path: { business_id: business.id, exception_id: exceptionId } },
     }),
@@ -80,13 +89,7 @@ export function ResourcesScreen() {
     });
 
   const setActive = async (resource: ResourceView, isActive: boolean) => {
-    setToggling((current) => new Set(current).add(resource.id));
-    const result = await toggle.run(resource.id, isActive);
-    setToggling((current) => {
-      const next = new Set(current);
-      next.delete(resource.id);
-      return next;
-    });
+    const result = await toggle.run(resource, isActive);
     if (result.ok) {
       replaceResource(result.data);
       setHasChanges(true);
@@ -138,7 +141,9 @@ export function ResourcesScreen() {
           </Alert>
         ) : null}
         {resources.isLoading && !resources.data ? (
-          <LoadingBlock label={t("common.loading")} />
+          <LoadingRegion label={t("common.loading")} className="p-4 sm:p-5">
+            <SkeletonRows rows={3} />
+          </LoadingRegion>
         ) : resources.error && !resources.data ? (
           <ErrorState error={resources.error} onRetry={resources.reload} />
         ) : resourceList.length === 0 ? (
@@ -153,7 +158,6 @@ export function ResourcesScreen() {
               <ResourceRow
                 key={resource.id}
                 resource={resource}
-                isToggling={toggling.has(resource.id)}
                 onToggle={(isActive) => void setActive(resource, isActive)}
                 onEdit={() => setResourceEditor((current) => ({ key: (current?.key ?? 0) + 1, resource }))}
               />

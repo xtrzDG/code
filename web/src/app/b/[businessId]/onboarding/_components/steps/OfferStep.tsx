@@ -6,7 +6,7 @@ import { useRef, useState } from "react";
 import type { KnowledgeItemDetails, KnowledgeItemKind } from "@/api/types";
 import { useBusiness } from "@/components/business/BusinessContext";
 import { IconPlus, IconTrash } from "@/components/icons";
-import { Button, Field, Input, LoadingBlock, Select, Textarea } from "@/components/ui";
+import { Button, Field, Input, LoadingRegion, Select, SkeletonRows, Textarea } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import type { MessageKey } from "@/i18n/translate";
 import { businessPath } from "@/lib/navigation";
@@ -40,7 +40,7 @@ const KIND_LABELS: Record<KnowledgeItemKind, MessageKey> = {
 export function OfferStep(props: StepProps) {
   const { t } = useI18n();
   if (!props.knowledge) {
-    return <LoadingBlock label={t("common.loading")} />;
+    return <LoadingRegion label={t("common.loading")} className="py-1"><SkeletonRows rows={3} /></LoadingRegion>;
   }
   return <OfferStepForm {...props} knowledge={props.knowledge} />;
 }

@@ -37,6 +37,8 @@ export const ru: Messages = {
     comingSoon: "Раздел в разработке и скоро появится здесь.",
     details: "Подробности",
     requestId: "Номер запроса: {id}",
+    typeToConfirm: "Введите {text} для подтверждения",
+    undo: "Отменить",
   },
   language: {
     label: "Язык интерфейса",

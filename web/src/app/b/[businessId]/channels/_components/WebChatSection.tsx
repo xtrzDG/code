@@ -1,7 +1,8 @@
 "use client";
 
 import { api } from "@/api/client";
-import { useApiQuery } from "@/api/hooks";
+import { queryKeys } from "@/api/queryKeys";
+import { useQuery } from "@/api/useQuery";
 import { useBusiness } from "@/components/business/BusinessContext";
 import { useI18n } from "@/i18n/client";
 
@@ -21,12 +22,10 @@ export function WebChatSection({
 }) {
   const { t } = useI18n();
   const { business } = useBusiness();
-  const snippet = useApiQuery(
-    () =>
-      api.GET("/v1/businesses/{business_id}/channels/web/snippet", {
-        params: { path: { business_id: business.id } },
-      }),
-    [business.id],
+  const snippet = useQuery(queryKeys.channels.snippet(business.id), () =>
+    api.GET("/v1/businesses/{business_id}/channels/web/snippet", {
+      params: { path: { business_id: business.id } },
+    }),
   );
 
   return (

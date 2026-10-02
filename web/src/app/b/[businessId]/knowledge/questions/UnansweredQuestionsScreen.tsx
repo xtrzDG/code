@@ -3,10 +3,11 @@
 import { useId, useState, type FormEvent } from "react";
 
 import { api } from "@/api/client";
-import { useApiMutation } from "@/api/hooks";
+import { queryKeys } from "@/api/queryKeys";
+import { useCursorPage } from "@/api/useCursorPage";
+import { useMutation } from "@/api/useMutation";
 import type { Schema } from "@/api/types";
 import { useBusiness, useBusinessFormat } from "@/components/business/BusinessContext";
-import { usePagedList } from "@/components/content/usePagedList";
 import { IconCheck } from "@/components/icons";
 import {
   Alert,
@@ -18,8 +19,9 @@ import {
   ErrorState,
   Field,
   Input,
-  LoadingBlock,
+  LoadingRegion,
   Modal,
+  SkeletonRows,
   Textarea,
   useToast,
 } from "@/components/ui";
@@ -48,23 +50,24 @@ export function UnansweredQuestionsScreen() {
   const [answering, setAnswering] = useState<UnansweredQuestion | null>(null);
   const [answeredCount, setAnsweredCount] = useState(0);
 
-  const questions = usePagedList(
-    (cursor) =>
+  const questions = useCursorPage<UnansweredQuestion, Schema<"UnansweredQuestionPage">>(
+    queryKeys.knowledge.questions(business.id, includeResolved, includeSandbox),
+    ({ cursor, limit }) =>
       api.GET("/v1/businesses/{business_id}/unanswered-questions", {
         params: {
           path: { business_id: business.id },
           query: {
             include_resolved: includeResolved ? "true" : undefined,
             include_sandbox: includeSandbox ? "true" : undefined,
-            limit: String(PAGE_SIZE),
+            limit: String(limit),
             cursor: cursor ?? undefined,
           },
         },
       }),
-    [business.id, includeResolved, includeSandbox],
+    { pageSize: PAGE_SIZE },
   );
 
-  const list = questions.items;
+  const list = questions.items ?? [];
 
   return (
     <div className="space-y-6">
@@ -91,7 +94,9 @@ export function UnansweredQuestionsScreen() {
         </div>
 
         {questions.isLoading ? (
-          <LoadingBlock label={t("common.loading")} />
+          <LoadingRegion label={t("common.loading")}>
+            <SkeletonRows rows={4} className="rounded-none border-0" />
+          </LoadingRegion>
         ) : questions.error ? (
           <ErrorState error={questions.error} onRetry={questions.reload} />
         ) : list.length === 0 ? (
@@ -132,13 +137,13 @@ export function UnansweredQuestionsScreen() {
             </ul>
             {questions.hasMore ? (
               <div className="flex flex-col items-center gap-2 border-t border-line px-4 py-3 text-center sm:px-6">
-                {questions.loadMoreError ? (
+                {questions.moreError ? (
                   <p className="text-sm text-danger" role="alert">
                     {t("knowledge.paging.failed")}
                   </p>
                 ) : null}
                 <Button variant="ghost" isLoading={questions.isLoadingMore} loadingText={t("common.loading")} onClick={questions.loadMore}>
-                  {questions.loadMoreError ? t("common.retry") : t("knowledge.paging.more")}
+                  {questions.moreError ? t("common.retry") : t("knowledge.paging.more")}
                 </Button>
               </div>
             ) : null}
@@ -152,7 +157,7 @@ export function UnansweredQuestionsScreen() {
           question={answering}
           onClose={() => setAnswering(null)}
           onAnswered={(result) => {
-            questions.update((items) =>
+            questions.updateItems((items) =>
               includeResolved
                 ? items.map((item) => (item.id === result.question.id ? result.question : item))
                 : items.filter((item) => item.id !== result.question.id),
@@ -183,11 +188,14 @@ function AnswerDialog({
   const [title, setTitle] = useState(question.question);
   const [errors, setErrors] = useState<{ answer?: MessageKey; title?: MessageKey }>({});
 
-  const save = useApiMutation((body: { answer: string; title: string | null }) =>
-    api.POST("/v1/businesses/{business_id}/unanswered-questions/{question_id}/answer", {
-      params: { path: { business_id: business.id, question_id: question.id } },
-      body,
-    }),
+  const save = useMutation(
+    (body: { answer: string; title: string | null }) =>
+      api.POST("/v1/businesses/{business_id}/unanswered-questions/{question_id}/answer", {
+        params: { path: { business_id: business.id, question_id: question.id } },
+        body,
+      }),
+    // A new FAQ item: the items, the open-question counts and the assistant's checks follow.
+    { stale: [queryKeys.knowledge.all(business.id), queryKeys.assistant.all(business.id)], invalidate: [queryKeys.dashboard.all(business.id)] },
   );
 
   const submit = async (event: FormEvent) => {

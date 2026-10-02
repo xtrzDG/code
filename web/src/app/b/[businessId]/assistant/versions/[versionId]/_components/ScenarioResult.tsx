@@ -1,7 +1,6 @@
 "use client";
 
-import { IconCheckCircle, IconXCircle } from "@/components/content/icons";
-import { IconAlert, IconChevronDown } from "@/components/icons";
+import { IconAlert, IconCheckCircle, IconChevronDown, IconXCircle } from "@/components/icons";
 import { Badge, type BadgeTone } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import type { MessageKey } from "@/i18n/translate";

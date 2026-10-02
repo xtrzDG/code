@@ -5,7 +5,7 @@ import { useCallback, useRef, useSyncExternalStore, type ComponentType, type Key
 import { cn } from "@/lib/cn";
 
 import { decodeHash } from "./helpers";
-import type { IconProps } from "./icons";
+import type { IconProps } from "@/components/icons";
 
 const HASH_EVENT = "aw:hashchange";
 

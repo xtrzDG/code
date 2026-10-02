@@ -3,7 +3,7 @@
 import { useId, useState, type FormEvent } from "react";
 
 import { api } from "@/api/client";
-import { useApiMutation } from "@/api/hooks";
+import { useMutation } from "@/api/useMutation";
 import type { OpeningInterval, ResourceKind, Weekday } from "@/api/types";
 import { useBusiness, useBusinessFormat } from "@/components/business/BusinessContext";
 import { Button, Checkbox, Field, Fieldset, Input, Modal, Radio, Select, useToast } from "@/components/ui";
@@ -76,10 +76,10 @@ export function ResourceEditor({
   const [hoursErrors, setHoursErrors] = useState<Partial<Record<Weekday, MessageKey>>>({});
   const [hoursMissing, setHoursMissing] = useState(false);
 
-  const create = useApiMutation((body: ResourceCreateBody) =>
+  const create = useMutation((body: ResourceCreateBody) =>
     api.POST("/v1/businesses/{business_id}/resources", { params: { path: { business_id: business.id } }, body }),
   );
-  const update = useApiMutation((resourceId: string, body: ResourcePatchBody) =>
+  const update = useMutation((resourceId: string, body: ResourcePatchBody) =>
     api.PATCH("/v1/businesses/{business_id}/resources/{resource_id}", {
       params: { path: { business_id: business.id, resource_id: resourceId } },
       body,

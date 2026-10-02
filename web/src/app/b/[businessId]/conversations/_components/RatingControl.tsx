@@ -12,7 +12,7 @@ const OPTIONS: { value: ConversationRating; label: "conversations.rating.good" |
 /**
  * Good / bad verdict on how the assistant handled the conversation (concept
  * section 8), for the weekly quality review. Pressing the chosen one again
- * clears it.
+ * clears it. The choice shows at once; a refusal puts the old one back.
  */
 export function RatingControl({
   value,
@@ -35,10 +35,10 @@ export function RatingControl({
               key={option.value}
               type="button"
               aria-pressed={isActive}
-              disabled={isPending}
+              aria-busy={isPending || undefined}
               onClick={() => onChange(isActive ? null : option.value)}
               className={cn(
-                "inline-flex min-h-9 items-center gap-1.5 rounded-lg px-3 text-sm font-medium transition-colors disabled:opacity-60",
+                "inline-flex min-h-9 items-center gap-1.5 rounded-lg px-3 text-sm font-medium transition-colors",
                 isActive
                   ? option.value === "good"
                     ? "bg-success-soft text-success"

@@ -9,8 +9,8 @@ import { CustomerName, LoadMore } from "@/components/insights/common";
 import { formatRelative } from "@/components/insights/dates";
 import { CHANNEL_LABELS, MESSAGE_AUTHORS } from "@/components/insights/labels";
 import type { ConversationPage, ConversationSummaryView } from "@/components/insights/types";
-import type { PagedQuery } from "@/components/insights/usePagedQuery";
-import { Button, Card, EmptyState, ErrorState, LoadingBlock } from "@/components/ui";
+import type { CursorPage } from "@/api/useCursorPage";
+import { Button, Card, EmptyState, ErrorState, LoadingRegion, Skeleton } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { cn } from "@/lib/cn";
 import { languageName } from "@/lib/format";
@@ -26,7 +26,7 @@ export function ConversationList({
   linkQuery,
   onClearFilters,
 }: {
-  query: PagedQuery<ConversationSummaryView, ConversationPage>;
+  query: CursorPage<ConversationSummaryView, ConversationPage>;
   /** Some filter is set: an empty page means "nothing matches", not "no conversations". */
   isFiltered: boolean;
   /** The shown rows belong to the previous filters while new ones load. */
@@ -39,14 +39,14 @@ export function ConversationList({
   const items = query.items;
 
   if (items === undefined) {
-    return (
+    return query.error ? (
       <Card className="lg:min-h-0 lg:flex-1">
-        {query.error ? (
-          <ErrorState error={query.error} onRetry={query.reload} />
-        ) : (
-          <LoadingBlock label={t("conversations.loading")} />
-        )}
+        <ErrorState error={query.error} onRetry={query.reload} />
       </Card>
+    ) : (
+      <LoadingRegion label={t("conversations.loading")} className="lg:min-h-0 lg:flex-1">
+        <ConversationRowsSkeleton />
+      </LoadingRegion>
     );
   }
 
@@ -77,7 +77,7 @@ export function ConversationList({
   return (
     <div
       className={cn(
-        "overflow-hidden rounded-2xl border border-line bg-surface shadow-sm transition-opacity lg:min-h-0 lg:flex-1 lg:overflow-y-auto",
+        "animate-settle overflow-hidden rounded-2xl border border-line bg-surface shadow-sm transition-opacity lg:min-h-0 lg:flex-1 lg:overflow-y-auto",
         isStale && "opacity-60",
       )}
       aria-busy={isStale || undefined}
@@ -188,5 +188,26 @@ function RatingMark({ rating }: { rating: NonNullable<ConversationSummaryView["r
       <span aria-hidden>{rating === "good" ? "▲" : "▼"}</span>
       <span className="sr-only">{t(rating === "good" ? "conversations.rating.good" : "conversations.rating.bad")}</span>
     </span>
+  );
+}
+
+/** Feed rows while the first page loads: an avatar, a name with a time and the last message. */
+export function ConversationRowsSkeleton({ rows = 6 }: { rows?: number }) {
+  return (
+    <div aria-hidden className="divide-y divide-line overflow-hidden rounded-2xl border border-line bg-surface">
+      {Array.from({ length: rows }, (_, index) => (
+        <div key={index} className="flex gap-3 px-4 py-3">
+          <Skeleton className="size-10 shrink-0 rounded-full" />
+          <div className="min-w-0 flex-1 space-y-2">
+            <div className="flex items-center justify-between gap-2">
+              <Skeleton className={index % 2 === 0 ? "h-3.5 w-32" : "h-3.5 w-24"} />
+              <Skeleton className="h-3 w-10" />
+            </div>
+            <Skeleton className="h-3 w-full" />
+            <Skeleton className={index % 3 === 0 ? "h-3 w-3/5" : "h-3 w-2/5"} />
+          </div>
+        </div>
+      ))}
+    </div>
   );
 }

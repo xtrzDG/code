@@ -3,7 +3,8 @@
 import { useState } from "react";
 
 import { api } from "@/api/client";
-import { useApiQuery } from "@/api/hooks";
+import { queryKeys } from "@/api/queryKeys";
+import { useQuery } from "@/api/useQuery";
 import { useBusiness } from "@/components/business/BusinessContext";
 import { IconClock } from "@/components/icons";
 import { formatLocalDate, formatLocalTime, isLocalDate, isLocalTime } from "@/components/insights/dates";
@@ -54,7 +55,8 @@ export function SlotPicker({
   const canAsk = isLocalDate(request.date);
   const isStay = request.isStay;
 
-  const availability = useApiQuery(
+  const availability = useQuery(
+    queryKeys.bookings.availability(businessId, JSON.stringify(asked)),
     () =>
       api.GET("/v1/businesses/{business_id}/availability", {
         params: {
@@ -69,8 +71,8 @@ export function SlotPicker({
           },
         },
       }),
-    [businessId, asked],
-    { enabled: asked !== null },
+    // Free slots change with every booking: always ask again.
+    { enabled: asked !== null, staleMs: 0 },
   );
 
   const isStale =
@@ -113,7 +115,7 @@ export function SlotPicker({
         )}
       </div>
 
-      {asked === null ? null : availability.isLoading ? (
+      {asked === null ? null : availability.isLoading || availability.isFetching ? (
         <Spinner size="sm" label={t("common.loading")} className="text-ink-subtle" />
       ) : availability.error ? (
         <ErrorState error={availability.error} onRetry={availability.reload} className="py-4" />
