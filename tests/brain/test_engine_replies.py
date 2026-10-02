@@ -19,6 +19,7 @@ from app.schemas.typings.bookings.constrained_strings import LocalDate
 from tests.brain.brain_world import build_world
 from tests.brain.business_setups import ARMENIA, BRAZIL, ISRAEL
 from tests.brain.engine_helpers import CountingLlmAdapter, requests_of, user_turn_text
+from tests.brain.fenced_text import ends_with_fenced
 from tests.brain.scripted_turns import call_tool, say, scripted
 
 
@@ -45,7 +46,8 @@ def test_first_reply_starts_with_the_localized_disclosure_only_once() -> None:
     assert "Channel: whatsapp." in first_turn_text
     assert "Customer: phone +995555123456." in first_turn_text
     assert "first reply in this conversation" in first_turn_text
-    assert first_turn_text.endswith("[Customer message]\nგამარჯობა!")
+    assert "[Customer message]\n<customer_text " in first_turn_text
+    assert ends_with_fenced(first_turn_text, "გამარჯობა!")
     assert "first reply" not in second_turn_text
 
 

@@ -35,6 +35,7 @@ SECTION_TITLES: list[str] = [
     "# Never",
     "# Rules for this type of business",
     "# Emergencies",
+    "# Messages",
     "# Answer format",
     "# Example exchanges",
 ]

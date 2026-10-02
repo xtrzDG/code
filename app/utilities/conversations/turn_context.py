@@ -11,6 +11,10 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 
 from app.schemas.constants.channels import ChannelKind
+from app.utilities.conversations.customer_text_fencing import (
+    describe_fence,
+    fence_customer_text,
+)
 
 WEEKDAY_NAMES: tuple[str, ...] = (
     "Monday",
@@ -120,33 +124,45 @@ def build_context_line(context: TurnContext) -> str:
     return "\n".join(lines)
 
 
-def build_user_turn_text(context_line: str, customer_text: str) -> str:
-    """The user turn: the context, then the customer's own words."""
+def build_user_turn_text(context_line: str, message_text: str, fence_key: str) -> str:
+    """
+    The user turn: the context, where the customer's words are fenced (the
+    fence key is new for every turn), then the message text built by
+    `build_text_with_unanswered_messages`.
+    """
 
-    return f"{context_line}\n{CUSTOMER_HEADER}\n{customer_text}"
+    return (
+        f"{context_line}\n{describe_fence(fence_key)}\n{CUSTOMER_HEADER}\n"
+        f"{message_text}"
+    )
 
 
 def build_text_with_unanswered_messages(
     earlier_messages: list[EarlierMessage],
     customer_text: str,
+    fence_key: str,
 ) -> str:
     """
     The customer's message after what was written while the assistant
     stayed silent (a colleague handled the conversation, or the hourly limit
     was reached), in time order: the customer's messages and the staff
     replies, so the model knows everything said and does not contradict the
-    business's own staff.
+    business's own staff. Every text a customer wrote is fenced and cannot
+    imitate the platform (`fence_customer_text`); staff speak for the
+    business and are quoted as they wrote.
     """
 
+    latest: str = fence_customer_text(customer_text, fence_key)
     if not earlier_messages:
-        return customer_text
+        return latest
 
     earlier: str = "\n".join(
-        f"- {STAFF_LINE_LABEL if message.is_from_staff else CUSTOMER_LINE_LABEL}: "
-        f"{message.text}"
+        f"- {STAFF_LINE_LABEL}: {message.text}"
+        if message.is_from_staff
+        else f"- {CUSTOMER_LINE_LABEL}:\n{fence_customer_text(message.text, fence_key)}"
         for message in earlier_messages
     )
-    return f"{UNANSWERED_HEADER}\n{earlier}\n{LATEST_MESSAGE_HEADER}\n{customer_text}"
+    return f"{UNANSWERED_HEADER}\n{earlier}\n{LATEST_MESSAGE_HEADER}\n{latest}"
 
 
 def build_rewrite_note(unverified_values: list[str]) -> str:

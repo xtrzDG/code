@@ -10,6 +10,7 @@ from app.schemas.constants.billing import UsageKind
 from app.schemas.constants.conversations import ReplyGuardVerdict
 from app.schemas.typings.assistants.constrained_strings import LlmModelId
 from tests.brain.brain_world import BrainWorld, build_world
+from tests.brain.fenced_text import ends_with_fenced
 from tests.brain.provider_http_fakes import (
     ScriptedHttp,
     anthropic_message,
@@ -82,7 +83,7 @@ def test_openai_turns_are_replayed_by_the_engine_across_messages() -> None:
     assert third_input[1]["encrypted_content"] == "gAAAA-encrypted-rs_1"
     tool_output = json.loads(third_input[3]["output"])
     assert tool_output["matches"][0]["price"] == "18.00"
-    assert "[Customer message]\nThanks!" in third_input[6]["content"][0]["text"]
+    assert ends_with_fenced(third_input[6]["content"][0]["text"], "Thanks!")
     outbound = world.messages(first.conversation_id)[1]
     assert int(outbound.input_tokens) == 4_200
     assert int(outbound.cost_micro_usd) == 1_050 + 300

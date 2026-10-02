@@ -16,6 +16,7 @@ from app.schemas.exceptions.application_errors import (
 )
 from tests.brain.brain_world import build_world
 from tests.brain.engine_helpers import requests_of
+from tests.brain.fenced_text import ends_with_fenced
 from tests.brain.scripted_turns import call_tool, say, scripted
 
 
@@ -210,4 +211,4 @@ def test_messages_written_during_a_handoff_reach_the_model_afterwards() -> None:
     final_user_turn = json.loads(last_request.transcript[-1])
     text = "".join(str(block.get("text", "")) for block in final_user_turn["content"])
     assert "make it 6 people instead of 4, at 20:00" in text
-    assert text.rstrip().endswith("so is my change confirmed?")
+    assert ends_with_fenced(text, "so is my change confirmed?")

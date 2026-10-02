@@ -11,6 +11,7 @@ from app.schemas.domain.conversations import MessageDocument
 from app.schemas.typings.conversations.strings import MessageText
 from tests.brain.brain_world import BrainWorld, build_world
 from tests.brain.engine_helpers import requests_of, user_turn_text
+from tests.brain.fenced_text import ends_with_fenced, fenced_texts
 from tests.brain.scripted_turns import call_tool, say, scripted
 
 STAFF_TEXT: str = "Yes, 10% for 8+ guests, Friday 19:00 is held for you"
@@ -66,10 +67,13 @@ def test_staff_reply_after_a_handoff_reaches_the_model_and_backs_its_numbers() -
     reply = world.send("Great, please confirm")
 
     turn = last_user_turn(world)
-    assert "- Customer: any news?" in turn
+    assert "any news?" in fenced_texts(turn)
     assert f"- Staff: {STAFF_TEXT}" in turn
-    assert turn.index("- Customer: any news?") < turn.index(f"- Staff: {STAFF_TEXT}")
-    assert turn.endswith("Great, please confirm")
+    assert turn.index("- Customer:\n<customer_text ") < turn.index(
+        f"- Staff: {STAFF_TEXT}"
+    )
+    assert turn.index("any news?") < turn.index(f"- Staff: {STAFF_TEXT}")
+    assert ends_with_fenced(turn, "Great, please confirm")
     # Staff are the business speaking: repeating their 10% is not invented.
     assert reply.text == "Done: 10% off for 8 guests, Friday at 19:00."
     assert reply.is_handed_off is False
@@ -86,4 +90,4 @@ def test_staff_message_in_an_open_conversation_reaches_the_next_turn() -> None:
 
     turn = last_user_turn(world)
     assert "- Staff: We hold a table for you on Friday at 19:00." in turn
-    assert turn.endswith("Thanks!")
+    assert ends_with_fenced(turn, "Thanks!")

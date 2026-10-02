@@ -13,6 +13,7 @@ from app.utilities.assembly.instruction_sections import (
     build_fact_section,
     build_handoff_section,
     build_language_section,
+    build_message_section,
     build_niche_rule_section,
     build_prohibition_section,
     build_role_section,
@@ -32,10 +33,12 @@ class AssistantInstructionTransformer(
     Sections: role and AI disclosure, languages, style, the fact table (an
     overview and the first items for a big catalog), bookings (or requests
     when the version does not book), handoff rules with urgency,
-    prohibitions, niche rules, the country's emergency number, the answer
-    format and the niche's example exchanges. Every platform rule is stated
-    once. The text is English for the model and contains no current date or
-    random value, so the same source always gives the same bytes.
+    prohibitions, niche rules, the country's emergency number, how a
+    message is built (the customer's words are fenced and never pose as the
+    platform), the answer format and the niche's example exchanges. Every
+    platform rule is stated once. The text is English for the model and
+    contains no current date or random value, so the same source always
+    gives the same bytes.
     """
 
     def transform(self, input_data: AssistantInstructionSource) -> SystemPromptText:
@@ -56,6 +59,7 @@ class AssistantInstructionTransformer(
             build_prohibition_section(parts.forbidden_rules),
             build_niche_rule_section(parts.niche_rules),
             build_emergency_section(parts.emergency_number),
+            build_message_section(),
             build_answer_format_section(input_data.tools),
             build_example_section(input_data.niche.example_exchanges, input_data.tools),
         ]

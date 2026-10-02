@@ -1,3 +1,5 @@
+from collections.abc import Callable
+
 from typed_time_provider import Microseconds, WallClock
 
 from app.contracts.brain import AssistantToolRegistryContract
@@ -51,6 +53,7 @@ from app.use_cases.conversations.replies.turn_progress import (
     build_reply,
     record_tool_outcome,
 )
+from app.utilities.conversations.customer_text_fencing import new_fence_key
 from app.utilities.conversations.turn_context import (
     build_rewrite_note,
     build_text_with_unanswered_messages,
@@ -65,7 +68,9 @@ class GenerateAssistantReplyUseCase(UseCaseContract[PreparedTurn, GeneratedReply
     The customer's message is appended to the verbatim transcript as one
     user turn: the server context line, then the text, preceded by what the
     customer wrote while the assistant stayed silent (a handoff, the hourly
-    limit), so the model never loses those messages. The model may call
+    limit), so the model never loses those messages. Customer text is
+    fenced with a key that is new for every turn and cannot imitate the
+    platform's lines (`customer_text_fencing`). The model may call
     the offered tools for up to `tool_round_limit` rounds; all results of a
     round go back in one tool-results turn. Every turn gets the next
     sequence number and is only ever appended.
@@ -92,6 +97,7 @@ class GenerateAssistantReplyUseCase(UseCaseContract[PreparedTurn, GeneratedReply
         max_output_tokens: LlmMaxOutputTokens,
         effort: LlmEffort,
         tool_round_limit: LlmToolRoundLimit,
+        fence_key_factory: Callable[[], str] = new_fence_key,
     ) -> None:
         self._llm_adapter: LlmAdapterContract = llm_adapter
         self._llm_turn_repo: LlmTurnRepoContract = llm_turn_repo
@@ -104,6 +110,7 @@ class GenerateAssistantReplyUseCase(UseCaseContract[PreparedTurn, GeneratedReply
         self._max_output_tokens: LlmMaxOutputTokens = max_output_tokens
         self._effort: LlmEffort = effort
         self._tool_round_limit: LlmToolRoundLimit = tool_round_limit
+        self._fence_key_factory: Callable[[], str] = fence_key_factory
 
     def run(self, input_data: PreparedTurn) -> GeneratedReply:
         stored_turns: list[LlmTurnDocument] = self._llm_turn_repo.list_by_conversation(
@@ -118,6 +125,7 @@ class GenerateAssistantReplyUseCase(UseCaseContract[PreparedTurn, GeneratedReply
         tools: list[LlmToolDefinition] = self._tool_registry.list_definitions(
             list(input_data.tool_context.available_tools)
         )
+        fence_key: str = self._fence_key_factory()
         self._append(
             input_data,
             progress,
@@ -131,7 +139,9 @@ class GenerateAssistantReplyUseCase(UseCaseContract[PreparedTurn, GeneratedReply
                                 self._message_repo, input_data, stored_turns
                             ),
                             str(input_data.customer_text),
+                            fence_key,
                         ),
+                        fence_key,
                     )
                 )
             ),
