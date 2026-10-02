@@ -1,6 +1,6 @@
 from app.contracts.channels import VoiceWebhookAdapterContract
 from app.contracts.localization_utilities import PhoneNumberParserContract
-from app.contracts.repositories import BusinessRepoContract
+from app.contracts.repositories.business_repositories import BusinessRepoContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.configurations.app_settings import AppSettings
 from app.schemas.domain.businesses import BusinessDocument

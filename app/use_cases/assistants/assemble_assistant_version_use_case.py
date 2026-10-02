@@ -6,10 +6,14 @@ from app.contracts.registries import (
     NicheTemplateRegistryContract,
     PlanRegistryContract,
 )
-from app.contracts.repositories import (
+from app.contracts.repositories.assistant_repositories import (
     AssistantVersionRepoContract,
+)
+from app.contracts.repositories.business_repositories import (
     BusinessProfileRepoContract,
     BusinessRepoContract,
+)
+from app.contracts.repositories.knowledge_repositories import (
     KnowledgeItemRepoContract,
     ResourceRepoContract,
     ScheduleExceptionRepoContract,

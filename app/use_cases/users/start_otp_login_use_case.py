@@ -9,7 +9,7 @@ from app.contracts.registries import (
     LanguageRegistryContract,
     LoginCodeSendLockRegistryContract,
 )
-from app.contracts.repositories import OtpChallengeRepoContract
+from app.contracts.repositories.user_repositories import OtpChallengeRepoContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.configurations.app_settings import AppSettings
 from app.schemas.constants.localization import (

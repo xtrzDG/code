@@ -7,13 +7,17 @@ from app.contracts.operations import (
     BookingCalendarSyncFacilitatorContract,
     BusinessLockRegistryContract,
 )
-from app.contracts.repositories import (
-    AuditLogRepoContract,
-    BookingRepoContract,
+from app.contracts.repositories.booking_repositories import BookingRepoContract
+from app.contracts.repositories.business_repositories import (
     BusinessProfileRepoContract,
     BusinessRepoContract,
+)
+from app.contracts.repositories.compliance_repositories import AuditLogRepoContract
+from app.contracts.repositories.conversation_repositories import (
     ContactRepoContract,
     ConversationRepoContract,
+)
+from app.contracts.repositories.knowledge_repositories import (
     ResourceRepoContract,
     ScheduleExceptionRepoContract,
 )

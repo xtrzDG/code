@@ -1,6 +1,6 @@
 from typed_time_provider import Microseconds, WallClock
 
-from app.contracts.repositories import (
+from app.contracts.repositories.assistant_repositories import (
     AssistantVersionRepoContract,
     AutotestRunRepoContract,
 )

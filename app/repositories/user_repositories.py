@@ -1,7 +1,7 @@
 from typed_time_provider import Microseconds
 
 from app.contracts.document_store import DocumentCollectionAdapterContract
-from app.contracts.repositories import (
+from app.contracts.repositories.user_repositories import (
     OtpChallengeRepoContract,
     UserRepoContract,
     UserSessionRepoContract,

@@ -2,10 +2,8 @@ from app.contracts.registries import (
     LanguageRegistryContract,
     NicheTemplateRegistryContract,
 )
-from app.contracts.repositories import (
-    BusinessProfileRepoContract,
-    KnowledgeItemRepoContract,
-)
+from app.contracts.repositories.business_repositories import BusinessProfileRepoContract
+from app.contracts.repositories.knowledge_repositories import KnowledgeItemRepoContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.assistants import AutotestScenarioKind
 from app.schemas.constants.knowledge import KnowledgeItemKind

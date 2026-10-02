@@ -1,6 +1,9 @@
 from typed_time_provider import Microseconds, WallClock
 
-from app.contracts.repositories import UserRepoContract, UserSessionRepoContract
+from app.contracts.repositories.user_repositories import (
+    UserRepoContract,
+    UserSessionRepoContract,
+)
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.domain.users import UserDocument, UserSessionDocument
 from app.schemas.exceptions.application_errors import AuthenticationRequiredError

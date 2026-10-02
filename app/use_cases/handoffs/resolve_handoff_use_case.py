@@ -1,9 +1,9 @@
 from typed_time_provider import Microseconds, WallClock
 
-from app.contracts.repositories import (
+from app.contracts.repositories.booking_repositories import HandoffRepoContract
+from app.contracts.repositories.conversation_repositories import (
     ContactRepoContract,
     ConversationRepoContract,
-    HandoffRepoContract,
 )
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.conversations import ConversationStatus

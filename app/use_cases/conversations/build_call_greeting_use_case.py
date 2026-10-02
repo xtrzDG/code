@@ -1,5 +1,5 @@
 from app.contracts.localization_utilities import LocalizedTextResolverContract
-from app.contracts.repositories import BusinessRepoContract
+from app.contracts.repositories.business_repositories import BusinessRepoContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.dto.conversations import CallGreeting, CallGreetingRequest

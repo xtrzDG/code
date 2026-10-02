@@ -4,7 +4,10 @@ from app.contracts.billing import (
     PaymentGatewayAdapterContract,
     PaymentOrderRepoContract,
 )
-from app.contracts.repositories import InvoiceRepoContract, SubscriptionRepoContract
+from app.contracts.repositories.billing_repositories import (
+    InvoiceRepoContract,
+    SubscriptionRepoContract,
+)
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.configurations.app_settings import AppSettings
 from app.schemas.constants.billing import (

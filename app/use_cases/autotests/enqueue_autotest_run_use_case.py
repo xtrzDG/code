@@ -1,5 +1,5 @@
 from app.contracts.jobs import JobQueueFacilitatorContract
-from app.contracts.repositories import AutotestRunRepoContract
+from app.contracts.repositories.assistant_repositories import AutotestRunRepoContract
 from app.contracts.transformer_contract import TransformerContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.domain.assistants import AutotestRunDocument

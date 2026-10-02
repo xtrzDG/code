@@ -2,7 +2,10 @@
 
 from typed_time_provider import Microseconds
 
-from app.contracts.repositories import InvoiceRepoContract, SubscriptionRepoContract
+from app.contracts.repositories.billing_repositories import (
+    InvoiceRepoContract,
+    SubscriptionRepoContract,
+)
 from app.schemas.constants.billing import (
     InvoiceKind,
     InvoiceStatus,

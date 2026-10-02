@@ -1,6 +1,6 @@
 from typed_time_provider import Microseconds, WallClock
 
-from app.contracts.repositories import MessageRepoContract
+from app.contracts.repositories.conversation_repositories import MessageRepoContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.channels import MessageDirection
 from app.schemas.constants.conversations import MessageAuthor

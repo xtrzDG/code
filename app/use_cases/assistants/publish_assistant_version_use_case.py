@@ -1,10 +1,10 @@
 from typed_time_provider import Microseconds, WallClock
 
-from app.contracts.repositories import (
+from app.contracts.repositories.assistant_repositories import (
     AssistantVersionRepoContract,
-    AuditLogRepoContract,
-    UserRepoContract,
 )
+from app.contracts.repositories.compliance_repositories import AuditLogRepoContract
+from app.contracts.repositories.user_repositories import UserRepoContract
 from app.contracts.transformer_contract import TransformerContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.assistants import (

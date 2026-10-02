@@ -1,9 +1,9 @@
 from typed_time_provider import Microseconds, WallClock
 
 from app.contracts.facilitators import ChannelMessageSenderFacilitatorContract
-from app.contracts.repositories import (
-    AuditLogRepoContract,
-    ChannelRepoContract,
+from app.contracts.repositories.business_repositories import ChannelRepoContract
+from app.contracts.repositories.compliance_repositories import AuditLogRepoContract
+from app.contracts.repositories.conversation_repositories import (
     ConversationRepoContract,
     MessageRepoContract,
 )

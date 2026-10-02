@@ -1,10 +1,10 @@
 from typed_time_provider import Microseconds, WallClock
 
 from app.contracts.localization_utilities import LocalizedTextResolverContract
-from app.contracts.repositories import (
+from app.contracts.repositories.billing_repositories import UsageEventRepoContract
+from app.contracts.repositories.conversation_repositories import (
     ConversationRepoContract,
     MessageRepoContract,
-    UsageEventRepoContract,
 )
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.billing import UsageKind

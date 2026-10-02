@@ -6,18 +6,26 @@ from zoneinfo import ZoneInfo
 from typed_time_provider import Microseconds, WallClock
 
 from app.contracts.registries import PlanRegistryContract
-from app.contracts.repositories import (
+from app.contracts.repositories.billing_repositories import (
+    SubscriptionRepoContract,
+    UsageEventRepoContract,
+)
+from app.contracts.repositories.booking_repositories import (
     BookingRepoContract,
-    BusinessProfileRepoContract,
-    BusinessRepoContract,
-    ConversationRepoContract,
     HandoffRepoContract,
     LeadRepoContract,
-    MessageRepoContract,
-    ScheduleExceptionRepoContract,
-    SubscriptionRepoContract,
     UnansweredQuestionRepoContract,
-    UsageEventRepoContract,
+)
+from app.contracts.repositories.business_repositories import (
+    BusinessProfileRepoContract,
+    BusinessRepoContract,
+)
+from app.contracts.repositories.conversation_repositories import (
+    ConversationRepoContract,
+    MessageRepoContract,
+)
+from app.contracts.repositories.knowledge_repositories import (
+    ScheduleExceptionRepoContract,
 )
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.billing import SubscriptionStatus, UsageKind

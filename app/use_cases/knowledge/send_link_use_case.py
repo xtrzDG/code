@@ -1,4 +1,4 @@
-from app.contracts.repositories import BusinessProfileRepoContract
+from app.contracts.repositories.business_repositories import BusinessProfileRepoContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.businesses import BusinessLinkKind
 from app.schemas.domain.profiles import BusinessProfileDocument

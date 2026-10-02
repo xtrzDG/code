@@ -1,10 +1,10 @@
 from app.contracts.billing import PaymentOrderRepoContract
-from app.contracts.repositories import (
+from app.contracts.repositories.assistant_repositories import (
     AssistantVersionRepoContract,
     AutotestRunRepoContract,
-    BusinessRepoContract,
-    InvoiceRepoContract,
 )
+from app.contracts.repositories.billing_repositories import InvoiceRepoContract
+from app.contracts.repositories.business_repositories import BusinessRepoContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.assistants import AutotestOutcome
 from app.schemas.domain.assistants import AssistantVersionDocument, AutotestRunDocument

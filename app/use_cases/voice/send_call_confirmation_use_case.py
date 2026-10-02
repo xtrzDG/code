@@ -2,12 +2,12 @@ import logging
 
 from app.contracts.facilitators import ChannelMessageSenderFacilitatorContract
 from app.contracts.localization_utilities import LocalizedTextResolverContract
-from app.contracts.repositories import (
-    BookingRepoContract,
+from app.contracts.repositories.booking_repositories import BookingRepoContract
+from app.contracts.repositories.business_repositories import (
     BusinessRepoContract,
     ChannelRepoContract,
-    ContactRepoContract,
 )
+from app.contracts.repositories.conversation_repositories import ContactRepoContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.channel_events import PostCallEventStatus
 from app.schemas.constants.channels import ChannelKind, ChannelStatus

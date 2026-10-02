@@ -1,6 +1,6 @@
 from typed_time_provider import Microseconds, WallClock
 
-from app.contracts.repositories import AutotestRunRepoContract
+from app.contracts.repositories.assistant_repositories import AutotestRunRepoContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.assistants import AutotestRunStatus
 from app.schemas.domain.assistants import AutotestRunDocument

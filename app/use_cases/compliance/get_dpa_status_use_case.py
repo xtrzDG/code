@@ -1,5 +1,5 @@
 from app.contracts.legal_registries import LegalDocumentRegistryContract
-from app.contracts.repositories import DpaAcceptanceRepoContract
+from app.contracts.repositories.compliance_repositories import DpaAcceptanceRepoContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.configurations.app_settings import AppSettings
 from app.schemas.domain.businesses import BusinessDocument

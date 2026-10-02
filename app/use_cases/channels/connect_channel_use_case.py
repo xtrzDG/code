@@ -8,7 +8,8 @@ from app.contracts.channel_clients import (
     TelegramBotApiClientContract,
 )
 from app.contracts.localization_utilities import PhoneNumberParserContract
-from app.contracts.repositories import AuditLogRepoContract, ChannelRepoContract
+from app.contracts.repositories.business_repositories import ChannelRepoContract
+from app.contracts.repositories.compliance_repositories import AuditLogRepoContract
 from app.contracts.secret_cipher import SecretCipherAdapterContract
 from app.contracts.storage import StorageScopeContract
 from app.contracts.use_case_contract import UseCaseContract

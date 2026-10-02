@@ -4,7 +4,10 @@ from typed_time_provider import Microseconds, WallClock
 
 from app.contracts.brain import AssistantToolRegistryContract
 from app.contracts.llm import LlmAdapterContract
-from app.contracts.repositories import LlmTurnRepoContract, MessageRepoContract
+from app.contracts.repositories.conversation_repositories import (
+    LlmTurnRepoContract,
+    MessageRepoContract,
+)
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.assistants import LlmEffort
 from app.schemas.constants.channels import MessageDirection

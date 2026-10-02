@@ -1,4 +1,6 @@
-from app.contracts.repositories import AssistantVersionRepoContract
+from app.contracts.repositories.assistant_repositories import (
+    AssistantVersionRepoContract,
+)
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.domain.assistants import AssistantVersionDocument
 from app.schemas.domain.businesses import BusinessDocument

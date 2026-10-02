@@ -1,7 +1,7 @@
 from typed_time_provider import Microseconds, WallClock
 
 from app.contracts.registries import LanguageRegistryContract
-from app.contracts.repositories import UserRepoContract
+from app.contracts.repositories.user_repositories import UserRepoContract
 from app.contracts.transformer_contract import TransformerContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.domain.users import UserDocument

@@ -1,4 +1,6 @@
-from app.contracts.repositories import UnansweredQuestionRepoContract
+from app.contracts.repositories.booking_repositories import (
+    UnansweredQuestionRepoContract,
+)
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.domain.handoffs import UnansweredQuestionDocument
 from app.schemas.dto.operations import (

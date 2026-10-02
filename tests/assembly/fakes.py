@@ -18,7 +18,7 @@ from app.contracts.registries import (
     LanguageRegistryContract,
     NicheTemplateRegistryContract,
 )
-from app.contracts.repositories import MessageRepoContract
+from app.contracts.repositories.conversation_repositories import MessageRepoContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.contracts.voice_platform import VoiceAgentProvisionerAdapterContract
 from app.schemas.constants.assistants import AssistantToolName, AutotestScenarioKind

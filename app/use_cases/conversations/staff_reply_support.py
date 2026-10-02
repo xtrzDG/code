@@ -2,8 +2,8 @@
 
 from typed_time_provider import Microseconds
 
-from app.contracts.repositories import (
-    ChannelRepoContract,
+from app.contracts.repositories.business_repositories import ChannelRepoContract
+from app.contracts.repositories.conversation_repositories import (
     ConversationRepoContract,
     MessageRepoContract,
 )

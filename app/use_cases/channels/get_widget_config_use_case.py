@@ -1,6 +1,8 @@
 from app.contracts.registries import LanguageRegistryContract
-from app.contracts.repositories import (
+from app.contracts.repositories.assistant_repositories import (
     AssistantVersionRepoContract,
+)
+from app.contracts.repositories.business_repositories import (
     BusinessRepoContract,
     ChannelRepoContract,
 )

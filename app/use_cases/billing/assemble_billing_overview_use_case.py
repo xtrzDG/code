@@ -5,7 +5,7 @@ from typed_time_provider import Microseconds, WallClock
 from app.contracts.catalog_registries import ExchangeRateRegistryContract
 from app.contracts.localization_utilities import LocalizedTextResolverContract
 from app.contracts.registries import PlanRegistryContract
-from app.contracts.repositories import (
+from app.contracts.repositories.billing_repositories import (
     InvoiceRepoContract,
     SubscriptionRepoContract,
     UsageEventRepoContract,

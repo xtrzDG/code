@@ -2,13 +2,13 @@ from collections import defaultdict
 from decimal import ROUND_HALF_UP, Decimal
 
 from app.contracts.catalog_registries import ExchangeRateRegistryContract
-from app.contracts.repositories import (
-    BusinessRepoContract,
+from app.contracts.repositories.billing_repositories import (
     InvoiceRepoContract,
-    MessageRepoContract,
     SubscriptionRepoContract,
     UsageEventRepoContract,
 )
+from app.contracts.repositories.business_repositories import BusinessRepoContract
+from app.contracts.repositories.conversation_repositories import MessageRepoContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.billing import InvoiceStatus, UsageKind
 from app.schemas.domain.billing import (

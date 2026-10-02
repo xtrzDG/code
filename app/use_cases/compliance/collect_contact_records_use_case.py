@@ -1,10 +1,12 @@
-from app.contracts.repositories import (
+from app.contracts.repositories.booking_repositories import (
     BookingRepoContract,
+    HandoffRepoContract,
+    LeadRepoContract,
+)
+from app.contracts.repositories.conversation_repositories import (
     CallRepoContract,
     ContactRepoContract,
     ConversationRepoContract,
-    HandoffRepoContract,
-    LeadRepoContract,
     MessageRepoContract,
 )
 from app.contracts.use_case_contract import UseCaseContract

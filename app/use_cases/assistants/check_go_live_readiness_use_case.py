@@ -1,13 +1,13 @@
 from typed_time_provider import Microseconds, WallClock
 
 from app.contracts.registries import NicheTemplateRegistryContract
-from app.contracts.repositories import (
-    AutotestRunRepoContract,
-    BusinessProfileRepoContract,
-    DpaAcceptanceRepoContract,
+from app.contracts.repositories.assistant_repositories import AutotestRunRepoContract
+from app.contracts.repositories.billing_repositories import SubscriptionRepoContract
+from app.contracts.repositories.business_repositories import BusinessProfileRepoContract
+from app.contracts.repositories.compliance_repositories import DpaAcceptanceRepoContract
+from app.contracts.repositories.knowledge_repositories import (
     KnowledgeItemRepoContract,
     ResourceRepoContract,
-    SubscriptionRepoContract,
 )
 from app.contracts.use_case_contract import UseCaseContract
 from app.contracts.voice_platform import VoiceAgentProvisionerAdapterContract

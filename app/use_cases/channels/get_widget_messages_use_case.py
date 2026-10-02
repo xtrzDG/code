@@ -4,9 +4,11 @@ from app.contracts.registries import (
     LanguageRegistryContract,
     RequestRateLimitRegistryContract,
 )
-from app.contracts.repositories import (
+from app.contracts.repositories.business_repositories import (
     BusinessRepoContract,
     ChannelRepoContract,
+)
+from app.contracts.repositories.conversation_repositories import (
     ConversationRepoContract,
     MessageRepoContract,
 )

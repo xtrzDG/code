@@ -1,6 +1,6 @@
 from typed_time_provider import Microseconds, WallClock
 
-from app.contracts.repositories import ResourceRepoContract
+from app.contracts.repositories.knowledge_repositories import ResourceRepoContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.domain.resources import ResourceDocument
 from app.schemas.dto.resources import ResourceView, UpdateResourceCommand

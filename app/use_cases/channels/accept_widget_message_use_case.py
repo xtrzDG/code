@@ -1,7 +1,10 @@
 from typed_time_provider import Microseconds, WallClock
 
 from app.contracts.registries import RequestRateLimitRegistryContract
-from app.contracts.repositories import BusinessRepoContract, ChannelRepoContract
+from app.contracts.repositories.business_repositories import (
+    BusinessRepoContract,
+    ChannelRepoContract,
+)
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.channels import ChannelKind, ChannelStatus
 from app.schemas.domain.businesses import BusinessDocument

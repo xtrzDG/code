@@ -1,7 +1,7 @@
 from typed_time_provider import Microseconds, WallClock
 
-from app.contracts.repositories import (
-    BusinessRepoContract,
+from app.contracts.repositories.business_repositories import BusinessRepoContract
+from app.contracts.repositories.knowledge_repositories import (
     ResourceRepoContract,
     ScheduleExceptionRepoContract,
 )

@@ -1,4 +1,6 @@
-from app.contracts.repositories import ScheduleExceptionRepoContract
+from app.contracts.repositories.knowledge_repositories import (
+    ScheduleExceptionRepoContract,
+)
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.dto.resources import (
     DeleteScheduleExceptionCommand,

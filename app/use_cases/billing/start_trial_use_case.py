@@ -1,11 +1,11 @@
 from typed_time_provider import Microseconds, WallClock
 
 from app.contracts.registries import PlanRegistryContract
-from app.contracts.repositories import (
-    BusinessRepoContract,
+from app.contracts.repositories.billing_repositories import (
     InvoiceRepoContract,
     SubscriptionRepoContract,
 )
+from app.contracts.repositories.business_repositories import BusinessRepoContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.billing import InvoiceStatus, PlanKey, SubscriptionStatus
 from app.schemas.constants.businesses import ServiceMode

@@ -1,6 +1,6 @@
 from typed_time_provider import Microseconds, WallClock
 
-from app.contracts.repositories import LeadRepoContract
+from app.contracts.repositories.booking_repositories import LeadRepoContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.domain.bookings import LeadDocument
 from app.schemas.dto.bookings import LeadView

@@ -1,14 +1,16 @@
 from typed_time_provider import Microseconds, WallClock
 
 from app.contracts.recording_storage import RecordingStorageAdapterContract
-from app.contracts.repositories import (
-    AuditLogRepoContract,
+from app.contracts.repositories.booking_repositories import (
     BookingRepoContract,
+    HandoffRepoContract,
+    LeadRepoContract,
+)
+from app.contracts.repositories.compliance_repositories import AuditLogRepoContract
+from app.contracts.repositories.conversation_repositories import (
     CallRepoContract,
     ContactRepoContract,
     ConversationRepoContract,
-    HandoffRepoContract,
-    LeadRepoContract,
     LlmTurnRepoContract,
     MessageRepoContract,
 )

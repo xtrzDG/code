@@ -1,7 +1,8 @@
 from typed_time_provider import Microseconds, WallClock
 
 from app.contracts.recording_storage import RecordingStorageAdapterContract
-from app.contracts.repositories import AuditLogRepoContract, CallRepoContract
+from app.contracts.repositories.compliance_repositories import AuditLogRepoContract
+from app.contracts.repositories.conversation_repositories import CallRepoContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.compliance import AuditAction
 from app.schemas.domain.businesses import BusinessDocument

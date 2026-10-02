@@ -6,12 +6,12 @@ from app.contracts.billing import (
 )
 from app.contracts.facilitators import ManagerNotificationFacilitatorContract
 from app.contracts.registries import PlanRegistryContract
-from app.contracts.repositories import (
-    BusinessRepoContract,
+from app.contracts.repositories.billing_repositories import (
     InvoiceRepoContract,
     SubscriptionRepoContract,
-    UserRepoContract,
 )
+from app.contracts.repositories.business_repositories import BusinessRepoContract
+from app.contracts.repositories.user_repositories import UserRepoContract
 from app.contracts.transformer_contract import TransformerContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.billing import (

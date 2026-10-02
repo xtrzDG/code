@@ -5,12 +5,16 @@ from typed_time_provider import Microseconds, WallClock
 
 from app.contracts.localization_utilities import PhoneNumberParserContract
 from app.contracts.operations import ManagerBroadcastFacilitatorContract
-from app.contracts.repositories import (
+from app.contracts.repositories.booking_repositories import HandoffRepoContract
+from app.contracts.repositories.business_repositories import (
     BusinessProfileRepoContract,
     BusinessRepoContract,
+)
+from app.contracts.repositories.conversation_repositories import (
     ContactRepoContract,
     ConversationRepoContract,
-    HandoffRepoContract,
+)
+from app.contracts.repositories.knowledge_repositories import (
     ScheduleExceptionRepoContract,
 )
 from app.contracts.transformer_contract import TransformerContract

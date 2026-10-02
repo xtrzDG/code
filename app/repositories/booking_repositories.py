@@ -1,4 +1,4 @@
-from app.contracts.repositories import (
+from app.contracts.repositories.booking_repositories import (
     BookingRepoContract,
     HandoffRepoContract,
     LeadRepoContract,

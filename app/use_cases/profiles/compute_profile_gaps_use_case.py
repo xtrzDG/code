@@ -1,11 +1,15 @@
 from app.contracts.localization_utilities import LocalizedTextResolverContract
 from app.contracts.registries import NicheTemplateRegistryContract
-from app.contracts.repositories import (
+from app.contracts.repositories.booking_repositories import (
+    UnansweredQuestionRepoContract,
+)
+from app.contracts.repositories.business_repositories import (
     BusinessProfileRepoContract,
     BusinessRepoContract,
+)
+from app.contracts.repositories.knowledge_repositories import (
     KnowledgeItemRepoContract,
     ResourceRepoContract,
-    UnansweredQuestionRepoContract,
 )
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.niches import ProfileWizardStep

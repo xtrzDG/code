@@ -1,6 +1,7 @@
 from typed_time_provider import Microseconds, WallClock
 
-from app.contracts.repositories import AuditLogRepoContract, ChannelRepoContract
+from app.contracts.repositories.business_repositories import ChannelRepoContract
+from app.contracts.repositories.compliance_repositories import AuditLogRepoContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.channels import ChannelKind
 from app.schemas.constants.compliance import AuditAction

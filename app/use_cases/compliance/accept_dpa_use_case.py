@@ -1,7 +1,10 @@
 from typed_time_provider import Microseconds, WallClock
 
 from app.contracts.legal_registries import LegalDocumentRegistryContract
-from app.contracts.repositories import AuditLogRepoContract, DpaAcceptanceRepoContract
+from app.contracts.repositories.compliance_repositories import (
+    AuditLogRepoContract,
+    DpaAcceptanceRepoContract,
+)
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.configurations.app_settings import AppSettings
 from app.schemas.constants.compliance import AuditAction

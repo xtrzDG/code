@@ -1,4 +1,4 @@
-from app.contracts.repositories import AuditLogRepoContract
+from app.contracts.repositories.compliance_repositories import AuditLogRepoContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.users import BusinessMemberRole
 from app.schemas.domain.businesses import BusinessDocument

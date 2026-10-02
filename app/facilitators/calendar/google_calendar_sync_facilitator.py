@@ -9,11 +9,9 @@ from app.contracts.operations import (
     CalendarEventLinkRepoContract,
     GoogleCalendarClientContract,
 )
-from app.contracts.repositories import (
-    BusinessRepoContract,
-    ContactRepoContract,
-    ResourceRepoContract,
-)
+from app.contracts.repositories.business_repositories import BusinessRepoContract
+from app.contracts.repositories.conversation_repositories import ContactRepoContract
+from app.contracts.repositories.knowledge_repositories import ResourceRepoContract
 from app.contracts.secret_cipher import SecretCipherAdapterContract
 from app.contracts.transformer_contract import TransformerContract
 from app.schemas.constants.bookings import BookingStatus

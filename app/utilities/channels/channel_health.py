@@ -10,7 +10,7 @@ reason so the owner can reconnect.
 
 from typed_time_provider import Microseconds
 
-from app.contracts.repositories import ChannelRepoContract
+from app.contracts.repositories.business_repositories import ChannelRepoContract
 from app.schemas.constants.channels import ChannelStatus
 from app.schemas.domain.channels import ChannelDocument
 from app.schemas.typings.channels.constrained_strings import ChannelErrorSummary

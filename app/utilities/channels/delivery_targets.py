@@ -2,7 +2,7 @@
 
 from typed_time_provider import Microseconds
 
-from app.contracts.repositories import ChannelRepoContract
+from app.contracts.repositories.business_repositories import ChannelRepoContract
 from app.contracts.secret_cipher import SecretCipherAdapterContract
 from app.schemas.constants.billing import UsageKind
 from app.schemas.constants.channels import ChannelKind

@@ -1,7 +1,7 @@
 from typed_time_provider import Microseconds, WallClock
 
 from app.contracts.registries import PlanRegistryContract
-from app.contracts.repositories import InvoiceRepoContract
+from app.contracts.repositories.billing_repositories import InvoiceRepoContract
 from app.contracts.transformer_contract import TransformerContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.billing import BillingPeriod, InvoiceKind, InvoiceStatus

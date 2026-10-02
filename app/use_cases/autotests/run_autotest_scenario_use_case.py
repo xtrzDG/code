@@ -2,7 +2,7 @@ from collections.abc import Sequence
 
 from app.contracts.conversation_flow import ConversationTurnOrchestratorContract
 from app.contracts.llm import LlmAdapterContract
-from app.contracts.repositories import MessageRepoContract
+from app.contracts.repositories.conversation_repositories import MessageRepoContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.configurations.app_settings import AppSettings
 from app.schemas.constants.assistants import AutotestOutcome

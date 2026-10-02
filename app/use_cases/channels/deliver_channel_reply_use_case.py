@@ -1,7 +1,8 @@
 from typed_time_provider import Microseconds, WallClock
 
 from app.contracts.channels import ChannelAdapterContract
-from app.contracts.repositories import ChannelRepoContract, UsageEventRepoContract
+from app.contracts.repositories.billing_repositories import UsageEventRepoContract
+from app.contracts.repositories.business_repositories import ChannelRepoContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.channels import ChannelKind
 from app.schemas.domain.channels import ChannelDocument

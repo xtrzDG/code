@@ -1,5 +1,5 @@
 from app.contracts.document_store import DocumentCollectionAdapterContract
-from app.contracts.repositories import (
+from app.contracts.repositories.compliance_repositories import (
     AuditLogRepoContract,
     DpaAcceptanceRepoContract,
 )

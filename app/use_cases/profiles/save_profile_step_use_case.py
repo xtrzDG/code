@@ -2,12 +2,12 @@ from typed_time_provider import Microseconds, WallClock
 
 from app.contracts.localization_utilities import PhoneNumberParserContract
 from app.contracts.registries import NicheTemplateRegistryContract
-from app.contracts.repositories import (
-    AuditLogRepoContract,
+from app.contracts.repositories.business_repositories import (
     BusinessProfileRepoContract,
     BusinessRepoContract,
-    KnowledgeItemRepoContract,
 )
+from app.contracts.repositories.compliance_repositories import AuditLogRepoContract
+from app.contracts.repositories.knowledge_repositories import KnowledgeItemRepoContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.knowledge import KnowledgeItemSource
 from app.schemas.constants.niches import ProfileWizardStep

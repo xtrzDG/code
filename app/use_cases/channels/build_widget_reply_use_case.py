@@ -1,5 +1,5 @@
 from app.contracts.registries import LanguageRegistryContract
-from app.contracts.repositories import MessageRepoContract
+from app.contracts.repositories.conversation_repositories import MessageRepoContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.conversations import MessageAuthor
 from app.schemas.constants.localization import TextDirection

@@ -4,15 +4,17 @@ from zoneinfo import ZoneInfo
 from typed_time_provider import Microseconds, WallClock
 
 from app.contracts.facilitators import ChannelMessageSenderFacilitatorContract
-from app.contracts.repositories import (
-    BookingRepoContract,
+from app.contracts.repositories.booking_repositories import BookingRepoContract
+from app.contracts.repositories.business_repositories import (
     BusinessProfileRepoContract,
     BusinessRepoContract,
+)
+from app.contracts.repositories.conversation_repositories import (
     ContactRepoContract,
     ConversationRepoContract,
     MessageRepoContract,
-    ResourceRepoContract,
 )
+from app.contracts.repositories.knowledge_repositories import ResourceRepoContract
 from app.contracts.transformer_contract import TransformerContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.bookings import BookingStatus

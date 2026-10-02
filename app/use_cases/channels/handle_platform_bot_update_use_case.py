@@ -5,7 +5,8 @@ from typed_time_provider import Microseconds, WallClock
 from app.contracts.channel_clients import TelegramBotApiClientContract
 from app.contracts.channels import ManagerTelegramLinkRepoContract
 from app.contracts.localization_utilities import LocalizedTextResolverContract
-from app.contracts.repositories import AuditLogRepoContract, BusinessRepoContract
+from app.contracts.repositories.business_repositories import BusinessRepoContract
+from app.contracts.repositories.compliance_repositories import AuditLogRepoContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.configurations.app_settings import AppSettings
 from app.schemas.constants.channel_events import PlatformBotCommandResult

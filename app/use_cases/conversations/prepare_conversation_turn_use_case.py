@@ -4,13 +4,19 @@ from zoneinfo import ZoneInfo
 from typed_time_provider import Microseconds, WallClock
 
 from app.contracts.localization_utilities import LanguageDetectorContract
-from app.contracts.repositories import (
+from app.contracts.repositories.assistant_repositories import (
     AssistantVersionRepoContract,
+)
+from app.contracts.repositories.business_repositories import (
     BusinessProfileRepoContract,
     BusinessRepoContract,
+)
+from app.contracts.repositories.conversation_repositories import (
     ContactRepoContract,
     ConversationRepoContract,
     MessageRepoContract,
+)
+from app.contracts.repositories.knowledge_repositories import (
     ScheduleExceptionRepoContract,
 )
 from app.contracts.use_case_contract import UseCaseContract

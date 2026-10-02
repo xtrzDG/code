@@ -1,8 +1,8 @@
-from app.contracts.repositories import (
+from app.contracts.repositories.assistant_repositories import (
     AssistantVersionRepoContract,
     AutotestRunRepoContract,
-    BusinessRepoContract,
 )
+from app.contracts.repositories.business_repositories import BusinessRepoContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.assistants import AssistantVersionStatus, AutotestRunStatus
 from app.schemas.domain.assistants import AssistantVersionDocument, AutotestRunDocument

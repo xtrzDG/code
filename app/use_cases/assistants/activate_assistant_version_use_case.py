@@ -3,8 +3,10 @@ import logging
 from typed_time_provider import Microseconds, WallClock
 
 from app.contracts.assistant_assembly import AssistantToolCatalogContract
-from app.contracts.repositories import (
+from app.contracts.repositories.assistant_repositories import (
     AssistantVersionRepoContract,
+)
+from app.contracts.repositories.business_repositories import (
     BusinessProfileRepoContract,
     BusinessRepoContract,
 )

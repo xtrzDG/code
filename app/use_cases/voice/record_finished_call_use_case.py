@@ -3,17 +3,23 @@ import logging
 from typed_time_provider import Microseconds, WallClock
 
 from app.contracts.localization_utilities import PhoneNumberParserContract
-from app.contracts.repositories import (
+from app.contracts.repositories.assistant_repositories import (
     AssistantVersionRepoContract,
-    AuditLogRepoContract,
+)
+from app.contracts.repositories.billing_repositories import UsageEventRepoContract
+from app.contracts.repositories.booking_repositories import (
     BookingRepoContract,
-    BusinessRepoContract,
-    CallRepoContract,
-    ChannelRepoContract,
-    ConversationRepoContract,
     HandoffRepoContract,
     LeadRepoContract,
-    UsageEventRepoContract,
+)
+from app.contracts.repositories.business_repositories import (
+    BusinessRepoContract,
+    ChannelRepoContract,
+)
+from app.contracts.repositories.compliance_repositories import AuditLogRepoContract
+from app.contracts.repositories.conversation_repositories import (
+    CallRepoContract,
+    ConversationRepoContract,
 )
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.billing import UsageKind

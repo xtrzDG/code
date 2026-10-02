@@ -1,15 +1,19 @@
 from typed_time_provider import Microseconds, WallClock
 
 from app.contracts.registries import PlanRegistryContract
-from app.contracts.repositories import (
+from app.contracts.repositories.assistant_repositories import (
     AssistantVersionRepoContract,
     AutotestRunRepoContract,
-    HandoffRepoContract,
-    MessageRepoContract,
+)
+from app.contracts.repositories.billing_repositories import (
     SubscriptionRepoContract,
-    UnansweredQuestionRepoContract,
     UsageEventRepoContract,
 )
+from app.contracts.repositories.booking_repositories import (
+    HandoffRepoContract,
+    UnansweredQuestionRepoContract,
+)
+from app.contracts.repositories.conversation_repositories import MessageRepoContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.assistants import AutotestOutcome
 from app.schemas.constants.billing import SubscriptionStatus
