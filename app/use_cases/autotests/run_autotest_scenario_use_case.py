@@ -1,3 +1,5 @@
+"""Run one autotest scenario: a simulated customer, the assistant, the judge."""
+
 from collections.abc import Sequence
 
 from app.contracts.conversation_flow import ConversationTurnOrchestratorContract
@@ -23,11 +25,14 @@ from app.schemas.dto.conversations import (
 from app.schemas.exceptions.base_exception import ApplicationError
 from app.schemas.typings.assistants.strings import AutotestCheckNote, SystemPromptText
 from app.schemas.typings.billing.constrained_integers import CostMicroUsd
-from app.schemas.typings.conversations.prefixed_id import ConversationId
 from app.schemas.typings.conversations.strings import (
     ChannelUserId,
     LlmProviderPayload,
     MessageText,
+)
+from app.use_cases.autotests.autotest_scenario_results import (
+    build_scenario_result,
+    sum_assistant_costs,
 )
 from app.utilities.assembly.autotest_evaluation import (
     check_conversation,
@@ -96,10 +101,10 @@ class RunAutotestScenarioUseCase(
             conversation_error = error
 
         cost: int = sum(int(cost) for cost in customer_costs) + int(
-            self._sum_assistant_costs(input_data, replies)
+            sum_assistant_costs(self._message_repo, input_data, replies)
         )
         if conversation_error is not None:
-            return self._build_result(
+            return build_scenario_result(
                 input_data,
                 AutotestOutcome.ERRORED,
                 transcript=transcript,
@@ -112,7 +117,7 @@ class RunAutotestScenarioUseCase(
             )
 
         if not any(line.author is MessageAuthor.CUSTOMER for line in transcript):
-            return self._build_result(
+            return build_scenario_result(
                 input_data,
                 AutotestOutcome.ERRORED,
                 transcript=transcript,
@@ -129,7 +134,7 @@ class RunAutotestScenarioUseCase(
                 self._build_judge_request(input_data, transcript, replies)
             )
         except ApplicationError as error:
-            return self._build_result(
+            return build_scenario_result(
                 input_data,
                 AutotestOutcome.ERRORED,
                 transcript=transcript,
@@ -145,7 +150,7 @@ class RunAutotestScenarioUseCase(
             str(judge_response.text) if judge_response.text is not None else None
         )
         if verdict is None:
-            return self._build_result(
+            return build_scenario_result(
                 input_data,
                 AutotestOutcome.ERRORED,
                 transcript=transcript,
@@ -156,7 +161,7 @@ class RunAutotestScenarioUseCase(
                 cost=CostMicroUsd(cost),
             )
 
-        return self._build_result(
+        return build_scenario_result(
             input_data,
             decide_outcome(verdict.scores, check_notes),
             transcript=transcript,
@@ -271,48 +276,4 @@ class RunAutotestScenarioUseCase(
             self._app_settings.llm_judge_model_id,
             response.input_tokens,
             response.output_tokens,
-        )
-
-    def _sum_assistant_costs(
-        self,
-        scenario_run: AutotestScenarioRun,
-        replies: list[AssistantReply],
-    ) -> CostMicroUsd:
-        conversation_ids: dict[str, ConversationId] = {}
-        for reply in replies:
-            conversation_ids.setdefault(
-                str(reply.conversation_id), reply.conversation_id
-            )
-
-        return CostMicroUsd(
-            sum(
-                int(message.cost_micro_usd)
-                for conversation_id in conversation_ids.values()
-                for message in self._message_repo.list_by_conversation(
-                    scenario_run.business.id,
-                    conversation_id,
-                )
-            )
-        )
-
-    def _build_result(
-        self,
-        scenario_run: AutotestScenarioRun,
-        outcome: AutotestOutcome,
-        *,
-        transcript: list[AutotestTranscriptLine],
-        check_notes: list[AutotestCheckNote],
-        cost: CostMicroUsd,
-        verdict: JudgeVerdict | None = None,
-    ) -> AutotestScenarioResult:
-        return AutotestScenarioResult(
-            scenario_key=scenario_run.scenario.key,
-            kind=scenario_run.scenario.kind,
-            language=scenario_run.scenario.language,
-            outcome=outcome,
-            scores=list(verdict.scores) if verdict is not None else [],
-            judge_notes=list(verdict.notes) if verdict is not None else [],
-            check_notes=check_notes,
-            transcript=list(transcript),
-            cost_micro_usd=cost,
         )
