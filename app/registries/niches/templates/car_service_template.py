@@ -1,3 +1,4 @@
+from app.registries.niches.examples.service_examples import CAR_SERVICE_EXAMPLES
 from app.registries.niches.template_parts import (
     autotest_kinds,
     choice,
@@ -158,6 +159,7 @@ def build_car_service_template() -> NicheTemplate:
             "Do not diagnose a car over chat or phone; offer a diagnostics "
             "appointment.",
         ),
+        example_exchanges=CAR_SERVICE_EXAMPLES,
         default_handoff_rules=handoff_rules(
             en=[
                 "Complex repair that needs an estimate",

@@ -1,6 +1,11 @@
-"""Knowledge tools of the assistant: search, prices and links."""
+"""
+Knowledge tools of the assistant: search, prices and links. On the phone a
+link is never handed to the agent to read out: it is texted after the call
+when a messenger reaches the caller.
+"""
 
 from app.contracts.use_case_contract import UseCaseContract
+from app.schemas.constants.channels import ChannelKind
 from app.schemas.dto.assistant_tools import (
     AssistantToolContext,
     AssistantToolOutcome,
@@ -21,6 +26,7 @@ from app.use_cases.conversations.tools.tool_outcomes import success_outcome
 from app.utilities.conversations.tool_payloads import (
     render_knowledge_search,
     render_link,
+    render_phone_link,
     render_price_lookup,
 )
 
@@ -70,4 +76,7 @@ def run_send_link(
     result: SendLinkResult = send_link.run(
         SendLinkQuery(business_id=context.business_id, kind=tool_input.kind)
     )
+    if context.channel is ChannelKind.PHONE:
+        return success_outcome(call, render_phone_link(result, context.can_text_caller))
+
     return success_outcome(call, render_link(result))

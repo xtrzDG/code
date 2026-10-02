@@ -1,3 +1,4 @@
+from app.registries.niches.examples.care_examples import FITNESS_EXAMPLES
 from app.registries.niches.template_parts import (
     autotest_kinds,
     choice,
@@ -151,6 +152,7 @@ def build_fitness_template() -> NicheTemplate:
             "Do not give training, nutrition or health advice; suggest talking to "
             "a coach.",
         ),
+        example_exchanges=FITNESS_EXAMPLES,
         default_handoff_rules=handoff_rules(
             en=[
                 "Injury or health problem during training",

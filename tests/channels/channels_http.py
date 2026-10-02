@@ -158,6 +158,9 @@ def build_channels_http_client(testbed: ChannelsUseCases) -> TestClient:
                     PlanRegistry(),
                     testbed.profile_repo,
                     testbed.exception_repo,
+                    testbed.contact_repo,
+                    testbed.booking_repo,
+                    testbed.resource_repo,
                     testbed.wall_clock,
                     testbed.voice_webhook_adapter,
                     testbed.phone_number_parser,
@@ -171,7 +174,9 @@ def build_channels_http_client(testbed: ChannelsUseCases) -> TestClient:
                         testbed.voice_webhook_adapter, testbed.wall_clock
                     ),
                     testbed.record_finished_call,
+                    testbed.audit_call_replies,
                     testbed.send_call_confirmation,
+                    testbed.send_call_links,
                 )
             ),
         )

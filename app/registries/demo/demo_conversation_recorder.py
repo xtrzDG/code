@@ -5,6 +5,7 @@ from typed_time_provider import Microseconds
 from app.registries.demo.demo_clock import MICROSECONDS_PER_SECOND, DemoClock
 from app.schemas.constants.channels import ChannelKind, MessageDirection
 from app.schemas.constants.conversations import (
+    CallGuardVerdict,
     CallOutcome,
     ConversationRating,
     ConversationStatus,
@@ -176,8 +177,12 @@ class DemoConversationRecorder:
         transcript: Sequence[tuple[int, MessageAuthor, str]],
         outcome: CallOutcome,
         cost_micro_usd: int,
+        guard_verdict: CallGuardVerdict | None = None,
     ) -> CallDocument:
-        """A finished call of a phone conversation; lines "[mm:ss] who: text"."""
+        """
+        A finished call of a phone conversation; lines "[mm:ss] who: text";
+        `guard_verdict` is what the after-call check found in it.
+        """
 
         lines: list[str] = [
             f"[{offset // 60:02d}:{offset % 60:02d}] {author.value}: {text}"
@@ -194,6 +199,7 @@ class DemoConversationRecorder:
             provider_call_id=ProviderCallId(str(conversation.channel_user_id)),
             cost_micro_usd=CostMicroUsd(cost_micro_usd),
             outcome=outcome,
+            guard_verdict=guard_verdict,
             created_at=conversation.created_at,
             updated_at=conversation.last_message_at,
         )

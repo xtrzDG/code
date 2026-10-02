@@ -8,6 +8,7 @@ HasCallRecording = bool
 HasChannelCredential = bool
 HasMoreWidgetMessages = bool
 IsCallConfirmationSent = bool
+IsCallLinkMessageSent = bool
 IsChannelConnected = bool
 IsWebChatEnabled = bool
 # Keep abc order for all non example types, if possible.

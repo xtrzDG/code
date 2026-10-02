@@ -58,7 +58,9 @@ def test_voice_agent_is_built_from_the_same_version() -> None:
     assert spec.business_id == business.id
     assert spec.existing_agent_id is None
     assert spec.business_name == "Café Rustaveli"
-    assert spec.prompt_text == version.prompt_text
+    # The agent speaks from the phone instruction of the same version.
+    assert spec.prompt_text == version.phone_prompt_text
+    assert "https://" not in str(spec.prompt_text)
     assert spec.languages == [LanguageTag("ka"), LanguageTag("ru"), LanguageTag("en")]
     assert spec.default_language == LanguageTag("ka")
     assert [greeting.language for greeting in spec.greetings] == spec.languages
@@ -89,7 +91,7 @@ def test_later_versions_and_rollbacks_reuse_the_voice_agent() -> None:
         VoiceAgentId("agent_1"),
     ]
     assert rolled_back.voice_agent_id == VoiceAgentId("agent_1")
-    assert specs[2].prompt_text == first.prompt_text
+    assert specs[2].prompt_text == first.phone_prompt_text
     assert [greeting.language for greeting in specs[0].greetings] == [
         LanguageTag("he"),
         LanguageTag("ar"),
@@ -246,3 +248,19 @@ def test_the_voice_agent_can_put_callers_through_to_the_handoff_phone() -> None:
 
     [spec] = testbed.voice_provisioner.specs
     assert spec.transfer_phone_number == "+995555123456"
+
+
+def test_a_version_from_before_the_phone_instruction_keeps_its_chat_instruction() -> (
+    None
+):
+    testbed = AssemblyTestbed()
+    business = seed_georgian_restaurant(testbed, PlanKey.VOICE_AND_CHAT)
+    version = ready_version(testbed, business)
+    stored = testbed.version(business.id, version.id)
+    stored.phone_prompt_text = None
+    testbed.version_repo.save(stored)
+
+    testbed.publish(business.id, version.id)
+
+    [spec] = testbed.voice_provisioner.specs
+    assert spec.prompt_text == version.prompt_text

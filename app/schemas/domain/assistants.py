@@ -70,6 +70,9 @@ class AssistantVersionDocument(BaseDocument):
     niche_key: NicheKey
     model_id: LlmModelId
     prompt_text: SystemPromptText
+    # The voice agent's instruction (spoken facts, no links); None for a
+    # version assembled before it existed, whose agent uses `prompt_text`.
+    phone_prompt_text: SystemPromptText | None = None
     tools: list[AssistantToolName]
     languages: list[LanguageTag]
     default_language: LanguageTag

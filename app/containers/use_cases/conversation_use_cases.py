@@ -84,6 +84,7 @@ class ConversationUseCasesContainer(containers.DeclarativeContainer):
         handoff_to_human=follow_up_use_cases.handoff_to_human_use_case,
         record_unanswered_question=follow_up_use_cases.record_unanswered_question_use_case,
         phone_number_parser=utilities.phone_number_parser,
+        wall_clock=time_provider.microsecond_wall_clock,
     )
     prepare_conversation_turn_use_case: Factory[
         UseCaseContract[InboundMessage, PreparedTurn]

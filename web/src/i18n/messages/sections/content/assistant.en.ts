@@ -75,6 +75,11 @@ export const assistantEn = {
     factsHint: "The assistant answers only from these facts and the knowledge base.",
     noFacts: "This version has no facts.",
     instructionHint: "The instruction the assistant follows, assembled from your answers.",
+    instructionFor: "Instruction for",
+    instructionChat: "Chat",
+    instructionPhone: "Phone calls",
+    phoneInstructionHint:
+      "What the phone assistant follows: the same rules, with prices, hours and dates written the way they are said and no links. The date and the caller are added when each call starts.",
     copy: "Copy",
     copied: "Instruction copied",
     copyFailed: "Could not copy. Select the text and copy it by hand.",

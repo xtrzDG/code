@@ -7,7 +7,7 @@ from typed_time_provider import Microseconds
 from app.schemas.constants.assistants import AssistantToolName
 from app.schemas.constants.channels import ChannelKind
 from app.schemas.constants.compliance import AuditAction
-from app.schemas.constants.conversations import CallOutcome
+from app.schemas.constants.conversations import CallGuardVerdict, CallOutcome
 from app.schemas.domain.conversations import CallDocument
 from app.schemas.typings.conversations.constrained_integers import CallDurationSeconds
 from app.schemas.typings.conversations.prefixed_id import CallId, ConversationId
@@ -15,6 +15,7 @@ from app.schemas.typings.conversations.strings import (
     CallTranscriptText,
     ProviderCallId,
     RecordingStoragePath,
+    UnverifiedReplyValue,
 )
 from app.schemas.typings.localization.constrained_strings import E164PhoneNumber
 from tests.brain.brain_world import build_world
@@ -109,6 +110,8 @@ def test_phone_conversation_card_shows_the_call_transcript_and_recording() -> No
         ),
         provider_call_id=ProviderCallId("conv_1"),
         outcome=CallOutcome.INFORMATION,
+        guard_verdict=CallGuardVerdict.FLAGGED,
+        unverified_values=[UnverifiedReplyValue("30 lari")],
     )
     world.call_repo.save(call)
     other_call = call.model_copy(
@@ -132,6 +135,8 @@ def test_phone_conversation_card_shows_the_call_transcript_and_recording() -> No
     assert shown["outcome"] == "information"
     assert shown["transcript"].endswith("customer: Есть столик?")
     assert shown["recording_path"] == "elevenlabs/conversations/conv_1"
+    assert shown["guard_verdict"] == "flagged"
+    assert shown["unverified_values"] == ["30 lari"]
     audit = world.audit_log_repo.list_by_business(world.business.id)
     assert [(entry.entity, entry.entity_id) for entry in audit] == [
         ("conversation", str(reply.conversation_id)),

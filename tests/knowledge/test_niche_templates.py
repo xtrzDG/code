@@ -7,7 +7,6 @@ from app.registries.niches.niche_template_registry import NicheTemplateRegistry
 from app.registries.niches.template_parts import (
     BASE_AUTOTEST_KINDS,
     COMMON_FORBIDDEN_RULES_EN,
-    COMMON_PROMPT_RULES,
 )
 from app.schemas.constants.assistants import AutotestScenarioKind
 from app.schemas.constants.bookings import BookingUnit
@@ -135,9 +134,10 @@ def test_platform_rules_and_autotests_are_shared_by_every_niche(
         template.default_forbidden_rules.values[ENGLISH]
     )
 
-    assert rule_texts[: len(COMMON_PROMPT_RULES)] == list(COMMON_PROMPT_RULES)
-    assert len(rule_texts) > len(COMMON_PROMPT_RULES)
+    # Platform rules are stated once, in the instruction sections.
+    assert 2 <= len(rule_texts) <= 6
     assert all(NON_LATIN_LETTER.search(rule) is None for rule in rule_texts)
+    assert not any("AI assistant" in rule for rule in rule_texts)
     assert forbidden_en[: len(COMMON_FORBIDDEN_RULES_EN)] == list(
         COMMON_FORBIDDEN_RULES_EN
     )

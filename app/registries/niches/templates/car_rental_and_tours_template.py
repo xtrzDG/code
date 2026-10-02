@@ -1,3 +1,4 @@
+from app.registries.niches.examples.trade_examples import CAR_RENTAL_AND_TOURS_EXAMPLES
 from app.registries.niches.template_parts import (
     autotest_kinds,
     choice,
@@ -153,6 +154,7 @@ def build_car_rental_and_tours_template() -> NicheTemplate:
             "payment link from the profile.",
             "State the deposit and driver requirements only as written in the profile.",
         ),
+        example_exchanges=CAR_RENTAL_AND_TOURS_EXAMPLES,
         default_handoff_rules=handoff_rules(
             en=[
                 "Accident, breakdown or problem on the road",

@@ -17,6 +17,9 @@ from app.transformers.assembly.autotest_run_view_transformer import (
 from app.transformers.assembly.business_facts_transformer import (
     BusinessFactsTransformer,
 )
+from app.transformers.assembly.phone_instruction_transformer import (
+    PhoneInstructionTransformer,
+)
 from app.transformers.billing.billing_notice_transformer import (
     BillingNoticeTransformer,
 )
@@ -91,6 +94,9 @@ class TransformersContainer(containers.DeclarativeContainer):
     )
     assistant_instruction_transformer: Singleton[AssistantInstructionTransformer] = (
         Singleton(AssistantInstructionTransformer)
+    )
+    phone_instruction_transformer: Singleton[PhoneInstructionTransformer] = Singleton(
+        PhoneInstructionTransformer
     )
     assistant_version_details_transformer: Singleton[
         AssistantVersionDetailsTransformer

@@ -1,3 +1,4 @@
+from app.registries.niches.examples.trade_examples import REAL_ESTATE_EXAMPLES
 from app.registries.niches.template_parts import (
     autotest_kinds,
     choice,
@@ -154,6 +155,7 @@ def build_real_estate_template() -> NicheTemplate:
             "Do not give legal, tax or investment advice and never promise returns "
             "or price growth.",
         ),
+        example_exchanges=REAL_ESTATE_EXAMPLES,
         default_handoff_rules=handoff_rules(
             en=[
                 "Qualified buyer ready for a viewing or a deal",

@@ -1,3 +1,4 @@
+from app.registries.niches.examples.service_examples import ENTERTAINMENT_EXAMPLES
 from app.registries.niches.template_parts import (
     autotest_kinds,
     choice,
@@ -179,6 +180,7 @@ def build_entertainment_template() -> NicheTemplate:
             "from the price list, mention the prepayment rule and create a lead "
             "with the date, number of guests and wishes.",
         ),
+        example_exchanges=ENTERTAINMENT_EXAMPLES,
         default_handoff_rules=handoff_rules(
             en=[
                 "Complaint",

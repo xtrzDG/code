@@ -1,3 +1,4 @@
+from app.registries.niches.examples.care_examples import BEAUTY_SALON_EXAMPLES
 from app.registries.niches.template_parts import (
     autotest_kinds,
     choice,
@@ -151,6 +152,7 @@ def build_beauty_salon_template() -> NicheTemplate:
             "Do not judge skin, hair or health conditions; suggest a consultation "
             "with a master instead.",
         ),
+        example_exchanges=BEAUTY_SALON_EXAMPLES,
         default_handoff_rules=handoff_rules(
             en=[
                 "Complaint about the result of a service",

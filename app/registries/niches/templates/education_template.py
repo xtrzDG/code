@@ -1,3 +1,4 @@
+from app.registries.niches.examples.service_examples import EDUCATION_EXAMPLES
 from app.registries.niches.template_parts import (
     autotest_kinds,
     choice,
@@ -167,6 +168,7 @@ def build_education_template() -> NicheTemplate:
             "price list.",
             "Do not promise exam results or certificates that are not in the profile.",
         ),
+        example_exchanges=EDUCATION_EXAMPLES,
         default_handoff_rules=handoff_rules(
             en=[
                 "Payment dispute or refund",

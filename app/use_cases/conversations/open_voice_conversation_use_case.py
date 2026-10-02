@@ -24,6 +24,7 @@ from app.schemas.exceptions.application_errors import ConflictError, NotFoundErr
 from app.schemas.typings.assistants.prefixed_id import AssistantVersionId
 from app.schemas.typings.conversations.strings import ChannelUserId
 from app.schemas.typings.localization.constrained_strings import LanguageTag
+from app.utilities.channels.caller_reachability import list_reachable_identities
 from app.utilities.channels.delivery_targets import find_business_channel
 from app.utilities.channels.voice_service import find_voice_refusal
 from app.utilities.conversations.tool_selection import select_available_tools
@@ -42,7 +43,9 @@ class OpenVoiceConversationUseCase(
     comes from the verified webhook, never from the agent's arguments. A
     call in progress keeps its tools; a new call is refused (ConflictError)
     while the phone assistant is off (business not live, no voice in the
-    live version or the plan, phone number disconnected).
+    live version or the plan, phone number disconnected). The tools learn
+    whether a connected messenger reaches the caller: only then are the
+    links the agent promises texted after the call.
     """
 
     def __init__(
@@ -134,6 +137,10 @@ class OpenVoiceConversationUseCase(
             language=language,
             is_sandbox=conversation.is_sandbox,
             available_tools=select_available_tools(version, business),
+            business_timezone=business.timezone,
+            can_text_caller=bool(
+                list_reachable_identities(self._channel_repo, business.id, contact)
+            ),
         )
 
     def _find_call_conversation(

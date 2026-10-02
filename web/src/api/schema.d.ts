@@ -1803,7 +1803,9 @@ export interface components {
         AssistantToolName: "search_knowledge" | "get_price" | "check_availability" | "create_booking" | "cancel_booking" | "reschedule_booking" | "create_lead" | "handoff_to_human" | "send_link" | "record_unanswered_question";
         /**
          * AssistantVersionDetails
-         * @description An assistant version with its frozen instruction and fact table.
+         * @description An assistant version with its frozen instructions and fact table: the
+         *     chat instruction, and the phone instruction of a version with voice
+         *     (None for a version without voice or assembled before it existed).
          */
         AssistantVersionDetails: {
             /** Autotest Run Id */
@@ -1825,6 +1827,8 @@ export interface components {
             /** Model Id */
             model_id: string;
             niche_key: components["schemas"]["NicheKey"];
+            /** Phone Prompt Text */
+            phone_prompt_text?: string | null;
             /** Profile Revision */
             profile_revision: number;
             /** Prompt Text */
@@ -2523,6 +2527,7 @@ export interface components {
             duration_seconds: number;
             /** From Phone Number */
             from_phone_number?: string | null;
+            guard_verdict?: components["schemas"]["CallGuardVerdict"] | null;
             /** Id */
             id?: string;
             outcome?: components["schemas"]["CallOutcome"] | null;
@@ -2542,6 +2547,8 @@ export interface components {
             to_phone_number?: string | null;
             /** Transcript */
             transcript?: string | null;
+            /** Unverified Values */
+            unverified_values?: string[];
             /**
              * Updated At
              * @description Last update wall-clock UNIX timestamp in microseconds.
@@ -2596,6 +2603,18 @@ export interface components {
             steps: string[];
         };
         /**
+         * CallGuardVerdict
+         * @description Result of the invented-numbers audit of what the phone assistant said
+         *     during a call (checked after the call, when it can no longer be
+         *     rewritten).
+         *
+         *     FLAGGED: values missing from the business data, in a call that made no
+         *     booking or lead; HANDED_OFF: the same in a call that made one, so staff
+         *     got a low-urgency handoff to check it.
+         * @enum {string}
+         */
+        CallGuardVerdict: "clean" | "flagged" | "handed_off";
+        /**
          * CallOutcome
          * @description Result extracted from a finished phone call.
          * @enum {string}
@@ -2605,13 +2624,15 @@ export interface components {
          * CallView
          * @description A phone call of the conversation: its transcript, duration, outcome and
          *     where its recording is kept (the platform reference; reading it is
-         *     audited with the card).
+         *     audited with the card), and what the after-call check of the
+         *     assistant's spoken values found (`guard_verdict`, None while unchecked).
          */
         CallView: {
             /** Duration Seconds */
             duration_seconds: number;
             /** From Phone Number */
             from_phone_number?: string | null;
+            guard_verdict?: components["schemas"]["CallGuardVerdict"] | null;
             /** Id */
             id: string;
             outcome?: components["schemas"]["CallOutcome"] | null;
@@ -2623,6 +2644,8 @@ export interface components {
             to_phone_number?: string | null;
             /** Transcript */
             transcript?: string | null;
+            /** Unverified Values */
+            unverified_values?: string[];
         };
         /**
          * CarrierForwardingInstructions

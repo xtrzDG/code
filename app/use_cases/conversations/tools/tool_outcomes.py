@@ -16,12 +16,16 @@ def success_outcome(
     )
 
 
-def error_outcome(call: LlmToolCall, message: str) -> AssistantToolOutcome:
+def error_outcome(
+    call: LlmToolCall,
+    message: str,
+    business_today: str | None = None,
+) -> AssistantToolOutcome:
     return AssistantToolOutcome(
         tool_name=call.tool_name,
         result=LlmToolResult(
             call_id=call.call_id,
-            result_json=render_tool_error(message),
+            result_json=render_tool_error(message, business_today),
             is_error=True,
         ),
     )

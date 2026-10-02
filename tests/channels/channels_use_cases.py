@@ -31,13 +31,18 @@ from app.use_cases.channels.receive_telegram_webhook_use_case import (
 from app.use_cases.channels.set_whatsapp_staff_template_use_case import (
     SetWhatsAppStaffTemplateUseCase,
 )
+from app.use_cases.voice.audit_call_replies_use_case import (
+    AuditCallRepliesUseCase,
+)
 from app.use_cases.voice.finished_call.record_finished_call_use_case import (
     RecordFinishedCallUseCase,
 )
 from app.use_cases.voice.send_call_confirmation_use_case import (
     SendCallConfirmationUseCase,
 )
+from app.use_cases.voice.send_call_links_use_case import SendCallLinksUseCase
 from app.utilities.storage.storage_scope_context import StorageScopeContext
+from tests.brain.fake_contact_tools import FakeHandoff
 from tests.channels.channels_fakes import RecordingVoiceAgentRemoval
 from tests.channels.channels_infrastructure import ChannelsInfrastructure
 
@@ -155,4 +160,28 @@ class ChannelsUseCases(ChannelsInfrastructure):
             self.channel_repo,
             self.channel_message_sender,
             self.text_resolver,
+        )
+        self.send_call_links = SendCallLinksUseCase(
+            self.business_repo,
+            self.profile_repo,
+            self.contact_repo,
+            self.channel_repo,
+            self.message_repo,
+            self.channel_message_sender,
+            self.text_resolver,
+        )
+        # The after-call check of what the assistant said; its handoffs are
+        # stored by a fake that records them.
+        self.call_handoff = FakeHandoff(
+            self.handoff_repo, self.conversation_repo, self.wall_clock
+        )
+        self.audit_call_replies = AuditCallRepliesUseCase(
+            self.business_repo,
+            self.call_repo,
+            self.conversation_repo,
+            self.assistant_version_repo,
+            self.message_repo,
+            self.booking_repo,
+            self.call_handoff,
+            self.wall_clock,
         )

@@ -10,6 +10,7 @@ from typed_time_provider import Microseconds
 from app.schemas.constants.assistants import AssistantToolName
 from app.schemas.constants.channels import ChannelKind, MessageDirection
 from app.schemas.constants.conversations import (
+    CallGuardVerdict,
     CallOutcome,
     ConversationRating,
     ConversationStatus,
@@ -57,6 +58,7 @@ from app.schemas.typings.conversations.strings import (
     MessagePreview,
     MessageText,
     RecordingStoragePath,
+    UnverifiedReplyValue,
 )
 from app.schemas.typings.localization.constrained_strings import (
     E164PhoneNumber,
@@ -167,7 +169,8 @@ class CallView(ImmutableDTO):
     """
     A phone call of the conversation: its transcript, duration, outcome and
     where its recording is kept (the platform reference; reading it is
-    audited with the card).
+    audited with the card), and what the after-call check of the
+    assistant's spoken values found (`guard_verdict`, None while unchecked).
     """
 
     id: CallId
@@ -178,6 +181,10 @@ class CallView(ImmutableDTO):
     outcome: CallOutcome | None = None
     transcript: CallTranscriptText | None = None
     recording_path: RecordingStoragePath | None = None
+    guard_verdict: CallGuardVerdict | None = None
+    unverified_values: list[UnverifiedReplyValue] = Field(
+        default_factory=list[UnverifiedReplyValue]
+    )
 
 
 class StaffReplyView(ImmutableDTO):

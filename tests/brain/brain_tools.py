@@ -71,6 +71,7 @@ def build_brain_tools(
         handoff_to_human=handoff,
         record_unanswered_question=record_question,
         phone_number_parser=PhoneNumberParser(),
+        wall_clock=wall_clock,
     )
     return BrainTools(
         bookings=bookings,

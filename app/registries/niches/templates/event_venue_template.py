@@ -1,3 +1,4 @@
+from app.registries.niches.examples.hospitality_examples import EVENT_VENUE_EXAMPLES
 from app.registries.niches.template_parts import (
     autotest_kinds,
     choice,
@@ -191,6 +192,7 @@ def build_event_venue_template() -> NicheTemplate:
             "event date.",
             "Quote packages and per-person prices only from the price list.",
         ),
+        example_exchanges=EVENT_VENUE_EXAMPLES,
         default_handoff_rules=handoff_rules(
             en=[
                 "Every event request once the details are collected",

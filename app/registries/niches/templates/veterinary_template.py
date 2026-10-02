@@ -1,3 +1,4 @@
+from app.registries.niches.examples.care_examples import VETERINARY_EXAMPLES
 from app.registries.niches.template_parts import (
     autotest_kinds,
     choice,
@@ -153,6 +154,7 @@ def build_veterinary_template() -> NicheTemplate:
             "and hand off with critical urgency.",
             "Ask for the kind of animal and the service when booking.",
         ),
+        example_exchanges=VETERINARY_EXAMPLES,
         default_handoff_rules=handoff_rules(
             en=[
                 "Animal in danger or an emergency",

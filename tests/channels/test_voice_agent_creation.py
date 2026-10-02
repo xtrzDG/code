@@ -137,7 +137,14 @@ class TestAgentCreation:
         assert "{{is_open_now}}" in destination["condition"]
         assert "handoff_to_human" in destination["condition"]
         assert agent_config["dynamic_variables"] == {
-            "dynamic_variable_placeholders": {"is_open_now": "no"}
+            "dynamic_variable_placeholders": {
+                "is_open_now": "no",
+                "local_now": "unknown",
+                "next_days": "unknown",
+                "timezone": "unknown",
+                "caller_name": "unknown",
+                "upcoming_booking": "none",
+            }
         }
 
     def test_brazilian_portuguese_uses_the_regional_code(self) -> None:

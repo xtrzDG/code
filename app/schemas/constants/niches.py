@@ -22,6 +22,21 @@ class NicheKey(StrEnum):
     B2B_SUPPLY = "b2b_supply"
 
 
+class ExampleExchangeKind(StrEnum):
+    """
+    What a short example exchange of a niche shows the model.
+
+    BOOKING_CONFIRMATION is shown only to versions that book directly;
+    REQUEST_CONFIRMATION (an order or request taken with create_lead) to
+    niches that take requests instead.
+    """
+
+    BOOKING_CONFIRMATION = "booking_confirmation"
+    REQUEST_CONFIRMATION = "request_confirmation"
+    PRICE_NOT_FOUND = "price_not_found"
+    HANDOFF = "handoff"
+
+
 class LaunchWave(StrEnum):
     """Go-to-market priority of a niche (A first, C last)."""
 
