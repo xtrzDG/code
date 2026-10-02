@@ -31,7 +31,7 @@ test.describe("sign-in", () => {
 
     await expect(page.getByRole("heading", { name: en.auth.codeTitle })).toBeVisible();
     await expect(page.getByText(/\+49/)).toBeVisible();
-    const code = await waitForLoginCode({ since, destinationSuffix: digits.slice(-2) });
+    const code = await waitForLoginCode({ since });
     await page.getByLabel(en.auth.code, { exact: true }).fill(code);
 
     await expect(page).toHaveURL(/\/businesses$/);
@@ -49,7 +49,7 @@ test.describe("sign-in", () => {
     await page.getByRole("button", { name: en.auth.sendCode }).click();
 
     await expect(page.getByRole("heading", { name: en.auth.codeTitle })).toBeVisible();
-    const code = await waitForLoginCode({ since, destinationSuffix: email.slice(email.indexOf("@")) });
+    const code = await waitForLoginCode({ since });
     await page.getByLabel(en.auth.code, { exact: true }).fill(code);
 
     await expect(page).toHaveURL(/\/businesses$/);
@@ -65,7 +65,7 @@ test.describe("sign-in", () => {
     await page.getByRole("textbox", { name: en.auth.email, exact: true }).fill(email);
     const since = apiLogSize();
     await page.getByRole("button", { name: en.auth.sendCode }).click();
-    const code = await waitForLoginCode({ since, destinationSuffix: email.slice(email.indexOf("@")) });
+    const code = await waitForLoginCode({ since });
     const wrong = code === "000000" ? "111111" : "000000";
 
     await page.getByLabel(en.auth.code, { exact: true }).fill(wrong);

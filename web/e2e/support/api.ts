@@ -10,7 +10,7 @@ export function uniqueSuffix(): string {
   return crypto.randomUUID().replaceAll("-", "").slice(0, 10);
 }
 
-/** A fresh e-mail address on its own domain, so its logged code is easy to find. */
+/** A fresh e-mail address on its own domain, so every test signs up a new owner. */
 export function uniqueEmail(): string {
   return `owner@e2e-${uniqueSuffix()}.example.com`;
 }
@@ -21,7 +21,7 @@ export async function signInByEmail(request: APIRequestContext, email: string): 
   const start = await request.post(`${API_URL}/v1/auth/otp/start`, { data: { email, locale: "en" } });
   expect(start.status(), await start.text()).toBe(200);
   const { challenge_id: challengeId } = (await start.json()) as { challenge_id: string };
-  const code = await waitForLoginCode({ since, destinationSuffix: email.slice(email.indexOf("@")) });
+  const code = await waitForLoginCode({ since });
   const verify = await request.post(`${API_URL}/v1/auth/otp/verify`, { data: { challenge_id: challengeId, code } });
   expect(verify.status(), await verify.text()).toBe(200);
   return ((await verify.json()) as { access_token: string }).access_token;

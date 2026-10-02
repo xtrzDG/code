@@ -58,7 +58,7 @@ API.
 1. Откройте <http://localhost:3000>, выберите страну и введите свой номер (или
    переключитесь на вход по почте).
 2. В другом окне терминала, в той же папке: `docker compose logs -f api`.
-3. Найдите строку `Login code 123456 for … Code logging is for development only.`
+3. Найдите строку `Login code 123456 via … Code logging is for development only.`
    — шесть цифр после `Login code` и есть код. Введите его в кабинете.
 
 В рабочей версии (`APP_ENV=production`) коды никогда не пишутся в лог: там нужен

@@ -31,7 +31,7 @@ npm run dev                     # http://localhost:3000
 
 Sign in with any mobile number of a supported country (or an e-mail); in
 development the 6-digit code appears in the API log
-(`Login code 123456 for … Code logging is for development only.`).
+(`Login code 123456 via … Code logging is for development only.`).
 
 ### Environment
 
