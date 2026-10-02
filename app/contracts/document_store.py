@@ -7,7 +7,7 @@ from base_pydantic_schemas import PersistentDocument
 
 from app.contracts.adapter_contract import AdapterContract
 from app.schemas.dto.storage_aggregates import DocumentAggregation, DocumentGroupCount
-from app.schemas.dto.storage_pages import DocumentPageQuery
+from app.schemas.dto.storage_pages import DocumentLatestQuery, DocumentPageQuery
 from app.schemas.dto.storage_queries import (
     DocumentFieldMatch,
     DocumentFieldOrder,
@@ -109,6 +109,11 @@ class DocumentCollectionAdapterContract(AdapterContract, Protocol[StoredDocument
         scan that starts at the position, so page 1000 costs what page 1
         costs.
         """
+        raise NotImplementedError
+
+    def latest_by(self, query: DocumentLatestQuery) -> list[StoredDocument]:
+        """The newest matching document of each group (one indexed probe per
+        group): a page's latest messages, never the whole conversations."""
         raise NotImplementedError
 
     def count_by(self, aggregation: DocumentAggregation) -> list[DocumentGroupCount]:

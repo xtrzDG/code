@@ -14,6 +14,7 @@ from app.repositories.conversation_lookup_fields import (
 from app.repositories.document_queries import (
     field_among,
     field_equals,
+    stored_text,
     time_range,
 )
 from app.schemas.constants.conversations import MessageAuthor
@@ -24,6 +25,7 @@ from app.schemas.dto.conversation_feed.message_tallies import (
 )
 from app.schemas.dto.paging import KeysetPosition, KeysetSlice
 from app.schemas.dto.storage_aggregates import DocumentAggregation, DocumentGroupCount
+from app.schemas.dto.storage_pages import DocumentLatestQuery
 from app.schemas.dto.storage_queries import DocumentFieldAmong, DocumentFilter
 from app.schemas.typings.billing.constrained_integers import CostMicroUsd
 from app.schemas.typings.businesses.prefixed_id import BusinessId
@@ -145,20 +147,24 @@ class MessageListing(BusinessScopedRepository[MessageDocument]):
     def find_latest_written(
         self,
         business_id: BusinessId,
-        conversation_id: ConversationId,
-    ) -> MessageDocument | None:
-        """The newest message a person or the assistant wrote."""
+        conversation_ids: Sequence[ConversationId],
+    ) -> dict[ConversationId, MessageDocument]:
+        """The newest message a person or the assistant wrote, per conversation."""
 
-        found: list[MessageDocument] = self._page_in_business(
+        latest: list[MessageDocument] = self._latest_in_business(
             business_id,
-            (CREATED_AT_FIELD,),
-            KeysetSlice(limit=KeysetReadLimit(1)),
-            DocumentFilter(
-                matches=(field_equals(CONVERSATION_ID_FIELD, conversation_id),),
-                among=(field_among(AUTHOR_FIELD, WRITTEN_AUTHORS),),
+            DocumentLatestQuery(
+                where=DocumentFilter(
+                    among=(field_among(AUTHOR_FIELD, WRITTEN_AUTHORS),)
+                ),
+                group_field=CONVERSATION_ID_FIELD,
+                groups=tuple(
+                    stored_text(item) for item in dict.fromkeys(conversation_ids)
+                ),
+                sort_field=CREATED_AT_FIELD,
             ),
         )
-        return found[0] if found else None
+        return {message.conversation_id: message for message in latest}
 
     def sum_usage(
         self,

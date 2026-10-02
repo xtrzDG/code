@@ -202,3 +202,9 @@ _.saved_knowledge_items  # app/schemas/dto/profiles/profile_steps.py
 _.is_complete  # app/schemas/dto/profiles/profile_wizard.py
 _.expires_in_seconds  # app/schemas/dto/users.py
 _.international_phone_number  # app/schemas/dto/users.py
+
+# The load-test manifest (`workshop seed-load`): written as JSON for the k6
+# scenarios (perf/k6), which read these fields; no Python code does.
+_.latest_message_id  # app/schemas/dto/load_data.py
+_.telegram_channel_id  # app/schemas/dto/load_data.py
+_.telegram_webhook_secret  # app/schemas/dto/load_data.py

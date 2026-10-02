@@ -27,7 +27,7 @@ from app.adapters.storage.postgres.document_lookup_sql import (
 )
 from app.schemas.constants.storage import LookupFieldKind
 from app.schemas.dto.storage_aggregates import DocumentAggregation
-from app.schemas.dto.storage_pages import DocumentPageQuery
+from app.schemas.dto.storage_pages import DocumentLatestQuery, DocumentPageQuery
 from app.schemas.dto.storage_queries import (
     DocumentFieldAmong,
     DocumentFieldExclusion,
@@ -96,6 +96,36 @@ def compose_page(
     ).format(table=table, where=sql.SQL(" and ").join(conditions), order=order)
     parameters.append(int(query.limit))
     return statement, parameters
+
+
+def compose_latest(
+    table: sql.Identifier,
+    collection_name: DocumentCollectionName,
+    fields: dict[DocumentFieldPath, LookupFieldKind],
+    query: DocumentLatestQuery,
+    scoped_business_id: str | None,
+) -> tuple[sql.Composed, SqlParameters]:
+    """
+    `select document::text`, one row per group that has one: a lateral
+    probe of the group's index for its greatest sort value (ties: the
+    later write), in the order of the groups.
+    """
+
+    conditions, where_parameters = compose_filter(
+        collection_name, fields, query.where, scoped_business_id
+    )
+    group: sql.Identifier = sql.Identifier(lookup_column_name(query.group_field))
+    sort: sql.Identifier = sql.Identifier(lookup_column_name(query.sort_field))
+    conditions.append(sql.SQL("{group} = wanted.value").format(group=group))
+    conditions.append(sql.SQL("{sort} is not null").format(sort=sort))
+    statement: sql.Composed = sql.SQL(
+        "select latest.document::text "
+        "from unnest(%s::text[]) with ordinality as wanted(value, position) "
+        "cross join lateral (select document from {table} where {where} "
+        "order by {sort} desc, created_at desc, row_sequence desc limit 1) "
+        "as latest order by wanted.position"
+    ).format(table=table, where=sql.SQL(" and ").join(conditions), sort=sort)
+    return statement, [[str(value) for value in query.groups], *where_parameters]
 
 
 def compose_aggregation(

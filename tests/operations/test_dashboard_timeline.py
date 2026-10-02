@@ -11,6 +11,7 @@ from app.schemas.domain.profiles import OpeningInterval
 from app.schemas.domain.resources import ScheduleExceptionDocument
 from app.schemas.typings.bookings.constrained_strings import LocalDate
 from app.schemas.typings.businesses.prefixed_id import BusinessId
+from app.schemas.typings.localization.constrained_strings import TimezoneName
 from app.use_cases.insights.dashboard_timeline import build_timeline, timeline_period
 from app.utilities.scheduling.opening_hours import business_day_ranges, is_open_at
 from app.utilities.scheduling.zoned_time import (
@@ -46,7 +47,7 @@ OVERNIGHT_HOURS = every_day("18:00", "02:00")
 def test_stretches_say_open_exactly_when_the_business_is_open(
     zone_name: str, hours: list[OpeningInterval], date_from: date, date_to: date
 ) -> None:
-    zone = load_time_zone(zone_name)
+    zone = load_time_zone(TimezoneName(zone_name))
     holiday = ScheduleExceptionDocument(
         business_id=BusinessId(), date=LocalDate(str(date_from)), is_closed_all_day=True
     )
@@ -68,7 +69,7 @@ def test_stretches_say_open_exactly_when_the_business_is_open(
 
 
 def test_without_hours_every_day_is_one_open_stretch() -> None:
-    zone = load_time_zone("Asia/Tbilisi")
+    zone = load_time_zone(TimezoneName("Asia/Tbilisi"))
     stretches = build_timeline(date(2026, 10, 1), date(2026, 10, 3), zone, None)
 
     assert [(stretch.day, stretch.is_open) for stretch in stretches] == [

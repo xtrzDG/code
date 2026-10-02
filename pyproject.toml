@@ -66,6 +66,11 @@ explicit_package_bases = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+# Timing budgets over large seeded tables run on their own:
+# `uv run pytest -m perf` (tests/perf: PERF_SCALE, PERF_REPORT; weekly in
+# .github/workflows/perf.yml, docs/operations/capacity.md).
+addopts = "-m 'not perf'"
+markers = ["perf: timing budgets on large tables (run with -m perf)"]
 
 # CI: `uv run pytest -n auto --cov=app --cov-branch --cov-fail-under=95`.
 # The floor is line and branch coverage of app/ together; lower it never,

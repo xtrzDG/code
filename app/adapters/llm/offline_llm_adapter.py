@@ -14,6 +14,8 @@ from app.schemas.typings.assistants.constrained_integers import (
 )
 from app.schemas.typings.conversations.strings import LlmProviderPayload, MessageText
 
+# Without SCRIPTED_LLM_LATENCY_MS the scripted model answers at once.
+NO_LATENCY: ScriptedLlmLatencyMilliseconds = ScriptedLlmLatencyMilliseconds(0)
 # What the staging assistant answers to everything.
 OFFLINE_REPLY: MessageText = MessageText(
     "Thank you for your message! This is the test assistant of a staging "
@@ -40,7 +42,7 @@ class OfflineLlmAdapter(LlmAdapterContract):
 
     def __init__(
         self,
-        latency_ms: ScriptedLlmLatencyMilliseconds = ScriptedLlmLatencyMilliseconds(0),
+        latency_ms: ScriptedLlmLatencyMilliseconds = NO_LATENCY,
         wait: Callable[[float], None] = time.sleep,
     ) -> None:
         self._latency_seconds: float = int(latency_ms) / 1000

@@ -3,14 +3,18 @@ from collections.abc import Callable, Mapping, Sequence
 
 from base_pydantic_schemas import PersistentDocument
 
-from app.adapters.storage.in_memory_document_listing import aggregate, select_page
+from app.adapters.storage.in_memory_document_listing import (
+    aggregate,
+    select_latest,
+    select_page,
+)
 from app.adapters.storage.in_memory_document_lookup import select_entries
 from app.adapters.storage.persisted_document_codec import PersistedDocumentCodec
 from app.contracts.document_store import DocumentCollectionAdapterContract
 from app.contracts.storage import StorageScopeContract
 from app.schemas.constants.storage import LookupFieldKind
 from app.schemas.dto.storage_aggregates import DocumentAggregation, DocumentGroupCount
-from app.schemas.dto.storage_pages import DocumentPageQuery
+from app.schemas.dto.storage_pages import DocumentLatestQuery, DocumentPageQuery
 from app.schemas.dto.storage_queries import (
     DocumentFieldMatch,
     DocumentFieldOrder,
@@ -34,6 +38,7 @@ from app.utilities.storage.document_lookup_fields import (
 )
 from app.utilities.storage.document_query_rules import (
     require_valid_aggregation,
+    require_valid_latest,
     require_valid_page,
 )
 from app.utilities.storage.storage_scoping import require_tenant_scope
@@ -45,15 +50,13 @@ class InMemoryDocumentCollectionAdapter[StoredDocument: PersistentDocument](
     """
     Thread-safe in-process collection that behaves like a document database.
 
-    Documents are stored as JSON and validated on every read, so callers get
-    independent instances and persistence-incompatible fields fail early.
-    Writing and reading go through the same `PersistedDocumentCodec` as
-    Postgres (current schema version stamped, tolerant upcasting reads).
-    Data lives until the process restarts. Queries by field accept the same
-    lookup fields as the Postgres collection (by default those the catalog
-    declares for the document type), so a query without an index fails in
-    in-memory tests too; they scan, which is fine for tests and demos.
-    Keyset pages and aggregations follow `in_memory_document_listing`.
+    Documents are stored as JSON (until the process restarts) through the
+    `PersistedDocumentCodec` Postgres uses, and validated on every read, so
+    callers get independent instances. Queries accept the lookup fields of
+    the Postgres collection (by default the catalog's), so a query without
+    an index fails in in-memory tests too; they scan, which suits tests
+    and demos. Pages, latest documents and aggregations follow
+    `in_memory_document_listing`.
 
     A tenant collection given the process's `tenant_scope` refuses code
     that entered no storage scope, like the Postgres collection
@@ -191,6 +194,12 @@ class InMemoryDocumentCollectionAdapter[StoredDocument: PersistentDocument](
             select_page(self._entries(), query, self._lookup_fields)
         )
 
+    def latest_by(self, query: DocumentLatestQuery) -> list[StoredDocument]:
+        require_valid_latest(self._lookup_fields, query, self._label())
+        return self._validate_all(
+            select_latest(self._entries(), query, self._lookup_fields)
+        )
+
     def count_by(self, aggregation: DocumentAggregation) -> list[DocumentGroupCount]:
         require_valid_aggregation(self._lookup_fields, aggregation, self._label())
         return aggregate(self._entries(), aggregation, self._lookup_fields)
@@ -279,10 +288,7 @@ class InMemoryDocumentCollectionAdapter[StoredDocument: PersistentDocument](
             return list(self._serialized_documents.items())
 
     def _validate_all(self, serialized_documents: list[str]) -> list[StoredDocument]:
-        return [
-            self._codec.decode(serialized_document)
-            for serialized_document in serialized_documents
-        ]
+        return [self._codec.decode(serialized) for serialized in serialized_documents]
 
     def _require_scope(self) -> None:
         if self._tenant_scope is not None:

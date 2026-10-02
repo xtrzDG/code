@@ -7,13 +7,14 @@ from psycopg.rows import TupleRow
 
 from app.adapters.storage.postgres.document_listing_sql import (
     compose_aggregation,
+    compose_latest,
     compose_page,
 )
 from app.adapters.storage.postgres.postgres_document_table import (
     PostgresDocumentTable,
 )
 from app.schemas.dto.storage_aggregates import DocumentAggregation, DocumentGroupCount
-from app.schemas.dto.storage_pages import DocumentPageQuery
+from app.schemas.dto.storage_pages import DocumentLatestQuery, DocumentPageQuery
 from app.schemas.exceptions.application_errors import ExternalServiceError
 from app.schemas.typings.storage.constrained_integers import (
     DocumentBucketIndex,
@@ -23,6 +24,7 @@ from app.schemas.typings.storage.integers import DocumentFieldInteger, DocumentF
 from app.schemas.typings.storage.strings import DocumentFieldText
 from app.utilities.storage.document_query_rules import (
     require_valid_aggregation,
+    require_valid_latest,
     require_valid_page,
 )
 
@@ -31,10 +33,9 @@ class PostgresDocumentListing[StoredDocument: PersistentDocument](
     PostgresDocumentTable[StoredDocument]
 ):
     """
-    `get_many`, `page_by` and `count_by` of the Postgres collection: one
-    statement each,
-    in the transaction and row-level security scope of every operation
-    (`document_listing_sql` has the SQL).
+    `get_many`, `page_by`, `latest_by` and `count_by` of the Postgres
+    collection: one statement each, in the transaction and row-level
+    security scope of every operation (`document_listing_sql` has the SQL).
     """
 
     def get_many(self, document_keys: Sequence[str]) -> list[StoredDocument]:
@@ -58,6 +59,23 @@ class PostgresDocumentListing[StoredDocument: PersistentDocument](
         require_valid_page(self._lookup_fields, query, self._label())
         with self._transaction() as (connection, scoped_business_id):
             statement, parameters = compose_page(
+                self._queries.table,
+                self._collection_name,
+                self._lookup_fields,
+                query,
+                scoped_business_id,
+            )
+            rows: list[TupleRow] = connection.execute(statement, parameters).fetchall()
+
+        return self._decode_all(rows)
+
+    def latest_by(self, query: DocumentLatestQuery) -> list[StoredDocument]:
+        require_valid_latest(self._lookup_fields, query, self._label())
+        if not query.groups:
+            return []
+
+        with self._transaction() as (connection, scoped_business_id):
+            statement, parameters = compose_latest(
                 self._queries.table,
                 self._collection_name,
                 self._lookup_fields,

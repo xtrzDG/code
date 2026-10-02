@@ -116,9 +116,16 @@ a stored shape changes only by expand and contract
 - Paged lists take `?limit=N&cursor=…` (`parse_page_request` in
   `app/gateways/http/paging_query.py` → `PageRequest`) and answer
   `{"items": [...], "next_cursor": … | null}` with a concrete page DTO per list
-  (e.g. `BookingPage`). Use cases page with `take_page`
-  (`app/utilities/paging/cursor_paging.py`): newest first by a timestamp, ties
-  by id. Filters run before paging.
+  (e.g. `BookingPage`). Lists of growing collections page in the database:
+  the repository reads one keyset page (`page_by` of the document store,
+  `app/utilities/paging/keyset_paging.py` turns the cursor into a position
+  and the page into `next_cursor`), and counts, sums and dashboards group
+  there (`count_by`); a page's related documents come in one read
+  (`get_many`, `latest_by`), never one query per row. Filters are part of
+  the query. `take_page` (`cursor_paging.py`) pages only small lists
+  already in memory; `tests/architecture_policy/test_lists_page_in_the_database.py`
+  keeps it out of the cabinet's lists, cards and dashboards. Their latency
+  budgets live in `tests/perf` (`docs/operations/capacity.md`).
 - JSON request bodies have one parsing stack,
   `app/gateways/http/strict_request_parsing.py`: read them with
   `build_json_body_dependency(Body)` (or `optional=True` when an empty body

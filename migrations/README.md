@@ -36,7 +36,7 @@ never used (EXPLAIN shows a sequential scan); GIN containment (`@>`) is not
 leakproof either. Queries therefore filter plain columns:
 
 - A field that repositories query by is declared in
-  `app/utilities/storage/document_lookup_fields.py` and gets a stored
+  `app/utilities/storage/document_lookup_catalog.py` and gets a stored
   generated column `doc_<field>` in a migration (see
   `1010_hot_path_lookup_indexes.sql`), with a btree index unless it is a
   FILTER_TEXT field that only narrows an indexed query:
@@ -58,3 +58,9 @@ leakproof either. Queries therefore filter plain columns:
   checks that every declared field has its column, index or trigger, and
   `tests/storage/test_hot_path_query_plans.py` that the hot queries use
   their index on realistic tables.
+- Keyset pages (`page_by`), the newest document per group (`latest_by`)
+  and grouped counts (`count_by`) sort, probe and group by these columns
+  too: `1042_list_pages_and_aggregates.sql` adds the sort and group columns
+  of the cabinet's lists and dashboards with indexes that start with
+  `business_id`, and `tests/storage/test_list_query_plans.py` checks each
+  list, count and sum uses its index.

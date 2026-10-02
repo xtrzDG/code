@@ -91,9 +91,10 @@ class MessageListingContract(Protocol):
         raise NotImplementedError
 
     def find_latest_written(
-        self, business_id: BusinessId, conversation_id: ConversationId
-    ) -> MessageDocument | None:
-        """The newest message of the customer, the assistant or staff."""
+        self, business_id: BusinessId, conversation_ids: Sequence[ConversationId]
+    ) -> dict[ConversationId, MessageDocument]:
+        """The newest message of the customer, the assistant or staff of each
+        conversation (one indexed probe each; none: left out)."""
         raise NotImplementedError
 
     def sum_usage(

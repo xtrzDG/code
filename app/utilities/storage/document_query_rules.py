@@ -14,7 +14,7 @@ from collections.abc import Mapping
 
 from app.schemas.constants.storage import LookupFieldKind
 from app.schemas.dto.storage_aggregates import DocumentAggregation
-from app.schemas.dto.storage_pages import DocumentPageQuery
+from app.schemas.dto.storage_pages import DocumentLatestQuery, DocumentPageQuery
 from app.schemas.dto.storage_queries import DocumentFilter
 from app.schemas.exceptions.storage_errors import UndeclaredLookupFieldError
 from app.schemas.typings.storage.constrained_strings import DocumentFieldPath
@@ -41,6 +41,21 @@ def require_valid_page(
     for field in query.sort_fields:
         require_lookup_field(fields, field, RANGE_KINDS, collection_label)
 
+    require_valid_filter(fields, query.where, collection_label, is_ordered=True)
+
+
+def require_valid_latest(
+    fields: Mapping[DocumentFieldPath, LookupFieldKind],
+    query: DocumentLatestQuery,
+    collection_label: str,
+) -> None:
+    """UndeclaredLookupFieldError unless the groups are a TEXT field (an
+    indexed column), the sort field an INTEGER field and the filter valid."""
+
+    require_lookup_field(
+        fields, query.group_field, frozenset({LookupFieldKind.TEXT}), collection_label
+    )
+    require_lookup_field(fields, query.sort_field, RANGE_KINDS, collection_label)
     require_valid_filter(fields, query.where, collection_label, is_ordered=True)
 
 

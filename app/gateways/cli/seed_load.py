@@ -4,6 +4,7 @@ Store a load-test dataset and write the manifest the load tests read.
     workshop seed-load --manifest perf/manifest.json     # the weekly scale
     workshop seed-load --businesses 20 --messages 40000 --bookings 4000 \\
         --visitors 100 --manifest /tmp/manifest.json
+    docker compose run --rm -T api seed-load --manifest - > perf/manifest.json
 
 (`uv run python -m app.gateways.cli.seed_load ...` without the image.) The
 default scale is the weekly perf run's: 500 businesses, 2,000,000 messages,
@@ -23,7 +24,7 @@ import os
 import sys
 from collections.abc import Mapping, Sequence
 from pathlib import Path
-from typing import TextIO
+from typing import Protocol, TextIO, cast
 
 from dependency_injector import providers
 
@@ -37,10 +38,19 @@ from app.utilities.config_helpers.app_settings.app_settings_assembler import (
 )
 from app.utilities.observability.logging_setup import configure_logging
 
+
+class OverridableProvider(Protocol):
+    """A container provider the CLI points at its own settings."""
+
+    def override(self, provider: object) -> object: ...
+
+
 EXIT_OK: int = 0
 EXIT_FAILED: int = 1
 EXIT_NOT_CONFIGURED: int = 2
 DEFAULT_MANIFEST_PATH: str = "perf/manifest.json"
+# `--manifest -` prints the manifest instead (a container writes to its caller).
+STANDARD_OUTPUT: str = "-"
 
 
 def main(
@@ -78,7 +88,9 @@ def main(
 
     configure_logging(settings.log_format, stream=error_stream)
     container = AppContainer()
-    container.config.app_settings.override(providers.Object(settings))
+    cast(OverridableProvider, container.config.app_settings).override(
+        providers.Object(settings)
+    )
     try:
         manifest: LoadSeedManifest = (
             container.operators.demo.seed_load_operator().operate(command)
@@ -91,10 +103,16 @@ def main(
         if connection_pool is not None:
             connection_pool.close()
 
+    manifest_json: str = manifest.model_dump_json(indent=2)
+    if parsed.manifest == STANDARD_OUTPUT:
+        print(manifest_json, file=output_stream)
+        print(describe_manifest(manifest, "standard output"), file=error_stream)
+        return EXIT_OK
+
     manifest_path = Path(parsed.manifest)
     manifest_path.parent.mkdir(parents=True, exist_ok=True)
-    manifest_path.write_text(manifest.model_dump_json(indent=2), encoding="utf-8")
-    print(describe_manifest(manifest, manifest_path), file=output_stream)
+    manifest_path.write_text(manifest_json, encoding="utf-8")
+    print(describe_manifest(manifest, str(manifest_path)), file=output_stream)
     return EXIT_OK
 
 
@@ -137,19 +155,19 @@ def build_argument_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--manifest",
         default=DEFAULT_MANIFEST_PATH,
-        help="where the JSON manifest goes (default: %(default)s)",
+        help="where the JSON manifest goes; - prints it (default: %(default)s)",
     )
     return parser
 
 
-def describe_manifest(manifest: LoadSeedManifest, path: Path) -> str:
+def describe_manifest(manifest: LoadSeedManifest, destination: str) -> str:
     messages: int = sum(int(entry.message_count) for entry in manifest.businesses)
     bookings: int = sum(int(entry.booking_count) for entry in manifest.businesses)
     visitors: int = sum(len(entry.visitors) for entry in manifest.businesses)
     return (
         f"Stored {len(manifest.businesses)} businesses with {messages} messages, "
         f"{bookings} bookings and {visitors} widget visitors (plus their demo "
-        f"activity). Manifest: {path}"
+        f"activity). Manifest: {destination}"
     )
 
 

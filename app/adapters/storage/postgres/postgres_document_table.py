@@ -118,7 +118,9 @@ class PostgresDocumentTable[StoredDocument: PersistentDocument]:
         if not entries:
             return
 
-        parameters = [self._write_parameters(key, document) for key, document in entries]
+        parameters = [
+            self._write_parameters(key, document) for key, document in entries
+        ]
         with self._transaction() as (connection, _), connection.cursor() as cursor:
             cursor.executemany(self._queries.upsert, parameters)
 

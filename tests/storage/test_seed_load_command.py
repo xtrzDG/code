@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 
 import pytest
+from psycopg import sql
 
 from app.clients.postgres.postgres_connection_pool_client import (
     PostgresConnectionPoolClient,
@@ -19,7 +20,9 @@ ENCRYPTION_KEY: str = "seed-load-test-key-0123456789abcdef"  # gitleaks:allow
 def count_rows(pool: PostgresConnectionPoolClient, table: str) -> int:
     with pool.transaction() as connection:
         connection.execute("set local app.bypass_rls = 'on'")
-        row = connection.execute(f"select count(*) from workshop.{table}").fetchone()
+        row = connection.execute(
+            sql.SQL("select count(*) from {}").format(sql.Identifier("workshop", table))
+        ).fetchone()
 
     assert row is not None
     return int(row[0])
@@ -62,6 +65,23 @@ def test_a_small_dataset_is_stored_and_described(
     assert count_rows(connection_pool, "bookings") >= 40
     assert "Stored 2 businesses with 300 messages, 40 bookings" in output.getvalue()
     assert "Load dataset: 2 of 2 businesses stored." in error_output.getvalue()
+
+
+def test_a_dash_prints_the_manifest_for_the_caller(database_url: DatabaseUrl) -> None:
+    output, error_output = io.StringIO(), io.StringIO()
+
+    exit_code = main(
+        ["--businesses", "1", "--messages", "20", "--bookings", "2"]
+        + ["--visitors", "1", "--manifest", "-"],
+        {"DATABASE_URL": database_url},
+        output=output,
+        error_output=error_output,
+    )
+
+    assert exit_code == 0, error_output.getvalue()
+    manifest = LoadSeedManifest.model_validate_json(output.getvalue())
+    assert [len(entry.visitors) for entry in manifest.businesses] == [1]
+    assert "Manifest: standard output" in error_output.getvalue()
 
 
 @pytest.mark.parametrize(

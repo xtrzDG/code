@@ -236,6 +236,14 @@ LIST_QUERIES: tuple[ListQuery, ...] = (
         "handoffs_doc_created_at_idx",
     ),
     ListQuery(
+        "newest written message of each conversation of a feed page",
+        lambda r: r.messages.find_latest_written(
+            BUSINESS, [ConversationId() for _ in range(50)]
+        ),
+        "messages",
+        "messages_doc_conversation_idx",
+    ),
+    ListQuery(
         "message counts of a feed page",
         lambda r: r.messages.tally_conversations(
             BUSINESS, [ConversationId() for _ in range(50)]

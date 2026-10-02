@@ -11,6 +11,30 @@ Kinds of change: **Added**, **Changed** (additive), **Deprecated** (with
 sunset date), **Removed** and **Breaking** (only with the `api-breaking`
 label and a migration path).
 
+## 2026-10-02 — long transcripts page back, lists read one page
+
+Spec: `1572f963cdc6844d`
+
+- **Added** `GET /v1/businesses/{business_id}/conversations/{conversation_id}/messages`
+  (owners and staff, audited like the card): earlier messages of a
+  conversation, oldest first, `limit` 1 to 200 (default 50) and `cursor`
+  from `earlier_messages_cursor` of the card or `next_cursor` of the
+  previous page; `next_cursor` is null where the transcript starts.
+- **Added** schemas `MessagePage` and `ConversationUsageView`.
+- **Changed** `ConversationDetailView`
+  (`GET /v1/businesses/{business_id}/conversations/{conversation_id}`):
+  `messages` holds the newest 100 messages of the transcript (all of a
+  shorter one), oldest first; the new `earlier_messages_cursor` (null when
+  nothing is older) pages back through the endpoint above, and the new
+  `usage` sums the model tokens and cost of the whole conversation. A
+  client that showed the full transcript of a longer conversation pages
+  back; `conversation.message_count` still counts every message.
+- **Changed** (no shape change) the conversation feed, bookings, leads,
+  handoffs, unanswered questions and audit log read one keyset page from
+  the database; cursors keep their format. A text search of the feed
+  looks through at most the 500 latest conversations per request and goes
+  on through `next_cursor`.
+
 ## 2026-10-02 — inbox counts for the cabinet's navigation
 
 Spec: `4064d2d88d252e03`

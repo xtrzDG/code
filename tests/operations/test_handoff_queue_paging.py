@@ -97,29 +97,22 @@ def test_pages_follow_the_queue_order_through_every_phase(size: int) -> None:
 
 
 @pytest.mark.parametrize(
-    ("filters", "keeps"),
+    ("filters", "kept_statuses"),
     [
-        ({"is_open": True}, lambda h: h.status is not HandoffStatus.RESOLVED),
-        ({"is_open": False}, lambda h: h.status is HandoffStatus.RESOLVED),
-        (
-            {"status": HandoffStatus.NOTIFIED},
-            lambda h: h.status is HandoffStatus.NOTIFIED,
-        ),
-        (
-            {"status": HandoffStatus.RESOLVED},
-            lambda h: h.status is HandoffStatus.RESOLVED,
-        ),
-        ({"status": HandoffStatus.RESOLVED, "is_open": True}, lambda h: False),
+        ({"is_open": True}, set(HandoffStatus) - {HandoffStatus.RESOLVED}),
+        ({"is_open": False}, {HandoffStatus.RESOLVED}),
+        ({"status": HandoffStatus.NOTIFIED}, {HandoffStatus.NOTIFIED}),
+        ({"status": HandoffStatus.RESOLVED}, {HandoffStatus.RESOLVED}),
+        ({"status": HandoffStatus.RESOLVED, "is_open": True}, set[HandoffStatus]()),
     ],
 )
 def test_filters_keep_the_order_of_their_phases(
-    filters: dict[str, object], keeps: object
+    filters: dict[str, object], kept_statuses: set[HandoffStatus]
 ) -> None:
     fixture = HandoffFixture("2026-10-05T11:00:00+03:00")
     handoffs = seed_queue(fixture, 30)
-    assert callable(keeps)
     expected = sorted(
-        (h for h in handoffs if not h.is_sandbox and keeps(h)),
+        (h for h in handoffs if not h.is_sandbox and h.status in kept_statuses),
         key=handoff_sort_key,
         reverse=True,
     )

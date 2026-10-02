@@ -63,10 +63,13 @@ def collect_conversation_links(
     contacts: dict[ContactId, ContactDocument] = (
         {} if contact is None else {contact.id: contact}
     )
+    linked: list[ContactId] = [
+        *(booking.contact_id for booking in bookings),
+        *(lead.contact_id for lead in leads),
+        *(handoff.contact_id for handoff in handoffs),
+    ]
     others: list[ContactId] = [
-        item.contact_id
-        for item in (*bookings, *leads, *handoffs)
-        if item.contact_id not in contacts
+        contact_id for contact_id in linked if contact_id not in contacts
     ]
     if others:
         contacts.update(contact_repo.get_many(business.id, others))

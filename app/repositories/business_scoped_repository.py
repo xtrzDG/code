@@ -6,7 +6,7 @@ from app.contracts.document_store import DocumentCollectionAdapterContract
 from app.repositories.document_queries import document_position, of_business
 from app.schemas.dto.paging import KeysetSlice
 from app.schemas.dto.storage_aggregates import DocumentAggregation, DocumentGroupCount
-from app.schemas.dto.storage_pages import DocumentPageQuery
+from app.schemas.dto.storage_pages import DocumentLatestQuery, DocumentPageQuery
 from app.schemas.dto.storage_queries import (
     DocumentFieldMatch,
     DocumentFieldOrder,
@@ -141,6 +141,25 @@ class BusinessScopedRepository[StoredDocument: PersistentDocument]:
                 is_descending=is_descending,
                 after=document_position(window.after),
                 limit=DocumentQueryLimit(int(window.limit)),
+            )
+        )
+
+    def _latest_in_business(
+        self,
+        business_id: BusinessId,
+        query: DocumentLatestQuery,
+    ) -> list[StoredDocument]:
+        """The business's newest document of each group (`latest_by`)."""
+
+        return self._collection.latest_by(
+            query.model_copy(
+                update={
+                    "where": query.where.model_copy(
+                        update={
+                            "matches": (of_business(business_id), *query.where.matches)
+                        }
+                    )
+                }
             )
         )
 

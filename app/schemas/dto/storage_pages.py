@@ -1,4 +1,7 @@
-"""Keyset pages of a document collection (`page_by` of the store contract)."""
+"""
+Keyset pages of a document collection (`page_by` of the store contract)
+and the latest document of each group (`latest_by`).
+"""
 
 from typing import Self
 
@@ -10,9 +13,11 @@ from app.schemas.typings.storage.booleans import IsDescendingOrder
 from app.schemas.typings.storage.constrained_integers import DocumentQueryLimit
 from app.schemas.typings.storage.constrained_strings import DocumentFieldPath
 from app.schemas.typings.storage.integers import DocumentFieldInteger
-from app.schemas.typings.storage.strings import StoredDocumentKey
+from app.schemas.typings.storage.strings import DocumentFieldText, StoredDocumentKey
 
 MAX_SORT_FIELDS: int = 3
+# Groups one `latest_by` reads (one indexed probe each).
+MAX_LATEST_GROUPS: int = 1_000
 
 
 class DocumentPagePosition(ImmutableDTO):
@@ -50,3 +55,18 @@ class DocumentPageQuery(ImmutableDTO):
             raise ValueError("A page position needs one value per sort field.")
 
         return self
+
+
+class DocumentLatestQuery(ImmutableDTO):
+    """
+    For each value of the TEXT field `group_field` among `groups`, the
+    document meeting `where` with the greatest INTEGER `sort_field` (ties:
+    the later write), in the order of `groups`; a group without one is
+    left out. Each group is one indexed probe, so a page of conversations
+    gets their newest messages without reading the rest.
+    """
+
+    where: DocumentFilter = Field(default_factory=DocumentFilter)
+    group_field: DocumentFieldPath
+    groups: tuple[DocumentFieldText, ...] = Field(max_length=MAX_LATEST_GROUPS)
+    sort_field: DocumentFieldPath

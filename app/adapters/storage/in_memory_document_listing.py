@@ -20,7 +20,7 @@ from app.adapters.storage.in_memory_document_lookup import (
 )
 from app.schemas.constants.storage import LookupFieldKind
 from app.schemas.dto.storage_aggregates import DocumentAggregation, DocumentGroupCount
-from app.schemas.dto.storage_pages import DocumentPageQuery
+from app.schemas.dto.storage_pages import DocumentLatestQuery, DocumentPageQuery
 from app.schemas.dto.storage_queries import DocumentFieldMatch, DocumentFilter
 from app.schemas.typings.storage.constrained_integers import (
     DocumentBucketIndex,
@@ -67,6 +67,31 @@ def select_page(
         ]
 
     return [serialized for _, _, serialized in keyed[: int(query.limit)]]
+
+
+def select_latest(
+    entries: Sequence[tuple[str, str]],
+    query: DocumentLatestQuery,
+    fields: dict[DocumentFieldPath, LookupFieldKind],
+) -> list[str]:
+    """The newest matching serialized document of each group, in group order."""
+
+    wanted: list[str] = list(dict.fromkeys(str(value) for value in query.groups))
+    newest: dict[str, tuple[int, int, str]] = {}
+    for written, (_, serialized) in enumerate(entries):
+        document: JsonObject | None = parse_object(serialized)
+        if document is None or not is_in_filter(document, query.where, fields):
+            continue
+
+        group: str | None = field_text(document.get(str(query.group_field)))
+        value: int | None = integer_value(document, query.sort_field)
+        if group is None or group not in wanted or value is None:
+            continue
+
+        if group not in newest or (value, written) > newest[group][:2]:
+            newest[group] = (value, written, serialized)
+
+    return [newest[group][2] for group in wanted if group in newest]
 
 
 def is_after(
