@@ -1,0 +1,184 @@
+"""
+Keyset pages and aggregations evaluated on stored JSON in memory, with the
+semantics of the Postgres collection (`document_listing_sql`): sort fields
+and buckets are integer fields (documents without them are left out), the
+storage key breaks ties in code point order (Postgres `collate "C"`), an
+exclusion keeps documents without the field, and a group value is the
+field as `document ->> field` gives it.
+"""
+
+import bisect
+from collections.abc import Sequence
+
+from app.adapters.storage.in_memory_document_lookup import (
+    JsonObject,
+    field_text,
+    is_matching,
+    is_within,
+    parse_object,
+)
+from app.schemas.constants.storage import LookupFieldKind
+from app.schemas.dto.storage_aggregates import DocumentAggregation, DocumentGroupCount
+from app.schemas.dto.storage_pages import DocumentPageQuery
+from app.schemas.dto.storage_queries import DocumentFieldMatch, DocumentFilter
+from app.schemas.typings.storage.constrained_integers import (
+    DocumentBucketIndex,
+    DocumentCount,
+)
+from app.schemas.typings.storage.constrained_strings import DocumentFieldPath
+from app.schemas.typings.storage.integers import DocumentFieldInteger, DocumentFieldSum
+from app.schemas.typings.storage.strings import DocumentFieldText
+
+type GroupKey = tuple[tuple[str | None, ...], int | None]
+
+
+def select_page(
+    entries: Sequence[tuple[str, str]],
+    query: DocumentPageQuery,
+    fields: dict[DocumentFieldPath, LookupFieldKind],
+) -> list[str]:
+    """The serialized documents of one keyset page, in page order."""
+
+    keyed: list[tuple[tuple[int, ...], str, str]] = []
+    for key, serialized in entries:
+        document: JsonObject | None = parse_object(serialized)
+        if document is None or not is_in_filter(document, query.where, fields):
+            continue
+
+        values: tuple[int, ...] | None = integer_values(document, query.sort_fields)
+        if values is not None:
+            keyed.append((values, key, serialized))
+
+    keyed.sort(key=lambda row: (row[0], row[1]), reverse=query.is_descending)
+    if query.after is not None:
+        position: tuple[tuple[int, ...], str] = (
+            tuple(int(value) for value in query.after.values),
+            str(query.after.document_key),
+        )
+        keyed = [
+            row
+            for row in keyed
+            if (
+                (row[0], row[1]) < position
+                if query.is_descending
+                else (row[0], row[1]) > position
+            )
+        ]
+
+    return [serialized for _, _, serialized in keyed[: int(query.limit)]]
+
+
+def aggregate(
+    entries: Sequence[tuple[str, str]],
+    aggregation: DocumentAggregation,
+    fields: dict[DocumentFieldPath, LookupFieldKind],
+) -> list[DocumentGroupCount]:
+    """Grouped counts, totals and largest values of the matching documents."""
+
+    counts: dict[GroupKey, int] = {}
+    totals: dict[GroupKey, int] = {}
+    latest: dict[GroupKey, int] = {}
+    for _, serialized in entries:
+        document: JsonObject | None = parse_object(serialized)
+        if document is None or not is_in_filter(document, aggregation.where, fields):
+            continue
+
+        bucket: int | None = None
+        if aggregation.buckets is not None:
+            value: int | None = integer_value(document, aggregation.buckets.field)
+            starts: list[int] = [int(start) for start in aggregation.buckets.starts]
+            if value is None or value < starts[0]:
+                continue
+
+            bucket = bisect.bisect_right(starts, value) - 1
+
+        group: GroupKey = (
+            tuple(
+                field_text(document.get(str(field))) for field in aggregation.group_by
+            ),
+            bucket,
+        )
+        counts[group] = counts.get(group, 0) + 1
+        if aggregation.total_of is not None:
+            amount: int | None = integer_value(document, aggregation.total_of)
+            totals[group] = totals.get(group, 0) + (amount or 0)
+
+        if aggregation.latest_of is not None:
+            moment: int | None = integer_value(document, aggregation.latest_of)
+            if moment is not None:
+                latest[group] = max(latest.get(group, moment), moment)
+
+    if not counts and not aggregation.group_by and aggregation.buckets is None:
+        counts[((), None)] = 0
+
+    return [
+        DocumentGroupCount(
+            values=tuple(
+                None if value is None else DocumentFieldText(value) for value in values
+            ),
+            bucket=None if bucket is None else DocumentBucketIndex(bucket),
+            count=DocumentCount(count),
+            total=(
+                None
+                if aggregation.total_of is None
+                else DocumentFieldSum(totals.get((values, bucket), 0))
+            ),
+            latest=(
+                None
+                if (values, bucket) not in latest
+                else DocumentFieldInteger(latest[(values, bucket)])
+            ),
+        )
+        for (values, bucket), count in counts.items()
+    ]
+
+
+def is_in_filter(
+    document: JsonObject,
+    where: DocumentFilter,
+    fields: dict[DocumentFieldPath, LookupFieldKind],
+) -> bool:
+    if not all(is_matching(document, match, fields) for match in where.matches):
+        return False
+
+    if not all(
+        any(
+            is_matching(
+                document, DocumentFieldMatch(field=among.field, value=value), fields
+            )
+            for value in among.values
+        )
+        for among in where.among
+    ):
+        return False
+
+    if any(
+        field_text(document.get(str(exclusion.field))) == str(exclusion.value)
+        for exclusion in where.excluding
+    ):
+        return False
+
+    return all(is_within(document, within) for within in where.ranges)
+
+
+def integer_values(
+    document: JsonObject,
+    sort_fields: Sequence[DocumentFieldPath],
+) -> tuple[int, ...] | None:
+    values: list[int] = []
+    for field in sort_fields:
+        value: int | None = integer_value(document, field)
+        if value is None:
+            return None
+
+        values.append(value)
+
+    return tuple(values)
+
+
+def integer_value(document: JsonObject, field: DocumentFieldPath) -> int | None:
+    value: object = document.get(str(field))
+    if isinstance(value, int) and not isinstance(value, bool):
+        return value
+
+    return None

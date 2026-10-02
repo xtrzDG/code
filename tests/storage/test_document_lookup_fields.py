@@ -10,15 +10,24 @@ from app.schemas.domain.contacts import ContactDocument
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.storage.constrained_strings import DocumentFieldPath
 from app.utilities.storage.document_collection_catalog import DOCUMENT_COLLECTIONS
+from app.utilities.storage.document_lookup_catalog import DOCUMENT_LOOKUP_FIELDS
 from app.utilities.storage.document_lookup_fields import (
     BUSINESS_ID_FIELD,
-    DOCUMENT_LOOKUP_FIELDS,
     catalog_name_of,
     declared_lookup_fields,
     split_element_path,
 )
 
-INTEGER_NAMES: frozenset[str] = frozenset({"Microseconds", "LlmTurnSequenceNumber"})
+INTEGER_NAMES: frozenset[str] = frozenset(
+    {
+        "BookingEndsAtUnixSeconds",
+        "BookingStartsAtUnixSeconds",
+        "CostMicroUsd",
+        "LlmTurnSequenceNumber",
+        "Microseconds",
+        "QuestionOccurrenceCount",
+    }
+)
 
 
 class LooseNote(BaseDocument):

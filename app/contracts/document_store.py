@@ -6,6 +6,8 @@ from typing import Protocol, TypeVar
 from base_pydantic_schemas import PersistentDocument
 
 from app.contracts.adapter_contract import AdapterContract
+from app.schemas.dto.storage_aggregates import DocumentAggregation, DocumentGroupCount
+from app.schemas.dto.storage_pages import DocumentPageQuery
 from app.schemas.dto.storage_queries import (
     DocumentFieldMatch,
     DocumentFieldOrder,
@@ -88,6 +90,21 @@ class DocumentCollectionAdapterContract(AdapterContract, Protocol[StoredDocument
         """
         Documents whose INTEGER lookup field lies within the range (and that
         match every field), sorted by that field, at most `limit` of them.
+        """
+        raise NotImplementedError
+
+    def page_by(self, query: DocumentPageQuery) -> list[StoredDocument]:
+        """
+        One keyset page (`DocumentPageQuery`): on Postgres an index range
+        scan that starts at the position, so page 1000 costs what page 1
+        costs.
+        """
+        raise NotImplementedError
+
+    def count_by(self, aggregation: DocumentAggregation) -> list[DocumentGroupCount]:
+        """
+        Grouped counts, sums and maxima (`DocumentAggregation`) computed by
+        the database: no document is read into the application.
         """
         raise NotImplementedError
 

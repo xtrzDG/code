@@ -21,8 +21,8 @@ from app.schemas.constants.storage import LookupFieldKind
 from app.schemas.domain.contacts import ContactDocument
 from app.schemas.domain.users import UserSessionDocument
 from app.schemas.typings.businesses.prefixed_id import BusinessId
+from app.utilities.storage.document_lookup_catalog import DOCUMENT_LOOKUP_FIELDS
 from app.utilities.storage.document_lookup_fields import (
-    DOCUMENT_LOOKUP_FIELDS,
     split_element_path,
 )
 from app.utilities.storage.storage_scope_context import StorageScopeContext

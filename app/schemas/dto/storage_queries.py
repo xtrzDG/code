@@ -20,6 +20,26 @@ class DocumentFieldMatch(ImmutableDTO):
     value: DocumentFieldText
 
 
+class DocumentFieldAmong(ImmutableDTO):
+    """
+    A TEXT, FILTER_TEXT or ELEMENT_TEXT lookup field equal to one of the
+    values (none: nothing matches).
+    """
+
+    field: DocumentFieldPath
+    values: tuple[DocumentFieldText, ...]
+
+
+class DocumentFieldExclusion(ImmutableDTO):
+    """
+    A TEXT or FILTER_TEXT lookup field other than the value; a document
+    without the field is kept (a flag stored before it existed).
+    """
+
+    field: DocumentFieldPath
+    value: DocumentFieldText
+
+
 class DocumentFieldRange(ImmutableDTO):
     """
     An INTEGER lookup field from `lower` (inclusive) to `upper` (exclusive);
@@ -60,6 +80,26 @@ class DocumentLookup(ImmutableDTO):
     within: DocumentFieldRange | None = None
     order: DocumentFieldOrder | None = None
     limit: DocumentQueryLimit | None = None
+
+
+class DocumentFilter(ImmutableDTO):
+    """
+    The conditions of a page or an aggregation: every match, among, and
+    exclusion and every range must hold.
+    """
+
+    matches: tuple[DocumentFieldMatch, ...] = Field(
+        default_factory=tuple[DocumentFieldMatch, ...]
+    )
+    among: tuple[DocumentFieldAmong, ...] = Field(
+        default_factory=tuple[DocumentFieldAmong, ...]
+    )
+    excluding: tuple[DocumentFieldExclusion, ...] = Field(
+        default_factory=tuple[DocumentFieldExclusion, ...]
+    )
+    ranges: tuple[DocumentFieldRange, ...] = Field(
+        default_factory=tuple[DocumentFieldRange, ...]
+    )
 
 
 class DocumentLookupField(ImmutableDTO):

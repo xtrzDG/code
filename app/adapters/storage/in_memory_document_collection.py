@@ -3,11 +3,14 @@ from collections.abc import Callable, Mapping, Sequence
 
 from base_pydantic_schemas import PersistentDocument
 
+from app.adapters.storage.in_memory_document_listing import aggregate, select_page
 from app.adapters.storage.in_memory_document_lookup import select_entries
 from app.adapters.storage.persisted_document_codec import PersistedDocumentCodec
 from app.contracts.document_store import DocumentCollectionAdapterContract
 from app.contracts.storage import StorageScopeContract
 from app.schemas.constants.storage import LookupFieldKind
+from app.schemas.dto.storage_aggregates import DocumentAggregation, DocumentGroupCount
+from app.schemas.dto.storage_pages import DocumentPageQuery
 from app.schemas.dto.storage_queries import (
     DocumentFieldMatch,
     DocumentFieldOrder,
@@ -29,6 +32,10 @@ from app.utilities.storage.document_lookup_fields import (
     declared_lookup_fields,
     require_valid_lookup,
 )
+from app.utilities.storage.document_query_rules import (
+    require_valid_aggregation,
+    require_valid_page,
+)
 from app.utilities.storage.storage_scoping import require_tenant_scope
 
 
@@ -46,6 +53,7 @@ class InMemoryDocumentCollectionAdapter[StoredDocument: PersistentDocument](
     lookup fields as the Postgres collection (by default those the catalog
     declares for the document type), so a query without an index fails in
     in-memory tests too; they scan, which is fine for tests and demos.
+    Keyset pages and aggregations follow `in_memory_document_listing`.
 
     A tenant collection given the process's `tenant_scope` refuses code
     that entered no storage scope, like the Postgres collection
@@ -162,6 +170,16 @@ class InMemoryDocumentCollectionAdapter[StoredDocument: PersistentDocument](
             )
         )
 
+    def page_by(self, query: DocumentPageQuery) -> list[StoredDocument]:
+        require_valid_page(self._lookup_fields, query, self._label())
+        return self._validate_all(
+            select_page(self._entries(), query, self._lookup_fields)
+        )
+
+    def count_by(self, aggregation: DocumentAggregation) -> list[DocumentGroupCount]:
+        require_valid_aggregation(self._lookup_fields, aggregation, self._label())
+        return aggregate(self._entries(), aggregation, self._lookup_fields)
+
     def delete_by_range(
         self,
         within: DocumentFieldRange,
@@ -231,16 +249,19 @@ class InMemoryDocumentCollectionAdapter[StoredDocument: PersistentDocument](
 
     def _select_serialized(self, lookup: DocumentLookup) -> list[str]:
         require_valid_lookup(self._lookup_fields, lookup, self._label())
-        self._require_scope()
-        with self._lock:
-            entries: list[tuple[str, str]] = list(self._serialized_documents.items())
-
         return [
             serialized_document
             for _, serialized_document in select_entries(
-                entries, lookup, self._lookup_fields
+                self._entries(), lookup, self._lookup_fields
             )
         ]
+
+    def _entries(self) -> list[tuple[str, str]]:
+        """(key, serialized document) in first-write order, after the scope check."""
+
+        self._require_scope()
+        with self._lock:
+            return list(self._serialized_documents.items())
 
     def _validate_all(self, serialized_documents: list[str]) -> list[StoredDocument]:
         return [
