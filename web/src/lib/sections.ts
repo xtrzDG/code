@@ -135,4 +135,3 @@ export function pageTitleKeys(page: BusinessPage): readonly MessageKey[] {
 export function listedPages(): readonly BusinessPage[] {
   return BUSINESS_SECTIONS.flatMap((section) => SECTION_PAGES[section].map((entry) => entry.page));
 }
-

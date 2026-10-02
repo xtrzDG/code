@@ -393,9 +393,9 @@ section tabs, page titles and the e2e suite read it):
   `aria-current="page"` marks where you are everywhere, badges read as "3
   waiting", folded icons keep their names, and touch targets are at least
   44 px on coarse pointers.
-- Checked by hand (axe cannot): a screen reader pass of the sidebar, the
-  user menu popover and the "More" sheet (VoiceOver on macOS and iOS
-  Safari); repeat it after changing the frame.
+- What axe cannot check needs a person: a screen reader pass of the
+  sidebar, the user menu popover and the "More" sheet (VoiceOver on macOS
+  and iOS Safari) after changing the frame.
 
 ## Conventions
 
