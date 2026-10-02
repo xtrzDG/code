@@ -25,7 +25,7 @@ import { businessPath } from "@/lib/navigation";
 
 import { BookFromConversation } from "./BookFromConversation";
 import { CallsCard } from "./CallsCard";
-import { initialsOf, usageTotals } from "./conversationModel";
+import { canReplyFromCard, initialsOf, usageTotals } from "./conversationModel";
 import { LinkedItems } from "./LinkedItems";
 import { RatingControl } from "./RatingControl";
 import { ReplyBox } from "./ReplyBox";
@@ -174,7 +174,9 @@ export function ConversationDetail({ conversationId }: { conversationId: string 
           setIsBooking(false);
           detail.reload();
           toast.success(t("bookings.created"));
-          if (reply?.is_available) {
+          // The reply box takes it freely or, past WhatsApp's 24 hours, in
+          // the owner's template; otherwise staff copy it by hand.
+          if (canReplyFromCard(reply)) {
             setDraft(result.confirmation_text);
             toast.info(t("conversations.reply.confirmationPrefilled"));
           } else {

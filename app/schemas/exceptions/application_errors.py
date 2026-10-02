@@ -61,6 +61,14 @@ class ChannelCredentialRejectedError(ExternalServiceError):
     """
 
 
+class WhatsAppTemplateRejectedError(ExternalServiceError):
+    """
+    Meta refused a WhatsApp message template: no approved template has that
+    name in that language, or its variables do not match. Trying again
+    cannot help until the template setting is corrected.
+    """
+
+
 class InvalidPhoneNumberError(ValidationFailedError):
     """Text is not a valid phone number for the given or detected country."""
 

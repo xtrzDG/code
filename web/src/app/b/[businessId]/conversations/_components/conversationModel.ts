@@ -12,6 +12,7 @@ import type {
   MessageAuthor,
   MessageView,
   StaffReplyBlock,
+  StaffReplyView,
 } from "@/components/insights/types";
 import type { MessageKey } from "@/i18n/translate";
 
@@ -265,4 +266,14 @@ export function templateLanguageName(code: string, locale: string): string {
   } catch {
     return code;
   }
+}
+
+/** The owner's WhatsApp template that carries staff text once the 24-hour window has closed, or null. */
+export function offeredTemplate(reply: StaffReplyView): NonNullable<StaffReplyView["template"]> | null {
+  return !reply.is_available && reply.block === "window_closed" ? (reply.template ?? null) : null;
+}
+
+/** Whether the reply box takes text now: freely, or in the owner's template. */
+export function canReplyFromCard(reply: StaffReplyView | null | undefined): boolean {
+  return reply != null && (reply.is_available || offeredTemplate(reply) !== null);
 }

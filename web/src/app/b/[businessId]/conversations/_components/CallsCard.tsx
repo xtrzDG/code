@@ -57,6 +57,7 @@ function CallItem({ call }: { call: CallView }) {
               <CallRecordingPlayer
                 callId={call.id}
                 label={t("conversations.calls.playerLabel", { date: format.dateTime(call.started_at) })}
+                playLabel={t("conversations.calls.playLabel", { date: format.dateTime(call.started_at) })}
               />
             ) : (
               t("conversations.calls.noRecording")

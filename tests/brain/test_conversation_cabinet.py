@@ -506,6 +506,34 @@ class TestStaffRepliesAsWhatsAppTemplates:
         assert cabinet.storage.channel_sender.templates == []
         assert len(world.messages(reply.conversation_id)) == 2
 
+    def test_a_template_meta_refuses_is_a_conflict_naming_the_template(
+        self,
+    ) -> None:
+        world = build_world(scripted(say("Hello!")))
+        reply = world.send("Hi")
+        cabinet = Cabinet(world)
+        cabinet.connect(ChannelKind.WHATSAPP, staff_template=STAFF_TEMPLATE)
+        world.clock.advance(timedelta(hours=25))
+        cabinet.storage.channel_sender.template_rejection = (
+            "Meta refused the message template (132001): (#132001) Template "
+            "name does not exist in the translation"
+        )
+
+        refused = cabinet.reply(reply.conversation_id, "Hello", as_template=True)
+
+        # Not "try again in a minute": retrying cannot help until the owner
+        # corrects the template in the channel settings.
+        assert refused.status_code == 409
+        body = refused.json()
+        assert body["error"] == "conflict"
+        assert "template" in body["message"]
+        [reason] = body["reasons"]
+        assert reason["code"] == "template_rejected"
+        assert "132001" in reason["message"]
+        assert reason["details"] == ["staff_reply", "en_US"]
+        assert cabinet.storage.channel_sender.templates == []
+        assert len(world.messages(reply.conversation_id)) == 2
+
     def test_without_a_template_the_refusal_points_to_the_channels_page(
         self,
     ) -> None:

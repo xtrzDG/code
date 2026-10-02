@@ -15,6 +15,7 @@ from app.schemas.constants.conversations import (
     MessageAuthor,
     StaffMessageDelivery,
     StaffReplyBlock,
+    StaffReplyRefusalCode,
 )
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.compliance import AuditLogEntryDocument
@@ -26,11 +27,13 @@ from app.schemas.dto.conversation_feed import (
     StaffMessageResult,
     StaffReplyView,
 )
+from app.schemas.dto.errors import ErrorReason
 from app.schemas.dto.staff_reply_templates import StaffReplyTemplateView
 from app.schemas.exceptions.application_errors import (
     ConflictError,
     NotFoundError,
     ValidationFailedError,
+    WhatsAppTemplateRejectedError,
 )
 from app.schemas.typings.compliance.strings import (
     AuditEntityName,
@@ -40,6 +43,11 @@ from app.schemas.typings.conversations.constrained_strings import (
     StaffTemplateReplyText,
 )
 from app.schemas.typings.conversations.strings import MessageText
+from app.schemas.typings.platform.constrained_strings import (
+    ErrorReasonCode,
+    ErrorReasonDetail,
+)
+from app.schemas.typings.platform.strings import ErrorReasonMessage
 from app.use_cases.conversations.staff_reply_support import (
     assess_conversation_reply,
 )
@@ -49,6 +57,11 @@ from app.utilities.conversations.staff_replies import (
 )
 
 MESSAGE_ENTITY: AuditEntityName = AuditEntityName("message")
+TEMPLATE_REJECTED_MESSAGE: str = (
+    "WhatsApp did not accept the message template for staff replies: check "
+    "its name, its language and its one {{1}} variable in the channel "
+    "settings."
+)
 
 
 class SendStaffMessageUseCase(
@@ -65,13 +78,15 @@ class SendStaffMessageUseCase(
     After that, a WhatsApp message asked to go `as_template` travels in the
     message template the owner set for staff replies, in its approved
     language, as its single body parameter: one line (line breaks become
-    spaces) of at most 1024 characters, else ValidationFailedError.
-    Website chat messages are kept for the visitor's widget. Phone and test
-    conversations cannot be written to; every refusal is a ConflictError
-    that says why. The message is stored in the transcript as a STAFF
-    message with its author, the conversation moves up the feed, the
-    assistant is not asked to answer, and the message (personal data) is
-    written to the audit log.
+    spaces) of at most 1024 characters, else ValidationFailedError. A
+    template Meta refuses (no approved template of that name in that
+    language, other variables) is a ConflictError with the reason
+    `template_rejected`: trying again cannot help. Website chat messages
+    are kept for the visitor's widget. Phone and test conversations cannot
+    be written to; every refusal is a ConflictError that says why. The
+    message is stored in the transcript as a STAFF message with its author,
+    the conversation moves up the feed, the assistant is not asked to
+    answer, and the message (personal data) is written to the audit log.
     """
 
     def __init__(
@@ -195,13 +210,32 @@ class SendStaffMessageUseCase(
             ) from error
 
         text: MessageText = MessageText(str(parameter))
-        self._channel_message_sender.send_whatsapp_template_in_language(
-            business.id,
-            conversation.channel_user_id,
-            template.name,
-            template.language_code,
-            [text],
-        )
+        try:
+            self._channel_message_sender.send_whatsapp_template_in_language(
+                business.id,
+                conversation.channel_user_id,
+                template.name,
+                template.language_code,
+                [text],
+            )
+        except WhatsAppTemplateRejectedError as error:
+            # Trying again cannot help: the template setting is wrong.
+            raise ConflictError(
+                TEMPLATE_REJECTED_MESSAGE,
+                reasons=[
+                    ErrorReason(
+                        code=ErrorReasonCode(
+                            StaffReplyRefusalCode.TEMPLATE_REJECTED.value
+                        ),
+                        message=ErrorReasonMessage(str(error)),
+                        details=[
+                            ErrorReasonDetail(str(template.name)),
+                            ErrorReasonDetail(str(template.language_code)),
+                        ],
+                    )
+                ],
+            ) from error
+
         return text
 
     def _require_conversation(

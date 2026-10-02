@@ -20,10 +20,10 @@ type ChannelView = Schema<"ChannelView">;
 const CONVERSATION_ID = "conversation_7f0c2a52-1d4b-4c3e-9a7e-2b6f1c9d0e11";
 const HOUR_US = 3600 * 1_000_000;
 
-/** Half a second of silence as a WAV file (what the player is given). */
-function silentWav(): Buffer {
+/** Seconds of silence as a WAV file (what the player is given). */
+function silentWav(seconds = 0.5): Buffer {
   const rate = 8000;
-  const samples = rate / 2;
+  const samples = Math.round(rate * seconds);
   const header = Buffer.alloc(44);
   header.write("RIFF", 0);
   header.writeUInt32LE(36 + samples * 2, 4);
@@ -91,56 +91,116 @@ function playerLabel(): RegExp {
   return new RegExp(`^${en.conversations.calls.playerLabel.replace("{date}", ".+")}$`);
 }
 
-test("a call recording loads only when played, and a missing one says so", async ({ page, owner, consoleErrors }) => {
-  consoleErrors.allow(/Failed to load resource: the server responded with a status of 404/);
-  const card = conversationCard(owner.businessId, {
-    calls: [
-      {
-        id: "call_kept",
-        started_at: Date.now() * 1000 - 3 * HOUR_US,
-        duration_seconds: 95,
-        outcome: "information",
-        recording_path: "elevenlabs/conversations/conv_kept",
-      },
-      {
-        id: "call_purged",
-        started_at: Date.now() * 1000 - 2 * HOUR_US,
-        duration_seconds: 40,
-        recording_path: "elevenlabs/conversations/conv_purged",
-      },
-    ],
+function datedLabel(template: string): RegExp {
+  return new RegExp(`^${template.replace("{date}", ".+")}$`);
+}
+
+function cardWithCalls(businessId: string, callIds: string[]): ConversationDetail {
+  const card = conversationCard(businessId, {
+    calls: callIds.map((id, index) => ({
+      id,
+      started_at: Date.now() * 1000 - (3 - index) * HOUR_US,
+      duration_seconds: 95,
+      outcome: "information",
+      recording_path: `elevenlabs/conversations/conv_${id}`,
+    })),
     reply: { is_available: false, block: "voice_call" },
   });
   card.conversation.channel = "phone";
-  await serveCard(page, owner.businessId, card);
+  return card;
+}
+
+test("a call recording loads only when played, seeks, and a missing one says so", async ({ page, owner, consoleErrors }) => {
+  consoleErrors.allow(/Failed to load resource: the server responded with a status of 404/);
+  await serveCard(page, owner.businessId, cardWithCalls(owner.businessId, ["call_kept", "call_purged"]));
   const played: string[] = [];
   await page.route("**/calls/*/recording", (route: Route) => {
     const url = route.request().url();
     played.push(url);
+    // Served the way the API answers a request without Range: whole, 200.
     return url.includes("/calls/call_kept/")
-      ? route.fulfill({ status: 200, contentType: "audio/wav", body: silentWav() })
+      ? route.fulfill({ status: 200, contentType: "audio/wav", body: silentWav(10) })
       : route.fulfill({ status: 404, json: { error: "not_found", message: "This call has no recording." } });
   });
 
   await page.goto(`/b/${owner.businessId}/conversations/${CONVERSATION_ID}`);
-  const players = page.getByLabel(playerLabel());
-  await expect(players).toHaveCount(2);
+  const playButtons = page.getByRole("button", { name: datedLabel(en.conversations.calls.playLabel) });
+  await expect(playButtons).toHaveCount(2);
   await page.waitForLoadState("networkidle");
   // Opening the card fetches no audio (and so writes no audit entry).
   expect(played).toEqual([]);
+  await expect(page.getByLabel(playerLabel())).toHaveCount(0);
 
-  await players.nth(0).evaluate((audio: HTMLAudioElement) => {
-    audio.muted = true;
-    return audio.play();
-  });
-  await expect.poll(() => players.nth(0).evaluate((audio: HTMLAudioElement) => audio.readyState)).toBeGreaterThan(1);
+  await playButtons.nth(0).click();
+  const player = page.getByLabel(playerLabel());
+  await expect(player).toHaveCount(1);
+  // The pressed button is gone; focus is on the player that replaced it.
+  await expect(player).toBeFocused();
+  expect(await player.evaluate((audio: HTMLAudioElement) => audio.src.startsWith("blob:"))).toBe(true);
+  await expect.poll(() => player.evaluate((audio: HTMLAudioElement) => audio.readyState)).toBeGreaterThan(0);
+  // Played from memory: the whole recording is seekable without ranges.
+  expect(await player.evaluate((audio: HTMLAudioElement) => audio.seekable.end(0))).toBeGreaterThan(9);
+  const position = await player.evaluate(
+    (audio: HTMLAudioElement) =>
+      new Promise<number>((resolve) => {
+        audio.addEventListener("seeked", () => resolve(audio.currentTime), { once: true });
+        audio.currentTime = 6;
+      }),
+  );
+  expect(position).toBeGreaterThanOrEqual(5.9);
   expect(played).toHaveLength(1);
   await expect(page.getByText(en.conversations.calls.playError)).toBeHidden();
 
-  await players.nth(1).evaluate((audio: HTMLAudioElement) => audio.play().catch(() => undefined));
+  await page.getByRole("button", { name: datedLabel(en.conversations.calls.playLabel) }).click();
+  await expect(page.getByText(en.conversations.calls.playMissing)).toBeVisible();
+  // A deleted recording cannot come back: nothing to try again.
+  await expect(page.getByRole("button", { name: en.conversations.calls.playRetry })).toHaveCount(0);
+  expect(played).toHaveLength(2);
+});
+
+test("a recording the service could not give can be tried again from the keyboard", async ({ page, owner, consoleErrors }) => {
+  consoleErrors.allow(/Failed to load resource: the server responded with a status of 502/);
+  await serveCard(page, owner.businessId, cardWithCalls(owner.businessId, ["call_flaky"]));
+  let answers = 0;
+  await page.route("**/calls/*/recording", (route: Route) => {
+    answers += 1;
+    return answers <= 2
+      ? route.fulfill({ status: 502, json: { error: "external_service_error", message: "ElevenLabs is down." } })
+      : route.fulfill({ status: 200, contentType: "audio/wav", body: silentWav() });
+  });
+
+  await page.goto(`/b/${owner.businessId}/conversations/${CONVERSATION_ID}`);
+  await page.getByRole("button", { name: datedLabel(en.conversations.calls.playLabel) }).click();
   const failure = page.getByRole("alert").filter({ hasText: en.conversations.calls.playError });
   await expect(failure).toBeVisible();
-  await expect(failure.getByRole("button", { name: en.conversations.calls.playRetry })).toBeVisible();
+  const retry = failure.getByRole("button", { name: en.conversations.calls.playRetry });
+
+  // A retry that fails again keeps the alert and the focus on its button.
+  await retry.press("Enter");
+  await expect.poll(() => answers).toBe(2);
+  await expect(retry).toBeFocused();
+  await expect(failure).toBeVisible();
+
+  await retry.press("Enter");
+  const player = page.getByLabel(playerLabel());
+  await expect(player).toHaveCount(1);
+  await expect(player).toBeFocused();
+  await expect(failure).toBeHidden();
+});
+
+test("an expired session sends the player to sign-in", async ({ page, owner, consoleErrors }) => {
+  consoleErrors.allow(/status of 401/);
+  await serveCard(page, owner.businessId, cardWithCalls(owner.businessId, ["call_late"]));
+  await page.route("**/calls/*/recording", (route: Route) =>
+    route.fulfill({ status: 401, json: { error: "authentication_required", message: "Sign in again." } }),
+  );
+
+  await page.goto(`/b/${owner.businessId}/conversations/${CONVERSATION_ID}`);
+  await page.getByRole("button", { name: datedLabel(en.conversations.calls.playLabel) }).click();
+
+  await expect(page).toHaveURL(/\/login\?.*reason=expired/);
+  const next = new URL(page.url()).searchParams.get("next");
+  expect(next).toBe(`/b/${owner.businessId}/conversations/${CONVERSATION_ID}`);
 });
 
 test("after 24 hours a WhatsApp reply goes out in the owner's template", async ({ page, owner }) => {
@@ -187,6 +247,55 @@ test("after 24 hours a WhatsApp reply goes out in the owner's template", async (
   await expect(page.getByText(en.conversations.reply.template.sent)).toBeVisible();
   expect(sent).toEqual([{ text: "Sua mesa está reservada.\nAté sábado!", as_template: true }]);
   await expect(page.getByText("Sua mesa está reservada. Até sábado!")).toBeVisible();
+});
+
+test("a template WhatsApp refuses points the owner to the Channels page", async ({ page, owner, consoleErrors }) => {
+  consoleErrors.allow(/status of 409/);
+  await serveCard(
+    page,
+    owner.businessId,
+    conversationCard(owner.businessId, {
+      reply: {
+        is_available: false,
+        block: "window_closed",
+        template: { name: "staff_reply", language_code: "en", max_text_length: 1024 },
+      },
+    }),
+  );
+  await page.route(`**/conversations/${CONVERSATION_ID}/messages`, (route) =>
+    route.fulfill({
+      status: 409,
+      json: {
+        error: "conflict",
+        message: "WhatsApp did not accept the message template for staff replies.",
+        reasons: [
+          {
+            code: "template_rejected",
+            message: "Meta refused the message template (132001): Template name does not exist in the translation",
+            details: ["staff_reply", "en"],
+          },
+        ],
+      },
+    }),
+  );
+
+  await page.goto(`/b/${owner.businessId}/conversations/${CONVERSATION_ID}`);
+  await page.getByLabel(en.conversations.reply.label).fill("Your table is ready.");
+  await page.getByRole("button", { name: en.conversations.reply.template.send }).click();
+
+  const rejected = en.conversations.reply.template.rejectedOwner.replace("{name}", "staff_reply");
+  // Not "try again in a minute": the box says what to fix, and keeps the text.
+  const inline = page
+    .getByRole("alert")
+    .filter({ hasText: rejected })
+    .filter({ has: page.getByRole("link", { name: en.conversations.reply.openChannels }) });
+  await expect(inline).toBeVisible();
+  await expect(inline.getByRole("link", { name: en.conversations.reply.openChannels })).toHaveAttribute(
+    "href",
+    `/b/${owner.businessId}/channels`,
+  );
+  await expect(page.getByText(en.errors.codes.external_service_error)).toHaveCount(0);
+  await expect(page.getByLabel(en.conversations.reply.label)).toHaveValue("Your table is ready.");
 });
 
 test("without a template the closed window points to the Channels page", async ({ page, owner }) => {

@@ -6,6 +6,7 @@ from app.schemas.exceptions.application_errors import (
     ChannelCredentialRejectedError,
     ExternalServiceError,
     ValidationFailedError,
+    WhatsAppTemplateRejectedError,
 )
 from app.schemas.typings.channels.constrained_strings import (
     MetaObjectId,
@@ -42,6 +43,13 @@ INVALID_INPUT_ERROR_CODES: frozenset[int] = frozenset({100, 190, 200, 803})
 REJECTED_CREDENTIAL_STATUS_CODES: frozenset[int] = frozenset({401, 403})
 REJECTED_CREDENTIAL_ERROR_CODES: frozenset[int] = frozenset({102, 190})
 PAGE_WEBHOOK_FIELDS: str = "messages,messaging_postbacks"
+# Graph error codes of a message template Meta refuses: 132000 wrong number
+# of variables, 132001 no template of that name in that language, 132005
+# translated text too long, 132007 policy, 132012 variable format, 132015
+# paused, 132016 disabled.
+WHATSAPP_TEMPLATE_ERROR_CODES: frozenset[int] = frozenset(
+    {132000, 132001, 132005, 132007, 132012, 132015, 132016}
+)
 
 
 class MetaGraphClient(MetaGraphApiClientContract):
@@ -253,6 +261,11 @@ class MetaGraphClient(MetaGraphApiClientContract):
             raise ChannelCredentialRejectedError(
                 f"Meta rejected the access token or its permissions "
                 f"({error_code or response.status_code}): {message}"
+            )
+
+        if error_code in WHATSAPP_TEMPLATE_ERROR_CODES:
+            raise WhatsAppTemplateRejectedError(
+                f"Meta refused the message template ({error_code}): {message}"
             )
 
         raise ExternalServiceError(

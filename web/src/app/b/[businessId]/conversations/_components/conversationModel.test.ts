@@ -2,11 +2,12 @@ import { describe, expect, it } from "vitest";
 
 import { en } from "@/i18n/messages/en";
 import { lookupMessage } from "@/i18n/translate";
-import type { MessageView } from "@/components/insights/types";
+import type { MessageView, StaffReplyView } from "@/components/insights/types";
 
 import {
   CALL_OUTCOMES,
   callRecordingUrl,
+  canReplyFromCard,
   conversationApiQuery,
   conversationFiltersQuery,
   DEFAULT_CONVERSATION_FILTERS,
@@ -18,6 +19,7 @@ import {
   isWindowClosingSoon,
   MAX_REPLY_LENGTH,
   messageSide,
+  offeredTemplate,
   parseConversationFilters,
   prettyJson,
   REPLY_BLOCKS,
@@ -176,5 +178,27 @@ describe("template languages", () => {
     expect(templateLanguageName("ka", "en")).toBe("Georgian (ka)");
     expect(templateLanguageName("ru", "ru")).toBe("русский (ru)");
     expect(templateLanguageName("zz_ZZ", "en")).toContain("zz_ZZ");
+  });
+});
+
+describe("whether the reply box takes text", () => {
+  const template = { name: "staff_reply", language_code: "pt_BR", max_text_length: 1024 };
+
+  it("takes it in an open channel and in the owner's template after the window", () => {
+    const open: StaffReplyView = { is_available: true, delivery: "sent" };
+    const closedWithTemplate: StaffReplyView = { is_available: false, block: "window_closed", template };
+
+    expect(canReplyFromCard(open)).toBe(true);
+    expect(offeredTemplate(open)).toBeNull();
+    // A booking confirmation goes into the box, not into the copy-it-yourself dialog.
+    expect(canReplyFromCard(closedWithTemplate)).toBe(true);
+    expect(offeredTemplate(closedWithTemplate)).toEqual(template);
+  });
+
+  it("does not take it without a template, in calls, or without a reply view", () => {
+    expect(canReplyFromCard({ is_available: false, block: "window_closed" })).toBe(false);
+    expect(canReplyFromCard({ is_available: false, block: "voice_call" })).toBe(false);
+    expect(canReplyFromCard({ is_available: false, block: "channel_disconnected", template })).toBe(false);
+    expect(canReplyFromCard(null)).toBe(false);
   });
 });

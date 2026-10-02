@@ -203,3 +203,9 @@ export const IconMoon = (props: IconProps) => (
     <path d="M20 14.5A8.5 8.5 0 019.5 4a8.5 8.5 0 1010.5 10.5z" />
   </Icon>
 );
+
+export const IconPlay = (props: IconProps) => (
+  <Icon {...props}>
+    <path d="M8 5.5v13l10-6.5-10-6.5z" />
+  </Icon>
+);

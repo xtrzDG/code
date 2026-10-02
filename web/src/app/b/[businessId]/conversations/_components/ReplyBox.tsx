@@ -16,6 +16,7 @@ import {
   isSendableTemplateReply,
   isWindowClosingSoon,
   MAX_REPLY_LENGTH,
+  offeredTemplate,
   REPLY_BLOCKS,
   templateLanguageName,
   templateReplyLength,
@@ -31,6 +32,9 @@ import {
  * Channels page) still carries the text: the box offers "Send as template",
  * or, without a template, points to the Channels page.
  */
+/** The refusal reason of a WhatsApp template Meta did not accept. */
+const TEMPLATE_REJECTED = "template_rejected";
+
 export function ReplyBox({
   conversation,
   reply,
@@ -55,7 +59,7 @@ export function ReplyBox({
   const [now] = useState(() => Date.now());
   const channel = t(CHANNEL_LABELS[conversation.channel]);
   // Offered only once the WhatsApp window has closed and the owner set one.
-  const template = !reply.is_available && reply.block === "window_closed" ? (reply.template ?? null) : null;
+  const template = offeredTemplate(reply);
 
   const send = useApiMutation(
     (text: string, asTemplate: boolean) =>
@@ -63,8 +67,19 @@ export function ReplyBox({
         params: { path: { business_id: business.id, conversation_id: conversation.id } },
         body: asTemplate ? { text, as_template: true } : { text },
       }),
-    { errorMessages: { conflict: "conversations.reply.refused" } },
+    {
+      errorMessages: { conflict: "conversations.reply.refused" },
+      reasonMessages: {
+        [TEMPLATE_REJECTED]: () => ({
+          key: isOwner ? "conversations.reply.template.rejectedOwner" : "conversations.reply.template.rejectedStaff",
+          values: { name: template?.name ?? "" },
+        }),
+      },
+    },
   );
+  // Meta refused the owner's template: retrying cannot help until it is
+  // corrected on the Channels page, so the box says so and stays open.
+  const [isTemplateRejected, setIsTemplateRejected] = useState(false);
 
   const windowClosedAt =
     reply.block === "window_closed" && reply.window_closes_at ? (
@@ -110,6 +125,7 @@ export function ReplyBox({
     }
     const result = await send.run(draft.trim(), template !== null);
     if (result.ok) {
+      setIsTemplateRejected(false);
       onSent(result.data.message);
       const delivery = result.data.delivery;
       toast.success(
@@ -122,6 +138,8 @@ export function ReplyBox({
           { channel },
         ),
       );
+    } else if (result.error.reasons.some((reason) => reason.code === TEMPLATE_REJECTED)) {
+      setIsTemplateRejected(true);
     } else if (result.error.code === "conflict") {
       onRefused();
     }
@@ -144,6 +162,23 @@ export function ReplyBox({
         <Alert tone="info" className="mb-3">
           <p>{t("conversations.reply.template.intro")}</p>
           {windowClosedAt}
+        </Alert>
+      ) : null}
+      {template && isTemplateRejected ? (
+        <Alert
+          tone="danger"
+          className="mb-3"
+          action={
+            isOwner ? (
+              <ButtonLink href={businessPath(business.id, "channels")} variant="secondary" size="sm">
+                {t("conversations.reply.openChannels")}
+              </ButtonLink>
+            ) : undefined
+          }
+        >
+          {t(isOwner ? "conversations.reply.template.rejectedOwner" : "conversations.reply.template.rejectedStaff", {
+            name: template.name,
+          })}
         </Alert>
       ) : null}
       <form onSubmit={(event) => void submit(event)} className="space-y-3">

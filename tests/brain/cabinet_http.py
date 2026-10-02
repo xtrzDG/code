@@ -52,6 +52,7 @@ from app.schemas.dto.menu_import import (
 from app.schemas.exceptions.application_errors import (
     AuthenticationRequiredError,
     ExternalServiceError,
+    WhatsAppTemplateRejectedError,
 )
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.channels.constrained_strings import (
@@ -123,6 +124,7 @@ class RecordingChannelSender(ChannelMessageSenderFacilitatorContract):
         self.sent: list[tuple[ChannelKind, str, str]] = []
         self.templates: list[tuple[str, str, str, list[str]]] = []
         self.failure: str | None = None
+        self.template_rejection: str | None = None
 
     def send(
         self,
@@ -156,6 +158,9 @@ class RecordingChannelSender(ChannelMessageSenderFacilitatorContract):
     ) -> None:
         if self.failure is not None:
             raise ExternalServiceError(self.failure)
+
+        if self.template_rejection is not None:
+            raise WhatsAppTemplateRejectedError(self.template_rejection)
 
         self.templates.append(
             (

@@ -90,6 +90,14 @@ class StaffReplyBlock(StrEnum):
     CHANNEL_DISCONNECTED = "channel_disconnected"
 
 
+class StaffReplyRefusalCode(StrEnum):
+    """Machine-readable reasons a staff reply is refused (409)."""
+
+    # Meta refused the owner's WhatsApp template (name, language or its one
+    # {{1}} variable): the owner corrects it in the channel settings.
+    TEMPLATE_REJECTED = "template_rejected"
+
+
 class StaffMessageDelivery(StrEnum):
     """
     How a staff message reaches the customer: sent through the messenger
