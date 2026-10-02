@@ -40,7 +40,6 @@ from app.repositories.conversation_repositories import (
 )
 from app.repositories.delivery_repositories import (
     InboundEventRepository,
-    OutboundMessageRepository,
 )
 from app.repositories.knowledge_repositories import ScheduleExceptionRepository
 from app.repositories.user_repositories import UserRepository
@@ -75,6 +74,7 @@ from tests.channels.channels_fakes import (
     FakeVoiceToolCallOrchestrator,
 )
 from tests.channels.channels_settings import build_settings
+from tests.channels.faulty_outbox import FaultyOutboundMessageRepository
 from tests.channels.recording_transport import RecordingTransport
 from tests.channels.scripted_customer_pipeline import ScriptedCustomerPipeline
 from tests.platform.worker_fakes import JobStores, build_job_stores
@@ -133,7 +133,7 @@ class ChannelsInfrastructure:
             OutboundMessageDocument
         )
         self.inbound_event_repo = InboundEventRepository(self.inbound_event_collection)
-        self.outbound_message_repo = OutboundMessageRepository(
+        self.outbound_message_repo = FaultyOutboundMessageRepository(
             self.outbound_message_collection
         )
         self.jobs: JobStores = build_job_stores()

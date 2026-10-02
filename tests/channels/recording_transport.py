@@ -56,6 +56,23 @@ class RecordingTransport:
             ),
         )
 
+    def respond_in_turn(
+        self,
+        method: str,
+        path_pattern: str,
+        responses: list[tuple[int, object]],
+    ) -> None:
+        """Answer matching requests with these responses in turn; the last stays."""
+
+        self.routes.insert(
+            0,
+            ScriptedRoute(
+                method=method,
+                path_pattern=re.compile(path_pattern),
+                responses=list(responses),
+            ),
+        )
+
     def build(self) -> httpx.MockTransport:
         return httpx.MockTransport(self._handle)
 
@@ -78,7 +95,11 @@ class RecordingTransport:
             if route.method == request.method and route.path_pattern.search(
                 request.url.path
             ):
-                status_code, body = route.responses[0]
+                status_code, body = (
+                    route.responses.pop(0)
+                    if len(route.responses) > 1
+                    else route.responses[0]
+                )
                 return httpx.Response(status_code, json=body)
 
         return httpx.Response(404, json={"error": "not scripted"})
