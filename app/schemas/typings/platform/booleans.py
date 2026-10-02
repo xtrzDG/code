@@ -8,4 +8,5 @@ IsDemoDataSeedingEnabled = bool
 IsEmbeddedWorkerEnabled = bool
 IsFinalJobAttempt = bool
 IsLlmContentTraced = bool
+IsProcessLocalJob = bool
 # Keep abc order for all non example types, if possible.

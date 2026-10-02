@@ -51,6 +51,7 @@ from app.schemas.domain.handoffs import (
     UnansweredQuestionDocument,
 )
 from app.schemas.domain.jobs import (
+    PeriodicJobRunDocument,
     QueuedJobDocument,
 )
 from app.schemas.domain.knowledge import (
@@ -210,6 +211,14 @@ class DocumentCollectionsContainer(containers.DeclarativeContainer):
     )
     queued_job_collection = document_collection(
         QueuedJobDocument, "queued_jobs", config, clients, utilities, time_provider
+    )
+    periodic_job_run_collection = document_collection(
+        PeriodicJobRunDocument,
+        "periodic_job_runs",
+        config,
+        clients,
+        utilities,
+        time_provider,
     )
     channel_message_receipt_collection = document_collection(
         ChannelMessageReceiptDocument,

@@ -60,6 +60,21 @@ class ErrorReasonDetail(BaseConstrainedTypedString):
     pattern = r"^[A-Za-z0-9][A-Za-z0-9_.:/+\-]*$"
 
 
+class JobLeaseToken(BaseConstrainedTypedString):
+    """
+    Random token of one claim of queued jobs by a worker. Only the worker
+    holding the token may extend the lease or settle the job, so a worker
+    whose lease expired cannot overwrite the result of the next attempt.
+
+    Example:
+        token = JobLeaseToken("4f6c1e2a9b3d4c5e8f7a6b5c4d3e2f1a")
+    """
+
+    min_length = 32
+    max_length = 32
+    pattern = r"^[0-9a-f]{32}$"
+
+
 class JobName(BaseConstrainedTypedString):
     """
     Stable snake-case name of a background job, e.g. "purge_expired_recordings".
@@ -71,6 +86,37 @@ class JobName(BaseConstrainedTypedString):
     min_length = 2
     max_length = 64
     pattern = r"^[a-z][a-z0-9_]*$"
+
+
+class JobPeriodKey(BaseConstrainedTypedString):
+    """
+    The period one run of a periodic job belongs to, in UTC: the date of a
+    daily job ("2026-10-02"), the ISO week of a weekly job ("2026-W40"), or
+    the start of the interval of a shorter one ("2026-10-02T14:15:00Z"). A
+    job runs once per period across workers and restarts.
+
+    Example:
+        period = JobPeriodKey("2026-10-02")
+    """
+
+    min_length = 8
+    max_length = 20
+    pattern = r"^\d{4}-(W\d{2}|\d{2}-\d{2}(T\d{2}:\d{2}:\d{2}Z)?)$"
+
+
+class JobSerialKey(BaseConstrainedTypedString):
+    """
+    Key of queued jobs that must run one at a time, oldest first (e.g. the
+    autotest runs of one business, or the messages of one customer): a
+    worker never starts a job while another job with the same key runs.
+
+    Example:
+        key = JobSerialKey("autotests:business_0f8f6bd6e9b24a4c8b8c3c1f2a7e9d10")
+    """
+
+    min_length = 3
+    max_length = 200
+    pattern = r"^[a-z][a-z0-9_]*:[A-Za-z0-9_.:\-]+$"
 
 
 class PageCursor(BaseConstrainedTypedString):
