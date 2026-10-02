@@ -93,6 +93,10 @@ npm run e2e -- onboarding         # one file
   tests type codes.
 - Every test fails on a browser console error or an uncaught exception;
   `consoleErrors.allow(/…/)` accepts one a test provokes on purpose.
+- A business page keeps its live event stream open, so
+  `waitForLoadState("networkidle")` never comes there: wait with
+  `waitForNetworkQuiet(page)` (`e2e/support/network.ts`, every other request
+  of the page settled).
 - The browser prefers reduced motion (`contextOptions.reducedMotion`), so
   animations end at once and the landing shows its still hero; a test about
   motion opts out with `test.use({ contextOptions: { reducedMotion: "no-preference" } })`.
