@@ -5,6 +5,10 @@
 #   workshop worker    background worker (periodic jobs and the job queue)
 #   workshop migrate   apply the SQL migrations to $DATABASE_URL (one-shot);
 #                      extra arguments go to the runner, e.g. --dry-run
+#   workshop migrate-documents
+#                      rewrite stored documents of older schema versions
+#                      (one-shot, after a release is fully deployed), e.g.
+#                      --collection bookings --batch 500 --dry-run
 #
 # Anything else is executed as given, so `workshop workshop api` (a platform
 # that keeps the ENTRYPOINT and passes the full command) also works.
@@ -30,6 +34,9 @@ case "$role" in
     ;;
   migrate)
     exec python -m app.gateways.cli.migrate "$@"
+    ;;
+  migrate-documents)
+    exec python -m app.gateways.cli.migrate_documents "$@"
     ;;
   *)
     exec "$role" "$@"

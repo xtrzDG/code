@@ -3,10 +3,7 @@ Two releases on one Postgres table, as during a rolling deploy or after a
 rollback: each reads what the other wrote.
 """
 
-import json
 from typing import cast
-
-from psycopg import sql
 
 from app.adapters.storage.document_upgrades import StoredJsonObject
 from app.adapters.storage.persisted_document_codec import parse_stored_object
@@ -24,40 +21,7 @@ from tests.storage.evolution_documents import (
     NoteV2,
     build_note_v2,
 )
-
-
-def read_stored(
-    connection_pool: PostgresConnectionPoolClient,
-    document_key: str,
-) -> StoredJsonObject:
-    with connection_pool.transaction() as connection:
-        connection.execute("select set_config('app.bypass_rls', 'on', true)")
-        row = connection.execute(
-            sql.SQL("select document::text from {} where document_key = %s").format(
-                sql.Identifier("workshop", NOTES_TABLE)
-            ),
-            (document_key,),
-        ).fetchone()
-
-    assert row is not None
-    return parse_stored_object(str(row[0]))
-
-
-def write_stored(
-    connection_pool: PostgresConnectionPoolClient,
-    document_key: str,
-    business_id: BusinessId,
-    document: StoredJsonObject,
-) -> None:
-    with connection_pool.transaction() as connection:
-        connection.execute("select set_config('app.bypass_rls', 'on', true)")
-        connection.execute(
-            sql.SQL(
-                "insert into {} (document_key, business_id, document, created_at, "
-                "updated_at) values (%s, %s, %s::jsonb, 1, 1)"
-            ).format(sql.Identifier("workshop", NOTES_TABLE)),
-            (document_key, str(business_id), json.dumps(document)),
-        )
+from tests.storage.stored_rows import read_stored, write_stored
 
 
 def test_the_previous_release_reads_and_rewrites_rows_of_the_next_one(
