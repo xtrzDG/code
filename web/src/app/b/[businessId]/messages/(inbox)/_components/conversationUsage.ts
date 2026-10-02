@@ -13,9 +13,9 @@ export interface UsageTotals {
 /** The card's totals from the usage the API sums over the whole conversation. */
 export function fromUsage(usage: ConversationUsageView): UsageTotals {
   return {
-    inputTokens: usage.input_tokens ?? 0,
-    outputTokens: usage.output_tokens ?? 0,
-    costMicroUsd: usage.cost_micro_usd ?? 0,
+    inputTokens: usage.input_tokens,
+    outputTokens: usage.output_tokens,
+    costMicroUsd: usage.cost_micro_usd,
   };
 }
 
@@ -25,9 +25,9 @@ export function addUsage(
   message: MessageUsage,
 ): ConversationUsageView {
   return {
-    input_tokens: (usage.input_tokens ?? 0) + message.input_tokens,
-    output_tokens: (usage.output_tokens ?? 0) + message.output_tokens,
-    cost_micro_usd: (usage.cost_micro_usd ?? 0) + message.cost_micro_usd,
+    input_tokens: usage.input_tokens + message.input_tokens,
+    output_tokens: usage.output_tokens + message.output_tokens,
+    cost_micro_usd: usage.cost_micro_usd + message.cost_micro_usd,
   };
 }
 

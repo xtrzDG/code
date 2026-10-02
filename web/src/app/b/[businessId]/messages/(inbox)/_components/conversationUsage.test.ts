@@ -15,11 +15,9 @@ describe("conversation usage", () => {
       outputTokens: 300,
       costMicroUsd: 4100,
     });
-    expect(fromUsage({})).toEqual({
-      inputTokens: 0,
-      outputTokens: 0,
-      costMicroUsd: 0,
-    });
+    expect(
+      fromUsage({ input_tokens: 0, output_tokens: 0, cost_micro_usd: 0 }),
+    ).toEqual({ inputTokens: 0, outputTokens: 0, costMicroUsd: 0 });
   });
 
   it("adds a reply sent from the card", () => {
