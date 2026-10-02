@@ -1,9 +1,10 @@
 from dependency_injector import containers
 from dependency_injector.providers import DependenciesContainer, Factory, Singleton
 
+from app.containers.container_edges import composed_container_edge
 from app.containers.orchestrators import OrchestratorsContainer
 from app.containers.provider_chains import orchestrator_pipeline
-from app.containers.use_cases import UseCasesContainer
+from app.containers.use_cases.use_cases_container import UseCasesContainer
 from app.contracts.conversation_flow import CustomerMessagePipelineContract
 from app.contracts.orchestrator_contract import OrchestratorContract
 from app.contracts.pipeline_contract import PipelineContract
@@ -48,7 +49,7 @@ class PipelinesContainer(containers.DeclarativeContainer):
     """
 
     orchestrators: OrchestratorsContainer = DependenciesContainer()  # type: ignore[assignment]
-    use_cases: UseCasesContainer = DependenciesContainer()  # type: ignore[assignment]
+    use_cases: UseCasesContainer = composed_container_edge(UseCasesContainer)  # type: ignore[assignment]
 
     # --- Customer messages of every channel. Singleton: its per-customer
     # locks must be shared by every channel of the process.
@@ -77,25 +78,25 @@ class PipelinesContainer(containers.DeclarativeContainer):
         OrchestratorContract[TelegramWebhookRequest, ChannelWebhookOutcome]
     ] = Factory(
         ChannelWebhookOrchestrator[TelegramWebhookRequest],
-        receive_webhook=use_cases.receive_telegram_webhook_use_case,
+        receive_webhook=use_cases.channels.receive_telegram_webhook_use_case,
         customer_message_pipeline=customer_message_pipeline,
-        deliver_reply=use_cases.deliver_channel_reply_use_case,
+        deliver_reply=use_cases.channels.deliver_channel_reply_use_case,
     )
     meta_webhook_orchestrator: Factory[
         OrchestratorContract[MetaWebhookRequest, ChannelWebhookOutcome]
     ] = Factory(
         ChannelWebhookOrchestrator[MetaWebhookRequest],
-        receive_webhook=use_cases.receive_meta_webhook_use_case,
+        receive_webhook=use_cases.channels.receive_meta_webhook_use_case,
         customer_message_pipeline=customer_message_pipeline,
-        deliver_reply=use_cases.deliver_channel_reply_use_case,
+        deliver_reply=use_cases.channels.deliver_channel_reply_use_case,
     )
     widget_message_orchestrator: Factory[
         OrchestratorContract[WidgetMessageCommand, WidgetReplyView]
     ] = Factory(
         WidgetMessageOrchestrator,
-        accept_widget_message=use_cases.accept_widget_message_use_case,
+        accept_widget_message=use_cases.channels.accept_widget_message_use_case,
         customer_message_pipeline=customer_message_pipeline,
-        build_widget_reply=use_cases.build_widget_reply_use_case,
+        build_widget_reply=use_cases.channels.build_widget_reply_use_case,
     )
     telegram_webhook_pipeline = orchestrator_pipeline(telegram_webhook_orchestrator)
     meta_webhook_pipeline = orchestrator_pipeline(meta_webhook_orchestrator)

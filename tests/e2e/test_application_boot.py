@@ -133,8 +133,8 @@ def test_stateful_collaborators_are_shared_singletons() -> None:
         is container.registries.business_lock_registry()
     )
     assert (
-        container.use_cases.create_telegram_link_use_case()
-        is container.use_cases.create_telegram_link_use_case()
+        container.use_cases.channels.create_telegram_link_use_case()
+        is container.use_cases.channels.create_telegram_link_use_case()
     )
     assert container.adapters.collections.booking_collection() is (
         container.adapters.collections.booking_collection()
