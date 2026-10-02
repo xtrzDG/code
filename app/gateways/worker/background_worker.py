@@ -137,7 +137,9 @@ class BackgroundWorker:
     def run_once(self) -> WorkerTickReport:
         """
         One tick in the calling thread: release expired leases, run every
-        due periodic job, then every due queued job of every lane.
+        due periodic job, then every due queued job of every lane. For
+        tests and one-off runs: no heartbeat runs meanwhile, so a batch
+        that takes longer than a lease may be taken over by another worker.
         """
 
         maintenance_failures: int = self._release_expired_leases()
