@@ -3,10 +3,9 @@
 from app.schemas.constants.billing import InvoiceKind, InvoiceStatus, SubscriptionStatus
 from app.schemas.constants.businesses import BusinessStatus, ServiceMode
 from app.schemas.constants.handoffs import ManagerContactChannel
-from app.schemas.domain.businesses import ManagerContact
 from app.schemas.dto.billing_cabinet import CancelSubscriptionCommand
+from app.schemas.dto.deliveries import StaffNotification
 from app.schemas.typings.businesses.strings import BusinessName
-from app.schemas.typings.conversations.strings import MessageText
 from tests.billing.billing_settings import ITALY, MICROSECONDS_PER_DAY
 from tests.billing.billing_testbed import BillingTestbed
 from tests.billing.grace_steps import end_trial, enforce, pay_open_invoices, start_trial
@@ -159,16 +158,13 @@ def test_the_grace_job_keeps_an_owner_edit_made_while_it_runs() -> None:
     testbed.clock.advance(days=8)
     deliver = testbed.notifier.notify
 
-    def rename_second_while_notifying(
-        contact: ManagerContact,
-        text: MessageText,
-    ) -> bool:
+    def rename_second_while_notifying(notification: StaffNotification) -> bool:
         stored = testbed.business(second.id)
         if str(stored.name) != "Renamed meanwhile":
             stored.name = BusinessName("Renamed meanwhile")
             testbed.business_repo.save(stored)
 
-        return deliver(contact, text)
+        return deliver(notification)
 
     testbed.notifier.notify = rename_second_while_notifying  # type: ignore[method-assign]
 

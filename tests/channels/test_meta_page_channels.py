@@ -90,7 +90,7 @@ class TestPageChannels:
 
         delivered = testbed.instagram_adapter.send(target, MessageText("Ok. " * 400))
 
-        assert delivered == 2
+        assert delivered.delivered == 2
         requests = testbed.meta_transport.requests
         assert all(
             r.headers["Authorization"] == f"Bearer {PAGE_ACCESS_TOKEN}"

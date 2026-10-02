@@ -9,6 +9,7 @@ from app.schemas.constants.channels import ChannelKind
 from app.schemas.dto.channels.channel_webhooks import (
     ChannelDeliveryTarget,
     ChannelInboundMessage,
+    ChannelSendReceipt,
     ChannelWebhookPayload,
 )
 from app.schemas.exceptions.application_errors import (
@@ -113,23 +114,33 @@ class WhatsAppChannelAdapter(ChannelAdapterContract, WhatsAppTemplateAdapterCont
 
         return messages
 
+    def split(self, text: MessageText) -> list[MessageText]:
+        return [
+            MessageText(part)
+            for part in split_message_text(str(text), WHATSAPP_MESSAGE_LIMIT)
+        ]
+
     def send(
         self,
         target: ChannelDeliveryTarget,
         text: MessageText,
-    ) -> DeliveredMessageCount:
+    ) -> ChannelSendReceipt:
         access_token: PlatformSecret = self._require_token()
         phone_number_id: MetaObjectId = require_phone_number_id(target.account_id)
-        parts: list[str] = split_message_text(str(text), WHATSAPP_MESSAGE_LIMIT)
+        parts: list[MessageText] = self.split(text)
+        provider_message_id: ProviderMessageId | None = None
         for part in parts:
-            self._meta_client.send_whatsapp_text(
+            provider_message_id = self._meta_client.send_whatsapp_text(
                 access_token,
                 phone_number_id,
                 target.channel_user_id,
-                OutboundMessagePart(part),
+                OutboundMessagePart(str(part)),
             )
 
-        return DeliveredMessageCount(len(parts))
+        return ChannelSendReceipt(
+            delivered=DeliveredMessageCount(len(parts)),
+            provider_message_id=provider_message_id,
+        )
 
     def send_template(
         self,
@@ -138,8 +149,8 @@ class WhatsAppChannelAdapter(ChannelAdapterContract, WhatsAppTemplateAdapterCont
         template_name: WhatsAppTemplateName,
         language_code: WhatsAppTemplateLanguageCode,
         body_parameters: list[MessageText],
-    ) -> None:
-        self._meta_client.send_whatsapp_template(
+    ) -> ProviderMessageId | None:
+        return self._meta_client.send_whatsapp_template(
             self._require_token(),
             phone_number_id,
             recipient,

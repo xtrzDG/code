@@ -115,9 +115,24 @@ def post_call(
         )
     elif signature is not None:
         headers["ElevenLabs-Signature"] = signature
-    return setup.testbed.build_http_client().post(
+    response: HttpResponse = setup.testbed.build_http_client().post(
         "/v1/voice/webhooks/post-call", content=body, headers=headers
     )
+    setup.testbed.run_worker()
+    return response
+
+
+def process_call(setup: VoiceSetup, payload: dict[str, Any]) -> dict[str, Any]:
+    """
+    Send a signed report and let the worker process it: what the post-call
+    flow made of it (status, call id, outcome, confirmation).
+    """
+
+    processed_before: int = len(setup.testbed.post_call_outcomes)
+    response: HttpResponse = post_call(setup, payload)
+    assert response.status_code == 200, response.text
+    assert len(setup.testbed.post_call_outcomes) == processed_before + 1
+    return setup.testbed.post_call_outcomes[-1].model_dump(mode="json")
 
 
 def stored_calls(setup: VoiceSetup) -> list[CallDocument]:

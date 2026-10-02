@@ -2728,10 +2728,11 @@ export interface components {
          * ChannelWebhookOutcome
          * @description What happened to the customer messages of one webhook delivery.
          *
-         *     `silenced` counts messages the assistant did not answer because staff
-         *     took over the conversation; `failed` counts messages that could not be
-         *     answered or delivered (the delivery is still acknowledged so the
-         *     platform does not repeat messages that were answered).
+         *     Messages are stored in the inbox and answered by the background worker,
+         *     so the platform gets its 200 at once: `queued` counts new messages,
+         *     `duplicates` messages the platform delivered before. `answered` and
+         *     `silenced` stay 0 (replies are sent later, not in this request);
+         *     `failed` counts messages that could not be stored.
          */
         ChannelWebhookOutcome: {
             /**
@@ -2740,10 +2741,20 @@ export interface components {
              */
             answered: number;
             /**
+             * Duplicates
+             * @default 0
+             */
+            duplicates: number;
+            /**
              * Failed
              * @default 0
              */
             failed: number;
+            /**
+             * Queued
+             * @default 0
+             */
+            queued: number;
             /**
              * Received
              * @default 0
@@ -4653,10 +4664,11 @@ export interface components {
         };
         /**
          * PlatformBotCommandResult
-         * @description How the platform Telegram bot handled one staff message.
+         * @description How the platform Telegram bot handled one staff message. The webhook
+         *     only stores the message (QUEUED); the worker then answers it.
          * @enum {string}
          */
-        PlatformBotCommandResult: "linked" | "rejected_code" | "contact_limit_reached" | "instructions_sent" | "ignored";
+        PlatformBotCommandResult: "linked" | "rejected_code" | "contact_limit_reached" | "instructions_sent" | "ignored" | "queued";
         /**
          * PlatformBotWebhookOutcome
          * @description How the platform bot handled the update.
@@ -4666,10 +4678,12 @@ export interface components {
         };
         /**
          * PostCallEventStatus
-         * @description What happened to one post-call webhook of the voice platform.
+         * @description What happened to one post-call webhook of the voice platform. The
+         *     webhook only stores the report (QUEUED, or DUPLICATE when it came
+         *     before); the worker then records the call (RECORDED).
          * @enum {string}
          */
-        PostCallEventStatus: "recorded" | "duplicate" | "ignored";
+        PostCallEventStatus: "recorded" | "duplicate" | "ignored" | "queued";
         /**
          * PostCallWebhookOutcome
          * @description Result of one post-call webhook.

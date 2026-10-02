@@ -70,11 +70,14 @@ def test_list_handoffs_filters_and_audits() -> None:
             include_sandbox=True,
         )
     )
+    pending_sandbox = [item for item in pending.items if item.is_sandbox]
 
-    assert [item.status for item in real.items] == [HandoffStatus.NOTIFIED]
+    # The staff notification is queued; the outbox marks it NOTIFIED once
+    # it is delivered.
+    assert [item.status for item in real.items] == [HandoffStatus.PENDING]
     assert real.items[0].contact_name == "Yossi"
     assert real.items[0].urgency is HandoffUrgency.HIGH
-    assert len(pending.items) == 1 and pending.items[0].is_sandbox
+    assert len(pending.items) == 2 and len(pending_sandbox) == 1
     assert len(fixture.world.audit_repo.list_by_business(fixture.business.id)) == 2
 
 

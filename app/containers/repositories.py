@@ -44,6 +44,10 @@ from app.repositories.conversation_repositories import (
     LlmTurnRepository,
     MessageRepository,
 )
+from app.repositories.delivery_repositories import (
+    InboundEventRepository,
+    OutboundMessageRepository,
+)
 from app.repositories.job_repositories import (
     PeriodicJobRunRepository,
     QueuedJobRepository,
@@ -181,6 +185,14 @@ class RepositoriesContainer(containers.DeclarativeContainer):
             ChannelMessageReceiptRepository,
             collection=collections.channel_message_receipt_collection,
         )
+    )
+    inbound_event_repo: Singleton[InboundEventRepository] = Singleton(
+        InboundEventRepository,
+        collection=collections.inbound_event_collection,
+    )
+    outbound_message_repo: Singleton[OutboundMessageRepository] = Singleton(
+        OutboundMessageRepository,
+        collection=collections.outbound_message_collection,
     )
     manager_telegram_link_repo: Singleton[ManagerTelegramLinkRepository] = Singleton(
         ManagerTelegramLinkRepository,

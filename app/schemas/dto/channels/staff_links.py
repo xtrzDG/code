@@ -58,6 +58,15 @@ class PlatformBotWebhookRequest(ImmutableDTO):
     payload: ChannelWebhookPayload
 
 
+class PlatformBotUpdate(ImmutableDTO):
+    """
+    A verified update of the platform bot, as the inbox kept it for the
+    worker (the webhook already checked its secret token).
+    """
+
+    body: bytes
+
+
 class PlatformBotWebhookSetup(ImmutableDTO):
     """Register the platform bot's webhook with Telegram (deployment step)."""
 

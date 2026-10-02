@@ -13,6 +13,12 @@ from app.gateways.worker.periodic.purge_stale_rows import purge_stale_rows_job
 from app.schemas.typings.platform.constrained_integers import JobIntervalSeconds
 from app.schemas.typings.platform.constrained_strings import JobName
 from app.use_cases.autotests.enqueue_autotest_run_use_case import RUN_AUTOTESTS_JOB
+from app.utilities.deliveries.delivery_jobs import (
+    DELIVER_OUTBOUND_JOB,
+    PROCESS_INBOUND_MESSAGE_JOB,
+    PROCESS_PLATFORM_BOT_UPDATE_JOB,
+    PROCESS_POST_CALL_JOB,
+)
 
 MINUTE_SECONDS: int = 60
 HOUR_SECONDS: int = 60 * MINUTE_SECONDS
@@ -106,7 +112,19 @@ class GatewaysContainer(containers.DeclarativeContainer):
     # Handlers of queued jobs by job name (the queue is filled by use cases
     # through the job queue facilitator).
     queued_job_operators: Dict = Dict(
-        {RUN_AUTOTESTS_JOB: operators.assistants.run_queued_autotests_operator}
+        {
+            RUN_AUTOTESTS_JOB: operators.assistants.run_queued_autotests_operator,
+            # The inbox: webhook messages answered by the worker.
+            PROCESS_INBOUND_MESSAGE_JOB: (
+                operators.channels.process_inbound_message_operator
+            ),
+            PROCESS_PLATFORM_BOT_UPDATE_JOB: (
+                operators.channels.process_platform_bot_update_operator
+            ),
+            PROCESS_POST_CALL_JOB: operators.conversations.process_post_call_operator,
+            # The outbox: replies and staff notifications sent with retries.
+            DELIVER_OUTBOUND_JOB: operators.channels.deliver_outbound_operator,
+        }
     )
     background_worker: Factory[BackgroundWorker] = Factory(
         BackgroundWorker,

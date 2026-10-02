@@ -14,8 +14,8 @@ from tests.channels.channels_payloads import telegram_ok
 from tests.channels.channels_settings import TELEGRAM_BOT_TOKEN
 from tests.channels.post_call_steps import (
     add_booking,
-    post_call,
     post_call_payload,
+    process_call,
     stored_calls,
 )
 from tests.channels.voice_setup import ASSISTANT_LINE, CALLER, build_voice_setup
@@ -35,10 +35,8 @@ class TestPostCallWebhook:
         )
         add_booking(setup)
 
-        response = post_call(setup, post_call_payload(tool_names=("create_booking",)))
+        body = process_call(setup, post_call_payload(tool_names=("create_booking",)))
 
-        assert response.status_code == 200
-        body = response.json()
         assert body["status"] == "recorded"
         assert body["outcome"] == "booking"
         assert body["is_confirmation_sent"] is True
@@ -89,7 +87,7 @@ class TestPostCallWebhook:
         setup.testbed.meta_transport.respond("POST", r"/messages$", {"messages": []})
         add_booking(setup, party_size=1)
 
-        body = post_call(setup, post_call_payload()).json()
+        body = process_call(setup, post_call_payload())
 
         assert body["is_confirmation_sent"] is True
         [whatsapp] = setup.testbed.meta_transport.requests
@@ -101,7 +99,7 @@ class TestPostCallWebhook:
         setup = build_voice_setup()
         add_booking(setup)
 
-        body = post_call(setup, post_call_payload()).json()
+        body = process_call(setup, post_call_payload())
 
         assert body["outcome"] == "booking"
         assert body["is_confirmation_sent"] is False
@@ -112,7 +110,7 @@ class TestPostCallWebhook:
         booking.status = BookingStatus.CANCELLED
         setup.testbed.booking_repo.save(booking)
 
-        assert post_call(setup, post_call_payload()).json()["outcome"] == "information"
+        assert process_call(setup, post_call_payload())["outcome"] == "information"
 
     def test_lead_handoff_and_unanswered_outcomes(self) -> None:
         lead_setup = build_voice_setup()
@@ -138,26 +136,24 @@ class TestPostCallWebhook:
         )
         question_setup = build_voice_setup()
 
-        assert post_call(lead_setup, post_call_payload()).json()["outcome"] == "lead"
+        assert process_call(lead_setup, post_call_payload())["outcome"] == "lead"
+        assert process_call(handoff_setup, post_call_payload())["outcome"] == "handoff"
         assert (
-            post_call(handoff_setup, post_call_payload()).json()["outcome"] == "handoff"
-        )
-        assert (
-            post_call(
+            process_call(
                 question_setup,
                 post_call_payload(tool_names=("record_unanswered_question", "unknown")),
-            ).json()["outcome"]
+            )["outcome"]
             == "unanswered_question"
         )
 
     def test_information_and_abandoned_calls(self) -> None:
         setup = build_voice_setup()
 
-        short = post_call(setup, post_call_payload("conv_short", duration=4)).json()
-        silent = post_call(
+        short = process_call(setup, post_call_payload("conv_short", duration=4))
+        silent = process_call(
             setup, post_call_payload("conv_silent", caller_spoke=False)
-        ).json()
-        informative = post_call(setup, post_call_payload("conv_info")).json()
+        )
+        informative = process_call(setup, post_call_payload("conv_info"))
 
         assert short["outcome"] == "abandoned"
         assert silent["outcome"] == "abandoned"

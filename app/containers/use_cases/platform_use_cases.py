@@ -126,6 +126,8 @@ class PlatformUseCasesContainer(containers.DeclarativeContainer):
         user_session_repo=repositories.user_session_repo,
         otp_challenge_repo=repositories.otp_challenge_repo,
         channel_message_receipt_repo=repositories.channel_message_receipt_repo,
+        inbound_event_repo=repositories.inbound_event_repo,
+        outbound_message_repo=repositories.outbound_message_repo,
         audit_log_repo=repositories.audit_log_repo,
         wall_clock=time_provider.microsecond_wall_clock,
     )

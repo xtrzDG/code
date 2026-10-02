@@ -79,14 +79,43 @@ def mark_channel_failing(
     channel_repo.save(channel)
 
 
+def note_channel_refusal(
+    channel_repo: ChannelRepoContract,
+    channel: ChannelDocument,
+    reason: str,
+    now: Microseconds,
+) -> None:
+    """
+    The platform refused one message for good (a blocked bot, a closed
+    24-hour window): the owner sees the reason, the channel keeps working.
+    """
+
+    if not is_channel_active(channel):
+        return
+
+    channel.last_error = summarize_channel_error(reason)
+    channel.last_error_at = now
+    channel.updated_at = now
+    channel_repo.save(channel)
+
+
 def mark_channel_working(
     channel_repo: ChannelRepoContract,
     channel: ChannelDocument,
     now: Microseconds,
 ) -> None:
-    """A delivery went through: a channel in ERROR is CONNECTED again."""
+    """
+    A delivery went through: a channel in ERROR is CONNECTED again and an
+    older refusal is no longer shown.
+    """
 
     if channel.status is not ChannelStatus.ERROR:
+        if channel.status is ChannelStatus.CONNECTED and channel.last_error is not None:
+            channel.last_error = None
+            channel.last_error_at = None
+            channel.updated_at = now
+            channel_repo.save(channel)
+
         return
 
     channel.status = ChannelStatus.CONNECTED

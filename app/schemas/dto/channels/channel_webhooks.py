@@ -7,9 +7,10 @@ from base_pydantic_schemas import ImmutableDTO
 from pydantic import Field
 
 from app.schemas.constants.channels import ChannelKind
-from app.schemas.dto.conversations import InboundMessage
-from app.schemas.typings.businesses.prefixed_id import BusinessId
-from app.schemas.typings.channels.constrained_integers import WebhookMessageCount
+from app.schemas.typings.channels.constrained_integers import (
+    DeliveredMessageCount,
+    WebhookMessageCount,
+)
 from app.schemas.typings.channels.prefixed_id import ChannelId
 from app.schemas.typings.channels.strings import (
     ChannelExternalId,
@@ -21,7 +22,6 @@ from app.schemas.typings.channels.strings import (
     WebhookSignatureHeader,
 )
 from app.schemas.typings.contacts.strings import ContactName
-from app.schemas.typings.conversations.prefixed_id import ConversationId
 from app.schemas.typings.conversations.strings import ChannelUserId, MessageText
 from app.schemas.typings.localization.constrained_strings import E164PhoneNumber
 
@@ -93,33 +93,31 @@ class ChannelDeliveryTarget(ImmutableDTO):
     credential: ChannelSecret | None = Field(default=None, repr=False)
 
 
-class ChannelInboundDelivery(ImmutableDTO):
-    """A customer message ready for the assistant and the way back to them."""
+class ChannelSendReceipt(ImmutableDTO):
+    """
+    What one send through a channel did: how many platform messages went
+    out (long texts are split) and the platform's id of the last one, when
+    it named one.
+    """
 
-    message: InboundMessage
-    target: ChannelDeliveryTarget
-
-
-class ChannelReplyDelivery(ImmutableDTO):
-    """An assistant reply to send to a customer in their channel."""
-
-    business_id: BusinessId
-    conversation_id: ConversationId | None = None
-    target: ChannelDeliveryTarget
-    text: MessageText
+    delivered: DeliveredMessageCount
+    provider_message_id: ProviderMessageId | None = None
 
 
 class ChannelWebhookOutcome(ImmutableDTO):
     """
     What happened to the customer messages of one webhook delivery.
 
-    `silenced` counts messages the assistant did not answer because staff
-    took over the conversation; `failed` counts messages that could not be
-    answered or delivered (the delivery is still acknowledged so the
-    platform does not repeat messages that were answered).
+    Messages are stored in the inbox and answered by the background worker,
+    so the platform gets its 200 at once: `queued` counts new messages,
+    `duplicates` messages the platform delivered before. `answered` and
+    `silenced` stay 0 (replies are sent later, not in this request);
+    `failed` counts messages that could not be stored.
     """
 
     received: WebhookMessageCount = WebhookMessageCount(0)
     answered: WebhookMessageCount = WebhookMessageCount(0)
     silenced: WebhookMessageCount = WebhookMessageCount(0)
     failed: WebhookMessageCount = WebhookMessageCount(0)
+    queued: WebhookMessageCount = WebhookMessageCount(0)
+    duplicates: WebhookMessageCount = WebhookMessageCount(0)

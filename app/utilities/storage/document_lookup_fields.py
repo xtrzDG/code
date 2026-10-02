@@ -107,6 +107,14 @@ DOCUMENT_LOOKUP_FIELDS: Mapping[
         _text("provider_message_id"),
         _integer("created_at"),
     ),
+    # The inbox and the outbox: their purge; one recipient's messages that
+    # still wait (they go out in order).
+    DocumentCollectionName("inbound_events"): (_integer("created_at"),),
+    DocumentCollectionName("outbound_messages"): (
+        _text("recipient_key"),
+        _filter("status"),
+        _integer("created_at"),
+    ),
     # "/start <code>" of the platform bot.
     DocumentCollectionName("manager_telegram_links"): (_text("code_hash"),),
 }

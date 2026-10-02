@@ -46,7 +46,11 @@ from app.schemas.typings.contacts.prefixed_id import ContactId
 from app.schemas.typings.conversations.constrained_integers import (
     ConversationMessageCount,
 )
-from app.schemas.typings.conversations.prefixed_id import CallId, ConversationId
+from app.schemas.typings.conversations.prefixed_id import (
+    CallId,
+    ConversationId,
+    MessageId,
+)
 from app.schemas.typings.conversations.strings import ChannelUserId, ProviderCallId
 from app.schemas.typings.localization.constrained_strings import E164PhoneNumber
 
@@ -177,6 +181,13 @@ class MessageRepository(
 ):
     def save(self, message: MessageDocument) -> None:
         self._store(str(message.id), message)
+
+    def get(
+        self,
+        business_id: BusinessId,
+        message_id: MessageId,
+    ) -> MessageDocument | None:
+        return self._load(business_id, str(message_id))
 
     def list_by_conversation(
         self,

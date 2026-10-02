@@ -14,8 +14,8 @@ from app.operators.pipeline_operator import PipelineOperator
 from app.orchestrators.channels.channel_webhook_orchestrator import (
     ChannelWebhookOrchestrator,
 )
-from app.orchestrators.channels.post_call_webhook_orchestrator import (
-    PostCallWebhookOrchestrator,
+from app.orchestrators.channels.inbox.accept_post_call_webhook_orchestrator import (
+    AcceptPostCallWebhookOrchestrator,
 )
 from app.orchestrators.channels.voice_tool_webhook_orchestrator import (
     VoiceToolWebhookOrchestrator,
@@ -41,7 +41,7 @@ from app.use_cases.voice.authenticate_voice_tool_call_use_case import (
     AuthenticateVoiceToolCallUseCase,
 )
 from app.use_cases.voice.start_voice_call_use_case import StartVoiceCallUseCase
-from tests.channels.channels_use_cases import ChannelsUseCases
+from tests.channels.channels_inbox import ChannelsInbox
 
 
 def wrap[InputData, OutputData](
@@ -60,16 +60,14 @@ def wrap_use_case[InputData, OutputData](
     return PipelineOperator(OrchestratorPipeline(UseCaseOrchestrator(use_case)))
 
 
-def build_channels_http_client(testbed: ChannelsUseCases) -> TestClient:
+def build_channels_http_client(testbed: ChannelsInbox) -> TestClient:
     http_application = FastAPI()
     install_error_handlers(http_application)
     http_application.include_router(
         build_channel_router(
             telegram_webhook_operator=wrap(
                 ChannelWebhookOrchestrator(
-                    testbed.receive_telegram_webhook,
-                    testbed.pipeline,
-                    testbed.deliver_reply,
+                    testbed.receive_telegram_webhook, testbed.store_inbound_messages
                 )
             ),
             meta_webhook_verification_operator=wrap_use_case(
@@ -77,13 +75,11 @@ def build_channels_http_client(testbed: ChannelsUseCases) -> TestClient:
             ),
             meta_webhook_operator=wrap(
                 ChannelWebhookOrchestrator(
-                    testbed.receive_meta_webhook,
-                    testbed.pipeline,
-                    testbed.deliver_reply,
+                    testbed.receive_meta_webhook, testbed.store_inbound_messages
                 )
             ),
             platform_bot_webhook_operator=wrap_use_case(
-                testbed.handle_platform_bot_update
+                testbed.accept_platform_bot_update
             ),
             widget_config_operator=wrap_use_case(
                 GetWidgetConfigUseCase(
@@ -101,7 +97,10 @@ def build_channels_http_client(testbed: ChannelsUseCases) -> TestClient:
                         testbed.widget_rate_limits,
                         testbed.wall_clock,
                     ),
+                    testbed.open_widget_event,
                     testbed.pipeline,
+                    testbed.finish_inbound_event,
+                    testbed.release_inbound_event,
                     BuildWidgetReplyUseCase(
                         testbed.message_repo, testbed.language_registry
                     ),
@@ -169,14 +168,11 @@ def build_channels_http_client(testbed: ChannelsUseCases) -> TestClient:
                 )
             ),
             post_call_operator=wrap(
-                PostCallWebhookOrchestrator(
+                AcceptPostCallWebhookOrchestrator(
                     AuthenticatePostCallUseCase(
                         testbed.voice_webhook_adapter, testbed.wall_clock
                     ),
-                    testbed.record_finished_call,
-                    testbed.audit_call_replies,
-                    testbed.send_call_confirmation,
-                    testbed.send_call_links,
+                    testbed.store_post_call_report,
                 )
             ),
         )

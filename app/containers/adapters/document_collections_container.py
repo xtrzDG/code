@@ -27,56 +27,37 @@ from app.schemas.domain.bookings import (
     BookingDocument,
     LeadDocument,
 )
-from app.schemas.domain.businesses import (
-    BusinessDocument,
-)
+from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.calendar import (
     CalendarAuthorizationStateDocument,
     CalendarConnectionDocument,
     CalendarEventLinkDocument,
 )
-from app.schemas.domain.channel_receipts import (
-    ChannelMessageReceiptDocument,
-)
-from app.schemas.domain.channels import (
-    ChannelDocument,
-)
+from app.schemas.domain.channel_receipts import ChannelMessageReceiptDocument
+from app.schemas.domain.channels import ChannelDocument
 from app.schemas.domain.compliance import (
     AuditLogEntryDocument,
     DpaAcceptanceDocument,
 )
-from app.schemas.domain.contacts import (
-    ContactDocument,
-)
+from app.schemas.domain.contacts import ContactDocument
 from app.schemas.domain.conversations import (
     CallDocument,
     ConversationDocument,
     LlmTurnDocument,
     MessageDocument,
 )
-from app.schemas.domain.handoffs import (
-    HandoffDocument,
-    UnansweredQuestionDocument,
-)
+from app.schemas.domain.handoffs import HandoffDocument, UnansweredQuestionDocument
+from app.schemas.domain.inbound_events import InboundEventDocument
 from app.schemas.domain.jobs import (
     PeriodicJobRunDocument,
     QueuedJobDocument,
 )
-from app.schemas.domain.knowledge import (
-    KnowledgeItemDocument,
-)
-from app.schemas.domain.manager_links import (
-    ManagerTelegramLinkDocument,
-)
-from app.schemas.domain.package_usage import (
-    PackageUsageWarningDocument,
-)
-from app.schemas.domain.payments import (
-    PaymentOrderDocument,
-)
-from app.schemas.domain.profiles import (
-    BusinessProfileDocument,
-)
+from app.schemas.domain.knowledge import KnowledgeItemDocument
+from app.schemas.domain.manager_links import ManagerTelegramLinkDocument
+from app.schemas.domain.outbound_messages import OutboundMessageDocument
+from app.schemas.domain.package_usage import PackageUsageWarningDocument
+from app.schemas.domain.payments import PaymentOrderDocument
+from app.schemas.domain.profiles import BusinessProfileDocument
 from app.schemas.domain.resources import (
     ResourceDocument,
     ScheduleExceptionDocument,
@@ -250,6 +231,24 @@ class DocumentCollectionsContainer(containers.DeclarativeContainer):
     manager_telegram_link_collection = document_collection(
         ManagerTelegramLinkDocument,
         "manager_telegram_links",
+        config,
+        clients,
+        utilities,
+        time_provider,
+    )
+    # The inbox of webhook messages and the outbox of replies and staff
+    # notifications (1020).
+    inbound_event_collection = document_collection(
+        InboundEventDocument,
+        "inbound_events",
+        config,
+        clients,
+        utilities,
+        time_provider,
+    )
+    outbound_message_collection = document_collection(
+        OutboundMessageDocument,
+        "outbound_messages",
         config,
         clients,
         utilities,

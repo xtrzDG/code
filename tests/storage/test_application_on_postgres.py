@@ -87,7 +87,11 @@ def test_published_assistant_books_a_table_with_everything_in_postgres(
     # The real booking plus one sandbox booking per language from the
     # autotests the worker played (ka, ru, en).
     assert stored["bookings"] == 4
-    assert stored["queued_jobs"] == 1
+    # The autotest run, the safety job of each widget message (they find
+    # their message answered) and the staff notification of the booking.
+    assert stored["queued_jobs"] == 4
+    assert stored["inbound_events"] == 2
+    assert stored["outbound_messages"] == 1
     assert stored["contacts"] >= 1
     assert stored["messages"] > 0
     assert stored["llm_turns"] > 0

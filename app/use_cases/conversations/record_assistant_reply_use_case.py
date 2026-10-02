@@ -19,6 +19,7 @@ from app.schemas.typings.billing.constrained_integers import (
     CostMicroUsd,
     UsageQuantity,
 )
+from app.schemas.typings.conversations.prefixed_id import MessageId
 from app.schemas.typings.conversations.strings import MessageText
 from app.utilities.conversations.assistant_texts.ai_disclosure_texts import (
     AI_DISCLOSURE,
@@ -83,6 +84,8 @@ class RecordAssistantReplyUseCase(UseCaseContract[ReplyRecord, AssistantReply]):
         if text is not None:
             self._message_repo.save(
                 MessageDocument(
+                    # The id the inbox chose: the reply it sends is this one.
+                    id=turn.reply_message_id or MessageId(),
                     conversation_id=turn.conversation.id,
                     business_id=turn.business.id,
                     direction=MessageDirection.OUTBOUND,

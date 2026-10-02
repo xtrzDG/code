@@ -24,7 +24,7 @@ from tests.channels.testbed import ChannelsTestbed
 
 
 class TestTelegramWebhook:
-    def test_message_is_answered_through_the_business_bot(self) -> None:
+    def test_message_is_acknowledged_then_answered_by_the_worker(self) -> None:
         testbed = ChannelsTestbed()
         business, channel = connect_bot(testbed)
 
@@ -33,10 +33,18 @@ class TestTelegramWebhook:
         assert response.status_code == 200
         assert response.json() == {
             "received": 1,
-            "answered": 1,
+            "answered": 0,
             "silenced": 0,
             "failed": 0,
+            "queued": 1,
+            "duplicates": 0,
         }
+        # The request only stored the message; nothing was asked or sent.
+        assert testbed.pipeline.messages == []
+        assert testbed.telegram_transport.requests_to("/sendMessage") == []
+
+        testbed.run_worker()
+
         [inbound] = testbed.pipeline.messages
         assert inbound.business_id == business.id
         assert inbound.channel is ChannelKind.TELEGRAM
@@ -52,6 +60,7 @@ class TestTelegramWebhook:
         testbed.pipeline.reply_text = ("Меню и цены. " * 400).strip()
 
         post_update(testbed, channel, build_update())
+        testbed.run_worker()
 
         sent = testbed.telegram_transport.requests_to("/sendMessage")
         assert len(sent) == 2
@@ -62,9 +71,10 @@ class TestTelegramWebhook:
         _, channel = connect_bot(testbed)
         testbed.pipeline.is_silent = True
 
-        response = post_update(testbed, channel, build_update())
+        post_update(testbed, channel, build_update())
+        testbed.run_worker()
 
-        assert response.json()["silenced"] == 1
+        assert len(testbed.pipeline.messages) == 1
         assert testbed.telegram_transport.requests_to("/sendMessage") == []
 
     def test_repeated_delivery_is_answered_once(self) -> None:
@@ -73,9 +83,12 @@ class TestTelegramWebhook:
 
         post_update(testbed, channel, build_update())
         second = post_update(testbed, channel, build_update())
+        testbed.run_worker()
 
-        assert second.json()["received"] == 0
+        assert second.json()["queued"] == 0
+        assert second.json()["duplicates"] == 1
         assert len(testbed.pipeline.messages) == 1
+        assert len(testbed.telegram_transport.requests_to("/sendMessage")) == 1
 
     @pytest.mark.parametrize("secret", [None, "wrong", BOT_SECRET.upper()])
     def test_wrong_or_missing_secret_is_refused(self, secret: str | None) -> None:
@@ -121,27 +134,22 @@ class TestTelegramWebhook:
 
         assert channel.status is ChannelStatus.CONNECTED
 
-    def test_engine_and_delivery_failures_are_counted_not_raised(self) -> None:
+    def test_engine_failures_are_retried_and_never_lose_the_message(self) -> None:
         testbed = ChannelsTestbed()
         _, channel = connect_bot(testbed)
         testbed.pipeline.failure = ExternalServiceError("model unavailable")
 
         response = post_update(testbed, channel, build_update())
+        testbed.run_worker()
 
         assert response.status_code == 200
-        assert response.json()["failed"] == 1
+        assert response.json()["queued"] == 1
+        assert testbed.telegram_transport.requests_to("/sendMessage") == []
 
+        # The job runs again after its backoff, and the customer is answered.
         testbed.pipeline.failure = None
-        testbed.telegram_transport.respond(
-            "POST",
-            r"/sendMessage$",
-            {"ok": False, "error_code": 403, "description": "blocked"},
-            status_code=403,
-        )
-        response = post_update(testbed, channel, build_update(message_id=18))
-        assert response.json() == {
-            "received": 1,
-            "answered": 0,
-            "silenced": 0,
-            "failed": 1,
-        }
+        testbed.clock.advance(60)
+        testbed.run_worker()
+
+        [sent] = testbed.telegram_transport.requests_to("/sendMessage")
+        assert sent.json()["text"] == "Reply: Do you have a table for 4 tonight?"

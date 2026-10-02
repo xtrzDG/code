@@ -3171,7 +3171,7 @@
       },
       "ChannelWebhookOutcome": {
         "additionalProperties": false,
-        "description": "What happened to the customer messages of one webhook delivery.\n\n`silenced` counts messages the assistant did not answer because staff\ntook over the conversation; `failed` counts messages that could not be\nanswered or delivered (the delivery is still acknowledged so the\nplatform does not repeat messages that were answered).",
+        "description": "What happened to the customer messages of one webhook delivery.\n\nMessages are stored in the inbox and answered by the background worker,\nso the platform gets its 200 at once: `queued` counts new messages,\n`duplicates` messages the platform delivered before. `answered` and\n`silenced` stay 0 (replies are sent later, not in this request);\n`failed` counts messages that could not be stored.",
         "properties": {
           "answered": {
             "default": 0,
@@ -3179,10 +3179,22 @@
             "title": "Answered",
             "type": "integer"
           },
+          "duplicates": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Duplicates",
+            "type": "integer"
+          },
           "failed": {
             "default": 0,
             "minimum": 0.0,
             "title": "Failed",
+            "type": "integer"
+          },
+          "queued": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Queued",
             "type": "integer"
           },
           "received": {
@@ -8079,13 +8091,14 @@
         "type": "object"
       },
       "PlatformBotCommandResult": {
-        "description": "How the platform Telegram bot handled one staff message.",
+        "description": "How the platform Telegram bot handled one staff message. The webhook\nonly stores the message (QUEUED); the worker then answers it.",
         "enum": [
           "linked",
           "rejected_code",
           "contact_limit_reached",
           "instructions_sent",
-          "ignored"
+          "ignored",
+          "queued"
         ],
         "title": "PlatformBotCommandResult",
         "type": "string"
@@ -8105,11 +8118,12 @@
         "type": "object"
       },
       "PostCallEventStatus": {
-        "description": "What happened to one post-call webhook of the voice platform.",
+        "description": "What happened to one post-call webhook of the voice platform. The\nwebhook only stores the report (QUEUED, or DUPLICATE when it came\nbefore); the worker then records the call (RECORDED).",
         "enum": [
           "recorded",
           "duplicate",
-          "ignored"
+          "ignored",
+          "queued"
         ],
         "title": "PostCallEventStatus",
         "type": "string"

@@ -1,159 +1,173 @@
 import logging
 
-from app.contracts.channel_clients import TelegramBotApiClientContract
-from app.contracts.channels import WhatsAppTemplateAdapterContract
+from typed_time_provider import Microseconds, WallClock
+
 from app.contracts.facilitators import ManagerNotificationFacilitatorContract
+from app.contracts.jobs import JobQueueFacilitatorContract
+from app.contracts.repositories.delivery_repositories import (
+    OutboundMessageRepoContract,
+)
 from app.schemas.configurations.app_settings import AppSettings
+from app.schemas.constants.deliveries import OutboundMessageKind, OutboundMessageStatus
 from app.schemas.constants.environment import DeploymentEnvironment
 from app.schemas.constants.handoffs import ManagerContactChannel
+from app.schemas.constants.jobs import JobLane
 from app.schemas.domain.businesses import ManagerContact
-from app.schemas.typings.channels.constrained_strings import (
-    MetaObjectId,
-    WhatsAppTemplateLanguageCode,
-    WhatsAppTemplateName,
+from app.schemas.domain.outbound_messages import (
+    OutboundMessageDocument,
+    OutboundTemplate,
 )
-from app.schemas.typings.channels.strings import OutboundMessagePart
-from app.schemas.typings.conversations.strings import ChannelUserId, MessageText
-from app.schemas.typings.platform.strings import PlatformSecret
+from app.schemas.dto.deliveries import StaffNotification
+from app.schemas.typings.channels.constrained_strings import WhatsAppTemplateName
+from app.schemas.typings.deliveries.constrained_strings import (
+    OutboundIdempotencyKey,
+    OutboundRecipientKey,
+)
+from app.schemas.typings.deliveries.strings import DeliveryErrorText
 from app.utilities.channels.language_codes import to_whatsapp_template_language
-from app.utilities.channels.message_chunks import split_message_text
+from app.utilities.deliveries.delivery_jobs import (
+    DELIVER_OUTBOUND_JOB,
+    encode_outbound_message_payload,
+)
+from app.utilities.deliveries.delivery_keys import (
+    derive_outbound_message_id,
+    outbound_serial_key,
+    staff_idempotency_key,
+    staff_recipient_key,
+)
 
 logger: logging.Logger = logging.getLogger(__name__)
-
-TELEGRAM_MESSAGE_LIMIT: int = 4096
-FALLBACK_TEMPLATE_LANGUAGE: WhatsAppTemplateLanguageCode = WhatsAppTemplateLanguageCode(
-    "en"
-)
-VISIBLE_ADDRESS_CHARACTERS: int = 3
 
 
 class ManagerNotificationFacilitator(ManagerNotificationFacilitatorContract):
     """
-    Notify staff about handoffs, bookings and leads (concept section 1).
+    Queues staff notifications (handoffs, bookings, leads, billing notices)
+    in the outbox; the worker sends them with retries (`deliver_outbound`),
+    so a provider outage delays a notification instead of losing it, and
+    its delivery state is stored.
 
-    - Telegram: the platform bot (TELEGRAM_PLATFORM_BOT_TOKEN) writes to the
-      chat linked with "/start <code>"; free of charge.
-    - WhatsApp: the approved template WHATSAPP_NOTIFICATION_TEMPLATE (one
-      body parameter: the text) from the platform number
-      WHATSAPP_NOTIFICATION_PHONE_NUMBER_ID, in the staff member's language
-      and in English when that translation is missing.
-    - E-mail and SMS have no provider yet: outside production the
-      notification is logged (without its text) and counts as delivered; in
-      production it is reported as not delivered.
-
-    Delivery problems are logged and reported as False, never raised.
+    A contact whose channel has no provider (the platform bot or the
+    WhatsApp template is not configured; e-mail and SMS in production) is
+    stored as DEAD with the reason and reported as not deliverable. A
+    notification about a handoff is queued once per handoff and contact.
+    Never raises: a notification must not break the action it reports.
     """
 
     def __init__(
         self,
-        telegram_client: TelegramBotApiClientContract,
-        whatsapp_templates: WhatsAppTemplateAdapterContract,
+        outbound_message_repo: OutboundMessageRepoContract,
+        job_queue: JobQueueFacilitatorContract,
         app_settings: AppSettings,
+        wall_clock: WallClock[Microseconds],
     ) -> None:
-        self._telegram_client: TelegramBotApiClientContract = telegram_client
-        self._whatsapp_templates: WhatsAppTemplateAdapterContract = whatsapp_templates
+        self._outbound_message_repo: OutboundMessageRepoContract = outbound_message_repo
+        self._job_queue: JobQueueFacilitatorContract = job_queue
         self._app_settings: AppSettings = app_settings
+        self._wall_clock: WallClock[Microseconds] = wall_clock
 
-    def notify(self, contact: ManagerContact, text: MessageText) -> bool:
+    def notify(self, notification: StaffNotification) -> bool:
         try:
-            if contact.channel is ManagerContactChannel.TELEGRAM:
-                return self._notify_by_telegram(contact, text)
-
-            if contact.channel is ManagerContactChannel.WHATSAPP:
-                return self._notify_by_whatsapp(contact, text)
-
-            return self._notify_without_provider(contact)
+            return self._queue(notification)
         except Exception:
             logger.exception(
-                "Staff notification through %s failed.",
-                contact.channel.value,
+                "Staff notification through %s could not be queued.",
+                notification.contact.channel.value,
             )
             return False
 
-    def _notify_by_telegram(self, contact: ManagerContact, text: MessageText) -> bool:
-        bot_token: PlatformSecret | None = (
-            self._app_settings.telegram_platform_bot_token
+    def _queue(self, notification: StaffNotification) -> bool:
+        now: Microseconds = self._wall_clock.now_unix()
+        contact: ManagerContact = notification.contact
+        missing_provider: DeliveryErrorText | None = self._missing_provider(contact)
+        idempotency_key: OutboundIdempotencyKey = staff_idempotency_key(
+            contact, notification.handoff_id
         )
-        if bot_token is None:
+        recipient_key: OutboundRecipientKey = staff_recipient_key(contact)
+        message = OutboundMessageDocument(
+            id=derive_outbound_message_id(notification.business_id, idempotency_key),
+            business_id=notification.business_id,
+            kind=OutboundMessageKind.STAFF_NOTIFICATION,
+            idempotency_key=idempotency_key,
+            recipient_key=recipient_key,
+            staff_contact=contact,
+            text=notification.text,
+            template=self._template(contact),
+            handoff_id=notification.handoff_id,
+            status=(
+                OutboundMessageStatus.PENDING
+                if missing_provider is None
+                else OutboundMessageStatus.DEAD
+            ),
+            last_error=missing_provider,
+            created_at=now,
+            updated_at=now,
+        )
+        if not self._outbound_message_repo.insert_if_new(message):
+            stored: OutboundMessageDocument | None = self._outbound_message_repo.get(
+                message.business_id, message.id
+            )
+            return (
+                stored is not None and stored.status is not OutboundMessageStatus.DEAD
+            )
+
+        if missing_provider is not None:
             logger.warning(
-                "Staff Telegram notification skipped: "
-                "TELEGRAM_PLATFORM_BOT_TOKEN is not configured."
+                "Staff notification by %s cannot be delivered: %s",
+                contact.channel.value,
+                missing_provider,
             )
             return False
 
-        for part in split_message_text(str(text), TELEGRAM_MESSAGE_LIMIT):
-            self._telegram_client.send_message(
-                bot_token,
-                ChannelUserId(str(contact.address)),
-                OutboundMessagePart(part),
-            )
-
+        self._job_queue.enqueue(
+            DELIVER_OUTBOUND_JOB,
+            encode_outbound_message_payload(message.id),
+            message.business_id,
+            lane=JobLane.OUTBOUND,
+            serial_key=outbound_serial_key(message.business_id, recipient_key),
+        )
         return True
 
-    def _notify_by_whatsapp(self, contact: ManagerContact, text: MessageText) -> bool:
-        phone_number_id: MetaObjectId | None = (
-            self._app_settings.whatsapp_notification_phone_number_id
-        )
+    def _template(self, contact: ManagerContact) -> OutboundTemplate | None:
         template_name: WhatsAppTemplateName | None = (
             self._app_settings.whatsapp_notification_template_name
         )
-        if phone_number_id is None or template_name is None:
-            logger.warning(
-                "Staff WhatsApp notification skipped: "
-                "WHATSAPP_NOTIFICATION_PHONE_NUMBER_ID or "
-                "WHATSAPP_NOTIFICATION_TEMPLATE is not configured."
-            )
-            return False
+        if (
+            contact.channel is not ManagerContactChannel.WHATSAPP
+            or template_name is None
+        ):
+            return None
 
-        recipient = ChannelUserId(str(contact.address).removeprefix("+"))
-        language_code: WhatsAppTemplateLanguageCode = to_whatsapp_template_language(
-            contact.language
+        return OutboundTemplate(
+            name=template_name,
+            language_code=to_whatsapp_template_language(contact.language),
         )
-        try:
-            self._whatsapp_templates.send_template(
-                phone_number_id, recipient, template_name, language_code, [text]
+
+    def _missing_provider(self, contact: ManagerContact) -> DeliveryErrorText | None:
+        settings: AppSettings = self._app_settings
+        if contact.channel is ManagerContactChannel.TELEGRAM:
+            if settings.telegram_platform_bot_token is None:
+                return DeliveryErrorText(
+                    "TELEGRAM_PLATFORM_BOT_TOKEN is not configured."
+                )
+
+            return None
+
+        if contact.channel is ManagerContactChannel.WHATSAPP:
+            if (
+                settings.whatsapp_notification_phone_number_id is None
+                or settings.whatsapp_notification_template_name is None
+            ):
+                return DeliveryErrorText(
+                    "WHATSAPP_NOTIFICATION_PHONE_NUMBER_ID or "
+                    "WHATSAPP_NOTIFICATION_TEMPLATE is not configured."
+                )
+
+            return None
+
+        if settings.environment is DeploymentEnvironment.PRODUCTION:
+            return DeliveryErrorText(
+                f"No {contact.channel.value} provider is configured for staff "
+                "notifications."
             )
-        except Exception:
-            if language_code == FALLBACK_TEMPLATE_LANGUAGE:
-                raise
 
-            logger.warning(
-                "Staff WhatsApp template in %s failed; retrying in English.",
-                language_code,
-            )
-            self._whatsapp_templates.send_template(
-                phone_number_id,
-                recipient,
-                template_name,
-                FALLBACK_TEMPLATE_LANGUAGE,
-                [text],
-            )
-
-        return True
-
-    def _notify_without_provider(self, contact: ManagerContact) -> bool:
-        masked_address: str = mask_address(str(contact.address))
-        if self._app_settings.environment is DeploymentEnvironment.PRODUCTION:
-            logger.warning(
-                "Staff notification to %s by %s not sent: no provider is configured.",
-                masked_address,
-                contact.channel.value,
-            )
-            return False
-
-        logger.info(
-            "Staff notification to %s by %s would be sent here (no provider "
-            "outside production).",
-            masked_address,
-            contact.channel.value,
-        )
-        return True
-
-
-def mask_address(address: str) -> str:
-    """Last characters of an e-mail or phone; enough to tell staff apart."""
-
-    if len(address) <= VISIBLE_ADDRESS_CHARACTERS:
-        return "***"
-
-    return "***" + address[-VISIBLE_ADDRESS_CHARACTERS:]
+        return None

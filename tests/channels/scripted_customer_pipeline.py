@@ -14,7 +14,7 @@ from app.schemas.dto.conversations import AssistantReply, InboundMessage
 from app.schemas.exceptions.base_exception import ApplicationError
 from app.schemas.typings.assistants.prefixed_id import AssistantVersionId
 from app.schemas.typings.contacts.prefixed_id import ContactId
-from app.schemas.typings.conversations.prefixed_id import ConversationId
+from app.schemas.typings.conversations.prefixed_id import ConversationId, MessageId
 from app.schemas.typings.conversations.strings import MessageText
 from app.schemas.typings.localization.constrained_strings import LanguageTag
 from tests.channels.channels_fakes import AdjustableClock
@@ -24,7 +24,9 @@ class ScriptedCustomerPipeline(CustomerMessagePipelineContract):
     """
     Engine stand-in: answers "Reply: <text>", stays silent or fails. Like the
     engine it stores the conversation of each customer (the first one gets
-    `conversation_id`) with the customer's message and the answer.
+    `conversation_id`) with the customer's message and the answer, under the
+    ids the inbox chose. `interruptions` are raised one per turn before
+    anything is stored (a worker killed mid-turn).
     """
 
     def __init__(
@@ -36,6 +38,8 @@ class ScriptedCustomerPipeline(CustomerMessagePipelineContract):
         self.messages: list[InboundMessage] = []
         self.is_silent: bool = False
         self.failure: ApplicationError | None = None
+        self.interruptions: list[BaseException] = []
+        self.crashing_texts: set[str] = set()
         self.language: LanguageTag = LanguageTag("en")
         self.reply_text: str | None = None
         self.conversation_id: ConversationId = ConversationId()
@@ -46,17 +50,30 @@ class ScriptedCustomerPipeline(CustomerMessagePipelineContract):
 
     def start(self, input_data: InboundMessage) -> AssistantReply:
         self.messages.append(input_data)
+        if self.interruptions:
+            raise self.interruptions.pop(0)
+
         if self.failure is not None:
             raise self.failure
+
+        if str(input_data.text) in self.crashing_texts:
+            raise RuntimeError("a bug in a tool")
 
         text: MessageText | None = None
         if not self.is_silent:
             text = MessageText(self.reply_text or f"Reply: {input_data.text}")
 
         conversation: ConversationDocument = self._conversation_of(input_data)
-        self._store(conversation, MessageAuthor.CUSTOMER, input_data.text)
+        self._store(
+            conversation,
+            MessageAuthor.CUSTOMER,
+            input_data.text,
+            input_data.customer_message_id,
+        )
         if text is not None:
-            self._store(conversation, MessageAuthor.ASSISTANT, text)
+            self._store(
+                conversation, MessageAuthor.ASSISTANT, text, input_data.reply_message_id
+            )
 
         return AssistantReply(
             conversation_id=conversation.id,
@@ -104,10 +121,12 @@ class ScriptedCustomerPipeline(CustomerMessagePipelineContract):
         conversation: ConversationDocument,
         author: MessageAuthor,
         text: MessageText,
+        message_id: MessageId | None,
     ) -> None:
         now: Microseconds = self._clock.now_microseconds()
         self._message_repo.save(
             MessageDocument(
+                id=message_id or MessageId(),
                 conversation_id=conversation.id,
                 business_id=conversation.business_id,
                 direction=(

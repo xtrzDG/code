@@ -22,6 +22,7 @@ _.open_connection_count  # app/clients/postgres/postgres_connection_pool_client.
 _.buffered_event_count  # app/facilitators/observability/langfuse_trace_facilitator.py
 _.collection_name_for  # app/utilities/storage/document_collection_catalog.py
 _.run_once  # app/gateways/worker/background_worker.py
+_.run_queued_jobs  # app/gateways/worker/background_worker.py
 
 # Container providers kept for the template example and for tests that
 # build the synchronous autotest run and bulk knowledge upserts.
@@ -76,6 +77,9 @@ _.rated_at  # app/registries/demo/demo_conversation_recorder.py
 _.connected_by  # app/schemas/domain/calendar.py
 _.linked_chat_id  # app/schemas/domain/manager_links.py
 _.last_payment_reference  # app/schemas/domain/payments.py
+_.processed_at  # app/schemas/domain/inbound_events.py
+_.delivered_at  # app/schemas/domain/outbound_messages.py
+_.source_message_id  # app/schemas/domain/outbound_messages.py
 
 # Response fields: serialized to JSON for the cabinet and the widget; the
 # code fills them by keyword, so nothing in Python reads them.
@@ -113,7 +117,10 @@ _.local_overage_price_per_minute  # app/schemas/dto/catalog/plan_quotes.py
 _.rate_date  # app/schemas/dto/catalog/plan_quotes.py
 _.has_credential  # app/schemas/dto/channels/channel_settings.py
 _.staff_reply_template  # app/schemas/dto/channels/channel_settings.py
+_.answered  # app/schemas/dto/channels/channel_webhooks.py
+_.failed  # app/schemas/dto/channels/channel_webhooks.py
 _.received  # app/schemas/dto/channels/channel_webhooks.py
+_.silenced  # app/schemas/dto/channels/channel_webhooks.py
 _.display_phone_number  # app/schemas/dto/channels/provider_profiles.py
 _.deep_link  # app/schemas/dto/channels/staff_links.py
 _.actor_ids  # app/schemas/dto/compliance.py

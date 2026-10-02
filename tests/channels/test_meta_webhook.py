@@ -66,8 +66,9 @@ class TestMetaWebhook:
             testbed,
             whatsapp_webhook([whatsapp_message("48512345678", "Dzień dobry")]),
         )
+        testbed.run_worker()
 
-        assert response.json()["answered"] == 1
+        assert response.json()["queued"] == 1
         [inbound] = testbed.pipeline.messages
         assert inbound.business_id == business_a.id
         assert inbound.contact_phone_number == "+48512345678"
@@ -131,6 +132,7 @@ class TestMetaWebhook:
                 "page", PAGE_ID, [page_message("ps-1", "Hi", PAGE_ID, mid="m2")]
             ),
         )
+        testbed.run_worker()
 
         tokens = [r.headers["Authorization"] for r in testbed.meta_transport.requests]
         assert tokens == [
@@ -177,7 +179,9 @@ class TestMetaWebhook:
 
         first = post_meta(testbed, payload)
         second = post_meta(testbed, payload)
+        testbed.run_worker()
 
-        assert first.json()["silenced"] == 1
-        assert second.json()["received"] == 0
+        assert first.json()["queued"] == 1
+        assert second.json()["duplicates"] == 1
+        assert len(testbed.pipeline.messages) == 1
         assert testbed.meta_transport.requests == []

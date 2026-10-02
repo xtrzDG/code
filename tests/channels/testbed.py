@@ -28,13 +28,16 @@ from app.schemas.typings.localization.constrained_strings import (
     TimezoneName,
 )
 from app.schemas.typings.users.prefixed_id import UserId
+from tests.channels.channels_deliveries import ChannelsDeliveries
 from tests.channels.channels_http import build_channels_http_client
 from tests.channels.channels_settings import GEORGIA, CountrySetup
-from tests.channels.channels_use_cases import ChannelsUseCases
 
 
-class ChannelsTestbed(ChannelsUseCases):
-    """Repositories, fakes and every channels component, wired in memory."""
+class ChannelsTestbed(ChannelsDeliveries):
+    """
+    Repositories, fakes and every channels component, wired in memory, with
+    a background worker (`run_worker`) for the inbox and the outbox.
+    """
 
     # --- HTTP -----------------------------------------------------------
 

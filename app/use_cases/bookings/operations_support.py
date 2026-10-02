@@ -27,6 +27,7 @@ from app.schemas.typings.compliance.strings import (
 from app.schemas.typings.contacts.prefixed_id import ContactId
 from app.schemas.typings.contacts.strings import ContactName
 from app.schemas.typings.conversations.strings import MessageText
+from app.schemas.typings.handoffs.prefixed_id import HandoffId
 from app.schemas.typings.localization.constrained_strings import (
     E164PhoneNumber,
     LanguageTag,
@@ -157,8 +158,12 @@ def build_audit_entry(
 def build_staff_messages(
     business: BusinessDocument,
     render_for_language: Callable[[LanguageTag], MessageText],
+    handoff_id: HandoffId | None = None,
 ) -> list[StaffMessage]:
-    """One message per manager contact, rendered once per language."""
+    """
+    One message per manager contact, rendered once per language
+    (`handoff_id`: the handoff the messages are about).
+    """
 
     texts: dict[LanguageTag, MessageText] = {}
     messages: list[StaffMessage] = []
@@ -168,6 +173,13 @@ def build_staff_messages(
             text = render_for_language(manager_contact.language)
             texts[manager_contact.language] = text
 
-        messages.append(StaffMessage(contact=manager_contact, text=text))
+        messages.append(
+            StaffMessage(
+                business_id=business.id,
+                contact=manager_contact,
+                text=text,
+                handoff_id=handoff_id,
+            )
+        )
 
     return messages

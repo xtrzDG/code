@@ -20,6 +20,9 @@ from app.facilitators.jobs.job_queue_facilitator import JobQueueFacilitator
 from app.facilitators.notifications.manager_notification_facilitator import (
     ManagerNotificationFacilitator,
 )
+from app.facilitators.notifications.staff_notification_sender_facilitator import (
+    StaffNotificationSenderFacilitator,
+)
 from app.facilitators.observability.sentry_error_reporting_facilitator import (
     SentryErrorReportingFacilitator,
 )
@@ -57,10 +60,27 @@ class FacilitatorsContainer(containers.DeclarativeContainer):
         email_client=clients.smtp_email_client,
         localized_text_resolver=utilities.localized_text_resolver,
     )
-    # Staff notifications: platform Telegram bot, WhatsApp template, e-mail.
+    # The durable job queue of the background workers.
+    job_queue_facilitator: Singleton[JobQueueFacilitator] = Singleton(
+        JobQueueFacilitator,
+        job_repo=repositories.queued_job_repo,
+        job_wakeup=utilities.job_wakeup,
+        wall_clock=time_provider.microsecond_wall_clock,
+    )
+    # Staff notifications are queued in the outbox; the worker sends them
+    # through the platform Telegram bot, a WhatsApp template or e-mail.
     manager_notification_facilitator: Singleton[ManagerNotificationFacilitator] = (
         Singleton(
             ManagerNotificationFacilitator,
+            outbound_message_repo=repositories.outbound_message_repo,
+            job_queue=job_queue_facilitator,
+            app_settings=config.app_settings,
+            wall_clock=time_provider.microsecond_wall_clock,
+        )
+    )
+    staff_notification_sender: Singleton[StaffNotificationSenderFacilitator] = (
+        Singleton(
+            StaffNotificationSenderFacilitator,
             telegram_client=clients.telegram_bot_client,
             whatsapp_templates=adapters.whatsapp_channel_adapter,
             app_settings=config.app_settings,
@@ -94,11 +114,5 @@ class FacilitatorsContainer(containers.DeclarativeContainer):
         secret_cipher=adapters.secret_cipher,
         phone_number_parser=utilities.phone_number_parser,
         event_text_transformer=transformers.calendar_event_text_transformer,
-        wall_clock=time_provider.microsecond_wall_clock,
-    )
-    job_queue_facilitator: Singleton[JobQueueFacilitator] = Singleton(
-        JobQueueFacilitator,
-        job_repo=repositories.queued_job_repo,
-        job_wakeup=utilities.job_wakeup,
         wall_clock=time_provider.microsecond_wall_clock,
     )

@@ -1,16 +1,12 @@
 import httpx
 
+from app.clients.meta.meta_graph_errors import build_graph_error
 from app.contracts.channel_clients import MetaGraphApiClientContract, ProviderToken
 from app.schemas.dto.channels.provider_profiles import (
     MetaPageProfile,
     WhatsAppPhoneNumberProfile,
 )
-from app.schemas.exceptions.application_errors import (
-    ChannelCredentialRejectedError,
-    ExternalServiceError,
-    ValidationFailedError,
-    WhatsAppTemplateRejectedError,
-)
+from app.schemas.exceptions.application_errors import ExternalServiceError
 from app.schemas.typings.channels.constrained_strings import (
     MetaObjectId,
     WhatsAppTemplateLanguageCode,
@@ -19,6 +15,7 @@ from app.schemas.typings.channels.constrained_strings import (
 from app.schemas.typings.channels.strings import (
     MetaPageName,
     OutboundMessagePart,
+    ProviderMessageId,
     WhatsAppDisplayPhoneNumber,
 )
 from app.schemas.typings.conversations.strings import ChannelUserId
@@ -26,8 +23,8 @@ from app.utilities.channels.json_values import (
     JsonObject,
     parse_json_object,
     read_identifier,
-    read_integer,
     read_object,
+    read_objects,
     read_text,
 )
 
@@ -36,23 +33,7 @@ META_GRAPH_BASE_URL: str = "https://graph.facebook.com"
 # working for at least two years after the next one is released.
 DEFAULT_GRAPH_API_VERSION: str = "v23.0"
 REQUEST_TIMEOUT_SECONDS: float = 10.0
-# Graph error codes meaning the caller's token or object id is wrong:
-# 100 invalid parameter / unknown object, 190 invalid token, 200 permission,
-# 803 unknown alias.
-INVALID_INPUT_ERROR_CODES: frozenset[int] = frozenset({100, 190, 200, 803})
-# After connecting, these mean the page or system user token stopped working
-# (expired, revoked, permissions removed): 401 / 403, Graph code 102
-# (session) and 190 (invalid OAuth token).
-REJECTED_CREDENTIAL_STATUS_CODES: frozenset[int] = frozenset({401, 403})
-REJECTED_CREDENTIAL_ERROR_CODES: frozenset[int] = frozenset({102, 190})
 PAGE_WEBHOOK_FIELDS: str = "messages,messaging_postbacks"
-# Graph error codes of a message template Meta refuses: 132000 wrong number
-# of variables, 132001 no template of that name in that language, 132005
-# translated text too long, 132007 policy, 132012 variable format, 132015
-# paused, 132016 disabled.
-WHATSAPP_TEMPLATE_ERROR_CODES: frozenset[int] = frozenset(
-    {132000, 132001, 132005, 132007, 132012, 132015, 132016}
-)
 
 
 class MetaGraphClient(MetaGraphApiClientContract):
@@ -155,18 +136,20 @@ class MetaGraphClient(MetaGraphApiClientContract):
         phone_number_id: MetaObjectId,
         recipient: ChannelUserId,
         text: OutboundMessagePart,
-    ) -> None:
-        self._request(
-            "POST",
-            f"/{phone_number_id}/messages",
-            access_token,
-            json_body={
-                "messaging_product": "whatsapp",
-                "recipient_type": "individual",
-                "to": str(recipient),
-                "type": "text",
-                "text": {"preview_url": False, "body": str(text)},
-            },
+    ) -> ProviderMessageId | None:
+        return read_whatsapp_message_id(
+            self._request(
+                "POST",
+                f"/{phone_number_id}/messages",
+                access_token,
+                json_body={
+                    "messaging_product": "whatsapp",
+                    "recipient_type": "individual",
+                    "to": str(recipient),
+                    "type": "text",
+                    "text": {"preview_url": False, "body": str(text)},
+                },
+            )
         )
 
     def send_whatsapp_template(
@@ -177,7 +160,7 @@ class MetaGraphClient(MetaGraphApiClientContract):
         template_name: WhatsAppTemplateName,
         language_code: WhatsAppTemplateLanguageCode,
         body_parameters: list[OutboundMessagePart],
-    ) -> None:
+    ) -> ProviderMessageId | None:
         template: JsonObject = {
             "name": str(template_name),
             "language": {"code": str(language_code)},
@@ -193,17 +176,19 @@ class MetaGraphClient(MetaGraphApiClientContract):
                 }
             ]
 
-        self._request(
-            "POST",
-            f"/{phone_number_id}/messages",
-            access_token,
-            json_body={
-                "messaging_product": "whatsapp",
-                "recipient_type": "individual",
-                "to": str(recipient),
-                "type": "template",
-                "template": template,
-            },
+        return read_whatsapp_message_id(
+            self._request(
+                "POST",
+                f"/{phone_number_id}/messages",
+                access_token,
+                json_body={
+                    "messaging_product": "whatsapp",
+                    "recipient_type": "individual",
+                    "to": str(recipient),
+                    "type": "template",
+                    "template": template,
+                },
+            )
         )
 
     def send_page_message(
@@ -211,8 +196,8 @@ class MetaGraphClient(MetaGraphApiClientContract):
         access_token: ProviderToken,
         recipient: ChannelUserId,
         text: OutboundMessagePart,
-    ) -> None:
-        self._request(
+    ) -> ProviderMessageId | None:
+        sent: JsonObject = self._request(
             "POST",
             "/me/messages",
             access_token,
@@ -222,6 +207,8 @@ class MetaGraphClient(MetaGraphApiClientContract):
                 "message": {"text": str(text)},
             },
         )
+        message_id: str | None = read_identifier(sent, "message_id")
+        return None if message_id is None else ProviderMessageId(message_id)
 
     def _request(
         self,
@@ -249,30 +236,11 @@ class MetaGraphClient(MetaGraphApiClientContract):
         if response.status_code < 400 and "error" not in body:
             return body
 
-        error: JsonObject = read_object(body, "error") or {}
-        error_code: int | None = read_integer(error, "code")
-        message: str = read_text(error, "message") or f"HTTP {response.status_code}"
-        if is_lookup and error_code in INVALID_INPUT_ERROR_CODES:
-            raise ValidationFailedError(
-                f"Meta did not accept the account or token: {message}"
-            )
-
-        if (
-            response.status_code in REJECTED_CREDENTIAL_STATUS_CODES
-            or error_code in REJECTED_CREDENTIAL_ERROR_CODES
-        ):
-            raise ChannelCredentialRejectedError(
-                f"Meta rejected the access token or its permissions "
-                f"({error_code or response.status_code}): {message}"
-            )
-
-        if error_code in WHATSAPP_TEMPLATE_ERROR_CODES:
-            raise WhatsAppTemplateRejectedError(
-                f"Meta refused the message template ({error_code}): {message}"
-            )
-
-        raise ExternalServiceError(
-            f"Meta Graph API error {error_code or response.status_code}: {message}"
+        raise build_graph_error(
+            response.status_code,
+            body,
+            response.headers.get("Retry-After"),
+            is_lookup=is_lookup,
         )
 
 
@@ -285,3 +253,11 @@ def read_object_id(source: JsonObject, key: str) -> MetaObjectId | None:
         return MetaObjectId(raw_id)
     except ValueError:
         return None
+
+
+def read_whatsapp_message_id(body: JsonObject) -> ProviderMessageId | None:
+    """The "wamid..." of a sent WhatsApp message (`messages[0].id`)."""
+
+    messages: list[JsonObject] = read_objects(body, "messages")
+    message_id: str | None = read_identifier(messages[0], "id") if messages else None
+    return None if message_id is None else ProviderMessageId(message_id)

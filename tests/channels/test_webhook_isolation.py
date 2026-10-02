@@ -1,89 +1,49 @@
 """One bad message of a webhook delivery never loses the others."""
 
-from app.contracts.conversation_flow import CustomerMessagePipelineContract
-from app.contracts.use_case_contract import UseCaseContract
-from app.orchestrators.channels.channel_webhook_orchestrator import (
-    ChannelWebhookOrchestrator,
-)
 from app.schemas.constants.channels import ChannelKind
-from app.schemas.dto.channels.channel_webhooks import (
-    ChannelDeliveryTarget,
-    ChannelInboundDelivery,
-    ChannelReplyDelivery,
+from app.schemas.constants.deliveries import InboundEventStatus
+from tests.channels.meta_payloads import (
+    PHONE_NUMBER_ID,
+    post_meta,
+    whatsapp_message,
+    whatsapp_webhook,
 )
-from app.schemas.dto.conversations import AssistantReply, InboundMessage
-from app.schemas.typings.businesses.prefixed_id import BusinessId
-from app.schemas.typings.channels.constrained_integers import DeliveredMessageCount
-from app.schemas.typings.conversations.prefixed_id import ConversationId
-from app.schemas.typings.conversations.strings import ChannelUserId, MessageText
-from app.schemas.typings.localization.constrained_strings import LanguageTag
-
-BUSINESS_ID: BusinessId = BusinessId()
-
-
-def delivery(text: str) -> ChannelInboundDelivery:
-    return ChannelInboundDelivery(
-        message=InboundMessage(
-            business_id=BUSINESS_ID,
-            channel=ChannelKind.TELEGRAM,
-            channel_user_id=ChannelUserId("42"),
-            text=MessageText(text),
-        ),
-        target=ChannelDeliveryTarget(
-            channel=ChannelKind.TELEGRAM,
-            channel_user_id=ChannelUserId("42"),
-        ),
-    )
-
-
-class TwoMessages(UseCaseContract[str, list[ChannelInboundDelivery]]):
-    def run(self, input_data: str) -> list[ChannelInboundDelivery]:
-        return [delivery("boom"), delivery("hello")]
-
-
-class FlakyPipeline(CustomerMessagePipelineContract):
-    def start(self, input_data: InboundMessage) -> AssistantReply:
-        if str(input_data.text) == "boom":
-            raise RuntimeError("a bug in a tool")
-
-        return AssistantReply(
-            conversation_id=ConversationId(),
-            text=MessageText("Hi!"),
-            language=LanguageTag("en"),
-            is_handed_off=False,
-        )
-
-
-class RecordingDelivery(UseCaseContract[ChannelReplyDelivery, DeliveredMessageCount]):
-    def __init__(self, is_failing: bool = False) -> None:
-        self.sent: list[str] = []
-        self.is_failing: bool = is_failing
-
-    def run(self, input_data: ChannelReplyDelivery) -> DeliveredMessageCount:
-        if self.is_failing:
-            raise RuntimeError("socket closed")
-
-        self.sent.append(str(input_data.text))
-        return DeliveredMessageCount(1)
+from tests.channels.outbox_reads import inbox
+from tests.channels.testbed import ChannelsTestbed
 
 
 def test_an_unexpected_error_of_one_message_spares_the_others() -> None:
-    sender = RecordingDelivery()
-    orchestrator = ChannelWebhookOrchestrator[str](
-        TwoMessages(), FlakyPipeline(), sender
+    testbed = ChannelsTestbed()
+    owner = testbed.add_user("owner")
+    business = testbed.add_business(owner)
+    testbed.add_channel(business.id, ChannelKind.WHATSAPP, PHONE_NUMBER_ID)
+    testbed.meta_transport.respond("POST", r"/messages$", {"messages": []})
+    testbed.pipeline.crashing_texts = {"boom"}
+
+    response = post_meta(
+        testbed,
+        whatsapp_webhook(
+            [
+                whatsapp_message("995599000001", "boom", message_id="wamid.A"),
+                whatsapp_message("995599000002", "hello", message_id="wamid.B"),
+            ]
+        ),
     )
+    testbed.run_worker()
 
-    outcome = orchestrator.execute("update")
-
-    assert (outcome.received, outcome.answered, outcome.failed) == (2, 1, 1)
-    assert sender.sent == ["Hi!"]
-
-
-def test_an_unexpected_delivery_error_is_counted_not_raised() -> None:
-    orchestrator = ChannelWebhookOrchestrator[str](
-        TwoMessages(), FlakyPipeline(), RecordingDelivery(is_failing=True)
-    )
-
-    outcome = orchestrator.execute("update")
-
-    assert (outcome.answered, outcome.failed) == (0, 2)
+    assert response.json()["queued"] == 2
+    [sent] = testbed.meta_transport.requests
+    assert sent.json()["text"]["body"] == "Reply: hello"
+    statuses = {
+        str(event.customer_message.text): event.status
+        for event in inbox(testbed)
+        if event.customer_message is not None
+    }
+    # The crashed message is kept for the job's next attempt, not dropped.
+    assert statuses == {
+        "boom": InboundEventStatus.PROCESSING,
+        "hello": InboundEventStatus.ANSWERED,
+    }
+    [crashed] = [event for event in inbox(testbed) if event.last_error is not None]
+    assert crashed.lease_until is None
+    assert str(crashed.last_error) == "a bug in a tool"

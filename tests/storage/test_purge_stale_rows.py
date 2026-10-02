@@ -12,20 +12,32 @@ from app.gateways.worker.periodic.purge_stale_rows import (
 )
 from app.repositories.channel_repositories import ChannelMessageReceiptRepository
 from app.repositories.compliance_repositories import AuditLogRepository
+from app.repositories.delivery_repositories import (
+    InboundEventRepository,
+    OutboundMessageRepository,
+)
 from app.repositories.user_repositories import (
     OtpChallengeRepository,
     UserSessionRepository,
 )
 from app.schemas.constants.channels import ChannelKind
 from app.schemas.constants.compliance import AuditAction
+from app.schemas.constants.deliveries import InboundEventKind, OutboundMessageKind
 from app.schemas.constants.localization import OtpDeliveryChannel
 from app.schemas.constants.users import LoginMethod
 from app.schemas.domain.channel_receipts import ChannelMessageReceiptDocument
 from app.schemas.domain.compliance import AuditLogEntryDocument
+from app.schemas.domain.inbound_events import InboundEventDocument
+from app.schemas.domain.outbound_messages import OutboundMessageDocument
 from app.schemas.domain.users import OtpChallengeDocument, UserSessionDocument
 from app.schemas.dto.jobs import JobTick
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.channels.strings import ProviderMessageId
+from app.schemas.typings.conversations.strings import MessageText
+from app.schemas.typings.deliveries.constrained_strings import (
+    OutboundIdempotencyKey,
+    OutboundRecipientKey,
+)
 from app.schemas.typings.localization.constrained_strings import (
     E164PhoneNumber,
     LanguageTag,
@@ -33,6 +45,10 @@ from app.schemas.typings.localization.constrained_strings import (
 from app.schemas.typings.users.prefixed_id import UserId
 from app.schemas.typings.users.strings import AccessTokenHash, OtpCodeHash
 from app.use_cases.maintenance.purge_stale_rows_use_case import PurgeStaleRowsUseCase
+from app.utilities.deliveries.delivery_keys import (
+    derive_inbound_event_id,
+    derive_outbound_message_id,
+)
 from tests.storage.conftest import CollectionFactory
 from tests.storage.storage_testing import FIXED_NANOSECONDS, build_fixed_wall_clock
 
@@ -73,6 +89,33 @@ def receipt(created_at: int, message_id: str) -> ChannelMessageReceiptDocument:
     )
 
 
+def inbound_event(created_at: int) -> InboundEventDocument:
+    message_id = ProviderMessageId(f"wamid.{created_at}")
+    return InboundEventDocument(
+        id=derive_inbound_event_id(None, ChannelKind.TELEGRAM, message_id),
+        kind=InboundEventKind.PLATFORM_BOT_UPDATE,
+        channel=ChannelKind.TELEGRAM,
+        provider_message_id=message_id,
+        created_at=Microseconds(created_at),
+        updated_at=Microseconds(created_at),
+    )
+
+
+def outbound_message(created_at: int) -> OutboundMessageDocument:
+    business_id = BusinessId()
+    key = OutboundIdempotencyKey(f"staff:{created_at}")
+    return OutboundMessageDocument(
+        id=derive_outbound_message_id(business_id, key),
+        business_id=business_id,
+        kind=OutboundMessageKind.STAFF_NOTIFICATION,
+        idempotency_key=key,
+        recipient_key=OutboundRecipientKey("staff:email:levan@example.ge"),
+        text=MessageText("A new booking."),
+        created_at=Microseconds(created_at),
+        updated_at=Microseconds(created_at),
+    )
+
+
 def test_stale_sessions_codes_and_receipts_are_purged_and_audited(
     collections: CollectionFactory,
 ) -> None:
@@ -92,12 +135,22 @@ def test_stale_sessions_codes_and_receipts_are_purged_and_audited(
     challenges.save(old_code)
     challenges.save(fresh_code)
     old_receipt, fresh_receipt = receipt(NOW - 31 * DAY, "1"), receipt(NOW - DAY, "2")
-    assert receipts.record_if_new(old_receipt)
-    assert receipts.record_if_new(fresh_receipt)
+    receipt_collection.upsert(str(old_receipt.id), old_receipt)
+    receipt_collection.upsert(str(fresh_receipt.id), fresh_receipt)
+    event_collection = collections(InboundEventDocument, "inbound_events")
+    outbox_collection = collections(OutboundMessageDocument, "outbound_messages")
+    old_event, fresh_event = inbound_event(NOW - 31 * DAY), inbound_event(NOW - DAY)
+    old_reply, fresh_reply = outbound_message(NOW - 31 * DAY), outbound_message(NOW)
+    for event in (old_event, fresh_event):
+        event_collection.upsert(str(event.id), event)
+    for reply in (old_reply, fresh_reply):
+        outbox_collection.upsert(str(reply.id), reply)
     use_case = PurgeStaleRowsUseCase(
         user_session_repo=sessions,
         otp_challenge_repo=challenges,
         channel_message_receipt_repo=receipts,
+        inbound_event_repo=InboundEventRepository(event_collection),
+        outbound_message_repo=OutboundMessageRepository(outbox_collection),
         audit_log_repo=audit,
         wall_clock=build_fixed_wall_clock(),
     )
@@ -105,17 +158,21 @@ def test_stale_sessions_codes_and_receipts_are_purged_and_audited(
     report = use_case.run(TICK)
     second_report = use_case.run(TICK)
 
-    assert report.processed_count == 4
+    assert report.processed_count == 6
     assert second_report.processed_count == 0
     assert sessions.find_by_token_hash(expired.token_hash) is None
     assert sessions.find_by_token_hash(at_expiry.token_hash) is None
     assert sessions.find_by_token_hash(valid.token_hash) == valid
     assert [c.id for c in challenge_collection.list_all()] == [fresh_code.id]
     assert [r.id for r in receipt_collection.list_all()] == [fresh_receipt.id]
+    assert [e.id for e in event_collection.list_all()] == [fresh_event.id]
+    assert [m.id for m in outbox_collection.list_all()] == [fresh_reply.id]
     entries = audit_collection.list_all()
     assert sorted(str(entry.entity) for entry in entries) == [
         "channel_message_receipt",
+        "inbound_event",
         "otp_challenge",
+        "outbound_message",
         "user_session",
     ]
     assert {entry.action for entry in entries} == {AuditAction.RETENTION_PURGE}

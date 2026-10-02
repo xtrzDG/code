@@ -19,6 +19,7 @@ from app.schemas.domain.businesses import BusinessDocument, BusinessMember
 from app.schemas.domain.compliance import AuditLogEntryDocument
 from app.schemas.domain.contacts import ContactDocument
 from app.schemas.domain.conversations import LlmTurnDocument
+from app.schemas.domain.inbound_events import InboundEventDocument
 from app.schemas.domain.jobs import PeriodicJobRunDocument, QueuedJobDocument
 from app.schemas.domain.profiles import BusinessProfileDocument
 from app.schemas.domain.users import (
@@ -60,6 +61,9 @@ PLATFORM_DOCUMENT_TYPES: frozenset[type[PersistentDocument]] = frozenset(
         LlmTurnDocument,
         QueuedJobDocument,
         PeriodicJobRunDocument,
+        # Staff-bot updates and finished-call reports arrive before their
+        # business is known.
+        InboundEventDocument,
     }
 )
 

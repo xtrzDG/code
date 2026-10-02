@@ -6,6 +6,7 @@ from app.schemas.constants.channels import ChannelKind
 from app.schemas.dto.channels.channel_webhooks import (
     ChannelDeliveryTarget,
     ChannelInboundMessage,
+    ChannelSendReceipt,
     ChannelWebhookPayload,
 )
 from app.schemas.exceptions.application_errors import (
@@ -133,25 +134,35 @@ class TelegramChannelAdapter(ChannelAdapterContract):
             )
         ]
 
+    def split(self, text: MessageText) -> list[MessageText]:
+        return [
+            MessageText(part)
+            for part in split_message_text(str(text), TELEGRAM_MESSAGE_LIMIT)
+        ]
+
     def send(
         self,
         target: ChannelDeliveryTarget,
         text: MessageText,
-    ) -> DeliveredMessageCount:
+    ) -> ChannelSendReceipt:
         if target.credential is None:
             raise ExternalServiceError(
                 "The Telegram bot of this business is not connected."
             )
 
-        parts: list[str] = split_message_text(str(text), TELEGRAM_MESSAGE_LIMIT)
+        parts: list[MessageText] = self.split(text)
+        provider_message_id: ProviderMessageId | None = None
         for part in parts:
-            self._telegram_client.send_message(
+            provider_message_id = self._telegram_client.send_message(
                 target.credential,
                 target.channel_user_id,
-                OutboundMessagePart(part),
+                OutboundMessagePart(str(part)),
             )
 
-        return DeliveredMessageCount(len(parts))
+        return ChannelSendReceipt(
+            delivered=DeliveredMessageCount(len(parts)),
+            provider_message_id=provider_message_id,
+        )
 
     def _read_own_phone_number(
         self,

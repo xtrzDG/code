@@ -25,7 +25,11 @@ from app.schemas.typings.contacts.prefixed_id import ContactId
 from app.schemas.typings.conversations.constrained_integers import (
     ConversationMessageCount,
 )
-from app.schemas.typings.conversations.prefixed_id import CallId, ConversationId
+from app.schemas.typings.conversations.prefixed_id import (
+    CallId,
+    ConversationId,
+    MessageId,
+)
 from app.schemas.typings.conversations.strings import ChannelUserId, ProviderCallId
 from app.schemas.typings.localization.constrained_strings import E164PhoneNumber
 
@@ -118,6 +122,13 @@ class ConversationRepoContract(RepoContract, Protocol):
 
 class MessageRepoContract(RepoContract, Protocol):
     def save(self, message: MessageDocument) -> None:
+        raise NotImplementedError
+
+    def get(
+        self,
+        business_id: BusinessId,
+        message_id: MessageId,
+    ) -> MessageDocument | None:
         raise NotImplementedError
 
     def list_by_conversation(

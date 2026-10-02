@@ -2,6 +2,7 @@ import logging
 
 from app.contracts.facilitators import ManagerNotificationFacilitatorContract
 from app.contracts.operations import ManagerBroadcastFacilitatorContract
+from app.schemas.dto.deliveries import StaffNotification
 from app.schemas.dto.operations.message_texts import StaffMessage
 from app.schemas.typings.handoffs.constrained_integers import (
     DeliveredNotificationCount,
@@ -12,8 +13,9 @@ LOGGER: logging.Logger = logging.getLogger(__name__)
 
 class ManagerBroadcastFacilitator(ManagerBroadcastFacilitatorContract):
     """
-    Sends staff messages one by one through the manager notifier (platform
-    Telegram bot, WhatsApp template, e-mail or SMS).
+    Queues staff messages one by one through the manager notifier (the
+    outbox: platform Telegram bot, WhatsApp template, e-mail or SMS) and
+    counts the ones queued for delivery.
 
     A notifier that fails or even raises for one contact never stops the
     others and never breaks the booking, lead or handoff being notified about.
@@ -27,7 +29,12 @@ class ManagerBroadcastFacilitator(ManagerBroadcastFacilitatorContract):
         for message in messages:
             try:
                 is_delivered: bool = self._notifier.notify(
-                    message.contact, message.text
+                    StaffNotification(
+                        business_id=message.business_id,
+                        contact=message.contact,
+                        text=message.text,
+                        handoff_id=message.handoff_id,
+                    )
                 )
             except Exception:  # noqa: BLE001 - notifier must never break the action
                 LOGGER.exception(
@@ -39,7 +46,7 @@ class ManagerBroadcastFacilitator(ManagerBroadcastFacilitatorContract):
                 delivered += 1
             else:
                 LOGGER.warning(
-                    "Staff notification via %s was not delivered.",
+                    "Staff notification via %s cannot be delivered.",
                     message.contact.channel,
                 )
 

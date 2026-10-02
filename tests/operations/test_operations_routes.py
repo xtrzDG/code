@@ -129,7 +129,7 @@ def test_leads_handoffs_and_questions() -> None:
         "lost": 0,
     }
     assert api.get("/leads", status="won").status_code == 200
-    handoffs = api.get("/handoffs", status="notified").json()["items"]
+    handoffs = api.get("/handoffs", status="pending").json()["items"]
     assert [item["id"] for item in handoffs] == [str(handoff.id)]
     waiting = api.get("/handoffs", is_open="true").json()
     assert (waiting["open_count"], waiting["resolved_count"]) == (1, 0)

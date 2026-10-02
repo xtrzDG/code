@@ -158,7 +158,7 @@ class TestWhatsAppSending:
 
         delivered = testbed.whatsapp_adapter.send(self.target(), MessageText("שלום"))
 
-        assert delivered == 1
+        assert delivered.delivered == 1
         [request] = testbed.meta_transport.requests
         assert request.path == f"/v23.0/{PHONE_NUMBER_ID}/messages"
         assert request.headers["Authorization"] == f"Bearer {WHATSAPP_SYSTEM_TOKEN}"

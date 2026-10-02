@@ -9,6 +9,7 @@ from app.containers.use_cases.conversation_feed_use_cases import (
 from app.containers.use_cases.conversation_use_cases import (
     ConversationUseCasesContainer,
 )
+from app.containers.use_cases.delivery_use_cases import DeliveryUseCasesContainer
 from app.containers.use_cases.follow_up_use_cases import FollowUpUseCasesContainer
 from app.containers.use_cases.voice_use_cases import VoiceUseCasesContainer
 from app.containers.utilities import UtilitiesContainer
@@ -17,6 +18,12 @@ from app.contracts.conversation_flow import (
     VoiceToolCallOrchestratorContract,
 )
 from app.contracts.orchestrator_contract import OrchestratorContract
+from app.orchestrators.channels.inbox.accept_post_call_webhook_orchestrator import (
+    AcceptPostCallWebhookOrchestrator,
+)
+from app.orchestrators.channels.inbox.process_post_call_orchestrator import (
+    ProcessPostCallOrchestrator,
+)
 from app.orchestrators.channels.post_call_webhook_orchestrator import (
     PostCallWebhookOrchestrator,
 )
@@ -34,6 +41,7 @@ from app.orchestrators.conversations.voice_tool_call_orchestrator import (
 )
 from app.schemas.dto.conversation_feed.owner_test_chat import OwnerTestChatCommand
 from app.schemas.dto.conversations import InboundMessage, VoiceToolCallResult
+from app.schemas.dto.jobs import JobReport, QueuedJobInput
 from app.schemas.dto.voice_webhooks import (
     PostCallWebhookOutcome,
     PostCallWebhookRequest,
@@ -56,6 +64,7 @@ class ConversationOrchestratorsContainer(containers.DeclarativeContainer):
         DependenciesContainer()  # type: ignore[assignment]
     )
     voice_use_cases: VoiceUseCasesContainer = DependenciesContainer()  # type: ignore[assignment]
+    delivery_use_cases: DeliveryUseCasesContainer = DependenciesContainer()  # type: ignore[assignment]
 
     # --- Conversation engine: one customer message, one voice tool call.
     conversation_turn_orchestrator: Factory[ConversationTurnOrchestratorContract] = (
@@ -92,15 +101,34 @@ class ConversationOrchestratorsContainer(containers.DeclarativeContainer):
         authenticate_voice_tool_call=voice_use_cases.authenticate_voice_tool_call_use_case,
         voice_tool_call=voice_tool_call_orchestrator,
     )
+    # The webhook verifies the report and keeps it in the inbox; the worker
+    # runs the post-call flow on it (the stored report is not verified
+    # again: a retry may come after the signature's 30 minutes).
+    accept_post_call_webhook_orchestrator: Factory[
+        OrchestratorContract[PostCallWebhookRequest, PostCallWebhookOutcome]
+    ] = Factory(
+        AcceptPostCallWebhookOrchestrator,
+        authenticate_post_call=voice_use_cases.authenticate_post_call_use_case,
+        store_post_call_report=delivery_use_cases.store_post_call_report_use_case,
+    )
     post_call_webhook_orchestrator: Factory[
         OrchestratorContract[PostCallWebhookRequest, PostCallWebhookOutcome]
     ] = Factory(
         PostCallWebhookOrchestrator,
-        authenticate_post_call=voice_use_cases.authenticate_post_call_use_case,
+        authenticate_post_call=delivery_use_cases.read_accepted_post_call_use_case,
         record_finished_call=voice_use_cases.record_finished_call_use_case,
         audit_call_replies=voice_use_cases.audit_call_replies_use_case,
         send_call_confirmation=voice_use_cases.send_call_confirmation_use_case,
         send_call_links=voice_use_cases.send_call_links_use_case,
+    )
+    process_post_call_orchestrator: Factory[
+        OrchestratorContract[QueuedJobInput, JobReport]
+    ] = Factory(
+        ProcessPostCallOrchestrator,
+        claim_inbound_event=delivery_use_cases.claim_inbound_event_use_case,
+        process_finished_call=post_call_webhook_orchestrator,
+        finish_inbound_event=delivery_use_cases.finish_inbound_event_use_case,
+        release_inbound_event=delivery_use_cases.release_inbound_event_use_case,
     )
 
     # --- Conversation feed.

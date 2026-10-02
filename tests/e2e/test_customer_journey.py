@@ -228,6 +228,9 @@ def test_georgian_restaurant_from_sign_in_to_a_booked_and_handed_off_chat(
     assert bookings[0]["contact_phone_number"] == "+995555123456"
     assert bookings[0]["source_channel"] == "web_chat"
     assert bookings[0]["status"] == "confirmed"
+    # Staff hear about it from the outbox, sent by the worker.
+    assert workshop.telegram.bodies("sendMessage") == []
+    workshop.run_queued_jobs()
     staff_messages = workshop.telegram.bodies("sendMessage")
     assert staff_messages[-1]["chat_id"] == "70001"
     assert staff_messages[-1]["text"].startswith("Новая бронь · Salobie Bia")
@@ -239,6 +242,7 @@ def test_georgian_restaurant_from_sign_in_to_a_booked_and_handed_off_chat(
     ).json()
     assert handed_off["is_handed_off"] is True
     assert handed_off["text"] == "Ваш вопрос передан коллеге. Вам скоро ответят."
+    workshop.run_queued_jobs()
     assert (
         "Клиенту нужен человек" in workshop.telegram.bodies("sendMessage")[-1]["text"]
     )

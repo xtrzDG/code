@@ -153,6 +153,21 @@ class BackgroundWorker:
             ),
         )
 
+    def run_queued_jobs(self) -> WorkerTickReport:
+        """
+        The queue only, in the calling thread: release expired leases, then
+        run every due queued job of every lane (jobs they queue for now
+        too). For tests and one-off runs, like `run_once`.
+        """
+
+        maintenance_failures: int = self._release_expired_leases()
+        queued_runs, queued_failures = self._run_due_queued_jobs()
+        return WorkerTickReport(
+            periodic_runs=ProcessedItemCount(0),
+            queued_runs=ProcessedItemCount(queued_runs),
+            failures=ProcessedItemCount(maintenance_failures + queued_failures),
+        )
+
     def run_periodic_tick(self) -> tuple[int, int]:
         """The periodic thread's tick: the reaper, then due periodic jobs."""
 
