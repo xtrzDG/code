@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 
+import { MotionProvider } from "@/components/motion/MotionProvider";
 import { ThemeProvider } from "@/components/theme/ThemeProvider";
 import { ToastProvider } from "@/components/ui/Toast";
 import { I18nProvider } from "@/i18n/client";
@@ -35,7 +36,9 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
       <body className="min-h-full bg-canvas text-ink antialiased">
         <I18nProvider locale={locale} messages={messages}>
           <ThemeProvider initialTheme={theme}>
-            <ToastProvider>{children}</ToastProvider>
+            <MotionProvider>
+              <ToastProvider>{children}</ToastProvider>
+            </MotionProvider>
           </ThemeProvider>
         </I18nProvider>
       </body>
