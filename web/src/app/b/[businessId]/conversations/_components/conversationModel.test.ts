@@ -146,6 +146,8 @@ describe("transcript", () => {
     expect(initialsOf("алексей петров иванович")).toBe("АП");
     expect(initialsOf(null)).toBe("#");
     expect(initialsOf("+995 599")).toBe("#");
+    expect(initialsOf("أحمد الخطيب")).toBe("أ");
+    expect(initialsOf("נועה כהן")).toBe("נכ");
   });
 });
 

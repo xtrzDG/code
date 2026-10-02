@@ -390,3 +390,22 @@ class TestWidgetColours:
             run_script_function("readableTextColor", f'readableTextColor("{accent}")')
             == text_colour
         )
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node is not installed")
+class TestWidgetLanguagePicker:
+    @pytest.mark.parametrize(
+        ("language", "label"),
+        [
+            ('{tag: "ru", native_name: "русский"}', "Русский"),
+            ('{tag: "de", native_name: "Deutsch"}', "Deutsch"),
+            # Georgian has no capitals; uppercasing would give Mtavruli.
+            ('{tag: "ka", native_name: "ქართული"}', "ქართული"),
+            ('{tag: "he", native_name: "עברית"}', "עברית"),
+            ('{tag: "xx"}', "Xx"),
+        ],
+    )
+    def test_languages_are_named_with_a_capital_where_the_script_has_one(
+        self, language: str, label: str
+    ) -> None:
+        assert run_script_function("pickerLabel", f"pickerLabel({language})") == label

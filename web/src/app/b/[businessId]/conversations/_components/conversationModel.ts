@@ -166,14 +166,19 @@ export function usageTotals(messages: readonly Pick<MessageView, "input_tokens" 
   );
 }
 
-/** Up to two letters for an avatar: "Nino Beridze" -> "NB", "+995…" -> "#". */
+/**
+ * Up to two letters for an avatar: "Nino Beridze" -> "NB", "+995…" -> "#".
+ * Arabic script takes one: its letters join into a different shape side by
+ * side, and the second word often starts with the article "ال".
+ */
 export function initialsOf(name: string | null | undefined): string {
   const words = (name ?? "").trim().split(/\s+/u).filter((word) => /\p{L}/u.test(word));
   if (words.length === 0) {
     return "#";
   }
+  const isArabicScript = /^\p{Script=Arabic}/u.test(words[0] ?? "");
   return words
-    .slice(0, 2)
+    .slice(0, isArabicScript ? 1 : 2)
     .map((word) => capitalLetter([...word][0] ?? ""))
     .join("");
 }

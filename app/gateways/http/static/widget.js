@@ -788,6 +788,22 @@
     );
   }
 
+  // A language in its own name as a picker label: "русский" -> "Русский".
+  // Georgian (Mkhedruli) has no capitals: uppercasing gives Mtavruli.
+  function pickerLabel(language) {
+    var name = String(language.native_name || language.tag || "");
+    if (!name || /^[\u10D0-\u10FF]/.test(name)) {
+      return name;
+    }
+    var first = name.charAt(0);
+    try {
+      first = first.toLocaleUpperCase(language.tag);
+    } catch (error) {
+      first = first.toUpperCase();
+    }
+    return first + name.slice(1);
+  }
+
   function mount(config, isPreview) {
     var showPreviewBanner = isPreview && !config.is_enabled;
     var host = document.createElement("div");
@@ -868,7 +884,7 @@
       languages.forEach(function (language) {
         var option = document.createElement("option");
         option.value = language.tag;
-        option.textContent = language.native_name || language.tag;
+        option.textContent = pickerLabel(language);
         option.setAttribute("dir", language.direction === "rtl" ? "rtl" : "ltr");
         languageSelect.appendChild(option);
       });

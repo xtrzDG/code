@@ -7,6 +7,8 @@
 import type { ApiError } from "@/api/errors";
 import type { CountryListItem } from "@/api/types";
 
+import { REGION_NAMES } from "./displayNames.generated";
+
 /** The first market: the default when nothing hints at the user's country. */
 export const FALLBACK_COUNTRY_CODE = "GE";
 
@@ -37,13 +39,28 @@ export function countryFlag(countryCode: string): string {
   return String.fromCodePoint(...[...code].map((letter) => 0x1f1e6 + letter.charCodeAt(0) - 65));
 }
 
-/** A country's name in the interface language: countryName("GE", "ka") -> "საქართველო". */
+/**
+ * A country's name in the interface language: countryName("GE", "ka") ->
+ * "საქართველო". The interface languages read the backend's CLDR table, so
+ * the server and every browser say the same (Chrome has no Georgian region
+ * names); other languages ask Intl.
+ */
 export function countryName(countryCode: string, locale: string): string {
+  const code = countryCode.toUpperCase();
+  const known = REGION_NAMES[baseLanguage(locale)]?.[code];
+  if (known) {
+    return known;
+  }
   try {
-    return new Intl.DisplayNames([locale], { type: "region" }).of(countryCode.toUpperCase()) ?? countryCode;
+    return new Intl.DisplayNames([locale], { type: "region" }).of(code) ?? countryCode;
   } catch {
     return countryCode;
   }
+}
+
+/** "ka-GE" -> "ka". */
+function baseLanguage(locale: string): string {
+  return locale.split(/[-_]/)[0]?.toLowerCase() ?? locale;
 }
 
 /** 995 -> "+995". */

@@ -53,8 +53,9 @@ Behind a reverse proxy, run the API with
 | `npm run typecheck` | `next typegen` (route types) + `tsc --noEmit` |
 | `npm test` | Vitest unit tests (`src/**/*.test.ts`) |
 | `npm run e2e` | Playwright end-to-end tests against the real API (see [End-to-end tests](#end-to-end-tests)) |
-| `npm run gen:api` | Regenerate `openapi.json` from the backend (`uv run python -m scripts.export_openapi`) and `src/api/schema.d.ts` from it (openapi-typescript). Run after any backend API change and commit both files. It also runs `gen:currencies`. |
+| `npm run gen:api` | Regenerate `openapi.json` from the backend (`uv run python -m scripts.export_openapi`) and `src/api/schema.d.ts` from it (openapi-typescript). Run after any backend API change and commit both files. It also runs `gen:currencies` and `gen:names`. |
 | `npm run gen:currencies` | Regenerate `src/lib/currencyDigits.generated.ts`: the digits after the decimal point of every currency, from the backend's CLDR data (Babel). Money is converted between minor and major units with this table, not with the browser's Intl data, which differs between browser versions. A backend test fails when the file is stale. |
+| `npm run gen:names` | Regenerate `src/lib/displayNames.generated.ts`: country and language names in Georgian, Russian and English from the backend's CLDR data. `countryName` and `languageName` read it before Intl: Chrome has no Georgian display names, so the server and the browser would disagree (a hydration error) and Georgian owners would see codes. A backend test fails when the file is stale. |
 
 All of `npm run lint && npm run typecheck && npm test && npm run build` must pass
 (CI job "web"); the CI job "e2e" then runs `npm run e2e`.
