@@ -26,7 +26,7 @@
       "endpoint": {
         "maxLength": 2048,
         "minLength": 12,
-        "pattern": "^https://[^\\s]+$",
+        "pattern": "^https?://[^\\s]+$",
         "type": "string"
       },
       "id": {

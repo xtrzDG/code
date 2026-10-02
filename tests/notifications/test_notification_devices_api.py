@@ -149,7 +149,8 @@ def test_only_real_subscriptions_of_known_push_services_are_accepted() -> None:
 
         # Outside production a local test push service is accepted.
         local = browser_subscription("http://127.0.0.1:9999/push/device")
-        assert client.post(path, json=local, headers=restaurant.headers).status_code == 201
+        accepted = client.post(path, json=local, headers=restaurant.headers)
+        assert accepted.status_code == 201, accepted.text
 
 
 def test_devices_cannot_be_turned_on_while_push_is_not_set_up() -> None:
