@@ -78,6 +78,15 @@ security:
     if command -v gitleaks >/dev/null; then gitleaks git --redact --no-banner .; \
         else echo "gitleaks is not installed; skipped (CI runs it)."; fi
 
+# After a stored document's schema_version bump: record its shape and golden
+# fixture (docs/operations/deploys.md).
+document-snapshots:
+    uv run python -m tests.storage.document_evolution.refresh
+
+# Smoke test a deployment: `just smoke https://api.example.com [cabinet URL]`.
+smoke api_url cabinet_url="":
+    scripts/smoke.sh {{api_url}} {{cabinet_url}}
+
 # Empty the docker compose data (Postgres, recordings) and migrate again.
 db-reset:
     docker compose down --volumes
