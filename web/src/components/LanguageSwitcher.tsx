@@ -42,7 +42,11 @@ export function LanguageSwitcher({ className, compact = false }: { className?: s
         {t("language.label")}
       </label>
       <div className="relative min-w-0">
-        <IconGlobe className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-ink-muted" aria-hidden />
+        {/* Below 360 px the globe makes room for the language's name. */}
+        <IconGlobe
+          className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-ink-muted max-[359px]:hidden"
+          aria-hidden
+        />
         <select
           id={id}
           value={locale}
@@ -63,7 +67,7 @@ export function LanguageSwitcher({ className, compact = false }: { className?: s
             });
           }}
           className={cn(
-            "h-8 w-full cursor-pointer appearance-none truncate rounded-lg border border-line bg-surface py-0 pr-7 pl-8 text-sm font-medium text-ink",
+            "h-8 w-full cursor-pointer appearance-none truncate rounded-lg border border-line bg-surface py-0 pr-7 pl-8 text-sm font-medium text-ink max-[359px]:pl-2.5",
             "transition-colors hover:bg-surface-muted focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-focus disabled:opacity-60",
           )}
         >

@@ -21,7 +21,7 @@ export function LandingHeader({ t }: { t: Translator["t"] }) {
               {t("landing.nav.faq")}
             </a>
           </nav>
-          <ButtonLink href={LOGIN_PATH} size="sm" variant="secondary">
+          <ButtonLink href={LOGIN_PATH} size="sm" variant="secondary" className="max-[359px]:hidden">
             {t("landing.nav.signIn")}
           </ButtonLink>
         </>
