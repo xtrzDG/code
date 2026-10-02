@@ -190,7 +190,9 @@ from app.use_cases.voice.authenticate_post_call_use_case import (
 from app.use_cases.voice.authenticate_voice_tool_call_use_case import (
     AuthenticateVoiceToolCallUseCase,
 )
-from app.use_cases.voice.record_finished_call_use_case import RecordFinishedCallUseCase
+from app.use_cases.voice.finished_call.record_finished_call_use_case import (
+    RecordFinishedCallUseCase,
+)
 from app.use_cases.voice.send_call_confirmation_use_case import (
     SendCallConfirmationUseCase,
 )

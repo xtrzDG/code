@@ -1,4 +1,4 @@
-import logging
+"""Store a finished phone call reported by the voice platform."""
 
 from typed_time_provider import Microseconds, WallClock
 
@@ -22,42 +22,40 @@ from app.contracts.repositories.conversation_repositories import (
     ConversationRepoContract,
 )
 from app.contracts.use_case_contract import UseCaseContract
-from app.schemas.constants.billing import UsageKind
-from app.schemas.constants.bookings import BookingStatus
 from app.schemas.constants.channel_events import PostCallEventStatus
-from app.schemas.constants.channels import ChannelKind
 from app.schemas.constants.compliance import AuditAction
 from app.schemas.constants.conversations import CallOutcome
 from app.schemas.domain.billing import UsageEventDocument
 from app.schemas.domain.bookings import BookingDocument
 from app.schemas.domain.businesses import BusinessDocument
-from app.schemas.domain.channels import ChannelDocument
 from app.schemas.domain.compliance import AuditLogEntryDocument
 from app.schemas.domain.conversations import CallDocument, ConversationDocument
 from app.schemas.dto.voice_webhooks import FinishedCallReport, RecordedCall
-from app.schemas.typings.billing.constrained_integers import CostMicroUsd, UsageQuantity
-from app.schemas.typings.channels.strings import ChannelExternalId
 from app.schemas.typings.compliance.strings import (
     AuditEntityName,
     AuditEntityReference,
 )
-from app.schemas.typings.conversations.strings import ChannelUserId
 from app.schemas.typings.localization.constrained_strings import (
     E164PhoneNumber,
     LanguageTag,
+)
+from app.use_cases.voice.finished_call.call_activity import (
+    find_call_conversation,
+    has_call_handoff,
+    has_call_lead,
+    list_call_bookings,
+)
+from app.use_cases.voice.finished_call.call_business_lookup import find_call_business
+from app.use_cases.voice.finished_call.call_usage_events import (
+    build_transfer_usage_event,
+    build_voice_usage_event,
 )
 from app.utilities.channels.call_outcomes import (
     determine_call_outcome,
     render_call_transcript,
 )
-from app.utilities.channels.channel_phone_numbers import (
-    parse_messaging_phone_number,
-)
-from app.utilities.channels.voice_recordings import (
-    build_voice_platform_recording_path,
-)
-
-logger: logging.Logger = logging.getLogger(__name__)
+from app.utilities.channels.channel_phone_numbers import parse_messaging_phone_number
+from app.utilities.channels.voice_recordings import build_voice_platform_recording_path
 
 
 class RecordFinishedCallUseCase(UseCaseContract[FinishedCallReport, RecordedCall]):
@@ -114,25 +112,30 @@ class RecordFinishedCallUseCase(UseCaseContract[FinishedCallReport, RecordedCall
                 str(input_data.assistant_number),
             )
         )
-        business: BusinessDocument | None = self._find_business(
+        business: BusinessDocument | None = find_call_business(
+            self._channel_repo,
+            self._business_repo,
+            self._assistant_version_repo,
             assistant_number,
             input_data,
         )
         if business is None:
             return RecordedCall(status=PostCallEventStatus.IGNORED)
 
-        conversation: ConversationDocument | None = self._find_call_conversation(
+        conversation: ConversationDocument | None = find_call_conversation(
+            self._conversation_repo,
             business,
             input_data,
         )
-        bookings: list[BookingDocument] = self._list_call_bookings(
+        bookings: list[BookingDocument] = list_call_bookings(
+            self._booking_repo,
             business,
             conversation,
         )
         outcome: CallOutcome = determine_call_outcome(
             has_booking=bool(bookings),
-            has_lead=self._has_call_lead(business, conversation),
-            has_handoff=self._has_call_handoff(business, conversation),
+            has_lead=has_call_lead(self._lead_repo, business, conversation),
+            has_handoff=has_call_handoff(self._handoff_repo, business, conversation),
             called_tools=input_data.called_tools,
             transcript=input_data.transcript,
             duration_seconds=int(input_data.duration_seconds),
@@ -173,8 +176,13 @@ class RecordFinishedCallUseCase(UseCaseContract[FinishedCallReport, RecordedCall
         call.updated_at = now
         self._call_repo.save(call)
         if existing_call is None:
-            self._record_usage(call, now)
-            self._record_transfer(call, input_data, now)
+            self._usage_event_repo.append(build_voice_usage_event(call, now))
+            transfer_event: UsageEventDocument | None = build_transfer_usage_event(
+                call, input_data, now
+            )
+            if transfer_event is not None:
+                self._usage_event_repo.append(transfer_event)
+
             self._audit_log_repo.append(
                 AuditLogEntryDocument(
                     business_id=business.id,
@@ -204,148 +212,4 @@ class RecordFinishedCallUseCase(UseCaseContract[FinishedCallReport, RecordedCall
             outcome=outcome,
             booking_ids=[booking.id for booking in bookings],
             language=language,
-        )
-
-    def _find_business(
-        self,
-        assistant_number: E164PhoneNumber | None,
-        report: FinishedCallReport,
-    ) -> BusinessDocument | None:
-        if assistant_number is None:
-            logger.info(
-                "Call %s has no assistant number; it is not stored.",
-                report.provider_call_id,
-            )
-            return None
-
-        channel: ChannelDocument | None = self._channel_repo.find_by_external_id(
-            ChannelKind.PHONE,
-            ChannelExternalId(str(assistant_number)),
-        )
-        # A call that ended after the number was turned off (or broke) is
-        # still the business's call: it is stored and its minutes metered.
-        business: BusinessDocument | None = (
-            None if channel is None else self._business_repo.get(channel.business_id)
-        )
-        if business is None:
-            logger.info(
-                "Call %s reached a number no business has connected.",
-                report.provider_call_id,
-            )
-            return None
-
-        known_agent_ids = {
-            version.voice_agent_id
-            for version in self._assistant_version_repo.list_by_business(business.id)
-            if version.voice_agent_id is not None
-        }
-        if (
-            report.agent_id is not None
-            and known_agent_ids
-            and report.agent_id not in known_agent_ids
-        ):
-            logger.warning(
-                "Call %s was answered by an agent of another business; ignored.",
-                report.provider_call_id,
-            )
-            return None
-
-        return business
-
-    def _find_call_conversation(
-        self,
-        business: BusinessDocument,
-        report: FinishedCallReport,
-    ) -> ConversationDocument | None:
-        call_user_id = ChannelUserId(str(report.provider_call_id))
-        for conversation in self._conversation_repo.list_by_business(business.id):
-            if (
-                conversation.channel is ChannelKind.PHONE
-                and conversation.channel_user_id == call_user_id
-            ):
-                return conversation
-
-        return None
-
-    def _list_call_bookings(
-        self,
-        business: BusinessDocument,
-        conversation: ConversationDocument | None,
-    ) -> list[BookingDocument]:
-        if conversation is None:
-            return []
-
-        bookings: list[BookingDocument] = [
-            booking
-            for booking in self._booking_repo.list_by_business(business.id)
-            if booking.conversation_id == conversation.id
-            and booking.status is not BookingStatus.CANCELLED
-        ]
-        return sorted(bookings, key=lambda booking: booking.created_at)
-
-    def _has_call_lead(
-        self,
-        business: BusinessDocument,
-        conversation: ConversationDocument | None,
-    ) -> bool:
-        return conversation is not None and any(
-            lead.conversation_id == conversation.id
-            for lead in self._lead_repo.list_by_business(business.id)
-        )
-
-    def _has_call_handoff(
-        self,
-        business: BusinessDocument,
-        conversation: ConversationDocument | None,
-    ) -> bool:
-        return conversation is not None and any(
-            handoff.conversation_id == conversation.id
-            for handoff in self._handoff_repo.list_by_business(business.id)
-        )
-
-    def _record_transfer(
-        self,
-        call: CallDocument,
-        report: FinishedCallReport,
-        now: Microseconds,
-    ) -> None:
-        """
-        Minutes after the caller was put through to staff (concept
-        `transfer_min`): from the transfer to the end of the call.
-        """
-
-        if report.transfer_offset_seconds is None:
-            return
-
-        self._usage_event_repo.append(
-            UsageEventDocument(
-                business_id=call.business_id,
-                conversation_id=call.conversation_id,
-                kind=UsageKind.TRANSFER_SECONDS,
-                quantity=UsageQuantity(
-                    max(
-                        int(call.duration_seconds)
-                        - int(report.transfer_offset_seconds),
-                        0,
-                    )
-                ),
-                cost_micro_usd=CostMicroUsd(0),
-                occurred_at=call.started_at,
-                created_at=now,
-                updated_at=now,
-            )
-        )
-
-    def _record_usage(self, call: CallDocument, now: Microseconds) -> None:
-        self._usage_event_repo.append(
-            UsageEventDocument(
-                business_id=call.business_id,
-                conversation_id=call.conversation_id,
-                kind=UsageKind.VOICE_SECONDS,
-                quantity=UsageQuantity(int(call.duration_seconds)),
-                cost_micro_usd=call.cost_micro_usd,
-                occurred_at=call.started_at,
-                created_at=now,
-                updated_at=now,
-            )
         )

@@ -12,9 +12,7 @@ from app.containers.use_cases.conversation_use_cases import (
 )
 from app.containers.utilities import UtilitiesContainer
 from app.contracts.use_case_contract import UseCaseContract
-from app.schemas.dto.conversations import (
-    VoiceToolCallRequest,
-)
+from app.schemas.dto.conversations import VoiceToolCallRequest
 from app.schemas.dto.voice_webhooks import (
     CallInitiationData,
     CallInitiationWebhookRequest,
@@ -30,7 +28,9 @@ from app.use_cases.voice.authenticate_post_call_use_case import (
 from app.use_cases.voice.authenticate_voice_tool_call_use_case import (
     AuthenticateVoiceToolCallUseCase,
 )
-from app.use_cases.voice.record_finished_call_use_case import RecordFinishedCallUseCase
+from app.use_cases.voice.finished_call.record_finished_call_use_case import (
+    RecordFinishedCallUseCase,
+)
 from app.use_cases.voice.remove_voice_agent_use_case import RemoveVoiceAgentUseCase
 from app.use_cases.voice.send_call_confirmation_use_case import (
     SendCallConfirmationUseCase,
