@@ -4,7 +4,7 @@ import os
 from collections.abc import Iterator
 
 import pytest
-from dependency_injector import providers
+from dependency_injector import containers, providers
 from fastapi.testclient import TestClient
 
 from app.containers.app import AppContainer
@@ -83,6 +83,28 @@ def test_openapi_document_describes_every_module() -> None:
     assert expected_paths <= set(paths)
 
 
+def resolve_every_provider(
+    container: containers.Container,
+    prefix: str,
+    resolved: list[str],
+) -> None:
+    """Call every provider of `container`, descending into child containers."""
+
+    for provider_name, provider in container.providers.items():
+        if isinstance(provider, providers.DependenciesContainer):
+            continue
+
+        name = f"{prefix}.{provider_name}"
+        if isinstance(provider, providers.Container):
+            resolve_every_provider(provider(), name, resolved)
+            continue
+
+        instance: object = provider()
+        # Optional clients are None until their settings are present.
+        assert instance is not None or name in OPTIONAL_PROVIDERS, name
+        resolved.append(name)
+
+
 def test_every_provider_of_the_container_resolves() -> None:
     container = AppContainer()
     replace_provider(
@@ -91,16 +113,7 @@ def test_every_provider_of_the_container_resolves() -> None:
     )
     resolved: list[str] = []
     for container_name, child_provider in container.providers.items():
-        child = child_provider()
-        for provider_name, provider in child.providers.items():
-            if isinstance(provider, providers.DependenciesContainer):
-                continue
-
-            instance: object = provider()
-            name = f"{container_name}.{provider_name}"
-            # Optional clients are None until their settings are present.
-            assert instance is not None or name in OPTIONAL_PROVIDERS, name
-            resolved.append(name)
+        resolve_every_provider(child_provider(), container_name, resolved)
 
     assert len(resolved) > 400
     assert "operators.widget_message_operator" in resolved
@@ -123,6 +136,6 @@ def test_stateful_collaborators_are_shared_singletons() -> None:
         container.use_cases.create_telegram_link_use_case()
         is container.use_cases.create_telegram_link_use_case()
     )
-    assert container.adapters.booking_collection() is (
-        container.adapters.booking_collection()
+    assert container.adapters.collections.booking_collection() is (
+        container.adapters.collections.booking_collection()
     )

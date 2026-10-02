@@ -1,7 +1,7 @@
 from dependency_injector import containers
 from dependency_injector.providers import DependenciesContainer, Singleton
 
-from app.containers.adapters import AdaptersContainer
+from app.containers.adapters.adapters_container import AdaptersContainer
 from app.containers.clients import ClientsContainer
 from app.containers.config import ConfigContainer
 from app.containers.factories import build_otp_delivery_facilitator

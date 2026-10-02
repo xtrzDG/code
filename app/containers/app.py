@@ -1,7 +1,7 @@
 from dependency_injector import containers
 from dependency_injector.providers import Container
 
-from app.containers.adapters import AdaptersContainer
+from app.containers.adapters.adapters_container import AdaptersContainer
 from app.containers.clients import ClientsContainer
 from app.containers.config import ConfigContainer
 from app.containers.facilitators import FacilitatorsContainer
@@ -47,7 +47,7 @@ class AppContainer(containers.DeclarativeContainer):
     )
     repositories: RepositoriesContainer = Container(  # type: ignore[assignment]
         RepositoriesContainer,
-        adapters=adapters,
+        collections=adapters.collections,
     )
     registries: RegistriesContainer = Container(  # type: ignore[assignment]
         RegistriesContainer,

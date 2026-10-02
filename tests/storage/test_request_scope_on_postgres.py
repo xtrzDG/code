@@ -44,7 +44,7 @@ def install_forgetful_repository(container: AppContainer) -> None:
     cast(OverridableProvider, container.repositories.knowledge_item_repo).override(
         providers.Singleton(
             ForgetfulKnowledgeItemRepository,
-            collection=container.adapters.knowledge_item_collection,
+            collection=container.adapters.collections.knowledge_item_collection,
         )
     )
 
