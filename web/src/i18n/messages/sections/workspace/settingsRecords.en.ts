@@ -38,7 +38,7 @@ export const settingsRecordsEn = {
     deleteDescription: "Messages, call transcripts and recordings of this customer are deleted for good; conversations, bookings, leads and handoffs stay without personal data. This cannot be undone.",
     deleteConfirm: "Delete for good",
     deleted: "The customer's data is deleted",
-    deletedSummary: "Deleted: {messages} messages, {recordings} recordings; anonymised: {conversations} conversations, {bookings} bookings, {leads} leads, {handoffs} handoffs.",
+    deletedSummary: "{name}: messages, call transcripts and recordings are deleted; conversations, bookings, leads and handoffs stay without personal data.",
     showMore: "Show more customers",
   },
   audit: {

@@ -15,6 +15,13 @@ Every HTTP endpoint runs `operator.operate` -> `pipeline.start` ->
   `app/orchestrators/use_case_orchestrator.py`).
 - Write a dedicated orchestrator when a flow coordinates several use cases, and a
   dedicated pipeline when a phase orders several orchestrators.
+- An endpoint's operator comes from `pipeline_operator(...)` (runs in the
+  storage scope of the business its input names; business routes must use
+  it, `tests/architecture_policy/test_business_routes_are_scoped.py`) or,
+  for platform-level work only (webhooks before their business is known,
+  admin lists across businesses, jobs over every business),
+  `platform_pipeline_operator(...)`, which runs platform-wide. The storage
+  scope is fail-closed: code in no scope cannot touch tenant collections.
 - Cabinet endpoints check access with `AuthorizeBusinessAccessUseCase`
   (`app/use_cases/authorize_business_access_use_case.py`) before acting: owners
   and staff pass, `required_role=OWNER` limits billing/settings/publishing to
@@ -96,8 +103,16 @@ a stored shape changes only by expand and contract
   parameters arrive as raw `str` and are converted to primitives inside the
   route function (the transport boundary).
 - Errors are raised as `app/schemas/exceptions/application_errors.py` classes;
-  `install_error_handlers` maps them to status codes. Never raise
-  `HTTPException` for business errors.
+  `install_error_handlers` maps them to status codes, and every error body is
+  an `ErrorBody` (the framework's refusals too). Never raise `HTTPException`
+  for business errors. Each router declares
+  `APIRouter(..., responses=standard_error_responses())`, so the description
+  documents its errors; DELETE routes answer `204 No Content`
+  (`tests/platform/test_api_contract.py`).
+- A new business route joins the authorization matrix by itself
+  (`tests/platform/test_authorization_matrix.py`); an owner-only one goes to
+  `OWNER_ONLY_OPERATIONS`, and a body with required fields to
+  `REQUEST_BODIES` (`tests/platform/authorization_*.py`).
 - Paged lists take `?limit=N&cursor=…` (`parse_page_request` in
   `app/gateways/http/paging_query.py` → `PageRequest`) and answer
   `{"items": [...], "next_cursor": … | null}` with a concrete page DTO per list

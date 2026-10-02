@@ -9,6 +9,7 @@ import {
   formatLinkCode,
   isChannelInPlan,
   isChannelOn,
+  markChannelDisabled,
   notificationLanguages,
   sortForwardingCodes,
   startCommand,
@@ -65,6 +66,14 @@ describe("channel state", () => {
     expect(updated).toHaveLength(2);
     expect(findChannel(updated, "phone")?.status).toBe("disabled");
     expect(upsertChannel(undefined, channel({ channel: "web_chat" }))).toHaveLength(1);
+  });
+
+  it("marks a disconnected channel off without its credential", () => {
+    const list = [channel({ channel: "telegram", account_id: "cafe_bot" }), channel({ id: "channel_2", channel: "phone" })];
+    const updated = markChannelDisabled(list, "telegram");
+    expect(findChannel(updated, "telegram")).toMatchObject({ status: "disabled", has_credential: false, account_id: null });
+    expect(findChannel(updated, "phone")?.status).toBe("connected");
+    expect(markChannelDisabled(undefined, "telegram")).toEqual([]);
   });
 
   it("shows bot usernames with @", () => {

@@ -1,45 +1,55 @@
 /**
  * Errors of the backend API and of the cabinet's own route handlers.
  *
- * The backend answers errors as {"error": "<code>", "message": "<English text>"}
- * (FastAPI's own validation errors as {"detail": [...]}). Every failure ends
- * up as an ApiError with a stable `code`; the UI shows the localized text of
- * the code (errors.codes.*), not the English backend message. Some refusals
- * also carry `reasons` ({code, message, details}: the failed go-live checks
- * of a publish, why a menu link could not be read); screens map those codes
- * to their own texts.
+ * Every failure of the backend is an `ErrorBody` ({"error", "message",
+ * "reasons"?}, app/gateways/http/error_responses.py), also the framework's
+ * own refusals (a missing parameter, an unknown route); the types below are
+ * read from the generated API description, so a new backend code fails the
+ * type check until it has a text. Every failure ends up as an ApiError with
+ * a stable `code`; the UI shows the localized text of the code
+ * (errors.codes.*), not the English backend message. Refusals may carry
+ * `reasons` ({code, message, details}: the failed go-live checks of a
+ * publish, the fields of an invalid request); screens map those codes to
+ * their own texts.
  */
 
 import type { MessageKey, MessageValues } from "@/i18n/translate";
 
+import type { components } from "./schema";
+
+/** The body of every failed backend request. */
+export type BackendErrorBody = components["schemas"]["ErrorBody"];
+/** The broad codes the backend answers with (`ErrorBody.error`). */
+export type BackendErrorCode = components["schemas"]["ApiErrorCode"];
+
+/** Every backend code, checked against the API description in both directions. */
+const BACKEND_ERROR_CODE_SET: Readonly<Record<BackendErrorCode, true>> = {
+  not_found: true,
+  validation_failed: true,
+  conflict: true,
+  authentication_required: true,
+  access_denied: true,
+  rate_limited: true,
+  external_service_error: true,
+  internal_error: true,
+};
+
+/** Codes of the cabinet's own route handlers and of the browser. */
+const CABINET_ERROR_CODES = ["backend_unavailable", "network_error", "forbidden_origin", "unknown_error"] as const;
+
 export const API_ERROR_CODES = [
-  // Backend (app/gateways/http/error_responses.py)
-  "not_found",
-  "validation_failed",
-  "conflict",
-  "authentication_required",
-  "access_denied",
-  "rate_limited",
-  "external_service_error",
-  "internal_error",
-  // Cabinet route handlers and the browser
-  "backend_unavailable",
-  "network_error",
-  "forbidden_origin",
-  "unknown_error",
+  ...(Object.keys(BACKEND_ERROR_CODE_SET) as BackendErrorCode[]),
+  ...CABINET_ERROR_CODES,
 ] as const;
 
-export type ApiErrorCode = (typeof API_ERROR_CODES)[number];
+export type ApiErrorCode = BackendErrorCode | (typeof CABINET_ERROR_CODES)[number];
 
-/** One machine-readable reason of a refusal (the backend's `reasons[]`). */
-export interface ApiErrorReason {
-  /** Stable code, e.g. "dpa" or "menu_link_unreachable". */
-  code: string;
-  /** The backend's English explanation (a fallback for unknown codes). */
-  message: string;
-  /** Values that qualify it: gap kinds, statuses, "http_status:404". */
-  details: string[];
-}
+/**
+ * One machine-readable reason of a refusal (the backend's `ErrorReason`,
+ * with `details` always present): e.g. "dpa", or "missing" with the field's
+ * location ("query.country_code") for an invalid request.
+ */
+export type ApiErrorReason = Required<components["schemas"]["ErrorReason"]>;
 
 export class ApiError extends Error {
   readonly status: number;
@@ -102,27 +112,6 @@ export function codeForStatus(status: number): ApiErrorCode {
   }
 }
 
-function describeValidationDetail(detail: unknown): string | null {
-  if (typeof detail === "string") {
-    return detail;
-  }
-  if (!Array.isArray(detail)) {
-    return null;
-  }
-
-  const parts = detail
-    .map((item: unknown) => {
-      if (!item || typeof item !== "object") {
-        return null;
-      }
-      const { loc, msg } = item as { loc?: unknown; msg?: unknown };
-      const location = Array.isArray(loc) ? loc.join(".") : "";
-      return typeof msg === "string" ? (location ? `${location}: ${msg}` : msg) : null;
-    })
-    .filter((part): part is string => part !== null);
-  return parts.length > 0 ? parts.join("; ") : null;
-}
-
 /** The well-formed entries of a body's `reasons` list (others are skipped). */
 export function parseErrorReasons(value: unknown): ApiErrorReason[] {
   if (!Array.isArray(value)) {
@@ -146,36 +135,25 @@ export function parseErrorReasons(value: unknown): ApiErrorReason[] {
   });
 }
 
+/** Whether a parsed body looks like an ErrorBody (its code is a string). */
+function isErrorBodyShaped(body: unknown): body is { error: string; message?: unknown; reasons?: unknown } {
+  return body !== null && typeof body === "object" && typeof (body as { error?: unknown }).error === "string";
+}
+
 /** An ApiError from a failed response's status and parsed JSON body. */
 export function parseApiError(
   status: number,
   body: unknown,
   requestId: string | null = null,
 ): ApiError {
-  if (body && typeof body === "object") {
-    const { error, message, detail, reasons } = body as {
-      error?: unknown;
-      message?: unknown;
-      detail?: unknown;
-      reasons?: unknown;
-    };
-    if (typeof error === "string") {
-      return new ApiError({
-        status,
-        code: isApiErrorCode(error) ? error : codeForStatus(status),
-        detail: typeof message === "string" ? message : null,
-        requestId,
-        reasons: parseErrorReasons(reasons),
-      });
-    }
-    if (detail !== undefined) {
-      return new ApiError({
-        status,
-        code: codeForStatus(status),
-        detail: describeValidationDetail(detail),
-        requestId,
-      });
-    }
+  if (isErrorBodyShaped(body)) {
+    return new ApiError({
+      status,
+      code: isApiErrorCode(body.error) ? body.error : codeForStatus(status),
+      detail: typeof body.message === "string" ? body.message : null,
+      requestId,
+      reasons: parseErrorReasons(body.reasons),
+    });
   }
 
   return new ApiError({

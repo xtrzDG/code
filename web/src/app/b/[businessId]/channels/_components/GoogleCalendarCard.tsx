@@ -55,11 +55,13 @@ export function GoogleCalendarCard({ canManage }: { canManage: boolean }) {
   };
 
   const onDisconnect = async () => {
+    // The API answers 204; whether a calendar was connected is what the card showed.
+    const wasConnected = status.data?.is_connected === true;
     const result = await disconnect.run();
     if (result.ok) {
       setConfirming(false);
       status.reload();
-      toast.success(result.data.was_connected ? t("channels.calendar.disconnectedToast") : t("channels.calendar.notConnectedToast"));
+      toast.success(wasConnected ? t("channels.calendar.disconnectedToast") : t("channels.calendar.notConnectedToast"));
     } else {
       setDisconnectError(result.error);
     }

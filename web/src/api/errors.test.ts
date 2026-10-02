@@ -5,13 +5,17 @@ import { en } from "@/i18n/messages/en";
 import { ru } from "@/i18n/messages/ru";
 
 import {
+  API_ERROR_CODES,
   ApiError,
   codeForStatus,
   describeError,
   errorMessageKey,
+  isApiErrorCode,
   parseApiError,
   readApiError,
   toApiError,
+  type BackendErrorBody,
+  type BackendErrorCode,
 } from "./errors";
 import { unwrap } from "./result";
 
@@ -47,21 +51,49 @@ describe("parseApiError", () => {
     expect(parseApiError(409, { error: "slot_taken", message: "Taken" }).code).toBe("conflict");
   });
 
-  it("summarizes FastAPI validation details", () => {
-    const error = parseApiError(422, {
-      detail: [
-        { loc: ["body", "raw_phone_number"], msg: "Field required", type: "missing" },
-        { loc: ["query", "language"], msg: "Bad tag", type: "value_error" },
-      ],
-    });
+  it("reads the fields of an invalid request from its reasons", () => {
+    const body: BackendErrorBody = {
+      error: "validation_failed",
+      message: "Invalid request: query.country_code: Field required",
+      reasons: [{ code: "missing", message: "Field required", details: ["query.country_code"] }],
+    };
+    const error = parseApiError(422, body);
     expect(error.code).toBe("validation_failed");
-    expect(error.detail).toBe("body.raw_phone_number: Field required; query.language: Bad tag");
+    expect(error.detail).toBe("Invalid request: query.country_code: Field required");
+    expect(error.reasons).toEqual([{ code: "missing", message: "Field required", details: ["query.country_code"] }]);
+  });
+
+  it("falls back to the status for bodies that are not an ErrorBody", () => {
+    expect(parseApiError(422, { detail: [{ loc: ["query"], msg: "x" }] })).toMatchObject({
+      code: "validation_failed",
+      detail: null,
+      reasons: [],
+    });
+    expect(parseApiError(404, { error: 7 }).code).toBe("not_found");
   });
 
   it("handles empty and non-JSON bodies", () => {
     expect(parseApiError(502, undefined).code).toBe("external_service_error");
     expect(parseApiError(500, "Internal Server Error").detail).toBe("Internal Server Error");
     expect(parseApiError(418, null).code).toBe("unknown_error");
+  });
+});
+
+describe("error codes", () => {
+  it("knows every backend code and the cabinet's own", () => {
+    const backend: BackendErrorCode[] = [
+      "not_found",
+      "validation_failed",
+      "conflict",
+      "authentication_required",
+      "access_denied",
+      "rate_limited",
+      "external_service_error",
+      "internal_error",
+    ];
+    expect(API_ERROR_CODES).toEqual(expect.arrayContaining([...backend, "network_error", "backend_unavailable"]));
+    expect(backend.every((code) => isApiErrorCode(code))).toBe(true);
+    expect(isApiErrorCode("slot_taken")).toBe(false);
   });
 });
 

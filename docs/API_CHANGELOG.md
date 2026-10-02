@@ -11,6 +11,40 @@ Kinds of change: **Added**, **Changed** (additive), **Deprecated** (with
 sunset date), **Removed** and **Breaking** (only with the `api-breaking`
 label and a migration path).
 
+## 2026-10-02 — one error contract, DELETE answers 204
+
+Spec: `8e2480c367937ab3`
+
+Every failure is an `ErrorBody` now, also the framework's own refusals,
+and the description says so, so the cabinet's generated client types its
+errors. The cabinet changes in the same pull request; the frozen widget and
+platform routes keep their success answers (platforms read only the
+status of an error). The pull request carries the `api-breaking` label for
+the DELETE and validation-body changes below.
+
+- **Changed** every operation documents `401`, `403`, `404`, `409`, `422`,
+  `429` and `502` as `ErrorBody` (`{"error", "message", "reasons"?}`); the
+  schemas `HTTPValidationError` and `ValidationError` are gone (the API
+  never sent them for request bodies).
+- **Breaking** a missing or malformed query parameter or header answers
+  `422` `ErrorBody` with `error: "validation_failed"` and one reason per
+  field (`code` `missing` or `invalid`, `details: ["query.country_code"]`)
+  instead of FastAPI's `{"detail": [...]}`. Migration path: read
+  `reasons` (the cabinet's `web/src/api/errors.ts` does).
+- **Changed** an unknown route (`404`) or method (`405`) answers
+  `ErrorBody` (`not_found`, `validation_failed`) instead of
+  `{"detail": "..."}`; a range outside a call recording answers `416` with
+  an `ErrorBody`.
+- **Breaking** every DELETE answers `204 No Content`:
+  `DELETE /v1/businesses/{business_id}/members/{user_id}` (was the
+  business), `.../contacts/{contact_id}` (was the erasure counts),
+  `.../channels/{channel}` (was the channel),
+  `.../knowledge/import/{batch_id}` (was the discarded item ids) and
+  `.../integrations/google-calendar` (was `was_connected`). Migration
+  path: read the resource again (`GET` the business, the channels, the
+  calendar status); the schemas `ContactErasureResult`,
+  `DiscardedImportBatch` and `CalendarDisconnectResult` are gone.
+
 ## 2026-10-02 — inbox and outbox for customer messages
 
 Spec: `8bf6a7c2e210906f`

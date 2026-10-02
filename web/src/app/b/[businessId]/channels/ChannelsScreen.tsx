@@ -31,6 +31,7 @@ import {
   findChannel,
   isChannelInPlan,
   isChannelOn,
+  markChannelDisabled,
   upsertChannel,
   type ConnectableChannel,
 } from "./_lib/channels";
@@ -135,7 +136,8 @@ export function ChannelsScreen({ calendarReturn: initialCalendarReturn }: { cale
     const kind = disconnecting;
     const result = await disconnect.run(kind);
     if (result.ok) {
-      channels.setData((current) => upsertChannel(current, result.data));
+      channels.setData((current) => markChannelDisabled(current, kind));
+      channels.reload();
       toast.success(t("channels.disconnectedToast", { channel: t(CHANNEL_NAMES[kind]) }));
       setDisconnecting(null);
     } else {

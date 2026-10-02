@@ -83,7 +83,9 @@ export function useTeam() {
       router.replace(HOME_PATH);
       return;
     }
-    setMembers(result.data.members);
+    // The API answers 204: drop the member here, the refresh brings the rest.
+    const removedId = removing.user_id;
+    setMembers((current) => current.filter((member) => member.user_id !== removedId));
     router.refresh();
   };
 
