@@ -67,10 +67,9 @@ export function ConversationsShell({ children }: { children: ReactNode }) {
 
   return (
     <>
-      {isOpen ? <h1 className="sr-only lg:hidden">{t("nav.conversations")}</h1> : null}
       <div className={cn(isOpen && "hidden lg:block")}>
         <PageHeader
-          title={t("nav.conversations")}
+          title={t("navigation.pages.messagesAll")}
           description={t("pages.conversations.description")}
           actions={
             <RefreshButton

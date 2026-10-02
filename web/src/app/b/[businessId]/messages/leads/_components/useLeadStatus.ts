@@ -50,7 +50,7 @@ export function useLeadStatus(listKey: QueryKey, tab: LeadTab) {
       // The other tabs and filters reload when shown; the shown list already
       // has the change (reloading it would only add an audit entry).
       stale: [queryKeys.leads.all(business.id)],
-      invalidate: [queryKeys.dashboard.all(business.id)],
+      invalidate: [queryKeys.dashboard.all(business.id), queryKeys.inbox.all(business.id)],
     },
   );
 

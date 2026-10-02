@@ -52,7 +52,7 @@ export function BillingScreen({ isCheckoutReturn }: { isCheckoutReturn: boolean 
   return (
     <>
       <PageHeader
-        title={t("nav.billing")}
+        title={t("navigation.pages.settingsBilling")}
         description={t("pages.billing.description")}
         actions={
           data ? (

@@ -70,7 +70,7 @@ export function HandoffsScreen({ initialFilters }: { initialFilters: HandoffFilt
   return (
     <>
       <PageHeader
-        title={t("nav.handoffs")}
+        title={t("navigation.pages.messagesHandoffs")}
         description={t("pages.handoffs.description")}
         actions={<RefreshButton onClick={handoffs.reload} isRefreshing={handoffs.isFetching && handoffs.items !== undefined} />}
       />

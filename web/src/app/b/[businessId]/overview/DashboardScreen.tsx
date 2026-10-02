@@ -7,6 +7,7 @@ import { queryKeys } from "@/api/queryKeys";
 import { sectionQueries } from "@/api/sectionQueries";
 import { useQuery } from "@/api/useQuery";
 import { useBusiness, useBusinessFormat } from "@/components/business/BusinessContext";
+import { useInboxCounts } from "@/components/shell/InboxCounts";
 import { BusinessStatusBadge } from "@/components/business/BusinessStatusBadge";
 import { IconBook, IconHandoff } from "@/components/icons";
 import { AnimatedNumber } from "@/components/motion";
@@ -52,12 +53,8 @@ export function DashboardScreen({ initialPeriod }: { initialPeriod: DashboardPer
   const statsQuery = sectionQueries.dashboardStats(businessId, range.from, range.to);
   // Another period keeps the shown tiles (dimmed) until its numbers arrive.
   const stats = useQuery(statsQuery.key, statsQuery.fetch, { keepPreviousData: true });
-  // Only the count of open handoffs is needed: one item, the totals come along.
-  const openHandoffs = useQuery(queryKeys.handoffs.openCount(businessId), () =>
-    api.GET("/v1/businesses/{business_id}/handoffs", {
-      params: { path: { business_id: businessId }, query: { is_open: "true", limit: "1" } },
-    }),
-  );
+  // The badges' counts: no list of handoffs is loaded (that would be an audited view).
+  const inbox = useInboxCounts();
   const gaps = useQuery(
     queryKeys.profile.gaps(businessId, locale),
     () =>
@@ -74,7 +71,7 @@ export function DashboardScreen({ initialPeriod }: { initialPeriod: DashboardPer
 
   const step = nextStep(business);
   const missingCount = (gaps.data?.gaps ?? []).filter((gap) => gap.is_blocking).length ?? 0;
-  const openHandoffCount = openHandoffs.data?.open_count;
+  const openHandoffCount = inbox?.openHandoffs;
   const data = stats.data;
   const hasActivity =
     data !== undefined &&
@@ -83,8 +80,8 @@ export function DashboardScreen({ initialPeriod }: { initialPeriod: DashboardPer
   return (
     <>
       <PageHeader
-        title={t("nav.dashboard")}
-        description={t("pages.dashboard.description")}
+        title={t("navigation.sections.overview")}
+        description={t("navigation.descriptions.overview")}
         actions={
           <SegmentedControl
             label={t("dashboard.periodLabel")}
@@ -99,7 +96,7 @@ export function DashboardScreen({ initialPeriod }: { initialPeriod: DashboardPer
         <NextStepCard
           step={step}
           status={<BusinessStatusBadge status={business.status} />}
-          href={canTakeStep(step, isOwner) ? businessPath(businessId, step.section) : null}
+          href={canTakeStep(step, isOwner) ? businessPath(businessId, step.page) : null}
           note={
             business.status === "onboarding" && missingCount > 0
               ? tp("dashboard.status.onboarding.missing", missingCount)

@@ -40,10 +40,10 @@ export function useResolveHandoff(
           withResolvedHandoff(data, resolvedLocally(handoff, Date.now() * 1000), tab),
         ),
       rollback: (_error, handoff) => setResolving(handoff),
-      // The shown list has the change; other tabs, the dashboard count and the
-      // conversation's card load again when shown.
+      // The shown list has the change; other tabs and the conversation's card
+      // load again when shown; the dashboard and the badges on Messages now.
       stale: [queryKeys.handoffs.all(business.id), queryKeys.conversations.all(business.id)],
-      invalidate: [queryKeys.dashboard.all(business.id)],
+      invalidate: [queryKeys.dashboard.all(business.id), queryKeys.inbox.all(business.id)],
     },
   );
 

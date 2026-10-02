@@ -5,7 +5,7 @@ import { readCalendarReturn } from "./_lib/calendarReturn";
 
 export const generateMetadata = pageMetadata("assistant/channels");
 
-export default async function ChannelsPage({ searchParams }: PageProps<"/b/[businessId]/channels">) {
+export default async function ChannelsPage({ searchParams }: PageProps<"/b/[businessId]/assistant/channels">) {
   const { calendar, reason } = await searchParams;
   const query = new URLSearchParams();
   if (typeof calendar === "string") {

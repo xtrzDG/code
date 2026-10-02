@@ -16,7 +16,8 @@ import type { StepProps } from "../types";
 /** Step 1: the niche, the customer languages and the language of the answers. */
 export function NicheStep({ wizard, step, canEdit, isSaving, isLastStep, onSave, onChange }: StepProps) {
   const { t, locale } = useI18n();
-  const { business } = useBusiness();
+  // In the setup flow the rest of the cabinet is not open yet: no links out of it.
+  const { business, isSetUp } = useBusiness();
   const questions = step.questions ?? [];
   const answers = useNicheAnswers(questions, onChange);
   const [answersLanguage, setAnswersLanguage] = useState(wizard.profile.answers_language);
@@ -54,9 +55,11 @@ export function NicheStep({ wizard, step, canEdit, isSaving, isLastStep, onSave,
               {tag === wizard.default_language ? " ★" : ""}
             </span>
           ))}
-          <Link href={businessPath(business.id, "settings")} className="text-sm font-medium text-accent hover:underline">
-            {t("onboarding.niche.changeInSettings")}
-          </Link>
+          {isSetUp ? (
+            <Link href={businessPath(business.id, "settings")} className="text-sm font-medium text-accent hover:underline">
+              {t("onboarding.niche.changeInSettings")}
+            </Link>
+          ) : null}
         </div>
       </StepSection>
 

@@ -26,6 +26,7 @@ export function UserMenu({ me, collapsed = false }: { me: CurrentUserView; colla
   const buttonRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const name = userDisplayName(me.user);
+  const contact = userContact(me.user);
 
   // Opens upwards from the button, inside the window (no anchor positioning in every browser yet).
   const place = () => {
@@ -62,7 +63,7 @@ export function UserMenu({ me, collapsed = false }: { me: CurrentUserView; colla
           <>
             <span className="min-w-0 flex-1">
               <span className="block truncate text-sm font-medium text-ink">{name}</span>
-              <span className="block truncate text-xs text-ink-subtle">{userContact(me.user) || t("account.menu")}</span>
+              <span className="block truncate text-xs text-ink-subtle">{contact && contact !== name ? contact : t("account.menu")}</span>
             </span>
             <IconChevronDown className="size-4 shrink-0 rotate-180 text-ink-subtle transition-transform group-hover:-translate-y-0.5" aria-hidden />
           </>

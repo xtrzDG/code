@@ -17,6 +17,7 @@ import { sidebarCookie } from "@/lib/shellPreferences";
 import { MoreSheet } from "./MoreSheet";
 import { PhoneTabBar } from "./PhoneTabBar";
 import { PhoneTopBar } from "./PhoneTopBar";
+import { ServiceWorker } from "./ServiceWorker";
 import { Sidebar } from "./Sidebar";
 import type { ShellNavItem } from "./types";
 import { UserAvatar } from "./UserAvatar";
@@ -35,8 +36,8 @@ export function ShellFrame({
   items: readonly ShellNavItem[];
   /** The business switcher, in the sidebar and in "More" (closes "More" once used). */
   switcher?: (onNavigate?: () => void, compact?: boolean) => ReactNode;
-  /** Instead of the sections in the sidebar (the setup entry). */
-  sidebarReplacement?: ReactNode;
+  /** Instead of the sections in the sidebar (the setup entry), for the expanded or collapsed sidebar. */
+  sidebarReplacement?: (collapsed: boolean) => ReactNode;
   /** Where you are, for the phone's top bar. */
   title?: string;
   /** The business name (or "Platform admin"), above the title on phones. */
@@ -61,6 +62,7 @@ export function ShellFrame({
 
   return (
     <div className="min-h-dvh" style={{ "--sidebar-width": collapsed ? "4.5rem" : "16rem" } as CSSProperties}>
+      <ServiceWorker />
       <a
         href="#main"
         className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:rounded-lg focus:border focus:border-line focus:bg-surface focus:px-4 focus:py-2"

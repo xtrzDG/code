@@ -32,7 +32,7 @@ export function Sidebar({
   /** Above the navigation (the business switcher). */
   top?: ReactNode;
   /** Instead of the navigation (the setup entry before the assistant exists). */
-  replacement?: ReactNode;
+  replacement?: (collapsed: boolean) => ReactNode;
   me: CurrentUserView;
   collapsed: boolean;
   onToggleCollapsed: () => void;
@@ -58,7 +58,7 @@ export function Sidebar({
       </div>
       {top ? <div className={cn(collapsed ? "px-2" : "px-3")}>{top}</div> : null}
       <div className={cn("min-h-0 flex-1 overflow-x-hidden overflow-y-auto py-4", collapsed ? "px-2" : "px-3")}>
-        {replacement ?? <SidebarNav items={items} collapsed={collapsed} />}
+        {replacement ? replacement(collapsed) : <SidebarNav items={items} collapsed={collapsed} />}
       </div>
       <div className={cn("border-t border-line py-3", collapsed ? "px-2" : "px-3")}>
         <UserMenu me={me} collapsed={collapsed} />

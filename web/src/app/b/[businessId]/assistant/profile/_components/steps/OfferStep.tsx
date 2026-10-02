@@ -56,7 +56,8 @@ function OfferStepForm({
   onChange,
 }: StepProps & { knowledge: KnowledgeItemDetails[] }) {
   const { t } = useI18n();
-  const { business } = useBusiness();
+  // In the setup flow the rest of the cabinet is not open yet: no links out of it.
+  const { business, isSetUp } = useBusiness();
   const currency = wizard.currency_code;
   const kinds = offerKinds(wizard.knowledge_kinds);
   const questions = step.questions ?? [];
@@ -208,9 +209,11 @@ function OfferStepForm({
           <Button variant="secondary" size="sm" leadingIcon={<IconPlus className="size-4" aria-hidden />} onClick={addRow}>
             {t("onboarding.offer.addItem")}
           </Button>
-          <Link href={businessPath(business.id, "assistant/knowledge")} className="text-sm font-medium text-accent hover:underline">
-            {t("nav.knowledge")}
-          </Link>
+          {isSetUp ? (
+            <Link href={businessPath(business.id, "assistant/knowledge")} className="text-sm font-medium text-accent hover:underline">
+              {t("navigation.pages.assistantKnowledge")}
+            </Link>
+          ) : null}
         </div>
       </StepSection>
 

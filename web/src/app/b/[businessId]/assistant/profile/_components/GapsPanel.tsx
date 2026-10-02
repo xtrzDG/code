@@ -1,12 +1,43 @@
 "use client";
 
+import { useState } from "react";
+
 import type { ApiError } from "@/api/errors";
 import type { ProfileGapsView, ProfileWizardStep, WizardStepView } from "@/api/types";
 import { useBusiness } from "@/components/business/BusinessContext";
-import { IconAlert, IconCheck } from "@/components/icons";
+import { IconAlert, IconCheck, IconSparkles } from "@/components/icons";
 import { Alert, Badge, Button, ButtonLink, Drawer, Spinner } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { businessPath } from "@/lib/navigation";
+
+import { BuildVersionDialog } from "../../_components/BuildVersionDialog";
+
+/**
+ * What to do once the profile is ready: open the assistant, or, in the
+ * setup flow (no assistant yet), create it right here: the first version
+ * is built and the cabinet opens.
+ */
+function ReadyAction() {
+  const { t } = useI18n();
+  const { business, isSetUp } = useBusiness();
+  const [isBuilding, setBuilding] = useState(false);
+
+  if (isSetUp) {
+    return (
+      <ButtonLink href={businessPath(business.id, "assistant")} size="sm">
+        {t("onboarding.gaps.toAssistant")}
+      </ButtonLink>
+    );
+  }
+  return (
+    <>
+      <Button size="sm" leadingIcon={<IconSparkles className="size-4" aria-hidden />} onClick={() => setBuilding(true)}>
+        {t("setup.create")}
+      </Button>
+      {isBuilding ? <BuildVersionDialog onClose={() => setBuilding(false)} onBuilt={() => setBuilding(false)} /> : null}
+    </>
+  );
+}
 
 /**
  * The "what to add" status under the step list: ready or how many required
@@ -27,7 +58,6 @@ export function GapsSummary({
   onRetry: () => void;
 }) {
   const { t, tp } = useI18n();
-  const { business } = useBusiness();
 
   const items = gaps?.gaps ?? [];
   const blockingCount = items.filter((gap) => gap.is_blocking).length;
@@ -88,11 +118,7 @@ export function GapsSummary({
               {t("common.retry")}
             </Button>
           ) : null}
-          {gaps?.is_ready_for_assembly ? (
-            <ButtonLink href={businessPath(business.id, "assistant")} size="sm">
-              {t("onboarding.gaps.toAssistant")}
-            </ButtonLink>
-          ) : null}
+          {gaps?.is_ready_for_assembly ? <ReadyAction /> : null}
           {items.length > 0 ? (
             <Button size="sm" variant="secondary" onClick={onShowList} aria-haspopup="dialog">
               {t("onboarding.gaps.showList")}
@@ -122,7 +148,6 @@ export function GapsDrawer({
   onOpenStep: (step: ProfileWizardStep) => void;
 }) {
   const { t, tp } = useI18n();
-  const { business } = useBusiness();
   const stepTitle = (step: ProfileWizardStep) => steps.find((item) => item.step === step)?.title ?? step;
   const items = [...(gaps?.gaps ?? [])].sort((left, right) => Number(right.is_blocking) - Number(left.is_blocking));
 
@@ -133,11 +158,7 @@ export function GapsDrawer({
           <Alert
             tone="success"
             title={t("onboarding.gaps.readyTitle")}
-            action={
-              <ButtonLink href={businessPath(business.id, "assistant")} size="sm">
-                {t("onboarding.gaps.toAssistant")}
-              </ButtonLink>
-            }
+            action={<ReadyAction />}
           >
             {t("onboarding.gaps.readyDescription")}
           </Alert>

@@ -76,7 +76,7 @@ export const SECTION_PAGES: Record<BusinessSection, readonly PageEntry[]> = {
 
 /** What a page is for, under its title (pages without one show none). */
 export const PAGE_DESCRIPTIONS: Partial<Record<BusinessPage, MessageKey>> = {
-  overview: "pages.dashboard.description",
+  overview: "navigation.descriptions.overview",
   messages: "pages.conversations.description",
   "messages/handoffs": "pages.handoffs.description",
   "messages/leads": "pages.leads.description",
@@ -95,7 +95,8 @@ export function sectionOf(page: BusinessPage): BusinessSection {
 }
 
 function entryOf(page: BusinessPage): PageEntry {
-  const entry = SECTION_PAGES[sectionOf(page)].find((candidate) => candidate.page === page);
+  const pages: readonly PageEntry[] | undefined = SECTION_PAGES[sectionOf(page)];
+  const entry = pages?.find((candidate) => candidate.page === page);
   if (!entry) {
     throw new Error(`The page ${page} is missing from SECTION_PAGES.`);
   }

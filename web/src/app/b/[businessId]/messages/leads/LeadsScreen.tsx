@@ -61,7 +61,7 @@ export function LeadsScreen({ initialFilters }: { initialFilters: LeadFilters })
   return (
     <>
       <PageHeader
-        title={t("nav.leads")}
+        title={t("navigation.pages.messagesLeads")}
         description={t("pages.leads.description")}
         actions={<RefreshButton onClick={leads.reload} isRefreshing={leads.isFetching && leads.items !== undefined} />}
       />

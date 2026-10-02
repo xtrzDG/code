@@ -34,7 +34,8 @@ interface LinkRow {
 /** Step 6: links the assistant may send and the call-recording notice. */
 export function ChannelsStep({ wizard, step, canEdit, isSaving, isLastStep, onSave, onChange }: StepProps) {
   const { t } = useI18n();
-  const { business } = useBusiness();
+  // In the setup flow the rest of the cabinet is not open yet: no links out of it.
+  const { business, isSetUp } = useBusiness();
   const { profile } = wizard;
   const questions = step.questions ?? [];
   const answers = useNicheAnswers(questions, onChange);
@@ -167,9 +168,11 @@ export function ChannelsStep({ wizard, step, canEdit, isSaving, isLastStep, onSa
       <Alert
         tone="info"
         action={
-          <ButtonLink href={businessPath(business.id, "assistant/channels")} variant="secondary" size="sm">
-            {t("onboarding.channels.openChannels")}
-          </ButtonLink>
+          isSetUp ? (
+            <ButtonLink href={businessPath(business.id, "assistant/channels")} variant="secondary" size="sm">
+              {t("onboarding.channels.openChannels")}
+            </ButtonLink>
+          ) : undefined
         }
       >
         {t("onboarding.channels.channelsHint")}

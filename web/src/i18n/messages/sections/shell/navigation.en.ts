@@ -39,6 +39,8 @@ export const navigationEn = {
     settingsAudit: "Audit log",
   },
   sectionPages: "Pages of {section}",
+  applyChanges: "Apply changes",
+  applyChangesHint: "Build a new version from the profile and knowledge, then test and publish it.",
   advanced: "Advanced",
   collapse: "Collapse the menu",
   expand: "Expand the menu",

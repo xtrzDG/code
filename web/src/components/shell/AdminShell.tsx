@@ -1,5 +1,6 @@
 "use client";
 
+import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 
 import type { CurrentUserView } from "@/api/types";
@@ -7,19 +8,22 @@ import { useI18n } from "@/i18n/client";
 import { ADMIN_PATH, HOME_PATH } from "@/lib/navigation";
 
 import { IconBuilding, IconShield } from "../icons";
-import { userDisplayName } from "./BusinessShell";
 import { ShellFrame } from "./ShellFrame";
 
-/** Frame of the platform admin pages (/admin/*). */
-export function AdminShell({ me, children }: { me: CurrentUserView; children: ReactNode }) {
+/** Frame of the platform admin pages (/admin/*): the clients, and the way back to the businesses. */
+export function AdminShell({ me, initialCollapsed = false, children }: { me: CurrentUserView; initialCollapsed?: boolean; children: ReactNode }) {
   const { t } = useI18n();
+  const pathname = usePathname();
+  const isAdminPage = pathname === ADMIN_PATH || pathname.startsWith(`${ADMIN_PATH}/`);
   return (
     <ShellFrame
-      userName={userDisplayName(me.user)}
+      me={me}
+      initialCollapsed={initialCollapsed}
       context={t("shell.platformAdmin")}
+      title={t("nav.admin")}
       items={[
-        { href: ADMIN_PATH, label: t("nav.admin"), icon: IconShield },
-        { href: HOME_PATH, label: t("nav.allBusinesses"), icon: IconBuilding, secondary: true },
+        { key: "admin", href: ADMIN_PATH, label: t("nav.admin"), icon: IconShield, isActive: isAdminPage, inTabBar: true },
+        { key: "businesses", href: HOME_PATH, label: t("nav.allBusinesses"), icon: IconBuilding, isActive: false, inTabBar: true },
       ]}
     >
       {children}

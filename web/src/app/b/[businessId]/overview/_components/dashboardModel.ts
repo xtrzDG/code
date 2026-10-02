@@ -4,7 +4,8 @@ import type { BusinessStatus, BusinessView } from "@/api/types";
 import { addDays, type LocalDateText } from "@/components/insights/dates";
 import { sharePercent } from "@/components/insights/numbers";
 import type { MessageKey } from "@/i18n/translate";
-import type { BusinessSection } from "@/lib/navigation";
+import type { BusinessPage } from "@/lib/navigation";
+import { canOpenPage } from "@/lib/sections";
 
 export const DASHBOARD_PERIODS = ["today", "7d", "30d", "90d"] as const;
 export type DashboardPeriod = (typeof DASHBOARD_PERIODS)[number];
@@ -26,7 +27,8 @@ export interface NextStep {
   title: MessageKey;
   description: MessageKey;
   action: MessageKey;
-  section: BusinessSection;
+  /** Where the button leads. */
+  page: BusinessPage;
 }
 
 const NEXT_STEPS: Record<BusinessStatus, NextStep> = {
@@ -35,28 +37,28 @@ const NEXT_STEPS: Record<BusinessStatus, NextStep> = {
     title: "dashboard.status.onboarding.title",
     description: "dashboard.status.onboarding.description",
     action: "dashboard.status.onboarding.action",
-    section: "onboarding",
+    page: "assistant/profile",
   },
   testing: {
     tone: "info",
     title: "dashboard.status.testing.title",
     description: "dashboard.status.testing.description",
     action: "dashboard.status.testing.action",
-    section: "assistant",
+    page: "assistant",
   },
   live: {
     tone: "success",
     title: "dashboard.status.live.title",
     description: "dashboard.status.live.description",
     action: "dashboard.status.live.action",
-    section: "channels",
+    page: "assistant/channels",
   },
   paused: {
     tone: "warning",
     title: "dashboard.status.paused.title",
     description: "dashboard.status.paused.description",
     action: "dashboard.status.paused.action",
-    section: "settings",
+    page: "settings",
   },
 };
 
@@ -65,7 +67,7 @@ const LEADS_ONLY_STEP: NextStep = {
   title: "dashboard.status.leadsOnly.title",
   description: "dashboard.status.leadsOnly.description",
   action: "dashboard.status.leadsOnly.action",
-  section: "billing",
+  page: "settings/billing",
 };
 
 /** What the owner should do next, from the business status (an unpaid plan wins). */
@@ -76,12 +78,9 @@ export function nextStep(business: Pick<BusinessView, "status" | "service_mode">
   return NEXT_STEPS[business.status];
 }
 
-/** Sections whose API answers owners only (billing overview, settings changes). */
-const OWNER_ONLY_SECTIONS: ReadonlySet<BusinessSection> = new Set(["billing", "settings"]);
-
-/** Whether the next step's button makes sense for the viewer (staff cannot act on billing or settings). */
-export function canTakeStep(step: Pick<NextStep, "section">, isOwner: boolean): boolean {
-  return isOwner || !OWNER_ONLY_SECTIONS.has(step.section);
+/** Whether the next step's button makes sense for the viewer (staff cannot open billing, settings or channels). */
+export function canTakeStep(step: Pick<NextStep, "page">, isOwner: boolean): boolean {
+  return canOpenPage(step.page, isOwner ? "owner" : "staff");
 }
 
 export type UsageLevel = "ok" | "warning" | "over";

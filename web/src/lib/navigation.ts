@@ -6,6 +6,8 @@
  * Addresses of earlier versions are redirected by lib/legacyRoutes.ts.
  */
 
+import type { BusinessSection } from "./sections";
+
 /** Every page of a business, as its path under /b/{businessId}/. */
 export const BUSINESS_PAGES = [
   "overview",
@@ -89,6 +91,18 @@ export function businessLocation(pathname: string): BusinessLocation | null {
       return parts.every((part, index) => segments[index] === part);
     }) ?? null;
   return { businessId, page, isSetup: segments[0] === "onboarding" };
+}
+
+/** The section of a business page path: "/b/biz_1/bookings/x" -> "bookings". */
+export function sectionFromPathname(pathname: string): BusinessSection | null {
+  const page = businessLocation(pathname)?.page;
+  return page ? (page.split("/")[0] as BusinessSection) : null;
+}
+
+/** An open conversation ("/b/x/messages/conv_1"): on phones it takes the whole screen. */
+export function isConversationPath(pathname: string): boolean {
+  const location = businessLocation(pathname);
+  return location?.page === "messages" && pathname.split("/").filter(Boolean).length > 3;
 }
 
 /** The same place in another business (the business switcher keeps the section). */

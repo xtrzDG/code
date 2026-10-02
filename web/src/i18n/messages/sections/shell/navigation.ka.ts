@@ -38,6 +38,8 @@ export const navigationKa: Translation<typeof navigationEn> = {
     settingsAudit: "მოქმედებების ჟურნალი",
   },
   sectionPages: "„{section}“-ის გვერდები",
+  applyChanges: "ცვლილებების გამოყენება",
+  applyChangesHint: "ახალი ვერსიის აწყობა ანკეტიდან და ცოდნიდან, შემდეგ შემოწმება და გამოქვეყნება.",
   advanced: "დამატებით",
   collapse: "მენიუს ჩაკეცვა",
   expand: "მენიუს გაშლა",

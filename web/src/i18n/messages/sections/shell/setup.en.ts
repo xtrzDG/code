@@ -6,7 +6,7 @@
 
 export const setupEn = {
   navEntry: "Create an AI assistant",
-  navEntryHint: "Step by step, about 10 minutes",
+  navEntryHint: "Step by step, about 20 minutes",
   eyebrow: "{business}",
   title: "Let's create your AI assistant",
   description:
@@ -14,7 +14,7 @@ export const setupEn = {
   start: "Create an AI assistant",
   continue: "Continue creating",
   progress: "{done} of {total} steps done",
-  duration: "About 10 minutes. You can stop and come back any time.",
+  duration: "About 20 minutes. You can stop and come back any time.",
   stagesLabel: "How it goes",
   stages: {
     business: {

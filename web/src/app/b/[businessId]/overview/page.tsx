@@ -6,7 +6,7 @@ import { DashboardScreen } from "./DashboardScreen";
 export const generateMetadata = pageMetadata("overview");
 
 /** The dashboard; `?period=7d` opens another period (today, 7d, 30d, 90d). */
-export default async function DashboardPage({ searchParams }: PageProps<"/b/[businessId]/dashboard">) {
+export default async function DashboardPage({ searchParams }: PageProps<"/b/[businessId]/overview">) {
   const { period } = await searchParams;
   return <DashboardScreen initialPeriod={isDashboardPeriod(period) ? period : null} />;
 }

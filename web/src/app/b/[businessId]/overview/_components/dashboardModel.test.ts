@@ -29,25 +29,26 @@ describe("dashboard periods", () => {
 
 describe("next step", () => {
   it("follows the business status", () => {
-    expect(nextStep({ status: "onboarding", service_mode: "full" }).section).toBe("onboarding");
-    expect(nextStep({ status: "testing", service_mode: "full" }).section).toBe("assistant");
-    expect(nextStep({ status: "live", service_mode: "full" }).section).toBe("channels");
-    expect(nextStep({ status: "paused", service_mode: "full" }).section).toBe("settings");
+    expect(nextStep({ status: "onboarding", service_mode: "full" }).page).toBe("assistant/profile");
+    expect(nextStep({ status: "testing", service_mode: "full" }).page).toBe("assistant");
+    expect(nextStep({ status: "live", service_mode: "full" }).page).toBe("assistant/channels");
+    expect(nextStep({ status: "paused", service_mode: "full" }).page).toBe("settings");
   });
 
   it("sends an unpaid live business to billing", () => {
     const step = nextStep({ status: "live", service_mode: "leads_only" });
-    expect(step.section).toBe("billing");
+    expect(step.page).toBe("settings/billing");
     expect(step.tone).toBe("danger");
   });
 });
 
 describe("who can take the next step", () => {
   it("keeps billing and settings for owners", () => {
-    expect(canTakeStep({ section: "billing" }, false)).toBe(false);
-    expect(canTakeStep({ section: "settings" }, false)).toBe(false);
-    expect(canTakeStep({ section: "billing" }, true)).toBe(true);
-    expect(canTakeStep({ section: "assistant" }, false)).toBe(true);
+    expect(canTakeStep({ page: "settings/billing" }, false)).toBe(false);
+    expect(canTakeStep({ page: "settings" }, false)).toBe(false);
+    expect(canTakeStep({ page: "assistant/channels" }, false)).toBe(false);
+    expect(canTakeStep({ page: "settings/billing" }, true)).toBe(true);
+    expect(canTakeStep({ page: "assistant" }, false)).toBe(true);
   });
 });
 

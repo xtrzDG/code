@@ -5,7 +5,7 @@ import type { setupEn } from "./setup.en";
 
 export const setupRu: Translation<typeof setupEn> = {
   navEntry: "Создать AI-помощника",
-  navEntryHint: "Шаг за шагом, около 10 минут",
+  navEntryHint: "Шаг за шагом, около 20 минут",
   eyebrow: "{business}",
   title: "Давайте создадим вашего AI-помощника",
   description:
@@ -13,7 +13,7 @@ export const setupRu: Translation<typeof setupEn> = {
   start: "Создать AI-помощника",
   continue: "Продолжить создание",
   progress: "Готово шагов: {done} из {total}",
-  duration: "Около 10 минут. Можно прерваться и вернуться в любой момент.",
+  duration: "Около 20 минут. Можно прерваться и вернуться в любой момент.",
   stagesLabel: "Как это устроено",
   stages: {
     business: {

@@ -1,13 +1,20 @@
+import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 
 import { AdminShell } from "@/components/shell/AdminShell";
+import { SIDEBAR_COOKIE, readSidebarState } from "@/lib/shellPreferences";
 import { getCurrentUser } from "@/server/api";
 
 /** /admin/* is only for platform admins; everyone else gets a 404. */
 export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
-  const me = await getCurrentUser();
+  const [me, cookieStore] = await Promise.all([getCurrentUser(), cookies()]);
   if (!me.user.is_platform_admin) {
     notFound();
   }
-  return <AdminShell me={me}>{children}</AdminShell>;
+  const collapsed = readSidebarState(cookieStore.get(SIDEBAR_COOKIE)?.value) === "collapsed";
+  return (
+    <AdminShell me={me} initialCollapsed={collapsed}>
+      {children}
+    </AdminShell>
+  );
 }

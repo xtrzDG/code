@@ -38,6 +38,8 @@ export const navigationRu: Translation<typeof navigationEn> = {
     settingsAudit: "Журнал действий",
   },
   sectionPages: "Страницы раздела «{section}»",
+  applyChanges: "Применить изменения",
+  applyChangesHint: "Собрать новую версию из анкеты и знаний, затем проверить и опубликовать.",
   advanced: "Дополнительно",
   collapse: "Свернуть меню",
   expand: "Развернуть меню",

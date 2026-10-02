@@ -5,7 +5,7 @@ import type { setupEn } from "./setup.en";
 
 export const setupKa: Translation<typeof setupEn> = {
   navEntry: "AI ასისტენტის შექმნა",
-  navEntryHint: "ნაბიჯ-ნაბიჯ, დაახლოებით 10 წუთი",
+  navEntryHint: "ნაბიჯ-ნაბიჯ, დაახლოებით 20 წუთი",
   eyebrow: "{business}",
   title: "მოდით, შევქმნათ თქვენი AI ასისტენტი",
   description:
@@ -13,7 +13,7 @@ export const setupKa: Translation<typeof setupEn> = {
   start: "AI ასისტენტის შექმნა",
   continue: "შექმნის გაგრძელება",
   progress: "დასრულებულია {done} ნაბიჯი {total}-დან",
-  duration: "დაახლოებით 10 წუთი. შეგიძლიათ ნებისმიერ დროს შეჩერდეთ და დაბრუნდეთ.",
+  duration: "დაახლოებით 20 წუთი. შეგიძლიათ ნებისმიერ დროს შეჩერდეთ და დაბრუნდეთ.",
   stagesLabel: "როგორ მიმდინარეობს",
   stages: {
     business: {
