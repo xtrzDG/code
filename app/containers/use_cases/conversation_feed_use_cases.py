@@ -17,12 +17,17 @@ from app.schemas.dto.conversation_feed.conversation_actions import (
 from app.schemas.dto.conversation_feed.conversation_views import (
     ConversationDetailView,
     ConversationListQuery,
+    ConversationMessagesQuery,
     ConversationPage,
     ConversationQuery,
     ConversationSummaryView,
+    MessagePage,
 )
 from app.schemas.dto.conversation_feed.owner_test_chat import OwnerTestChatVersionQuery
 from app.schemas.typings.assistants.prefixed_id import AssistantVersionId
+from app.use_cases.conversations.card.list_conversation_messages_use_case import (
+    ListConversationMessagesUseCase,
+)
 from app.use_cases.conversations.get_call_recording_use_case import (
     GetCallRecordingUseCase,
 )
@@ -85,6 +90,17 @@ class ConversationFeedUseCasesContainer(containers.DeclarativeContainer):
         handoff_repo=repositories.handoff_repo,
         resource_repo=repositories.resource_repo,
         channel_repo=repositories.channel_repo,
+    )
+    list_conversation_messages_use_case: Factory[
+        UseCaseContract[ConversationMessagesQuery, MessagePage]
+    ] = Factory(
+        ListConversationMessagesUseCase,
+        authorize_business_access=account_use_cases.authorize_business_access_use_case,
+        conversation_repo=repositories.conversation_repo,
+        message_repo=repositories.message_repo,
+        message_transformer=transformers.message_view_transformer,
+        audit_log_repo=repositories.audit_log_repo,
+        wall_clock=time_provider.microsecond_wall_clock,
     )
     get_call_recording_use_case: Factory[
         UseCaseContract[CallRecordingQuery, RecordingAudio]

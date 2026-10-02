@@ -13,10 +13,10 @@ from app.utilities.paging.keyset_paging import finish_page, read_slice
 class ListAuditLogUseCase(UseCaseContract[AuditLogQuery, AuditLogPage]):
     """
     Owner reads the operations on personal data of the business, newest
-    first (operations of the same microsecond by id), one keyset page at a
-    time, filtered by operation, entity type, person and period before
-    paging. The page also names every entity type and person in the log,
-    for the filters (grouped by the database).
+    first (operations of the same microsecond the latest written first), one
+    keyset page at a time, filtered by operation, entity type, person and
+    period before paging. The page also names every entity type and person
+    in the log, for the filters (grouped by the database).
     """
 
     def __init__(

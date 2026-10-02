@@ -5,13 +5,15 @@ Like `document_lookup_sql`, only declared lookup fields reach this module
 (the adapter checks them first) and become column identifiers; every value
 is a bind parameter.
 
-A keyset page compares `(sort columns, document_key)` with the position of
-the previous page's last row. The row comparison is not leakproof under
-row-level security, so the first sort column also gets a plain bound
-(`doc_x <= $1`), which is: the index range scan starts at the position and
-the row comparison only drops the ties already shown. Storage keys compare
-in byte order (`collate "C"`), as Python compares strings, whatever the
-database's default collation.
+A keyset page compares `(sort columns, created_at, row_sequence)` with the
+position of the previous page's last row: its sort values, and its first
+write (`created_at, row_sequence` of the row its storage key names, so ties
+keep the order they were written in, like `list_all`). The row comparison
+is not leakproof under row-level security, so the first sort column also
+gets a plain bound (`doc_x <= $1`), which is: the index range scan starts
+at the position and the row comparison only drops the ties already shown.
+When the position's row is gone, its write position is NULL and only the
+rest of its ties are skipped.
 """
 
 from psycopg import sql
@@ -36,7 +38,10 @@ from app.schemas.typings.storage.constrained_strings import (
     DocumentFieldPath,
 )
 
-BYTE_ORDER_KEY: sql.SQL = sql.SQL('document_key collate "C"')
+WRITE_ORDER_COLUMNS: tuple[sql.SQL, ...] = (
+    sql.SQL("created_at"),
+    sql.SQL("row_sequence"),
+)
 
 
 def compose_page(
@@ -66,19 +71,25 @@ def compose_page(
         )
         parameters.append(int(query.after.values[0]))
         conditions.append(
-            sql.SQL("({columns}, {key}) {comparison} ({values}, %s)").format(
+            sql.SQL(
+                "({columns}, created_at, row_sequence) {comparison} ({values}, "
+                "(select page_position.created_at from {table} as page_position "
+                "where page_position.document_key = %s), "
+                "(select page_position.row_sequence from {table} as page_position "
+                "where page_position.document_key = %s))"
+            ).format(
                 columns=sql.SQL(", ").join(columns),
-                key=BYTE_ORDER_KEY,
                 comparison=comparison,
                 values=sql.SQL(", ").join(sql.SQL("%s") for _ in columns),
+                table=table,
             )
         )
         parameters.extend(int(value) for value in query.after.values)
-        parameters.append(str(query.after.document_key))
+        parameters.extend([str(query.after.document_key)] * 2)
 
     order: sql.Composable = sql.SQL(", ").join(
         sql.SQL("{column} {direction}").format(column=column, direction=direction)
-        for column in [*columns, BYTE_ORDER_KEY]
+        for column in [*columns, *WRITE_ORDER_COLUMNS]
     )
     statement: sql.Composed = sql.SQL(
         "select document::text from {table} where {where} order by {order} limit %s"

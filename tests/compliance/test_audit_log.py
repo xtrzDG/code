@@ -116,8 +116,6 @@ def test_platform_admin_reading_the_audit_log_is_itself_audited() -> None:
         is_platform_admin=True,
     )
     testbed.user_repo.save(admin)
-    # Entries of the same microsecond are ordered by id; the admin reads later.
-    testbed.clock.advance(1)
 
     entries = testbed.list_audit_log.run(
         AuditLogQuery(user_id=admin.id, business_id=business.id)

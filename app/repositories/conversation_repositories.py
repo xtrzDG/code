@@ -1,5 +1,3 @@
-from collections.abc import Sequence
-
 from typed_time_provider import Microseconds
 
 from app.contracts.document_store import DocumentCollectionAdapterContract
@@ -10,7 +8,6 @@ from app.contracts.repositories.conversation_repositories import (
     LlmTurnRepoContract,
     MessageRepoContract,
 )
-from app.repositories.business_scoped_repository import BusinessScopedRepository
 from app.repositories.conversation_lookup_fields import (
     AUTHOR_FIELD,
     CHANNEL_USER_ID_FIELD,
@@ -32,6 +29,7 @@ from app.repositories.document_queries import (
     field_equals,
     time_range,
 )
+from app.repositories.listing.contact_listing import CallListing, ContactListing
 from app.repositories.listing.conversation_listing import ConversationListing
 from app.repositories.listing.message_listing import MessageListing
 from app.schemas.constants.channels import ChannelKind, MessageDirection
@@ -59,10 +57,7 @@ from app.schemas.typings.conversations.strings import ChannelUserId, ProviderCal
 from app.schemas.typings.localization.constrained_strings import E164PhoneNumber
 
 
-class ContactRepository(
-    BusinessScopedRepository[ContactDocument],
-    ContactRepoContract,
-):
+class ContactRepository(ContactListing, ContactRepoContract):
     def save(self, contact: ContactDocument) -> None:
         self._store(str(contact.id), contact)
 
@@ -112,18 +107,6 @@ class ContactRepository(
 
     def list_by_business(self, business_id: BusinessId) -> list[ContactDocument]:
         return self._list_in_business(business_id)
-
-    def get_many(
-        self,
-        business_id: BusinessId,
-        contact_ids: Sequence[ContactId],
-    ) -> dict[ContactId, ContactDocument]:
-        return {
-            contact.id: contact
-            for contact in self._load_many(
-                business_id, [str(contact_id) for contact_id in contact_ids]
-            )
-        }
 
     def delete(self, business_id: BusinessId, contact_id: ContactId) -> None:
         self._remove(business_id, str(contact_id))
@@ -275,24 +258,12 @@ class LlmTurnRepository(LlmTurnRepoContract):
             self._collection.delete(str(turn.id))
 
 
-class CallRepository(BusinessScopedRepository[CallDocument], CallRepoContract):
+class CallRepository(CallListing, CallRepoContract):
     def save(self, call: CallDocument) -> None:
         self._store(str(call.id), call)
 
     def get(self, business_id: BusinessId, call_id: CallId) -> CallDocument | None:
         return self._load(business_id, str(call_id))
-
-    def list_by_conversation(
-        self,
-        business_id: BusinessId,
-        conversation_id: ConversationId,
-    ) -> list[CallDocument]:
-        return sorted(
-            self._list_in_business(
-                business_id, [field_equals(CONVERSATION_ID_FIELD, conversation_id)]
-            ),
-            key=lambda call: int(call.started_at),
-        )
 
     def find_by_provider_call_id(
         self,

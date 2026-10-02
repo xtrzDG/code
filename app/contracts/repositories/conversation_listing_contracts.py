@@ -48,7 +48,7 @@ class ConversationListingContract(Protocol):
     def page_feed(
         self, business_id: BusinessId, window: KeysetSlice, feed: ConversationFeedFilter
     ) -> list[ConversationDocument]:
-        """The latest message first, ties by id."""
+        """The latest message first, ties in write order."""
         raise NotImplementedError
 
     def count_started_by_mix(
@@ -76,7 +76,13 @@ class MessageListingContract(Protocol):
         conversation_id: ConversationId,
         window: KeysetSlice,
     ) -> list[MessageDocument]:
-        """The conversation's messages newest first, ties by id."""
+        """The conversation's messages newest first, ties in write order."""
+        raise NotImplementedError
+
+    def list_by_conversations(
+        self, business_id: BusinessId, conversation_ids: Sequence[ConversationId]
+    ) -> list[MessageDocument]:
+        """Every message of these conversations, oldest first (search)."""
         raise NotImplementedError
 
     def tally_conversations(
@@ -127,7 +133,7 @@ class AuditLogListingContract(Protocol):
     def page_by_business(
         self, business_id: BusinessId, window: KeysetSlice, log_filter: AuditLogFilter
     ) -> list[AuditLogEntryDocument]:
-        """Newest first, ties by id."""
+        """Newest first, ties in write order."""
         raise NotImplementedError
 
     def list_entities(self, business_id: BusinessId) -> list[AuditEntityName]:

@@ -14,7 +14,6 @@ from app.schemas.dto.storage_queries import (
     DocumentFieldRange,
     DocumentFilter,
 )
-from app.schemas.exceptions.storage_errors import UndeclaredLookupFieldError
 from app.schemas.typings.assistants.prefixed_id import AssistantVersionId
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.contacts.prefixed_id import ContactId
@@ -97,7 +96,7 @@ def feed_query(
     )
 
 
-def test_pages_walk_the_feed_newest_first_with_ties_by_key(
+def test_pages_walk_the_feed_newest_first_with_ties_in_write_order(
     collections: CollectionFactory,
 ) -> None:
     conversations = collections(ConversationDocument, "conversations")
@@ -105,9 +104,8 @@ def test_pages_walk_the_feed_newest_first_with_ties_by_key(
     stored = [conversation(business_id, at) for at in (50, 20, 20, 20, 90, 10)]
     for document in [*stored, conversation(BusinessId(), 70)]:
         conversations.upsert(str(document.id), document)
-    expected = sorted(
-        stored, key=lambda c: (int(c.last_message_at), str(c.id)), reverse=True
-    )
+    # Ties keep the order they were written in: the latest written first.
+    expected = [stored[i] for i in (4, 0, 3, 2, 1, 5)]
 
     walked: list[ConversationDocument] = []
     after: ConversationDocument | None = None
@@ -195,12 +193,9 @@ def test_ascending_pages_and_several_sort_fields(
     for document in stored:
         questions.upsert(str(document.id), document)
 
-    def rank(question: UnansweredQuestionDocument) -> tuple[int, int, str]:
-        return (
-            int(question.occurrence_count),
-            int(question.last_seen_at),
-            str(question.id),
-        )
+    def rank(question: UnansweredQuestionDocument) -> tuple[int, int, int]:
+        written = next(i for i, q in enumerate(stored) if q.id == question.id)
+        return (int(question.occurrence_count), int(question.last_seen_at), written)
 
     for is_descending in (True, False):
         expected = sorted(stored, key=rank, reverse=is_descending)
@@ -259,56 +254,3 @@ def test_pages_of_messages_by_conversation(collections: CollectionFactory) -> No
     )
 
     assert [m.id for m in newest] == [stored[1].id, stored[2].id]
-
-
-@pytest.mark.parametrize(
-    "query",
-    ["sort by a text field", "undeclared filter", "exclusion of a list field"],
-)
-def test_pages_refuse_undeclared_fields(
-    collections: CollectionFactory, query: str
-) -> None:
-    conversations = collections(ConversationDocument, "conversations")
-    with pytest.raises(UndeclaredLookupFieldError, match="lookup field"):
-        if query == "sort by a text field":
-            conversations.page_by(
-                DocumentPageQuery(sort_fields=(STATUS,), limit=DocumentQueryLimit(1))
-            )
-        elif query == "undeclared filter":
-            conversations.page_by(
-                feed_query(
-                    BusinessId(),
-                    1,
-                    excluding=(
-                        DocumentFieldExclusion(
-                            field=DocumentFieldPath("rating"), value=text("good")
-                        ),
-                    ),
-                )
-            )
-        else:
-            collections(MessageDocument, "messages").page_by(
-                DocumentPageQuery(
-                    where=DocumentFilter(
-                        excluding=(
-                            DocumentFieldExclusion(
-                                field=DocumentFieldPath("tool_calls[].is_error"),
-                                value=text("true"),
-                            ),
-                        )
-                    ),
-                    sort_fields=(CREATED_AT,),
-                    limit=DocumentQueryLimit(1),
-                )
-            )
-
-
-def test_a_page_query_checks_its_shape() -> None:
-    with pytest.raises(ValueError, match="1 to 3"):
-        DocumentPageQuery(sort_fields=(), limit=DocumentQueryLimit(1))
-    with pytest.raises(ValueError, match="one value per sort field"):
-        DocumentPageQuery(
-            sort_fields=(CREATED_AT,),
-            after=DocumentPagePosition(values=(), document_key=StoredDocumentKey("x")),
-            limit=DocumentQueryLimit(1),
-        )

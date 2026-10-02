@@ -62,6 +62,9 @@ class ConversationPipelinesContainer(containers.DeclarativeContainer):
     get_conversation_pipeline = orchestrator_pipeline(
         conversation_orchestrators.get_conversation_orchestrator
     )
+    list_conversation_messages_pipeline = orchestrator_pipeline(
+        conversation_orchestrators.list_conversation_messages_orchestrator
+    )
     rate_conversation_pipeline = orchestrator_pipeline(
         conversation_orchestrators.rate_conversation_orchestrator
     )

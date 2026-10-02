@@ -25,8 +25,8 @@ class ListUnansweredQuestionsUseCase(
     """
     Questions without an answer for the cabinet, one page at a time: open
     ones by default, most asked first, then the most recently asked (ties
-    by id). The resolved and sandbox filters apply before paging; pages are
-    keyset pages read by the database.
+    in write order). The resolved and sandbox filters apply before paging;
+    pages are keyset pages read by the database.
     """
 
     def __init__(

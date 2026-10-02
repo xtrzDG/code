@@ -1,10 +1,11 @@
 """
 Keyset pages and aggregations evaluated on stored JSON in memory, with the
 semantics of the Postgres collection (`document_listing_sql`): sort fields
-and buckets are integer fields (documents without them are left out), the
-storage key breaks ties in code point order (Postgres `collate "C"`), an
-exclusion keeps documents without the field, and a group value is the
-field as `document ->> field` gives it.
+and buckets are integer fields (documents without them are left out), ties
+keep the first-write order (the position of the page's last key in the
+collection; a key that is gone skips the rest of its ties), an exclusion
+keeps documents without the field, and a group value is the field as
+`document ->> field` gives it.
 """
 
 import bisect
@@ -39,33 +40,51 @@ def select_page(
 ) -> list[str]:
     """The serialized documents of one keyset page, in page order."""
 
-    keyed: list[tuple[tuple[int, ...], str, str]] = []
-    for key, serialized in entries:
+    keyed: list[tuple[tuple[int, ...], int, str]] = []
+    written_at: dict[str, int] = {}
+    for written, (key, serialized) in enumerate(entries):
+        written_at[key] = written
         document: JsonObject | None = parse_object(serialized)
         if document is None or not is_in_filter(document, query.where, fields):
             continue
 
         values: tuple[int, ...] | None = integer_values(document, query.sort_fields)
         if values is not None:
-            keyed.append((values, key, serialized))
+            keyed.append((values, written, serialized))
 
     keyed.sort(key=lambda row: (row[0], row[1]), reverse=query.is_descending)
     if query.after is not None:
-        position: tuple[tuple[int, ...], str] = (
-            tuple(int(value) for value in query.after.values),
-            str(query.after.document_key),
+        after_values: tuple[int, ...] = tuple(
+            int(value) for value in query.after.values
         )
+        after_written: int | None = written_at.get(str(query.after.document_key))
         keyed = [
             row
             for row in keyed
-            if (
-                (row[0], row[1]) < position
-                if query.is_descending
-                else (row[0], row[1]) > position
+            if is_after(
+                row[0], row[1], after_values, after_written, query.is_descending
             )
         ]
 
     return [serialized for _, _, serialized in keyed[: int(query.limit)]]
+
+
+def is_after(
+    values: tuple[int, ...],
+    written: int,
+    after_values: tuple[int, ...],
+    after_written: int | None,
+    is_descending: bool,
+) -> bool:
+    """Whether a row comes after the position in the page order."""
+
+    if values != after_values:
+        return values < after_values if is_descending else values > after_values
+
+    if after_written is None:
+        return False
+
+    return written < after_written if is_descending else written > after_written
 
 
 def aggregate(

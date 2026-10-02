@@ -18,7 +18,8 @@ MAX_SORT_FIELDS: int = 3
 class DocumentPagePosition(ImmutableDTO):
     """
     Where the previous page ended: the sort field values and the storage
-    key of its last document. The next page starts strictly after it.
+    key of its last document (storage finds the key's first write, the tie
+    order). The next page starts strictly after it.
     """
 
     values: tuple[DocumentFieldInteger, ...]
@@ -28,10 +29,10 @@ class DocumentPagePosition(ImmutableDTO):
 class DocumentPageQuery(ImmutableDTO):
     """
     One keyset page: the documents that meet `where` and have every sort
-    field, ordered by the INTEGER sort fields and then the storage key
-    (byte order), all ascending or all descending, starting after `after`,
-    at most `limit` of them. The cost of a page does not grow with how many
-    pages came before it.
+    field, ordered by the INTEGER sort fields and then their first write
+    (ties keep the order they were written in), all ascending or all
+    descending, starting after `after`, at most `limit` of them. The cost of
+    a page does not grow with how many pages came before it.
     """
 
     where: DocumentFilter = Field(default_factory=DocumentFilter)

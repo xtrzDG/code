@@ -1,5 +1,3 @@
-from zoneinfo import ZoneInfo
-
 from typed_time_provider import Microseconds, WallClock
 
 from app.contracts.repositories.booking_repositories import (
@@ -19,7 +17,6 @@ from app.contracts.repositories.knowledge_repositories import ResourceRepoContra
 from app.contracts.transformer_contract import TransformerContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.compliance import AuditAction
-from app.schemas.domain.bookings import BookingDocument
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.compliance import AuditLogEntryDocument
 from app.schemas.domain.contacts import ContactDocument
@@ -28,9 +25,7 @@ from app.schemas.domain.conversations import (
     ConversationDocument,
     MessageDocument,
 )
-from app.schemas.domain.resources import ResourceDocument
 from app.schemas.dto.access import BusinessAccessRequest
-from app.schemas.dto.bookings import BookingView
 from app.schemas.dto.conversation_feed.conversation_views import (
     CallView,
     ConversationDetailView,
@@ -39,31 +34,38 @@ from app.schemas.dto.conversation_feed.conversation_views import (
     ConversationViewSource,
     MessageView,
 )
+from app.schemas.dto.paging import PageRequest
 from app.schemas.exceptions.application_errors import NotFoundError
-from app.schemas.typings.bookings.prefixed_id import ResourceId
 from app.schemas.typings.compliance.strings import (
     AuditEntityName,
     AuditEntityReference,
 )
-from app.schemas.typings.contacts.prefixed_id import ContactId
+from app.schemas.typings.platform.constrained_integers import PageSize
+from app.schemas.typings.platform.constrained_strings import PageCursor
+from app.use_cases.conversations.card.conversation_links import (
+    ConversationLinks,
+    collect_conversation_links,
+)
+from app.use_cases.conversations.feed.conversation_rows import build_view_sources
 from app.use_cases.conversations.staff_reply_support import (
     assess_conversation_reply,
 )
-from app.use_cases.handoffs.handoff_views import build_handoff_list_item
-from app.use_cases.leads.lead_views import build_lead_list_item
-from app.utilities.scheduling.booking_views import build_booking_view
-from app.utilities.scheduling.zoned_time import load_time_zone
+from app.utilities.paging.keyset_paging import finish_page, read_slice
 
 CONVERSATION_ENTITY: AuditEntityName = AuditEntityName("conversation")
 CALL_ENTITY: AuditEntityName = AuditEntityName("call")
+# The card shows the newest messages; earlier ones come page by page.
+CARD_TRANSCRIPT: PageRequest = PageRequest(size=PageSize(100))
 
 
 class GetConversationUseCase(
     UseCaseContract[ConversationQuery, ConversationDetailView]
 ):
     """
-    Conversation card for owners and staff: the transcript with every tool
-    call, model, tokens and cost, the phone calls of the conversation with
+    Conversation card for owners and staff: the newest 100 messages of the
+    transcript (a keyset page; `ListConversationMessagesUseCase` pages back)
+    with every tool call, model, tokens and cost, the usage of the whole
+    conversation, the phone calls of the conversation with
     their transcripts, outcomes and recordings, the bookings, leads and
     handoffs made in it, and whether staff can write to the customer now
     (concept section 8). Reading a conversation is an operation on personal
@@ -132,16 +134,18 @@ class GetConversationUseCase(
                 f"Conversation {input_data.conversation_id} was not found."
             )
 
-        messages: list[MessageDocument] = self._message_repo.list_by_conversation(
-            business.id, conversation.id
-        )
-        calls: list[CallDocument] = sorted(
-            (
-                call
-                for call in self._call_repo.list_by_business(business.id)
-                if call.conversation_id == conversation.id
+        newest_first: list[MessageDocument]
+        earlier_cursor: PageCursor | None
+        newest_first, earlier_cursor = finish_page(
+            self._message_repo.page_transcript(
+                business.id, conversation.id, read_slice(CARD_TRANSCRIPT)
             ),
-            key=lambda call: call.started_at,
+            CARD_TRANSCRIPT,
+            sort_key=lambda message: int(message.created_at),
+            item_id=lambda message: str(message.id),
+        )
+        calls: list[CallDocument] = self._call_repo.list_by_conversation(
+            business.id, conversation.id
         )
         now: Microseconds = self._wall_clock.now_unix()
         viewed: list[tuple[AuditEntityName, str]] = [
@@ -164,33 +168,36 @@ class GetConversationUseCase(
         contact: ContactDocument | None = self._contact_repo.get(
             business.id, conversation.contact_id
         )
+        links: ConversationLinks = collect_conversation_links(
+            business,
+            conversation.id,
+            contact,
+            self._booking_repo,
+            self._lead_repo,
+            self._handoff_repo,
+            self._resource_repo,
+            self._contact_repo,
+        )
         return ConversationDetailView(
             conversation=self._summary_transformer.transform(
-                ConversationViewSource(
-                    conversation=conversation,
-                    contact=contact,
-                    messages=messages,
-                )
+                build_view_sources(
+                    business.id,
+                    [conversation],
+                    self._contact_repo,
+                    self._message_repo,
+                    {} if contact is None else {contact.id: contact},
+                )[0]
             ),
             messages=[
-                self._message_transformer.transform(message) for message in messages
+                self._message_transformer.transform(message)
+                for message in reversed(newest_first)
             ],
+            earlier_messages_cursor=earlier_cursor,
+            usage=self._message_repo.sum_usage(business.id, conversation.id),
             calls=[self._call_transformer.transform(call) for call in calls],
-            bookings=self._bookings(business, conversation, contact),
-            leads=[
-                build_lead_list_item(
-                    lead, self._contact_of(business, lead.contact_id, contact)
-                )
-                for lead in self._lead_repo.list_by_business(business.id)
-                if lead.conversation_id == conversation.id
-            ],
-            handoffs=[
-                build_handoff_list_item(
-                    handoff, self._contact_of(business, handoff.contact_id, contact)
-                )
-                for handoff in self._handoff_repo.list_by_business(business.id)
-                if handoff.conversation_id == conversation.id
-            ],
+            bookings=links.bookings,
+            leads=links.leads,
+            handoffs=links.handoffs,
             reply=assess_conversation_reply(
                 conversation,
                 self._conversation_repo,
@@ -199,48 +206,3 @@ class GetConversationUseCase(
                 now,
             ),
         )
-
-    def _bookings(
-        self,
-        business: BusinessDocument,
-        conversation: ConversationDocument,
-        contact: ContactDocument | None,
-    ) -> list[BookingView]:
-        """Bookings made in the conversation, by start time."""
-
-        bookings: list[BookingDocument] = [
-            booking
-            for booking in self._booking_repo.list_by_business(business.id)
-            if booking.conversation_id == conversation.id
-        ]
-        if not bookings:
-            return []
-
-        resources: dict[ResourceId, ResourceDocument] = {
-            resource.id: resource
-            for resource in self._resource_repo.list_by_business(business.id)
-        }
-        zone: ZoneInfo = load_time_zone(business.timezone)
-        return [
-            build_booking_view(
-                booking,
-                business.timezone,
-                zone,
-                resources.get(booking.resource_id),
-                self._contact_of(business, booking.contact_id, contact),
-            )
-            for booking in sorted(bookings, key=lambda booking: int(booking.starts_at))
-        ]
-
-    def _contact_of(
-        self,
-        business: BusinessDocument,
-        contact_id: ContactId,
-        conversation_contact: ContactDocument | None,
-    ) -> ContactDocument | None:
-        """The conversation's contact, or another one an item names."""
-
-        if conversation_contact is not None and conversation_contact.id == contact_id:
-            return conversation_contact
-
-        return self._contact_repo.get(business.id, contact_id)

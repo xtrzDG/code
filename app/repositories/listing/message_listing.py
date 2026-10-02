@@ -22,7 +22,7 @@ from app.schemas.dto.conversation_feed.message_tallies import (
     ConversationMessageTally,
     ConversationUsageView,
 )
-from app.schemas.dto.paging import KeysetSlice
+from app.schemas.dto.paging import KeysetPosition, KeysetSlice
 from app.schemas.dto.storage_aggregates import DocumentAggregation, DocumentGroupCount
 from app.schemas.dto.storage_queries import DocumentFieldAmong, DocumentFilter
 from app.schemas.typings.billing.constrained_integers import CostMicroUsd
@@ -34,12 +34,15 @@ from app.schemas.typings.conversations.constrained_integers import (
 from app.schemas.typings.conversations.prefixed_id import ConversationId
 from app.schemas.typings.insights.constrained_integers import PeriodItemCount
 from app.schemas.typings.platform.constrained_integers import KeysetReadLimit
+from app.schemas.typings.platform.integers import ListSortValue
+from app.schemas.typings.platform.strings import ListItemKey
 from app.schemas.typings.storage.constrained_strings import DocumentFieldPath
 
 INPUT_TOKENS_FIELD: DocumentFieldPath = DocumentFieldPath("input_tokens")
 OUTPUT_TOKENS_FIELD: DocumentFieldPath = DocumentFieldPath("output_tokens")
 COST_FIELD: DocumentFieldPath = DocumentFieldPath("cost_micro_usd")
 TOOL_ERRORS_FIELD: DocumentFieldPath = DocumentFieldPath("tool_calls[].is_error")
+LIST_BATCH: KeysetReadLimit = KeysetReadLimit(1_000)
 # Messages someone wrote (system notes of the voice agent are not previews).
 WRITTEN_AUTHORS: tuple[MessageAuthor, ...] = (
     MessageAuthor.CUSTOMER,
@@ -67,6 +70,41 @@ class MessageListing(BusinessScopedRepository[MessageDocument]):
                 matches=(field_equals(CONVERSATION_ID_FIELD, conversation_id),)
             ),
         )
+
+    def list_by_conversations(
+        self,
+        business_id: BusinessId,
+        conversation_ids: Sequence[ConversationId],
+    ) -> list[MessageDocument]:
+        """Oldest first, read in keyset batches of `LIST_BATCH` messages."""
+
+        if not conversation_ids:
+            return []
+
+        found: list[MessageDocument] = []
+        window = KeysetSlice(limit=LIST_BATCH)
+        while True:
+            batch: list[MessageDocument] = self._page_in_business(
+                business_id,
+                (CREATED_AT_FIELD,),
+                window,
+                DocumentFilter(
+                    among=(field_among(CONVERSATION_ID_FIELD, conversation_ids),)
+                ),
+                is_descending=False,
+            )
+            found.extend(batch)
+            if len(batch) < int(LIST_BATCH):
+                return found
+
+            last: MessageDocument = batch[-1]
+            window = KeysetSlice(
+                after=KeysetPosition(
+                    sort_values=(ListSortValue(int(last.created_at)),),
+                    item_key=ListItemKey(str(last.id)),
+                ),
+                limit=LIST_BATCH,
+            )
 
     def tally_conversations(
         self,

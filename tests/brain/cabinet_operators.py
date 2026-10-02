@@ -20,9 +20,11 @@ from app.schemas.dto.conversation_feed.conversation_actions import (
 from app.schemas.dto.conversation_feed.conversation_views import (
     ConversationDetailView,
     ConversationListQuery,
+    ConversationMessagesQuery,
     ConversationPage,
     ConversationQuery,
     ConversationSummaryView,
+    MessagePage,
 )
 from app.schemas.dto.conversation_feed.owner_test_chat import OwnerTestChatCommand
 from app.schemas.dto.conversations import AssistantReply
@@ -40,6 +42,9 @@ from app.transformers.conversations.conversation_summary_transformer import (
 )
 from app.transformers.conversations.message_view_transformer import (
     MessageViewTransformer,
+)
+from app.use_cases.conversations.card.list_conversation_messages_use_case import (
+    ListConversationMessagesUseCase,
 )
 from app.use_cases.conversations.get_call_recording_use_case import (
     GetCallRecordingUseCase,
@@ -78,6 +83,7 @@ class CabinetOperators:
     owner_test_chat: OperatorContract[OwnerTestChatCommand, AssistantReply]
     send_staff_message: OperatorContract[SendStaffMessageCommand, StaffMessageResult]
     get_call_recording: OperatorContract[CallRecordingQuery, RecordingAudio]
+    list_conversation_messages: OperatorContract[ConversationMessagesQuery, MessagePage]
     import_menu: OperatorContract[ImportMenuCommand, MenuImportResult]
     confirm_imported_items: OperatorContract[
         ConfirmImportedItemsCommand, ConfirmImportedItemsResult
@@ -143,6 +149,20 @@ def build_cabinet_operators(
                         audit_log_repo=world.audit_log_repo,
                         channel_message_sender=storage.channel_sender,
                         message_transformer=MessageViewTransformer(),
+                        wall_clock=world.clock.wall_clock(),
+                    )
+                )
+            )
+        ),
+        list_conversation_messages=PipelineOperator(
+            OrchestratorPipeline(
+                UseCaseOrchestrator(
+                    ListConversationMessagesUseCase(
+                        authorize_business_access=world.authorize,
+                        conversation_repo=world.conversation_repo,
+                        message_repo=world.message_repo,
+                        message_transformer=MessageViewTransformer(),
+                        audit_log_repo=world.audit_log_repo,
                         wall_clock=world.clock.wall_clock(),
                     )
                 )

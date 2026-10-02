@@ -28,8 +28,9 @@ ENTITY_FIELD: DocumentFieldPath = DocumentFieldPath("entity")
 class AuditLogListing(BusinessScopedRepository[AuditLogEntryDocument]):
     """
     A business's audit entries newest first (entries of the same
-    microsecond by id), filtered by operation, entity type, person and
-    period; the entity types and persons present, for the filters.
+    microsecond the latest written first), filtered by operation, entity
+    type, person and period; the entity types and persons present, for the
+    filters.
     """
 
     def page_by_business(

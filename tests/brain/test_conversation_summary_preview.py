@@ -6,9 +6,13 @@ from app.schemas.constants.channels import ChannelKind, MessageDirection
 from app.schemas.constants.conversations import MessageAuthor
 from app.schemas.domain.conversations import ConversationDocument, MessageDocument
 from app.schemas.dto.conversation_feed.conversation_views import ConversationViewSource
+from app.schemas.dto.conversation_feed.message_tallies import ConversationMessageTally
 from app.schemas.typings.assistants.prefixed_id import AssistantVersionId
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.contacts.prefixed_id import ContactId
+from app.schemas.typings.conversations.constrained_integers import (
+    ConversationMessageCount,
+)
 from app.schemas.typings.conversations.strings import ChannelUserId, MessageText
 from app.transformers.conversations.conversation_summary_transformer import (
     ConversationSummaryTransformer,
@@ -46,13 +50,14 @@ def message(
 
 def test_a_phone_conversation_with_only_voice_agent_notes_has_no_preview() -> None:
     call = conversation(ChannelKind.PHONE)
-    notes = [
-        message(call, MessageAuthor.SYSTEM, "Voice agent called check_availability."),
-        message(call, MessageAuthor.SYSTEM, "Voice agent called create_booking."),
-    ]
+    note = message(call, MessageAuthor.SYSTEM, "Voice agent called create_booking.")
 
     row = ConversationSummaryTransformer().transform(
-        ConversationViewSource(conversation=call, messages=notes)
+        ConversationViewSource(
+            conversation=call,
+            tally=ConversationMessageTally(message_count=ConversationMessageCount(2)),
+            last_written=note,
+        )
     )
 
     assert (row.last_message_text, row.last_message_author) == (None, None)
@@ -61,15 +66,19 @@ def test_a_phone_conversation_with_only_voice_agent_notes_has_no_preview() -> No
 
 def test_the_preview_is_the_last_message_someone_wrote() -> None:
     chat = conversation(ChannelKind.TELEGRAM)
-    messages = [
-        message(chat, MessageAuthor.CUSTOMER, "Есть стол на двоих?"),
-        message(chat, MessageAuthor.ASSISTANT, "Да, в 20:00."),
-        message(chat, MessageAuthor.SYSTEM, "Voice agent called search_knowledge."),
-    ]
+    reply = message(chat, MessageAuthor.ASSISTANT, "Да, в 20:00.")
 
     row = ConversationSummaryTransformer().transform(
-        ConversationViewSource(conversation=chat, messages=messages)
+        ConversationViewSource(
+            conversation=chat,
+            tally=ConversationMessageTally(
+                message_count=ConversationMessageCount(3),
+                customer_message_count=ConversationMessageCount(1),
+            ),
+            last_written=reply,
+        )
     )
 
     assert str(row.last_message_text) == "Да, в 20:00."
     assert row.last_message_author is MessageAuthor.ASSISTANT
+    assert (int(row.message_count), int(row.customer_message_count)) == (3, 1)

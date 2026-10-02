@@ -21,6 +21,10 @@ from app.schemas.constants.conversations import (
 from app.schemas.domain.contacts import ContactDocument
 from app.schemas.domain.conversations import ConversationDocument, MessageDocument
 from app.schemas.dto.bookings import BookingView
+from app.schemas.dto.conversation_feed.message_tallies import (
+    ConversationMessageTally,
+    ConversationUsageView,
+)
 from app.schemas.dto.operations.handoffs import HandoffListItem
 from app.schemas.dto.operations.leads import LeadListItem
 from app.schemas.dto.paging import PageRequest
@@ -98,6 +102,19 @@ class ConversationQuery(ImmutableDTO):
     user_id: UserId
     business_id: BusinessId
     conversation_id: ConversationId
+    client_ip_address: ClientIpAddress | None = None
+
+
+class ConversationMessagesQuery(ImmutableDTO):
+    """
+    Earlier messages of a conversation: the page before the cursor the card
+    or the previous page gave (audited like the card).
+    """
+
+    user_id: UserId
+    business_id: BusinessId
+    conversation_id: ConversationId
+    page: PageRequest = Field(default_factory=PageRequest)
     client_ip_address: ClientIpAddress | None = None
 
 
@@ -205,13 +222,18 @@ class StaffReplyView(ImmutableDTO):
 
 class ConversationDetailView(ImmutableDTO):
     """
-    Conversation card: summary, the full transcript with tool calls, for
-    phone conversations the calls with their transcripts and recordings,
-    the bookings, leads and handoffs made in it, and whether staff can reply.
+    Conversation card: summary, the newest part of the transcript with tool
+    calls (oldest first; `earlier_messages_cursor` pages back through
+    `GET .../messages` when there is more), the model usage of the whole
+    conversation, for phone conversations the calls with their transcripts
+    and recordings, the bookings, leads and handoffs made in it, and
+    whether staff can reply.
     """
 
     conversation: ConversationSummaryView
     messages: list[MessageView] = Field(default_factory=list[MessageView])
+    earlier_messages_cursor: PageCursor | None = None
+    usage: ConversationUsageView = Field(default_factory=ConversationUsageView)
     calls: list[CallView] = Field(default_factory=list[CallView])
     bookings: list[BookingView] = Field(default_factory=list[BookingView])
     leads: list[LeadListItem] = Field(default_factory=list[LeadListItem])
@@ -220,8 +242,22 @@ class ConversationDetailView(ImmutableDTO):
 
 
 class ConversationViewSource(ImmutableDTO):
-    """A conversation with its contact and messages, ready to be rendered."""
+    """
+    A conversation with its contact, its message counts and the newest
+    message someone wrote (the preview), ready to be rendered as a row.
+    """
 
     conversation: ConversationDocument
     contact: ContactDocument | None = None
-    messages: list[MessageDocument] = Field(default_factory=list[MessageDocument])
+    tally: ConversationMessageTally = Field(default_factory=ConversationMessageTally)
+    last_written: MessageDocument | None = None
+
+
+class MessagePage(ImmutableDTO):
+    """
+    Earlier messages of a conversation, oldest first; `next_cursor` asks for
+    the ones before them (None when the transcript starts here).
+    """
+
+    items: list[MessageView] = Field(default_factory=list[MessageView])
+    next_cursor: PageCursor | None = None

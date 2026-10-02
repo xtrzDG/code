@@ -33,7 +33,7 @@ class BookingListingContract(Protocol):
     def page_by_business(
         self, business_id: BusinessId, window: KeysetSlice, listing: BookingListFilter
     ) -> list[BookingDocument]:
-        """By start time in the filter's order, ties by id."""
+        """By start time in the filter's order, ties in write order."""
         raise NotImplementedError
 
     def list_ending_after(
@@ -62,7 +62,7 @@ class LeadListingContract(Protocol):
         status: LeadStatus | None,
         include_sandbox: IsSandboxIncluded,
     ) -> list[LeadDocument]:
-        """Newest first, ties by id."""
+        """Newest first, ties in write order."""
         raise NotImplementedError
 
     def count_by_status(
@@ -132,7 +132,7 @@ class UnansweredQuestionListingContract(Protocol):
         include_resolved: IsResolvedIncluded,
         include_sandbox: IsSandboxIncluded,
     ) -> list[UnansweredQuestionDocument]:
-        """Most asked first, then the most recently asked, ties by id."""
+        """Most asked first, then the most recently asked, ties in write order."""
         raise NotImplementedError
 
     def count_open(self, business_id: BusinessId) -> ListItemCount:

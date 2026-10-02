@@ -18,6 +18,7 @@ from app.schemas.dto.conversation_feed.conversation_views import (
     ConversationViewSource,
 )
 from app.schemas.exceptions.application_errors import NotFoundError
+from app.use_cases.conversations.feed.conversation_rows import build_view_sources
 
 
 class RateConversationUseCase(
@@ -77,11 +78,7 @@ class RateConversationUseCase(
         conversation.updated_at = now
         self._conversation_repo.save(conversation)
         return self._summary_transformer.transform(
-            ConversationViewSource(
-                conversation=conversation,
-                contact=self._contact_repo.get(business.id, conversation.contact_id),
-                messages=self._message_repo.list_by_conversation(
-                    business.id, conversation.id
-                ),
-            )
+            build_view_sources(
+                business.id, [conversation], self._contact_repo, self._message_repo
+            )[0]
         )
