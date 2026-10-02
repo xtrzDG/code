@@ -65,6 +65,11 @@ services:
     dockerContext: .
     dockerCommand: workshop api
     preDeployCommand: workshop migrate
+    # Two instances: a deploy or a crashed instance never takes the API down.
+    # Locks (bookings, a customer's turns, login code sends) are Postgres
+    # advisory locks and the rate limits are counted in Postgres, so both
+    # instances share them (docs/LAUNCH.md, "Несколько экземпляров API").
+    numInstances: 2
     # Readiness: the database answers, every migration of this build is
     # applied and a connection is free (GET /healthz is liveness only).
     healthCheckPath: /readyz
@@ -83,6 +88,15 @@ services:
       - fromGroup: workshop-backend
       - key: PORT
         value: "8000"
+      # Connections: 2 instances x 30 + the worker's 20 stay below the 100 of
+      # basic-256mb (a thread holds one connection at most, so the pool
+      # matches the request threads). Half the threads may wait for the model.
+      - key: THREADPOOL_SIZE
+        value: "30"
+      - key: DB_POOL_SIZE
+        value: "30"
+      - key: LLM_MAX_CONCURRENCY
+        value: "15"
       - key: DATABASE_URL
         fromDatabase:
           name: workshop-db
@@ -222,6 +236,14 @@ services:
         fromDatabase:
           name: workshop-db
           property: connectionString
+      # The worker's lanes run 16 jobs at once (WORKER_LANE_CONCURRENCY), plus
+      # its scheduler: 20 connections; it serves no requests.
+      - key: THREADPOOL_SIZE
+        value: "20"
+      - key: DB_POOL_SIZE
+        value: "20"
+      - key: LLM_MAX_CONCURRENCY
+        value: "12"
       - key: APP_BASE_URL
         fromService:
           type: web

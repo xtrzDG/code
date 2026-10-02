@@ -16,6 +16,9 @@ from app.adapters.llm.call_limited_llm_adapter import (
     CHAT_CALL_RETRY_LIMIT,
     CallLimitedLlmAdapter,
 )
+from app.adapters.llm.concurrency_limited_llm_adapter import (
+    ConcurrencyLimitedLlmAdapter,
+)
 from app.adapters.llm.menu_extraction.menu_extraction_adapter import (
     MenuExtractionAdapter,
 )
@@ -208,14 +211,22 @@ class AdaptersContainer(containers.DeclarativeContainer):
         build_llm_trace_facilitator,
         langfuse_client=clients.langfuse_ingestion_client,
     )
-    # The adapter every use case gets: routing by model id, traced.
-    llm_adapter: Singleton[TracingLlmAdapter] = Singleton(
+    # Every model call traced (Langfuse) ...
+    traced_llm_adapter: Singleton[TracingLlmAdapter] = Singleton(
         TracingLlmAdapter,
         inner_adapter=routing_llm_adapter,
         trace_facilitator=llm_trace_facilitator,
         wall_clock=time_provider.microsecond_wall_clock,
         monotonic_clock=time_provider.monotonic_clock,
         is_content_traced=config.app_settings.provided.is_llm_content_traced,
+    )
+    # ... and the adapter every use case gets: routing by model id, traced,
+    # at most LLM_MAX_CONCURRENCY calls of this process at once.
+    llm_adapter: Singleton[ConcurrencyLimitedLlmAdapter] = Singleton(
+        ConcurrencyLimitedLlmAdapter,
+        inner_adapter=traced_llm_adapter,
+        max_concurrency=config.app_settings.provided.llm_max_concurrency,
+        wait_seconds=config.app_settings.provided.llm_call_timeout_seconds,
     )
     # The adapter of a customer chat: each call bounded by
     # LLM_CALL_TIMEOUT_SECONDS and retried once.

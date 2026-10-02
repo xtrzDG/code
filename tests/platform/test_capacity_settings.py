@@ -29,6 +29,12 @@ def test_the_database_pool_follows_the_request_threads_unless_set() -> None:
         32,
     )
     assert int(own_pool.db_pool_size) == 20
+    # Model calls: half the request threads by default.
+    assert int(default.llm_max_concurrency) == 32
+    assert (
+        int(assemble_app_settings({"LLM_MAX_CONCURRENCY": "8"}).llm_max_concurrency)
+        == 8
+    )
 
 
 @pytest.mark.parametrize(
@@ -39,6 +45,7 @@ def test_the_database_pool_follows_the_request_threads_unless_set() -> None:
         {"SENTRY_TRACES_SAMPLE_RATE": "1.5"},
         {"LOG_FORMAT": "xml"},
         {"LLM_CALL_TIMEOUT_SECONDS": "0"},
+        {"LLM_MAX_CONCURRENCY": "0"},
         {"APP_RELEASE": "not a release!"},
     ],
 )

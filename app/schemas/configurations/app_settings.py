@@ -10,6 +10,7 @@ from app.schemas.constants.observability import LogFormat
 from app.schemas.typings.assistants.constrained_integers import (
     AutotestTurnLimit,
     LlmCallTimeoutSeconds,
+    LlmConcurrencyLimit,
     LlmMaxOutputTokens,
     LlmToolRoundLimit,
 )
@@ -101,6 +102,8 @@ class AppSettings(ImmutableDTO):
     llm_tool_round_limit: LlmToolRoundLimit
     # One model call of a customer chat: its timeout (retried once).
     llm_call_timeout_seconds: LlmCallTimeoutSeconds = LlmCallTimeoutSeconds(25)
+    # Model calls of one process at once (LLM_MAX_CONCURRENCY).
+    llm_max_concurrency: LlmConcurrencyLimit = LlmConcurrencyLimit(32)
     openai_base_url: PublicBaseUrl
     openai_project_id: PlatformIdentifier | None = None
     autotest_turn_limit: AutotestTurnLimit
