@@ -37,7 +37,7 @@ export function Alert({
       role={tone === "danger" ? "alert" : undefined}
       className={cn("flex gap-3 rounded-xl border px-4 py-3 text-sm", toneClass, className)}
     >
-      <Icon className="mt-0.5 size-5 shrink-0" aria-hidden />
+      <Icon className="mt-px size-[1.125rem] shrink-0" aria-hidden />
       {/* The alert's own width decides the layout (a container query), not the screen's. */}
       <div className="@container min-w-0 flex-1">
         <div className="flex flex-col items-start gap-3 @md:flex-row @md:items-center">

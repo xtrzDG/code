@@ -48,9 +48,9 @@ export function Drawer({
     >
       {open ? (
         <div className="flex h-full flex-col">
-          <header className="flex items-start justify-between gap-4 border-b border-line px-5 py-4 sm:px-6">
+          <header className="flex items-start justify-between gap-4 border-b border-line px-5 py-4">
             <div className="min-w-0 space-y-1">
-              <h2 id={titleId} className="text-lg font-semibold">
+              <h2 id={titleId} className="text-base font-semibold tracking-tight">
                 {title}
               </h2>
               {description ? (
@@ -62,15 +62,15 @@ export function Drawer({
             <button
               type="button"
               onClick={onClose}
-              className="-m-1 rounded-md p-1 text-ink-subtle hover:bg-surface-muted hover:text-ink"
+              className="-m-1 rounded-md p-1 text-ink-subtle transition-colors hover:bg-surface-muted hover:text-ink"
               aria-label={t("common.close")}
             >
               <IconX className="size-5" aria-hidden />
             </button>
           </header>
-          <div className="min-h-0 flex-1 overflow-y-auto px-5 py-5 sm:px-6">{children}</div>
+          <div className="min-h-0 flex-1 overflow-y-auto p-5">{children}</div>
           {footer ? (
-            <footer className="flex flex-wrap items-center justify-end gap-3 border-t border-line px-5 py-4 sm:px-6">
+            <footer className="flex flex-wrap items-center justify-end gap-3 border-t border-line px-5 py-3.5">
               {footer}
             </footer>
           ) : null}

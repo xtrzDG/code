@@ -209,3 +209,29 @@ export const IconPlay = (props: IconProps) => (
     <path d="M8 5.5v13l10-6.5-10-6.5z" />
   </Icon>
 );
+
+export const IconSun = (props: IconProps) => (
+  <Icon {...props}>
+    <circle cx="12" cy="12" r="4" />
+    <path d="M12 2.5v2M12 19.5v2M4.6 4.6l1.4 1.4M18 18l1.4 1.4M2.5 12h2M19.5 12h2M4.6 19.4L6 18M18 6l1.4-1.4" />
+  </Icon>
+);
+
+export const IconMonitor = (props: IconProps) => (
+  <Icon {...props}>
+    <rect x="3" y="4" width="18" height="12.5" rx="2" />
+    <path d="M8.5 20.5h7M12 16.5v4" />
+  </Icon>
+);
+
+export const IconPhone = (props: IconProps) => (
+  <Icon {...props}>
+    <path d="M5 4h3.5l1.8 4.5-2.3 1.4a11 11 0 005.1 5.1l1.4-2.3L19 14.5V18a2 2 0 01-2 2A14 14 0 013 6a2 2 0 012-2z" />
+  </Icon>
+);
+
+export const IconArrowRight = (props: IconProps) => (
+  <Icon {...props}>
+    <path d="M5 12h14M13 6l6 6-6 6" />
+  </Icon>
+);

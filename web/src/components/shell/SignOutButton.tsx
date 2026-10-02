@@ -9,7 +9,7 @@ import { LOGIN_PATH } from "@/lib/navigation";
 import { IconLogout } from "../icons";
 
 /** Ends the session (POST /api/auth/logout) and opens the sign-in page. */
-export function SignOutButton({ className }: { className?: string }) {
+export function SignOutButton({ className, iconOnlyOnPhones = false }: { className?: string; iconOnlyOnPhones?: boolean }) {
   const { t } = useI18n();
   const [isPending, setPending] = useState(false);
 
@@ -27,12 +27,14 @@ export function SignOutButton({ className }: { className?: string }) {
         }
       }}
       className={cn(
-        "inline-flex items-center gap-2 rounded-lg px-2.5 py-2 text-sm text-ink-muted hover:bg-surface-muted hover:text-ink disabled:opacity-60",
+        "inline-flex h-8 cursor-pointer items-center gap-2 rounded-lg px-2.5 text-sm text-ink-muted transition-colors hover:bg-surface-muted hover:text-ink disabled:opacity-60",
         className,
       )}
     >
       <IconLogout className="size-4" aria-hidden />
-      {isPending ? t("shell.signingOut") : t("shell.signOut")}
+      <span className={cn(iconOnlyOnPhones && "sr-only sm:not-sr-only")}>
+        {isPending ? t("shell.signingOut") : t("shell.signOut")}
+      </span>
     </button>
   );
 }

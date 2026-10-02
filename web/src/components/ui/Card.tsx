@@ -28,19 +28,19 @@ export function Card({
 }) {
   const hasHeader = title !== undefined || description !== undefined || actions !== undefined;
   return (
-    <section className={cn("rounded-2xl border border-line bg-surface shadow-sm", className)} {...props}>
+    <section className={cn("rounded-2xl border border-line bg-surface", className)} {...props}>
       {hasHeader ? (
-        <header className="flex flex-wrap items-start justify-between gap-3 border-b border-line px-5 py-4 sm:px-6">
+        <header className="flex flex-wrap items-start justify-between gap-3 border-b border-line px-5 py-4">
           <div className="min-w-0 space-y-1">
-            {title !== undefined ? <h2 className="text-base font-semibold text-ink">{title}</h2> : null}
+            {title !== undefined ? <h2 className="text-[0.9375rem] font-semibold tracking-tight text-ink">{title}</h2> : null}
             {description !== undefined ? <p className="text-sm text-ink-muted">{description}</p> : null}
           </div>
           {actions !== undefined ? <div className="flex shrink-0 items-center gap-2">{actions}</div> : null}
         </header>
       ) : null}
-      <div className={cn(padded && "px-5 py-5 sm:px-6")}>{children}</div>
+      <div className={cn(padded && "p-5")}>{children}</div>
       {footer !== undefined ? (
-        <footer className="flex flex-wrap items-center justify-end gap-3 border-t border-line px-5 py-4 sm:px-6">
+        <footer className="flex flex-wrap items-center justify-end gap-3 border-t border-line px-5 py-3.5">
           {footer}
         </footer>
       ) : null}

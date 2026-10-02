@@ -68,9 +68,9 @@ export function BusinessSwitcher({
         aria-expanded={open}
         aria-controls={menuId}
         onClick={() => setOpen((value) => !value)}
-        className="flex w-full items-center gap-3 rounded-xl border border-line bg-surface px-3 py-2.5 text-left hover:border-line-strong"
+        className="flex w-full cursor-pointer items-center gap-2.5 rounded-lg border border-line bg-surface px-2.5 py-2 text-left transition-colors hover:bg-surface-muted"
       >
-        <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-accent-soft text-accent" aria-hidden>
+        <span className="flex size-8 shrink-0 items-center justify-center rounded-md border border-line bg-surface-muted text-ink-muted" aria-hidden>
           <IconBuilding className="size-4" />
         </span>
         <span className="min-w-0 flex-1">
@@ -83,7 +83,7 @@ export function BusinessSwitcher({
       {open ? (
         <div
           id={menuId}
-          className="absolute inset-x-0 top-full z-30 mt-2 overflow-hidden rounded-xl border border-line bg-surface shadow-lg"
+          className="absolute inset-x-0 top-full z-30 mt-1.5 overflow-hidden rounded-xl border border-line bg-surface shadow-lg"
         >
           <ul className="max-h-72 overflow-y-auto py-1">
             {memberships.map((membership) => {
