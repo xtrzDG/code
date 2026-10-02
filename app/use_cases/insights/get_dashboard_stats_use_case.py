@@ -1,7 +1,6 @@
 """The cabinet dashboard of a business for a period of local dates."""
 
-from collections import Counter
-from datetime import date, timedelta
+from datetime import timedelta
 from zoneinfo import ZoneInfo
 
 from typed_time_provider import Microseconds, WallClock
@@ -29,9 +28,14 @@ from app.contracts.repositories.knowledge_repositories import (
     ScheduleExceptionRepoContract,
 )
 from app.contracts.use_case_contract import UseCaseContract
-from app.schemas.constants.conversations import MessageAuthor
 from app.schemas.domain.businesses import BusinessDocument
-from app.schemas.domain.conversations import ConversationDocument
+from app.schemas.domain.profiles import BusinessProfileDocument
+from app.schemas.dto.operations.activity_counts import (
+    ActivityPeriod,
+    BookingActivityCount,
+    ConversationMixCount,
+    HandoffActivityCount,
+)
 from app.schemas.dto.operations.dashboard import (
     BookingStatusCount,
     ChannelCount,
@@ -45,20 +49,30 @@ from app.schemas.dto.operations.dashboard import (
 from app.schemas.typings.conversations.prefixed_id import ConversationId
 from app.schemas.typings.insights.constrained_integers import PeriodItemCount
 from app.use_cases.bookings.operations_support import require_business
+from app.use_cases.insights.dashboard_activity import (
+    ConversationActivity,
+    DailyCounts,
+    daily_bookings,
+    daily_handoffs,
+    fold_conversations,
+    ranked_counts,
+)
 from app.use_cases.insights.dashboard_counts import (
-    count_after_hours,
     count_used_voice_minutes,
-    ranked,
     share_percent,
 )
 from app.use_cases.insights.dashboard_package_usage import build_dashboard_package_usage
 from app.use_cases.insights.dashboard_period import choose_dashboard_period
+from app.use_cases.insights.dashboard_timeline import (
+    TimelineStretch,
+    build_timeline,
+    timeline_period,
+)
+from app.utilities.scheduling.opening_hours import DayRanges, business_day_ranges
 from app.utilities.scheduling.zoned_time import (
     load_time_zone,
     local_day_start_microseconds,
-    microseconds_to_seconds,
     to_local_date,
-    to_local_moment,
 )
 
 
@@ -76,6 +90,10 @@ class GetDashboardStatsUseCase(UseCaseContract[DashboardStatsQuery, DashboardSta
     minutes used in the period, and the package of the current billing
     window (used and included minutes and dialogs, no prices), which staff
     see too. Sandbox activity is excluded everywhere.
+
+    Everything is counted by the database (grouped counts over indexed
+    columns, `dashboard_timeline` for days and opening hours), so the
+    dashboard costs the same with a year of history as with a week.
     """
 
     def __init__(
@@ -120,138 +138,99 @@ class GetDashboardStatsUseCase(UseCaseContract[DashboardStatsQuery, DashboardSta
         date_from, date_to = choose_dashboard_period(
             input_data, zone, self._wall_clock.now_unix()
         )
-        period_start: int = local_day_start_microseconds(date_from, zone)
+        days: list[TimelineStretch] = build_timeline(date_from, date_to, zone, None)
         period_end: int = local_day_start_microseconds(
             date_to + timedelta(days=1), zone
         )
-
-        def in_period(moment: Microseconds) -> bool:
-            return period_start <= int(moment) < period_end
-
-        all_conversations: list[ConversationDocument] = (
-            self._conversation_repo.list_by_business(business.id)
+        by_day: ActivityPeriod = timeline_period(days, period_end)
+        start: Microseconds = by_day.start
+        end: Microseconds = by_day.end
+        stretches: list[TimelineStretch] = build_timeline(
+            date_from, date_to, zone, self._weekly_hours(business)
         )
-        sandbox_conversation_ids: set[ConversationId] = {
-            conversation.id
-            for conversation in all_conversations
-            if conversation.is_sandbox
-        }
-        conversations: list[ConversationDocument] = [
-            conversation
-            for conversation in all_conversations
-            if not conversation.is_sandbox and in_period(conversation.created_at)
-        ]
-        after_hours_count: int = count_after_hours(
-            self._business_profile_repo,
-            self._schedule_exception_repo,
-            business,
-            zone,
-            conversations,
+        mix: list[ConversationMixCount] = self._conversation_repo.count_started_by_mix(
+            business.id, start, end
         )
-        bookings = [
-            booking
-            for booking in self._booking_repo.list_by_business(business.id)
-            if not booking.is_sandbox and in_period(booking.created_at)
-        ]
-        handoffs = [
-            handoff
-            for handoff in self._handoff_repo.list_by_business(business.id)
-            if not handoff.is_sandbox and in_period(handoff.created_at)
-        ]
-
-        def local_day(moment: Microseconds) -> date:
-            return to_local_moment(microseconds_to_seconds(int(moment)), zone).date()
-
-        conversations_by_day: Counter[date] = Counter(
-            local_day(conversation.created_at) for conversation in conversations
+        conversations: ConversationActivity = fold_conversations(
+            mix,
+            self._conversation_repo.count_started_by_timeline(
+                business.id, timeline_period(stretches, period_end)
+            ),
+            stretches,
         )
-        bookings_by_day: Counter[date] = Counter(
-            local_day(booking.created_at) for booking in bookings
+        bookings: list[BookingActivityCount] = self._booking_repo.count_made(
+            business.id, by_day
         )
-        handoffs_by_day: Counter[date] = Counter(
-            local_day(handoff.created_at) for handoff in handoffs
+        handoffs: list[HandoffActivityCount] = self._handoff_repo.count_made(
+            business.id, by_day
         )
+        sandbox_ids: list[ConversationId] = (
+            self._conversation_repo.list_sandbox_active_since(business.id, start)
+        )
+        booking_days: DailyCounts = daily_bookings(bookings)
+        handoff_days: DailyCounts = daily_handoffs(handoffs)
         return DashboardStats(
             business_id=business.id,
             timezone=business.timezone,
             date_from=to_local_date(date_from),
             date_to=to_local_date(date_to),
-            conversation_count=PeriodItemCount(len(conversations)),
-            customer_message_count=PeriodItemCount(
-                sum(
-                    1
-                    for message in self._message_repo.list_by_business(business.id)
-                    if message.author is MessageAuthor.CUSTOMER
-                    and message.conversation_id not in sandbox_conversation_ids
-                    and in_period(message.created_at)
-                )
+            conversation_count=PeriodItemCount(conversations.total),
+            customer_message_count=self._count_customer_messages(
+                business, start, end, sandbox_ids
             ),
-            after_hours_conversation_count=PeriodItemCount(after_hours_count),
+            after_hours_conversation_count=PeriodItemCount(conversations.after_hours),
             after_hours_share_percent=share_percent(
-                after_hours_count, len(conversations)
+                conversations.after_hours, conversations.total
             ),
-            booking_count=PeriodItemCount(len(bookings)),
+            booking_count=PeriodItemCount(sum(int(item.count) for item in bookings)),
             bookings_by_status=[
                 BookingStatusCount(status=status, count=count)
-                for status, count in ranked(booking.status for booking in bookings)
-            ],
-            lead_count=PeriodItemCount(
-                sum(
-                    1
-                    for lead in self._lead_repo.list_by_business(business.id)
-                    if not lead.is_sandbox and in_period(lead.created_at)
+                for status, count in ranked_counts(
+                    (item.status, int(item.count)) for item in bookings
                 )
-            ),
-            handoff_count=PeriodItemCount(len(handoffs)),
+            ],
+            lead_count=self._lead_repo.count_made(business.id, start, end),
+            handoff_count=PeriodItemCount(sum(int(item.count) for item in handoffs)),
             handoffs_by_reason=[
                 HandoffReasonCount(reason=reason, count=count)
-                for reason, count in ranked(handoff.reason for handoff in handoffs)
+                for reason, count in ranked_counts(
+                    (item.reason, int(item.count)) for item in handoffs
+                )
             ],
             handoffs_by_urgency=[
                 HandoffUrgencyCount(urgency=urgency, count=count)
-                for urgency, count in ranked(handoff.urgency for handoff in handoffs)
+                for urgency, count in ranked_counts(
+                    (item.urgency, int(item.count)) for item in handoffs
+                )
             ],
             languages=[
                 LanguageCount(language=language, count=count)
-                for language, count in ranked(
-                    conversation.language
-                    for conversation in conversations
-                    if conversation.language is not None
+                for language, count in ranked_counts(
+                    (item.language, int(item.count))
+                    for item in mix
+                    if item.language is not None
                 )
             ],
             channels=[
                 ChannelCount(channel=channel, count=count)
-                for channel, count in ranked(
-                    conversation.channel for conversation in conversations
+                for channel, count in ranked_counts(
+                    (item.channel, int(item.count)) for item in mix
                 )
             ],
             open_unanswered_question_count=PeriodItemCount(
-                sum(
-                    1
-                    for question in self._unanswered_question_repo.list_by_business(
-                        business.id
-                    )
-                    if not question.is_resolved and not question.is_sandbox
-                )
+                int(self._unanswered_question_repo.count_open(business.id))
             ),
             used_voice_minutes=count_used_voice_minutes(
-                self._usage_event_repo,
-                business,
-                period_start,
-                period_end,
-                sandbox_conversation_ids,
+                self._usage_event_repo, business, int(start), int(end), set(sandbox_ids)
             ),
             daily=[
                 DashboardDay(
-                    date=to_local_date(day),
-                    conversation_count=PeriodItemCount(conversations_by_day[day]),
-                    booking_count=PeriodItemCount(bookings_by_day[day]),
-                    handoff_count=PeriodItemCount(handoffs_by_day[day]),
+                    date=to_local_date(date_from + timedelta(days=day)),
+                    conversation_count=conversations.daily.on(day),
+                    booking_count=booking_days.on(day),
+                    handoff_count=handoff_days.on(day),
                 )
-                for day in (
-                    date_from + timedelta(days=offset)
-                    for offset in range((date_to - date_from).days + 1)
-                )
+                for day in range(len(days))
             ],
             package=build_dashboard_package_usage(
                 self._subscription_repo,
@@ -261,3 +240,38 @@ class GetDashboardStatsUseCase(UseCaseContract[DashboardStatsQuery, DashboardSta
                 business,
             ),
         )
+
+    def _weekly_hours(self, business: BusinessDocument) -> DayRanges | None:
+        """The business's opening ranges by date; None without weekly hours."""
+
+        profile: BusinessProfileDocument | None = (
+            self._business_profile_repo.get_by_business(business.id)
+        )
+        if profile is None or not profile.hours:
+            return None
+
+        return business_day_ranges(
+            list(profile.hours),
+            self._schedule_exception_repo.list_by_business(business.id),
+        )
+
+    def _count_customer_messages(
+        self,
+        business: BusinessDocument,
+        start: Microseconds,
+        end: Microseconds,
+        sandbox_ids: list[ConversationId],
+    ) -> PeriodItemCount:
+        """Customer messages of the period outside sandbox conversations."""
+
+        total: int = int(
+            self._message_repo.count_customer_messages(business.id, start, end)
+        )
+        if sandbox_ids:
+            total -= int(
+                self._message_repo.count_customer_messages(
+                    business.id, start, end, sandbox_ids
+                )
+            )
+
+        return PeriodItemCount(total)

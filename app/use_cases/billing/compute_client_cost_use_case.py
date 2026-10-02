@@ -180,9 +180,10 @@ class ComputeClientCostUseCase(UseCaseContract[ClientCostQuery, ClientCostReport
                 usage_costs[event.conversation_id] += int(event.cost_micro_usd)
 
         message_costs: defaultdict[ConversationKey, int] = defaultdict(int)
-        for message in self._message_repo.list_by_business(business.id):
-            if input_data.period_start <= message.created_at < input_data.period_end:
-                message_costs[message.conversation_id] += int(message.cost_micro_usd)
+        for conversation_id, cost in self._message_repo.sum_cost_by_conversation(
+            business.id, input_data.period_start, input_data.period_end
+        ).items():
+            message_costs[conversation_id] += int(cost)
 
         unattributed: int = usage_costs.pop(None, 0) + message_costs.pop(None, 0)
         conversation_ids: set[ConversationKey] = set(usage_costs) | set(message_costs)

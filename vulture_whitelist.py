@@ -160,6 +160,7 @@ _.scanned_businesses  # app/schemas/dto/compliance.py
 _.conversation_count  # app/schemas/dto/contacts.py
 _.first_seen_at  # app/schemas/dto/contacts.py
 _.customer_message_count  # app/schemas/dto/conversation_feed/conversation_views.py
+_.earlier_messages_cursor  # app/schemas/dto/conversation_feed/conversation_views.py
 _.last_message_author  # app/schemas/dto/conversation_feed/conversation_views.py
 _.last_message_text  # app/schemas/dto/conversation_feed/conversation_views.py
 _.message_count  # app/schemas/dto/conversation_feed/conversation_views.py
@@ -187,6 +188,7 @@ _.handoffs_by_reason  # app/schemas/dto/operations/dashboard.py
 _.handoffs_by_urgency  # app/schemas/dto/operations/dashboard.py
 _.open_unanswered_question_count  # app/schemas/dto/operations/dashboard.py
 _.package  # app/schemas/dto/operations/dashboard.py
+_.open_count  # app/schemas/dto/operations/handoffs.py
 _.resolved_count  # app/schemas/dto/operations/handoffs.py
 _.new_lead_count  # app/schemas/dto/operations/inbox_counts.py
 _.open_handoff_count  # app/schemas/dto/operations/inbox_counts.py

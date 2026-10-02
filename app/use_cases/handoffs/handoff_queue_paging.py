@@ -142,7 +142,9 @@ def read_phase(
 def cursor_position(sort_key: int, item_id: str) -> tuple[QueuePhase, KeysetPosition]:
     """The phase a cursor's sort key belongs to, and the position inside it."""
 
-    if sort_key < OPEN_BAND:
+    # Open keys stay above OPEN_BAND - URGENCY_BAND (a low-urgency handoff
+    # is OPEN_BAND minus its creation time); resolved keys are timestamps.
+    if sort_key <= OPEN_BAND - URGENCY_BAND:
         return RESOLVED_PHASE, single_value_position(sort_key, item_id)
 
     above_open: int = sort_key - OPEN_BAND

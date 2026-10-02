@@ -51,6 +51,7 @@ from app.use_cases.bookings.booking_support import (
     notify_staff_about_booking,
     stay_night_count,
 )
+from app.use_cases.bookings.bookings_in_play import bookings_not_over_on
 from app.utilities.scheduling.availability import BLOCKING_BOOKING_STATUSES
 from app.utilities.scheduling.booking_placement import place_booking
 from app.utilities.scheduling.booking_views import build_booking_view
@@ -194,8 +195,11 @@ class RescheduleBookingUseCase(
                     zone=inputs.zone,
                     business_hours=inputs.business_hours,
                     exceptions=inputs.exceptions,
-                    bookings=self._booking_repo.list_by_business(
-                        input_data.business_id
+                    bookings=bookings_not_over_on(
+                        self._booking_repo,
+                        input_data.business_id,
+                        new_date,
+                        inputs.zone,
                     ),
                     rules=inputs.rules,
                     stay_times=inputs.stay_times,

@@ -50,7 +50,7 @@ def find_full_scans(module_path: Path) -> list[str]:
 def test_repositories_query_by_index_instead_of_reading_whole_collections() -> None:
     full_scans: list[str] = [
         full_scan
-        for module_path in sorted(REPOSITORIES_DIRECTORY.glob("*.py"))
+        for module_path in sorted(REPOSITORIES_DIRECTORY.rglob("*.py"))
         for full_scan in find_full_scans(module_path)
     ]
     unexpected: list[str] = [
@@ -68,7 +68,7 @@ def test_repositories_query_by_index_instead_of_reading_whole_collections() -> N
 def test_the_allow_list_has_no_stale_entries() -> None:
     full_scans: set[str] = {
         full_scan
-        for module_path in sorted(REPOSITORIES_DIRECTORY.glob("*.py"))
+        for module_path in sorted(REPOSITORIES_DIRECTORY.rglob("*.py"))
         for full_scan in find_full_scans(module_path)
     }
 

@@ -48,6 +48,7 @@ from app.use_cases.bookings.booking_support import (
     load_scheduling_inputs,
     stay_night_count,
 )
+from app.use_cases.bookings.bookings_in_play import bookings_not_over_on
 from app.use_cases.bookings.operations_support import (
     ContactDetails,
     build_audit_entry,
@@ -257,7 +258,9 @@ class UpdateBookingUseCase(UseCaseContract[UpdateBookingCommand, BookingView]):
                 zone=inputs.zone,
                 business_hours=inputs.business_hours,
                 exceptions=inputs.exceptions,
-                bookings=self._booking_repo.list_by_business(booking.business_id),
+                bookings=bookings_not_over_on(
+                    self._booking_repo, booking.business_id, starts.date(), inputs.zone
+                ),
                 rules=inputs.rules,
                 stay_times=inputs.stay_times,
                 earliest_start=0,
