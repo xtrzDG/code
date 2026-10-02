@@ -3,16 +3,18 @@
 import { useBusinessFormat } from "@/components/business/BusinessContext";
 import { IconChevronRight } from "@/components/icons";
 import type { CallView } from "@/components/insights/types";
-import { Badge, Card } from "@/components/ui";
+import { Alert, Badge, Card } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 
 import { CallRecordingPlayer } from "./CallRecordingPlayer";
+import { callGuardBadge, callGuardFindings } from "./callGuard";
 import { CALL_OUTCOMES, formatCallDuration } from "./conversationModel";
 
 /**
  * The phone calls of the conversation: when, how long, what came out of
- * them, the call transcript and a player for the recording (kept by the
- * voice platform, loaded only on play; recordings are deleted after the
+ * them, what the after-call check of the assistant's spoken values found,
+ * the call transcript and a player for the recording (kept by the voice
+ * platform, loaded only on play; recordings are deleted after the
  * retention period).
  */
 export function CallsCard({ calls }: { calls: readonly CallView[] }) {
@@ -32,6 +34,7 @@ export function CallsCard({ calls }: { calls: readonly CallView[] }) {
 function CallItem({ call }: { call: CallView }) {
   const { t } = useI18n();
   const format = useBusinessFormat();
+  const guardBadge = callGuardBadge(call);
   return (
     <li className="rounded-xl border border-line p-4">
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
@@ -40,6 +43,7 @@ function CallItem({ call }: { call: CallView }) {
           {formatCallDuration(call.duration_seconds)}
         </span>
         {call.outcome ? <Badge tone="neutral">{t(CALL_OUTCOMES[call.outcome])}</Badge> : null}
+        {guardBadge ? <Badge tone={guardBadge.tone}>{t(guardBadge.label)}</Badge> : null}
         {call.from_phone_number ? (
           <span className="text-ink-muted">
             {t("conversations.calls.from")}{" "}
@@ -49,6 +53,7 @@ function CallItem({ call }: { call: CallView }) {
           </span>
         ) : null}
       </div>
+      <CallGuardFindingsNotice call={call} />
       <dl className="mt-3 space-y-2 text-sm">
         <div>
           <dt className="text-ink-muted">{t("conversations.calls.recording")}</dt>
@@ -82,5 +87,31 @@ function CallItem({ call }: { call: CallView }) {
         <p className="mt-3 text-sm text-ink-muted">{t("conversations.calls.noTranscript")}</p>
       )}
     </li>
+  );
+}
+
+/** The values the assistant said that the business data does not back. */
+function CallGuardFindingsNotice({ call }: { call: CallView }) {
+  const { t } = useI18n();
+  const findings = callGuardFindings(call);
+  if (findings === null) {
+    return null;
+  }
+  return (
+    <Alert tone="warning" title={t(findings.title)} className="mt-3">
+      <p>{t("conversations.calls.guard.valuesLabel")}</p>
+      <ul className="mt-1.5 flex flex-wrap gap-1.5" aria-label={t("conversations.calls.guard.valuesLabel")}>
+        {findings.values.map((value) => (
+          <li
+            key={value}
+            dir="auto"
+            className="rounded-lg border border-warning/30 bg-surface px-2 py-0.5 font-medium text-ink tabular-nums"
+          >
+            {value}
+          </li>
+        ))}
+      </ul>
+      <p className="mt-2">{t("conversations.calls.guard.hint")}</p>
+    </Alert>
   );
 }

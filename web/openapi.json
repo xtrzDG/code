@@ -2629,6 +2629,16 @@
             ],
             "title": "From Phone Number"
           },
+          "guard_verdict": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CallGuardVerdict"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "id": {
             "title": "Id",
             "type": "string"
@@ -2692,6 +2702,13 @@
               }
             ],
             "title": "Transcript"
+          },
+          "unverified_values": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Unverified Values",
+            "type": "array"
           },
           "updated_at": {
             "description": "Last update wall-clock UNIX timestamp in microseconds.",
@@ -2819,6 +2836,16 @@
         "title": "CallForwardingInstructions",
         "type": "object"
       },
+      "CallGuardVerdict": {
+        "description": "Result of the invented-numbers audit of what the phone assistant said\nduring a call (checked after the call, when it can no longer be\nrewritten).\n\nFLAGGED: values missing from the business data, in a call that made no\nbooking or lead; HANDED_OFF: the same in a call that made one, so staff\ngot a low-urgency handoff to check it.",
+        "enum": [
+          "clean",
+          "flagged",
+          "handed_off"
+        ],
+        "title": "CallGuardVerdict",
+        "type": "string"
+      },
       "CallOutcome": {
         "description": "Result extracted from a finished phone call.",
         "enum": [
@@ -2834,7 +2861,7 @@
       },
       "CallView": {
         "additionalProperties": false,
-        "description": "A phone call of the conversation: its transcript, duration, outcome and\nwhere its recording is kept (the platform reference; reading it is\naudited with the card).",
+        "description": "A phone call of the conversation: its transcript, duration, outcome and\nwhere its recording is kept (the platform reference; reading it is\naudited with the card), and what the after-call check of the\nassistant's spoken values found (`guard_verdict`, None while unchecked).",
         "properties": {
           "duration_seconds": {
             "minimum": 0.0,
@@ -2854,6 +2881,16 @@
               }
             ],
             "title": "From Phone Number"
+          },
+          "guard_verdict": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CallGuardVerdict"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "id": {
             "title": "Id",
@@ -2908,6 +2945,13 @@
               }
             ],
             "title": "Transcript"
+          },
+          "unverified_values": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Unverified Values",
+            "type": "array"
           }
         },
         "required": [

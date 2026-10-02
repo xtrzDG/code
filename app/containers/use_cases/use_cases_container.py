@@ -154,6 +154,7 @@ class UseCasesContainer(containers.DeclarativeContainer):
         time_provider=time_provider,
         utilities=utilities,
         conversation_use_cases=conversations,
+        follow_up_use_cases=follow_ups,
     )
     assistants: AssistantUseCasesContainer = Container(  # type: ignore[assignment]
         AssistantUseCasesContainer,

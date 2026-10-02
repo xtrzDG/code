@@ -34,6 +34,15 @@ export const conversationsEn = {
     playRetry: "Try again",
     transcript: "Call transcript",
     noTranscript: "No transcript for this call.",
+    guard: {
+      clean: "Values checked",
+      flagged: "Unchecked values",
+      handedOff: "Passed to staff to check",
+      flaggedTitle: "The assistant mentioned values that are not in your data",
+      handedOffTitle: "The assistant mentioned values that are not in your data during a call that made a booking or request. A colleague got a task to check it.",
+      valuesLabel: "Not found in your data:",
+      hint: "Compare them with what was agreed in the transcript, and add missing prices or hours to the knowledge base.",
+    },
     outcomes: {
       booking: "Booking",
       lead: "Lead",

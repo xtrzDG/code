@@ -10,8 +10,10 @@ from app.containers.time_provider import TimeProviderContainer
 from app.containers.use_cases.conversation_use_cases import (
     ConversationUseCasesContainer,
 )
+from app.containers.use_cases.follow_up_use_cases import FollowUpUseCasesContainer
 from app.containers.utilities import UtilitiesContainer
 from app.contracts.use_case_contract import UseCaseContract
+from app.schemas.dto.call_audits import CallAudit, CallAuditRequest
 from app.schemas.dto.conversations import VoiceToolCallRequest
 from app.schemas.dto.voice_webhooks import (
     CallInitiationData,
@@ -22,6 +24,9 @@ from app.schemas.dto.voice_webhooks import (
     VoiceToolWebhookRequest,
 )
 from app.schemas.typings.businesses.prefixed_id import BusinessId
+from app.use_cases.voice.audit_call_replies_use_case import (
+    AuditCallRepliesUseCase,
+)
 from app.use_cases.voice.authenticate_post_call_use_case import (
     AuthenticatePostCallUseCase,
 )
@@ -40,8 +45,9 @@ from app.use_cases.voice.start_voice_call_use_case import StartVoiceCallUseCase
 
 class VoiceUseCasesContainer(containers.DeclarativeContainer):
     """
-    Voice calls (ElevenLabs Agents): webhooks, finished calls, confirmations,
-    and switching the voice agent off when voice leaves the live service.
+    Voice calls (ElevenLabs Agents): webhooks, finished calls and the check
+    of what the assistant said, confirmations, and switching the voice agent
+    off when voice leaves the live service.
     """
 
     adapters: AdaptersContainer = DependenciesContainer()  # type: ignore[assignment]
@@ -52,6 +58,7 @@ class VoiceUseCasesContainer(containers.DeclarativeContainer):
     time_provider: TimeProviderContainer = DependenciesContainer()  # type: ignore[assignment]
     utilities: UtilitiesContainer = DependenciesContainer()  # type: ignore[assignment]
     conversation_use_cases: ConversationUseCasesContainer = DependenciesContainer()  # type: ignore[assignment]
+    follow_up_use_cases: FollowUpUseCasesContainer = DependenciesContainer()  # type: ignore[assignment]
 
     # Switches the voice agent off when voice leaves the live service.
     remove_voice_agent_use_case: Factory[UseCaseContract[BusinessId, None]] = Factory(
@@ -88,6 +95,19 @@ class VoiceUseCasesContainer(containers.DeclarativeContainer):
         phone_number_parser=utilities.phone_number_parser,
         build_call_greeting=conversation_use_cases.build_call_greeting_use_case,
         app_settings=config.app_settings,
+    )
+    audit_call_replies_use_case: Factory[
+        UseCaseContract[CallAuditRequest, CallAudit]
+    ] = Factory(
+        AuditCallRepliesUseCase,
+        business_repo=repositories.business_repo,
+        call_repo=repositories.call_repo,
+        conversation_repo=repositories.conversation_repo,
+        assistant_version_repo=repositories.assistant_version_repo,
+        message_repo=repositories.message_repo,
+        booking_repo=repositories.booking_repo,
+        handoff_to_human=follow_up_use_cases.handoff_to_human_use_case,
+        wall_clock=time_provider.microsecond_wall_clock,
     )
     authenticate_post_call_use_case: Factory[
         UseCaseContract[PostCallWebhookRequest, FinishedCallReport | None]

@@ -5,6 +5,7 @@ from typed_time_provider import Microseconds
 from app.schemas.constants.assistants import AssistantToolName
 from app.schemas.constants.channels import ChannelKind, MessageDirection
 from app.schemas.constants.conversations import (
+    CallGuardVerdict,
     CallOutcome,
     ConversationRating,
     ConversationStatus,
@@ -41,6 +42,7 @@ from app.schemas.typings.conversations.strings import (
     MessageText,
     ProviderCallId,
     RecordingStoragePath,
+    UnverifiedReplyValue,
 )
 from app.schemas.typings.localization.constrained_strings import (
     E164PhoneNumber,
@@ -134,3 +136,9 @@ class CallDocument(BaseDocument):
     provider_call_id: ProviderCallId
     cost_micro_usd: CostMicroUsd = CostMicroUsd(0)
     outcome: CallOutcome | None = None
+    # The invented-numbers audit of the assistant's spoken lines; None until
+    # the call is audited (calls stored before the audit existed).
+    guard_verdict: CallGuardVerdict | None = None
+    unverified_values: list[UnverifiedReplyValue] = Field(
+        default_factory=list[UnverifiedReplyValue]
+    )

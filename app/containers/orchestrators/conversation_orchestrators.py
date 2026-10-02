@@ -98,6 +98,7 @@ class ConversationOrchestratorsContainer(containers.DeclarativeContainer):
         PostCallWebhookOrchestrator,
         authenticate_post_call=voice_use_cases.authenticate_post_call_use_case,
         record_finished_call=voice_use_cases.record_finished_call_use_case,
+        audit_call_replies=voice_use_cases.audit_call_replies_use_case,
         send_call_confirmation=voice_use_cases.send_call_confirmation_use_case,
     )
 

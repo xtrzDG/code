@@ -44,6 +44,7 @@ export type HandoffPage = Schema<"HandoffPage">;
 
 export type CallView = Schema<"CallView">;
 export type CallOutcome = Schema<"CallOutcome">;
+export type CallGuardVerdict = Schema<"CallGuardVerdict">;
 export type ConversationRating = Schema<"ConversationRating">;
 export type StaffReplyView = Schema<"StaffReplyView">;
 export type StaffReplyBlock = Schema<"StaffReplyBlock">;

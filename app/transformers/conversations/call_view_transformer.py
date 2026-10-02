@@ -16,4 +16,6 @@ class CallViewTransformer(TransformerContract[CallDocument, CallView]):
             outcome=input_data.outcome,
             transcript=input_data.transcript,
             recording_path=input_data.recording_path,
+            guard_verdict=input_data.guard_verdict,
+            unverified_values=list(input_data.unverified_values),
         )

@@ -63,6 +63,22 @@ class CallOutcome(StrEnum):
     ABANDONED = "abandoned"
 
 
+class CallGuardVerdict(StrEnum):
+    """
+    Result of the invented-numbers audit of what the phone assistant said
+    during a call (checked after the call, when it can no longer be
+    rewritten).
+
+    FLAGGED: values missing from the business data, in a call that made no
+    booking or lead; HANDED_OFF: the same in a call that made one, so staff
+    got a low-urgency handoff to check it.
+    """
+
+    CLEAN = "clean"
+    FLAGGED = "flagged"
+    HANDED_OFF = "handed_off"
+
+
 class ReplyGuardVerdict(StrEnum):
     """Result of the invented-numbers guard on an assistant reply."""
 
