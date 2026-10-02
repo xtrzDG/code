@@ -1,5 +1,3 @@
-from uuid import UUID, uuid5
-
 from app.contracts.repositories.notification_repositories import (
     NotificationPreferencesRepoContract,
     PushSubscriptionChange,
@@ -16,28 +14,14 @@ from app.schemas.domain.push_subscriptions import PushSubscriptionDocument
 from app.schemas.domain.staff_deliveries import StaffDeliveryStateDocument
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.notifications.prefixed_id import (
-    NotificationPreferencesId,
     PushSubscriptionId,
     StaffDeliveryStateId,
 )
 from app.schemas.typings.storage.constrained_strings import DocumentFieldPath
 from app.schemas.typings.users.prefixed_id import UserId
+from app.utilities.notifications.staff_delivery_keys import preferences_id_of
 
 USER_ID_FIELD: DocumentFieldPath = DocumentFieldPath("user_id")
-# Fixed namespace of the preferences ids (never change it: stored ids
-# depend on it).
-PREFERENCES_NAMESPACE: UUID = UUID("3a6f0f1e-6f55-4d1c-9a7e-0c2b8a51d4e3")
-
-
-def preferences_id_of(
-    business_id: BusinessId,
-    user_id: UserId,
-) -> NotificationPreferencesId:
-    """One preferences document per business and user."""
-
-    return NotificationPreferencesId(
-        uuid5(PREFERENCES_NAMESPACE, f"{business_id}|{user_id}")
-    )
 
 
 class PushSubscriptionRepository(

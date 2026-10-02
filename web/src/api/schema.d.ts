@@ -1075,6 +1075,75 @@ export interface paths {
         patch: operations["change_member_role_v1_businesses__business_id__members__user_id__patch"];
         trace?: never;
     };
+    "/v1/businesses/{business_id}/notification-contacts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Notification Contacts */
+        get: operations["list_notification_contacts_v1_businesses__business_id__notification_contacts_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/businesses/{business_id}/notification-contacts/{contact_key}/test": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Check Notification Contact */
+        post: operations["check_notification_contact_v1_businesses__business_id__notification_contacts__contact_key__test_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/businesses/{business_id}/notification-links/{token}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Resolve Notification Link */
+        get: operations["resolve_notification_link_v1_businesses__business_id__notification_links__token__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/businesses/{business_id}/notification-preferences": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Notification Settings */
+        get: operations["get_notification_settings_v1_businesses__business_id__notification_preferences_get"];
+        /** Update Notification Preferences */
+        put: operations["update_notification_preferences_v1_businesses__business_id__notification_preferences_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/businesses/{business_id}/profile": {
         parameters: {
             query?: never;
@@ -1138,6 +1207,57 @@ export interface paths {
         get: operations["get_profile_wizard_v1_businesses__business_id__profile_wizard_get"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/businesses/{business_id}/push-subscriptions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Subscribe Push Device */
+        post: operations["subscribe_push_device_v1_businesses__business_id__push_subscriptions_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/businesses/{business_id}/push-subscriptions/{subscription_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Unsubscribe Push Device */
+        delete: operations["unsubscribe_push_device_v1_businesses__business_id__push_subscriptions__subscription_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/businesses/{business_id}/push-subscriptions/{subscription_id}/test": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Check Push Device */
+        post: operations["check_push_device_v1_businesses__business_id__push_subscriptions__subscription_id__test_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -4252,7 +4372,9 @@ export interface components {
         ManagerContactChannel: "telegram" | "whatsapp" | "email" | "sms";
         /**
          * ManagerContactView
-         * @description Validated staff contact that receives handoffs, bookings and leads.
+         * @description Validated staff contact that receives handoffs, bookings and leads:
+         *     which events and quiet hours (None: all, any hour), and the Telegram
+         *     @username of a chat linked through the platform bot.
          */
         ManagerContactView: {
             /** Address */
@@ -4262,6 +4384,9 @@ export interface components {
             language: string;
             /** Name */
             name: string;
+            preferences?: components["schemas"]["StaffNotificationPreferences"] | null;
+            /** Telegram Username */
+            telegram_username?: string | null;
         };
         /**
          * MarginMoney
@@ -4402,6 +4527,21 @@ export interface components {
             currency_code: string;
         };
         /**
+         * MyNotificationSettingsView
+         * @description The signed-in user's notifications in one business: which events and
+         *     quiet hours, the devices that show them, and the key a browser
+         *     subscribes with (None: device notifications are off on this server).
+         */
+        MyNotificationSettingsView: {
+            /** Business Id */
+            business_id: string;
+            /** Devices */
+            devices: components["schemas"]["PushDeviceView"][];
+            preferences: components["schemas"]["StaffNotificationPreferences"];
+            /** Push Public Key */
+            push_public_key?: string | null;
+        };
+        /**
          * NicheCatalogView
          * @description Every niche the platform supports.
          */
@@ -4464,6 +4604,49 @@ export interface components {
             wave: components["schemas"]["LaunchWave"];
         };
         /**
+         * NotificationCheckResult
+         * @description How a test notification went right after it was sent.
+         */
+        NotificationCheckResult: {
+            delivery: components["schemas"]["StaffDeliveryView"];
+            /**
+             * Is Simulated
+             * @default false
+             */
+            is_simulated: boolean;
+        };
+        /** NotificationContactList */
+        NotificationContactList: {
+            /** Business Id */
+            business_id: string;
+            /** Items */
+            items: components["schemas"]["NotificationContactView"][];
+        };
+        /**
+         * NotificationContactView
+         * @description A staff contact as Settings shows it. `provider_ready` is False when
+         *     this server has no provider for its channel (then notifications fail
+         *     in production and are only logged elsewhere); `delivery` is None until
+         *     a first notification.
+         */
+        NotificationContactView: {
+            /** Address */
+            address: string;
+            channel: components["schemas"]["ManagerContactChannel"];
+            delivery?: components["schemas"]["StaffDeliveryView"] | null;
+            /** Key */
+            key: string;
+            /** Language */
+            language: string;
+            /** Name */
+            name: string;
+            preferences: components["schemas"]["StaffNotificationPreferences"];
+            /** Provider Ready */
+            provider_ready: boolean;
+            /** Telegram Username */
+            telegram_username?: string | null;
+        };
+        /**
          * OpeningInterval
          * @description One opening interval in the business time zone (closing may be 24:00).
          */
@@ -4502,6 +4685,14 @@ export interface components {
          * @enum {string}
          */
         OtpDeliveryChannel: "sms" | "whatsapp" | "telegram" | "email";
+        /**
+         * OutboundMessageStatus
+         * @description Delivery state of an outbox message: PENDING waits for its next attempt,
+         *     DELIVERED reached the platform, DEAD was refused for good (a 4xx, no
+         *     provider) or ran out of attempts.
+         * @enum {string}
+         */
+        OutboundMessageStatus: "pending" | "delivered" | "dead";
         /**
          * PackageUsageView
          * @description Use of the plan package in the current billing period.
@@ -4796,6 +4987,22 @@ export interface components {
             timezone: string;
         };
         /**
+         * PushDeviceView
+         * @description One device of the signed-in user that shows notifications.
+         */
+        PushDeviceView: {
+            /** Created At */
+            created_at: number;
+            /** Delivered At */
+            delivered_at?: number | null;
+            /** Id */
+            id: string;
+            /** Language */
+            language: string;
+            /** Last Error */
+            last_error?: string | null;
+        };
+        /**
          * QuestionAnswerType
          * @description Input shape of one niche-specific profile question.
          * @enum {string}
@@ -4849,6 +5056,18 @@ export interface components {
             status: components["schemas"]["QueuedJobStatus"];
             /** Updated At */
             updated_at: number;
+        };
+        /**
+         * QuietHours
+         * @description A daily stretch in the business time zone when notifications wait
+         *     (`starts_at` to `ends_at`, across midnight when it ends earlier than it
+         *     starts). Urgent handoffs still come through.
+         */
+        QuietHours: {
+            /** Ends At */
+            ends_at: string;
+            /** Starts At */
+            starts_at: string;
         };
         /**
          * QuotedMoney
@@ -4960,6 +5179,61 @@ export interface components {
          */
         ServiceMode: "full" | "leads_only";
         /**
+         * StaffAlertEvent
+         * @description What staff can be told about: a conversation passed to a person, a new
+         *     request, a booking (new, moved or cancelled). Each staff contact and
+         *     each cabinet user chooses which of them reach them.
+         * @enum {string}
+         */
+        StaffAlertEvent: "handoff" | "lead" | "booking";
+        /**
+         * StaffDeliveryView
+         * @description How the latest notification to a contact or device went: sending
+         *     (`pending`, also while held for quiet hours or waiting for a retry),
+         *     `delivered` or `dead` with the reason, and when one last arrived.
+         */
+        StaffDeliveryView: {
+            /** Attempted At */
+            attempted_at: number;
+            /** Delivered At */
+            delivered_at?: number | null;
+            /** Last Error */
+            last_error?: string | null;
+            status: components["schemas"]["OutboundMessageStatus"];
+        };
+        /**
+         * StaffLinkTarget
+         * @description The cabinet page a notification link opens (after sign-in).
+         * @enum {string}
+         */
+        StaffLinkTarget: "conversation" | "lead" | "booking" | "notifications";
+        /**
+         * StaffLinkView
+         * @description Where a link leads, for the cabinet to open (it maps the target to its
+         *     page; a booking opens the bookings of `booking_date`). An expired link
+         *     (`is_expired`) names no page. Every page still checks access itself.
+         */
+        StaffLinkView: {
+            /** Booking Date */
+            booking_date?: string | null;
+            /** Booking Id */
+            booking_id?: string | null;
+            /** Business Id */
+            business_id: string;
+            /** Conversation Id */
+            conversation_id?: string | null;
+            /** Expires At */
+            expires_at: number;
+            /**
+             * Is Expired
+             * @default false
+             */
+            is_expired: boolean;
+            /** Lead Id */
+            lead_id?: string | null;
+            target: components["schemas"]["StaffLinkTarget"];
+        };
+        /**
          * StaffMessageDelivery
          * @description How a staff message reaches the customer: sent through the messenger
          *     right away, sent in the owner's WhatsApp message template (after the
@@ -4975,6 +5249,16 @@ export interface components {
         StaffMessageResult: {
             delivery: components["schemas"]["StaffMessageDelivery"];
             message: components["schemas"]["MessageView"];
+        };
+        /**
+         * StaffNotificationPreferences
+         * @description What reaches one recipient (a staff contact, or a cabinet user's
+         *     devices): which events, and quiet hours when they wait.
+         */
+        StaffNotificationPreferences: {
+            /** Events */
+            events?: components["schemas"]["StaffAlertEvent"][];
+            quiet_hours?: components["schemas"]["QuietHours"] | null;
         };
         /**
          * StaffReplyBlock
@@ -6608,6 +6892,16 @@ export interface operations {
                         language?: string | null;
                         /** Name */
                         name: string;
+                        preferences?: {
+                            /** Events */
+                            events?: ("handoff" | "lead" | "booking")[];
+                            quiet_hours?: {
+                                /** Ends At */
+                                ends_at: string;
+                                /** Starts At */
+                                starts_at: string;
+                            } | null;
+                        } | null;
                     }[] | null;
                     /** Name */
                     name?: string | null;
@@ -12380,6 +12674,456 @@ export interface operations {
             };
         };
     };
+    list_notification_contacts_v1_businesses__business_id__notification_contacts_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NotificationContactList"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    check_notification_contact_v1_businesses__business_id__notification_contacts__contact_key__test_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+                contact_key: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NotificationCheckResult"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    resolve_notification_link_v1_businesses__business_id__notification_links__token__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+                token: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StaffLinkView"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    get_notification_settings_v1_businesses__business_id__notification_preferences_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MyNotificationSettingsView"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    update_notification_preferences_v1_businesses__business_id__notification_preferences_put: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Events */
+                    events: ("handoff" | "lead" | "booking")[];
+                    quiet_hours?: {
+                        /** Ends At */
+                        ends_at: string;
+                        /** Starts At */
+                        starts_at: string;
+                    } | null;
+                };
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MyNotificationSettingsView"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
     get_profile_v1_businesses__business_id__profile_get: {
         parameters: {
             query?: never;
@@ -13021,6 +13765,286 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ProfileWizardView"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    subscribe_push_device_v1_businesses__business_id__push_subscriptions_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Endpoint */
+                    endpoint: string;
+                    /**
+                     * PushSubscriptionKeys
+                     * @description The browser's keys that messages to it are encrypted with (RFC 8291).
+                     */
+                    keys: {
+                        /** Auth */
+                        auth: string;
+                        /** P256Dh */
+                        p256dh: string;
+                    };
+                    /** Language */
+                    language: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PushDeviceView"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    unsubscribe_push_device_v1_businesses__business_id__push_subscriptions__subscription_id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+                subscription_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    check_push_device_v1_businesses__business_id__push_subscriptions__subscription_id__test_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+                subscription_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NotificationCheckResult"];
                 };
             };
             /** @description Sign-in required: the bearer token is missing, invalid or expired. */

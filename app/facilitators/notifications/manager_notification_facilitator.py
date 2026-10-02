@@ -15,20 +15,14 @@ from app.facilitators.notifications.staff_outbox_messages import (
 )
 from app.schemas.configurations.app_settings import AppSettings
 from app.schemas.constants.deliveries import OutboundMessageKind, OutboundMessageStatus
-from app.schemas.constants.handoffs import ManagerContactChannel
 from app.schemas.domain.businesses import ManagerContact
-from app.schemas.domain.outbound_messages import (
-    OutboundMessageDocument,
-    OutboundTemplate,
-)
+from app.schemas.domain.outbound_messages import OutboundMessageDocument
 from app.schemas.dto.deliveries import StaffNotification
-from app.schemas.typings.channels.constrained_strings import WhatsAppTemplateName
 from app.schemas.typings.deliveries.constrained_strings import (
     OutboundIdempotencyKey,
     OutboundRecipientKey,
 )
 from app.schemas.typings.deliveries.strings import DeliveryErrorText
-from app.utilities.channels.language_codes import to_whatsapp_template_language
 from app.utilities.deliveries.delivery_keys import (
     derive_outbound_message_id,
     staff_idempotency_key,
@@ -39,7 +33,10 @@ from app.utilities.notifications.staff_delivery_keys import (
     RATE_WINDOW_SECONDS,
     rate_limit_key,
 )
-from app.utilities.notifications.staff_providers import missing_staff_provider
+from app.utilities.notifications.staff_providers import (
+    missing_staff_provider,
+    staff_template,
+)
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -115,7 +112,7 @@ class ManagerNotificationFacilitator(ManagerNotificationFacilitatorContract):
             recipient_key=recipient_key,
             staff_contact=contact,
             text=notification.text,
-            template=self._template(contact),
+            template=staff_template(self._app_settings, contact),
             handoff_id=notification.handoff_id,
             next_attempt_at=notification.deliver_after,
             created_at=now,
@@ -142,18 +139,3 @@ class ManagerNotificationFacilitator(ManagerNotificationFacilitatorContract):
             now,
         )
         return None if refused_key is None else RATE_LIMITED_TEXT
-
-    def _template(self, contact: ManagerContact) -> OutboundTemplate | None:
-        template_name: WhatsAppTemplateName | None = (
-            self._app_settings.whatsapp_notification_template_name
-        )
-        if (
-            contact.channel is not ManagerContactChannel.WHATSAPP
-            or template_name is None
-        ):
-            return None
-
-        return OutboundTemplate(
-            name=template_name,
-            language_code=to_whatsapp_template_language(contact.language),
-        )

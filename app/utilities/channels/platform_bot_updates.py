@@ -5,6 +5,7 @@ from typing import NamedTuple
 from app.schemas.exceptions.application_errors import UnsupportedLanguageError
 from app.schemas.typings.channels.strings import ProviderMessageId
 from app.schemas.typings.conversations.strings import ChannelUserId
+from app.schemas.typings.handoffs.constrained_strings import ManagerTelegramUsername
 from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.utilities.channels.json_values import (
     JsonObject,
@@ -23,13 +24,15 @@ FALLBACK_LANGUAGE: LanguageTag = LanguageTag("en")
 class StaffBotMessage(NamedTuple):
     """
     A text a person wrote to the platform bot in a private chat (the text
-    is raw input: the bot parses the command itself).
+    is raw input: the bot parses the command itself), with the sender's
+    public @username when they have one.
     """
 
     update_id: ProviderMessageId | None
     chat_id: ChannelUserId
     text: str
     sender_language: LanguageTag
+    sender_username: ManagerTelegramUsername | None = None
 
 
 def read_staff_bot_message(body: bytes) -> StaffBotMessage | None:
@@ -58,7 +61,21 @@ def read_staff_bot_message(body: bytes) -> StaffBotMessage | None:
         chat_id=ChannelUserId(chat_id),
         text=text,
         sender_language=read_sender_language(sender),
+        sender_username=read_sender_username(sender),
     )
+
+
+def read_sender_username(sender: JsonObject) -> ManagerTelegramUsername | None:
+    """The sender's @username (without "@"), None when absent or malformed."""
+
+    raw_username: str | None = read_text(sender, "username")
+    if raw_username is None:
+        return None
+
+    try:
+        return ManagerTelegramUsername(raw_username.strip().removeprefix("@"))
+    except ValueError:
+        return None
 
 
 def read_sender_language(sender: JsonObject) -> LanguageTag:

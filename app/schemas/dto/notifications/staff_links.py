@@ -4,9 +4,11 @@ from base_pydantic_schemas import ImmutableDTO
 from typed_time_provider import Microseconds
 
 from app.schemas.constants.notifications import StaffLinkTarget
+from app.schemas.typings.bookings.constrained_strings import LocalDate
 from app.schemas.typings.bookings.prefixed_id import BookingId, LeadId
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.conversations.prefixed_id import ConversationId
+from app.schemas.typings.notifications.booleans import IsStaffLinkExpired
 from app.schemas.typings.notifications.constrained_strings import StaffLinkToken
 from app.schemas.typings.users.prefixed_id import UserId
 
@@ -36,8 +38,9 @@ class StaffLinkQuery(ImmutableDTO):
 
 class StaffLinkView(ImmutableDTO):
     """
-    Where a valid link leads, for the cabinet to open (it maps the target to
-    its page). Every page still checks the user's access itself.
+    Where a link leads, for the cabinet to open (it maps the target to its
+    page; a booking opens the bookings of `booking_date`). An expired link
+    (`is_expired`) names no page. Every page still checks access itself.
     """
 
     business_id: BusinessId
@@ -45,4 +48,6 @@ class StaffLinkView(ImmutableDTO):
     conversation_id: ConversationId | None = None
     lead_id: LeadId | None = None
     booking_id: BookingId | None = None
+    booking_date: LocalDate | None = None
     expires_at: Microseconds
+    is_expired: IsStaffLinkExpired = False

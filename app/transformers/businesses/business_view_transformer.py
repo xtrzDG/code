@@ -65,6 +65,8 @@ class BusinessViewTransformer(TransformerContract[BusinessViewSource, BusinessVi
                     channel=contact.channel,
                     address=contact.address,
                     language=contact.language,
+                    preferences=contact.preferences,
+                    telegram_username=contact.telegram_username,
                 )
                 for contact in business.manager_contacts
             ],

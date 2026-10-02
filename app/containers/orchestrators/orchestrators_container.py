@@ -26,6 +26,9 @@ from app.containers.orchestrators.demo_orchestrators import DemoOrchestratorsCon
 from app.containers.orchestrators.knowledge_orchestrators import (
     KnowledgeOrchestratorsContainer,
 )
+from app.containers.orchestrators.notification_orchestrators import (
+    NotificationOrchestratorsContainer,
+)
 from app.containers.orchestrators.operations_orchestrators import (
     OperationsOrchestratorsContainer,
 )
@@ -105,6 +108,11 @@ class OrchestratorsContainer(containers.DeclarativeContainer):
     billing: BillingOrchestratorsContainer = Container(  # type: ignore[assignment]
         BillingOrchestratorsContainer,
         billing_use_cases=use_cases.billing,
+    )
+    notifications: NotificationOrchestratorsContainer = Container(  # type: ignore[assignment]
+        NotificationOrchestratorsContainer,
+        notification_use_cases=use_cases.notifications,
+        delivery_use_cases=use_cases.deliveries,
     )
     platform: PlatformOrchestratorsContainer = Container(  # type: ignore[assignment]
         PlatformOrchestratorsContainer,

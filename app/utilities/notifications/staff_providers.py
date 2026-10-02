@@ -3,7 +3,11 @@
 from app.schemas.configurations.app_settings import AppSettings
 from app.schemas.constants.environment import DeploymentEnvironment
 from app.schemas.constants.handoffs import ManagerContactChannel
+from app.schemas.domain.businesses import ManagerContact
+from app.schemas.domain.outbound_messages import OutboundTemplate
+from app.schemas.typings.channels.constrained_strings import WhatsAppTemplateName
 from app.schemas.typings.deliveries.strings import DeliveryErrorText
+from app.utilities.channels.language_codes import to_whatsapp_template_language
 
 
 def is_provider_configured(
@@ -69,3 +73,32 @@ def missing_staff_provider(
         return None
 
     return DeliveryErrorText(MISSING_PROVIDER_TEXTS[channel])
+
+
+def is_delivery_simulated(
+    settings: AppSettings, channel: ManagerContactChannel
+) -> bool:
+    """No provider outside production: the notification is only logged."""
+
+    return (
+        not is_provider_configured(settings, channel)
+        and settings.environment is not DeploymentEnvironment.PRODUCTION
+    )
+
+
+def staff_template(
+    settings: AppSettings,
+    contact: ManagerContact,
+) -> OutboundTemplate | None:
+    """The approved WhatsApp template a staff notification goes out as."""
+
+    template_name: WhatsAppTemplateName | None = (
+        settings.whatsapp_notification_template_name
+    )
+    if contact.channel is not ManagerContactChannel.WHATSAPP or template_name is None:
+        return None
+
+    return OutboundTemplate(
+        name=template_name,
+        language_code=to_whatsapp_template_language(contact.language),
+    )

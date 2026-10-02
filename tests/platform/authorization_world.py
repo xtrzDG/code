@@ -27,6 +27,7 @@ from tests.e2e.harness import Workshop, bearer, start_workshop
 from tests.e2e.harness_settings import E2E_ENVIRONMENT
 from tests.e2e.workshop_container import OverridableProvider, replace_provider
 from tests.operations.fake_google import FakeGoogle
+from tests.platform.authorization_notifications import notification_path_values
 
 type JsonObject = dict[str, Any]
 type Headers = dict[str, str]
@@ -194,6 +195,11 @@ def discover_path_values(
     )
     values["call_id"] = find_call(world)
     values["batch_id"] = seed_import_batch(world)
+    values.update(
+        notification_path_values(
+            world.workshop, world.storage_scope, world.business_b, world.owner_b
+        )
+    )
     return values
 
 

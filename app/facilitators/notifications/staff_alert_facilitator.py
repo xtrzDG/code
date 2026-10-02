@@ -37,13 +37,12 @@ from app.schemas.typings.handoffs.constrained_integers import (
 )
 from app.schemas.typings.notifications.constrained_strings import CabinetDeepLink
 from app.schemas.typings.users.prefixed_id import UserId
+from app.utilities.notifications.cabinet_links import build_cabinet_link, link_expiry
 from app.utilities.notifications.quiet_hours import quiet_hours_end
 from app.utilities.scheduling.zoned_time import load_time_zone
 
 logger: logging.Logger = logging.getLogger(__name__)
 
-# How long a notification link opens its page (after sign-in).
-LINK_LIFETIME_MICROSECONDS: int = 7 * 24 * 60 * 60 * 1_000_000
 # Chats the staff member linked themselves may show the customer's details.
 DETAILED_CHANNELS: frozenset[ManagerContactChannel] = frozenset(
     {ManagerContactChannel.TELEGRAM, ManagerContactChannel.WHATSAPP}
@@ -230,18 +229,15 @@ class StaffAlertFacilitator(StaffAlertFacilitatorContract):
         return quiet_hours_end(preferences.quiet_hours, zone, now)
 
     def _link(self, alert: StaffAlert, now: Microseconds) -> CabinetDeepLink | None:
-        base_url = self._app_settings.cabinet_base_url
-        if base_url is None:
-            return None
-
-        token = self._link_signer.sign(
+        return build_cabinet_link(
+            self._link_signer,
+            self._app_settings.cabinet_base_url,
             StaffLinkClaims(
                 business_id=alert.business_id,
                 target=alert.target,
                 conversation_id=alert.conversation_id,
                 lead_id=alert.lead_id,
                 booking_id=alert.booking_id,
-                expires_at=Microseconds(int(now) + LINK_LIFETIME_MICROSECONDS),
-            )
+                expires_at=link_expiry(now),
+            ),
         )
-        return CabinetDeepLink(f"{str(base_url).rstrip('/')}/n/{token}")

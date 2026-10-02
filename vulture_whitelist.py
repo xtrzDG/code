@@ -200,3 +200,5 @@ _.saved_knowledge_items  # app/schemas/dto/profiles/profile_steps.py
 _.is_complete  # app/schemas/dto/profiles/profile_wizard.py
 _.expires_in_seconds  # app/schemas/dto/users.py
 _.international_phone_number  # app/schemas/dto/users.py
+_.provider_ready  # app/schemas/dto/notifications/notification_settings.py
+_.booking_date  # app/schemas/dto/notifications/staff_links.py

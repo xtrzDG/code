@@ -17,6 +17,20 @@ class CabinetDeepLink(BaseConstrainedTypedString):
     pattern = r"^https?://[^\s/]+/n/[A-Za-z0-9_-]+$"
 
 
+class NotificationContactKey(BaseConstrainedTypedString):
+    """
+    How the cabinet names one staff contact of a business: a digest of the
+    business, channel and address (the contacts are a list without ids).
+
+    Example:
+        key = NotificationContactKey("3f9a1c0e5b7d2a4c6e8f0a1b")
+    """
+
+    min_length = 24
+    max_length = 24
+    pattern = r"^[0-9a-f]{24}$"
+
+
 class PushAuthSecret(BaseConstrainedTypedString):
     """
     The authentication secret a browser gives with its push subscription

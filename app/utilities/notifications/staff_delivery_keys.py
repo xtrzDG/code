@@ -13,7 +13,11 @@ from app.schemas.typings.deliveries.constrained_strings import (
     OutboundRecipientKey,
 )
 from app.schemas.typings.handoffs.prefixed_id import HandoffId
+from app.schemas.typings.notifications.constrained_strings import (
+    NotificationContactKey,
+)
 from app.schemas.typings.notifications.prefixed_id import (
+    NotificationPreferencesId,
     PushSubscriptionId,
     StaffDeliveryStateId,
 )
@@ -23,6 +27,7 @@ from app.schemas.typings.users.prefixed_id import UserId
 # them).
 STAFF_DELIVERY_NAMESPACE: UUID = UUID("9b1e4c2a-58d3-4f0e-a7c6-2d8f1b3e5a90")
 PUSH_SUBSCRIPTION_NAMESPACE: UUID = UUID("d24a7f61-0c3e-4b9a-8e15-6f2b9c4d7a38")
+PREFERENCES_NAMESPACE: UUID = UUID("3a6f0f1e-6f55-4d1c-9a7e-0c2b8a51d4e3")
 RATE_KEY_DIGEST_LENGTH: int = 32
 # Notifications one recipient may get per hour; more are not sent (a flood
 # of handoffs is someone abusing the chat, and SMS cost money). Devices
@@ -82,3 +87,25 @@ def rate_limit_key(
 
     digest: str = hashlib.sha256(f"{business_id}|{recipient_key}".encode()).hexdigest()
     return f"staff_notify:{digest[:RATE_KEY_DIGEST_LENGTH]}"
+
+
+def notification_contact_key(
+    business_id: BusinessId,
+    channel: ManagerContactChannel,
+    address: str,
+) -> NotificationContactKey:
+    """The cabinet's name of a staff contact (channel and address digest)."""
+
+    text: str = f"{business_id}|{channel.value}|{address}"
+    return NotificationContactKey(hashlib.sha256(text.encode()).hexdigest()[:24])
+
+
+def preferences_id_of(
+    business_id: BusinessId,
+    user_id: UserId,
+) -> NotificationPreferencesId:
+    """One preferences document per business and user."""
+
+    return NotificationPreferencesId(
+        uuid5(PREFERENCES_NAMESPACE, f"{business_id}|{user_id}")
+    )

@@ -6924,7 +6924,7 @@
       },
       "ManagerContactView": {
         "additionalProperties": false,
-        "description": "Validated staff contact that receives handoffs, bookings and leads.",
+        "description": "Validated staff contact that receives handoffs, bookings and leads:\nwhich events and quiet hours (None: all, any hour), and the Telegram\n@username of a chat linked through the platform bot.",
         "properties": {
           "address": {
             "title": "Address",
@@ -6943,6 +6943,30 @@
           "name": {
             "title": "Name",
             "type": "string"
+          },
+          "preferences": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/StaffNotificationPreferences"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "telegram_username": {
+            "anyOf": [
+              {
+                "maxLength": 32,
+                "minLength": 4,
+                "pattern": "^[A-Za-z][A-Za-z0-9_]{3,31}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Telegram Username"
           }
         },
         "required": [
@@ -7268,6 +7292,47 @@
         "title": "Money",
         "type": "object"
       },
+      "MyNotificationSettingsView": {
+        "additionalProperties": false,
+        "description": "The signed-in user's notifications in one business: which events and\nquiet hours, the devices that show them, and the key a browser\nsubscribes with (None: device notifications are off on this server).",
+        "properties": {
+          "business_id": {
+            "title": "Business Id",
+            "type": "string"
+          },
+          "devices": {
+            "items": {
+              "$ref": "#/components/schemas/PushDeviceView"
+            },
+            "title": "Devices",
+            "type": "array"
+          },
+          "preferences": {
+            "$ref": "#/components/schemas/StaffNotificationPreferences"
+          },
+          "push_public_key": {
+            "anyOf": [
+              {
+                "maxLength": 88,
+                "minLength": 86,
+                "pattern": "^[A-Za-z0-9_-]+={0,2}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Push Public Key"
+          }
+        },
+        "required": [
+          "business_id",
+          "preferences",
+          "devices"
+        ],
+        "title": "MyNotificationSettingsView",
+        "type": "object"
+      },
       "NicheCatalogView": {
         "additionalProperties": false,
         "description": "Every niche the platform supports.",
@@ -7445,6 +7510,120 @@
         "title": "NicheSummaryView",
         "type": "object"
       },
+      "NotificationCheckResult": {
+        "additionalProperties": false,
+        "description": "How a test notification went right after it was sent.",
+        "properties": {
+          "delivery": {
+            "$ref": "#/components/schemas/StaffDeliveryView"
+          },
+          "is_simulated": {
+            "default": false,
+            "title": "Is Simulated",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "delivery"
+        ],
+        "title": "NotificationCheckResult",
+        "type": "object"
+      },
+      "NotificationContactList": {
+        "additionalProperties": false,
+        "properties": {
+          "business_id": {
+            "title": "Business Id",
+            "type": "string"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/NotificationContactView"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "business_id",
+          "items"
+        ],
+        "title": "NotificationContactList",
+        "type": "object"
+      },
+      "NotificationContactView": {
+        "additionalProperties": false,
+        "description": "A staff contact as Settings shows it. `provider_ready` is False when\nthis server has no provider for its channel (then notifications fail\nin production and are only logged elsewhere); `delivery` is None until\na first notification.",
+        "properties": {
+          "address": {
+            "title": "Address",
+            "type": "string"
+          },
+          "channel": {
+            "$ref": "#/components/schemas/ManagerContactChannel"
+          },
+          "delivery": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/StaffDeliveryView"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "key": {
+            "maxLength": 24,
+            "minLength": 24,
+            "pattern": "^[0-9a-f]{24}$",
+            "title": "Key",
+            "type": "string"
+          },
+          "language": {
+            "maxLength": 16,
+            "minLength": 2,
+            "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$",
+            "title": "Language",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "preferences": {
+            "$ref": "#/components/schemas/StaffNotificationPreferences"
+          },
+          "provider_ready": {
+            "title": "Provider Ready",
+            "type": "boolean"
+          },
+          "telegram_username": {
+            "anyOf": [
+              {
+                "maxLength": 32,
+                "minLength": 4,
+                "pattern": "^[A-Za-z][A-Za-z0-9_]{3,31}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Telegram Username"
+          }
+        },
+        "required": [
+          "key",
+          "name",
+          "channel",
+          "address",
+          "language",
+          "preferences",
+          "provider_ready"
+        ],
+        "title": "NotificationContactView",
+        "type": "object"
+      },
       "OpeningInterval": {
         "additionalProperties": false,
         "description": "One opening interval in the business time zone (closing may be 24:00).",
@@ -7564,6 +7743,16 @@
           "email"
         ],
         "title": "OtpDeliveryChannel",
+        "type": "string"
+      },
+      "OutboundMessageStatus": {
+        "description": "Delivery state of an outbox message: PENDING waits for its next attempt,\nDELIVERED reached the platform, DEAD was refused for good (a 4xx, no\nprovider) or ran out of attempts.",
+        "enum": [
+          "pending",
+          "delivered",
+          "dead"
+        ],
+        "title": "OutboundMessageStatus",
         "type": "string"
       },
       "PackageUsageView": {
@@ -8361,6 +8550,56 @@
         "title": "ProfileWizardView",
         "type": "object"
       },
+      "PushDeviceView": {
+        "additionalProperties": false,
+        "description": "One device of the signed-in user that shows notifications.",
+        "properties": {
+          "created_at": {
+            "title": "Created At",
+            "type": "integer"
+          },
+          "delivered_at": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Delivered At"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "language": {
+            "maxLength": 16,
+            "minLength": 2,
+            "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$",
+            "title": "Language",
+            "type": "string"
+          },
+          "last_error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Error"
+          }
+        },
+        "required": [
+          "id",
+          "language",
+          "created_at"
+        ],
+        "title": "PushDeviceView",
+        "type": "object"
+      },
       "QuestionAnswerType": {
         "description": "Input shape of one niche-specific profile question.",
         "enum": [
@@ -8504,6 +8743,32 @@
           "updated_at"
         ],
         "title": "QueuedJobView",
+        "type": "object"
+      },
+      "QuietHours": {
+        "additionalProperties": false,
+        "description": "A daily stretch in the business time zone when notifications wait\n(`starts_at` to `ends_at`, across midnight when it ends earlier than it\nstarts). Urgent handoffs still come through.",
+        "properties": {
+          "ends_at": {
+            "maxLength": 5,
+            "minLength": 5,
+            "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$",
+            "title": "Ends At",
+            "type": "string"
+          },
+          "starts_at": {
+            "maxLength": 5,
+            "minLength": 5,
+            "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$",
+            "title": "Starts At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "starts_at",
+          "ends_at"
+        ],
+        "title": "QuietHours",
         "type": "object"
       },
       "QuotedMoney": {
@@ -8750,6 +9015,144 @@
         "title": "ServiceMode",
         "type": "string"
       },
+      "StaffAlertEvent": {
+        "description": "What staff can be told about: a conversation passed to a person, a new\nrequest, a booking (new, moved or cancelled). Each staff contact and\neach cabinet user chooses which of them reach them.",
+        "enum": [
+          "handoff",
+          "lead",
+          "booking"
+        ],
+        "title": "StaffAlertEvent",
+        "type": "string"
+      },
+      "StaffDeliveryView": {
+        "additionalProperties": false,
+        "description": "How the latest notification to a contact or device went: sending\n(`pending`, also while held for quiet hours or waiting for a retry),\n`delivered` or `dead` with the reason, and when one last arrived.",
+        "properties": {
+          "attempted_at": {
+            "title": "Attempted At",
+            "type": "integer"
+          },
+          "delivered_at": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Delivered At"
+          },
+          "last_error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Error"
+          },
+          "status": {
+            "$ref": "#/components/schemas/OutboundMessageStatus"
+          }
+        },
+        "required": [
+          "status",
+          "attempted_at"
+        ],
+        "title": "StaffDeliveryView",
+        "type": "object"
+      },
+      "StaffLinkTarget": {
+        "description": "The cabinet page a notification link opens (after sign-in).",
+        "enum": [
+          "conversation",
+          "lead",
+          "booking",
+          "notifications"
+        ],
+        "title": "StaffLinkTarget",
+        "type": "string"
+      },
+      "StaffLinkView": {
+        "additionalProperties": false,
+        "description": "Where a link leads, for the cabinet to open (it maps the target to its\npage; a booking opens the bookings of `booking_date`). An expired link\n(`is_expired`) names no page. Every page still checks access itself.",
+        "properties": {
+          "booking_date": {
+            "anyOf": [
+              {
+                "maxLength": 10,
+                "minLength": 10,
+                "pattern": "^(19|20|21)[0-9]{2}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Booking Date"
+          },
+          "booking_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Booking Id"
+          },
+          "business_id": {
+            "title": "Business Id",
+            "type": "string"
+          },
+          "conversation_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Conversation Id"
+          },
+          "expires_at": {
+            "title": "Expires At",
+            "type": "integer"
+          },
+          "is_expired": {
+            "default": false,
+            "title": "Is Expired",
+            "type": "boolean"
+          },
+          "lead_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lead Id"
+          },
+          "target": {
+            "$ref": "#/components/schemas/StaffLinkTarget"
+          }
+        },
+        "required": [
+          "business_id",
+          "target",
+          "expires_at"
+        ],
+        "title": "StaffLinkView",
+        "type": "object"
+      },
       "StaffMessageDelivery": {
         "description": "How a staff message reaches the customer: sent through the messenger\nright away, sent in the owner's WhatsApp message template (after the\n24-hour window), or kept for the website chat, which shows it when the\nvisitor's widget asks for new messages.",
         "enum": [
@@ -8776,6 +9179,31 @@
           "delivery"
         ],
         "title": "StaffMessageResult",
+        "type": "object"
+      },
+      "StaffNotificationPreferences": {
+        "additionalProperties": false,
+        "description": "What reaches one recipient (a staff contact, or a cabinet user's\ndevices): which events, and quiet hours when they wait.",
+        "properties": {
+          "events": {
+            "items": {
+              "$ref": "#/components/schemas/StaffAlertEvent"
+            },
+            "title": "Events",
+            "type": "array"
+          },
+          "quiet_hours": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/QuietHours"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "title": "StaffNotificationPreferences",
         "type": "object"
       },
       "StaffReplyBlock": {
@@ -11801,7 +12229,7 @@
                       {
                         "items": {
                           "additionalProperties": false,
-                          "description": "Staff contact typed by the owner.\n\nThe address is checked per channel: a numeric chat id for Telegram, a\nphone number of any country for WhatsApp and SMS (national formats use\nthe business country), an e-mail address for e-mail. Without `language`\nthe owner's language is used.",
+                          "description": "Staff contact typed by the owner.\n\nThe address is checked per channel: a numeric chat id for Telegram, a\nphone number of any country for WhatsApp and SMS (national formats use\nthe business country), an e-mail address for e-mail. Without `language`\nthe owner's language is used; without `preferences` every event arrives\nat any hour.",
                           "properties": {
                             "address": {
                               "title": "Address",
@@ -11835,6 +12263,68 @@
                             "name": {
                               "title": "Name",
                               "type": "string"
+                            },
+                            "preferences": {
+                              "anyOf": [
+                                {
+                                  "additionalProperties": false,
+                                  "description": "What reaches one recipient (a staff contact, or a cabinet user's\ndevices): which events, and quiet hours when they wait.",
+                                  "properties": {
+                                    "events": {
+                                      "items": {
+                                        "description": "What staff can be told about: a conversation passed to a person, a new\nrequest, a booking (new, moved or cancelled). Each staff contact and\neach cabinet user chooses which of them reach them.",
+                                        "enum": [
+                                          "handoff",
+                                          "lead",
+                                          "booking"
+                                        ],
+                                        "title": "StaffAlertEvent",
+                                        "type": "string"
+                                      },
+                                      "title": "Events",
+                                      "type": "array"
+                                    },
+                                    "quiet_hours": {
+                                      "anyOf": [
+                                        {
+                                          "additionalProperties": false,
+                                          "description": "A daily stretch in the business time zone when notifications wait\n(`starts_at` to `ends_at`, across midnight when it ends earlier than it\nstarts). Urgent handoffs still come through.",
+                                          "properties": {
+                                            "ends_at": {
+                                              "maxLength": 5,
+                                              "minLength": 5,
+                                              "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$",
+                                              "title": "Ends At",
+                                              "type": "string"
+                                            },
+                                            "starts_at": {
+                                              "maxLength": 5,
+                                              "minLength": 5,
+                                              "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$",
+                                              "title": "Starts At",
+                                              "type": "string"
+                                            }
+                                          },
+                                          "required": [
+                                            "starts_at",
+                                            "ends_at"
+                                          ],
+                                          "title": "QuietHours",
+                                          "type": "object"
+                                        },
+                                        {
+                                          "type": "null"
+                                        }
+                                      ]
+                                    }
+                                  },
+                                  "title": "StaffNotificationPreferences",
+                                  "type": "object"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
                             }
                           },
                           "required": [
@@ -21757,6 +22247,677 @@
         ]
       }
     },
+    "/v1/businesses/{business_id}/notification-contacts": {
+      "get": {
+        "operationId": "list_notification_contacts_v1_businesses__business_id__notification_contacts_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationContactList"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "List Notification Contacts",
+        "tags": [
+          "notifications"
+        ]
+      }
+    },
+    "/v1/businesses/{business_id}/notification-contacts/{contact_key}/test": {
+      "post": {
+        "operationId": "check_notification_contact_v1_businesses__business_id__notification_contacts__contact_key__test_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "contact_key",
+            "required": true,
+            "schema": {
+              "title": "Contact Key",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationCheckResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Check Notification Contact",
+        "tags": [
+          "notifications"
+        ]
+      }
+    },
+    "/v1/businesses/{business_id}/notification-links/{token}": {
+      "get": {
+        "operationId": "resolve_notification_link_v1_businesses__business_id__notification_links__token__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "token",
+            "required": true,
+            "schema": {
+              "title": "Token",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StaffLinkView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Resolve Notification Link",
+        "tags": [
+          "notifications"
+        ]
+      }
+    },
+    "/v1/businesses/{business_id}/notification-preferences": {
+      "get": {
+        "operationId": "get_notification_settings_v1_businesses__business_id__notification_preferences_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MyNotificationSettingsView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Get Notification Settings",
+        "tags": [
+          "notifications"
+        ]
+      },
+      "put": {
+        "operationId": "update_notification_preferences_v1_businesses__business_id__notification_preferences_put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "description": "HTTP body: which events reach me, and my quiet hours (None: none).",
+                "properties": {
+                  "events": {
+                    "items": {
+                      "description": "What staff can be told about: a conversation passed to a person, a new\nrequest, a booking (new, moved or cancelled). Each staff contact and\neach cabinet user chooses which of them reach them.",
+                      "enum": [
+                        "handoff",
+                        "lead",
+                        "booking"
+                      ],
+                      "title": "StaffAlertEvent",
+                      "type": "string"
+                    },
+                    "title": "Events",
+                    "type": "array"
+                  },
+                  "quiet_hours": {
+                    "anyOf": [
+                      {
+                        "additionalProperties": false,
+                        "description": "A daily stretch in the business time zone when notifications wait\n(`starts_at` to `ends_at`, across midnight when it ends earlier than it\nstarts). Urgent handoffs still come through.",
+                        "properties": {
+                          "ends_at": {
+                            "maxLength": 5,
+                            "minLength": 5,
+                            "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$",
+                            "title": "Ends At",
+                            "type": "string"
+                          },
+                          "starts_at": {
+                            "maxLength": 5,
+                            "minLength": 5,
+                            "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$",
+                            "title": "Starts At",
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "starts_at",
+                          "ends_at"
+                        ],
+                        "title": "QuietHours",
+                        "type": "object"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "required": [
+                  "events"
+                ],
+                "title": "NotificationPreferencesRequest",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MyNotificationSettingsView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Update Notification Preferences",
+        "tags": [
+          "notifications"
+        ]
+      }
+    },
     "/v1/businesses/{business_id}/profile": {
       "get": {
         "operationId": "get_profile_v1_businesses__business_id__profile_get",
@@ -23535,6 +24696,431 @@
         "summary": "Get Profile Wizard",
         "tags": [
           "profile"
+        ]
+      }
+    },
+    "/v1/businesses/{business_id}/push-subscriptions": {
+      "post": {
+        "operationId": "subscribe_push_device_v1_businesses__business_id__push_subscriptions_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "description": "HTTP body: the browser's push subscription (PushSubscription.toJSON())\nand the cabinet's language, which its notifications will speak.",
+                "properties": {
+                  "endpoint": {
+                    "maxLength": 2048,
+                    "minLength": 12,
+                    "pattern": "^https://[^\\s]+$",
+                    "title": "Endpoint",
+                    "type": "string"
+                  },
+                  "keys": {
+                    "additionalProperties": false,
+                    "description": "The browser's keys that messages to it are encrypted with (RFC 8291).",
+                    "properties": {
+                      "auth": {
+                        "maxLength": 64,
+                        "minLength": 16,
+                        "pattern": "^[A-Za-z0-9_-]+={0,2}$",
+                        "title": "Auth",
+                        "type": "string"
+                      },
+                      "p256dh": {
+                        "maxLength": 100,
+                        "minLength": 80,
+                        "pattern": "^[A-Za-z0-9_-]+={0,2}$",
+                        "title": "P256Dh",
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "p256dh",
+                      "auth"
+                    ],
+                    "title": "PushSubscriptionKeys",
+                    "type": "object"
+                  },
+                  "language": {
+                    "maxLength": 16,
+                    "minLength": 2,
+                    "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$",
+                    "title": "Language",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "endpoint",
+                  "keys",
+                  "language"
+                ],
+                "title": "PushSubscriptionRequest",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PushDeviceView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Subscribe Push Device",
+        "tags": [
+          "notifications"
+        ]
+      }
+    },
+    "/v1/businesses/{business_id}/push-subscriptions/{subscription_id}": {
+      "delete": {
+        "operationId": "unsubscribe_push_device_v1_businesses__business_id__push_subscriptions__subscription_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "subscription_id",
+            "required": true,
+            "schema": {
+              "title": "Subscription Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Unsubscribe Push Device",
+        "tags": [
+          "notifications"
+        ]
+      }
+    },
+    "/v1/businesses/{business_id}/push-subscriptions/{subscription_id}/test": {
+      "post": {
+        "operationId": "check_push_device_v1_businesses__business_id__push_subscriptions__subscription_id__test_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "subscription_id",
+            "required": true,
+            "schema": {
+              "title": "Subscription Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationCheckResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Check Push Device",
+        "tags": [
+          "notifications"
         ]
       }
     },

@@ -15,6 +15,9 @@ from app.containers.pipelines.conversation_pipelines import (
 )
 from app.containers.pipelines.demo_pipelines import DemoPipelinesContainer
 from app.containers.pipelines.knowledge_pipelines import KnowledgePipelinesContainer
+from app.containers.pipelines.notification_pipelines import (
+    NotificationPipelinesContainer,
+)
 from app.containers.pipelines.operations_pipelines import OperationsPipelinesContainer
 from app.containers.pipelines.platform_pipelines import PlatformPipelinesContainer
 from app.containers.use_cases.use_cases_container import UseCasesContainer
@@ -70,6 +73,10 @@ class PipelinesContainer(containers.DeclarativeContainer):
     billing: BillingPipelinesContainer = Container(  # type: ignore[assignment]
         BillingPipelinesContainer,
         billing_orchestrators=orchestrators.billing,
+    )
+    notifications: NotificationPipelinesContainer = Container(  # type: ignore[assignment]
+        NotificationPipelinesContainer,
+        notifications=orchestrators.notifications,
     )
     platform: PlatformPipelinesContainer = Container(  # type: ignore[assignment]
         PlatformPipelinesContainer,

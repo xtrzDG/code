@@ -36,6 +36,7 @@ OWNER_ONLY_OPERATIONS: frozenset[str] = frozenset(
         f"GET {B}/integrations/google-calendar/connect-url",
         f"POST {B}/manager-contacts/telegram-link",
         f"POST {B}/members",
+        f"POST {B}/notification-contacts/{{contact_key}}/test",
         f"PATCH {B}/members/{{user_id}}",
         f"DELETE {B}/members/{{user_id}}",
         f"PUT {B}/profile",
