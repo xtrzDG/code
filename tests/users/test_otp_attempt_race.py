@@ -12,6 +12,7 @@ import time
 from collections.abc import Callable
 
 import pytest
+from typed_time_provider import Microseconds
 
 from app.repositories.user_repositories import OtpChallengeRepository
 from app.schemas.domain.users import OtpChallengeDocument
@@ -21,6 +22,7 @@ from app.schemas.exceptions.application_errors import (
     RateLimitedError,
 )
 from app.schemas.typings.compliance.strings import ClientIpAddress
+from app.schemas.typings.localization.constrained_strings import E164PhoneNumber
 from app.schemas.typings.users.constrained_strings import OtpCode
 from app.schemas.typings.users.prefixed_id import OtpChallengeId
 from app.schemas.typings.users.strings import OtpCodeHash
@@ -168,3 +170,30 @@ def test_the_same_right_code_sent_twice_at_once_opens_one_session() -> None:
     stored = testbed.otp_challenge_repo.get(challenge.challenge_id)
     assert stored is not None
     assert stored.is_consumed
+
+
+def test_a_right_code_consumed_by_a_parallel_check_opens_no_second_session() -> None:
+    testbed = build_accounts_testbed()
+    challenge = testbed.request_phone_code(GEORGIA_MOBILE)
+    correct_code = testbed.otp_delivery.last_code()
+    repo = testbed.otp_challenge_repo
+    consume = repo.consume
+
+    def consumed_meanwhile(
+        challenge_id: OtpChallengeId, now: Microseconds
+    ) -> OtpChallengeDocument | None:
+        consume(challenge_id, now)  # The parallel check wins the swap.
+        return consume(challenge_id, now)
+
+    repo.consume = consumed_meanwhile  # type: ignore[method-assign]
+
+    with pytest.raises(AuthenticationRequiredError):
+        testbed.verify_otp_login.run(
+            VerifyOtpLoginCommand(
+                challenge_id=challenge.challenge_id, code=correct_code
+            )
+        )
+
+    assert (
+        testbed.user_repo.find_by_phone_number(E164PhoneNumber("+995555123456")) is None
+    )

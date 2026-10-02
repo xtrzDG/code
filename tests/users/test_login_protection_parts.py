@@ -127,6 +127,7 @@ def test_an_alert_never_fails_the_refused_request(
         ("+995555123456", False),  # Georgian mobile.
         ("+4915112345678", False),  # German mobile.
         ("+447624123456", False),  # Isle of Man mobile.
+        ("+99912345678", True),  # No such calling code: never sent.
     ],
 )
 def test_high_cost_numbers(phone_number: str, is_high_cost: bool) -> None:

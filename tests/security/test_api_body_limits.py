@@ -1,11 +1,13 @@
 """Request body limits of the API: 413 before or while a body is read."""
 
+import asyncio
 from collections.abc import Iterator
 from typing import Annotated
 
 import pytest
 from fastapi import APIRouter, Depends, Request
 from fastapi.testclient import TestClient
+from starlette.types import Message, Receive, Scope, Send
 
 from app.gateways.http.application import build_http_application
 from app.gateways.http.middleware.body_size_limit_middleware import (
@@ -13,7 +15,11 @@ from app.gateways.http.middleware.body_size_limit_middleware import (
     MENU_IMPORT_BODY_LIMIT_BYTES,
     POST_CALL_BODY_LIMIT_BYTES,
     WEBHOOK_BODY_LIMIT_BYTES,
+    BodySizeLimitMiddleware,
     find_body_limit,
+)
+from app.gateways.http.middleware.security_headers_middleware import (
+    SecurityHeadersMiddleware,
 )
 from app.gateways.http.strict_request_parsing import read_raw_request_body
 from app.schemas.typings.channels.constrained_strings import PublicBaseUrl
@@ -128,3 +134,26 @@ def test_a_refused_cabinet_body_still_answers_with_cors() -> None:
     assert (
         response.headers["Access-Control-Allow-Origin"] == "https://cabinet.example.com"
     )
+
+
+def test_other_connections_pass_through_both_middlewares() -> None:
+    seen: list[str] = []
+
+    async def app(scope: Scope, receive: Receive, send: Send) -> None:
+        del receive, send
+        seen.append(str(scope["type"]))
+
+    async def receive() -> Message:
+        return {"type": "lifespan.startup"}
+
+    async def send(message: Message) -> None:
+        del message
+
+    asyncio.run(BodySizeLimitMiddleware(app)({"type": "lifespan"}, receive, send))
+    asyncio.run(
+        SecurityHeadersMiddleware(app, is_https_only=True)(
+            {"type": "websocket", "path": "/ws"}, receive, send
+        )
+    )
+
+    assert seen == ["lifespan", "websocket"]
