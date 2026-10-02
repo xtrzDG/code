@@ -6,11 +6,11 @@ from app.schemas.typings.billing.constrained_integers import MoneyAmountMinor
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.knowledge.strings import KnowledgeBody, KnowledgeTitle
 from app.schemas.typings.localization.constrained_strings import LanguageTag
-from app.utilities.knowledge.lexical_ranking import (
+from app.utilities.knowledge.ranking.character_ngrams import character_ngram_dice
+from app.utilities.knowledge.ranking.lexical_ranking import rank_knowledge_items
+from app.utilities.knowledge.ranking.price_matching import rank_price_matches
+from app.utilities.knowledge.ranking.token_similarity import (
     bounded_edit_distance,
-    character_ngram_dice,
-    rank_knowledge_items,
-    rank_price_matches,
     token_similarity,
 )
 from app.utilities.knowledge.search_text import (
