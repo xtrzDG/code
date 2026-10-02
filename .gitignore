@@ -27,7 +27,6 @@ dist/
 downloads/
 eggs/
 .ruff_cache/
-.import_linter_cache/
 .eggs/
 lib/
 lib64/
