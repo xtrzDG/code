@@ -173,6 +173,8 @@ _.handoffs_by_urgency  # app/schemas/dto/operations/dashboard.py
 _.open_unanswered_question_count  # app/schemas/dto/operations/dashboard.py
 _.package  # app/schemas/dto/operations/dashboard.py
 _.resolved_count  # app/schemas/dto/operations/handoffs.py
+_.new_lead_count  # app/schemas/dto/operations/inbox_counts.py
+_.open_handoff_count  # app/schemas/dto/operations/inbox_counts.py
 _.status_counts  # app/schemas/dto/operations/leads.py
 _.knowledge_item_id  # app/schemas/dto/operations/unanswered_questions.py
 _.requires_reassembly  # app/schemas/dto/operations/unanswered_questions.py

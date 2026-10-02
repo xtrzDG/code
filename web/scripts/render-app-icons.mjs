@@ -51,7 +51,7 @@ try {
     mkdirSync(path.dirname(target), { recursive: true });
     await page.screenshot({ path: target, omitBackground: icon.transparent, clip: { x: 0, y: 0, width: icon.size, height: icon.size } });
     await page.close();
-    console.log(`${icon.file} (${icon.size} × ${icon.size})`);
+    process.stdout.write(`${icon.file} (${icon.size} × ${icon.size})\n`);
   }
 } finally {
   await browser.close();
