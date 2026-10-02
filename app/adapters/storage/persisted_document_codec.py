@@ -22,7 +22,7 @@ import json
 from collections.abc import Mapping
 from typing import cast
 
-from base_pydantic_schemas import PersistentDocument
+from base_pydantic_schemas import PersistentDocument, SchemaVersion
 from pydantic import ValidationError
 
 from app.adapters.storage.document_upgrades import (
@@ -65,6 +65,12 @@ class PersistedDocumentCodec[StoredDocument: PersistentDocument]:
         self._upcasters: dict[DocumentSchemaVersionNumber, DocumentUpcaster] = dict(
             upcasters_of(collection_name) if upcasters is None else upcasters
         )
+        # Compared with every document read: built once.
+        self._current_text: SchemaVersion | None = (
+            None
+            if self._current_version is None
+            else schema_version_text(self._current_version)
+        )
 
     @property
     def current_version(self) -> DocumentSchemaVersionNumber | None:
@@ -93,7 +99,7 @@ class PersistedDocumentCodec[StoredDocument: PersistentDocument]:
             # An older shape may become valid only after its upcasters.
             return self._decode_upgraded(stored_text, current_version)
 
-        if self._has_version(document, current_version):
+        if self._is_current(document):
             return document
 
         return self._decode_upgraded(stored_text, current_version)
@@ -134,21 +140,16 @@ class PersistedDocumentCodec[StoredDocument: PersistentDocument]:
         return self._document_type.model_validate_json(stored_text, extra="ignore")
 
     def _stamped(self, document: StoredDocument) -> StoredDocument:
-        current_version: DocumentSchemaVersionNumber | None = self._current_version
-        if current_version is None or self._has_version(document, current_version):
+        if self._current_text is None or self._is_current(document):
             return document
 
         return document.model_copy(
-            update={SCHEMA_VERSION_FIELD_NAME: schema_version_text(current_version)}
+            update={SCHEMA_VERSION_FIELD_NAME: self._current_text}
         )
 
-    @staticmethod
-    def _has_version(
-        document: PersistentDocument,
-        version: DocumentSchemaVersionNumber,
-    ) -> bool:
+    def _is_current(self, document: PersistentDocument) -> bool:
         stored: object = getattr(document, SCHEMA_VERSION_FIELD_NAME, None)
-        return stored == schema_version_text(version)
+        return stored == self._current_text
 
 
 def parse_stored_object(stored_text: str) -> StoredJsonObject:

@@ -6,10 +6,12 @@ from app.adapters.storage.document_upgrades import StoredJsonObject
 from app.adapters.storage.persisted_document_codec import parse_stored_object
 from app.adapters.storage.postgres.postgres_stored_document_upgrade_adapter import (
     PostgresStoredDocumentUpgradeAdapter,
+    read_position,
 )
 from app.clients.postgres.postgres_connection_pool_client import (
     PostgresConnectionPoolClient,
 )
+from app.schemas.domain.example_document import ExamplePersistentDocument
 from app.schemas.dto.document_upgrades import CollectionUpgradeRequest
 from app.schemas.exceptions.application_errors import NotFoundError
 from app.schemas.typings.businesses.prefixed_id import BusinessId
@@ -200,3 +202,21 @@ def test_real_collections_upgrade_with_nothing_to_do(
         upgrades.upgrade_collection(
             CollectionUpgradeRequest(collection_name=DocumentCollectionName("nope"))
         )
+
+
+def test_unversioned_documents_count_as_the_first_version(
+    connection_pool: PostgresConnectionPoolClient,
+) -> None:
+    upgrades = PostgresStoredDocumentUpgradeAdapter(
+        connection_pool,
+        collections=[
+            DocumentCollectionDefinition(NOTES_COLLECTION, ExamplePersistentDocument)
+        ],
+    )
+
+    report = upgrades.upgrade_collection(request())
+
+    assert report.current_version == DocumentSchemaVersionNumber(1)
+    assert report.outdated == DocumentCount(0)
+    with pytest.raises(TypeError):
+        read_position(("key", "{}", None, 1))

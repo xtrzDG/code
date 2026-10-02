@@ -7,6 +7,9 @@ import sys
 
 import pytest
 
+from app.clients.postgres.postgres_connection_pool_client import (
+    PostgresConnectionPoolClient,
+)
 from app.gateways.cli.migrate_documents import (
     batch_size,
     build_argument_parser,
@@ -17,6 +20,7 @@ from app.schemas.dto.document_upgrades import (
     CollectionUpgradeReport,
     StoredDocumentsUpgradeReport,
 )
+from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.platform.strings import DatabaseUrl
 from app.schemas.typings.storage.constrained_integers import (
     DocumentCount,
@@ -27,6 +31,7 @@ from app.schemas.typings.storage.strings import StoredDocumentKey
 from app.utilities.storage.document_collection_catalog import DOCUMENT_COLLECTIONS
 from tests.storage.postgres_server import ThrowawayPostgresServer
 from tests.storage.storage_testing import PROJECT_ROOT_DIRECTORY
+from tests.storage.stored_rows import write_stored
 
 
 def test_a_migrated_database_has_nothing_to_upgrade(database_url: DatabaseUrl) -> None:
@@ -44,6 +49,25 @@ def test_a_migrated_database_has_nothing_to_upgrade(database_url: DatabaseUrl) -
         "2 collections checked: upgraded 0 documents, 0 failed."
     )
     assert error_output.getvalue() == ""
+
+
+def test_documents_that_cannot_be_upgraded_fail_with_one(
+    database_url: DatabaseUrl,
+    connection_pool: PostgresConnectionPoolClient,
+) -> None:
+    write_stored(connection_pool, "broken", BusinessId(), {"schema_version": "seven"})
+    output = io.StringIO()
+
+    exit_code = main(
+        ["--collection", "knowledge_items"],
+        {"DATABASE_URL": database_url},
+        output=output,
+        error_output=io.StringIO(),
+    )
+
+    assert exit_code == 1
+    assert "knowledge_items (v1): 1 outdated, upgraded 0" in output.getvalue()
+    assert "1 failed (broken)" in output.getvalue()
 
 
 def test_a_database_without_tables_fails_with_one(
@@ -119,13 +143,21 @@ def test_the_report_lists_collections_with_outdated_rows_and_failures() -> None:
                 collection_name=DocumentCollectionName("users"),
                 current_version=DocumentSchemaVersionNumber(1),
             ),
+            CollectionUpgradeReport(
+                collection_name=DocumentCollectionName("contacts"),
+                current_version=DocumentSchemaVersionNumber(3),
+                outdated=DocumentCount(1),
+                upgraded=DocumentCount(1),
+            ),
         ],
     )
 
     assert describe_report(report).splitlines() == [
         "bookings (v2): 4 outdated, would upgrade 2, 1 newer left alone, "
         "0 changed meanwhile, 1 failed (bkg_1)",
-        "2 collections checked: would upgrade 2 documents, 1 failed.",
+        "contacts (v3): 1 outdated, would upgrade 1, 0 newer left alone, "
+        "0 changed meanwhile, 0 failed",
+        "3 collections checked: would upgrade 3 documents, 1 failed.",
     ]
 
 
