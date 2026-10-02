@@ -27,9 +27,9 @@ from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.schemas.typings.platform.constrained_strings import EnvironmentVariableName
 from app.use_cases.assistants.resume_assistant_use_case import ResumeAssistantUseCase
 from app.use_cases.voice.remove_voice_agent_use_case import RemoveVoiceAgentUseCase
-from tests.assembly.builders import (
-    make_launch_ready,
-    seed_georgian_restaurant,
+from tests.assembly.builders import make_launch_ready
+from tests.assembly.georgian_restaurant_seed import seed_georgian_restaurant
+from tests.assembly.international_business_seeds import (
     seed_israeli_clinic,
     seed_italian_restaurant,
     seed_online_shop,

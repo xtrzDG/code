@@ -17,7 +17,7 @@ from app.utilities.assembly.autotest_scenarios import (
     select_kinds,
     select_languages,
 )
-from tests.assembly.fakes import ALL_BASE_KINDS
+from tests.assembly.fake_niche_templates import ALL_BASE_KINDS
 
 GEORGIAN = AutotestLanguage(
     tag=LanguageTag("ka"),

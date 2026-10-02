@@ -21,12 +21,14 @@ from tests.assembly.autotest_scripts import (
     default_reply_script,
     read_scenario_key,
 )
-from tests.assembly.fakes import (
+from tests.assembly.fake_engine_and_voice import (
     FakeAssistantToolCatalog,
     FakeAuthenticationOperator,
     FakeCallGreetingUseCase,
     FakeConversationTurnOrchestrator,
     FakeVoiceAgentProvisioner,
+)
+from tests.assembly.llm_request_helpers import (
     TokenReportingLlmAdapter,
     count_assistant_turns,
     read_last_user_text,

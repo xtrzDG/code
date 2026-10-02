@@ -55,11 +55,11 @@ from app.schemas.typings.users.prefixed_id import UserId
 from app.utilities.config_helpers.app_settings.app_settings_assembler import (
     assemble_app_settings,
 )
-from tests.assembly.fakes import (
+from tests.assembly.fake_locale_registries import (
     FakeCountryRegistry,
     FakeLanguageRegistry,
-    FakeNicheTemplateRegistry,
 )
+from tests.assembly.fake_niche_templates import FakeNicheTemplateRegistry
 
 # Thursday 1 October 2026, 09:00 UTC (13:00 in Tbilisi, 18:00 in Tokyo).
 START_MOMENT: datetime = datetime(2026, 10, 1, 9, 0, tzinfo=UTC)

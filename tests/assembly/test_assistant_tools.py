@@ -5,8 +5,8 @@ from app.utilities.assembly.assistant_tools import (
     can_take_bookings,
     select_assistant_tools,
 )
-from tests.assembly.builders import (
-    seed_georgian_restaurant,
+from tests.assembly.georgian_restaurant_seed import seed_georgian_restaurant
+from tests.assembly.international_business_seeds import (
     seed_israeli_clinic,
     seed_japanese_restaurant,
     seed_online_shop,

@@ -4,7 +4,8 @@ from fastapi.testclient import TestClient
 
 from app.schemas.exceptions.application_errors import ExternalServiceError
 from app.schemas.typings.assistants.prefixed_id import AssistantVersionId
-from tests.assembly.builders import seed_georgian_restaurant, seed_italian_restaurant
+from tests.assembly.georgian_restaurant_seed import seed_georgian_restaurant
+from tests.assembly.international_business_seeds import seed_italian_restaurant
 from tests.assembly.testbed import AssemblyTestbed
 
 

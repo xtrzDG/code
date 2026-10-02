@@ -47,13 +47,13 @@ from app.schemas.typings.platform.constrained_integers import WorkerPollSeconds
 from app.use_cases.autotests.enqueue_autotest_run_use_case import RUN_AUTOTESTS_JOB
 from app.utilities.storage.storage_scope_context import StorageScopeContext
 from tests.assembly.autotest_scripts import CUSTOMER_TEXTS, DONE, build_reply
-from tests.assembly.builders import (
-    seed_georgian_restaurant,
+from tests.assembly.georgian_restaurant_seed import seed_georgian_restaurant
+from tests.assembly.international_business_seeds import (
     seed_israeli_clinic,
     seed_japanese_restaurant,
     seed_online_shop,
 )
-from tests.assembly.fakes import read_last_user_text
+from tests.assembly.llm_request_helpers import read_last_user_text
 from tests.assembly.testbed import AssemblyTestbed
 
 GEORGIAN_SCENARIO_COUNT: int = 3 * 9 + 2
