@@ -28,14 +28,13 @@ from app.schemas.typings.localization.strings import RawPhoneNumberInput
 from app.schemas.typings.users.constrained_strings import EmailAddress
 from app.schemas.typings.users.prefixed_id import UserId
 from app.schemas.typings.users.strings import RawEmailAddressInput, UserDisplayName
-from tests.users.accounts_testbed import (
+from tests.users.accounts_phones import (
     BRAZIL_MOBILE,
     GEORGIA_MOBILE,
     GERMANY_MOBILE,
     ISRAEL_MOBILE,
-    AccountsTestbed,
-    build_accounts_testbed,
 )
+from tests.users.accounts_testbed import AccountsTestbed, build_accounts_testbed
 
 
 def invite(

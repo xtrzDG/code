@@ -44,13 +44,8 @@ from app.schemas.typings.localization.constrained_strings import (
 )
 from app.schemas.typings.localization.strings import RawPhoneNumberInput
 from app.schemas.typings.users.prefixed_id import UserId
-from tests.users.accounts_testbed import (
-    GEORGIA_MOBILE,
-    GERMANY_MOBILE,
-    ISRAEL_MOBILE,
-    AccountsTestbed,
-    build_accounts_testbed,
-)
+from tests.users.accounts_phones import GEORGIA_MOBILE, GERMANY_MOBILE, ISRAEL_MOBILE
+from tests.users.accounts_testbed import AccountsTestbed, build_accounts_testbed
 
 
 def georgian_restaurant(testbed: AccountsTestbed) -> tuple[UserId, BusinessDocument]:

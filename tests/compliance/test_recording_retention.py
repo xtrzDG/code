@@ -13,13 +13,9 @@ from app.schemas.typings.conversations.strings import (
     ProviderCallId,
     RecordingStoragePath,
 )
-from tests.users.accounts_testbed import (
-    GEORGIA_MOBILE,
-    SECONDS_PER_DAY,
-    USA_MOBILE,
-    AccountsTestbed,
-    build_accounts_testbed,
-)
+from tests.users.accounts_clock import SECONDS_PER_DAY
+from tests.users.accounts_phones import GEORGIA_MOBILE, USA_MOBILE
+from tests.users.accounts_testbed import AccountsTestbed, build_accounts_testbed
 
 
 def store_call(

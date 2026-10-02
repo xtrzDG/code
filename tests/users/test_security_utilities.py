@@ -33,7 +33,7 @@ from app.utilities.security.one_time_codes import (
     hash_otp_code,
     is_otp_code_matching,
 )
-from tests.users.accounts_testbed import PhonenumbersParser
+from tests.users.accounts_phones import PhonenumbersParser
 
 
 def test_generated_codes_are_six_random_digits() -> None:

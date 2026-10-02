@@ -25,7 +25,7 @@ from app.schemas.typings.localization.constrained_strings import (
 from app.schemas.typings.localization.strings import RawPhoneNumberInput
 from app.schemas.typings.users.strings import RawEmailAddressInput
 from app.utilities.security.one_time_codes import hash_otp_code
-from tests.users.accounts_testbed import (
+from tests.users.accounts_phones import (
     BRAZIL_MOBILE,
     GEORGIA_MOBILE,
     GERMANY_MOBILE,
@@ -34,9 +34,8 @@ from tests.users.accounts_testbed import (
     ISRAEL_MOBILE,
     MONACO_MOBILE,
     NORTH_KOREA_MOBILE,
-    AccountsTestbed,
-    build_accounts_testbed,
 )
+from tests.users.accounts_testbed import AccountsTestbed, build_accounts_testbed
 
 
 @pytest.mark.parametrize(

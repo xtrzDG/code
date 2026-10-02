@@ -32,13 +32,8 @@ from tests.compliance.visitor_records import (
     build_conversation,
     seed_visitor,
 )
-from tests.users.accounts_testbed import (
-    GEORGIA_MOBILE,
-    GERMANY_MOBILE,
-    ISRAEL_MOBILE,
-    AccountsTestbed,
-    build_accounts_testbed,
-)
+from tests.users.accounts_phones import GEORGIA_MOBILE, GERMANY_MOBILE, ISRAEL_MOBILE
+from tests.users.accounts_testbed import AccountsTestbed, build_accounts_testbed
 
 
 @dataclass(frozen=True)

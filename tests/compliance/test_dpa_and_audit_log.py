@@ -30,13 +30,8 @@ from app.use_cases.compliance.get_dpa_status_use_case import GetDpaStatusUseCase
 from app.utilities.config_helpers.app_settings.app_settings_assembler import (
     assemble_app_settings,
 )
-from tests.users.accounts_testbed import (
-    GEORGIA_MOBILE,
-    GERMANY_MOBILE,
-    ISRAEL_MOBILE,
-    AccountsTestbed,
-    build_accounts_testbed,
-)
+from tests.users.accounts_phones import GEORGIA_MOBILE, GERMANY_MOBILE, ISRAEL_MOBILE
+from tests.users.accounts_testbed import AccountsTestbed, build_accounts_testbed
 
 
 def business_with_staff(

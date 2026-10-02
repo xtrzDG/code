@@ -14,11 +14,8 @@ from app.schemas.typings.localization.strings import RawPhoneNumberInput
 from app.schemas.typings.users.prefixed_id import UserId
 from app.schemas.typings.users.strings import AccessToken, UserDisplayName
 from app.utilities.security.access_tokens import hash_access_token
-from tests.users.accounts_testbed import (
-    GEORGIA_MOBILE,
-    ISRAEL_MOBILE,
-    build_accounts_testbed,
-)
+from tests.users.accounts_phones import GEORGIA_MOBILE, ISRAEL_MOBILE
+from tests.users.accounts_testbed import build_accounts_testbed
 
 THIRTY_DAYS_IN_SECONDS: int = 30 * 24 * 60 * 60
 

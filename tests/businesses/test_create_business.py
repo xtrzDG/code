@@ -21,7 +21,7 @@ from app.schemas.typings.localization.constrained_strings import (
     TimezoneName,
 )
 from app.schemas.typings.users.prefixed_id import UserId
-from tests.users.accounts_testbed import (
+from tests.users.accounts_phones import (
     BRAZIL_MOBILE,
     GEORGIA_MOBILE,
     GERMANY_MOBILE,
@@ -30,9 +30,8 @@ from tests.users.accounts_testbed import (
     JAPAN_MOBILE,
     UAE_MOBILE,
     USA_MOBILE,
-    AccountsTestbed,
-    build_accounts_testbed,
 )
+from tests.users.accounts_testbed import AccountsTestbed, build_accounts_testbed
 
 ELEVEN_LANGUAGES: list[LanguageTag] = [
     LanguageTag(tag)

@@ -21,7 +21,7 @@ from app.schemas.typings.users.constrained_strings import EmailAddress, OtpCode
 from app.schemas.typings.users.prefixed_id import OtpChallengeId
 from app.schemas.typings.users.strings import UserDisplayName
 from app.utilities.security.access_tokens import hash_access_token
-from tests.users.accounts_testbed import (
+from tests.users.accounts_phones import (
     BRAZIL_MOBILE,
     GEORGIA_MOBILE,
     GERMANY_MOBILE,
@@ -30,8 +30,8 @@ from tests.users.accounts_testbed import (
     JAPAN_MOBILE,
     UAE_MOBILE,
     USA_MOBILE,
-    build_accounts_testbed,
 )
+from tests.users.accounts_testbed import build_accounts_testbed
 
 
 def wrong_code_for(correct_code: OtpCode) -> OtpCode:
