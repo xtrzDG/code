@@ -68,7 +68,7 @@ test("an error of the widget's code is reported with its place, not its text", a
   await page.goto(`${SITE}/`);
 
   await expect.poll(() => api.reports.length).toBe(1);
-  const [report] = api.reports;
+  const report = api.reports[0] ?? {};
   expect(report).toMatchObject({ kind: "script_error", phase: "mount", business_id: BUSINESS, error_name: "TypeError" });
   expect(report.line).toEqual(expect.any(Number));
   expect(report.column).toEqual(expect.any(Number));

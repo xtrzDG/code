@@ -205,3 +205,6 @@ services:
         value: "true"
       - key: TRUSTED_PROXY_HOPS
         value: "1"
+      # errors of the cabinet (server and browser); empty: none are sent
+      - key: SENTRY_DSN
+        sync: false

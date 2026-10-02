@@ -31,7 +31,7 @@ LAUNCH_GUIDE: str = "docs/LAUNCH.md"
 SDK_VARIABLES: frozenset[str] = frozenset({"OPENAI_API_KEY", "ANTHROPIC_API_KEY"})
 
 # Set by Next.js itself (`next build`, `next start`), never by people.
-NEXT_JS_VARIABLES: frozenset[str] = frozenset({"NODE_ENV"})
+NEXT_JS_VARIABLES: frozenset[str] = frozenset({"NODE_ENV", "NEXT_RUNTIME"})
 
 
 def read(relative_path: str) -> str:
