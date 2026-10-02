@@ -28,6 +28,17 @@ class ChannelOperatorsContainer(containers.DeclarativeContainer):
         channel_pipelines.widget_message_pipeline, storage_scope
     )
 
+    # --- Worker jobs: the inbox and the outbox.
+    process_inbound_message_operator = pipeline_operator(
+        channel_pipelines.process_inbound_message_pipeline, storage_scope
+    )
+    process_platform_bot_update_operator = pipeline_operator(
+        channel_pipelines.process_platform_bot_update_pipeline, storage_scope
+    )
+    deliver_outbound_operator = pipeline_operator(
+        channel_pipelines.deliver_outbound_pipeline, storage_scope
+    )
+
     # --- Channels: webhook checks, widget, cabinet settings, staff links.
     verify_meta_webhook_operator = pipeline_operator(
         channel_pipelines.verify_meta_webhook_pipeline, storage_scope

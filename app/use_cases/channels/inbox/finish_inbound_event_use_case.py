@@ -61,9 +61,7 @@ class FinishInboundEventUseCase(
         wall_clock: WallClock[Microseconds],
     ) -> None:
         self._inbound_event_repo: InboundEventRepoContract = inbound_event_repo
-        self._outbound_message_repo: OutboundMessageRepoContract = (
-            outbound_message_repo
-        )
+        self._outbound_message_repo: OutboundMessageRepoContract = outbound_message_repo
         self._job_queue: JobQueueFacilitatorContract = job_queue
         self._wall_clock: WallClock[Microseconds] = wall_clock
 

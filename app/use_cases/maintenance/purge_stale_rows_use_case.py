@@ -4,6 +4,10 @@ from typed_time_provider import Microseconds, Seconds, WallClock
 
 from app.contracts.channels import ChannelMessageReceiptRepoContract
 from app.contracts.repositories.compliance_repositories import AuditLogRepoContract
+from app.contracts.repositories.delivery_repositories import (
+    InboundEventRepoContract,
+    OutboundMessageRepoContract,
+)
 from app.contracts.repositories.user_repositories import (
     OtpChallengeRepoContract,
     UserSessionRepoContract,
@@ -22,18 +26,22 @@ SECONDS_PER_HOUR: int = 60 * 60
 # hour. A day keeps enough history for abuse questions.
 OTP_CHALLENGE_RETENTION_SECONDS: int = 24 * SECONDS_PER_HOUR
 # Platforms redeliver a webhook for hours (Meta up to 7 days); a month of
-# receipts is a wide margin.
+# receipts and inbox events is a wide margin. The outbox keeps a month of
+# delivery history (the transcript keeps the messages themselves).
 CHANNEL_RECEIPT_RETENTION_SECONDS: int = 30 * 24 * SECONDS_PER_HOUR
+DELIVERY_RETENTION_SECONDS: int = 30 * 24 * SECONDS_PER_HOUR
 USER_SESSION_ENTITY: AuditEntityName = AuditEntityName("user_session")
 OTP_CHALLENGE_ENTITY: AuditEntityName = AuditEntityName("otp_challenge")
 CHANNEL_RECEIPT_ENTITY: AuditEntityName = AuditEntityName("channel_message_receipt")
+INBOUND_EVENT_ENTITY: AuditEntityName = AuditEntityName("inbound_event")
+OUTBOUND_MESSAGE_ENTITY: AuditEntityName = AuditEntityName("outbound_message")
 
 
 class PurgeStaleRowsUseCase(UseCaseContract[JobTick, JobReport]):
     """
     Daily retention job: delete expired sessions, login codes older than a
-    day, and webhook redelivery receipts older than 30 days, so the auth
-    and receipt tables stop growing forever.
+    day, and webhook receipts, inbox events and outbox messages older than
+    30 days, so the auth and delivery tables stop growing forever.
 
     Each delete is an indexed range query in small batches. A purge that
     removed rows is audited as RETENTION_PURGE without an actor or business
@@ -46,6 +54,8 @@ class PurgeStaleRowsUseCase(UseCaseContract[JobTick, JobReport]):
         user_session_repo: UserSessionRepoContract,
         otp_challenge_repo: OtpChallengeRepoContract,
         channel_message_receipt_repo: ChannelMessageReceiptRepoContract,
+        inbound_event_repo: InboundEventRepoContract,
+        outbound_message_repo: OutboundMessageRepoContract,
         audit_log_repo: AuditLogRepoContract,
         wall_clock: WallClock[Microseconds],
     ) -> None:
@@ -54,6 +64,8 @@ class PurgeStaleRowsUseCase(UseCaseContract[JobTick, JobReport]):
         self._channel_message_receipt_repo: ChannelMessageReceiptRepoContract = (
             channel_message_receipt_repo
         )
+        self._inbound_event_repo: InboundEventRepoContract = inbound_event_repo
+        self._outbound_message_repo: OutboundMessageRepoContract = outbound_message_repo
         self._audit_log_repo: AuditLogRepoContract = audit_log_repo
         self._wall_clock: WallClock[Microseconds] = wall_clock
 
@@ -75,6 +87,22 @@ class PurgeStaleRowsUseCase(UseCaseContract[JobTick, JobReport]):
                 self._channel_message_receipt_repo.delete_created_before(
                     self._wall_clock.now_unix_with_delta(
                         Seconds(-CHANNEL_RECEIPT_RETENTION_SECONDS)
+                    )
+                ),
+            ),
+            (
+                INBOUND_EVENT_ENTITY,
+                self._inbound_event_repo.delete_created_before(
+                    self._wall_clock.now_unix_with_delta(
+                        Seconds(-DELIVERY_RETENTION_SECONDS)
+                    )
+                ),
+            ),
+            (
+                OUTBOUND_MESSAGE_ENTITY,
+                self._outbound_message_repo.delete_created_before(
+                    self._wall_clock.now_unix_with_delta(
+                        Seconds(-DELIVERY_RETENTION_SECONDS)
                     )
                 ),
             ),

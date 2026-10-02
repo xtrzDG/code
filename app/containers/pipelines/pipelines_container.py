@@ -64,6 +64,7 @@ class PipelinesContainer(containers.DeclarativeContainer):
         ChannelPipelinesContainer,
         channel_orchestrators=orchestrators.channels,
         channel_use_cases=use_cases.channels,
+        delivery_use_cases=use_cases.deliveries,
         conversation_pipelines=conversations,
     )
     billing: BillingPipelinesContainer = Container(  # type: ignore[assignment]

@@ -85,6 +85,7 @@ class OrchestratorsContainer(containers.DeclarativeContainer):
         conversation_use_cases=use_cases.conversations,
         conversation_feed_use_cases=use_cases.conversation_feed,
         voice_use_cases=use_cases.voice,
+        delivery_use_cases=use_cases.deliveries,
     )
     assistants: AssistantOrchestratorsContainer = Container(  # type: ignore[assignment]
         AssistantOrchestratorsContainer,
@@ -98,6 +99,8 @@ class OrchestratorsContainer(containers.DeclarativeContainer):
     channels: ChannelOrchestratorsContainer = Container(  # type: ignore[assignment]
         ChannelOrchestratorsContainer,
         channel_use_cases=use_cases.channels,
+        delivery_use_cases=use_cases.deliveries,
+        follow_up_use_cases=use_cases.follow_ups,
     )
     billing: BillingOrchestratorsContainer = Container(  # type: ignore[assignment]
         BillingOrchestratorsContainer,

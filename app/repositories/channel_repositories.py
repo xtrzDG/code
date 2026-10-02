@@ -21,11 +21,9 @@ CODE_HASH_FIELD: DocumentFieldPath = DocumentFieldPath("code_hash")
 
 class ChannelMessageReceiptRepository(ChannelMessageReceiptRepoContract):
     """
-    Receipts keyed by business, channel and provider message id. A receipt
-    is inserted in one atomic step that fails on a taken key (and, on
-    Postgres, on the unique index of the same three values), so two
-    deliveries of one message are never both accepted, not even by two
-    instances at the same moment.
+    Webhook redelivery receipts of earlier releases: the inbox
+    (`inbound_events`) replaced them, and the daily purge removes what is
+    left.
     """
 
     def __init__(
@@ -36,19 +34,10 @@ class ChannelMessageReceiptRepository(ChannelMessageReceiptRepoContract):
             ChannelMessageReceiptDocument
         ] = collection
 
-    def record_if_new(self, receipt: ChannelMessageReceiptDocument) -> bool:
-        return self._collection.insert_if_absent(build_receipt_key(receipt), receipt)
-
     def delete_created_before(self, created_before: Microseconds) -> DocumentCount:
         return self._collection.delete_by_range(
             time_range(RECEIPT_CREATED_AT_FIELD, ending_before=created_before)
         )
-
-
-def build_receipt_key(receipt: ChannelMessageReceiptDocument) -> str:
-    return (
-        f"{receipt.business_id}:{receipt.channel.value}:{receipt.provider_message_id}"
-    )
 
 
 class ManagerTelegramLinkRepository(

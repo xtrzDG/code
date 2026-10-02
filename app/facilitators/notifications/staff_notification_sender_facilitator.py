@@ -78,7 +78,8 @@ class StaffNotificationSenderFacilitator(StaffNotificationSenderContract):
         if contact.channel is ManagerContactChannel.WHATSAPP:
             return self._send_by_whatsapp(contact, text, template)
 
-        return self._send_without_provider(contact)
+        self._send_without_provider(contact)
+        return None
 
     def _send_by_telegram(
         self,

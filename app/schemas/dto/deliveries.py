@@ -13,6 +13,7 @@ from app.schemas.domain.inbound_events import InboundEventDocument
 from app.schemas.domain.outbound_messages import OutboundMessageDocument
 from app.schemas.dto.channels.channel_webhooks import ChannelInboundMessage
 from app.schemas.dto.conversations import InboundMessage
+from app.schemas.dto.voice_webhooks import FinishedCallReport
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.channels.constrained_integers import (
     DeliveredMessageCount,
@@ -47,6 +48,13 @@ class InboxIntake(ImmutableDTO):
     received: WebhookMessageCount = WebhookMessageCount(0)
     queued: WebhookMessageCount = WebhookMessageCount(0)
     duplicates: WebhookMessageCount = WebhookMessageCount(0)
+
+
+class VerifiedPostCallReport(ImmutableDTO):
+    """A post-call webhook whose signature was checked, and its report."""
+
+    body: bytes
+    report: FinishedCallReport
 
 
 class InboundEventJobPayload(ImmutableDTO):

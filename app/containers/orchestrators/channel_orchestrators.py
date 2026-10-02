@@ -1,24 +1,37 @@
 from dependency_injector import containers
-from dependency_injector.providers import DependenciesContainer
+from dependency_injector.providers import DependenciesContainer, Factory
 
 from app.containers.provider_chains import use_case_orchestrator
 from app.containers.use_cases.channel_use_cases import ChannelUseCasesContainer
+from app.containers.use_cases.delivery_use_cases import DeliveryUseCasesContainer
+from app.containers.use_cases.follow_up_use_cases import FollowUpUseCasesContainer
+from app.contracts.orchestrator_contract import OrchestratorContract
+from app.orchestrators.channels.inbox.process_platform_bot_update_orchestrator import (
+    ProcessPlatformBotUpdateOrchestrator,
+)
+from app.orchestrators.channels.outbox.deliver_outbound_message_orchestrator import (
+    DeliverOutboundMessageOrchestrator,
+)
+from app.schemas.dto.jobs import JobReport, QueuedJobInput
 
 
 class ChannelOrchestratorsContainer(containers.DeclarativeContainer):
     """
     Orchestrators of messaging webhooks, the website widget, cabinet
-    channel settings, staff links and the platform bot.
+    channel settings, staff links, the platform bot and the outbox.
     """
 
     channel_use_cases: ChannelUseCasesContainer = DependenciesContainer()  # type: ignore[assignment]
+    delivery_use_cases: DeliveryUseCasesContainer = DependenciesContainer()  # type: ignore[assignment]
+    follow_up_use_cases: FollowUpUseCasesContainer = DependenciesContainer()  # type: ignore[assignment]
 
     # --- Channels: webhooks, widget, cabinet settings, staff links.
     verify_meta_webhook_orchestrator = use_case_orchestrator(
         channel_use_cases.verify_meta_webhook_use_case
     )
+    # The platform bot's webhook only stores the update; the worker answers.
     handle_platform_bot_update_orchestrator = use_case_orchestrator(
-        channel_use_cases.handle_platform_bot_update_use_case
+        delivery_use_cases.accept_platform_bot_update_use_case
     )
     get_widget_config_orchestrator = use_case_orchestrator(
         channel_use_cases.get_widget_config_use_case
@@ -46,4 +59,27 @@ class ChannelOrchestratorsContainer(containers.DeclarativeContainer):
     )
     configure_platform_bot_webhook_orchestrator = use_case_orchestrator(
         channel_use_cases.configure_platform_bot_webhook_use_case
+    )
+
+    # --- Worker jobs: the platform bot's updates and the outbox.
+    process_platform_bot_update_orchestrator: Factory[
+        OrchestratorContract[QueuedJobInput, JobReport]
+    ] = Factory(
+        ProcessPlatformBotUpdateOrchestrator,
+        claim_inbound_event=delivery_use_cases.claim_inbound_event_use_case,
+        handle_platform_bot_update=channel_use_cases.handle_platform_bot_update_use_case,
+        finish_inbound_event=delivery_use_cases.finish_inbound_event_use_case,
+        release_inbound_event=delivery_use_cases.release_inbound_event_use_case,
+    )
+    deliver_outbound_orchestrator: Factory[
+        OrchestratorContract[QueuedJobInput, JobReport]
+    ] = Factory(
+        DeliverOutboundMessageOrchestrator,
+        take_due_outbound_message=delivery_use_cases.take_due_outbound_message_use_case,
+        send_outbound_message=delivery_use_cases.send_outbound_message_use_case,
+        record_outbound_attempt=delivery_use_cases.record_outbound_attempt_use_case,
+        build_undelivered_reply_handoff=(
+            delivery_use_cases.build_undelivered_reply_handoff_use_case
+        ),
+        handoff_to_human=follow_up_use_cases.handoff_to_human_use_case,
     )

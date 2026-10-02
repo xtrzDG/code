@@ -31,6 +31,9 @@ class ConversationOperatorsContainer(containers.DeclarativeContainer):
     post_call_webhook_operator = pipeline_operator(
         conversation_pipelines.post_call_webhook_pipeline, storage_scope
     )
+    process_post_call_operator = pipeline_operator(
+        conversation_pipelines.process_post_call_pipeline, storage_scope
+    )
 
     # --- Conversation feed.
     list_conversations_operator = pipeline_operator(

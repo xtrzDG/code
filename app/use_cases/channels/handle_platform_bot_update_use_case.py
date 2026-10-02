@@ -223,4 +223,3 @@ class HandlePlatformBotUpdateUseCase(
             )
         except ExternalServiceError as error:
             logger.warning("The platform bot could not reply: %s", error)
-

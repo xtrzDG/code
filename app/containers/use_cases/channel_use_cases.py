@@ -18,8 +18,6 @@ from app.schemas.dto.channels.channel_settings import (
     DisableChannelCommand,
 )
 from app.schemas.dto.channels.channel_webhooks import (
-    ChannelInboundDelivery,
-    ChannelReplyDelivery,
     MetaWebhookRequest,
     MetaWebhookVerificationRequest,
     TelegramWebhookRequest,
@@ -27,8 +25,8 @@ from app.schemas.dto.channels.channel_webhooks import (
 from app.schemas.dto.channels.provider_profiles import TelegramBotProfile
 from app.schemas.dto.channels.staff_links import (
     CreateTelegramLinkCommand,
+    PlatformBotUpdate,
     PlatformBotWebhookOutcome,
-    PlatformBotWebhookRequest,
     PlatformBotWebhookSetup,
     TelegramLinkView,
 )
@@ -43,9 +41,9 @@ from app.schemas.dto.channels.widget import (
     WidgetSnippetView,
 )
 from app.schemas.dto.conversations import InboundMessage
+from app.schemas.dto.deliveries import RoutedInboundMessage
 from app.schemas.dto.staff_reply_templates import SetWhatsAppStaffTemplateCommand
 from app.schemas.typings.businesses.prefixed_id import BusinessId
-from app.schemas.typings.channels.constrained_integers import DeliveredMessageCount
 from app.schemas.typings.channels.strings import MetaWebhookChallenge
 from app.use_cases.channels.accept_widget_message_use_case import (
     AcceptWidgetMessageUseCase,
@@ -59,9 +57,6 @@ from app.use_cases.channels.connection.connect_channel_use_case import (
 )
 from app.use_cases.channels.create_telegram_link_use_case import (
     CreateTelegramLinkUseCase,
-)
-from app.use_cases.channels.deliver_channel_reply_use_case import (
-    DeliverChannelReplyUseCase,
 )
 from app.use_cases.channels.disable_channel_use_case import DisableChannelUseCase
 from app.use_cases.channels.get_widget_config_use_case import GetWidgetConfigUseCase
@@ -100,38 +95,21 @@ class ChannelUseCasesContainer(containers.DeclarativeContainer):
     voice_use_cases: VoiceUseCasesContainer = DependenciesContainer()  # type: ignore[assignment]
 
     receive_telegram_webhook_use_case: Factory[
-        UseCaseContract[TelegramWebhookRequest, list[ChannelInboundDelivery]]
+        UseCaseContract[TelegramWebhookRequest, list[RoutedInboundMessage]]
     ] = Factory(
         ReceiveTelegramWebhookUseCase,
         channel_repo=repositories.channel_repo,
         secret_cipher=adapters.secret_cipher,
         telegram_adapter=adapters.telegram_channel_adapter,
-        receipt_repo=repositories.channel_message_receipt_repo,
-        wall_clock=time_provider.microsecond_wall_clock,
     )
     receive_meta_webhook_use_case: Factory[
-        UseCaseContract[MetaWebhookRequest, list[ChannelInboundDelivery]]
+        UseCaseContract[MetaWebhookRequest, list[RoutedInboundMessage]]
     ] = Factory(
         ReceiveMetaWebhookUseCase,
         channel_repo=repositories.channel_repo,
-        secret_cipher=adapters.secret_cipher,
         whatsapp_adapter=adapters.whatsapp_channel_adapter,
         messenger_adapter=adapters.messenger_channel_adapter,
         instagram_adapter=adapters.instagram_channel_adapter,
-        receipt_repo=repositories.channel_message_receipt_repo,
-        wall_clock=time_provider.microsecond_wall_clock,
-    )
-    deliver_channel_reply_use_case: Factory[
-        UseCaseContract[ChannelReplyDelivery, DeliveredMessageCount]
-    ] = Factory(
-        DeliverChannelReplyUseCase,
-        telegram_adapter=adapters.telegram_channel_adapter,
-        whatsapp_adapter=adapters.whatsapp_channel_adapter,
-        messenger_adapter=adapters.messenger_channel_adapter,
-        instagram_adapter=adapters.instagram_channel_adapter,
-        usage_event_repo=repositories.usage_event_repo,
-        channel_repo=repositories.channel_repo,
-        wall_clock=time_provider.microsecond_wall_clock,
     )
     verify_meta_webhook_use_case: Factory[
         UseCaseContract[MetaWebhookVerificationRequest, MetaWebhookChallenge]
@@ -239,7 +217,7 @@ class ChannelUseCasesContainer(containers.DeclarativeContainer):
         wall_clock=time_provider.microsecond_wall_clock,
     )
     handle_platform_bot_update_use_case: Factory[
-        UseCaseContract[PlatformBotWebhookRequest, PlatformBotWebhookOutcome]
+        UseCaseContract[PlatformBotUpdate, PlatformBotWebhookOutcome]
     ] = Factory(
         HandlePlatformBotUpdateUseCase,
         link_repo=repositories.manager_telegram_link_repo,

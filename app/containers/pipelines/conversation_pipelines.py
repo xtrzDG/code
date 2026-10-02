@@ -49,7 +49,10 @@ class ConversationPipelinesContainer(containers.DeclarativeContainer):
         conversation_orchestrators.voice_tool_webhook_orchestrator
     )
     post_call_webhook_pipeline = orchestrator_pipeline(
-        conversation_orchestrators.post_call_webhook_orchestrator
+        conversation_orchestrators.accept_post_call_webhook_orchestrator
+    )
+    process_post_call_pipeline = orchestrator_pipeline(
+        conversation_orchestrators.process_post_call_orchestrator
     )
 
     # --- Conversation feed.

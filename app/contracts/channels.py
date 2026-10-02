@@ -6,7 +6,6 @@ from typed_time_provider import Microseconds
 
 from app.contracts.adapter_contract import AdapterContract
 from app.contracts.repo_contract import RepoContract
-from app.schemas.domain.channel_receipts import ChannelMessageReceiptDocument
 from app.schemas.domain.manager_links import ManagerTelegramLinkDocument
 from app.schemas.dto.channels.channel_webhooks import (
     ChannelDeliveryTarget,
@@ -146,13 +145,10 @@ class VoiceWebhookAdapterContract(AdapterContract, Protocol):
 
 
 class ChannelMessageReceiptRepoContract(RepoContract, Protocol):
-    def record_if_new(self, receipt: ChannelMessageReceiptDocument) -> bool:
-        """
-        Store the receipt and return True, or return False when a receipt
-        for the same business, channel and provider message id exists
-        (atomic: of two concurrent deliveries exactly one gets True).
-        """
-        raise NotImplementedError
+    """
+    Webhook receipts of earlier releases (the inbox replaced them); kept
+    only until the daily purge has removed the last ones.
+    """
 
     def delete_created_before(self, created_before: Microseconds) -> DocumentCount:
         """Purge receipts created before a moment; returns how many."""

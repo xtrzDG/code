@@ -64,9 +64,7 @@ class AcceptPlatformBotUpdateUseCase(
         message: StaffBotMessage | None = read_staff_bot_message(
             input_data.payload.body
         )
-        payload: InboundPayloadText | None = read_payload_text(
-            input_data.payload.body
-        )
+        payload: InboundPayloadText | None = read_payload_text(input_data.payload.body)
         if message is None or payload is None:
             return PlatformBotWebhookOutcome(result=PlatformBotCommandResult.IGNORED)
 
