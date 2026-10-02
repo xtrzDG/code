@@ -9,6 +9,7 @@ from app.containers.repositories import RepositoriesContainer
 from app.containers.time_provider import TimeProviderContainer
 from app.containers.utilities import UtilitiesContainer
 from app.gateways.worker.background_worker import BackgroundWorker, PeriodicJobSpec
+from app.gateways.worker.periodic.purge_stale_rows import purge_stale_rows_job
 from app.schemas.typings.platform.constrained_integers import JobIntervalSeconds
 from app.schemas.typings.platform.constrained_strings import JobName
 from app.use_cases.autotests.enqueue_autotest_run_use_case import RUN_AUTOTESTS_JOB
@@ -86,6 +87,9 @@ class GatewaysContainer(containers.DeclarativeContainer):
             name=FLUSH_LLM_TRACES_JOB,
             interval_seconds=JobIntervalSeconds(MINUTE_SECONDS),
             operator=operators.platform.flush_llm_traces_operator,
+        ),
+        Factory(
+            purge_stale_rows_job, operator=operators.platform.purge_stale_rows_operator
         ),
     )
     # Handlers of queued jobs by job name (the queue is filled by use cases

@@ -30,6 +30,7 @@ from app.use_cases.admin.get_client_health_use_case import GetClientHealthUseCas
 from app.use_cases.admin.list_clients_use_case import ListClientsUseCase
 from app.use_cases.admin.open_client_cabinet_use_case import OpenClientCabinetUseCase
 from app.use_cases.admin.summarize_client_use_case import SummarizeClientUseCase
+from app.use_cases.maintenance.purge_stale_rows_use_case import PurgeStaleRowsUseCase
 from app.use_cases.observability.flush_llm_traces_use_case import FlushLlmTracesUseCase
 
 
@@ -102,4 +103,14 @@ class PlatformUseCasesContainer(containers.DeclarativeContainer):
     flush_llm_traces_use_case: Factory[UseCaseContract[JobTick, JobReport]] = Factory(
         FlushLlmTracesUseCase,
         trace_facilitator=adapters.llm_trace_facilitator,
+    )
+
+    # --- Storage retention.
+    purge_stale_rows_use_case: Factory[UseCaseContract[JobTick, JobReport]] = Factory(
+        PurgeStaleRowsUseCase,
+        user_session_repo=repositories.user_session_repo,
+        otp_challenge_repo=repositories.otp_challenge_repo,
+        channel_message_receipt_repo=repositories.channel_message_receipt_repo,
+        audit_log_repo=repositories.audit_log_repo,
+        wall_clock=time_provider.microsecond_wall_clock,
     )

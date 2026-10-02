@@ -32,3 +32,6 @@ class PlatformOperatorsContainer(containers.DeclarativeContainer):
     flush_llm_traces_operator = pipeline_operator(
         platform_pipelines.flush_llm_traces_pipeline, storage_scope
     )
+    purge_stale_rows_operator = pipeline_operator(
+        platform_pipelines.purge_stale_rows_pipeline, storage_scope
+    )

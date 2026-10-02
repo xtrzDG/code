@@ -28,3 +28,6 @@ class PlatformOrchestratorsContainer(containers.DeclarativeContainer):
     flush_llm_traces_orchestrator = use_case_orchestrator(
         platform_use_cases.flush_llm_traces_use_case
     )
+    purge_stale_rows_orchestrator = use_case_orchestrator(
+        platform_use_cases.purge_stale_rows_use_case
+    )
