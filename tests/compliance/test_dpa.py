@@ -1,55 +1,25 @@
+"""Accepting the data processing agreement and reading its text."""
+
 import pytest
 
 from app.schemas.constants.compliance import AuditAction
-from app.schemas.constants.users import LoginMethod
-from app.schemas.domain.businesses import BusinessDocument
-from app.schemas.domain.users import UserDocument
-from app.schemas.dto.businesses import (
-    BusinessQuery,
-    InviteStaffCommand,
-    InviteStaffRequest,
-)
-from app.schemas.dto.compliance import (
-    AcceptDpaCommand,
-    AuditLogQuery,
-    DpaDocumentQuery,
-)
-from app.schemas.dto.paging import PageRequest
+from app.schemas.dto.businesses import BusinessQuery
+from app.schemas.dto.compliance import AcceptDpaCommand, DpaDocumentQuery
 from app.schemas.exceptions.application_errors import (
     AccessDeniedError,
     ConflictError,
     NotFoundError,
 )
 from app.schemas.typings.compliance.constrained_strings import DpaDocumentVersion
-from app.schemas.typings.compliance.strings import AuditEntityName, ClientIpAddress
+from app.schemas.typings.compliance.strings import ClientIpAddress
 from app.schemas.typings.localization.constrained_strings import LanguageTag
-from app.schemas.typings.localization.strings import RawPhoneNumberInput
-from app.schemas.typings.platform.constrained_integers import PageSize
-from app.schemas.typings.users.prefixed_id import UserId
 from app.use_cases.compliance.get_dpa_status_use_case import GetDpaStatusUseCase
 from app.utilities.config_helpers.app_settings.app_settings_assembler import (
     assemble_app_settings,
 )
-from tests.users.accounts_phones import GEORGIA_MOBILE, GERMANY_MOBILE, ISRAEL_MOBILE
-from tests.users.accounts_testbed import AccountsTestbed, build_accounts_testbed
-
-
-def business_with_staff(
-    testbed: AccountsTestbed,
-) -> tuple[UserId, UserId, BusinessDocument]:
-    owner = testbed.sign_in_with_phone(GEORGIA_MOBILE)
-    business = testbed.create_restaurant(owner.user.id)
-    testbed.invite_staff.run(
-        InviteStaffCommand(
-            user_id=owner.user.id,
-            business_id=business.id,
-            invitation=InviteStaffRequest(
-                phone_number=RawPhoneNumberInput(GERMANY_MOBILE)
-            ),
-        )
-    )
-    staff = testbed.sign_in_with_phone(GERMANY_MOBILE)
-    return owner.user.id, staff.user.id, business
+from tests.compliance.business_with_staff import business_with_staff
+from tests.users.accounts_phones import ISRAEL_MOBILE
+from tests.users.accounts_testbed import build_accounts_testbed
 
 
 def test_owner_accepts_the_current_agreement_version() -> None:
@@ -125,115 +95,6 @@ def test_only_owners_accept_and_strangers_see_nothing() -> None:
             BusinessQuery(user_id=stranger.user.id, business_id=business.id)
         )
     assert testbed.dpa_acceptance_repo.list_by_business(business.id) == []
-
-
-def test_owner_reads_the_newest_audit_entries_of_their_business_only() -> None:
-    testbed = build_accounts_testbed()
-    owner_id, staff_id, business = business_with_staff(testbed)
-    other_owner = testbed.sign_in_with_phone(ISRAEL_MOBILE)
-    other_business = testbed.create_restaurant(other_owner.user.id)
-    testbed.accept_dpa.run(
-        AcceptDpaCommand(user_id=other_owner.user.id, business_id=other_business.id)
-    )
-    for _ in range(3):
-        testbed.clock.advance(1)
-        testbed.accept_dpa.run(
-            AcceptDpaCommand(user_id=owner_id, business_id=business.id)
-        )
-
-    entries = testbed.list_audit_log.run(
-        AuditLogQuery(user_id=owner_id, business_id=business.id)
-    ).items
-    first_page = testbed.list_audit_log.run(
-        AuditLogQuery(
-            user_id=owner_id,
-            business_id=business.id,
-            page=PageRequest(size=PageSize(3)),
-        )
-    )
-    second_page = testbed.list_audit_log.run(
-        AuditLogQuery(
-            user_id=owner_id,
-            business_id=business.id,
-            page=PageRequest(size=PageSize(3), cursor=first_page.next_cursor),
-        )
-    )
-
-    assert [entry.entity for entry in entries] == [
-        "dpa_acceptance",
-        "dpa_acceptance",
-        "dpa_acceptance",
-        "business_member",
-    ]
-    assert [entry.occurred_at for entry in entries] == sorted(
-        (entry.occurred_at for entry in entries),
-        reverse=True,
-    )
-    assert entries[-1].action is AuditAction.CREATE
-    assert entries[-1].entity_id == str(staff_id)
-    assert first_page.items == entries[:3]
-    assert first_page.next_cursor is not None
-    assert second_page.items == entries[3:]
-    assert second_page.next_cursor is None
-    with pytest.raises(AccessDeniedError):
-        testbed.list_audit_log.run(
-            AuditLogQuery(user_id=staff_id, business_id=business.id)
-        )
-
-
-def test_audit_log_filters_run_before_paging_and_name_the_filter_values() -> None:
-    testbed = build_accounts_testbed()
-    owner_id, staff_id, business = business_with_staff(testbed)
-    started = testbed.clock.now_microseconds()
-    testbed.clock.advance(60)
-    testbed.accept_dpa.run(AcceptDpaCommand(user_id=owner_id, business_id=business.id))
-    accepted_at = testbed.clock.now_microseconds()
-    testbed.clock.advance(60)
-    testbed.accept_dpa.run(AcceptDpaCommand(user_id=owner_id, business_id=business.id))
-
-    def query(**filters: object) -> list[str]:
-        page = testbed.list_audit_log.run(
-            AuditLogQuery.model_validate(
-                {"user_id": owner_id, "business_id": business.id, **filters}
-            )
-        )
-        return [str(entry.entity) for entry in page.items]
-
-    everything = testbed.list_audit_log.run(
-        AuditLogQuery(user_id=owner_id, business_id=business.id)
-    )
-
-    assert query(
-        action=AuditAction.CREATE, entity=AuditEntityName("dpa_acceptance")
-    ) == [
-        "dpa_acceptance",
-        "dpa_acceptance",
-    ]
-    assert query(entity=AuditEntityName("business_member")) == ["business_member"]
-    assert query(actor_id=staff_id) == []
-    assert query(since=accepted_at) == ["dpa_acceptance", "dpa_acceptance"]
-    assert query(since=accepted_at, until=accepted_at + 1) == ["dpa_acceptance"]
-    assert query(until=started + 1) == ["business_member"]
-    assert everything.entities == ["business_member", "dpa_acceptance"]
-    assert everything.actor_ids == [owner_id]
-
-
-def test_platform_admin_reading_the_audit_log_is_itself_audited() -> None:
-    testbed = build_accounts_testbed()
-    _, _, business = business_with_staff(testbed)
-    admin = UserDocument(
-        login_method=LoginMethod.EMAIL,
-        locale=LanguageTag("en"),
-        is_platform_admin=True,
-    )
-    testbed.user_repo.save(admin)
-
-    entries = testbed.list_audit_log.run(
-        AuditLogQuery(user_id=admin.id, business_id=business.id)
-    ).items
-
-    assert entries[0].action is AuditAction.ADMIN_ACCESS
-    assert entries[0].actor_id == admin.id
 
 
 def test_a_version_without_a_text_cannot_be_accepted() -> None:
