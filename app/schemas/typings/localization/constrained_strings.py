@@ -100,6 +100,21 @@ class LanguageTag(BaseConstrainedTypedString):
     pattern = r"^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$"
 
 
+class PhoneNumberPrefix(BaseConstrainedTypedString):
+    """
+    The start of E.164 phone numbers ("+" and 1 to 15 digits): a calling
+    code or a number range of one, such as a premium-rate range that login
+    codes are never sent to.
+
+    Example:
+        premium_range = PhoneNumberPrefix("+4490")
+    """
+
+    min_length = 2
+    max_length = 16
+    pattern = r"^\+[1-9][0-9]{0,14}$"
+
+
 class ScriptCode(BaseConstrainedTypedString):
     """
     ISO 15924 script code.

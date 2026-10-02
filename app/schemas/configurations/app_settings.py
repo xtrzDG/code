@@ -1,4 +1,5 @@
 from base_pydantic_schemas import ImmutableDTO
+from pydantic import Field
 
 from app.schemas.constants.assistants import LlmEffort, LlmProvider
 from app.schemas.constants.environment import DeploymentEnvironment
@@ -27,6 +28,7 @@ from app.schemas.typings.conversations.constrained_integers import (
 from app.schemas.typings.localization.constrained_strings import (
     CountryCode,
     E164PhoneNumber,
+    PhoneNumberPrefix,
 )
 from app.schemas.typings.messaging.constrained_integers import SmtpPort
 from app.schemas.typings.messaging.constrained_strings import (
@@ -58,9 +60,13 @@ from app.schemas.typings.users.constrained_integers import (
     OtpAttemptCount,
     OtpLifetimeSeconds,
     OtpSendLimit,
+    OtpVerifyLimit,
     SessionLifetimeSeconds,
 )
-from app.schemas.typings.users.constrained_strings import EmailAddress
+from app.schemas.typings.users.constrained_strings import (
+    EmailAddress,
+    TurnstileSiteKey,
+)
 
 
 class AppSettings(ImmutableDTO):
@@ -93,6 +99,22 @@ class AppSettings(ImmutableDTO):
     otp_sends_per_destination_per_hour: OtpSendLimit = OtpSendLimit(5)
     otp_sends_per_ip_per_hour: OtpSendLimit = OtpSendLimit(10)
     otp_sends_per_hour: OtpSendLimit = OtpSendLimit(300)
+    # Login abuse limits (see `.env.example`, "Login abuse protection"):
+    # codes to phones of one country, codes to the phones and e-mails of
+    # verified users (their own budget), code checks per client address.
+    otp_sends_per_country_per_hour: OtpSendLimit = OtpSendLimit(100)
+    otp_sends_to_verified_users_per_hour: OtpSendLimit = OtpSendLimit(300)
+    otp_verifies_per_ip_per_10_minutes: OtpVerifyLimit = OtpVerifyLimit(20)
+    otp_high_risk_country_codes: list[CountryCode] = Field(
+        default_factory=list[CountryCode]
+    )
+    otp_denied_phone_prefixes: list[PhoneNumberPrefix] = Field(
+        default_factory=list[PhoneNumberPrefix]
+    )
+    # Cloudflare Turnstile bot check of risky code requests; off unless both
+    # keys are set.
+    turnstile_site_key: TurnstileSiteKey | None = None
+    turnstile_secret_key: PlatformSecret | None = None
     is_otp_code_logging_enabled: IsOtpCodeLoggingEnabled
     session_lifetime_seconds: SessionLifetimeSeconds
     restricted_country_codes: list[CountryCode]

@@ -27,6 +27,15 @@ class OtpSendLimit(BaseConstrainedTypedInt):
     le = 1_000_000
 
 
+class OtpVerifyLimit(BaseConstrainedTypedInt):
+    """
+    How many login code checks one client address may make in ten minutes.
+    """
+
+    ge = 1
+    le = 1_000_000
+
+
 class SessionLifetimeSeconds(BaseConstrainedTypedInt):
     """How long a session stays valid, in seconds."""
 

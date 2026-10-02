@@ -109,6 +109,7 @@ class AccountUseCasesContainer(containers.DeclarativeContainer):
         user_view_transformer=transformers.user_view_transformer,
         app_settings=config.app_settings,
         wall_clock=time_provider.microsecond_wall_clock,
+        rate_limit_registry=registries.request_rate_limit_registry,
     )
     authenticate_user_use_case: Factory[UseCaseContract[AccessToken, UserId]] = Factory(
         AuthenticateUserUseCase,

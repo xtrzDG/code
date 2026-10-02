@@ -4,6 +4,7 @@ from collections.abc import Mapping
 
 from typed_time_provider import Microseconds, WallClock
 
+from app.registries.limits.request_rate_limit_registry import RequestRateLimitRegistry
 from app.registries.locks.login_code_send_lock_registry import LoginCodeSendLockRegistry
 from app.transformers.businesses.business_view_transformer import (
     BusinessViewTransformer,
@@ -51,6 +52,7 @@ class AccountsUserUseCases(AccountsRepositories):
             wall_clock=wall_clock,
         )
 
+        self.login_rate_limits = RequestRateLimitRegistry()
         self.start_otp_login = StartOtpLoginUseCase(
             otp_challenge_repo=self.otp_challenge_repo,
             phone_number_parser=self.phone_parser,
@@ -74,6 +76,7 @@ class AccountsUserUseCases(AccountsRepositories):
             user_view_transformer=user_view_transformer,
             app_settings=self.settings,
             wall_clock=wall_clock,
+            rate_limit_registry=self.login_rate_limits,
         )
         self.authenticate_user = AuthenticateUserUseCase(
             user_session_repo=self.user_session_repo,

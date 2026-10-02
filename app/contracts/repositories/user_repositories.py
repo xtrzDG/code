@@ -17,6 +17,7 @@ from app.schemas.domain.users import (
 )
 from app.schemas.typings.localization.constrained_strings import E164PhoneNumber
 from app.schemas.typings.storage.constrained_integers import DocumentCount
+from app.schemas.typings.users.constrained_integers import OtpAttemptCount
 from app.schemas.typings.users.constrained_strings import EmailAddress
 from app.schemas.typings.users.prefixed_id import OtpChallengeId, UserId, UserSessionId
 from app.schemas.typings.users.strings import AccessTokenHash
@@ -51,6 +52,34 @@ class OtpChallengeRepoContract(RepoContract, Protocol):
         created_after: Microseconds,
     ) -> list[OtpChallengeDocument]:
         """Challenges created after a moment (throttling of repeated logins)."""
+        raise NotImplementedError
+
+    def register_failed_attempt(
+        self,
+        challenge_id: OtpChallengeId,
+        max_failed_attempts: OtpAttemptCount,
+        now: Microseconds,
+    ) -> OtpAttemptCount | None:
+        """
+        Count one more failed code check in one atomic step (a row lock on
+        Postgres, the collection lock in memory), only while the challenge
+        is open: not consumed and below `max_failed_attempts`. Returns the
+        new count, or None when nothing was counted (missing, consumed or
+        locked). Parallel callers each get a different count, so at most
+        `max_failed_attempts` of them get one.
+        """
+        raise NotImplementedError
+
+    def consume(
+        self,
+        challenge_id: OtpChallengeId,
+        now: Microseconds,
+    ) -> OtpChallengeDocument | None:
+        """
+        Mark the challenge consumed in one atomic step (compare-and-swap on
+        `is_consumed`): the consumed challenge, or None when it is missing
+        or another request consumed it first.
+        """
         raise NotImplementedError
 
     def delete(self, challenge_id: OtpChallengeId) -> None:
