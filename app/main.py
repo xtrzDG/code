@@ -41,8 +41,9 @@ LOGGER: logging.Logger = logging.getLogger(__name__)
 # Buffered model-call traces of the API process go to Langfuse this often
 # (the worker flushes its own buffer as a periodic job).
 TRACE_FLUSH_INTERVAL_SECONDS: float = 60.0
-# On shutdown the embedded worker finishes its current tick; a tick still
-# running after this long (a long autotest run) is abandoned with a warning.
+# On shutdown the embedded worker gives running jobs time to finish; one
+# still running after this long (a long autotest run) is abandoned with a
+# warning and runs again once its lease ends.
 EMBEDDED_WORKER_STOP_SECONDS: float = 30.0
 EMBEDDED_WORKER_THREAD_NAME: str = "embedded-background-worker"
 
@@ -74,7 +75,7 @@ def build_lifespan(app_container: AppContainer) -> Lifespan[FastAPI]:
     demo businesses (once), point the platform Telegram bot
     at this API when it is configured, start flushing model-call traces and,
     with EMBEDDED_WORKER, start the background worker in a thread. Shutdown:
-    stop the worker after its current tick, flush the remaining traces and
+    stop the worker (running jobs may finish), flush the remaining traces and
     close the Postgres pool.
     """
 
@@ -263,14 +264,14 @@ def start_embedded_worker(
     )
     worker_thread.start()
     LOGGER.info(
-        "Background worker runs inside the API (EMBEDDED_WORKER); do not start "
-        "app.worker_main next to it"
+        "Background worker runs inside the API (EMBEDDED_WORKER); without "
+        "DATABASE_URL a separate app.worker_main would not see this data"
     )
     return worker_thread
 
 
 def stop_embedded_worker(worker_thread: threading.Thread) -> None:
-    """Wait for the worker's current tick (its stop event is already set)."""
+    """Wait for the worker's running jobs (its stop event is already set)."""
 
     worker_thread.join(timeout=EMBEDDED_WORKER_STOP_SECONDS)
     if worker_thread.is_alive():

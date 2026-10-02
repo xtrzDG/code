@@ -1,11 +1,19 @@
 from dependency_injector import containers
-from dependency_injector.providers import DependenciesContainer
+from dependency_injector.providers import DependenciesContainer, Singleton
 
+from app.adapters.storage.job_store_factory import (
+    build_periodic_job_run_store_adapter,
+    build_queued_job_claim_adapter,
+)
 from app.containers.adapters.document_collection_provider import document_collection
 from app.containers.clients import ClientsContainer
 from app.containers.config import ConfigContainer
 from app.containers.time_provider import TimeProviderContainer
 from app.containers.utilities import UtilitiesContainer
+from app.contracts.jobs import (
+    PeriodicJobRunStoreAdapterContract,
+    QueuedJobClaimAdapterContract,
+)
 from app.schemas.domain.assistants import (
     AssistantVersionDocument,
     AutotestRunDocument,
@@ -51,6 +59,7 @@ from app.schemas.domain.handoffs import (
     UnansweredQuestionDocument,
 )
 from app.schemas.domain.jobs import (
+    PeriodicJobRunDocument,
     QueuedJobDocument,
 )
 from app.schemas.domain.knowledge import (
@@ -210,6 +219,25 @@ class DocumentCollectionsContainer(containers.DeclarativeContainer):
     )
     queued_job_collection = document_collection(
         QueuedJobDocument, "queued_jobs", config, clients, utilities, time_provider
+    )
+    periodic_job_run_collection = document_collection(
+        PeriodicJobRunDocument,
+        "periodic_job_runs",
+        config,
+        clients,
+        utilities,
+        time_provider,
+    )
+    # Leased job claims and periodic runs (Postgres, or in-process twins).
+    queued_job_claims: Singleton[QueuedJobClaimAdapterContract] = Singleton(
+        build_queued_job_claim_adapter,
+        collection=queued_job_collection,
+        connection_pool=clients.postgres_pool,
+    )
+    periodic_job_run_store: Singleton[PeriodicJobRunStoreAdapterContract] = Singleton(
+        build_periodic_job_run_store_adapter,
+        collection=periodic_job_run_collection,
+        connection_pool=clients.postgres_pool,
     )
     channel_message_receipt_collection = document_collection(
         ChannelMessageReceiptDocument,

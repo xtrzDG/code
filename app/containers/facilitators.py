@@ -99,5 +99,6 @@ class FacilitatorsContainer(containers.DeclarativeContainer):
     job_queue_facilitator: Singleton[JobQueueFacilitator] = Singleton(
         JobQueueFacilitator,
         job_repo=repositories.queued_job_repo,
+        job_wakeup=utilities.job_wakeup,
         wall_clock=time_provider.microsecond_wall_clock,
     )

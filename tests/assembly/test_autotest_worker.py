@@ -2,7 +2,6 @@
 
 import pytest
 
-from app.gateways.worker.background_worker import BackgroundWorker
 from app.operators.pipeline_operator import PipelineOperator
 from app.orchestrators.assistants.run_queued_autotests_orchestrator import (
     RunQueuedAutotestsOrchestrator,
@@ -24,9 +23,7 @@ from app.schemas.exceptions.application_errors import (
 )
 from app.schemas.typings.assistants.prefixed_id import AssistantVersionId
 from app.schemas.typings.localization.constrained_strings import LanguageTag
-from app.schemas.typings.platform.constrained_integers import WorkerPollSeconds
 from app.use_cases.autotests.enqueue_autotest_run_use_case import RUN_AUTOTESTS_JOB
-from app.utilities.storage.storage_scope_context import StorageScopeContext
 from tests.assembly.autotest_run_helpers import GEORGIAN_SCENARIO_COUNT, start
 from tests.assembly.testbed import AssemblyTestbed
 
@@ -77,9 +74,8 @@ def test_a_run_the_worker_cannot_finish_does_not_leave_the_version_testing() -> 
     business, version = start(testbed)
     full = testbed.run_autotests(business.id, version.id)
     assert full.version_status is AssistantVersionStatus.READY
-    worker = BackgroundWorker(
-        periodic_jobs=[],
-        queued_job_operators={
+    worker = testbed.background_worker(
+        {
             RUN_AUTOTESTS_JOB: PipelineOperator(
                 OrchestratorPipeline(
                     RunQueuedAutotestsOrchestrator(
@@ -91,12 +87,7 @@ def test_a_run_the_worker_cannot_finish_does_not_leave_the_version_testing() -> 
                     )
                 )
             )
-        },
-        job_repo=testbed.job_repo,
-        wall_clock=testbed.wall_clock,
-        error_reporter=testbed.worker_errors,
-        poll_seconds=WorkerPollSeconds(5),
-        storage_scope=StorageScopeContext(),
+        }
     )
     started = testbed.queue_autotest_run_orchestrator.execute(
         RunAutotestsCommand(
@@ -154,9 +145,8 @@ def test_a_running_run_shows_its_progress_scenario_by_scenario() -> None:
     testbed = AssemblyTestbed()
     business, version = start(testbed)
     progress = ProgressSnapshots(testbed)
-    worker = BackgroundWorker(
-        periodic_jobs=[],
-        queued_job_operators={
+    worker = testbed.background_worker(
+        {
             RUN_AUTOTESTS_JOB: PipelineOperator(
                 OrchestratorPipeline(
                     RunQueuedAutotestsOrchestrator(
@@ -168,12 +158,7 @@ def test_a_running_run_shows_its_progress_scenario_by_scenario() -> None:
                     )
                 )
             )
-        },
-        job_repo=testbed.job_repo,
-        wall_clock=testbed.wall_clock,
-        error_reporter=testbed.worker_errors,
-        poll_seconds=WorkerPollSeconds(5),
-        storage_scope=StorageScopeContext(),
+        }
     )
     started = testbed.queue_autotest_run_orchestrator.execute(
         RunAutotestsCommand(

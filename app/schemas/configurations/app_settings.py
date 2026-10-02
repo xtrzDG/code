@@ -2,6 +2,7 @@ from base_pydantic_schemas import ImmutableDTO
 
 from app.schemas.constants.assistants import LlmEffort, LlmProvider
 from app.schemas.constants.environment import DeploymentEnvironment
+from app.schemas.constants.jobs import JobLane
 from app.schemas.constants.localization import DataRegion
 from app.schemas.constants.messaging import SmtpSecurity
 from app.schemas.typings.assistants.constrained_integers import (
@@ -41,7 +42,10 @@ from app.schemas.typings.platform.booleans import (
     IsEmbeddedWorkerEnabled,
     IsLlmContentTraced,
 )
-from app.schemas.typings.platform.constrained_integers import WorkerPollSeconds
+from app.schemas.typings.platform.constrained_integers import (
+    WorkerLaneConcurrency,
+    WorkerPollSeconds,
+)
 from app.schemas.typings.platform.constrained_strings import CabinetBaseUrl
 from app.schemas.typings.platform.strings import (
     DatabaseUrl,
@@ -140,6 +144,8 @@ class AppSettings(ImmutableDTO):
     is_llm_content_traced: IsLlmContentTraced
     cors_allowed_origins: list[PublicBaseUrl]
     worker_poll_seconds: WorkerPollSeconds
+    # Threads per lane of each worker process (WORKER_LANE_CONCURRENCY).
+    worker_lane_concurrency: dict[JobLane, WorkerLaneConcurrency]
     # The API runs the background worker in a thread of its own process
     # (EMBEDDED_WORKER; see `read_embedded_worker`).
     is_embedded_worker_enabled: IsEmbeddedWorkerEnabled = IsEmbeddedWorkerEnabled(False)

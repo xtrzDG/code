@@ -21,10 +21,6 @@ ALLOWED_FULL_SCANS: dict[str, str] = {
         "the platform admin's client list and the periodic jobs that walk "
         "every business (trials, grace periods, usage, reminders, retention)"
     ),
-    "job_repositories.py::QueuedJobRepository.list_due": (
-        "the job queue's own claim queries replace it (R1-JOBS); remove this "
-        "entry when the leased queue lands"
-    ),
 }
 
 

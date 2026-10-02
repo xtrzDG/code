@@ -88,6 +88,7 @@ export const settingsRecordsRu: Translation<typeof settingsRecordsEn> = {
       assistant_version: "Версия ассистента",
       business_cabinet: "Кабинет бизнеса",
       business: "Бизнес",
+      queued_job: "Фоновая задача",
     },
   },
   roles: {

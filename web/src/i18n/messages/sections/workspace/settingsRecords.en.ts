@@ -81,6 +81,7 @@ export const settingsRecordsEn = {
       assistant_version: "Assistant version",
       business_cabinet: "Business cabinet",
       business: "Business",
+      queued_job: "Background job",
     },
   },
   roles: {

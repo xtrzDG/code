@@ -25,6 +25,7 @@ CHECK_PACKAGE_USAGE_JOB: JobName = JobName("check_package_usage")
 INVOICE_USAGE_OVERAGE_JOB: JobName = JobName("invoice_usage_overage")
 SEND_BOOKING_REMINDERS_JOB: JobName = JobName("send_booking_reminders")
 FLUSH_LLM_TRACES_JOB: JobName = JobName("flush_llm_traces")
+PURGE_FINISHED_JOBS_JOB: JobName = JobName("purge_finished_jobs")
 
 
 class GatewaysContainer(containers.DeclarativeContainer):
@@ -41,10 +42,11 @@ class GatewaysContainer(containers.DeclarativeContainer):
     time_provider: TimeProviderContainer = DependenciesContainer()  # type: ignore[assignment]
     utilities: UtilitiesContainer = DependenciesContainer()  # type: ignore[assignment]
 
-    # Periodic jobs in the order they run within a tick: trials end before
-    # grace periods are enforced, so an expired trial and its grace period
-    # are handled in the same hour; minutes above the package are billed
-    # before the grace job looks for unpaid bills.
+    # Periodic jobs in the order they run within a tick, each once per
+    # period (day or interval) across workers: trials end before grace
+    # periods are enforced, so an expired trial and its grace period are
+    # handled in the same hour; minutes above the package are billed before
+    # the grace job looks for unpaid bills.
     periodic_jobs: List = List(
         Factory(
             PeriodicJobSpec,
@@ -84,9 +86,18 @@ class GatewaysContainer(containers.DeclarativeContainer):
         ),
         Factory(
             PeriodicJobSpec,
+            name=PURGE_FINISHED_JOBS_JOB,
+            interval_seconds=JobIntervalSeconds(DAY_SECONDS),
+            operator=operators.platform.purge_finished_jobs_operator,
+        ),
+        # Each process flushes its own trace buffer, so this one runs in
+        # every worker on its interval instead of once per period.
+        Factory(
+            PeriodicJobSpec,
             name=FLUSH_LLM_TRACES_JOB,
             interval_seconds=JobIntervalSeconds(MINUTE_SECONDS),
             operator=operators.platform.flush_llm_traces_operator,
+            is_process_local=True,
         ),
         Factory(
             purge_stale_rows_job, operator=operators.platform.purge_stale_rows_operator
@@ -102,8 +113,11 @@ class GatewaysContainer(containers.DeclarativeContainer):
         periodic_jobs=periodic_jobs,
         queued_job_operators=queued_job_operators,
         job_repo=repositories.queued_job_repo,
+        periodic_run_repo=repositories.periodic_job_run_repo,
         wall_clock=time_provider.microsecond_wall_clock,
         error_reporter=facilitators.error_reporter,
         poll_seconds=config.app_settings.provided.worker_poll_seconds,
         storage_scope=utilities.storage_scope,
+        job_wakeup=utilities.job_wakeup,
+        lane_concurrency=config.app_settings.provided.worker_lane_concurrency,
     )

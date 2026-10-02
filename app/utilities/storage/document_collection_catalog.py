@@ -34,7 +34,7 @@ from app.schemas.domain.conversations import (
     MessageDocument,
 )
 from app.schemas.domain.handoffs import HandoffDocument, UnansweredQuestionDocument
-from app.schemas.domain.jobs import QueuedJobDocument
+from app.schemas.domain.jobs import PeriodicJobRunDocument, QueuedJobDocument
 from app.schemas.domain.knowledge import KnowledgeItemDocument
 from app.schemas.domain.manager_links import ManagerTelegramLinkDocument
 from app.schemas.domain.package_usage import PackageUsageWarningDocument
@@ -120,9 +120,12 @@ DOCUMENT_COLLECTIONS: tuple[DocumentCollectionDefinition, ...] = (
     DocumentCollectionDefinition(
         DocumentCollectionName("dpa_acceptances"), DpaAcceptanceDocument
     ),
-    # Background work.
+    # Background work; periodic job runs per period (1011).
     DocumentCollectionDefinition(
         DocumentCollectionName("queued_jobs"), QueuedJobDocument
+    ),
+    DocumentCollectionDefinition(
+        DocumentCollectionName("periodic_job_runs"), PeriodicJobRunDocument
     ),
     # Channels: webhook redelivery receipts and staff Telegram links (0002).
     DocumentCollectionDefinition(

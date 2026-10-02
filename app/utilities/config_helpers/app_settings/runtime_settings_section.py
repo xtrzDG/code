@@ -7,13 +7,17 @@ from collections.abc import Mapping
 from typing import TypedDict
 
 from app.schemas.constants.environment import DeploymentEnvironment
+from app.schemas.constants.jobs import JobLane
 from app.schemas.exceptions.application_errors import ValidationFailedError
 from app.schemas.typings.channels.constrained_strings import PublicBaseUrl
 from app.schemas.typings.platform.booleans import (
     IsDemoDataSeedingEnabled,
     IsEmbeddedWorkerEnabled,
 )
-from app.schemas.typings.platform.constrained_integers import WorkerPollSeconds
+from app.schemas.typings.platform.constrained_integers import (
+    WorkerLaneConcurrency,
+    WorkerPollSeconds,
+)
 from app.schemas.typings.platform.strings import LocalDirectoryPath
 from app.utilities.config_helpers.app_settings.environment_variable_readers import (
     FALSE_VALUES,
@@ -22,6 +26,9 @@ from app.utilities.config_helpers.app_settings.environment_variable_readers impo
     read_integer,
     read_raw_list,
     read_text,
+)
+from app.utilities.config_helpers.app_settings.worker_lane_settings import (
+    read_worker_lane_concurrency,
 )
 
 # Call recordings kept on this server (development or a single server);
@@ -36,6 +43,7 @@ class RuntimeSettingsSection(TypedDict):
 
     cors_allowed_origins: list[PublicBaseUrl]
     worker_poll_seconds: WorkerPollSeconds
+    worker_lane_concurrency: dict[JobLane, WorkerLaneConcurrency]
     is_embedded_worker_enabled: IsEmbeddedWorkerEnabled
     is_demo_data_seeding_enabled: IsDemoDataSeedingEnabled
     recordings_directory: LocalDirectoryPath
@@ -54,6 +62,7 @@ def read_runtime_settings(
         worker_poll_seconds=WorkerPollSeconds(
             read_integer(environment_variables, "WORKER_POLL_SECONDS", 15)
         ),
+        worker_lane_concurrency=read_worker_lane_concurrency(environment_variables),
         is_embedded_worker_enabled=IsEmbeddedWorkerEnabled(
             read_embedded_worker(
                 environment_variables,
@@ -89,9 +98,9 @@ def read_embedded_worker(
       see the API's data: autotests would stay "running" and reminders
       would never go out.
     - `true`: on (e.g. development against a local Postgres without the
-      separate worker). Refused in production: the worker assumes it is
-      the only one, and a production API may run in several processes or
-      instances next to `workshop worker`, so jobs would run twice.
+      separate worker). Refused in production: workers may run side by side
+      (leased claims), but there the API serves requests and the workers
+      (`workshop worker`, as many as needed) run the model-heavy jobs.
     - `false`: off; run `python -m app.worker_main` (`workshop worker`).
 
     Raises:
@@ -112,9 +121,9 @@ def read_embedded_worker(
 
     if environment is DeploymentEnvironment.PRODUCTION:
         raise ValidationFailedError(
-            "EMBEDDED_WORKER cannot be true in production: run the background "
-            "worker as its own single process (`workshop worker`), or jobs run "
-            "once per API process."
+            "EMBEDDED_WORKER cannot be true in production: run background "
+            "workers as their own service (`workshop worker`), so autotests "
+            "and other long jobs never slow down the API."
         )
 
     return True

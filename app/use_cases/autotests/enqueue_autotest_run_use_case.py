@@ -2,6 +2,7 @@ from app.contracts.jobs import JobQueueFacilitatorContract
 from app.contracts.repositories.assistant_repositories import AutotestRunRepoContract
 from app.contracts.transformer_contract import TransformerContract
 from app.contracts.use_case_contract import UseCaseContract
+from app.schemas.constants.jobs import JobLane
 from app.schemas.domain.assistants import AutotestRunDocument
 from app.schemas.dto.assistants.assistant_views import AutotestRunView
 from app.schemas.dto.assistants.autotest_runs import (
@@ -10,10 +11,11 @@ from app.schemas.dto.assistants.autotest_runs import (
     AutotestRunViewSource,
 )
 from app.schemas.exceptions.application_errors import NotFoundError
-from app.schemas.typings.platform.constrained_strings import JobName
+from app.schemas.typings.platform.constrained_strings import JobName, JobSerialKey
 from app.schemas.typings.platform.strings import JobPayloadJson
 
 RUN_AUTOTESTS_JOB: JobName = JobName("run_autotests")
+AUTOTESTS_SERIAL_KEY_PREFIX: str = "autotests"
 
 
 class EnqueueAutotestRunUseCase(UseCaseContract[AutotestRunPlan, AutotestRunView]):
@@ -48,10 +50,17 @@ class EnqueueAutotestRunUseCase(UseCaseContract[AutotestRunPlan, AutotestRunView
         if run is None:
             raise NotFoundError(f"Autotest run {input_data.run_id} was not found.")
 
+        # The autotests lane, one run per business at a time: a long run
+        # never delays customer messages or reminders, and one business
+        # cannot take every autotest slot of the worker.
         self._job_queue.enqueue(
             RUN_AUTOTESTS_JOB,
             JobPayloadJson(AutotestJobPayload(run_id=run.id).model_dump_json()),
             input_data.business.id,
+            lane=JobLane.AUTOTESTS,
+            serial_key=JobSerialKey(
+                f"{AUTOTESTS_SERIAL_KEY_PREFIX}:{input_data.business.id}"
+            ),
         )
         return self._autotest_run_view_transformer.transform(
             AutotestRunViewSource(run=run, version=input_data.version)

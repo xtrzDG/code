@@ -83,6 +83,7 @@ export const settingsRecordsKa: Translation<typeof settingsRecordsEn> = {
       assistant_version: "ასისტენტის ვერსია",
       business_cabinet: "ბიზნესის კაბინეტი",
       business: "ბიზნესი",
+      queued_job: "ფონური დავალება",
     },
   },
   roles: {

@@ -11,18 +11,15 @@ from app.repositories.billing_repositories import UsageEventRepository
 from app.repositories.booking_repositories import BookingRepository
 from app.repositories.compliance_repositories import AuditLogRepository
 from app.repositories.conversation_repositories import LlmTurnRepository
-from app.repositories.job_repositories import QueuedJobRepository
 from app.repositories.knowledge_repositories import KnowledgeItemRepository
 from app.schemas.constants.billing import UsageKind
 from app.schemas.constants.channels import ChannelKind
 from app.schemas.constants.compliance import AuditAction
-from app.schemas.constants.jobs import QueuedJobStatus
 from app.schemas.domain.billing import UsageEventDocument
 from app.schemas.domain.bookings import BookingDocument
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.compliance import AuditLogEntryDocument
 from app.schemas.domain.conversations import LlmTurnDocument
-from app.schemas.domain.jobs import QueuedJobDocument
 from app.schemas.domain.knowledge import KnowledgeItemDocument
 from app.schemas.exceptions.application_errors import ConflictError
 from app.schemas.typings.billing.constrained_integers import UsageQuantity
@@ -36,8 +33,6 @@ from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.compliance.strings import AuditEntityName
 from app.schemas.typings.contacts.prefixed_id import ContactId
 from app.schemas.typings.conversations.prefixed_id import ConversationId
-from app.schemas.typings.platform.constrained_strings import JobName
-from app.schemas.typings.platform.strings import JobPayloadJson
 from app.schemas.typings.users.prefixed_id import UserId
 from tests.storage.builders import (
     COUNTRY_SAMPLES,
@@ -135,34 +130,6 @@ def test_append_only_journals(collections: CollectionFactory) -> None:
     assert len(llm_turn_repo.list_by_conversation(other_conversation_id)) == 1
     assert entry.business_id is not None
     assert audit_log_repo.list_by_business(entry.business_id) == [entry]
-
-
-def test_due_jobs_come_oldest_first(collections: CollectionFactory) -> None:
-    job_repo = QueuedJobRepository(collections(QueuedJobDocument, "queued_jobs"))
-    jobs = [
-        QueuedJobDocument(
-            name=JobName("send_booking_reminders"),
-            payload=JobPayloadJson('{"language": "ka", "text": "შეხსენება"}'),
-            business_id=BusinessId() if index % 2 == 0 else None,
-            run_at=Microseconds(run_at),
-            status=status,
-        )
-        for index, (run_at, status) in enumerate(
-            (
-                (300, QueuedJobStatus.PENDING),
-                (100, QueuedJobStatus.PENDING),
-                (200, QueuedJobStatus.DONE),
-                (900, QueuedJobStatus.PENDING),
-            )
-        )
-    ]
-    for job in jobs:
-        job_repo.save(job)
-
-    due_jobs = job_repo.list_due(Microseconds(500))
-
-    assert [job.run_at for job in due_jobs] == [100, 300]
-    assert job_repo.get(jobs[3].id) == jobs[3]
 
 
 def test_collections_return_fresh_copies_in_first_write_order(

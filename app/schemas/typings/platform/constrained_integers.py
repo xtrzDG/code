@@ -16,11 +16,35 @@ class JobAttemptCount(BaseConstrainedTypedInt):
     le = 1000
 
 
+class JobClaimLimit(BaseConstrainedTypedInt):
+    """How many due queued jobs a worker claims at once (its free slots)."""
+
+    ge = 1
+    le = 256
+
+
 class JobIntervalSeconds(BaseConstrainedTypedInt):
     """How often a periodic background job runs, in seconds."""
 
     ge = 1
     le = 7 * 24 * 60 * 60
+
+
+class JobLeaseSeconds(BaseConstrainedTypedInt):
+    """
+    How long a claimed job stays reserved for its worker without a
+    heartbeat; after that another worker may take it over.
+    """
+
+    ge = 5
+    le = 60 * 60
+
+
+class JobRetentionDays(BaseConstrainedTypedInt):
+    """How long finished queued jobs and periodic run records are kept, in days."""
+
+    ge = 1
+    le = 366
 
 
 class ListItemCount(BaseConstrainedTypedInt):
@@ -47,6 +71,13 @@ class RetryAfterSeconds(BaseConstrainedTypedInt):
 
     ge = 1
     le = 24 * 60 * 60
+
+
+class WorkerLaneConcurrency(BaseConstrainedTypedInt):
+    """How many jobs of one worker lane one worker process runs at the same time."""
+
+    ge = 1
+    le = 64
 
 
 class WorkerPollSeconds(BaseConstrainedTypedInt):
