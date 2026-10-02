@@ -2,7 +2,8 @@
 
 /**
  * Who is signed in and their preferences: the interface language, the
- * theme, installing the cabinet as an app, all businesses, the platform
+ * theme, the chime when someone needs a person, installing the cabinet as
+ * an app, all businesses, the platform
  * admin (for admins) and signing out. Shown by the user menu at the bottom
  * of the sidebar, and inside "More" on phones.
  */
@@ -18,6 +19,7 @@ import { ADMIN_PATH, HOME_PATH } from "@/lib/navigation";
 import { LanguageSwitcher } from "../LanguageSwitcher";
 import { IconBuilding, IconDownload, IconShield } from "../icons";
 import { ThemeSwitcher } from "../theme/ThemeSwitcher";
+import { ChimeSetting } from "./ChimeSetting";
 import { SignOutButton } from "./SignOutButton";
 import { UserAvatar, userDisplayName, userContact } from "./UserAvatar";
 import { useInstallPrompt } from "./useInstallPrompt";
@@ -85,6 +87,10 @@ export function AccountPanel({ me, onNavigate }: { me: CurrentUserView; onNaviga
           <ThemeSwitcher />
         </div>
       </section>
+
+      <div className="border-t border-line pt-2.5">
+        <ChimeSetting />
+      </div>
 
       <div className="space-y-0.5 border-t border-line pt-2">
         <InstallRow />

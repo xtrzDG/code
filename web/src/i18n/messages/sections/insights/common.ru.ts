@@ -8,7 +8,6 @@ import type { insightsCommonEn } from "./common.en";
 
 export const insightsCommonRu: Translation<typeof insightsCommonEn> = {
   loadingMore: "Загрузка…",
-  refresh: "Обновить",
   showMore: "Показать ещё",
   shownOf: "Показано {shown} из {total}",
   includeTest: "Показывать тестовые",

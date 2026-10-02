@@ -68,7 +68,7 @@ export const billingKa: Translation<typeof billingEn> = {
     usageDialogs: "პაკეტის დიალოგები იწურება.",
     usageDialogsExceeded: "პაკეტის დიალოგები ამოიწურა. განიხილეთ უფრო დიდი ტარიფი.",
     checkoutReturnTitle: "გმადლობთ!",
-    checkoutReturn: "გადახდის დადასტურებას შეიძლება ერთი წუთი დასჭირდეს. ახალი სტატუსის სანახავად განაახლეთ გვერდი.",
+    checkoutReturn: "გადახდის დადასტურებას შეიძლება ერთი წუთი დასჭირდეს; გვერდი ახალ სტატუსს თავად აჩვენებს.",
   },
   usage: {
     title: "პაკეტის ხარჯი",

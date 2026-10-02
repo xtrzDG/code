@@ -5,7 +5,7 @@
 import type { ReactNode } from "react";
 
 import { describeError } from "@/api/errors";
-import { Alert, Button, Checkbox, Spinner } from "@/components/ui";
+import { Alert, Button, Checkbox } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { cn } from "@/lib/cn";
 
@@ -33,17 +33,6 @@ export function CustomerName({ name, className }: { name: string | null | undefi
     </span>
   ) : (
     <span className={cn("text-ink-muted italic", className)}>{t("insights.unknownCustomer")}</span>
-  );
-}
-
-/** Reload button for a list; spins while a reload is running over shown data. */
-export function RefreshButton({ onClick, isRefreshing }: { onClick: () => void; isRefreshing: boolean }) {
-  const { t } = useI18n();
-  return (
-    <Button variant="secondary" onClick={onClick} disabled={isRefreshing} aria-busy={isRefreshing || undefined}>
-      {isRefreshing ? <Spinner size="sm" /> : null}
-      {t("insights.refresh")}
-    </Button>
   );
 }
 

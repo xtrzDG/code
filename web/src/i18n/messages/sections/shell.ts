@@ -1,7 +1,7 @@
 /**
  * Texts of the cabinet's frame: the five sections and the navigation,
  * the user menu and installing the app, "Create an AI assistant" before
- * the assistant exists, and the offline page.
+ * the assistant exists, the offline page and the live cabinet.
  *
  * Top-level keys are namespaces. They are spread into en.ts, ru.ts and
  * ka.ts, so they must not clash with the namespaces of the other
@@ -18,6 +18,9 @@ import { accountRu } from "./shell/account.ru";
 import { appEn } from "./shell/app.en";
 import { appKa } from "./shell/app.ka";
 import { appRu } from "./shell/app.ru";
+import { liveEn } from "./shell/live.en";
+import { liveKa } from "./shell/live.ka";
+import { liveRu } from "./shell/live.ru";
 import { navigationEn } from "./shell/navigation.en";
 import { navigationKa } from "./shell/navigation.ka";
 import { navigationRu } from "./shell/navigation.ru";
@@ -30,6 +33,7 @@ export const shellEn = {
   account: accountEn,
   setup: setupEn,
   app: appEn,
+  live: liveEn,
 } as const;
 
 export const shellRu: Translation<typeof shellEn> = {
@@ -37,6 +41,7 @@ export const shellRu: Translation<typeof shellEn> = {
   account: accountRu,
   setup: setupRu,
   app: appRu,
+  live: liveRu,
 };
 
 export const shellKa: Translation<typeof shellEn> = {
@@ -44,4 +49,5 @@ export const shellKa: Translation<typeof shellEn> = {
   account: accountKa,
   setup: setupKa,
   app: appKa,
+  live: liveKa,
 };

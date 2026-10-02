@@ -7,7 +7,7 @@ import { queryKeys } from "@/api/queryKeys";
 import { sectionQueries } from "@/api/sectionQueries";
 import { useQuery } from "@/api/useQuery";
 import { useBusiness, useBusinessFormat } from "@/components/business/BusinessContext";
-import { useInboxCounts } from "@/components/shell/InboxCounts";
+import { useAttentionCounts } from "@/components/shell/LiveEvents";
 import { BusinessStatusBadge } from "@/components/business/BusinessStatusBadge";
 import { IconBook, IconHandoff } from "@/components/icons";
 import { AnimatedNumber } from "@/components/motion";
@@ -54,7 +54,7 @@ export function DashboardScreen({ initialPeriod }: { initialPeriod: DashboardPer
   // Another period keeps the shown tiles (dimmed) until its numbers arrive.
   const stats = useQuery(statsQuery.key, statsQuery.fetch, { keepPreviousData: true });
   // The badges' counts: no list of handoffs is loaded (that would be an audited view).
-  const inbox = useInboxCounts();
+  const inbox = useAttentionCounts();
   const gaps = useQuery(
     queryKeys.profile.gaps(businessId, locale),
     () =>

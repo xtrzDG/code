@@ -1,9 +1,10 @@
 "use client";
 
 import { IconCalendar, IconPlus } from "@/components/icons";
-import { RefreshButton, RefreshFailed } from "@/components/insights/common";
+import { RefreshFailed } from "@/components/insights/common";
 import { useBusiness } from "@/components/business/BusinessContext";
 import { Button, Card, EmptyState, ErrorState, LoadingRegion, PageHeader } from "@/components/ui";
+import { LiveStatus } from "@/components/shell/LiveStatus";
 import { useI18n } from "@/i18n/client";
 
 import { BookingDialogs } from "./_components/BookingDialogs";
@@ -33,7 +34,7 @@ export function BookingsScreen({ initialFilters }: { initialFilters: BookingFilt
         description={t("pages.bookings.description")}
         actions={
           <>
-            <RefreshButton onClick={bookings.reload} isRefreshing={bookings.isFetching && bookings.items !== undefined} />
+            <LiveStatus updatedAt={bookings.updatedAt} isFetching={bookings.isFetching && bookings.items !== undefined} />
             <Button leadingIcon={<IconPlus className="size-4" aria-hidden />} onClick={() => setDialog({ kind: "create" })}>
               {t("bookings.newBooking")}
             </Button>

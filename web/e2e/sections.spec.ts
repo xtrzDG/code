@@ -5,7 +5,6 @@
  */
 
 import { expect, test } from "./support/fixtures";
-import { en } from "./support/messages";
 
 test.describe("lists whose every load is audited", () => {
   const lists = [
@@ -13,7 +12,7 @@ test.describe("lists whose every load is audited", () => {
     { section: "conversations", page: "messages" },
   ] as const;
   for (const { section, page: path } of lists) {
-    test(`${section} reload on return and on Refresh, never on a timer`, async ({ page, owner }) => {
+    test(`${section} reload on return to the tab, never on a timer`, async ({ page, owner }) => {
       await page.clock.install();
       const loads: string[] = [];
       page.on("request", (request) => {
@@ -30,7 +29,8 @@ test.describe("lists whose every load is audited", () => {
       await page.waitForLoadState("networkidle");
       expect(loads).toHaveLength(1);
 
-      await page.getByRole("button", { name: en.insights.refresh }).first().click();
+      // Coming back to the tab reloads (the live stream does the rest).
+      await page.evaluate(() => document.dispatchEvent(new Event("visibilitychange")));
       await expect.poll(() => loads.length).toBe(2);
     });
   }

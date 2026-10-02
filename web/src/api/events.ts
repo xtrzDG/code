@@ -145,7 +145,8 @@ export class LiveEventStream {
   }
 
   private async read(body: ReadableStream<Uint8Array>, abort: AbortController): Promise<void> {
-    const reader = body.pipeThrough(new TextDecoderStream()).getReader();
+    const reader = body.getReader();
+    const decoder = new TextDecoder();
     const onAbort = () => void reader.cancel().catch(() => undefined);
     abort.signal.addEventListener("abort", onAbort, { once: true });
     this.armWatchdog(abort);
@@ -155,7 +156,7 @@ export class LiveEventStream {
         if (done) {
           break;
         }
-        for (const message of this.parser.push(value)) {
+        for (const message of this.parser.push(decoder.decode(value, { stream: true }))) {
           this.handle(message.event, message);
         }
         // Any bytes (a heartbeat too) prove the connection alive.

@@ -11,7 +11,6 @@ export const adminEn = {
     healthy: "Healthy",
     losingMoney: "Losing money",
   },
-  generatedAt: "Updated {time}",
   filtersLabel: "Filters",
   search: "Search",
   searchPlaceholder: "Business name or ID",

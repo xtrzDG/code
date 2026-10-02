@@ -45,11 +45,13 @@ export interface Query<T> {
   error: ApiError | null;
   /** Nothing loaded for this key yet: show a skeleton (or the placeholder). */
   isLoading: boolean;
-  /** A load is running (Refresh spins while data is shown). */
+  /** A load is running (a reload over shown data, "Updating…"). */
   isFetching: boolean;
   /** `data` belongs to the previous key (dim it). */
   isPlaceholder: boolean;
-  /** Load again now (the Refresh button, a retry). */
+  /** When the shown data came from the server (ms since epoch; 0 for never): "Updated just now". */
+  updatedAt: number;
+  /** Load again now (a retry). */
   reload: () => void;
   /** Change the cached data locally (after a mutation that returned it). */
   setData: (update: T | ((current: T | undefined) => T | undefined)) => void;
@@ -99,6 +101,7 @@ export function useCachedQuery<T>(key: QueryKey, load: () => Promise<T>, options
     isLoading: enabled && data === undefined && error === null,
     isFetching: snapshot.isFetching,
     isPlaceholder: data === undefined && placeholder !== undefined,
+    updatedAt: snapshot.updatedAt,
     reload,
     setData,
   };

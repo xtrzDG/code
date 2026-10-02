@@ -75,7 +75,7 @@ export const billingRu: Translation<typeof billingEn> = {
     usageDialogs: "Диалоги в пакете заканчиваются.",
     usageDialogsExceeded: "Диалоги в пакете израсходованы. Подумайте о тарифе побольше.",
     checkoutReturnTitle: "Спасибо!",
-    checkoutReturn: "Подтверждение оплаты может занять минуту. Обновите страницу, чтобы увидеть новый статус.",
+    checkoutReturn: "Подтверждение оплаты может занять минуту; страница сама покажет новый статус.",
   },
   usage: {
     title: "Расход пакета",

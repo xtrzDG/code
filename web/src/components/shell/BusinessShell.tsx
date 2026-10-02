@@ -21,7 +21,7 @@ import { SECTION_LABELS, canOpenPage, pageLabel, sectionOf, visiblePages, visibl
 import { BusinessSwitcher } from "../BusinessSwitcher";
 import { useBusiness } from "../business/BusinessContext";
 import { IconCalendar, IconChat, IconGauge, IconSettings, IconShield, IconSparkles, type IconProps } from "../icons";
-import { InboxCountsProvider, useInboxCounts } from "./InboxCounts";
+import { LiveEventsProvider, useAttentionCounts } from "./LiveEvents";
 import { OwnersOnlyPage } from "./OwnersOnlyPage";
 import { SetupEntry } from "./setup/SetupEntry";
 import { SetupHero } from "./setup/SetupHero";
@@ -46,7 +46,7 @@ function useNavItems(prefetch: PagePrefetch): ShellNavItem[] {
   const { t } = useI18n();
   const { business, isPlatformAdmin } = useBusiness();
   const role = useMemberRole();
-  const counts = useInboxCounts();
+  const counts = useAttentionCounts();
   const current = businessLocation(usePathname())?.page ?? null;
 
   const items: ShellNavItem[] = visibleSections(role).map((section) => {
@@ -58,7 +58,10 @@ function useNavItems(prefetch: PagePrefetch): ShellNavItem[] {
       label: t(SECTION_LABELS[section]),
       icon: SECTION_ICONS[section],
       isActive: current !== null && sectionOf(current) === section,
-      badge: sectionBadge(section, counts),
+      badge: sectionBadge(
+        pages.map((entry) => entry.page),
+        counts,
+      ),
       onPrefetch: prefetch[home],
       inTabBar: !MORE_SECTIONS.has(section),
       pages: pages.map((entry) => ({
@@ -154,7 +157,7 @@ export function BusinessShell({
 }) {
   const { isSetUp } = useBusiness();
   return (
-    <InboxCountsProvider enabled={isSetUp}>
+    <LiveEventsProvider enabled={isSetUp}>
       {isSetUp ? (
         <CabinetFrame prefetch={prefetch} initialCollapsed={initialCollapsed}>
           {children}
@@ -162,6 +165,6 @@ export function BusinessShell({
       ) : (
         <SetupFrame initialCollapsed={initialCollapsed}>{children}</SetupFrame>
       )}
-    </InboxCountsProvider>
+    </LiveEventsProvider>
   );
 }

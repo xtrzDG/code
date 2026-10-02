@@ -7,12 +7,13 @@ import { api } from "@/api/client";
 import { queryKeys } from "@/api/queryKeys";
 import { useCursorPage } from "@/api/useCursorPage";
 import { useBusiness } from "@/components/business/BusinessContext";
-import { RefreshButton, RefreshFailed } from "@/components/insights/common";
+import { RefreshFailed } from "@/components/insights/common";
 import { useToday } from "@/components/insights/useToday";
 import type { ConversationPage, ConversationSummaryView } from "@/components/insights/types";
 import { useAutoReload } from "@/components/insights/useAutoReload";
 import { replaceUrlQuery } from "@/components/insights/urlQuery";
 import { PageHeader } from "@/components/ui";
+import { LiveStatus } from "@/components/shell/LiveStatus";
 import { useI18n } from "@/i18n/client";
 import { cn } from "@/lib/cn";
 
@@ -55,8 +56,9 @@ export function ConversationsShell({ children }: { children: ReactNode }) {
         },
       }),
   );
-  // Every load of the feed is audited (a view of personal data): no polling,
-  // a reload when the user comes back to the tab and the Refresh button.
+  // Every load of the feed is audited (a view of personal data): no polling.
+  // The live stream reloads it when a message arrives, and it reloads when
+  // the person comes back to the tab.
   useAutoReload(conversations.reload, { intervalMs: null });
 
   const setFilters = (next: ConversationFilters) => {
@@ -72,9 +74,9 @@ export function ConversationsShell({ children }: { children: ReactNode }) {
           title={t("navigation.pages.messagesAll")}
           description={t("pages.conversations.description")}
           actions={
-            <RefreshButton
-              onClick={conversations.reload}
-              isRefreshing={conversations.isFetching && conversations.items !== undefined}
+            <LiveStatus
+              updatedAt={conversations.updatedAt}
+              isFetching={conversations.isFetching && conversations.items !== undefined}
             />
           }
         />

@@ -6,7 +6,6 @@
 
 export const insightsCommonEn = {
   loadingMore: "Loading…",
-  refresh: "Refresh",
   showMore: "Show more",
   shownOf: "Showing {shown} of {total}",
   includeTest: "Include test activity",

@@ -65,7 +65,7 @@ export const billingEn = {
     usageDialogs: "Dialogs in the package are running out.",
     usageDialogsExceeded: "The dialogs in the package are used up. Consider a bigger plan.",
     checkoutReturnTitle: "Thank you!",
-    checkoutReturn: "Confirming the payment can take a minute. Refresh the page to see the new status.",
+    checkoutReturn: "Confirming the payment can take a minute; this page shows the new status by itself.",
   },
   usage: {
     title: "Package usage",

@@ -10,9 +10,9 @@ import { sectionQueries } from "@/api/sectionQueries";
 import { useMutation } from "@/api/useMutation";
 import { useQuery } from "@/api/useQuery";
 import { useBusiness } from "@/components/business/BusinessContext";
-import { IconRefresh } from "@/components/icons";
 import { Alert, Button, Card, ConfirmDialog, ErrorState, LoadingRegion, PageHeader, useToast } from "@/components/ui";
 import { OwnerOnlyNote } from "@/components/workspace/OwnerOnly";
+import { LiveStatus } from "@/components/shell/LiveStatus";
 import { useI18n } from "@/i18n/client";
 import type { MessageKey } from "@/i18n/translate";
 
@@ -156,17 +156,7 @@ export function ChannelsScreen({ calendarReturn: initialCalendarReturn }: { cale
       <PageHeader
         title={t("nav.channels")}
         description={t("pages.channels.description")}
-        actions={
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={channels.reload}
-            disabled={channels.isFetching}
-            leadingIcon={<IconRefresh className="size-4" aria-hidden />}
-          >
-            {t("workspace.refresh")}
-          </Button>
-        }
+        actions={<LiveStatus updatedAt={channels.updatedAt} isFetching={channels.isFetching && channels.data !== undefined} />}
       />
 
       {!isOwner ? <OwnerOnlyNote className="mb-6" /> : null}

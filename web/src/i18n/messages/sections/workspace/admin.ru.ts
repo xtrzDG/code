@@ -11,7 +11,6 @@ export const adminRu: Translation<typeof adminEn> = {
     healthy: "В порядке",
     losingMoney: "В минусе",
   },
-  generatedAt: "Обновлено {time}",
   filtersLabel: "Фильтры",
   search: "Поиск",
   searchPlaceholder: "Название бизнеса или ID",

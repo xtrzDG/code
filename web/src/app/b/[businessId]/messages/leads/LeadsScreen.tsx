@@ -7,13 +7,14 @@ import { queryKeys } from "@/api/queryKeys";
 import { useCursorPage } from "@/api/useCursorPage";
 import { useBusiness } from "@/components/business/BusinessContext";
 import { IconInbox } from "@/components/icons";
-import { CustomerName, IncludeTestToggle, LoadMore, RefreshButton, RefreshFailed } from "@/components/insights/common";
+import { CustomerName, IncludeTestToggle, LoadMore, RefreshFailed } from "@/components/insights/common";
 import { LEAD_STATUS, LEAD_STATUSES } from "@/components/insights/labels";
 import { SegmentedControl } from "@/components/insights/SegmentedControl";
 import type { LeadListItem, LeadPage } from "@/components/insights/types";
 import { replaceUrlQuery } from "@/components/insights/urlQuery";
 import { Button, Card, EmptyState, ErrorState, LoadingRegion, Modal, PageHeader, SkeletonCardList } from "@/components/ui";
 import { AnimatedPresenceList } from "@/components/motion";
+import { LiveStatus } from "@/components/shell/LiveStatus";
 import { useI18n } from "@/i18n/client";
 
 import { countsByTab, leadFiltersQuery, type LeadFilters, type LeadTab } from "./_components/leadModel";
@@ -63,7 +64,7 @@ export function LeadsScreen({ initialFilters }: { initialFilters: LeadFilters })
       <PageHeader
         title={t("navigation.pages.messagesLeads")}
         description={t("pages.leads.description")}
-        actions={<RefreshButton onClick={leads.reload} isRefreshing={leads.isFetching && leads.items !== undefined} />}
+        actions={<LiveStatus updatedAt={leads.updatedAt} isFetching={leads.isFetching && leads.items !== undefined} />}
       />
 
       <div className="space-y-5">

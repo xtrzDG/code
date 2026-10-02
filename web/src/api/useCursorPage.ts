@@ -43,6 +43,8 @@ export interface CursorPage<Item, Page> {
   isFetching: boolean;
   /** The shown items belong to the previous filters while the new ones load. */
   isPlaceholder: boolean;
+  /** When the first page last came from the server (ms since epoch; 0 for never). */
+  updatedAt: number;
   hasMore: boolean;
   isLoadingMore: boolean;
   /** The last "show more" failed (the shown items stay). */
@@ -138,6 +140,7 @@ export function useCursorPage<Item, Page extends PageShape<Item>>(
     isLoading: query.isLoading,
     isFetching: query.isFetching,
     isPlaceholder: query.isPlaceholder,
+    updatedAt: query.updatedAt,
     hasMore: nextCursor !== null,
     isLoadingMore: currentMore.isLoading,
     moreError: currentMore.error,

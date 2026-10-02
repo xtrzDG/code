@@ -131,11 +131,13 @@ describe("the live event stream", () => {
     const quiet = controlledResponse();
     const next = controlledResponse();
     const third = controlledResponse();
+    const fourth = controlledResponse();
     const open = vi
       .fn<OpenEventStream>()
       .mockResolvedValueOnce(quiet.response)
       .mockResolvedValueOnce(next.response)
-      .mockResolvedValueOnce(third.response);
+      .mockResolvedValueOnce(third.response)
+      .mockResolvedValueOnce(fourth.response);
     const { stream } = harness(open);
 
     stream.start();

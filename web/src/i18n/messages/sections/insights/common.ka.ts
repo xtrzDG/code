@@ -8,7 +8,6 @@ import type { insightsCommonEn } from "./common.en";
 
 export const insightsCommonKa: Translation<typeof insightsCommonEn> = {
   loadingMore: "იტვირთება…",
-  refresh: "განახლება",
   showMore: "მეტის ჩვენება",
   shownOf: "ნაჩვენებია {shown} / {total}",
   includeTest: "სატესტოების ჩვენება",
