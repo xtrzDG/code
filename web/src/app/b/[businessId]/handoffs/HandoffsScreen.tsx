@@ -21,6 +21,7 @@ import {
   PageHeader,
   SkeletonCardList,
 } from "@/components/ui";
+import { AnimatedPresenceList } from "@/components/motion";
 import { useI18n } from "@/i18n/client";
 
 import { HandoffCard } from "./_components/HandoffCard";
@@ -113,11 +114,12 @@ export function HandoffsScreen({ initialFilters }: { initialFilters: HandoffFilt
             className={handoffs.isPlaceholder ? "animate-settle opacity-60 transition-opacity" : "animate-settle transition-opacity"}
             aria-busy={handoffs.isPlaceholder || undefined}
           >
-            <ul className="space-y-3">
-              {items.map((handoff) => (
-                <HandoffCard key={handoff.id} handoff={handoff} onResolve={() => setResolving(handoff)} />
-              ))}
-            </ul>
+            <AnimatedPresenceList
+              items={items}
+              getKey={(handoff) => handoff.id}
+              className="space-y-3"
+              renderItem={(handoff) => <HandoffCard handoff={handoff} onResolve={() => setResolving(handoff)} />}
+            />
             <LoadMore
               hasMore={handoffs.hasMore}
               isLoading={handoffs.isLoadingMore}

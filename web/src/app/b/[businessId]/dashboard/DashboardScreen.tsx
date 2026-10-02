@@ -9,6 +9,7 @@ import { useQuery } from "@/api/useQuery";
 import { useBusiness, useBusinessFormat } from "@/components/business/BusinessContext";
 import { BusinessStatusBadge } from "@/components/business/BusinessStatusBadge";
 import { IconBook, IconHandoff } from "@/components/icons";
+import { AnimatedNumber } from "@/components/motion";
 import { formatLocalDateRange } from "@/components/insights/dates";
 import { useToday } from "@/components/insights/useToday";
 import { BOOKING_STATUS, CHANNEL_LABELS, HANDOFF_REASONS } from "@/components/insights/labels";
@@ -115,7 +116,8 @@ export function DashboardScreen({ initialPeriod }: { initialPeriod: DashboardPer
               href={businessPath(businessId, "handoffs")}
               label={t("dashboard.attention.openHandoffs")}
               hint={t("dashboard.attention.openHandoffsHint")}
-              count={openHandoffCount === undefined ? "–" : format.number(openHandoffCount)}
+              count={openHandoffCount}
+              formatCount={format.number}
               actionLabel={t("dashboard.attention.open")}
               icon={<IconHandoff className="size-5" />}
             />
@@ -123,7 +125,8 @@ export function DashboardScreen({ initialPeriod }: { initialPeriod: DashboardPer
               href={businessPath(businessId, "knowledge")}
               label={t("dashboard.attention.questions")}
               hint={t("dashboard.attention.questionsHint")}
-              count={data === undefined ? "–" : format.number(data.open_unanswered_question_count)}
+              count={data?.open_unanswered_question_count}
+              formatCount={format.number}
               actionLabel={t("dashboard.attention.open")}
               icon={<IconBook className="size-5" />}
             />
@@ -157,21 +160,21 @@ export function DashboardScreen({ initialPeriod }: { initialPeriod: DashboardPer
             <dl className="grid grid-cols-2 gap-3 sm:grid-cols-3" aria-busy={stats.isPlaceholder || undefined}>
               <StatTile
                 label={t("dashboard.kpi.conversations")}
-                value={format.number(data.conversation_count)}
+                value={<AnimatedNumber value={data.conversation_count} format={format.number} />}
                 hint={t("dashboard.kpi.conversationsHint")}
               />
-              <StatTile label={t("dashboard.kpi.messages")} value={format.number(data.customer_message_count)} />
-              <StatTile label={t("dashboard.kpi.bookings")} value={format.number(data.booking_count)} />
+              <StatTile label={t("dashboard.kpi.messages")} value={<AnimatedNumber value={data.customer_message_count} format={format.number} />} />
+              <StatTile label={t("dashboard.kpi.bookings")} value={<AnimatedNumber value={data.booking_count} format={format.number} />} />
               <StatTile
                 label={t("dashboard.kpi.afterHours")}
-                value={formatPercent(data.after_hours_share_percent, locale)}
+                value={<AnimatedNumber value={data.after_hours_share_percent} format={(percent) => formatPercent(percent, locale)} />}
                 hint={t("dashboard.kpi.afterHoursHint", {
                   count: format.number(data.after_hours_conversation_count),
                   total: format.number(data.conversation_count),
                 })}
               />
-              <StatTile label={t("dashboard.kpi.leads")} value={format.number(data.lead_count)} />
-              <StatTile label={t("dashboard.kpi.handoffs")} value={format.number(data.handoff_count)} />
+              <StatTile label={t("dashboard.kpi.leads")} value={<AnimatedNumber value={data.lead_count} format={format.number} />} />
+              <StatTile label={t("dashboard.kpi.handoffs")} value={<AnimatedNumber value={data.handoff_count} format={format.number} />} />
             </dl>
 
             {hasActivity && (data.daily ?? []).length > 1 ? <TrendChart days={data.daily ?? []} /> : null}

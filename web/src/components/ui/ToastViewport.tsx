@@ -1,9 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { AnimatePresence } from "motion/react";
+import * as m from "motion/react-m";
+import { useCallback, useEffect, useRef, useState, type Ref } from "react";
 import { createPortal } from "react-dom";
 
 import { cn } from "@/lib/cn";
+import { springTransition, tweenTransition } from "@/lib/motion";
 
 import { IconAlert, IconCheck, IconInfo, IconX } from "../icons";
 
@@ -17,6 +20,17 @@ export interface ToastItem {
   action?: { label: string; onAction: () => void };
   durationMs: number;
 }
+
+/**
+ * A toast rises from the corner tipping forward (3D), the others make room
+ * with a spring, and a dismissed one shrinks away.
+ */
+const TOAST_MOTION = {
+  initial: { opacity: 0, y: 16, rotateX: -24, scale: 0.96, transformPerspective: 640 },
+  animate: { opacity: 1, y: 0, rotateX: 0, scale: 1, transition: springTransition("snappy") },
+  exit: { opacity: 0, scale: 0.94, transition: tweenTransition("fast", "exit") },
+  transition: { layout: springTransition("layout") },
+} as const;
 
 const TONE_STYLES: Record<ToastTone, { icon: typeof IconCheck; className: string }> = {
   success: { icon: IconCheck, className: "text-success" },
@@ -80,7 +94,18 @@ function useDismissTimer(durationMs: number, isPaused: boolean, onExpire: () => 
   }, [isPaused]);
 }
 
-function ToastCard({ item, onDismiss, closeLabel }: { item: ToastItem; onDismiss: (id: number) => void; closeLabel: string }) {
+function ToastCard({
+  item,
+  onDismiss,
+  closeLabel,
+  ref,
+}: {
+  item: ToastItem;
+  onDismiss: (id: number) => void;
+  closeLabel: string;
+  /** Set by AnimatePresence ("popLayout" measures a leaving toast). */
+  ref?: Ref<HTMLDivElement>;
+}) {
   const [isHovered, setHovered] = useState(false);
   const [isFocused, setFocused] = useState(false);
   // Only a toast with an action (Undo) waits while it is pointed at or
@@ -91,7 +116,10 @@ function ToastCard({ item, onDismiss, closeLabel }: { item: ToastItem; onDismiss
   const { icon: Icon, className } = TONE_STYLES[item.tone];
 
   return (
-    <div
+    <m.div
+      ref={ref}
+      layout="position"
+      {...TOAST_MOTION}
       role={item.tone === "error" ? "alert" : "status"}
       onPointerEnter={() => setHovered(true)}
       onPointerLeave={() => setHovered(false)}
@@ -101,7 +129,7 @@ function ToastCard({ item, onDismiss, closeLabel }: { item: ToastItem; onDismiss
           setFocused(false);
         }
       }}
-      className="pointer-events-auto relative flex w-full max-w-sm origin-bottom animate-toast-in items-start gap-3 overflow-hidden rounded-xl border border-line bg-surface p-3.5 shadow-lg"
+      className="pointer-events-auto relative flex w-full max-w-sm origin-bottom items-start gap-3 overflow-hidden rounded-xl border border-line bg-surface p-3.5 shadow-lg"
     >
       <Icon className={cn("mt-0.5 size-5 shrink-0", className)} aria-hidden />
       <div className="min-w-0 flex-1">
@@ -136,7 +164,7 @@ function ToastCard({ item, onDismiss, closeLabel }: { item: ToastItem; onDismiss
           style={{ animationDuration: `${item.durationMs}ms`, animationPlayState: isPaused ? "paused" : "running" }}
         />
       ) : null}
-    </div>
+    </m.div>
   );
 }
 
@@ -156,12 +184,15 @@ export function ToastViewport({
       aria-live="polite"
       aria-relevant="additions"
     >
-      {items.map((item) => (
-        <ToastCard key={item.id} item={item} onDismiss={onDismiss} closeLabel={closeLabel} />
-      ))}
+      {/* Not initial: toasts moving into a dialog (a remount) do not rise again. */}
+      <AnimatePresence initial={false} mode="popLayout">
+        {items.map((item) => (
+          <ToastCard key={item.id} item={item} onDismiss={onDismiss} closeLabel={closeLabel} />
+        ))}
+      </AnimatePresence>
     </div>
   );
   // Fixed positioning inside the dialog still refers to the viewport (the
-  // dialog has no transform), so the corner does not move.
+  // dialog has no transform once it has sprung in), so the corner does not move.
   return topDialog ? createPortal(viewport, topDialog) : viewport;
 }

@@ -20,11 +20,8 @@ export function Skeleton({ className, style }: { className?: string; style?: CSS
     <span
       aria-hidden
       style={style}
-      className={cn(
-        "block rounded-md bg-surface-muted",
-        "bg-[linear-gradient(100deg,transparent_30%,color-mix(in_oklab,var(--ink)_7%,transparent)_50%,transparent_70%)] bg-size-[220%_100%] bg-no-repeat animate-shimmer",
-        className,
-      )}
+      // skeleton-shimmer: a light sweeping across (a transform, src/styles/motion.css).
+      className={cn("skeleton-shimmer block rounded-md bg-surface-muted", className)}
     />
   );
 }

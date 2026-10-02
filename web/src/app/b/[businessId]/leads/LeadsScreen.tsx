@@ -13,6 +13,7 @@ import { SegmentedControl } from "@/components/insights/SegmentedControl";
 import type { LeadListItem, LeadPage } from "@/components/insights/types";
 import { replaceUrlQuery } from "@/components/insights/urlQuery";
 import { Button, Card, EmptyState, ErrorState, LoadingRegion, Modal, PageHeader, SkeletonCardList } from "@/components/ui";
+import { AnimatedPresenceList } from "@/components/motion";
 import { useI18n } from "@/i18n/client";
 
 import { countsByTab, leadFiltersQuery, type LeadFilters, type LeadTab } from "./_components/leadModel";
@@ -104,17 +105,19 @@ export function LeadsScreen({ initialFilters }: { initialFilters: LeadFilters })
             className={leads.isPlaceholder ? "animate-settle opacity-60 transition-opacity" : "animate-settle transition-opacity"}
             aria-busy={leads.isPlaceholder || undefined}
           >
-            <ul className="space-y-3">
-              {items.map((lead) => (
+            <AnimatedPresenceList
+              items={items}
+              getKey={(lead) => lead.id}
+              className="space-y-3"
+              renderItem={(lead) => (
                 <LeadCard
-                  key={lead.id}
                   lead={lead}
                   isPending={status.isPending(lead.id)}
                   onStatus={(next) => void status.changeStatus(lead, next)}
                   onOpen={() => setOpenId(lead.id)}
                 />
-              ))}
-            </ul>
+              )}
+            />
             <LoadMore
               hasMore={leads.hasMore}
               isLoading={leads.isLoadingMore}
