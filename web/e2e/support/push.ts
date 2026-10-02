@@ -73,24 +73,51 @@ export async function mockBrowserPush(page: Page, endpoint: string, receiver: Re
         toJSON: () => PushSubscriptionJSON;
         unsubscribe: () => Promise<boolean>;
       };
-      let subscription: FakeSubscription | null = null;
+      // The browser keeps its subscription across page loads, as a real one does.
+      const SAVED = "__e2ePushSubscriptionKey";
+      const subscriptionFor = (key: ArrayBuffer): FakeSubscription => ({
+        endpoint: address,
+        options: { applicationServerKey: key },
+        toJSON: () => ({ endpoint: address, expirationTime: null, keys: { p256dh, auth } }),
+        unsubscribe: async () => {
+          subscription = null;
+          store(null);
+          return true;
+        },
+      });
+      const store = (value: string | null) => {
+        try {
+          if (value === null) {
+            localStorage.removeItem(SAVED);
+          } else {
+            localStorage.setItem(SAVED, value);
+          }
+        } catch {
+          // A frame without storage (about:blank): nothing to keep.
+        }
+      };
+      let saved: string | null = null;
+      try {
+        saved = localStorage.getItem(SAVED);
+      } catch {
+        saved = null;
+      }
+      let subscription: FakeSubscription | null = saved
+        ? subscriptionFor(Uint8Array.from(JSON.parse(saved) as number[]).buffer)
+        : null;
       const pushManager = {
         getSubscription: async () => subscription,
         subscribe: async (options: { applicationServerKey: Uint8Array }) => {
           const key = options.applicationServerKey;
-          subscription = {
-            endpoint: address,
-            options: { applicationServerKey: key.buffer.slice(key.byteOffset, key.byteOffset + key.byteLength) as ArrayBuffer },
-            toJSON: () => ({ endpoint: address, expirationTime: null, keys: { p256dh, auth } }),
-            unsubscribe: async () => {
-              subscription = null;
-              return true;
-            },
-          };
+          store(JSON.stringify(Array.from(key)));
+          subscription = subscriptionFor(key.buffer.slice(key.byteOffset, key.byteOffset + key.byteLength) as ArrayBuffer);
           return subscription;
         },
       };
       let registration: object | null = null;
+      if (saved) {
+        registration = { scope: `${location.origin}/`, pushManager, active: { postMessage: () => undefined } };
+      }
       const register = () => (registration ??= { scope: `${location.origin}/`, pushManager, active: { postMessage: () => undefined } });
       const serviceWorker = {
         getRegistration: async () => registration ?? undefined,
@@ -103,7 +130,7 @@ export async function mockBrowserPush(page: Page, endpoint: string, receiver: Re
       };
       Object.defineProperty(Navigator.prototype, "serviceWorker", { configurable: true, get: () => serviceWorker });
       Object.defineProperty(window, "PushManager", { configurable: true, value: function PushManager() {} });
-      let permission: NotificationPermission = "default";
+      let permission: NotificationPermission = saved ? "granted" : "default";
       Object.defineProperty(window, "Notification", {
         configurable: true,
         value: {

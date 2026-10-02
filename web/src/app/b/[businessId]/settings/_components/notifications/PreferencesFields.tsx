@@ -35,7 +35,7 @@ export function PreferencesFields({
         legend={t("notifications.preferences.events")}
         error={value.events.length === 0 ? t("notifications.preferences.noEvents") : undefined}
       >
-        <div className="grid gap-2.5 sm:grid-cols-3">
+        <div className="grid grid-cols-[repeat(auto-fit,minmax(13rem,1fr))] gap-2.5">
           {ALL_EVENTS.map((event) => (
             <Checkbox
               key={event}
