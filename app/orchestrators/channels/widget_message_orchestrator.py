@@ -71,9 +71,7 @@ class WidgetMessageOrchestrator(
             raise ValidationFailedError("The widget message could not be stored.")
 
         try:
-            reply: AssistantReply = self._customer_message_pipeline.start(
-                claim.message
-            )
+            reply: AssistantReply = self._customer_message_pipeline.start(claim.message)
         except Exception as error:
             if is_inbound_refusal(error):
                 self._release_inbound_event.run(
