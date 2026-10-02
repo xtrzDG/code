@@ -9,17 +9,18 @@
 # Runtime variables: BACKEND_URL (the Python API, server side only) and
 # COOKIE_SECURE ("false" only when served over plain http).
 
-ARG NODE_IMAGE=node:22-bookworm-slim
+# The base image is named once, in a FROM line, so Dependabot can update it.
+FROM node:22-bookworm-slim AS node-base
 
 # --- Dependencies ------------------------------------------------------------
-FROM ${NODE_IMAGE} AS deps
+FROM node-base AS deps
 WORKDIR /web
 COPY package.json package-lock.json ./
 RUN --mount=type=cache,target=/root/.npm \
     npm ci --no-audit --no-fund
 
 # --- Build -------------------------------------------------------------------
-FROM ${NODE_IMAGE} AS build
+FROM node-base AS build
 WORKDIR /web
 ENV NEXT_TELEMETRY_DISABLED=1
 COPY --from=deps /web/node_modules ./node_modules
@@ -28,7 +29,7 @@ RUN npm run build \
     && npm prune --omit=dev --no-audit --no-fund
 
 # --- Runtime -----------------------------------------------------------------
-FROM ${NODE_IMAGE} AS runtime
+FROM node-base AS runtime
 WORKDIR /web
 ENV NODE_ENV=production \
     NEXT_TELEMETRY_DISABLED=1 \

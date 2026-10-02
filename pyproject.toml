@@ -128,3 +128,10 @@ ignore_names = [
     "handle_endtag",
     "handle_data",
 ]
+
+# Static security scan: `uv run bandit -c pyproject.toml -r app scripts -b
+# bandit-baseline.json`. The baseline holds the findings reviewed on its
+# date (generated_at) and accepted as false positives (SECURITY.md lists
+# them); any new finding fails CI.
+[tool.bandit]
+exclude_dirs = ["tests", ".venv", "web"]

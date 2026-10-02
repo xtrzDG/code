@@ -15,8 +15,8 @@ from app.schemas.dto.localization import LocalizedText
 from app.schemas.typings.localization.constrained_strings import LanguageTag
 
 ENGLISH: LanguageTag = LanguageTag("en")
-FIRST_STRONG_ISOLATE: str = "⁨"
-POP_DIRECTIONAL_ISOLATE: str = "⁩"
+FIRST_STRONG_ISOLATE: str = "\u2068"
+POP_DIRECTIONAL_ISOLATE: str = "\u2069"
 RIGHT_TO_LEFT: str = "right-to-left"
 
 
