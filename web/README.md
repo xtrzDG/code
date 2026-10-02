@@ -88,7 +88,10 @@ npm run e2e -- onboarding         # one file
   dictionaries (`e2e/support/messages.ts`), so rewording a text does not break
   a test. Prefer `getByRole`/`getByLabel`; avoid CSS classes.
 - Scenarios that need the voice platform or Meta (a call recording, a WhatsApp chat past its
-  24-hour window) answer the card's own BFF calls with `page.route` (`e2e/card.spec.ts`).
+  24-hour window) answer the card's own BFF calls with `page.route`
+  (`e2e/card-recordings.spec.ts`, `e2e/card-whatsapp.spec.ts`, served by
+  `e2e/support/conversation-card.ts`); the widget tests run the API's
+  `/widget.js` on a fake host site (`e2e/support/widget-site.ts`).
 - Scenarios: the landing page (prices of a chosen country, theme and language
   kept after a reload, signed-in users sent to their businesses),
   sign-in with a German number and with e-mail (and a wrong code),

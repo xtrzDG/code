@@ -3,155 +3,15 @@
  * app/gateways/http/static/widget/) on a host site, against a fake widget
  * API: polling, page changes, several tabs, screen readers and text
  * direction. The script is the one the real API serves at /widget.js, as it
- * is; everything else is faked.
+ * is; everything else is faked (support/widget-site.ts).
  */
 
-import type { BrowserContext, Page, Route } from "@playwright/test";
-
-import { API_URL } from "./support/env";
 import { expect, test } from "./support/fixtures";
-
-let WIDGET_SOURCE = "";
+import { FakeWidgetApi, SITE, STORAGE_PREFIX, ask, chat, chatTexts, loadWidgetSource, serveSite } from "./support/widget-site";
 
 test.beforeAll(async () => {
-  const response = await fetch(`${API_URL}/widget.js`);
-  expect(response.ok).toBe(true);
-  WIDGET_SOURCE = await response.text();
+  await loadWidgetSource();
 });
-const SITE = "https://shop.example";
-const API = "https://api.example";
-const BUSINESS = "business_0b6c2f5e-1d1a-4c55-9a3e-2f1d5b7c9e01";
-const STORAGE_PREFIX = `aw-chat:${BUSINESS}:`;
-const CORS_HEADERS = {
-  "access-control-allow-origin": "*",
-  "access-control-allow-methods": "GET, POST, OPTIONS",
-  "access-control-allow-headers": "Content-Type, X-Widget-Session-Key",
-};
-
-interface FakeMessage {
-  id: string;
-  author: "customer" | "assistant" | "staff";
-  text: string;
-  direction?: "ltr" | "rtl";
-}
-
-/** The widget API of one business, as GetWidgetMessagesUseCase answers. */
-class FakeWidgetApi {
-  messages: FakeMessage[] = [];
-  isHandedOff = false;
-  /** POSTs are recorded and answered on the server, but the page never gets the reply. */
-  holdPosts = false;
-  /** The next POSTs are refused with 429 and this Retry-After (seconds). */
-  refusePostsFor: number | null = null;
-  polls: { url: string; sessionKey: string | null }[] = [];
-  private nextId = 1;
-
-  async handle(route: Route): Promise<void> {
-    const request = route.request();
-    const url = new URL(request.url());
-    if (request.method() === "OPTIONS") {
-      await route.fulfill({ status: 204, headers: CORS_HEADERS });
-      return;
-    }
-    if (url.pathname.endsWith("/config")) {
-      await this.json(route, {
-        is_enabled: true,
-        business_name: "Cafe Batumi",
-        languages: [{ tag: "en", direction: "ltr", native_name: "English" }],
-        default_language: "en",
-      });
-      return;
-    }
-    if (request.method() === "POST" && this.refusePostsFor !== null) {
-      await route.fulfill({
-        status: 429,
-        headers: {
-          ...CORS_HEADERS,
-          "access-control-expose-headers": "Retry-After",
-          "retry-after": String(this.refusePostsFor),
-        },
-        json: { error: "rate_limited", message: "Too many messages; wait a moment before sending another." },
-      });
-      return;
-    }
-    if (request.method() === "POST") {
-      const body = JSON.parse(request.postData() ?? "{}") as { text: string };
-      const question = this.add("customer", body.text);
-      const answer = this.add("assistant", `Answer to ${body.text}`);
-      const reply = { text: answer.text, message_id: answer.id, cursor: question.id, is_handed_off: false, direction: "ltr" };
-      if (this.holdPosts) {
-        // The visitor leaves before the answer arrives: the request is
-        // never answered and the browser drops it on navigation.
-        return;
-      }
-      await this.json(route, reply);
-      return;
-    }
-    this.polls.push({ url: request.url(), sessionKey: request.headers()["x-widget-session-key"] ?? null });
-    await this.json(route, this.page(url.searchParams.get("after")));
-  }
-
-  add(author: FakeMessage["author"], text: string, direction: "ltr" | "rtl" = "ltr"): FakeMessage {
-    const message = { id: `m${this.nextId++}`, author, text, direction };
-    this.messages.push(message);
-    return message;
-  }
-
-  private page(after: string | null) {
-    const index = after === null ? -1 : this.messages.findIndex((message) => message.id === after);
-    const latest = this.messages.at(-1)?.id ?? null;
-    if (index === -1) {
-      const ownLatest = this.messages.filter((message) => message.author === "customer").at(-1)?.id;
-      return { items: [], cursor: ownLatest ?? latest, has_more: false, is_handed_off: this.isHandedOff };
-    }
-    const items = this.messages.slice(index + 1).filter((message) => message.author !== "customer");
-    return { items, cursor: latest, has_more: false, is_handed_off: this.isHandedOff };
-  }
-
-  private async json(route: Route, body: unknown): Promise<void> {
-    await route.fulfill({ headers: CORS_HEADERS, json: body });
-  }
-}
-
-/** A two-page host site with the widget snippet, and the fake API behind it. */
-async function serveSite(context: BrowserContext, api: FakeWidgetApi, options: { dataOpen?: boolean } = {}) {
-  await context.route(`${SITE}/**`, (route) => {
-    const pathname = new URL(route.request().url()).pathname;
-    if (pathname === "/favicon.ico") {
-      return route.fulfill({ status: 204 });
-    }
-    return route.fulfill({
-      contentType: "text/html",
-      body:
-        `<!doctype html><html lang="en"><head><title>Shop ${pathname}</title></head><body>` +
-        `<h1>Shop page ${pathname}</h1><a href="/next">Next page</a>` +
-        `<script src="${API}/widget.js" data-tenant="${BUSINESS}"${options.dataOpen ? ' data-open="true"' : ""} async></script>` +
-        `</body></html>`,
-    });
-  });
-  await context.route(`${API}/widget.js`, (route) =>
-    route.fulfill({ contentType: "application/javascript", body: WIDGET_SOURCE }),
-  );
-  await context.route(`${API}/v1/widget/**`, (route) => api.handle(route));
-}
-
-/** The chat panel (the status line for screen readers repeats some texts). */
-function chat(page: Page) {
-  return page.getByRole("dialog");
-}
-
-async function ask(page: Page, question: string): Promise<void> {
-  await page.getByRole("textbox").fill(question);
-  await page.getByRole("textbox").press("Enter");
-}
-
-/** The texts of the chat's message bubbles, greeting first. */
-async function chatTexts(page: Page): Promise<string[]> {
-  return page.evaluate(() => {
-    const root = document.querySelector("[data-assistant-workshop-chat]")?.shadowRoot;
-    return Array.from(root?.querySelectorAll(".aw-message") ?? []).map((row) => row.textContent ?? "");
-  });
-}
 
 test("an open chat shows a staff message written without a handoff", async ({ page }) => {
   const api = new FakeWidgetApi();
