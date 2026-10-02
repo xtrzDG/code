@@ -24,7 +24,7 @@ export function Brand({
       <span className="flex size-7 shrink-0 items-center justify-center rounded-md bg-accent-solid text-on-accent" aria-hidden>
         <IconSparkles className="size-4" />
       </span>
-      <span className={cn("truncate text-sm font-semibold tracking-tight text-ink", hideNameOnPhones && "sr-only sm:not-sr-only")}>
+      <span className={cn("line-clamp-2 text-sm leading-tight font-semibold tracking-tight text-ink", hideNameOnPhones && "sr-only sm:not-sr-only")}>
         {t("common.appName")}
       </span>
     </Link>
