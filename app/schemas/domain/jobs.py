@@ -1,8 +1,9 @@
-from base_pydantic_schemas import BaseDocument
+from base_pydantic_schemas import BaseDocument, PersistentDocument
 from pydantic import Field
 from typed_time_provider import Microseconds
 
 from app.schemas.constants.jobs import JobLane, PeriodicJobRunStatus, QueuedJobStatus
+from app.schemas.constants.observability import PeriodicJobOutcome
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.platform.constrained_integers import (
     JobAttemptCount,
@@ -13,8 +14,14 @@ from app.schemas.typings.platform.constrained_strings import (
     JobName,
     JobPeriodKey,
     JobSerialKey,
+    ReleaseVersion,
+    WorkerHostName,
 )
-from app.schemas.typings.platform.prefixed_id import PeriodicJobRunId, QueuedJobId
+from app.schemas.typings.platform.prefixed_id import (
+    PeriodicJobRunId,
+    QueuedJobId,
+    WorkerInstanceId,
+)
 from app.schemas.typings.platform.strings import JobErrorText, JobPayloadJson
 
 
@@ -66,3 +73,31 @@ class PeriodicJobRunDocument(BaseDocument):
     retry_at: Microseconds | None = None
     processed_count: ProcessedItemCount | None = None
     last_error: JobErrorText | None = None
+
+
+class PeriodicJobResult(PersistentDocument):
+    """How the last run of one periodic job in a worker process ended."""
+
+    job_name: JobName
+    outcome: PeriodicJobOutcome
+    finished_at: Microseconds
+    processed_count: ProcessedItemCount | None = None
+
+
+class WorkerHeartbeatDocument(BaseDocument):
+    """
+    The pulse of one background worker process, written on every tick of
+    its periodic thread: which build it runs, since when, and how its
+    periodic jobs ended last. GET /readyz reports the age of the freshest
+    one (a missing or old pulse means jobs wait); a worker deletes pulses
+    older than a day when it starts.
+    """
+
+    id: WorkerInstanceId = Field(default_factory=WorkerInstanceId)
+    host_name: WorkerHostName
+    release: ReleaseVersion | None = None
+    started_at: Microseconds
+    beat_at: Microseconds
+    periodic_results: list[PeriodicJobResult] = Field(
+        default_factory=list[PeriodicJobResult]
+    )

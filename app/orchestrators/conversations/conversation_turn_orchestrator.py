@@ -25,6 +25,7 @@ from app.utilities.conversations.assistant_texts.notice_texts import (
     CONTACT_LIMIT_NOTICE,
 )
 from app.utilities.conversations.farewells import is_farewell
+from app.utilities.observability.log_context import bound_log_context
 
 LOGGER: logging.Logger = logging.getLogger(__name__)
 MAX_QUOTED_CUSTOMER_TEXT: int = 300
@@ -84,12 +85,19 @@ class ConversationTurnOrchestrator(ConversationTurnOrchestratorContract):
 
     def execute(self, input_data: InboundMessage) -> AssistantReply:
         # The whole turn, the model's tool calls included, sees only this
-        # business's rows (row-level security on Postgres).
-        with self._storage_scope.scoped_to_business(input_data.business_id):
-            return self._answer(input_data)
+        # business's rows (row-level security on Postgres); its log lines
+        # name the business, channel and (once known) the conversation.
+        with (
+            bound_log_context(
+                business_id=input_data.business_id, channel=input_data.channel
+            ),
+            self._storage_scope.scoped_to_business(input_data.business_id),
+        ):
+            turn: PreparedTurn = self._prepare_turn.run(input_data)
+            with bound_log_context(conversation_id=turn.conversation.id):
+                return self._answer(turn)
 
-    def _answer(self, input_data: InboundMessage) -> AssistantReply:
-        turn: PreparedTurn = self._prepare_turn.run(input_data)
+    def _answer(self, turn: PreparedTurn) -> AssistantReply:
         is_phone: bool = turn.conversation.channel is ChannelKind.PHONE
         if turn.gate is not TurnGate.ANSWER:
             return self._record_reply.run(self._build_gated_record(turn, is_phone))

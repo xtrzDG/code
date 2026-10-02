@@ -29,6 +29,23 @@ class JudgeScore(BaseConstrainedTypedInt):
     le = 5
 
 
+class LlmCallRetryLimit(BaseConstrainedTypedInt):
+    """How many times one language-model call is retried after a failure."""
+
+    ge = 0
+    le = 5
+
+
+class LlmCallTimeoutSeconds(BaseConstrainedTypedInt):
+    """
+    How long one language-model call of a customer chat may take before it
+    is given up (LLM_CALL_TIMEOUT_SECONDS), in seconds.
+    """
+
+    ge = 1
+    le = 600
+
+
 class LlmMaxOutputTokens(BaseConstrainedTypedInt):
     """Upper bound of output tokens for one language-model request."""
 

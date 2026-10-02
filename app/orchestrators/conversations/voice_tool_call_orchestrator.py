@@ -3,6 +3,7 @@ import uuid
 from app.contracts.conversation_flow import VoiceToolCallOrchestratorContract
 from app.contracts.storage import StorageScopeContract
 from app.contracts.use_case_contract import UseCaseContract
+from app.schemas.constants.channels import ChannelKind
 from app.schemas.dto.assistant_tools import (
     AssistantToolContext,
     AssistantToolInvocation,
@@ -15,6 +16,7 @@ from app.schemas.dto.conversations import (
     VoiceToolCallResult,
 )
 from app.schemas.typings.conversations.strings import LlmToolCallId
+from app.utilities.observability.log_context import bound_log_context
 
 VOICE_CALL_ID_PREFIX: str = "voice_"
 
@@ -55,11 +57,24 @@ class VoiceToolCallOrchestrator(VoiceToolCallOrchestratorContract):
     def execute(self, input_data: VoiceToolCallRequest) -> VoiceToolCallResult:
         # The business comes from the verified webhook; the tool sees only
         # its rows (row-level security on Postgres).
-        with self._storage_scope.scoped_to_business(input_data.business_id):
+        with (
+            bound_log_context(
+                business_id=input_data.business_id, channel=ChannelKind.PHONE
+            ),
+            self._storage_scope.scoped_to_business(input_data.business_id),
+        ):
             return self._run(input_data)
 
     def _run(self, input_data: VoiceToolCallRequest) -> VoiceToolCallResult:
         context: AssistantToolContext = self._open_voice_conversation.run(input_data)
+        with bound_log_context(conversation_id=context.conversation_id):
+            return self._run_tool(input_data, context)
+
+    def _run_tool(
+        self,
+        input_data: VoiceToolCallRequest,
+        context: AssistantToolContext,
+    ) -> VoiceToolCallResult:
         call = LlmToolCall(
             call_id=LlmToolCallId(f"{VOICE_CALL_ID_PREFIX}{uuid.uuid4().hex}"),
             tool_name=input_data.tool_name,

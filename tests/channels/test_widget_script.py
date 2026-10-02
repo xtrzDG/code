@@ -18,6 +18,7 @@ from app.gateways.http.widget_cors_middleware import (
     WIDGET_CORS_HEADERS,
     WIDGET_SESSION_KEY_HEADER,
 )
+from app.gateways.http.widget_error_routes import WIDGET_ERRORS_PATH
 from app.gateways.http.widget_script_assembly import (
     WIDGET_SCRIPT_PART_FILE_NAMES,
     WIDGET_SCRIPT_PARTS_DIRECTORY_NAME,
@@ -136,6 +137,7 @@ class TestScriptAgreesWithTheApi:
         assert read_script_constant("CONFIG_PATH") == WIDGET_CONFIG_PATH
         assert read_script_constant("MESSAGES_PATH") == WIDGET_MESSAGES_PATH
         assert read_script_constant("SCRIPT_FILE_NAME") == WIDGET_SCRIPT_PATH
+        assert read_script_constant("ERRORS_PATH") == WIDGET_ERRORS_PATH
 
     def test_session_keys_and_message_limit_fit_the_request_schema(self) -> None:
         alphabet = read_script_constant("SESSION_KEY_ALPHABET")

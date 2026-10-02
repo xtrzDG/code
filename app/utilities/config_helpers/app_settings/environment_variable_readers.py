@@ -37,6 +37,23 @@ def read_integer(
         ) from error
 
 
+def read_float(
+    environment_variables: Mapping[str, str],
+    variable_name: str,
+    default_value: float,
+) -> float:
+    raw_value: str = environment_variables.get(variable_name, "").strip()
+    if raw_value == "":
+        return default_value
+
+    try:
+        return float(raw_value)
+    except ValueError as error:
+        raise ValidationFailedError(
+            f"{variable_name} must be a number, got {raw_value!r}."
+        ) from error
+
+
 def read_boolean(
     environment_variables: Mapping[str, str],
     variable_name: str,

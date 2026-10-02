@@ -1,7 +1,10 @@
 """Webhooks of the voice platform (ElevenLabs Agents)."""
 
+import logging
 from typing import Annotated
 
+import anyio
+import anyio.to_thread
 from fastapi import APIRouter, Depends, Header, Response
 
 from app.contracts.operator_contract import OperatorContract
@@ -47,9 +50,19 @@ from app.utilities.channels.voice_service import (
     UNKNOWN_VALUE,
     UPCOMING_BOOKING_VARIABLE,
 )
+from app.utilities.conversations.tool_payloads import render_tool_error
 
+LOGGER: logging.Logger = logging.getLogger(__name__)
 CALL_INITIATION_RESPONSE_TYPE: str = "conversation_initiation_client_data"
 JSON_MEDIA_TYPE: str = "application/json"
+# A caller waits in silence while a tool runs; ElevenLabs gives up after
+# TOOL_RESPONSE_TIMEOUT_SECONDS (10 s). Past this deadline the agent hears
+# that the system is slow, so it can tell the caller instead of hanging up.
+VOICE_TOOL_DEADLINE_SECONDS: float = 8.0
+VOICE_TOOL_TIMEOUT_MESSAGE: str = (
+    "The booking system did not answer in time. Do not confirm or promise "
+    "anything; tell the caller that a colleague will check and get back to them."
+)
 
 
 def build_voice_router(
@@ -70,13 +83,16 @@ def build_voice_router(
 
     Tool calls and call initiation carry X-Assistant-Business-Id and either
     X-Assistant-Tool-Secret or X-Assistant-Signature (sha256=HMAC of the
-    body); the post-call webhook carries ElevenLabs-Signature.
+    body); the post-call webhook carries ElevenLabs-Signature. A tool call
+    answers within VOICE_TOOL_DEADLINE_SECONDS: a tool still running then
+    is left to finish on its own, and the agent gets an error result it
+    can say to the caller.
     """
 
     router = APIRouter(tags=["voice"])
 
     @router.post(VOICE_TOOL_PATH_TEMPLATE)
-    def run_voice_tool(
+    async def run_voice_tool(
         tool_name: str,
         body: Annotated[bytes, Depends(read_raw_request_body)],
         business_id: Annotated[
@@ -92,13 +108,28 @@ def build_voice_router(
             Header(alias=VOICE_BODY_SIGNATURE_HEADER),
         ] = None,
     ) -> Response:
-        result: VoiceToolCallResult = voice_tool_operator.operate(
-            VoiceToolWebhookRequest(
-                tool_name=parse_tool_name(tool_name),
-                credentials=build_credentials(business_id, tool_secret, body_signature),
-                body=body,
-            )
+        request = VoiceToolWebhookRequest(
+            tool_name=parse_tool_name(tool_name),
+            credentials=build_credentials(business_id, tool_secret, body_signature),
+            body=body,
         )
+        result: VoiceToolCallResult | None = None
+        with anyio.move_on_after(VOICE_TOOL_DEADLINE_SECONDS):
+            result = await anyio.to_thread.run_sync(
+                voice_tool_operator.operate, request, abandon_on_cancel=True
+            )
+
+        if result is None:
+            LOGGER.warning(
+                "Voice tool %s did not finish within %.0f s",
+                request.tool_name.value,
+                VOICE_TOOL_DEADLINE_SECONDS,
+            )
+            return Response(
+                content=str(render_tool_error(VOICE_TOOL_TIMEOUT_MESSAGE)),
+                media_type=JSON_MEDIA_TYPE,
+            )
+
         return Response(content=str(result.result_json), media_type=JSON_MEDIA_TYPE)
 
     @router.post(VOICE_CALL_INITIATION_PATH)

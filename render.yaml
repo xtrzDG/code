@@ -65,7 +65,11 @@ services:
     dockerContext: .
     dockerCommand: workshop api
     preDeployCommand: workshop migrate
-    healthCheckPath: /healthz
+    # Readiness: the database answers, every migration of this build is
+    # applied and a connection is free (GET /healthz is liveness only).
+    healthCheckPath: /readyz
+    # SIGTERM first: uvicorn finishes open requests (25 s), then exits.
+    maxShutdownDelaySeconds: 30
     # docs/** is ignored, so a new DPA text in docs/legal is built into the
     # image only by a rebuild: set DPA_DOCUMENT_VERSION with
     # "Save, rebuild, and deploy" or use Manual Deploy -> "Deploy latest commit"
@@ -196,6 +200,9 @@ services:
     dockerfilePath: ./Dockerfile
     dockerContext: .
     dockerCommand: workshop worker
+    # Running jobs get 25 s after SIGTERM; a cut-off job runs again on
+    # another worker once its lease ends.
+    maxShutdownDelaySeconds: 60
     buildFilter:
       ignoredPaths:
         - web/**
@@ -450,3 +457,6 @@ services:
       # only that right-most entry is forwarded to the API.
       - key: TRUSTED_PROXY_HOPS
         value: "1"
+      # errors of the cabinet (server and browser); empty: none are sent
+      - key: SENTRY_DSN
+        sync: false

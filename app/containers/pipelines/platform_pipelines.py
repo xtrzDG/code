@@ -47,3 +47,11 @@ class PlatformPipelinesContainer(containers.DeclarativeContainer):
     purge_finished_jobs_pipeline = orchestrator_pipeline(
         platform_orchestrators.purge_finished_jobs_orchestrator
     )
+
+    # --- Health and client errors.
+    check_readiness_pipeline = orchestrator_pipeline(
+        platform_orchestrators.check_readiness_orchestrator
+    )
+    report_widget_error_pipeline = orchestrator_pipeline(
+        platform_orchestrators.report_widget_error_orchestrator
+    )

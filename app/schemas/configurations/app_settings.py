@@ -5,8 +5,10 @@ from app.schemas.constants.environment import DeploymentEnvironment
 from app.schemas.constants.jobs import JobLane
 from app.schemas.constants.localization import DataRegion
 from app.schemas.constants.messaging import SmtpSecurity
+from app.schemas.constants.observability import LogFormat
 from app.schemas.typings.assistants.constrained_integers import (
     AutotestTurnLimit,
+    LlmCallTimeoutSeconds,
     LlmMaxOutputTokens,
     LlmToolRoundLimit,
 )
@@ -42,11 +44,17 @@ from app.schemas.typings.platform.booleans import (
     IsEmbeddedWorkerEnabled,
     IsLlmContentTraced,
 )
+from app.schemas.typings.platform.constrained_floats import TraceSampleRate
 from app.schemas.typings.platform.constrained_integers import (
+    DatabasePoolSize,
+    ThreadPoolSize,
     WorkerLaneConcurrency,
     WorkerPollSeconds,
 )
-from app.schemas.typings.platform.constrained_strings import CabinetBaseUrl
+from app.schemas.typings.platform.constrained_strings import (
+    CabinetBaseUrl,
+    ReleaseVersion,
+)
 from app.schemas.typings.platform.strings import (
     DatabaseUrl,
     LocalDirectoryPath,
@@ -85,6 +93,8 @@ class AppSettings(ImmutableDTO):
     llm_judge_effort: LlmEffort
     llm_max_output_tokens: LlmMaxOutputTokens
     llm_tool_round_limit: LlmToolRoundLimit
+    # One model call of a customer chat: its timeout (retried once).
+    llm_call_timeout_seconds: LlmCallTimeoutSeconds = LlmCallTimeoutSeconds(25)
     openai_base_url: PublicBaseUrl
     openai_project_id: PlatformIdentifier | None = None
     autotest_turn_limit: AutotestTurnLimit
@@ -143,6 +153,10 @@ class AppSettings(ImmutableDTO):
     langfuse_host: PublicBaseUrl
     is_llm_content_traced: IsLlmContentTraced
     cors_allowed_origins: list[PublicBaseUrl]
+    # Request handlers running at once in threads (THREADPOOL_SIZE) and the
+    # Postgres connections of one process (DB_POOL_SIZE, as many by default).
+    threadpool_size: ThreadPoolSize = ThreadPoolSize(64)
+    db_pool_size: DatabasePoolSize = DatabasePoolSize(64)
     worker_poll_seconds: WorkerPollSeconds
     # Threads per lane of each worker process (WORKER_LANE_CONCURRENCY).
     worker_lane_concurrency: dict[JobLane, WorkerLaneConcurrency]
@@ -155,4 +169,9 @@ class AppSettings(ImmutableDTO):
         False
     )
     sentry_dsn: PlatformSecret | None = None
+    sentry_traces_sample_rate: TraceSampleRate = TraceSampleRate(0.05)
+    # The deployed build (APP_RELEASE, on Render RENDER_GIT_COMMIT): error
+    # reports and worker heartbeats name it.
+    release_version: ReleaseVersion | None = None
+    log_format: LogFormat = LogFormat.TEXT
     recordings_directory: LocalDirectoryPath = LocalDirectoryPath("var/recordings")

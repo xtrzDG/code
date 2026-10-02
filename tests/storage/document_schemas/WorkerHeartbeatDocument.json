@@ -1,0 +1,98 @@
+{
+  "collection": "worker_heartbeats",
+  "document_type": "WorkerHeartbeatDocument",
+  "schema_version": 1,
+  "shape": {
+    "additionalProperties": false,
+    "properties": {
+      "beat_at": {
+        "type": "integer"
+      },
+      "created_at": {
+        "type": "integer"
+      },
+      "host_name": {
+        "maxLength": 255,
+        "minLength": 1,
+        "pattern": "^[A-Za-z0-9][A-Za-z0-9._\\-]*$",
+        "type": "string"
+      },
+      "id": {
+        "pattern": "^worker_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "periodic_results": {
+        "items": {
+          "additionalProperties": false,
+          "properties": {
+            "finished_at": {
+              "type": "integer"
+            },
+            "job_name": {
+              "maxLength": 64,
+              "minLength": 2,
+              "pattern": "^[a-z][a-z0-9_]*$",
+              "type": "string"
+            },
+            "outcome": {
+              "enum": [
+                "succeeded",
+                "failed"
+              ],
+              "type": "string"
+            },
+            "processed_count": {
+              "anyOf": [
+                {
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            }
+          },
+          "required": [
+            "job_name",
+            "outcome",
+            "finished_at"
+          ],
+          "type": "object"
+        },
+        "type": "array"
+      },
+      "release": {
+        "anyOf": [
+          {
+            "maxLength": 64,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._+\\-]*$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "schema_version": {
+        "default": "1",
+        "type": "string"
+      },
+      "started_at": {
+        "type": "integer"
+      },
+      "updated_at": {
+        "type": "integer"
+      }
+    },
+    "required": [
+      "host_name",
+      "started_at",
+      "beat_at"
+    ],
+    "type": "object"
+  }
+}

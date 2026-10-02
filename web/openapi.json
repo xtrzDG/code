@@ -21272,6 +21272,125 @@
         ]
       }
     },
+    "/v1/widget/errors": {
+      "post": {
+        "operationId": "report_widget_error_v1_widget_errors_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "description": "HTTP body of one widget error: what failed and where in widget.js. No\nmessage text, page address or visitor data: an error message may quote\nthe business's page or what the visitor typed.",
+                "properties": {
+                  "business_id": {
+                    "anyOf": [
+                      {
+                        "pattern": "^business_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Business Id"
+                  },
+                  "column": {
+                    "anyOf": [
+                      {
+                        "maximum": 10000000.0,
+                        "minimum": 0.0,
+                        "type": "integer"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Column"
+                  },
+                  "error_name": {
+                    "anyOf": [
+                      {
+                        "maxLength": 64,
+                        "minLength": 1,
+                        "pattern": "^[A-Za-z_$][A-Za-z0-9_$]*$",
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Error Name"
+                  },
+                  "kind": {
+                    "description": "What went wrong in the website widget, as its error beacon reports it.",
+                    "enum": [
+                      "script_error",
+                      "config_failed"
+                    ],
+                    "title": "WidgetErrorKind",
+                    "type": "string"
+                  },
+                  "line": {
+                    "anyOf": [
+                      {
+                        "maximum": 10000000.0,
+                        "minimum": 0.0,
+                        "type": "integer"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Line"
+                  },
+                  "phase": {
+                    "description": "Which part of the widget failed.",
+                    "enum": [
+                      "boot",
+                      "mount",
+                      "send",
+                      "poll",
+                      "render"
+                    ],
+                    "title": "WidgetErrorPhase",
+                    "type": "string"
+                  },
+                  "status_code": {
+                    "anyOf": [
+                      {
+                        "maximum": 599.0,
+                        "minimum": 100.0,
+                        "type": "integer"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Status Code"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "phase"
+                ],
+                "title": "WidgetErrorReport",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Report Widget Error",
+        "tags": [
+          "widget"
+        ]
+      }
+    },
     "/v1/widget/{business_id}/config": {
       "get": {
         "operationId": "get_widget_config_v1_widget__business_id__config_get",

@@ -24,10 +24,13 @@ class OpenAiResponsesClientContract(ClientContract, Protocol):
         reasoning_effort: str | None,
         max_output_tokens: int,
         text_format: dict[str, object] | None = None,
+        timeout_seconds: float | None = None,
+        max_retries: int | None = None,
     ) -> Response:
         """
         One stateless Responses API call (`store=False`, encrypted reasoning
-        returned so it can be replayed).
+        returned so it can be replayed). `timeout_seconds` and `max_retries`
+        bound this call instead of the client's defaults.
         """
         raise NotImplementedError
 
@@ -43,10 +46,14 @@ class AnthropicMessagesClientContract(ClientContract, Protocol):
         messages: list[dict[str, object]],
         effort: str | None,
         is_fallback_enabled: bool,
+        timeout_seconds: float | None = None,
+        max_retries: int | None = None,
     ) -> BetaMessage:
         """
         One Messages API call; `effort` None leaves `output_config` out, and
         server-side refusal fallbacks are asked for only when enabled (models
         that do not support an option reject the whole request).
+        `timeout_seconds` and `max_retries` bound this call instead of the
+        client's defaults.
         """
         raise NotImplementedError

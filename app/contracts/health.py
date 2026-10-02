@@ -1,0 +1,36 @@
+"""Readiness of the API: the database probe and the background worker pulse."""
+
+from typing import Protocol
+
+from typed_time_provider import Microseconds
+
+from app.contracts.adapter_contract import AdapterContract
+from app.contracts.repo_contract import RepoContract
+from app.schemas.domain.jobs import WorkerHeartbeatDocument
+from app.schemas.dto.health import DatabaseProbe
+from app.schemas.typings.storage.constrained_integers import DocumentCount
+
+
+class DatabaseProbeAdapterContract(AdapterContract, Protocol):
+    def probe(self) -> DatabaseProbe:
+        """
+        Borrow a connection, run `select 1` and read the applied migrations,
+        all within the probe's timeout. Never raises: a failure is reported
+        in the result.
+        """
+        raise NotImplementedError
+
+
+class WorkerHeartbeatRepoContract(RepoContract, Protocol):
+    """The pulses of background worker processes (a platform collection)."""
+
+    def save(self, heartbeat: WorkerHeartbeatDocument) -> None:
+        raise NotImplementedError
+
+    def find_freshest(self) -> WorkerHeartbeatDocument | None:
+        """The most recently written pulse of any worker, or None."""
+        raise NotImplementedError
+
+    def delete_beaten_before(self, beaten_before: Microseconds) -> DocumentCount:
+        """Delete the pulses last written before `beaten_before`; how many."""
+        raise NotImplementedError

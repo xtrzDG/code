@@ -25,9 +25,12 @@ case "$role" in
     # FORWARDED_ALLOW_IPS (uvicorn reads it; default 127.0.0.1). List the
     # proxies' address ranges, never "*" (then the left-most, client-controlled
     # entry wins). Workers: WEB_CONCURRENCY (default 1).
+    # On SIGTERM open requests get 25 s to finish (Render waits 30 s, see
+    # maxShutdownDelaySeconds); idle keep-alive connections close after 5 s.
     exec uvicorn app.main:create_application --factory \
       --host 0.0.0.0 --port "${PORT:-8000}" \
-      --proxy-headers --no-server-header "$@"
+      --proxy-headers --no-server-header \
+      --timeout-graceful-shutdown 25 --timeout-keep-alive 5 "$@"
     ;;
   worker)
     exec python -m app.worker_main "$@"

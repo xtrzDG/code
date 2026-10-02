@@ -23,6 +23,7 @@ class FakeDeployment:
     configured_channels: list[str] = field(default_factory=lambda: ["email"])
     reply_inline: bool = True
     reply_text: str = REPLY
+    is_ready: bool = True
     polls: int = 0
     posted: list[dict[str, object]] = field(default_factory=list[dict[str, object]])
 
@@ -33,6 +34,11 @@ def build_handler(deployment: FakeDeployment) -> type[BaseHTTPRequestHandler]:
             path: str = self.path.split("?", 1)[0]
             if path == "/healthz":
                 self.answer(200, {"status": "ok"})
+            elif path == "/readyz":
+                self.answer(
+                    200 if deployment.is_ready else 503,
+                    {"status": "ready" if deployment.is_ready else "not_ready"},
+                )
             elif path == "/widget.js":
                 self.answer_text(200, deployment.widget_script, "text/javascript")
             elif path == "/v1/auth/login-options":

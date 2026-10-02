@@ -10,6 +10,7 @@ from app.containers.time_provider import TimeProviderContainer
 from app.containers.transformers import TransformersContainer
 from app.containers.utilities import UtilitiesContainer
 from app.contracts.facilitators import OtpDeliveryFacilitatorContract
+from app.contracts.observability import JobMonitorFacilitatorContract
 from app.facilitators.calendar.google_calendar_sync_facilitator import (
     GoogleCalendarSyncFacilitator,
 )
@@ -22,6 +23,9 @@ from app.facilitators.notifications.manager_notification_facilitator import (
 )
 from app.facilitators.notifications.staff_notification_sender_facilitator import (
     StaffNotificationSenderFacilitator,
+)
+from app.facilitators.observability.job_monitor_factory import (
+    build_job_monitor_facilitator,
 )
 from app.facilitators.observability.sentry_error_reporting_facilitator import (
     SentryErrorReportingFacilitator,
@@ -40,13 +44,21 @@ class FacilitatorsContainer(containers.DeclarativeContainer):
     transformers: TransformersContainer = DependenciesContainer()  # type: ignore[assignment]
     utilities: UtilitiesContainer = DependenciesContainer()  # type: ignore[assignment]
 
-    # Unexpected errors of the API and the worker (Sentry when SENTRY_DSN is
-    # set, otherwise the log). The quality journal of model calls is
-    # AdaptersContainer.llm_trace_facilitator.
+    # Unexpected errors of the API and the worker, and errors of the website
+    # widget (Sentry when SENTRY_DSN is set, otherwise the log), with the
+    # release and a share of traced requests. The quality journal of model
+    # calls is AdaptersContainer.llm_trace_facilitator.
     error_reporter: Singleton[SentryErrorReportingFacilitator] = Singleton(
         SentryErrorReportingFacilitator,
         dsn=config.app_settings.provided.sentry_dsn,
         environment=config.app_settings.provided.environment,
+        release=config.app_settings.provided.release_version,
+        traces_sample_rate=config.app_settings.provided.sentry_traces_sample_rate,
+    )
+    # Check-ins of the periodic jobs (Sentry Crons), with Sentry only.
+    job_monitor: Singleton[JobMonitorFacilitatorContract] = Singleton(
+        build_job_monitor_facilitator,
+        error_reporter=error_reporter,
     )
     # Sign-in codes: Twilio SMS, Telegram Gateway, WhatsApp authentication
     # template and SMTP e-mail, each when configured; in development and test

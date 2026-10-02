@@ -179,6 +179,20 @@ class WidgetDemoUrl(BaseConstrainedTypedString):
     pattern = r"^https?://[^\s/]+(/[^\s]*)?/widget/demo\?business_id=[^\s&]+$"
 
 
+class WidgetErrorName(BaseConstrainedTypedString):
+    """
+    The JavaScript error type a website widget error was (TypeError,
+    NetworkError...): a name, never the message, which may quote a page.
+
+    Example:
+        name = WidgetErrorName("TypeError")
+    """
+
+    min_length = 1
+    max_length = 64
+    pattern = r"^[A-Za-z_$][A-Za-z0-9_$]*$"
+
+
 class WidgetMessageText(BaseConstrainedTypedString):
     """
     Message typed into the website chat widget (1 to 4000 characters, not

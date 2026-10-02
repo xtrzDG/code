@@ -44,6 +44,11 @@ class PostgresConnectionPoolClient(ClientContract):
 
     Prepared statements are off by default: transaction poolers in front of
     managed Postgres (PgBouncer, Supavisor) do not support them.
+
+    `statement_timeout_seconds` and `idle_in_transaction_timeout_seconds`
+    become the server settings of every connection (startup options), so a
+    runaway query or a transaction left open by a stuck thread is ended by
+    the server instead of holding locks and a connection for minutes.
     """
 
     def __init__(
@@ -55,6 +60,8 @@ class PostgresConnectionPoolClient(ClientContract):
         idle_check_seconds: float = DEFAULT_IDLE_CHECK_SECONDS,
         application_name: str = DEFAULT_APPLICATION_NAME,
         is_statement_preparation_enabled: bool = False,
+        statement_timeout_seconds: int | None = None,
+        idle_in_transaction_timeout_seconds: int | None = None,
     ) -> None:
         if max_size < 1:
             raise ValueError(
@@ -69,6 +76,9 @@ class PostgresConnectionPoolClient(ClientContract):
         self._application_name: str = application_name
         self._prepare_threshold: int | None = (
             5 if is_statement_preparation_enabled else None
+        )
+        self._session_options: str = build_session_options(
+            statement_timeout_seconds, idle_in_transaction_timeout_seconds
         )
         self._condition: threading.Condition = threading.Condition()
         self._idle_connections: list[_IdleConnection] = []
@@ -90,10 +100,21 @@ class PostgresConnectionPoolClient(ClientContract):
             return len(self._idle_connections)
 
     @contextmanager
-    def connection(self) -> Generator[PostgresConnection]:
-        """Borrow one connection (autocommit) for the duration of the block."""
+    def connection(
+        self,
+        acquire_timeout_seconds: float | None = None,
+    ) -> Generator[PostgresConnection]:
+        """
+        Borrow one connection (autocommit) for the duration of the block,
+        waiting at most `acquire_timeout_seconds` (default: the pool's) for
+        a free one.
+        """
 
-        connection: PostgresConnection = self._acquire()
+        connection: PostgresConnection = self._acquire(
+            self._acquire_timeout_seconds
+            if acquire_timeout_seconds is None
+            else acquire_timeout_seconds
+        )
         try:
             yield connection
         finally:
@@ -126,10 +147,12 @@ class PostgresConnectionPoolClient(ClientContract):
         except Exception:  # noqa: BLE001 - never raise from a finalizer
             return
 
-    def _acquire(self) -> PostgresConnection:
-        deadline: float = time.monotonic() + self._acquire_timeout_seconds
+    def _acquire(self, timeout_seconds: float) -> PostgresConnection:
+        deadline: float = time.monotonic() + timeout_seconds
         while True:
-            idle_connection: _IdleConnection | None = self._reserve(deadline)
+            idle_connection: _IdleConnection | None = self._reserve(
+                deadline, timeout_seconds
+            )
             if idle_connection is None:
                 return self._open_new_connection()
 
@@ -138,7 +161,9 @@ class PostgresConnectionPoolClient(ClientContract):
 
             self._discard(idle_connection.connection)
 
-    def _reserve(self, deadline: float) -> _IdleConnection | None:
+    def _reserve(
+        self, deadline: float, timeout_seconds: float
+    ) -> _IdleConnection | None:
         """Take an idle connection, or reserve a slot for a new one (None)."""
 
         with self._condition:
@@ -159,7 +184,7 @@ class PostgresConnectionPoolClient(ClientContract):
                 if remaining_seconds <= 0:
                     raise ExternalServiceError(
                         "No free database connection within "
-                        f"{self._acquire_timeout_seconds:g} s "
+                        f"{timeout_seconds:g} s "
                         f"(all {self._max_size} are in use)."
                     )
 
@@ -173,6 +198,8 @@ class PostgresConnectionPoolClient(ClientContract):
                 prepare_threshold=self._prepare_threshold,
                 connect_timeout=self._connect_timeout_seconds,
                 application_name=self._application_name,
+                # None leaves the server's defaults (psycopg drops it).
+                options=self._session_options or None,
             )
         except psycopg.Error as error:
             self._forget_slot()
@@ -236,6 +263,24 @@ class PostgresConnectionPoolClient(ClientContract):
         with self._condition:
             self._open_connection_count -= 1
             self._condition.notify()
+
+
+def build_session_options(
+    statement_timeout_seconds: int | None,
+    idle_in_transaction_timeout_seconds: int | None,
+) -> str:
+    """libpq `options` that set the server's timeouts for one connection."""
+
+    settings: list[str] = []
+    if statement_timeout_seconds is not None:
+        settings.append(f"-c statement_timeout={int(statement_timeout_seconds)}s")
+    if idle_in_transaction_timeout_seconds is not None:
+        settings.append(
+            "-c idle_in_transaction_session_timeout="
+            f"{int(idle_in_transaction_timeout_seconds)}s"
+        )
+
+    return " ".join(settings)
 
 
 def is_idle(connection: PostgresConnection) -> bool:

@@ -49,3 +49,11 @@ class PlatformOperatorsContainer(containers.DeclarativeContainer):
     purge_finished_jobs_operator = pipeline_operator(
         platform_pipelines.purge_finished_jobs_pipeline, storage_scope
     )
+
+    # --- Health and client errors.
+    check_readiness_operator = pipeline_operator(
+        platform_pipelines.check_readiness_pipeline, storage_scope
+    )
+    report_widget_error_operator = pipeline_operator(
+        platform_pipelines.report_widget_error_pipeline, storage_scope
+    )

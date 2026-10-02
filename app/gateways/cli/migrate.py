@@ -43,6 +43,10 @@ from app.utilities.config_helpers.app_settings.app_settings_assembler import (
 )
 
 DEFAULT_MIGRATIONS_DIRECTORY: Path = Path(__file__).resolve().parents[3] / "migrations"
+# A migration may rewrite or index a big table: much longer than a request
+# may take, but still bounded, so a deploy never hangs on a blocked lock.
+MIGRATION_STATEMENT_TIMEOUT_SECONDS: int = 30 * 60
+MIGRATION_IDLE_IN_TRANSACTION_TIMEOUT_SECONDS: int = 5 * 60
 EXIT_OK: int = 0
 EXIT_MIGRATION_FAILED: int = 1
 EXIT_NOT_CONFIGURED: int = 2
@@ -82,6 +86,10 @@ def main(
         database_url=settings.database_url,
         max_size=1,
         application_name="assistant-workshop-migrate",
+        statement_timeout_seconds=MIGRATION_STATEMENT_TIMEOUT_SECONDS,
+        idle_in_transaction_timeout_seconds=(
+            MIGRATION_IDLE_IN_TRANSACTION_TIMEOUT_SECONDS
+        ),
     )
     operator = PipelineOperator(
         OrchestratorPipeline(

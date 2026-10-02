@@ -7,6 +7,7 @@ from openai.types.responses import (
     ResponseOutputText,
 )
 
+from app.adapters.llm.llm_call_limits import call_max_retries, call_timeout_seconds
 from app.adapters.llm.llm_payloads import (
     build_tool_results_payload,
     build_user_text_payload,
@@ -93,6 +94,8 @@ class OpenAiLlmAdapter(LlmAdapterContract):
             tools=[build_openai_function_tool(tool) for tool in request.tools],
             reasoning_effort=REASONING_EFFORTS[request.effort],
             max_output_tokens=int(request.max_output_tokens),
+            timeout_seconds=call_timeout_seconds(request),
+            max_retries=call_max_retries(request),
         )
         return parse_openai_response(response)
 

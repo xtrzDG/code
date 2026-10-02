@@ -5,6 +5,7 @@ import { useEffect } from "react";
 import { IconAlert } from "@/components/icons";
 import { Button, ButtonLink, EmptyState } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
+import { reportClientError } from "@/lib/monitoring/clientReporter";
 import { HOME_PATH } from "@/lib/navigation";
 
 /** Unexpected errors of a page (Server Component data loads included). */
@@ -13,6 +14,7 @@ export default function ErrorPage({ error, reset }: { error: Error & { digest?: 
 
   useEffect(() => {
     console.error(error);
+    void reportClientError(error);
   }, [error]);
 
   return (

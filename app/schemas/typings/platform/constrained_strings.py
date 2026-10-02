@@ -133,4 +133,48 @@ class PageCursor(BaseConstrainedTypedString):
     pattern = r"^[A-Za-z0-9_-]+$"
 
 
+class ReleaseVersion(BaseConstrainedTypedString):
+    """
+    The deployed build of the backend: the git commit Render builds from
+    (RENDER_GIT_COMMIT) or a version name. Error reports and worker
+    heartbeats name it, so a fault can be traced to one deploy.
+
+    Example:
+        release = ReleaseVersion("4718714c0f2e9a1b7d3c5e6f8a9b0c1d2e3f4a5b")
+    """
+
+    min_length = 1
+    max_length = 64
+    pattern = r"^[A-Za-z0-9][A-Za-z0-9._+\-]*$"
+
+
+class RequestId(BaseConstrainedTypedString):
+    """
+    The X-Request-ID of one HTTP request: taken from the caller when it is
+    short printable ASCII, otherwise generated. Every log line and error
+    report of the request carries it, and the response echoes it.
+
+    Example:
+        request_id = RequestId("0b7c3f0e-58f1-4c44-9a63-2f1f9f0c1b2a")
+    """
+
+    min_length = 1
+    max_length = 128
+    pattern = r"^[\x20-\x7e]+$"
+
+
+class WorkerHostName(BaseConstrainedTypedString):
+    """
+    Host name of the machine or container a background worker process runs
+    on, as its heartbeat reports it (no personal data).
+
+    Example:
+        host = WorkerHostName("srv-d1f2g3h4-5b6c7")
+    """
+
+    min_length = 1
+    max_length = 255
+    pattern = r"^[A-Za-z0-9][A-Za-z0-9._\-]*$"
+
+
 # Keep abc order for all non example types, if possible.

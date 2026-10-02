@@ -10,7 +10,12 @@ from app.adapters.channels.instagram_channel_adapter import InstagramChannelAdap
 from app.adapters.channels.messenger_channel_adapter import MessengerChannelAdapter
 from app.adapters.channels.telegram_channel_adapter import TelegramChannelAdapter
 from app.adapters.channels.whatsapp_channel_adapter import WhatsAppChannelAdapter
+from app.adapters.health.database_probe_factory import build_database_probe_adapter
 from app.adapters.llm.anthropic_llm_adapter import AnthropicLlmAdapter
+from app.adapters.llm.call_limited_llm_adapter import (
+    CHAT_CALL_RETRY_LIMIT,
+    CallLimitedLlmAdapter,
+)
 from app.adapters.llm.menu_extraction.menu_extraction_adapter import (
     MenuExtractionAdapter,
 )
@@ -28,6 +33,10 @@ from app.adapters.recordings.local_recording_storage_adapter import (
     LocalRecordingStorageAdapter,
 )
 from app.adapters.security.secret_cipher_adapter import SecretCipherAdapter
+from app.adapters.storage.postgres.sql_file_migration_source_adapter import (
+    BUILD_MIGRATIONS_DIRECTORY,
+    SqlFileMigrationSourceAdapter,
+)
 from app.adapters.voice.elevenlabs_recording_storage_adapter import (
     ElevenLabsRecordingStorageAdapter,
 )
@@ -49,8 +58,10 @@ from app.containers.factories import (
 )
 from app.containers.time_provider import TimeProviderContainer
 from app.containers.utilities import UtilitiesContainer
+from app.contracts.health import DatabaseProbeAdapterContract
 from app.contracts.llm import LlmAdapterContract
 from app.contracts.observability import LlmTraceFacilitatorContract
+from app.schemas.dto.conversations import LlmCallLimits
 
 
 class AdaptersContainer(containers.DeclarativeContainer):
@@ -73,6 +84,17 @@ class AdaptersContainer(containers.DeclarativeContainer):
         config=config,
         time_provider=time_provider,
         utilities=utilities,
+    )
+
+    # --- Readiness (GET /readyz): the database probe over the shared pool and
+    # the migration files of this build.
+    database_probe: Singleton[DatabaseProbeAdapterContract] = Singleton(
+        build_database_probe_adapter,
+        connection_pool=clients.postgres_pool,
+    )
+    migration_source: Singleton[SqlFileMigrationSourceAdapter] = Singleton(
+        SqlFileMigrationSourceAdapter,
+        migrations_directory=BUILD_MIGRATIONS_DIRECTORY,
     )
 
     # --- Security and recordings.
@@ -173,6 +195,17 @@ class AdaptersContainer(containers.DeclarativeContainer):
         wall_clock=time_provider.microsecond_wall_clock,
         monotonic_clock=time_provider.monotonic_clock,
         is_content_traced=config.app_settings.provided.is_llm_content_traced,
+    )
+    # The adapter of a customer chat: each call bounded by
+    # LLM_CALL_TIMEOUT_SECONDS and retried once.
+    chat_llm_adapter: Singleton[CallLimitedLlmAdapter] = Singleton(
+        CallLimitedLlmAdapter,
+        inner_adapter=llm_adapter,
+        limits=Singleton(
+            LlmCallLimits,
+            timeout_seconds=config.app_settings.provided.llm_call_timeout_seconds,
+            retry_limit=CHAT_CALL_RETRY_LIMIT,
+        ),
     )
     menu_extraction_adapter: Singleton[MenuExtractionAdapter] = Singleton(
         MenuExtractionAdapter,

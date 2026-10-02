@@ -89,6 +89,10 @@ def main(
         database_url=settings.database_url,
         max_size=1,
         application_name="assistant-workshop-migrate-documents",
+        # One batch of rewritten documents per statement: longer than a
+        # request, bounded all the same.
+        statement_timeout_seconds=5 * 60,
+        idle_in_transaction_timeout_seconds=5 * 60,
     )
     operator = PipelineOperator(
         OrchestratorPipeline(

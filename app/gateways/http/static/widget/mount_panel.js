@@ -146,9 +146,12 @@
 
     var typingRow = null;
 
-    launcher.addEventListener("click", function () {
-      setOpen(!state.isOpen);
-    });
+    launcher.addEventListener(
+      "click",
+      guarded("render", function () {
+        setOpen(!state.isOpen);
+      })
+    );
     wrapper.addEventListener("keydown", function (event) {
       if (event.key === "Escape" && state.isOpen) {
         event.stopPropagation();
@@ -159,16 +162,22 @@
       autoSize();
       updateSendButton();
     });
-    input.addEventListener("keydown", function (event) {
-      if (event.key === "Enter" && !event.shiftKey && !event.isComposing) {
+    input.addEventListener(
+      "keydown",
+      guarded("send", function (event) {
+        if (event.key === "Enter" && !event.shiftKey && !event.isComposing) {
+          event.preventDefault();
+          submit();
+        }
+      })
+    );
+    composer.addEventListener(
+      "submit",
+      guarded("send", function (event) {
         event.preventDefault();
         submit();
-      }
-    });
-    composer.addEventListener("submit", function (event) {
-      event.preventDefault();
-      submit();
-    });
+      })
+    );
 
     applyLanguage();
     exposeApi();

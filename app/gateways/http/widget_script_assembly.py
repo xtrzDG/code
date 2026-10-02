@@ -35,6 +35,8 @@ WIDGET_SCRIPT_PART_FILE_NAMES: tuple[str, ...] = (
     "language.js",
     # JSON requests to the API and Retry-After.
     "transport.js",
+    # The error beacon: errors of the widget's own code, without texts.
+    "errors.js",
     # The visitor key and history in localStorage (never cookies).
     "storage.js",
     # DOM, SVG and colour helpers, console messages; closes the closure.

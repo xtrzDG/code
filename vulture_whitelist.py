@@ -23,6 +23,7 @@ _.buffered_event_count  # app/facilitators/observability/langfuse_trace_facilita
 _.collection_name_for  # app/utilities/storage/document_collection_catalog.py
 _.run_once  # app/gateways/worker/background_worker.py
 _.run_queued_jobs  # app/gateways/worker/background_worker.py
+_.worker_id  # app/gateways/worker/heartbeat_recorder.py
 # The current schema version of every collection, read by the document
 # evolution policy (tests/architecture_policy/test_document_evolution.py).
 _.CURRENT_SCHEMA_VERSION  # app/adapters/storage/document_upgrades.py
@@ -36,6 +37,9 @@ _.example_config  # app/containers/config.py
 _.run_autotests_orchestrator  # app/containers/orchestrators/assistant_orchestrators.py
 _.upsert_knowledge_items_use_case  # app/containers/use_cases/knowledge_use_cases.py
 _.example_use_case  # app/containers/use_cases/use_cases_container.py
+
+# Set for a library that reads it: AnyIO's thread limiter (app/main.py).
+_.total_tokens  # app/main.py
 
 # Template examples, kept on purpose
 # (tests/architecture_policy/test_example_schemas_are_kept.py).
@@ -76,6 +80,14 @@ _.SETTINGS  # app/schemas/constants/client_health.py
 _.TEST  # app/schemas/constants/environment.py
 _.UNSUPPORTED  # app/schemas/constants/localization.py
 _.US  # app/schemas/constants/localization.py
+# What the website widget's error beacon sends (widget.js, errors.js).
+_.SCRIPT_ERROR  # app/schemas/constants/observability.py
+_.CONFIG_FAILED  # app/schemas/constants/observability.py
+_.BOOT  # app/schemas/constants/observability.py
+_.MOUNT  # app/schemas/constants/observability.py
+_.SEND  # app/schemas/constants/observability.py
+_.POLL  # app/schemas/constants/observability.py
+_.RENDER  # app/schemas/constants/observability.py
 
 # Stored document fields: written for people and exports, never read back
 # by code.
@@ -89,6 +101,9 @@ _.source_message_id  # app/schemas/domain/outbound_messages.py
 
 # Response fields: serialized to JSON for the cabinet and the widget; the
 # code fills them by keyword, so nothing in Python reads them.
+_.latency_ms  # app/schemas/dto/health.py (GET /readyz)
+_.heartbeat_age_seconds  # app/schemas/dto/health.py (GET /readyz)
+_.error_name  # app/schemas/dto/widget_errors.py (read as a tag by model_dump)
 _.attention_count  # app/schemas/dto/admin.py
 _.audit_log_entry_id  # app/schemas/dto/admin.py
 _.client_count  # app/schemas/dto/admin.py

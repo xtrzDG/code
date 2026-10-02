@@ -38,6 +38,7 @@
   var BUSINESS_ATTRIBUTE = "data-tenant";
   var CONFIG_PATH = "/v1/widget/{business_id}/config";
   var MESSAGES_PATH = "/v1/widget/{business_id}/messages";
+  var ERRORS_PATH = "/v1/widget/errors";
   var SCRIPT_FILE_NAME = "/widget.js";
 
   var MAX_MESSAGE_LENGTH = 4000;
@@ -68,6 +69,11 @@
   var RATE_LIMIT_DEFAULT_WAIT_MS = 10000;
   var RATE_LIMIT_MAX_WAIT_MS = 10 * 60 * 1000;
   var SVG_NS = "http://www.w3.org/2000/svg";
+  // The error beacon: a few reports per page at most, error type names only.
+  var MAX_ERROR_REPORTS = 3;
+  var ERROR_NAME_PATTERN = /^[A-Za-z_$][A-Za-z0-9_$]{0,63}$/;
+  var BUSINESS_ID_PATTERN = /^business_[0-9a-f-]{36}$/;
+  var WIDGET_FRAME_PATTERN = /widget\.js(?:\?[^\s:)]*)?:(\d+):(\d+)/;
   // Fallback when the browser blocks localStorage / sessionStorage.
   var memoryStorage = {};
 

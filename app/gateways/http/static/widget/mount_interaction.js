@@ -119,7 +119,7 @@
         session_key: state.sessionKey,
         text: item.text
       }).then(
-        function (result) {
+        guarded("send", function (result) {
           showTyping(false);
           state.isSending = false;
           state.pendingItem = null;
@@ -140,7 +140,7 @@
           } else {
             schedulePoll(Math.max(POLL_FIRST_DELAY_MS, waitAfter(result)));
           }
-        },
+        }),
         function () {
           showTyping(false);
           state.isSending = false;

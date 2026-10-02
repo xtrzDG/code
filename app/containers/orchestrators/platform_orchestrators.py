@@ -45,3 +45,11 @@ class PlatformOrchestratorsContainer(containers.DeclarativeContainer):
     purge_finished_jobs_orchestrator = use_case_orchestrator(
         platform_use_cases.purge_finished_jobs_use_case
     )
+
+    # --- Health and client errors.
+    check_readiness_orchestrator = use_case_orchestrator(
+        platform_use_cases.check_readiness_use_case
+    )
+    report_widget_error_orchestrator = use_case_orchestrator(
+        platform_use_cases.report_widget_error_use_case
+    )

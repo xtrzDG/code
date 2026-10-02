@@ -15,4 +15,10 @@ class QueuedJobId(BasePrefixedTypedId):
     prefix = "queued_job"
 
 
+class WorkerInstanceId(BasePrefixedTypedId):
+    """Random identifier of one running background worker process."""
+
+    prefix = "worker"
+
+
 # Keep abc order for all non example types, if possible.

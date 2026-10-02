@@ -28,7 +28,7 @@ OPENAPI_DESCRIPTION: str = "web/openapi.json"
 
 # Routes outside the OpenAPI description (include_in_schema=False).
 UNDESCRIBED_ROUTES: frozenset[str] = frozenset(
-    {"/healthz", WIDGET_SCRIPT_PATH, WIDGET_DEMO_PATH}
+    {"/healthz", "/readyz", WIDGET_SCRIPT_PATH, WIDGET_DEMO_PATH}
 )
 
 # The guide names the curated country data relative to this folder.

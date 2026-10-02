@@ -1,7 +1,6 @@
 """FastAPI application assembly: routers, errors, CORS, request ids, health."""
 
-import uuid
-from collections.abc import Awaitable, Callable, Sequence
+from collections.abc import Sequence
 
 from fastapi import APIRouter, FastAPI, Request, Response
 from fastapi.responses import JSONResponse
@@ -10,15 +9,22 @@ from starlette.types import Lifespan
 from app.contracts.observability import ErrorReportingFacilitatorContract
 from app.gateways.http.cabinet_cors_middleware import CabinetCorsMiddleware
 from app.gateways.http.error_responses import install_error_handlers
+from app.gateways.http.request_context_middleware import (
+    REQUEST_ID_HEADER,
+    RequestContextMiddleware,
+    sanitize_request_id,
+)
 from app.gateways.http.widget_cors_middleware import (
     WIDGET_CORS_HEADERS,
     WidgetCorsMiddleware,
     is_widget_path,
 )
+from app.schemas.dto.observability import LogContext
 from app.schemas.typings.channels.constrained_strings import PublicBaseUrl
+from app.utilities.observability.log_context import log_context_of_error
 
-REQUEST_ID_HEADER: str = "X-Request-ID"
-MAX_REQUEST_ID_LENGTH: int = 128
+__all__ = ["REQUEST_ID_HEADER", "build_http_application", "sanitize_request_id"]
+
 API_TITLE: str = "Assistant Workshop API"
 API_VERSION: str = "0.1.0"
 
@@ -33,10 +39,14 @@ def build_http_application(
     Build the HTTP application.
 
     Application errors map to their status codes; anything else becomes a 500
-    without internals and is sent to the error reporter. Every response carries
-    an X-Request-ID (taken from the request when present). CORS allows the
-    cabinet origins; the public widget routes answer CORS themselves.
-    `lifespan` runs startup and shutdown work (see `app.main`).
+    without internals and is sent to the error reporter with the request,
+    business and conversation it happened in. Every response carries an
+    X-Request-ID (taken from the request when present), which every log line
+    of the request carries too. CORS allows the cabinet origins; the public
+    widget routes answer CORS themselves. `GET /healthz` is pure liveness: an
+    async handler that needs no request thread, so it answers while slow
+    requests hold all of them. `lifespan` runs startup and shutdown work (see
+    `app.main`).
     """
 
     http_application = FastAPI(title=API_TITLE, version=API_VERSION, lifespan=lifespan)
@@ -44,13 +54,19 @@ def build_http_application(
 
     async def handle_unexpected_error(request: Request, error: Exception) -> Response:
         error_reporter.capture_exception(error)
+        headers: dict[str, str] = (
+            dict(WIDGET_CORS_HEADERS) if is_widget_path(request.url.path) else {}
+        )
+        context: LogContext = log_context_of_error(error)
+        if context.request_id is not None:
+            headers[REQUEST_ID_HEADER] = str(context.request_id)
         return JSONResponse(
             status_code=500,
             content={
                 "error": "internal_error",
                 "message": "Unexpected server error.",
             },
-            headers=(WIDGET_CORS_HEADERS if is_widget_path(request.url.path) else None),
+            headers=headers,
         )
 
     http_application.add_exception_handler(Exception, handle_unexpected_error)
@@ -65,36 +81,14 @@ def build_http_application(
         )
 
     http_application.add_middleware(WidgetCorsMiddleware)
-
-    @http_application.middleware("http")
-    async def attach_request_id(
-        request: Request,
-        call_next: Callable[[Request], Awaitable[Response]],
-    ) -> Response:
-        request_id: str = sanitize_request_id(request.headers.get(REQUEST_ID_HEADER))
-        response: Response = await call_next(request)
-        response.headers[REQUEST_ID_HEADER] = request_id
-        return response
+    # Outermost, so the request id is bound before anything else runs.
+    http_application.add_middleware(RequestContextMiddleware)
 
     @http_application.get("/healthz", include_in_schema=False)
-    def health() -> dict[str, str]:
+    async def health() -> dict[str, str]:
         return {"status": "ok"}
 
     for router in routers:
         http_application.include_router(router)
 
     return http_application
-
-
-def sanitize_request_id(raw_request_id: str | None) -> str:
-    """Keep a caller's request id if it is short and printable, else make one."""
-
-    if (
-        raw_request_id is not None
-        and 0 < len(raw_request_id) <= MAX_REQUEST_ID_LENGTH
-        and raw_request_id.isascii()
-        and raw_request_id.isprintable()
-    ):
-        return raw_request_id
-
-    return str(uuid.uuid4())

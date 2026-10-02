@@ -35,7 +35,11 @@ from app.schemas.domain.conversations import (
 )
 from app.schemas.domain.handoffs import HandoffDocument, UnansweredQuestionDocument
 from app.schemas.domain.inbound_events import InboundEventDocument
-from app.schemas.domain.jobs import PeriodicJobRunDocument, QueuedJobDocument
+from app.schemas.domain.jobs import (
+    PeriodicJobRunDocument,
+    QueuedJobDocument,
+    WorkerHeartbeatDocument,
+)
 from app.schemas.domain.knowledge import KnowledgeItemDocument
 from app.schemas.domain.manager_links import ManagerTelegramLinkDocument
 from app.schemas.domain.outbound_messages import OutboundMessageDocument
@@ -128,6 +132,10 @@ DOCUMENT_COLLECTIONS: tuple[DocumentCollectionDefinition, ...] = (
     ),
     DocumentCollectionDefinition(
         DocumentCollectionName("periodic_job_runs"), PeriodicJobRunDocument
+    ),
+    # The pulse of each worker process, reported by GET /readyz (1030).
+    DocumentCollectionDefinition(
+        DocumentCollectionName("worker_heartbeats"), WorkerHeartbeatDocument
     ),
     # Channels: webhook redelivery receipts and staff Telegram links (0002).
     DocumentCollectionDefinition(

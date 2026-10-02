@@ -11,6 +11,24 @@ Kinds of change: **Added**, **Changed** (additive), **Deprecated** (with
 sunset date), **Removed** and **Breaking** (only with the `api-breaking`
 label and a migration path).
 
+## 2026-10-02 — widget error beacon, readiness
+
+Spec: `60e48c140683bbc4`
+
+- **Added** `POST /v1/widget/errors` (public, CORS for any site, like the
+  other widget routes): the website widget reports an error of its own
+  code — `kind`, `phase`, optional `business_id`, `error_name`, `line`,
+  `column` and `status_code`, never a message text — and gets `204`; a
+  client network, a business or the platform reporting too many gets
+  `429` with `Retry-After`.
+- **Added** `GET /readyz` (not in the description, like `GET /healthz`):
+  `200` with `"status": "ready"` when the database answers, every
+  migration of the build is applied and a connection is free, else `503`;
+  the body names each check and the age of the freshest worker heartbeat.
+- **Changed** `POST /v1/voice/tools/{tool_name}` answers within 8 s: a
+  tool still running then gives the agent an `{"error": ...}` result to
+  say to the caller (the tool itself finishes in the background).
+
 ## 2026-10-02 — inbox and outbox for customer messages
 
 Spec: `8bf6a7c2e210906f`

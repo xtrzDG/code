@@ -51,6 +51,9 @@ def test_entrypoint_roles_run_existing_modules() -> None:
         getattr(importlib.import_module(factory.group(1)), factory.group(2))
     )
     assert "--proxy-headers" in script
+    # Open requests finish within Render's shutdown delay (30 s).
+    assert "--timeout-graceful-shutdown 25" in script
+    assert "--timeout-keep-alive 5" in script
     assert ENTRYPOINT.stat().st_mode & 0o111
     assert POSTGRES_INIT.stat().st_mode & 0o111
 
@@ -116,7 +119,9 @@ def test_render_blueprint_uses_known_variables_and_the_eu_region() -> None:
     assert variables - env_example_variables() - EXTERNAL_VARIABLES == set()
     assert set(re.findall(r"region: (\w+)", blueprint)) == {"frankfurt"}
     assert "preDeployCommand: workshop migrate" in blueprint
-    assert "healthCheckPath: /healthz" in blueprint
+    assert "healthCheckPath: /readyz" in blueprint
+    assert "maxShutdownDelaySeconds: 30" in blueprint
+    assert "maxShutdownDelaySeconds: 60" in blueprint
     assert "dockerfilePath: ./web/Dockerfile" in blueprint
 
 
