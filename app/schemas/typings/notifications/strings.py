@@ -3,6 +3,13 @@
 from base_typed_string import BaseTypedString
 
 
+class PushPayloadJson(BaseTypedString):
+    """
+    The JSON a device notification carries before encryption:
+    {title, body, url, tag}, as the cabinet's service worker reads it.
+    """
+
+
 class StaffAlertDetail(BaseTypedString):
     """
     The short second line of a staff alert on a lock screen, by SMS or in an
