@@ -63,10 +63,10 @@ def indentation(line: str) -> int:
     return len(line) - len(line.lstrip(" "))
 
 
-def render_services() -> dict[str, set[str]]:
+def render_services(blueprint_path: str = "render.yaml") -> dict[str, set[str]]:
     """Variables of each Render service, those of its groups included."""
 
-    blueprint: str = read("render.yaml")
+    blueprint: str = read(blueprint_path)
     groups_text, services_text = blueprint.split("\nservices:\n", 1)
     groups_text = groups_text.split("\nenvVarGroups:\n", 1)[1]
     groups: dict[str, set[str]] = {}

@@ -32,8 +32,10 @@ uv, Python 3.14, ruff, mypy и pyright в строгом режиме, pytest, d
 | HTTP API | `app.main:create_application` (фабрика uvicorn) | кабинет, каталог, вебхуки каналов, голоса и оплаты, виджет сайта |
 | Фоновый воркер | `python -m app.worker_main` | периодические задачи и очередь задач по полосам (ответы на сообщения из входящих, доставка исходящих, автотесты версий помощника и др.); воркеров может быть сколько угодно; в разработке без Postgres — поток внутри API (`EMBEDDED_WORKER`) |
 | Миграции | `python -m app.gateways.cli.migrate` | схема Postgres (ЕС) с изоляцией по бизнесу (RLS) |
+| Миграция документов | `python -m app.gateways.cli.migrate_documents` | переписывает сохранённые документы старых версий схемы в текущую (после деплоя, см. [`docs/operations/deploys.md`](docs/operations/deploys.md)) |
 
-Все три собираются в один образ (`Dockerfile`, роли `api`, `worker`, `migrate`);
+Все они собираются в один образ (`Dockerfile`, роли `api`, `worker`, `migrate`,
+`migrate-documents`);
 кабинет владельца на Next.js — отдельный образ `web/Dockerfile`.
 
 API и воркер собираются из одного контейнера `app/containers/app.py::AppContainer`
@@ -189,6 +191,16 @@ Langfuse, Sentry — ненужные оставьте пустыми. Ворк�
 одного адреса Render и упрутся в лимит кодов с одного адреса). Адреса вебхуков для
 внешних кабинетов — в разделе «Окружение».
 
+Деплой только после проверок: сервисы `render.yaml` следуют ветке `release`
+и разворачивают коммит, только когда все проверки GitHub по нему зелёные
+(`autoDeployTrigger: checksPass`). `render.staging.yaml` — такое же окружение
+staging на ветке `main` с отдельной базой и группой `workshop-staging`
+(`LLM_PROVIDER=scripted`: фиксированные ответы без модели). После каждого
+деплоя `.github/workflows/deploy-smoke.yml` прогоняет `scripts/smoke.sh`;
+зелёный staging переносит коммит в `release`. Правила изменения схемы
+(сначала расширить, потом сузить), миграция документов и откат — в
+[`docs/operations/deploys.md`](docs/operations/deploys.md).
+
 ### Postgres (ЕС)
 
 ```bash
@@ -318,7 +330,7 @@ UI-тестов); `color`, `position` и `language` в ней показываю
 | `CORS_ALLOWED_ORIGINS` | CORS выключен (виджет сайта разрешает любой источник сам); страница оплаты возвращает плательщика только на источник `CABINET_BASE_URL` и `APP_BASE_URL`. Укажите адрес кабинета (`http://localhost:3000` локально; в `docker-compose.yml` он задан) |
 | `DATABASE_URL` | хранение в памяти |
 | `ENCRYPTION_KEY` | временный ключ: токены каналов не переживут перезапуск; в `production` — ошибка запуска (как и с общеизвестным значением по умолчанию из `docker-compose.yml`). Ключ Fernet или любая случайная строка от 32 символов; после первого запуска не меняется |
-| `LLM_PROVIDER`, `LLM_MODEL_ID`, `LLM_JUDGE_MODEL_ID` | `openai` и `gpt-5-mini` (`anthropic` — `claude-opus-5-5`); `LLM_JUDGE_MODEL_ID` — модель клиента и судьи автотестов, по умолчанию та же модель провайдера |
+| `LLM_PROVIDER`, `LLM_MODEL_ID`, `LLM_JUDGE_MODEL_ID` | `openai` и `gpt-5-mini` (`anthropic` — `claude-opus-5-5`; `scripted` — без модели и ключей: каждый ответ — одна фиксированная фраза, для staging и проверок); `LLM_JUDGE_MODEL_ID` — модель клиента и судьи автотестов, по умолчанию та же модель провайдера |
 | `LLM_CHAT_EFFORT`, `LLM_JUDGE_EFFORT` | усилие рассуждений: `low` в чате, `medium` у судьи автотестов (`minimal`, `low`, `medium`, `high`) |
 | `LLM_MAX_OUTPUT_TOKENS`, `LLM_TOOL_ROUND_LIMIT` | 16000 токенов ответа, 8 кругов вызова инструментов на один ответ |
 | `OPENAI_API_KEY`, `OPENAI_PROJECT_ID`, `OPENAI_BASE_URL` | ответы модели — ошибка 502 при первом вызове; ключ читает SDK OpenAI; адрес по умолчанию — `https://eu.api.openai.com/v1` (проект с хранением в ЕС) |

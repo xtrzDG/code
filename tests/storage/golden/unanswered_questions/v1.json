@@ -1,0 +1,14 @@
+{
+  "business_id": "business_1a0380fd-4290-4220-b157-4df0b7e73c22",
+  "created_at": 1790000000000000,
+  "id": "unanswered_question_cbf14492-adfc-4034-8bdb-4ac04a55e8e8",
+  "is_resolved": true,
+  "is_sandbox": true,
+  "language": "ka",
+  "last_seen_at": 1790000000000000,
+  "occurrence_count": 1,
+  "question": "Sample UnansweredQuestionText",
+  "resolved_knowledge_item_id": "knowledge_item_c938a256-0a4f-4750-a93a-2708b9bf4b38",
+  "schema_version": "1",
+  "updated_at": 1790000000000000
+}

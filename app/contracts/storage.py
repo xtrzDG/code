@@ -1,4 +1,5 @@
-"""Storage seams beyond document collections: tenant scope and migrations."""
+"""Storage seams beyond document collections: tenant scope and migrations
+(of the SQL schema and of stored documents)."""
 
 from contextlib import AbstractContextManager
 from typing import Protocol
@@ -7,6 +8,10 @@ from typed_time_provider import Microseconds
 
 from app.contracts.adapter_contract import AdapterContract
 from app.contracts.utility_contract import UtilityContract
+from app.schemas.dto.document_upgrades import (
+    CollectionUpgradeReport,
+    CollectionUpgradeRequest,
+)
 from app.schemas.dto.storage import (
     AppliedSchemaMigration,
     SchemaMigrationScript,
@@ -67,5 +72,24 @@ class SchemaMigrationStoreAdapterContract(AdapterContract, Protocol):
         serialized by a database lock). Raises ConflictError when it was
         recorded with a different checksum, ExternalServiceError when the
         script fails (nothing of it is kept).
+        """
+        raise NotImplementedError
+
+
+class StoredDocumentUpgradeAdapterContract(AdapterContract, Protocol):
+    def upgrade_collection(
+        self,
+        request: CollectionUpgradeRequest,
+    ) -> CollectionUpgradeReport:
+        """
+        Rewrite the collection's documents of an older schema version in the
+        current version's shape, platform-wide (all businesses), in
+        transactions of `batch_size` rows; a dry run writes nothing.
+
+        Idempotent: a row is written only if it is still what was read, and
+        current rows are never touched, so a second run upgrades nothing.
+        Rows of a newer version are counted and left alone; a row that
+        cannot be upgraded is counted as failed and the run goes on.
+        NotFoundError for a collection outside the catalog.
         """
         raise NotImplementedError

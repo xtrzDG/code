@@ -1,0 +1,52 @@
+{
+  "address": {
+    "maps_url": "https://example.com/menu",
+    "text": "Sample AddressText"
+  },
+  "answers_language": "ka",
+  "booking_rules": {
+    "cancellation_policy": "Sample CancellationPolicyText",
+    "deposit_currency_code": "GEL",
+    "deposit_minor": 1500,
+    "max_party_size": 1,
+    "min_notice_minutes": 1,
+    "resource_kind": "table",
+    "slot_minutes": 30
+  },
+  "business_id": "business_63d38e8d-8165-4eb9-bc25-1bdca038460e",
+  "contacts": {
+    "handoff_phone_number": "+995599123456",
+    "public_phone_number": "+995599123456"
+  },
+  "created_at": 1790000000000000,
+  "forbidden": [
+    "Sample ForbiddenRuleText"
+  ],
+  "handoff_rules": [
+    "Sample HandoffRuleText"
+  ],
+  "hours": [
+    {
+      "closes_at": 1080,
+      "opens_at": 540,
+      "weekday": 1
+    }
+  ],
+  "is_recording_notice_enabled": true,
+  "links": [
+    {
+      "kind": "menu",
+      "url": "https://example.com/menu"
+    }
+  ],
+  "niche_answers": [
+    {
+      "answer": "Sample ProfileAnswerText",
+      "question_key": "parking"
+    }
+  ],
+  "niche_key": "restaurant",
+  "schema_version": "1",
+  "tone": "Sample ToneText",
+  "updated_at": 1790000000000000
+}

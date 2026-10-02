@@ -1,0 +1,17 @@
+{
+  "budget": "Sample LeadBudgetText",
+  "business_id": "business_696f183c-bb48-4f53-8bc2-f9fc1b4e74bf",
+  "contact_id": "contact_959f3706-94dc-4fa5-98c0-8b909c358d76",
+  "conversation_id": "conversation_3008a321-30e8-4792-9660-97fc961929df",
+  "created_at": 1790000000000000,
+  "details": "Sample LeadDetails",
+  "id": "lead_d6596957-8698-4c93-bff7-40c292814d51",
+  "is_sandbox": true,
+  "lead_type": "banquet",
+  "party_size": 1,
+  "requested_date": "2026-09-21",
+  "schema_version": "1",
+  "source_channel": "phone",
+  "status": "new",
+  "updated_at": 1790000000000000
+}

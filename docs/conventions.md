@@ -56,6 +56,28 @@ Every HTTP endpoint runs `operator.operate` -> `pipeline.start` ->
 - New primitives go to `app/schemas/typings/<bounded_context>/<allowed_name>.py`
   in abc order. Reuse existing primitives first.
 
+## Stored documents and deploys
+
+Two releases run side by side during every deploy and after a rollback, so
+a stored shape changes only by expand and contract
+(`docs/operations/deploys.md`):
+
+- Add fields as optional; make them required only in a later release,
+  after an upcaster or `workshop migrate-documents` filled old rows.
+  Never rename, remove or retype a field, and never write a new enum
+  value, in the release that introduces the change.
+- Every shape change bumps the document's `schema_version` (on the model)
+  and adds a golden fixture: run
+  `uv run python -m tests.storage.document_evolution.refresh`. Old rows
+  that need a change get an upcaster in
+  `app/adapters/storage/document_upgrades.py`;
+  `tests/architecture_policy/test_document_evolution.py` checks both.
+- Documents stay strict (`extra="forbid"`) everywhere; only the storage
+  read path (`PersistedDocumentCodec`) ignores unknown fields. Never relax
+  inputs or DTOs to make old data load.
+- SQL migrations are additive; drop or rename only what no running
+  release uses.
+
 ## Time
 
 - "Now" comes from an injected `WallClock[Microseconds]` (`typed_time_provider`).

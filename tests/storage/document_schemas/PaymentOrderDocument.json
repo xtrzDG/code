@@ -1,0 +1,137 @@
+{
+  "collection": "payment_orders",
+  "document_type": "PaymentOrderDocument",
+  "schema_version": 1,
+  "shape": {
+    "additionalProperties": false,
+    "properties": {
+      "amount_minor": {
+        "minimum": 0,
+        "type": "integer"
+      },
+      "business_id": {
+        "pattern": "^business_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "checkout_url": {
+        "anyOf": [
+          {
+            "maxLength": 2048,
+            "minLength": 10,
+            "pattern": "^https?://[^\\s/]+(/[^\\s]*)?$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "created_at": {
+        "type": "integer"
+      },
+      "currency_code": {
+        "maxLength": 3,
+        "minLength": 3,
+        "pattern": "^[A-Z]{3}$",
+        "type": "string"
+      },
+      "id": {
+        "pattern": "^payment_order_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "invoice_ids": {
+        "items": {
+          "pattern": "^invoice_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+          "type": "string"
+        },
+        "type": "array"
+      },
+      "is_initial_payment_settled": {
+        "default": false,
+        "type": "boolean"
+      },
+      "is_refund_due": {
+        "default": false,
+        "type": "boolean"
+      },
+      "last_failure_reason": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "last_payment_reference": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "processed_notification_keys": {
+        "items": {
+          "type": "string"
+        },
+        "type": "array"
+      },
+      "provider": {
+        "enum": [
+          "flitt"
+        ],
+        "type": "string"
+      },
+      "recurring_amount_minor": {
+        "minimum": 0,
+        "type": "integer"
+      },
+      "recurring_interval_months": {
+        "maximum": 12,
+        "minimum": 1,
+        "type": "integer"
+      },
+      "schema_version": {
+        "default": "1",
+        "type": "string"
+      },
+      "status": {
+        "default": "created",
+        "enum": [
+          "created",
+          "processing",
+          "approved",
+          "declined",
+          "expired",
+          "reversed"
+        ],
+        "type": "string"
+      },
+      "subscription_id": {
+        "pattern": "^subscription_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "updated_at": {
+        "type": "integer"
+      }
+    },
+    "required": [
+      "business_id",
+      "subscription_id",
+      "provider",
+      "invoice_ids",
+      "amount_minor",
+      "currency_code",
+      "recurring_amount_minor",
+      "recurring_interval_months"
+    ],
+    "type": "object"
+  }
+}

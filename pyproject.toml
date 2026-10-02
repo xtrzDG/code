@@ -13,6 +13,8 @@ dependencies = [
     "dependency-injector",
     "typed-time-provider",
     "fastapi>=0.142.2",
+    # Tolerant reads of stored documents use model_validate_json(extra=...).
+    "pydantic>=2.13.5",
     "uvicorn[standard]>=0.54.0",
     "phonenumbers>=9.0.40",
     "babel>=2.18.0",

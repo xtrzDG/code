@@ -1,0 +1,12 @@
+{
+  "business_id": "business_6e27d146-c3ce-4ec0-810e-6f5aa2c873c8",
+  "conversation_id": "conversation_abe54aef-a8c3-493e-84e1-4dc02d144d15",
+  "cost_micro_usd": 1,
+  "created_at": 1790000000000000,
+  "id": "usage_event_07cc0b8e-c730-4501-bad3-47050d7abc5a",
+  "kind": "voice_seconds",
+  "occurred_at": 1790000000000000,
+  "quantity": 1,
+  "schema_version": "1",
+  "updated_at": 1790000000000000
+}

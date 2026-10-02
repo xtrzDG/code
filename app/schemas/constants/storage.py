@@ -41,3 +41,18 @@ class StorageScopeKind(StrEnum):
 
     BUSINESS = "business"
     PLATFORM = "platform"
+
+
+class StoredDocumentVersionState(StrEnum):
+    """
+    How a stored document's `schema_version` compares with this release's.
+
+    OLDER documents are upcast on read and rewritten by `workshop
+    migrate-documents`; NEWER ones were written by a newer release (during
+    a rolling deploy or before a rollback) and are read tolerantly, never
+    rewritten down.
+    """
+
+    OLDER = "older"
+    CURRENT = "current"
+    NEWER = "newer"

@@ -14,6 +14,7 @@ from app.adapters.llm.anthropic_llm_adapter import AnthropicLlmAdapter
 from app.adapters.llm.menu_extraction.menu_extraction_adapter import (
     MenuExtractionAdapter,
 )
+from app.adapters.llm.offline_llm_adapter import OfflineLlmAdapter
 from app.adapters.llm.openai_llm_adapter import OpenAiLlmAdapter
 from app.adapters.llm.routing_llm_adapter import RoutingLlmAdapter
 from app.adapters.llm.tracing_llm_adapter import TracingLlmAdapter
@@ -148,11 +149,14 @@ class AdaptersContainer(containers.DeclarativeContainer):
         AnthropicLlmAdapter,
         client=clients.anthropic_messages_client,
     )
+    # LLM_PROVIDER=scripted (staging, offline runs): fixed answers, no network.
+    offline_llm_adapter: Singleton[OfflineLlmAdapter] = Singleton(OfflineLlmAdapter)
     # Typed by its contract: tests replace it with the scripted model.
     routing_llm_adapter: Singleton[LlmAdapterContract] = Singleton(
         RoutingLlmAdapter,
         openai_adapter=openai_llm_adapter,
         anthropic_adapter=anthropic_llm_adapter,
+        scripted_adapter=offline_llm_adapter,
     )
     # The quality journal (Langfuse, or nothing without keys). It lives here,
     # not in FacilitatorsContainer, because the LLM adapter below decorates

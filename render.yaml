@@ -18,6 +18,14 @@
 #
 # The image's ENTRYPOINT is `workshop`; the commands below also name it, so
 # they work whether a platform keeps the ENTRYPOINT or replaces it.
+#
+# Deploys (docs/operations/deploys.md): every service follows the `release`
+# branch and deploys a commit only after all its GitHub checks passed
+# (`autoDeployTrigger: checksPass`), so API, worker and cabinet always run
+# one commit. `release` moves forward only to commits that passed the
+# staging smoke test (render.staging.yaml, .github/workflows/deploy-smoke.yml)
+# or by hand: `git push origin <commit>:release` (create it once before the
+# Blueprint: `git push origin main:release`).
 
 databases:
   - name: workshop-db
@@ -51,6 +59,8 @@ services:
     runtime: docker
     region: frankfurt
     plan: starter
+    branch: release
+    autoDeployTrigger: checksPass
     dockerfilePath: ./Dockerfile
     dockerContext: .
     dockerCommand: workshop api
@@ -181,6 +191,8 @@ services:
     runtime: docker
     region: frankfurt
     plan: starter
+    branch: release
+    autoDeployTrigger: checksPass
     dockerfilePath: ./Dockerfile
     dockerContext: .
     dockerCommand: workshop worker
@@ -416,6 +428,8 @@ services:
     runtime: docker
     region: frankfurt
     plan: starter
+    branch: release
+    autoDeployTrigger: checksPass
     dockerfilePath: ./web/Dockerfile
     dockerContext: ./web
     healthCheckPath: /login

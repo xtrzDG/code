@@ -61,9 +61,11 @@ class PostgresDocumentCollectionAdapter[StoredDocument: PersistentDocument](
     settings). Connect with a role that is neither superuser nor BYPASSRLS,
     otherwise Postgres skips the policies.
 
-    Documents are written with `model_dump_json()` and read back with
-    `model_validate_json()` on the JSONB text, so typed primitives survive the
-    round trip and callers always get fresh instances. `list_all()` returns
+    Documents are written as validated JSON stamped with the current
+    `schema_version` and read back from the JSONB text tolerantly (unknown
+    fields of a newer release ignored, older versions upcast:
+    `PersistedDocumentCodec`), so typed primitives survive the round trip
+    and callers always get fresh instances. `list_all()` returns
     documents in first-write order, like the in-memory adapter. Queries by
     lookup field are parameterized SQL on plain indexed columns
     (`document_lookup_sql`).
@@ -124,7 +126,7 @@ class PostgresDocumentCollectionAdapter[StoredDocument: PersistentDocument](
             parameters = self._write_parameters(document_key, changed)
             connection.execute(self._queries.upsert, parameters)
 
-        return self._document_type.model_validate_json(parameters[2])
+        return self._codec.decode(parameters[2])
 
     def replace_if(
         self,

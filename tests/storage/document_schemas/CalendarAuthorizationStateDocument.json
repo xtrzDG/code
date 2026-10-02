@@ -1,0 +1,49 @@
+{
+  "collection": "calendar_authorization_states",
+  "document_type": "CalendarAuthorizationStateDocument",
+  "schema_version": 1,
+  "shape": {
+    "additionalProperties": false,
+    "properties": {
+      "business_id": {
+        "pattern": "^business_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "created_at": {
+        "type": "integer"
+      },
+      "expires_at": {
+        "type": "integer"
+      },
+      "id": {
+        "pattern": "^calendar_authorization_state_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "is_consumed": {
+        "default": false,
+        "type": "boolean"
+      },
+      "schema_version": {
+        "default": "1",
+        "type": "string"
+      },
+      "state_hash": {
+        "type": "string"
+      },
+      "updated_at": {
+        "type": "integer"
+      },
+      "user_id": {
+        "pattern": "^user_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      }
+    },
+    "required": [
+      "business_id",
+      "user_id",
+      "state_hash",
+      "expires_at"
+    ],
+    "type": "object"
+  }
+}

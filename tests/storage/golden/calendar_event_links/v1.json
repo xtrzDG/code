@@ -1,0 +1,10 @@
+{
+  "booking_id": "booking_237608e8-d430-41f4-83da-d5ed7ec12400",
+  "business_id": "business_1ddef8e1-0bfe-4d04-98e6-497e93300100",
+  "calendar_id": "Sample ExternalCalendarId",
+  "created_at": 1790000000000000,
+  "event_id": "Sample CalendarEventId",
+  "id": "calendar_event_link_10002fa9-f529-4ca7-9bb0-0f87e4a7f06a",
+  "schema_version": "1",
+  "updated_at": 1790000000000000
+}

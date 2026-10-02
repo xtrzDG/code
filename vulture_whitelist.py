@@ -23,6 +23,9 @@ _.buffered_event_count  # app/facilitators/observability/langfuse_trace_facilita
 _.collection_name_for  # app/utilities/storage/document_collection_catalog.py
 _.run_once  # app/gateways/worker/background_worker.py
 _.run_queued_jobs  # app/gateways/worker/background_worker.py
+# The current schema version of every collection, read by the document
+# evolution policy (tests/architecture_policy/test_document_evolution.py).
+_.CURRENT_SCHEMA_VERSION  # app/adapters/storage/document_upgrades.py
 
 # Container providers kept for the template example and for tests that
 # build the synchronous autotest run and bulk knowledge upserts.

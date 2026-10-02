@@ -5,6 +5,7 @@ from app.adapters.storage.periodic_job_run_records import (
     PeriodicJobRunRecords,
     periodic_run_key,
 )
+from app.adapters.storage.persisted_document_codec import PersistedDocumentCodec
 from app.adapters.storage.postgres.periodic_job_run_queries import (
     DELETE_STARTED_BEFORE,
     PERIODIC_JOB_RUNS_COLLECTION,
@@ -27,6 +28,7 @@ from app.contracts.jobs import (
 from app.schemas.domain.jobs import PeriodicJobRunDocument
 from app.schemas.typings.platform.constrained_integers import ProcessedItemCount
 from app.schemas.typings.platform.constrained_strings import JobName, JobPeriodKey
+from app.schemas.typings.storage.constrained_strings import DocumentCollectionName
 
 
 class PostgresPeriodicJobRunStoreAdapter(
@@ -50,6 +52,12 @@ class PostgresPeriodicJobRunStoreAdapter(
     ) -> None:
         super().__init__(collection)
         self._connection_pool: PostgresConnectionPoolClient = connection_pool
+        self._codec: PersistedDocumentCodec[PeriodicJobRunDocument] = (
+            PersistedDocumentCodec(
+                PeriodicJobRunDocument,
+                DocumentCollectionName(PERIODIC_JOB_RUNS_COLLECTION),
+            )
+        )
 
     def claim(
         self,
@@ -73,7 +81,7 @@ class PostgresPeriodicJobRunStoreAdapter(
             stored: PeriodicJobRunDocument | None = (
                 None
                 if row is None
-                else PeriodicJobRunDocument.model_validate_json(
+                else self._codec.decode(
                     read_document_text(row, PERIODIC_JOB_RUNS_COLLECTION)
                 )
             )
@@ -81,7 +89,7 @@ class PostgresPeriodicJobRunStoreAdapter(
             if decided is None:
                 return None
 
-            serialized_run: str = decided.model_dump_json()
+            serialized_run: str = self._codec.encode(decided)
             connection.execute(
                 UPSERT_RUN,
                 (
@@ -92,7 +100,7 @@ class PostgresPeriodicJobRunStoreAdapter(
                 ),
             )
 
-        return PeriodicJobRunDocument.model_validate_json(serialized_run)
+        return self._codec.decode(serialized_run)
 
     def purge_started_before(self, started_before: Microseconds) -> ProcessedItemCount:
         with platform_transaction(
