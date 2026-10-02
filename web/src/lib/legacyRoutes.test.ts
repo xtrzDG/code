@@ -12,6 +12,7 @@ describe("addresses from before the five sections", () => {
   });
 
   it("become next.config redirects that keep deeper paths where they move along", () => {
+    expect(legacyRedirects()[0]).toEqual({ source: "/b/:businessId", destination: "/b/:businessId/overview", permanent: false });
     expect(legacyRedirects()).toContainEqual({
       source: "/b/:businessId/conversations/:rest*",
       destination: "/b/:businessId/messages/:rest*",
@@ -39,7 +40,8 @@ describe("addresses from before the five sections", () => {
   it("leave current and unknown addresses alone", () => {
     expect(legacyDestination("/b/biz_1/overview")).toBeNull();
     expect(legacyDestination("/b/biz_1/handoffs/x")).toBeNull();
-    expect(legacyDestination("/b/biz_1")).toBeNull();
+    expect(legacyDestination("/b/biz_1")).toBe("/b/biz_1/overview");
+    expect(legacyDestination("/b/")).toBeNull();
     expect(legacyDestination("/businesses")).toBeNull();
   });
 });

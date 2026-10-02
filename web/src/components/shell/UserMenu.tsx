@@ -62,8 +62,9 @@ export function UserMenu({ me, collapsed = false }: { me: CurrentUserView; colla
         {collapsed ? null : (
           <>
             <span className="min-w-0 flex-1">
+              <span className="sr-only">{`${t("account.menu")}: `}</span>
               <span className="block truncate text-sm font-medium text-ink">{name}</span>
-              <span className="block truncate text-xs text-ink-subtle">{contact && contact !== name ? contact : t("account.menu")}</span>
+              {contact && contact !== name ? <span className="block truncate text-xs text-ink-subtle">{contact}</span> : null}
             </span>
             <IconChevronDown className="size-4 shrink-0 rotate-180 text-ink-subtle transition-transform group-hover:-translate-y-0.5" aria-hidden />
           </>
@@ -73,6 +74,7 @@ export function UserMenu({ me, collapsed = false }: { me: CurrentUserView; colla
         ref={panelRef}
         id={panelId}
         popover="auto"
+        role="dialog"
         aria-label={t("account.menu")}
         className="user-menu-panel fixed inset-auto m-0 w-72 rounded-2xl border border-line bg-surface p-2 text-ink shadow-2xl"
       >

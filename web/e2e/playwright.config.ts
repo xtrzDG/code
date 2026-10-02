@@ -77,6 +77,10 @@ export default defineConfig({
     // which shows its still picture), so tests never wait on or race them.
     // A test about motion opts out: test.use({ contextOptions: { reducedMotion: "no-preference" } }).
     contextOptions: { reducedMotion: "reduce" },
+    // The cabinet's service worker would take requests out of reach of
+    // page.route(), which many tests use to stand in for the API; the
+    // tests about it opt in: test.use({ serviceWorkers: "allow" }).
+    serviceWorkers: "block",
     launchOptions: {
       ...(chromiumExecutable ? { executablePath: chromiumExecutable } : {}),
       // WebGL on machines without a GPU (CI): SwiftShader, asked for explicitly.

@@ -22,7 +22,7 @@ export function NavBadge({ count, size = "md", className }: { count: number; siz
       )}
     >
       <span aria-hidden>{badgeText(count)}</span>
-      <span className="sr-only">{tp("navigation.waiting", count)}</span>
+      <span className="sr-only">{`, ${tp("navigation.waiting", count)}`}</span>
     </span>
   );
 }

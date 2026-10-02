@@ -147,7 +147,7 @@ export function SidebarNav({
           </span>
           <span className={cn("relative truncate", collapsed && "sr-only")}>{item.label}</span>
           {collapsed ? (
-            badge > 0 ? <span className="sr-only">{tp("navigation.waiting", badge)}</span> : null
+            badge > 0 ? <span className="sr-only">{`, ${tp("navigation.waiting", badge)}`}</span> : null
           ) : (
             <NavBadge count={badge} className="relative ms-auto" />
           )}

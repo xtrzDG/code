@@ -34,20 +34,30 @@ export interface NextRedirect {
   permanent: false;
 }
 
-/** The redirects for next.config.ts. */
+/**
+ * The redirects for next.config.ts, and /b/{id} to its overview (before the
+ * page streams: before the assistant exists, the business frame shows the
+ * setup invitation instead of a page, so a page's own redirect would not run).
+ */
 export function legacyRedirects(): NextRedirect[] {
-  return LEGACY_ROUTES.map(({ from, to, withSubpaths }) => ({
-    source: `/b/:businessId/${from}${withSubpaths ? "/:rest*" : ""}`,
-    destination: `/b/:businessId/${to}${withSubpaths ? "/:rest*" : ""}`,
-    permanent: false,
-  }));
+  return [
+    { source: "/b/:businessId", destination: "/b/:businessId/overview", permanent: false },
+    ...LEGACY_ROUTES.map(({ from, to, withSubpaths }) => ({
+      source: `/b/:businessId/${from}${withSubpaths ? "/:rest*" : ""}`,
+      destination: `/b/:businessId/${to}${withSubpaths ? "/:rest*" : ""}`,
+      permanent: false as const,
+    })),
+  ];
 }
 
 /** Where an old path goes now, or null ("/b/x/handoffs" -> "/b/x/messages/handoffs"); for tests and links. */
 export function legacyDestination(pathname: string): string | null {
   const [, root, businessId, page, ...rest] = pathname.split("/");
-  if (root !== "b" || !businessId || !page) {
+  if (root !== "b" || !businessId) {
     return null;
+  }
+  if (!page) {
+    return `/b/${businessId}/overview`;
   }
   const route = LEGACY_ROUTES.find((candidate) => candidate.from === page);
   if (!route || (rest.length > 0 && !route.withSubpaths)) {
