@@ -118,6 +118,6 @@ class RecordOutboundAttemptUseCase(
                 stored.last_error,
             )
 
-        update_channel_health(self._channel_repo, stored, input_data.failure, now)
+        update_channel_health(self._channel_repo, stored, input_data, now)
         update_handoff_notification(self._handoff_repo, stored, now)
         return stored

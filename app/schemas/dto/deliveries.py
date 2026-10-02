@@ -9,6 +9,7 @@ from typed_time_provider import Microseconds
 from app.schemas.constants.channels import ChannelKind
 from app.schemas.constants.deliveries import DeliveryFailureKind
 from app.schemas.domain.businesses import ManagerContact
+from app.schemas.domain.channels import ChannelDocument
 from app.schemas.domain.inbound_events import InboundEventDocument
 from app.schemas.domain.outbound_messages import OutboundMessageDocument
 from app.schemas.dto.channels.channel_webhooks import ChannelInboundMessage
@@ -124,9 +125,12 @@ class OutboundAttempt(ImmutableDTO):
     """
     One send attempt of an outbox message: the parts delivered so far (all
     of them when `failure` is None) and why it stopped otherwise.
+    `channel` is the business channel a reply was sent with (its health
+    follows the outcome only while it still has that connection).
     """
 
     message: OutboundMessageDocument
+    channel: ChannelDocument | None = None
     delivered_parts: DeliveredMessageCount
     provider_message_id: ProviderMessageId | None = None
     failure: DeliveryFailureKind | None = None

@@ -6,9 +6,11 @@ from typed_time_provider import Microseconds, WallClock
 
 from app.contracts.conversation_flow import VoiceToolCallOrchestratorContract
 from app.contracts.operator_contract import OperatorContract
+from app.contracts.orchestrator_contract import OrchestratorContract
 from app.contracts.secret_cipher import SecretCipherAdapterContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.repositories.business_repositories import BusinessRepository
+from app.schemas.constants.handoffs import HandoffStatus
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.dto.conversations import (
     CallGreeting,
@@ -16,6 +18,7 @@ from app.schemas.dto.conversations import (
     VoiceToolCallRequest,
     VoiceToolCallResult,
 )
+from app.schemas.dto.handoffs import HandoffCommand, HandoffResult
 from app.schemas.exceptions.application_errors import (
     AuthenticationRequiredError,
     ValidationFailedError,
@@ -23,6 +26,7 @@ from app.schemas.exceptions.application_errors import (
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.channels.strings import ChannelSecret, EncryptedChannelSecret
 from app.schemas.typings.conversations.strings import LlmToolResultJson, MessageText
+from app.schemas.typings.handoffs.prefixed_id import HandoffId
 from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.schemas.typings.users.prefixed_id import UserId
 from app.schemas.typings.users.strings import AccessToken
@@ -129,3 +133,41 @@ class FakeAuthenticationOperator(OperatorContract[AccessToken, UserId]):
             raise AuthenticationRequiredError("Unknown token.")
 
         return user_id
+
+
+class RecordingHandoffToHuman(UseCaseContract[HandoffCommand, HandoffResult]):
+    """Records the handoffs the outbox asks for (undelivered replies)."""
+
+    def __init__(self) -> None:
+        self.commands: list[HandoffCommand] = []
+
+    def run(self, input_data: HandoffCommand) -> HandoffResult:
+        self.commands.append(input_data)
+        return HandoffResult(
+            id=HandoffId(),
+            business_id=input_data.business_id,
+            conversation_id=input_data.conversation_id,
+            reason=input_data.reason,
+            urgency=input_data.urgency,
+            status=HandoffStatus.PENDING,
+            customer_message=MessageText("A colleague will reply soon."),
+        )
+
+
+class RecordingOrchestrator[InputData, OutputData](
+    OrchestratorContract[InputData, OutputData]
+):
+    """Runs an orchestrator and keeps what it returned."""
+
+    def __init__(
+        self,
+        orchestrator: OrchestratorContract[InputData, OutputData],
+        outputs: list[OutputData],
+    ) -> None:
+        self._orchestrator: OrchestratorContract[InputData, OutputData] = orchestrator
+        self._outputs: list[OutputData] = outputs
+
+    def execute(self, input_data: InputData) -> OutputData:
+        output: OutputData = self._orchestrator.execute(input_data)
+        self._outputs.append(output)
+        return output

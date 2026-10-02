@@ -35,6 +35,7 @@ class PlatformBotSetup:
             owner_language="ru",
         )
         self.client = self.testbed.build_http_client()
+        self.update_count: int = 0
         self.testbed.telegram_transport.respond(
             "POST", r"/getMe$", telegram_ok({"username": "workshop_staff_bot"})
         )
@@ -56,8 +57,11 @@ class PlatformBotSetup:
         chat_type: str = "private",
         language_code: str = "en",
     ) -> HttpResponse:
+        """Post an update (each a new one) and let the worker answer it."""
+
+        self.update_count += 1
         update = {
-            "update_id": 1,
+            "update_id": self.update_count,
             "message": {
                 "message_id": 5,
                 "chat": {"id": STAFF_CHAT_ID, "type": chat_type},
@@ -70,11 +74,13 @@ class PlatformBotSetup:
             },
         }
         headers = {} if secret is None else {TELEGRAM_SECRET_HEADER: secret}
-        return self.client.post(
+        response: HttpResponse = self.client.post(
             "/v1/channels/telegram-platform/webhook",
             content=to_json_bytes(update),
             headers=headers,
         )
+        self.testbed.run_worker()
+        return response
 
     def replies(self) -> list[str]:
         return [

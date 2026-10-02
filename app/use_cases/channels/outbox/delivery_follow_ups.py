@@ -14,10 +14,12 @@ from app.schemas.constants.handoffs import HandoffStatus
 from app.schemas.domain.channels import ChannelDocument
 from app.schemas.domain.handoffs import HandoffDocument
 from app.schemas.domain.outbound_messages import OutboundMessageDocument
+from app.schemas.dto.deliveries import OutboundAttempt
 from app.utilities.channels.channel_health import (
     mark_channel_failing,
     mark_channel_working,
     note_channel_refusal,
+    reload_same_connection,
 )
 
 # Handoff states a delivered notification may move to NOTIFIED (a resolved
@@ -30,20 +32,24 @@ NOTIFIABLE_HANDOFF_STATUSES: frozenset[HandoffStatus] = frozenset(
 def update_channel_health(
     channel_repo: ChannelRepoContract,
     message: OutboundMessageDocument,
-    failure: DeliveryFailureKind | None,
+    attempt: OutboundAttempt,
     now: Microseconds,
 ) -> None:
     """
     A delivered reply shows the channel works (and clears an old error); a
     refused credential puts it in ERROR; a reply refused for good (a 4xx,
-    or every retry failed) leaves its reason for the owner to see.
+    or every retry failed) leaves its reason for the owner to see. Only
+    while the channel still has the connection the reply was sent with: an
+    outcome of a replaced token says nothing about the new one.
     """
 
-    if message.customer is None:
+    if attempt.channel is None:
         return
 
-    channel: ChannelDocument | None = channel_repo.get(message.customer.channel_id)
-    if channel is None or channel.business_id != message.business_id:
+    channel: ChannelDocument | None = reload_same_connection(
+        channel_repo, attempt.channel
+    )
+    if channel is None:
         return
 
     if message.status is OutboundMessageStatus.DELIVERED:
@@ -53,7 +59,7 @@ def update_channel_health(
     if message.status is not OutboundMessageStatus.DEAD or message.last_error is None:
         return
 
-    if failure is DeliveryFailureKind.CREDENTIAL_REJECTED:
+    if attempt.failure is DeliveryFailureKind.CREDENTIAL_REJECTED:
         mark_channel_failing(channel_repo, channel, str(message.last_error), now)
         return
 

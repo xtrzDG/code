@@ -12,7 +12,10 @@ from app.facilitators.channels.channel_message_sender_facilitator import (
 from app.schemas.constants.billing import UsageKind
 from app.schemas.constants.channels import ChannelKind, ChannelStatus
 from app.schemas.domain.channels import ChannelDocument
-from app.schemas.dto.channels.channel_webhooks import ChannelDeliveryTarget
+from app.schemas.dto.channels.channel_webhooks import (
+    ChannelDeliveryTarget,
+    ChannelSendReceipt,
+)
 from app.schemas.exceptions.application_errors import ChannelCredentialRejectedError
 from app.schemas.typings.channels.constrained_integers import DeliveredMessageCount
 from app.schemas.typings.channels.constrained_strings import WhatsAppTemplateName
@@ -52,6 +55,7 @@ class TestMetaChannelHealth:
             testbed,
             page_webhook("page", PAGE_ID, [page_message("ps-1", "Hi", PAGE_ID)]),
         )
+        testbed.run_worker()
 
         broken = stored(testbed, channel)
         assert broken.status is ChannelStatus.ERROR
@@ -66,6 +70,7 @@ class TestMetaChannelHealth:
                 "page", PAGE_ID, [page_message("ps-1", "Again", PAGE_ID, mid="m2")]
             ),
         )
+        testbed.run_worker()
         assert stored(testbed, channel).status is ChannelStatus.CONNECTED
 
     def test_temporary_meta_failures_leave_the_channel_connected(self) -> None:
@@ -86,6 +91,7 @@ class TestMetaChannelHealth:
             testbed,
             page_webhook("page", PAGE_ID, [page_message("ps-1", "Hi", PAGE_ID)]),
         )
+        testbed.run_worker()
 
         assert stored(testbed, channel).status is ChannelStatus.CONNECTED
 
@@ -117,7 +123,7 @@ class ReconnectedMidSendAdapter(TelegramChannelAdapter):
 
     def send(
         self, target: ChannelDeliveryTarget, text: MessageText
-    ) -> DeliveredMessageCount:
+    ) -> ChannelSendReceipt:
         channel = stored(self._testbed, self._channel)
         channel.encrypted_secret = self._testbed.secret_cipher.encrypt(
             ChannelSecret(OTHER_TELEGRAM_BOT_TOKEN)
@@ -129,7 +135,7 @@ class ReconnectedMidSendAdapter(TelegramChannelAdapter):
         if not self._accepts:
             raise ChannelCredentialRejectedError("Telegram rejected the bot token.")
 
-        return DeliveredMessageCount(1)
+        return ChannelSendReceipt(delivered=DeliveredMessageCount(1))
 
 
 @pytest.mark.parametrize("accepts", [True, False])

@@ -7,7 +7,12 @@ from app.schemas.constants.billing import UsageKind
 from app.schemas.constants.channels import ChannelKind, ChannelStatus
 from app.schemas.dto.channels.channel_settings import DisableChannelCommand
 from tests.channels.channels_payloads import sign_elevenlabs, to_json_bytes
-from tests.channels.post_call_steps import post_call, post_call_payload, stored_calls
+from tests.channels.post_call_steps import (
+    post_call,
+    post_call_payload,
+    process_call,
+    stored_calls,
+)
 from tests.channels.voice_setup import ASSISTANT_LINE, build_voice_setup
 
 
@@ -15,10 +20,14 @@ class TestPostCallWebhook:
     def test_repeated_webhook_is_not_billed_twice(self) -> None:
         setup = build_voice_setup()
 
-        first = post_call(setup, post_call_payload()).json()
-        second = post_call(setup, post_call_payload(duration=96)).json()
+        first = process_call(setup, post_call_payload())
+        redelivered = post_call(setup, post_call_payload())
+        second = process_call(setup, post_call_payload(duration=96))
 
         assert first["status"] == "recorded"
+        # The same report again is recognised in the inbox; a changed
+        # report of the call updates it without billing it twice.
+        assert redelivered.json()["status"] == "duplicate"
         assert second["status"] == "duplicate"
         assert first["call_id"] == second["call_id"]
         [call] = stored_calls(setup)
@@ -61,19 +70,25 @@ class TestPostCallWebhook:
             post_call_payload(),
             signed_at=setup.testbed.clock.now_seconds() - 29 * 60,
         )
-        assert response.json()["status"] == "recorded"
+        assert response.json()["status"] == "queued"
+        assert len(stored_calls(setup)) == 1
 
     def test_other_events_and_unknown_numbers_are_ignored(self) -> None:
         setup = build_voice_setup()
 
         audio = post_call(setup, post_call_payload(event_type="post_call_audio"))
-        unknown_line = post_call(setup, post_call_payload(agent_number="+48221234567"))
-        no_line = post_call(setup, post_call_payload(agent_number=None))
-        foreign_agent = post_call(setup, post_call_payload(agent_id="agent_of_others"))
+        unknown_line = process_call(
+            setup, post_call_payload("conv_2", agent_number="+48221234567")
+        )
+        no_line = process_call(setup, post_call_payload("conv_3", agent_number=None))
+        foreign_agent = process_call(
+            setup, post_call_payload("conv_4", agent_id="agent_of_others")
+        )
 
-        for response in (audio, unknown_line, no_line, foreign_agent):
-            assert response.status_code == 200
-            assert response.json()["status"] == "ignored"
+        assert audio.status_code == 200
+        assert audio.json()["status"] == "ignored"
+        for outcome in (unknown_line, no_line, foreign_agent):
+            assert outcome["status"] == "ignored"
 
         assert stored_calls(setup) == []
 
@@ -85,9 +100,9 @@ class TestPostCallWebhook:
             channel.status = ChannelStatus.ERROR
             setup.testbed.channel_repo.save(channel)
 
-        response = post_call(setup, post_call_payload())
+        outcome = process_call(setup, post_call_payload())
 
-        assert response.json()["status"] == "recorded"
+        assert outcome["status"] == "recorded"
         assert len(stored_calls(setup)) == 1
         [usage] = setup.testbed.usage_event_repo.list_by_business_between(
             setup.business.id, Microseconds(0), Microseconds(2**62)
@@ -106,9 +121,9 @@ class TestPostCallWebhook:
             }
         )
 
-        response = post_call(setup, payload)
+        outcome = process_call(setup, payload)
 
-        assert response.json()["status"] == "recorded"
+        assert outcome["status"] == "recorded"
         usage = setup.testbed.usage_event_repo.list_by_business_between(
             setup.business.id, Microseconds(0), Microseconds(2**62)
         )
@@ -156,7 +171,7 @@ class TestPostCallWebhook:
             }
         }
 
-        assert post_call(setup, payload).json()["status"] == "recorded"
+        assert process_call(setup, payload)["status"] == "recorded"
         [call] = stored_calls(setup)
         assert call.from_phone_number == "+12025550123"
         assert call.cost_micro_usd == 60_000

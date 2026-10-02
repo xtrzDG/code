@@ -33,9 +33,9 @@ class TestTelegramChannelHealth:
         )
 
         failed = post_update(testbed, channel, build_update())
+        testbed.run_worker()
 
         assert failed.status_code == 200
-        assert failed.json()["failed"] == 1
         broken = stored(testbed, channel)
         assert broken.status is ChannelStatus.ERROR
         assert broken.last_error == (
@@ -56,8 +56,9 @@ class TestTelegramChannelHealth:
         testbed.clock.advance(60)
         testbed.telegram_transport.respond("POST", r"/sendMessage$", telegram_ok({}))
         answered = post_update(testbed, channel, build_update(message_id=18))
+        testbed.run_worker()
 
-        assert answered.json()["answered"] == 1
+        assert answered.json()["queued"] == 1
         healed = stored(testbed, channel)
         assert healed.status is ChannelStatus.CONNECTED
         assert healed.last_error is None
@@ -74,8 +75,16 @@ class TestTelegramChannelHealth:
         )
 
         post_update(testbed, channel, build_update())
+        testbed.run_worker()
 
-        assert stored(testbed, channel).status is ChannelStatus.CONNECTED
+        refused = stored(testbed, channel)
+        assert refused.status is ChannelStatus.CONNECTED
+        # The owner sees why; staff are asked to reach the customer.
+        assert refused.last_error == (
+            "Telegram sendMessage refused the request (403): Forbidden: blocked"
+        )
+        [handoff] = testbed.handoffs_to_human.commands
+        assert "could not be delivered" in str(handoff.summary)
 
     def test_proactive_messages_also_track_the_channel(self) -> None:
         testbed = ChannelsTestbed()

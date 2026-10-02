@@ -34,10 +34,14 @@ type PartSender = Callable[[MessageText], ProviderMessageId | None]
 
 @dataclass(frozen=True)
 class OutboundRoute:
-    """The parts of one message and how to send one of them."""
+    """
+    The parts of one message, how to send one of them, and the business
+    channel they go through (None for staff notifications).
+    """
 
     parts: list[MessageText]
     send_part: PartSender
+    channel: ChannelDocument | None = None
 
 
 def route_customer_reply(
@@ -83,6 +87,7 @@ def route_customer_reply(
     return OutboundRoute(
         parts=adapter.split(message.text),
         send_part=lambda part: adapter.send(target, part).provider_message_id,
+        channel=channel,
     )
 
 

@@ -72,7 +72,8 @@ def build_graph_error(
         or error_code in REJECTED_CREDENTIAL_ERROR_CODES
     ):
         return ChannelCredentialRejectedError(
-            f"Meta rejected the access token or its permissions ({described})"
+            "Meta rejected the access token or its permissions "
+            f"({error_code or status_code}): {message}"
         )
 
     if error_code in WHATSAPP_TEMPLATE_ERROR_CODES:

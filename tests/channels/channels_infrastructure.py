@@ -15,6 +15,7 @@ from app.adapters.voice.elevenlabs_voice_webhook_adapter import (
 from app.clients.elevenlabs.elevenlabs_client import ElevenLabsClient
 from app.clients.meta.meta_graph_client import MetaGraphClient
 from app.clients.telegram.telegram_bot_client import TelegramBotClient
+from app.facilitators.jobs.job_queue_facilitator import JobQueueFacilitator
 from app.registries.limits.request_rate_limit_registry import RequestRateLimitRegistry
 from app.registries.localization.language_registry import LanguageRegistry
 from app.repositories.assistant_repositories import AssistantVersionRepository
@@ -29,16 +30,17 @@ from app.repositories.business_repositories import (
     BusinessRepository,
     ChannelRepository,
 )
-from app.repositories.channel_repositories import (
-    ChannelMessageReceiptRepository,
-    ManagerTelegramLinkRepository,
-)
+from app.repositories.channel_repositories import ManagerTelegramLinkRepository
 from app.repositories.compliance_repositories import AuditLogRepository
 from app.repositories.conversation_repositories import (
     CallRepository,
     ContactRepository,
     ConversationRepository,
     MessageRepository,
+)
+from app.repositories.delivery_repositories import (
+    InboundEventRepository,
+    OutboundMessageRepository,
 )
 from app.repositories.knowledge_repositories import ScheduleExceptionRepository
 from app.repositories.user_repositories import UserRepository
@@ -47,7 +49,6 @@ from app.schemas.domain.assistants import AssistantVersionDocument
 from app.schemas.domain.billing import UsageEventDocument
 from app.schemas.domain.bookings import BookingDocument, LeadDocument
 from app.schemas.domain.businesses import BusinessDocument
-from app.schemas.domain.channel_receipts import ChannelMessageReceiptDocument
 from app.schemas.domain.channels import ChannelDocument
 from app.schemas.domain.compliance import AuditLogEntryDocument
 from app.schemas.domain.contacts import ContactDocument
@@ -57,7 +58,9 @@ from app.schemas.domain.conversations import (
     MessageDocument,
 )
 from app.schemas.domain.handoffs import HandoffDocument
+from app.schemas.domain.inbound_events import InboundEventDocument
 from app.schemas.domain.manager_links import ManagerTelegramLinkDocument
+from app.schemas.domain.outbound_messages import OutboundMessageDocument
 from app.schemas.domain.profiles import BusinessProfileDocument
 from app.schemas.domain.resources import ScheduleExceptionDocument
 from app.schemas.domain.users import UserDocument
@@ -74,6 +77,7 @@ from tests.channels.channels_fakes import (
 from tests.channels.channels_settings import build_settings
 from tests.channels.recording_transport import RecordingTransport
 from tests.channels.scripted_customer_pipeline import ScriptedCustomerPipeline
+from tests.platform.worker_fakes import JobStores, build_job_stores
 
 
 class ChannelsInfrastructure:
@@ -122,8 +126,19 @@ class ChannelsInfrastructure:
         self.assistant_version_repo = AssistantVersionRepository(
             InMemoryDocumentCollectionAdapter(AssistantVersionDocument)
         )
-        self.receipt_repo = ChannelMessageReceiptRepository(
-            InMemoryDocumentCollectionAdapter(ChannelMessageReceiptDocument)
+        self.inbound_event_collection = InMemoryDocumentCollectionAdapter(
+            InboundEventDocument
+        )
+        self.outbound_message_collection = InMemoryDocumentCollectionAdapter(
+            OutboundMessageDocument
+        )
+        self.inbound_event_repo = InboundEventRepository(self.inbound_event_collection)
+        self.outbound_message_repo = OutboundMessageRepository(
+            self.outbound_message_collection
+        )
+        self.jobs: JobStores = build_job_stores()
+        self.job_queue = JobQueueFacilitator(
+            self.jobs.job_repo, self.wall_clock, self.jobs.job_wakeup
         )
         self.link_repo = ManagerTelegramLinkRepository(
             InMemoryDocumentCollectionAdapter(ManagerTelegramLinkDocument)

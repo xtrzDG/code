@@ -1,3 +1,5 @@
+import hashlib
+
 from typed_time_provider import Microseconds, WallClock
 
 from app.contracts.jobs import JobQueueFacilitatorContract
@@ -16,6 +18,9 @@ from app.use_cases.channels.inbox.inbox_queue import store_and_queue
 from app.utilities.deliveries.delivery_jobs import PROCESS_POST_CALL_JOB
 from app.utilities.deliveries.delivery_keys import derive_inbound_event_id
 
+# Reports of one call are told apart by a digest of their body.
+REPORT_DIGEST_LENGTH: int = 16
+
 
 class StorePostCallReportUseCase(
     UseCaseContract[VerifiedPostCallReport, PostCallWebhookOutcome]
@@ -23,8 +28,10 @@ class StorePostCallReportUseCase(
     """
     Keep a verified finished-call report in the inbox and queue
     `process_post_call` (the worker stores the call, bills it and confirms
-    a booking to the caller). A report the platform delivered before is a
-    duplicate and is not processed again.
+    a booking to the caller). The same report delivered again is a
+    duplicate and is not processed again; a changed report of the same
+    call is processed (the post-call flow updates the stored call without
+    billing it twice).
     """
 
     def __init__(
@@ -46,7 +53,10 @@ class StorePostCallReportUseCase(
             ) from error
 
         now: Microseconds = self._wall_clock.now_unix()
-        provider_message_id = ProviderMessageId(str(input_data.report.provider_call_id))
+        provider_message_id = ProviderMessageId(
+            f"{input_data.report.provider_call_id}:"
+            f"{hashlib.sha256(input_data.body).hexdigest()[:REPORT_DIGEST_LENGTH]}"
+        )
         event = InboundEventDocument(
             id=derive_inbound_event_id(None, ChannelKind.PHONE, provider_message_id),
             kind=InboundEventKind.VOICE_POST_CALL,

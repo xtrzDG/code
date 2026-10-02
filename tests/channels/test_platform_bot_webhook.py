@@ -18,7 +18,7 @@ class TestPlatformBotWebhook:
         response = setup.send_to_bot(f"/start {code}")
 
         assert response.status_code == 200
-        assert response.json() == {"result": "linked"}
+        assert response.json() == {"result": "queued"}
         [manager] = setup.stored_business().manager_contacts
         assert manager.channel is ManagerContactChannel.TELEGRAM
         assert manager.address == str(STAFF_CHAT_ID)
@@ -38,8 +38,8 @@ class TestPlatformBotWebhook:
         second_code = setup.create_link({"name": "Nino B."}).json()["code"]
         relinked = setup.send_to_bot(f"/start {second_code.lower()}")
 
-        assert reused.json() == {"result": "rejected_code"}
-        assert relinked.json() == {"result": "linked"}
+        assert reused.json() == relinked.json() == {"result": "queued"}
+        assert setup.replies()[1].startswith("This code is invalid or has expired.")
         assert [
             contact.name for contact in setup.stored_business().manager_contacts
         ] == ["Nino B."]
@@ -59,7 +59,7 @@ class TestPlatformBotWebhook:
             expired.json()["result"],
             unknown.json()["result"],
             malformed.json()["result"],
-        } == {"rejected_code"}
+        } == {"queued"}
         replies = setup.replies()
         assert replies[0].startswith("Код недійсний")
         assert replies[1].startswith("הקוד אינו תקף")
@@ -73,9 +73,9 @@ class TestPlatformBotWebhook:
         bare_start = setup.send_to_bot("/start", language_code="kk")
         unknown_language = setup.send_to_bot("/help", language_code="tlh")
 
-        assert plain.json() == {"result": "instructions_sent"}
-        assert bare_start.json() == {"result": "instructions_sent"}
-        assert unknown_language.json() == {"result": "instructions_sent"}
+        assert plain.json() == {"result": "queued"}
+        assert bare_start.json() == {"result": "queued"}
+        assert unknown_language.json() == {"result": "queued"}
         replies = setup.replies()
         assert replies[0].startswith("Olá!")
         assert replies[1].startswith("Сәлеметсіз бе!")
@@ -107,7 +107,7 @@ class TestPlatformBotWebhook:
 
         response = setup.send_to_bot(f"/start {code}")
 
-        assert response.json() == {"result": "contact_limit_reached"}
+        assert response.json() == {"result": "queued"}
         assert setup.replies()[-1].startswith("У «Funicular VR» уже максимальное")
         [link] = setup.testbed.link_repo.list_by_business(setup.business.id)
         assert link.used_at is None
@@ -133,5 +133,5 @@ class TestPlatformBotWebhook:
             status_code=403,
         )
 
-        assert setup.send_to_bot(f"/start {code}").json() == {"result": "linked"}
+        assert setup.send_to_bot(f"/start {code}").json() == {"result": "queued"}
         assert len(setup.stored_business().manager_contacts) == 1

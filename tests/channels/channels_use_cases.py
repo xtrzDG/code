@@ -14,9 +14,6 @@ from app.use_cases.channels.connection.connect_channel_use_case import (
 from app.use_cases.channels.create_telegram_link_use_case import (
     CreateTelegramLinkUseCase,
 )
-from app.use_cases.channels.deliver_channel_reply_use_case import (
-    DeliverChannelReplyUseCase,
-)
 from app.use_cases.channels.disable_channel_use_case import DisableChannelUseCase
 from app.use_cases.channels.handle_platform_bot_update_use_case import (
     HandlePlatformBotUpdateUseCase,
@@ -61,30 +58,14 @@ class ChannelsUseCases(ChannelsInfrastructure):
             self.usage_event_repo,
             self.wall_clock,
         )
-        self.deliver_reply = DeliverChannelReplyUseCase(
-            self.telegram_adapter,
-            self.whatsapp_adapter,
-            self.messenger_adapter,
-            self.instagram_adapter,
-            self.usage_event_repo,
-            self.channel_repo,
-            self.wall_clock,
-        )
         self.receive_telegram_webhook = ReceiveTelegramWebhookUseCase(
-            self.channel_repo,
-            self.secret_cipher,
-            self.telegram_adapter,
-            self.receipt_repo,
-            self.wall_clock,
+            self.channel_repo, self.secret_cipher, self.telegram_adapter
         )
         self.receive_meta_webhook = ReceiveMetaWebhookUseCase(
             self.channel_repo,
-            self.secret_cipher,
             self.whatsapp_adapter,
             self.messenger_adapter,
             self.instagram_adapter,
-            self.receipt_repo,
-            self.wall_clock,
         )
         self.connect_channel = ConnectChannelUseCase(
             self.authorize_business_access,

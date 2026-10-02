@@ -65,8 +65,9 @@ class SendOutboundMessageUseCase(
     def run(self, input_data: OutboundMessageDocument) -> OutboundAttempt:
         delivered: int = int(input_data.delivered_parts)
         provider_message_id: ProviderMessageId | None = input_data.provider_message_id
+        route: OutboundRoute | None = None
         try:
-            route: OutboundRoute = self._route(input_data)
+            route = self._route(input_data)
             for part in route.parts[delivered:]:
                 provider_message_id = route.send_part(part) or provider_message_id
                 delivered += 1
@@ -74,6 +75,7 @@ class SendOutboundMessageUseCase(
             self._meter(input_data, delivered)
             return OutboundAttempt(
                 message=input_data,
+                channel=None if route is None else route.channel,
                 delivered_parts=DeliveredMessageCount(delivered),
                 provider_message_id=provider_message_id,
                 failure=classify_delivery_error(error),
@@ -85,6 +87,7 @@ class SendOutboundMessageUseCase(
         self._meter(input_data, delivered)
         return OutboundAttempt(
             message=input_data,
+            channel=route.channel,
             delivered_parts=DeliveredMessageCount(delivered),
             provider_message_id=provider_message_id,
             attempted_at=self._wall_clock.now_unix(),
