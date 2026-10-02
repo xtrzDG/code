@@ -41,7 +41,9 @@ class BrokenConfigApi extends FakeWidgetApi {
   }
 }
 
-test("a failing chat configuration is reported with its status only", async ({ page }) => {
+test("a failing chat configuration is reported with its status only", async ({ page, consoleErrors }) => {
+  // The browser itself logs the failed request.
+  consoleErrors.allow(/status of 503/);
   const api = new BrokenConfigApi({ status: 503, body: { error: "unavailable" } });
   await serveSite(page.context(), api);
   await page.goto(`${SITE}/`);
