@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useState, type FormEvent } from "react";
 
-import { useCountries } from "@/api/catalog";
 import { api } from "@/api/client";
 import { useApiMutation } from "@/api/hooks";
 import { useBusiness } from "@/components/business/BusinessContext";
@@ -11,7 +10,6 @@ import { CHANNEL_LABELS, CUSTOMER_CHANNELS } from "@/components/insights/labels"
 import type { BookingResult, ChannelKind, ManualBookingBody, ResourceView } from "@/components/insights/types";
 import { Alert, Button, Field, Input, Select, Textarea } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
-import { countryFlag, countryName, formatCallingCode } from "@/lib/countries";
 import { businessPath } from "@/lib/navigation";
 
 import {
@@ -22,7 +20,8 @@ import {
 } from "../_lib/manualBooking";
 import { BOOKING_REFUSAL_MESSAGES } from "../_lib/bookingRefusals";
 import { CustomerLanguageSelect } from "./CustomerLanguageSelect";
-import { SlotPicker } from "./SlotPicker";
+import { BookingCustomerFields } from "./BookingCustomerFields";
+import { BookingTimingFields } from "./BookingTimingFields";
 
 /**
  * A booking taken by phone or in person (POST …/bookings). The API checks
@@ -45,9 +44,8 @@ export function BookingForm({
   initialValues?: Partial<BookingFormValues>;
   conversationId?: string;
 }) {
-  const { t, locale } = useI18n();
+  const { t } = useI18n();
   const { business } = useBusiness();
-  const countries = useCountries();
   const businessId = business.id;
   const activeResources = resources.filter((resource) => resource.is_active);
 
@@ -94,18 +92,6 @@ export function BookingForm({
     }
   };
 
-  const country = countries.data?.countries.find((item) => item.country_code === values.country);
-  const phoneHint = t("bookings.form.phoneHint", {
-    country: [
-      countryFlag(values.country),
-      countryName(values.country, locale),
-      country ? `(${formatCallingCode(country.calling_code)})` : null,
-    ]
-      .filter(Boolean)
-      .join(" "),
-  });
-  const partySize = Number(values.partySize);
-  const nights = Number(values.nights);
 
   return (
     <form onSubmit={submit} noValidate className="space-y-5">
@@ -120,57 +106,7 @@ export function BookingForm({
           </Link>
         </Alert>
       ) : null}
-      <div className="grid gap-4 sm:grid-cols-2">
-        <Field label={t("bookings.form.contactName")} error={errors.contactName && t(errors.contactName)} required>
-          {(control) => (
-            <Input
-              {...control}
-              dir="auto"
-              autoComplete="off"
-              value={values.contactName}
-              maxLength={200}
-              onChange={(event) => set("contactName", event.target.value)}
-            />
-          )}
-        </Field>
-        <Field
-          label={t("bookings.form.phone")}
-          hint={phoneHint}
-          error={errors.phone && t(errors.phone)}
-          optionalLabel={t("common.optional")}
-        >
-          {(control) => (
-            <div className="flex gap-2">
-              <Select
-                aria-label={t("bookings.form.phoneCountry")}
-                value={values.country}
-                onChange={(event) => set("country", event.target.value)}
-                className="w-28 shrink-0"
-              >
-                {(countries.data?.countries ?? []).length === 0 ? (
-                  <option value={values.country}>{countryFlag(values.country)}</option>
-                ) : (
-                  (countries.data?.countries ?? []).map((item) => (
-                    <option key={item.country_code} value={item.country_code}>
-                      {`${countryFlag(item.country_code)} ${formatCallingCode(item.calling_code)} ${countryName(item.country_code, locale)}`}
-                    </option>
-                  ))
-                )}
-              </Select>
-              <Input
-                {...control}
-                type="tel"
-                dir="ltr"
-                inputMode="tel"
-                autoComplete="off"
-                value={values.phone}
-                maxLength={40}
-                onChange={(event) => set("phone", event.target.value)}
-              />
-            </div>
-          )}
-        </Field>
-      </div>
+      <BookingCustomerFields values={values} errors={errors} set={set} />
 
       <div className="grid gap-4 sm:grid-cols-3">
         <Field label={t("bookings.form.date")} error={errors.date && t(errors.date)} required>
@@ -205,57 +141,21 @@ export function BookingForm({
         </Field>
       </div>
 
-      <div className="space-y-3 rounded-xl border border-line bg-surface-muted/50 p-4">
-        <div className="grid gap-4 sm:grid-cols-3">
-          {unit === "night" ? (
-            <Field label={t("bookings.form.nights")} error={errors.nights && t(errors.nights)} required>
-              {(control) => (
-                <Input
-                  {...control}
-                  type="number"
-                  inputMode="numeric"
-                  min={1}
-                  max={365}
-                  value={values.nights}
-                  onChange={(event) => set("nights", event.target.value)}
-                />
-              )}
-            </Field>
-          ) : (
-            <Field label={t("bookings.form.time")} error={errors.time && t(errors.time)} required>
-              {(control) => (
-                <Input
-                  {...control}
-                  type="time"
-                  step={300}
-                  value={values.time}
-                  onChange={(event) => set("time", event.target.value)}
-                />
-              )}
-            </Field>
-          )}
-        </div>
-        <SlotPicker
-          request={{
-            date: values.date,
-            partySize: Number.isInteger(partySize) && partySize > 0 ? partySize : null,
-            resourceId: values.resourceId || null,
-            time: unit === "night" ? null : values.time || null,
-            nights: unit === "night" && Number.isInteger(nights) && nights > 0 ? nights : null,
-            isStay: unit === "night",
-          }}
-          selected={{ time: values.time || null, resourceId: values.resourceId || null }}
-          onPick={(slot) => {
-            setValues((current) => ({
-              ...current,
-              time: slot.time ?? current.time,
-              resourceId: slot.resource_id,
-              nights: slot.nights ? String(slot.nights) : current.nights,
-            }));
-            setErrors((current) => ({ ...current, time: undefined, nights: undefined }));
-          }}
-        />
-      </div>
+      <BookingTimingFields
+        values={values}
+        errors={errors}
+        unit={unit}
+        set={set}
+        onPick={(slot) => {
+          setValues((current) => ({
+            ...current,
+            time: slot.time ?? current.time,
+            resourceId: slot.resource_id,
+            nights: slot.nights ? String(slot.nights) : current.nights,
+          }));
+          setErrors((current) => ({ ...current, time: undefined, nights: undefined }));
+        }}
+      />
 
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label={t("bookings.form.source")}>
