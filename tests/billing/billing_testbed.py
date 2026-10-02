@@ -165,7 +165,7 @@ from app.use_cases.billing.issue_due_invoices_use_case import (
 from app.use_cases.billing.open_subscription_use_case import (
     OpenSubscriptionUseCase,
 )
-from app.use_cases.billing.process_payment_webhook_use_case import (
+from app.use_cases.billing.payment_webhook.process_payment_webhook_use_case import (
     ProcessPaymentWebhookUseCase,
 )
 from app.use_cases.billing.start_checkout_use_case import StartCheckoutUseCase
