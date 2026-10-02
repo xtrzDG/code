@@ -185,6 +185,7 @@ def test_openapi_documents_bodies_read_by_the_strict_parser() -> None:
         "country_hint",
         "locale",
         "preferred_delivery_channel",
+        "turnstile_token",
     }
     settings_body = paths["/v1/businesses/{business_id}"]["patch"]["requestBody"]
     settings_schema = settings_body["content"]["application/json"]["schema"]

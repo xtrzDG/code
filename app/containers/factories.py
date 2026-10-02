@@ -18,6 +18,9 @@ from app.clients.google.google_calendar_redirect import (
 from app.clients.langfuse.langfuse_ingestion_client import LangfuseIngestionClient
 from app.clients.meta.whatsapp_authentication_client import WhatsAppAuthenticationClient
 from app.clients.telegram.telegram_gateway_client import TelegramGatewayClient
+from app.clients.turnstile.turnstile_verification_client import (
+    TurnstileVerificationClient,
+)
 from app.clients.twilio.twilio_messaging_client import TwilioMessagingClient
 from app.contracts.channel_clients import ElevenLabsApiClientContract
 from app.contracts.facilitators import OtpDeliveryFacilitatorContract
@@ -186,6 +189,17 @@ def build_smtp_email_client(settings: AppSettings) -> SmtpEmailClient | None:
         username=settings.smtp_username,
         password=settings.smtp_password,
     )
+
+
+def build_turnstile_verification_client(
+    settings: AppSettings,
+) -> TurnstileVerificationClient | None:
+    """Turnstile siteverify client when both keys are set, else None."""
+
+    if settings.turnstile_site_key is None or settings.turnstile_secret_key is None:
+        return None
+
+    return TurnstileVerificationClient(secret_key=settings.turnstile_secret_key)
 
 
 def build_otp_delivery_facilitator(

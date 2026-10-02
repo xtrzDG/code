@@ -10,6 +10,7 @@ from app.containers.transformers import TransformersContainer
 from app.containers.utilities import UtilitiesContainer
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.domain.businesses import BusinessDocument
+from app.schemas.domain.users import OtpChallengeDocument
 from app.schemas.dto.access import BusinessAccessRequest
 from app.schemas.dto.businesses import (
     BusinessQuery,
@@ -20,6 +21,7 @@ from app.schemas.dto.businesses import (
     RemoveMemberCommand,
 )
 from app.schemas.dto.login_options import LoginOptionsQuery, LoginOptionsView
+from app.schemas.dto.login_protection import SendLoginCodeCommand
 from app.schemas.dto.users import (
     CurrentUserView,
     LoginSessionView,
@@ -45,6 +47,9 @@ from app.use_cases.users.authenticate_user_use_case import AuthenticateUserUseCa
 from app.use_cases.users.get_current_user_use_case import GetCurrentUserUseCase
 from app.use_cases.users.get_login_options_use_case import GetLoginOptionsUseCase
 from app.use_cases.users.logout_use_case import LogoutUseCase
+from app.use_cases.users.otp_login.send_login_code_use_case import (
+    SendLoginCodeUseCase,
+)
 from app.use_cases.users.otp_login.start_otp_login_use_case import StartOtpLoginUseCase
 from app.use_cases.users.update_current_user_use_case import UpdateCurrentUserUseCase
 from app.use_cases.users.verify_otp_login_use_case import VerifyOtpLoginUseCase
@@ -77,18 +82,30 @@ class AccountUseCasesContainer(containers.DeclarativeContainer):
     )
 
     # --- Sign-in and the current user.
+    send_login_code_use_case: Factory[
+        UseCaseContract[SendLoginCodeCommand, OtpChallengeDocument]
+    ] = Factory(
+        SendLoginCodeUseCase,
+        otp_challenge_repo=repositories.otp_challenge_repo,
+        otp_delivery_facilitator=facilitators.otp_delivery_facilitator,
+        app_settings=config.app_settings,
+        wall_clock=time_provider.microsecond_wall_clock,
+        send_lock_registry=registries.login_code_send_lock_registry,
+        bot_check=facilitators.bot_check_facilitator,
+        cap_alerts=facilitators.login_code_cap_alerts,
+    )
     start_otp_login_use_case: Factory[
         UseCaseContract[StartOtpLoginCommand, OtpChallengeView]
     ] = Factory(
         StartOtpLoginUseCase,
-        otp_challenge_repo=repositories.otp_challenge_repo,
         phone_number_parser=utilities.phone_number_parser,
         country_registry=registries.country_registry,
         language_registry=registries.language_registry,
         otp_delivery_facilitator=facilitators.otp_delivery_facilitator,
         app_settings=config.app_settings,
-        wall_clock=time_provider.microsecond_wall_clock,
-        send_lock_registry=registries.login_code_send_lock_registry,
+        user_repo=repositories.user_repo,
+        high_cost_phone_registry=registries.high_cost_phone_number_registry,
+        send_login_code=send_login_code_use_case,
     )
     get_login_options_use_case: Factory[
         UseCaseContract[LoginOptionsQuery, LoginOptionsView]

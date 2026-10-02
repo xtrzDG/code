@@ -35,6 +35,20 @@ class OtpCode(BaseConstrainedTypedString):
     pattern = r"^[0-9]{6}$"
 
 
+class TurnstileAction(BaseConstrainedTypedString):
+    """
+    The action a Turnstile widget was rendered for; Cloudflare echoes it in
+    the verification, so a token from another form is refused.
+
+    Example:
+        action = TurnstileAction("login")
+    """
+
+    min_length = 1
+    max_length = 32
+    pattern = r"^[A-Za-z0-9_\-]+$"
+
+
 class TurnstileResponseToken(BaseConstrainedTypedString):
     """
     The one-time answer of a passed Cloudflare Turnstile check (the

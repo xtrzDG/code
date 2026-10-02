@@ -15,6 +15,9 @@ from app.registries.localization.call_forwarding_guide_registry import (
     CallForwardingGuideRegistry,
 )
 from app.registries.localization.country_registry import CountryRegistry
+from app.registries.localization.high_cost_phone_number_registry import (
+    HighCostPhoneNumberRegistry,
+)
 from app.registries.localization.language_registry import LanguageRegistry
 from app.registries.locks.business_lock_registry import BusinessLockRegistry
 from app.registries.locks.login_code_send_lock_registry import (
@@ -69,6 +72,11 @@ class RegistriesContainer(containers.DeclarativeContainer):
     # One lock for reserving login code sends (the hourly limits).
     login_code_send_lock_registry: Singleton[LoginCodeSendLockRegistry] = Singleton(
         LoginCodeSendLockRegistry
+    )
+    # Numbers a login code is never sent to (premium rate, satellite, ...).
+    high_cost_phone_number_registry: Singleton[HighCostPhoneNumberRegistry] = Singleton(
+        HighCostPhoneNumberRegistry,
+        denied_prefixes=config.app_settings.provided.otp_denied_phone_prefixes,
     )
     # Development demo businesses (SEED_DEMO_DATA), built for the moment of
     # seeding.

@@ -88,6 +88,7 @@ def build_users_router(
                 country_hint=body.country_hint,
                 locale=body.locale,
                 preferred_delivery_channel=body.preferred_delivery_channel,
+                turnstile_token=body.turnstile_token,
                 client_ip_address=read_client_ip_address(request),
             )
         )

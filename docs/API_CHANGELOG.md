@@ -11,6 +11,22 @@ Kinds of change: **Added**, **Changed** (additive), **Deprecated** (with
 sunset date), **Removed** and **Breaking** (only with the `api-breaking`
 label and a migration path).
 
+## 2026-10-02 — login abuse protection
+
+Spec: `c9b16be0e997d710`
+
+- **Added** `turnstile_token` to `StartOtpLoginRequest`
+  (`POST /v1/auth/otp/start`): the answer of the Cloudflare Turnstile
+  check. A risky code request (a phone or e-mail of no verified user, a
+  busy client address, half a platform cap used, a high-risk country)
+  answers 403 `access_denied` with the reason `challenge_required`, whose
+  details hold the widget's site key, while the check is on; the client
+  shows the check and sends the request again with its token. High-cost
+  numbers (premium rate, shared cost, satellite) answer 422.
+- **Changed** `POST /v1/auth/otp/verify` answers 429 `rate_limited` with
+  `Retry-After` after 20 checks from one client network or 10 checks of
+  one challenge in ten minutes.
+
 ## 2026-10-02 — inbox and outbox for customer messages
 
 Spec: `8bf6a7c2e210906f`

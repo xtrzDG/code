@@ -5703,6 +5703,8 @@ export interface operations {
                     /** Phone Number */
                     phone_number?: string | null;
                     preferred_delivery_channel?: ("sms" | "whatsapp" | "telegram" | "email") | null;
+                    /** Turnstile Token */
+                    turnstile_token?: string | null;
                 };
             };
         };

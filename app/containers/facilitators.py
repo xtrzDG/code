@@ -29,6 +29,12 @@ from app.facilitators.observability.sentry_error_reporting_facilitator import (
 from app.facilitators.staff.manager_broadcast_facilitator import (
     ManagerBroadcastFacilitator,
 )
+from app.facilitators.users.login_code_cap_alert_facilitator import (
+    LoginCodeCapAlertFacilitator,
+)
+from app.facilitators.users.turnstile_bot_check_facilitator import (
+    TurnstileBotCheckFacilitator,
+)
 
 
 class FacilitatorsContainer(containers.DeclarativeContainer):
@@ -59,6 +65,19 @@ class FacilitatorsContainer(containers.DeclarativeContainer):
         whatsapp_client=clients.whatsapp_authentication_client,
         email_client=clients.smtp_email_client,
         localized_text_resolver=utilities.localized_text_resolver,
+    )
+    # Login abuse protection: the Turnstile check of risky code requests
+    # (off without TURNSTILE_* keys) and the alert when a cap refuses sends.
+    bot_check_facilitator: Singleton[TurnstileBotCheckFacilitator] = Singleton(
+        TurnstileBotCheckFacilitator,
+        verification_client=clients.turnstile_verification_client,
+        site_key=config.app_settings.provided.turnstile_site_key,
+    )
+    login_code_cap_alerts: Singleton[LoginCodeCapAlertFacilitator] = Singleton(
+        LoginCodeCapAlertFacilitator,
+        email_client=clients.smtp_email_client,
+        platform_admin_emails=config.app_settings.provided.platform_admin_emails,
+        wall_clock=time_provider.microsecond_wall_clock,
     )
     # The durable job queue of the background workers.
     job_queue_facilitator: Singleton[JobQueueFacilitator] = Singleton(

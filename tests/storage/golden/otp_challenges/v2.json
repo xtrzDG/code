@@ -1,0 +1,18 @@
+{
+  "code_hash": "Sample OtpCodeHash",
+  "country_code": "GE",
+  "created_at": 1790000000000000,
+  "delivery_channel": "sms",
+  "email": "owner@example.com",
+  "expires_at": 1790000000000000,
+  "failed_attempts": 1,
+  "id": "otp_challenge_2365fbda-aada-406b-8179-1df76a458a04",
+  "is_consumed": true,
+  "is_verified_destination": true,
+  "locale": "ka",
+  "login_method": "phone",
+  "phone_number": "+995599123456",
+  "requested_from_ip": "203.0.113.7",
+  "schema_version": "2",
+  "updated_at": 1790000000000000
+}
