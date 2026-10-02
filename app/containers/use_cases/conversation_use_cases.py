@@ -45,7 +45,7 @@ from app.use_cases.conversations.record_assistant_reply_use_case import (
 from app.use_cases.conversations.record_voice_tool_call_use_case import (
     RecordVoiceToolCallUseCase,
 )
-from app.use_cases.conversations.run_assistant_tool_use_case import (
+from app.use_cases.conversations.tools.run_assistant_tool_use_case import (
     RunAssistantToolUseCase,
 )
 from app.use_cases.conversations.turns.prepare_conversation_turn_use_case import (
