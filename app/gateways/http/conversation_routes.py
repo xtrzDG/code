@@ -5,6 +5,11 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, Query, Request, Response
 
 from app.contracts.operator_contract import OperatorContract
+from app.gateways.http.byte_ranges import (
+    ByteRange,
+    read_byte_range,
+    resolve_byte_range,
+)
 from app.gateways.http.paging_query import parse_page_request
 from app.gateways.http.strict_request_parsing import (
     build_json_body_dependency,
@@ -45,7 +50,8 @@ read_test_chat_body = build_json_body_dependency(OwnerTestChatRequest)
 read_rating_body = build_json_body_dependency(ConversationRatingRequest)
 read_staff_message_body = build_json_body_dependency(StaffMessageRequest)
 # A recording is personal data: no HTTP cache keeps it (shared proxies and
-# CDNs least of all); the browser's player buffers it in memory.
+# CDNs least of all); the browser's player buffers it in memory and asks for
+# parts of it (byte ranges) while it plays and seeks.
 RECORDING_RESPONSE_HEADERS: dict[str, str] = {
     "Cache-Control": "private, no-store",
     "X-Content-Type-Options": "nosniff",
@@ -54,7 +60,13 @@ RECORDING_OPENAPI_RESPONSES: dict[int | str, dict[str, object]] = {
     200: {
         "description": "The call recording (audio/mpeg from the voice platform).",
         "content": {"audio/*": {"schema": {"type": "string", "format": "binary"}}},
-    }
+    },
+    206: {
+        "description": "The part of the recording a `Range: bytes=…` header asks "
+        "for (media players ask for parts while they play and seek).",
+        "content": {"audio/*": {"schema": {"type": "string", "format": "binary"}}},
+    },
+    416: {"description": "The requested range lies outside the recording."},
 }
 TRUE_FLAGS: frozenset[str] = frozenset({"1", "true", "yes"})
 FALSE_FLAGS: frozenset[str] = frozenset({"0", "false", "no"})
@@ -217,19 +229,22 @@ def build_conversation_router(
         call_id: str,
         user_id: Annotated[UserId, Depends(current_user)],
     ) -> Response:
+        requested_range: ByteRange | None = read_byte_range(
+            request.headers.get("range"),
+            request.headers.get("if-range"),
+        )
         audio: RecordingAudio = get_call_recording_operator.operate(
             CallRecordingQuery(
                 user_id=user_id,
                 business_id=parse_path_identifier(business_id, BusinessId, "Business"),
                 call_id=parse_path_identifier(call_id, CallId, "Call"),
                 client_ip_address=read_client_ip_address(request),
+                starts_playback=(
+                    requested_range is None or requested_range.starts_at_beginning()
+                ),
             )
         )
-        return Response(
-            content=audio.content,
-            media_type=str(audio.media_type),
-            headers=RECORDING_RESPONSE_HEADERS,
-        )
+        return build_recording_response(audio, requested_range)
 
     @router.post(
         "/v1/businesses/{business_id}/test-chat",
@@ -249,6 +264,45 @@ def build_conversation_router(
         )
 
     return router
+
+
+def build_recording_response(
+    audio: RecordingAudio,
+    requested_range: ByteRange | None,
+) -> Response:
+    """
+    The whole recording, or the one range a media player asked for (206),
+    or 416 for a range outside it. Every answer says ranges are served:
+    Safari and iOS play only media that supports them, and other browsers
+    can then seek.
+    """
+
+    total_length: int = len(audio.content)
+    headers: dict[str, str] = {**RECORDING_RESPONSE_HEADERS, "Accept-Ranges": "bytes"}
+    if requested_range is None:
+        return Response(
+            content=audio.content,
+            media_type=str(audio.media_type),
+            headers=headers,
+        )
+
+    span: tuple[int, int] | None = resolve_byte_range(requested_range, total_length)
+    if span is None:
+        return Response(
+            status_code=416,
+            headers={**headers, "Content-Range": f"bytes */{total_length}"},
+        )
+
+    first_byte, last_byte = span
+    return Response(
+        content=audio.content[first_byte : last_byte + 1],
+        status_code=206,
+        media_type=str(audio.media_type),
+        headers={
+            **headers,
+            "Content-Range": f"bytes {first_byte}-{last_byte}/{total_length}",
+        },
+    )
 
 
 def parse_channel(raw_channel: str | None) -> ChannelKind | None:

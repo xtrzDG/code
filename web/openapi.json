@@ -13409,6 +13409,20 @@
             },
             "description": "The call recording (audio/mpeg from the voice platform)."
           },
+          "206": {
+            "content": {
+              "audio/*": {
+                "schema": {
+                  "format": "binary",
+                  "type": "string"
+                }
+              }
+            },
+            "description": "The part of the recording a `Range: bytes=…` header asks for (media players ask for parts while they play and seek)."
+          },
+          "416": {
+            "description": "The requested range lies outside the recording."
+          },
           "422": {
             "content": {
               "application/json": {

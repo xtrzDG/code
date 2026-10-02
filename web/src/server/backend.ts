@@ -96,7 +96,8 @@ export function sanitizeRequestId(value: string | null | undefined): string {
   return crypto.randomUUID();
 }
 
-const FORWARDED_REQUEST_HEADERS = ["accept", "content-type", "user-agent"] as const;
+/** `range` and `if-range`: media players ask for parts of a recording. */
+const FORWARDED_REQUEST_HEADERS = ["accept", "content-type", "user-agent", "range", "if-range"] as const;
 
 /**
  * The X-Forwarded-For hops the cabinet's own proxies added: the right-most
@@ -162,6 +163,9 @@ const FORWARDED_RESPONSE_HEADERS = [
   "cache-control",
   "retry-after",
   "x-content-type-options",
+  // A media player seeks and (Safari, iOS) plays only with byte ranges.
+  "accept-ranges",
+  "content-range",
   REQUEST_ID_HEADER,
 ] as const;
 

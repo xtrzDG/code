@@ -86,6 +86,25 @@ describe("BFF path and headers", () => {
     expect(pickResponseHeaders(json, "r5").get("content-length")).toBeNull();
   });
 
+  it("passes byte ranges of a recording both ways", () => {
+    const request = buildUpstreamHeaders(new Headers({ range: "bytes=0-1", "if-range": '"v1"' }), { requestId: "r6" });
+    expect(request.get("range")).toBe("bytes=0-1");
+    expect(request.get("if-range")).toBe('"v1"');
+
+    const partial = pickResponseHeaders(
+      new Headers({
+        "content-type": "audio/mpeg",
+        "content-range": "bytes 0-1/10",
+        "accept-ranges": "bytes",
+        "content-length": "2",
+      }),
+      "r7",
+    );
+    expect(partial.get("content-range")).toBe("bytes 0-1/10");
+    expect(partial.get("accept-ranges")).toBe("bytes");
+    expect(partial.get("content-length")).toBe("2");
+  });
+
   it("keeps sane request ids and replaces others", () => {
     expect(sanitizeRequestId("abc-123")).toBe("abc-123");
     expect(sanitizeRequestId("bad id\n")).not.toBe("bad id\n");

@@ -13,6 +13,9 @@ from app.adapters.llm.tracing_llm_adapter import TracingLlmAdapter
 from app.adapters.payments.flitt_payment_gateway_adapter import (
     FlittPaymentGatewayAdapter,
 )
+from app.adapters.recordings.cached_recording_storage_adapter import (
+    CachedRecordingStorageAdapter,
+)
 from app.adapters.recordings.local_recording_storage_adapter import (
     LocalRecordingStorageAdapter,
 )
@@ -501,10 +504,19 @@ class AdaptersContainer(containers.DeclarativeContainer):
     )
     # ElevenLabs keeps call audio in its own (EU) storage; other paths are
     # files of this server.
-    recording_storage: Singleton[ElevenLabsRecordingStorageAdapter] = Singleton(
-        ElevenLabsRecordingStorageAdapter,
-        elevenlabs_client=clients.elevenlabs_client,
-        fallback=local_recording_storage,
+    platform_recording_storage: Singleton[ElevenLabsRecordingStorageAdapter] = (
+        Singleton(
+            ElevenLabsRecordingStorageAdapter,
+            elevenlabs_client=clients.elevenlabs_client,
+            fallback=local_recording_storage,
+        )
+    )
+    # A player asks for parts of a recording while it plays and seeks: keep
+    # a played one in memory for a few minutes instead of downloading it again.
+    recording_storage: Singleton[CachedRecordingStorageAdapter] = Singleton(
+        CachedRecordingStorageAdapter,
+        storage=platform_recording_storage,
+        wall_clock=time_provider.microsecond_wall_clock,
     )
 
     # --- Voice platform (ElevenLabs Agents).

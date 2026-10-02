@@ -6672,6 +6672,22 @@ export interface operations {
                     "audio/*": string;
                 };
             };
+            /** @description The part of the recording a `Range: bytes=…` header asks for (media players ask for parts while they play and seek). */
+            206: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "audio/*": string;
+                };
+            };
+            /** @description The requested range lies outside the recording. */
+            416: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
             /** @description Validation Error */
             422: {
                 headers: {

@@ -28,7 +28,9 @@ class GetCallRecordingUseCase(UseCaseContract[CallRecordingQuery, RecordingAudio
     conversation card (concept sections 7 and 8). The audio stays with the
     voice platform (ElevenLabs keeps it in the EU) or the recording storage
     and is read only when someone presses play; each playback is a view of
-    personal data and is written to the audit log (concept section 10).
+    personal data and is written to the audit log (concept section 10), once
+    (the parts a player asks for while it plays and seeks are not new
+    playbacks; access is checked for every one of them).
 
     A call of another business, a call without a recording (no consent,
     purged after the retention period, deleted with the contact's data) and
@@ -70,6 +72,10 @@ class GetCallRecordingUseCase(UseCaseContract[CallRecordingQuery, RecordingAudio
         audio: RecordingAudio | None = self._recording_storage.read(call.recording_path)
         if audio is None:
             raise NotFoundError(NO_RECORDING_MESSAGE)
+
+        if not input_data.starts_playback:
+            # A later part of a playback that is already in the audit log.
+            return audio
 
         now: Microseconds = self._wall_clock.now_unix()
         self._audit_log_repo.append(
