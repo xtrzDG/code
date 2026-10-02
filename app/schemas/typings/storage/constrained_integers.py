@@ -16,4 +16,21 @@ class DocumentQueryLimit(BaseConstrainedTypedInt):
     le = 10_000
 
 
+class DocumentSchemaVersionNumber(BaseConstrainedTypedInt):
+    """
+    Version of a stored document's shape within its collection: the number
+    in its `schema_version` ("1", "2", ...). Upcasters upgrade stored JSON
+    from one version to the next (`app/adapters/storage/document_upgrades.py`).
+    """
+
+    ge = 1
+
+
+class DocumentUpgradeBatchSize(BaseConstrainedTypedInt):
+    """How many stored documents one transaction of `migrate-documents` reads."""
+
+    ge = 1
+    le = 10_000
+
+
 # Keep abc order for all non example types, if possible.

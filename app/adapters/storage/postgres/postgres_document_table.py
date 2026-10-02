@@ -8,6 +8,7 @@ from base_pydantic_schemas import PersistentDocument
 from psycopg.rows import TupleRow
 from typed_time_provider import Microseconds, WallClock
 
+from app.adapters.storage.persisted_document_codec import PersistedDocumentCodec
 from app.adapters.storage.postgres.document_table_queries import (
     DocumentTableQueries,
     build_document_table_queries,
@@ -37,7 +38,9 @@ class PostgresDocumentTable[StoredDocument: PersistentDocument]:
     """
     Base of the Postgres document collection: the table's statements and
     lookup fields, one transaction per operation with the row-level
-    security scope applied, and the decoding of rows into fresh documents.
+    security scope applied, and the decoding of rows into fresh documents
+    (`PersistedDocumentCodec`: written strictly with the current schema
+    version, read back tolerantly and upcast).
     """
 
     def __init__(
@@ -50,7 +53,6 @@ class PostgresDocumentTable[StoredDocument: PersistentDocument]:
         isolation: CollectionIsolation,
         lookup_fields: Mapping[DocumentFieldPath, LookupFieldKind] | None = None,
     ) -> None:
-        self._document_type: type[StoredDocument] = document_type
         self._collection_name: DocumentCollectionName = collection_name
         self._connection_pool: PostgresConnectionPoolClient = connection_pool
         self._storage_scope: StorageScopeContract = storage_scope
@@ -59,6 +61,9 @@ class PostgresDocumentTable[StoredDocument: PersistentDocument]:
         self._platform_scope: StorageScope = StorageScope.platform_wide()
         self._queries: DocumentTableQueries = build_document_table_queries(
             collection_name
+        )
+        self._codec: PersistedDocumentCodec[StoredDocument] = PersistedDocumentCodec(
+            document_type, collection_name
         )
         self._lookup_fields: dict[DocumentFieldPath, LookupFieldKind] = (
             declared_lookup_fields(collection_name, document_type)
@@ -119,13 +124,13 @@ class PostgresDocumentTable[StoredDocument: PersistentDocument]:
         return (
             document_key,
             None if business_id is None else str(business_id),
-            document.model_dump_json(),
+            self._codec.encode(document),
             written_at,
             written_at,
         )
 
     def _decode(self, row: TupleRow) -> StoredDocument:
-        return self._document_type.model_validate_json(self._read_text(row))
+        return self._codec.decode(self._read_text(row))
 
     def _decode_all(self, rows: list[TupleRow]) -> list[StoredDocument]:
         return [self._decode(row) for row in rows]

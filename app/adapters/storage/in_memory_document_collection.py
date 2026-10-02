@@ -4,6 +4,7 @@ from collections.abc import Callable, Mapping, Sequence
 from base_pydantic_schemas import PersistentDocument
 
 from app.adapters.storage.in_memory_document_lookup import select_entries
+from app.adapters.storage.persisted_document_codec import PersistedDocumentCodec
 from app.contracts.document_store import DocumentCollectionAdapterContract
 from app.schemas.constants.storage import LookupFieldKind
 from app.schemas.dto.storage_queries import (
@@ -17,7 +18,10 @@ from app.schemas.typings.storage.constrained_integers import (
     DocumentCount,
     DocumentQueryLimit,
 )
-from app.schemas.typings.storage.constrained_strings import DocumentFieldPath
+from app.schemas.typings.storage.constrained_strings import (
+    DocumentCollectionName,
+    DocumentFieldPath,
+)
 from app.schemas.typings.storage.strings import DocumentFieldText
 from app.utilities.storage.document_lookup_fields import (
     catalog_name_of,
@@ -34,6 +38,8 @@ class InMemoryDocumentCollectionAdapter[StoredDocument: PersistentDocument](
 
     Documents are stored as JSON and validated on every read, so callers get
     independent instances and persistence-incompatible fields fail early.
+    Writing and reading go through the same `PersistedDocumentCodec` as
+    Postgres (current schema version stamped, tolerant upcasting reads).
     Data lives until the process restarts. Queries by field accept the same
     lookup fields as the Postgres collection (by default those the catalog
     declares for the document type), so a query without an index fails in
@@ -48,14 +54,18 @@ class InMemoryDocumentCollectionAdapter[StoredDocument: PersistentDocument](
         self._document_type: type[StoredDocument] = document_type
         self._serialized_documents: dict[str, str] = {}
         self._lock: threading.Lock = threading.Lock()
+        collection_name: DocumentCollectionName | None = catalog_name_of(document_type)
+        self._codec: PersistedDocumentCodec[StoredDocument] = PersistedDocumentCodec(
+            document_type, collection_name
+        )
         self._lookup_fields: dict[DocumentFieldPath, LookupFieldKind] = (
-            declared_lookup_fields(catalog_name_of(document_type), document_type)
+            declared_lookup_fields(collection_name, document_type)
             if lookup_fields is None
             else dict(lookup_fields)
         )
 
     def upsert(self, document_key: str, document: StoredDocument) -> None:
-        serialized_document: str = document.model_dump_json()
+        serialized_document: str = self._codec.encode(document)
         with self._lock:
             self._serialized_documents[document_key] = serialized_document
 
@@ -64,7 +74,7 @@ class InMemoryDocumentCollectionAdapter[StoredDocument: PersistentDocument](
         document_key: str,
         document: StoredDocument,
     ) -> IsDocumentInserted:
-        serialized_document: str = document.model_dump_json()
+        serialized_document: str = self._codec.encode(document)
         with self._lock:
             if document_key in self._serialized_documents:
                 return False
@@ -81,7 +91,7 @@ class InMemoryDocumentCollectionAdapter[StoredDocument: PersistentDocument](
         if serialized_document is None:
             return None
 
-        return self._document_type.model_validate_json(serialized_document)
+        return self._codec.decode(serialized_document)
 
     def list_all(self) -> list[StoredDocument]:
         with self._lock:
@@ -172,16 +182,14 @@ class InMemoryDocumentCollectionAdapter[StoredDocument: PersistentDocument](
             if stored is None:
                 return None
 
-            changed: StoredDocument | None = change(
-                self._document_type.model_validate_json(stored)
-            )
+            changed: StoredDocument | None = change(self._codec.decode(stored))
             if changed is None:
                 return None
 
-            serialized_document: str = changed.model_dump_json()
+            serialized_document: str = self._codec.encode(changed)
             self._serialized_documents[document_key] = serialized_document
 
-        return self._document_type.model_validate_json(serialized_document)
+        return self._codec.decode(serialized_document)
 
     def replace_if(
         self,
@@ -218,7 +226,7 @@ class InMemoryDocumentCollectionAdapter[StoredDocument: PersistentDocument](
 
     def _validate_all(self, serialized_documents: list[str]) -> list[StoredDocument]:
         return [
-            self._document_type.model_validate_json(serialized_document)
+            self._codec.decode(serialized_document)
             for serialized_document in serialized_documents
         ]
 

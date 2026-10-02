@@ -1,6 +1,7 @@
 from psycopg.rows import TupleRow
 from typed_time_provider import Microseconds
 
+from app.adapters.storage.persisted_document_codec import PersistedDocumentCodec
 from app.adapters.storage.postgres.job_claim_queries import (
     CLAIM_DUE,
     EXTEND_LEASES,
@@ -29,6 +30,7 @@ from app.schemas.dto.job_queue import (
 )
 from app.schemas.typings.platform.constrained_integers import ProcessedItemCount
 from app.schemas.typings.platform.prefixed_id import QueuedJobId
+from app.schemas.typings.storage.constrained_strings import DocumentCollectionName
 
 
 class PostgresQueuedJobClaimAdapter(QueuedJobClaimAdapterContract):
@@ -46,6 +48,9 @@ class PostgresQueuedJobClaimAdapter(QueuedJobClaimAdapterContract):
 
     def __init__(self, connection_pool: PostgresConnectionPoolClient) -> None:
         self._connection_pool: PostgresConnectionPoolClient = connection_pool
+        self._codec: PersistedDocumentCodec[QueuedJobDocument] = PersistedDocumentCodec(
+            QueuedJobDocument, DocumentCollectionName(QUEUED_JOBS_COLLECTION)
+        )
 
     def claim_due(self, claim: JobClaimRequest) -> list[QueuedJobDocument]:
         with platform_transaction(
@@ -154,8 +159,6 @@ class PostgresQueuedJobClaimAdapter(QueuedJobClaimAdapterContract):
 
     def _parse(self, rows: list[TupleRow]) -> list[QueuedJobDocument]:
         return [
-            QueuedJobDocument.model_validate_json(
-                read_document_text(row, QUEUED_JOBS_COLLECTION)
-            )
+            self._codec.decode(read_document_text(row, QUEUED_JOBS_COLLECTION))
             for row in rows
         ]
