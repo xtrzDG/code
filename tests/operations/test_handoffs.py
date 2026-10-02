@@ -29,8 +29,9 @@ from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.schemas.typings.platform.constrained_integers import PageSize
 from app.schemas.typings.platform.constrained_strings import PageCursor
 from app.schemas.typings.users.prefixed_id import UserId
-from tests.operations.builders import OperationsWorld, every_day, interval
+from tests.operations.builders import every_day, interval
 from tests.operations.fakes import RecordingManagerNotifier
+from tests.operations.operations_world import OperationsWorld
 
 
 class HandoffFixture:

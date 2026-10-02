@@ -17,7 +17,7 @@ from app.schemas.typings.localization.constrained_strings import (
     E164PhoneNumber,
     LanguageTag,
 )
-from tests.operations.builders import OperationsWorld
+from tests.operations.operations_world import OperationsWorld
 
 PHONE: str = "+995555123456"
 

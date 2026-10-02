@@ -35,8 +35,8 @@ from app.schemas.typings.localization.constrained_strings import (
     CurrencyCode,
     LanguageTag,
 )
-from tests.operations.builders import OperationsWorld
 from tests.operations.fakes import to_microseconds
+from tests.operations.operations_world import OperationsWorld
 
 
 class DashboardFixture:

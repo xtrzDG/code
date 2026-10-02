@@ -60,9 +60,9 @@ from app.use_cases.calendar.get_google_calendar_connection_use_case import (
 from app.use_cases.calendar.start_google_calendar_connection_use_case import (
     StartGoogleCalendarConnectionUseCase,
 )
-from tests.operations.builders import OperationsWorld
 from tests.operations.fake_google import FakeGoogle
 from tests.operations.fakes import ReversingSecretCipher
+from tests.operations.operations_world import OperationsWorld
 
 OWNER_TOKEN: str = "owner-token"
 STAFF_TOKEN: str = "staff-token"

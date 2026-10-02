@@ -46,7 +46,8 @@ from app.utilities.scheduling.zoned_time import (
     to_local_moment,
     to_time_of_day,
 )
-from tests.operations.builders import OperationsWorld, every_day, interval, minute
+from tests.operations.builders import every_day, interval, minute
+from tests.operations.operations_world import OperationsWorld
 
 NEW_YORK: ZoneInfo = ZoneInfo("America/New_York")
 TBILISI: ZoneInfo = ZoneInfo("Asia/Tbilisi")

@@ -20,7 +20,8 @@ from app.schemas.typings.bookings.constrained_integers import (
 from app.schemas.typings.bookings.constrained_strings import LocalDate, LocalTimeOfDay
 from app.schemas.typings.bookings.prefixed_id import ResourceId
 from app.schemas.typings.businesses.prefixed_id import BusinessId
-from tests.operations.builders import OperationsWorld, every_day, interval
+from tests.operations.builders import every_day, interval
+from tests.operations.operations_world import OperationsWorld
 
 
 class RestaurantFixture:

@@ -62,8 +62,9 @@ from app.use_cases.bookings.reminders.send_booking_reminders_use_case import (
     SendBookingRemindersUseCase,
 )
 from app.utilities.localization.localized_text_resolver import LocalizedTextResolver
-from tests.operations.builders import DEFAULT_NOW, OperationsWorld
+from tests.operations.builders import DEFAULT_NOW
 from tests.operations.fakes import to_microseconds
+from tests.operations.operations_world import OperationsWorld
 
 # DEFAULT_NOW is Monday 2026-10-05 08:00 UTC = 12:00 in Tbilisi (UTC+4).
 TICK: JobTick = JobTick(

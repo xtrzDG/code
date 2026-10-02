@@ -27,7 +27,7 @@ from app.schemas.typings.localization.constrained_strings import (
 from app.schemas.typings.platform.constrained_integers import PageSize
 from app.schemas.typings.platform.constrained_strings import PageCursor
 from app.schemas.typings.users.prefixed_id import UserId
-from tests.operations.builders import OperationsWorld
+from tests.operations.operations_world import OperationsWorld
 
 
 class LeadsFixture:

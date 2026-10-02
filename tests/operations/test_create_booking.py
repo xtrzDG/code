@@ -33,8 +33,9 @@ from app.utilities.scheduling.localized_formatting import (
     FIRST_STRONG_ISOLATE,
     POP_DIRECTIONAL_ISOLATE,
 )
-from tests.operations.builders import OperationsWorld, every_day, manager
+from tests.operations.builders import every_day, manager
 from tests.operations.fakes import RecordingManagerNotifier
+from tests.operations.operations_world import OperationsWorld
 
 
 def seconds(text: str) -> int:
