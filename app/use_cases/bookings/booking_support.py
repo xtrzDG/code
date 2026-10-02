@@ -6,7 +6,7 @@ from typing import NamedTuple
 from zoneinfo import ZoneInfo
 
 from app.contracts.localization_utilities import PhoneNumberParserContract
-from app.contracts.operations import ManagerBroadcastFacilitatorContract
+from app.contracts.notifications import StaffAlertFacilitatorContract
 from app.contracts.repositories.booking_repositories import BookingRepoContract
 from app.contracts.repositories.business_repositories import (
     BusinessProfileRepoContract,
@@ -19,6 +19,7 @@ from app.contracts.repositories.knowledge_repositories import (
 )
 from app.contracts.transformer_contract import TransformerContract
 from app.schemas.constants.bookings import BookingUnit
+from app.schemas.constants.notifications import StaffBookingChange
 from app.schemas.domain.bookings import BookingDocument
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.profiles import (
@@ -28,6 +29,11 @@ from app.schemas.domain.profiles import (
 )
 from app.schemas.domain.resources import ResourceDocument, ScheduleExceptionDocument
 from app.schemas.dto.bookings import BookingView
+from app.schemas.dto.notifications.staff_alerts import (
+    BookingBrief,
+    StaffAlertBrief,
+    StaffAlertBriefInput,
+)
 from app.schemas.dto.operations.message_texts import BookingStaffNotificationInput
 from app.schemas.exceptions.application_errors import (
     ConflictError,
@@ -44,10 +50,10 @@ from app.schemas.typings.localization.constrained_strings import (
 )
 from app.schemas.typings.localization.strings import FormattedPhoneNumber
 from app.use_cases.bookings.operations_support import (
-    build_staff_messages,
     display_phone,
     require_business,
 )
+from app.use_cases.notifications.staff_alerts import StaffAlertTexts, booking_alert
 from app.utilities.scheduling.availability import BLOCKING_BOOKING_STATUSES
 from app.utilities.scheduling.nights import StayTimes, read_stay_times
 from app.utilities.scheduling.zoned_time import load_time_zone, to_local_moment
@@ -90,15 +96,20 @@ def load_scheduling_inputs(
 
 
 def notify_staff_about_booking(
-    manager_broadcaster: ManagerBroadcastFacilitatorContract,
+    staff_alerts: StaffAlertFacilitatorContract,
     notification_transformer: TransformerContract[
         BookingStaffNotificationInput, MessageText
     ],
+    brief_transformer: TransformerContract[StaffAlertBriefInput, StaffAlertBrief],
     phone_number_parser: PhoneNumberParserContract,
     business: BusinessDocument,
     view: BookingView,
+    change: StaffBookingChange,
 ) -> None:
-    """Tell every staff contact about a booking, each in their own language."""
+    """
+    Tell every staff contact and subscribed device about a booking, each in
+    their own language, with a link to the bookings of its day.
+    """
 
     phone: FormattedPhoneNumber | None = display_phone(
         phone_number_parser, view.contact_phone_number
@@ -114,7 +125,20 @@ def notify_staff_about_booking(
             )
         )
 
-    manager_broadcaster.broadcast(build_staff_messages(business, render))
+    def render_brief(language: LanguageTag) -> StaffAlertBrief:
+        return brief_transformer.transform(
+            StaffAlertBriefInput(
+                business_name=business.name,
+                language=language,
+                booking=BookingBrief(booking=view, change=change),
+            )
+        )
+
+    staff_alerts.alert(
+        business,
+        booking_alert(view),
+        StaffAlertTexts(detailed=render, brief=render_brief),
+    )
 
 
 def find_resource(

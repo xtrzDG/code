@@ -21,6 +21,7 @@
     "subscription_id": "push_subscription_06bfb682-5c3d-5d9b-93f4-a61d55e38e9e",
     "tag": "handoff:handoff_42",
     "title": "Sample StaffAlertTitle",
+    "urgency": "normal",
     "url": "https://app.example.com/n/AQ3xL8nYtQ2bS0pK9mVwZcRj5uHfE1gDaB7iO4lN6eT",
     "user_id": "user_277b5097-15e1-41aa-a3c7-6572ffc50211"
   },

@@ -173,6 +173,14 @@
               "title": {
                 "type": "string"
               },
+              "urgency": {
+                "default": "normal",
+                "enum": [
+                  "normal",
+                  "high"
+                ],
+                "type": "string"
+              },
               "url": {
                 "anyOf": [
                   {

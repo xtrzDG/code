@@ -18,7 +18,6 @@ from app.schemas.dto.operations.calendar_connection import (
     CalendarEventDraft,
     CalendarTokenGrant,
 )
-from app.schemas.dto.operations.message_texts import StaffMessage
 from app.schemas.typings.bookings.constrained_strings import CalendarAuthorizationUrl
 from app.schemas.typings.bookings.prefixed_id import BookingId
 from app.schemas.typings.bookings.strings import (
@@ -32,9 +31,6 @@ from app.schemas.typings.bookings.strings import (
     ExternalCalendarId,
 )
 from app.schemas.typings.businesses.prefixed_id import BusinessId
-from app.schemas.typings.handoffs.constrained_integers import (
-    DeliveredNotificationCount,
-)
 
 
 class CalendarConnectionRepoContract(RepoContract, Protocol):
@@ -90,15 +86,6 @@ class BusinessLockRegistryContract(RegistryContract, Protocol):
         """
         Lock serializing booking changes of one business inside this process,
         so a check-then-insert cannot double-book the last unit.
-        """
-        raise NotImplementedError
-
-
-class ManagerBroadcastFacilitatorContract(FacilitatorContract, Protocol):
-    def broadcast(self, messages: list[StaffMessage]) -> DeliveredNotificationCount:
-        """
-        Deliver every message to its staff contact and count the deliveries.
-        Never raises: one failing contact does not stop the others.
         """
         raise NotImplementedError
 

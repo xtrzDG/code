@@ -79,6 +79,7 @@ class AppContainer(containers.DeclarativeContainer):
         adapters=adapters,
         clients=clients,
         config=config,
+        registries=registries,
         repositories=repositories,
         time_provider=time_provider,
         transformers=transformers,

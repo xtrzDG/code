@@ -82,7 +82,8 @@ class BookingUseCasesContainer(containers.DeclarativeContainer):
         phone_number_parser=utilities.phone_number_parser,
         confirmation_transformer=transformers.booking_confirmation_transformer,
         staff_notification_transformer=transformers.new_booking_notification_transformer,
-        manager_broadcaster=facilitators.manager_broadcast_facilitator,
+        staff_brief_transformer=transformers.staff_alert_brief_transformer,
+        staff_alerts=facilitators.staff_alert_facilitator,
         calendar_sync=facilitators.calendar_sync_facilitator,
         wall_clock=time_provider.microsecond_wall_clock,
     )
@@ -100,7 +101,8 @@ class BookingUseCasesContainer(containers.DeclarativeContainer):
         phone_number_parser=utilities.phone_number_parser,
         confirmation_transformer=transformers.cancellation_confirmation_transformer,
         staff_notification_transformer=transformers.booking_cancelled_notification_transformer,
-        manager_broadcaster=facilitators.manager_broadcast_facilitator,
+        staff_brief_transformer=transformers.staff_alert_brief_transformer,
+        staff_alerts=facilitators.staff_alert_facilitator,
         calendar_sync=facilitators.calendar_sync_facilitator,
         wall_clock=time_provider.microsecond_wall_clock,
     )
@@ -118,7 +120,8 @@ class BookingUseCasesContainer(containers.DeclarativeContainer):
         phone_number_parser=utilities.phone_number_parser,
         confirmation_transformer=transformers.reschedule_confirmation_transformer,
         staff_notification_transformer=transformers.booking_moved_notification_transformer,
-        manager_broadcaster=facilitators.manager_broadcast_facilitator,
+        staff_brief_transformer=transformers.staff_alert_brief_transformer,
+        staff_alerts=facilitators.staff_alert_facilitator,
         calendar_sync=facilitators.calendar_sync_facilitator,
         wall_clock=time_provider.microsecond_wall_clock,
     )

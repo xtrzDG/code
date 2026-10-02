@@ -4,6 +4,7 @@ from typed_time_provider import Microseconds
 
 from app.schemas.constants.channels import ChannelKind
 from app.schemas.constants.deliveries import OutboundMessageKind, OutboundMessageStatus
+from app.schemas.constants.notifications import WebPushUrgency
 from app.schemas.domain.businesses import ManagerContact
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.channels.constrained_integers import DeliveredMessageCount
@@ -53,9 +54,10 @@ class OutboundTemplate(PersistentDocument):
 class PushRecipient(PersistentDocument):
     """
     A cabinet user's device (Web Push subscription) and what its
-    notification shows besides the text: the title, the page it opens and
-    the tag a newer notification about the same thing replaces it by. The
-    subscription's keys are read at send time (never copied here).
+    notification shows besides the text: the title, the page it opens, the
+    tag a newer notification about the same thing replaces it by, and how
+    soon the device should wake. The subscription's keys are read at send
+    time (never copied here).
     """
 
     subscription_id: PushSubscriptionId
@@ -63,6 +65,7 @@ class PushRecipient(PersistentDocument):
     title: StaffAlertTitle
     url: CabinetDeepLink | None = None
     tag: PushNotificationTag | None = None
+    urgency: WebPushUrgency = WebPushUrgency.NORMAL
 
 
 class OutboundMessageDocument(BaseDocument):

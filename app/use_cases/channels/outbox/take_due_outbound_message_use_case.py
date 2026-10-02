@@ -98,7 +98,7 @@ class TakeDueOutboundMessageUseCase(
         for waiting in self._outbound_message_repo.list_pending_for_recipient(
             message.business_id, message.recipient_key
         ):
-            if not is_queued_before(waiting, message):
+            if not is_queued_before(waiting, message) or is_held(waiting, now):
                 continue
 
             due_at: int = int(waiting.next_attempt_at or waiting.created_at)
@@ -121,4 +121,17 @@ def is_queued_before(
     return (int(first.created_at), str(first.id)) < (
         int(second.created_at),
         str(second.id),
+    )
+
+
+def is_held(message: OutboundMessageDocument, now: Microseconds) -> bool:
+    """
+    A staff notification held for quiet hours (never tried, due later):
+    an urgent one queued after it goes first.
+    """
+
+    return (
+        int(message.attempts) == 0
+        and message.next_attempt_at is not None
+        and message.next_attempt_at > now
     )

@@ -4,7 +4,7 @@ from zoneinfo import ZoneInfo
 from typed_time_provider import Microseconds, WallClock
 
 from app.contracts.localization_utilities import PhoneNumberParserContract
-from app.contracts.operations import ManagerBroadcastFacilitatorContract
+from app.contracts.notifications import StaffAlertFacilitatorContract
 from app.contracts.repositories.booking_repositories import HandoffRepoContract
 from app.contracts.repositories.business_repositories import (
     BusinessProfileRepoContract,
@@ -27,6 +27,11 @@ from app.schemas.domain.conversations import ConversationDocument
 from app.schemas.domain.handoffs import HandoffDocument
 from app.schemas.domain.profiles import BusinessProfileDocument, OpeningInterval
 from app.schemas.dto.handoffs import HandoffCommand, HandoffResult
+from app.schemas.dto.notifications.staff_alerts import (
+    HandoffBrief,
+    StaffAlertBrief,
+    StaffAlertBriefInput,
+)
 from app.schemas.dto.operations.message_texts import (
     HandoffCustomerMessageInput,
     HandoffStaffNotificationInput,
@@ -36,14 +41,13 @@ from app.schemas.typings.conversations.strings import MessageText
 from app.schemas.typings.handoffs.constrained_integers import (
     DeliveredNotificationCount,
 )
-from app.schemas.typings.handoffs.prefixed_id import HandoffId
 from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.schemas.typings.localization.strings import FormattedPhoneNumber
 from app.use_cases.bookings.operations_support import (
-    build_staff_messages,
     display_phone,
     require_business,
 )
+from app.use_cases.notifications.staff_alerts import StaffAlertTexts, handoff_alert
 from app.utilities.scheduling.opening_hours import (
     business_day_ranges,
     find_next_opening,
@@ -64,9 +68,11 @@ class HandoffToHumanUseCase(UseCaseContract[HandoffCommand, HandoffResult]):
 
     The handoff is stored with its urgency and the conversation switches to
     HANDOFF, so the assistant stays silent in chat until staff resolve it.
-    Every staff contact is notified in their language with the reason,
-    urgency, summary, the customer's name, phone in international format and
-    channel. The notifications go through the outbox: the handoff stays
+    Every staff contact is notified in their language (linked chats with the
+    reason, urgency, summary, the customer's name, phone in international
+    format and channel; e-mail, SMS and devices briefly), each with a link
+    to the conversation. The notifications go through the outbox: the
+    handoff stays
     PENDING until one is delivered (NOTIFIED) or they fail
     (NOTIFICATION_FAILED); it is NOTIFICATION_FAILED at once when no contact
     can be reached. Sandbox handoffs notify nobody and stay PENDING.
@@ -91,7 +97,10 @@ class HandoffToHumanUseCase(UseCaseContract[HandoffCommand, HandoffResult]):
         customer_message_transformer: TransformerContract[
             HandoffCustomerMessageInput, MessageText
         ],
-        manager_broadcaster: ManagerBroadcastFacilitatorContract,
+        staff_brief_transformer: TransformerContract[
+            StaffAlertBriefInput, StaffAlertBrief
+        ],
+        staff_alerts: StaffAlertFacilitatorContract,
         wall_clock: WallClock[Microseconds],
     ) -> None:
         self._business_repo: BusinessRepoContract = business_repo
@@ -109,9 +118,10 @@ class HandoffToHumanUseCase(UseCaseContract[HandoffCommand, HandoffResult]):
         self._customer_message_transformer: TransformerContract[
             HandoffCustomerMessageInput, MessageText
         ] = customer_message_transformer
-        self._manager_broadcaster: ManagerBroadcastFacilitatorContract = (
-            manager_broadcaster
-        )
+        self._staff_brief_transformer: TransformerContract[
+            StaffAlertBriefInput, StaffAlertBrief
+        ] = staff_brief_transformer
+        self._staff_alerts: StaffAlertFacilitatorContract = staff_alerts
         self._wall_clock: WallClock[Microseconds] = wall_clock
 
     def run(self, input_data: HandoffCommand) -> HandoffResult:
@@ -146,7 +156,7 @@ class HandoffToHumanUseCase(UseCaseContract[HandoffCommand, HandoffResult]):
 
         if not input_data.is_sandbox:
             queued: DeliveredNotificationCount = self._notify_staff(
-                business, input_data, handoff.id
+                business, input_data, handoff
             )
             if int(queued) == 0:
                 # Nobody can be reached. When notifications are queued, the
@@ -171,7 +181,7 @@ class HandoffToHumanUseCase(UseCaseContract[HandoffCommand, HandoffResult]):
         self,
         business: BusinessDocument,
         command: HandoffCommand,
-        handoff_id: HandoffId,
+        handoff: HandoffDocument,
     ) -> DeliveredNotificationCount:
         contact: ContactDocument | None = self._contact_repo.get(
             business.id, command.contact_id
@@ -195,8 +205,23 @@ class HandoffToHumanUseCase(UseCaseContract[HandoffCommand, HandoffResult]):
                 )
             )
 
-        return self._manager_broadcaster.broadcast(
-            build_staff_messages(business, render, handoff_id)
+        def render_brief(language: LanguageTag) -> StaffAlertBrief:
+            return self._staff_brief_transformer.transform(
+                StaffAlertBriefInput(
+                    business_name=business.name,
+                    language=language,
+                    handoff=HandoffBrief(
+                        reason=command.reason, urgency=command.urgency
+                    ),
+                )
+            )
+
+        return self._staff_alerts.alert(
+            business,
+            handoff_alert(
+                business.id, handoff.id, handoff.conversation_id, command.urgency
+            ),
+            StaffAlertTexts(detailed=render, brief=render_brief),
         )
 
     def _customer_message_input(

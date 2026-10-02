@@ -39,3 +39,11 @@ class WebPushUrgency(StrEnum):
 
     NORMAL = "normal"
     HIGH = "high"
+
+
+class StaffBookingChange(StrEnum):
+    """What happened to a booking staff are told about."""
+
+    CREATED = "created"
+    MOVED = "moved"
+    CANCELLED = "cancelled"
