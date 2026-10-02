@@ -10,7 +10,7 @@ from app.containers.operators import OperatorsContainer
 from app.containers.orchestrators.orchestrators_container import (
     OrchestratorsContainer,
 )
-from app.containers.pipelines import PipelinesContainer
+from app.containers.pipelines.pipelines_container import PipelinesContainer
 from app.containers.registries import RegistriesContainer
 from app.containers.repositories import RepositoriesContainer
 from app.containers.time_provider import TimeProviderContainer

@@ -125,8 +125,8 @@ def test_stateful_collaborators_are_shared_singletons() -> None:
     container = workshop.container
 
     assert (
-        container.pipelines.customer_message_pipeline()
-        is container.pipelines.customer_message_pipeline()
+        container.pipelines.conversations.customer_message_pipeline()
+        is container.pipelines.conversations.customer_message_pipeline()
     )
     assert (
         container.registries.business_lock_registry()
