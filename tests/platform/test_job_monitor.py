@@ -76,7 +76,7 @@ def test_a_run_checks_in_when_it_starts_and_when_it_ends() -> None:
 def test_the_interval_is_given_in_whole_units(
     seconds: int, schedule: dict[str, object]
 ) -> None:
-    config = build_monitor_config(JobIntervalSeconds(seconds))
+    config: dict[str, Any] = dict(build_monitor_config(JobIntervalSeconds(seconds)))
 
     assert config["schedule"] == schedule
     assert config["timezone"] == "UTC"
@@ -99,6 +99,10 @@ def test_a_failing_monitor_never_fails_the_job(
     assert caplog.text.count("Sentry check-in of send_booking_reminders failed") == 2
 
 
+def ignore_options(**options: Any) -> None:
+    del options
+
+
 def test_the_monitor_follows_the_error_reporter() -> None:
     disabled = SentryErrorReportingFacilitator(
         dsn=None, environment=DeploymentEnvironment.TEST
@@ -106,7 +110,7 @@ def test_the_monitor_follows_the_error_reporter() -> None:
     enabled = SentryErrorReportingFacilitator(
         dsn=PlatformSecret("https://key@o1.ingest.de.sentry.io/1"),
         environment=DeploymentEnvironment.TEST,
-        sentry_init=lambda **options: None,
+        sentry_init=ignore_options,
     )
     null_monitor = build_job_monitor_facilitator(disabled)
 

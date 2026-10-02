@@ -53,10 +53,9 @@ class PeriodicJobOutcome(StrEnum):
 class WidgetErrorKind(StrEnum):
     """What went wrong in the website widget, as its error beacon reports it."""
 
-    # An exception thrown by the widget's own code.
+    # An exception thrown by the widget's own code (an event handler, a
+    # timer or a callback of a request).
     SCRIPT_ERROR = "script_error"
-    # A promise of the widget's own code rejected without a handler.
-    UNHANDLED_REJECTION = "unhandled_rejection"
     # The chat configuration answered with an error status.
     CONFIG_FAILED = "config_failed"
 

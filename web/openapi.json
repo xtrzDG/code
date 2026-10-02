@@ -21325,7 +21325,6 @@
                     "description": "What went wrong in the website widget, as its error beacon reports it.",
                     "enum": [
                       "script_error",
-                      "unhandled_rejection",
                       "config_failed"
                     ],
                     "title": "WidgetErrorKind",

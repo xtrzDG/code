@@ -9966,7 +9966,7 @@ export interface operations {
                      * @description What went wrong in the website widget, as its error beacon reports it.
                      * @enum {string}
                      */
-                    kind: "script_error" | "unhandled_rejection" | "config_failed";
+                    kind: "script_error" | "config_failed";
                     /** Line */
                     line?: number | null;
                     /**

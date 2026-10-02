@@ -1,7 +1,7 @@
 """Sentry gets the release, the log context as tags, no personal data, no secrets."""
 
 import logging
-from typing import Any
+from typing import Any, cast
 
 import pytest
 import sentry_sdk
@@ -94,13 +94,14 @@ def test_events_lose_personal_data_and_gain_the_log_context_as_tags() -> None:
         scrubbed = scrub_event(event, {})
 
     assert scrubbed is not None
-    assert "request" not in scrubbed and "user" not in scrubbed
-    assert "breadcrumbs" not in scrubbed
-    assert scrubbed["tags"] == {"job_name": "explicit", "request_id": "req-9"}
+    fields: dict[str, Any] = dict(scrubbed)
+    assert "request" not in fields and "user" not in fields
+    assert "breadcrumbs" not in fields
+    assert fields["tags"] == {"job_name": "explicit", "request_id": "req-9"}
 
 
 def test_traces_keep_no_urls_or_tokens() -> None:
-    transaction: Event = {
+    transaction: dict[str, Any] = {
         "request": {"url": "https://api.example.com/v1/x?session_key=abc"},
         "spans": [
             {
@@ -111,10 +112,12 @@ def test_traces_keep_no_urls_or_tokens() -> None:
         ],
     }
 
-    scrubbed = scrub_transaction(transaction, {})
+    scrubbed = scrub_transaction(cast(Event, transaction), {})
 
-    assert scrubbed is not None and "request" not in scrubbed
-    span = scrubbed["spans"][0]
+    assert scrubbed is not None
+    fields: dict[str, Any] = dict(scrubbed)
+    assert "request" not in fields
+    span: dict[str, Any] = fields["spans"][0]
     assert (
         span["description"] == "POST https://api.telegram.org/bot<redacted>/sendMessage"
     )
@@ -126,11 +129,11 @@ def test_an_error_is_sent_with_the_context_it_was_raised_in(
 ) -> None:
     reporter, _ = enabled_reporter()
     captured: list[tuple[BaseException, dict[str, str]]] = []
-    monkeypatch.setattr(
-        sentry_sdk,
-        "capture_exception",
-        lambda error, tags: captured.append((error, tags)),
-    )
+
+    def capture_exception(error: BaseException, tags: dict[str, str]) -> None:
+        captured.append((error, tags))
+
+    monkeypatch.setattr(sentry_sdk, "capture_exception", capture_exception)
     try:
         with bound_log_context(business_id=BUSINESS_ID):
             raise RuntimeError("boom")
@@ -171,11 +174,11 @@ def test_a_widget_error_becomes_a_grouped_warning(
 ) -> None:
     reporter, _ = enabled_reporter()
     messages: list[tuple[str, dict[str, Any]]] = []
-    monkeypatch.setattr(
-        sentry_sdk,
-        "capture_message",
-        lambda message, **options: messages.append((message, options)),
-    )
+
+    def capture_message(message: str, **options: Any) -> None:
+        messages.append((message, options))
+
+    monkeypatch.setattr(sentry_sdk, "capture_message", capture_message)
 
     with caplog.at_level(logging.WARNING, logger="app.widget"):
         reporter.capture_widget_error(WIDGET_REPORT)

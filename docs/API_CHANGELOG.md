@@ -13,7 +13,7 @@ label and a migration path).
 
 ## 2026-10-02 — widget error beacon, readiness
 
-Spec: `15d3c1cc4d9555ac`
+Spec: `60e48c140683bbc4`
 
 - **Added** `POST /v1/widget/errors` (public, CORS for any site, like the
   other widget routes): the website widget reports an error of its own
