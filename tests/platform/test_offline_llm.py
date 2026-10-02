@@ -2,8 +2,6 @@
 
 import json
 
-from dependency_injector import providers
-
 from app.adapters.llm.offline_llm_adapter import OFFLINE_REPLY, OfflineLlmAdapter
 from app.containers.app import AppContainer
 from app.schemas.constants.assistants import LlmEffort
@@ -20,6 +18,7 @@ from app.schemas.typings.conversations.strings import (
 from app.utilities.config_helpers.app_settings.app_settings_assembler import (
     assemble_app_settings,
 )
+from tests.e2e.workshop_container import replace_provider
 
 
 def build_request(model_id: str) -> LlmRequest:
@@ -62,8 +61,9 @@ def test_turn_payloads_are_the_canonical_ones() -> None:
 
 def test_the_application_routes_the_scripted_model_to_it() -> None:
     container = AppContainer()
-    container.config.app_settings.override(
-        providers.Object(assemble_app_settings({"LLM_PROVIDER": "scripted"}))
+    replace_provider(
+        container.config.app_settings,
+        assemble_app_settings({"LLM_PROVIDER": "scripted"}),
     )
 
     response = container.adapters.routing_llm_adapter().complete(
