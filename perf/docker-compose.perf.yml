@@ -33,6 +33,9 @@ services:
     environment:
       <<: *load-environment
       FORWARDED_ALLOW_IPS: "*"
+      # Two API processes (uvicorn workers): one process acknowledges about
+      # 120 webhooks a second on a 4-vCPU runner, the burst sends 200.
+      WEB_CONCURRENCY: "2"
     extra_hosts: *offline-providers
 
   worker:

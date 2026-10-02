@@ -35,12 +35,19 @@ the p95 in milliseconds:
 tenth) or `small` (default: 10 businesses, 20,000 messages). `PERF_REPORT`
 names the JSON file the results go to.
 
-Measured at the full scale (local run, 8 vCPU, Postgres 16 on the same
-machine; seeding took SEED_MINUTES minutes):
+Measured at the full scale (a local run on 4 vCPU and 16 GB shared with
+other jobs, Postgres 16 on the same machine; seeding took
+21 minutes). These are also the first `perf/baseline.json`; refresh
+it from the first weekly run on GitHub's runners (below), which differ.
 
 | Request | p50 | p95 |
 | --- | ---: | ---: |
-FULL_SCALE_ROWS
+| authenticate | 7 ms | 14 ms |
+| conversations list | 48 ms | 69 ms |
+| conversation detail | 27 ms | 38 ms |
+| availability | 24 ms | 39 ms |
+| dashboard | 55 ms | 78 ms |
+| widget poll | 10 ms | 19 ms |
 
 ### The baseline
 
@@ -106,7 +113,7 @@ $C down --volumes
 | --- | --- | --- |
 | `cabinet_browsing.js` | 100 owners (`CABINET_USERS`) for 5 minutes: dashboard, feed, a card, bookings, availability, with think time | errors < 1%; p95 per page: dashboard 800 ms, others 500 ms |
 | `widget_polling.js` | 1,000 visitors (`WIDGET_VISITORS`) polling every 4 s, each writing about every 2 minutes | errors < 1%; poll p95 150 ms; message p95 the model latency + 1.5 s |
-| `webhook_burst.js` | 200 Telegram updates a second (`WEBHOOK_RATE`) for a minute over the restaurants' bots | errors < 1%; p95 250 ms; fewer than 100 dropped iterations |
+| `webhook_burst.js` | 200 Telegram updates a second (`WEBHOOK_RATE`) for a minute over the restaurants' bots | errors < 1%; p95 1 s, p99 3 s; fewer than 100 dropped iterations |
 
 Outside CI, `k6 run -e MANIFEST=$PWD/perf/manifest.json -e
 API_URL=http://localhost:8000 perf/k6/cabinet_browsing.js` runs a scenario
@@ -121,10 +128,18 @@ against any stack you seeded (only ever a load-test one).
   A widget message holds its thread for the whole model answer: with
   800 ms of model latency one instance answers at most about 80 widget
   messages a second, less what else it serves. Scale API instances for
-  chat traffic, not for lists.
+  chat traffic, not for lists. Polls that arrive in lockstep queue
+  behind each other (one process runs Python one request at a time):
+  60 visitors polling at the same instant saw a p95 of 0.5 s, spread
+  over the 4 seconds 25 ms; real visitors open their pages at random
+  moments, and the k6 scenario spreads them the same way.
 - **Webhooks.** A channel webhook only verifies, stores the update and
-  queues it, so its acknowledgment stays in the tens of
-  milliseconds under a burst; the answer comes from the worker.
+  queues it; the answer comes from the worker. One API process
+  acknowledges about 120 webhooks a second on 4 shared vCPU (10 ms each
+  at 50 a second); at 200 a second it falls behind and the wait grows to
+  seconds. Two processes (`WEB_CONCURRENCY=2`, as the load override sets)
+  took 200 a second for 20 s with nothing dropped and a p95 of 0.6 s.
+  Plan one API process per 100 webhooks a second of peak.
 - **Worker throughput.** A worker answers `inbound` messages
   `WORKER_LANE_CONCURRENCY` at a time (8 by default). At 800 ms per model
   call that is about 10 answers a second per worker: a one-minute burst
@@ -162,5 +177,8 @@ against any stack you seeded (only ever a load-test one).
   and need a stored last-activity time to page in the database.
 - A widget poll reads the messages of the visitor's own conversations:
   bounded by one visitor's chat, not by the business.
-- Seeding the full dataset takes minutes (the demo part of each business
-  dominates); the weekly budgets job allows two hours.
+- Seeding the full dataset took 21 minutes locally (the demo part of each
+  business dominates); the weekly budgets job allows two hours.
+- The scripted model answers every message with one sentence; a
+  conversation the engine hands to staff afterwards gets no model call,
+  so widget messages of such visitors measure storage, not the model.

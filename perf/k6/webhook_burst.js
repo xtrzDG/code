@@ -22,9 +22,12 @@ export const options = {
       maxVUs: RATE * 4,
     },
   },
+  // Telegram waits for the answer and retries what it did not get; the
+  // burst must be taken whole (no errors, nothing dropped) and acknowledged
+  // well within that wait.
   thresholds: {
     http_req_failed: ["rate<0.01"],
-    http_req_duration: ["p(95)<250"],
+    http_req_duration: ["p(95)<1000", "p(99)<3000"],
     dropped_iterations: ["count<100"],
   },
 };

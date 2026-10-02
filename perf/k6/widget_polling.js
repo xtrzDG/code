@@ -29,6 +29,10 @@ export const options = {
 };
 
 export default function () {
+  // Visitors open their pages at different moments, not in one burst.
+  if (__ITER === 0) {
+    sleep(Math.random() * POLL_SECONDS);
+  }
   const visitor = pick(visitors, __VU - 1);
   const url = `${API_URL}/v1/widget/${visitor.business_id}/messages`;
   const headers = {
@@ -45,5 +49,5 @@ export default function () {
     );
     check(sent, { "message answered": (r) => r.status === 200 });
   }
-  sleep(POLL_SECONDS);
+  sleep(POLL_SECONDS - 0.25 + Math.random() * 0.5);
 }
