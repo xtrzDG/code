@@ -593,7 +593,9 @@ No layout shift (the e2e test asserts CLS = 0 with the scene). The scene is
 one draw call per object (orb, shell, halo, six bubbles, six message
 lights, three rings, 220 dust points): 60 fps on a laptop GPU; three.js
 stays at 0.182 because react-three-fiber 9 still uses `THREE.Clock`, which
-logs a deprecation warning from r183.
+logs a deprecation warning from r183. `@react-three/drei` is not used: the
+scene needs nothing from it (three's own RoomEnvironment and PMREM give the
+reflections, the floating and billboarding are a few lines in `useFrame`).
 
 ### Landing page
 

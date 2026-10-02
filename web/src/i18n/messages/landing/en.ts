@@ -22,7 +22,7 @@ export const landingEn = {
       title: "Every call and message answered. Day and night, in any language.",
       subtitle:
         "The assistant picks up the phone and replies in WhatsApp, Instagram, Messenger, Telegram and your website chat. It books tables, rooms and appointments, collects requests and hands complex cases to your team with a short summary.",
-      primary: "Get started",
+      primary: "Create an AI assistant",
       secondary: "See pricing",
       trial: "{days} days free on every plan",
       note: "Sign in with a phone number of any country or with e-mail.",
@@ -135,7 +135,7 @@ export const landingEn = {
     cta: {
       title: "Put an assistant on your front line",
       text: "Create an account with your phone number or e-mail, fill in the profile and try the assistant before it talks to customers.",
-      button: "Get started",
+      button: "Create an AI assistant",
     },
     footer: {
       rights: "© {year} {name}",
