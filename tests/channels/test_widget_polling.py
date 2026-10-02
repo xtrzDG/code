@@ -1,74 +1,21 @@
 """GET /v1/widget/{business_id}/messages: answers the widget has not shown yet."""
 
-from typing import Any
-
-from base_pydantic_schemas import PersistentDocument
-from fastapi.testclient import TestClient
-
-from app.adapters.storage.in_memory_document_collection import (
-    InMemoryDocumentCollectionAdapter,
-)
-from app.schemas.constants.channels import ChannelKind, ChannelStatus, MessageDirection
-from app.schemas.constants.conversations import ConversationStatus, MessageAuthor
-from app.schemas.domain.conversations import ConversationDocument, MessageDocument
+from app.schemas.constants.channels import ChannelKind, ChannelStatus
+from app.schemas.constants.conversations import ConversationStatus
+from app.schemas.domain.conversations import ConversationDocument
 from app.schemas.typings.assistants.prefixed_id import AssistantVersionId
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.contacts.prefixed_id import ContactId
-from app.schemas.typings.conversations.prefixed_id import ConversationId, MessageId
-from app.schemas.typings.conversations.strings import ChannelUserId, MessageText
-from app.schemas.typings.localization.constrained_strings import LanguageTag
-from tests.channels.channels_payloads import HttpResponse
-from tests.channels.test_widget import SESSION_KEY, enable_widget
+from app.schemas.typings.conversations.prefixed_id import MessageId
+from app.schemas.typings.conversations.strings import ChannelUserId
+from tests.channels.test_widget import enable_widget
 from tests.channels.testbed import ChannelsTestbed
-
-OTHER_VISITOR: str = "v1_someone_else_entirely_42"
-
-
-def send(client: TestClient, business_id: BusinessId, text: str) -> dict[str, Any]:
-    response = client.post(
-        f"/v1/widget/{business_id}/messages",
-        json={"session_key": SESSION_KEY, "text": text},
-    )
-    assert response.status_code == 200, response.text
-    body: dict[str, Any] = response.json()
-    return body
-
-
-def poll(
-    client: TestClient,
-    business_id: BusinessId,
-    after: str | None = None,
-    session_key: str = SESSION_KEY,
-) -> HttpResponse:
-    params: dict[str, str] = {} if after is None else {"after": after}
-    return client.get(
-        f"/v1/widget/{business_id}/messages",
-        params=params,
-        headers={"X-Widget-Session-Key": session_key},
-    )
-
-
-def add_staff_message(
-    testbed: ChannelsTestbed,
-    business_id: BusinessId,
-    conversation_id: ConversationId,
-    text: str,
-    language: str = "he",
-) -> MessageDocument:
-    testbed.clock.advance(5)
-    now = testbed.clock.now_microseconds()
-    message = MessageDocument(
-        conversation_id=conversation_id,
-        business_id=business_id,
-        direction=MessageDirection.OUTBOUND,
-        author=MessageAuthor.STAFF,
-        text=MessageText(text),
-        language=LanguageTag(language),
-        created_at=now,
-        updated_at=now,
-    )
-    testbed.message_repo.save(message)
-    return message
+from tests.channels.widget_polling_steps import (
+    OTHER_VISITOR,
+    add_staff_message,
+    poll,
+    send,
+)
 
 
 class TestWidgetPolling:
@@ -260,108 +207,3 @@ class TestWidgetPolling:
         assert bad_key.status_code == 422
         assert bad_after.status_code == 422
         assert missing_key.status_code == 422
-
-
-class CountingCollection[StoredDocument: PersistentDocument](
-    InMemoryDocumentCollectionAdapter[StoredDocument]
-):
-    """Counts the documents every read returns."""
-
-    def __init__(self, document_type: type[StoredDocument]) -> None:
-        super().__init__(document_type)
-        self.read_count: int = 0
-
-    def list_all(self) -> list[StoredDocument]:
-        documents = super().list_all()
-        self.read_count += len(documents)
-        return documents
-
-    def list_by_field(self, field_name: str, value: str) -> list[StoredDocument]:
-        documents = super().list_by_field(field_name, value)
-        self.read_count += len(documents)
-        return documents
-
-
-class TestWidgetPollingCost:
-    def test_a_poll_reads_only_the_visitors_conversations_and_messages(self) -> None:
-        testbed = ChannelsTestbed()
-        conversations = CountingCollection(ConversationDocument)
-        messages = CountingCollection(MessageDocument)
-        testbed.conversation_repo._collection = conversations  # noqa: SLF001  # pyright: ignore[reportPrivateUsage]
-        testbed.message_repo._collection = messages  # noqa: SLF001  # pyright: ignore[reportPrivateUsage]
-        business = enable_widget(testbed)
-        client = testbed.build_http_client()
-        for number in range(50):
-            other = ConversationDocument(
-                business_id=business.id,
-                contact_id=ContactId(),
-                assistant_version_id=AssistantVersionId(),
-                channel=ChannelKind.WEB_CHAT,
-                channel_user_id=ChannelUserId(f"v1_other_visitor_{number:04d}"),
-                last_message_at=testbed.clock.now_microseconds(),
-                created_at=testbed.clock.now_microseconds(),
-                updated_at=testbed.clock.now_microseconds(),
-            )
-            testbed.conversation_repo.save(other)
-            for note in range(20):
-                add_staff_message(testbed, business.id, other.id, f"Note {note}", "en")
-        reply = send(client, business.id, "Hi")
-        conversations.read_count = messages.read_count = 0
-
-        body = poll(client, business.id, after=reply["cursor"]).json()
-
-        assert [item["id"] for item in body["items"]] == [reply["message_id"]]
-        assert conversations.read_count == 1
-        assert messages.read_count == 2
-        conversations.read_count = messages.read_count = 0
-        assert (
-            poll(client, business.id, session_key=OTHER_VISITOR).json()["items"] == []
-        )
-        assert (conversations.read_count, messages.read_count) == (0, 0)
-
-    def test_polling_too_fast_is_rate_limited(self) -> None:
-        testbed = ChannelsTestbed()
-        business = enable_widget(testbed)
-        client = testbed.build_http_client()
-        reply = send(client, business.id, "Hi")
-
-        answers = [
-            poll(client, business.id, after=reply["cursor"]).status_code
-            for _ in range(61)
-        ]
-        other_visitor = poll(client, business.id, session_key=OTHER_VISITOR)
-
-        assert answers[:60] == [200] * 60
-        assert answers[60] == 429
-        assert other_visitor.status_code == 200
-        limited = poll(client, business.id, after=reply["cursor"])
-        assert limited.json()["error"] == "rate_limited"
-        assert limited.headers["Retry-After"] == "60"
-        testbed.clock.advance(61)
-        assert poll(client, business.id, after=reply["cursor"]).status_code == 200
-
-    def test_the_visitor_key_travels_in_a_header_not_in_the_url(self) -> None:
-        testbed = ChannelsTestbed()
-        business = enable_widget(testbed)
-        client = testbed.build_http_client()
-        reply = send(client, business.id, "Hi")
-        path = f"/v1/widget/{business.id}/messages"
-
-        in_the_url = client.get(
-            path, params={"session_key": SESSION_KEY, "after": reply["cursor"]}
-        )
-        preflight = client.options(
-            path,
-            headers={
-                "Origin": "https://shop.example",
-                "Access-Control-Request-Method": "GET",
-                "Access-Control-Request-Headers": "x-widget-session-key",
-            },
-        )
-
-        assert in_the_url.status_code == 422
-        assert preflight.status_code == 204
-        assert "x-widget-session-key" in (
-            preflight.headers["Access-Control-Allow-Headers"].lower()
-        )
-        assert poll(client, business.id, after=reply["cursor"]).status_code == 200

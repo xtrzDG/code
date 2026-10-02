@@ -1,11 +1,11 @@
+"""The Telegram bot client and channel adapter."""
+
 from typing import Any
 
 import httpx
 import pytest
 
-from app.schemas.constants.channels import ChannelKind, ChannelStatus
-from app.schemas.domain.businesses import BusinessDocument
-from app.schemas.domain.channels import ChannelDocument
+from app.schemas.constants.channels import ChannelKind
 from app.schemas.dto.channels.channel_webhooks import ChannelWebhookPayload
 from app.schemas.exceptions.application_errors import (
     AuthenticationRequiredError,
@@ -23,73 +23,15 @@ from app.schemas.typings.channels.strings import (
 )
 from app.schemas.typings.conversations.strings import ChannelUserId
 from app.schemas.typings.platform.strings import PlatformSecret
-from app.utilities.channels.channel_endpoints import TELEGRAM_SECRET_HEADER
 from app.utilities.channels.webhook_signatures import derive_telegram_webhook_secret
-from tests.channels.channels_payloads import HttpResponse, telegram_ok, to_json_bytes
+from tests.channels.channels_payloads import telegram_ok, to_json_bytes
 from tests.channels.channels_settings import (
     ENCRYPTION_KEY,
     OTHER_TELEGRAM_BOT_TOKEN,
     TELEGRAM_BOT_TOKEN,
 )
+from tests.channels.telegram_updates import BOT_SECRET, build_update
 from tests.channels.testbed import ChannelsTestbed
-
-BOT_SECRET: str = str(
-    derive_telegram_webhook_secret(
-        PlatformSecret(ENCRYPTION_KEY), ChannelSecret(TELEGRAM_BOT_TOKEN)
-    )
-)
-
-
-def build_update(
-    text: str | None = "Do you have a table for 4 tonight?",
-    chat_id: int = 555_000_111,
-    chat_type: str = "private",
-    message_id: int = 17,
-    contact: dict[str, Any] | None = None,
-    is_bot: bool = False,
-    language_code: str = "ka",
-) -> dict[str, Any]:
-    message: dict[str, Any] = {
-        "message_id": message_id,
-        "date": 1_790_856_000,
-        "chat": {"id": chat_id, "type": chat_type},
-        "from": {
-            "id": chat_id,
-            "is_bot": is_bot,
-            "first_name": "ნინო",
-            "last_name": "Beridze",
-            "language_code": language_code,
-        },
-    }
-    if text is not None:
-        message["text"] = text
-    if contact is not None:
-        message["contact"] = contact
-    return {"update_id": 1001, "message": message}
-
-
-def connect_bot(testbed: ChannelsTestbed) -> tuple[BusinessDocument, ChannelDocument]:
-    owner_id = testbed.add_user("owner")
-    business = testbed.add_business(owner_id)
-    channel = testbed.add_channel(
-        business.id, ChannelKind.TELEGRAM, "funicular_vr_bot", TELEGRAM_BOT_TOKEN
-    )
-    testbed.telegram_transport.respond("POST", r"/sendMessage$", telegram_ok({}))
-    return business, channel
-
-
-def post_update(
-    testbed: ChannelsTestbed,
-    channel: ChannelDocument,
-    update: dict[str, Any],
-    secret: str | None = BOT_SECRET,
-) -> HttpResponse:
-    headers: dict[str, str] = {} if secret is None else {TELEGRAM_SECRET_HEADER: secret}
-    return testbed.build_http_client().post(
-        f"/v1/channels/telegram/{channel.id}/webhook",
-        content=to_json_bytes(update),
-        headers=headers,
-    )
 
 
 class TestTelegramBotClient:
@@ -263,127 +205,3 @@ class TestTelegramAdapter:
         ):
             with pytest.raises(AuthenticationRequiredError):
                 adapter.verify_signature(payload, credential)
-
-
-class TestTelegramWebhook:
-    def test_message_is_answered_through_the_business_bot(self) -> None:
-        testbed = ChannelsTestbed()
-        business, channel = connect_bot(testbed)
-
-        response = post_update(testbed, channel, build_update())
-
-        assert response.status_code == 200
-        assert response.json() == {
-            "received": 1,
-            "answered": 1,
-            "silenced": 0,
-            "failed": 0,
-        }
-        [inbound] = testbed.pipeline.messages
-        assert inbound.business_id == business.id
-        assert inbound.channel is ChannelKind.TELEGRAM
-        assert inbound.channel_user_id == "555000111"
-        [sent] = testbed.telegram_transport.requests_to("/sendMessage")
-        assert sent.path == f"/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
-        assert sent.json()["chat_id"] == "555000111"
-        assert sent.json()["text"] == "Reply: Do you have a table for 4 tonight?"
-
-    def test_long_reply_is_split_into_several_messages(self) -> None:
-        testbed = ChannelsTestbed()
-        _, channel = connect_bot(testbed)
-        testbed.pipeline.reply_text = ("Меню и цены. " * 400).strip()
-
-        post_update(testbed, channel, build_update())
-
-        sent = testbed.telegram_transport.requests_to("/sendMessage")
-        assert len(sent) == 2
-        assert all(len(request.json()["text"]) <= 4096 for request in sent)
-
-    def test_assistant_stays_silent_while_staff_handle_the_chat(self) -> None:
-        testbed = ChannelsTestbed()
-        _, channel = connect_bot(testbed)
-        testbed.pipeline.is_silent = True
-
-        response = post_update(testbed, channel, build_update())
-
-        assert response.json()["silenced"] == 1
-        assert testbed.telegram_transport.requests_to("/sendMessage") == []
-
-    def test_repeated_delivery_is_answered_once(self) -> None:
-        testbed = ChannelsTestbed()
-        _, channel = connect_bot(testbed)
-
-        post_update(testbed, channel, build_update())
-        second = post_update(testbed, channel, build_update())
-
-        assert second.json()["received"] == 0
-        assert len(testbed.pipeline.messages) == 1
-
-    @pytest.mark.parametrize("secret", [None, "wrong", BOT_SECRET.upper()])
-    def test_wrong_or_missing_secret_is_refused(self, secret: str | None) -> None:
-        testbed = ChannelsTestbed()
-        _, channel = connect_bot(testbed)
-
-        response = post_update(testbed, channel, build_update(), secret=secret)
-
-        assert response.status_code == 401
-        assert testbed.pipeline.messages == []
-
-    def test_secret_of_another_bot_is_refused(self) -> None:
-        testbed = ChannelsTestbed()
-        _, channel = connect_bot(testbed)
-        other_secret = derive_telegram_webhook_secret(
-            PlatformSecret(ENCRYPTION_KEY), ChannelSecret(OTHER_TELEGRAM_BOT_TOKEN)
-        )
-
-        response = post_update(testbed, channel, build_update(), str(other_secret))
-
-        assert response.status_code == 401
-
-    def test_unknown_disabled_or_foreign_channels_are_not_found(self) -> None:
-        testbed = ChannelsTestbed()
-        business, channel = connect_bot(testbed)
-        whatsapp = testbed.add_channel(business.id, ChannelKind.WHATSAPP, "1000")
-        disabled = testbed.add_channel(
-            business.id,
-            ChannelKind.TELEGRAM,
-            "old_bot",
-            TELEGRAM_BOT_TOKEN,
-            status=ChannelStatus.DISABLED,
-        )
-        client = testbed.build_http_client()
-
-        for channel_id in ("channel_not-an-id", str(whatsapp.id), str(disabled.id)):
-            response = client.post(
-                f"/v1/channels/telegram/{channel_id}/webhook",
-                content=to_json_bytes(build_update()),
-                headers={TELEGRAM_SECRET_HEADER: BOT_SECRET},
-            )
-            assert response.status_code == 404
-
-        assert channel.status is ChannelStatus.CONNECTED
-
-    def test_engine_and_delivery_failures_are_counted_not_raised(self) -> None:
-        testbed = ChannelsTestbed()
-        _, channel = connect_bot(testbed)
-        testbed.pipeline.failure = ExternalServiceError("model unavailable")
-
-        response = post_update(testbed, channel, build_update())
-
-        assert response.status_code == 200
-        assert response.json()["failed"] == 1
-
-        testbed.pipeline.failure = None
-        testbed.telegram_transport.respond(
-            "POST",
-            r"/sendMessage$",
-            {"ok": False, "error_code": 403, "description": "blocked"},
-            status_code=403,
-        )
-        response = post_update(testbed, channel, build_update(message_id=18))
-        assert response.json() == {
-            "received": 1,
-            "answered": 0,
-            "silenced": 0,
-            "failed": 1,
-        }

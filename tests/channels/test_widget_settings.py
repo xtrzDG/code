@@ -23,8 +23,8 @@ from app.utilities.channels.delivery_targets import find_business_channel
 from app.utilities.channels.widget_texts import build_widget_greeting
 from tests.channels.channels_payloads import HttpResponse, bearer
 from tests.channels.channels_settings import ARMENIA, GEORGIA, ISRAEL, CountrySetup
-from tests.channels.test_widget_script import BUSINESS_ID, parse_script_tags
 from tests.channels.testbed import ChannelsTestbed
+from tests.channels.widget_script_source import BUSINESS_ID, parse_script_tags
 
 NIGERIA = CountrySetup("NG", "Africa/Lagos", "NGN", ("yo", "en"))
 NETHERLANDS = CountrySetup("NL", "Europe/Amsterdam", "EUR", ("nl", "en"))
