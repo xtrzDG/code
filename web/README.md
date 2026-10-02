@@ -181,7 +181,8 @@ web/
       messages/landing/        the landing page's texts, one file per language
       messages/sections/       section texts, spread into en/ru/ka: insights.ts (dashboard, conversations,
                                bookings, leads, handoffs), content.ts (knowledge, assistant),
-                               workspace.ts (channels, billing, settings, admin)
+                               workspace.ts (channels, billing, settings, admin); each composes one file
+                               per namespace and language from its folder (insights/bookings.ru.ts)
     components/
       ui/                      the UI kit (import from "@/components/ui"): Button, ButtonLink, Input,
                                Select, Textarea, Checkbox, Radio, Field, Fieldset, Card, Table, Badge,
@@ -366,9 +367,12 @@ as `reasonMessages` to `useApiMutation`); never match the English message.
 - Shared texts (common, auth, nav, theme, pages, errors, validation) live
   in `src/i18n/messages/{en,ru,ka}.ts`; section texts in
   `src/i18n/messages/sections/{insights,content,workspace}.ts`, whose
-  `*En`/`*Ru`/`*Ka` objects are spread into those files; the wizard's and the
-  landing page's in `messages/onboarding/` and `messages/landing/` (one file
-  per language, translations typed `Translation<typeof …En>`). English is the
+  `*En`/`*Ru`/`*Ka` objects are spread into those files; each is composed of
+  one file per namespace and language in its folder
+  (`sections/insights/bookings.en.ts`, `bookings.ru.ts`, `bookings.ka.ts`; a
+  large namespace in a few parts); the wizard's and the landing page's in
+  `messages/onboarding/` and `messages/landing/` (one file per language).
+  Translations are typed `Translation<typeof …En>`. English is the
   reference; `ru` and `ka` are typed as `Messages`, so a key added in English
   and missing in another language fails `npm run typecheck` (and a unit test).
   At runtime a missing text falls back to English, then to the key.
