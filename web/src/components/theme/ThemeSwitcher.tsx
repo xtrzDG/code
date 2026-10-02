@@ -41,7 +41,7 @@ export function ThemeSwitcher({ className }: { className?: string }) {
             className={cn(
               "flex size-7 cursor-pointer items-center justify-center rounded-md transition-colors",
               "has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-1 has-[:focus-visible]:outline-focus",
-              isChecked ? "bg-surface-muted text-ink ring-1 ring-line ring-inset" : "text-ink-subtle hover:text-ink",
+              isChecked ? "bg-surface-muted text-ink ring-1 ring-line-strong/40 ring-inset" : "text-ink-subtle hover:text-ink",
             )}
           >
             <input

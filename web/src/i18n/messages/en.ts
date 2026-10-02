@@ -80,6 +80,7 @@ export const en = {
     platformAdmin: "Platform admin",
   },
   auth: {
+    aboutLink: "What the assistant does →",
     title: "Sign in",
     subtitle: "Enter your phone number or e-mail and we will send you a code. New here? The account is created automatically.",
     methodLabel: "Sign in with",

@@ -189,7 +189,7 @@ export function AutotestsPanel({
                   onClick={() => setOutcome(value)}
                   className={cn(
                     "h-8 rounded-lg px-3 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-focus",
-                    outcome === value ? "bg-surface text-ink shadow-sm" : "text-ink-muted hover:text-ink",
+                    outcome === value ? "bg-surface text-ink ring-1 ring-line-strong/40" : "text-ink-muted hover:text-ink",
                   )}
                 >
                   {value === "all"

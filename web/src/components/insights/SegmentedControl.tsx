@@ -36,7 +36,7 @@ export function SegmentedControl<Value extends string>({
               className={cn(
                 "relative flex shrink-0 cursor-pointer items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium whitespace-nowrap transition-colors",
                 "has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-1 has-[:focus-visible]:outline-focus",
-                checked ? "bg-surface text-ink shadow-sm" : "text-ink-muted hover:text-ink",
+                checked ? "bg-surface text-ink ring-1 ring-line-strong/40" : "text-ink-muted hover:text-ink",
               )}
             >
               <input
