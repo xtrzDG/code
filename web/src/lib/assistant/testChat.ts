@@ -4,11 +4,23 @@ import type { Schema } from "@/api/types";
 
 export type MessageView = Schema<"MessageView">;
 
-/** A test chat session key the API accepts: ^[A-Za-z0-9][A-Za-z0-9_-]*$, at most 64. */
-export function newSessionKey(now: number = Date.now(), random: () => number = Math.random): string {
-  const suffix = Math.floor(random() * 36 ** 6)
-    .toString(36)
-    .padStart(6, "0");
+const SESSION_SUFFIX_BYTES = 10;
+
+/** Cryptographically strong random bytes from the browser (or Node in tests). */
+function secureRandomBytes(length: number): Uint8Array {
+  return globalThis.crypto.getRandomValues(new Uint8Array(length));
+}
+
+/**
+ * A test chat session key the API accepts: ^[A-Za-z0-9][A-Za-z0-9_-]*$, at
+ * most 64. The suffix comes from crypto.getRandomValues, so keys cannot be
+ * guessed from the time.
+ */
+export function newSessionKey(
+  now: number = Date.now(),
+  randomBytes: (length: number) => Uint8Array = secureRandomBytes,
+): string {
+  const suffix = Array.from(randomBytes(SESSION_SUFFIX_BYTES), (byte) => (byte % 36).toString(36)).join("");
   return `web-${now.toString(36)}-${suffix}`;
 }
 

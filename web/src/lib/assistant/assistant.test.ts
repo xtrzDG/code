@@ -210,10 +210,14 @@ describe("going live", () => {
 
 describe("test chat", () => {
   it("makes session keys the API accepts", () => {
-    const key = newSessionKey(1_790_000_000_000, () => 0.5);
+    const key = newSessionKey(1_790_000_000_000, (length) => new Uint8Array(length).fill(200));
     expect(isSessionKey(key)).toBe(true);
     expect(key.length).toBeLessThanOrEqual(64);
-    expect(newSessionKey(1, () => 0)).not.toBe(newSessionKey(1, () => 0.99));
+    expect(newSessionKey(1, (length) => new Uint8Array(length))).not.toBe(
+      newSessionKey(1, (length) => new Uint8Array(length).fill(35)),
+    );
+    // The default source is crypto.getRandomValues: two keys made at once differ.
+    expect(newSessionKey(1)).not.toBe(newSessionKey(1));
     expect(isSessionKey("-bad")).toBe(false);
     expect(isSessionKey("a".repeat(65))).toBe(false);
   });

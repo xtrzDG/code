@@ -31,6 +31,12 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 # --- Runtime -----------------------------------------------------------------
 FROM python-base AS runtime
 
+# Take the Debian security fixes published since the base image was built
+# (image scans fail on fixable HIGH/CRITICAL findings).
+RUN apt-get update \
+    && apt-get upgrade --yes --no-install-recommends \
+    && rm -rf /var/lib/apt/lists/*
+
 RUN groupadd --system --gid 10001 workshop \
     && useradd --system --uid 10001 --gid workshop --home-dir /app \
        --no-create-home --shell /usr/sbin/nologin workshop
