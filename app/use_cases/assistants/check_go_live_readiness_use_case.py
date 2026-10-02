@@ -1,3 +1,5 @@
+"""Whether a version of the assistant may go live, check by check."""
+
 from typed_time_provider import Microseconds, WallClock
 
 from app.contracts.registries import NicheTemplateRegistryContract
@@ -12,46 +14,33 @@ from app.contracts.repositories.knowledge_repositories import (
 from app.contracts.use_case_contract import UseCaseContract
 from app.contracts.voice_platform import VoiceAgentProvisionerAdapterContract
 from app.schemas.configurations.app_settings import AppSettings
-from app.schemas.constants.assistants import (
-    AssistantVersionStatus,
-    AutotestOutcome,
-    GoLiveCheckCode,
-)
+from app.schemas.constants.assistants import GoLiveCheckCode
 from app.schemas.constants.environment import DeploymentEnvironment
 from app.schemas.constants.profiles import ProfileGapKind
 from app.schemas.domain.assistants import AssistantVersionDocument, AutotestRunDocument
 from app.schemas.domain.billing import SubscriptionDocument
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.dto.go_live import (
-    GoLiveAutotestRunSummary,
     GoLiveCheck,
     GoLiveReadiness,
     GoLiveReadinessRequest,
 )
 from app.schemas.dto.profiles.profile_gaps import ProfileGapFinding
-from app.schemas.typings.assistants.constrained_integers import AutotestScenarioCount
 from app.schemas.typings.assistants.constrained_strings import GoLiveCheckDetail
 from app.schemas.typings.assistants.strings import GoLiveCheckMessage
 from app.schemas.typings.platform.constrained_strings import EnvironmentVariableName
+from app.use_cases.assistants.go_live_autotest_checks import (
+    check_autotests,
+    summarize_autotest_run,
+)
 from app.use_cases.billing.billing_records import (
     find_current_subscription,
     is_service_paid_for,
 )
-from app.utilities.assembly.autotest_evaluation import count_run_scenarios
 from app.utilities.knowledge.profile_gaps import find_profile_gaps
 
 NO_SUBSCRIPTION_DETAIL: str = "none"
-PARTIAL_COVERAGE_DETAIL: str = "partial_coverage"
 APP_BASE_URL_SETTING: str = "APP_BASE_URL"
-# Versions that may go live as far as the autotests are concerned: READY
-# passed them, a PUBLISHED or ARCHIVED one was live already (rollback).
-AUTOTESTS_OK_STATUSES: frozenset[AssistantVersionStatus] = frozenset(
-    {
-        AssistantVersionStatus.READY,
-        AssistantVersionStatus.PUBLISHED,
-        AssistantVersionStatus.ARCHIVED,
-    }
-)
 
 
 class CheckGoLiveReadinessUseCase(
@@ -255,62 +244,3 @@ class CheckGoLiveReadinessUseCase(
             ),
             details=[GoLiveCheckDetail(str(name)) for name in missing],
         )
-
-
-def check_autotests(
-    version: AssistantVersionDocument,
-    run: AutotestRunDocument | None,
-) -> GoLiveCheck:
-    """Passed autotests: a READY version (or one that was live already)."""
-
-    details: list[GoLiveCheckDetail] = [GoLiveCheckDetail(version.status.value)]
-    if run is not None:
-        details.append(GoLiveCheckDetail(run.status.value))
-        if not run.is_full_coverage:
-            details.append(GoLiveCheckDetail(PARTIAL_COVERAGE_DETAIL))
-
-    number: int = int(version.version_number)
-    message: str
-    match version.status:
-        case AssistantVersionStatus.READY:
-            message = f"Version {number} passed its autotests."
-        case AssistantVersionStatus.PUBLISHED:
-            message = f"Version {number} is live."
-        case AssistantVersionStatus.ARCHIVED:
-            message = f"Version {number} was live before."
-        case AssistantVersionStatus.TESTING:
-            message = (
-                f"Version {number} is being tested; publish it when the "
-                "autotests finish."
-            )
-        case AssistantVersionStatus.DRAFT | AssistantVersionStatus.TESTS_FAILED:
-            message = (
-                f"Version {number} has not passed the autotests (status "
-                f"{version.status.value}). Run the autotests in every language "
-                "and publish it when it is ready."
-            )
-
-    return GoLiveCheck(
-        code=GoLiveCheckCode.AUTOTESTS,
-        is_ok=version.status in AUTOTESTS_OK_STATUSES,
-        is_blocking=True,
-        message=GoLiveCheckMessage(message),
-        details=details,
-    )
-
-
-def summarize_autotest_run(run: AutotestRunDocument) -> GoLiveAutotestRunSummary:
-    return GoLiveAutotestRunSummary(
-        id=run.id,
-        status=run.status,
-        is_full_coverage=run.is_full_coverage,
-        is_passed=run.is_passed,
-        scenario_count=count_run_scenarios(run),
-        completed_count=AutotestScenarioCount(len(run.results)),
-        passed_count=AutotestScenarioCount(
-            sum(1 for result in run.results if result.outcome is AutotestOutcome.PASSED)
-        ),
-        pass_rate=run.pass_rate,
-        average_score=run.average_score,
-        updated_at=run.updated_at,
-    )
