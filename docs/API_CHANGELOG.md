@@ -13,7 +13,7 @@ label and a migration path).
 
 ## 2026-10-02 — inbox counts for the cabinet's navigation
 
-Spec: `f5a7d64f13ad3ace`
+Spec: `4064d2d88d252e03`
 
 - **Added** `GET /v1/businesses/{business_id}/inbox-counts` (owners and
   staff): `open_handoff_count` (handoffs nobody has resolved) and
@@ -22,6 +22,9 @@ Spec: `f5a7d64f13ad3ace`
   only, so a read writes no audit entry (unlike the handoff and lead
   lists).
 - **Added** schema `InboxCounts`.
+- **Changed** `POST /v1/widget/errors` documents the standard `ErrorBody`
+  errors (`401` … `502`) like every other operation; it still answers only
+  `204`, `413`, `422` and `429`.
 
 ## 2026-10-02 — login abuse protection, body limits and security headers
 

@@ -7,7 +7,7 @@
 
 import type { Page } from "@playwright/test";
 
-import { BUSINESS_SECTIONS } from "../src/lib/navigation";
+import { BUSINESS_PAGES, setupPath } from "../src/lib/navigation";
 
 import { uniqueEmail } from "./support/api";
 import { expect, test } from "./support/fixtures";
@@ -85,13 +85,25 @@ test.describe("Content Security Policy", () => {
   });
 
   test("no page of a business breaks it", async ({ page, owner }) => {
+    test.setTimeout(120_000);
     await watchPolicyViolations(page);
 
     await openAndCheck(page, "/businesses");
-    for (const section of BUSINESS_SECTIONS) {
-      await test.step(section, async () => {
-        await openAndCheck(page, `/b/${owner.businessId}/${section}`);
-        await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+    for (const businessPage of BUSINESS_PAGES) {
+      await test.step(businessPage, async () => {
+        await openAndCheck(page, `/b/${owner.businessId}/${businessPage}`);
+        await expect(page.getByRole("heading", { level: 1 }).first()).toBeVisible();
+      });
+    }
+  });
+
+  test("the setup invitation and the setup flow do not break it", async ({ page, newOwner }) => {
+    await watchPolicyViolations(page);
+
+    for (const path of [`/b/${newOwner.businessId}/overview`, setupPath(newOwner.businessId)]) {
+      await test.step(path, async () => {
+        await openAndCheck(page, path);
+        await expect(page.getByRole("heading", { level: 1 }).first()).toBeVisible();
       });
     }
   });

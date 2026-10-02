@@ -5,6 +5,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, Request, Response, status
 
 from app.contracts.operator_contract import OperatorContract
+from app.gateways.http.openapi_error_contract import standard_error_responses
 from app.gateways.http.strict_request_parsing import (
     build_json_body_dependency,
     describe_json_body,
@@ -32,7 +33,7 @@ def build_widget_error_router(
     preflight, no cookies).
     """
 
-    router = APIRouter(tags=["widget"])
+    router = APIRouter(tags=["widget"], responses=standard_error_responses())
 
     @router.options(WIDGET_ERRORS_PATH, include_in_schema=False)
     def allow_widget_error_preflight() -> Response:
