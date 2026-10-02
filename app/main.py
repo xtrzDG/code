@@ -173,9 +173,10 @@ def configure_platform_bot(app_container: AppContainer) -> None:
     ):
         return
 
+    channel_operators = app_container.operators.channels
     try:
         profile: TelegramBotProfile = (
-            app_container.operators.configure_platform_bot_webhook_operator().operate(
+            channel_operators.configure_platform_bot_webhook_operator().operate(
                 PlatformBotWebhookSetup()
             )
         )

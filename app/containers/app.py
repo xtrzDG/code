@@ -6,7 +6,7 @@ from app.containers.clients import ClientsContainer
 from app.containers.config import ConfigContainer
 from app.containers.facilitators import FacilitatorsContainer
 from app.containers.gateways import GatewaysContainer
-from app.containers.operators import OperatorsContainer
+from app.containers.operators.operators_container import OperatorsContainer
 from app.containers.orchestrators.orchestrators_container import (
     OrchestratorsContainer,
 )

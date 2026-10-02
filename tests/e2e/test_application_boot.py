@@ -116,7 +116,7 @@ def test_every_provider_of_the_container_resolves() -> None:
         resolve_every_provider(child_provider(), container_name, resolved)
 
     assert len(resolved) > 400
-    assert "operators.widget_message_operator" in resolved
+    assert "operators.channels.widget_message_operator" in resolved
     assert "gateways.background_worker" in resolved
 
 
