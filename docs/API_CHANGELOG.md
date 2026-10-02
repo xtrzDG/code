@@ -11,6 +11,34 @@ Kinds of change: **Added**, **Changed** (additive), **Deprecated** (with
 sunset date), **Removed** and **Breaking** (only with the `api-breaking`
 label and a migration path).
 
+## 2026-10-02 — inbox and outbox for customer messages
+
+Spec: `c9b705ce8891f05e`
+
+The platform webhooks answer as soon as the delivery is stored in the
+inbox; the background worker answers the customer later. Telegram, Meta
+and ElevenLabs read only the HTTP status of these answers, and the cabinet
+does not call these routes, so no client has to change. The two new enum
+values below are reported by `oasdiff` as breaking (new value of a
+response enum on a frozen route): the pull request carries the
+`api-breaking` label.
+
+- **Added** `queued` and `duplicates` to `ChannelWebhookOutcome`
+  (`POST /v1/channels/telegram/{channel_id}/webhook`,
+  `POST /v1/channels/meta/webhook`): new customer messages stored for the
+  worker, and messages the platform delivered before.
+- **Changed** `answered` and `silenced` of `ChannelWebhookOutcome` are
+  always `0` now (replies are sent by the worker, not within the request);
+  `failed` counts messages that could not be stored.
+- **Breaking** `PlatformBotCommandResult` gains `queued`
+  (`POST /v1/channels/telegram-platform/webhook`): the staff message is
+  stored and the worker answers it. Migration path: none needed, Telegram
+  ignores the body.
+- **Breaking** `PostCallEventStatus` gains `queued`
+  (`POST /v1/voice/webhooks/post-call`): the report is stored and the
+  worker files the call; a repeated delivery of the same report answers
+  `duplicate`. Migration path: none needed, ElevenLabs ignores the body.
+
 ## 2026-10-02 — background job queue
 
 Spec: `f4380cc473533ee9`
