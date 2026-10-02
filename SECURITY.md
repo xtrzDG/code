@@ -74,6 +74,23 @@ cooldown; security updates arrive as soon as an advisory is published. This
 is how the DPA's promise of "regular updates of software dependencies"
 (section 9.1) is kept.
 
+At run time:
+
+- Sign-in codes cannot be guessed in parallel: each check takes one of the
+  challenge's attempts atomically before the code is compared, checks are
+  limited per client network and per challenge, and a right code opens one
+  session (compare-and-swap).
+- Codes are not sent to premium-rate, shared-cost or satellite numbers;
+  codes to new phones are capped per country, verified users have a budget
+  of their own, a cap that trips alerts the platform admins, and risky
+  requests need a Cloudflare Turnstile check (README, "Защита входа").
+- The API sends `nosniff`, `Referrer-Policy`, `X-Frame-Options`,
+  `frame-ancestors 'none'`, `no-store` on `/v1` and HSTS in production,
+  serves no `/docs` or `/openapi.json` in production and refuses request
+  bodies over the route's limit (413). The cabinet sends a nonce-based CSP,
+  HSTS, COOP and CORP, keeps the session in a `__Host-` cookie and applies
+  the same body limits (web/README.md, "Security notes").
+
 ## Triage of automated findings
 
 - **Fix first.** Upgrade the dependency or change the code. A gate is never
