@@ -12,17 +12,16 @@ from app.contracts.live_events import (
     OpenLiveStreamContract,
 )
 from app.schemas.dto.errors import ErrorReason
-from app.schemas.dto.live_events import LiveEvent, LiveEventReplay
+from app.schemas.dto.live_events import LiveEvent, LiveEventReplay, LiveStreamLimits
 from app.schemas.exceptions.application_errors import RateLimitedError
 from app.schemas.typings.businesses.prefixed_id import BusinessId
+from app.schemas.typings.live_events.constrained_integers import LiveStreamsPerUser
 from app.schemas.typings.live_events.constrained_strings import LiveEventId
 from app.schemas.typings.platform.constrained_integers import RetryAfterSeconds
 from app.schemas.typings.platform.constrained_strings import ErrorReasonCode
 from app.schemas.typings.platform.strings import ErrorReasonMessage
 from app.schemas.typings.users.prefixed_id import UserId
 
-# Tabs and devices of one person streaming from one API process at once.
-DEFAULT_MAX_STREAMS_PER_USER: int = 5
 # A refused stream asks again after this long (the cabinet backs off too).
 STREAM_LIMIT_RETRY_SECONDS: int = 30
 
@@ -69,10 +68,10 @@ class LiveEventStreamFacilitator(LiveEventStreamFacilitatorContract):
     def __init__(
         self,
         bus: LiveEventBusAdapterContract,
-        max_streams_per_user: int = DEFAULT_MAX_STREAMS_PER_USER,
+        limits: LiveStreamLimits,
     ) -> None:
         self._bus: LiveEventBusAdapterContract = bus
-        self._max_streams_per_user: int = max_streams_per_user
+        self._max_streams_per_user: LiveStreamsPerUser = limits.streams_per_user
         self._lock: threading.Lock = threading.Lock()
         self._streams_per_user: Counter[UserId] = Counter()
 

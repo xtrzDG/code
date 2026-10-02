@@ -21,6 +21,8 @@ from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.live_events.constrained_strings import LiveEventId
 
 NOTIFY_STATEMENT: str = "select pg_notify(%s, %s)"
+# A busy pool delays the change's own request only this long for its event.
+PUBLISH_ACQUIRE_TIMEOUT_SECONDS: float = 2.0
 
 
 class PostgresLiveEventBusAdapter(LiveEventBusAdapterContract):
@@ -46,7 +48,9 @@ class PostgresLiveEventBusAdapter(LiveEventBusAdapterContract):
 
     def publish(self, event: LiveEvent) -> None:
         try:
-            with self._connection_pool.connection() as connection:
+            with self._connection_pool.connection(
+                acquire_timeout_seconds=PUBLISH_ACQUIRE_TIMEOUT_SECONDS
+            ) as connection:
                 connection.execute(
                     NOTIFY_STATEMENT, (LIVE_EVENTS_CHANNEL, event.model_dump_json())
                 )
@@ -74,5 +78,7 @@ class PostgresLiveEventBusAdapter(LiveEventBusAdapterContract):
         return self._fanout.replay_after(business_id, event_id)
 
     def close(self) -> None:
-        self._listener.stop()
+        # The streams end at once; the LISTEN thread notices the stop within
+        # a second and closes its connection (it is a daemon thread).
         self._fanout.close()
+        self._listener.stop(timeout_seconds=0.0)

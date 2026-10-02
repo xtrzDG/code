@@ -18,6 +18,10 @@ from app.schemas.dto.handoffs import (
     RecordUnansweredQuestionCommand,
     UnansweredQuestionView,
 )
+from app.schemas.dto.operations.attention_counts import (
+    AttentionCounts,
+    AttentionCountsQuery,
+)
 from app.schemas.dto.operations.dashboard import DashboardStats, DashboardStatsQuery
 from app.schemas.dto.operations.handoffs import (
     HandoffListItem,
@@ -49,6 +53,9 @@ from app.use_cases.handoffs.record_unanswered_question_use_case import (
     RecordUnansweredQuestionUseCase,
 )
 from app.use_cases.handoffs.resolve_handoff_use_case import ResolveHandoffUseCase
+from app.use_cases.insights.get_attention_counts_use_case import (
+    GetAttentionCountsUseCase,
+)
 from app.use_cases.insights.get_dashboard_stats_use_case import GetDashboardStatsUseCase
 from app.use_cases.insights.get_inbox_counts_use_case import GetInboxCountsUseCase
 from app.use_cases.leads.create_lead_use_case import CreateLeadUseCase
@@ -177,6 +184,13 @@ class FollowUpUseCasesContainer(containers.DeclarativeContainer):
     ] = Factory(
         GetInboxCountsUseCase,
         business_repo=repositories.business_repo,
-        handoff_repo=repositories.handoff_repo,
-        lead_repo=repositories.lead_repo,
+        attention_count_repo=repositories.attention_count_repo,
+    )
+    get_attention_counts_use_case: Factory[
+        UseCaseContract[AttentionCountsQuery, AttentionCounts]
+    ] = Factory(
+        GetAttentionCountsUseCase,
+        business_repo=repositories.business_repo,
+        attention_count_repo=repositories.attention_count_repo,
+        wall_clock=time_provider.microsecond_wall_clock,
     )

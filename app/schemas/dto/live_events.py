@@ -13,11 +13,15 @@ from typed_time_provider import Microseconds
 from app.schemas.constants.live_events import LiveEventKind
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.live_events.booleans import IsLiveResyncRequired
+from app.schemas.typings.live_events.constrained_floats import (
+    LiveStreamHeartbeatSeconds,
+    LiveStreamLifetimeSeconds,
+)
+from app.schemas.typings.live_events.constrained_integers import LiveStreamsPerUser
 from app.schemas.typings.live_events.constrained_strings import (
     LiveEventId,
     LiveEventSubjectId,
 )
-from app.schemas.typings.users.prefixed_id import UserId
 
 # An event names at most this many changed things (one booking, one
 # handoff and its conversation, ...).
@@ -52,10 +56,14 @@ class LiveEventReplay(ImmutableDTO):
     is_resync_required: IsLiveResyncRequired = False
 
 
-class LiveStreamRequest(ImmutableDTO):
-    """A signed-in member opens the live stream of a business they may see."""
+class LiveStreamLimits(ImmutableDTO):
+    """
+    How the API keeps live streams: a heartbeat comment every
+    `heartbeat_seconds` of quiet, each stream ended after
+    `lifetime_seconds` (the cabinet reconnects with its Last-Event-ID), and
+    at most `streams_per_user` streams of one person on one process.
+    """
 
-    user_id: UserId
-    business_id: BusinessId
-    # The `Last-Event-ID` the cabinet sent; None for a first connection.
-    last_event_id: LiveEventId | None = None
+    heartbeat_seconds: LiveStreamHeartbeatSeconds = LiveStreamHeartbeatSeconds(20.0)
+    lifetime_seconds: LiveStreamLifetimeSeconds = LiveStreamLifetimeSeconds(900.0)
+    streams_per_user: LiveStreamsPerUser = LiveStreamsPerUser(5)

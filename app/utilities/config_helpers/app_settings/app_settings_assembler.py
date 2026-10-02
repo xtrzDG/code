@@ -78,6 +78,9 @@ def assemble_app_settings(environment_variables: Mapping[str, str]) -> AppSettin
         environment=environment,
         **read_public_address_settings(environment_variables, is_development),
         database_url=database_url,
+        live_events_database_url=optional_text(
+            environment_variables, "LIVE_EVENTS_DATABASE_URL", DatabaseUrl
+        ),
         encryption_key=optional_text(
             environment_variables, "ENCRYPTION_KEY", PlatformSecret
         ),

@@ -16,6 +16,7 @@ from app.schemas.constants.live_events import LiveEventKind
 from app.schemas.dto.live_events import MAX_LIVE_EVENT_SUBJECTS, LiveEvent
 from app.schemas.exceptions.base_exception import ApplicationError
 from app.schemas.typings.businesses.prefixed_id import BusinessId
+from app.schemas.typings.conversations.booleans import IsSandboxConversation
 from app.schemas.typings.live_events.constrained_strings import (
     LiveEventId,
     LiveEventSubjectId,
@@ -47,7 +48,11 @@ class EventPublisherFacilitator(EventPublisherFacilitatorContract):
         business_id: BusinessId,
         event: LiveEventKind,
         ids: Sequence[BasePrefixedTypedId] = (),
+        is_sandbox: IsSandboxConversation = False,
     ) -> None:
+        if is_sandbox:
+            return
+
         try:
             live_event: LiveEvent = self._build(business_id, event, ids)
             self._bus.publish(live_event)

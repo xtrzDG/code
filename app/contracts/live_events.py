@@ -20,6 +20,7 @@ from app.contracts.facilitator_contract import FacilitatorContract
 from app.schemas.constants.live_events import LiveEventKind
 from app.schemas.dto.live_events import LiveEvent, LiveEventReplay
 from app.schemas.typings.businesses.prefixed_id import BusinessId
+from app.schemas.typings.conversations.booleans import IsSandboxConversation
 from app.schemas.typings.live_events.constrained_strings import LiveEventId
 from app.schemas.typings.users.prefixed_id import UserId
 
@@ -88,11 +89,14 @@ class EventPublisherFacilitatorContract(FacilitatorContract, Protocol):
         business_id: BusinessId,
         event: LiveEventKind,
         ids: Sequence[BasePrefixedTypedId] = (),
+        is_sandbox: IsSandboxConversation = False,
     ) -> None:
         """
         Tell the business's open cabinets what changed (by id, never with
-        customer text). Never raises: a lost event only delays the
-        cabinet's update until its next reload.
+        customer text). Sandbox activity (the owner's test chat, autotests)
+        is not announced: the cabinet's lists and badges leave it out. Never
+        raises: a lost event only delays the cabinet's update until its
+        next reload.
         """
         raise NotImplementedError
 

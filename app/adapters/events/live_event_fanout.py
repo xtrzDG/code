@@ -30,7 +30,7 @@ type SubscriberAction = Callable[[LiveEventSubscriberContract], None]
 
 @dataclass(eq=False)
 class _Subscription(LiveEventSubscriptionContract):
-    fanout: "LiveEventFanout"
+    fanout: LiveEventFanout
     business_id: BusinessId
     subscriber: LiveEventSubscriberContract
     is_cancelled: bool = field(default=False)
@@ -69,7 +69,10 @@ class LiveEventFanout:
         with self._lock:
             subscription.is_cancelled = True
             business_subscriptions = self._subscriptions.get(subscription.business_id)
-            if business_subscriptions is None or subscription not in business_subscriptions:
+            if (
+                business_subscriptions is None
+                or subscription not in business_subscriptions
+            ):
                 return
 
             business_subscriptions.remove(subscription)

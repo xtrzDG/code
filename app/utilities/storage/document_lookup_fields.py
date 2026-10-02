@@ -73,8 +73,23 @@ DOCUMENT_LOOKUP_FIELDS: Mapping[
     DocumentCollectionName("otp_challenges"): (_integer("created_at"),),
     # The businesses of a signed-in user.
     DocumentCollectionName("businesses"): (_element("members[].user_id"),),
-    # Webhook routing: the channel of an incoming message.
-    DocumentCollectionName("channels"): (_filter("kind"), _text("external_id")),
+    # Webhook routing: the channel of an incoming message; channels in
+    # error (a navigation badge).
+    DocumentCollectionName("channels"): (
+        _filter("kind"),
+        _text("external_id"),
+        _text("status"),
+    ),
+    # What waits for a person (navigation badges, migration 1040): open
+    # handoffs, new requests and upcoming bookings to confirm, without
+    # sandbox activity.
+    DocumentCollectionName("handoffs"): (_text("status"), _filter("is_sandbox")),
+    DocumentCollectionName("leads"): (_text("status"), _filter("is_sandbox")),
+    DocumentCollectionName("bookings"): (
+        _text("status"),
+        _filter("is_sandbox"),
+        _integer("starts_at"),
+    ),
     # Every customer message: the contact, its open conversation, the
     # hourly message count and the transcript.
     DocumentCollectionName("contacts"): (
