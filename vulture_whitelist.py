@@ -21,6 +21,7 @@ _.idle_connection_count  # app/clients/postgres/postgres_connection_pool_client.
 _.open_connection_count  # app/clients/postgres/postgres_connection_pool_client.py
 _.buffered_event_count  # app/facilitators/observability/langfuse_trace_facilitator.py
 _.collection_name_for  # app/utilities/storage/document_collection_catalog.py
+_.run_once  # app/gateways/worker/background_worker.py
 
 # Container providers kept for the template example and for tests that
 # build the synchronous autotest run and bulk knowledge upserts.

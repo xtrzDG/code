@@ -23,7 +23,6 @@ from app.schemas.typings.platform.constrained_strings import (
 )
 from app.schemas.typings.platform.prefixed_id import QueuedJobId
 
-STATUS_FIELD: str = "status"
 FINISHED_STATUSES: frozenset[QueuedJobStatus] = frozenset(
     {QueuedJobStatus.DONE, QueuedJobStatus.DEAD, QueuedJobStatus.DISCARDED}
 )
@@ -149,7 +148,9 @@ class InMemoryQueuedJobClaimAdapter(QueuedJobClaimAdapterContract):
         return ProcessedItemCount(purged)
 
     def _with_status(self, status: QueuedJobStatus) -> list[QueuedJobDocument]:
-        return self._collection.list_by_field(STATUS_FIELD, status.value)
+        # The in-memory twin reads its own dict; status is not a declared
+        # lookup field (the Postgres claims use their own partial indexes).
+        return [job for job in self._collection.list_all() if job.status is status]
 
 
 def lease_job(

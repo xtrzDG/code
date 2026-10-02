@@ -11,6 +11,22 @@ Kinds of change: **Added**, **Changed** (additive), **Deprecated** (with
 sunset date), **Removed** and **Breaking** (only with the `api-breaking`
 label and a migration path).
 
+## 2026-10-02 — background job queue
+
+Spec: `f4380cc473533ee9`
+
+- **Added** `GET /v1/admin/jobs` (platform admins only): background jobs,
+  the most recently changed first, paged with `limit` and `cursor` and
+  filtered by `status` (`pending`, `running`, `done`, `dead`, `discarded`)
+  and `name`. Job payloads are never returned.
+- **Added** `POST /v1/admin/jobs/{job_id}/retry` (a dead or discarded job
+  runs again) and `POST /v1/admin/jobs/{job_id}/discard` (a dead or waiting
+  job is dropped). Both answer the job and the id of the audit entry that
+  records the action; `409` when the job is in another state, `404` for an
+  unknown job, `403` for anyone but a platform admin.
+- **Added** schemas `QueuedJobView`, `QueuedJobPage`, `QueuedJobStatus`,
+  `JobLane` and `AdminJobActionResult`.
+
 ## 2026-10-02
 
 Spec: `1052b4e91d0ed103`
