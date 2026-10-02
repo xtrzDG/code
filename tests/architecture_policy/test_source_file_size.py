@@ -13,10 +13,14 @@ MAX_SOURCE_FILE_LINES: int = 300
 PROJECT_ROOT: Path = Path(__file__).resolve().parents[2]
 # Checked folders (relative to the project root) and the suffixes of their
 # source files. The widget's parts are assembled into /widget.js at startup.
+# Tests follow the same rule: shared fixtures and fakes live in their own
+# modules next to the test files that use them. The cabinet (web/) has the
+# same limit in its ESLint config (max-lines).
 CHECKED_SOURCE_ROOTS: tuple[tuple[str, frozenset[str]], ...] = (
     ("app", frozenset({".py"})),
     ("scripts", frozenset({".py"})),
     ("app/gateways/http/static", frozenset({".js", ".html"})),
+    ("tests", frozenset({".py"})),
 )
 
 

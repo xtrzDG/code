@@ -37,11 +37,14 @@ Every HTTP endpoint runs `operator.operate` -> `pipeline.start` ->
 - Group a module's files in a sub-package when it has more than a few files,
   e.g. `app/use_cases/bookings/`.
 - A hand-written source file has at most 300 lines (aim for 150–300): every
-  `.py` file under `app/` and `scripts/`, and the widget's parts under
-  `app/gateways/http/static/`. Split a bigger file along its
+  `.py` file under `app/`, `scripts/` and `tests/`, and the widget's parts
+  under `app/gateways/http/static/`. Split a bigger file along its
   responsibilities (a use case with its helpers in a sub-package, data
-  tables in data modules), not at an arbitrary line;
-  `tests/architecture_policy/test_source_file_size.py` checks it.
+  tables in data modules, a test file's shared fixtures and fakes in their
+  own modules next to it), not at an arbitrary line;
+  `tests/architecture_policy/test_source_file_size.py` checks it. The
+  cabinet's files under `web/src/` and `web/e2e/` have the same limit
+  (ESLint `max-lines`, generated files exempt); CI fails on a longer file.
 - Module-specific DTOs go to a new file `app/schemas/dto/<module>.py`; do not
   edit DTO files owned by the foundation unless a field is truly missing.
 - New primitives go to `app/schemas/typings/<bounded_context>/<allowed_name>.py`
