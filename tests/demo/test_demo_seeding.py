@@ -8,7 +8,8 @@ from typing import Any, cast
 
 from fastapi.testclient import TestClient
 
-from tests.e2e.harness import E2E_ENVIRONMENT, Workshop, bearer, start_workshop
+from tests.e2e.harness import Workshop, bearer, start_workshop
+from tests.e2e.harness_settings import E2E_ENVIRONMENT
 
 type JsonObject = dict[str, Any]
 

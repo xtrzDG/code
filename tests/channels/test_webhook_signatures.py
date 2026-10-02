@@ -23,11 +23,8 @@ from app.utilities.channels.webhook_signatures import (
     read_elevenlabs_signature,
     sign_body,
 )
-from tests.channels.testbed import (
-    ELEVENLABS_WEBHOOK_SECRET,
-    sign_elevenlabs,
-    sign_meta,
-)
+from tests.channels.channels_payloads import sign_elevenlabs, sign_meta
+from tests.channels.channels_settings import ELEVENLABS_WEBHOOK_SECRET
 
 BODY: bytes = '{"text":"გამარჯობა, שלום"}'.encode()
 NOW: int = 1_790_856_000

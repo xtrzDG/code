@@ -1,86 +1,22 @@
-"""The migration runner against a real Postgres: idempotent, safe, concurrent."""
+"""The migration runner against a real Postgres: idempotent and concurrent."""
 
-import io
-import os
 import shutil
-import subprocess
-import sys
 import threading
 from pathlib import Path
 
 import psycopg
 import pytest
 
-from app.adapters.storage.postgres.migrate import main
-from app.adapters.storage.postgres.postgres_schema_migration_store_adapter import (
-    PostgresSchemaMigrationStoreAdapter,
-)
-from app.adapters.storage.postgres.sql_file_migration_source_adapter import (
-    SqlFileMigrationSourceAdapter,
-)
-from app.clients.postgres.postgres_connection_pool_client import (
-    PostgresConnectionPoolClient,
-)
-from app.schemas.dto.storage import (
-    ApplyDatabaseMigrationsCommand,
-    DatabaseMigrationsReport,
-)
-from app.schemas.exceptions.application_errors import (
-    ConflictError,
-    ExternalServiceError,
-)
-from app.schemas.typings.platform.strings import DatabaseUrl
-from app.use_cases.maintenance.apply_database_migrations_use_case import (
-    ApplyDatabaseMigrationsUseCase,
-)
+from app.schemas.dto.storage import DatabaseMigrationsReport
+from app.schemas.exceptions.application_errors import ConflictError
 from app.utilities.storage.document_collection_catalog import DOCUMENT_COLLECTIONS
+from tests.storage.migration_steps import (
+    MIGRATION_NAMES,
+    run_migrations,
+    workshop_tables,
+)
 from tests.storage.postgres_server import ThrowawayPostgresServer
-from tests.storage.storage_testing import (
-    FIXED_NANOSECONDS,
-    MIGRATIONS_DIRECTORY,
-    PROJECT_ROOT_DIRECTORY,
-    build_fixed_wall_clock,
-)
-
-MIGRATION_NAMES: list[str] = sorted(
-    path.stem for path in MIGRATIONS_DIRECTORY.glob("*.sql")
-)
-
-
-def run_migrations(
-    database_url: DatabaseUrl,
-    migrations_directory: Path = MIGRATIONS_DIRECTORY,
-    is_dry_run: bool = False,
-) -> DatabaseMigrationsReport:
-    connection_pool = PostgresConnectionPoolClient(database_url, max_size=1)
-    try:
-        return ApplyDatabaseMigrationsUseCase(
-            migration_source=SqlFileMigrationSourceAdapter(migrations_directory),
-            migration_store=PostgresSchemaMigrationStoreAdapter(connection_pool),
-            wall_clock=build_fixed_wall_clock(),
-        ).run(ApplyDatabaseMigrationsCommand(is_dry_run=is_dry_run))
-    finally:
-        connection_pool.close()
-
-
-def copy_migrations(target_directory: Path) -> Path:
-    target_directory.mkdir()
-    for source_path in MIGRATIONS_DIRECTORY.glob("*.sql"):
-        shutil.copy(source_path, target_directory / source_path.name)
-
-    return target_directory
-
-
-def workshop_tables(
-    postgres_server: ThrowawayPostgresServer,
-    database_name: str,
-) -> set[str]:
-    with postgres_server.admin_connection(database_name) as connection:
-        rows = connection.execute(
-            "select tablename from pg_tables where schemaname = 'workshop'"
-        ).fetchall()
-
-    return {str(row[0]) for row in rows}
+from tests.storage.storage_testing import FIXED_NANOSECONDS, MIGRATIONS_DIRECTORY
 
 
 def test_migrations_apply_once_and_then_do_nothing(
@@ -170,97 +106,6 @@ def test_dry_run_lists_pending_without_applying(
     assert run_migrations(database_url, is_dry_run=True).pending == []
 
 
-def test_edited_applied_migration_is_refused(
-    postgres_server: ThrowawayPostgresServer,
-    empty_database_name: str,
-    tmp_path: Path,
-) -> None:
-    database_url = postgres_server.app_database_url(empty_database_name)
-    migrations_directory = copy_migrations(tmp_path / "migrations")
-    run_migrations(database_url, migrations_directory)
-    first_file = migrations_directory / f"{MIGRATION_NAMES[0]}.sql"
-    first_file.write_text(
-        first_file.read_text(encoding="utf-8") + "\n-- edited\n", encoding="utf-8"
-    )
-
-    with pytest.raises(ConflictError, match="changed after it was applied"):
-        run_migrations(database_url, migrations_directory)
-
-
-def test_crlf_checkout_keeps_the_checksum(
-    postgres_server: ThrowawayPostgresServer,
-    empty_database_name: str,
-    tmp_path: Path,
-) -> None:
-    database_url = postgres_server.app_database_url(empty_database_name)
-    migrations_directory = copy_migrations(tmp_path / "migrations")
-    run_migrations(database_url, migrations_directory)
-    for file_path in migrations_directory.glob("*.sql"):
-        file_path.write_bytes(file_path.read_bytes().replace(b"\n", b"\r\n"))
-
-    report = run_migrations(database_url, migrations_directory)
-
-    assert report.already_applied == MIGRATION_NAMES
-
-
-def test_failing_migration_is_rolled_back_and_can_be_fixed(
-    postgres_server: ThrowawayPostgresServer,
-    empty_database_name: str,
-    tmp_path: Path,
-) -> None:
-    database_url = postgres_server.app_database_url(empty_database_name)
-    migrations_directory = copy_migrations(tmp_path / "migrations")
-    broken_file = migrations_directory / "0099_broken_step.sql"
-    broken_file.write_text(
-        "select workshop.create_document_collection('half_done');\nselect 1 / 0;\n",
-        encoding="utf-8",
-    )
-
-    with pytest.raises(ExternalServiceError, match="0099_broken_step") as error:
-        run_migrations(database_url, migrations_directory)
-
-    assert "DivisionByZero" in str(error.value)
-    tables = workshop_tables(postgres_server, empty_database_name)
-    assert "half_done" not in tables
-    assert "users" in tables
-    broken_file.write_text(
-        "select workshop.create_document_collection('half_done');\n",
-        encoding="utf-8",
-    )
-    report = run_migrations(database_url, migrations_directory)
-    assert report.newly_applied == ["0099_broken_step"]
-    assert "half_done" in workshop_tables(postgres_server, empty_database_name)
-
-
-def test_script_session_settings_end_with_the_migration(
-    postgres_server: ThrowawayPostgresServer,
-    empty_database_name: str,
-    tmp_path: Path,
-) -> None:
-    database_url = postgres_server.app_database_url(empty_database_name)
-    migrations_directory = copy_migrations(tmp_path / "migrations")
-    (migrations_directory / "0098_session_setting.sql").write_text(
-        "set statement_timeout = '1ms';\nset search_path = workshop;\n",
-        encoding="utf-8",
-    )
-    connection_pool = PostgresConnectionPoolClient(database_url, max_size=1)
-    try:
-        ApplyDatabaseMigrationsUseCase(
-            migration_source=SqlFileMigrationSourceAdapter(migrations_directory),
-            migration_store=PostgresSchemaMigrationStoreAdapter(connection_pool),
-            wall_clock=build_fixed_wall_clock(),
-        ).run(ApplyDatabaseMigrationsCommand())
-        with connection_pool.connection() as connection:
-            row = connection.execute(
-                "select current_setting('statement_timeout'), "
-                "current_setting('search_path')"
-            ).fetchone()
-    finally:
-        connection_pool.close()
-
-    assert row == ("0", '"$user", public')
-
-
 def test_unknown_and_reused_versions(
     postgres_server: ThrowawayPostgresServer,
     empty_database_name: str,
@@ -316,73 +161,3 @@ def test_concurrent_runners_apply_each_migration_once(
             "select count(*) from workshop.schema_migrations"
         ).fetchone()
     assert row == (len(MIGRATION_NAMES),)
-
-
-def test_main_applies_and_reports(
-    postgres_server: ThrowawayPostgresServer,
-    empty_database_name: str,
-) -> None:
-    database_url = postgres_server.app_database_url(empty_database_name)
-    output, error_output = io.StringIO(), io.StringIO()
-
-    dry_exit_code = main(
-        ["--dry-run"],
-        {"DATABASE_URL": database_url},
-        output=output,
-        error_output=error_output,
-    )
-    apply_exit_code = main(
-        [], {"DATABASE_URL": database_url}, output=output, error_output=error_output
-    )
-
-    assert dry_exit_code == 0
-    assert apply_exit_code == 0
-    assert f"pending  {MIGRATION_NAMES[0]}" in output.getvalue()
-    assert f"applied  {MIGRATION_NAMES[0]}" in output.getvalue()
-    assert f"{len(MIGRATION_NAMES)} applied now" in output.getvalue()
-    assert error_output.getvalue() == ""
-
-
-def test_main_reports_a_failed_migration(
-    postgres_server: ThrowawayPostgresServer,
-    empty_database_name: str,
-    tmp_path: Path,
-) -> None:
-    database_url = postgres_server.app_database_url(empty_database_name)
-    migrations_directory = tmp_path / "migrations"
-    migrations_directory.mkdir()
-    (migrations_directory / "0001_broken.sql").write_text(
-        "select * from missing_table;", encoding="utf-8"
-    )
-    error_output = io.StringIO()
-
-    exit_code = main(
-        ["--directory", str(migrations_directory)],
-        {"DATABASE_URL": database_url},
-        output=io.StringIO(),
-        error_output=error_output,
-    )
-
-    assert exit_code == 1
-    assert "0001_broken" in error_output.getvalue()
-
-
-def test_module_runs_as_a_command(
-    postgres_server: ThrowawayPostgresServer,
-    empty_database_name: str,
-) -> None:
-    database_url = postgres_server.app_database_url(empty_database_name)
-    environment = {**os.environ, "DATABASE_URL": database_url}
-
-    completed = subprocess.run(
-        [sys.executable, "-m", "app.adapters.storage.postgres.migrate"],
-        cwd=PROJECT_ROOT_DIRECTORY,
-        env=environment,
-        capture_output=True,
-        text=True,
-        check=False,
-        timeout=120,
-    )
-
-    assert completed.returncode == 0, completed.stderr
-    assert f"applied  {MIGRATION_NAMES[-1]}" in completed.stdout

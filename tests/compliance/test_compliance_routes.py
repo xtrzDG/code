@@ -2,12 +2,8 @@ from typing import Any
 
 from app.schemas.typings.contacts.prefixed_id import ContactId
 from tests.compliance.visitor_records import seed_visitor
-from tests.users.accounts_testbed import (
-    GEORGIA_MOBILE,
-    GERMANY_MOBILE,
-    bearer,
-    build_accounts_testbed,
-)
+from tests.users.accounts_phones import GEORGIA_MOBILE, GERMANY_MOBILE
+from tests.users.accounts_testbed import bearer, build_accounts_testbed
 
 
 def test_dpa_audit_log_export_and_erasure_over_http() -> None:

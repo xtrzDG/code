@@ -1,7 +1,8 @@
 """SEED_DEMO_DATA on Postgres: seeded once, kept as it is after a restart."""
 
 from app.schemas.typings.platform.strings import DatabaseUrl
-from tests.e2e.harness import E2E_ENVIRONMENT, bearer, start_workshop
+from tests.e2e.harness import bearer, start_workshop
+from tests.e2e.harness_settings import E2E_ENVIRONMENT
 from tests.storage.postgres_server import ThrowawayPostgresServer
 from tests.storage.test_application_on_postgres import count_rows
 

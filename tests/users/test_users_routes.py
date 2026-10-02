@@ -2,12 +2,12 @@ from typing import Any
 
 from app.schemas.constants.compliance import AuditAction
 from app.schemas.constants.localization import OtpDeliveryChannel
-from tests.users.accounts_testbed import (
+from tests.users.accounts_phones import (
     GEORGIA_MOBILE,
     ISRAEL_MOBILE,
     NORTH_KOREA_MOBILE,
-    build_accounts_testbed,
 )
+from tests.users.accounts_testbed import build_accounts_testbed
 
 
 def test_full_sign_in_profile_and_logout_over_http() -> None:

@@ -5,14 +5,8 @@ from fastapi.testclient import TestClient
 from app.schemas.constants.businesses import BusinessStatus
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.users.prefixed_id import UserId
-from tests.users.accounts_testbed import (
-    GEORGIA_MOBILE,
-    GERMANY_MOBILE,
-    ISRAEL_MOBILE,
-    AccountsTestbed,
-    bearer,
-    build_accounts_testbed,
-)
+from tests.users.accounts_phones import GEORGIA_MOBILE, GERMANY_MOBILE, ISRAEL_MOBILE
+from tests.users.accounts_testbed import AccountsTestbed, bearer, build_accounts_testbed
 
 
 def signed_in(testbed: AccountsTestbed, raw_phone_number: str) -> dict[str, str]:

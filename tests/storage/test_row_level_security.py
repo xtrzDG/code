@@ -1,13 +1,7 @@
 """Row-level security: a business scope sees and writes only its own rows."""
 
-import threading
-
 import pytest
-from psycopg.rows import TupleRow
 
-from app.clients.postgres.postgres_connection_pool_client import (
-    PostgresConnectionPoolClient,
-)
 from app.repositories.conversation_repositories import ContactRepository
 from app.repositories.user_repositories import UserRepository
 from app.schemas.domain.compliance import AuditLogEntryDocument
@@ -17,33 +11,18 @@ from app.schemas.exceptions.application_errors import AccessDeniedError
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.contacts.strings import ContactName
 from app.schemas.typings.localization.constrained_strings import E164PhoneNumber
-from app.schemas.typings.platform.strings import DatabaseUrl
 from app.utilities.storage.document_collection_catalog import DOCUMENT_COLLECTIONS
 from app.utilities.storage.storage_scope_context import StorageScopeContext
-from tests.storage.builders import COUNTRY_SAMPLES, build_contact, build_owner
+from tests.storage.builders import build_contact, build_owner
 from tests.storage.conftest import PostgresCollectionFactory
 from tests.storage.postgres_server import ThrowawayPostgresServer
-from tests.storage.storage_testing import build_fixed_wall_clock
-
-GEORGIA, ISRAEL, EMIRATES, JAPAN = COUNTRY_SAMPLES[0:4]
-
-
-def count_contacts(rows: list[TupleRow]) -> int:
-    count: object = rows[0][0]
-    assert isinstance(count, int)
-    return count
-
-
-def save_two_businesses_contacts(
-    postgres_collections: PostgresCollectionFactory,
-) -> tuple[BusinessId, BusinessId, ContactDocument, ContactDocument]:
-    contacts = postgres_collections(ContactDocument, "contacts")
-    first_business_id, second_business_id = BusinessId(), BusinessId()
-    first_contact = build_contact(GEORGIA, first_business_id)
-    second_contact = build_contact(ISRAEL, second_business_id)
-    contacts.upsert(str(first_contact.id), first_contact)
-    contacts.upsert(str(second_contact.id), second_contact)
-    return first_business_id, second_business_id, first_contact, second_contact
+from tests.storage.rls_contacts import (
+    EMIRATES,
+    GEORGIA,
+    ISRAEL,
+    JAPAN,
+    save_two_businesses_contacts,
+)
 
 
 def test_every_collection_table_has_forced_rls_and_the_policy(
@@ -189,108 +168,6 @@ def test_repository_check_and_rls_both_hide_foreign_rows(
         assert contact_repo.list_by_business(second_business_id) == []
 
     assert contact_repo.get(second_business_id, second_contact.id) == second_contact
-
-
-def test_raw_sessions_default_to_deny(
-    postgres_server: ThrowawayPostgresServer,
-    postgres_collections: PostgresCollectionFactory,
-    database_name: str,
-) -> None:
-    first_business_id, _, _, _ = save_two_businesses_contacts(postgres_collections)
-
-    with postgres_server.app_connection(database_name) as connection:
-        no_settings = connection.execute(
-            "select count(*) from workshop.contacts"
-        ).fetchall()
-        with connection.transaction():
-            connection.execute(
-                "select set_config('app.business_id', %s, true)",
-                (str(first_business_id),),
-            )
-            scoped = connection.execute(
-                "select count(*) from workshop.contacts"
-            ).fetchall()
-        with connection.transaction():
-            connection.execute("select set_config('app.bypass_rls', 'on', true)")
-            bypassed = connection.execute(
-                "select count(*) from workshop.contacts"
-            ).fetchall()
-        after_transactions = connection.execute(
-            "select count(*) from workshop.contacts"
-        ).fetchall()
-
-    assert count_contacts(no_settings) == 0
-    assert count_contacts(scoped) == 1
-    assert count_contacts(bypassed) == 2
-    assert count_contacts(after_transactions) == 0
-
-
-def test_scope_settings_do_not_leak_to_the_next_pool_user(
-    database_url: DatabaseUrl,
-    storage_scope: StorageScopeContext,
-) -> None:
-    single_connection_pool = PostgresConnectionPoolClient(
-        database_url=database_url, max_size=1
-    )
-    try:
-        contacts = PostgresCollectionFactory(
-            connection_pool=single_connection_pool,
-            storage_scope=storage_scope,
-            wall_clock=build_fixed_wall_clock(),
-        )(ContactDocument, "contacts")
-        with storage_scope.scoped_to_business(BusinessId()):
-            contacts.list_all()
-
-        with single_connection_pool.connection() as connection:
-            row = connection.execute(
-                "select coalesce(current_setting('app.business_id', true), ''), "
-                "coalesce(current_setting('app.bypass_rls', true), '')"
-            ).fetchone()
-    finally:
-        single_connection_pool.close()
-
-    assert row == ("", "")
-
-
-def test_concurrent_threads_keep_their_own_scope(
-    postgres_collections: PostgresCollectionFactory,
-    storage_scope: StorageScopeContext,
-) -> None:
-    contacts = postgres_collections(ContactDocument, "contacts")
-    business_ids = [BusinessId() for _ in COUNTRY_SAMPLES]
-    for sample, business_id in zip(COUNTRY_SAMPLES, business_ids, strict=True):
-        for index in range(3):
-            contact = build_contact(sample, business_id)
-            contact.phone_number = E164PhoneNumber(f"{sample.phone_number[:-1]}{index}")
-            contacts.upsert(str(contact.id), contact)
-
-    seen_business_ids: dict[BusinessId, set[BusinessId]] = {}
-    errors: list[BaseException] = []
-    start = threading.Barrier(len(business_ids))
-
-    def read_own_contacts(business_id: BusinessId) -> None:
-        try:
-            start.wait()
-            with storage_scope.scoped_to_business(business_id):
-                for _ in range(5):
-                    found = {contact.business_id for contact in contacts.list_all()}
-                    seen_business_ids.setdefault(business_id, set()).update(found)
-        except BaseException as error:  # pragma: no cover - reported below
-            errors.append(error)
-
-    threads = [
-        threading.Thread(target=read_own_contacts, args=(business_id,))
-        for business_id in business_ids
-    ]
-    for thread in threads:
-        thread.start()
-    for thread in threads:
-        thread.join()
-
-    assert errors == []
-    assert seen_business_ids == {
-        business_id: {business_id} for business_id in business_ids
-    }
 
 
 def test_field_lookups_keep_to_the_business_scope(
