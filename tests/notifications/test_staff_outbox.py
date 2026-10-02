@@ -181,8 +181,14 @@ def test_a_device_the_push_service_forgot_is_removed() -> None:
 def test_devices_are_skipped_while_push_is_off_and_limited_per_hour() -> None:
     testbed, world = ChannelsTestbed(), AlertWorld()
     notification = device_notification(world, testbed)
-    off = push_queue(testbed)
-    off._web_push_client = None  # noqa: SLF001
+    off = PushNotificationQueueFacilitator(
+        testbed.outbound_message_repo,
+        testbed.job_queue,
+        None,
+        testbed.rate_limits,
+        testbed.delivery_recorder,
+        testbed.wall_clock,
+    )
 
     assert not off.queue(notification)
     on = push_queue(testbed)

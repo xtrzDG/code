@@ -74,11 +74,15 @@ def build_business(owner: UserId, staff: UserId) -> BusinessDocument:
 class AlertWorld:
     """The real staff alert facilitator with recording edges."""
 
-    def __init__(self, settings: AppSettings | None = None) -> None:
+    def __init__(
+        self,
+        settings: AppSettings | None = None,
+        notifier: RecordingManagerNotifier | None = None,
+    ) -> None:
         self.clock = MovableClock(NOON)
         self.owner, self.staff = UserId(), UserId()
         self.business = build_business(self.owner, self.staff)
-        self.notifier = RecordingManagerNotifier()
+        self.notifier = notifier or RecordingManagerNotifier()
         self.push_queue = RecordingPushQueue()
         self.subscriptions = push_subscription_repo()
         self.preferences = preferences_repo()

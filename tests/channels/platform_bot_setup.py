@@ -56,6 +56,7 @@ class PlatformBotSetup:
         secret: str | None = PLATFORM_SECRET,
         chat_type: str = "private",
         language_code: str = "en",
+        username: str | None = None,
     ) -> HttpResponse:
         """Post an update (each a new one) and let the worker answer it."""
 
@@ -69,6 +70,7 @@ class PlatformBotSetup:
                     "id": STAFF_CHAT_ID,
                     "is_bot": False,
                     "language_code": language_code,
+                    **({} if username is None else {"username": username}),
                 },
                 "text": text,
             },

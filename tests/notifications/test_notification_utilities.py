@@ -1,6 +1,8 @@
 """Signed links, quiet hours, push endpoint checks, staff e-mails and settings."""
 
 import base64
+import hashlib
+import hmac
 import struct
 from datetime import UTC, datetime
 
@@ -33,7 +35,10 @@ from app.utilities.notifications.quiet_hours import (
     quiet_hours_end,
 )
 from app.utilities.notifications.staff_email import build_staff_email
-from app.utilities.notifications.staff_link_signer import StaffLinkSigner
+from app.utilities.notifications.staff_link_signer import (
+    StaffLinkSigner,
+    derive_link_key,
+)
 from app.utilities.scheduling.zoned_time import load_time_zone
 from tests.notifications.test_web_push_encryption import (
     AUTH_SECRET,
@@ -45,6 +50,12 @@ from tests.notifications.test_web_push_encryption import (
 KEY = PlatformSecret("a-long-enough-encryption-key-for-the-tests")
 EXPIRES = Microseconds(1_790_000_000_000_000)
 TBILISI = load_time_zone(TimezoneName("Asia/Tbilisi"))
+
+
+def signature_of(payload: bytes) -> bytes:
+    """What the signer under KEY appends: HMAC-SHA256, its first 12 bytes."""
+
+    return hmac.new(derive_link_key(KEY), payload, hashlib.sha256).digest()[:12]
 
 
 def at(text: str) -> Microseconds:
@@ -105,12 +116,12 @@ def test_altered_foreign_and_malformed_tokens_are_refused() -> None:
     assert signer.read(StaffLinkToken("A" * 66 + "-")) is None
 
     payload = struct.pack("!B16sB16sI", 2, bytes(16), 1, bytes(16), 1)
-    resigned = payload + signer._signature(payload)  # noqa: SLF001
+    resigned = payload + signature_of(payload)
     encoded = base64.urlsafe_b64encode(resigned).rstrip(b"=").decode()
     assert signer.read(StaffLinkToken(encoded)) is None
     unknown_target = struct.pack("!B16sB16sI", 1, bytes(16), 9, bytes(16), 1)
     encoded = (
-        base64.urlsafe_b64encode(unknown_target + signer._signature(unknown_target))  # noqa: SLF001
+        base64.urlsafe_b64encode(unknown_target + signature_of(unknown_target))
         .rstrip(b"=")
         .decode()
     )

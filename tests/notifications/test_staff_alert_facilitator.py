@@ -188,12 +188,12 @@ def test_member_devices_get_the_brief_in_their_language_as_each_prefers() -> Non
 
 
 def test_a_failing_contact_never_stops_the_others() -> None:
-    world = AlertWorld()
-    world.notifier = RecordingManagerNotifier(
-        failing_addresses=frozenset({"+995555000222"}),
-        raising_addresses=frozenset({"4242"}),
+    world = AlertWorld(
+        notifier=RecordingManagerNotifier(
+            failing_addresses=frozenset({"+995555000222"}),
+            raising_addresses=frozenset({"4242"}),
+        )
     )
-    world.alerts._manager_notifier = world.notifier  # noqa: SLF001
 
     queued = world.alerts.alert(
         world.business, handoff(world, HandoffUrgency.NORMAL), texts()
