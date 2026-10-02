@@ -1,3 +1,4 @@
+from app.registries.niches.examples.trade_examples import B2B_SUPPLY_EXAMPLES
 from app.registries.niches.template_parts import (
     autotest_kinds,
     choice,
@@ -149,6 +150,7 @@ def build_b2b_supply_template() -> NicheTemplate:
             "Collect the company, products, volumes, delivery address and deadline "
             "and create an order lead.",
         ),
+        example_exchanges=B2B_SUPPLY_EXAMPLES,
         default_handoff_rules=handoff_rules(
             en=[
                 "Large order or a request for a commercial offer",

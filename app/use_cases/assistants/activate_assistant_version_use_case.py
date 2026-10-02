@@ -65,11 +65,12 @@ class ActivateAssistantVersionUseCase(
     is a ConflictError whose reasons carry the check codes, and nothing
     changes. The autotests are the caller's decision. With voice enabled, the
     business's voice agent is created or updated first from the same
-    version: its instruction, a greeting in every language, the chat's tool
+    version: its phone instruction, a greeting in every language, the chat's tool
     definitions and the public base URL for the tool webhooks. The agent id
     of earlier versions is reused (one agent per business). In opening
     hours a caller may be put through to the profile's handoff phone (or a
-    manager reachable by phone). If that fails,
+    manager reachable by phone). The agent gets the version's phone
+    instruction (spoken facts, no links). If that fails,
     ExternalServiceError is raised and nothing is published. Then the
     business goes live with this version (see `_store_business`: a save
     made meanwhile is never overwritten), the previously published version
@@ -223,7 +224,9 @@ class ActivateAssistantVersionUseCase(
                 business_name=business.name,
                 languages=list(version.languages),
                 default_language=version.default_language,
-                prompt_text=version.prompt_text,
+                # The phone instruction; a version assembled before it
+                # existed keeps using its chat instruction.
+                prompt_text=version.phone_prompt_text or version.prompt_text,
                 greetings=self._build_greetings(business, version),
                 tools=self._assistant_tool_catalog.list_definitions(version.tools),
                 tool_webhook_base_url=base_url,

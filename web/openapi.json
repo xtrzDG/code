@@ -572,7 +572,7 @@
       },
       "AssistantVersionDetails": {
         "additionalProperties": false,
-        "description": "An assistant version with its frozen instruction and fact table.",
+        "description": "An assistant version with its frozen instructions and fact table: the\nchat instruction, and the phone instruction of a version with voice\n(None for a version without voice or assembled before it existed).",
         "properties": {
           "autotest_run_id": {
             "anyOf": [
@@ -634,6 +634,17 @@
           },
           "niche_key": {
             "$ref": "#/components/schemas/NicheKey"
+          },
+          "phone_prompt_text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone Prompt Text"
           },
           "profile_revision": {
             "title": "Profile Revision",

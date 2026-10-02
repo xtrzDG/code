@@ -1,3 +1,4 @@
+from app.registries.niches.examples.care_examples import CLINIC_EXAMPLES
 from app.registries.niches.template_parts import (
     autotest_kinds,
     choice,
@@ -190,6 +191,7 @@ def build_clinic_template() -> NicheTemplate:
             "do not ask about health details.",
             "Share preparation instructions only as written in the profile.",
         ),
+        example_exchanges=CLINIC_EXAMPLES,
         default_handoff_rules=handoff_rules(
             en=[
                 "Urgent symptoms or an emergency",

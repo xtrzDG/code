@@ -9,7 +9,7 @@ from app.schemas.dto.assistants.assistant_views import (
 class AssistantVersionDetailsTransformer(
     TransformerContract[AssistantVersionDocument, AssistantVersionDetails]
 ):
-    """An assistant version with its frozen instruction and fact table."""
+    """An assistant version with its frozen instructions and fact table."""
 
     def transform(
         self, input_data: AssistantVersionDocument
@@ -32,6 +32,7 @@ class AssistantVersionDetailsTransformer(
             published_at=input_data.published_at,
             created_at=input_data.created_at,
             prompt_text=input_data.prompt_text,
+            phone_prompt_text=input_data.phone_prompt_text,
             facts=[
                 BusinessFactView(key=fact.key, label=fact.label, value=fact.value)
                 for fact in input_data.facts

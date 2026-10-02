@@ -65,9 +65,10 @@ class AssembleAssistantVersionUseCase(
     Owner assembles a new assistant version from the current profile
     (concept section 4, "buildAssistant").
 
-    The fact table and the instruction are built by code from the niche
-    template, the profile, active knowledge items, resources and upcoming
-    special days; tools follow the niche (booking tools only for a business
+    The fact table and the instructions (chat, and the phone when the plan
+    has voice) are built by code from the niche template, the profile,
+    active knowledge items, resources and upcoming special days; tools
+    follow the niche (booking tools only for a business
     with booking rules and an active resource, send_link only with links)
     and voice follows the plan. The version gets the next number, the
     configured chat model, status DRAFT and the profile's revision. Every
@@ -99,6 +100,10 @@ class AssembleAssistantVersionUseCase(
             list[BusinessFact],
         ],
         assistant_instruction_transformer: TransformerContract[
+            AssistantInstructionSource,
+            SystemPromptText,
+        ],
+        phone_instruction_transformer: TransformerContract[
             AssistantInstructionSource,
             SystemPromptText,
         ],
@@ -137,6 +142,10 @@ class AssembleAssistantVersionUseCase(
             AssistantInstructionSource,
             SystemPromptText,
         ] = assistant_instruction_transformer
+        self._phone_instruction_transformer: TransformerContract[
+            AssistantInstructionSource,
+            SystemPromptText,
+        ] = phone_instruction_transformer
         self._version_details_transformer: TransformerContract[
             AssistantVersionDocument,
             AssistantVersionDetails,
@@ -200,18 +209,18 @@ class AssembleAssistantVersionUseCase(
             has_links=bool(profile.links),
         )
         self._validate_autotest_selection(input_data.request, business, niche, tools)
+        instruction_source = AssistantInstructionSource(
+            business=business,
+            profile=profile,
+            niche=niche,
+            country=country,
+            language_profiles=language_profiles,
+            facts=facts,
+            tools=tools,
+            knowledge_items=knowledge_items,
+        )
         prompt_text: SystemPromptText = (
-            self._assistant_instruction_transformer.transform(
-                AssistantInstructionSource(
-                    business=business,
-                    profile=profile,
-                    niche=niche,
-                    country=country,
-                    language_profiles=language_profiles,
-                    facts=facts,
-                    tools=tools,
-                )
-            )
+            self._assistant_instruction_transformer.transform(instruction_source)
         )
         version = AssistantVersionDocument(
             business_id=business.id,
@@ -220,6 +229,11 @@ class AssembleAssistantVersionUseCase(
             niche_key=business.niche_key,
             model_id=self._app_settings.llm_model_id,
             prompt_text=prompt_text,
+            phone_prompt_text=(
+                self._phone_instruction_transformer.transform(instruction_source)
+                if plan.is_voice_included
+                else None
+            ),
             tools=tools,
             languages=list(business.languages),
             default_language=business.default_language,

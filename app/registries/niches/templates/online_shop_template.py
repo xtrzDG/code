@@ -1,3 +1,4 @@
+from app.registries.niches.examples.trade_examples import ONLINE_SHOP_EXAMPLES
 from app.registries.niches.template_parts import (
     autotest_kinds,
     choice,
@@ -178,6 +179,7 @@ def build_online_shop_template() -> NicheTemplate:
             "manager will confirm.",
             "Do not invent delivery times or delivery prices.",
         ),
+        example_exchanges=ONLINE_SHOP_EXAMPLES,
         default_handoff_rules=handoff_rules(
             en=[
                 "Question about the status of an order",

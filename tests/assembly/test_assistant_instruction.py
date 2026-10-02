@@ -36,6 +36,7 @@ SECTION_TITLES: list[str] = [
     "# Rules for this type of business",
     "# Emergencies",
     "# Answer format",
+    "# Example exchanges",
 ]
 
 
@@ -107,7 +108,7 @@ def test_right_to_left_languages_are_listed_by_english_name() -> None:
 
     assert "Hebrew (he), Arabic (ar), English (en)" in prompt
     assert "Its default language is Hebrew (he)." in prompt
-    assert "- תלונה (urgency normal)" in prompt
+    assert "- תלונה\n" in prompt
 
 
 def test_tone_comes_from_the_profile_or_a_neutral_default() -> None:
@@ -164,11 +165,17 @@ def test_handoff_rules_join_business_and_niche_rules_without_repeats() -> None:
     prompt = assemble_prompt(testbed, seed_georgian_restaurant(testbed))
     handoff_section = prompt.split("# Handing off to a human\n")[1].split("\n\n")[0]
 
-    assert "- the customer asks for a person (urgency normal)" in handoff_section
+    assert (
+        "- the customer asks for a person: hand off right away (urgency normal)"
+        in handoff_section
+    )
     assert "- the customer complains or is unhappy (urgency high)" in handoff_section
     assert "- someone reports an emergency (urgency critical)" in handoff_section
-    assert "- банкет больше 20 человек (urgency normal)" in handoff_section
-    assert "- Banquet over 20 people (urgency normal)" in handoff_section
+    assert (
+        "Also hand off in these cases of this business (urgency normal, unless a "
+        "case above calls for a higher one):\n- банкет больше 20 человек\n"
+        "- Allergy question\n- Banquet over 20 people"
+    ) in handoff_section
     assert handoff_section.count("Allergy question") == 1
 
 
@@ -238,15 +245,14 @@ def test_emergency_numbers_of_the_real_country_registry() -> None:
         assert f"the emergency number {emergency_number} immediately" in prompt
 
 
-def test_answer_format_for_voice_and_chat() -> None:
+def test_answer_format_is_for_chat_only() -> None:
     testbed = AssemblyTestbed()
     with_links = assemble_prompt(testbed, seed_georgian_restaurant(testbed))
     without_links = assemble_prompt(testbed, seed_japanese_restaurant(testbed))
 
-    assert "On the phone: speak in short, plain sentences" in with_links
-    assert "repeat the digits back to the customer for confirmation" in with_links
-    assert "In chat: write concise plain text without markdown" in with_links
+    assert "Write concise plain text without markdown" in with_links
     assert "Send links only through send_link." in with_links
+    assert "On the phone" not in with_links
     assert "send_link" not in without_links
 
 
@@ -278,5 +284,5 @@ def test_instruction_changes_when_the_profile_changes() -> None:
 
     assert first.prompt_text != second.prompt_text
     assert "- No smoking talk" in str(second.prompt_text)
-    assert "- VIP guest Nino (urgency normal)" in str(second.prompt_text)
+    assert "- VIP guest Nino\n" in str(second.prompt_text)
     assert "No smoking talk" not in str(first.prompt_text)

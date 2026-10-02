@@ -1,3 +1,4 @@
+from app.registries.niches.examples.hospitality_examples import RESTAURANT_EXAMPLES
 from app.registries.niches.template_parts import (
     autotest_kinds,
     choice,
@@ -246,6 +247,7 @@ def build_restaurant_template() -> NicheTemplate:
             "Do not take delivery orders yourself; send the delivery link when "
             "there is one.",
         ),
+        example_exchanges=RESTAURANT_EXAMPLES,
         default_handoff_rules=handoff_rules(
             en=[
                 "Complaint about food or service",

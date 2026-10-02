@@ -76,9 +76,14 @@ class AssistantVersionSummary(ImmutableDTO):
 
 
 class AssistantVersionDetails(AssistantVersionSummary):
-    """An assistant version with its frozen instruction and fact table."""
+    """
+    An assistant version with its frozen instructions and fact table: the
+    chat instruction, and the phone instruction of a version with voice
+    (None for a version without voice or assembled before it existed).
+    """
 
     prompt_text: SystemPromptText
+    phone_prompt_text: SystemPromptText | None = None
     facts: list[BusinessFactView]
 
 

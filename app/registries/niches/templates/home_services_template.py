@@ -1,3 +1,4 @@
+from app.registries.niches.examples.service_examples import HOME_SERVICES_EXAMPLES
 from app.registries.niches.template_parts import (
     autotest_kinds,
     choice,
@@ -195,6 +196,7 @@ def build_home_services_template() -> NicheTemplate:
             "tell the customer to call the local emergency service first and hand "
             "off with high urgency.",
         ),
+        example_exchanges=HOME_SERVICES_EXAMPLES,
         default_handoff_rules=handoff_rules(
             en=[
                 "Emergency at home (leak, electrical fault)",

@@ -1,6 +1,7 @@
 """Internal inputs of assembling and activating an assistant version."""
 
 from base_pydantic_schemas import ImmutableDTO
+from pydantic import Field
 
 from app.schemas.constants.assistants import AssistantToolName
 from app.schemas.domain.assistants import AssistantVersionDocument, BusinessFact
@@ -38,7 +39,11 @@ class BusinessFactsSource(ImmutableDTO):
 
 
 class AssistantInstructionSource(ImmutableDTO):
-    """Everything the instruction (system prompt) of a version is composed from."""
+    """
+    Everything the instructions (system prompts) of a version, for chat and
+    for the phone, are composed from. The active knowledge items give the
+    overview of a big catalog whose fact table is limited.
+    """
 
     business: BusinessDocument
     profile: BusinessProfileDocument
@@ -47,6 +52,9 @@ class AssistantInstructionSource(ImmutableDTO):
     language_profiles: list[LanguageProfile]
     facts: list[BusinessFact]
     tools: list[AssistantToolName]
+    knowledge_items: list[KnowledgeItemDocument] = Field(
+        default_factory=list[KnowledgeItemDocument]
+    )
 
 
 class AssistantVersionActivation(ImmutableDTO):

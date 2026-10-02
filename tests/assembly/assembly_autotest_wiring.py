@@ -33,6 +33,9 @@ from app.transformers.assembly.autotest_run_view_transformer import (
 from app.transformers.assembly.business_facts_transformer import (
     BusinessFactsTransformer,
 )
+from app.transformers.assembly.phone_instruction_transformer import (
+    PhoneInstructionTransformer,
+)
 from app.use_cases.assistants.assemble_assistant_version_use_case import (
     AssembleAssistantVersionUseCase,
 )
@@ -105,6 +108,7 @@ class AssemblyAutotestWiring(AssemblyScriptedModels):
             plan_registry=self.plan_registry,
             business_facts_transformer=BusinessFactsTransformer(),
             assistant_instruction_transformer=AssistantInstructionTransformer(),
+            phone_instruction_transformer=PhoneInstructionTransformer(),
             version_details_transformer=details_transformer,
             app_settings=self.settings,
             wall_clock=self.wall_clock,

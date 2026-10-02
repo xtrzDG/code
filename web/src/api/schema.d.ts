@@ -1803,7 +1803,9 @@ export interface components {
         AssistantToolName: "search_knowledge" | "get_price" | "check_availability" | "create_booking" | "cancel_booking" | "reschedule_booking" | "create_lead" | "handoff_to_human" | "send_link" | "record_unanswered_question";
         /**
          * AssistantVersionDetails
-         * @description An assistant version with its frozen instruction and fact table.
+         * @description An assistant version with its frozen instructions and fact table: the
+         *     chat instruction, and the phone instruction of a version with voice
+         *     (None for a version without voice or assembled before it existed).
          */
         AssistantVersionDetails: {
             /** Autotest Run Id */
@@ -1825,6 +1827,8 @@ export interface components {
             /** Model Id */
             model_id: string;
             niche_key: components["schemas"]["NicheKey"];
+            /** Phone Prompt Text */
+            phone_prompt_text?: string | null;
             /** Profile Revision */
             profile_revision: number;
             /** Prompt Text */

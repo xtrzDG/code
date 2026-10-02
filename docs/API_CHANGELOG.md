@@ -11,6 +11,16 @@ Kinds of change: **Added**, **Changed** (additive), **Deprecated** (with
 sunset date), **Removed** and **Breaking** (only with the `api-breaking`
 label and a migration path).
 
+## 2026-10-02 — phone instruction and call checks
+
+Spec: `397827df605ac5dc`
+
+- **Changed** (additive) `AssistantVersionDetails` (`GET
+  /v1/businesses/{business_id}/assistant-versions/{version_id}` and the
+  assemble answer) has `phone_prompt_text`: the instruction the phone
+  assistant speaks from (spoken prices and hours, no links); `null` for a
+  version without voice or one assembled before it existed.
+
 ## 2026-10-02 — background job queue
 
 Spec: `f4380cc473533ee9`

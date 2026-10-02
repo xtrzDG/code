@@ -1,3 +1,6 @@
+from app.registries.niches.examples.hospitality_examples import (
+    SHORT_TERM_RENTAL_EXAMPLES,
+)
 from app.registries.niches.template_parts import (
     autotest_kinds,
     forbidden_rules,
@@ -143,6 +146,7 @@ def build_short_term_rental_template() -> NicheTemplate:
             "If a guest cannot get in or something is broken, hand off to the host "
             "with high urgency.",
         ),
+        example_exchanges=SHORT_TERM_RENTAL_EXAMPLES,
         default_handoff_rules=handoff_rules(
             en=[
                 "A guest cannot get in",

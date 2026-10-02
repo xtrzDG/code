@@ -1,3 +1,4 @@
+from app.registries.niches.examples.hospitality_examples import HOTEL_EXAMPLES
 from app.registries.niches.template_parts import (
     autotest_kinds,
     choice,
@@ -216,6 +217,7 @@ def build_hotel_template() -> NicheTemplate:
             "Guests also write at night: answer arrival questions yourself, but "
             "pass emergencies and complaints to staff right away.",
         ),
+        example_exchanges=HOTEL_EXAMPLES,
         default_handoff_rules=handoff_rules(
             en=[
                 "Complaint during the stay",

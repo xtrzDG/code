@@ -1,6 +1,8 @@
 """A niche template registry with a restaurant, a clinic and an online shop."""
 
 from app.contracts.registries import NicheTemplateRegistryContract
+from app.registries.niches.examples.hospitality_examples import RESTAURANT_EXAMPLES
+from app.registries.niches.examples.trade_examples import ONLINE_SHOP_EXAMPLES
 from app.schemas.constants.assistants import AutotestScenarioKind
 from app.schemas.constants.billing import PlanKey
 from app.schemas.constants.bookings import BookingUnit, ResourceKind
@@ -112,6 +114,7 @@ def build_restaurant_template() -> NicheTemplate:
             PromptRuleText("Offer the menu link when customers ask what to eat."),
             PromptRuleText("Never promise a table that check_availability did not."),
         ],
+        example_exchanges=RESTAURANT_EXAMPLES,
         default_handoff_rules=text(
             en="Banquet over 20 people\nAllergy question",
             ru="Банкет больше 20 человек\nВопрос об аллергии",
@@ -174,6 +177,7 @@ def build_online_shop_template() -> NicheTemplate:
         knowledge_kinds=[KnowledgeItemKind.PRODUCT],
         questions=[],
         prompt_rules=[],
+        example_exchanges=ONLINE_SHOP_EXAMPLES,
         default_handoff_rules=text(en="", ru=""),
         default_forbidden_rules=text(en="", ru=""),
         autotest_kinds=list(ALL_BASE_KINDS),

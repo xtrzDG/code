@@ -100,6 +100,7 @@ class AssistantUseCasesContainer(containers.DeclarativeContainer):
         plan_registry=registries.plan_registry,
         business_facts_transformer=transformers.business_facts_transformer,
         assistant_instruction_transformer=transformers.assistant_instruction_transformer,
+        phone_instruction_transformer=transformers.phone_instruction_transformer,
         version_details_transformer=transformers.assistant_version_details_transformer,
         app_settings=config.app_settings,
         wall_clock=time_provider.microsecond_wall_clock,
