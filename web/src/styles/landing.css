@@ -141,6 +141,13 @@
   color: transparent;
 }
 
+@media (forced-colors: active) {
+  .landing-gradient-text {
+    background: none;
+    color: CanvasText;
+  }
+}
+
 /* A light running around a card's edge (the final call to action). */
 @property --beam-angle {
   syntax: "<angle>";
