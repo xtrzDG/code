@@ -33,10 +33,13 @@
       return;
     }
     requestJson(configUrl, null).then(
-      function (result) {
+      guarded("boot", function (result) {
         var config = result.body;
         var isPreview = script.getAttribute("data-preview") === "true";
         if (!result.ok || !config || typeof config !== "object") {
+          if (result.status >= 500) {
+            reportWidgetError("config_failed", "boot", null, result.status);
+          }
           warn("the chat configuration could not be loaded (HTTP " + result.status + ").");
           return;
         }
@@ -44,8 +47,8 @@
           info("the chat is switched off for this business.");
           return;
         }
-        mount(config, isPreview);
-      },
+        guarded("mount", mount)(config, isPreview);
+      }),
       function () {
         warn("the chat configuration could not be loaded.");
       }

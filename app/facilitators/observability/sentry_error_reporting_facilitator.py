@@ -29,6 +29,7 @@ __all__ = ["SentryErrorReportingFacilitator", "scrub_event"]
 type SentryInit = Callable[..., object]
 
 LOGGER: logging.Logger = logging.getLogger(__name__)
+NO_TRACES: TraceSampleRate = TraceSampleRate(0.0)
 WIDGET_LOGGER: logging.Logger = logging.getLogger("app.widget")
 
 
@@ -56,7 +57,7 @@ class SentryErrorReportingFacilitator(
         dsn: PlatformSecret | None,
         environment: DeploymentEnvironment,
         release: ReleaseVersion | None = None,
-        traces_sample_rate: TraceSampleRate = TraceSampleRate(0.0),
+        traces_sample_rate: TraceSampleRate = NO_TRACES,
         sentry_init: SentryInit = sentry_sdk.init,
     ) -> None:
         self._is_enabled: bool = dsn is not None
@@ -121,8 +122,8 @@ class SentryErrorReportingFacilitator(
                     "widget",
                     report.kind.value,
                     report.phase.value,
-                    str(report.error_name),
-                    str(report.line),
+                    tags.get("error_name", ""),
+                    tags.get("line", ""),
                 ],
             )
         except Exception:  # noqa: BLE001 - reporting must never fail the caller

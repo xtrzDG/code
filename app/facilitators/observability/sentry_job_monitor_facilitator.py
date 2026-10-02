@@ -76,7 +76,7 @@ class SentryJobMonitorFacilitator(JobMonitorFacilitatorContract):
 
 
 def monitor_slug(job_name: JobName) -> str:
-    """Sentry monitor slugs use hyphens: send_booking_reminders -> send-booking-reminders."""
+    """Sentry monitor slugs use hyphens: purge_stale_rows -> purge-stale-rows."""
 
     return str(job_name).replace("_", "-")
 

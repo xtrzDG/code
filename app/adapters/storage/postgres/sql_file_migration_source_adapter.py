@@ -13,7 +13,6 @@ from app.utilities.storage.schema_migration_files import (
     normalize_migration_sql,
 )
 
-
 # The `migrations/` directory of this build (the image copies it next to app/).
 BUILD_MIGRATIONS_DIRECTORY: Path = Path(__file__).resolve().parents[4] / "migrations"
 

@@ -7,10 +7,10 @@ from dependency_injector.providers import (
 )
 
 from app.adapters.channels.instagram_channel_adapter import InstagramChannelAdapter
-from app.adapters.health.database_probe_factory import build_database_probe_adapter
 from app.adapters.channels.messenger_channel_adapter import MessengerChannelAdapter
 from app.adapters.channels.telegram_channel_adapter import TelegramChannelAdapter
 from app.adapters.channels.whatsapp_channel_adapter import WhatsAppChannelAdapter
+from app.adapters.health.database_probe_factory import build_database_probe_adapter
 from app.adapters.llm.anthropic_llm_adapter import AnthropicLlmAdapter
 from app.adapters.llm.call_limited_llm_adapter import (
     CHAT_CALL_RETRY_LIMIT,

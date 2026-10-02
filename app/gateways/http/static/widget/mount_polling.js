@@ -77,9 +77,12 @@
       if (!shouldPoll() || state.isSending) {
         return;
       }
-      state.pollTimer = window.setTimeout(function () {
-        poll(false);
-      }, delay);
+      state.pollTimer = window.setTimeout(
+        guarded("poll", function () {
+          poll(false);
+        }),
+        delay
+      );
     }
 
     function stopPolling() {
@@ -112,7 +115,7 @@
         url += "?after=" + encodeURIComponent(state.cursor);
       }
       requestJson(url, null, state.sessionKey).then(
-        function (result) {
+        guarded("poll", function (result) {
           state.isPolling = false;
           if (result.status === 404) {
             // The chat was switched off: stop asking.
@@ -132,7 +135,7 @@
           } else {
             schedulePoll(nextDelay());
           }
-        },
+        }),
         function () {
           state.isPolling = false;
           schedulePoll(nextDelay());

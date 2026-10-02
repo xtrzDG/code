@@ -35,7 +35,6 @@ from app.utilities.storage.document_lookup_fields import declared_lookup_fields
 from app.utilities.storage.document_tenancy import infer_collection_isolation
 from app.utilities.storage.storage_scope_context import StorageScopeContext
 
-
 # A request or job statement that runs longer is cancelled by the server;
 # a transaction left open longer (a stuck thread) is ended by it.
 STATEMENT_TIMEOUT_SECONDS: int = 10

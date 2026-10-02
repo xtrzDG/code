@@ -10,8 +10,10 @@ from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.conversations.constrained_integers import LlmTokenCount
 from app.schemas.typings.conversations.prefixed_id import ConversationId
 from app.schemas.typings.conversations.strings import MessageText
-from app.schemas.typings.platform.constrained_integers import ElapsedMilliseconds
-from app.schemas.typings.platform.constrained_integers import JobIntervalSeconds
+from app.schemas.typings.platform.constrained_integers import (
+    ElapsedMilliseconds,
+    JobIntervalSeconds,
+)
 from app.schemas.typings.platform.constrained_strings import JobName, RequestId
 from app.schemas.typings.platform.prefixed_id import QueuedJobId
 from app.schemas.typings.platform.strings import (

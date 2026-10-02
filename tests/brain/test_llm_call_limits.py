@@ -133,4 +133,4 @@ def test_the_timeout_comes_from_the_settings() -> None:
 
     assert default.llm_call_timeout_seconds == LlmCallTimeoutSeconds(25)
     assert custom.llm_call_timeout_seconds == LlmCallTimeoutSeconds(40)
-    assert CHAT_CALL_RETRY_LIMIT == LlmCallRetryLimit(1)
+    assert LlmCallRetryLimit(1) == CHAT_CALL_RETRY_LIMIT
