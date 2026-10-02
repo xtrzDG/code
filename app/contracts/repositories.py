@@ -5,6 +5,7 @@ not change stored state until it is saved. Every business-owned document is
 looked up through its business id, so one tenant never sees another's data.
 """
 
+from collections.abc import Callable
 from typing import Protocol
 
 from typed_time_provider import Microseconds
@@ -119,8 +120,26 @@ class UserSessionRepoContract(RepoContract, Protocol):
 class BusinessRepoContract(RepoContract, Protocol):
     def save(self, business: BusinessDocument) -> None:
         """
-        Store the business and raise its `revision` (on the given document
-        too) above the stored one.
+        Store the whole business and raise its `revision` (on the given
+        document too) above the stored one, in one step with the write. For
+        creating a business; a change of an existing one goes through
+        `update` (or `save_if_unchanged`), which cannot overwrite what
+        others saved since this copy was read.
+        """
+        raise NotImplementedError
+
+    def update(
+        self,
+        business_id: BusinessId,
+        apply: Callable[[BusinessDocument], None],
+    ) -> BusinessDocument:
+        """
+        Apply a change to the business as stored now and store it, raising
+        the revision by one, in one step (no other save can come in
+        between). `apply` changes only the fields its writer owns and may
+        raise to refuse (nothing is stored then); a change that leaves the
+        document as it was stores nothing. Returns the business as stored;
+        NotFoundError when it does not exist.
         """
         raise NotImplementedError
 

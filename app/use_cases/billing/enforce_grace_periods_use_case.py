@@ -282,20 +282,22 @@ class EnforceGracePeriodsUseCase(UseCaseContract[JobTick, JobReport]):
         now: Microseconds,
     ) -> bool:
         """
-        Switch the mode of the freshly read business; return False when it
+        Switch the mode of the business as stored now (one atomic change, so
+        an owner's edit saved meanwhile is kept); return False when it
         already was that mode.
         """
 
-        current: BusinessDocument = self._business_repo.get(business.id) or business
-        if current.service_mode is service_mode:
-            business.service_mode = service_mode
-            return False
+        switched: list[bool] = []
 
-        current.service_mode = service_mode
-        current.updated_at = now
-        self._business_repo.save(current)
+        def switch_mode(current: BusinessDocument) -> None:
+            if current.service_mode is not service_mode:
+                current.service_mode = service_mode
+                current.updated_at = now
+                switched.append(True)
+
+        self._business_repo.update(business.id, switch_mode)
         business.service_mode = service_mode
-        return True
+        return bool(switched)
 
     def _notify(
         self,

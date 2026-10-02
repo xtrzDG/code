@@ -120,9 +120,14 @@ class ChangePlanUseCase(UseCaseContract[ChangePlanCommand, BillingOverview]):
         subscription.price_minor = new_price.amount_minor
         subscription.updated_at = now
         self._subscription_repo.save(subscription)
-        business.plan_key = input_data.request.plan_key
-        business.updated_at = now
-        self._business_repo.save(business)
+
+        def change_plan(current: BusinessDocument) -> None:
+            # Changed on the business as stored now, so an edit saved
+            # meanwhile is kept.
+            current.plan_key = input_data.request.plan_key
+            current.updated_at = now
+
+        business = self._business_repo.update(business.id, change_plan)
         if not self._plan_registry.get(input_data.request.plan_key).is_voice_included:
             self._remove_voice_agent.run(business.id)
 

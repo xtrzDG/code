@@ -12,10 +12,7 @@ from app.contracts.repositories import (
 )
 from app.contracts.transformer_contract import TransformerContract
 from app.contracts.use_case_contract import UseCaseContract
-from app.schemas.constants.businesses import (
-    BusinessSettingsRefusalCode,
-    BusinessStatus,
-)
+from app.schemas.constants.businesses import BusinessStatus
 from app.schemas.constants.compliance import AuditAction
 from app.schemas.constants.handoffs import ManagerContactChannel
 from app.schemas.constants.users import BusinessMemberRole
@@ -30,7 +27,6 @@ from app.schemas.dto.businesses import (
     ManagerContactInput,
     UpdateBusinessSettingsCommand,
 )
-from app.schemas.dto.errors import ErrorReason
 from app.schemas.dto.localization import PhoneNumberDetails
 from app.schemas.exceptions.application_errors import (
     ConflictError,
@@ -45,12 +41,8 @@ from app.schemas.typings.compliance.strings import (
 from app.schemas.typings.handoffs.strings import ManagerContactAddress
 from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.schemas.typings.localization.strings import RawPhoneNumberInput
-from app.schemas.typings.platform.constrained_strings import (
-    ErrorReasonCode,
-    ErrorReasonDetail,
-)
-from app.schemas.typings.platform.strings import ErrorReasonMessage
 from app.schemas.typings.users.constrained_strings import EmailAddress
+from app.utilities.businesses.business_revisions import build_stale_revision_error
 from app.utilities.businesses.business_settings_validation import (
     require_existing_timezone,
     require_valid_business_name,
@@ -63,10 +55,6 @@ MAX_MANAGER_CONTACTS: int = 20
 MAX_MANAGER_NAME_LENGTH: int = 100
 # Telegram chat ids are integers; group and channel chats are negative.
 TELEGRAM_CHAT_ID_PATTERN: re.Pattern[str] = re.compile(r"^-?[0-9]{1,20}$")
-STALE_REVISION_MESSAGE: str = (
-    "These settings were saved by someone else after you opened them. Reload "
-    "them and make your change again."
-)
 OWNER_STATUS_SWITCHES: frozenset[tuple[BusinessStatus, BusinessStatus]] = frozenset(
     {
         (BusinessStatus.LIVE, BusinessStatus.PAUSED),
@@ -86,10 +74,11 @@ class UpdateBusinessSettingsUseCase(
     contacts are validated per channel: a numeric Telegram chat id, a phone
     number of any country for WhatsApp and SMS (stored as E.164, national
     formats read in the business country), an e-mail address for e-mail.
-    The owner may only pause a live assistant (its voice agent is removed)
-    and resume a paused one (the published version is activated again, with
-    the launch conditions and a new voice agent); publishing (another
-    module) makes a business live. The plan may be
+    The owner may only pause a live assistant (its voice agent is removed
+    once the pause is stored) and resume a paused one (the published version
+    is activated again, with the launch conditions and a new voice agent);
+    publishing (another module) makes a business live. A refused change
+    (invalid, stale) changes nothing, the status included. The plan may be
     chosen here until the business has a subscription; after that it is
     changed in billing, which also changes the price. Contact changes are
     audited because they hold staff personal data.
@@ -157,9 +146,13 @@ class UpdateBusinessSettingsUseCase(
         ):
             raise build_stale_revision_error(business.revision)
 
+        read_revision: BusinessRevision = business.revision
+        status_switch: BusinessStatus | None = self._check_status_switch(
+            business,
+            changes.status,
+        )
         self._apply_profile_changes(business, changes)
         self._apply_language_changes(business, changes)
-        self._apply_status_change(business, changes.status)
 
         now: Microseconds = self._wall_clock.now_unix()
         contacts_audit_entry: AuditLogEntryDocument | None = None
@@ -180,8 +173,25 @@ class UpdateBusinessSettingsUseCase(
             )
 
         business.updated_at = now
-        if not self._business_repo.save_if_unchanged(business):
+        # The status switch comes last, after every other change was
+        # validated. Resuming activates the published version again (launch
+        # conditions, a new voice agent), and activation then writes this
+        # whole business, only while nobody saved it since it was read here.
+        if status_switch is BusinessStatus.LIVE:
+            self._resume_assistant.run(business)
+        elif status_switch is BusinessStatus.PAUSED:
+            business.status = BusinessStatus.PAUSED
+
+        if business.revision == read_revision and not (
+            self._business_repo.save_if_unchanged(business)
+        ):
             raise build_stale_revision_error(None)
+
+        if status_switch is BusinessStatus.PAUSED:
+            # Only a stored pause switches the voice agent off, so a refused
+            # change leaves a live business with its agent. Calls of a paused
+            # business are refused even while the removal fails.
+            self._remove_voice_agent.run(business.id)
 
         if contacts_audit_entry is not None:
             self._audit_log_repo.append(contacts_audit_entry)
@@ -251,13 +261,15 @@ class UpdateBusinessSettingsUseCase(
             self._language_registry.get(changes.owner_language)
             business.owner_language = changes.owner_language
 
-    def _apply_status_change(
+    def _check_status_switch(
         self,
         business: BusinessDocument,
         requested_status: BusinessStatus | None,
-    ) -> None:
+    ) -> BusinessStatus | None:
+        """The status the owner switches to, or None when it stays."""
+
         if requested_status is None or requested_status is business.status:
-            return
+            return None
 
         if (business.status, requested_status) not in OWNER_STATUS_SWITCHES:
             raise ConflictError(
@@ -265,15 +277,7 @@ class UpdateBusinessSettingsUseCase(
                 f"resumed; the business is {business.status.value}."
             )
 
-        if requested_status is BusinessStatus.LIVE:
-            # Resuming re-activates the published version: launch conditions
-            # are checked again and the voice agent is set up anew.
-            self._resume_assistant.run(business)
-            return
-
-        business.status = requested_status
-        # A paused assistant answers no calls: its voice agent is removed.
-        self._remove_voice_agent.run(business.id)
+        return requested_status
 
     def _limit_contacts(
         self,
@@ -332,27 +336,3 @@ class UpdateBusinessSettingsUseCase(
                     business.country_code,
                 )
                 return ManagerContactAddress(str(phone_number.e164))
-
-
-def build_stale_revision_error(
-    current_revision: BusinessRevision | None,
-) -> ConflictError:
-    """
-    The refusal of a change made from an older revision; its details carry
-    the current revision when it is known.
-    """
-
-    return ConflictError(
-        STALE_REVISION_MESSAGE,
-        reasons=[
-            ErrorReason(
-                code=ErrorReasonCode(BusinessSettingsRefusalCode.STALE_REVISION.value),
-                message=ErrorReasonMessage(STALE_REVISION_MESSAGE),
-                details=(
-                    []
-                    if current_revision is None
-                    else [ErrorReasonDetail(str(int(current_revision)))]
-                ),
-            )
-        ],
-    )

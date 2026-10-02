@@ -36,6 +36,22 @@ class DocumentCollectionAdapterContract(AdapterContract, Protocol[StoredDocument
         """
         raise NotImplementedError
 
+    def modify(
+        self,
+        document_key: str,
+        change: Callable[[StoredDocument], StoredDocument | None],
+    ) -> StoredDocument | None:
+        """
+        Read the stored document, let `change` turn it into the document to
+        store, and write that, in one step (no other write of this document
+        can come in between: a row lock on Postgres, the collection lock in
+        memory). Returns what was written; None, and nothing written, when
+        the document is missing or `change` returns None. An error raised by
+        `change` leaves the document as it was. `change` must not use this
+        collection itself.
+        """
+        raise NotImplementedError
+
     def replace_if(
         self,
         document_key: str,

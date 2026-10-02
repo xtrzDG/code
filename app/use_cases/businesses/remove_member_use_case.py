@@ -69,33 +69,40 @@ class RemoveMemberUseCase(UseCaseContract[RemoveMemberCommand, BusinessView]):
                 required_role=BusinessMemberRole.OWNER,
             )
         )
-        removed_member: BusinessMember | None = next(
-            (
-                member
-                for member in business.members
-                if member.user_id == input_data.member_user_id
-            ),
-            None,
-        )
-        if removed_member is None:
-            raise NotFoundError(
-                f"User {input_data.member_user_id} is not a member of the business."
-            )
-
-        owner_count: int = sum(
-            1 for member in business.members if member.role is BusinessMemberRole.OWNER
-        )
-        if removed_member.role is BusinessMemberRole.OWNER and owner_count == 1:
-            raise ConflictError("A business must keep at least one owner.")
-
         now: Microseconds = self._wall_clock.now_unix()
-        business.members = [
-            member
-            for member in business.members
-            if member.user_id != input_data.member_user_id
-        ]
-        business.updated_at = now
-        self._business_repo.save(business)
+
+        def remove_member(current: BusinessDocument) -> None:
+            # Checked and removed on the business as stored now, so a change
+            # saved meanwhile (settings, another member) is kept.
+            removed_member: BusinessMember | None = next(
+                (
+                    member
+                    for member in current.members
+                    if member.user_id == input_data.member_user_id
+                ),
+                None,
+            )
+            if removed_member is None:
+                raise NotFoundError(
+                    f"User {input_data.member_user_id} is not a member of the business."
+                )
+
+            owner_count: int = sum(
+                1
+                for member in current.members
+                if member.role is BusinessMemberRole.OWNER
+            )
+            if removed_member.role is BusinessMemberRole.OWNER and owner_count == 1:
+                raise ConflictError("A business must keep at least one owner.")
+
+            current.members = [
+                member
+                for member in current.members
+                if member.user_id != input_data.member_user_id
+            ]
+            current.updated_at = now
+
+        business = self._business_repo.update(business.id, remove_member)
         self._audit_log_repo.append(
             AuditLogEntryDocument(
                 business_id=business.id,

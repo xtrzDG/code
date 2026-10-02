@@ -118,13 +118,15 @@ class EndTrialsUseCase(UseCaseContract[JobTick, JobReport]):
             advance_to_paid_periods(subscription, invoices, now)
             subscription.updated_at = now
             self._subscription_repo.save(subscription)
-            # Re-read so an owner's edit made while the job runs is kept.
-            current: BusinessDocument = self._business_repo.get(business.id) or business
-            if current.service_mode is not ServiceMode.FULL:
-                current.service_mode = ServiceMode.FULL
-                current.updated_at = now
-                self._business_repo.save(current)
 
+            def restore_full_service(current: BusinessDocument) -> None:
+                # Changed on the business as stored now, so an owner's edit
+                # saved while the job runs is kept.
+                if current.service_mode is not ServiceMode.FULL:
+                    current.service_mode = ServiceMode.FULL
+                    current.updated_at = now
+
+            self._business_repo.update(business.id, restore_full_service)
             return
 
         self._issue_due_invoices.run(

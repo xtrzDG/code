@@ -175,15 +175,34 @@ class HandlePlatformBotUpdateUseCase(
             return PlatformBotCommandResult.REJECTED_CODE
 
         address = ManagerContactAddress(chat_id)
-        other_contacts: list[ManagerContact] = [
-            contact
-            for contact in business.manager_contacts
-            if not (
-                contact.channel is ManagerContactChannel.TELEGRAM
-                and contact.address == address
-            )
-        ]
-        if len(other_contacts) >= MAX_MANAGER_CONTACTS:
+        linked_contact = ManagerContact(
+            name=link.manager_name,
+            channel=ManagerContactChannel.TELEGRAM,
+            address=address,
+            language=link.language,
+        )
+        contact_limit_reached: list[bool] = []
+
+        def link_contact(current: BusinessDocument) -> None:
+            # Rebuilt from the contacts as stored now, so a contact change
+            # saved meanwhile (settings, another manager) is kept.
+            other_contacts: list[ManagerContact] = [
+                contact
+                for contact in current.manager_contacts
+                if not (
+                    contact.channel is ManagerContactChannel.TELEGRAM
+                    and contact.address == address
+                )
+            ]
+            if len(other_contacts) >= MAX_MANAGER_CONTACTS:
+                contact_limit_reached.append(True)
+                return
+
+            current.manager_contacts = [*other_contacts, linked_contact]
+            current.updated_at = now
+
+        business = self._business_repo.update(business.id, link_contact)
+        if contact_limit_reached:
             self._reply(
                 bot_token,
                 chat_id,
@@ -193,17 +212,6 @@ class HandlePlatformBotUpdateUseCase(
             )
             return PlatformBotCommandResult.CONTACT_LIMIT_REACHED
 
-        business.manager_contacts = [
-            *other_contacts,
-            ManagerContact(
-                name=link.manager_name,
-                channel=ManagerContactChannel.TELEGRAM,
-                address=address,
-                language=link.language,
-            ),
-        ]
-        business.updated_at = now
-        self._business_repo.save(business)
         link.used_at = now
         link.linked_chat_id = address
         link.updated_at = now

@@ -10,8 +10,11 @@ class ResumeAssistantUseCase(UseCaseContract[BusinessDocument, None]):
     """
     A paused business goes live again with its published version: the
     version is activated once more, so the launch conditions are checked
-    again and the voice agent removed at pause is set up anew. A business
-    without a published version only changes its status.
+    again and the voice agent removed at pause is set up anew. The given
+    business may carry the caller's other changes: activation writes it
+    whole, and only while nobody saved the business since it was read (a
+    stale-revision ConflictError otherwise). A business without a published
+    version only changes its status (the caller stores it).
     """
 
     def __init__(
@@ -44,5 +47,9 @@ class ResumeAssistantUseCase(UseCaseContract[BusinessDocument, None]):
             return
 
         self._activate_assistant_version.run(
-            AssistantVersionActivation(business=business, version=version)
+            AssistantVersionActivation(
+                business=business,
+                version=version,
+                carries_business_changes=True,
+            )
         )

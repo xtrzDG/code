@@ -1,3 +1,5 @@
+from collections.abc import Callable
+
 from app.contracts.document_store import DocumentCollectionAdapterContract
 from app.contracts.repositories import (
     BusinessProfileRepoContract,
@@ -9,6 +11,7 @@ from app.schemas.constants.channels import ChannelKind
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.channels import ChannelDocument
 from app.schemas.domain.profiles import BusinessProfileDocument
+from app.schemas.exceptions.application_errors import NotFoundError
 from app.schemas.typings.businesses.constrained_integers import BusinessRevision
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.channels.prefixed_id import ChannelId
@@ -19,7 +22,10 @@ from app.schemas.typings.users.prefixed_id import UserId
 class BusinessRepository(BusinessRepoContract):
     """
     Businesses with a revision that grows with every save (optimistic
-    concurrency of settings changes, see `save_if_unchanged`).
+    concurrency of settings changes, see `save_if_unchanged`). Every write
+    reads the stored revision and writes in one step of the collection
+    (`modify`), so two writes never end at the same revision and a change
+    through `update` is applied to what is stored, not to an older copy.
     """
 
     def __init__(
@@ -31,15 +37,46 @@ class BusinessRepository(BusinessRepoContract):
         )
 
     def save(self, business: BusinessDocument) -> None:
-        stored: BusinessDocument | None = self._collection.get(str(business.id))
-        # Never below the stored revision, even when this copy is older.
-        base_revision: int = (
-            int(business.revision)
-            if stored is None
-            else max(int(stored.revision), int(business.revision))
+        def overwrite(stored: BusinessDocument) -> BusinessDocument:
+            # Never below the stored revision, even when this copy is older;
+            # read and written under one lock, so no two saves share one.
+            business.revision = BusinessRevision(
+                max(int(stored.revision), int(business.revision)) + 1
+            )
+            return business
+
+        if self._collection.modify(str(business.id), overwrite) is None:
+            business.revision = BusinessRevision(int(business.revision) + 1)
+            self._collection.upsert(str(business.id), business)
+
+    def update(
+        self,
+        business_id: BusinessId,
+        apply: Callable[[BusinessDocument], None],
+    ) -> BusinessDocument:
+        unchanged: list[BusinessDocument] = []
+
+        def change(stored: BusinessDocument) -> BusinessDocument | None:
+            before: str = stored.model_dump_json()
+            apply(stored)
+            if stored.model_dump_json() == before:
+                unchanged.append(stored)
+                return None
+
+            stored.revision = BusinessRevision(int(stored.revision) + 1)
+            return stored
+
+        updated: BusinessDocument | None = self._collection.modify(
+            str(business_id),
+            change,
         )
-        business.revision = BusinessRevision(base_revision + 1)
-        self._collection.upsert(str(business.id), business)
+        if updated is not None:
+            return updated
+
+        if unchanged:
+            return unchanged[0]
+
+        raise NotFoundError(f"Business {business_id} was not found.")
 
     def save_if_unchanged(self, business: BusinessDocument) -> bool:
         read_revision: BusinessRevision = business.revision

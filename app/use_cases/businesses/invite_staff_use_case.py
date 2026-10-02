@@ -103,15 +103,20 @@ class InviteStaffUseCase(UseCaseContract[InviteStaffCommand, BusinessView]):
             display_name,
             now,
         )
-        if any(member.user_id == staff_user.id for member in business.members):
-            raise ConflictError("This person is already a member of the business.")
 
-        business.members = [
-            *business.members,
-            BusinessMember(user_id=staff_user.id, role=invitation.role),
-        ]
-        business.updated_at = now
-        self._business_repo.save(business)
+        def add_member(current: BusinessDocument) -> None:
+            # Checked and added on the business as stored now, so a change
+            # saved meanwhile (settings, another member) is kept.
+            if any(member.user_id == staff_user.id for member in current.members):
+                raise ConflictError("This person is already a member of the business.")
+
+            current.members = [
+                *current.members,
+                BusinessMember(user_id=staff_user.id, role=invitation.role),
+            ]
+            current.updated_at = now
+
+        business = self._business_repo.update(business.id, add_member)
         self._audit_log_repo.append(
             AuditLogEntryDocument(
                 business_id=business.id,

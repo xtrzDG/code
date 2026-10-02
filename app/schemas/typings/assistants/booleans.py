@@ -5,6 +5,7 @@ Example:
 """
 
 AcceptsFailedAutotests = bool
+CarriesBusinessChanges = bool
 IsAutotestRunPassed = bool
 IsFullAutotestCoverage = bool
 IsGoLiveCheckBlocking = bool

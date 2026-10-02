@@ -28,6 +28,7 @@ from app.schemas.exceptions.application_errors import (
     ExternalServiceError,
 )
 from app.schemas.exceptions.base_exception import ApplicationError
+from app.schemas.typings.assistants.prefixed_id import AssistantVersionId
 from app.schemas.typings.assistants.strings import VoiceAgentId
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.channels.constrained_strings import PublicBaseUrl
@@ -38,6 +39,7 @@ from app.utilities.assembly.go_live_refusals import (
     is_voice_configured,
 )
 from app.utilities.assembly.voice_agents import find_existing_voice_agent_id
+from app.utilities.businesses.business_revisions import build_stale_revision_error
 from app.utilities.channels.voice_service import find_transfer_phone_number
 
 LOGGER: logging.Logger = logging.getLogger(__name__)
@@ -67,8 +69,9 @@ class ActivateAssistantVersionUseCase(
     hours a caller may be put through to the profile's handoff phone (or a
     manager reachable by phone). If that fails,
     ExternalServiceError is raised and nothing is published. Then the
-    previously published version is archived, this one is published, and
-    the business goes live with it. Activating a version without voice
+    business goes live with this version (see `_store_business`: a save
+    made meanwhile is never overwritten), the previously published version
+    is archived and this one is published. Activating a version without voice
     removes the agent of earlier versions. In development and test, a voice
     version goes live without an agent while ElevenLabs is not configured
     (a warning is logged).
@@ -145,6 +148,9 @@ class ActivateAssistantVersionUseCase(
             self._remove_voice_agent.run(business.id)
 
         now: Microseconds = self._wall_clock.now_unix()
+        # The business first: when that write is refused, the versions stay
+        # as they were and the business keeps pointing at its live one.
+        self._store_business(input_data, now)
         for other_version in versions:
             if (
                 other_version.id != version.id
@@ -159,12 +165,41 @@ class ActivateAssistantVersionUseCase(
         version.voice_agent_id = voice_agent_id
         version.updated_at = now
         self._assistant_version_repo.save(version)
-
-        business.published_assistant_version_id = version.id
-        business.status = BusinessStatus.LIVE
-        business.updated_at = now
-        self._business_repo.save(business)
         return version
+
+    def _store_business(
+        self,
+        activation: AssistantVersionActivation,
+        now: Microseconds,
+    ) -> None:
+        """
+        Point the business at the version and make it live. Setting up the
+        voice agent takes seconds, so the business is never written from the
+        copy read before it: activation's fields go onto the business as
+        stored now, or, when the caller changed the business too, the whole
+        copy is written only while nobody saved the business since it was
+        read (else nothing is written and the change is refused as stale).
+        """
+
+        business: BusinessDocument = activation.business
+        version_id: AssistantVersionId = activation.version.id
+
+        def go_live(target: BusinessDocument) -> None:
+            target.published_assistant_version_id = version_id
+            target.status = BusinessStatus.LIVE
+            target.updated_at = now
+
+        if activation.carries_business_changes:
+            go_live(business)
+            if not self._business_repo.save_if_unchanged(business):
+                raise build_stale_revision_error(None)
+
+            return
+
+        self._business_repo.update(business.id, go_live)
+        # The given copy shows the activation too, but keeps the revision it
+        # was read with: it does not hold what others saved meanwhile.
+        go_live(business)
 
     def _provision_voice_agent(
         self,

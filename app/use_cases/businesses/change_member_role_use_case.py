@@ -70,45 +70,56 @@ class ChangeMemberRoleUseCase(UseCaseContract[ChangeMemberRoleCommand, BusinessV
                 required_role=BusinessMemberRole.OWNER,
             )
         )
-        member: BusinessMember | None = next(
-            (
-                member
-                for member in business.members
-                if member.user_id == input_data.member_user_id
-            ),
-            None,
+        member_with_new_role: BusinessMember = BusinessMember(
+            user_id=input_data.member_user_id,
+            role=input_data.change.role,
         )
-        if member is None:
-            raise NotFoundError(
-                f"User {input_data.member_user_id} is not a member of the business."
-            )
+        now: Microseconds = self._wall_clock.now_unix()
+        changed_members: list[BusinessMember] = []
 
-        new_role: BusinessMemberRole = input_data.change.role
-        if member.role is new_role:
+        def change_role(current: BusinessDocument) -> None:
+            # Checked and changed on the business as stored now, so a change
+            # saved meanwhile (settings, another member) is kept.
+            member: BusinessMember | None = next(
+                (
+                    member
+                    for member in current.members
+                    if member.user_id == input_data.member_user_id
+                ),
+                None,
+            )
+            if member is None:
+                raise NotFoundError(
+                    f"User {input_data.member_user_id} is not a member of the business."
+                )
+
+            if member.role is member_with_new_role.role:
+                return
+
+            owner_count: int = sum(
+                1 for other in current.members if other.role is BusinessMemberRole.OWNER
+            )
+            if member.role is BusinessMemberRole.OWNER and owner_count == 1:
+                raise ConflictError("A business must keep at least one owner.")
+
+            current.members = [
+                member_with_new_role if other.user_id == member.user_id else other
+                for other in current.members
+            ]
+            current.updated_at = now
+            changed_members.append(member)
+
+        business = self._business_repo.update(business.id, change_role)
+        if not changed_members:
             return self._view(business, input_data)
 
-        owner_count: int = sum(
-            1 for other in business.members if other.role is BusinessMemberRole.OWNER
-        )
-        if member.role is BusinessMemberRole.OWNER and owner_count == 1:
-            raise ConflictError("A business must keep at least one owner.")
-
-        now: Microseconds = self._wall_clock.now_unix()
-        business.members = [
-            BusinessMember(user_id=other.user_id, role=new_role)
-            if other.user_id == member.user_id
-            else other
-            for other in business.members
-        ]
-        business.updated_at = now
-        self._business_repo.save(business)
         self._audit_log_repo.append(
             AuditLogEntryDocument(
                 business_id=business.id,
                 actor_id=input_data.user_id,
                 action=AuditAction.UPDATE,
                 entity=AuditEntityName("business_member"),
-                entity_id=AuditEntityReference(str(member.user_id)),
+                entity_id=AuditEntityReference(str(input_data.member_user_id)),
                 ip_address=input_data.client_ip_address,
                 created_at=now,
                 updated_at=now,

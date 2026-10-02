@@ -138,10 +138,15 @@ class StartTrialUseCase(UseCaseContract[StartTrialCommand, BillingOverview]):
             updated_at=now,
         )
         self._subscription_repo.save(subscription)
-        business.plan_key = plan_key
-        business.service_mode = ServiceMode.FULL
-        business.updated_at = now
-        self._business_repo.save(business)
+
+        def start_trial(current: BusinessDocument) -> None:
+            # Changed on the business as stored now, so an edit saved
+            # meanwhile is kept.
+            current.plan_key = plan_key
+            current.service_mode = ServiceMode.FULL
+            current.updated_at = now
+
+        business = self._business_repo.update(business.id, start_trial)
         return self._assemble_billing_overview.run(
             BillingOverviewSource(
                 business=business,

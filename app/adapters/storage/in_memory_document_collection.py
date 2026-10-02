@@ -58,22 +58,43 @@ class InMemoryDocumentCollectionAdapter[StoredDocument: PersistentDocument](
             if read_field_text(serialized_document, field_name) == value
         ]
 
+    def modify(
+        self,
+        document_key: str,
+        change: Callable[[StoredDocument], StoredDocument | None],
+    ) -> StoredDocument | None:
+        # The whole read-change-write holds the collection lock, so `change`
+        # must not call back into this collection (the lock is not
+        # reentrant).
+        with self._lock:
+            stored: str | None = self._serialized_documents.get(document_key)
+            if stored is None:
+                return None
+
+            changed: StoredDocument | None = change(
+                self._document_type.model_validate_json(stored)
+            )
+            if changed is None:
+                return None
+
+            serialized_document: str = changed.model_dump_json()
+            self._serialized_documents[document_key] = serialized_document
+
+        return self._document_type.model_validate_json(serialized_document)
+
     def replace_if(
         self,
         document_key: str,
         document: StoredDocument,
         is_current: Callable[[StoredDocument], bool],
     ) -> bool:
-        serialized_document: str = document.model_dump_json()
-        with self._lock:
-            stored: str | None = self._serialized_documents.get(document_key)
-            if stored is None or not is_current(
-                self._document_type.model_validate_json(stored)
-            ):
-                return False
-
-            self._serialized_documents[document_key] = serialized_document
-            return True
+        return (
+            self.modify(
+                document_key,
+                lambda stored: document if is_current(stored) else None,
+            )
+            is not None
+        )
 
     def delete(self, document_key: str) -> None:
         with self._lock:

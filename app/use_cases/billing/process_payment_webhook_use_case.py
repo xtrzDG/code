@@ -315,10 +315,19 @@ class ProcessPaymentWebhookUseCase(
         if subscription.status in {
             SubscriptionStatus.ACTIVE,
             SubscriptionStatus.TRIALING,
-        } and (business.service_mode is not ServiceMode.FULL):
-            business.service_mode = ServiceMode.FULL
-            business.updated_at = now
-            self._business_repo.save(business)
+        }:
+
+            def restore_full_service(current: BusinessDocument) -> None:
+                # Changed on the business as stored now, so an owner's edit
+                # saved while the payment was processed is kept.
+                if current.service_mode is not ServiceMode.FULL:
+                    current.service_mode = ServiceMode.FULL
+                    current.updated_at = now
+
+            business.service_mode = self._business_repo.update(
+                business.id,
+                restore_full_service,
+            ).service_mode
 
         return outcome
 

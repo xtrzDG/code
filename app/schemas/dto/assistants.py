@@ -27,6 +27,7 @@ from app.schemas.dto.localization import CountryProfile, LanguageProfile
 from app.schemas.dto.niches import NicheTemplate
 from app.schemas.typings.assistants.booleans import (
     AcceptsFailedAutotests,
+    CarriesBusinessChanges,
     IsAutotestRunPassed,
     IsFullAutotestCoverage,
     ShouldRunAutotests,
@@ -408,10 +409,19 @@ class JudgeVerdict(ImmutableDTO):
 
 
 class AssistantVersionActivation(ImmutableDTO):
-    """Publish an authorized version of an authorized business."""
+    """
+    Publish an authorized version of an authorized business.
+
+    By default activation changes only its own fields of the business as
+    stored when it writes. When the caller changed the given business too
+    (`carries_business_changes`, settings resuming the assistant), the whole
+    given business is written with them, and only while nobody saved the
+    business since the caller read it (else a stale-revision conflict).
+    """
 
     business: BusinessDocument
     version: AssistantVersionDocument
+    carries_business_changes: CarriesBusinessChanges = False
 
 
 class LlmTokenPrice(ImmutableDTO):

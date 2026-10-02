@@ -225,9 +225,15 @@ class AssembleAssistantVersionUseCase(
         )
         self._assistant_version_repo.save(version)
         if business.status is BusinessStatus.ONBOARDING:
-            business.status = BusinessStatus.TESTING
-            business.updated_at = now
-            self._business_repo.save(business)
+
+            def start_testing(current: BusinessDocument) -> None:
+                # Changed on the business as stored now, so an edit saved
+                # while the version was built is kept.
+                if current.status is BusinessStatus.ONBOARDING:
+                    current.status = BusinessStatus.TESTING
+                    current.updated_at = now
+
+            self._business_repo.update(business.id, start_testing)
 
         return self._version_details_transformer.transform(version)
 

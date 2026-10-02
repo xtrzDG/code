@@ -142,21 +142,17 @@ class PostgresDocumentCollectionAdapter[StoredDocument: PersistentDocument](
                 ),
             )
 
-    def replace_if(
+    def modify(
         self,
         document_key: str,
-        document: StoredDocument,
-        is_current: Callable[[StoredDocument], bool],
-    ) -> bool:
+        change: Callable[[StoredDocument], StoredDocument | None],
+    ) -> StoredDocument | None:
         """
         Read the row `for update` (other writers of it wait until this
-        transaction ends), ask `is_current`, and write in the same
-        transaction.
+        transaction ends), let `change` build the new document, and write it
+        in the same transaction.
         """
 
-        serialized_document: str = document.model_dump_json()
-        business_id: BusinessId | None = read_document_business_id(document)
-        written_at: int = int(self._wall_clock.now_unix())
         with self._transaction() as (connection, scoped_business_id):
             if scoped_business_id is None:
                 row: TupleRow | None = connection.execute(
@@ -169,11 +165,18 @@ class PostgresDocumentCollectionAdapter[StoredDocument: PersistentDocument](
                     (document_key, scoped_business_id),
                 ).fetchone()
 
-            if row is None or not is_current(
-                self._document_type.model_validate_json(self._read_text(row))
-            ):
-                return False
+            if row is None:
+                return None
 
+            changed: StoredDocument | None = change(
+                self._document_type.model_validate_json(self._read_text(row))
+            )
+            if changed is None:
+                return None
+
+            serialized_document: str = changed.model_dump_json()
+            business_id: BusinessId | None = read_document_business_id(changed)
+            written_at: int = int(self._wall_clock.now_unix())
             connection.execute(
                 self._upsert_query,
                 (
@@ -185,7 +188,21 @@ class PostgresDocumentCollectionAdapter[StoredDocument: PersistentDocument](
                 ),
             )
 
-        return True
+        return self._document_type.model_validate_json(serialized_document)
+
+    def replace_if(
+        self,
+        document_key: str,
+        document: StoredDocument,
+        is_current: Callable[[StoredDocument], bool],
+    ) -> bool:
+        return (
+            self.modify(
+                document_key,
+                lambda stored: document if is_current(stored) else None,
+            )
+            is not None
+        )
 
     def get(self, document_key: str) -> StoredDocument | None:
         with self._transaction() as (connection, scoped_business_id):

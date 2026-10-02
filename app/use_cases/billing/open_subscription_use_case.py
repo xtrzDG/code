@@ -134,9 +134,14 @@ class OpenSubscriptionUseCase(UseCaseContract[SubscribeCommand, SubscriptionOpen
             updated_at=now,
         )
         self._subscription_repo.save(subscription)
-        business.plan_key = request.plan_key
-        business.updated_at = now
-        self._business_repo.save(business)
+
+        def choose_plan(current: BusinessDocument) -> None:
+            # Changed on the business as stored now, so an edit saved
+            # meanwhile is kept.
+            current.plan_key = request.plan_key
+            current.updated_at = now
+
+        self._business_repo.update(business.id, choose_plan)
         return subscription
 
     def _redate_unpaid(
