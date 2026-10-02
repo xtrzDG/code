@@ -1,3 +1,5 @@
+"""A booking added by staff in the cabinet."""
+
 from datetime import date
 
 from typed_time_provider import Microseconds, WallClock
@@ -23,20 +25,15 @@ from app.contracts.repositories.knowledge_repositories import (
 )
 from app.contracts.transformer_contract import TransformerContract
 from app.contracts.use_case_contract import UseCaseContract
-from app.schemas.constants.bookings import BookingRefusalCode, BookingStatus
+from app.schemas.constants.bookings import BookingStatus
 from app.schemas.constants.compliance import AuditAction
 from app.schemas.domain.bookings import BookingDocument
-from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.contacts import ContactDocument
 from app.schemas.domain.conversations import ConversationDocument
 from app.schemas.domain.resources import ResourceDocument
 from app.schemas.dto.bookings import BookingResult, BookingView
 from app.schemas.dto.operations.bookings import ManualBookingCommand
 from app.schemas.dto.operations.message_texts import BookingMessageInput
-from app.schemas.exceptions.application_errors import (
-    NotFoundError,
-    ValidationFailedError,
-)
 from app.schemas.typings.bookings.constrained_integers import (
     BookingEndsAtUnixSeconds,
     BookingStartsAtUnixSeconds,
@@ -52,22 +49,20 @@ from app.use_cases.bookings.booking_support import (
     SchedulingInputs,
     load_scheduling_inputs,
 )
-from app.use_cases.bookings.operations_support import (
-    CONTACT_ENTITY,
-    ContactDetails,
-    build_audit_entry,
-    require_contact,
-    update_contact_details,
+from app.use_cases.bookings.manual_booking.manual_booking_customer import (
+    customer_language,
+    find_booking_conversation,
+    find_existing_contact,
+    store_booking_contact,
 )
+from app.use_cases.bookings.manual_booking.manual_booking_resources import (
+    choose_seating_candidates,
+)
+from app.use_cases.bookings.operations_support import build_audit_entry
 from app.utilities.scheduling.booking_placement import place_booking
 from app.utilities.scheduling.booking_views import build_booking_view
 from app.utilities.scheduling.placement import Placement
-from app.utilities.scheduling.placement_errors import booking_refusal_reason
 from app.utilities.scheduling.placement_request import PlacementRequest
-from app.utilities.scheduling.resource_selection import (
-    seating_resources,
-    select_resources,
-)
 from app.utilities.scheduling.zoned_time import (
     microseconds_to_seconds,
     parse_local_date,
@@ -143,47 +138,20 @@ class CreateManualBookingUseCase(UseCaseContract[ManualBookingCommand, BookingRe
                 input_data.country_hint or inputs.business.country_code,
             ).e164
 
-        conversation: ConversationDocument | None = self._find_conversation(input_data)
-        existing_contact: ContactDocument | None
-        if conversation is not None:
-            existing_contact = require_contact(
-                self._contact_repo, input_data.business_id, conversation.contact_id
-            )
-        elif phone_number is not None:
-            existing_contact = self._contact_repo.find_by_phone_number(
-                input_data.business_id, phone_number
-            )
-        else:
-            existing_contact = None
+        conversation: ConversationDocument | None = find_booking_conversation(
+            self._conversation_repo, input_data
+        )
+        existing_contact: ContactDocument | None = find_existing_contact(
+            self._contact_repo, input_data, conversation, phone_number
+        )
 
         is_sandbox: IsSandboxConversation = (
             conversation is not None and conversation.is_sandbox
         )
         local_date: date = parse_local_date(input_data.date)
-        candidates: list[ResourceDocument] = seating_resources(
-            select_resources(
-                inputs.resources,
-                input_data.resource_id,
-                input_data.resource_kind,
-                inputs.rules,
-            ),
-            input_data.party_size,
+        candidates: list[ResourceDocument] = choose_seating_candidates(
+            inputs, input_data
         )
-        if not candidates:
-            message: str = (
-                f"No bookable resource seats {int(input_data.party_size)} guests."
-            )
-            raise ValidationFailedError(
-                message,
-                reasons=[
-                    booking_refusal_reason(
-                        BookingRefusalCode.NO_SEATING_RESOURCE,
-                        message,
-                        [str(int(input_data.party_size))],
-                    )
-                ],
-            )
-
         now: Microseconds = self._wall_clock.now_unix()
         contact: ContactDocument = existing_contact or ContactDocument(
             business_id=input_data.business_id,
@@ -219,8 +187,14 @@ class CreateManualBookingUseCase(UseCaseContract[ManualBookingCommand, BookingRe
                     include_sandbox=is_sandbox,
                 ),
             )
-            contact = self._store_contact(
-                contact, existing_contact, input_data, phone_number, now
+            contact = store_booking_contact(
+                self._contact_repo,
+                self._audit_log_repo,
+                contact,
+                existing_contact,
+                input_data,
+                phone_number,
+                now,
             )
             language: LanguageTag = customer_language(
                 input_data, contact, conversation, inputs.business
@@ -278,79 +252,3 @@ class CreateManualBookingUseCase(UseCaseContract[ManualBookingCommand, BookingRe
                 )
             ),
         )
-
-    def _find_conversation(
-        self,
-        command: ManualBookingCommand,
-    ) -> ConversationDocument | None:
-        if command.conversation_id is None:
-            return None
-
-        conversation: ConversationDocument | None = self._conversation_repo.get(
-            command.business_id, command.conversation_id
-        )
-        if conversation is None:
-            raise NotFoundError(
-                f"Conversation {command.conversation_id} was not found."
-            )
-
-        return conversation
-
-    def _store_contact(
-        self,
-        contact: ContactDocument,
-        existing_contact: ContactDocument | None,
-        command: ManualBookingCommand,
-        phone_number: E164PhoneNumber | None,
-        now: Microseconds,
-    ) -> ContactDocument:
-        """
-        Save a new contact, or update the name of a reused one (and its phone
-        when booking for a conversation's customer).
-        """
-
-        if existing_contact is not None:
-            return update_contact_details(
-                self._contact_repo,
-                self._audit_log_repo,
-                existing_contact,
-                ContactDetails(
-                    command.contact_name,
-                    None if command.conversation_id is None else phone_number,
-                ),
-                command.actor_id,
-                now,
-            )
-
-        self._contact_repo.save(contact)
-        self._audit_log_repo.append(
-            build_audit_entry(
-                contact.business_id,
-                command.actor_id,
-                AuditAction.CREATE,
-                CONTACT_ENTITY,
-                str(contact.id),
-                now,
-            )
-        )
-        return contact
-
-
-def customer_language(
-    command: ManualBookingCommand,
-    contact: ContactDocument,
-    conversation: ConversationDocument | None,
-    business: BusinessDocument,
-) -> LanguageTag:
-    """Given, else the contact's, else the conversation's, else the default."""
-
-    if command.language is not None:
-        return command.language
-
-    if contact.language is not None:
-        return contact.language
-
-    if conversation is not None and conversation.language is not None:
-        return conversation.language
-
-    return business.default_language

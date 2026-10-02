@@ -129,10 +129,10 @@ from app.transformers.notifications.reschedule_confirmation_transformer import (
 from app.use_cases.bookings.cancel_booking_use_case import CancelBookingUseCase
 from app.use_cases.bookings.check_availability_use_case import CheckAvailabilityUseCase
 from app.use_cases.bookings.create_booking_use_case import CreateBookingUseCase
-from app.use_cases.bookings.create_manual_booking_use_case import (
+from app.use_cases.bookings.list_bookings_use_case import ListBookingsUseCase
+from app.use_cases.bookings.manual_booking.create_manual_booking_use_case import (
     CreateManualBookingUseCase,
 )
-from app.use_cases.bookings.list_bookings_use_case import ListBookingsUseCase
 from app.use_cases.bookings.reschedule_booking_use_case import RescheduleBookingUseCase
 from app.use_cases.bookings.update_booking_use_case import UpdateBookingUseCase
 from app.use_cases.handoffs.answer_unanswered_question_use_case import (

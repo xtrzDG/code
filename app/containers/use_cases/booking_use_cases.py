@@ -31,10 +31,10 @@ from app.schemas.dto.operations.bookings import (
 from app.use_cases.bookings.cancel_booking_use_case import CancelBookingUseCase
 from app.use_cases.bookings.check_availability_use_case import CheckAvailabilityUseCase
 from app.use_cases.bookings.create_booking_use_case import CreateBookingUseCase
-from app.use_cases.bookings.create_manual_booking_use_case import (
+from app.use_cases.bookings.list_bookings_use_case import ListBookingsUseCase
+from app.use_cases.bookings.manual_booking.create_manual_booking_use_case import (
     CreateManualBookingUseCase,
 )
-from app.use_cases.bookings.list_bookings_use_case import ListBookingsUseCase
 from app.use_cases.bookings.reminders.send_booking_reminders_use_case import (
     SendBookingRemindersUseCase,
 )
