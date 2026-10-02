@@ -119,6 +119,8 @@ DOCUMENT_LOOKUP_FIELDS: Mapping[
     DocumentCollectionName("manager_telegram_links"): (_text("code_hash"),),
     # The freshest worker pulse (GET /readyz) and the purge of old ones.
     DocumentCollectionName("worker_heartbeats"): (_integer("beat_at"),),
+    # The devices of one user in a business (Settings, "this device").
+    DocumentCollectionName("push_subscriptions"): (_text("user_id"),),
 }
 
 

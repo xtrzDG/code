@@ -4,6 +4,9 @@ from dependency_injector.providers import DependenciesContainer, Singleton
 from app.containers.adapters.document_collections_container import (
     DocumentCollectionsContainer,
 )
+from app.containers.adapters.notification_collections_container import (
+    NotificationCollectionsContainer,
+)
 from app.repositories.assistant_repositories import (
     AssistantVersionRepository,
     AutotestRunRepository,
@@ -57,6 +60,11 @@ from app.repositories.knowledge_repositories import (
     ResourceRepository,
     ScheduleExceptionRepository,
 )
+from app.repositories.notification_repositories import (
+    NotificationPreferencesRepository,
+    PushSubscriptionRepository,
+    StaffDeliveryStateRepository,
+)
 from app.repositories.payment_repositories import (
     PackageUsageWarningRepository,
     PaymentOrderRepository,
@@ -71,6 +79,7 @@ from app.repositories.worker_heartbeat_repository import WorkerHeartbeatReposito
 
 class RepositoriesContainer(containers.DeclarativeContainer):
     collections: DocumentCollectionsContainer = DependenciesContainer()  # type: ignore[assignment]
+    notification_collections: NotificationCollectionsContainer = DependenciesContainer()  # type: ignore[assignment]
 
     user_repo: Singleton[UserRepository] = Singleton(
         UserRepository,
@@ -224,4 +233,19 @@ class RepositoriesContainer(containers.DeclarativeContainer):
     package_usage_warning_repo: Singleton[PackageUsageWarningRepository] = Singleton(
         PackageUsageWarningRepository,
         collection=collections.package_usage_warning_collection,
+    )
+    # Staff notifications: devices (Web Push), preferences, delivery states.
+    push_subscription_repo: Singleton[PushSubscriptionRepository] = Singleton(
+        PushSubscriptionRepository,
+        collection=notification_collections.push_subscription_collection,
+    )
+    notification_preferences_repo: Singleton[NotificationPreferencesRepository] = (
+        Singleton(
+            NotificationPreferencesRepository,
+            collection=notification_collections.notification_preferences_collection,
+        )
+    )
+    staff_delivery_state_repo: Singleton[StaffDeliveryStateRepository] = Singleton(
+        StaffDeliveryStateRepository,
+        collection=notification_collections.staff_delivery_state_collection,
     )

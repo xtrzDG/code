@@ -24,7 +24,10 @@ def take_storage_snapshot(
     snapshot: StorageSnapshot = {}
     collection_providers = cast(
         dict[str, Provider[object]],
-        container.adapters.collections.providers,
+        {
+            **container.adapters.collections.providers,
+            **container.adapters.notification_collections.providers,
+        },
     )
     with storage_scope.platform_wide():
         for name, provider in sorted(collection_providers.items()):

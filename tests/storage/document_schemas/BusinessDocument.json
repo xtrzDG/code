@@ -1,7 +1,7 @@
 {
   "collection": "businesses",
   "document_type": "BusinessDocument",
-  "schema_version": 1,
+  "schema_version": 2,
   "shape": {
     "additionalProperties": false,
     "properties": {
@@ -81,6 +81,75 @@
             },
             "name": {
               "type": "string"
+            },
+            "preferences": {
+              "anyOf": [
+                {
+                  "additionalProperties": false,
+                  "properties": {
+                    "events": {
+                      "items": {
+                        "enum": [
+                          "handoff",
+                          "lead",
+                          "booking"
+                        ],
+                        "type": "string"
+                      },
+                      "type": "array"
+                    },
+                    "quiet_hours": {
+                      "anyOf": [
+                        {
+                          "additionalProperties": false,
+                          "properties": {
+                            "ends_at": {
+                              "maxLength": 5,
+                              "minLength": 5,
+                              "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$",
+                              "type": "string"
+                            },
+                            "starts_at": {
+                              "maxLength": 5,
+                              "minLength": 5,
+                              "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$",
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "starts_at",
+                            "ends_at"
+                          ],
+                          "type": "object"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "default": null
+                    }
+                  },
+                  "type": "object"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "telegram_username": {
+              "anyOf": [
+                {
+                  "maxLength": 32,
+                  "minLength": 4,
+                  "pattern": "^[A-Za-z][A-Za-z0-9_]{3,31}$",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
             }
           },
           "required": [
@@ -179,7 +248,7 @@
         "type": "integer"
       },
       "schema_version": {
-        "default": "1",
+        "default": "2",
         "type": "string"
       },
       "service_mode": {
