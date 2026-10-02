@@ -53,8 +53,8 @@ class Comparison:
 
     def describe(self) -> str:
         baseline: str = "new" if self.baseline_ms is None else f"{self.baseline_ms:.1f}"
-        measured: str = "missing" if self.measured_ms is None else (
-            f"{self.measured_ms:.1f}"
+        measured: str = (
+            "missing" if self.measured_ms is None else (f"{self.measured_ms:.1f}")
         )
         change: str = ""
         if self.baseline_ms and self.measured_ms is not None:
