@@ -44,8 +44,11 @@ COPY docs/legal ./docs/legal
 COPY docker/entrypoint.sh /usr/local/bin/workshop
 
 # Call recordings kept on this server (RECORDINGS_DIRECTORY); mount a volume
-# here to keep them across deploys.
-RUN chmod 0755 /usr/local/bin/workshop \
+# here to keep them across deploys. The service never installs packages at
+# runtime (the virtual environment comes from uv.lock), so the base image's
+# pip is removed: less to attack and nothing for image scans to flag.
+RUN python -m pip uninstall --yes --root-user-action=ignore pip \
+    && chmod 0755 /usr/local/bin/workshop \
     && mkdir -p /app/var/recordings \
     && chown -R workshop:workshop /app/var
 

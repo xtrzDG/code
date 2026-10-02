@@ -41,6 +41,13 @@ COPY --from=build --chown=node:node /web/public ./public
 COPY --from=build --chown=node:node /web/node_modules ./node_modules
 COPY --from=build --chown=node:node /web/.next ./.next
 
+# The server runs node_modules/.bin/next with node alone: package managers
+# (npm, npx, corepack, yarn) and their bundled dependencies are removed so
+# they are neither an attack surface nor a source of image-scan findings.
+RUN rm -rf /usr/local/lib/node_modules /opt/yarn-* \
+        /usr/local/bin/npm /usr/local/bin/npx /usr/local/bin/corepack \
+        /usr/local/bin/yarn /usr/local/bin/yarnpkg
+
 # The image's unprivileged "node" user.
 USER 1000:1000
 EXPOSE 3000
