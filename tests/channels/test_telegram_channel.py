@@ -25,15 +25,13 @@ from app.schemas.typings.conversations.strings import ChannelUserId
 from app.schemas.typings.platform.strings import PlatformSecret
 from app.utilities.channels.channel_endpoints import TELEGRAM_SECRET_HEADER
 from app.utilities.channels.webhook_signatures import derive_telegram_webhook_secret
-from tests.channels.testbed import (
+from tests.channels.channels_payloads import HttpResponse, telegram_ok, to_json_bytes
+from tests.channels.channels_settings import (
     ENCRYPTION_KEY,
     OTHER_TELEGRAM_BOT_TOKEN,
     TELEGRAM_BOT_TOKEN,
-    ChannelsTestbed,
-    HttpResponse,
-    telegram_ok,
-    to_json_bytes,
 )
+from tests.channels.testbed import ChannelsTestbed
 
 BOT_SECRET: str = str(
     derive_telegram_webhook_secret(

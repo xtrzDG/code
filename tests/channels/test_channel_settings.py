@@ -11,19 +11,17 @@ from app.schemas.typings.localization.constrained_strings import CountryCode
 from app.schemas.typings.platform.strings import PlatformSecret
 from app.utilities.channels.delivery_targets import find_business_channel
 from app.utilities.channels.webhook_signatures import derive_telegram_webhook_secret
-from tests.channels.testbed import (
+from tests.channels.channels_payloads import HttpResponse, bearer, telegram_ok
+from tests.channels.channels_settings import (
     BRAZIL,
     ENCRYPTION_KEY,
     PAGE_ACCESS_TOKEN,
     TELEGRAM_BOT_TOKEN,
     UNITED_STATES,
     WHATSAPP_SYSTEM_TOKEN,
-    ChannelsTestbed,
-    HttpResponse,
-    bearer,
     build_settings,
-    telegram_ok,
 )
+from tests.channels.testbed import ChannelsTestbed
 
 PAGE_ID: str = "4410001"
 INSTAGRAM_ID: str = "17841400000000001"

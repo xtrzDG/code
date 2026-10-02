@@ -15,17 +15,19 @@ from app.use_cases.channels.configure_platform_bot_webhook_use_case import (
 )
 from app.utilities.channels.channel_endpoints import TELEGRAM_SECRET_HEADER
 from app.utilities.channels.webhook_signatures import derive_telegram_webhook_secret
-from tests.channels.testbed import (
-    ENCRYPTION_KEY,
-    GEORGIA,
-    PLATFORM_BOT_TOKEN,
-    ChannelsTestbed,
+from tests.channels.channels_payloads import (
     HttpResponse,
     bearer,
-    build_settings,
     telegram_ok,
     to_json_bytes,
 )
+from tests.channels.channels_settings import (
+    ENCRYPTION_KEY,
+    GEORGIA,
+    PLATFORM_BOT_TOKEN,
+    build_settings,
+)
+from tests.channels.testbed import ChannelsTestbed
 
 PLATFORM_SECRET: str = str(
     derive_telegram_webhook_secret(

@@ -17,8 +17,9 @@ from app.schemas.typings.contacts.prefixed_id import ContactId
 from app.schemas.typings.conversations.prefixed_id import ConversationId, MessageId
 from app.schemas.typings.conversations.strings import ChannelUserId, MessageText
 from app.schemas.typings.localization.constrained_strings import LanguageTag
+from tests.channels.channels_payloads import HttpResponse
 from tests.channels.test_widget import SESSION_KEY, enable_widget
-from tests.channels.testbed import ChannelsTestbed, HttpResponse
+from tests.channels.testbed import ChannelsTestbed
 
 OTHER_VISITOR: str = "v1_someone_else_entirely_42"
 

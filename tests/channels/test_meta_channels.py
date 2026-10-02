@@ -25,16 +25,14 @@ from app.schemas.typings.channels.strings import (
 )
 from app.schemas.typings.conversations.strings import ChannelUserId, MessageText
 from app.utilities.channels.channel_endpoints import META_SIGNATURE_HEADER
-from tests.channels.testbed import (
+from tests.channels.channels_payloads import HttpResponse, sign_meta, to_json_bytes
+from tests.channels.channels_settings import (
     META_VERIFY_TOKEN,
     PAGE_ACCESS_TOKEN,
     WHATSAPP_SYSTEM_TOKEN,
-    ChannelsTestbed,
-    HttpResponse,
     build_settings,
-    sign_meta,
-    to_json_bytes,
 )
+from tests.channels.testbed import ChannelsTestbed
 
 PHONE_NUMBER_ID: str = "106540352242922"
 PAGE_ID: str = "4410001"

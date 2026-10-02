@@ -46,19 +46,21 @@ from app.utilities.channels.webhook_signatures import (
     derive_voice_tool_secret,
     sign_body,
 )
-from tests.channels.testbed import (
-    ELEVENLABS_WEBHOOK_SECRET,
-    GEORGIA,
-    ISRAEL,
-    TELEGRAM_BOT_TOKEN,
-    ChannelsTestbed,
-    CountrySetup,
+from tests.channels.channels_payloads import (
     HttpResponse,
-    build_settings,
     sign_elevenlabs,
     telegram_ok,
     to_json_bytes,
 )
+from tests.channels.channels_settings import (
+    ELEVENLABS_WEBHOOK_SECRET,
+    GEORGIA,
+    ISRAEL,
+    TELEGRAM_BOT_TOKEN,
+    CountrySetup,
+    build_settings,
+)
+from tests.channels.testbed import ChannelsTestbed
 
 ASSISTANT_LINE: str = "+995322000000"
 CALLER: str = "+995599123456"

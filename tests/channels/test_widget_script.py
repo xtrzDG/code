@@ -45,7 +45,8 @@ from app.utilities.channels.channel_endpoints import (
 )
 from app.utilities.channels.widget_texts import WIDGET_GREETING, build_widget_greeting
 from app.utilities.localization.language_tags import base_language_code
-from tests.channels.testbed import ChannelsTestbed, bearer
+from tests.channels.channels_payloads import bearer
+from tests.channels.testbed import ChannelsTestbed
 from tests.e2e.harness import start_workshop
 
 SCRIPT_SOURCE: str = assemble_widget_script(STATIC_DIRECTORY)

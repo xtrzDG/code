@@ -34,11 +34,8 @@ from app.schemas.typings.localization.constrained_strings import (
 )
 from app.schemas.typings.platform.strings import PlatformSecret
 from app.utilities.channels.webhook_signatures import derive_voice_tool_secret
-from tests.channels.testbed import (
-    ELEVENLABS_WEBHOOK_SECRET,
-    ChannelsTestbed,
-    build_settings,
-)
+from tests.channels.channels_settings import ELEVENLABS_WEBHOOK_SECRET, build_settings
+from tests.channels.testbed import ChannelsTestbed
 
 BUSINESS_ID = BusinessId()
 TOOL_SECRET: str = str(

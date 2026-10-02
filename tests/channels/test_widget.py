@@ -4,13 +4,9 @@ import pytest
 
 from app.schemas.constants.channels import ChannelKind, ChannelStatus
 from app.schemas.typings.localization.constrained_strings import LanguageTag
-from tests.channels.testbed import (
-    ISRAEL,
-    POLAND,
-    ChannelsTestbed,
-    bearer,
-    build_settings,
-)
+from tests.channels.channels_payloads import bearer
+from tests.channels.channels_settings import ISRAEL, POLAND, build_settings
+from tests.channels.testbed import ChannelsTestbed
 
 SESSION_KEY: str = "v1_9f2c4e1b7a3d48c6"
 

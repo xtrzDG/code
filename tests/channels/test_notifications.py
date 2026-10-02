@@ -23,14 +23,14 @@ from app.schemas.typings.channels.strings import EncryptedChannelSecret
 from app.schemas.typings.conversations.strings import ChannelUserId, MessageText
 from app.schemas.typings.handoffs.strings import ManagerContactAddress, ManagerName
 from app.schemas.typings.localization.constrained_strings import LanguageTag
-from tests.channels.testbed import (
+from tests.channels.channels_payloads import telegram_ok
+from tests.channels.channels_settings import (
     PAGE_ACCESS_TOKEN,
     PLATFORM_BOT_TOKEN,
     TELEGRAM_BOT_TOKEN,
-    ChannelsTestbed,
     build_settings,
-    telegram_ok,
 )
+from tests.channels.testbed import ChannelsTestbed
 
 HANDOFF_TEXT = MessageText("Handoff: guest asks about a banquet for 40 people.")
 

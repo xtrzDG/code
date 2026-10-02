@@ -23,6 +23,12 @@ from app.schemas.typings.channels.strings import ChannelSecret
 from app.schemas.typings.conversations.strings import ChannelUserId, MessageText
 from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.utilities.channels.channel_health import summarize_channel_error
+from tests.channels.channels_payloads import bearer, telegram_ok
+from tests.channels.channels_settings import (
+    OTHER_TELEGRAM_BOT_TOKEN,
+    PAGE_ACCESS_TOKEN,
+    TELEGRAM_BOT_TOKEN,
+)
 from tests.channels.test_meta_channels import (
     PAGE_ID,
     page_message,
@@ -30,14 +36,7 @@ from tests.channels.test_meta_channels import (
     post_meta,
 )
 from tests.channels.test_telegram_channel import build_update, connect_bot, post_update
-from tests.channels.testbed import (
-    OTHER_TELEGRAM_BOT_TOKEN,
-    PAGE_ACCESS_TOKEN,
-    TELEGRAM_BOT_TOKEN,
-    ChannelsTestbed,
-    bearer,
-    telegram_ok,
-)
+from tests.channels.testbed import ChannelsTestbed
 
 REVOKED: dict[str, object] = {
     "ok": False,
