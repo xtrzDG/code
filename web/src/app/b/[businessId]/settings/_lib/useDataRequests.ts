@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 
 import { api } from "@/api/client";
 import type { ApiError } from "@/api/errors";
-import { useApiMutation } from "@/api/hooks";
+import { useMutation } from "@/api/useMutation";
 import { unwrap } from "@/api/result";
 import { useBusiness } from "@/components/business/BusinessContext";
 import { useToast } from "@/components/ui";
@@ -54,7 +54,7 @@ export function useDataRequests() {
     (contact) => contact.id,
     [business.id, search],
   );
-  const erase = useApiMutation(
+  const erase = useMutation(
     (contactId: string) =>
       api.DELETE("/v1/businesses/{business_id}/contacts/{contact_id}", {
         params: { path: { business_id: business.id, contact_id: contactId } },

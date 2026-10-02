@@ -4,10 +4,9 @@ import { api } from "@/api/client";
 import { useApiQuery } from "@/api/hooks";
 import type { Schema } from "@/api/types";
 import { useBusiness } from "@/components/business/BusinessContext";
-import { IconChevronDown, IconInfo } from "@/components/icons";
+import { IconChevronDown, IconInfo, IconPhone } from "@/components/icons";
 import { Card, ErrorState, LoadingBlock } from "@/components/ui";
 import { CopyButton } from "@/components/workspace/CopyButton";
-import { IconPhone } from "@/components/workspace/icons";
 import { useI18n } from "@/i18n/client";
 import type { MessageKey } from "@/i18n/translate";
 

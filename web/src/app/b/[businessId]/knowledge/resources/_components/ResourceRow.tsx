@@ -1,6 +1,6 @@
 "use client";
 
-import { IconPencil } from "@/components/content/icons";
+import { IconPencil } from "@/components/icons";
 import { Switch } from "@/components/content/Switch";
 import { Badge, Button, Spinner } from "@/components/ui";
 import { useI18n } from "@/i18n/client";

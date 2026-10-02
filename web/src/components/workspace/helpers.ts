@@ -12,12 +12,6 @@ export function decodeHash(hash: string): string {
   }
 }
 
-/** Whether the typed confirmation matches (spaces around it and case are ignored). */
-export function isConfirmationTyped(typed: string, expected: string): boolean {
-  const target = expected.trim();
-  return target !== "" && typed.trim().toLocaleLowerCase() === target.toLocaleLowerCase();
-}
-
 /** The owner is warned when a package is used to this share (concept section 9). */
 export const USAGE_WARNING_PERCENT = 80;
 

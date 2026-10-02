@@ -6,7 +6,7 @@ import { api } from "@/api/client";
 import { useApiMutation, useApiQuery } from "@/api/hooks";
 import { useBusiness, useBusinessFormat } from "@/components/business/BusinessContext";
 import { Alert, Badge, Button, Card, Checkbox, ErrorState, LoadingBlock, useToast } from "@/components/ui";
-import { IconFile } from "@/components/workspace/icons";
+import { IconFile } from "@/components/icons";
 import { OwnerOnlyState } from "@/components/workspace/OwnerOnly";
 import { useI18n } from "@/i18n/client";
 

@@ -46,12 +46,12 @@ export function BookingDetailActions({ booking, page }: { booking: BookingView; 
         </Button>
       ) : null}
       {actions.complete ? (
-        <Button variant="secondary" size="sm" isLoading={page.isChangingStatus} onClick={() => void page.runStatus(booking, "completed")}>
+        <Button variant="secondary" size="sm" onClick={() => void page.runStatus(booking, "completed")}>
           {t("bookings.actions.complete")}
         </Button>
       ) : null}
       {actions.confirm ? (
-        <Button size="sm" isLoading={page.isChangingStatus} onClick={() => void page.runStatus(booking, "confirmed")}>
+        <Button size="sm" onClick={() => void page.runStatus(booking, "confirmed")}>
           {t("bookings.actions.confirm")}
         </Button>
       ) : null}

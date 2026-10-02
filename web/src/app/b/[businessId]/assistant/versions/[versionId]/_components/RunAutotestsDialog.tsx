@@ -5,7 +5,7 @@ import { useState } from "react";
 import { api } from "@/api/client";
 import { useApiMutation, useApiQuery } from "@/api/hooks";
 import { useBusiness } from "@/components/business/BusinessContext";
-import { ConfirmDialog } from "@/components/content/ConfirmDialog";
+import { ConfirmDialog } from "@/components/ui";
 import { Alert, Checkbox, Fieldset, Spinner, useToast } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import {
@@ -67,7 +67,7 @@ export function RunAutotestsDialog({
   return (
     <ConfirmDialog
       open
-      variant="primary"
+      tone="primary"
       title={t("assistant.autotests.runTitle", { number: version.version_number })}
       description={t("assistant.autotests.runDescription")}
       confirmLabel={t("assistant.autotests.run")}

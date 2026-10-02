@@ -26,7 +26,7 @@ import { fromFirstPage, PAGE_SIZE, reloadLimit, withNextPage, type PageRequest, 
 import { queryCache } from "./queryCache";
 import { hashKey, type QueryKey } from "./queryKey";
 import { unwrap, type ApiResult } from "./result";
-import { useCachedQuery, type QueryOptions } from "./useQuery";
+import { DEFAULT_STALE_MS, useCachedQuery, type QueryOptions } from "./useQuery";
 
 export type { PageRequest } from "./paging";
 
@@ -146,4 +146,19 @@ export function useCursorPage<Item, Page extends PageShape<Item>>(
     updateItems,
     updatePage,
   };
+}
+
+/**
+ * Loads a paged list's first page into the cache ahead of time (a section
+ * link under the pointer), unless fresh data is already there.
+ */
+export function prefetchCursorPage<Item, Page extends PageShape<Item>>(
+  key: QueryKey,
+  fetchPage: (request: PageRequest) => Promise<ApiResult<Page>>,
+  options: { pageSize?: number; staleMs?: number } = {},
+): Promise<void> {
+  const limit = options.pageSize ?? PAGE_SIZE;
+  return queryCache.fetch(key, async () => fromFirstPage<Item, Page>(await unwrap(fetchPage({ cursor: null, limit }))), {
+    staleMs: options.staleMs ?? DEFAULT_STALE_MS,
+  });
 }

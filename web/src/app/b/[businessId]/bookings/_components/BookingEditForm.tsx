@@ -3,7 +3,7 @@
 import { useState, type FormEvent } from "react";
 
 import { api } from "@/api/client";
-import { useApiMutation } from "@/api/hooks";
+import { useMutation } from "@/api/useMutation";
 import { useBusiness } from "@/components/business/BusinessContext";
 import type { BookingUpdateBody, BookingView, ResourceView } from "@/components/insights/types";
 import { Alert, Button, Field, Input, Select, Textarea } from "@/components/ui";
@@ -43,7 +43,7 @@ export function BookingEditForm({
   const placement = canChangePlacement(booking.status);
   const places = placesForEdit(resources, booking);
 
-  const save = useApiMutation(
+  const save = useMutation(
     (body: BookingUpdateBody) =>
       api.PATCH("/v1/businesses/{business_id}/bookings/{booking_id}", {
         params: { path: { business_id: business.id, booking_id: booking.id } },

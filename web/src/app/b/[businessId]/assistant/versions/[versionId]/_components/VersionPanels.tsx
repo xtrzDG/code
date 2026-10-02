@@ -3,7 +3,7 @@
 import Link from "next/link";
 
 import { useBusiness } from "@/components/business/BusinessContext";
-import { IconCopy } from "@/components/content/icons";
+import { IconCopy } from "@/components/icons";
 import { Button, useToast } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import type { AssistantVersionDetails } from "@/lib/assistant/versions";

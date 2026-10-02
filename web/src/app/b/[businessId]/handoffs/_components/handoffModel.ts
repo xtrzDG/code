@@ -48,3 +48,23 @@ export function afterResolve<T extends Pick<HandoffListItem, "id">>(handoffs: re
 export function withResolvedCounts<Page extends { open_count: number; resolved_count: number }>(page: Page): Page {
   return { ...page, open_count: Math.max(0, page.open_count - 1), resolved_count: page.resolved_count + 1 };
 }
+
+/** How a handoff looks once resolved, before the server's copy arrives. */
+export function resolvedLocally<T extends Pick<HandoffListItem, "status" | "resolved_at">>(handoff: T, nowUs: number): T {
+  return { ...handoff, status: "resolved", resolved_at: nowUs };
+}
+
+/** A cached handoffs list (one tab) after a handoff was resolved: its items and the tab totals. */
+export function withResolvedHandoff<Page extends { open_count: number; resolved_count: number }, T extends Pick<HandoffListItem, "id" | "status">>(
+  data: { page: Page; items: T[]; nextCursor: string | null },
+  resolved: T,
+  tab: HandoffTab,
+): { page: Page; items: T[]; nextCursor: string | null } {
+  const before = data.items.find((item) => item.id === resolved.id);
+  const wasOpen = before === undefined || before.status !== "resolved";
+  return {
+    ...data,
+    items: afterResolve(data.items, resolved, tab),
+    page: wasOpen ? withResolvedCounts(data.page) : data.page,
+  };
+}

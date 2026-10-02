@@ -2,7 +2,7 @@
 
 import { useId, type FormEvent, type KeyboardEvent, type RefObject } from "react";
 
-import { IconSend } from "@/components/content/icons";
+import { IconSend } from "@/components/icons";
 import { Button, Textarea } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 

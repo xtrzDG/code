@@ -1,7 +1,7 @@
 "use client";
 
 import { useBusiness } from "@/components/business/BusinessContext";
-import { ConfirmDialog } from "@/components/content/ConfirmDialog";
+import { ConfirmDialog } from "@/components/ui";
 import { IconCheck } from "@/components/icons";
 import { Button, ButtonLink, Card, EmptyState } from "@/components/ui";
 import { useI18n } from "@/i18n/client";

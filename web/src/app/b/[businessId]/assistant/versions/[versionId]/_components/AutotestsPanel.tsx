@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-import { IconFlask } from "@/components/content/icons";
+import { IconFlask } from "@/components/icons";
 import { Alert, Button, EmptyState, Select, Spinner } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import {

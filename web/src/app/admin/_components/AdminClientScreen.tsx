@@ -9,7 +9,7 @@ import type { ApiError } from "@/api/errors";
 import { useApiMutation, useApiQuery } from "@/api/hooks";
 import { IconArrowLeft, IconExternal } from "@/components/icons";
 import { Button, ButtonLink, Card, ErrorState, LoadingBlock, PageHeader } from "@/components/ui";
-import { ConfirmDialog } from "@/components/workspace/ConfirmDialog";
+import { ConfirmDialog } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { countryFlag, countryName } from "@/lib/countries";
 import { ADMIN_PATH, businessPath } from "@/lib/navigation";

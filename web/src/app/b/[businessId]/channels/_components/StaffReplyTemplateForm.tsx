@@ -3,7 +3,7 @@
 import { useId, useState, type FormEvent } from "react";
 
 import { api } from "@/api/client";
-import { useApiMutation } from "@/api/hooks";
+import { useMutation } from "@/api/useMutation";
 import { useBusiness } from "@/components/business/BusinessContext";
 import { Button, Field, Input, useToast } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
@@ -42,7 +42,7 @@ export function StaffReplyTemplateForm({
   const [language, setLanguage] = useState(saved?.language_code ?? "");
   const [errors, setErrors] = useState<{ name?: StaffTemplateFieldError; language?: StaffTemplateFieldError }>({});
 
-  const save = useApiMutation((body: StaffTemplateBody) =>
+  const save = useMutation((body: StaffTemplateBody) =>
     api.PUT("/v1/businesses/{business_id}/channels/whatsapp/staff-template", {
       params: { path: { business_id: business.id } },
       body,

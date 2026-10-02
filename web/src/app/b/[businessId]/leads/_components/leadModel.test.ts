@@ -1,6 +1,13 @@
 import { describe, expect, it } from "vitest";
 
-import { afterStatusChange, countsByTab, leadFiltersQuery, parseLeadFilters, withStatusCounts } from "./leadModel";
+import {
+  afterStatusChange,
+  countsByTab,
+  leadFiltersQuery,
+  parseLeadFilters,
+  withLeadStatus,
+  withStatusCounts,
+} from "./leadModel";
 
 const leads = [
   { id: "a", status: "new" as const },
@@ -40,5 +47,24 @@ describe("lead filters in the URL", () => {
     expect(parseLeadFilters({ status: "in_progress", test: "1" })).toEqual({ tab: "in_progress", includeTest: true });
     expect(parseLeadFilters({ status: "open" })).toEqual({ tab: "all", includeTest: false });
     expect(leadFiltersQuery({ tab: "all", includeTest: false })).toBe("");
+  });
+});
+
+describe("withLeadStatus", () => {
+  const data = { page: { status_counts: statusCounts }, items: leads, nextCursor: "c" };
+
+  it("moves the lead and its count in the cached tab", () => {
+    const moved = withLeadStatus(data, "a", "new", "won", "all");
+    expect(moved.items.map((lead) => [lead.id, lead.status])).toEqual([
+      ["a", "won"],
+      ["b", "won"],
+      ["c", "new"],
+    ]);
+    expect(countsByTab(moved.page.status_counts)).toEqual({ all: 3, new: 1, in_progress: 0, won: 2, lost: 0 });
+    expect(moved.nextCursor).toBe("c");
+  });
+
+  it("drops the lead from a tab of its old status", () => {
+    expect(withLeadStatus(data, "a", "new", "lost", "new").items.map((lead) => lead.id)).toEqual(["b", "c"]);
   });
 });

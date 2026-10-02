@@ -2,8 +2,7 @@
 
 import type { ReactNode } from "react";
 
-import { IconCheckCircle, IconXCircle } from "@/components/content/icons";
-import { IconAlert, IconClock } from "@/components/icons";
+import { IconAlert, IconCheckCircle, IconClock, IconXCircle } from "@/components/icons";
 import { useI18n } from "@/i18n/client";
 import type { MessageKey } from "@/i18n/translate";
 import type { CheckState } from "@/lib/assistant/goLive";

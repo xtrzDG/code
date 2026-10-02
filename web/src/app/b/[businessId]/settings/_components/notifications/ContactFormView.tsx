@@ -5,7 +5,7 @@ import { useState, type FormEvent } from "react";
 import type { ApiError } from "@/api/errors";
 import { useBusiness } from "@/components/business/BusinessContext";
 import { Button, Field, Input, Select } from "@/components/ui";
-import { InlineError } from "@/components/workspace/InlineError";
+import { InlineError } from "@/components/ui/InlineError";
 import { useI18n } from "@/i18n/client";
 import { languageName } from "@/lib/format";
 

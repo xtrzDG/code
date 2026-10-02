@@ -37,6 +37,9 @@ export const ka: Messages = {
     comingSoon: "ეს განყოფილება მზადდება და მალე აქ გამოჩნდება.",
     details: "დეტალები",
     requestId: "მოთხოვნის ID: {id}",
+    typeToConfirm: "დასადასტურებლად ჩაწერეთ {text}",
+    undo: "გაუქმება",
+    undone: "გაუქმდა",
   },
   language: {
     label: "ინტერფეისის ენა",

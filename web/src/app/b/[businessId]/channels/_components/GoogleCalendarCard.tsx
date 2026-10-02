@@ -7,7 +7,7 @@ import { useApiMutation, useApiQuery } from "@/api/hooks";
 import { useBusiness, useBusinessFormat } from "@/components/business/BusinessContext";
 import { IconCalendar, IconExternal } from "@/components/icons";
 import { Alert, Badge, Button, Card, ErrorState, LoadingBlock, useToast } from "@/components/ui";
-import { ConfirmDialog } from "@/components/workspace/ConfirmDialog";
+import { ConfirmDialog } from "@/components/ui";
 import { Facts } from "@/components/workspace/Facts";
 import { useI18n } from "@/i18n/client";
 

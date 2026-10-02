@@ -3,7 +3,7 @@
 import { useId, useState, type FormEvent } from "react";
 
 import { api } from "@/api/client";
-import { useApiMutation } from "@/api/hooks";
+import { useMutation } from "@/api/useMutation";
 import type { Schema } from "@/api/types";
 import { useBusiness, useBusinessFormat } from "@/components/business/BusinessContext";
 import { usePagedList } from "@/components/content/usePagedList";
@@ -183,7 +183,7 @@ function AnswerDialog({
   const [title, setTitle] = useState(question.question);
   const [errors, setErrors] = useState<{ answer?: MessageKey; title?: MessageKey }>({});
 
-  const save = useApiMutation((body: { answer: string; title: string | null }) =>
+  const save = useMutation((body: { answer: string; title: string | null }) =>
     api.POST("/v1/businesses/{business_id}/unanswered-questions/{question_id}/answer", {
       params: { path: { business_id: business.id, question_id: question.id } },
       body,

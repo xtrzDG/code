@@ -10,7 +10,8 @@ import { useState } from "react";
 
 import { useCountries } from "@/api/catalog";
 import { api } from "@/api/client";
-import { useApiQuery } from "@/api/hooks";
+import { queryKeys } from "@/api/queryKeys";
+import { useQuery } from "@/api/useQuery";
 import type { OtpDeliveryChannel } from "@/api/types";
 import type { MessageKey } from "@/i18n/translate";
 import { guessCountryCode, isCountryAvailable, type LoginMethod } from "@/lib/countries";
@@ -43,9 +44,8 @@ export function useDestination() {
   const countryCode = chosenCountry ?? guessedCountry;
   const country = countryList.find((item) => item.country_code === countryCode);
 
-  const loginOptions = useApiQuery(
-    () => api.GET("/v1/auth/login-options", { params: { query: countryCode ? { country_code: countryCode } : {} } }),
-    [countryCode],
+  const loginOptions = useQuery(queryKeys.auth.loginOptions(countryCode ?? null), () =>
+    api.GET("/v1/auth/login-options", { params: { query: countryCode ? { country_code: countryCode } : {} } }),
   );
   const options = loginOptions.data;
   const method = effectiveLoginMethod(chosenMethod, options);

@@ -3,8 +3,7 @@
 import type { ReactNode } from "react";
 
 import { useBusiness, useBusinessFormat } from "@/components/business/BusinessContext";
-import { IconFlask, IconRocket, IconUndo } from "@/components/content/icons";
-import { IconChat } from "@/components/icons";
+import { IconChat, IconFlask, IconRocket, IconUndo } from "@/components/icons";
 import { Alert, Button, ButtonLink, Card } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { formatScore } from "@/lib/assistant/autotests";

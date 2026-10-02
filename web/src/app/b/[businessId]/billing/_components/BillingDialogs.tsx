@@ -1,7 +1,7 @@
 "use client";
 
 import { useBusinessFormat } from "@/components/business/BusinessContext";
-import { ConfirmDialog } from "@/components/workspace/ConfirmDialog";
+import { ConfirmDialog } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 
 import { planPrice, planSetupFee, quotedMoneyText, type BillingOverview, type BillingPeriod } from "../_lib/billing";

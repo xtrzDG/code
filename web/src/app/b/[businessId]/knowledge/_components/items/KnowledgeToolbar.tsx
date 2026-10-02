@@ -1,8 +1,7 @@
 "use client";
 
 import { useBusiness } from "@/components/business/BusinessContext";
-import { IconUpload } from "@/components/content/icons";
-import { IconPlus } from "@/components/icons";
+import { IconPlus, IconUpload } from "@/components/icons";
 import { Button, ButtonLink, Field, Select } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import type { KnowledgeFilter, KnowledgeStatusFilter } from "@/lib/knowledge/kinds";

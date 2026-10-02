@@ -1,7 +1,7 @@
 "use client";
 
-import { api } from "@/api/client";
-import { useApiQuery } from "@/api/hooks";
+import { sectionQueries } from "@/api/sectionQueries";
+import { useQuery } from "@/api/useQuery";
 import { useBusiness, useBusinessFormat } from "@/components/business/BusinessContext";
 import type { DashboardPackageUsage } from "@/components/insights/types";
 import { Alert, ButtonLink, Card } from "@/components/ui";
@@ -32,14 +32,8 @@ export function PackageCard({
   const dialogLevel = usage ? usageLevel(usage.dialog_usage_percent) : "ok";
   const needsPrice = isOwner && usage !== null && (voiceLevel !== "ok" || dialogLevel !== "ok");
 
-  const billing = useApiQuery(
-    () =>
-      api.GET("/v1/businesses/{business_id}/billing", {
-        params: { path: { business_id: businessId }, query: { language: locale } },
-      }),
-    [businessId, locale],
-    { enabled: needsPrice },
-  );
+  const billingQuery = sectionQueries.billingOverview(businessId, locale);
+  const billing = useQuery(billingQuery.key, billingQuery.fetch, { enabled: needsPrice });
   const prices = billing.data?.usage ?? null;
 
   if (!usage) {

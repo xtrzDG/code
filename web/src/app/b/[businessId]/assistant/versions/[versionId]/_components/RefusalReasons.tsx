@@ -1,7 +1,7 @@
 "use client";
 
 import type { ApiError } from "@/api/errors";
-import { IconXCircle } from "@/components/content/icons";
+import { IconXCircle } from "@/components/icons";
 import { useI18n } from "@/i18n/client";
 import type { MessageKey } from "@/i18n/translate";
 import { isTestingRefusal, type GoLiveCheckCode, type Refusal, type RefusalCode } from "@/lib/assistant/goLive";

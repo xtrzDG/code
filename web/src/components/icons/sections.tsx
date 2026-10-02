@@ -1,92 +1,6 @@
-/**
- * Inline outline icons (24×24, stroke = currentColor). Size them with
- * classes (`className="size-5"`) and hide decorative ones from screen
- * readers with `aria-hidden`.
- */
+/** Icons of the cabinet sections and the things they hold (people, places, tools, themes). */
 
-import type { SVGProps } from "react";
-
-export type IconProps = SVGProps<SVGSVGElement>;
-
-function Icon({ children, ...props }: IconProps) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={1.75}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      focusable="false"
-      {...props}
-    >
-      {children}
-    </svg>
-  );
-}
-
-export const IconMenu = (props: IconProps) => (
-  <Icon {...props}>
-    <path d="M4 6h16M4 12h16M4 18h16" />
-  </Icon>
-);
-
-export const IconX = (props: IconProps) => (
-  <Icon {...props}>
-    <path d="M6 6l12 12M18 6L6 18" />
-  </Icon>
-);
-
-export const IconCheck = (props: IconProps) => (
-  <Icon {...props}>
-    <path d="M5 12.5l4.5 4.5L19 7.5" />
-  </Icon>
-);
-
-export const IconChevronDown = (props: IconProps) => (
-  <Icon {...props}>
-    <path d="M6 9l6 6 6-6" />
-  </Icon>
-);
-
-export const IconChevronRight = (props: IconProps) => (
-  <Icon {...props}>
-    <path d="M9 6l6 6-6 6" />
-  </Icon>
-);
-
-export const IconArrowLeft = (props: IconProps) => (
-  <Icon {...props}>
-    <path d="M19 12H5M11 6l-6 6 6 6" />
-  </Icon>
-);
-
-export const IconPlus = (props: IconProps) => (
-  <Icon {...props}>
-    <path d="M12 5v14M5 12h14" />
-  </Icon>
-);
-
-export const IconTrash = (props: IconProps) => (
-  <Icon {...props}>
-    <path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 002 2h6a2 2 0 002-2l1-12M9 7V4h6v3" />
-  </Icon>
-);
-
-export const IconAlert = (props: IconProps) => (
-  <Icon {...props}>
-    <circle cx="12" cy="12" r="9" />
-    <path d="M12 7.5v5.5M12 16.5v.01" />
-  </Icon>
-);
-
-export const IconInfo = (props: IconProps) => (
-  <Icon {...props}>
-    <circle cx="12" cy="12" r="9" />
-    <path d="M12 11v5.5M12 7.5v.01" />
-  </Icon>
-);
+import { Icon, type IconProps } from "./Icon";
 
 export const IconGlobe = (props: IconProps) => (
   <Icon {...props}>
@@ -185,28 +99,9 @@ export const IconShield = (props: IconProps) => (
   </Icon>
 );
 
-export const IconExternal = (props: IconProps) => (
-  <Icon {...props}>
-    <path d="M14 4h6v6M20 4l-9 9M18 14v4.5a1.5 1.5 0 01-1.5 1.5h-11A1.5 1.5 0 014 18.5v-11A1.5 1.5 0 015.5 6H10" />
-  </Icon>
-);
-
-export const IconClock = (props: IconProps) => (
-  <Icon {...props}>
-    <circle cx="12" cy="12" r="9" />
-    <path d="M12 7v5l3 2" />
-  </Icon>
-);
-
 export const IconMoon = (props: IconProps) => (
   <Icon {...props}>
     <path d="M20 14.5A8.5 8.5 0 019.5 4a8.5 8.5 0 1010.5 10.5z" />
-  </Icon>
-);
-
-export const IconPlay = (props: IconProps) => (
-  <Icon {...props}>
-    <path d="M8 5.5v13l10-6.5-10-6.5z" />
   </Icon>
 );
 
@@ -230,8 +125,41 @@ export const IconPhone = (props: IconProps) => (
   </Icon>
 );
 
-export const IconArrowRight = (props: IconProps) => (
+export const IconWrench = (props: IconProps) => (
   <Icon {...props}>
-    <path d="M5 12h14M13 6l6 6-6 6" />
+    <path d="M14.5 6.5a4 4 0 015.2 5.2l-1.5-1.5-2.3.6-.6 2.3 1.5 1.5a4 4 0 01-5.2-5.2L4 17.5 6.5 20l7.6-7.6" />
+  </Icon>
+);
+
+export const IconRocket = (props: IconProps) => (
+  <Icon {...props}>
+    <path d="M12 15l-3-3c1.5-4.5 4.5-7.5 10-8-.5 5.5-3.5 8.5-8 10zM9 12l-4 .5L7.5 9H11M12 15l-.5 4 3.5-2.5V13" />
+    <path d="M6 18c-1 .5-1.5 1.5-2 3 1.5-.5 2.5-1 3-2" />
+  </Icon>
+);
+
+export const IconFlask = (props: IconProps) => (
+  <Icon {...props}>
+    <path d="M9 3h6M10 3v6l-5.5 9.5A1.7 1.7 0 006 21h12a1.7 1.7 0 001.5-2.5L14 9V3M7.5 15h9" />
+  </Icon>
+);
+
+export const IconWindow = (props: IconProps) => (
+  <Icon {...props}>
+    <rect x="3" y="4.5" width="18" height="15" rx="2" />
+    <path d="M3 8.5h18M6.5 6.5h.01M9 6.5h.01M14 15.5h3.5v-3" />
+  </Icon>
+);
+
+export const IconUsers = (props: IconProps) => (
+  <Icon {...props}>
+    <circle cx="9" cy="8.5" r="3.5" />
+    <path d="M2.5 19.5a6.5 6.5 0 0113 0M16 5a3.5 3.5 0 010 7M18 14.5a5.5 5.5 0 013.5 5" />
+  </Icon>
+);
+
+export const IconBell = (props: IconProps) => (
+  <Icon {...props}>
+    <path d="M6 16.5V11a6 6 0 0112 0v5.5l1.5 2h-15zM10 20.5a2 2 0 004 0" />
   </Icon>
 );

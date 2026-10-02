@@ -1,10 +1,9 @@
 "use client";
 
-import { IconShield } from "@/components/icons";
+import { IconRefresh, IconSearch, IconShield } from "@/components/icons";
 import { RefreshFailed } from "@/components/insights/common";
 import { Button, Card, EmptyState, ErrorState, LoadingBlock, PageHeader } from "@/components/ui";
-import { IconRefresh, IconSearch } from "@/components/workspace/icons";
-import { InlineError } from "@/components/workspace/InlineError";
+import { InlineError } from "@/components/ui/InlineError";
 import { useI18n } from "@/i18n/client";
 import { formatDateTime } from "@/lib/format";
 

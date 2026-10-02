@@ -3,9 +3,9 @@
 import { useState } from "react";
 
 import { api } from "@/api/client";
-import { useApiMutation } from "@/api/hooks";
+import { useMutation } from "@/api/useMutation";
 import { useBusiness } from "@/components/business/BusinessContext";
-import { ConfirmDialog } from "@/components/content/ConfirmDialog";
+import { ConfirmDialog } from "@/components/ui";
 import { Alert, Checkbox, useToast } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import type { AssistantVersionDetails } from "@/lib/assistant/versions";
@@ -43,7 +43,7 @@ export function PublishDialog({
   const [refusal, setRefusal] = useState<RefusalState | null>(null);
   const [acknowledged, setAcknowledged] = useState(false);
 
-  const publish = useApiMutation(
+  const publish = useMutation(
     (acceptFailedTests: boolean) =>
       api.POST("/v1/businesses/{business_id}/assistant-versions/{version_id}/publish", {
         params: { path: { business_id: business.id, version_id: version.id } },
@@ -72,7 +72,7 @@ export function PublishDialog({
   return (
     <ConfirmDialog
       open
-      variant={force ? "danger" : "primary"}
+      tone={force ? "danger" : "primary"}
       title={force ? t("assistant.publish.forceTitle", { number: version.version_number }) : t("assistant.publish.title", { number: version.version_number })}
       description={
         liveNumber !== null

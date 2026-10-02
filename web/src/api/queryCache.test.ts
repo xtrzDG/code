@@ -39,7 +39,7 @@ describe("QueryCache", () => {
     expect(fetcher).toHaveBeenCalledTimes(1);
     expect(cache.get(["leads", "b1"]).isFetching).toBe(true);
 
-    pending[0].resolve("leads");
+    pending[0]?.resolve("leads");
     await Promise.all([first, second]);
     expect(cache.get(["leads", "b1"])).toMatchObject({ data: "leads", error: null, isFetching: false, updatedAt: now });
   });
@@ -74,7 +74,7 @@ describe("QueryCache", () => {
     const load = cache.fetch(["leads", "b1"], fetcher);
     await flush();
     cache.setData(["leads", "b1"], "written locally");
-    pending[0].resolve("older server copy");
+    pending[0]?.resolve("older server copy");
     await load;
     expect(cache.get(["leads", "b1"])).toMatchObject({ data: "written locally", isInvalidated: true, isFetching: false });
   });
@@ -85,8 +85,8 @@ describe("QueryCache", () => {
     await flush();
     const second = cache.fetch(["leads", "b1"], fetcher, { force: true });
     await flush();
-    pending[1].resolve("new");
-    pending[0].resolve("old");
+    pending[1]?.resolve("new");
+    pending[0]?.resolve("old");
     await Promise.all([first, second]);
     expect(cache.get(["leads", "b1"]).data).toBe("new");
   });

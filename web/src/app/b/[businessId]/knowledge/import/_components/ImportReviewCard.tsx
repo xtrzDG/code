@@ -1,6 +1,6 @@
 "use client";
 
-import { IconFile } from "@/components/content/icons";
+import { IconFile } from "@/components/icons";
 import { Button, Card, Checkbox, EmptyState } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import type { ImportedMenuItem } from "@/lib/knowledge/menuImport";

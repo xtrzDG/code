@@ -3,12 +3,13 @@
 import { IconCalendar, IconPlus } from "@/components/icons";
 import { RefreshButton, RefreshFailed } from "@/components/insights/common";
 import { useBusiness } from "@/components/business/BusinessContext";
-import { Button, Card, EmptyState, ErrorState, LoadingBlock, PageHeader } from "@/components/ui";
+import { Button, Card, EmptyState, ErrorState, LoadingRegion, PageHeader } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 
 import { BookingDialogs } from "./_components/BookingDialogs";
 import { BookingFiltersBar } from "./_components/BookingFiltersBar";
 import { BookingDays } from "./_components/BookingList";
+import { BookingDaysSkeleton } from "./_components/BookingsSkeleton";
 import type { BookingFilters } from "./_lib/bookingFilters";
 import { useBookingsPage } from "./_lib/useBookingsPage";
 
@@ -32,7 +33,7 @@ export function BookingsScreen({ initialFilters }: { initialFilters: BookingFilt
         description={t("pages.bookings.description")}
         actions={
           <>
-            <RefreshButton onClick={bookings.reload} isRefreshing={bookings.isLoading && bookings.items !== undefined} />
+            <RefreshButton onClick={bookings.reload} isRefreshing={bookings.isFetching && bookings.items !== undefined} />
             <Button leadingIcon={<IconPlus className="size-4" aria-hidden />} onClick={() => setDialog({ kind: "create" })}>
               {t("bookings.newBooking")}
             </Button>
@@ -51,14 +52,16 @@ export function BookingsScreen({ initialFilters }: { initialFilters: BookingFilt
         {bookings.error && bookings.items ? <RefreshFailed error={bookings.error} onRetry={bookings.reload} /> : null}
 
         {!rangeValid ? null : bookings.items === undefined ? (
-          <Card>
-            {bookings.error ? (
+          bookings.error ? (
+            <Card>
               <ErrorState error={bookings.error} onRetry={bookings.reload} />
-            ) : (
-              <LoadingBlock label={t("bookings.loading")} />
-            )}
-          </Card>
-        ) : items.length === 0 && !bookings.isLoading ? (
+            </Card>
+          ) : (
+            <LoadingRegion label={t("bookings.loading")}>
+              <BookingDaysSkeleton />
+            </LoadingRegion>
+          )
+        ) : items.length === 0 && !bookings.isPlaceholder ? (
           <Card>
             <EmptyState
               icon={<IconCalendar className="size-6" />}
@@ -72,7 +75,10 @@ export function BookingsScreen({ initialFilters }: { initialFilters: BookingFilt
             />
           </Card>
         ) : (
-          <div className={bookings.isLoading ? "opacity-60 transition-opacity" : undefined} aria-busy={bookings.isLoading || undefined}>
+          <div
+            className={bookings.isPlaceholder ? "opacity-60 transition-opacity" : "animate-settle"}
+            aria-busy={bookings.isPlaceholder || undefined}
+          >
             <BookingDays
               bookings={items}
               newestFirst={filters.range === "past"}

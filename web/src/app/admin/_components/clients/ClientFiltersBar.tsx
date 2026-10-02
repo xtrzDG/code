@@ -1,7 +1,7 @@
 "use client";
 
 import { Field, Input, Select } from "@/components/ui";
-import { IconSearch } from "@/components/workspace/icons";
+import { IconSearch } from "@/components/icons";
 import { useI18n } from "@/i18n/client";
 import { countryFlag, countryName } from "@/lib/countries";
 

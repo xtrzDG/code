@@ -5,7 +5,7 @@ import { useMemo, useState } from "react";
 import { api } from "@/api/client";
 import { useApiMutation, useApiQuery } from "@/api/hooks";
 import { useBusiness, useBusinessFormat } from "@/components/business/BusinessContext";
-import { ConfirmDialog } from "@/components/content/ConfirmDialog";
+import { ConfirmDialog } from "@/components/ui";
 import { IconCalendar, IconPlus } from "@/components/icons";
 import { Alert, Button, Card, EmptyState, ErrorState, LoadingBlock, useToast } from "@/components/ui";
 import { useI18n } from "@/i18n/client";

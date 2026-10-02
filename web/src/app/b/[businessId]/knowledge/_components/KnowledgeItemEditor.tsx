@@ -3,7 +3,7 @@
 import { useId, useState, type FormEvent } from "react";
 
 import { api } from "@/api/client";
-import { useApiMutation } from "@/api/hooks";
+import { useMutation } from "@/api/useMutation";
 import type { KnowledgeItemDetails, KnowledgeItemKind } from "@/api/types";
 import { useBusiness, useBusinessFormat } from "@/components/business/BusinessContext";
 import { Button, Checkbox, Field, Fieldset, Input, Modal, Select, Textarea, useToast } from "@/components/ui";
@@ -79,13 +79,13 @@ export function KnowledgeItemEditor({
   const [form, setForm] = useState<KnowledgeForm>(initial);
   const [errors, setErrors] = useState<KnowledgeFormErrors>({});
 
-  const create = useApiMutation((body: KnowledgeItemCreateBody) =>
+  const create = useMutation((body: KnowledgeItemCreateBody) =>
     api.POST("/v1/businesses/{business_id}/knowledge", {
       params: { path: { business_id: business.id }, query: { language: locale } },
       body,
     }),
   );
-  const update = useApiMutation((itemId: string, body: KnowledgeItemPatchBody) =>
+  const update = useMutation((itemId: string, body: KnowledgeItemPatchBody) =>
     api.PATCH("/v1/businesses/{business_id}/knowledge/{item_id}", {
       params: { path: { business_id: business.id, item_id: itemId }, query: { language: locale } },
       body,

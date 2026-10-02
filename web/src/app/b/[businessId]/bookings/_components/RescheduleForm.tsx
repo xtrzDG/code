@@ -3,7 +3,7 @@
 import { useState, type FormEvent } from "react";
 
 import { api } from "@/api/client";
-import { useApiMutation } from "@/api/hooks";
+import { useMutation } from "@/api/useMutation";
 import { useBusiness } from "@/components/business/BusinessContext";
 import { isLocalDate, isLocalTime } from "@/components/insights/dates";
 import type { BookingResult, BookingView, RescheduleBookingBody } from "@/components/insights/types";
@@ -37,7 +37,7 @@ export function RescheduleForm({
   const [time, setTime] = useState(booking.time ?? "");
   const [errors, setErrors] = useState<{ date?: MessageKey; time?: MessageKey }>({});
 
-  const reschedule = useApiMutation(
+  const reschedule = useMutation(
     (body: RescheduleBookingBody) =>
       api.POST("/v1/businesses/{business_id}/bookings/{booking_id}/reschedule", {
         params: { path: { business_id: businessId, booking_id: booking.id }, query: { language } },

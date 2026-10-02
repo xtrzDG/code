@@ -8,7 +8,7 @@ import {
   IconWhatsApp,
   IconWindow,
   type IconProps,
-} from "@/components/workspace/icons";
+} from "@/components/icons";
 import type { MessageKey } from "@/i18n/translate";
 
 import type { ChannelState, ConnectableChannel } from "../_lib/channels";

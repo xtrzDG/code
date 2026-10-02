@@ -1,7 +1,7 @@
 "use client";
 
 import { CustomerName } from "@/components/insights/common";
-import { ConfirmDialog } from "@/components/insights/ConfirmDialog";
+import { ConfirmDialog } from "@/components/ui";
 import { CustomerMessageModal } from "@/components/insights/CustomerMessageModal";
 import { Modal, useToast } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
@@ -150,7 +150,6 @@ export function BookingDialogs({ page }: { page: BookingsPage }) {
             : undefined
         }
         confirmLabel={t("bookings.confirmNoShow.confirm")}
-        isPending={page.isChangingStatus}
         onConfirm={() => (dialogBooking ? void runStatus(dialogBooking, "no_show") : undefined)}
         onClose={() =>
           setDialog((current) => (current.kind === "noShow" ? { kind: "details", booking: current.booking } : current))

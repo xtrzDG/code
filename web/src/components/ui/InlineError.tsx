@@ -1,7 +1,7 @@
 "use client";
 
 import { describeError, type ErrorMessageOverrides } from "@/api/errors";
-import { Alert } from "@/components/ui";
+import { Alert } from "./Alert";
 import { useI18n } from "@/i18n/client";
 
 /**

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 
 import { api } from "@/api/client";
-import { useApiMutation } from "@/api/hooks";
+import { useMutation } from "@/api/useMutation";
 import type { KnowledgeItemDetails, Schema } from "@/api/types";
 import { useBusiness } from "@/components/business/BusinessContext";
 import { useToast } from "@/components/ui";
@@ -34,13 +34,13 @@ export function useImportReview() {
   const [confirmDiscard, setConfirmDiscard] = useState(false);
   const [done, setDone] = useState<{ added: number } | null>(null);
 
-  const confirm = useApiMutation((itemIds: string[]) =>
+  const confirm = useMutation((itemIds: string[]) =>
     api.POST("/v1/businesses/{business_id}/knowledge/import/confirm", {
       params: { path: { business_id: business.id } },
       body: { item_ids: itemIds },
     }),
   );
-  const discardBatch = useApiMutation(
+  const discardBatch = useMutation(
     (batchId: string) =>
       api.DELETE("/v1/businesses/{business_id}/knowledge/import/{batch_id}", {
         params: { path: { business_id: business.id, batch_id: batchId } },

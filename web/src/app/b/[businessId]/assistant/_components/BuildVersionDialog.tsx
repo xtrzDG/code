@@ -7,7 +7,7 @@ import { api } from "@/api/client";
 import { useApiMutation, useApiQuery } from "@/api/hooks";
 import { useBusiness } from "@/components/business/BusinessContext";
 import { Alert, ButtonLink, Checkbox, Spinner, useToast } from "@/components/ui";
-import { ConfirmDialog } from "@/components/content/ConfirmDialog";
+import { ConfirmDialog } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { businessPath } from "@/lib/navigation";
 
@@ -53,7 +53,7 @@ export function BuildVersionDialog({ onClose, onBuilt }: { onClose: () => void; 
   return (
     <ConfirmDialog
       open
-      variant="primary"
+      tone="primary"
       title={t("assistant.build.title")}
       description={t("assistant.build.description")}
       confirmLabel={t("assistant.build.confirm")}

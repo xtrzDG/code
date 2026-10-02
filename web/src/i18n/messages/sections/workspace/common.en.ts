@@ -10,7 +10,6 @@ export const workspaceCommonEn = {
   ownerOnlyChange: "Only the owner can change this. You can look around.",
   ownerOnlyTitle: "For the owner only",
   ownerOnlyDescription: "Only the owner of the business can see this part.",
-  typeToConfirm: "Type {text} to confirm",
   refresh: "Refresh",
   loadMore: "Show more",
   usage: {

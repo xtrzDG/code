@@ -4,12 +4,13 @@ import { useSearchParams, useSelectedLayoutSegment } from "next/navigation";
 import { useMemo, type ReactNode } from "react";
 
 import { api } from "@/api/client";
+import { queryKeys } from "@/api/queryKeys";
+import { useCursorPage } from "@/api/useCursorPage";
 import { useBusiness } from "@/components/business/BusinessContext";
 import { RefreshButton, RefreshFailed } from "@/components/insights/common";
 import { useToday } from "@/components/insights/useToday";
 import type { ConversationPage, ConversationSummaryView } from "@/components/insights/types";
 import { useAutoReload } from "@/components/insights/useAutoReload";
-import { usePagedQuery } from "@/components/insights/usePagedQuery";
 import { replaceUrlQuery } from "@/components/insights/urlQuery";
 import { PageHeader } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
@@ -44,7 +45,8 @@ export function ConversationsShell({ children }: { children: ReactNode }) {
   const filters = useMemo(() => parseConversationFilters(new URLSearchParams(searchParams.toString())), [searchParams]);
   const query = conversationFiltersQuery(filters);
 
-  const conversations = usePagedQuery<ConversationSummaryView, ConversationPage>(
+  const conversations = useCursorPage<ConversationSummaryView, ConversationPage>(
+    queryKeys.conversations.list(businessId, query, today),
     ({ cursor, limit }) =>
       api.GET("/v1/businesses/{business_id}/conversations", {
         params: {
@@ -52,7 +54,6 @@ export function ConversationsShell({ children }: { children: ReactNode }) {
           query: { ...conversationApiQuery(filters, today), limit: String(limit), cursor: cursor ?? undefined },
         },
       }),
-    [businessId, query, today],
   );
   // Every load of the feed is audited (a view of personal data): no polling,
   // a reload when the user comes back to the tab and the Refresh button.
@@ -74,7 +75,7 @@ export function ConversationsShell({ children }: { children: ReactNode }) {
           actions={
             <RefreshButton
               onClick={conversations.reload}
-              isRefreshing={conversations.isLoading && conversations.items !== undefined}
+              isRefreshing={conversations.isFetching && conversations.items !== undefined}
             />
           }
         />
@@ -98,7 +99,7 @@ export function ConversationsShell({ children }: { children: ReactNode }) {
             selectedId={selectedId}
             linkQuery={query}
             onClearFilters={() => setFilters({ ...filters, status: null, period: "all", search: "", channel: null })}
-            isStale={conversations.isLoading}
+            isStale={conversations.isPlaceholder}
           />
         </section>
 

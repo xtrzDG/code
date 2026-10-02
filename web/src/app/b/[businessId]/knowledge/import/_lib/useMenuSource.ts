@@ -4,7 +4,7 @@ import { useId, useRef, useState, type DragEvent, type FormEvent } from "react";
 
 import { api } from "@/api/client";
 import { describeError } from "@/api/errors";
-import { useApiMutation } from "@/api/hooks";
+import { useMutation } from "@/api/useMutation";
 import type { Schema } from "@/api/types";
 import { useBusiness } from "@/components/business/BusinessContext";
 import { useI18n } from "@/i18n/client";
@@ -46,7 +46,7 @@ export function useMenuSource(onImported: (result: Schema<"MenuImportResult">) =
   const [isReading, setReading] = useState(false);
   const [readError, setReadError] = useState<unknown>(null);
 
-  const importMenu = useApiMutation(
+  const importMenu = useMutation(
     (body: ImportBody) =>
       api.POST("/v1/businesses/{business_id}/knowledge/import", {
         params: { path: { business_id: business.id } },

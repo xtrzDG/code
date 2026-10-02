@@ -1,7 +1,6 @@
 "use client";
 
-import { IconRefresh } from "@/components/content/icons";
-import { IconInfo } from "@/components/icons";
+import { IconInfo, IconRefresh } from "@/components/icons";
 import { Button, Field, Select } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import type { AssistantVersionSummary } from "@/lib/assistant/versions";

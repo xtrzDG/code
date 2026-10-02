@@ -11,7 +11,7 @@ import { z } from "zod";
 
 import { useCountries, useCountryProfile } from "@/api/catalog";
 import { api } from "@/api/client";
-import { useApiMutation } from "@/api/hooks";
+import { useMutation } from "@/api/useMutation";
 import type { BusinessView, CurrentUserView, NicheKey } from "@/api/types";
 import type { MessageKey } from "@/i18n/translate";
 import { guessCountryCode, isCountryAvailable, pickInitialTimezone } from "@/lib/countries";
@@ -91,7 +91,7 @@ export function useCreateBusiness(me: CurrentUserView, onCreated: (business: Bus
         )
       : undefined);
 
-  const create = useApiMutation((body: CreateBody) => api.POST("/v1/businesses", { body }), {
+  const create = useMutation((body: CreateBody) => api.POST("/v1/businesses", { body }), {
     errorMessages: { access_denied: "businesses.errors.countryRestricted" },
   });
 

@@ -3,17 +3,19 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-import { api } from "@/api/client";
-import { useApiQuery } from "@/api/hooks";
+import { usePlans } from "@/api/catalog";
+import { sectionQueries } from "@/api/sectionQueries";
+import { useQuery } from "@/api/useQuery";
 import { useBusiness } from "@/components/business/BusinessContext";
-import { Alert, Button, Card, ErrorState, LoadingBlock, PageHeader } from "@/components/ui";
+import { Alert, Button, Card, ErrorState, LoadingRegion, PageHeader } from "@/components/ui";
 import { OwnerOnlyState } from "@/components/workspace/OwnerOnly";
-import { IconRefresh } from "@/components/workspace/icons";
+import { IconRefresh } from "@/components/icons";
 import { useI18n } from "@/i18n/client";
 import { businessPath } from "@/lib/navigation";
 
 import { BillingDialogs } from "./_components/BillingDialogs";
 import { BillingNotices } from "./_components/BillingNotices";
+import { BillingSkeleton } from "./_components/BillingSkeleton";
 import { InvoicesCard } from "./_components/InvoicesCard";
 import { PlansSection } from "./_components/PlansSection";
 import { SubscriptionCard } from "./_components/SubscriptionCard";
@@ -36,17 +38,9 @@ export function BillingScreen({ isCheckoutReturn }: { isCheckoutReturn: boolean 
   // "Now" for the trial countdown; the page is reloaded far more often than days pass.
   const [nowUs] = useState(() => Date.now() * 1000);
 
-  const overview = useApiQuery(
-    () =>
-      api.GET("/v1/businesses/{business_id}/billing", {
-        params: { path: { business_id: business.id }, query: { language: locale } },
-      }),
-    [business.id, locale],
-  );
-  const plans = useApiQuery(
-    () => api.GET("/v1/catalog/plans", { params: { query: { country_code: business.country_code, language: locale } } }),
-    [business.country_code, locale],
-  );
+  const overviewQuery = sectionQueries.billingOverview(business.id, locale);
+  const overview = useQuery(overviewQuery.key, overviewQuery.fetch);
+  const plans = usePlans(business.country_code);
 
   const actions = useBillingActions(overview);
   const { isPaying, onPay, openCancel, openChoice } = actions;
@@ -86,9 +80,9 @@ export function BillingScreen({ isCheckoutReturn }: { isCheckoutReturn: boolean 
           <ErrorState error={overview.error} onRetry={overview.reload} />
         </Card>
       ) : !data ? (
-        <Card>
-          <LoadingBlock label={t("common.loading")} />
-        </Card>
+        <LoadingRegion label={t("common.loading")}>
+          <BillingSkeleton />
+        </LoadingRegion>
       ) : (
         <div className="space-y-8">
           {showReturnNotice ? (

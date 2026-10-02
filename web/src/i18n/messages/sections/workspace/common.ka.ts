@@ -13,7 +13,6 @@ export const workspaceCommonKa: Translation<typeof workspaceCommonEn> = {
   ownerOnlyChange: "ამის შეცვლა მხოლოდ მფლობელს შეუძლია. დათვალიერება შეგიძლიათ.",
   ownerOnlyTitle: "მხოლოდ მფლობელისთვის",
   ownerOnlyDescription: "ამ ნაწილს მხოლოდ ბიზნესის მფლობელი ხედავს.",
-  typeToConfirm: "დასადასტურებლად ჩაწერეთ {text}",
   refresh: "განახლება",
   loadMore: "მეტის ჩვენება",
   usage: {

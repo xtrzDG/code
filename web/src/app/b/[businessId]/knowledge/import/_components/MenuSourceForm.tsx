@@ -1,6 +1,6 @@
 "use client";
 
-import { IconLink, IconUpload } from "@/components/content/icons";
+import { IconLink, IconUpload } from "@/components/icons";
 import { Alert, Button, Card, Field, Input, Radio } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import type { MessageKey } from "@/i18n/translate";

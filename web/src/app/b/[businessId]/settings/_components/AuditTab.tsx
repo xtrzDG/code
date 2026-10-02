@@ -7,8 +7,8 @@ import { useBusiness, useBusinessFormat } from "@/components/business/BusinessCo
 import { RefreshFailed } from "@/components/insights/common";
 import { Badge, Button, Card, EmptyState, ErrorState, Field, Input, LoadingBlock, Select, Table, TBody, Td, Th, THead, Tr } from "@/components/ui";
 import { shortId, zonedDayStartUs } from "@/components/workspace/helpers";
-import { InlineError } from "@/components/workspace/InlineError";
-import { IconList } from "@/components/workspace/icons";
+import { InlineError } from "@/components/ui/InlineError";
+import { IconList } from "@/components/icons";
 import { OwnerOnlyState } from "@/components/workspace/OwnerOnly";
 import { useCursorList } from "@/components/workspace/useCursorList";
 import { useI18n } from "@/i18n/client";

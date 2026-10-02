@@ -3,7 +3,7 @@
 import { useBusiness, useBusinessFormat } from "@/components/business/BusinessContext";
 import { Badge, Button } from "@/components/ui";
 import { CHANNEL_NAMES } from "@/components/workspace/channelNames";
-import { IconDownload } from "@/components/workspace/icons";
+import { IconDownload } from "@/components/icons";
 import { useI18n } from "@/i18n/client";
 
 import type { ContactSummary } from "../../_lib/customers";

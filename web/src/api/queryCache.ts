@@ -13,34 +13,12 @@
  * load (sign-in, sign-out) starts from an empty cache.
  */
 
-import { toApiError, type ApiError } from "./errors";
+import { toApiError } from "./errors";
 import { hashKey, startsWithKey, type QueryKey } from "./queryKey";
+import { EMPTY_SNAPSHOT, type QuerySnapshot, type Rollback } from "./querySnapshot";
 
 export type { QueryKey, QueryKeyPart } from "./queryKey";
-
-export interface QuerySnapshot<T> {
-  /** The last data loaded (or written locally); kept while reloading and after a failed reload. */
-  readonly data: T | undefined;
-  /** The last load failed (cleared by the next success or local write). */
-  readonly error: ApiError | null;
-  /** When the data last came from the server (ms since epoch); 0 for never. */
-  readonly updatedAt: number;
-  /** A load is running. */
-  readonly isFetching: boolean;
-  /** The server changed since the data was loaded: the next reader loads it again. */
-  readonly isInvalidated: boolean;
-}
-
-/** Undoes a local change (an optimistic update) unless newer data replaced it since. */
-export type Rollback = () => void;
-
-export const EMPTY_SNAPSHOT: QuerySnapshot<never> = Object.freeze({
-  data: undefined,
-  error: null,
-  updatedAt: 0,
-  isFetching: false,
-  isInvalidated: false,
-});
+export { EMPTY_SNAPSHOT, type QuerySnapshot, type Rollback } from "./querySnapshot";
 
 /** Unobserved entries are dropped after this long. */
 const DEFAULT_GC_MS = 5 * 60_000;

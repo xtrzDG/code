@@ -2,9 +2,8 @@
 
 import type { KnowledgeItemDetails } from "@/api/types";
 import { useBusinessFormat } from "@/components/business/BusinessContext";
-import { IconPencil } from "@/components/content/icons";
+import { IconPencil, IconTrash } from "@/components/icons";
 import { Switch } from "@/components/content/Switch";
-import { IconTrash } from "@/components/icons";
 import { Badge, Button, Spinner } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { languageName } from "@/lib/format";

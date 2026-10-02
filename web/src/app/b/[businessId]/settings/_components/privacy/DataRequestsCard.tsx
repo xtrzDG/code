@@ -1,12 +1,11 @@
 "use client";
 
-import { IconShield } from "@/components/icons";
+import { IconSearch, IconShield, IconUsers } from "@/components/icons";
 import { RefreshFailed } from "@/components/insights/common";
 import { useBusinessFormat } from "@/components/business/BusinessContext";
 import { Alert, Button, Card, EmptyState, ErrorState, Field, Input, LoadingBlock } from "@/components/ui";
-import { ConfirmDialog } from "@/components/workspace/ConfirmDialog";
-import { IconSearch, IconUsers } from "@/components/workspace/icons";
-import { InlineError } from "@/components/workspace/InlineError";
+import { ConfirmDialog } from "@/components/ui";
+import { InlineError } from "@/components/ui/InlineError";
 import { OwnerOnlyState } from "@/components/workspace/OwnerOnly";
 import { useI18n } from "@/i18n/client";
 
