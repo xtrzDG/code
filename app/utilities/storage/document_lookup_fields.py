@@ -30,6 +30,9 @@ from app.utilities.storage.document_tenancy import BUSINESS_ID_FIELD_NAME
 
 BUSINESS_ID_FIELD: DocumentFieldPath = DocumentFieldPath(BUSINESS_ID_FIELD_NAME)
 MATCH_KINDS: frozenset[LookupFieldKind] = frozenset(
+    {LookupFieldKind.TEXT, LookupFieldKind.FILTER_TEXT, LookupFieldKind.ELEMENT_TEXT}
+)
+SELECTIVE_MATCH_KINDS: frozenset[LookupFieldKind] = frozenset(
     {LookupFieldKind.TEXT, LookupFieldKind.ELEMENT_TEXT}
 )
 RANGE_KINDS: frozenset[LookupFieldKind] = frozenset({LookupFieldKind.INTEGER})
@@ -37,6 +40,12 @@ RANGE_KINDS: frozenset[LookupFieldKind] = frozenset({LookupFieldKind.INTEGER})
 
 def _text(path: str) -> DocumentLookupField:
     return DocumentLookupField(path=DocumentFieldPath(path), kind=LookupFieldKind.TEXT)
+
+
+def _filter(path: str) -> DocumentLookupField:
+    return DocumentLookupField(
+        path=DocumentFieldPath(path), kind=LookupFieldKind.FILTER_TEXT
+    )
 
 
 def _integer(path: str) -> DocumentLookupField:
@@ -65,7 +74,7 @@ DOCUMENT_LOOKUP_FIELDS: Mapping[
     # The businesses of a signed-in user.
     DocumentCollectionName("businesses"): (_element("members[].user_id"),),
     # Webhook routing: the channel of an incoming message.
-    DocumentCollectionName("channels"): (_text("kind"), _text("external_id")),
+    DocumentCollectionName("channels"): (_filter("kind"), _text("external_id")),
     # Every customer message: the contact, its open conversation, the
     # hourly message count and the transcript.
     DocumentCollectionName("contacts"): (
@@ -76,13 +85,13 @@ DOCUMENT_LOOKUP_FIELDS: Mapping[
     DocumentCollectionName("conversations"): (
         _text("contact_id"),
         _text("channel_user_id"),
-        _text("status"),
+        _filter("status"),
         _integer("last_message_at"),
     ),
     DocumentCollectionName("messages"): (
         _text("conversation_id"),
-        _text("direction"),
-        _text("author"),
+        _filter("direction"),
+        _filter("author"),
         _integer("created_at"),
     ),
     DocumentCollectionName("llm_turns"): (
@@ -94,7 +103,7 @@ DOCUMENT_LOOKUP_FIELDS: Mapping[
     DocumentCollectionName("usage_events"): (_integer("occurred_at"),),
     # Webhook redelivery receipts (unique per message) and their purge.
     DocumentCollectionName("channel_message_receipts"): (
-        _text("channel"),
+        _filter("channel"),
         _text("provider_message_id"),
         _integer("created_at"),
     ),
@@ -118,7 +127,9 @@ def declared_lookup_fields(
         fields[BUSINESS_ID_FIELD] = LookupFieldKind.TEXT
 
     declared: Iterable[DocumentLookupField] = (
-        () if collection_name is None else DOCUMENT_LOOKUP_FIELDS.get(collection_name, ())
+        ()
+        if collection_name is None
+        else DOCUMENT_LOOKUP_FIELDS.get(collection_name, ())
     )
     for field in declared:
         fields[field.path] = field.kind
@@ -144,18 +155,31 @@ def require_valid_lookup(
     collection_label: str,
 ) -> None:
     """
-    UndeclaredLookupFieldError unless every match is a TEXT or ELEMENT_TEXT
-    lookup field and the range and order are INTEGER lookup fields.
+    UndeclaredLookupFieldError unless every match is a TEXT, FILTER_TEXT or
+    ELEMENT_TEXT lookup field, the range and order are INTEGER lookup
+    fields, and FILTER_TEXT fields come with an indexed match (other than
+    `business_id`) or a range that selects the rows they narrow.
     """
 
-    for match in lookup.matches:
+    match_kinds: list[LookupFieldKind] = [
         require_lookup_field(fields, match.field, MATCH_KINDS, collection_label)
-
+        for match in lookup.matches
+    ]
     if lookup.within is not None:
         require_lookup_field(fields, lookup.within.field, RANGE_KINDS, collection_label)
 
     if lookup.order is not None:
         require_lookup_field(fields, lookup.order.field, RANGE_KINDS, collection_label)
+
+    is_selected_by_index: bool = lookup.within is not None or any(
+        kind in SELECTIVE_MATCH_KINDS and match.field != BUSINESS_ID_FIELD
+        for match, kind in zip(lookup.matches, match_kinds, strict=True)
+    )
+    if LookupFieldKind.FILTER_TEXT in match_kinds and not is_selected_by_index:
+        raise UndeclaredLookupFieldError(
+            f"Filter fields of {collection_label} only narrow a query by an "
+            "indexed lookup field; add one."
+        )
 
 
 def require_lookup_field(

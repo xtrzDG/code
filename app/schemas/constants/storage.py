@@ -23,12 +23,15 @@ class LookupFieldKind(StrEnum):
     generated column `doc_<field>` (plain columns keep btree indexes usable
     under row-level security; expressions on the JSON document are not).
     TEXT fields are matched for equality, INTEGER fields by range and order.
-    ELEMENT_TEXT fields are a field of the objects of a top-level list
-    (`members[].user_id`); a trigger keeps one row per value in
-    `workshop.document_lookup_keys`.
+    FILTER_TEXT fields have a column but no index of their own: they only
+    narrow a query that an indexed field already selects (a message's
+    direction within its conversation). ELEMENT_TEXT fields are a field of
+    the objects of a top-level list (`members[].user_id`); a trigger keeps
+    one row per value in `workshop.document_lookup_keys`.
     """
 
     TEXT = "text"
+    FILTER_TEXT = "filter_text"
     INTEGER = "integer"
     ELEMENT_TEXT = "element_text"
 

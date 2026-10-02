@@ -1,4 +1,4 @@
-"""Indexed queries of a document collection (see `DocumentCollectionAdapterContract`)."""
+"""Indexed queries of a document collection (`DocumentCollectionAdapterContract`)."""
 
 from typing import Self
 
