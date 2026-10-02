@@ -14,8 +14,9 @@ class RequestRateLimitRegistry(RequestRateLimitRegistryContract):
     """
     Sliding-window request counters per key, kept in this process.
 
-    Guards public endpoints (the website widget's polling) against scripts
-    that would make the API read a business's data over and over. A
+    Guards public endpoints (the website widget's polling and messages)
+    against scripts that would make the API read a business's data or call
+    the model over and over. A
     multi-process deployment counts per process, which still bounds each
     process.
     """
@@ -47,6 +48,33 @@ class RequestRateLimitRegistry(RequestRateLimitRegistryContract):
 
             moments.append(int(now))
             return True
+
+    def try_acquire_all(
+        self,
+        counters: list[tuple[str, int]],
+        window_seconds: int,
+        now: Microseconds,
+    ) -> str | None:
+        window_start: int = int(now) - window_seconds * MICROSECONDS_PER_SECOND
+        with self._lock:
+            self._calls += 1
+            if self._calls % SWEEP_EVERY_CALLS == 0:
+                self._sweep(window_start)
+
+            for key, limit in counters:
+                moments: deque[int] | None = self._requests.get(key)
+                if moments is None:
+                    continue
+
+                while moments and moments[0] <= window_start:
+                    moments.popleft()
+                if len(moments) >= limit:
+                    return key
+
+            for key, _ in counters:
+                self._requests.setdefault(key, deque()).append(int(now))
+
+            return None
 
     def seconds_until_free(
         self,

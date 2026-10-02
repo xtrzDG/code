@@ -34,8 +34,10 @@ class AcceptWidgetMessageUseCase(UseCaseContract[WidgetMessageCommand, InboundMe
     session key.
 
     The endpoint is public and every message costs a model call, so
-    messages are limited per visitor and per client address before anything
-    is read (429 with Retry-After, `WIDGET_MESSAGE_LIMITS`).
+    messages are limited per visitor, per client network (an IPv6 /64), per
+    business and for the platform before anything is read (429 with
+    Retry-After, `WIDGET_MESSAGE_LIMITS`); the caller chooses the session
+    key, so the other limits bound the model spend.
     """
 
     def __init__(

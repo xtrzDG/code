@@ -59,8 +59,9 @@ class GetWidgetMessagesUseCase(
     missed (the page was left while it was being written) comes with the
     next poll; the widget skips answers it already shows by id.
 
-    The endpoint is public, so polls are limited per visitor and per client
-    address (429 with Retry-After, `WIDGET_POLL_LIMITS`), and only the
+    The endpoint is public, so polls are limited per visitor, per client
+    network, per business and for the platform (429 with Retry-After,
+    `WIDGET_POLL_LIMITS`), and only the
     visitor's own conversations and messages are read (indexed lookups, not
     the whole business).
     """

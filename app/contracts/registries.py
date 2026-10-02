@@ -92,6 +92,20 @@ class RequestRateLimitRegistryContract(RegistryContract, Protocol):
         """
         raise NotImplementedError
 
+    def try_acquire_all(
+        self,
+        counters: list[tuple[str, int]],
+        window_seconds: int,
+        now: Microseconds,
+    ) -> str | None:
+        """
+        Count one request for every `(key, limit)` only when all of them stay
+        within their limits, in one step; otherwise count none and return
+        the first key whose limit is used up. A refused request leaves no
+        state behind (no counter is created for its keys).
+        """
+        raise NotImplementedError
+
     def seconds_until_free(
         self,
         key: str,
