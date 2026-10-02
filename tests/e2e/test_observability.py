@@ -2,7 +2,8 @@
 
 import json
 
-from tests.e2e.harness import E2E_ENVIRONMENT, bearer, start_workshop
+from tests.e2e.harness import bearer, start_workshop
+from tests.e2e.harness_settings import E2E_ENVIRONMENT
 
 LANGFUSE_ENVIRONMENT: dict[str, str] = {
     **E2E_ENVIRONMENT,

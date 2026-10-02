@@ -12,7 +12,9 @@ from app.main import create_application
 from app.utilities.config_helpers.app_settings.app_settings_assembler import (
     assemble_app_settings,
 )
-from tests.e2e.harness import E2E_ENVIRONMENT, replace_provider, start_workshop
+from tests.e2e.harness import start_workshop
+from tests.e2e.harness_settings import E2E_ENVIRONMENT
+from tests.e2e.workshop_container import replace_provider
 
 OPTIONAL_PROVIDERS: frozenset[str] = frozenset(
     {

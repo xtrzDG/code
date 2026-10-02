@@ -4,7 +4,8 @@ import threading
 import time
 
 from app.main import EMBEDDED_WORKER_THREAD_NAME
-from tests.e2e.harness import E2E_ENVIRONMENT, Workshop, bearer, start_workshop
+from tests.e2e.harness import Workshop, bearer, start_workshop
+from tests.e2e.harness_settings import E2E_ENVIRONMENT
 from tests.e2e.journeys import (
     WIZARD_STEPS,
     JsonObject,

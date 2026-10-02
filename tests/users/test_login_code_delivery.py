@@ -61,7 +61,7 @@ from app.utilities.config_helpers.app_settings.app_settings_assembler import (
     assemble_app_settings,
 )
 from app.utilities.localization.localized_text_resolver import LocalizedTextResolver
-from tests.e2e.harness import replace_provider
+from tests.e2e.workshop_container import replace_provider
 
 PHONE = E164PhoneNumber("+995555123456")
 EMAIL = EmailAddress("owner@example.com")

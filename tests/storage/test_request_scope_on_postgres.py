@@ -15,13 +15,9 @@ from app.schemas.domain.knowledge import KnowledgeItemDocument
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.knowledge.prefixed_id import KnowledgeItemId
 from app.schemas.typings.platform.strings import DatabaseUrl
-from tests.e2e.harness import (
-    E2E_ENVIRONMENT,
-    OverridableProvider,
-    Workshop,
-    bearer,
-    start_workshop,
-)
+from tests.e2e.harness import Workshop, bearer, start_workshop
+from tests.e2e.harness_settings import E2E_ENVIRONMENT
+from tests.e2e.workshop_container import OverridableProvider
 
 FIRST_OWNER_PHONE: str = "+995 555 12 34 56"
 SECOND_OWNER_PHONE: str = "+995 555 65 43 21"

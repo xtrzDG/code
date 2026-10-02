@@ -11,14 +11,12 @@ from app.schemas.constants.localization import OtpDeliveryChannel
 from app.schemas.typings.channels.strings import ChannelSecret
 from app.schemas.typings.platform.strings import PlatformSecret
 from app.utilities.channels.webhook_signatures import derive_telegram_webhook_secret
-from tests.e2e.harness import (
+from tests.e2e.harness import Workshop, bearer, start_workshop
+from tests.e2e.harness_settings import (
     ADMIN_EMAIL,
     API_BASE_URL,
     E2E_ENVIRONMENT,
     PLATFORM_BOT_TOKEN,
-    Workshop,
-    bearer,
-    start_workshop,
 )
 from tests.e2e.journeys import (
     BOOKING_REQUEST_RU,

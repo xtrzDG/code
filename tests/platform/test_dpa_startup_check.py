@@ -17,7 +17,7 @@ from app.schemas.exceptions.application_errors import ValidationFailedError
 from app.utilities.config_helpers.app_settings.app_settings_assembler import (
     assemble_app_settings,
 )
-from tests.e2e.harness import replace_provider
+from tests.e2e.workshop_container import replace_provider
 
 PRODUCTION: dict[str, str] = {"APP_ENV": "production", "ENCRYPTION_KEY": "x" * 32}
 

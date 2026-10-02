@@ -7,7 +7,8 @@ from app.clients.postgres.postgres_connection_pool_client import (
 )
 from app.schemas.typings.platform.strings import DatabaseUrl
 from app.utilities.storage.document_collection_catalog import DOCUMENT_COLLECTIONS
-from tests.e2e.harness import E2E_ENVIRONMENT, start_workshop
+from tests.e2e.harness import start_workshop
+from tests.e2e.harness_settings import E2E_ENVIRONMENT
 from tests.e2e.journeys import BOOKING_REQUEST_RU, WIDGET_SESSION, open_restaurant
 from tests.storage.postgres_server import ThrowawayPostgresServer
 
