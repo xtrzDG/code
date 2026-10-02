@@ -2,6 +2,7 @@ import logging
 from collections.abc import Callable
 
 from pydantic import ValidationError
+from typed_time_provider import Microseconds, WallClock
 
 from app.contracts.localization_utilities import PhoneNumberParserContract
 from app.contracts.use_case_contract import UseCaseContract
@@ -54,6 +55,11 @@ from app.use_cases.conversations.tools.request_tool_handlers import (
     run_record_unanswered_question,
 )
 from app.use_cases.conversations.tools.tool_outcomes import error_outcome
+from app.utilities.conversations.business_today import (
+    SCHEDULING_TOOLS,
+    BusinessToday,
+    find_business_today,
+)
 from app.utilities.conversations.tool_payloads import (
     describe_tool_input_error,
 )
@@ -84,7 +90,9 @@ class RunAssistantToolUseCase(
     (anyone can type someone else's number), and only in the conversation's
     sandbox mode. A tool not offered in the conversation, invalid input or
     a business rule error (slot taken, unknown booking) becomes an error
-    result the model can act on instead of an exception.
+    result the model can act on instead of an exception. Availability and
+    booking results and their errors state today at the business
+    (`business_today`), and a date that has already passed is refused.
     """
 
     def __init__(
@@ -104,6 +112,7 @@ class RunAssistantToolUseCase(
             RecordUnansweredQuestionCommand, UnansweredQuestionView
         ],
         phone_number_parser: PhoneNumberParserContract,
+        wall_clock: WallClock[Microseconds],
     ) -> None:
         self._search_knowledge: UseCaseContract[
             KnowledgeSearchRequest, KnowledgeSearchResult
@@ -132,6 +141,7 @@ class RunAssistantToolUseCase(
             RecordUnansweredQuestionCommand, UnansweredQuestionView
         ] = record_unanswered_question
         self._phone_number_parser: PhoneNumberParserContract = phone_number_parser
+        self._wall_clock: WallClock[Microseconds] = wall_clock
         self._handlers: dict[AssistantToolName, ToolHandler] = {
             AssistantToolName.SEARCH_KNOWLEDGE: lambda call, context: (
                 run_search_knowledge(self._search_knowledge, call, context)
@@ -143,17 +153,31 @@ class RunAssistantToolUseCase(
                 self._send_link, call, context
             ),
             AssistantToolName.CHECK_AVAILABILITY: lambda call, context: (
-                run_check_availability(self._check_availability, call, context)
+                run_check_availability(
+                    self._check_availability, call, context, self._today(context)
+                )
             ),
             AssistantToolName.CREATE_BOOKING: lambda call, context: run_create_booking(
-                self._create_booking, self._phone_number_parser, call, context
+                self._create_booking,
+                self._phone_number_parser,
+                call,
+                context,
+                self._today(context),
             ),
             AssistantToolName.CANCEL_BOOKING: lambda call, context: run_cancel_booking(
-                self._cancel_booking, self._phone_number_parser, call, context
+                self._cancel_booking,
+                self._phone_number_parser,
+                call,
+                context,
+                self._today(context),
             ),
             AssistantToolName.RESCHEDULE_BOOKING: lambda call, context: (
                 run_reschedule_booking(
-                    self._reschedule_booking, self._phone_number_parser, call, context
+                    self._reschedule_booking,
+                    self._phone_number_parser,
+                    call,
+                    context,
+                    self._today(context),
                 )
             ),
             AssistantToolName.CREATE_LEAD: lambda call, context: run_create_lead(
@@ -181,11 +205,38 @@ class RunAssistantToolUseCase(
         try:
             return self._handlers[call.tool_name](call, context)
         except ValidationError as error:
-            return error_outcome(call, describe_tool_input_error(error))
+            return error_outcome(
+                call, describe_tool_input_error(error), self._today_text(call, context)
+            )
         except ApplicationError as error:
-            return error_outcome(call, str(error) or type(error).__name__)
+            return error_outcome(
+                call,
+                str(error) or type(error).__name__,
+                self._today_text(call, context),
+            )
         except Exception:
             # A bug must not cost the customer the reply: the model gets an
             # error result it can act on, and the error is reported.
             logger.exception("Tool %s failed unexpectedly.", call.tool_name)
             return error_outcome(call, UNEXPECTED_TOOL_ERROR)
+
+    def _today(self, context: AssistantToolContext) -> BusinessToday | None:
+        """Today at the business, when its time zone is known."""
+
+        if context.business_timezone is None:
+            return None
+
+        return find_business_today(
+            self._wall_clock.now_unix(), context.business_timezone
+        )
+
+    def _today_text(
+        self, call: LlmToolCall, context: AssistantToolContext
+    ) -> str | None:
+        """Today for an error of a scheduling tool, so a wrong date is caught."""
+
+        if call.tool_name not in SCHEDULING_TOOLS:
+            return None
+
+        today: BusinessToday | None = self._today(context)
+        return None if today is None else today.text

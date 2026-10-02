@@ -48,6 +48,7 @@ from app.schemas.typings.localization.constrained_strings import (
     CountryCode,
     E164PhoneNumber,
     LanguageTag,
+    TimezoneName,
 )
 from app.schemas.typings.localization.strings import RawPhoneNumberInput
 
@@ -166,6 +167,8 @@ class AssistantToolContext(ImmutableDTO):
     language: LanguageTag
     is_sandbox: IsSandboxConversation = False
     available_tools: list[AssistantToolName]
+    # Scheduling results state today in this zone (None: not stated).
+    business_timezone: TimezoneName | None = None
 
 
 class AssistantToolInvocation(ImmutableDTO):

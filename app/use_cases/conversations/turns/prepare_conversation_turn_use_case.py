@@ -255,6 +255,7 @@ class PrepareConversationTurnUseCase(UseCaseContract[InboundMessage, PreparedTur
                 language=language,
                 is_sandbox=conversation.is_sandbox,
                 available_tools=available_tools,
+                business_timezone=business.timezone,
             ),
             received_at=now,
         )

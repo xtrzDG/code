@@ -134,6 +134,7 @@ class OpenVoiceConversationUseCase(
             language=language,
             is_sandbox=conversation.is_sandbox,
             available_tools=select_available_tools(version, business),
+            business_timezone=business.timezone,
         )
 
     def _find_call_conversation(

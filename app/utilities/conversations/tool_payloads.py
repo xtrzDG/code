@@ -5,6 +5,8 @@ Results are compact JSON objects with plain values: prices in major units
 of their currency next to the formatted price, dates and times in the
 business time zone. Errors are `{"error": "..."}` with a message the model
 can act on (ask again, choose another date, pass to a colleague).
+Availability and booking results and their errors also state
+`business_today`, so relative dates are checked against today.
 """
 
 from pydantic import ValidationError
@@ -77,7 +79,10 @@ def render_knowledge_item(item: KnowledgeItemView) -> dict[str, object]:
     return rendered
 
 
-def render_availability(result: AvailabilityResult) -> LlmToolResultJson:
+def render_availability(
+    result: AvailabilityResult,
+    business_today: str | None = None,
+) -> LlmToolResultJson:
     slots: list[dict[str, object]] = []
     for slot in result.slots:
         rendered_slot: dict[str, object] = {
@@ -98,15 +103,21 @@ def render_availability(result: AvailabilityResult) -> LlmToolResultJson:
         slots.append(rendered_slot)
 
     return render(
-        {
-            "timezone": str(result.timezone),
-            "is_open_on_date": result.is_open_on_date,
-            "slots": slots,
-        }
+        with_business_today(
+            {
+                "timezone": str(result.timezone),
+                "is_open_on_date": result.is_open_on_date,
+                "slots": slots,
+            },
+            business_today,
+        )
     )
 
 
-def render_booking(result: BookingResult) -> LlmToolResultJson:
+def render_booking(
+    result: BookingResult,
+    business_today: str | None = None,
+) -> LlmToolResultJson:
     booking = result.booking
     rendered: dict[str, object] = {
         "booking_id": str(booking.id),
@@ -130,7 +141,7 @@ def render_booking(result: BookingResult) -> LlmToolResultJson:
     if booking.contact_phone_number is not None:
         rendered["phone"] = str(booking.contact_phone_number)
 
-    return render(rendered)
+    return render(with_business_today(rendered, business_today))
 
 
 def render_lead(lead: LeadView) -> LlmToolResultJson:
@@ -170,10 +181,29 @@ def render_unanswered_question(question: UnansweredQuestionView) -> LlmToolResul
     return render({"recorded": True, "question_id": str(question.id)})
 
 
-def render_tool_error(message: str) -> LlmToolResultJson:
+def render_tool_error(
+    message: str,
+    business_today: str | None = None,
+) -> LlmToolResultJson:
     """An error result; the message is shortened so it never floods the model."""
 
-    return render({"error": message[:MAX_ERROR_MESSAGE_LENGTH]})
+    return render(
+        with_business_today(
+            {"error": message[:MAX_ERROR_MESSAGE_LENGTH]}, business_today
+        )
+    )
+
+
+def with_business_today(
+    payload: dict[str, object],
+    business_today: str | None,
+) -> dict[str, object]:
+    """The payload with today at the business ("2026-10-01 (Thursday)") when known."""
+
+    if business_today is None:
+        return payload
+
+    return {**payload, "business_today": business_today}
 
 
 def describe_tool_input_error(error: ValidationError) -> str:
