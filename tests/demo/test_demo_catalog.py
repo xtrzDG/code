@@ -14,6 +14,7 @@ from app.registries.demo.demo_dataset_registry import DemoDatasetRegistry
 from app.schemas.constants.assistants import AssistantVersionStatus
 from app.schemas.constants.bookings import BookingStatus
 from app.schemas.constants.channels import ChannelKind
+from app.schemas.constants.conversations import CallGuardVerdict
 from app.schemas.dto.demo_data import (
     DemoActivityRequest,
     DemoBusinessActivity,
@@ -107,6 +108,7 @@ def test_the_restaurant_covers_what_the_cabinet_shows() -> None:
     }
     assert any(message.tool_calls for message in restaurant.messages)
     assert len(restaurant.calls) == 1
+    assert restaurant.calls[0].guard_verdict is CallGuardVerdict.CLEAN
     assert restaurant.autotest_run.is_passed
     assert {h.status.value for h in restaurant.handoffs} == {"notified", "resolved"}
     assert salon.subscription.currency_code == "EUR"

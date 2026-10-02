@@ -65,6 +65,10 @@ architecture:
 gen:
     cd web && npm run gen:api
 
+# Rewrite the golden snapshots of the niche instructions after an intended change.
+prompt-snapshots:
+    uv run python -m scripts.update_prompt_snapshots
+
 # Playwright end-to-end suite (builds the cabinet, starts API and cabinet).
 e2e:
     cd web && npm run e2e

@@ -16,6 +16,7 @@ from app.registries.demo.tbilisi_restaurant.restaurant_foundation import (
 from app.schemas.constants.bookings import BookingStatus
 from app.schemas.constants.channels import ChannelKind
 from app.schemas.constants.conversations import (
+    CallGuardVerdict,
     CallOutcome,
     ConversationRating,
     ConversationStatus,
@@ -167,6 +168,8 @@ def record_phone_booking(story: DemoActivityBuilder, caller: ContactDocument) ->
         ],
         outcome=CallOutcome.BOOKING,
         cost_micro_usd=109_300,
+        # Every value said is backed: the parking price is from the FAQ.
+        guard_verdict=CallGuardVerdict.CLEAN,
     )
 
 
