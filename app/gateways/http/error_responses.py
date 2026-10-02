@@ -23,7 +23,7 @@ from typing import cast
 from base_typed_string import BaseTypedStringConstraintViolationError
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, Response
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.gateways.http.openapi_error_contract import install_error_contract_openapi
@@ -153,8 +153,11 @@ async def handle_request_validation_error(
     )
 
 
-async def handle_http_exception(request: Request, error: Exception) -> JSONResponse:
-    """An unknown route, a wrong method or another framework refusal."""
+async def handle_http_exception(request: Request, error: Exception) -> Response:
+    """
+    An unknown route, a wrong method or another framework refusal. A status
+    that is not an error (a 304 raised by a route) keeps its empty answer.
+    """
 
     del request
     status_code: int = (
@@ -164,6 +167,9 @@ async def handle_http_exception(request: Request, error: Exception) -> JSONRespo
     headers: dict[str, str] = dict(
         getattr(error, "headers", None) or {},
     )
+    if status_code < 400:
+        return Response(status_code=status_code, headers=headers)
+
     return error_response(
         status_code,
         ErrorBody(

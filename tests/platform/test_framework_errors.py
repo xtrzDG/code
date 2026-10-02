@@ -12,6 +12,7 @@ from fastapi import APIRouter, FastAPI, Header, Query, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import PlainTextResponse
 from fastapi.testclient import TestClient
+from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.gateways.http.error_responses import (
     describe_field_error,
@@ -126,6 +127,11 @@ def test_handlers_answer_other_exceptions_without_details() -> None:
         handle_request_validation_error(request, RequestValidationError([]))
     )
     other = asyncio.run(handle_http_exception(request, ValueError("x")))
+    not_modified = asyncio.run(
+        handle_http_exception(
+            request, StarletteHTTPException(304, headers={"ETag": '"a"'})
+        )
+    )
 
     assert (validation.status_code, empty.status_code) == (422, 422)
     assert bytes(validation.body) == (
@@ -133,6 +139,8 @@ def test_handlers_answer_other_exceptions_without_details() -> None:
     )
     assert other.status_code == 500
     assert b'"internal_error"' in bytes(other.body)
+    assert (not_modified.status_code, bytes(not_modified.body)) == (304, b"")
+    assert not_modified.headers["ETag"] == '"a"'
 
 
 def test_the_description_names_only_error_body_for_errors() -> None:
