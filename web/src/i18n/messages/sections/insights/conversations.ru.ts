@@ -132,6 +132,10 @@ export const conversationsRu: Translation<typeof conversationsEn> = {
   noPhone: "Нет телефона",
   transcript: "Расшифровка",
   emptyTranscript: "В этом разговоре нет сообщений.",
+  earlierMessages: "Показать более ранние сообщения",
+  earlierLoading: "Загружаем более ранние сообщения…",
+  searchOlder: "Искать в более старых разговорах",
+  searchOlderDescription: "Среди последних разговоров совпадений нет.",
   handoffNotice: "Разговор ведёт человек: помощник молчит, пока передачу не закроют.",
   toHandoffs: "Открыть передачи",
   author: {

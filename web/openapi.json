@@ -3923,7 +3923,7 @@
       },
       "ConversationDetailView": {
         "additionalProperties": false,
-        "description": "Conversation card: summary, the full transcript with tool calls, for\nphone conversations the calls with their transcripts and recordings,\nthe bookings, leads and handoffs made in it, and whether staff can reply.",
+        "description": "Conversation card: summary, the newest part of the transcript with tool\ncalls (oldest first; `earlier_messages_cursor` pages back through\n`GET .../messages` when there is more), the model usage of the whole\nconversation, for phone conversations the calls with their transcripts\nand recordings, the bookings, leads and handoffs made in it, and\nwhether staff can reply.",
         "properties": {
           "bookings": {
             "items": {
@@ -3941,6 +3941,20 @@
           },
           "conversation": {
             "$ref": "#/components/schemas/ConversationSummaryView"
+          },
+          "earlier_messages_cursor": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "minLength": 1,
+                "pattern": "^[A-Za-z0-9_-]+$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Earlier Messages Cursor"
           },
           "handoffs": {
             "items": {
@@ -3972,6 +3986,9 @@
                 "type": "null"
               }
             ]
+          },
+          "usage": {
+            "$ref": "#/components/schemas/ConversationUsageView"
           }
         },
         "required": [
@@ -4285,6 +4302,32 @@
           "created_at"
         ],
         "title": "ConversationSummaryView",
+        "type": "object"
+      },
+      "ConversationUsageView": {
+        "additionalProperties": false,
+        "description": "Language-model usage of a whole conversation (every message, also the\nones a page of the transcript does not show).",
+        "properties": {
+          "cost_micro_usd": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Cost Micro Usd",
+            "type": "integer"
+          },
+          "input_tokens": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Input Tokens",
+            "type": "integer"
+          },
+          "output_tokens": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Output Tokens",
+            "type": "integer"
+          }
+        },
+        "title": "ConversationUsageView",
         "type": "object"
       },
       "CountryList": {
@@ -7145,6 +7188,35 @@
           "text"
         ],
         "title": "MessageDocument",
+        "type": "object"
+      },
+      "MessagePage": {
+        "additionalProperties": false,
+        "description": "Earlier messages of a conversation, oldest first; `next_cursor` asks for\nthe ones before them (None when the transcript starts here).",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/MessageView"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "minLength": 1,
+                "pattern": "^[A-Za-z0-9_-]+$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          }
+        },
+        "title": "MessagePage",
         "type": "object"
       },
       "MessageView": {
@@ -17670,6 +17742,163 @@
       }
     },
     "/v1/businesses/{business_id}/conversations/{conversation_id}/messages": {
+      "get": {
+        "operationId": "list_conversation_messages_v1_businesses__business_id__conversations__conversation_id__messages_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "conversation_id",
+            "required": true,
+            "schema": {
+              "title": "Conversation Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Limit"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessagePage"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "List Conversation Messages",
+        "tags": [
+          "conversations"
+        ]
+      },
       "post": {
         "operationId": "send_staff_message_v1_businesses__business_id__conversations__conversation_id__messages_post",
         "parameters": [

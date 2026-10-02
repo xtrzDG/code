@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useState, type ReactNode } from "react";
+import { useCallback, useState, type ReactNode } from "react";
 
 import { api } from "@/api/client";
 import { queryKeys } from "@/api/queryKeys";
@@ -16,6 +16,7 @@ import { formatMicroUsd } from "@/components/insights/numbers";
 import type {
   ConversationDetailView,
   ConversationSummaryView,
+  MessagePage,
   MessageView,
 } from "@/components/insights/types";
 import { Alert, Card, ErrorState, useToast } from "@/components/ui";
@@ -25,13 +26,15 @@ import { businessPath } from "@/lib/navigation";
 
 import { BookFromConversation } from "./BookFromConversation";
 import { CallsCard } from "./CallsCard";
-import { canReplyFromCard, initialsOf, usageTotals } from "./conversationModel";
+import { canReplyFromCard, initialsOf } from "./conversationModel";
+import { addUsage, fromUsage, usageTotals } from "./conversationUsage";
 import { ConversationDetailSkeleton } from "./ConversationDetailSkeleton";
 import { LinkedItems } from "./LinkedItems";
 import { RatingControl } from "./RatingControl";
 import { useConversationRating } from "./useConversationRating";
 import { ReplyBox } from "./ReplyBox";
 import { Transcript } from "./Transcript";
+import { useEarlierMessages } from "./useEarlierMessages";
 
 /**
  * The conversation card: who, where, how it was rated, what came out of it
@@ -57,6 +60,21 @@ export function ConversationDetail({ conversationId }: { conversationId: string 
   );
   // No auto-refresh here: every card view is written to the audit log.
   const rate = useConversationRating(conversationId);
+  const setDetail = detail.setData;
+  const prependEarlier = useCallback(
+    (page: MessagePage) =>
+      setDetail((current) =>
+        current
+          ? {
+              ...current,
+              messages: [...(page.items ?? []), ...(current.messages ?? [])],
+              earlier_messages_cursor: page.next_cursor ?? null,
+            }
+          : current,
+      ),
+    [setDetail],
+  );
+  const earlier = useEarlierMessages(conversationId, detail.data?.earlier_messages_cursor ?? null, prependEarlier);
 
   const backLink = (
     <Link
@@ -95,6 +113,7 @@ export function ConversationDetail({ conversationId }: { conversationId: string 
     updateDetail((current) => ({
       ...current,
       messages: [...(current.messages ?? []), message],
+      usage: current.usage ? addUsage(current.usage, message) : current.usage,
       conversation: {
         ...current.conversation,
         message_count: current.conversation.message_count + 1,
@@ -107,8 +126,8 @@ export function ConversationDetail({ conversationId }: { conversationId: string 
       {backLink}
       <ConversationHeader
         conversation={conversation}
-        messageCount={messages.length}
-        totals={usageTotals(messages)}
+        messageCount={conversation.message_count}
+        totals={data.usage ? fromUsage(data.usage) : usageTotals(messages)}
         rating={
           <RatingControl
             value={conversation.rating ?? null}
@@ -135,7 +154,7 @@ export function ConversationDetail({ conversationId }: { conversationId: string 
       {(data.calls ?? []).length > 0 ? <CallsCard calls={data.calls ?? []} /> : null}
 
       <Card title={t("conversations.transcript")}>
-        <Transcript messages={messages} />
+        <Transcript messages={messages} earlier={earlier} />
       </Card>
 
       {reply ? (

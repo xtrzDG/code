@@ -149,23 +149,6 @@ export function prettyJson(text: string): string {
   }
 }
 
-export interface UsageTotals {
-  inputTokens: number;
-  outputTokens: number;
-  costMicroUsd: number;
-}
-
-export function usageTotals(messages: readonly Pick<MessageView, "input_tokens" | "output_tokens" | "cost_micro_usd">[]): UsageTotals {
-  return messages.reduce<UsageTotals>(
-    (totals, message) => ({
-      inputTokens: totals.inputTokens + message.input_tokens,
-      outputTokens: totals.outputTokens + message.output_tokens,
-      costMicroUsd: totals.costMicroUsd + message.cost_micro_usd,
-    }),
-    { inputTokens: 0, outputTokens: 0, costMicroUsd: 0 },
-  );
-}
-
 /**
  * Up to two letters for an avatar: "Nino Beridze" -> "NB", "+995…" -> "#".
  * Arabic script takes one: its letters join into a different shape side by
