@@ -6,7 +6,7 @@ from app.schemas.domain.knowledge import KnowledgeItemDocument
 from app.schemas.dto.knowledge_admin import KnowledgeItemListQuery, KnowledgeItemPage
 from app.schemas.exceptions.application_errors import NotFoundError
 from app.schemas.typings.localization.constrained_strings import LanguageTag
-from app.utilities.knowledge.knowledge_items import to_item_details
+from app.utilities.knowledge.knowledge_item_views import to_item_details
 from app.utilities.paging.cursor_paging import take_page
 
 

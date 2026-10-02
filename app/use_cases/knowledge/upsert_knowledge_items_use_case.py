@@ -12,10 +12,8 @@ from app.schemas.dto.knowledge_admin import (
 )
 from app.schemas.exceptions.application_errors import NotFoundError
 from app.schemas.typings.localization.constrained_strings import LanguageTag
-from app.utilities.knowledge.knowledge_items import (
-    to_item_details,
-    upsert_knowledge_items,
-)
+from app.utilities.knowledge.knowledge_item_views import to_item_details
+from app.utilities.knowledge.knowledge_items import upsert_knowledge_items
 
 
 class UpsertKnowledgeItemsUseCase(

@@ -28,9 +28,9 @@ from app.schemas.dto.profiles.profile_steps import (
     SaveProfileStepCommand,
 )
 from app.schemas.exceptions.application_errors import NotFoundError
+from app.utilities.knowledge.knowledge_item_views import to_item_details
 from app.utilities.knowledge.knowledge_items import (
     faq_entry_to_upsert_input,
-    to_item_details,
     upsert_knowledge_items,
 )
 from app.utilities.knowledge.niche_answers import merge_niche_answers

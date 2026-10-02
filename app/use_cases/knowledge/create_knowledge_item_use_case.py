@@ -11,10 +11,8 @@ from app.schemas.dto.knowledge_admin import (
     KnowledgeItemDetails,
 )
 from app.schemas.exceptions.application_errors import NotFoundError
-from app.utilities.knowledge.knowledge_items import (
-    build_knowledge_item,
-    to_item_details,
-)
+from app.utilities.knowledge.knowledge_item_views import to_item_details
+from app.utilities.knowledge.knowledge_items import build_knowledge_item
 
 
 class CreateKnowledgeItemUseCase(

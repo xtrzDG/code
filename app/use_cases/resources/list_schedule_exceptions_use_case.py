@@ -7,7 +7,7 @@ from app.schemas.dto.resources import (
     ScheduleExceptionList,
     ScheduleExceptionListQuery,
 )
-from app.utilities.knowledge.resource_rules import to_schedule_exception_view
+from app.utilities.knowledge.schedule_exception_rules import to_schedule_exception_view
 
 
 class ListScheduleExceptionsUseCase(
