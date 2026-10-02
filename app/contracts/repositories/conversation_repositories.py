@@ -8,8 +8,11 @@ looked up through its business id, so one tenant never sees another's data.
 
 from typing import Protocol
 
+from typed_time_provider import Microseconds
+
 from app.contracts.repo_contract import RepoContract
-from app.schemas.constants.channels import ChannelKind
+from app.schemas.constants.channels import ChannelKind, MessageDirection
+from app.schemas.constants.conversations import ConversationStatus, MessageAuthor
 from app.schemas.domain.contacts import ContactDocument
 from app.schemas.domain.conversations import (
     CallDocument,
@@ -19,6 +22,9 @@ from app.schemas.domain.conversations import (
 )
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.contacts.prefixed_id import ContactId
+from app.schemas.typings.conversations.constrained_integers import (
+    ConversationMessageCount,
+)
 from app.schemas.typings.conversations.prefixed_id import CallId, ConversationId
 from app.schemas.typings.conversations.strings import ChannelUserId, ProviderCallId
 from app.schemas.typings.localization.constrained_strings import E164PhoneNumber
@@ -83,6 +89,20 @@ class ConversationRepoContract(RepoContract, Protocol):
         """Return conversations ordered by last_message_at descending."""
         raise NotImplementedError
 
+    def list_by_contact(
+        self,
+        business_id: BusinessId,
+        contact_id: ContactId,
+        last_message_from: Microseconds | None = None,
+        status: ConversationStatus | None = None,
+    ) -> list[ConversationDocument]:
+        """
+        One contact's conversations (indexed lookup), ordered by
+        last_message_at descending; only those in `status`, and with a
+        message at or after `last_message_from`, when given.
+        """
+        raise NotImplementedError
+
     def list_by_channel_user(
         self,
         business_id: BusinessId,
@@ -108,7 +128,23 @@ class MessageRepoContract(RepoContract, Protocol):
         """Return messages ordered by created_at ascending."""
         raise NotImplementedError
 
+    def count_by_conversation(
+        self,
+        business_id: BusinessId,
+        conversation_id: ConversationId,
+        direction: MessageDirection,
+        author: MessageAuthor | None = None,
+        created_from: Microseconds | None = None,
+    ) -> ConversationMessageCount:
+        """
+        Messages of a conversation in one direction (and by one author, and
+        created at or after `created_from`, when given), counted by an
+        indexed query.
+        """
+        raise NotImplementedError
+
     def list_by_business(self, business_id: BusinessId) -> list[MessageDocument]:
+        """Return messages ordered by created_at ascending."""
         raise NotImplementedError
 
     def delete_by_conversation(

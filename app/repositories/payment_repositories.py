@@ -24,7 +24,7 @@ class PaymentOrderRepository(
 
     def list_by_business(self, business_id: BusinessId) -> list[PaymentOrderDocument]:
         return sorted(
-            self._list(business_id),
+            self._list_in_business(business_id),
             key=lambda payment_order: payment_order.created_at,
             reverse=True,
         )
@@ -44,7 +44,7 @@ class PackageUsageWarningRepository(
         metric: PackageMetric,
         period_start: Microseconds,
     ) -> PackageUsageWarningDocument | None:
-        for warning in self._list(business_id):
+        for warning in self._list_in_business(business_id):
             if (
                 warning.subscription_id == subscription_id
                 and warning.metric is metric

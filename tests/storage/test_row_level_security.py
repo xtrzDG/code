@@ -7,10 +7,13 @@ from app.repositories.user_repositories import UserRepository
 from app.schemas.domain.compliance import AuditLogEntryDocument
 from app.schemas.domain.contacts import ContactDocument
 from app.schemas.domain.users import UserDocument
+from app.schemas.dto.storage_queries import DocumentFieldMatch
 from app.schemas.exceptions.application_errors import AccessDeniedError
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.contacts.strings import ContactName
 from app.schemas.typings.localization.constrained_strings import E164PhoneNumber
+from app.schemas.typings.storage.constrained_strings import DocumentFieldPath
+from app.schemas.typings.storage.strings import DocumentFieldText
 from app.utilities.storage.document_collection_catalog import DOCUMENT_COLLECTIONS
 from app.utilities.storage.storage_scope_context import StorageScopeContext
 from tests.storage.builders import build_contact, build_owner
@@ -182,7 +185,19 @@ def test_field_lookups_keep_to_the_business_scope(
     second_phone = str(second_contact.phone_number)
 
     with storage_scope.scoped_to_business(first_business_id):
-        assert [c.id for c in contacts.list_by_field("phone_number", first_phone)] == [
+        assert [c.id for c in contacts.list_by_fields([phone_is(first_phone)])] == [
             first_contact.id
         ]
-        assert contacts.list_by_field("phone_number", second_phone) == []
+        assert contacts.list_by_fields([phone_is(second_phone)]) == []
+        assert contacts.find_one_by_field(PHONE_FIELD, phone_text(second_phone)) is None
+
+
+PHONE_FIELD = DocumentFieldPath("phone_number")
+
+
+def phone_text(phone: str) -> DocumentFieldText:
+    return DocumentFieldText(phone)
+
+
+def phone_is(phone: str) -> DocumentFieldMatch:
+    return DocumentFieldMatch(field=PHONE_FIELD, value=phone_text(phone))

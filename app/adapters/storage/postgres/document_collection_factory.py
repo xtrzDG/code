@@ -32,6 +32,7 @@ from app.schemas.configurations.app_settings import AppSettings
 from app.schemas.constants.storage import CollectionIsolation
 from app.schemas.exceptions.application_errors import ValidationFailedError
 from app.schemas.typings.storage.constrained_strings import DocumentCollectionName
+from app.utilities.storage.document_lookup_fields import declared_lookup_fields
 from app.utilities.storage.document_tenancy import infer_collection_isolation
 from app.utilities.storage.storage_scope_context import StorageScopeContext
 
@@ -74,7 +75,10 @@ def build_document_collection[StoredDocument: PersistentDocument](
         collection_name
     )
     if settings.database_url is None:
-        return InMemoryDocumentCollectionAdapter[StoredDocument](document_type)
+        return InMemoryDocumentCollectionAdapter[StoredDocument](
+            document_type,
+            declared_lookup_fields(validated_collection_name, document_type),
+        )
 
     return PostgresDocumentCollectionAdapter[StoredDocument](
         document_type=document_type,

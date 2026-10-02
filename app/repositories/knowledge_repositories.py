@@ -29,7 +29,7 @@ class KnowledgeItemRepository(
         self,
         business_id: BusinessId,
     ) -> list[KnowledgeItemDocument]:
-        return self._list(business_id)
+        return self._list_in_business(business_id)
 
     def delete(self, business_id: BusinessId, item_id: KnowledgeItemId) -> None:
         self._remove(business_id, str(item_id))
@@ -50,7 +50,7 @@ class ResourceRepository(
         return self._load(business_id, str(resource_id))
 
     def list_by_business(self, business_id: BusinessId) -> list[ResourceDocument]:
-        return self._list(business_id)
+        return self._list_in_business(business_id)
 
 
 class ScheduleExceptionRepository(
@@ -64,7 +64,9 @@ class ScheduleExceptionRepository(
         self,
         business_id: BusinessId,
     ) -> list[ScheduleExceptionDocument]:
-        return sorted(self._list(business_id), key=lambda exception: exception.date)
+        return sorted(
+            self._list_in_business(business_id), key=lambda exception: exception.date
+        )
 
     def delete(
         self,

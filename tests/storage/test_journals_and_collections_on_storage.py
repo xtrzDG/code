@@ -21,7 +21,6 @@ from app.schemas.domain.billing import UsageEventDocument
 from app.schemas.domain.bookings import BookingDocument
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.compliance import AuditLogEntryDocument
-from app.schemas.domain.contacts import ContactDocument
 from app.schemas.domain.conversations import LlmTurnDocument
 from app.schemas.domain.jobs import QueuedJobDocument
 from app.schemas.domain.knowledge import KnowledgeItemDocument
@@ -37,7 +36,6 @@ from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.compliance.strings import AuditEntityName
 from app.schemas.typings.contacts.prefixed_id import ContactId
 from app.schemas.typings.conversations.prefixed_id import ConversationId
-from app.schemas.typings.localization.constrained_strings import E164PhoneNumber
 from app.schemas.typings.platform.constrained_strings import JobName
 from app.schemas.typings.platform.strings import JobPayloadJson
 from app.schemas.typings.users.prefixed_id import UserId
@@ -183,27 +181,3 @@ def test_collections_return_fresh_copies_in_first_write_order(
     reloaded = businesses.get(str(stored[1].id))
     assert reloaded is not None
     assert len(reloaded.members) == 1
-
-
-def test_field_lookups_find_documents_by_a_top_level_value(
-    collections: CollectionFactory,
-) -> None:
-    contacts = collections(ContactDocument, "contacts")
-    business_id = BusinessId()
-    first = ContactDocument(
-        business_id=business_id, phone_number=E164PhoneNumber("+995555123456")
-    )
-    second = ContactDocument(
-        business_id=business_id, phone_number=E164PhoneNumber("+995555000000")
-    )
-    third = ContactDocument(
-        business_id=BusinessId(), phone_number=E164PhoneNumber("+995555123456")
-    )
-    for contact in (first, second, third):
-        contacts.upsert(str(contact.id), contact)
-
-    found = contacts.list_by_field("phone_number", "+995555123456")
-
-    assert [contact.id for contact in found] == [first.id, third.id]
-    assert contacts.list_by_field("phone_number", "+1") == []
-    assert contacts.list_by_field("no_such_field", "+995555123456") == []

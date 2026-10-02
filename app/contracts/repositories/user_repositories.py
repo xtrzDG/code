@@ -16,6 +16,7 @@ from app.schemas.domain.users import (
     UserSessionDocument,
 )
 from app.schemas.typings.localization.constrained_strings import E164PhoneNumber
+from app.schemas.typings.storage.constrained_integers import DocumentCount
 from app.schemas.typings.users.constrained_strings import EmailAddress
 from app.schemas.typings.users.prefixed_id import OtpChallengeId, UserId, UserSessionId
 from app.schemas.typings.users.strings import AccessTokenHash
@@ -56,6 +57,10 @@ class OtpChallengeRepoContract(RepoContract, Protocol):
         """Drop a challenge whose code could not be delivered."""
         raise NotImplementedError
 
+    def delete_created_before(self, created_before: Microseconds) -> DocumentCount:
+        """Purge challenges created before a moment; returns how many."""
+        raise NotImplementedError
+
 
 class UserSessionRepoContract(RepoContract, Protocol):
     def save(self, session: UserSessionDocument) -> None:
@@ -68,4 +73,8 @@ class UserSessionRepoContract(RepoContract, Protocol):
         raise NotImplementedError
 
     def delete(self, session_id: UserSessionId) -> None:
+        raise NotImplementedError
+
+    def delete_expired(self, now: Microseconds) -> DocumentCount:
+        """Purge sessions whose expiry has come (expires_at <= now)."""
         raise NotImplementedError

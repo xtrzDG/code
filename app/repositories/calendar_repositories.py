@@ -88,7 +88,7 @@ class CalendarEventLinkRepository(
         self,
         business_id: BusinessId,
     ) -> list[CalendarEventLinkDocument]:
-        return self._list(business_id)
+        return self._list_in_business(business_id)
 
     def delete_by_booking(self, business_id: BusinessId, booking_id: BookingId) -> None:
         self._remove(business_id, str(booking_id))

@@ -1,35 +1,39 @@
-from collections.abc import Callable, Generator
-from contextlib import contextmanager
+from collections.abc import Callable, Sequence
 
-import psycopg
 from base_pydantic_schemas import PersistentDocument
 from psycopg.rows import TupleRow
-from typed_time_provider import Microseconds, WallClock
 
-from app.adapters.storage.postgres.document_table_queries import (
-    DocumentTableQueries,
-    build_document_table_queries,
+from app.adapters.storage.postgres.document_lookup_sql import (
+    compose_count,
+    compose_delete_batch,
+    compose_select,
 )
-from app.adapters.storage.postgres.postgres_session_settings import (
-    apply_storage_scope,
-    translate_storage_error,
-)
-from app.clients.postgres.postgres_connection_pool_client import (
-    PostgresConnection,
-    PostgresConnectionPoolClient,
+from app.adapters.storage.postgres.postgres_document_table import (
+    PostgresDocumentTable,
 )
 from app.contracts.document_store import DocumentCollectionAdapterContract
-from app.contracts.storage import StorageScopeContract
-from app.schemas.constants.storage import CollectionIsolation
-from app.schemas.dto.storage import StorageScope
-from app.schemas.exceptions.application_errors import ExternalServiceError
-from app.schemas.typings.businesses.prefixed_id import BusinessId
-from app.schemas.typings.storage.constrained_strings import DocumentCollectionName
-from app.utilities.storage.document_tenancy import read_document_business_id
+from app.schemas.dto.storage_queries import (
+    DocumentFieldMatch,
+    DocumentFieldOrder,
+    DocumentFieldRange,
+    DocumentLookup,
+)
+from app.schemas.typings.storage.booleans import IsDescendingOrder, IsDocumentInserted
+from app.schemas.typings.storage.constrained_integers import (
+    DocumentCount,
+    DocumentQueryLimit,
+)
+from app.schemas.typings.storage.constrained_strings import DocumentFieldPath
+from app.schemas.typings.storage.strings import DocumentFieldText
+from app.utilities.storage.document_lookup_fields import require_valid_lookup
+
+# Rows one purge transaction deletes; small batches keep locks short.
+DELETE_BATCH_SIZE: DocumentQueryLimit = DocumentQueryLimit(1000)
 
 
 class PostgresDocumentCollectionAdapter[StoredDocument: PersistentDocument](
-    DocumentCollectionAdapterContract[StoredDocument]
+    PostgresDocumentTable[StoredDocument],
+    DocumentCollectionAdapterContract[StoredDocument],
 ):
     """
     One document collection stored as one Postgres table (EU region).
@@ -37,8 +41,9 @@ class PostgresDocumentCollectionAdapter[StoredDocument: PersistentDocument](
     Table `workshop.<collection_name>` (created by migrations): `document_key`
     (primary key), `business_id` (copied from the document: its `business_id`,
     or its own id for a business), `document` (JSONB), `created_at` and
-    `updated_at` (UNIX microseconds of the first and the last write) and an
-    identity `row_sequence` that keeps the first-write order stable.
+    `updated_at` (UNIX microseconds of the first and the last write), an
+    identity `row_sequence` that keeps the first-write order stable, and
+    generated `doc_<field>` columns of the lookup fields (migration 1010).
 
     Business isolation has two lines of defence. Repositories already read
     tenant documents only together with their business id. Below them, every
@@ -59,53 +64,32 @@ class PostgresDocumentCollectionAdapter[StoredDocument: PersistentDocument](
     Documents are written with `model_dump_json()` and read back with
     `model_validate_json()` on the JSONB text, so typed primitives survive the
     round trip and callers always get fresh instances. `list_all()` returns
-    documents in first-write order, like the in-memory adapter.
+    documents in first-write order, like the in-memory adapter. Queries by
+    lookup field are parameterized SQL on plain indexed columns
+    (`document_lookup_sql`).
     """
 
-    def __init__(
-        self,
-        document_type: type[StoredDocument],
-        collection_name: DocumentCollectionName,
-        connection_pool: PostgresConnectionPoolClient,
-        storage_scope: StorageScopeContract,
-        wall_clock: WallClock[Microseconds],
-        isolation: CollectionIsolation,
-    ) -> None:
-        self._document_type: type[StoredDocument] = document_type
-        self._collection_name: DocumentCollectionName = collection_name
-        self._connection_pool: PostgresConnectionPoolClient = connection_pool
-        self._storage_scope: StorageScopeContract = storage_scope
-        self._wall_clock: WallClock[Microseconds] = wall_clock
-        self._isolation: CollectionIsolation = isolation
-        self._platform_scope: StorageScope = StorageScope.platform_wide()
-
-        self._queries: DocumentTableQueries = build_document_table_queries(
-            collection_name
-        )
-
-    @property
-    def collection_name(self) -> DocumentCollectionName:
-        return self._collection_name
-
-    @property
-    def isolation(self) -> CollectionIsolation:
-        return self._isolation
-
     def upsert(self, document_key: str, document: StoredDocument) -> None:
-        serialized_document: str = document.model_dump_json()
-        business_id: BusinessId | None = read_document_business_id(document)
-        written_at: int = int(self._wall_clock.now_unix())
         with self._transaction() as (connection, _):
             connection.execute(
                 self._queries.upsert,
-                (
-                    document_key,
-                    None if business_id is None else str(business_id),
-                    serialized_document,
-                    written_at,
-                    written_at,
-                ),
+                self._write_parameters(document_key, document),
             )
+
+    def insert_if_absent(
+        self,
+        document_key: str,
+        document: StoredDocument,
+    ) -> IsDocumentInserted:
+        """`insert ... on conflict do nothing`: atomic across processes."""
+
+        with self._transaction() as (connection, _):
+            inserted_rows: int = connection.execute(
+                self._queries.insert_if_absent,
+                self._write_parameters(document_key, document),
+            ).rowcount
+
+        return inserted_rows == 1
 
     def modify(
         self,
@@ -133,27 +117,14 @@ class PostgresDocumentCollectionAdapter[StoredDocument: PersistentDocument](
             if row is None:
                 return None
 
-            changed: StoredDocument | None = change(
-                self._document_type.model_validate_json(self._read_text(row))
-            )
+            changed: StoredDocument | None = change(self._decode(row))
             if changed is None:
                 return None
 
-            serialized_document: str = changed.model_dump_json()
-            business_id: BusinessId | None = read_document_business_id(changed)
-            written_at: int = int(self._wall_clock.now_unix())
-            connection.execute(
-                self._queries.upsert,
-                (
-                    document_key,
-                    None if business_id is None else str(business_id),
-                    serialized_document,
-                    written_at,
-                    written_at,
-                ),
-            )
+            parameters = self._write_parameters(document_key, changed)
+            connection.execute(self._queries.upsert, parameters)
 
-        return self._document_type.model_validate_json(serialized_document)
+        return self._document_type.model_validate_json(parameters[2])
 
     def replace_if(
         self,
@@ -182,10 +153,7 @@ class PostgresDocumentCollectionAdapter[StoredDocument: PersistentDocument](
                     (document_key, scoped_business_id),
                 ).fetchone()
 
-        if row is None:
-            return None
-
-        return self._document_type.model_validate_json(self._read_text(row))
+        return None if row is None else self._decode(row)
 
     def list_all(self) -> list[StoredDocument]:
         with self._transaction() as (connection, scoped_business_id):
@@ -199,28 +167,98 @@ class PostgresDocumentCollectionAdapter[StoredDocument: PersistentDocument](
                     (scoped_business_id,),
                 ).fetchall()
 
-        return [
-            self._document_type.model_validate_json(self._read_text(row))
-            for row in rows
-        ]
+        return self._decode_all(rows)
 
-    def list_by_field(self, field_name: str, value: str) -> list[StoredDocument]:
+    def find_one_by_field(
+        self,
+        field: DocumentFieldPath,
+        value: DocumentFieldText,
+    ) -> StoredDocument | None:
+        found: list[StoredDocument] = self._select(
+            DocumentLookup(
+                matches=(DocumentFieldMatch(field=field, value=value),),
+                limit=DocumentQueryLimit(1),
+            )
+        )
+        return found[0] if found else None
+
+    def list_by_fields(
+        self,
+        matches: Sequence[DocumentFieldMatch],
+        order: DocumentFieldOrder | None = None,
+        limit: DocumentQueryLimit | None = None,
+    ) -> list[StoredDocument]:
+        return self._select(
+            DocumentLookup(matches=tuple(matches), order=order, limit=limit)
+        )
+
+    def count_by_fields(
+        self,
+        matches: Sequence[DocumentFieldMatch],
+        within: DocumentFieldRange | None = None,
+    ) -> DocumentCount:
+        lookup = DocumentLookup(matches=tuple(matches), within=within)
+        require_valid_lookup(self._lookup_fields, lookup, self._label())
         with self._transaction() as (connection, scoped_business_id):
-            if scoped_business_id is None:
-                rows: list[TupleRow] = connection.execute(
-                    self._queries.list_by_field(field_name, is_in_business=False),
-                    (value,),
-                ).fetchall()
-            else:
-                rows = connection.execute(
-                    self._queries.list_by_field(field_name, is_in_business=True),
-                    (scoped_business_id, value),
-                ).fetchall()
+            query, parameters = compose_count(
+                self._queries.table,
+                self._collection_name,
+                self._lookup_fields,
+                lookup,
+                scoped_business_id,
+            )
+            row: TupleRow | None = connection.execute(query, parameters).fetchone()
 
-        return [
-            self._document_type.model_validate_json(self._read_text(row))
-            for row in rows
-        ]
+        count: object = None if row is None else row[0]
+        return DocumentCount(count if isinstance(count, int) else 0)
+
+    def list_by_range(
+        self,
+        within: DocumentFieldRange,
+        matches: Sequence[DocumentFieldMatch] = (),
+        is_descending: IsDescendingOrder = False,
+        limit: DocumentQueryLimit | None = None,
+    ) -> list[StoredDocument]:
+        return self._select(
+            DocumentLookup(
+                matches=tuple(matches),
+                within=within,
+                order=DocumentFieldOrder(
+                    field=within.field, is_descending=is_descending
+                ),
+                limit=limit,
+            )
+        )
+
+    def delete_by_range(
+        self,
+        within: DocumentFieldRange,
+        matches: Sequence[DocumentFieldMatch] = (),
+    ) -> DocumentCount:
+        """Deletes in transactions of DELETE_BATCH_SIZE rows each."""
+
+        lookup = DocumentLookup(
+            matches=tuple(matches),
+            within=within,
+            order=DocumentFieldOrder(field=within.field),
+        )
+        require_valid_lookup(self._lookup_fields, lookup, self._label())
+        deleted_total: int = 0
+        while True:
+            with self._transaction() as (connection, scoped_business_id):
+                query, parameters = compose_delete_batch(
+                    self._queries.table,
+                    self._collection_name,
+                    self._lookup_fields,
+                    lookup,
+                    scoped_business_id,
+                    DELETE_BATCH_SIZE,
+                )
+                deleted_rows: int = connection.execute(query, parameters).rowcount
+
+            deleted_total += max(deleted_rows, 0)
+            if deleted_rows < int(DELETE_BATCH_SIZE):
+                return DocumentCount(deleted_total)
 
     def delete(self, document_key: str) -> None:
         with self._transaction() as (connection, scoped_business_id):
@@ -232,45 +270,16 @@ class PostgresDocumentCollectionAdapter[StoredDocument: PersistentDocument](
                     (document_key, scoped_business_id),
                 )
 
-    @contextmanager
-    def _transaction(self) -> Generator[tuple[PostgresConnection, str | None]]:
-        """
-        One transaction with the RLS scope applied.
-
-        Yields the connection and the business id of a business scope (None
-        when platform-wide), for the explicit filter in queries.
-        """
-
-        scope: StorageScope = self._effective_scope()
-        scoped_business_id: str | None = (
-            None if scope.business_id is None else str(scope.business_id)
-        )
-        try:
-            with self._connection_pool.transaction() as connection:
-                apply_storage_scope(connection, scope)
-                yield connection, scoped_business_id
-        except psycopg.Error as error:
-            application_error = translate_storage_error(
-                error,
-                str(self._collection_name),
+    def _select(self, lookup: DocumentLookup) -> list[StoredDocument]:
+        require_valid_lookup(self._lookup_fields, lookup, self._label())
+        with self._transaction() as (connection, scoped_business_id):
+            query, parameters = compose_select(
+                self._queries.table,
+                self._collection_name,
+                self._lookup_fields,
+                lookup,
+                scoped_business_id,
             )
-            if application_error is None:
-                raise
+            rows: list[TupleRow] = connection.execute(query, parameters).fetchall()
 
-            raise application_error from error
-
-    def _effective_scope(self) -> StorageScope:
-        if self._isolation is CollectionIsolation.PLATFORM:
-            return self._platform_scope
-
-        return self._storage_scope.current()
-
-    def _read_text(self, row: TupleRow) -> str:
-        document_text: object = row[0]
-        if not isinstance(document_text, str):
-            raise ExternalServiceError(
-                f"Collection {str(self._collection_name)!r} returned a document "
-                f"that is not JSON text ({type(document_text).__name__})."
-            )
-
-        return document_text
+        return self._decode_all(rows)

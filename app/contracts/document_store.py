@@ -1,11 +1,23 @@
 """Storage-neutral document collection contract used by repositories."""
 
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from typing import Protocol, TypeVar
 
 from base_pydantic_schemas import PersistentDocument
 
 from app.contracts.adapter_contract import AdapterContract
+from app.schemas.dto.storage_queries import (
+    DocumentFieldMatch,
+    DocumentFieldOrder,
+    DocumentFieldRange,
+)
+from app.schemas.typings.storage.booleans import IsDescendingOrder, IsDocumentInserted
+from app.schemas.typings.storage.constrained_integers import (
+    DocumentCount,
+    DocumentQueryLimit,
+)
+from app.schemas.typings.storage.constrained_strings import DocumentFieldPath
+from app.schemas.typings.storage.strings import DocumentFieldText
 
 StoredDocument = TypeVar("StoredDocument", bound=PersistentDocument)
 
@@ -17,6 +29,13 @@ class DocumentCollectionAdapterContract(AdapterContract, Protocol[StoredDocument
     Keys are technical storage keys (usually the document id as str).
     Implementations serialize on write and validate on read, so callers always
     receive fresh, independent instances.
+
+    Queries by field go through lookup fields that the collection declares
+    (`app/utilities/storage/document_lookup_fields.py`) and the migrations
+    index; an undeclared field, or a field of the wrong kind, raises
+    `UndeclaredLookupFieldError` on every storage, so a missing index shows
+    up in in-memory tests already. `list_all` reads the whole collection and
+    is meant for admin views, exports and jobs that walk every business.
     """
 
     def upsert(self, document_key: str, document: StoredDocument) -> None:
@@ -28,11 +47,70 @@ class DocumentCollectionAdapterContract(AdapterContract, Protocol[StoredDocument
     def list_all(self) -> list[StoredDocument]:
         raise NotImplementedError
 
-    def list_by_field(self, field_name: str, value: str) -> list[StoredDocument]:
+    def find_one_by_field(
+        self,
+        field: DocumentFieldPath,
+        value: DocumentFieldText,
+    ) -> StoredDocument | None:
         """
-        Documents whose top-level field has this text value, in first-write
-        order (an indexed lookup instead of reading the whole collection).
-        Field name and value are technical storage values.
+        The first-written document whose TEXT or ELEMENT_TEXT lookup field
+        has this value (an indexed lookup), or None.
+        """
+        raise NotImplementedError
+
+    def list_by_fields(
+        self,
+        matches: Sequence[DocumentFieldMatch],
+        order: DocumentFieldOrder | None = None,
+        limit: DocumentQueryLimit | None = None,
+    ) -> list[StoredDocument]:
+        """
+        Documents matching every field (indexed), in first-write order or
+        sorted by an INTEGER lookup field, at most `limit` of them.
+        """
+        raise NotImplementedError
+
+    def count_by_fields(
+        self,
+        matches: Sequence[DocumentFieldMatch],
+        within: DocumentFieldRange | None = None,
+    ) -> DocumentCount:
+        """How many documents match every field and lie within the range."""
+        raise NotImplementedError
+
+    def list_by_range(
+        self,
+        within: DocumentFieldRange,
+        matches: Sequence[DocumentFieldMatch] = (),
+        is_descending: IsDescendingOrder = False,
+        limit: DocumentQueryLimit | None = None,
+    ) -> list[StoredDocument]:
+        """
+        Documents whose INTEGER lookup field lies within the range (and that
+        match every field), sorted by that field, at most `limit` of them.
+        """
+        raise NotImplementedError
+
+    def delete_by_range(
+        self,
+        within: DocumentFieldRange,
+        matches: Sequence[DocumentFieldMatch] = (),
+    ) -> DocumentCount:
+        """
+        Delete the documents `list_by_range` would return (in small batches
+        on Postgres, so no long lock is held); returns how many.
+        """
+        raise NotImplementedError
+
+    def insert_if_absent(
+        self,
+        document_key: str,
+        document: StoredDocument,
+    ) -> IsDocumentInserted:
+        """
+        Store a new document in one atomic step: False, and nothing
+        written, when the key (or a unique index of the collection) is
+        already taken, even by a concurrent writer in another process.
         """
         raise NotImplementedError
 

@@ -30,7 +30,7 @@ class AssistantVersionRepository(
         business_id: BusinessId,
     ) -> list[AssistantVersionDocument]:
         return sorted(
-            self._list(business_id),
+            self._list_in_business(business_id),
             key=lambda version: version.version_number,
         )
 

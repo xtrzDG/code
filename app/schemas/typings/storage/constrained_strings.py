@@ -19,6 +19,26 @@ class DocumentCollectionName(BaseConstrainedTypedString):
     pattern = r"^[a-z][a-z0-9_]{1,62}\Z"
 
 
+class DocumentFieldPath(BaseConstrainedTypedString):
+    """
+    A field of stored documents that queries may filter or sort by.
+
+    A top-level field (`token_hash`), or a field of the objects in a
+    top-level list (`members[].user_id`: matches when any member has it).
+    Every path a collection is queried by is declared in
+    `app/utilities/storage/document_lookup_fields.py` and indexed by the
+    migrations; storage refuses undeclared paths. The pattern keeps it a
+    safe part of a Postgres identifier (`doc_<path>`).
+
+    Example:
+        field = DocumentFieldPath("token_hash")
+    """
+
+    min_length = 1
+    max_length = 100
+    pattern = r"^[a-z][a-z0-9_]{0,47}(\[\]\.[a-z][a-z0-9_]{0,47})?\Z"
+
+
 class SchemaMigrationChecksum(BaseConstrainedTypedString):
     """
     SHA-256 (lowercase hex) of a migration file with normalized line endings.

@@ -63,22 +63,24 @@ def count_recent_inbound_messages(
     contact: ContactDocument,
     now: Microseconds,
 ) -> int:
-    """Inbound messages of the contact in the last hour, in every channel."""
+    """
+    Inbound messages of the contact in the last hour, in every channel:
+    the contact's conversations with a message in that hour, and an indexed
+    count of each one's recent inbound messages.
+    """
 
-    window_start: int = int(now) - to_microseconds(CONTACT_LIMIT_WINDOW)
+    window_start = Microseconds(int(now) - to_microseconds(CONTACT_LIMIT_WINDOW))
     recent_message_count: int = 0
-    for conversation in conversation_repo.list_by_business(business.id):
-        if conversation.contact_id != contact.id:
-            continue
-
-        if int(conversation.last_message_at) < window_start:
-            continue
-
-        for message in message_repo.list_by_conversation(business.id, conversation.id):
-            if (
-                message.direction is MessageDirection.INBOUND
-                and int(message.created_at) >= window_start
-            ):
-                recent_message_count += 1
+    for conversation in conversation_repo.list_by_contact(
+        business.id, contact.id, last_message_from=window_start
+    ):
+        recent_message_count += int(
+            message_repo.count_by_conversation(
+                business.id,
+                conversation.id,
+                MessageDirection.INBOUND,
+                created_from=window_start,
+            )
+        )
 
     return recent_message_count

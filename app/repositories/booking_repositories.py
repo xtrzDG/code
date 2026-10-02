@@ -27,7 +27,9 @@ class BookingRepository(
         return self._load(business_id, str(booking_id))
 
     def list_by_business(self, business_id: BusinessId) -> list[BookingDocument]:
-        return sorted(self._list(business_id), key=lambda booking: booking.starts_at)
+        return sorted(
+            self._list_in_business(business_id), key=lambda booking: booking.starts_at
+        )
 
 
 class LeadRepository(BusinessScopedRepository[LeadDocument], LeadRepoContract):
@@ -39,7 +41,7 @@ class LeadRepository(BusinessScopedRepository[LeadDocument], LeadRepoContract):
 
     def list_by_business(self, business_id: BusinessId) -> list[LeadDocument]:
         return sorted(
-            self._list(business_id),
+            self._list_in_business(business_id),
             key=lambda lead: lead.created_at,
             reverse=True,
         )
@@ -61,7 +63,7 @@ class HandoffRepository(
 
     def list_by_business(self, business_id: BusinessId) -> list[HandoffDocument]:
         return sorted(
-            self._list(business_id),
+            self._list_in_business(business_id),
             key=lambda handoff: handoff.created_at,
             reverse=True,
         )
@@ -86,7 +88,7 @@ class UnansweredQuestionRepository(
         business_id: BusinessId,
     ) -> list[UnansweredQuestionDocument]:
         return sorted(
-            self._list(business_id),
+            self._list_in_business(business_id),
             key=lambda question: question.occurrence_count,
             reverse=True,
         )

@@ -6,6 +6,7 @@ from app.contracts.repositories.billing_repositories import (
     UsageEventRepoContract,
 )
 from app.repositories.business_scoped_repository import BusinessScopedRepository
+from app.repositories.document_queries import time_range
 from app.schemas.domain.billing import (
     InvoiceDocument,
     SubscriptionDocument,
@@ -13,6 +14,9 @@ from app.schemas.domain.billing import (
 )
 from app.schemas.typings.billing.prefixed_id import InvoiceId, SubscriptionId
 from app.schemas.typings.businesses.prefixed_id import BusinessId
+from app.schemas.typings.storage.constrained_strings import DocumentFieldPath
+
+OCCURRED_AT_FIELD: DocumentFieldPath = DocumentFieldPath("occurred_at")
 
 
 class SubscriptionRepository(
@@ -34,7 +38,7 @@ class SubscriptionRepository(
         business_id: BusinessId,
     ) -> list[SubscriptionDocument]:
         return sorted(
-            self._list(business_id),
+            self._list_in_business(business_id),
             key=lambda subscription: subscription.period_start,
         )
 
@@ -55,7 +59,7 @@ class InvoiceRepository(
 
     def list_by_business(self, business_id: BusinessId) -> list[InvoiceDocument]:
         return sorted(
-            self._list(business_id),
+            self._list_in_business(business_id),
             key=lambda invoice: invoice.period_start,
             reverse=True,
         )
@@ -74,9 +78,11 @@ class UsageEventRepository(
         occurred_from: Microseconds,
         occurred_to: Microseconds,
     ) -> list[UsageEventDocument]:
-        events: list[UsageEventDocument] = [
-            event
-            for event in self._list(business_id)
-            if occurred_from <= event.occurred_at < occurred_to
-        ]
-        return sorted(events, key=lambda event: event.occurred_at)
+        return self._list_in_range(
+            business_id,
+            time_range(
+                OCCURRED_AT_FIELD,
+                starting_at=occurred_from,
+                ending_before=occurred_to,
+            ),
+        )

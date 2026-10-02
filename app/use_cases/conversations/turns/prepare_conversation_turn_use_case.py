@@ -264,10 +264,14 @@ class PrepareConversationTurnUseCase(UseCaseContract[InboundMessage, PreparedTur
         business: BusinessDocument,
         conversation: ConversationDocument,
     ) -> bool:
-        return any(
-            message.direction is MessageDirection.OUTBOUND
-            and message.author is MessageAuthor.ASSISTANT
-            for message in self._message_repo.list_by_conversation(
-                business.id, conversation.id
+        return (
+            int(
+                self._message_repo.count_by_conversation(
+                    business.id,
+                    conversation.id,
+                    MessageDirection.OUTBOUND,
+                    author=MessageAuthor.ASSISTANT,
+                )
             )
+            > 0
         )
