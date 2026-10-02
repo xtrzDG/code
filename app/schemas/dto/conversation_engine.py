@@ -21,6 +21,7 @@ from app.schemas.typings.conversations.booleans import (
     ShouldEndCall,
 )
 from app.schemas.typings.conversations.constrained_integers import LlmTokenCount
+from app.schemas.typings.conversations.prefixed_id import MessageId
 from app.schemas.typings.conversations.strings import (
     MessageText,
     UnverifiedReplyValue,
@@ -37,6 +38,8 @@ class PreparedTurn(ImmutableDTO):
     `context_line` is the server-written preamble (local date and time,
     channel, known phone, notes) placed before the customer's text in the
     model's user turn; `tool_context` is what tools run with.
+    `reply_message_id` is the id the reply must be stored under (chosen by
+    the inbox), None for a new one.
     """
 
     business: BusinessDocument
@@ -48,6 +51,7 @@ class PreparedTurn(ImmutableDTO):
     is_new_conversation: IsNewConversation
     is_first_reply: IsFirstAssistantReply
     customer_text: MessageText
+    reply_message_id: MessageId | None = None
     context_line: MessageText
     tool_context: AssistantToolContext
     received_at: Microseconds

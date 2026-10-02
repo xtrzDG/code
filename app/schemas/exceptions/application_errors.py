@@ -61,6 +61,38 @@ class ChannelCredentialRejectedError(ExternalServiceError):
     """
 
 
+class ProviderRateLimitedError(ExternalServiceError):
+    """
+    A messaging platform asked to slow down (HTTP 429, Telegram
+    `retry_after`, Meta throttling codes). Sending again after
+    `retry_after_seconds` (when the platform named it) can succeed.
+    """
+
+    def __init__(
+        self,
+        *args: object,
+        retry_after_seconds: RetryAfterSeconds | None = None,
+    ) -> None:
+        super().__init__(*args)
+        self.retry_after_seconds: RetryAfterSeconds | None = retry_after_seconds
+
+
+class ProviderRejectedMessageError(ExternalServiceError):
+    """
+    A messaging platform refused this message for good (a 4xx other than a
+    rate limit: the customer blocked the bot, the recipient does not exist,
+    the 24-hour window is closed). Sending the same message again cannot
+    help.
+    """
+
+
+class DeliveryNotConfiguredError(ExternalServiceError):
+    """
+    No provider is configured for this kind of message (staff e-mail or SMS
+    in production, the platform bot or WhatsApp template not set up).
+    """
+
+
 class WhatsAppTemplateRejectedError(ExternalServiceError):
     """
     Meta refused a WhatsApp message template: no approved template has that

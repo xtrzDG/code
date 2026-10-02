@@ -26,7 +26,7 @@ from app.schemas.typings.conversations.booleans import (
     ShouldEndCall,
 )
 from app.schemas.typings.conversations.constrained_integers import LlmTokenCount
-from app.schemas.typings.conversations.prefixed_id import ConversationId
+from app.schemas.typings.conversations.prefixed_id import ConversationId, MessageId
 from app.schemas.typings.conversations.strings import (
     ChannelUserId,
     LlmProviderPayload,
@@ -50,6 +50,9 @@ class InboundMessage(ImmutableDTO):
     `assistant_version_id` pins a specific version (owner test chat,
     autotests); otherwise the business's published version answers. The
     business comes from the server-side channel lookup, never from the model.
+    `customer_message_id` and `reply_message_id` (from the inbox) are the
+    ids the customer's message and the reply are stored under, so a turn
+    that runs again after a crash stores each of them once.
     """
 
     business_id: BusinessId
@@ -58,6 +61,8 @@ class InboundMessage(ImmutableDTO):
     text: MessageText
     contact_name: ContactName | None = None
     contact_phone_number: E164PhoneNumber | None = None
+    customer_message_id: MessageId | None = None
+    reply_message_id: MessageId | None = None
     is_sandbox: IsSandboxConversation = False
     assistant_version_id: AssistantVersionId | None = None
 

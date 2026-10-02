@@ -11,9 +11,11 @@ from app.schemas.constants.handoffs import HandoffReason, HandoffUrgency
 from app.schemas.domain.businesses import ManagerContact
 from app.schemas.dto.bookings import BookingView, LeadView
 from app.schemas.typings.bookings.constrained_strings import LocalDate, LocalTimeOfDay
+from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.businesses.strings import BusinessName
 from app.schemas.typings.contacts.strings import ContactName
 from app.schemas.typings.conversations.strings import MessageText
+from app.schemas.typings.handoffs.prefixed_id import HandoffId
 from app.schemas.typings.handoffs.strings import HandoffSummary
 from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.schemas.typings.localization.strings import FormattedPhoneNumber
@@ -21,10 +23,15 @@ from app.schemas.typings.profiles.strings import CancellationPolicyText
 
 
 class StaffMessage(ImmutableDTO):
-    """One notification text for one staff contact, in their language."""
+    """
+    One notification text for one staff contact of a business, in their
+    language; `handoff_id` names the handoff it is about.
+    """
 
+    business_id: BusinessId
     contact: ManagerContact
     text: MessageText
+    handoff_id: HandoffId | None = None
 
 
 class BookingMessageInput(ImmutableDTO):

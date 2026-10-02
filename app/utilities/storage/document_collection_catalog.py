@@ -34,9 +34,11 @@ from app.schemas.domain.conversations import (
     MessageDocument,
 )
 from app.schemas.domain.handoffs import HandoffDocument, UnansweredQuestionDocument
+from app.schemas.domain.inbound_events import InboundEventDocument
 from app.schemas.domain.jobs import PeriodicJobRunDocument, QueuedJobDocument
 from app.schemas.domain.knowledge import KnowledgeItemDocument
 from app.schemas.domain.manager_links import ManagerTelegramLinkDocument
+from app.schemas.domain.outbound_messages import OutboundMessageDocument
 from app.schemas.domain.package_usage import PackageUsageWarningDocument
 from app.schemas.domain.payments import PaymentOrderDocument
 from app.schemas.domain.profiles import BusinessProfileDocument
@@ -135,6 +137,14 @@ DOCUMENT_COLLECTIONS: tuple[DocumentCollectionDefinition, ...] = (
     DocumentCollectionDefinition(
         DocumentCollectionName("manager_telegram_links"),
         ManagerTelegramLinkDocument,
+    ),
+    # Message delivery: the inbox of webhook messages and the outbox of
+    # replies and staff notifications (1020).
+    DocumentCollectionDefinition(
+        DocumentCollectionName("inbound_events"), InboundEventDocument
+    ),
+    DocumentCollectionDefinition(
+        DocumentCollectionName("outbound_messages"), OutboundMessageDocument
     ),
     # Google Calendar: connection, OAuth state, event per booking (0002).
     DocumentCollectionDefinition(
