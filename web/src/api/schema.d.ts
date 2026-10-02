@@ -2537,8 +2537,7 @@ export interface components {
             recording_path?: string | null;
             /**
              * Schema Version
-             * @description Persistence schema version. This is not the package version or application release version.
-             * @default 1
+             * @default 2
              */
             schema_version: string;
             /** Started At */

@@ -2669,8 +2669,7 @@
             "title": "Recording Path"
           },
           "schema_version": {
-            "default": "1",
-            "description": "Persistence schema version. This is not the package version or application release version.",
+            "default": "2",
             "title": "Schema Version",
             "type": "string"
           },

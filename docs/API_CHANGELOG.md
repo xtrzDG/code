@@ -13,7 +13,7 @@ label and a migration path).
 
 ## 2026-10-02 — inbox and outbox for customer messages
 
-Spec: `c9b705ce8891f05e`
+Spec: `8bf6a7c2e210906f`
 
 The platform webhooks answer as soon as the delivery is stored in the
 inbox; the background worker answers the customer later. Telegram, Meta
@@ -38,6 +38,9 @@ response enum on a frozen route): the pull request carries the
   (`POST /v1/voice/webhooks/post-call`): the report is stored and the
   worker files the call; a repeated delivery of the same report answers
   `duplicate`. Migration path: none needed, ElevenLabs ignores the body.
+- **Changed** (additive) `CallDocument` (the `calls` of a contact's data
+  export) has `schema_version` `2`: stored calls carry the after-call
+  check fields (older calls are read as version 2 with them empty).
 
 ## 2026-10-02 — phone instruction and call checks
 
