@@ -3,30 +3,34 @@ import { describe, expect, it } from "vitest";
 import { ApiError } from "@/api/errors";
 
 import {
-  base64FromDataUrl,
-  checkMenuFile,
-  confidenceLevel,
-  countByKind,
   emptyKnowledgeForm,
-  filterKnowledgeItems,
-  formatFileSize,
-  groupByKind,
-  initialImportSelection,
   isEmptyPatch,
-  kindHasDuration,
-  kindHasPrice,
   knowledgeCreateBody,
   knowledgeFormFromItem,
   knowledgePatchBody,
+  validateKnowledgeForm,
+  type KnowledgeForm,
+} from "./form";
+import {
+  countByKind,
+  filterKnowledgeItems,
+  groupByKind,
+  kindHasDuration,
+  kindHasPrice,
+  orderKinds,
+  sortByTitle,
+} from "./kinds";
+import {
+  base64FromDataUrl,
+  checkMenuFile,
+  confidenceLevel,
+  formatFileSize,
+  initialImportSelection,
   MENU_UPLOAD_MAX_BYTES,
   menuLinkProblem,
   menuMediaType,
-  orderKinds,
-  sortByTitle,
-  validateKnowledgeForm,
   type ImportedMenuItem,
-  type KnowledgeForm,
-} from "./knowledge";
+} from "./menuImport";
 
 const item = (id: string, kind: ImportedMenuItem["item"]["kind"], isActive = true) => ({ id, kind, is_active: isActive });
 

@@ -6,7 +6,8 @@ import { useBusiness, useBusinessFormat } from "@/components/business/BusinessCo
 import { IconChevronRight, IconSparkles } from "@/components/icons";
 import { Button, Card, EmptyState, ErrorState, LoadingBlock } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
-import { formatScore, sortVersions } from "@/lib/assistant";
+import { sortVersions } from "@/lib/assistant/versions";
+import { formatScore } from "@/lib/assistant/autotests";
 import { cn } from "@/lib/cn";
 import { languageName } from "@/lib/format";
 import { businessPath } from "@/lib/navigation";

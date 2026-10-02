@@ -35,7 +35,7 @@ import {
   sortByTitle,
   type KnowledgeFilter,
   type KnowledgeStatusFilter,
-} from "@/lib/knowledge";
+} from "@/lib/knowledge/kinds";
 import { businessPath } from "@/lib/navigation";
 
 import { KIND_GROUP_LABELS, KIND_LABELS, useKnowledgeKinds } from "./_components/hooks";

@@ -9,15 +9,14 @@ import { useBusiness } from "@/components/business/BusinessContext";
 import { ConfirmDialog } from "@/components/content/ConfirmDialog";
 import { Alert, Checkbox, Fieldset, Spinner, useToast } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
+import type { AssistantVersionDetails } from "@/lib/assistant/versions";
 import {
   applicableAutotestKinds,
   narrowedSelection,
-  refusalReasons,
-  type AssistantVersionDetails,
   type AutotestRunView,
   type AutotestScenarioKind,
-  type Refusal,
-} from "@/lib/assistant";
+} from "@/lib/assistant/autotests";
+import { refusalReasons, type Refusal } from "@/lib/assistant/goLive";
 import { languageName } from "@/lib/format";
 
 import { SCENARIO_KIND_LABELS } from "./AutotestsPanel";

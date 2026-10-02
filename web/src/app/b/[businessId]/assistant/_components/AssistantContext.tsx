@@ -3,7 +3,7 @@
 import { createContext, useContext } from "react";
 
 import type { ApiQuery } from "@/api/hooks";
-import type { AssistantVersionSummary } from "@/lib/assistant";
+import type { AssistantVersionSummary } from "@/lib/assistant/versions";
 
 export interface AssistantContextValue {
   /** The version history (newest first), shared by every Assistant sub-page. */

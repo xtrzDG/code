@@ -23,7 +23,7 @@ import {
   type GoLiveReadiness,
   type Refusal,
   type RefusalCode,
-} from "@/lib/assistant";
+} from "@/lib/assistant/goLive";
 import { businessPath } from "@/lib/navigation";
 
 type ProfileGapKind = Schema<"ProfileGapKind">;

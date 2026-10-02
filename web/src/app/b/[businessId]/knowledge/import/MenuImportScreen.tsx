@@ -38,7 +38,7 @@ import {
   type ConfidenceLevel,
   type ImportedMenuItem,
   type MenuLinkProblemCode,
-} from "@/lib/knowledge";
+} from "@/lib/knowledge/menuImport";
 import { businessPath } from "@/lib/navigation";
 import { webLinkSchema } from "@/lib/validation";
 

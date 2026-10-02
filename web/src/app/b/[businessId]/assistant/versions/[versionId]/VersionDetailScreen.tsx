@@ -14,13 +14,12 @@ import { Alert, Button, ButtonLink, Card, ErrorState, LoadingBlock, useToast } f
 import { useI18n } from "@/i18n/client";
 import type { MessageKey } from "@/i18n/translate";
 import {
-  formatScore,
-  isRunInProgress,
   liveVersion,
   versionActions,
   type AssistantToolName,
   type AssistantVersionDetails,
-} from "@/lib/assistant";
+} from "@/lib/assistant/versions";
+import { formatScore, isRunInProgress } from "@/lib/assistant/autotests";
 import { languageName } from "@/lib/format";
 import { businessPath } from "@/lib/navigation";
 

@@ -25,7 +25,7 @@ import {
   type AutotestScenarioResult,
   type JudgeCriterion,
   type ResultFilter,
-} from "@/lib/assistant";
+} from "@/lib/assistant/autotests";
 import { cn } from "@/lib/cn";
 import { languageName } from "@/lib/format";
 

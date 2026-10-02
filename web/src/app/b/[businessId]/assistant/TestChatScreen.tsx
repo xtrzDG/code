@@ -14,16 +14,14 @@ import { IconAlert, IconChat, IconInfo, IconSparkles } from "@/components/icons"
 import { Alert, Badge, Button, Card, EmptyState, ErrorState, Field, LoadingBlock, Select, Spinner, Textarea } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import type { MessageKey } from "@/i18n/translate";
+import { defaultTestVersionId, sortVersions, type AssistantVersionSummary } from "@/lib/assistant/versions";
 import {
-  defaultTestVersionId,
   newSessionKey,
   parseStoredTestChat,
   prettyJson,
-  sortVersions,
-  type AssistantVersionSummary,
   type MessageView,
   type StoredTestChat,
-} from "@/lib/assistant";
+} from "@/lib/assistant/testChat";
 import { cn } from "@/lib/cn";
 
 import { useAssistant } from "./_components/AssistantContext";

@@ -1,34 +1,24 @@
 import { describe, expect, it } from "vitest";
 
+import { defaultTestVersionId, liveVersion, sortVersions, versionActions } from "./versions";
 import {
   applicableAutotestKinds,
-  blockingChecks,
-  checkState,
   criterionScore,
-  defaultTestVersionId,
   filterResults,
   formatScore,
   isRunInProgress,
-  isSessionKey,
-  isTestingRefusal,
-  liveVersion,
   narrowedSelection,
-  newSessionKey,
-  parseStoredTestChat,
-  prettyJson,
-  refusalReasons,
   resultLanguages,
   scenarioAverage,
   scenarioNumber,
   scoreTone,
   sortResults,
-  sortVersions,
   summarizeRun,
-  versionActions,
   type AutotestRunView,
   type AutotestScenarioResult,
-  type GoLiveCheck,
-} from "./assistant";
+} from "./autotests";
+import { blockingChecks, checkState, isTestingRefusal, refusalReasons, type GoLiveCheck } from "./goLive";
+import { isSessionKey, newSessionKey, parseStoredTestChat, prettyJson } from "./testChat";
 
 const version = (id: string, versionNumber: number, status: "draft" | "testing" | "ready" | "tests_failed" | "published" | "archived") => ({
   id,

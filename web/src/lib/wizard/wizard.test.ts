@@ -2,21 +2,17 @@ import { describe, expect, it } from "vitest";
 
 import type { KnowledgeItemDetails, WizardQuestionView } from "@/api/types";
 
+import { answersPayload, initialAnswers, validateAnswers } from "./answers";
+import { cleanRules, faqPayload, newFaqRow } from "./faq";
 import {
-  answersPayload,
-  cleanRules,
-  faqPayload,
-  initialAnswers,
   isOfferRowChanged,
   markOfferRowsSaved,
-  newFaqRow,
   newOfferRow,
   offerItemsPayload,
   offerKinds,
   offerRowFromItem,
-  validateAnswers,
   validateOfferRow,
-} from "./wizard";
+} from "./offers";
 
 function question(key: string, answerType: WizardQuestionView["question"]["answer_type"], answer?: string, selected: string[] = []): WizardQuestionView {
   return {

@@ -3,7 +3,7 @@
 import { Badge, Spinner } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import type { MessageKey } from "@/i18n/translate";
-import { VERSION_STATUS_TONES, type AssistantVersionStatus } from "@/lib/assistant";
+import { VERSION_STATUS_TONES, type AssistantVersionStatus } from "@/lib/assistant/versions";
 
 export const VERSION_STATUS_LABELS: Record<AssistantVersionStatus, MessageKey> = {
   draft: "assistant.status.draft",

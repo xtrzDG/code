@@ -26,7 +26,7 @@ import {
 import { useI18n } from "@/i18n/client";
 import type { MessageKey } from "@/i18n/translate";
 import { languageName } from "@/lib/format";
-import { MAX_BODY_LENGTH, MAX_TITLE_LENGTH } from "@/lib/knowledge";
+import { MAX_BODY_LENGTH, MAX_TITLE_LENGTH } from "@/lib/knowledge/form";
 
 import { ReassemblyNotice } from "../_components/ReassemblyNotice";
 

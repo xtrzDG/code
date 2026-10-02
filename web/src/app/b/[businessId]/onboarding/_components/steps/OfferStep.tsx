@@ -19,7 +19,7 @@ import {
   validateOfferRow,
   type OfferRow,
   type OfferRowErrors,
-} from "@/lib/wizard";
+} from "@/lib/wizard/offers";
 
 import { NicheQuestions, useNicheAnswers } from "../NicheQuestions";
 import { StepForm, StepSection } from "../StepForm";

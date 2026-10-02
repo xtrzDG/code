@@ -9,7 +9,7 @@ import { SectionTabs } from "@/components/content/SectionTabs";
 import { IconSparkles } from "@/components/icons";
 import { Button, PageHeader } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
-import { liveVersion, sortVersions } from "@/lib/assistant";
+import { liveVersion, sortVersions } from "@/lib/assistant/versions";
 import { businessPath } from "@/lib/navigation";
 
 import { AssistantContext, type AssistantContextValue } from "./AssistantContext";

@@ -15,7 +15,7 @@ import {
   newFaqRow,
   validateFaqRow,
   type FaqRow,
-} from "@/lib/wizard";
+} from "@/lib/wizard/faq";
 
 import { NicheQuestions, useNicheAnswers } from "../NicheQuestions";
 import { RuleListEditor } from "../RuleListEditor";
