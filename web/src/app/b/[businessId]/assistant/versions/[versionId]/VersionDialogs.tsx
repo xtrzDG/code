@@ -19,7 +19,7 @@ import {
 import { refusalReasons, type Refusal } from "@/lib/assistant/goLive";
 import { languageName } from "@/lib/format";
 
-import { SCENARIO_KIND_LABELS } from "./AutotestsPanel";
+import { SCENARIO_KIND_LABELS } from "./_lib/scenarioLabels";
 import { RefusalReasons } from "./GoLiveChecklist";
 
 /** Start the autotests, in every language and scenario or a narrowed selection. */
