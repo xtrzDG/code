@@ -17,14 +17,11 @@ from app.utilities.localization.language_tags import (
 )
 
 ENGLISH_LOCALE_IDENTIFIER: str = "en"
-
 # CLDR codes that name no real language, script or region.
 PLACEHOLDER_LANGUAGE_CODES: frozenset[str] = frozenset({"mis", "mul", "und", "zxx"})
-
 PLACEHOLDER_SCRIPT_CODES: frozenset[str] = frozenset(
     {"Zinh", "Zmth", "Zsye", "Zsym", "Zxxx", "Zyyy", "Zzzz"}
 )
-
 PLACEHOLDER_REGION_CODES: frozenset[str] = frozenset({"ZZ"})
 
 

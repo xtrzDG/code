@@ -8,7 +8,6 @@ from app.schemas.dto.admin import AdminClientSummary
 
 MANY_HANDOFFS_THRESHOLD: int = 20
 OPEN_QUESTIONS_THRESHOLD: int = 5
-
 CRITICAL_ISSUES: frozenset[ClientHealthIssue] = frozenset(
     {ClientHealthIssue.LEADS_ONLY_MODE, ClientHealthIssue.NEGATIVE_MARGIN}
 )

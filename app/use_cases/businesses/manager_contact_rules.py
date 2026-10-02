@@ -17,7 +17,6 @@ from app.utilities.security.email_addresses import parse_email_address
 
 MAX_MANAGER_CONTACTS: int = 20
 MAX_MANAGER_NAME_LENGTH: int = 100
-
 # Telegram chat ids are integers; group and channel chats are negative.
 TELEGRAM_CHAT_ID_PATTERN: re.Pattern[str] = re.compile(r"^-?[0-9]{1,20}$")
 
