@@ -37,7 +37,7 @@ export function LanguageSwitcher({ className, compact = false }: { className?: s
   const id = useId();
 
   return (
-    <div className={cn("flex items-center gap-2", className)}>
+    <div className={cn("flex min-w-0 items-center gap-2", className)}>
       <label htmlFor={id} className={cn(compact ? "sr-only" : "text-sm text-ink-muted")}>
         {t("language.label")}
       </label>

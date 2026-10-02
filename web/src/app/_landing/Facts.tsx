@@ -1,4 +1,5 @@
 import type { Translator } from "@/i18n/translate";
+import { cn } from "@/lib/cn";
 
 const FACTS = [
   ["landing.facts.alwaysTitle", "landing.facts.alwaysText"],
@@ -15,7 +16,13 @@ export function Facts({ t }: { t: Translator["t"] }) {
         {FACTS.map(([title, text], index) => (
           <div
             key={title}
-            className={`space-y-1 px-4 py-8 sm:px-6 ${index % 2 === 1 ? "border-l border-line" : ""} ${index >= 2 ? "border-t border-line lg:border-t-0" : ""} ${index === 2 ? "lg:border-l" : ""}`}
+            // Hairlines between the cells: two columns on phones, four in a row on large screens.
+            className={cn(
+              "space-y-1 border-line px-4 py-8 sm:px-6",
+              index % 2 === 1 && "border-l",
+              index >= 2 && "border-t lg:border-t-0",
+              index === 2 && "lg:border-l",
+            )}
           >
             <dt className="text-base font-semibold tracking-tight text-ink sm:text-lg">{t(title)}</dt>
             <dd className="text-sm text-ink-muted">{t(text)}</dd>
