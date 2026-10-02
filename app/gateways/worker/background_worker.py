@@ -167,18 +167,21 @@ class BackgroundWorker:
         jobs get STOP_GRACE_SECONDS to finish.
         """
 
+        # The lane threads and the heartbeat stop with their own event, set
+        # once the periodic loop is over (also when it fails).
+        stopping = threading.Event()
         heartbeat_thread = threading.Thread(
             target=self._heartbeat.run_forever,
-            args=(stop_event,),
+            args=(stopping,),
             name="worker-lease-heartbeat",
             daemon=True,
         )
         heartbeat_thread.start()
-        self._lane_threads.start(stop_event)
+        self._lane_threads.start(stopping)
         try:
             self._tick_periodic_jobs(stop_event)
         finally:
-            stop_event.set()
+            stopping.set()
             self._lane_threads.wake_all()
             self._lane_threads.join(STOP_GRACE_SECONDS)
 
