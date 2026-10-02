@@ -44,6 +44,9 @@ jobs:
           queries: security-extended
           config: |
             paths-ignore:
+              # Flitt's API prescribes SHA-1 signatures; this one-function
+              # module is the only use (see its docstring).
+              - app/clients/flitt/flitt_signature_digest.py
               - tests
               - web/e2e
               - web/src/**/*.test.ts

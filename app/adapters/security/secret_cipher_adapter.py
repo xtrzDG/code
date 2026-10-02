@@ -17,7 +17,7 @@ logger: logging.Logger = logging.getLogger(__name__)
 
 FERNET_KEY_PATTERN: re.Pattern[str] = re.compile(r"^[A-Za-z0-9_\-]{43}=$")
 FERNET_KEY_BYTES: int = 32
-MIN_DERIVED_SECRET_LENGTH: int = 32
+MIN_DERIVED_KEY_TEXT_LENGTH: int = 32
 KEY_DERIVATION_INFO: bytes = b"assistant-workshop/channel-secrets/fernet/v1"
 # Defaults printed in the repository (docker-compose.yml) for a local run:
 # anyone can read them, so production refuses them like a missing key.
@@ -89,17 +89,17 @@ def resolve_fernet_key(
     if FERNET_KEY_PATTERN.fullmatch(secret_text) is not None:
         return secret_text.encode("ascii")
 
-    if len(secret_text) < MIN_DERIVED_SECRET_LENGTH:
+    if len(secret_text) < MIN_DERIVED_KEY_TEXT_LENGTH:
         if is_production:
             raise ValidationFailedError(
                 f"ENCRYPTION_KEY must be a Fernet key or a secret of at least "
-                f"{MIN_DERIVED_SECRET_LENGTH} characters in production."
+                f"{MIN_DERIVED_KEY_TEXT_LENGTH} characters in production."
             )
 
         logger.warning(
             "ENCRYPTION_KEY is shorter than %s characters; use a Fernet key or a "
             "long random secret outside development.",
-            MIN_DERIVED_SECRET_LENGTH,
+            MIN_DERIVED_KEY_TEXT_LENGTH,
         )
 
     derived_key: bytes = HKDF(

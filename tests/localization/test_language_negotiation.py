@@ -64,3 +64,19 @@ def test_optional_query_values_are_typed_blank_is_absent() -> None:
         parse_optional("maybe", parse_boolean_text, "is_active")
     with pytest.raises(ValidationFailedError, match="kind"):
         parse_optional("spaceship", KnowledgeItemKind, "kind")
+
+
+def test_accept_language_items_with_odd_spacing_and_parameters() -> None:
+    assert negotiate_language("  en-GB  ;  q = 0.4 ,  ka ; q=0.9 ") == "ka"
+    assert negotiate_language("de;level=1, fr") == "fr"
+    assert negotiate_language("de;q=, fr") == "fr"
+    assert negotiate_language("de;q=0.5;x=1") is None
+
+
+def test_long_accept_language_headers_are_cut_quickly() -> None:
+    # The header is cut at 1024 characters: the first item survives without
+    # its weight, and no pattern ever scans the run of spaces.
+    hostile: str = "en" + " " * 50_000 + ";q=0.9"
+    assert negotiate_language(hostile) == "en"
+    many_items: str = ",".join(["xx-YY;q=0.1"] * 5_000)
+    assert negotiate_language(many_items + ",ka") == "xx-YY"

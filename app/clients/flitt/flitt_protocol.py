@@ -18,13 +18,13 @@ Nested values cannot be signed this way and are rejected.
 
 import base64
 import binascii
-import hashlib
 import hmac
 import json
 from collections.abc import Mapping
 from typing import cast
 from urllib.parse import parse_qsl
 
+from app.clients.flitt.flitt_signature_digest import flitt_sha1_hex
 from app.schemas.exceptions.application_errors import ValidationFailedError
 
 SIGNATURE_SEPARATOR: str = "|"
@@ -54,7 +54,7 @@ def build_parameter_signature(secret_key: str, parameters: Mapping[str, object])
         if signed_value is not None:
             signed_values.append(signed_value)
 
-    return sha1_hex(SIGNATURE_SEPARATOR.join(signed_values))
+    return flitt_sha1_hex(SIGNATURE_SEPARATOR.join(signed_values))
 
 
 def stringify_signature_value(parameter_name: str, value: object) -> str | None:
@@ -83,7 +83,7 @@ def stringify_signature_value(parameter_name: str, value: object) -> str | None:
 def build_envelope_signature(secret_key: str, envelope_data: str) -> str:
     """Signature of a protocol 2.0 envelope: sha1("<secret>|<data>")."""
 
-    return sha1_hex(f"{secret_key}{SIGNATURE_SEPARATOR}{envelope_data}")
+    return flitt_sha1_hex(f"{secret_key}{SIGNATURE_SEPARATOR}{envelope_data}")
 
 
 def encode_envelope_data(order_parameters: Mapping[str, object]) -> str:
@@ -189,7 +189,3 @@ def require_mapping(value: object, label: str) -> dict[str, object]:
 
     mapping: dict[object, object] = cast(dict[object, object], value)
     return {str(key): item for key, item in mapping.items()}
-
-
-def sha1_hex(text: str) -> str:
-    return hashlib.sha1(text.encode("utf-8")).hexdigest()

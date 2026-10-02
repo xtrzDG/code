@@ -21,10 +21,6 @@ from app.gateways.http.access_log_redaction import install_access_log_redaction
 from app.gateways.http.application import build_http_application
 from app.gateways.http.router_assembly import build_application_routers
 from app.gateways.worker.background_worker import BackgroundWorker
-from app.registries.demo.demo_dataset_registry import (
-    DEMO_OWNER_EMAIL,
-    DEMO_OWNER_PHONE_NUMBER,
-)
 from app.schemas.configurations.app_settings import AppSettings
 from app.schemas.constants.environment import DeploymentEnvironment
 from app.schemas.constants.localization import OtpDeliveryChannel
@@ -188,12 +184,11 @@ def seed_demo_data(app_container: AppContainer) -> None:
     # A warning, like the development login codes, so that uvicorn's default
     # log shows how to sign in.
     LOGGER.warning(
-        "Demo data: %d business(es) created, %d already there. Sign in with "
-        "%s or %s; in development the login code is printed in this log.",
+        "Demo data: %d business(es) created, %d already there. Sign in as the "
+        "demo owner from docs/LAUNCH.md; in development the login code is "
+        "printed in this log.",
         len(report.created_business_ids),
         len(report.kept_business_ids),
-        DEMO_OWNER_PHONE_NUMBER,
-        DEMO_OWNER_EMAIL,
     )
 
 

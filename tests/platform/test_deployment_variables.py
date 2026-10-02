@@ -3,7 +3,7 @@
 import re
 
 from app.adapters.security.secret_cipher_adapter import (
-    MIN_DERIVED_SECRET_LENGTH,
+    MIN_DERIVED_KEY_TEXT_LENGTH,
     PUBLIC_ENCRYPTION_KEYS,
 )
 from tests.platform.deployment_variables import (
@@ -78,7 +78,9 @@ def test_compose_sets_what_a_local_run_needs() -> None:
     assert set(web) >= REQUIRED_CABINET_VARIABLES
     # API and worker share one key by default, long enough to use as is;
     # production refuses it, since it is printed here.
-    assert len(compose_default(backend["ENCRYPTION_KEY"])) >= MIN_DERIVED_SECRET_LENGTH
+    assert (
+        len(compose_default(backend["ENCRYPTION_KEY"])) >= MIN_DERIVED_KEY_TEXT_LENGTH
+    )
     assert compose_default(backend["ENCRYPTION_KEY"]) in PUBLIC_ENCRYPTION_KEYS
     # The cabinet's address is also its origin; its server reaches the API
     # inside the Compose network.

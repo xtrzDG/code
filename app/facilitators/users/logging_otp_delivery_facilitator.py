@@ -10,11 +10,6 @@ from app.schemas.typings.localization.constrained_strings import (
     LanguageTag,
 )
 from app.schemas.typings.users.constrained_strings import EmailAddress, OtpCode
-from app.schemas.typings.users.strings import MaskedLoginDestination
-from app.utilities.security.login_destination_masking import (
-    mask_e164_phone_number,
-    mask_email_address,
-)
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -53,17 +48,12 @@ class LoggingOtpDeliveryFacilitator(OtpDeliveryFacilitatorContract):
                 f"{delivery_channel.value})."
             )
 
-        destination: MaskedLoginDestination = MaskedLoginDestination("unknown")
-        if phone_number is not None:
-            destination = mask_e164_phone_number(phone_number)
-        elif email is not None:
-            destination = mask_email_address(email)
-
+        # No phone number or e-mail in the log line, not even masked: personal
+        # data stays out of logs; the channel and language are enough to tell
+        # concurrent development logins apart.
         logger.warning(
-            "Login code %s for %s via %s (language %s). Code logging is for "
-            "development only.",
+            "Login code %s via %s (language %s). Code logging is for development only.",
             code,
-            destination,
             delivery_channel.value,
             language_tag,
         )

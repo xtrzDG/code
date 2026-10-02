@@ -17,7 +17,7 @@ from app.utilities.config_helpers.app_settings.app_settings_assembler import (
 )
 
 
-def test_development_logs_the_code_with_a_masked_destination(
+def test_development_logs_the_code_without_the_destination(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     facilitator = LoggingOtpDeliveryFacilitator(assemble_app_settings({}))
@@ -40,11 +40,10 @@ def test_development_logs_the_code_with_a_masked_destination(
 
     messages = [record.getMessage() for record in caplog.records]
     assert any("042317" in message and "whatsapp" in message for message in messages)
-    assert any("+**********56" in message for message in messages)
-    assert all("+995555123456" not in message for message in messages)
-    assert any(
-        "998877" in message and "o***r@example.com" in message for message in messages
-    )
+    assert any("998877" in message and "email" in message for message in messages)
+    # No phone number or e-mail address, not even masked, reaches the log.
+    assert all("555" not in message and "56" not in message for message in messages)
+    assert all("example.com" not in message for message in messages)
 
 
 def test_production_without_a_provider_refuses_and_logs_nothing(

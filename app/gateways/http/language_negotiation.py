@@ -5,11 +5,15 @@ import re
 from app.schemas.exceptions.application_errors import ValidationFailedError
 from app.schemas.typings.localization.constrained_strings import LanguageTag
 
-# One Accept-Language item: a language range and an optional quality weight.
-ACCEPT_LANGUAGE_ITEM_PATTERN: re.Pattern[str] = re.compile(
-    r"^\s*(?P<tag>[A-Za-z]{2,3}(?:-[A-Za-z0-9]{2,8})*)"
-    r"\s*(?:;\s*q\s*=\s*(?P<q>[0-9.]+))?\s*$"
+# The language range of one Accept-Language item, after trimming spaces. The
+# item is split on ";" and "=" first, so no pattern runs over runs of spaces.
+LANGUAGE_RANGE_PATTERN: re.Pattern[str] = re.compile(
+    r"[A-Za-z]{2,3}(?:-[A-Za-z0-9]{2,8})*"
 )
+QUALITY_VALUE_PATTERN: re.Pattern[str] = re.compile(r"[0-9.]+")
+# Real browsers send a few hundred characters at most; longer headers are cut.
+MAX_ACCEPT_LANGUAGE_LENGTH: int = 1024
+MAX_ACCEPT_LANGUAGE_ITEMS: int = 32
 
 
 def parse_language_parameter(raw_value: str | None) -> LanguageTag | None:
@@ -37,13 +41,15 @@ def negotiate_language(accept_language: str | None) -> LanguageTag | None:
         return None
 
     candidates: list[tuple[float, int, LanguageTag]] = []
-    for position, raw_item in enumerate(accept_language.split(",")):
-        match: re.Match[str] | None = ACCEPT_LANGUAGE_ITEM_PATTERN.match(raw_item)
-        if match is None:
+    raw_items: list[str] = accept_language[:MAX_ACCEPT_LANGUAGE_LENGTH].split(",")
+    for position, raw_item in enumerate(raw_items[:MAX_ACCEPT_LANGUAGE_ITEMS]):
+        item: tuple[str, str | None] | None = split_accept_language_item(raw_item)
+        if item is None:
             continue
 
-        quality: float = parse_quality(match.group("q"))
-        language_tag: LanguageTag | None = canonical_language_tag(match.group("tag"))
+        raw_tag, raw_quality = item
+        quality: float = parse_quality(raw_quality)
+        language_tag: LanguageTag | None = canonical_language_tag(raw_tag)
         if language_tag is not None and quality > 0.0:
             candidates.append((-quality, position, language_tag))
 
@@ -51,6 +57,32 @@ def negotiate_language(accept_language: str | None) -> LanguageTag | None:
         return None
 
     return min(candidates)[2]
+
+
+def split_accept_language_item(raw_item: str) -> tuple[str, str | None] | None:
+    """
+    The language range and the raw q weight of one item ("en-US;q=0.8"), or
+    None when the item is not a language range with an optional q weight.
+    """
+
+    raw_range, separator, raw_parameter = raw_item.partition(";")
+    language_range: str = raw_range.strip()
+    if LANGUAGE_RANGE_PATTERN.fullmatch(language_range) is None:
+        return None
+
+    if separator == "":
+        return language_range, None
+
+    name, equals, raw_value = raw_parameter.partition("=")
+    value: str = raw_value.strip()
+    if (
+        name.strip() != "q"
+        or equals == ""
+        or QUALITY_VALUE_PATTERN.fullmatch(value) is None
+    ):
+        return None
+
+    return language_range, value
 
 
 def parse_quality(raw_quality: str | None) -> float:
