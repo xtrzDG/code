@@ -13,7 +13,7 @@ import {
   type AnswerValue,
   type AnswerValues,
   type ProfileAnswerInput,
-} from "@/lib/wizard";
+} from "@/lib/wizard/answers";
 
 import { StepSection } from "./StepForm";
 

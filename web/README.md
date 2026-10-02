@@ -51,7 +51,7 @@ Behind a reverse proxy, run the API with
 | Script | What it does |
 | --- | --- |
 | `npm run dev` / `build` / `start` | Next.js development server, production build, production server |
-| `npm run lint` | ESLint (`eslint-config-next` + strict project rules), zero warnings allowed |
+| `npm run lint` | ESLint (`eslint-config-next` + strict project rules), zero warnings allowed; every file in `src/` and `e2e/` has at most 300 lines (`max-lines`; the generated `schema.d.ts` and `*.generated.ts` are exempt) |
 | `npm run typecheck` | `next typegen` (route types) + `tsc --noEmit` |
 | `npm test` | Vitest unit tests (`src/**/*.test.ts`) |
 | `npm run e2e` | Playwright end-to-end tests against the real API (see [End-to-end tests](#end-to-end-tests)) |
@@ -88,7 +88,10 @@ npm run e2e -- onboarding         # one file
   dictionaries (`e2e/support/messages.ts`), so rewording a text does not break
   a test. Prefer `getByRole`/`getByLabel`; avoid CSS classes.
 - Scenarios that need the voice platform or Meta (a call recording, a WhatsApp chat past its
-  24-hour window) answer the card's own BFF calls with `page.route` (`e2e/card.spec.ts`).
+  24-hour window) answer the card's own BFF calls with `page.route`
+  (`e2e/card-recordings.spec.ts`, `e2e/card-whatsapp.spec.ts`, served by
+  `e2e/support/conversation-card.ts`); the widget tests run the API's
+  `/widget.js` on a fake host site (`e2e/support/widget-site.ts`).
 - Scenarios: the landing page (prices of a chosen country, theme and language
   kept after a reload, signed-in users sent to their businesses),
   sign-in with a German number and with e-mail (and a wrong code),
@@ -181,7 +184,8 @@ web/
       messages/landing/        the landing page's texts, one file per language
       messages/sections/       section texts, spread into en/ru/ka: insights.ts (dashboard, conversations,
                                bookings, leads, handoffs), content.ts (knowledge, assistant),
-                               workspace.ts (channels, billing, settings, admin)
+                               workspace.ts (channels, billing, settings, admin); each composes one file
+                               per namespace and language from its folder (insights/bookings.ru.ts)
     components/
       ui/                      the UI kit (import from "@/components/ui"): Button, ButtonLink, Input,
                                Select, Textarea, Checkbox, Radio, Field, Fieldset, Card, Table, Badge,
@@ -210,9 +214,11 @@ web/
       BusinessSwitcher.tsx LanguageSwitcher.tsx CountrySelect.tsx icons.tsx
     lib/                       pure helpers with unit tests (*.test.ts): navigation (sections, paths,
                                safeNextPath), format (Intl, money units), countries (phone/country),
-                               hours (opening hours), wizard (profile answers), knowledge, resources,
-                               assistant, validation (zod), classMerge (className overrides), cn,
-                               theme (cookie, theme colours), landing (country guess, plan prices)
+                               hours (opening hours), wizard/ (niche answers, offers, FAQ), knowledge/
+                               (kinds, item form, menu import), resources, assistant/ (versions,
+                               autotests, go-live, test chat), validation (zod), classMerge (className
+                               overrides), cn, theme (cookie, theme colours), landing (country guess,
+                               plan prices)
 ```
 
 ## Sections
@@ -256,7 +262,10 @@ web/
    ```
 
 3. Put interactive parts in `"use client"` components next to the page
-   (`BookingsScreen.tsx`, helpers in a `_components/` folder). They get the
+   (`BookingsScreen.tsx`; its parts in a `_components/` folder, its hooks and
+   pure helpers with their tests in `_lib/`). Keep files small: one screen,
+   card, dialog, hook or helper group per file, at most 300 lines (`npm run
+   lint` fails on a longer one). They get the
    business and the user from the layout:
 
    ```tsx
@@ -357,8 +366,8 @@ version state, and a menu link the API cannot read is `menu_link_invalid`,
 `menu_link_unreachable` or `menu_link_unreadable`. A refused booking names
 why (`closed`, `too_soon`, `time_required`, `taken`, `party_too_large`,
 `no_seating_resource`; the numbers and days are in `details`). Screens map these
-codes to their own texts (`refusalReasons` in `src/lib/assistant.ts`,
-`menuLinkProblem` in `src/lib/knowledge.ts`, `BOOKING_REFUSAL_MESSAGES` passed
+codes to their own texts (`refusalReasons` in `src/lib/assistant/goLive.ts`,
+`menuLinkProblem` in `src/lib/knowledge/menuImport.ts`, `BOOKING_REFUSAL_MESSAGES` passed
 as `reasonMessages` to `useApiMutation`); never match the English message.
 
 ### Translations
@@ -366,9 +375,12 @@ as `reasonMessages` to `useApiMutation`); never match the English message.
 - Shared texts (common, auth, nav, theme, pages, errors, validation) live
   in `src/i18n/messages/{en,ru,ka}.ts`; section texts in
   `src/i18n/messages/sections/{insights,content,workspace}.ts`, whose
-  `*En`/`*Ru`/`*Ka` objects are spread into those files; the wizard's and the
-  landing page's in `messages/onboarding/` and `messages/landing/` (one file
-  per language, translations typed `Translation<typeof …En>`). English is the
+  `*En`/`*Ru`/`*Ka` objects are spread into those files; each is composed of
+  one file per namespace and language in its folder
+  (`sections/insights/bookings.en.ts`, `bookings.ru.ts`, `bookings.ka.ts`; a
+  large namespace in a few parts); the wizard's and the landing page's in
+  `messages/onboarding/` and `messages/landing/` (one file per language).
+  Translations are typed `Translation<typeof …En>`. English is the
   reference; `ru` and `ka` are typed as `Messages`, so a key added in English
   and missing in another language fails `npm run typecheck` (and a unit test).
   At runtime a missing text falls back to English, then to the key.

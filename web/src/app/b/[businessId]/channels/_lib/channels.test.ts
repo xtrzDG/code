@@ -1,12 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  EMPTY_CONNECT_FORM,
-  WIDGET_DEFAULT_COLOR,
   accountLabel,
-  buildConnectBody,
-  buildStaffTemplateBody,
-  buildWidgetPreviewUrl,
   channelPathName,
   channelState,
   dialHref,
@@ -14,19 +9,24 @@ import {
   formatLinkCode,
   isChannelInPlan,
   isChannelOn,
-  isSameWidgetLook,
-  normalizeHexColor,
   notificationLanguages,
-  readCalendarReturn,
-  readableTextColor,
-  WIDGET_COLOR_PRESETS,
-  savedWidgetLook,
   sortForwardingCodes,
   startCommand,
   upsertChannel,
-  withoutCalendarReturn,
   type ChannelView,
 } from "./channels";
+import { buildConnectBody, EMPTY_CONNECT_FORM } from "./connectForm";
+import {
+  buildWidgetPreviewUrl,
+  isSameWidgetLook,
+  normalizeHexColor,
+  readableTextColor,
+  savedWidgetLook,
+  WIDGET_COLOR_PRESETS,
+  WIDGET_DEFAULT_COLOR,
+} from "./widgetLook";
+import { buildStaffTemplateBody } from "./staffTemplate";
+import { readCalendarReturn, withoutCalendarReturn } from "./calendarReturn";
 
 const channel = (overrides: Partial<ChannelView>): ChannelView => ({
   id: "channel_1",

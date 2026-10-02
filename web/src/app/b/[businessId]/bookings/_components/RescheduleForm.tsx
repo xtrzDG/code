@@ -11,7 +11,8 @@ import { Button, Field, Input } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import type { MessageKey } from "@/i18n/translate";
 
-import { BOOKING_REFUSAL_MESSAGES, customerLanguage } from "./bookingModel";
+import { customerLanguage } from "../_lib/bookingList";
+import { BOOKING_REFUSAL_MESSAGES } from "../_lib/bookingRefusals";
 import { CustomerLanguageSelect } from "./CustomerLanguageSelect";
 import { SlotPicker } from "./SlotPicker";
 

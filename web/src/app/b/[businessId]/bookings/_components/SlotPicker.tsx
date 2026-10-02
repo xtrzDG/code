@@ -12,7 +12,7 @@ import { Button, ErrorState, Spinner } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { cn } from "@/lib/cn";
 
-import { groupSlotsByResource } from "./bookingModel";
+import { groupSlotsByResource } from "../_lib/manualBooking";
 
 export interface SlotRequest {
   date: string;

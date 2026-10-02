@@ -1,7 +1,7 @@
 import { sectionMetadata } from "@/components/business/SectionPlaceholder";
 
 import { ChannelsScreen } from "./ChannelsScreen";
-import { readCalendarReturn } from "./_lib/channels";
+import { readCalendarReturn } from "./_lib/calendarReturn";
 
 export const generateMetadata = sectionMetadata("channels");
 

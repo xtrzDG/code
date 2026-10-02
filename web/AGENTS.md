@@ -17,7 +17,8 @@ API, translations). In short:
   (the BFF at `/api/backend/*`); never `BACKEND_URL`, never the token.
 - Every UI text goes into the dictionaries in Georgian, Russian and English:
   shared texts in `src/i18n/messages/en.ts`, `ru.ts`, `ka.ts`, section texts
-  in `src/i18n/messages/sections/*.ts`; no hard-coded strings in components.
+  in `src/i18n/messages/sections/*/` (one file per namespace and language,
+  composed in `sections/*.ts`); no hard-coded strings in components.
 - Dates, times and money: Intl helpers in `src/lib/format.ts` /
   `useBusinessFormat()`, in the business time zone and currency. API
   timestamps are microseconds, prices are minor units.

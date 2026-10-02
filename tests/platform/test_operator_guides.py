@@ -78,6 +78,13 @@ WIDGET_SECTION_LABELS: tuple[str, ...] = (
     "«Код чата для сайта»",
     "«Открыть живой предпросмотр»",
 )
+# The cabinet's workspace texts: one file per namespace and language.
+WORKSPACE_TEXTS: Path = ROOT / "web/src/i18n/messages/sections/workspace"
+
+
+def read_workspace_texts() -> str:
+    paths: list[Path] = sorted(WORKSPACE_TEXTS.glob("*.ts"))
+    return "\n".join(path.read_text(encoding="utf-8") for path in paths)
 
 
 def test_render_docs_send_undeclared_variables_to_the_shared_group() -> None:
@@ -103,7 +110,7 @@ def test_the_guides_do_not_put_a_scheme_before_the_api_address() -> None:
 def test_the_guide_turns_the_website_chat_on_before_its_code() -> None:
     # The cabinet shows the widget code and its preview only once the
     # website chat is on, and the widget refuses messages until then.
-    workspace: str = read("web/src/i18n/messages/sections/workspace.ts")
+    workspace: str = read_workspace_texts()
     for label in (WEB_CHAT_CARD, TURN_ON, *WIDGET_SECTION_LABELS):
         assert f'"{label.strip("«»")}"' in workspace, label
 
@@ -132,7 +139,7 @@ def test_the_guide_explains_how_a_business_whatsapp_number_is_reached() -> None:
     # Business account with the platform's portfolio and system user.
     guide: str = read(LAUNCH_GUIDE)
     section: str = guide.split("### 4.5.", 1)[1].split("### 4.6.", 1)[0]
-    workspace: str = read("web/src/i18n/messages/sections/workspace.ts")
+    workspace: str = read_workspace_texts()
 
     assert "(Embedded Signup)" not in workspace
     assert "Embedded Signup)" not in section.replace("(Embedded Signup) в кабинете", "")

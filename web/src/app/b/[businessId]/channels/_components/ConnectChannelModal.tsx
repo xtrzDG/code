@@ -10,16 +10,16 @@ import { InlineError } from "@/components/workspace/InlineError";
 import { useI18n } from "@/i18n/client";
 import { countryFlag } from "@/lib/countries";
 
+import type { ConnectableChannel } from "../_lib/channels";
 import {
+  buildConnectBody,
   CHANNEL_FIELDS,
   EMPTY_CONNECT_FORM,
-  buildConnectBody,
   type ConnectChannelBody,
   type ConnectField,
   type ConnectFieldError,
   type ConnectForm,
-  type ConnectableChannel,
-} from "../_lib/channels";
+} from "../_lib/connectForm";
 import { CHANNEL_NAMES, CHANNEL_STEPS, FIELD_ERRORS, FIELD_LABELS } from "./channelMeta";
 
 const SECRET_FIELDS: ReadonlySet<ConnectField> = new Set(["botToken", "pageAccessToken"]);

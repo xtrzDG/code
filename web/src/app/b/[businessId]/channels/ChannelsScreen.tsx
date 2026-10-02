@@ -22,18 +22,16 @@ import { StaffReplyTemplateForm } from "./_components/StaffReplyTemplateForm";
 import { StaffTelegramCard } from "./_components/StaffTelegramCard";
 import { WebChatSection } from "./_components/WebChatSection";
 import {
-  CONNECTABLE_CHANNELS,
   channelPathName,
+  CONNECTABLE_CHANNELS,
   findChannel,
   isChannelInPlan,
   isChannelOn,
   upsertChannel,
-  withoutCalendarReturn,
-  type CalendarFailureReason,
-  type CalendarReturn,
-  type ConnectChannelBody,
   type ConnectableChannel,
 } from "./_lib/channels";
+import type { ConnectChannelBody } from "./_lib/connectForm";
+import { withoutCalendarReturn, type CalendarFailureReason, type CalendarReturn } from "./_lib/calendarReturn";
 
 const CALENDAR_RETURN_REASONS: Record<CalendarFailureReason, MessageKey> = {
   access_denied: "channels.calendar.returnReasons.access_denied",

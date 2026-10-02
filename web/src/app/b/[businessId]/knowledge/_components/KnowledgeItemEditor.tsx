@@ -13,8 +13,6 @@ import { languageName } from "@/lib/format";
 import {
   emptyKnowledgeForm,
   isEmptyPatch,
-  kindHasDuration,
-  kindHasPrice,
   knowledgeCreateBody,
   knowledgeFormFromItem,
   knowledgePatchBody,
@@ -25,7 +23,8 @@ import {
   type KnowledgeFormErrors,
   type KnowledgeItemCreateBody,
   type KnowledgeItemPatchBody,
-} from "@/lib/knowledge";
+} from "@/lib/knowledge/form";
+import { kindHasDuration, kindHasPrice } from "@/lib/knowledge/kinds";
 
 import { KIND_LABELS } from "./hooks";
 

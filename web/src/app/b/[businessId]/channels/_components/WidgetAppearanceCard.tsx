@@ -10,19 +10,19 @@ import { Badge, Button, Card, Field, Fieldset, Input, Radio, buttonClasses, useT
 import { useI18n } from "@/i18n/client";
 import { cn } from "@/lib/cn";
 
+import type { ChannelView } from "../_lib/channels";
 import {
-  WIDGET_COLOR_PRESETS,
-  WIDGET_DEFAULT_COLOR,
-  WIDGET_POSITIONS,
   buildWidgetPreviewUrl,
   isSameWidgetLook,
   normalizeHexColor,
   readableTextColor,
   savedWidgetLook,
-  type ChannelView,
+  WIDGET_COLOR_PRESETS,
+  WIDGET_DEFAULT_COLOR,
+  WIDGET_POSITIONS,
   type WidgetLook,
   type WidgetPosition,
-} from "../_lib/channels";
+} from "../_lib/widgetLook";
 
 /**
  * The website chat's brand colour and launcher corner (saved on the web

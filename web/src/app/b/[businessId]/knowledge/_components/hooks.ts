@@ -8,7 +8,7 @@ import type { KnowledgeItemKind } from "@/api/types";
 import { useBusiness } from "@/components/business/BusinessContext";
 import { useI18n } from "@/i18n/client";
 import type { MessageKey } from "@/i18n/translate";
-import { orderKinds } from "@/lib/knowledge";
+import { orderKinds } from "@/lib/knowledge/kinds";
 
 /** The business niche (knowledge kinds, resource kind, booking unit), in the UI language. */
 export function useNicheDetails() {

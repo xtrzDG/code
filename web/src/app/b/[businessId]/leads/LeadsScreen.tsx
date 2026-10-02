@@ -1,31 +1,19 @@
 "use client";
 
-import Link from "next/link";
 import { useState } from "react";
 
 import { api } from "@/api/client";
 import { useApiMutation } from "@/api/hooks";
-import { useBusiness, useBusinessFormat } from "@/components/business/BusinessContext";
+import { useBusiness } from "@/components/business/BusinessContext";
 import { IconInbox } from "@/components/icons";
-import { ChannelBadge, LeadStatusBadge, LeadTypeBadge, TestBadge } from "@/components/insights/Badges";
-import {
-  CustomerName,
-  DetailRow,
-  IncludeTestToggle,
-  LoadMore,
-  PhoneLink,
-  RefreshButton,
-  RefreshFailed,
-} from "@/components/insights/common";
-import { formatLocalDate, formatRelative } from "@/components/insights/dates";
+import { CustomerName, IncludeTestToggle, LoadMore, RefreshButton, RefreshFailed } from "@/components/insights/common";
 import { LEAD_STATUS, LEAD_STATUSES } from "@/components/insights/labels";
 import { SegmentedControl } from "@/components/insights/SegmentedControl";
 import type { LeadListItem, LeadPage, LeadStatus } from "@/components/insights/types";
 import { replaceUrlQuery } from "@/components/insights/urlQuery";
 import { usePagedQuery } from "@/components/insights/usePagedQuery";
-import { Button, Card, EmptyState, ErrorState, LoadingBlock, Modal, PageHeader, Select, useToast } from "@/components/ui";
+import { Button, Card, EmptyState, ErrorState, LoadingBlock, Modal, PageHeader, useToast } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
-import { businessPath } from "@/lib/navigation";
 
 import {
   afterStatusChange,
@@ -35,6 +23,8 @@ import {
   type LeadFilters,
   type LeadTab,
 } from "./_components/leadModel";
+import { LeadCard } from "./_components/LeadCard";
+import { LeadDetails } from "./_components/LeadDetails";
 
 /**
  * Leads (concept /leads): requests the assistant passed to a manager —
@@ -179,160 +169,5 @@ export function LeadsScreen({ initialFilters }: { initialFilters: LeadFilters })
         ) : null}
       </Modal>
     </>
-  );
-}
-
-function StatusSelect({
-  lead,
-  isPending,
-  onStatus,
-  label,
-}: {
-  lead: LeadListItem;
-  isPending: boolean;
-  onStatus: (status: LeadStatus) => void;
-  label: string;
-}) {
-  const { t } = useI18n();
-  return (
-    <Select
-      aria-label={label}
-      value={lead.status}
-      disabled={isPending}
-      aria-busy={isPending || undefined}
-      onChange={(event) => onStatus(event.target.value as LeadStatus)}
-      className="w-full sm:w-44"
-    >
-      {LEAD_STATUSES.map((status) => (
-        <option key={status} value={status}>
-          {t(LEAD_STATUS[status].label)}
-        </option>
-      ))}
-    </Select>
-  );
-}
-
-function LeadMeta({ lead }: { lead: LeadListItem }) {
-  const { t, tp, locale } = useI18n();
-  const parts = [
-    lead.requested_date ? `${t("leads.requestedDate")}: ${formatLocalDate(lead.requested_date, locale)}` : null,
-    lead.party_size ? tp("bookings.guests", lead.party_size) : null,
-  ].filter(Boolean);
-  return (
-    <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-ink-muted">
-      {parts.length > 0 ? <span>{parts.join(" · ")}</span> : null}
-      {lead.budget ? (
-        <span>
-          {t("leads.budget")}: <span dir="auto">{lead.budget}</span>
-        </span>
-      ) : null}
-    </p>
-  );
-}
-
-function LeadCard({
-  lead,
-  isPending,
-  onStatus,
-  onOpen,
-}: {
-  lead: LeadListItem;
-  isPending: boolean;
-  onStatus: (status: LeadStatus) => void;
-  onOpen: () => void;
-}) {
-  const { t, locale } = useI18n();
-  const format = useBusinessFormat();
-  const name = lead.contact_name ?? t("insights.unknownCustomer");
-  return (
-    <li className="rounded-2xl border border-line bg-surface p-4 shadow-sm sm:p-5">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
-        <div className="min-w-0 flex-1 space-y-2">
-          <div className="flex flex-wrap items-center gap-2">
-            <LeadTypeBadge type={lead.lead_type} />
-            <LeadStatusBadge status={lead.status} />
-            {lead.is_sandbox ? <TestBadge /> : null}
-            <span className="text-xs text-ink-subtle">
-              {formatRelative(lead.created_at, locale) ?? format.date(lead.created_at)}
-            </span>
-          </div>
-          <p dir="auto" className="line-clamp-3 text-sm whitespace-pre-wrap text-ink">
-            {lead.details}
-          </p>
-          <LeadMeta lead={lead} />
-          <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
-            <span className="font-medium text-ink">
-              <CustomerName name={lead.contact_name} />
-            </span>
-            {lead.contact_phone_number ? <PhoneLink phone={lead.contact_phone_number} /> : null}
-          </p>
-        </div>
-        <div className="flex shrink-0 flex-col gap-2 sm:items-end">
-          <StatusSelect lead={lead} isPending={isPending} onStatus={onStatus} label={t("leads.statusOf", { name })} />
-          <Button variant="ghost" size="sm" onClick={onOpen}>
-            {t("leads.showDetails")}
-          </Button>
-        </div>
-      </div>
-    </li>
-  );
-}
-
-function LeadDetails({
-  lead,
-  isPending,
-  onStatus,
-}: {
-  lead: LeadListItem;
-  isPending: boolean;
-  onStatus: (status: LeadStatus) => void;
-}) {
-  const { t, tp, locale } = useI18n();
-  const { business } = useBusiness();
-  const format = useBusinessFormat();
-  return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap items-center gap-2">
-        <LeadTypeBadge type={lead.lead_type} />
-        {lead.is_sandbox ? <TestBadge /> : null}
-      </div>
-      <p dir="auto" className="rounded-xl bg-surface-muted px-4 py-3 text-sm whitespace-pre-wrap text-ink">
-        {lead.details}
-      </p>
-      <dl className="divide-y divide-line">
-        <DetailRow label={t("leads.statusLabel")}>
-          <StatusSelect lead={lead} isPending={isPending} onStatus={onStatus} label={t("leads.statusLabel")} />
-        </DetailRow>
-        {lead.requested_date ? (
-          <DetailRow label={t("leads.requestedDate")}>
-            {formatLocalDate(lead.requested_date, locale, { dateStyle: "full" })}
-          </DetailRow>
-        ) : null}
-        {lead.party_size ? <DetailRow label={t("leads.partySize")}>{tp("bookings.guests", lead.party_size)}</DetailRow> : null}
-        {lead.budget ? (
-          <DetailRow label={t("leads.budget")}>
-            <span dir="auto">{lead.budget}</span>
-          </DetailRow>
-        ) : null}
-        <DetailRow label={t("leads.contact")}>
-          <span className="flex flex-wrap items-center gap-x-3">
-            <CustomerName name={lead.contact_name} />
-            {lead.contact_phone_number ? <PhoneLink phone={lead.contact_phone_number} /> : null}
-          </span>
-        </DetailRow>
-        <DetailRow label={t("leads.source")}>
-          <ChannelBadge channel={lead.source_channel} />
-        </DetailRow>
-        <DetailRow label={t("leads.received")}>{format.dateTime(lead.created_at)}</DetailRow>
-      </dl>
-      {lead.conversation_id ? (
-        <Link
-          href={`${businessPath(business.id, "conversations")}/${encodeURIComponent(lead.conversation_id)}`}
-          className="inline-flex text-sm font-medium text-accent hover:underline"
-        >
-          {t("insights.openConversation")}
-        </Link>
-      ) : null}
-    </div>
   );
 }
