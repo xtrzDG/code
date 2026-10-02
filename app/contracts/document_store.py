@@ -49,6 +49,11 @@ class DocumentCollectionAdapterContract(AdapterContract, Protocol[StoredDocument
     def list_all(self) -> list[StoredDocument]:
         raise NotImplementedError
 
+    def get_many(self, document_keys: Sequence[str]) -> list[StoredDocument]:
+        """The stored documents of these keys (missing ones skipped), in no
+        particular order: one indexed read for a page's related documents."""
+        raise NotImplementedError
+
     def find_one_by_field(
         self,
         field: DocumentFieldPath,

@@ -44,8 +44,8 @@ class DocumentAggregation(ImmutableDTO):
     """
     Count the documents that meet `where`, per combination of the values
     of the `group_by` fields (TEXT or FILTER_TEXT lookup fields) and per
-    bucket. Optionally each group also sums one INTEGER field
-    (`total_of`) and takes the largest value of one (`latest_of`).
+    bucket. Optionally each group also sums INTEGER fields (`totals_of`)
+    and takes the largest value of one (`latest_of`).
 
     Without groups or buckets the answer is exactly one group (count 0 when
     nothing matches); with them, only groups that have documents.
@@ -56,16 +56,18 @@ class DocumentAggregation(ImmutableDTO):
         default_factory=tuple[DocumentFieldPath, ...]
     )
     buckets: DocumentFieldBuckets | None = None
-    total_of: DocumentFieldPath | None = None
+    totals_of: tuple[DocumentFieldPath, ...] = Field(
+        default_factory=tuple[DocumentFieldPath, ...]
+    )
     latest_of: DocumentFieldPath | None = None
 
 
 class DocumentGroupCount(ImmutableDTO):
     """
     One group of an aggregation: the `group_by` values in their order (None
-    for a missing field), the bucket, how many documents, the asked total
-    (0 when no document has the field; None when not asked) and largest
-    value (None when not asked or no document has the field).
+    for a missing field), the bucket, how many documents, the asked totals
+    in their order (0 when no document has the field) and largest value
+    (None when not asked or no document has the field).
     """
 
     values: tuple[DocumentFieldText | None, ...] = Field(
@@ -73,5 +75,7 @@ class DocumentGroupCount(ImmutableDTO):
     )
     bucket: DocumentBucketIndex | None = None
     count: DocumentCount
-    total: DocumentFieldSum | None = None
+    totals: tuple[DocumentFieldSum, ...] = Field(
+        default_factory=tuple[DocumentFieldSum, ...]
+    )
     latest: DocumentFieldInteger | None = None

@@ -96,7 +96,7 @@ def compose_aggregation(
 ) -> tuple[sql.Composed, SqlParameters]:
     """
     One row per group: the group values, the bucket (0-based), the count,
-    then the total and the largest value when asked.
+    then the asked totals and the largest value.
     """
 
     conditions, where_parameters = compose_filter(
@@ -120,12 +120,12 @@ def compose_aggregation(
 
     grouped_count: int = len(selected)
     selected.append(sql.SQL("count(*)"))
-    if aggregation.total_of is not None:
-        selected.append(
-            sql.SQL("coalesce(sum({column}), 0)::bigint").format(
-                column=sql.Identifier(lookup_column_name(aggregation.total_of))
-            )
+    selected.extend(
+        sql.SQL("coalesce(sum({column}), 0)::bigint").format(
+            column=sql.Identifier(lookup_column_name(field))
         )
+        for field in aggregation.totals_of
+    )
 
     if aggregation.latest_of is not None:
         selected.append(

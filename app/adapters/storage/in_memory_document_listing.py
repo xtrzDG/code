@@ -76,7 +76,7 @@ def aggregate(
     """Grouped counts, totals and largest values of the matching documents."""
 
     counts: dict[GroupKey, int] = {}
-    totals: dict[GroupKey, int] = {}
+    totals: dict[GroupKey, list[int]] = {}
     latest: dict[GroupKey, int] = {}
     for _, serialized in entries:
         document: JsonObject | None = parse_object(serialized)
@@ -99,9 +99,9 @@ def aggregate(
             bucket,
         )
         counts[group] = counts.get(group, 0) + 1
-        if aggregation.total_of is not None:
-            amount: int | None = integer_value(document, aggregation.total_of)
-            totals[group] = totals.get(group, 0) + (amount or 0)
+        sums: list[int] = totals.setdefault(group, [0] * len(aggregation.totals_of))
+        for index, field in enumerate(aggregation.totals_of):
+            sums[index] += integer_value(document, field) or 0
 
         if aggregation.latest_of is not None:
             moment: int | None = integer_value(document, aggregation.latest_of)
@@ -118,10 +118,11 @@ def aggregate(
             ),
             bucket=None if bucket is None else DocumentBucketIndex(bucket),
             count=DocumentCount(count),
-            total=(
-                None
-                if aggregation.total_of is None
-                else DocumentFieldSum(totals.get((values, bucket), 0))
+            totals=tuple(
+                DocumentFieldSum(amount)
+                for amount in totals.get(
+                    (values, bucket), [0] * len(aggregation.totals_of)
+                )
             ),
             latest=(
                 None

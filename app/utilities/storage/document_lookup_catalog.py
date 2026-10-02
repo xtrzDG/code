@@ -80,12 +80,14 @@ DOCUMENT_LOOKUP_FIELDS: Mapping[
         _integer("created_at"),
     ),
     # The transcript (pages of older messages), the customer messages of a
-    # period, the model spend per conversation and the tool errors.
+    # period, the model usage per conversation and the tool errors.
     DocumentCollectionName("messages"): (
         _text("conversation_id"),
         _filter("direction"),
         _filter("author"),
         _integer("created_at"),
+        _integer("input_tokens"),
+        _integer("output_tokens"),
         _integer("cost_micro_usd"),
         _element("tool_calls[].is_error"),
     ),

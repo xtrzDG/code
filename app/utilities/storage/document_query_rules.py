@@ -51,7 +51,7 @@ def require_valid_aggregation(
 ) -> None:
     """
     UndeclaredLookupFieldError unless the filter is valid, the groups are
-    TEXT or FILTER_TEXT fields (columns), and the buckets, total and
+    TEXT or FILTER_TEXT fields (columns), and the buckets, totals and
     largest value are INTEGER fields.
     """
 
@@ -61,7 +61,7 @@ def require_valid_aggregation(
 
     for integer_field in (
         None if aggregation.buckets is None else aggregation.buckets.field,
-        aggregation.total_of,
+        *aggregation.totals_of,
         aggregation.latest_of,
     ):
         if integer_field is not None:

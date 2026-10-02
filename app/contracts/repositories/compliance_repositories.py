@@ -8,11 +8,14 @@ not change stored state until it is saved.
 from typing import Protocol
 
 from app.contracts.repo_contract import RepoContract
+from app.contracts.repositories.conversation_listing_contracts import (
+    AuditLogListingContract,
+)
 from app.schemas.domain.compliance import AuditLogEntryDocument, DpaAcceptanceDocument
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 
 
-class AuditLogRepoContract(RepoContract, Protocol):
+class AuditLogRepoContract(AuditLogListingContract, RepoContract, Protocol):
     def append(self, entry: AuditLogEntryDocument) -> None:
         """Audit entries are never updated or deleted."""
         raise NotImplementedError

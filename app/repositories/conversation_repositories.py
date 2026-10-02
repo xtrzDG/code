@@ -1,3 +1,5 @@
+from collections.abc import Sequence
+
 from typed_time_provider import Microseconds
 
 from app.contracts.document_store import DocumentCollectionAdapterContract
@@ -30,6 +32,8 @@ from app.repositories.document_queries import (
     field_equals,
     time_range,
 )
+from app.repositories.listing.conversation_listing import ConversationListing
+from app.repositories.listing.message_listing import MessageListing
 from app.schemas.constants.channels import ChannelKind, MessageDirection
 from app.schemas.constants.conversations import ConversationStatus, MessageAuthor
 from app.schemas.domain.contacts import ContactDocument
@@ -109,14 +113,23 @@ class ContactRepository(
     def list_by_business(self, business_id: BusinessId) -> list[ContactDocument]:
         return self._list_in_business(business_id)
 
+    def get_many(
+        self,
+        business_id: BusinessId,
+        contact_ids: Sequence[ContactId],
+    ) -> dict[ContactId, ContactDocument]:
+        return {
+            contact.id: contact
+            for contact in self._load_many(
+                business_id, [str(contact_id) for contact_id in contact_ids]
+            )
+        }
+
     def delete(self, business_id: BusinessId, contact_id: ContactId) -> None:
         self._remove(business_id, str(contact_id))
 
 
-class ConversationRepository(
-    BusinessScopedRepository[ConversationDocument],
-    ConversationRepoContract,
-):
+class ConversationRepository(ConversationListing, ConversationRepoContract):
     def save(self, conversation: ConversationDocument) -> None:
         self._store(str(conversation.id), conversation)
 
@@ -175,10 +188,7 @@ class ConversationRepository(
         ]
 
 
-class MessageRepository(
-    BusinessScopedRepository[MessageDocument],
-    MessageRepoContract,
-):
+class MessageRepository(MessageListing, MessageRepoContract):
     def save(self, message: MessageDocument) -> None:
         self._store(str(message.id), message)
 
@@ -271,6 +281,18 @@ class CallRepository(BusinessScopedRepository[CallDocument], CallRepoContract):
 
     def get(self, business_id: BusinessId, call_id: CallId) -> CallDocument | None:
         return self._load(business_id, str(call_id))
+
+    def list_by_conversation(
+        self,
+        business_id: BusinessId,
+        conversation_id: ConversationId,
+    ) -> list[CallDocument]:
+        return sorted(
+            self._list_in_business(
+                business_id, [field_equals(CONVERSATION_ID_FIELD, conversation_id)]
+            ),
+            key=lambda call: int(call.started_at),
+        )
 
     def find_by_provider_call_id(
         self,

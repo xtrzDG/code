@@ -66,7 +66,7 @@ def rows(groups: list[DocumentGroupCount]) -> set[GroupRow]:
             tuple(None if value is None else str(value) for value in group.values),
             None if group.bucket is None else int(group.bucket),
             int(group.count),
-            None if group.total is None else int(group.total),
+            None if not group.totals else int(group.totals[0]),
             None if group.latest is None else int(group.latest),
         )
         for group in groups
@@ -151,7 +151,7 @@ def test_totals_sum_an_integer_field_per_group(collections: CollectionFactory) -
                 ),
             ),
             group_by=(CONVERSATION,),
-            total_of=COST,
+            totals_of=(COST,),
         )
     )
     customer = messages.count_by(
@@ -165,7 +165,7 @@ def test_totals_sum_an_integer_field_per_group(collections: CollectionFactory) -
                     DocumentFieldAmong(field=CONVERSATION, values=(text(str(first)),)),
                 ),
             ),
-            total_of=COST,
+            totals_of=(COST,),
         )
     )
 
@@ -240,7 +240,7 @@ def test_list_field_matches_and_platform_wide_groups(
     [
         DocumentAggregation(group_by=(CREATED_AT,)),
         DocumentAggregation(group_by=(TOOL_ERRORS,)),
-        DocumentAggregation(total_of=AUTHOR),
+        DocumentAggregation(totals_of=(AUTHOR,)),
         DocumentAggregation(
             buckets=DocumentFieldBuckets(
                 field=AUTHOR, starts=(DocumentFieldInteger(1),)

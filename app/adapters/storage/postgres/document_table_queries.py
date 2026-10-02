@@ -25,6 +25,8 @@ class DocumentTableQueries:
     insert_if_absent: sql.Composed
     get: sql.Composed
     get_in_business: sql.Composed
+    get_many: sql.Composed
+    get_many_in_business: sql.Composed
     lock: sql.Composed
     lock_in_business: sql.Composed
     list_all: sql.Composed
@@ -59,6 +61,13 @@ def build_document_table_queries(
         get_in_business=sql.SQL(
             "select document::text from {table} "
             "where document_key = %s and business_id = %s"
+        ).format(table=table),
+        get_many=sql.SQL(
+            "select document::text from {table} where document_key = any(%s)"
+        ).format(table=table),
+        get_many_in_business=sql.SQL(
+            "select document::text from {table} "
+            "where document_key = any(%s) and business_id = %s"
         ).format(table=table),
         lock=sql.SQL(
             "select document::text from {table} where document_key = %s for update"

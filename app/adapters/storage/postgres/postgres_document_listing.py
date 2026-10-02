@@ -1,5 +1,7 @@
 """Keyset pages and aggregations of one Postgres document table."""
 
+from collections.abc import Sequence
+
 from base_pydantic_schemas import PersistentDocument
 from psycopg.rows import TupleRow
 
@@ -29,10 +31,28 @@ class PostgresDocumentListing[StoredDocument: PersistentDocument](
     PostgresDocumentTable[StoredDocument]
 ):
     """
-    `page_by` and `count_by` of the Postgres collection: one statement each,
+    `get_many`, `page_by` and `count_by` of the Postgres collection: one
+    statement each,
     in the transaction and row-level security scope of every operation
     (`document_listing_sql` has the SQL).
     """
+
+    def get_many(self, document_keys: Sequence[str]) -> list[StoredDocument]:
+        keys: list[str] = list(dict.fromkeys(document_keys))
+        if not keys:
+            return []
+
+        with self._transaction() as (connection, scoped_business_id):
+            if scoped_business_id is None:
+                rows: list[TupleRow] = connection.execute(
+                    self._queries.get_many, (keys,)
+                ).fetchall()
+            else:
+                rows = connection.execute(
+                    self._queries.get_many_in_business, (keys, scoped_business_id)
+                ).fetchall()
+
+        return self._decode_all(rows)
 
     def page_by(self, query: DocumentPageQuery) -> list[StoredDocument]:
         require_valid_page(self._lookup_fields, query, self._label())
@@ -67,7 +87,7 @@ class PostgresDocumentListing[StoredDocument: PersistentDocument](
         row: TupleRow,
         aggregation: DocumentAggregation,
     ) -> DocumentGroupCount:
-        """A result row: group values, bucket, count, total, largest value."""
+        """A result row: group values, bucket, count, totals, largest value."""
 
         cells: list[object] = list(row)
         values: tuple[DocumentFieldText | None, ...] = tuple(
@@ -82,17 +102,18 @@ class PostgresDocumentListing[StoredDocument: PersistentDocument](
 
         count = DocumentCount(self._read_integer(cells[position]))
         position += 1
-        total: DocumentFieldSum | None = None
-        if aggregation.total_of is not None:
-            total = DocumentFieldSum(self._read_integer(cells[position]))
-            position += 1
+        totals: tuple[DocumentFieldSum, ...] = tuple(
+            DocumentFieldSum(self._read_integer(cell))
+            for cell in cells[position : position + len(aggregation.totals_of)]
+        )
+        position += len(aggregation.totals_of)
 
         latest: DocumentFieldInteger | None = None
         if aggregation.latest_of is not None and cells[position] is not None:
             latest = DocumentFieldInteger(self._read_integer(cells[position]))
 
         return DocumentGroupCount(
-            values=values, bucket=bucket, count=count, total=total, latest=latest
+            values=values, bucket=bucket, count=count, totals=totals, latest=latest
         )
 
     def _read_integer(self, cell: object) -> int:

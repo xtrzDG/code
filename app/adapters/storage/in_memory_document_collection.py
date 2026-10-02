@@ -121,6 +121,17 @@ class InMemoryDocumentCollectionAdapter[StoredDocument: PersistentDocument](
 
         return self._validate_all(serialized_documents)
 
+    def get_many(self, document_keys: Sequence[str]) -> list[StoredDocument]:
+        self._require_scope()
+        with self._lock:
+            serialized_documents: list[str] = [
+                serialized
+                for key in dict.fromkeys(document_keys)
+                if (serialized := self._serialized_documents.get(key)) is not None
+            ]
+
+        return self._validate_all(serialized_documents)
+
     def find_one_by_field(
         self,
         field: DocumentFieldPath,

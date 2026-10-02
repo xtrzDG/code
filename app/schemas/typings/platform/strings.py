@@ -35,6 +35,13 @@ class JobCheckInId(BaseTypedString):
     """Id the job monitor (Sentry Crons) gave one run of a periodic job."""
 
 
+class ListItemKey(BaseTypedString):
+    """
+    The id of the last item a keyset page showed, as text: where the next
+    page starts when several items share the sort value.
+    """
+
+
 class LocalDirectoryPath(BaseTypedString):
     """Directory on the server's file system (absolute or relative to the cwd)."""
 

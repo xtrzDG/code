@@ -23,6 +23,8 @@ def test_dpa_audit_log_export_and_erasure_over_http() -> None:
     assert accepted.json()["is_current_version_accepted"] is True
     assert accepted.json()["latest_acceptance"]["accepted_by"] == str(owner.user.id)
 
+    # One second between the operations: the log reads newest first.
+    testbed.clock.advance(1)
     exported = client.get(
         f"{base_url}/contacts/{visitor.contact.id}/export",
         headers=headers,
@@ -34,6 +36,7 @@ def test_dpa_audit_log_export_and_erasure_over_http() -> None:
     assert len(export["records"]["messages"]) == 3
     assert len(export["records"]["calls"]) == 2
 
+    testbed.clock.advance(1)
     erased = client.delete(f"{base_url}/contacts/{visitor.contact.id}", headers=headers)
     # What was erased is counted by the use case tests; the route answers 204.
     assert (erased.status_code, erased.content) == (204, b"")

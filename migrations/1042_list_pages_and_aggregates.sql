@@ -43,17 +43,24 @@ alter table workshop.conversations
 create index if not exists conversations_doc_created_at_idx
     on workshop.conversations (business_id, doc_created_at);
 
--- Messages: customer messages of a period (dashboard), the model spend per
--- conversation of a billing window (admin, covered so the sum reads only
--- the index), and messages with a failed tool call (admin health).
+-- Messages: customer messages of a period (dashboard), the model usage of
+-- a conversation (its card) and per conversation of a billing window
+-- (admin; covered, so the sums read only the index), and messages with a
+-- failed tool call (admin health).
 alter table workshop.messages
+    add column if not exists doc_input_tokens bigint
+        generated always as ((document ->> 'input_tokens')::bigint) stored,
+    add column if not exists doc_output_tokens bigint
+        generated always as ((document ->> 'output_tokens')::bigint) stored,
     add column if not exists doc_cost_micro_usd bigint
         generated always as ((document ->> 'cost_micro_usd')::bigint) stored;
 create index if not exists messages_doc_author_created_at_idx
     on workshop.messages (business_id, doc_author, doc_created_at);
 create index if not exists messages_doc_created_at_idx
     on workshop.messages (business_id, doc_created_at)
-    include (doc_conversation_id, doc_cost_micro_usd);
+    include (
+        doc_conversation_id, doc_input_tokens, doc_output_tokens, doc_cost_micro_usd
+    );
 
 drop trigger if exists messages_tool_calls_lookup_keys on workshop.messages;
 create trigger messages_tool_calls_lookup_keys
