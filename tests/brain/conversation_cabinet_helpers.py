@@ -8,20 +8,14 @@ from fastapi.testclient import TestClient
 from app.schemas.constants.channels import ChannelKind, ChannelStatus
 from app.schemas.constants.conversations import ConversationStatus
 from app.schemas.domain.channels import ChannelDocument, WhatsAppStaffTemplate
-from app.schemas.dto.menu_import import MenuExtraction, MenuExtractionRequest
 from app.schemas.typings.conversations.prefixed_id import ConversationId
 from app.schemas.typings.localization.constrained_strings import E164PhoneNumber
 from app.schemas.typings.users.prefixed_id import UserId
 from tests.brain.brain_world import BrainWorld
-from tests.brain.cabinet_fakes import CabinetStorage
+from tests.brain.cabinet_fakes import CabinetStorage, UnusedMenuExtractor
 from tests.brain.cabinet_http import bearer, build_cabinet_client
 
 DAY_MICROSECONDS: int = 24 * 60 * 60 * 1_000_000
-
-
-class UnusedMenuExtractor:
-    def extract(self, request: MenuExtractionRequest) -> MenuExtraction:
-        raise AssertionError("Menu extraction is not part of these tests.")
 
 
 class Cabinet:

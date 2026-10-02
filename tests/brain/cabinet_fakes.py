@@ -14,6 +14,7 @@ from app.schemas.constants.channels import ChannelKind
 from app.schemas.domain.bookings import BookingDocument, LeadDocument
 from app.schemas.domain.resources import ResourceDocument
 from app.schemas.dto.call_recordings import RecordingAudio
+from app.schemas.dto.menu_import import MenuExtraction, MenuExtractionRequest
 from app.schemas.exceptions.application_errors import (
     AuthenticationRequiredError,
     ExternalServiceError,
@@ -154,3 +155,10 @@ class CabinetStorage:
     recording_storage: InMemoryRecordingStorage = field(
         default_factory=InMemoryRecordingStorage
     )
+
+
+class UnusedMenuExtractor:
+    """Menu extractor for tests that never import a menu."""
+
+    def extract(self, request: MenuExtractionRequest) -> MenuExtraction:
+        raise AssertionError("Menu extraction is not part of these tests.")
