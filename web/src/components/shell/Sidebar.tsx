@@ -83,7 +83,8 @@ export function SidebarContent({
   const { t } = useI18n();
   return (
     <div className="flex h-full flex-col gap-5 overflow-y-auto px-3 py-4">
-      <Brand href={HOME_PATH} className="px-1.5 py-1" />
+      {/* In the phone menu the close button sits at the end of this row. */}
+      <Brand href={HOME_PATH} className={cn("px-1.5 py-1", onNavigate && "mr-9")} />
       {top}
       <div className="flex-1">
         <NavList items={items} onNavigate={onNavigate} />
