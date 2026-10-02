@@ -12,7 +12,7 @@ from app.schemas.domain.contacts import ContactDocument
 from app.schemas.typings.bookings.prefixed_id import BookingId, LeadId
 from app.schemas.typings.handoffs.prefixed_id import HandoffId
 
-HELLO: str = "Здравствуйте! Я ИИ-ассистент ресторана «Мцване Эзо»."
+HELLO: str = "Здравствуйте! Я AI-ассистент ресторана «Mtsvane Ezo»."
 TELEGRAM = ChannelKind.TELEGRAM
 WHATSAPP = ChannelKind.WHATSAPP
 WEB = ChannelKind.WEB_CHAT
@@ -144,7 +144,7 @@ def record_russian_request_chats(
                 "Очень разочарованы."
             ),
             assistant(
-                "Мне очень жаль, Ирина. Я ИИ-ассистент ресторана и сразу передаю "
+                "Мне очень жаль, Ирина. Я AI-ассистент ресторана и сразу передаю "
                 "ваше сообщение администратору зала — он подойдёт к вашему столу.",
                 calls.handoff(
                     handoff_id, HandoffReason.COMPLAINT, summary, HandoffUrgency.HIGH

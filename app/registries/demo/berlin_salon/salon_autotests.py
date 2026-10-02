@@ -1,6 +1,6 @@
 """The autotest run of the salon's published version (German and English)."""
 
-from app.registries.demo.demo_autotests import scenario
+from app.registries.demo.demo_autotests import everyday_scores, scenario
 from app.schemas.constants.assistants import AutotestScenarioKind as Kind
 from app.schemas.domain.assistants import AutotestScenarioResult
 
@@ -107,10 +107,14 @@ LINES: dict[Kind, tuple[tuple[str, str], ...]] = {
 
 
 def build_salon_autotest_results() -> list[AutotestScenarioResult]:
-    return [
-        scenario(kind, language, customer_text, assistant_text)
+    played = [
+        (kind, language, customer_text, assistant_text)
         for kind, lines in LINES.items()
         for language, (customer_text, assistant_text) in zip(
             LANGUAGES, lines, strict=True
         )
+    ]
+    return [
+        scenario(*lines, scores=everyday_scores(ordinal))
+        for ordinal, lines in enumerate(played)
     ]

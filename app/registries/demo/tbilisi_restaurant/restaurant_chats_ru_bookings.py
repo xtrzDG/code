@@ -16,7 +16,7 @@ from app.schemas.constants.conversations import ConversationRating, Conversation
 from app.schemas.domain.contacts import ContactDocument
 from app.schemas.typings.bookings.prefixed_id import BookingId
 
-HELLO: str = "Здравствуйте! Я ИИ-ассистент ресторана «Мцване Эзо»."
+HELLO: str = "Здравствуйте! Я AI-ассистент ресторана «Mtsvane Ezo»."
 TELEGRAM = ChannelKind.TELEGRAM
 WHATSAPP = ChannelKind.WHATSAPP
 WEB = ChannelKind.WEB_CHAT

@@ -39,6 +39,21 @@ SCENARIO_COST_MICRO_USD: int = 41000
 # Scores in criterion order: facts and prices, booking data, AI
 # disclosure, handoff, language.
 PERFECT_SCORES: tuple[int, int, int, int, int] = (5, 5, 5, 5, 5)
+# What a judge gives a good answer, scenario after scenario: rarely five out
+# of five on every criterion, so the average lands near 4.8, not 5.0.
+EVERYDAY_SCORES: tuple[tuple[int, int, int, int, int], ...] = (
+    PERFECT_SCORES,
+    (5, 5, 4, 5, 5),
+    (5, 5, 5, 4, 5),
+)
+
+
+def everyday_scores(ordinal: int) -> tuple[int, int, int, int, int]:
+    """The scores of the `ordinal`-th good scenario of a run."""
+
+    return EVERYDAY_SCORES[ordinal % len(EVERYDAY_SCORES)]
+
+
 CRITERIA: tuple[JudgeCriterion, ...] = (
     JudgeCriterion.FACTS_AND_PRICES,
     JudgeCriterion.BOOKING_DATA,

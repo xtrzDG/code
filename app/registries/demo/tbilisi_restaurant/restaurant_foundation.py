@@ -144,7 +144,13 @@ def build_restaurant_foundation(
     ]
     channels = [
         connected_channel(business, ChannelKind.TELEGRAM, opened, "mtsvane_ezo_bot"),
-        connected_channel(business, ChannelKind.WHATSAPP, opened, "109876543210987"),
+        connected_channel(
+            business,
+            ChannelKind.WHATSAPP,
+            opened,
+            "109876543210987",
+            staff_template=("staff_reply", "ru"),
+        ),
         connected_channel(
             business, ChannelKind.WEB_CHAT, opened, accent_color="#2F7D4F"
         ),

@@ -9,7 +9,11 @@ from app.schemas.constants.businesses import Weekday
 from app.schemas.constants.channels import ChannelKind, ChannelStatus
 from app.schemas.constants.knowledge import KnowledgeItemKind, KnowledgeItemSource
 from app.schemas.domain.businesses import BusinessDocument
-from app.schemas.domain.channels import ChannelDocument, WebChatAppearance
+from app.schemas.domain.channels import (
+    ChannelDocument,
+    WebChatAppearance,
+    WhatsAppStaffTemplate,
+)
 from app.schemas.domain.knowledge import KnowledgeAttribute, KnowledgeItemDocument
 from app.schemas.domain.profiles import OpeningInterval
 from app.schemas.domain.resources import ResourceDocument
@@ -24,7 +28,11 @@ from app.schemas.typings.businesses.constrained_integers import (
     ClosingMinuteOfDay,
     OpeningMinuteOfDay,
 )
-from app.schemas.typings.channels.constrained_strings import WidgetAccentColor
+from app.schemas.typings.channels.constrained_strings import (
+    WhatsAppTemplateLanguageCode,
+    WhatsAppTemplateName,
+    WidgetAccentColor,
+)
 from app.schemas.typings.channels.strings import ChannelExternalId
 from app.schemas.typings.knowledge.constrained_integers import ServiceDurationMinutes
 from app.schemas.typings.knowledge.constrained_strings import (
@@ -69,7 +77,9 @@ def connected_channel(
     since: Microseconds,
     external_id: str | None = None,
     accent_color: str | None = None,
+    staff_template: tuple[str, str] | None = None,
 ) -> ChannelDocument:
+    """`staff_template`: the WhatsApp template name and its language."""
     return ChannelDocument(
         business_id=business.id,
         kind=kind,
@@ -79,6 +89,14 @@ def connected_channel(
             None
             if accent_color is None
             else WebChatAppearance(accent_color=WidgetAccentColor(accent_color))
+        ),
+        whatsapp_staff_template=(
+            None
+            if staff_template is None
+            else WhatsAppStaffTemplate(
+                name=WhatsAppTemplateName(staff_template[0]),
+                language_code=WhatsAppTemplateLanguageCode(staff_template[1]),
+            )
         ),
         created_at=since,
         updated_at=since,

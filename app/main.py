@@ -181,7 +181,9 @@ def seed_demo_data(app_container: AppContainer) -> None:
     report: DemoDataSeedReport = (
         app_container.operators.seed_demo_data_operator().operate(SeedDemoDataCommand())
     )
-    LOGGER.info(
+    # A warning, like the development login codes, so that uvicorn's default
+    # log shows how to sign in.
+    LOGGER.warning(
         "Demo data: %d business(es) created, %d already there. Sign in with "
         "%s or %s; in development the login code is printed in this log.",
         len(report.created_business_ids),

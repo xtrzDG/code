@@ -4,7 +4,7 @@ scenario in its five languages. One scenario failed (an Arabic message
 answered in English), which is not launch-critical, so the run passed.
 """
 
-from app.registries.demo.demo_autotests import scenario
+from app.registries.demo.demo_autotests import everyday_scores, scenario
 from app.schemas.constants.assistants import AutotestScenarioKind as Kind
 from app.schemas.domain.assistants import AutotestScenarioResult
 
@@ -19,7 +19,7 @@ LINES: dict[Kind, tuple[tuple[str, str], ...]] = {
         ),
         (
             "Забронируйте стол на завтра на 19:00 на двоих, Ника, +995 599 00 11 22",
-            "Я ИИ-ассистент ресторана. Завтра в 19:00 стол на двоих свободен — "
+            "Я AI-ассистент ресторана. Завтра в 19:00 стол на двоих свободен — "
             "подтверждаете бронь на имя Ника?",
         ),
         (
@@ -227,7 +227,9 @@ def build_restaurant_autotest_results() -> list[AutotestScenarioResult]:
         for language, (customer_text, assistant_text) in zip(
             LANGUAGES, lines, strict=True
         ):
-            scores, note = SCORES.get((kind, language), ((5, 5, 5, 5, 5), None))
+            scores, note = SCORES.get(
+                (kind, language), (everyday_scores(len(results)), None)
+            )
             results.append(
                 scenario(kind, language, customer_text, assistant_text, scores, note)
             )
