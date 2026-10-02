@@ -1,9 +1,8 @@
-"""Subscribing with payment now: without a trial, after it, after cancelling."""
+"""Subscribing without a trial: the first payment, unpaid periods, two pages."""
 
 import pytest
 
 from app.schemas.constants.billing import (
-    BillingPeriod,
     InvoiceKind,
     InvoiceStatus,
     PlanKey,
@@ -11,88 +10,18 @@ from app.schemas.constants.billing import (
 )
 from app.schemas.constants.businesses import BusinessStatus, ServiceMode
 from app.schemas.constants.client_health import ClientHealthIssue
-from app.schemas.domain.businesses import BusinessDocument
-from app.schemas.domain.users import UserDocument
 from app.schemas.dto.admin import AdminClientsQuery
 from app.schemas.dto.billing_cabinet import (
     BillingOverviewQuery,
-    CancelSubscriptionCommand,
     CheckoutSessionView,
     StartCheckoutCommand,
     StartCheckoutRequest,
-    StartTrialCommand,
-    StartTrialRequest,
-    SubscribeCommand,
-    SubscribeRequest,
 )
-from app.schemas.dto.payments import PaymentWebhookReceipt
-from app.schemas.exceptions.application_errors import (
-    AccessDeniedError,
-    ConflictError,
-    ValidationFailedError,
-)
-from app.schemas.typings.billing.constrained_strings import PaymentReturnUrl
+from app.schemas.exceptions.application_errors import ConflictError
 from app.use_cases.billing.billing_records import is_service_paid_for
 from app.utilities.billing.billing_periods import to_local_calendar_day
-from tests.billing.billing_settings import CABINET_ORIGIN, GEORGIA
-from tests.billing.billing_testbed import BillingTestbed, bearer
-
-
-class World:
-    def __init__(self) -> None:
-        self.testbed = BillingTestbed()
-        self.owner: UserDocument = self.testbed.add_user(phone_number="+995599123456")
-        self.staff: UserDocument = self.testbed.add_user(email="staff@example.com")
-        self.business: BusinessDocument = self.testbed.add_business(
-            self.owner,
-            GEORGIA,
-            staff=[self.staff],
-        )
-
-    def subscribe(
-        self,
-        plan_key: PlanKey = PlanKey.VOICE_AND_CHAT,
-        billing_period: BillingPeriod = BillingPeriod.MONTHLY,
-        return_url: str | None = f"{CABINET_ORIGIN}/billing",
-        user: UserDocument | None = None,
-    ) -> CheckoutSessionView:
-        return self.testbed.subscribe.execute(
-            SubscribeCommand(
-                user_id=(user or self.owner).id,
-                business_id=self.business.id,
-                request=SubscribeRequest(
-                    plan_key=plan_key,
-                    billing_period=billing_period,
-                    return_url=None
-                    if return_url is None
-                    else PaymentReturnUrl(return_url),
-                ),
-            )
-        )
-
-    def start_trial(self) -> None:
-        self.testbed.start_trial.run(
-            StartTrialCommand(
-                user_id=self.owner.id,
-                business_id=self.business.id,
-                request=StartTrialRequest(),
-            )
-        )
-
-    def pay(self, session: CheckoutSessionView, payment_id: int = 1) -> None:
-        order = self.testbed.payment_order_repo.get(session.payment_order_id)
-        assert order is not None
-        receipt: PaymentWebhookReceipt = self.testbed.deliver_flitt_callback(
-            self.testbed.callback_parameters(order, "approved", payment_id=payment_id)
-        )
-        assert receipt.payment_order_id == session.payment_order_id
-
-    def open_invoices(self) -> list[InvoiceKind]:
-        return [
-            invoice.kind
-            for invoice in self.testbed.invoices(self.business.id)
-            if invoice.status is InvoiceStatus.ISSUED
-        ]
+from tests.billing.billing_settings import CABINET_ORIGIN
+from tests.billing.subscribe_world import World
 
 
 def test_subscribing_without_a_trial_bills_setup_and_the_first_month_from_now() -> None:
@@ -215,98 +144,6 @@ def test_starting_the_trial_after_an_unpaid_subscription_voids_its_bills() -> No
         world.start_trial()
 
 
-def test_subscribing_after_an_unpaid_trial_switches_plan_and_bills_from_now() -> None:
-    world = World()
-    world.start_trial()
-    world.testbed.clock.advance(days=14, hours=1)
-    world.testbed.run_job(world.testbed.end_trials, "end_trials")
-    assert world.testbed.subscription(world.business.id).status is (
-        SubscriptionStatus.PAST_DUE
-    )
-
-    session = world.subscribe(PlanKey.CHAT, BillingPeriod.ANNUAL)
-
-    subscription = world.testbed.subscription(world.business.id)
-    assert subscription.plan_key is PlanKey.CHAT
-    assert subscription.billing_period is BillingPeriod.ANNUAL
-    invoices = world.testbed.invoices(world.business.id)
-    open_invoices = [
-        invoice for invoice in invoices if invoice.status is InvoiceStatus.ISSUED
-    ]
-    assert [invoice.kind for invoice in open_invoices] == [InvoiceKind.SERVICE_PERIOD]
-    assert open_invoices[0].period_start == world.testbed.clock.now()
-    assert int(open_invoices[0].amount_minor) == int(subscription.price_minor)
-    assert set(session.invoice_ids) == {open_invoices[0].id}
-    world.pay(session)
-    assert world.testbed.subscription(world.business.id).status is (
-        SubscriptionStatus.ACTIVE
-    )
-
-
-def test_subscribing_after_the_trial_on_the_same_plan_pays_the_open_bills() -> None:
-    world = World()
-    world.start_trial()
-    world.testbed.clock.advance(days=14, hours=1)
-    world.testbed.run_job(world.testbed.end_trials, "end_trials")
-    open_before = {
-        invoice.id
-        for invoice in world.testbed.invoices(world.business.id)
-        if invoice.status is InvoiceStatus.ISSUED
-    }
-
-    session = world.subscribe()
-
-    assert set(session.invoice_ids) == open_before
-    world.pay(session)
-    assert world.testbed.subscription(world.business.id).status is (
-        SubscriptionStatus.ACTIVE
-    )
-
-
-def test_subscribing_after_cancelling_resumes_the_service() -> None:
-    world = World()
-    world.start_trial()
-    world.testbed.cancel_subscription.run(
-        CancelSubscriptionCommand(user_id=world.owner.id, business_id=world.business.id)
-    )
-    world.testbed.clock.advance(days=20)
-
-    world.pay(world.subscribe())
-
-    assert world.testbed.subscription(world.business.id).status is (
-        SubscriptionStatus.ACTIVE
-    )
-
-
-def test_subscribing_while_automatic_payments_run_has_nothing_to_pay() -> None:
-    world = World()
-    world.pay(world.subscribe())
-
-    with pytest.raises(ConflictError):
-        world.subscribe()
-
-    assert world.testbed.flitt.stopped_orders == []
-
-
-def test_a_foreign_return_page_is_refused_before_anything_changes() -> None:
-    world = World()
-
-    with pytest.raises(ValidationFailedError):
-        world.subscribe(return_url="https://evil.example/billing")
-
-    assert world.testbed.subscription_repo.list_by_business(world.business.id) == []
-    assert world.testbed.flitt.checkout_orders == []
-
-
-def test_staff_cannot_subscribe() -> None:
-    world = World()
-
-    with pytest.raises(AccessDeniedError):
-        world.subscribe(user=world.staff)
-
-    assert world.testbed.subscription_repo.list_by_business(world.business.id) == []
-
-
 def test_checkout_of_an_unpaid_subscription_still_works() -> None:
     world = World()
     world.subscribe()
@@ -332,29 +169,6 @@ def test_the_admin_sees_a_first_payment_pending() -> None:
     summary = clients.items[0]
     assert summary.subscription_status is SubscriptionStatus.INCOMPLETE
     assert ClientHealthIssue.FIRST_PAYMENT_PENDING in summary.health_issues
-
-
-def test_subscribe_route_answers_with_the_payment_page() -> None:
-    world = World()
-    client = world.testbed.build_http_client()
-    path = f"/v1/businesses/{world.business.id}/billing/subscribe"
-
-    created = client.post(
-        path,
-        headers=bearer(world.owner),
-        json={"plan_key": "plus", "billing_period": "annual"},
-    )
-    missing_plan = client.post(path, headers=bearer(world.owner), json={})
-    staff = client.post(
-        path,
-        headers=bearer(world.staff),
-        json={"plan_key": "plus"},
-    )
-
-    assert created.status_code == 201
-    assert created.json()["checkout_url"]
-    assert missing_plan.status_code == 422
-    assert staff.status_code == 403
 
 
 def paid_service_periods(world: World) -> int:

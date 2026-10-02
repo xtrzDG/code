@@ -1,26 +1,13 @@
+"""Starting the trial: local prices, the annual discount, who may start it."""
+
 import pytest
 
-from app.schemas.constants.billing import (
-    BillingPeriod,
-    InvoiceKind,
-    InvoiceStatus,
-    PlanKey,
-    SubscriptionStatus,
-)
+from app.schemas.constants.billing import BillingPeriod, PlanKey, SubscriptionStatus
 from app.schemas.constants.businesses import ServiceMode
-from app.schemas.domain.businesses import BusinessDocument
-from app.schemas.domain.users import UserDocument
 from app.schemas.dto.billing import PlanDefinition
 from app.schemas.dto.billing_cabinet import (
-    BillingOverview,
     BillingOverviewQuery,
     CancelSubscriptionCommand,
-    ChangePlanCommand,
-    ChangePlanRequest,
-    StartCheckoutCommand,
-    StartCheckoutRequest,
-    StartTrialCommand,
-    StartTrialRequest,
 )
 from app.schemas.exceptions.application_errors import (
     AccessDeniedError,
@@ -41,40 +28,7 @@ from tests.billing.billing_settings import (
     CountryPreset,
 )
 from tests.billing.billing_testbed import BillingTestbed
-
-
-def start_trial(
-    testbed: BillingTestbed,
-    owner: UserDocument,
-    business: BusinessDocument,
-    plan_key: PlanKey | None = None,
-    billing_period: BillingPeriod = BillingPeriod.MONTHLY,
-    language: str | None = None,
-) -> BillingOverview:
-    return testbed.start_trial.run(
-        StartTrialCommand(
-            user_id=owner.id,
-            business_id=business.id,
-            request=StartTrialRequest(plan_key=plan_key, billing_period=billing_period),
-            display_language=None if language is None else LanguageTag(language),
-        )
-    )
-
-
-def change_plan(
-    testbed: BillingTestbed,
-    owner: UserDocument,
-    business: BusinessDocument,
-    plan_key: PlanKey,
-    billing_period: BillingPeriod,
-) -> BillingOverview:
-    return testbed.change_plan.run(
-        ChangePlanCommand(
-            user_id=owner.id,
-            business_id=business.id,
-            request=ChangePlanRequest(plan_key=plan_key, billing_period=billing_period),
-        )
-    )
+from tests.billing.plan_steps import change_plan, start_trial
 
 
 def test_trial_in_georgia_is_priced_in_lari_from_the_price_book() -> None:
@@ -239,75 +193,6 @@ def test_overview_rejects_languages_without_locale_data() -> None:
         )
 
 
-def test_change_plan_during_the_trial_reprices_at_once() -> None:
-    testbed = BillingTestbed()
-    owner = testbed.add_user(phone_number="+995599123456")
-    business = testbed.add_business(owner, GEORGIA)
-    start_trial(testbed, owner, business)
-
-    overview = change_plan(
-        testbed,
-        owner,
-        business,
-        PlanKey.PLUS,
-        BillingPeriod.ANNUAL,
-    )
-
-    assert overview.subscription is not None
-    assert overview.subscription.plan_key is PlanKey.PLUS
-    assert overview.subscription.status is SubscriptionStatus.TRIALING
-    assert int(overview.subscription.price.money.amount_minor) == 1051620
-    assert overview.usage is not None
-    assert int(overview.usage.included_voice_minutes) == 1000
-    assert testbed.business(business.id).plan_key is PlanKey.PLUS
-    assert testbed.flitt.stopped_orders == []
-
-
-def test_moving_to_a_plan_without_voice_switches_the_voice_agent_off() -> None:
-    testbed = BillingTestbed()
-    owner = testbed.add_user(phone_number="+995599123456")
-    business = testbed.add_business(owner, GEORGIA)
-    start_trial(testbed, owner, business)
-
-    change_plan(testbed, owner, business, PlanKey.PLUS, BillingPeriod.MONTHLY)
-    assert testbed.voice_agent_removals.business_ids == []
-    change_plan(testbed, owner, business, PlanKey.CHAT, BillingPeriod.MONTHLY)
-
-    assert testbed.voice_agent_removals.business_ids == [business.id]
-
-
-def test_changing_to_the_same_plan_changes_nothing() -> None:
-    testbed = BillingTestbed()
-    owner = testbed.add_user(phone_number="+995599123456")
-    business = testbed.add_business(owner, GEORGIA)
-    start_trial(testbed, owner, business)
-    before = testbed.subscription(business.id)
-
-    change_plan(
-        testbed,
-        owner,
-        business,
-        PlanKey.VOICE_AND_CHAT,
-        BillingPeriod.MONTHLY,
-    )
-
-    assert testbed.subscription(business.id) == before
-
-
-def test_plan_changes_need_a_subscription_and_a_price() -> None:
-    testbed = BillingTestbed()
-    owner = testbed.add_user(email="owner@example.com")
-    business = testbed.add_business(owner, ITALY)
-
-    with pytest.raises(NotFoundError):
-        change_plan(testbed, owner, business, PlanKey.PLUS, BillingPeriod.MONTHLY)
-
-    with pytest.raises(NotFoundError):
-        testbed.cancel_subscription.run(
-            CancelSubscriptionCommand(user_id=owner.id, business_id=business.id)
-        )
-
-
 def test_a_plan_without_trial_days_cannot_start_a_trial() -> None:
     class NoTrialRegistry(PriceBookPlanRegistry):
         def get(self, plan_key: PlanKey) -> PlanDefinition:
@@ -320,55 +205,3 @@ def test_a_plan_without_trial_days_cannot_start_a_trial() -> None:
 
     with pytest.raises(ValidationFailedError):
         start_trial(testbed, owner, business)
-
-
-def test_cancel_ends_the_trial_at_its_end_and_is_idempotent() -> None:
-    testbed = BillingTestbed()
-    owner = testbed.add_user(email="owner@example.com")
-    business = testbed.add_business(owner, ITALY)
-    start_trial(testbed, owner, business)
-    command = CancelSubscriptionCommand(user_id=owner.id, business_id=business.id)
-
-    first = testbed.cancel_subscription.run(command)
-    second = testbed.cancel_subscription.run(command)
-
-    assert first.subscription is not None
-    assert first.subscription.status is SubscriptionStatus.CANCELLED
-    assert second == first
-    assert all(
-        invoice.status is InvoiceStatus.VOID
-        for invoice in testbed.invoices(business.id)
-    )
-
-
-def test_switching_from_paid_annual_to_monthly_bills_no_setup_fee() -> None:
-    testbed = BillingTestbed()
-    owner = testbed.add_user(phone_number="+995599123456", locale="ka")
-    business = testbed.add_business(owner, GEORGIA)
-    start_trial(testbed, owner, business, billing_period=BillingPeriod.ANNUAL)
-    first = testbed.start_checkout.run(
-        StartCheckoutCommand(
-            user_id=owner.id,
-            business_id=business.id,
-            request=StartCheckoutRequest(),
-        )
-    )
-    order = testbed.payment_order_repo.get(first.payment_order_id)
-    assert order is not None
-    testbed.deliver_flitt_callback(testbed.callback_parameters(order, "approved"))
-    testbed.clock.advance(days=300)
-
-    change_plan(testbed, owner, business, PlanKey.VOICE_AND_CHAT, BillingPeriod.MONTHLY)
-    session = testbed.start_checkout.run(
-        StartCheckoutCommand(
-            user_id=owner.id,
-            business_id=business.id,
-            request=StartCheckoutRequest(),
-        )
-    )
-
-    assert session.amount.text == "517,00\xa0₾"
-    assert all(
-        invoice.kind is not InvoiceKind.SETUP_FEE
-        for invoice in testbed.invoices(business.id)
-    )

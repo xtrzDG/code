@@ -1,63 +1,15 @@
+"""The owner's billing routes and the Flitt webhook route over HTTP."""
+
 import json
 from typing import Any
 from urllib.parse import urlencode
 
-from fastapi.testclient import TestClient
-
-from app.schemas.constants.compliance import AuditAction
-from app.schemas.domain.businesses import BusinessDocument
-from app.schemas.domain.payments import PaymentOrderDocument
-from app.schemas.domain.users import UserDocument
 from app.schemas.typings.billing.prefixed_id import PaymentOrderId
-from tests.billing.billing_settings import (
-    CABINET_ORIGIN,
-    CHECKOUT_URL,
-    GEORGIA,
-    sign_flitt_callback,
-)
-from tests.billing.billing_testbed import BillingTestbed, bearer
+from tests.billing.billing_settings import CHECKOUT_URL, sign_flitt_callback
+from tests.billing.billing_testbed import bearer
+from tests.billing.route_world import RouteWorld
 
 WEBHOOK_PATH: str = "/v1/payments/flitt/webhook"
-
-
-class RouteWorld:
-    def __init__(self) -> None:
-        self.testbed = BillingTestbed()
-        self.client: TestClient = self.testbed.build_http_client()
-        self.owner: UserDocument = self.testbed.add_user(phone_number="+995599123456")
-        self.staff: UserDocument = self.testbed.add_user(email="staff@example.com")
-        self.admin: UserDocument = self.testbed.add_user(
-            email="dani@example.com",
-            is_platform_admin=True,
-        )
-        self.business: BusinessDocument = self.testbed.add_business(
-            self.owner,
-            GEORGIA,
-            staff=[self.staff],
-        )
-
-    def billing_path(self, suffix: str = "") -> str:
-        return f"/v1/businesses/{self.business.id}/billing{suffix}"
-
-    def start_trial(self) -> None:
-        response = self.client.post(
-            self.billing_path("/trial"),
-            headers=bearer(self.owner),
-        )
-        assert response.status_code == 201
-
-    def checkout(self) -> PaymentOrderDocument:
-        response = self.client.post(
-            self.billing_path("/checkout"),
-            headers=bearer(self.owner),
-            json={"return_url": f"{CABINET_ORIGIN}/billing"},
-        )
-        assert response.status_code == 201
-        order = self.testbed.payment_order_repo.get(
-            PaymentOrderId(response.json()["payment_order_id"])
-        )
-        assert order is not None
-        return order
 
 
 def test_owner_starts_the_trial_and_reads_the_billing_page() -> None:
@@ -247,79 +199,3 @@ def test_flitt_webhook_rejects_bad_notifications() -> None:
     assert missing.status_code == 404
     assert not_utf8.status_code == 422
     assert empty.status_code == 422
-
-
-def test_admin_routes() -> None:
-    world = RouteWorld()
-    world.start_trial()
-    detail_path = f"/v1/admin/clients/{world.business.id}"
-
-    listing = world.client.get("/v1/admin/clients", headers=bearer(world.admin))
-    detail = world.client.get(detail_path, headers=bearer(world.admin))
-    opened = world.client.post(f"{detail_path}/open", headers=bearer(world.admin))
-
-    filtered = world.client.get(
-        "/v1/admin/clients",
-        headers=bearer(world.admin),
-        params={"health": "critical", "sort": "name", "country": "ge", "limit": "5"},
-    )
-    invalid = {
-        name: world.client.get(
-            "/v1/admin/clients", headers=bearer(world.admin), params=params
-        ).status_code
-        for name, params in {
-            "sort": {"sort": "loudest"},
-            "health": {"health": "fine"},
-            "status": {"status": "sleeping"},
-            "country": {"country": "Georgia"},
-            "niche": {"niche": "spaceship"},
-            "limit": {"limit": "0"},
-        }.items()
-    }
-
-    assert listing.status_code == 200
-    assert listing.json()["totals"]["client_count"] == 1
-    assert listing.json()["items"][0]["health_issues"] == ["not_published"]
-    assert filtered.status_code == 200
-    assert filtered.json()["items"] == []
-    assert filtered.json()["matching_count"] == 0
-    assert invalid == {
-        "sort": 422,
-        "health": 422,
-        "status": 422,
-        "country": 422,
-        "niche": 422,
-        "limit": 422,
-    }
-    assert detail.status_code == 200
-    assert detail.json()["summary"]["subscription_status"] == "trialing"
-    assert opened.status_code == 200
-    assert "billing" in opened.json()["sections"]
-    [entry] = world.testbed.audit_log_repo.list_by_business(world.business.id)
-    assert entry.action is AuditAction.ADMIN_ACCESS
-    assert str(entry.ip_address) == "testclient"
-
-
-def test_admin_routes_refuse_everyone_else() -> None:
-    world = RouteWorld()
-
-    assert world.client.get("/v1/admin/clients").status_code == 401
-    assert (
-        world.client.get("/v1/admin/clients", headers=bearer(world.owner)).status_code
-        == 403
-    )
-    assert (
-        world.client.post(
-            f"/v1/admin/clients/{world.business.id}/open",
-            headers=bearer(world.owner),
-        ).status_code
-        == 403
-    )
-    assert (
-        world.client.get(
-            "/v1/admin/clients/business_nope",
-            headers=bearer(world.admin),
-        ).status_code
-        == 404
-    )
-    assert world.testbed.audit_log_repo.list_by_business(world.business.id) == []
