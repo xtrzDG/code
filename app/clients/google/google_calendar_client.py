@@ -1,20 +1,26 @@
 """Google OAuth 2.0 (web server flow) and Google Calendar API v3 over httpx."""
 
-from datetime import UTC, datetime
-from typing import cast
-from urllib.parse import quote, urlencode
+from urllib.parse import urlencode
 
 import httpx
 
+from app.clients.google.google_api_responses import (
+    ensure_success,
+    parse_token_grant,
+    read_json_object,
+)
+from app.clients.google.google_calendar_requests import (
+    bearer,
+    event_body,
+    event_url,
+    events_url,
+)
 from app.contracts.operations import GoogleCalendarClientContract
 from app.schemas.dto.operations.calendar_connection import (
     CalendarEventDraft,
     CalendarTokenGrant,
 )
 from app.schemas.exceptions.application_errors import ExternalServiceError
-from app.schemas.typings.bookings.constrained_integers import (
-    CalendarTokenLifetimeSeconds,
-)
 from app.schemas.typings.bookings.constrained_strings import (
     CalendarAuthorizationUrl,
     CalendarRedirectUrl,
@@ -28,32 +34,16 @@ from app.schemas.typings.bookings.strings import (
     CalendarRefreshToken,
     ExternalCalendarId,
 )
-from app.schemas.typings.channels.constrained_strings import PublicBaseUrl
 from app.schemas.typings.platform.strings import PlatformIdentifier, PlatformSecret
 
 GOOGLE_AUTHORIZATION_ENDPOINT: str = "https://accounts.google.com/o/oauth2/v2/auth"
 GOOGLE_TOKEN_ENDPOINT: str = "https://oauth2.googleapis.com/token"
 GOOGLE_REVOKE_ENDPOINT: str = "https://oauth2.googleapis.com/revoke"
-GOOGLE_CALENDAR_API_BASE_URL: str = "https://www.googleapis.com/calendar/v3"
 # Least privilege: create, change and delete events only.
 GOOGLE_CALENDAR_EVENTS_SCOPE: str = "https://www.googleapis.com/auth/calendar.events"
-GOOGLE_CALENDAR_CALLBACK_PATH: str = "/v1/integrations/google-calendar/callback"
 REQUEST_TIMEOUT_SECONDS: float = 10.0
 GONE_STATUS_CODES: frozenset[int] = frozenset({404, 410})
 MAX_CALENDAR_NAME_LENGTH: int = 200
-
-
-def build_google_calendar_redirect_url(
-    app_base_url: PublicBaseUrl | None,
-) -> CalendarRedirectUrl | None:
-    """OAuth redirect URI of this backend (APP_BASE_URL + callback path)."""
-
-    if app_base_url is None:
-        return None
-
-    return CalendarRedirectUrl(
-        f"{str(app_base_url).rstrip('/')}{GOOGLE_CALENDAR_CALLBACK_PATH}"
-    )
 
 
 class GoogleCalendarClient(GoogleCalendarClientContract):
@@ -274,113 +264,3 @@ class GoogleCalendarClient(GoogleCalendarClientContract):
             raise ExternalServiceError(
                 f"{operation} failed: {type(error).__name__}."
             ) from error
-
-
-def events_url(calendar_id: ExternalCalendarId) -> str:
-    return (
-        f"{GOOGLE_CALENDAR_API_BASE_URL}/calendars/"
-        f"{quote(str(calendar_id), safe='')}/events"
-    )
-
-
-def event_url(calendar_id: ExternalCalendarId, event_id: CalendarEventId) -> str:
-    return f"{events_url(calendar_id)}/{quote(str(event_id), safe='')}"
-
-
-def bearer(access_token: CalendarAccessToken) -> dict[str, str]:
-    return {"Authorization": f"Bearer {access_token}"}
-
-
-def event_body(event: CalendarEventDraft) -> dict[str, object]:
-    """Event resource with UTC instants and the business zone for display."""
-
-    return {
-        "summary": str(event.title),
-        "description": str(event.description),
-        "start": {
-            "dateTime": format_rfc3339(int(event.starts_at)),
-            "timeZone": str(event.timezone),
-        },
-        "end": {
-            "dateTime": format_rfc3339(int(event.ends_at)),
-            "timeZone": str(event.timezone),
-        },
-    }
-
-
-def format_rfc3339(unix_seconds: int) -> str:
-    return (
-        datetime.fromtimestamp(unix_seconds, tz=UTC)
-        .isoformat(timespec="seconds")
-        .replace("+00:00", "Z")
-    )
-
-
-def ensure_success(response: httpx.Response, operation: str) -> None:
-    if response.status_code < 400:
-        return
-
-    reason: str = describe_google_error(response)
-    raise ExternalServiceError(
-        f"{operation} returned HTTP {response.status_code}{reason}."
-    )
-
-
-def describe_google_error(response: httpx.Response) -> str:
-    """Google's error code ("invalid_grant") without any token or detail."""
-
-    payload: dict[str, object] | None = find_json_object(response)
-    if payload is None:
-        return ""
-
-    error: object = payload.get("error")
-    if isinstance(error, str):
-        return f" ({error})"
-
-    if isinstance(error, dict):
-        status: object = cast(dict[str, object], error).get("status")
-        if isinstance(status, str):
-            return f" ({status})"
-
-    return ""
-
-
-def read_json_object(response: httpx.Response, operation: str) -> dict[str, object]:
-    payload: dict[str, object] | None = find_json_object(response)
-    if payload is None:
-        raise ExternalServiceError(f"{operation} returned an unexpected payload.")
-
-    return payload
-
-
-def find_json_object(response: httpx.Response) -> dict[str, object] | None:
-    """The JSON object body (JSON object keys are always strings), if any."""
-
-    try:
-        payload: object = response.json()
-    except ValueError:
-        return None
-
-    if not isinstance(payload, dict):
-        return None
-
-    return cast(dict[str, object], payload)
-
-
-def parse_token_grant(payload: dict[str, object]) -> CalendarTokenGrant:
-    access_token: object = payload.get("access_token")
-    expires_in: object = payload.get("expires_in")
-    refresh_token: object = payload.get("refresh_token")
-    if not isinstance(access_token, str) or access_token == "":
-        raise ExternalServiceError("Google returned no access token.")
-
-    lifetime: int = expires_in if isinstance(expires_in, int) else 0
-    return CalendarTokenGrant(
-        access_token=CalendarAccessToken(access_token),
-        refresh_token=(
-            CalendarRefreshToken(refresh_token)
-            if isinstance(refresh_token, str) and refresh_token != ""
-            else None
-        ),
-        expires_in=CalendarTokenLifetimeSeconds(max(lifetime, 0)),
-    )

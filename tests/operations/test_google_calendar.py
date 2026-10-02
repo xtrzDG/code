@@ -6,15 +6,13 @@ from urllib.parse import parse_qs, urlsplit
 import httpx
 import pytest
 
-from app.clients.google.google_calendar_client import (
+from app.clients.google.google_calendar_client import GoogleCalendarClient
+from app.clients.google.google_calendar_redirect import (
     GOOGLE_CALENDAR_CALLBACK_PATH,
-    GoogleCalendarClient,
     build_google_calendar_redirect_url,
 )
 from app.schemas.dto.operations.calendar_connection import CalendarEventDraft
-from app.schemas.exceptions.application_errors import (
-    ExternalServiceError,
-)
+from app.schemas.exceptions.application_errors import ExternalServiceError
 from app.schemas.typings.bookings.constrained_integers import (
     BookingEndsAtUnixSeconds,
     BookingStartsAtUnixSeconds,
@@ -30,9 +28,7 @@ from app.schemas.typings.bookings.strings import (
     ExternalCalendarId,
 )
 from app.schemas.typings.channels.constrained_strings import PublicBaseUrl
-from app.schemas.typings.localization.constrained_strings import (
-    TimezoneName,
-)
+from app.schemas.typings.localization.constrained_strings import TimezoneName
 from app.schemas.typings.platform.strings import PlatformIdentifier, PlatformSecret
 from tests.operations.fake_google import REDIRECT_URL, FakeGoogle
 

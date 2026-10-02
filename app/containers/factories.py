@@ -11,14 +11,12 @@ from app.clients.elevenlabs.unconfigured_elevenlabs_client import (
 )
 from app.clients.email.smtp_email_client import SmtpEmailClient
 from app.clients.flitt.flitt_client import FlittClient
-from app.clients.google.google_calendar_client import (
-    GoogleCalendarClient,
+from app.clients.google.google_calendar_client import GoogleCalendarClient
+from app.clients.google.google_calendar_redirect import (
     build_google_calendar_redirect_url,
 )
 from app.clients.langfuse.langfuse_ingestion_client import LangfuseIngestionClient
-from app.clients.meta.whatsapp_authentication_client import (
-    WhatsAppAuthenticationClient,
-)
+from app.clients.meta.whatsapp_authentication_client import WhatsAppAuthenticationClient
 from app.clients.telegram.telegram_gateway_client import TelegramGatewayClient
 from app.clients.twilio.twilio_messaging_client import TwilioMessagingClient
 from app.contracts.channel_clients import ElevenLabsApiClientContract
@@ -34,9 +32,7 @@ from app.contracts.observability import LlmTraceFacilitatorContract
 from app.facilitators.observability.langfuse_trace_facilitator import (
     LangfuseTraceFacilitator,
 )
-from app.facilitators.observability.null_trace_facilitator import (
-    NullTraceFacilitator,
-)
+from app.facilitators.observability.null_trace_facilitator import NullTraceFacilitator
 from app.facilitators.users.email_otp_delivery_facilitator import (
     EmailOtpDeliveryFacilitator,
 )
