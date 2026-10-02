@@ -32,6 +32,7 @@ pull request ──► CI (ci.yml: backend, cabinet, images, security, e2e)
   they always deploy the same commit. Never deploy one of them from another
   commit by hand: the worker runs the same document and job code as the API.
 - `scripts/smoke.sh <api-url> [cabinet-url]` checks `/healthz`,
+  `/readyz` (database, migrations of the release, a free connection),
   `/widget.js`, `/v1/auth/login-options`, the cabinet's `/login` and,
   with `SMOKE_WIDGET_BUSINESS_ID`, a test chat through the website widget
   (`/v1/widget/{business_id}/config` and `/v1/widget/{business_id}/messages`).

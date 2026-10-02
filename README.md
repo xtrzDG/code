@@ -156,11 +156,41 @@ docker run --env-file .env assistant-workshop-backend migrate --dry-run
 ```
 
 Образ работает от непривилегированного пользователя, по умолчанию `APP_ENV=production`
-(нужен `ENCRYPTION_KEY`), слушает `$PORT` (8000), проверка здоровья — `GET /healthz`.
+(нужен `ENCRYPTION_KEY`), слушает `$PORT` (8000), проверка здоровья — `GET /healthz`
+(жив ли процесс), готовность к трафику — `GET /readyz` (см. «Наблюдение и устойчивость»).
 API запускается с `--proxy-headers`; адреса доверенных прокси — в
 `FORWARDED_ALLOW_IPS` (по умолчанию 127.0.0.1). Указывайте диапазоны адресов
 прокси, а не `*`: со `*` uvicorn берёт самый левый адрес `X-Forwarded-For`,
 который подставляет сам клиент, и IP в журнале аудита можно подделать.
+
+### Наблюдение и устойчивость
+
+- **Здоровье.** `GET /healthz` — асинхронный, без потоков и базы: отвечает,
+  даже когда все `THREADPOOL_SIZE` потоков запросов заняты. `GET /readyz`
+  (по нему Render направляет трафик) — `select 1` с таймаутом 2 с, все
+  миграции этой сборки применены, свободное соединение из пула; иначе 503.
+  Возраст последнего пульса воркера (`worker_heartbeats`, миграция 1030;
+  воркер пишет его каждый такт с версией и итогами периодических задач)
+  виден в ответе, но трафик не останавливает.
+- **Таймауты.** Каждое соединение с Postgres: `statement_timeout=10s` и
+  `idle_in_transaction_session_timeout=30s` (`workshop migrate` — 30 мин и
+  5 мин). Вызов модели в чате — `LLM_CALL_TIMEOUT_SECONDS` (25 с) и одна
+  повторная попытка; инструмент голосового агента отвечает не дольше 8 с
+  (иначе агент получает ошибку и говорит звонящему, что коллега перезвонит).
+- **Остановка.** uvicorn даёт открытым запросам 25 с
+  (`--timeout-graceful-shutdown 25`, keep-alive 5 с), воркер — 25 с
+  выполняющимся задачам; Render ждёт 30 и 60 с (`maxShutdownDelaySeconds`).
+- **Логи.** `LOG_FORMAT=json` (по умолчанию в `production`): одна строка JSON
+  на запись — время, уровень, логгер, поток, текст и `request_id`,
+  `business_id`, `conversation_id`, `channel`, `job_name`, `job_id`; тот же
+  `X-Request-ID` возвращается в ответе. Токены ботов в адресах скрыты.
+- **Sentry.** `SENTRY_DSN`: ошибки API и воркера с версией сборки
+  (`RENDER_GIT_COMMIT`/`APP_RELEASE`) и тегами контекста, доля трассировок
+  `SENTRY_TRACES_SAMPLE_RATE`, проверки Sentry Crons вокруг каждой
+  периодической задачи (пропущенный или упавший запуск видно в Sentry),
+  ошибки виджета сайтов (`POST /v1/widget/errors`) и кабинета
+  (`SENTRY_DSN` сервиса `workshop-cabinet`, `web/README.md`). Без тел
+  запросов, пользователей и breadcrumbs.
 
 ### Деплой на Render (ЕС)
 
@@ -171,8 +201,8 @@ API запускается с `--proxy-headers`; адреса доверенны
 | Ресурс | Что это |
 | --- | --- |
 | `workshop-db` | управляемый Postgres 16, доступен только изнутри Render |
-| `workshop-api` | API из `Dockerfile`; перед каждым деплоем `workshop migrate`, проверка `/healthz` |
-| `workshop-worker` | фоновый воркер из того же образа |
+| `workshop-api` | API из `Dockerfile`; перед каждым деплоем `workshop migrate`, проверка готовности `/readyz`, 30 с на завершение запросов при остановке |
+| `workshop-worker` | фоновый воркер из того же образа; 60 с на завершение задач при остановке |
 | `workshop-cabinet` | кабинет из `web/Dockerfile` |
 
 При создании Render спросит секреты (`sync: false`): провайдер и ключи модели,
@@ -390,7 +420,7 @@ UI-тестов); `color`, `position` и `language` в ней показываю
 
 | Раздел | Маршруты |
 | --- | --- |
-| Здоровье | `GET /healthz` |
+| Здоровье | `GET /healthz` (жив ли процесс; не трогает базу и потоки запросов), `GET /readyz` (готов ли принимать трафик: база отвечает за 2 с, все миграции сборки применены, есть свободное соединение — иначе 503; в ответе каждая проверка и возраст пульса воркера) |
 | Вход и профиль | `GET /v1/auth/login-options[?country_code=…]`, `POST /v1/auth/otp/start`, `POST /v1/auth/otp/verify`, `POST /v1/auth/logout`, `GET·PATCH /v1/me` |
 | Каталог | `GET /v1/catalog/countries[/{code}]`, `GET /v1/catalog/languages`, `GET /v1/catalog/plans`, `GET /v1/catalog/niches[/{niche}]`, `POST /v1/phone-numbers/parse` |
 | Бизнесы и команда | `POST·GET /v1/businesses`, `GET·PATCH /v1/businesses/{id}` (в ответе `revision`, растёт с каждым сохранением; PATCH с `expected_revision` от устаревшей версии — 409 `stale_revision`, ничего не меняется), `POST …/members` (роль `owner` или `staff`), `PATCH·DELETE …/members/{user_id}` (последнего владельца нельзя ни удалить, ни сделать сотрудником), `GET …/call-forwarding-instructions` |
@@ -403,7 +433,7 @@ UI-тестов); `color`, `position` и `language` в ней показываю
 | Разговоры | `GET …/conversations` (страницы, фильтры `channel`, `status`, `from`/`to`, `search`), `GET …/conversations/{id}` (расшифровка, звонки, брони, заявки, передачи), `PUT …/conversations/{id}/rating`, `POST …/conversations/{id}/messages` (ответ сотрудника клиенту; шаблон WhatsApp, который Meta не принял, — 409 `template_rejected`), `GET …/calls/{call_id}/recording` (запись звонка; отдаёт части по `Range`, прослушивание пишется в журнал аудита), `POST …/test-chat` |
 | Сборка помощника | `POST·GET …/assistant-versions`, `GET …/assistant-versions/{id}[/autotest-run]`, `GET …/assistant-versions/{id}/go-live-readiness`, `POST …/assistant-versions/{id}/autotests`, `POST …/assistant-versions/{id}/publish`, `POST …/assistant-versions/{id}/rollback` |
 | Каналы (кабинет) | `GET …/channels`, `PUT·DELETE …/channels/{channel}`, `GET …/channels/web/snippet`, `PUT …/channels/whatsapp/staff-template` (шаблон WhatsApp для ответа сотрудника вне 24-часового окна), `POST …/manager-contacts/telegram-link` |
-| Вебхуки и виджет | `POST /v1/channels/telegram/{channel_id}/webhook`, `GET·POST /v1/channels/meta/webhook`, `POST /v1/channels/telegram-platform/webhook`, `GET /v1/widget/{id}/config`, `GET·POST /v1/widget/{id}/messages`, `GET /widget.js`, `GET /widget/demo` |
+| Вебхуки и виджет | `POST /v1/channels/telegram/{channel_id}/webhook`, `GET·POST /v1/channels/meta/webhook`, `POST /v1/channels/telegram-platform/webhook`, `GET /v1/widget/{id}/config`, `GET·POST /v1/widget/{id}/messages`, `POST /v1/widget/errors` (сигнал ошибки виджета: вид, этап, тип ошибки и место в widget.js, без текстов; лимиты на сеть, бизнес и платформу), `GET /widget.js`, `GET /widget/demo` |
 | Голос | `POST /v1/voice/tools/{tool}`, `POST /v1/voice/webhooks/conversation-initiation`, `POST /v1/voice/webhooks/post-call` |
 | Оплата | `GET …/billing`, `POST …/billing/trial`, `POST …/billing/plan`, `POST …/billing/cancel`, `POST …/billing/checkout`, `POST …/billing/subscribe` (тариф и период с оплатой сразу: после пробного периода, после отмены или без него), `POST /v1/payments/flitt/webhook` |
 | Админка платформы | `GET /v1/admin/clients` (страницы, фильтры `status`, `health`, `country`, `niche`, `search`, сортировка `sort`), `GET /v1/admin/clients/{business_id}`, `POST /v1/admin/clients/{business_id}/open` |

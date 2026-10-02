@@ -1555,6 +1555,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/widget/errors": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Report Widget Error */
+        post: operations["report_widget_error_v1_widget_errors_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/widget/{business_id}/config": {
         parameters: {
             query?: never;
@@ -9925,6 +9942,51 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
                 };
+            };
+        };
+    };
+    report_widget_error_v1_widget_errors_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Business Id */
+                    business_id?: string | null;
+                    /** Column */
+                    column?: number | null;
+                    /** Error Name */
+                    error_name?: string | null;
+                    /**
+                     * WidgetErrorKind
+                     * @description What went wrong in the website widget, as its error beacon reports it.
+                     * @enum {string}
+                     */
+                    kind: "script_error" | "unhandled_rejection" | "config_failed";
+                    /** Line */
+                    line?: number | null;
+                    /**
+                     * WidgetErrorPhase
+                     * @description Which part of the widget failed.
+                     * @enum {string}
+                     */
+                    phase: "boot" | "mount" | "send" | "poll" | "render";
+                    /** Status Code */
+                    status_code?: number | null;
+                };
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
