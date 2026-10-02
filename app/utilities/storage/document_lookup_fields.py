@@ -117,6 +117,8 @@ DOCUMENT_LOOKUP_FIELDS: Mapping[
     ),
     # "/start <code>" of the platform bot.
     DocumentCollectionName("manager_telegram_links"): (_text("code_hash"),),
+    # The freshest worker pulse (GET /readyz) and the purge of old ones.
+    DocumentCollectionName("worker_heartbeats"): (_integer("beat_at"),),
 }
 
 

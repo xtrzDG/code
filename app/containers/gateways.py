@@ -9,6 +9,7 @@ from app.containers.repositories import RepositoriesContainer
 from app.containers.time_provider import TimeProviderContainer
 from app.containers.utilities import UtilitiesContainer
 from app.gateways.worker.background_worker import BackgroundWorker, PeriodicJobSpec
+from app.gateways.worker.heartbeat_recorder import WorkerHeartbeatRecorder
 from app.gateways.worker.periodic.purge_stale_rows import purge_stale_rows_job
 from app.schemas.typings.platform.constrained_integers import JobIntervalSeconds
 from app.schemas.typings.platform.constrained_strings import JobName
@@ -126,6 +127,14 @@ class GatewaysContainer(containers.DeclarativeContainer):
             DELIVER_OUTBOUND_JOB: operators.channels.deliver_outbound_operator,
         }
     )
+    # The pulse of this worker process (GET /readyz reports its age).
+    worker_heartbeat_recorder: Factory[WorkerHeartbeatRecorder] = Factory(
+        WorkerHeartbeatRecorder,
+        heartbeat_repo=repositories.worker_heartbeat_repo,
+        storage_scope=utilities.storage_scope,
+        wall_clock=time_provider.microsecond_wall_clock,
+        release=config.app_settings.provided.release_version,
+    )
     background_worker: Factory[BackgroundWorker] = Factory(
         BackgroundWorker,
         periodic_jobs=periodic_jobs,
@@ -138,4 +147,6 @@ class GatewaysContainer(containers.DeclarativeContainer):
         storage_scope=utilities.storage_scope,
         job_wakeup=utilities.job_wakeup,
         lane_concurrency=config.app_settings.provided.worker_lane_concurrency,
+        job_monitor=facilitators.job_monitor,
+        heartbeat_recorder=worker_heartbeat_recorder,
     )

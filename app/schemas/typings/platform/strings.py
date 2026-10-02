@@ -31,6 +31,10 @@ class JobPayloadJson(BaseTypedString):
     """JSON object with the arguments of one queued background job."""
 
 
+class JobCheckInId(BaseTypedString):
+    """Id the job monitor (Sentry Crons) gave one run of a periodic job."""
+
+
 class LocalDirectoryPath(BaseTypedString):
     """Directory on the server's file system (absolute or relative to the cwd)."""
 

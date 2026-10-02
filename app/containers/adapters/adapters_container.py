@@ -7,6 +7,7 @@ from dependency_injector.providers import (
 )
 
 from app.adapters.channels.instagram_channel_adapter import InstagramChannelAdapter
+from app.adapters.health.database_probe_factory import build_database_probe_adapter
 from app.adapters.channels.messenger_channel_adapter import MessengerChannelAdapter
 from app.adapters.channels.telegram_channel_adapter import TelegramChannelAdapter
 from app.adapters.channels.whatsapp_channel_adapter import WhatsAppChannelAdapter
@@ -28,6 +29,10 @@ from app.adapters.recordings.local_recording_storage_adapter import (
     LocalRecordingStorageAdapter,
 )
 from app.adapters.security.secret_cipher_adapter import SecretCipherAdapter
+from app.adapters.storage.postgres.sql_file_migration_source_adapter import (
+    BUILD_MIGRATIONS_DIRECTORY,
+    SqlFileMigrationSourceAdapter,
+)
 from app.adapters.voice.elevenlabs_recording_storage_adapter import (
     ElevenLabsRecordingStorageAdapter,
 )
@@ -49,6 +54,7 @@ from app.containers.factories import (
 )
 from app.containers.time_provider import TimeProviderContainer
 from app.containers.utilities import UtilitiesContainer
+from app.contracts.health import DatabaseProbeAdapterContract
 from app.contracts.llm import LlmAdapterContract
 from app.contracts.observability import LlmTraceFacilitatorContract
 
@@ -73,6 +79,17 @@ class AdaptersContainer(containers.DeclarativeContainer):
         config=config,
         time_provider=time_provider,
         utilities=utilities,
+    )
+
+    # --- Readiness (GET /readyz): the database probe over the shared pool and
+    # the migration files of this build.
+    database_probe: Singleton[DatabaseProbeAdapterContract] = Singleton(
+        build_database_probe_adapter,
+        connection_pool=clients.postgres_pool,
+    )
+    migration_source: Singleton[SqlFileMigrationSourceAdapter] = Singleton(
+        SqlFileMigrationSourceAdapter,
+        migrations_directory=BUILD_MIGRATIONS_DIRECTORY,
     )
 
     # --- Security and recordings.

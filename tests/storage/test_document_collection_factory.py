@@ -57,10 +57,18 @@ def test_unsafe_collection_names_are_rejected(collection_name: str) -> None:
 def test_with_database_url_collections_are_postgres_tables(
     database_url: DatabaseUrl,
 ) -> None:
-    settings = assemble_app_settings({"DATABASE_URL": database_url})
-    connection_pool = build_postgres_connection_pool(settings, max_size=2)
+    settings = assemble_app_settings(
+        {"DATABASE_URL": database_url, "DB_POOL_SIZE": "2"}
+    )
+    connection_pool = build_postgres_connection_pool(settings)
     assert isinstance(connection_pool, PostgresConnectionPoolClient)
     assert connection_pool.max_size == 2
+    with connection_pool.connection() as connection:
+        timeouts = connection.execute(
+            "select current_setting('statement_timeout'), "
+            "current_setting('idle_in_transaction_session_timeout')"
+        ).fetchone()
+    assert timeouts == ("10s", "30s")
     storage_scope = StorageScopeContext()
     try:
         businesses = build_document_collection(

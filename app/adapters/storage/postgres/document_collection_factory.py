@@ -23,7 +23,6 @@ from app.adapters.storage.postgres.postgres_document_collection_adapter import (
     PostgresDocumentCollectionAdapter,
 )
 from app.clients.postgres.postgres_connection_pool_client import (
-    DEFAULT_MAX_POOL_SIZE,
     PostgresConnectionPoolClient,
 )
 from app.contracts.document_store import DocumentCollectionAdapterContract
@@ -37,18 +36,29 @@ from app.utilities.storage.document_tenancy import infer_collection_isolation
 from app.utilities.storage.storage_scope_context import StorageScopeContext
 
 
+# A request or job statement that runs longer is cancelled by the server;
+# a transaction left open longer (a stuck thread) is ended by it.
+STATEMENT_TIMEOUT_SECONDS: int = 10
+IDLE_IN_TRANSACTION_TIMEOUT_SECONDS: int = 30
+
+
 def build_postgres_connection_pool(
     settings: AppSettings,
-    max_size: int = DEFAULT_MAX_POOL_SIZE,
 ) -> PostgresConnectionPoolClient | None:
-    """The process-wide pool when `DATABASE_URL` is set, otherwise None."""
+    """
+    The process-wide pool when `DATABASE_URL` is set, otherwise None: up to
+    DB_POOL_SIZE connections, each with the statement and idle-transaction
+    timeouts above (the migration commands use their own, longer ones).
+    """
 
     if settings.database_url is None:
         return None
 
     return PostgresConnectionPoolClient(
         database_url=settings.database_url,
-        max_size=max_size,
+        max_size=int(settings.db_pool_size),
+        statement_timeout_seconds=STATEMENT_TIMEOUT_SECONDS,
+        idle_in_transaction_timeout_seconds=IDLE_IN_TRANSACTION_TIMEOUT_SECONDS,
     )
 
 

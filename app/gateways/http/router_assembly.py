@@ -14,6 +14,7 @@ from app.gateways.http.channel_routes import build_channel_router
 from app.gateways.http.channel_settings_routes import build_channel_settings_router
 from app.gateways.http.compliance_routes import build_compliance_router
 from app.gateways.http.conversation_routes import build_conversation_router
+from app.gateways.http.health_routes import build_readiness_router
 from app.gateways.http.knowledge_routes import build_knowledge_router
 from app.gateways.http.menu_import_routes import build_menu_import_router
 from app.gateways.http.operations_routes import build_operations_router
@@ -25,6 +26,7 @@ from app.gateways.http.user_authentication import (
 )
 from app.gateways.http.users_routes import build_users_router
 from app.gateways.http.voice_routes import build_voice_router
+from app.gateways.http.widget_error_routes import build_widget_error_router
 from app.gateways.http.widget_script_routes import build_widget_script_router
 
 
@@ -243,4 +245,6 @@ def build_application_routers(app_container: AppContainer) -> list[APIRouter]:
             current_user=current_user,
         ),
         build_widget_script_router(),
+        build_readiness_router(platform.check_readiness_operator()),
+        build_widget_error_router(platform.report_widget_error_operator()),
     ]

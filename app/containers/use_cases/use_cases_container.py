@@ -215,6 +215,7 @@ class UseCasesContainer(containers.DeclarativeContainer):
     platform: PlatformUseCasesContainer = Container(  # type: ignore[assignment]
         PlatformUseCasesContainer,
         adapters=adapters,
+        facilitators=facilitators,
         registries=registries,
         repositories=repositories,
         time_provider=time_provider,

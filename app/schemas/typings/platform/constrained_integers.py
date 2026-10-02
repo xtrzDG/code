@@ -3,6 +3,12 @@
 from base_typed_int import BaseConstrainedTypedInt
 
 
+class DatabaseConnectionCount(BaseConstrainedTypedInt):
+    """How many Postgres connections of a process's pool are borrowed right now."""
+
+    ge = 0
+
+
 class DatabasePoolSize(BaseConstrainedTypedInt):
     """
     How many Postgres connections one process may hold at once (DB_POOL_SIZE);

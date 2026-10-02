@@ -66,6 +66,7 @@ from app.repositories.user_repositories import (
     UserRepository,
     UserSessionRepository,
 )
+from app.repositories.worker_heartbeat_repository import WorkerHeartbeatRepository
 
 
 class RepositoriesContainer(containers.DeclarativeContainer):
@@ -179,6 +180,10 @@ class RepositoriesContainer(containers.DeclarativeContainer):
     periodic_job_run_repo: Singleton[PeriodicJobRunRepository] = Singleton(
         PeriodicJobRunRepository,
         store=collections.periodic_job_run_store,
+    )
+    worker_heartbeat_repo: Singleton[WorkerHeartbeatRepository] = Singleton(
+        WorkerHeartbeatRepository,
+        collection=collections.worker_heartbeat_collection,
     )
     channel_message_receipt_repo: Singleton[ChannelMessageReceiptRepository] = (
         Singleton(

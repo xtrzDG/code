@@ -11,9 +11,14 @@ from app.schemas.typings.conversations.constrained_integers import LlmTokenCount
 from app.schemas.typings.conversations.prefixed_id import ConversationId
 from app.schemas.typings.conversations.strings import MessageText
 from app.schemas.typings.platform.constrained_integers import ElapsedMilliseconds
+from app.schemas.typings.platform.constrained_integers import JobIntervalSeconds
 from app.schemas.typings.platform.constrained_strings import JobName, RequestId
 from app.schemas.typings.platform.prefixed_id import QueuedJobId
-from app.schemas.typings.platform.strings import CorrelationId, JobErrorText
+from app.schemas.typings.platform.strings import (
+    CorrelationId,
+    JobCheckInId,
+    JobErrorText,
+)
 
 
 class LlmGenerationTrace(ImmutableDTO):
@@ -65,3 +70,11 @@ class LogContext(ImmutableDTO):
             for name, value in self.model_dump(mode="json").items()
             if value is not None
         }
+
+
+class JobCheckIn(ImmutableDTO):
+    """A periodic job run the job monitor (Sentry Crons) was told about."""
+
+    job_name: JobName
+    interval_seconds: JobIntervalSeconds
+    check_in_id: JobCheckInId | None = None

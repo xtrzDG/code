@@ -14,19 +14,13 @@ from app.contracts.jobs import (
     PeriodicJobRunStoreAdapterContract,
     QueuedJobClaimAdapterContract,
 )
-from app.schemas.domain.assistants import (
-    AssistantVersionDocument,
-    AutotestRunDocument,
-)
+from app.schemas.domain.assistants import AssistantVersionDocument, AutotestRunDocument
 from app.schemas.domain.billing import (
     InvoiceDocument,
     SubscriptionDocument,
     UsageEventDocument,
 )
-from app.schemas.domain.bookings import (
-    BookingDocument,
-    LeadDocument,
-)
+from app.schemas.domain.bookings import BookingDocument, LeadDocument
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.calendar import (
     CalendarAuthorizationStateDocument,
@@ -35,10 +29,7 @@ from app.schemas.domain.calendar import (
 )
 from app.schemas.domain.channel_receipts import ChannelMessageReceiptDocument
 from app.schemas.domain.channels import ChannelDocument
-from app.schemas.domain.compliance import (
-    AuditLogEntryDocument,
-    DpaAcceptanceDocument,
-)
+from app.schemas.domain.compliance import AuditLogEntryDocument, DpaAcceptanceDocument
 from app.schemas.domain.contacts import ContactDocument
 from app.schemas.domain.conversations import (
     CallDocument,
@@ -51,6 +42,7 @@ from app.schemas.domain.inbound_events import InboundEventDocument
 from app.schemas.domain.jobs import (
     PeriodicJobRunDocument,
     QueuedJobDocument,
+    WorkerHeartbeatDocument,
 )
 from app.schemas.domain.knowledge import KnowledgeItemDocument
 from app.schemas.domain.manager_links import ManagerTelegramLinkDocument
@@ -58,10 +50,7 @@ from app.schemas.domain.outbound_messages import OutboundMessageDocument
 from app.schemas.domain.package_usage import PackageUsageWarningDocument
 from app.schemas.domain.payments import PaymentOrderDocument
 from app.schemas.domain.profiles import BusinessProfileDocument
-from app.schemas.domain.resources import (
-    ResourceDocument,
-    ScheduleExceptionDocument,
-)
+from app.schemas.domain.resources import ResourceDocument, ScheduleExceptionDocument
 from app.schemas.domain.users import (
     OtpChallengeDocument,
     UserDocument,
@@ -204,6 +193,15 @@ class DocumentCollectionsContainer(containers.DeclarativeContainer):
     periodic_job_run_collection = document_collection(
         PeriodicJobRunDocument,
         "periodic_job_runs",
+        config,
+        clients,
+        utilities,
+        time_provider,
+    )
+    # The pulse of each worker process (1030).
+    worker_heartbeat_collection = document_collection(
+        WorkerHeartbeatDocument,
+        "worker_heartbeats",
         config,
         clients,
         utilities,

@@ -12,8 +12,15 @@ from app.contracts.jobs import (
     QueuedJobOperator,
     QueuedJobRepoContract,
 )
-from app.contracts.observability import ErrorReportingFacilitatorContract
+from app.contracts.observability import (
+    ErrorReportingFacilitatorContract,
+    JobMonitorFacilitatorContract,
+)
 from app.contracts.storage import StorageScopeContract
+from app.facilitators.observability.null_job_monitor_facilitator import (
+    NullJobMonitorFacilitator,
+)
+from app.gateways.worker.heartbeat_recorder import WorkerHeartbeatRecorder
 from app.gateways.worker.held_leases import HeldLeases
 from app.gateways.worker.job_failure_reporter import JobFailureReporter
 from app.gateways.worker.lane_threads import LaneThreads
@@ -78,7 +85,9 @@ class BackgroundWorker:
     A queued job of one business runs in that business's storage scope.
     Failures of one job never stop others, and a storage outage never stops
     the worker: the tick is reported and the next one comes after a growing
-    pause. Unexpected errors go to the error reporter.
+    pause. Unexpected errors go to the error reporter. Every tick of the
+    periodic thread writes the worker's heartbeat (GET /readyz reports its
+    age), and periodic runs check in with the job monitor (Sentry Crons).
     """
 
     def __init__(
@@ -94,8 +103,11 @@ class BackgroundWorker:
         job_wakeup: JobWakeupContract,
         lane_concurrency: Mapping[JobLane, WorkerLaneConcurrency],
         lease_seconds: JobLeaseSeconds = DEFAULT_LEASE_SECONDS,
+        job_monitor: JobMonitorFacilitatorContract | None = None,
+        heartbeat_recorder: WorkerHeartbeatRecorder | None = None,
     ) -> None:
         self._poll_seconds: WorkerPollSeconds = poll_seconds
+        self._heartbeat_recorder: WorkerHeartbeatRecorder | None = heartbeat_recorder
         self._lane_concurrency: dict[JobLane, WorkerLaneConcurrency] = dict(
             lane_concurrency
         )
@@ -117,6 +129,9 @@ class BackgroundWorker:
             held_leases=held_leases,
             failure_reporter=self._failure_reporter,
             lease_seconds=lease_seconds,
+            job_monitor=(
+                NullJobMonitorFacilitator() if job_monitor is None else job_monitor
+            ),
         )
         self._heartbeat = LeaseHeartbeat(
             job_repo=job_repo,
@@ -144,6 +159,7 @@ class BackgroundWorker:
 
         maintenance_failures: int = self._release_expired_leases()
         periodic_runs, periodic_failures = self._periodic_runner.run_due()
+        self._beat()
         queued_runs, queued_failures = self._run_due_queued_jobs()
         return WorkerTickReport(
             periodic_runs=ProcessedItemCount(periodic_runs),
@@ -169,10 +185,14 @@ class BackgroundWorker:
         )
 
     def run_periodic_tick(self) -> tuple[int, int]:
-        """The periodic thread's tick: the reaper, then due periodic jobs."""
+        """
+        The periodic thread's tick: the reaper, then due periodic jobs, then
+        the worker's heartbeat.
+        """
 
         maintenance_failures: int = self._release_expired_leases()
         runs, failures = self._periodic_runner.run_due()
+        self._beat()
         return runs, maintenance_failures + failures
 
     def run_forever(self, stop_event: threading.Event) -> None:
@@ -194,6 +214,8 @@ class BackgroundWorker:
             daemon=True,
         )
         heartbeat_thread.start()
+        if self._heartbeat_recorder is not None:
+            self._heartbeat_recorder.start()
         self._lane_threads.start(stopping)
         try:
             self._tick_periodic_jobs(stop_event)
@@ -221,6 +243,10 @@ class BackgroundWorker:
 
         backoff_seconds: int = poll_seconds * (1 << min(consecutive_failures, 16))
         return min(backoff_seconds, max(poll_seconds, MAX_TICK_BACKOFF_SECONDS))
+
+    def _beat(self) -> None:
+        if self._heartbeat_recorder is not None:
+            self._heartbeat_recorder.beat(self._periodic_runner.last_results())
 
     def _release_expired_leases(self) -> int:
         try:

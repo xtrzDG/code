@@ -2,6 +2,7 @@ from dependency_injector import containers
 from dependency_injector.providers import DependenciesContainer, Factory
 
 from app.containers.adapters.adapters_container import AdaptersContainer
+from app.containers.facilitators import FacilitatorsContainer
 from app.containers.registries import RegistriesContainer
 from app.containers.repositories import RepositoriesContainer
 from app.containers.time_provider import TimeProviderContainer
@@ -25,10 +26,9 @@ from app.schemas.dto.admin_jobs import (
     AdminJobsQuery,
     QueuedJobPage,
 )
-from app.schemas.dto.jobs import (
-    JobReport,
-    JobTick,
-)
+from app.schemas.dto.health import ReadinessQuery, ReadinessReport
+from app.schemas.dto.jobs import JobReport, JobTick
+from app.schemas.dto.widget_errors import WidgetErrorCommand
 from app.schemas.typings.users.prefixed_id import UserId
 from app.use_cases.admin.authorize_platform_admin_use_case import (
     AuthorizePlatformAdminUseCase,
@@ -44,7 +44,13 @@ from app.use_cases.admin.open_client_cabinet_use_case import OpenClientCabinetUs
 from app.use_cases.admin.summarize_client_use_case import SummarizeClientUseCase
 from app.use_cases.jobs.purge_finished_jobs_use_case import PurgeFinishedJobsUseCase
 from app.use_cases.maintenance.purge_stale_rows_use_case import PurgeStaleRowsUseCase
+from app.use_cases.observability.check_readiness_use_case import (
+    CheckReadinessUseCase,
+)
 from app.use_cases.observability.flush_llm_traces_use_case import FlushLlmTracesUseCase
+from app.use_cases.observability.report_widget_error_use_case import (
+    ReportWidgetErrorUseCase,
+)
 
 
 class PlatformUseCasesContainer(containers.DeclarativeContainer):
@@ -55,6 +61,7 @@ class PlatformUseCasesContainer(containers.DeclarativeContainer):
     """
 
     adapters: AdaptersContainer = DependenciesContainer()  # type: ignore[assignment]
+    facilitators: FacilitatorsContainer = DependenciesContainer()  # type: ignore[assignment]
     registries: RegistriesContainer = DependenciesContainer()  # type: ignore[assignment]
     repositories: RepositoriesContainer = DependenciesContainer()  # type: ignore[assignment]
     time_provider: TimeProviderContainer = DependenciesContainer()  # type: ignore[assignment]
@@ -163,5 +170,25 @@ class PlatformUseCasesContainer(containers.DeclarativeContainer):
             PurgeFinishedJobsUseCase,
             job_repo=repositories.queued_job_repo,
             periodic_run_repo=repositories.periodic_job_run_repo,
+        )
+    )
+
+    # --- Health and client errors.
+    check_readiness_use_case: Factory[
+        UseCaseContract[ReadinessQuery, ReadinessReport]
+    ] = Factory(
+        CheckReadinessUseCase,
+        database_probe=adapters.database_probe,
+        migration_source=adapters.migration_source,
+        worker_heartbeat_repo=repositories.worker_heartbeat_repo,
+        storage_scope=utilities.storage_scope,
+        wall_clock=time_provider.microsecond_wall_clock,
+    )
+    report_widget_error_use_case: Factory[UseCaseContract[WidgetErrorCommand, None]] = (
+        Factory(
+            ReportWidgetErrorUseCase,
+            client_error_reporter=facilitators.error_reporter,
+            rate_limit_registry=registries.request_rate_limit_registry,
+            wall_clock=time_provider.microsecond_wall_clock,
         )
     )

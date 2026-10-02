@@ -30,6 +30,19 @@ class HealthCheckStatus(StrEnum):
     SKIPPED = "skipped"
 
 
+class DatabaseProbeFailure(StrEnum):
+    """Why the readiness probe could not use the database."""
+
+    # No connection could be opened (the server is down or unreachable).
+    UNREACHABLE = "unreachable"
+    # Every connection of the pool stayed in use for the whole probe.
+    POOL_EXHAUSTED = "pool_exhausted"
+    # The server took longer than the probe allows to answer `select 1`.
+    TIMEOUT = "timeout"
+    # The server answered with an error.
+    ERROR = "error"
+
+
 class PeriodicJobOutcome(StrEnum):
     """How the last run of a periodic job in one worker process ended."""
 

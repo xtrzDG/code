@@ -27,11 +27,13 @@ CONSTRAINED_TEXT_SAMPLES: dict[str, str] = {
     "LocalDate": "2026-09-21",
     "PaymentCheckoutUrl": "https://pay.example.com/checkout/42",
     "QuestionKey": "parking",
+    "ReleaseVersion": "4718714c0f2e9a1b",
     "TimezoneName": "Asia/Tbilisi",
     "WebLink": "https://example.com/menu",
     "WhatsAppTemplateLanguageCode": "en_US",
     "WhatsAppTemplateName": "booking_reminder",
     "WidgetAccentColor": "#7c5cff",
+    "WorkerHostName": "srv-workshop-worker-1",
 }
 
 # Unconstrained text that still has a format in practice.
