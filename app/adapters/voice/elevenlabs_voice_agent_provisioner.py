@@ -1,11 +1,14 @@
+"""Create, update and remove the ElevenLabs voice agent of a business."""
+
 import logging
 
+from app.adapters.voice.elevenlabs_agent_config import build_agent_config
+from app.adapters.voice.elevenlabs_tool_config import build_tool_config
 from app.contracts.channel_clients import ElevenLabsApiClientContract, JsonObject
 from app.contracts.voice_platform import VoiceAgentProvisionerAdapterContract
 from app.schemas.configurations.app_settings import AppSettings
 from app.schemas.constants.assistants import AssistantToolName
-from app.schemas.dto.conversations import LlmToolDefinition
-from app.schemas.dto.voice import VoiceAgentSpec, VoiceGreeting
+from app.schemas.dto.voice import VoiceAgentSpec
 from app.schemas.exceptions.application_errors import ExternalServiceError
 from app.schemas.exceptions.base_exception import ApplicationError
 from app.schemas.typings.assistants.strings import VoiceAgentId
@@ -15,50 +18,11 @@ from app.schemas.typings.platform.constrained_strings import EnvironmentVariable
 from app.schemas.typings.platform.strings import PlatformSecret
 from app.utilities.channels.channel_endpoints import (
     VOICE_BUSINESS_ID_HEADER,
-    VOICE_CALL_INITIATION_PATH,
     VOICE_TOOL_SECRET_HEADER,
-    build_voice_tool_path,
-    join_public_url,
 )
-from app.utilities.channels.json_values import parse_json_object
-from app.utilities.channels.language_codes import to_voice_platform_language
-from app.utilities.channels.voice_service import (
-    OPEN_NOW_NO,
-    OPEN_NOW_VARIABLE,
-    OPEN_NOW_YES,
-    TRANSFER_TOOL_NAME,
-)
-from app.utilities.channels.voice_tool_schemas import convert_tool_schema
 from app.utilities.channels.webhook_signatures import derive_voice_tool_secret
 
 logger: logging.Logger = logging.getLogger(__name__)
-
-AGENT_TAG: str = "assistant-workshop"
-MAX_AGENT_NAME_LENGTH: int = 120
-# The concept's target is a tool answer within a second; the timeout only
-# bounds a stuck request so the agent can apologise and move on.
-TOOL_RESPONSE_TIMEOUT_SECONDS: int = 10
-ARGUMENTS_DESCRIPTION: str = "Arguments of the tool call."
-LANGUAGE_DESCRIPTION: str = (
-    "BCP 47 tag of the language the caller speaks right now, such as en, ka, "
-    "ru, he or pt-BR."
-)
-REQUEST_BODY_DESCRIPTION: str = "Tool call of the business assistant."
-
-
-# Concept sections 1 and 6: during opening hours a caller who asks for a
-# person is put through to staff; outside them the agent hands off and a
-# colleague calls back. The call-initiation webhook sets is_open_now.
-TRANSFER_TOOL_DESCRIPTION: str = (
-    "Put the caller through to a staff member of the business."
-)
-TRANSFER_CONDITION: str = (
-    "The caller asks to talk to a person (an operator, a manager, a staff "
-    "member) and the business is open now: is_open_now is "
-    f"'{{{{{OPEN_NOW_VARIABLE}}}}}' and must be '{OPEN_NOW_YES}'. When it is "
-    f"'{OPEN_NOW_NO}', never transfer: use handoff_to_human so a colleague "
-    "calls back."
-)
 
 
 class ElevenLabsVoiceAgentProvisioner(VoiceAgentProvisionerAdapterContract):
@@ -213,154 +177,3 @@ class ElevenLabsVoiceAgentProvisioner(VoiceAgentProvisionerAdapterContract):
                 logger.warning(
                     "Unused voice tool %s was not deleted: %s", tool_id, error
                 )
-
-
-def build_tool_config(
-    tool: LlmToolDefinition,
-    base_url: str,
-    request_headers: JsonObject,
-) -> JsonObject:
-    """ElevenLabs webhook tool that forwards one assistant tool to this backend."""
-
-    input_schema: JsonObject = parse_json_object(str(tool.input_schema_json)) or {}
-    return {
-        "type": "webhook",
-        "name": tool.name.value,
-        "description": str(tool.description),
-        "response_timeout_secs": TOOL_RESPONSE_TIMEOUT_SECONDS,
-        "api_schema": {
-            "url": join_public_url(base_url, build_voice_tool_path(tool.name)),
-            "method": "POST",
-            "request_headers": dict(request_headers),
-            "request_body_schema": {
-                "type": "object",
-                "description": REQUEST_BODY_DESCRIPTION,
-                "properties": {
-                    "arguments": convert_tool_schema(
-                        input_schema, ARGUMENTS_DESCRIPTION
-                    ),
-                    "conversation_id": {
-                        "type": "string",
-                        "dynamic_variable": "system__conversation_id",
-                    },
-                    "caller_id": {
-                        "type": "string",
-                        "dynamic_variable": "system__caller_id",
-                    },
-                    "language": {"type": "string", "description": LANGUAGE_DESCRIPTION},
-                },
-                "required": ["arguments", "conversation_id"],
-            },
-        },
-    }
-
-
-def build_agent_config(
-    spec: VoiceAgentSpec,
-    tool_ids: list[VoicePlatformToolId],
-    request_headers: JsonObject,
-) -> JsonObject:
-    """Create / update body of the business's agent."""
-
-    default_code: str = to_voice_platform_language(spec.default_language)
-    default_greeting: VoiceGreeting | None = find_greeting(spec)
-    built_in_tools: JsonObject = {
-        "end_call": {
-            "type": "system",
-            "name": "end_call",
-            "params": {"system_tool_type": "end_call"},
-        }
-    }
-    language_presets: JsonObject = {}
-    for greeting in spec.greetings:
-        language_code: str = to_voice_platform_language(greeting.language)
-        if language_code == default_code or language_code in language_presets:
-            continue
-
-        language_presets[language_code] = {
-            "overrides": {
-                "agent": {
-                    "first_message": str(greeting.text),
-                    "language": language_code,
-                }
-            }
-        }
-
-    if spec.transfer_phone_number is not None:
-        built_in_tools[TRANSFER_TOOL_NAME] = {
-            "type": "system",
-            "name": TRANSFER_TOOL_NAME,
-            "description": TRANSFER_TOOL_DESCRIPTION,
-            "params": {
-                "system_tool_type": TRANSFER_TOOL_NAME,
-                "transfers": [
-                    {
-                        "transfer_destination": {
-                            "type": "phone",
-                            "phone_number": str(spec.transfer_phone_number),
-                        },
-                        "condition": TRANSFER_CONDITION,
-                    }
-                ],
-                "enable_client_message": True,
-            },
-        }
-
-    if len({to_voice_platform_language(tag) for tag in spec.languages}) > 1:
-        built_in_tools["language_detection"] = {
-            "type": "system",
-            "name": "language_detection",
-            "params": {"system_tool_type": "language_detection"},
-        }
-
-    agent: JsonObject = {
-        "language": default_code,
-        "prompt": {
-            "prompt": str(spec.prompt_text),
-            "tool_ids": [str(tool_id) for tool_id in tool_ids],
-            "built_in_tools": built_in_tools,
-        },
-        # Set per call by the call-initiation webhook; closed until then.
-        "dynamic_variables": {
-            "dynamic_variable_placeholders": {OPEN_NOW_VARIABLE: OPEN_NOW_NO}
-        },
-    }
-    if default_greeting is not None:
-        agent["first_message"] = str(default_greeting.text)
-
-    conversation_config: JsonObject = {"agent": agent}
-    if language_presets:
-        conversation_config["language_presets"] = language_presets
-
-    return {
-        "name": f"{spec.business_name} ({spec.business_id})"[:MAX_AGENT_NAME_LENGTH],
-        "tags": [AGENT_TAG, str(spec.business_id)],
-        "conversation_config": conversation_config,
-        "platform_settings": {
-            "overrides": {
-                "enable_conversation_initiation_client_data_from_webhook": True,
-                "conversation_config_override": {
-                    "agent": {"first_message": True, "language": True}
-                },
-            },
-            "workspace_overrides": {
-                "conversation_initiation_client_data_webhook": {
-                    "url": join_public_url(
-                        str(spec.tool_webhook_base_url),
-                        VOICE_CALL_INITIATION_PATH,
-                    ),
-                    "request_headers": dict(request_headers),
-                }
-            },
-        },
-    }
-
-
-def find_greeting(spec: VoiceAgentSpec) -> VoiceGreeting | None:
-    """Greeting in the default language, else the first one."""
-
-    for greeting in spec.greetings:
-        if greeting.language == spec.default_language:
-            return greeting
-
-    return spec.greetings[0] if spec.greetings else None
