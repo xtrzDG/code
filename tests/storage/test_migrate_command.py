@@ -6,7 +6,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-from app.adapters.storage.postgres.migrate import main
+from app.gateways.cli.migrate import main
 from tests.storage.migration_steps import MIGRATION_NAMES
 from tests.storage.postgres_server import ThrowawayPostgresServer
 from tests.storage.storage_testing import PROJECT_ROOT_DIRECTORY
@@ -69,7 +69,7 @@ def test_module_runs_as_a_command(
     environment = {**os.environ, "DATABASE_URL": database_url}
 
     completed = subprocess.run(
-        [sys.executable, "-m", "app.adapters.storage.postgres.migrate"],
+        [sys.executable, "-m", "app.gateways.cli.migrate"],
         cwd=PROJECT_ROOT_DIRECTORY,
         env=environment,
         capture_output=True,

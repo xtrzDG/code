@@ -75,10 +75,6 @@ class WebhookSignatureHeader(BaseTypedString):
     """
 
 
-class WebhookVerificationToken(BaseTypedString):
-    """Shared secret used to verify incoming webhooks."""
-
-
 class WhatsAppDisplayPhoneNumber(BaseTypedString):
     """Phone number of a WhatsApp business account as Meta displays it."""
 

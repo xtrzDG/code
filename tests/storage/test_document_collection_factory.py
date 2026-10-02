@@ -11,13 +11,13 @@ from app.adapters.storage.postgres.document_collection_factory import (
     build_document_collection,
     build_postgres_connection_pool,
 )
-from app.adapters.storage.postgres.migrate import main
 from app.adapters.storage.postgres.postgres_document_collection_adapter import (
     PostgresDocumentCollectionAdapter,
 )
 from app.clients.postgres.postgres_connection_pool_client import (
     PostgresConnectionPoolClient,
 )
+from app.gateways.cli.migrate import main
 from app.repositories.business_repositories import BusinessRepository
 from app.schemas.constants.storage import CollectionIsolation
 from app.schemas.domain.businesses import BusinessDocument

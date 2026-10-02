@@ -14,12 +14,12 @@ E2E_ENVIRONMENT: dict[str, str] = {
     "APP_ENV": "test",
     "APP_BASE_URL": API_BASE_URL,
     "CORS_ALLOWED_ORIGINS": CABINET_ORIGIN,
-    "ENCRYPTION_KEY": "e2e-encryption-secret-0123456789abcdef",
+    "ENCRYPTION_KEY": "e2e-encryption-secret-0123456789abcdef",  # gitleaks:allow
     "LLM_PROVIDER": "scripted",
     "PLATFORM_ADMIN_EMAILS": ADMIN_EMAIL,
     "TELEGRAM_PLATFORM_BOT_TOKEN": PLATFORM_BOT_TOKEN,
     "ELEVENLABS_API_KEY": "xi-e2e-key",
-    "ELEVENLABS_WEBHOOK_SECRET": "elevenlabs-webhook-secret-e2e",
+    "ELEVENLABS_WEBHOOK_SECRET": "elevenlabs-webhook-secret-e2e",  # gitleaks:allow
 }
 
 type JsonObject = dict[str, Any]

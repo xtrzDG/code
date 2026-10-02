@@ -31,7 +31,7 @@ uv, Python 3.14, ruff, mypy и pyright в строгом режиме, pytest, d
 | --- | --- | --- |
 | HTTP API | `app.main:create_application` (фабрика uvicorn) | кабинет, каталог, вебхуки каналов, голоса и оплаты, виджет сайта |
 | Фоновый воркер | `python -m app.worker_main` | периодические задачи и очередь задач по полосам (автотесты версий помощника и др.); воркеров может быть сколько угодно; в разработке без Postgres — поток внутри API (`EMBEDDED_WORKER`) |
-| Миграции | `python -m app.adapters.storage.postgres.migrate` | схема Postgres (ЕС) с изоляцией по бизнесу (RLS) |
+| Миграции | `python -m app.gateways.cli.migrate` | схема Postgres (ЕС) с изоляцией по бизнесу (RLS) |
 
 Все три собираются в один образ (`Dockerfile`, роли `api`, `worker`, `migrate`);
 кабинет владельца на Next.js — отдельный образ `web/Dockerfile`.
@@ -193,8 +193,8 @@ Langfuse, Sentry — ненужные оставьте пустыми. Ворк�
 
 ```bash
 export DATABASE_URL=postgresql://app_user:...@host:5432/workshop?sslmode=require
-uv run python -m app.adapters.storage.postgres.migrate --dry-run   # что будет применено
-uv run python -m app.adapters.storage.postgres.migrate             # применить
+uv run python -m app.gateways.cli.migrate --dry-run   # что будет применено
+uv run python -m app.gateways.cli.migrate             # применить
 ```
 
 Миграции из `migrations/` применяются по порядку, каждая в своей транзакции;
@@ -447,9 +447,26 @@ uv run pyright
 uv run pytest
 ```
 
+Короче — через [`just`](https://just.systems) (`justfile`): `just setup`
+(зависимости и git-хук `.pre-commit-config.yaml`), `just dev` (API с демо-данными
+и кабинет), `just check` (всё, что CI проверяет в коде бэкенда и кабинета),
+`just gen`, `just e2e`, `just security`, `just db-reset`.
+
+Ворота качества в CI: покрытие строк и ветвей `app/` не ниже 95 %
+(`pytest -n auto --cov=app --cov-branch`), пороги покрытия `src/lib` и `_lib`
+кабинета (`npm run test:coverage`), слои ролей (`.importlinter`, решение
+[ADR 0002](docs/adr/0002-role-chain-and-layers.md)), мёртвый код (`vulture`),
+актуальность `openapi.json` и `schema.d.ts`, совместимость API внутри `/v1`
+(`oasdiff`, [docs/api-versioning.md](docs/api-versioning.md),
+[docs/API_CHANGELOG.md](docs/API_CHANGELOG.md)) и проверки безопасности
+(pip-audit, npm audit, gitleaks, bandit, CodeQL, Trivy, SBOM; Dependabot раз в
+неделю) — см. [SECURITY.md](SECURITY.md). Решения архитектуры —
+[docs/adr/](docs/adr/README.md).
+
 CI (`.github/workflows/ci.yml`) прогоняет те же проверки бэкенда (с Postgres 16 из
-пакетов Ubuntu), линтер, проверку типов, тесты и сборку кабинета (`web/`), собирает
-оба Docker-образа и проверяет `docker-compose.yml`. Задача `e2e` после проверки
+пакетов Ubuntu), линтер, проверку типов, тесты и сборку кабинета (`web/`), проверки
+безопасности, собирает оба Docker-образа, сканирует их Trivy и проверяет
+`docker-compose.yml`. Задача `e2e` после проверки
 кабинета запускает браузерные тесты Playwright (`web/e2e/`): API в режиме
 разработки и собранный кабинет, вход по телефону и e-mail, создание бизнеса,
 анкета, все разделы, смена языка и демо виджета (`cd web && npm run e2e`, см.

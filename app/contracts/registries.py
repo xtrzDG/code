@@ -78,20 +78,6 @@ class LoginCodeSendLockRegistryContract(RegistryContract, Protocol):
 
 
 class RequestRateLimitRegistryContract(RegistryContract, Protocol):
-    def try_acquire(
-        self,
-        key: str,
-        limit: int,
-        window_seconds: int,
-        now: Microseconds,
-    ) -> bool:
-        """
-        Count one request for `key` (a technical key, e.g. "widget-poll:ip:…")
-        and tell whether it stays within `limit` requests per sliding window
-        of `window_seconds` in this process. A refused request is not counted.
-        """
-        raise NotImplementedError
-
     def try_acquire_all(
         self,
         counters: list[tuple[str, int]],

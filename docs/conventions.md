@@ -47,9 +47,10 @@ Every HTTP endpoint runs `operator.operate` -> `pipeline.start` ->
   responsibilities (a use case with its helpers in a sub-package, data
   tables in data modules, a test file's shared fixtures and fakes in their
   own modules next to it), not at an arbitrary line;
-  `tests/architecture_policy/test_source_file_size.py` checks it. The
-  cabinet's files under `web/src/` and `web/e2e/` have the same limit
-  (ESLint `max-lines`, generated files exempt); CI fails on a longer file.
+  `tests/architecture_policy/test_source_file_size.py` checks it, and the
+  cabinet's files under `web/src/` and `web/e2e/` too (generated files and
+  the translation dictionaries exempt); ESLint `max-lines` checks the
+  cabinet as well. CI fails on a longer file.
 - Module-specific DTOs go to a new file `app/schemas/dto/<module>.py`; do not
   edit DTO files owned by the foundation unless a field is truly missing.
 - New primitives go to `app/schemas/typings/<bounded_context>/<allowed_name>.py`
@@ -81,9 +82,16 @@ Every HTTP endpoint runs `operator.operate` -> `pipeline.start` ->
   (e.g. `BookingPage`). Use cases page with `take_page`
   (`app/utilities/paging/cursor_paging.py`): newest first by a timestamp, ties
   by id. Filters run before paging.
-- Request bodies read with `build_json_body_dependency` must also be described
-  for OpenAPI (`openapi_extra=describe_json_body(...)`), so the cabinet's
-  generated client knows them.
+- JSON request bodies have one parsing stack,
+  `app/gateways/http/strict_request_parsing.py`: read them with
+  `build_json_body_dependency(Body)` (or `optional=True` when an empty body
+  means all defaults) and describe them for OpenAPI with
+  `openapi_extra=describe_json_body(Body)` (same `optional`), so the
+  cabinet's generated client knows them. Signed webhooks and bodies whose
+  type depends on the path read `read_raw_request_body` and validate with
+  `parse_json_body`. Path ids go through `parse_path_identifier`, optional
+  query values through `parse_optional` (`query_parsing.py`), `?language=`
+  and Accept-Language through `language_negotiation.py`.
 - Router tests build a small `FastAPI()` with `install_error_handlers` and the
   module router, and call it with `fastapi.testclient.TestClient`.
 
@@ -105,4 +113,9 @@ Every HTTP endpoint runs `operator.operate` -> `pipeline.start` ->
   (`app/repositories/*` over `InMemoryDocumentCollectionAdapter`), and fakes
   that implement contracts.
 - Before committing: `uv run ruff check . && uv run ruff format --check . &&
-  uv run mypy . && uv run pyright && uv run pytest`.
+  uv run mypy . && uv run pyright && uv run pytest` (or `just check`, which
+  also runs the cabinet checks). pytest includes the architecture policies:
+  the role layers of `.importlinter` (`lint-imports`), dead code
+  (`vulture`, whitelist in `vulture_whitelist.py`) and the 300-line limit.
+  CI also enforces at least 95 % line-and-branch coverage of `app/`
+  (`uv run pytest -n auto --cov=app --cov-branch --cov-fail-under=95`).

@@ -13,11 +13,19 @@ concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
+# Every `uses:` is pinned to a commit SHA (the comment names the release);
+# Dependabot (.github/dependabot.yml) proposes updates weekly. Downloaded
+# tools are pinned by version and checked against their SHA-256.
+env:
+  GITLEAKS_VERSION: "8.30.1"
+  GITLEAKS_SHA256: "551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb"
+  PIP_AUDIT_VERSION: "2.10.1"
+
 jobs:
   backend:
-    name: Backend (ruff, mypy, pyright, pytest)
+    name: Backend (ruff, mypy, pyright, pytest with coverage)
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 15
     env:
       # The storage tests start a throwaway Postgres 16 from these binaries
       # (tests/storage/postgres_server.py); they are skipped without them, so
@@ -25,10 +33,12 @@ jobs:
       POSTGRES_BIN_DIRECTORY: /usr/lib/postgresql/16/bin
       UV_FROZEN: "1"
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Install uv and Python 3.14
-        uses: astral-sh/setup-uv@v6
+        uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
         with:
           python-version: "3.14"
           enable-cache: true
@@ -57,25 +67,33 @@ jobs:
       - name: Type check (pyright)
         run: uv run pyright
 
-      # Includes the architecture policies, such as at most 300 lines per
-      # file in app/, scripts/ and tests/ (test_source_file_size.py).
-      - name: Tests
-        run: uv run pytest -ra
+      # In parallel (pytest-xdist) with line and branch coverage of app/,
+      # which may not fall below 95 % ([tool.coverage] in pyproject.toml).
+      # Includes the architecture policies: role layers (.importlinter),
+      # dead code (vulture), at most 300 lines per file in app/, scripts/,
+      # tests/ and web/src/, typed domain primitives, the API changelog.
+      - name: Tests with coverage
+        run: >-
+          uv run pytest -ra -n auto
+          --cov=app --cov-branch --cov-fail-under=95
+          --cov-report=term:skip-covered
 
   web:
-    name: Cabinet (lint, typecheck, test, build)
+    name: Cabinet (lint, typecheck, test with coverage, generated client, build)
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 15
     defaults:
       run:
         working-directory: web
     env:
       NEXT_TELEMETRY_DISABLED: "1"
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Install Node 22
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: 22
           cache: npm
@@ -91,18 +109,75 @@ jobs:
       - name: Type check
         run: npm run typecheck
 
-      - name: Tests
-        run: npm test
+      # Coverage floors of src/lib and the routes' _lib (vitest.config.mts).
+      - name: Tests with coverage
+        run: npm run test:coverage
+
+      # The typed client must be generated from the committed openapi.json
+      # (which the backend tests compare with the API itself).
+      - name: Generated API client is current
+        run: |
+          npm run gen:api:types
+          git diff --exit-code -- src/api/schema.d.ts \
+            || { echo "::error::Run 'cd web && npm run gen:api' and commit src/api/schema.d.ts."; exit 1; }
 
       - name: Build
         run: npm run build
 
-  images:
-    name: Docker images and Compose file
+  security:
+    name: Security (dependencies, secrets, static analysis)
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # gitleaks reads the whole history, not only the last commit.
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+        with:
+          python-version: "3.14"
+          enable-cache: true
+          cache-dependency-glob: uv.lock
+
+      # Known vulnerabilities in the locked Python dependencies (PyPI and
+      # OSV advisories); --strict fails when a package cannot be audited.
+      - name: Python dependencies (pip-audit)
+        run: >-
+          uv export --frozen --no-emit-project --format requirements-txt
+          | uvx "pip-audit==${PIP_AUDIT_VERSION}" --strict --disable-pip
+          --requirement /dev/stdin
+
+      # Runtime dependencies of the cabinet; dev tools never reach users.
+      - name: Cabinet dependencies (npm audit)
+        working-directory: web
+        run: npm audit --omit=dev --audit-level=high
+
+      # Reviewed false positives are listed by fingerprint in .gitleaksignore.
+      - name: Secrets in the whole history (gitleaks)
+        run: |
+          archive="gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+          curl --silent --show-error --fail --location --output "$RUNNER_TEMP/$archive" \
+            "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/$archive"
+          echo "${GITLEAKS_SHA256}  $RUNNER_TEMP/$archive" | sha256sum --check
+          tar --extract --gzip --file "$RUNNER_TEMP/$archive" --directory "$RUNNER_TEMP" gitleaks
+          "$RUNNER_TEMP/gitleaks" git --redact --no-banner --log-opts="--all" .
+
+      # Static analysis of the backend; bandit-baseline.json holds the
+      # findings reviewed on its date (SECURITY.md), new ones fail.
+      - name: Python static analysis (bandit)
+        run: uv run --frozen --only-group dev bandit -c pyproject.toml -r app scripts -b bandit-baseline.json
+
+  images:
+    name: Docker images (build, smoke test, Trivy, SBOM)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Validate docker-compose.yml
         run: docker compose config --quiet
@@ -132,11 +207,50 @@ jobs:
           docker logs api
           exit 1
 
+      # Fails on HIGH and CRITICAL vulnerabilities that have a fix; reviewed
+      # exceptions go to .trivyignore with a reason and an expiry date.
+      - name: Scan the backend image (Trivy)
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: assistant-workshop-backend:ci
+          scanners: vuln
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          exit-code: "1"
+          trivyignores: .trivyignore
+
+      - name: Scan the cabinet image (Trivy)
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: assistant-workshop-web:ci
+          scanners: vuln
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          exit-code: "1"
+          trivyignores: .trivyignore
+          skip-setup-trivy: true
+
+      - name: SBOM of the backend image (syft)
+        uses: anchore/sbom-action@3ad7283483fc7af8ff2b4ea19663c2d5ca935e26 # v0.24.2
+        with:
+          image: assistant-workshop-backend:ci
+          format: spdx-json
+          artifact-name: sbom-backend.spdx.json
+          upload-artifact-retention: 30
+
+      - name: SBOM of the cabinet image (syft)
+        uses: anchore/sbom-action@3ad7283483fc7af8ff2b4ea19663c2d5ca935e26 # v0.24.2
+        with:
+          image: assistant-workshop-web:ci
+          format: spdx-json
+          artifact-name: sbom-web.spdx.json
+          upload-artifact-retention: 30
+
   e2e:
     name: End-to-end (Playwright, API + cabinet)
     needs: web
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 20
     defaults:
       run:
         working-directory: web
@@ -144,10 +258,12 @@ jobs:
       NEXT_TELEMETRY_DISABLED: "1"
       UV_FROZEN: "1"
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Install uv and Python 3.14
-        uses: astral-sh/setup-uv@v6
+        uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
         with:
           python-version: "3.14"
           enable-cache: true
@@ -158,7 +274,7 @@ jobs:
         run: uv sync --frozen
 
       - name: Install Node 22
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: 22
           cache: npm
@@ -177,7 +293,7 @@ jobs:
 
       - name: Keep the report, traces and API log
         if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: e2e-report
           path: |

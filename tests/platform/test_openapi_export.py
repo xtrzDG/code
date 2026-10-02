@@ -12,7 +12,11 @@ from pathlib import Path
 
 import pytest
 
-from scripts.export_openapi import export_openapi_document
+from scripts.export_openapi import (
+    EmbeddedDefinitionError,
+    export_openapi_document,
+    require_root_resolvable_references,
+)
 
 COMMITTED_DESCRIPTION: Path = (
     Path(__file__).resolve().parents[2] / "web" / "openapi.json"
@@ -32,3 +36,15 @@ def test_cabinet_api_description_matches_the_api() -> None:
     assert (
         COMMITTED_DESCRIPTION.read_text(encoding="utf-8") == export_openapi_document()
     ), "Run `cd web && npm run gen:api` and commit the result."
+
+
+def test_schema_local_references_are_refused() -> None:
+    document: dict[str, object] = {
+        "paths": {"/x": {"post": {"schema": {"$ref": "#/$defs/Hidden"}}}},
+        "components": {"schemas": {"A": {"$ref": "#/components/schemas/B"}}},
+    }
+
+    with pytest.raises(EmbeddedDefinitionError, match="Hidden"):
+        require_root_resolvable_references(document)
+
+    require_root_resolvable_references(document["components"])

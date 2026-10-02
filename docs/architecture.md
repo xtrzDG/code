@@ -36,6 +36,10 @@ HTTP (FastAPI)              app/gateways/http/      маршруты, коды �
 repositories ─ adapters (app/adapters/) ─ clients (app/clients/)  внешние системы
 ```
 
+Направление проверяет `lint-imports` по контрактам `.importlinter` в каждом прогоне
+тестов; утилиты — чистые помощники, их могут импортировать все роли
+([ADR 0002](adr/0002-role-chain-and-layers.md)).
+
 ## Данные (ТЗ §2)
 
 Каждая таблица ТЗ — документ в `app/schemas/domain/`. Документы бизнеса несут
@@ -164,6 +168,8 @@ repositories ─ adapters (app/adapters/) ─ clients (app/clients/)  внешн
   `TracingLlmAdapter` оборачивает им маршрутизирующий адаптер модели, а
   фасилитаторы сами зависят от адаптеров.
 - HTTP: `app/main.py` (фабрика uvicorn) и `app/gateways/http/router_assembly.py`.
+  Миграции: `python -m app.gateways.cli.migrate` — шлюз командной строки, он
+  запускает use case применения миграций (`app/gateways/cli/`).
   Фоновый воркер: `app/worker_main.py`, задачи перечислены в
   `app/containers/gateways.py`. В разработке без Postgres тот же воркер идёт
   потоком внутри API (`EMBEDDED_WORKER`, жизненный цикл в `app/main.py`): данные в

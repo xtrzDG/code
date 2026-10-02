@@ -25,7 +25,7 @@ from app.schemas.exceptions.application_errors import (
 from app.schemas.exceptions.base_exception import ApplicationError
 
 DOCUMENT_SCHEMA_NAME: str = "workshop"
-MIGRATION_COMMAND: str = "uv run python -m app.adapters.storage.postgres.migrate"
+MIGRATION_COMMAND: str = "uv run python -m app.gateways.cli.migrate"
 ROW_LEVEL_SECURITY_MARKER: str = "row-level security"
 
 

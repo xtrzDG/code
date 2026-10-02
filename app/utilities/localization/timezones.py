@@ -1,4 +1,4 @@
-"""IANA time zones: validation, per-country lists and display names."""
+"""IANA time zones: known names, per-country lists and display names."""
 
 from collections.abc import Sequence
 from datetime import UTC, datetime, timedelta
@@ -9,35 +9,12 @@ from zoneinfo import ZoneInfo, available_timezones
 from babel.core import get_global
 from typed_time_provider import Microseconds
 
-from app.schemas.exceptions.application_errors import ValidationFailedError
 from app.schemas.typings.localization.constrained_strings import TimezoneName
 from app.schemas.typings.localization.strings import TimezoneDisplayName
 
-MAX_RAW_TIMEZONE_NAME_LENGTH: int = 64
 UNIX_EPOCH: datetime = datetime(1970, 1, 1, tzinfo=UTC)
 SECONDS_IN_MINUTE: int = 60
 MINUTES_IN_HOUR: int = 60
-
-
-def parse_timezone_name(raw_timezone_name: str) -> TimezoneName:
-    """
-    Validate a name against the IANA database: "asia/tbilisi" -> "Asia/Tbilisi".
-
-    Raises:
-        ValidationFailedError: the IANA database has no such time zone.
-    """
-
-    trimmed_name: str = raw_timezone_name.strip()
-    canonical_name: str | None = None
-    if len(trimmed_name) <= MAX_RAW_TIMEZONE_NAME_LENGTH:
-        canonical_name = load_canonical_timezone_names().get(trimmed_name.casefold())
-
-    if canonical_name is None:
-        raise ValidationFailedError(
-            "Time zone must be an IANA name such as 'Asia/Tbilisi' or 'UTC'."
-        )
-
-    return TimezoneName(canonical_name)
 
 
 def is_known_timezone_name(timezone_name: str) -> bool:
@@ -109,10 +86,3 @@ def load_available_timezone_names() -> frozenset[str]:
     """Every IANA name this process can load with zoneinfo."""
 
     return frozenset(available_timezones())
-
-
-@cache
-def load_canonical_timezone_names() -> dict[str, str]:
-    return {
-        zone_name.casefold(): zone_name for zone_name in load_available_timezone_names()
-    }

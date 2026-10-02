@@ -15,8 +15,8 @@ from app.schemas.dto.localization import LocalizedText
 from app.schemas.typings.localization.constrained_strings import LanguageTag
 
 ENGLISH: LanguageTag = LanguageTag("en")
-FIRST_STRONG_ISOLATE: str = "⁨"
-POP_DIRECTIONAL_ISOLATE: str = "⁩"
+FIRST_STRONG_ISOLATE: str = "\u2068"
+POP_DIRECTIONAL_ISOLATE: str = "\u2069"
 RIGHT_TO_LEFT: str = "right-to-left"
 
 
@@ -56,10 +56,6 @@ def format_full_date(value: date, language: LanguageTag) -> str:
     """Date with weekday, e.g. "Monday, October 5, 2026" / "5 Ekim 2026 Pazartesi"."""
 
     return format_date(value, "full", locale=find_locale(language))
-
-
-def format_weekday(value: date, language: LanguageTag) -> str:
-    return format_date(value, "EEEE", locale=find_locale(language))
 
 
 def isolate(value: str, language: LanguageTag) -> str:

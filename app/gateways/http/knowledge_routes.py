@@ -2,10 +2,17 @@
 
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Query, Request, status
+from fastapi import APIRouter, Depends, Query, status
 
 from app.contracts.operator_contract import OperatorContract
+from app.gateways.http.language_negotiation import parse_language_parameter
 from app.gateways.http.paging_query import parse_page_request
+from app.gateways.http.query_parsing import parse_boolean_text, parse_optional
+from app.gateways.http.strict_request_parsing import (
+    build_json_body_dependency,
+    describe_json_body,
+    parse_path_identifier,
+)
 from app.gateways.http.user_authentication import CurrentUserDependency
 from app.schemas.constants.knowledge import KnowledgeItemKind
 from app.schemas.domain.businesses import BusinessDocument
@@ -27,22 +34,12 @@ from app.schemas.dto.knowledge_admin import (
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.knowledge.prefixed_id import KnowledgeItemId
 from app.schemas.typings.users.prefixed_id import UserId
-from app.utilities.knowledge.request_parsing import (
-    json_body_openapi,
-    parse_boolean_text,
-    parse_json_body,
-    parse_language_parameter,
-    parse_path_value,
-    parse_query_value,
-)
 
 type BusinessAccessOperator = OperatorContract[BusinessAccessRequest, BusinessDocument]
 
-
-async def read_request_body(request: Request) -> bytes:
-    """Raw request body; routes validate it in JSON mode against strict DTOs."""
-
-    return await request.body()
+read_item_input = build_json_body_dependency(KnowledgeItemInput)
+read_item_patch = build_json_body_dependency(KnowledgeItemPatch)
+read_search_input = build_json_body_dependency(KnowledgeSearchInput)
 
 
 def build_knowledge_router(
@@ -81,9 +78,9 @@ def build_knowledge_router(
     router: APIRouter = APIRouter(tags=["knowledge"])
 
     def authorize(user_id: UserId, raw_business_id: str) -> BusinessDocument:
-        business_id: BusinessId = parse_path_value(
-            BusinessId,
+        business_id: BusinessId = parse_path_identifier(
             raw_business_id,
+            BusinessId,
             "Business",
         )
         return business_access_operator.operate(
@@ -104,8 +101,8 @@ def build_knowledge_router(
         return list_knowledge_items_operator.operate(
             KnowledgeItemListQuery(
                 business_id=business.id,
-                kind=parse_query_value(KnowledgeItemKind, kind, "kind"),
-                is_active=parse_query_value(parse_boolean_text, is_active, "is_active"),
+                kind=parse_optional(kind, KnowledgeItemKind, "kind"),
+                is_active=parse_optional(is_active, parse_boolean_text, "is_active"),
                 language=parse_language_parameter(language),
                 page=parse_page_request(limit, cursor),
             )
@@ -114,37 +111,33 @@ def build_knowledge_router(
     @router.post(
         "/v1/businesses/{business_id}/knowledge",
         status_code=status.HTTP_201_CREATED,
-        openapi_extra=json_body_openapi(KnowledgeItemInput),
+        openapi_extra=describe_json_body(KnowledgeItemInput),
     )
     def create_knowledge_item(
         business_id: str,
         user_id: Annotated[UserId, Depends(current_user)],
-        raw_body: Annotated[bytes, Depends(read_request_body)],
+        item: Annotated[KnowledgeItemInput, Depends(read_item_input)],
         language: Annotated[str | None, Query()] = None,
     ) -> KnowledgeItemDetails:
         business: BusinessDocument = authorize(user_id, business_id)
         return create_knowledge_item_operator.operate(
             CreateKnowledgeItemCommand(
                 business_id=business.id,
-                item=parse_json_body(KnowledgeItemInput, raw_body),
+                item=item,
                 language=parse_language_parameter(language),
             )
         )
 
     @router.post(
         "/v1/businesses/{business_id}/knowledge/search",
-        openapi_extra=json_body_openapi(KnowledgeSearchInput),
+        openapi_extra=describe_json_body(KnowledgeSearchInput),
     )
     def search_knowledge(
         business_id: str,
         user_id: Annotated[UserId, Depends(current_user)],
-        raw_body: Annotated[bytes, Depends(read_request_body)],
+        search_input: Annotated[KnowledgeSearchInput, Depends(read_search_input)],
     ) -> KnowledgeSearchResult:
         business: BusinessDocument = authorize(user_id, business_id)
-        search_input: KnowledgeSearchInput = parse_json_body(
-            KnowledgeSearchInput,
-            raw_body,
-        )
         return search_knowledge_operator.operate(
             KnowledgeSearchRequest(
                 business_id=business.id,
@@ -165,28 +158,32 @@ def build_knowledge_router(
         return get_knowledge_item_operator.operate(
             KnowledgeItemQuery(
                 business_id=business.id,
-                item_id=parse_path_value(KnowledgeItemId, item_id, "Knowledge item"),
+                item_id=parse_path_identifier(
+                    item_id, KnowledgeItemId, "Knowledge item"
+                ),
                 language=parse_language_parameter(language),
             )
         )
 
     @router.patch(
         "/v1/businesses/{business_id}/knowledge/{item_id}",
-        openapi_extra=json_body_openapi(KnowledgeItemPatch),
+        openapi_extra=describe_json_body(KnowledgeItemPatch),
     )
     def update_knowledge_item(
         business_id: str,
         item_id: str,
         user_id: Annotated[UserId, Depends(current_user)],
-        raw_body: Annotated[bytes, Depends(read_request_body)],
+        patch: Annotated[KnowledgeItemPatch, Depends(read_item_patch)],
         language: Annotated[str | None, Query()] = None,
     ) -> KnowledgeItemDetails:
         business: BusinessDocument = authorize(user_id, business_id)
         return update_knowledge_item_operator.operate(
             UpdateKnowledgeItemCommand(
                 business_id=business.id,
-                item_id=parse_path_value(KnowledgeItemId, item_id, "Knowledge item"),
-                patch=parse_json_body(KnowledgeItemPatch, raw_body),
+                item_id=parse_path_identifier(
+                    item_id, KnowledgeItemId, "Knowledge item"
+                ),
+                patch=patch,
                 language=parse_language_parameter(language),
             )
         )
@@ -204,7 +201,9 @@ def build_knowledge_router(
         delete_knowledge_item_operator.operate(
             DeleteKnowledgeItemCommand(
                 business_id=business.id,
-                item_id=parse_path_value(KnowledgeItemId, item_id, "Knowledge item"),
+                item_id=parse_path_identifier(
+                    item_id, KnowledgeItemId, "Knowledge item"
+                ),
             )
         )
 

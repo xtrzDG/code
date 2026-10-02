@@ -1,17 +1,15 @@
 """Billing: subscription, invoices, checkout and the Flitt payment webhook."""
 
-from collections.abc import Callable, Coroutine
-from typing import Annotated, Any
+from typing import Annotated
 
-from fastapi import APIRouter, Depends, Header, Request, status
-from pydantic import BaseModel, ValidationError
+from fastapi import APIRouter, Depends, Header, status
 
 from app.contracts.operator_contract import OperatorContract
 from app.gateways.http.strict_request_parsing import (
     build_json_body_dependency,
     describe_json_body,
-    describe_validation_error,
     parse_path_identifier,
+    read_raw_request_body,
 )
 from app.gateways.http.user_authentication import CurrentUserDependency
 from app.schemas.dto.billing_cabinet import (
@@ -54,39 +52,12 @@ type PaymentWebhookOperator = OperatorContract[
     PaymentWebhookDelivery,
     PaymentWebhookReceipt,
 ]
-type OptionalJsonBodyDependency[Body: BaseModel] = Callable[
-    [Request],
-    Coroutine[Any, Any, Body],
-]
-
-
-def build_optional_json_body_dependency[Body: BaseModel](
-    body_type: type[Body],
-) -> OptionalJsonBodyDependency[Body]:
-    """
-    Parse a JSON body whose fields are all optional; an empty body means
-    the defaults. Invalid bodies become ValidationFailedError (HTTP 422).
-    """
-
-    async def read_optional_json_body(request: Request) -> Body:
-        raw_body: bytes = await request.body()
-        try:
-            return body_type.model_validate_json(raw_body.strip() or b"{}")
-        except ValidationError as error:
-            raise ValidationFailedError(describe_validation_error(error)) from error
-
-    return read_optional_json_body
-
-
-async def read_raw_body(request: Request) -> bytes:
-    """The request body exactly as sent (signatures cover the raw values)."""
-
-    return await request.body()
-
-
-read_start_trial_body = build_optional_json_body_dependency(StartTrialRequest)
-read_change_plan_body = build_optional_json_body_dependency(ChangePlanRequest)
-read_start_checkout_body = build_optional_json_body_dependency(StartCheckoutRequest)
+read_start_trial_body = build_json_body_dependency(StartTrialRequest, optional=True)
+read_change_plan_body = build_json_body_dependency(ChangePlanRequest, optional=True)
+read_start_checkout_body = build_json_body_dependency(
+    StartCheckoutRequest,
+    optional=True,
+)
 read_subscribe_body = build_json_body_dependency(SubscribeRequest)
 
 
@@ -139,7 +110,7 @@ def build_billing_router(
     @router.post(
         "/v1/businesses/{business_id}/billing/trial",
         status_code=status.HTTP_201_CREATED,
-        openapi_extra=describe_json_body(StartTrialRequest),
+        openapi_extra=describe_json_body(StartTrialRequest, optional=True),
     )
     def start_trial(
         business_id: str,
@@ -158,7 +129,7 @@ def build_billing_router(
 
     @router.post(
         "/v1/businesses/{business_id}/billing/plan",
-        openapi_extra=describe_json_body(ChangePlanRequest),
+        openapi_extra=describe_json_body(ChangePlanRequest, optional=True),
     )
     def change_plan(
         business_id: str,
@@ -192,7 +163,7 @@ def build_billing_router(
     @router.post(
         "/v1/businesses/{business_id}/billing/checkout",
         status_code=status.HTTP_201_CREATED,
-        openapi_extra=describe_json_body(StartCheckoutRequest),
+        openapi_extra=describe_json_body(StartCheckoutRequest, optional=True),
     )
     def start_checkout(
         business_id: str,
@@ -231,7 +202,7 @@ def build_billing_router(
 
     @router.post(FLITT_WEBHOOK_PATH, tags=["payments"])
     def receive_flitt_webhook(
-        raw_body: Annotated[bytes, Depends(read_raw_body)],
+        raw_body: Annotated[bytes, Depends(read_raw_request_body)],
         content_type: Annotated[str | None, Header()] = None,
     ) -> PaymentWebhookReceipt:
         try:

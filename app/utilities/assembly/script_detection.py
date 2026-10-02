@@ -77,12 +77,6 @@ SCRIPT_RANGES: dict[str, tuple[CodePointRange, ...]] = {
 }
 
 
-def is_detectable_script(script_code: ScriptCode | None) -> bool:
-    """True when the script's letters can be recognised by code point."""
-
-    return script_code is not None and str(script_code) in SCRIPT_RANGES
-
-
 def is_written_in_script(text: str, script_code: ScriptCode | None) -> bool | None:
     """
     True when at least half of the letters belong to the script, False when

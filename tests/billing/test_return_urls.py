@@ -17,7 +17,7 @@ def test_the_cabinet_base_url_origin_is_an_allowed_return_origin() -> None:
     settings = assemble_app_settings(
         {
             "APP_ENV": "production",
-            "ENCRYPTION_KEY": "return-urls-secret-0123456789abcdef",
+            "ENCRYPTION_KEY": "return-urls-secret-0123456789abcdef",  # gitleaks:allow
             "APP_BASE_URL": "https://api.workshop.example",
             "CABINET_BASE_URL": "https://cabinet.workshop.example/app/",
         }
@@ -57,7 +57,7 @@ def test_without_cabinet_settings_only_the_api_address_is_allowed() -> None:
     settings = assemble_app_settings(
         {
             "APP_ENV": "production",
-            "ENCRYPTION_KEY": "return-urls-secret-0123456789abcdef",
+            "ENCRYPTION_KEY": "return-urls-secret-0123456789abcdef",  # gitleaks:allow
             "APP_BASE_URL": "https://api.workshop.example",
         }
     )

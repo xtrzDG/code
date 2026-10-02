@@ -1,10 +1,11 @@
 """Transport-boundary parsing of request bodies, path ids and client IPs.
 
-Request DTOs are strict pydantic models: enums and typed primitives are
-accepted from JSON text but not from already-decoded Python values, which is
-what FastAPI's own body validation would pass. Bodies are therefore read as
-raw JSON and validated with `model_validate_json`; failures become
-ValidationFailedError (HTTP 422) through the shared error handlers.
+This is the one JSON-body stack of the HTTP layer. Request DTOs are strict
+pydantic models: enums and typed primitives are accepted from JSON text but
+not from already-decoded Python values, which is what FastAPI's own body
+validation would pass. Bodies are therefore read as raw JSON and validated
+with `model_validate_json`; failures become ValidationFailedError (HTTP 422)
+through the shared error handlers.
 """
 
 from collections.abc import Callable, Coroutine
@@ -26,13 +27,21 @@ type JsonBodyDependency[Body: BaseModel] = Callable[
 
 MAX_REPORTED_VALIDATION_ERRORS: int = 5
 LOCAL_DEFINITION_PREFIX: str = "#/$defs/"
+EMPTY_JSON_OBJECT: bytes = b"{}"
+EMPTY_BODY_MESSAGE: str = "The request body must be a JSON object."
 
 
 def build_json_body_dependency[Body: BaseModel](
     body_type: type[Body],
+    *,
+    optional: bool = False,
 ) -> JsonBodyDependency[Body]:
     """
     Build a FastAPI dependency that parses the JSON body into `body_type`.
+
+    With `optional=True` an empty body means `{}` (every field of such a
+    body has a default); describe it with `describe_json_body(...,
+    optional=True)`.
 
     Usage:
         read_body = build_json_body_dependency(CreateBusinessRequest)
@@ -45,47 +54,99 @@ def build_json_body_dependency[Body: BaseModel](
     """
 
     async def read_json_body(request: Request) -> Body:
-        raw_body: bytes = await request.body()
-        try:
-            return body_type.model_validate_json(raw_body)
-        except ValidationError as error:
-            raise ValidationFailedError(describe_validation_error(error)) from error
+        return parse_json_body(body_type, await request.body(), optional=optional)
 
     return read_json_body
 
 
-def describe_json_body(body_type: type[BaseModel]) -> dict[str, Any]:
+async def read_raw_request_body(request: Request) -> bytes:
     """
-    OpenAPI `requestBody` for a route that reads its body through
-    `build_json_body_dependency`, with nested models inlined.
+    The request body exactly as sent: for signed webhooks (signatures cover
+    the raw bytes) and for routes whose body type depends on the path, which
+    then validate it with `parse_json_body`.
     """
 
-    schema: dict[str, object] = body_type.model_json_schema()
-    definitions: dict[str, object] = cast(
-        dict[str, object],
-        schema.pop("$defs", {}),
-    )
+    return await request.body()
+
+
+def parse_json_body[Body: BaseModel](
+    body_type: type[Body],
+    raw_body: bytes,
+    *,
+    optional: bool = False,
+) -> Body:
+    """
+    Validate a raw JSON request body as `body_type` in JSON mode.
+
+    Raises:
+        ValidationFailedError: the body is empty (unless optional), not JSON,
+            or breaks the schema.
+    """
+
+    if raw_body.strip() == b"":
+        if not optional:
+            raise ValidationFailedError(EMPTY_BODY_MESSAGE)
+
+        raw_body = EMPTY_JSON_OBJECT
+
+    try:
+        return body_type.model_validate_json(raw_body)
+    except ValidationError as error:
+        raise ValidationFailedError(describe_validation_error(error)) from error
+
+
+def describe_json_body(
+    *body_types: type[BaseModel],
+    optional: bool = False,
+) -> dict[str, Any]:
+    """
+    OpenAPI `requestBody` for a route that reads its body through this
+    module, with nested models inlined. Several body types (the body type
+    depends on the path) become a `oneOf`.
+    """
+
+    if body_types == ():
+        raise ValueError("describe_json_body needs at least one body type.")
+
+    schemas: list[object] = [inline_model_schema(body_type) for body_type in body_types]
     return {
         "requestBody": {
-            "required": True,
+            "required": not optional,
             "content": {
                 "application/json": {
-                    "schema": inline_local_references(schema, definitions)
+                    "schema": schemas[0] if len(schemas) == 1 else {"oneOf": schemas}
                 }
             },
         }
     }
 
 
+def inline_model_schema(body_type: type[BaseModel]) -> object:
+    """The JSON schema of a model with its `$defs` inlined."""
+
+    schema: dict[str, object] = body_type.model_json_schema()
+    definitions: dict[str, object] = cast(
+        dict[str, object],
+        schema.pop("$defs", {}),
+    )
+    return inline_local_references(schema, definitions)
+
+
 def inline_local_references(
     node: object,
     definitions: dict[str, object],
+    expanding: tuple[str, ...] = (),
 ) -> object:
-    """Replace "#/$defs/..." references with the definitions they point to."""
+    """
+    Replace "#/$defs/..." references with the definitions they point to.
+
+    Raises:
+        ValueError: a definition refers to itself (it cannot be inlined).
+    """
 
     if isinstance(node, list):
         return [
-            inline_local_references(item, definitions)
+            inline_local_references(item, definitions, expanding)
             for item in cast(list[object], node)
         ]
 
@@ -98,16 +159,21 @@ def inline_local_references(
         isinstance(reference, str) and reference.startswith(LOCAL_DEFINITION_PREFIX)
     ):
         return {
-            key: inline_local_references(value, definitions)
+            key: inline_local_references(value, definitions, expanding)
             for key, value in mapping.items()
         }
 
+    name: str = reference.removeprefix(LOCAL_DEFINITION_PREFIX)
+    if name in expanding:
+        raise ValueError(f"Request schema {name!r} refers to itself.")
+
     definition: object = inline_local_references(
-        definitions[reference.removeprefix(LOCAL_DEFINITION_PREFIX)],
+        definitions[name],
         definitions,
+        (*expanding, name),
     )
     siblings: dict[str, object] = {
-        key: inline_local_references(value, definitions)
+        key: inline_local_references(value, definitions, expanding)
         for key, value in mapping.items()
         if key != "$ref"
     }
@@ -121,7 +187,7 @@ def describe_validation_error(error: ValidationError) -> str:
     """Summarize field errors without echoing the submitted values."""
 
     descriptions: list[str] = []
-    for detail in error.errors()[:MAX_REPORTED_VALIDATION_ERRORS]:
+    for detail in error.errors(include_url=False)[:MAX_REPORTED_VALIDATION_ERRORS]:
         location: str = ".".join(str(part) for part in detail["loc"]) or "body"
         descriptions.append(f"{location}: {detail['msg']}")
 
@@ -133,7 +199,10 @@ def parse_path_identifier[Identifier: str](
     identifier_type: Callable[[str], Identifier],
     entity_label: str,
 ) -> Identifier:
-    """Convert a path segment to a typed id; malformed ids are not found."""
+    """
+    Convert a path segment to a typed id, key or enum member; malformed
+    values are reported as not found (without echoing them).
+    """
 
     try:
         return identifier_type(raw_identifier)

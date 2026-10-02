@@ -5,10 +5,11 @@ Write the API's OpenAPI document as JSON (for the web cabinet's typed client):
 
 Without a path the document goes to standard output.
 
-Some request bodies are JSON Schemas with their own `$id` and `$defs`, so
-their "#/$defs/..." references resolve inside the schema (JSON Schema
-2020-12). Code generators resolve references from the document root, so the
-exported document has those references inlined; the API itself is unchanged.
+Request bodies are described with their nested models inlined
+(`describe_json_body` in app/gateways/http/strict_request_parsing.py), so
+code generators, which resolve references from the document root, read the
+document as is. The export refuses a document that still carries a
+schema-local "#/$defs/..." reference.
 """
 
 import json
@@ -21,71 +22,42 @@ from app.main import create_application
 LOCAL_DEFINITION_PREFIX: str = "#/$defs/"
 
 
-class RecursiveDefinitionError(ValueError):
-    """A schema definition refers to itself and cannot be inlined."""
+class EmbeddedDefinitionError(ValueError):
+    """A schema-local reference that root-resolving generators cannot follow."""
 
 
 def export_openapi_document() -> str:
     """The OpenAPI document of the application, pretty-printed, keys sorted."""
 
     document: object = create_application().openapi()
-    portable_document: object = inline_embedded_definitions(document, {}, ())
-    return (
-        json.dumps(portable_document, ensure_ascii=False, indent=2, sort_keys=True)
-        + "\n"
-    )
+    require_root_resolvable_references(document)
+    return json.dumps(document, ensure_ascii=False, indent=2, sort_keys=True) + "\n"
 
 
-def inline_embedded_definitions(
-    node: object,
-    definitions: dict[str, object],
-    expanding: tuple[str, ...],
-) -> object:
+def require_root_resolvable_references(node: object) -> None:
     """
-    Replace "#/$defs/<name>" references with the definitions of the nearest
-    enclosing schema that declares `$defs`; drop every `$defs` and `$id`
-    (only the request schemas above carry them).
+    Raises:
+        EmbeddedDefinitionError: a "$ref" points into a schema's own `$defs`.
     """
 
     if isinstance(node, list):
-        return [
-            inline_embedded_definitions(item, definitions, expanding)
-            for item in cast(list[object], node)
-        ]
+        for item in cast(list[object], node):
+            require_root_resolvable_references(item)
+        return
 
     if not isinstance(node, dict):
-        return node
+        return
 
     mapping: dict[str, object] = cast(dict[str, object], node)
-    scope: dict[str, object] = definitions
-    embedded: object = mapping.get("$defs")
-    if isinstance(embedded, dict):
-        scope = definitions | cast(dict[str, object], embedded)
-
     reference: object = mapping.get("$ref")
     if isinstance(reference, str) and reference.startswith(LOCAL_DEFINITION_PREFIX):
-        name: str = reference.removeprefix(LOCAL_DEFINITION_PREFIX)
-        if name in expanding:
-            raise RecursiveDefinitionError(f"Definition {name!r} refers to itself.")
-
-        definition: object = inline_embedded_definitions(
-            scope[name], scope, (*expanding, name)
+        raise EmbeddedDefinitionError(
+            f"{reference!r} is local to its schema; describe the body with "
+            "describe_json_body so nested models are inlined."
         )
-        siblings: dict[str, object] = {
-            key: inline_embedded_definitions(value, scope, expanding)
-            for key, value in mapping.items()
-            if key not in ("$ref", "$defs", "$id")
-        }
-        if isinstance(definition, dict):
-            return cast(dict[str, object], definition) | siblings
 
-        return definition
-
-    return {
-        key: inline_embedded_definitions(value, scope, expanding)
-        for key, value in mapping.items()
-        if key not in ("$defs", "$id")
-    }
+    for value in mapping.values():
+        require_root_resolvable_references(value)
 
 
 def main(arguments: list[str]) -> None:

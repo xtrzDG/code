@@ -8,13 +8,12 @@
 #   docker run --env-file .env assistant-workshop-backend worker
 #   docker run --env-file .env assistant-workshop-backend migrate
 
-ARG PYTHON_IMAGE=python:3.14-slim
-ARG UV_IMAGE=ghcr.io/astral-sh/uv:0.12.21
-
-FROM ${UV_IMAGE} AS uv
+# Base images are named once, in FROM lines, so Dependabot can update them.
+FROM ghcr.io/astral-sh/uv:0.12.21 AS uv
+FROM python:3.14-slim AS python-base
 
 # --- Dependencies ------------------------------------------------------------
-FROM ${PYTHON_IMAGE} AS builder
+FROM python-base AS builder
 
 COPY --from=uv /uv /uvx /bin/
 ENV UV_COMPILE_BYTECODE=1 \
@@ -30,7 +29,7 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --frozen --no-dev --no-install-project
 
 # --- Runtime -----------------------------------------------------------------
-FROM ${PYTHON_IMAGE} AS runtime
+FROM python-base AS runtime
 
 RUN groupadd --system --gid 10001 workshop \
     && useradd --system --uid 10001 --gid workshop --home-dir /app \
@@ -45,8 +44,11 @@ COPY docs/legal ./docs/legal
 COPY docker/entrypoint.sh /usr/local/bin/workshop
 
 # Call recordings kept on this server (RECORDINGS_DIRECTORY); mount a volume
-# here to keep them across deploys.
-RUN chmod 0755 /usr/local/bin/workshop \
+# here to keep them across deploys. The service never installs packages at
+# runtime (the virtual environment comes from uv.lock), so the base image's
+# pip is removed: less to attack and nothing for image scans to flag.
+RUN python -m pip uninstall --yes --root-user-action=ignore pip \
+    && chmod 0755 /usr/local/bin/workshop \
     && mkdir -p /app/var/recordings \
     && chown -R workshop:workshop /app/var
 
