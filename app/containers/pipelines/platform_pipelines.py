@@ -30,3 +30,17 @@ class PlatformPipelinesContainer(containers.DeclarativeContainer):
     flush_llm_traces_pipeline = orchestrator_pipeline(
         platform_orchestrators.flush_llm_traces_orchestrator
     )
+
+    # --- The job queue: the admin's dead letters and the purge job.
+    list_queued_jobs_pipeline = orchestrator_pipeline(
+        platform_orchestrators.list_queued_jobs_orchestrator
+    )
+    retry_queued_job_pipeline = orchestrator_pipeline(
+        platform_orchestrators.retry_queued_job_orchestrator
+    )
+    discard_queued_job_pipeline = orchestrator_pipeline(
+        platform_orchestrators.discard_queued_job_orchestrator
+    )
+    purge_finished_jobs_pipeline = orchestrator_pipeline(
+        platform_orchestrators.purge_finished_jobs_orchestrator
+    )

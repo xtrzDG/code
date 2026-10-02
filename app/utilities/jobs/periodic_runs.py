@@ -25,6 +25,9 @@ MICROSECONDS_PER_SECOND: int = 1_000_000
 DAY_SECONDS: int = 24 * 60 * 60
 WEEK_SECONDS: int = 7 * DAY_SECONDS
 INTERVAL_START_FORMAT: str = "%Y-%m-%dT%H:%M:%SZ"
+# A weekly job failing all week is retried thousands of times; the count
+# stops at the largest JobAttemptCount.
+MAX_RECORDED_ATTEMPTS: int = 1000
 
 
 def compute_period_key(
@@ -85,7 +88,7 @@ def decide_periodic_run_start(start: PeriodicRunStart) -> PeriodicRunDecision:
         taken_over: PeriodicJobRunDocument = stored.model_copy(deep=True)
         taken_over.status = PeriodicJobRunStatus.RUNNING
         taken_over.attempts = JobAttemptCount(
-            min(int(stored.attempts) + 1, JobAttemptCount.le)
+            min(int(stored.attempts) + 1, MAX_RECORDED_ATTEMPTS)
         )
         taken_over.started_at = start.now
         taken_over.lease_until = start.lease_until
@@ -105,6 +108,6 @@ def may_take_over(stored: PeriodicJobRunDocument, now: Microseconds) -> bool:
         return False
 
     if stored.status is PeriodicJobRunStatus.RUNNING:
-        return stored.lease_until is None or stored.lease_until <= now
+        return stored.lease_until is None or stored.lease_until < now
 
     return stored.retry_at is None or stored.retry_at <= now

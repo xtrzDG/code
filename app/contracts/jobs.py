@@ -76,12 +76,12 @@ class QueuedJobClaimAdapterContract(AdapterContract, Protocol):
         raise NotImplementedError
 
 
-class PeriodicJobRunClaimAdapterContract(AdapterContract, Protocol):
+class PeriodicJobRunStoreAdapterContract(AdapterContract, Protocol):
     """
-    The run records of periodic jobs. A start is decided under a lock per
-    job name (Postgres: `pg_try_advisory_xact_lock`), so exactly one worker
-    may start a job in a period; a worker that cannot take the lock right
-    away leaves the job to the one holding it.
+    The run records of periodic jobs, one per job and period. A start is
+    decided under a lock per job name (Postgres: `pg_try_advisory_xact_lock`),
+    so exactly one worker may start a job in a period; a worker that cannot
+    take the lock right away leaves the job to the one holding it.
     """
 
     def claim(
@@ -98,7 +98,23 @@ class PeriodicJobRunClaimAdapterContract(AdapterContract, Protocol):
         """
         raise NotImplementedError
 
+    def get(
+        self,
+        job_name: JobName,
+        period_key: JobPeriodKey,
+    ) -> PeriodicJobRunDocument | None:
+        raise NotImplementedError
+
+    def extend_lease(self, lease: PeriodicRunLease) -> bool:
+        """Move the lease of a RUNNING run held under the lease's token."""
+        raise NotImplementedError
+
+    def finish(self, run: PeriodicJobRunDocument, lease_token: JobLeaseToken) -> bool:
+        """Store the finished run only while it is RUNNING under `lease_token`."""
+        raise NotImplementedError
+
     def purge_started_before(self, started_before: Microseconds) -> ProcessedItemCount:
+        """Delete the runs of periods that first started before then."""
         raise NotImplementedError
 
 

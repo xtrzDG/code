@@ -208,6 +208,7 @@ class UseCasesContainer(containers.DeclarativeContainer):
         registries=registries,
         repositories=repositories,
         time_provider=time_provider,
+        utilities=utilities,
         billing_use_cases=billing,
     )
     demo: DemoUseCasesContainer = Container(  # type: ignore[assignment]

@@ -44,7 +44,10 @@ from app.repositories.conversation_repositories import (
     LlmTurnRepository,
     MessageRepository,
 )
-from app.repositories.job_repositories import QueuedJobRepository
+from app.repositories.job_repositories import (
+    PeriodicJobRunRepository,
+    QueuedJobRepository,
+)
 from app.repositories.knowledge_repositories import (
     KnowledgeItemRepository,
     ResourceRepository,
@@ -167,6 +170,11 @@ class RepositoriesContainer(containers.DeclarativeContainer):
     queued_job_repo: Singleton[QueuedJobRepository] = Singleton(
         QueuedJobRepository,
         collection=collections.queued_job_collection,
+        claims=collections.queued_job_claims,
+    )
+    periodic_job_run_repo: Singleton[PeriodicJobRunRepository] = Singleton(
+        PeriodicJobRunRepository,
+        store=collections.periodic_job_run_store,
     )
     channel_message_receipt_repo: Singleton[ChannelMessageReceiptRepository] = (
         Singleton(

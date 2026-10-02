@@ -4,6 +4,7 @@ from fastapi import APIRouter
 
 from app.containers.app import AppContainer
 from app.containers.operators.operators_container import OperatorsContainer
+from app.gateways.http.admin_jobs_routes import build_admin_jobs_router
 from app.gateways.http.admin_routes import build_admin_router
 from app.gateways.http.assistant_routes import build_assistant_router
 from app.gateways.http.billing_routes import build_billing_router
@@ -233,6 +234,12 @@ def build_application_routers(app_container: AppContainer) -> list[APIRouter]:
             list_clients_operator=platform.list_clients_operator(),
             get_client_health_operator=platform.get_client_health_operator(),
             open_client_cabinet_operator=platform.open_client_cabinet_operator(),
+            current_user=current_user,
+        ),
+        build_admin_jobs_router(
+            list_queued_jobs_operator=platform.list_queued_jobs_operator(),
+            retry_queued_job_operator=platform.retry_queued_job_operator(),
+            discard_queued_job_operator=platform.discard_queued_job_operator(),
             current_user=current_user,
         ),
         build_widget_script_router(),
