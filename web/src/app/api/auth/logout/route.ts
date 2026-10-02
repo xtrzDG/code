@@ -6,7 +6,8 @@
 import { NextResponse, type NextRequest } from "next/server";
 
 import { callBackend } from "@/server/backend";
-import { clearSessionCookie, prepareBackendCall } from "@/server/relay";
+import { prepareBackendCall } from "@/server/relay";
+import { clearSessionCookie } from "@/server/sessionCookie";
 
 export const dynamic = "force-dynamic";
 

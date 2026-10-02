@@ -1,4 +1,4 @@
-from base_pydantic_schemas import BaseDocument
+from base_pydantic_schemas import BaseDocument, SchemaVersion
 from pydantic import Field
 from typed_time_provider import Microseconds
 
@@ -14,6 +14,7 @@ from app.schemas.typings.users.booleans import (
     IsOtpChallengeConsumed,
     IsPlatformAdmin,
     IsUserVerified,
+    IsVerifiedLoginDestination,
 )
 from app.schemas.typings.users.constrained_integers import OtpAttemptCount
 from app.schemas.typings.users.constrained_strings import EmailAddress
@@ -49,8 +50,14 @@ class UserDocument(BaseDocument):
 
 
 class OtpChallengeDocument(BaseDocument):
-    """One login attempt with a one-time code; only the code hash is stored."""
+    """
+    One login attempt with a one-time code; only the code hash is stored.
+    `is_verified_destination` marks a code for a verified user's phone or
+    e-mail: those sends count against a budget of their own.
+    """
 
+    # 2: `is_verified_destination` (optional, so version 1 needs no upcaster).
+    schema_version: SchemaVersion = SchemaVersion("2")
     id: OtpChallengeId = Field(default_factory=OtpChallengeId)
     login_method: LoginMethod
     phone_number: E164PhoneNumber | None = None
@@ -63,6 +70,7 @@ class OtpChallengeDocument(BaseDocument):
     failed_attempts: OtpAttemptCount = OtpAttemptCount(0)
     is_consumed: IsOtpChallengeConsumed = False
     requested_from_ip: ClientIpAddress | None = None
+    is_verified_destination: IsVerifiedLoginDestination = False
 
 
 class UserSessionDocument(BaseDocument):

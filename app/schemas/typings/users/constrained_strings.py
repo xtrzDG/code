@@ -35,4 +35,46 @@ class OtpCode(BaseConstrainedTypedString):
     pattern = r"^[0-9]{6}$"
 
 
+class TurnstileAction(BaseConstrainedTypedString):
+    """
+    The action a Turnstile widget was rendered for; Cloudflare echoes it in
+    the verification, so a token from another form is refused.
+
+    Example:
+        action = TurnstileAction("login")
+    """
+
+    min_length = 1
+    max_length = 32
+    pattern = r"^[A-Za-z0-9_\-]+$"
+
+
+class TurnstileResponseToken(BaseConstrainedTypedString):
+    """
+    The one-time answer of a passed Cloudflare Turnstile check (the
+    widget's `cf-turnstile-response`), opaque and at most 2048 characters.
+
+    Example:
+        token = TurnstileResponseToken("0.zrSnRHO7h0HwSjSCU8oyzbjEtD8p...")
+    """
+
+    min_length = 1
+    max_length = 2048
+    pattern = r"^[\x21-\x7e]+$"
+
+
+class TurnstileSiteKey(BaseConstrainedTypedString):
+    """
+    Public key of a Cloudflare Turnstile widget (TURNSTILE_SITE_KEY); the
+    cabinet renders the check with it.
+
+    Example:
+        site_key = TurnstileSiteKey("0x4AAAAAAABkMYinukE8nzY")
+    """
+
+    min_length = 1
+    max_length = 64
+    pattern = r"^[0-9A-Za-z_\-]+$"
+
+
 # Keep abc order for all non example types, if possible.

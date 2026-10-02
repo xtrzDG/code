@@ -19,6 +19,9 @@ from app.clients.postgres.postgres_connection_pool_client import (
 )
 from app.clients.telegram.telegram_bot_client import TelegramBotClient
 from app.clients.telegram.telegram_gateway_client import TelegramGatewayClient
+from app.clients.turnstile.turnstile_verification_client import (
+    TurnstileVerificationClient,
+)
 from app.clients.twilio.twilio_messaging_client import TwilioMessagingClient
 from app.containers.config import ConfigContainer
 from app.containers.factories import (
@@ -28,6 +31,7 @@ from app.containers.factories import (
     build_langfuse_ingestion_client,
     build_smtp_email_client,
     build_telegram_gateway_client,
+    build_turnstile_verification_client,
     build_twilio_messaging_client,
     build_whatsapp_authentication_client,
 )
@@ -88,4 +92,12 @@ class ClientsContainer(containers.DeclarativeContainer):
     smtp_email_client: Singleton[SmtpEmailClient | None] = Singleton(
         build_smtp_email_client,
         settings=config.app_settings,
+    )
+    # The bot check of risky login code requests; None until both
+    # TURNSTILE_* keys are set.
+    turnstile_verification_client: Singleton[TurnstileVerificationClient | None] = (
+        Singleton(
+            build_turnstile_verification_client,
+            settings=config.app_settings,
+        )
     )

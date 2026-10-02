@@ -145,6 +145,14 @@ services:
         sync: false
       - key: SMTP_FROM
         sync: false
+      # bot check of risky login code requests (Cloudflare Turnstile)
+      - key: TURNSTILE_SITE_KEY
+        sync: false
+      - key: TURNSTILE_SECRET_KEY
+        sync: false
+      # phone ranges that never get a login code (E.164 starts)
+      - key: OTP_DENIED_PHONE_PREFIXES
+        sync: false
       # voice
       - key: ELEVENLABS_API_KEY
         sync: false
@@ -334,6 +342,21 @@ services:
           type: web
           name: workshop-api
           envVarKey: SMTP_FROM
+      - key: TURNSTILE_SITE_KEY
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: TURNSTILE_SITE_KEY
+      - key: TURNSTILE_SECRET_KEY
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: TURNSTILE_SECRET_KEY
+      - key: OTP_DENIED_PHONE_PREFIXES
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: OTP_DENIED_PHONE_PREFIXES
       - key: ELEVENLABS_API_KEY
         fromService:
           type: web

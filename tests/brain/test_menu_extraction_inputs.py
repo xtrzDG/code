@@ -16,9 +16,9 @@ from app.schemas.typings.knowledge.strings import KnowledgeTitle
 from app.schemas.typings.localization.constrained_strings import CurrencyCode
 from app.schemas.typings.menu_import.constrained_strings import (
     ExtractedPriceAmount,
+    MenuSourceBase64,
     MenuSourceMediaType,
 )
-from app.schemas.typings.menu_import.strings import MenuSourceBase64
 from tests.brain.menu_extraction_helpers import (
     MENU_JSON,
     PNG_BYTES,

@@ -3,7 +3,7 @@
  * validation into the POST body, and free slots grouped by place.
  */
 
-import { z } from "zod";
+import { z } from "@/lib/zod";
 
 import { isLocalDate, isLocalTime } from "@/components/insights/dates";
 import type { AvailableSlot, BookingUnit, ChannelKind, ManualBookingBody, ResourceView } from "@/components/insights/types";

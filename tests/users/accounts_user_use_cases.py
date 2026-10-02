@@ -4,6 +4,10 @@ from collections.abc import Mapping
 
 from typed_time_provider import Microseconds, WallClock
 
+from app.registries.limits.request_rate_limit_registry import RequestRateLimitRegistry
+from app.registries.localization.high_cost_phone_number_registry import (
+    HighCostPhoneNumberRegistry,
+)
 from app.registries.locks.login_code_send_lock_registry import LoginCodeSendLockRegistry
 from app.transformers.businesses.business_view_transformer import (
     BusinessViewTransformer,
@@ -25,6 +29,9 @@ from app.use_cases.users.authenticate_user_use_case import AuthenticateUserUseCa
 from app.use_cases.users.get_current_user_use_case import GetCurrentUserUseCase
 from app.use_cases.users.get_login_options_use_case import GetLoginOptionsUseCase
 from app.use_cases.users.logout_use_case import LogoutUseCase
+from app.use_cases.users.otp_login.send_login_code_use_case import (
+    SendLoginCodeUseCase,
+)
 from app.use_cases.users.otp_login.start_otp_login_use_case import StartOtpLoginUseCase
 from app.use_cases.users.update_current_user_use_case import UpdateCurrentUserUseCase
 from app.use_cases.users.verify_otp_login_use_case import VerifyOtpLoginUseCase
@@ -33,6 +40,7 @@ from tests.users.accounts_recorders import (
     RecordingVoiceAgentRemoval,
 )
 from tests.users.accounts_repositories import AccountsRepositories
+from tests.users.login_protection_fakes import FakeBotCheck, RecordingCapAlerts
 
 
 class AccountsUserUseCases(AccountsRepositories):
@@ -51,15 +59,29 @@ class AccountsUserUseCases(AccountsRepositories):
             wall_clock=wall_clock,
         )
 
-        self.start_otp_login = StartOtpLoginUseCase(
+        self.login_rate_limits = RequestRateLimitRegistry()
+        self.bot_check = FakeBotCheck()
+        self.cap_alerts = RecordingCapAlerts()
+        self.send_login_code = SendLoginCodeUseCase(
             otp_challenge_repo=self.otp_challenge_repo,
+            otp_delivery_facilitator=self.otp_delivery,
+            app_settings=self.settings,
+            wall_clock=wall_clock,
+            send_lock_registry=LoginCodeSendLockRegistry(),
+            bot_check=self.bot_check,
+            cap_alerts=self.cap_alerts,
+        )
+        self.start_otp_login = StartOtpLoginUseCase(
             phone_number_parser=self.phone_parser,
             country_registry=self.country_registry,
             language_registry=self.language_registry,
             otp_delivery_facilitator=self.otp_delivery,
             app_settings=self.settings,
-            wall_clock=wall_clock,
-            send_lock_registry=LoginCodeSendLockRegistry(),
+            user_repo=self.user_repo,
+            high_cost_phone_registry=HighCostPhoneNumberRegistry(
+                self.settings.otp_denied_phone_prefixes
+            ),
+            send_login_code=self.send_login_code,
         )
         self.get_login_options = GetLoginOptionsUseCase(
             country_registry=self.country_registry,
@@ -74,6 +96,7 @@ class AccountsUserUseCases(AccountsRepositories):
             user_view_transformer=user_view_transformer,
             app_settings=self.settings,
             wall_clock=wall_clock,
+            rate_limit_registry=self.login_rate_limits,
         )
         self.authenticate_user = AuthenticateUserUseCase(
             user_session_repo=self.user_session_repo,

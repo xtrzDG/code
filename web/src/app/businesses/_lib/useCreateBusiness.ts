@@ -7,7 +7,7 @@
  */
 
 import { useState, type FormEvent } from "react";
-import { z } from "zod";
+import { z } from "@/lib/zod";
 
 import { useCountries, useCountryProfile } from "@/api/catalog";
 import { api } from "@/api/client";

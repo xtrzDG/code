@@ -7,7 +7,7 @@
  *     <Field error={errors.name && t(errors.name)} …>
  */
 
-import { z } from "zod";
+import { z } from "@/lib/zod";
 
 import type { MessageKey } from "@/i18n/translate";
 

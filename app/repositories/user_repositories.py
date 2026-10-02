@@ -18,6 +18,7 @@ from app.schemas.typings.storage.constrained_integers import DocumentCount
 from app.schemas.typings.storage.constrained_strings import DocumentFieldPath
 from app.schemas.typings.storage.integers import DocumentFieldInteger
 from app.schemas.typings.storage.strings import DocumentFieldText
+from app.schemas.typings.users.constrained_integers import OtpAttemptCount
 from app.schemas.typings.users.constrained_strings import EmailAddress
 from app.schemas.typings.users.prefixed_id import (
     OtpChallengeId,
@@ -85,6 +86,46 @@ class OtpChallengeRepository(OtpChallengeRepoContract):
                 lower=DocumentFieldInteger(int(created_after) + 1),
             )
         )
+
+    def register_failed_attempt(
+        self,
+        challenge_id: OtpChallengeId,
+        max_failed_attempts: OtpAttemptCount,
+        now: Microseconds,
+    ) -> OtpAttemptCount | None:
+        def count_attempt(
+            challenge: OtpChallengeDocument,
+        ) -> OtpChallengeDocument | None:
+            if challenge.is_consumed or challenge.failed_attempts >= int(
+                max_failed_attempts
+            ):
+                return None
+
+            challenge.failed_attempts = OtpAttemptCount(challenge.failed_attempts + 1)
+            challenge.updated_at = now
+            return challenge
+
+        counted: OtpChallengeDocument | None = self._collection.modify(
+            str(challenge_id), count_attempt
+        )
+        return None if counted is None else counted.failed_attempts
+
+    def consume(
+        self,
+        challenge_id: OtpChallengeId,
+        now: Microseconds,
+    ) -> OtpChallengeDocument | None:
+        def mark_consumed(
+            challenge: OtpChallengeDocument,
+        ) -> OtpChallengeDocument | None:
+            if challenge.is_consumed:
+                return None
+
+            challenge.is_consumed = True
+            challenge.updated_at = now
+            return challenge
+
+        return self._collection.modify(str(challenge_id), mark_consumed)
 
     def delete_created_before(self, created_before: Microseconds) -> DocumentCount:
         return self._collection.delete_by_range(

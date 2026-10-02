@@ -1,6 +1,5 @@
 """Throttling login codes per destination, per client address and per hour."""
 
-import logging
 import time
 from concurrent.futures import ThreadPoolExecutor
 from typing import Any
@@ -8,6 +7,7 @@ from typing import Any
 import pytest
 
 from app.schemas.constants.localization import OtpDeliveryChannel
+from app.schemas.constants.users import LoginCodeCap
 from app.schemas.dto.users import StartOtpLoginCommand
 from app.schemas.exceptions.application_errors import (
     ExternalServiceError,
@@ -115,16 +115,18 @@ def test_one_number_gets_a_limited_number_of_codes_an_hour() -> None:
     assert len(testbed.otp_delivery.deliveries) == 2
 
 
-def test_the_hourly_cap_stops_all_sends(caplog: pytest.LogCaptureFixture) -> None:
+def test_the_hourly_cap_stops_all_sends_to_new_destinations() -> None:
     testbed = build_accounts_testbed({"OTP_SENDS_PER_HOUR": "2"})
     testbed.request_phone_code(georgian_number(1))
     testbed.request_phone_code(georgian_number(2))
 
-    with caplog.at_level(logging.WARNING), pytest.raises(RateLimitedError):
+    with pytest.raises(RateLimitedError):
         testbed.request_phone_code(georgian_number(3))
 
-    assert "hourly cap" in caplog.text
     assert len(testbed.otp_delivery.deliveries) == 2
+    assert [alert.cap for alert in testbed.cap_alerts.alerts] == [
+        LoginCodeCap.NEW_DESTINATIONS
+    ]
 
 
 def test_a_failed_delivery_releases_the_reservation() -> None:

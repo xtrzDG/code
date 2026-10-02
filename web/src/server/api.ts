@@ -11,13 +11,8 @@ import type { paths } from "@/api/schema";
 import type { BusinessView, CurrentUserView } from "@/api/types";
 import { getLocale } from "@/i18n/server";
 
-import {
-  PATHNAME_HEADER,
-  SESSION_COOKIE,
-  buildUpstreamHeaders,
-  getBackendUrl,
-  sanitizeRequestId,
-} from "./backend";
+import { PATHNAME_HEADER, buildUpstreamHeaders, getBackendUrl, sanitizeRequestId } from "./backend";
+import { readSessionToken } from "./sessionCookie";
 
 /**
  * Typed API client for Server Components, authenticated with the session
@@ -26,7 +21,7 @@ import {
 export async function getServerApi(): Promise<Client<paths>> {
   const [cookieStore, locale] = await Promise.all([cookies(), getLocale()]);
   const upstreamHeaders = buildUpstreamHeaders(null, {
-    token: cookieStore.get(SESSION_COOKIE)?.value,
+    token: readSessionToken(cookieStore),
     locale,
     requestId: sanitizeRequestId(null),
   });
@@ -39,7 +34,7 @@ export async function getServerApi(): Promise<Client<paths>> {
 
 /** True when the request carries a session cookie (it may still be expired). */
 export async function hasSession(): Promise<boolean> {
-  return (await cookies()).has(SESSION_COOKIE);
+  return readSessionToken(await cookies()) !== undefined;
 }
 
 async function expiredSessionUrl(): Promise<string> {

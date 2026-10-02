@@ -51,6 +51,8 @@ const UNSET_FOR_API = Object.fromEntries(
     "SMTP_FROM",
     "SMTP_USERNAME",
     "SMTP_PASSWORD",
+    "TURNSTILE_SITE_KEY",
+    "TURNSTILE_SECRET_KEY",
   ].map((name) => [name, ""]),
 );
 
@@ -100,8 +102,10 @@ export default defineConfig({
         ...UNSET_FOR_API,
         APP_ENV: "development",
         OTP_LOG_CODES: "true",
-        // Every test signs in from 127.0.0.1: lift the per-address cap.
+        // Every test signs in from 127.0.0.1: lift the per-address caps.
         OTP_SENDS_PER_IP_PER_HOUR: "100000",
+        OTP_VERIFIES_PER_IP_PER_10_MINUTES: "100000",
+        OTP_SENDS_PER_COUNTRY_PER_HOUR: "100000",
         PYTHONUNBUFFERED: "1",
       },
       reuseExistingServer: false,

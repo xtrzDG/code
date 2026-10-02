@@ -23,7 +23,11 @@ from app.schemas.typings.users.booleans import (
     IsUserVerified,
 )
 from app.schemas.typings.users.constrained_integers import OtpLifetimeSeconds
-from app.schemas.typings.users.constrained_strings import EmailAddress, OtpCode
+from app.schemas.typings.users.constrained_strings import (
+    EmailAddress,
+    OtpCode,
+    TurnstileResponseToken,
+)
 from app.schemas.typings.users.prefixed_id import OtpChallengeId, UserId
 from app.schemas.typings.users.strings import (
     AccessToken,
@@ -42,7 +46,9 @@ class StartOtpLoginRequest(ImmutableDTO):
     "+"; `locale` is the language of the code message and of a new account.
     `preferred_delivery_channel` is used when the phone's country allows it;
     asking for another channel right after a code was sent ("send by SMS
-    instead") is allowed once per channel.
+    instead") is allowed once per channel. `turnstile_token` is the answer
+    of the Cloudflare Turnstile check, sent again after a 403 whose reason
+    is `challenge_required` (its details hold the widget's site key).
     """
 
     phone_number: RawPhoneNumberInput | None = None
@@ -50,6 +56,7 @@ class StartOtpLoginRequest(ImmutableDTO):
     country_hint: CountryCode | None = None
     locale: LanguageTag | None = None
     preferred_delivery_channel: OtpDeliveryChannel | None = None
+    turnstile_token: TurnstileResponseToken | None = None
 
 
 class StartOtpLoginCommand(ImmutableDTO):
@@ -60,6 +67,7 @@ class StartOtpLoginCommand(ImmutableDTO):
     country_hint: CountryCode | None = None
     locale: LanguageTag | None = None
     preferred_delivery_channel: OtpDeliveryChannel | None = None
+    turnstile_token: TurnstileResponseToken | None = None
     client_ip_address: ClientIpAddress | None = None
 
 

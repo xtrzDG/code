@@ -12,8 +12,8 @@ import { NextResponse, type NextRequest } from "next/server";
 
 import { LOCALE_COOKIE, matchLocale } from "@/i18n/config";
 import { HOME_PATH, loginPath, safeNextPath } from "@/lib/navigation";
-import { SESSION_COOKIE, buildUpstreamHeaders, callBackend, sanitizeRequestId } from "@/server/backend";
-import { clearSessionCookie } from "@/server/relay";
+import { buildUpstreamHeaders, callBackend, sanitizeRequestId } from "@/server/backend";
+import { clearSessionCookie, readSessionToken } from "@/server/sessionCookie";
 
 export const dynamic = "force-dynamic";
 
@@ -37,7 +37,7 @@ async function isSessionRejected(token: string, request: NextRequest): Promise<b
 
 export async function GET(request: NextRequest): Promise<Response> {
   const next = request.nextUrl.searchParams.get("next");
-  const token = request.cookies.get(SESSION_COOKIE)?.value;
+  const token = readSessionToken(request.cookies);
   if (token && !(await isSessionRejected(token, request))) {
     // The API returns 401 only for a missing or rejected session, so going
     // back to `next` cannot loop here.

@@ -1767,7 +1767,7 @@ export interface components {
          *     body (app/gateways/http/error_responses.py maps errors to HTTP status).
          * @enum {string}
          */
-        ApiErrorCode: "not_found" | "validation_failed" | "conflict" | "authentication_required" | "access_denied" | "rate_limited" | "external_service_error" | "internal_error";
+        ApiErrorCode: "not_found" | "validation_failed" | "conflict" | "authentication_required" | "access_denied" | "rate_limited" | "payload_too_large" | "external_service_error" | "internal_error";
         /**
          * AssistantReply
          * @description What the assistant answered and what happened during the turn.
@@ -6082,6 +6082,8 @@ export interface operations {
                     /** Phone Number */
                     phone_number?: string | null;
                     preferred_delivery_channel?: ("sms" | "whatsapp" | "telegram" | "email") | null;
+                    /** Turnstile Token */
+                    turnstile_token?: string | null;
                 };
             };
         };

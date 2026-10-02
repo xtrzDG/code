@@ -6,15 +6,15 @@ import { LOCALE_COOKIE, matchLocale } from "@/i18n/config";
 
 import {
   REQUEST_ID_HEADER,
-  SESSION_COOKIE,
   buildUpstreamHeaders,
   callBackend,
   isCrossSiteRequest,
   jsonError,
   pickResponseHeaders,
   sanitizeRequestId,
-  sessionCookieOptions,
 } from "./backend";
+import { BodyTooLargeError, bodyLimitFor, isDeclaredTooLarge, limitBodyStream, payloadTooLargeMessage } from "./bodyLimits";
+import { clearSessionCookie, readSessionToken } from "./sessionCookie";
 
 const BODILESS_METHODS: ReadonlySet<string> = new Set(["GET", "HEAD"]);
 const BODILESS_STATUSES: ReadonlySet<number> = new Set([101, 204, 205, 304]);
@@ -29,7 +29,7 @@ export function prepareBackendCall(
     return { refusal: jsonError(403, "forbidden_origin", "Cross-site request refused.", requestId) };
   }
 
-  const token = options.useSession ? request.cookies.get(SESSION_COOKIE)?.value : undefined;
+  const token = options.useSession ? readSessionToken(request.cookies) : undefined;
   const headers = buildUpstreamHeaders(request.headers, {
     token,
     locale: matchLocale(request.cookies.get(LOCALE_COOKIE)?.value),
@@ -40,7 +40,9 @@ export function prepareBackendCall(
 
 /**
  * Send the request to `backendPath` (+ the incoming query string) and stream
- * the answer back. A 401 for a request that carried the session ends it.
+ * the answer back. A 401 for a request that carried the session ends it. A
+ * body over the path's limit (bodyLimits.ts) is refused with 413 before it
+ * reaches the API.
  */
 export async function relayToBackend(
   request: NextRequest,
@@ -52,15 +54,22 @@ export async function relayToBackend(
     return prepared.refusal;
   }
   const { requestId, headers, token } = prepared;
+  const limit = bodyLimitFor(backendPath);
+  if (isDeclaredTooLarge(request.headers, limit)) {
+    return jsonError(413, "payload_too_large", payloadTooLargeMessage(limit), requestId);
+  }
 
   let upstream: Response;
   try {
     upstream = await callBackend(`${backendPath}${request.nextUrl.search}`, {
       method: request.method,
       headers,
-      body: BODILESS_METHODS.has(request.method) ? null : request.body,
+      body: BODILESS_METHODS.has(request.method) || !request.body ? null : limitBodyStream(request.body, limit),
     });
-  } catch {
+  } catch (error) {
+    if (error instanceof BodyTooLargeError || (error instanceof Error && error.cause instanceof BodyTooLargeError)) {
+      return jsonError(413, "payload_too_large", payloadTooLargeMessage(limit), requestId);
+    }
     return jsonError(502, "backend_unavailable", "The API is not reachable.", requestId);
   }
 
@@ -72,8 +81,4 @@ export async function relayToBackend(
     clearSessionCookie(response);
   }
   return response;
-}
-
-export function clearSessionCookie(response: NextResponse): void {
-  response.cookies.set(SESSION_COOKIE, "", { ...sessionCookieOptions(), maxAge: 0 });
 }

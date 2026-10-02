@@ -111,6 +111,12 @@ export const en = {
     welcome: "Welcome!",
     sessionExpired: "Your session has ended. Please sign in again.",
     countryUnavailable: "not available yet",
+    botCheck: {
+      title: "One more step",
+      hint: "Confirm that you are not a robot, and we will send the code right away.",
+      failed: "The check did not pass. Try it once more.",
+      unavailable: "The check could not load. Check the connection or turn off content blockers, then reload the page.",
+    },
     deliveryChannels: {
       sms: "SMS",
       whatsapp: "WhatsApp",
@@ -206,6 +212,7 @@ export const en = {
       authentication_required: "Please sign in again.",
       access_denied: "You do not have permission for this action.",
       rate_limited: "Too many attempts. Wait a little and try again.",
+      payload_too_large: "This is too large to send. Choose a smaller file or shorten the text.",
       external_service_error: "An external service is not responding. Try again in a minute.",
       internal_error: "Server error. We already know about it.",
       backend_unavailable: "The server is not reachable. Check the connection and try again.",

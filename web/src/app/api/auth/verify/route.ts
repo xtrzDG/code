@@ -1,8 +1,9 @@
 /**
  * POST /api/auth/verify — check the login code and open a session.
  *
- * Body: {"challenge_id", "code"}. On success the API's bearer token goes
- * into the httpOnly session cookie (never into the response body), the
+ * Body: {"challenge_id", "code"} (at most 256 KB). On success the API's
+ * bearer token goes into the httpOnly session cookie (`__Host-aw_session`
+ * over HTTPS; never into the response body), the
  * interface language becomes the account's language, and the answer is
  * {"user", "is_new_user", "expires_at"}.
  */
@@ -12,15 +13,15 @@ import { NextResponse, type NextRequest } from "next/server";
 import type { LoginSessionView } from "@/api/types";
 import { LOCALE_COOKIE, matchLocale } from "@/i18n/config";
 import {
-  SESSION_COOKIE,
   callBackend,
   dateFromMicroseconds,
   jsonError,
   localeCookieOptions,
   pickResponseHeaders,
-  sessionCookieOptions,
 } from "@/server/backend";
+import { BodyTooLargeError, DEFAULT_BODY_LIMIT_BYTES, readLimitedText } from "@/server/bodyLimits";
 import { prepareBackendCall } from "@/server/relay";
+import { setSessionCookie } from "@/server/sessionCookie";
 
 export const dynamic = "force-dynamic";
 
@@ -31,13 +32,19 @@ export async function POST(request: NextRequest): Promise<Response> {
   }
   const { requestId, headers } = prepared;
 
+  let body: string;
+  try {
+    body = await readLimitedText(request, DEFAULT_BODY_LIMIT_BYTES);
+  } catch (error) {
+    if (error instanceof BodyTooLargeError) {
+      return jsonError(413, "payload_too_large", error.message, requestId);
+    }
+    throw error;
+  }
+
   let upstream: Response;
   try {
-    upstream = await callBackend("/v1/auth/otp/verify", {
-      method: "POST",
-      headers,
-      body: await request.text(),
-    });
+    upstream = await callBackend("/v1/auth/otp/verify", { method: "POST", headers, body });
   } catch {
     return jsonError(502, "backend_unavailable", "The API is not reachable.", requestId);
   }
@@ -54,11 +61,7 @@ export async function POST(request: NextRequest): Promise<Response> {
     { user: session.user, is_new_user: session.is_new_user, expires_at: session.expires_at },
     { headers: pickResponseHeaders(upstream.headers, requestId) },
   );
-  response.cookies.set(
-    SESSION_COOKIE,
-    session.access_token,
-    sessionCookieOptions(dateFromMicroseconds(session.expires_at)),
-  );
+  setSessionCookie(response, session.access_token, dateFromMicroseconds(session.expires_at));
   const accountLocale = matchLocale(session.user.locale);
   if (accountLocale) {
     response.cookies.set(LOCALE_COOKIE, accountLocale, localeCookieOptions());

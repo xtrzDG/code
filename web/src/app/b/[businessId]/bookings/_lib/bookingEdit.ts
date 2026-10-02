@@ -1,6 +1,6 @@
 /** Editing a booking: the form values, the places it may move to and the PATCH body. */
 
-import { z } from "zod";
+import { z } from "@/lib/zod";
 
 import type { BookingStatus, BookingUpdateBody, BookingView, ResourceView } from "@/components/insights/types";
 import type { MessageKey } from "@/i18n/translate";

@@ -202,6 +202,9 @@ web/
       theme.ts                 getTheme(): the aw_theme cookie of the request
       backend.ts               BACKEND_URL, cookies, header allow-lists, CSRF check
       relay.ts                 streaming relay used by the route handlers
+      sessionCookie.ts         the __Host- session cookie (read, set, clear, migrate)
+      contentSecurityPolicy.ts the per-page nonce and Content Security Policy
+      bodyLimits.ts            request body limits of the BFF (413)
     i18n/                      config.ts (locales, negotiation), translate.ts, server.ts, client.tsx
       messages/en.ts ru.ts ka.ts   shared texts (common, auth, nav, theme, errors …); English is the reference
       messages/onboarding/     the profile wizard's texts, one file per language
@@ -641,9 +644,33 @@ engines (the cabinet's pages are `noindex`) and texts in
 
 ## Security notes
 
-- Session: httpOnly, `SameSite=Lax`, `Secure` in production cookie `aw_session`
-  holding the API bearer token; expires with the API session. A 401 from the
-  API clears it.
+- Session: an httpOnly, `SameSite=Lax` cookie holding the API bearer token,
+  `__Host-aw_session` over HTTPS (Secure, `Path=/`, no `Domain`: no subdomain
+  or plain-HTTP page can set or shadow it) and `aw_session` when
+  `COOKIE_SECURE=false`; expires with the API session. A 401 from the API
+  clears it. A browser that still has the old `aw_session` keeps its session:
+  it is read as a fallback and moved to the new name on the next page view
+  (`src/server/sessionCookie.ts`).
+- Content Security Policy (`src/server/contentSecurityPolicy.ts`, set by the
+  proxy on every page view with a fresh nonce that Next.js puts on its own
+  scripts): scripts only with the nonce or loaded by a trusted script
+  (`'strict-dynamic'`), Cloudflare Turnstile allowed, no framing
+  (`frame-ancestors 'none'`), `base-uri 'none'`, forms only to the cabinet or
+  the Flitt checkout, `upgrade-insecure-requests` over HTTPS; `'unsafe-eval'`
+  only under `next dev`. Zod's JIT would need eval: import `z` from
+  `@/lib/zod` (jitless; ESLint refuses `"zod"`). `e2e/security.spec.ts`
+  fails when any page reports a violation.
+- Every answer sends `nosniff`, `X-Frame-Options: DENY`,
+  `Cross-Origin-Opener-Policy` and `Cross-Origin-Resource-Policy:
+  same-origin`, and production builds HSTS (`next.config.ts`).
+- The BFF refuses a request body over the API's limit with 413
+  `payload_too_large` (256 KB, 21 MB for a menu import), before reading it
+  when the length is declared and as soon as a streamed body grows over it
+  (`src/server/bodyLimits.ts`).
+- Sign-in: when the API asks for a bot check (403, reason
+  `challenge_required` with the site key), the page loads Cloudflare
+  Turnstile, shows "One more step" and sends the request again with the
+  check's token (`src/app/login/_lib/botCheck.ts`, `useTurnstile.ts`).
 - The BFF forwards only `/v1/*` paths, an allow-list of headers (never the
   browser's cookies), and refuses cross-site state-changing requests
   (`Origin`/`Sec-Fetch-Site` check) on top of `SameSite=Lax`.

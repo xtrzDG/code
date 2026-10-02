@@ -9,6 +9,13 @@ from starlette.types import Lifespan
 from app.contracts.observability import ErrorReportingFacilitatorContract
 from app.gateways.http.cabinet_cors_middleware import CabinetCorsMiddleware
 from app.gateways.http.error_responses import install_error_handlers
+from app.gateways.http.middleware.body_size_limit_middleware import (
+    BodySizeLimitMiddleware,
+)
+from app.gateways.http.middleware.security_headers_middleware import (
+    SecurityHeadersMiddleware,
+    with_security_headers,
+)
 from app.gateways.http.request_context_middleware import (
     REQUEST_ID_HEADER,
     RequestContextMiddleware,
@@ -19,6 +26,7 @@ from app.gateways.http.widget_cors_middleware import (
     WidgetCorsMiddleware,
     is_widget_path,
 )
+from app.schemas.constants.environment import DeploymentEnvironment
 from app.schemas.dto.observability import LogContext
 from app.schemas.typings.channels.constrained_strings import PublicBaseUrl
 from app.utilities.observability.log_context import log_context_of_error
@@ -34,6 +42,7 @@ def build_http_application(
     error_reporter: ErrorReportingFacilitatorContract,
     cors_allowed_origins: Sequence[PublicBaseUrl],
     lifespan: Lifespan[FastAPI] | None = None,
+    environment: DeploymentEnvironment = DeploymentEnvironment.DEVELOPMENT,
 ) -> FastAPI:
     """
     Build the HTTP application.
@@ -46,11 +55,23 @@ def build_http_application(
     widget routes answer CORS themselves. `GET /healthz` is pure liveness: an
     async handler that needs no request thread, so it answers while slow
     requests hold all of them. `lifespan` runs startup and shutdown work (see
-    `app.main`).
+    `app.main`). Request bodies are limited per route (413), every answer
+    carries the security headers, and in production the API description
+    (/docs, /openapi.json) is not served and HSTS is sent.
     """
 
-    http_application = FastAPI(title=API_TITLE, version=API_VERSION, lifespan=lifespan)
+    is_production: bool = environment is DeploymentEnvironment.PRODUCTION
+    http_application = FastAPI(
+        title=API_TITLE,
+        version=API_VERSION,
+        lifespan=lifespan,
+        docs_url=None if is_production else "/docs",
+        redoc_url=None if is_production else "/redoc",
+        openapi_url=None if is_production else "/openapi.json",
+    )
     install_error_handlers(http_application)
+    # Inside CORS (added below), so a refused body still answers with CORS.
+    http_application.add_middleware(BodySizeLimitMiddleware)
 
     async def handle_unexpected_error(request: Request, error: Exception) -> Response:
         error_reporter.capture_exception(error)
@@ -69,7 +90,9 @@ def build_http_application(
             headers=headers,
         )
 
-    http_application.add_exception_handler(Exception, handle_unexpected_error)
+    http_application.add_exception_handler(
+        Exception, with_security_headers(handle_unexpected_error, is_production)
+    )
 
     if cors_allowed_origins:
         http_application.add_middleware(
@@ -81,7 +104,8 @@ def build_http_application(
         )
 
     http_application.add_middleware(WidgetCorsMiddleware)
-    # Outermost, so the request id is bound before anything else runs.
+    # Outside every layer but the security headers, so the request id is
+    # bound before anything else runs.
     http_application.add_middleware(RequestContextMiddleware)
 
     @http_application.get("/healthz", include_in_schema=False)
@@ -91,4 +115,8 @@ def build_http_application(
     for router in routers:
         http_application.include_router(router)
 
+    # Outermost: answers of every other layer get the headers too.
+    http_application.add_middleware(
+        SecurityHeadersMiddleware, is_https_only=is_production
+    )
     return http_application

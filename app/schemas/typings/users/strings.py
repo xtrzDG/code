@@ -33,6 +33,10 @@ class RawEmailAddressInput(BaseTypedString):
     """
 
 
+class TurnstileErrorCode(BaseTypedString):
+    """An error code Cloudflare's siteverify returned ("invalid-input-response")."""
+
+
 class UserDisplayName(BaseTypedString):
     """Name the user wants to be addressed by."""
 

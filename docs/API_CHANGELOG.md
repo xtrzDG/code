@@ -11,6 +11,32 @@ Kinds of change: **Added**, **Changed** (additive), **Deprecated** (with
 sunset date), **Removed** and **Breaking** (only with the `api-breaking`
 label and a migration path).
 
+## 2026-10-02 — login abuse protection, body limits and security headers
+
+Spec: `15dd0984bdea39f3`
+
+- **Added** `turnstile_token` to `StartOtpLoginRequest`
+  (`POST /v1/auth/otp/start`): the answer of the Cloudflare Turnstile
+  check. A risky code request (a phone or e-mail of no verified user, a
+  busy client address, half a platform cap used, a high-risk country)
+  answers 403 `access_denied` with the reason `challenge_required`, whose
+  details hold the widget's site key, while the check is on; the client
+  shows the check and sends the request again with its token. High-cost
+  numbers (premium rate, shared cost, satellite) answer 422.
+- **Changed** `POST /v1/auth/otp/verify` answers 429 `rate_limited` with
+  `Retry-After` after 20 checks from one client network or 10 checks of
+  one challenge in ten minutes.
+- **Added** `payload_too_large` to `ApiErrorCode`: every route answers 413
+  with it when the request body is over the route's limit (256 KB; 1 MB
+  for platform webhooks, 5 MB for the post-call report, 21 MB for a menu
+  import). `MenuImportRequest.data_base64` has a `maxLength` (a 15 MB file
+  in base64).
+- **Changed** every answer carries `X-Content-Type-Options`,
+  `Referrer-Policy`, `X-Frame-Options` and a `frame-ancestors 'none'`
+  policy; `/v1/*` answers without their own caching rule are `no-store`;
+  production sends HSTS and no longer serves `/docs`, `/redoc` and
+  `/openapi.json`.
+
 ## 2026-10-02 — one error contract, DELETE answers 204
 
 Spec: `8e2480c367937ab3`

@@ -4,13 +4,15 @@ import Link from "next/link";
 
 import { useI18n } from "@/i18n/client";
 
+import { BotCheck } from "./_components/BotCheck";
 import { CodeForm } from "./_components/CodeForm";
 import { DestinationForm } from "./_components/DestinationForm";
 import { useLoginFlow } from "./_lib/useLoginFlow";
 
 /**
  * Sign-in by phone (any country) or e-mail with a 6-digit code. New
- * visitors get an account automatically. The steps live in
+ * visitors get an account automatically. When the API asks for it (a risky
+ * request), a Cloudflare Turnstile check comes first. The steps live in
  * `_components/`, the state in `_lib/useLoginFlow.ts`.
  */
 export function LoginScreen({ next, sessionExpired }: { next: string; sessionExpired: boolean }) {
@@ -25,6 +27,14 @@ export function LoginScreen({ next, sessionExpired }: { next: string; sessionExp
         ) : (
           <DestinationForm flow={flow} sessionExpired={sessionExpired} />
         )}
+        {flow.botCheck ? (
+          <BotCheck
+            key={flow.botCheck.attempt}
+            siteKey={flow.botCheck.siteKey}
+            isRetry={flow.botCheck.isRetry}
+            onToken={(token) => void flow.passBotCheck(token)}
+          />
+        ) : null}
       </div>
       <p className="mt-5 text-center text-sm">
         <Link href="/" className="text-ink-muted underline-offset-4 transition-colors hover:text-ink hover:underline">

@@ -5,7 +5,7 @@
  */
 
 import { NextResponse, type NextRequest } from "next/server";
-import { z } from "zod";
+import { z } from "@/lib/zod";
 
 import { LOCALES, LOCALE_COOKIE } from "@/i18n/config";
 import { callBackend, jsonError, localeCookieOptions } from "@/server/backend";
