@@ -31,17 +31,19 @@ from app.use_cases.bookings.booking_support import (
 from app.utilities.scheduling.availability import is_resource_open_on
 from app.utilities.scheduling.booking_placement import (
     DEFAULT_NIGHT_COUNT,
-    Placement,
-    PlacementRequest,
-    ensure_party_size_allowed,
     free_stay,
     free_time_slots,
+)
+from app.utilities.scheduling.opening_hours import business_day_ranges, is_open_on_date
+from app.utilities.scheduling.placement import Placement
+from app.utilities.scheduling.placement_request import PlacementRequest
+from app.utilities.scheduling.resource_selection import (
+    ensure_party_size_allowed,
     min_notice_seconds,
     resolve_duration_minutes,
     seating_resources,
     select_resources,
 )
-from app.utilities.scheduling.opening_hours import business_day_ranges, is_open_on_date
 from app.utilities.scheduling.slots import nearest_minutes
 from app.utilities.scheduling.zoned_time import (
     microseconds_to_seconds,

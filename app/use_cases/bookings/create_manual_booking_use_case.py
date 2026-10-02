@@ -59,15 +59,15 @@ from app.use_cases.bookings.operations_support import (
     require_contact,
     update_contact_details,
 )
-from app.utilities.scheduling.booking_placement import (
-    Placement,
-    PlacementRequest,
-    booking_refusal_reason,
-    place_booking,
+from app.utilities.scheduling.booking_placement import place_booking
+from app.utilities.scheduling.booking_views import build_booking_view
+from app.utilities.scheduling.placement import Placement
+from app.utilities.scheduling.placement_errors import booking_refusal_reason
+from app.utilities.scheduling.placement_request import PlacementRequest
+from app.utilities.scheduling.resource_selection import (
     seating_resources,
     select_resources,
 )
-from app.utilities.scheduling.booking_views import build_booking_view
 from app.utilities.scheduling.zoned_time import (
     microseconds_to_seconds,
     parse_local_date,

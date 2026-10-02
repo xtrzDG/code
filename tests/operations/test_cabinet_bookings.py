@@ -43,7 +43,7 @@ from app.schemas.typings.localization.constrained_strings import (
 from app.schemas.typings.localization.strings import RawPhoneNumberInput
 from app.schemas.typings.platform.constrained_integers import PageSize
 from app.schemas.typings.users.prefixed_id import UserId
-from app.utilities.scheduling.booking_placement import ensure_party_size_allowed
+from app.utilities.scheduling.resource_selection import ensure_party_size_allowed
 from tests.operations.builders import OperationsWorld, every_day
 
 

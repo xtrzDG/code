@@ -48,12 +48,10 @@ from app.use_cases.bookings.operations_support import (
     update_contact_details,
 )
 from app.utilities.scheduling.availability import BLOCKING_BOOKING_STATUSES
-from app.utilities.scheduling.booking_placement import (
-    PlacementRequest,
-    place_booking,
-    select_resources,
-)
+from app.utilities.scheduling.booking_placement import place_booking
 from app.utilities.scheduling.booking_views import build_booking_view
+from app.utilities.scheduling.placement_request import PlacementRequest
+from app.utilities.scheduling.resource_selection import select_resources
 from app.utilities.scheduling.zoned_time import (
     SECONDS_PER_MINUTE,
     minute_of_day,
