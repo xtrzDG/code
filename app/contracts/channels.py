@@ -11,6 +11,7 @@ from app.schemas.domain.manager_links import ManagerTelegramLinkDocument
 from app.schemas.dto.channels.channel_webhooks import (
     ChannelDeliveryTarget,
     ChannelInboundMessage,
+    ChannelSendReceipt,
     ChannelWebhookPayload,
 )
 from app.schemas.dto.voice_webhooks import (
@@ -19,13 +20,16 @@ from app.schemas.dto.voice_webhooks import (
     VoiceToolCallArguments,
 )
 from app.schemas.typings.businesses.prefixed_id import BusinessId
-from app.schemas.typings.channels.constrained_integers import DeliveredMessageCount
 from app.schemas.typings.channels.constrained_strings import (
     MetaObjectId,
     WhatsAppTemplateLanguageCode,
     WhatsAppTemplateName,
 )
-from app.schemas.typings.channels.strings import ChannelSecret, ManagerLinkCodeHash
+from app.schemas.typings.channels.strings import (
+    ChannelSecret,
+    ManagerLinkCodeHash,
+    ProviderMessageId,
+)
 from app.schemas.typings.conversations.strings import ChannelUserId, MessageText
 from app.schemas.typings.localization.strings import RawPhoneNumberInput
 from app.schemas.typings.storage.constrained_integers import DocumentCount
@@ -61,14 +65,24 @@ class ChannelAdapterContract(AdapterContract, Protocol):
         """
         raise NotImplementedError
 
+    def split(self, text: MessageText) -> list[MessageText]:
+        """
+        The platform messages `send` sends for `text`: one per part at the
+        channel's length limit, in order (each part goes out as one message).
+        """
+        raise NotImplementedError
+
     def send(
         self,
         target: ChannelDeliveryTarget,
         text: MessageText,
-    ) -> DeliveredMessageCount:
+    ) -> ChannelSendReceipt:
         """
-        Send a text, split at the channel's length limit, and return how many
-        platform messages were sent. Raises ExternalServiceError.
+        Send a text, split at the channel's length limit: how many platform
+        messages were sent and the id of the last. Raises
+        ProviderRateLimitedError, ChannelCredentialRejectedError,
+        ProviderRejectedMessageError (a 4xx: sending again cannot help) or
+        ExternalServiceError (a temporary failure).
         """
         raise NotImplementedError
 
@@ -89,8 +103,11 @@ class WhatsAppTemplateAdapterContract(AdapterContract, Protocol):
         template_name: WhatsAppTemplateName,
         language_code: WhatsAppTemplateLanguageCode,
         body_parameters: list[MessageText],
-    ) -> None:
-        """Raises ExternalServiceError (unknown template, closed number, ...)."""
+    ) -> ProviderMessageId | None:
+        """
+        The sent message's id. Raises ExternalServiceError (unknown template,
+        closed number, ...).
+        """
         raise NotImplementedError
 
 

@@ -6,6 +6,7 @@ from app.schemas.constants.handoffs import ManagerContactChannel
 from app.schemas.constants.users import BusinessMemberRole
 from app.schemas.domain.businesses import BusinessDocument, ManagerContact
 from app.schemas.domain.users import UserDocument
+from app.schemas.dto.deliveries import StaffNotification
 from app.schemas.typings.conversations.strings import MessageText
 from app.schemas.typings.handoffs.strings import ManagerContactAddress, ManagerName
 
@@ -33,7 +34,9 @@ def notify_business_owners(
             continue
 
         contact: ManagerContact | None = build_owner_contact(owner, business)
-        if contact is not None and notifier.notify(contact, text):
+        if contact is not None and notifier.notify(
+            StaffNotification(business_id=business.id, contact=contact, text=text)
+        ):
             delivered += 1
 
     return delivered

@@ -121,7 +121,7 @@ class ChannelMessageSenderFacilitator(ChannelMessageSenderFacilitatorContract):
             self._secret_cipher,
         )
         try:
-            delivered: DeliveredMessageCount = adapter.send(target, text)
+            delivered: DeliveredMessageCount = adapter.send(target, text).delivered
         except ChannelCredentialRejectedError as error:
             self._record_health(channel_document, str(error))
             raise
@@ -184,7 +184,7 @@ class ChannelMessageSenderFacilitator(ChannelMessageSenderFacilitatorContract):
         self,
         business_id: BusinessId,
         channel_user_id: ChannelUserId,
-        send: Callable[[MetaObjectId], None],
+        send: Callable[[MetaObjectId], object],
     ) -> None:
         """
         Send a template from the business's WhatsApp number, keep the

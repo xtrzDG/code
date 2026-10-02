@@ -37,6 +37,7 @@ from app.schemas.typings.conversations.booleans import IsAfterHours
 from app.schemas.typings.conversations.constrained_integers import (
     ContactMessageLimit,
 )
+from app.schemas.typings.conversations.prefixed_id import MessageId
 from app.schemas.typings.conversations.strings import MessageText
 from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.use_cases.conversations.turns.contact_resolution import (
@@ -181,6 +182,8 @@ class PrepareConversationTurnUseCase(UseCaseContract[InboundMessage, PreparedTur
         is_first_reply: bool = not self._has_assistant_reply(business, conversation)
         self._message_repo.save(
             MessageDocument(
+                # The inbox's id: a turn run again stores the message once.
+                id=input_data.customer_message_id or MessageId(),
                 conversation_id=conversation.id,
                 business_id=business.id,
                 direction=MessageDirection.INBOUND,
@@ -214,6 +217,7 @@ class PrepareConversationTurnUseCase(UseCaseContract[InboundMessage, PreparedTur
             is_new_conversation=is_new_conversation,
             is_first_reply=is_first_reply,
             customer_text=customer_text,
+            reply_message_id=input_data.reply_message_id,
             context_line=MessageText(
                 build_context_line(
                     TurnContext(

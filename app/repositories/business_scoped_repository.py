@@ -1,4 +1,4 @@
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 
 from base_pydantic_schemas import PersistentDocument
 
@@ -96,6 +96,26 @@ class BusinessScopedRepository[StoredDocument: PersistentDocument]:
         return self._collection.count_by_fields(
             (of_business(business_id), *matches), within
         )
+
+    def _modify_in_business(
+        self,
+        business_id: BusinessId,
+        document_id: str,
+        change: Callable[[StoredDocument], StoredDocument | None],
+    ) -> StoredDocument | None:
+        """
+        Store what `change` makes of the business's document as stored now,
+        in one step; None, and nothing written, for a document of another
+        business, a missing one, or when `change` returns None.
+        """
+
+        def change_own(stored: StoredDocument) -> StoredDocument | None:
+            if read_business_id(stored) != business_id:
+                return None
+
+            return change(stored)
+
+        return self._collection.modify(document_id, change_own)
 
     def _remove(self, business_id: BusinessId, document_id: str) -> None:
         if self._load(business_id, document_id) is not None:

@@ -68,9 +68,7 @@ def is_retryable(
 ) -> bool:
     """Another attempt follows a temporary failure until the last one."""
 
-    return failure in RETRYABLE_FAILURES and int(attempts) < int(
-        MAX_DELIVERY_ATTEMPTS
-    )
+    return failure in RETRYABLE_FAILURES and int(attempts) < int(MAX_DELIVERY_ATTEMPTS)
 
 
 def retry_delay_seconds(

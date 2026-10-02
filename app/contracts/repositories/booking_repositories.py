@@ -6,6 +6,7 @@ not change stored state until it is saved. Every business-owned document is
 looked up through its business id, so one tenant never sees another's data.
 """
 
+from collections.abc import Callable
 from typing import Protocol
 
 from app.contracts.repo_contract import RepoContract
@@ -57,6 +58,19 @@ class HandoffRepoContract(RepoContract, Protocol):
 
     def list_by_business(self, business_id: BusinessId) -> list[HandoffDocument]:
         """Return handoffs ordered by created_at descending."""
+        raise NotImplementedError
+
+    def update(
+        self,
+        business_id: BusinessId,
+        handoff_id: HandoffId,
+        change: Callable[[HandoffDocument], HandoffDocument | None],
+    ) -> HandoffDocument | None:
+        """
+        Store what `change` makes of the handoff as stored now, in one step;
+        None, and nothing written, when it is missing, belongs to another
+        business, or `change` returns None.
+        """
         raise NotImplementedError
 
 

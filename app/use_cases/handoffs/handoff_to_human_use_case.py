@@ -36,6 +36,7 @@ from app.schemas.typings.conversations.strings import MessageText
 from app.schemas.typings.handoffs.constrained_integers import (
     DeliveredNotificationCount,
 )
+from app.schemas.typings.handoffs.prefixed_id import HandoffId
 from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.schemas.typings.localization.strings import FormattedPhoneNumber
 from app.use_cases.bookings.operations_support import (
@@ -65,9 +66,10 @@ class HandoffToHumanUseCase(UseCaseContract[HandoffCommand, HandoffResult]):
     HANDOFF, so the assistant stays silent in chat until staff resolve it.
     Every staff contact is notified in their language with the reason,
     urgency, summary, the customer's name, phone in international format and
-    channel: the handoff becomes NOTIFIED when at least one notification was
-    delivered, NOTIFICATION_FAILED otherwise. Sandbox handoffs notify nobody
-    and stay PENDING.
+    channel. The notifications go through the outbox: the handoff stays
+    PENDING until one is delivered (NOTIFIED) or they fail
+    (NOTIFICATION_FAILED); it is NOTIFICATION_FAILED at once when no contact
+    can be reached. Sandbox handoffs notify nobody and stay PENDING.
 
     The customer is told, in their language, that a colleague replies soon
     (during opening hours, or when hours are unknown) or when the business
@@ -143,16 +145,15 @@ class HandoffToHumanUseCase(UseCaseContract[HandoffCommand, HandoffResult]):
         self._conversation_repo.save(conversation)
 
         if not input_data.is_sandbox:
-            delivered: DeliveredNotificationCount = self._notify_staff(
-                business, input_data
+            queued: DeliveredNotificationCount = self._notify_staff(
+                business, input_data, handoff.id
             )
-            handoff.status = (
-                HandoffStatus.NOTIFIED
-                if int(delivered) > 0
-                else HandoffStatus.NOTIFICATION_FAILED
-            )
-            handoff.updated_at = now
-            self._handoff_repo.save(handoff)
+            if int(queued) == 0:
+                # Nobody can be reached. When notifications are queued, the
+                # outbox moves the handoff on as they are delivered.
+                handoff.status = HandoffStatus.NOTIFICATION_FAILED
+                handoff.updated_at = now
+                self._handoff_repo.save(handoff)
 
         return HandoffResult(
             id=handoff.id,
@@ -170,6 +171,7 @@ class HandoffToHumanUseCase(UseCaseContract[HandoffCommand, HandoffResult]):
         self,
         business: BusinessDocument,
         command: HandoffCommand,
+        handoff_id: HandoffId,
     ) -> DeliveredNotificationCount:
         contact: ContactDocument | None = self._contact_repo.get(
             business.id, command.contact_id
@@ -194,7 +196,7 @@ class HandoffToHumanUseCase(UseCaseContract[HandoffCommand, HandoffResult]):
             )
 
         return self._manager_broadcaster.broadcast(
-            build_staff_messages(business, render)
+            build_staff_messages(business, render, handoff_id)
         )
 
     def _customer_message_input(

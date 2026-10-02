@@ -5,6 +5,8 @@ from app.schemas.dto.channels.provider_profiles import TelegramBotProfile
 from app.schemas.exceptions.application_errors import (
     ChannelCredentialRejectedError,
     ExternalServiceError,
+    ProviderRateLimitedError,
+    ProviderRejectedMessageError,
     ValidationFailedError,
 )
 from app.schemas.typings.channels.constrained_strings import (
@@ -12,15 +14,18 @@ from app.schemas.typings.channels.constrained_strings import (
     TelegramBotUsername,
     TelegramWebhookSecret,
 )
-from app.schemas.typings.channels.strings import OutboundMessagePart
+from app.schemas.typings.channels.strings import OutboundMessagePart, ProviderMessageId
 from app.schemas.typings.conversations.strings import ChannelUserId
 from app.utilities.channels.json_values import (
     JsonObject,
     as_object,
     parse_json_object,
+    read_identifier,
     read_integer,
+    read_object,
     read_text,
 )
+from app.utilities.channels.retry_after import read_retry_after_seconds
 
 TELEGRAM_API_BASE_URL: str = "https://api.telegram.org"
 REQUEST_TIMEOUT_SECONDS: float = 10.0
@@ -28,6 +33,9 @@ REQUEST_TIMEOUT_SECONDS: float = 10.0
 # connecting; any later call means the bot stopped working). 403 is about
 # one chat (the customer blocked the bot), not the bot.
 REJECTED_TOKEN_ERROR_CODES: frozenset[int] = frozenset({401, 404})
+# "Too Many Requests: retry after N" (`parameters.retry_after`).
+RATE_LIMITED_ERROR_CODE: int = 429
+CLIENT_ERROR_CODES: range = range(400, 500)
 # Only customer messages are handled; edits, callbacks and the rest are not.
 ALLOWED_UPDATES: tuple[str, ...] = ("message",)
 
@@ -89,15 +97,23 @@ class TelegramBotClient(TelegramBotApiClientContract):
         bot_token: ProviderToken,
         chat_id: ChannelUserId,
         text: OutboundMessagePart,
-    ) -> None:
-        self._call(
-            bot_token,
-            "sendMessage",
-            {
-                "chat_id": str(chat_id),
-                "text": str(text),
-                "link_preview_options": {"is_disabled": True},
-            },
+    ) -> ProviderMessageId | None:
+        sent: JsonObject | None = as_object(
+            self._call(
+                bot_token,
+                "sendMessage",
+                {
+                    "chat_id": str(chat_id),
+                    "text": str(text),
+                    "link_preview_options": {"is_disabled": True},
+                },
+            )
+        )
+        message_id: str | None = (
+            None if sent is None else read_identifier(sent, "message_id")
+        )
+        return (
+            None if message_id is None else ProviderMessageId(f"{chat_id}:{message_id}")
         )
 
     def _call(
@@ -134,10 +150,28 @@ class TelegramBotClient(TelegramBotApiClientContract):
                 "Telegram rejected the bot token; copy it again from @BotFather."
             )
 
+        if error_code == RATE_LIMITED_ERROR_CODE:
+            parameters: JsonObject = read_object(body, "parameters") or {}
+            raise ProviderRateLimitedError(
+                f"Telegram {method_name} is rate limited: {description}",
+                retry_after_seconds=read_retry_after_seconds(
+                    read_integer(parameters, "retry_after"),
+                    response.headers.get("Retry-After"),
+                ),
+            )
+
         if error_code in REJECTED_TOKEN_ERROR_CODES:
             raise ChannelCredentialRejectedError(
                 f"Telegram {method_name} rejected the bot token ({error_code}: "
                 f"{description})."
+            )
+
+        if CLIENT_ERROR_CODES.start <= error_code < CLIENT_ERROR_CODES.stop:
+            # A refusal of this request (blocked bot, unknown chat, bad text):
+            # sending it again cannot help.
+            raise ProviderRejectedMessageError(
+                f"Telegram {method_name} refused the request ({error_code}): "
+                f"{description}"
             )
 
         raise ExternalServiceError(

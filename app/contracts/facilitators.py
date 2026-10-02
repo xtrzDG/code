@@ -6,11 +6,14 @@ from app.contracts.facilitator_contract import FacilitatorContract
 from app.schemas.constants.channels import ChannelKind
 from app.schemas.constants.localization import OtpDeliveryChannel
 from app.schemas.domain.businesses import ManagerContact
+from app.schemas.domain.outbound_messages import OutboundTemplate
+from app.schemas.dto.deliveries import StaffNotification
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.channels.constrained_strings import (
     WhatsAppTemplateLanguageCode,
     WhatsAppTemplateName,
 )
+from app.schemas.typings.channels.strings import ProviderMessageId
 from app.schemas.typings.conversations.strings import ChannelUserId, MessageText
 from app.schemas.typings.localization.constrained_strings import (
     E164PhoneNumber,
@@ -37,10 +40,35 @@ class OtpDeliveryFacilitatorContract(FacilitatorContract, Protocol):
 
 
 class ManagerNotificationFacilitatorContract(FacilitatorContract, Protocol):
-    def notify(self, contact: ManagerContact, text: MessageText) -> bool:
+    def notify(self, notification: StaffNotification) -> bool:
         """
-        Notify staff through the platform Telegram bot, a WhatsApp template,
-        e-mail or SMS. Return False when delivery failed (never raise).
+        Queue a staff notification in the outbox (the worker sends it through
+        the platform Telegram bot, a WhatsApp template, e-mail or SMS, with
+        retries). False when it cannot be delivered (no provider for the
+        contact's channel) or could not be queued; never raises.
+        """
+        raise NotImplementedError
+
+
+class StaffNotificationSenderContract(FacilitatorContract, Protocol):
+    """The providers that carry staff notifications, one platform message at a time."""
+
+    def split(self, contact: ManagerContact, text: MessageText) -> list[MessageText]:
+        """The platform messages a notification goes out as, in order."""
+        raise NotImplementedError
+
+    def send(
+        self,
+        contact: ManagerContact,
+        text: MessageText,
+        template: OutboundTemplate | None,
+    ) -> ProviderMessageId | None:
+        """
+        Send one part (WhatsApp: the template with the text as its
+        parameter, in English when the contact's language is refused). The
+        provider's message id when it names one. Raises
+        DeliveryNotConfiguredError, ProviderRateLimitedError,
+        ProviderRejectedMessageError or ExternalServiceError.
         """
         raise NotImplementedError
 

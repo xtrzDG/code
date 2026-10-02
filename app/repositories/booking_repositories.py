@@ -1,3 +1,5 @@
+from collections.abc import Callable
+
 from app.contracts.repositories.booking_repositories import (
     BookingRepoContract,
     HandoffRepoContract,
@@ -67,6 +69,14 @@ class HandoffRepository(
             key=lambda handoff: handoff.created_at,
             reverse=True,
         )
+
+    def update(
+        self,
+        business_id: BusinessId,
+        handoff_id: HandoffId,
+        change: Callable[[HandoffDocument], HandoffDocument | None],
+    ) -> HandoffDocument | None:
+        return self._modify_in_business(business_id, str(handoff_id), change)
 
 
 class UnansweredQuestionRepository(

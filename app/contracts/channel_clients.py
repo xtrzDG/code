@@ -21,6 +21,7 @@ from app.schemas.typings.channels.constrained_strings import (
 from app.schemas.typings.channels.strings import (
     ChannelSecret,
     OutboundMessagePart,
+    ProviderMessageId,
     VoicePlatformToolId,
 )
 from app.schemas.typings.conversations.strings import ChannelUserId, ProviderCallId
@@ -55,8 +56,13 @@ class TelegramBotApiClientContract(ClientContract, Protocol):
         bot_token: ProviderToken,
         chat_id: ChannelUserId,
         text: OutboundMessagePart,
-    ) -> None:
-        """Send at most 4096 characters. Raises ExternalServiceError."""
+    ) -> ProviderMessageId | None:
+        """
+        Send at most 4096 characters; the sent message's id
+        ("<chat id>:<message id>"). Raises ProviderRateLimitedError (429),
+        ChannelCredentialRejectedError (the token), ProviderRejectedMessageError
+        (another 4xx: blocked bot, unknown chat), ExternalServiceError.
+        """
         raise NotImplementedError
 
 
@@ -101,8 +107,11 @@ class MetaGraphApiClientContract(ClientContract, Protocol):
         phone_number_id: MetaObjectId,
         recipient: ChannelUserId,
         text: OutboundMessagePart,
-    ) -> None:
-        """Free-form text (at most 4096 characters, 24-hour window)."""
+    ) -> ProviderMessageId | None:
+        """
+        Free-form text (at most 4096 characters, 24-hour window); the
+        "wamid..." of the sent message. Errors as `send_page_message`.
+        """
         raise NotImplementedError
 
     def send_whatsapp_template(
@@ -113,7 +122,8 @@ class MetaGraphApiClientContract(ClientContract, Protocol):
         template_name: WhatsAppTemplateName,
         language_code: WhatsAppTemplateLanguageCode,
         body_parameters: list[OutboundMessagePart],
-    ) -> None:
+    ) -> ProviderMessageId | None:
+        """The "wamid..." of the sent template message."""
         raise NotImplementedError
 
     def send_page_message(
@@ -121,8 +131,14 @@ class MetaGraphApiClientContract(ClientContract, Protocol):
         access_token: ProviderToken,
         recipient: ChannelUserId,
         text: OutboundMessagePart,
-    ) -> None:
-        """Messenger or Instagram message through the page token's Send API."""
+    ) -> ProviderMessageId | None:
+        """
+        Messenger or Instagram message through the page token's Send API;
+        the "mid..." of the sent message. Raises ProviderRateLimitedError
+        (429, throttling codes), ChannelCredentialRejectedError (the token),
+        WhatsAppTemplateRejectedError, ProviderRejectedMessageError (another
+        4xx), ExternalServiceError (5xx, network).
+        """
         raise NotImplementedError
 
 

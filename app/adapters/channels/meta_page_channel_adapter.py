@@ -7,6 +7,7 @@ from app.schemas.constants.channels import ChannelKind
 from app.schemas.dto.channels.channel_webhooks import (
     ChannelDeliveryTarget,
     ChannelInboundMessage,
+    ChannelSendReceipt,
     ChannelWebhookPayload,
 )
 from app.schemas.exceptions.application_errors import (
@@ -99,26 +100,36 @@ class MetaPageChannelAdapter(ChannelAdapterContract):
 
         return messages
 
+    def split(self, text: MessageText) -> list[MessageText]:
+        return [
+            MessageText(part)
+            for part in split_message_text(str(text), self.message_limit)
+        ]
+
     def send(
         self,
         target: ChannelDeliveryTarget,
         text: MessageText,
-    ) -> DeliveredMessageCount:
+    ) -> ChannelSendReceipt:
         if target.credential is None:
             raise ExternalServiceError(
                 f"The {self.channel_kind.value} account of this business is not "
                 "connected."
             )
 
-        parts: list[str] = split_message_text(str(text), self.message_limit)
+        parts: list[MessageText] = self.split(text)
+        provider_message_id: ProviderMessageId | None = None
         for part in parts:
-            self._meta_client.send_page_message(
+            provider_message_id = self._meta_client.send_page_message(
                 target.credential,
                 target.channel_user_id,
-                OutboundMessagePart(part),
+                OutboundMessagePart(str(part)),
             )
 
-        return DeliveredMessageCount(len(parts))
+        return ChannelSendReceipt(
+            delivered=DeliveredMessageCount(len(parts)),
+            provider_message_id=provider_message_id,
+        )
 
     def _read_event(
         self,
