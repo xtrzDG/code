@@ -7,14 +7,6 @@ import type { Translation } from "../../../translate";
 import type { settingsEn } from "./settings.en";
 
 export const settingsKa: Translation<typeof settingsEn> = {
-  tabsLabel: "პარამეტრების განყოფილებები",
-  tabs: {
-    general: "ზოგადი",
-    team: "გუნდი",
-    notifications: "შეტყობინებები",
-    privacy: "მონაცემები და კონფიდენციალურობა",
-    audit: "მოქმედებების ჟურნალი",
-  },
   general: {
     businessTitle: "ბიზნესი",
     name: "ბიზნესის სახელი",

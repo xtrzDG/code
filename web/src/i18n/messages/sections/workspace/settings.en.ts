@@ -4,14 +4,6 @@
  */
 
 export const settingsEn = {
-  tabsLabel: "Settings sections",
-  tabs: {
-    general: "General",
-    team: "Team",
-    notifications: "Notifications",
-    privacy: "Privacy and data",
-    audit: "Audit log",
-  },
   general: {
     businessTitle: "Business",
     name: "Business name",

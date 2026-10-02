@@ -7,11 +7,6 @@ import type { Translation } from "../../../translate";
 import type { assistantEn } from "./assistant.en";
 
 export const assistantRu: Translation<typeof assistantEn> = {
-  tabs: {
-    label: "Разделы помощника",
-    chat: "Тестовый чат",
-    versions: "Версии",
-  },
   live: "Клиенты общаются с версией {number}",
   liveSince: "Клиенты общаются с версией {number} с {date}",
   notLive: "Помощник ещё не работает с клиентами: соберите версию, протестируйте и опубликуйте её.",
