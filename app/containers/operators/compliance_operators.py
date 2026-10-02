@@ -2,7 +2,10 @@ from dependency_injector import containers
 from dependency_injector.providers import DependenciesContainer
 
 from app.containers.pipelines.compliance_pipelines import CompliancePipelinesContainer
-from app.containers.provider_chains import pipeline_operator
+from app.containers.provider_chains import (
+    pipeline_operator,
+    platform_pipeline_operator,
+)
 from app.containers.utilities import UtilitiesContainer
 
 
@@ -14,11 +17,12 @@ class ComplianceOperatorsContainer(containers.DeclarativeContainer):
 
     compliance_pipelines: CompliancePipelinesContainer = DependenciesContainer()  # type: ignore[assignment]
     utilities: UtilitiesContainer = DependenciesContainer()  # type: ignore[assignment]
-    # Operators run inside the storage scope of the business they serve.
+    # Operators run inside the storage scope of the business they serve;
+    # platform_pipeline_operator marks platform-level work (platform-wide).
     storage_scope = utilities.storage_scope
 
     # --- Retention purge as a periodic job.
-    purge_expired_recordings_operator = pipeline_operator(
+    purge_expired_recordings_operator = platform_pipeline_operator(
         compliance_pipelines.purge_expired_recordings_pipeline, storage_scope
     )
 

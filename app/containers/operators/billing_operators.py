@@ -2,7 +2,10 @@ from dependency_injector import containers
 from dependency_injector.providers import DependenciesContainer
 
 from app.containers.pipelines.billing_pipelines import BillingPipelinesContainer
-from app.containers.provider_chains import pipeline_operator
+from app.containers.provider_chains import (
+    pipeline_operator,
+    platform_pipeline_operator,
+)
 from app.containers.utilities import UtilitiesContainer
 
 
@@ -14,7 +17,8 @@ class BillingOperatorsContainer(containers.DeclarativeContainer):
 
     billing_pipelines: BillingPipelinesContainer = DependenciesContainer()  # type: ignore[assignment]
     utilities: UtilitiesContainer = DependenciesContainer()  # type: ignore[assignment]
-    # Operators run inside the storage scope of the business they serve.
+    # Operators run inside the storage scope of the business they serve;
+    # platform_pipeline_operator marks platform-level work (platform-wide).
     storage_scope = utilities.storage_scope
 
     # --- Billing and payments.
@@ -36,20 +40,20 @@ class BillingOperatorsContainer(containers.DeclarativeContainer):
     subscribe_operator = pipeline_operator(
         billing_pipelines.subscribe_pipeline, storage_scope
     )
-    process_payment_webhook_operator = pipeline_operator(
+    process_payment_webhook_operator = platform_pipeline_operator(
         billing_pipelines.process_payment_webhook_pipeline, storage_scope
     )
 
     # --- Periodic jobs of the background worker.
-    end_trials_operator = pipeline_operator(
+    end_trials_operator = platform_pipeline_operator(
         billing_pipelines.end_trials_pipeline, storage_scope
     )
-    enforce_grace_periods_operator = pipeline_operator(
+    enforce_grace_periods_operator = platform_pipeline_operator(
         billing_pipelines.enforce_grace_periods_pipeline, storage_scope
     )
-    check_package_usage_operator = pipeline_operator(
+    check_package_usage_operator = platform_pipeline_operator(
         billing_pipelines.check_package_usage_pipeline, storage_scope
     )
-    invoice_usage_overage_operator = pipeline_operator(
+    invoice_usage_overage_operator = platform_pipeline_operator(
         billing_pipelines.invoice_usage_overage_pipeline, storage_scope
     )

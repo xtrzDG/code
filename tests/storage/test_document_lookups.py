@@ -23,6 +23,10 @@ from app.schemas.typings.storage.integers import DocumentFieldInteger
 from app.schemas.typings.storage.strings import DocumentFieldText
 from tests.storage.conftest import CollectionFactory
 
+# Seeding and checking rows of several businesses runs platform-wide; the
+# business scopes a test enters nest inside (tests/storage/conftest.py).
+pytestmark = pytest.mark.usefixtures("platform_scope")
+
 PHONE = DocumentFieldPath("phone_number")
 IDENTITIES = DocumentFieldPath("channel_identities[].channel_user_id")
 CONVERSATION = DocumentFieldPath("conversation_id")

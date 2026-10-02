@@ -2,7 +2,10 @@ from dependency_injector import containers
 from dependency_injector.providers import DependenciesContainer
 
 from app.containers.pipelines.platform_pipelines import PlatformPipelinesContainer
-from app.containers.provider_chains import pipeline_operator
+from app.containers.provider_chains import (
+    pipeline_operator,
+    platform_pipeline_operator,
+)
 from app.containers.utilities import UtilitiesContainer
 
 
@@ -14,11 +17,12 @@ class PlatformOperatorsContainer(containers.DeclarativeContainer):
 
     platform_pipelines: PlatformPipelinesContainer = DependenciesContainer()  # type: ignore[assignment]
     utilities: UtilitiesContainer = DependenciesContainer()  # type: ignore[assignment]
-    # Operators run inside the storage scope of the business they serve.
+    # Operators run inside the storage scope of the business they serve;
+    # platform_pipeline_operator marks platform-level work (platform-wide).
     storage_scope = utilities.storage_scope
 
     # --- Platform admin.
-    list_clients_operator = pipeline_operator(
+    list_clients_operator = platform_pipeline_operator(
         platform_pipelines.list_clients_pipeline, storage_scope
     )
     get_client_health_operator = pipeline_operator(
@@ -32,7 +36,7 @@ class PlatformOperatorsContainer(containers.DeclarativeContainer):
     flush_llm_traces_operator = pipeline_operator(
         platform_pipelines.flush_llm_traces_pipeline, storage_scope
     )
-    purge_stale_rows_operator = pipeline_operator(
+    purge_stale_rows_operator = platform_pipeline_operator(
         platform_pipelines.purge_stale_rows_pipeline, storage_scope
     )
 

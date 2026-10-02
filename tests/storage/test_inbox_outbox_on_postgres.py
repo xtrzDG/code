@@ -7,6 +7,7 @@ security.
 
 import threading
 
+import pytest
 from typed_time_provider import Microseconds
 
 from app.repositories.delivery_repositories import (
@@ -34,6 +35,10 @@ from app.utilities.deliveries.delivery_keys import (
 )
 from app.utilities.storage.storage_scope_context import StorageScopeContext
 from tests.storage.conftest import PostgresCollectionFactory
+
+# Seeding and checking rows of several businesses runs platform-wide; the
+# business scopes a test enters nest inside (tests/storage/conftest.py).
+pytestmark = pytest.mark.usefixtures("platform_scope")
 
 RECIPIENT: OutboundRecipientKey = OutboundRecipientKey("customer:channel_1:9001")
 

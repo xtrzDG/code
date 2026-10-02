@@ -14,9 +14,12 @@ class BusinessScopedPipelineOperator[InputData, OutputData](
     and 10: row-level security as the second line of defence). A request
     for business A then cannot read or write business B's tenant rows on
     Postgres even if a repository forgot its business filter. Inputs
-    without a business (sign-in, webhooks, admin lists) run platform-wide;
-    code that must look across businesses escalates explicitly with
-    `StorageScopeContract.platform_wide()`.
+    without a business (sign-in, the signed-in user's own account and
+    business list) run in the caller's scope, by default unscoped: they may
+    use platform collections (users, sessions, businesses) but no tenant
+    collection (fail-closed). Platform-level work uses
+    `PlatformWidePipelineOperator`; code that must look across businesses
+    escalates explicitly with `StorageScopeContract.platform_wide()`.
     """
 
     def __init__(

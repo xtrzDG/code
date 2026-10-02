@@ -24,6 +24,10 @@ from tests.storage.conftest import PostgresCollectionFactory
 from tests.storage.postgres_server import ThrowawayPostgresServer
 from tests.storage.storage_testing import build_ticking_wall_clock
 
+# Seeding and checking rows of several businesses runs platform-wide; the
+# business scopes a test enters nest inside (tests/storage/conftest.py).
+pytestmark = pytest.mark.usefixtures("platform_scope")
+
 
 def test_nul_character_is_rejected_with_a_clear_error(
     postgres_collections: PostgresCollectionFactory,

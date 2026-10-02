@@ -61,10 +61,12 @@ def test_hot_query_uses_its_index(
     storage_scope = StorageScopeContext()
     repositories = HotPathRepositories(recording_pool, storage_scope)
     try:
-        if query.is_in_business_scope:
-            with storage_scope.scoped_to_business(BUSINESS_IDS[0]):
-                query.run(repositories)
-        else:
+        # Platform-level queries (webhook routing, purges) run platform-wide.
+        with (
+            storage_scope.scoped_to_business(BUSINESS_IDS[0])
+            if query.is_in_business_scope
+            else storage_scope.platform_wide()
+        ):
             query.run(repositories)
 
         plans = [

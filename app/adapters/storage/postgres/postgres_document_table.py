@@ -32,6 +32,7 @@ from app.schemas.typings.storage.constrained_strings import (
 )
 from app.utilities.storage.document_lookup_fields import declared_lookup_fields
 from app.utilities.storage.document_tenancy import read_document_business_id
+from app.utilities.storage.storage_scoping import require_tenant_scope
 
 
 class PostgresDocumentTable[StoredDocument: PersistentDocument]:
@@ -85,7 +86,9 @@ class PostgresDocumentTable[StoredDocument: PersistentDocument]:
         One transaction with the RLS scope applied.
 
         Yields the connection and the business id of a business scope (None
-        when platform-wide), for the explicit filter in queries.
+        when platform-wide), for the explicit filter in queries. Raises
+        UnscopedStorageAccessError before connecting when a tenant
+        collection is used outside a scope.
         """
 
         scope: StorageScope = self._effective_scope()
@@ -107,10 +110,15 @@ class PostgresDocumentTable[StoredDocument: PersistentDocument]:
             raise application_error from error
 
     def _effective_scope(self) -> StorageScope:
+        """
+        Platform collections are read across businesses; a tenant
+        collection uses the ambient scope and refuses unscoped code.
+        """
+
         if self._isolation is CollectionIsolation.PLATFORM:
             return self._platform_scope
 
-        return self._storage_scope.current()
+        return require_tenant_scope(self._storage_scope.current(), self._label())
 
     def _write_parameters(
         self,

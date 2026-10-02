@@ -2,12 +2,18 @@
 
 import threading
 
+import psycopg
+import pytest
 from psycopg.rows import TupleRow
 
+from app.adapters.storage.postgres.postgres_session_settings import (
+    apply_storage_scope,
+)
 from app.clients.postgres.postgres_connection_pool_client import (
     PostgresConnectionPoolClient,
 )
 from app.schemas.domain.contacts import ContactDocument
+from app.schemas.dto.storage import StorageScope
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.localization.constrained_strings import E164PhoneNumber
 from app.schemas.typings.platform.strings import DatabaseUrl
@@ -17,6 +23,10 @@ from tests.storage.conftest import PostgresCollectionFactory
 from tests.storage.postgres_server import ThrowawayPostgresServer
 from tests.storage.rls_contacts import save_two_businesses_contacts
 from tests.storage.storage_testing import build_fixed_wall_clock
+
+# Seeding and checking rows of several businesses runs platform-wide; the
+# business scopes a test enters nest inside (tests/storage/conftest.py).
+pytestmark = pytest.mark.usefixtures("platform_scope")
 
 
 def count_contacts(rows: list[TupleRow]) -> int:
@@ -125,3 +135,37 @@ def test_concurrent_threads_keep_their_own_scope(
     assert seen_business_ids == {
         business_id: {business_id} for business_id in business_ids
     }
+
+
+def test_an_unscoped_session_sees_and_writes_no_tenant_row(
+    postgres_server: ThrowawayPostgresServer,
+    postgres_collections: PostgresCollectionFactory,
+    database_name: str,
+) -> None:
+    first_business_id, _, _, _ = save_two_businesses_contacts(postgres_collections)
+    foreign_contact = build_contact(COUNTRY_SAMPLES[0], first_business_id)
+
+    with postgres_server.app_connection(database_name) as connection:
+        with connection.transaction():
+            apply_storage_scope(connection, StorageScope.unscoped())
+            settings = connection.execute(
+                "select current_setting('app.business_id', true), "
+                "current_setting('app.bypass_rls', true)"
+            ).fetchone()
+            unscoped = connection.execute(
+                "select count(*) from workshop.contacts"
+            ).fetchall()
+        with (
+            pytest.raises(psycopg.errors.InsufficientPrivilege),
+            connection.transaction(),
+        ):
+            apply_storage_scope(connection, StorageScope.unscoped())
+            connection.execute(
+                "insert into workshop.contacts "
+                "(document_key, business_id, document, created_at, updated_at) "
+                "values (%s, %s, '{}'::jsonb, 0, 0)",
+                (str(foreign_contact.id), str(first_business_id)),
+            )
+
+    assert settings == ("", "off")
+    assert count_contacts(unscoped) == 0

@@ -6,6 +6,7 @@ from base_pydantic_schemas import PersistentDocument
 from app.adapters.storage.in_memory_document_lookup import select_entries
 from app.adapters.storage.persisted_document_codec import PersistedDocumentCodec
 from app.contracts.document_store import DocumentCollectionAdapterContract
+from app.contracts.storage import StorageScopeContract
 from app.schemas.constants.storage import LookupFieldKind
 from app.schemas.dto.storage_queries import (
     DocumentFieldMatch,
@@ -28,6 +29,7 @@ from app.utilities.storage.document_lookup_fields import (
     declared_lookup_fields,
     require_valid_lookup,
 )
+from app.utilities.storage.storage_scoping import require_tenant_scope
 
 
 class InMemoryDocumentCollectionAdapter[StoredDocument: PersistentDocument](
@@ -44,14 +46,22 @@ class InMemoryDocumentCollectionAdapter[StoredDocument: PersistentDocument](
     lookup fields as the Postgres collection (by default those the catalog
     declares for the document type), so a query without an index fails in
     in-memory tests too; they scan, which is fine for tests and demos.
+
+    A tenant collection given the process's `tenant_scope` refuses code
+    that entered no storage scope, like the Postgres collection
+    (`UnscopedStorageAccessError`), so the in-memory app is fail-closed too.
+    Rows of other businesses are not filtered here: that is the job of
+    repositories and, on Postgres, of row-level security.
     """
 
     def __init__(
         self,
         document_type: type[StoredDocument],
         lookup_fields: Mapping[DocumentFieldPath, LookupFieldKind] | None = None,
+        tenant_scope: StorageScopeContract | None = None,
     ) -> None:
         self._document_type: type[StoredDocument] = document_type
+        self._tenant_scope: StorageScopeContract | None = tenant_scope
         self._serialized_documents: dict[str, str] = {}
         self._lock: threading.Lock = threading.Lock()
         collection_name: DocumentCollectionName | None = catalog_name_of(document_type)
@@ -65,6 +75,7 @@ class InMemoryDocumentCollectionAdapter[StoredDocument: PersistentDocument](
         )
 
     def upsert(self, document_key: str, document: StoredDocument) -> None:
+        self._require_scope()
         serialized_document: str = self._codec.encode(document)
         with self._lock:
             self._serialized_documents[document_key] = serialized_document
@@ -74,6 +85,7 @@ class InMemoryDocumentCollectionAdapter[StoredDocument: PersistentDocument](
         document_key: str,
         document: StoredDocument,
     ) -> IsDocumentInserted:
+        self._require_scope()
         serialized_document: str = self._codec.encode(document)
         with self._lock:
             if document_key in self._serialized_documents:
@@ -83,6 +95,7 @@ class InMemoryDocumentCollectionAdapter[StoredDocument: PersistentDocument](
             return True
 
     def get(self, document_key: str) -> StoredDocument | None:
+        self._require_scope()
         with self._lock:
             serialized_document: str | None = self._serialized_documents.get(
                 document_key
@@ -94,6 +107,7 @@ class InMemoryDocumentCollectionAdapter[StoredDocument: PersistentDocument](
         return self._codec.decode(serialized_document)
 
     def list_all(self) -> list[StoredDocument]:
+        self._require_scope()
         with self._lock:
             serialized_documents: list[str] = list(self._serialized_documents.values())
 
@@ -155,6 +169,7 @@ class InMemoryDocumentCollectionAdapter[StoredDocument: PersistentDocument](
     ) -> DocumentCount:
         lookup = DocumentLookup(matches=tuple(matches), within=within)
         require_valid_lookup(self._lookup_fields, lookup, self._label())
+        self._require_scope()
         with self._lock:
             deleted_keys: list[str] = [
                 key
@@ -177,6 +192,7 @@ class InMemoryDocumentCollectionAdapter[StoredDocument: PersistentDocument](
         # The whole read-change-write holds the collection lock, so `change`
         # must not call back into this collection (the lock is not
         # reentrant).
+        self._require_scope()
         with self._lock:
             stored: str | None = self._serialized_documents.get(document_key)
             if stored is None:
@@ -206,6 +222,7 @@ class InMemoryDocumentCollectionAdapter[StoredDocument: PersistentDocument](
         )
 
     def delete(self, document_key: str) -> None:
+        self._require_scope()
         with self._lock:
             self._serialized_documents.pop(document_key, None)
 
@@ -214,6 +231,7 @@ class InMemoryDocumentCollectionAdapter[StoredDocument: PersistentDocument](
 
     def _select_serialized(self, lookup: DocumentLookup) -> list[str]:
         require_valid_lookup(self._lookup_fields, lookup, self._label())
+        self._require_scope()
         with self._lock:
             entries: list[tuple[str, str]] = list(self._serialized_documents.items())
 
@@ -229,6 +247,10 @@ class InMemoryDocumentCollectionAdapter[StoredDocument: PersistentDocument](
             self._codec.decode(serialized_document)
             for serialized_document in serialized_documents
         ]
+
+    def _require_scope(self) -> None:
+        if self._tenant_scope is not None:
+            require_tenant_scope(self._tenant_scope.current(), self._label())
 
     def _label(self) -> str:
         return f"the {self._document_type.__name__} collection"

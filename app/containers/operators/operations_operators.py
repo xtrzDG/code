@@ -2,7 +2,10 @@ from dependency_injector import containers
 from dependency_injector.providers import DependenciesContainer
 
 from app.containers.pipelines.operations_pipelines import OperationsPipelinesContainer
-from app.containers.provider_chains import pipeline_operator
+from app.containers.provider_chains import (
+    pipeline_operator,
+    platform_pipeline_operator,
+)
 from app.containers.utilities import UtilitiesContainer
 
 
@@ -14,7 +17,8 @@ class OperationsOperatorsContainer(containers.DeclarativeContainer):
 
     operations_pipelines: OperationsPipelinesContainer = DependenciesContainer()  # type: ignore[assignment]
     utilities: UtilitiesContainer = DependenciesContainer()  # type: ignore[assignment]
-    # Operators run inside the storage scope of the business they serve.
+    # Operators run inside the storage scope of the business they serve;
+    # platform_pipeline_operator marks platform-level work (platform-wide).
     storage_scope = utilities.storage_scope
 
     # --- Bookings, leads, handoffs, questions, dashboard, Google Calendar.
@@ -60,7 +64,9 @@ class OperationsOperatorsContainer(containers.DeclarativeContainer):
     start_google_calendar_connection_operator = pipeline_operator(
         operations_pipelines.start_google_calendar_connection_pipeline, storage_scope
     )
-    complete_google_calendar_connection_operator = pipeline_operator(
+    # The business is known only from the consent state (read across
+    # businesses); the use case checks it is the signed-in owner's.
+    complete_google_calendar_connection_operator = platform_pipeline_operator(
         operations_pipelines.complete_google_calendar_connection_pipeline, storage_scope
     )
     disconnect_google_calendar_operator = pipeline_operator(
@@ -71,6 +77,6 @@ class OperationsOperatorsContainer(containers.DeclarativeContainer):
     )
 
     # --- Periodic job of the background worker.
-    send_booking_reminders_operator = pipeline_operator(
+    send_booking_reminders_operator = platform_pipeline_operator(
         operations_pipelines.send_booking_reminders_pipeline, storage_scope
     )

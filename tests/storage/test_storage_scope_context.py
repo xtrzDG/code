@@ -1,4 +1,4 @@
-"""The ambient storage scope: per context, nested, restored on errors."""
+"""The ambient storage scope: fail-closed, per context, nested, restored on errors."""
 
 import asyncio
 import contextvars
@@ -13,12 +13,12 @@ from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.utilities.storage.storage_scope_context import StorageScopeContext
 
 
-def test_default_scope_is_platform_wide() -> None:
+def test_default_scope_is_unscoped() -> None:
     scope = StorageScopeContext().current()
 
-    assert scope.kind is StorageScopeKind.PLATFORM
+    assert scope.kind is StorageScopeKind.UNSCOPED
     assert scope.business_id is None
-    assert scope == StorageScope.platform_wide()
+    assert scope == StorageScope.unscoped()
 
 
 def test_scopes_nest_and_restore() -> None:
@@ -36,7 +36,7 @@ def test_scopes_nest_and_restore() -> None:
             assert storage_scope.current().business_id == second_business_id
         assert storage_scope.current().business_id == first_business_id
 
-    assert storage_scope.current().kind is StorageScopeKind.PLATFORM
+    assert storage_scope.current().kind is StorageScopeKind.UNSCOPED
 
 
 def test_scope_is_restored_after_an_error() -> None:
@@ -48,17 +48,17 @@ def test_scope_is_restored_after_an_error() -> None:
     ):
         raise RuntimeError("boom")
 
-    assert storage_scope.current().kind is StorageScopeKind.PLATFORM
+    assert storage_scope.current().kind is StorageScopeKind.UNSCOPED
 
 
 def test_instances_do_not_share_their_scope() -> None:
     first_context, second_context = StorageScopeContext(), StorageScopeContext()
 
-    with first_context.scoped_to_business(BusinessId()):
-        assert second_context.current().kind is StorageScopeKind.PLATFORM
+    with first_context.platform_wide():
+        assert second_context.current().kind is StorageScopeKind.UNSCOPED
 
 
-def test_new_threads_start_platform_wide_and_copied_contexts_inherit() -> None:
+def test_new_threads_start_unscoped_and_copied_contexts_inherit() -> None:
     storage_scope = StorageScopeContext()
     business_id = BusinessId()
     seen_in_thread: list[StorageScope] = []
@@ -71,9 +71,9 @@ def test_new_threads_start_platform_wide_and_copied_contexts_inherit() -> None:
         thread.join()
         copied_context = contextvars.copy_context()
 
-    assert seen_in_thread == [StorageScope.platform_wide()]
+    assert seen_in_thread == [StorageScope.unscoped()]
     assert copied_context.run(storage_scope.current).business_id == business_id
-    assert storage_scope.current().kind is StorageScopeKind.PLATFORM
+    assert storage_scope.current().kind is StorageScopeKind.UNSCOPED
 
 
 def test_concurrent_asyncio_tasks_keep_their_own_scope() -> None:
@@ -101,3 +101,6 @@ def test_scope_value_requires_a_business_id_only_for_a_business() -> None:
 
     with pytest.raises(ValidationError, match="business id"):
         StorageScope(kind=StorageScopeKind.PLATFORM, business_id=BusinessId())
+
+    with pytest.raises(ValidationError, match="business id"):
+        StorageScope(kind=StorageScopeKind.UNSCOPED, business_id=BusinessId())

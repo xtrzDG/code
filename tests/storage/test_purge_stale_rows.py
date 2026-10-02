@@ -2,6 +2,7 @@
 
 from typing import cast
 
+import pytest
 from typed_time_provider import Microseconds
 
 from app.containers.app import AppContainer
@@ -51,6 +52,10 @@ from app.utilities.deliveries.delivery_keys import (
 )
 from tests.storage.conftest import CollectionFactory
 from tests.storage.storage_testing import FIXED_NANOSECONDS, build_fixed_wall_clock
+
+# Seeding and checking rows of several businesses runs platform-wide; the
+# business scopes a test enters nest inside (tests/storage/conftest.py).
+pytestmark = pytest.mark.usefixtures("platform_scope")
 
 NOW: int = FIXED_NANOSECONDS // 1_000
 HOUR: int = 3_600_000_000

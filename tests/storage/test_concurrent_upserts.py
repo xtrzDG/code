@@ -78,7 +78,8 @@ def test_concurrent_upserts_through_a_small_pool(database_url: DatabaseUrl) -> N
                     written_prices.add(price)
                 shared_item = build_knowledge_item(sample, business_id)
                 shared_item.price_minor = MoneyAmountMinor(price)
-                knowledge_items.upsert(SHARED_KEY, shared_item)
+                with storage_scope.platform_wide():
+                    knowledge_items.upsert(SHARED_KEY, shared_item)
         except BaseException as error:  # pragma: no cover - reported below
             errors.append(error)
 
@@ -93,7 +94,8 @@ def test_concurrent_upserts_through_a_small_pool(database_url: DatabaseUrl) -> N
             thread.join()
 
         total_rows, distinct_keys = count_rows(connection_pool)
-        shared_item = knowledge_items.get(SHARED_KEY)
+        with storage_scope.platform_wide():
+            shared_item = knowledge_items.get(SHARED_KEY)
         visible_counts: dict[BusinessId, int] = {}
         for business_id in business_ids:
             with storage_scope.scoped_to_business(business_id):

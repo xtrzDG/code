@@ -40,6 +40,10 @@ from tests.storage.builders import (
 from tests.storage.conftest import PostgresCollectionFactory
 from tests.storage.storage_testing import build_ticking_wall_clock
 
+# Seeding and checking rows of several businesses runs platform-wide; the
+# business scopes a test enters nest inside (tests/storage/conftest.py).
+pytestmark = pytest.mark.usefixtures("platform_scope")
+
 SAMPLE_IDS: list[str] = [sample.country_code for sample in COUNTRY_SAMPLES]
 
 
@@ -153,10 +157,11 @@ def test_large_integers_and_unicode_survive_jsonb(
 
 def test_upsert_overwrites_and_keeps_first_write_time(
     connection_pool: PostgresConnectionPoolClient,
+    platform_scope: StorageScopeContext,
 ) -> None:
     knowledge_items = PostgresCollectionFactory(
         connection_pool=connection_pool,
-        storage_scope=StorageScopeContext(),
+        storage_scope=platform_scope,
         wall_clock=build_ticking_wall_clock(step_microseconds=10),
     )(KnowledgeItemDocument, "knowledge_items")
     item = build_knowledge_item(COUNTRY_SAMPLES[0], BusinessId())
