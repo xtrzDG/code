@@ -29,6 +29,9 @@ from app.adapters.locks.advisory_lock_adapter_factory import (
 from app.adapters.payments.flitt_payment_gateway_adapter import (
     FlittPaymentGatewayAdapter,
 )
+from app.adapters.rate_limits.rate_limit_bucket_adapter_factory import (
+    build_rate_limit_bucket_adapter,
+)
 from app.adapters.recordings.cached_recording_storage_adapter import (
     CachedRecordingStorageAdapter,
 )
@@ -65,6 +68,7 @@ from app.contracts.health import DatabaseProbeAdapterContract
 from app.contracts.llm import LlmAdapterContract
 from app.contracts.locks import AdvisoryLockAdapterContract
 from app.contracts.observability import LlmTraceFacilitatorContract
+from app.contracts.rate_limits import RateLimitBucketAdapterContract
 from app.schemas.dto.conversations import LlmCallLimits
 
 
@@ -106,6 +110,12 @@ class AdaptersContainer(containers.DeclarativeContainer):
         build_advisory_lock_adapter,
         connection_pool=clients.postgres_pool,
         storage_scope=utilities.storage_scope,
+    )
+    # Request counters of the rate limits (Postgres: shared by every
+    # instance; in memory without a database).
+    rate_limit_buckets: Singleton[RateLimitBucketAdapterContract] = Singleton(
+        build_rate_limit_bucket_adapter,
+        connection_pool=clients.postgres_pool,
     )
 
     # --- Security and recordings.

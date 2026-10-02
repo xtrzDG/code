@@ -31,6 +31,9 @@ class PlatformOrchestratorsContainer(containers.DeclarativeContainer):
     purge_stale_rows_orchestrator = use_case_orchestrator(
         platform_use_cases.purge_stale_rows_use_case
     )
+    sweep_rate_limit_buckets_orchestrator = use_case_orchestrator(
+        platform_use_cases.sweep_rate_limit_buckets_use_case
+    )
 
     # --- The job queue: the admin's dead letters and the purge job.
     list_queued_jobs_orchestrator = use_case_orchestrator(

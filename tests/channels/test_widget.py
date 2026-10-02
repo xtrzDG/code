@@ -213,10 +213,13 @@ class TestWidgetMessageRateLimits:
         assert answers == [200] * 12
         assert limited.status_code == 429
         assert limited.json()["error"] == "rate_limited"
-        # The first message leaves the minute 5 seconds later.
-        assert limited.headers["Retry-After"] == "5"
+        # The minute's 12 messages count fully until it ends in 5 s, then
+        # fade with the next minute: 5 s into it there is room for one.
+        assert limited.headers["Retry-After"] == "10"
         assert other_visitor.status_code == 200
         assert len(testbed.pipeline.messages) == 13
+        testbed.clock.advance(5)
+        assert post_message(client, business.id).status_code == 429
         testbed.clock.advance(5)
         assert post_message(client, business.id).status_code == 200
 
@@ -235,7 +238,9 @@ class TestWidgetMessageRateLimits:
 
         assert answers == [200] * 60
         assert limited.status_code == 429
-        assert limited.headers["Retry-After"] == "60"
+        # The next minute starts in 60 s; a second into it, this minute's
+        # weight leaves room for one more.
+        assert limited.headers["Retry-After"] == "61"
         assert len(testbed.pipeline.messages) == 60
 
 

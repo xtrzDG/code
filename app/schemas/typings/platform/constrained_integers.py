@@ -94,6 +94,26 @@ class ProcessedItemCount(BaseConstrainedTypedInt):
     ge = 0
 
 
+class RateLimitRequestCount(BaseConstrainedTypedInt):
+    """How many requests one rate-limit counter recorded in one window."""
+
+    ge = 0
+
+
+class RateWindowSeconds(BaseConstrainedTypedInt):
+    """The length of a rate limit's counting window, in seconds."""
+
+    ge = 1
+    le = 24 * 60 * 60
+
+
+class RequestsPerWindow(BaseConstrainedTypedInt):
+    """How many requests one rate-limit counter allows in one window."""
+
+    ge = 1
+    le = 10_000_000
+
+
 class RetryAfterSeconds(BaseConstrainedTypedInt):
     """How long a rate-limited caller should wait before asking again."""
 

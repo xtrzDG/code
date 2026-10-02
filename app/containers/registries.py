@@ -75,9 +75,10 @@ class RegistriesContainer(containers.DeclarativeContainer):
     customer_message_lock_registry: Singleton[CustomerMessageLockRegistry] = Singleton(
         CustomerMessageLockRegistry, advisory_locks=adapters.advisory_locks
     )
-    # Request counters of public endpoints (the website widget's polling).
+    # Request counters of public endpoints (the website widget, login code
+    # checks), shared by every API instance through Postgres.
     request_rate_limit_registry: Singleton[RequestRateLimitRegistry] = Singleton(
-        RequestRateLimitRegistry
+        RequestRateLimitRegistry, buckets=adapters.rate_limit_buckets
     )
     # One lock for reserving login code sends (the hourly limits).
     login_code_send_lock_registry: Singleton[LoginCodeSendLockRegistry] = Singleton(

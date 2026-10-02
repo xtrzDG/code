@@ -133,6 +133,20 @@ class PageCursor(BaseConstrainedTypedString):
     pattern = r"^[A-Za-z0-9_-]+$"
 
 
+class RateLimitKey(BaseConstrainedTypedString):
+    """
+    What one rate-limit counter counts: the kind of request and who or what
+    makes it ("widget-message:business:biz_..."). Every API instance counts
+    the same key in the same shared counter.
+
+    Example:
+        key = RateLimitKey("otp-check:address:203.0.113.7")
+    """
+
+    min_length = 1
+    max_length = 400
+
+
 class ReleaseVersion(BaseConstrainedTypedString):
     """
     The deployed build of the backend: the git commit Render builds from

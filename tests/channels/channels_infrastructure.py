@@ -6,6 +6,9 @@ from app.adapters.channels.instagram_channel_adapter import InstagramChannelAdap
 from app.adapters.channels.messenger_channel_adapter import MessengerChannelAdapter
 from app.adapters.channels.telegram_channel_adapter import TelegramChannelAdapter
 from app.adapters.channels.whatsapp_channel_adapter import WhatsAppChannelAdapter
+from app.adapters.rate_limits.in_memory_rate_limit_bucket_adapter import (
+    InMemoryRateLimitBucketAdapter,
+)
 from app.adapters.storage.in_memory_document_collection import (
     InMemoryDocumentCollectionAdapter,
 )
@@ -151,7 +154,9 @@ class ChannelsInfrastructure:
         )
 
         self.secret_cipher = FakeSecretCipher()
-        self.widget_rate_limits = RequestRateLimitRegistry()
+        self.widget_rate_limits = RequestRateLimitRegistry(
+            InMemoryRateLimitBucketAdapter()
+        )
         self.phone_number_parser = PhoneNumberParser()
         self.language_registry = LanguageRegistry()
         self.text_resolver = LocalizedTextResolver()

@@ -39,6 +39,9 @@ class PlatformOperatorsContainer(containers.DeclarativeContainer):
     purge_stale_rows_operator = platform_pipeline_operator(
         platform_pipelines.purge_stale_rows_pipeline, storage_scope
     )
+    sweep_rate_limit_buckets_operator = pipeline_operator(
+        platform_pipelines.sweep_rate_limit_buckets_pipeline, storage_scope
+    )
 
     # --- The job queue: the admin's dead letters and the purge job.
     list_queued_jobs_operator = pipeline_operator(

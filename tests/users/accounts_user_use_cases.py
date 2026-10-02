@@ -7,6 +7,9 @@ from typed_time_provider import Microseconds, WallClock
 from app.adapters.locks.in_memory_advisory_lock_adapter import (
     InMemoryAdvisoryLockAdapter,
 )
+from app.adapters.rate_limits.in_memory_rate_limit_bucket_adapter import (
+    InMemoryRateLimitBucketAdapter,
+)
 from app.registries.limits.request_rate_limit_registry import RequestRateLimitRegistry
 from app.registries.localization.high_cost_phone_number_registry import (
     HighCostPhoneNumberRegistry,
@@ -62,7 +65,9 @@ class AccountsUserUseCases(AccountsRepositories):
             wall_clock=wall_clock,
         )
 
-        self.login_rate_limits = RequestRateLimitRegistry()
+        self.login_rate_limits = RequestRateLimitRegistry(
+            InMemoryRateLimitBucketAdapter()
+        )
         self.bot_check = FakeBotCheck()
         self.cap_alerts = RecordingCapAlerts()
         self.send_login_code = SendLoginCodeUseCase(
