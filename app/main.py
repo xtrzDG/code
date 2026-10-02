@@ -21,10 +21,15 @@ from app.gateways.http.access_log_redaction import install_access_log_redaction
 from app.gateways.http.application import build_http_application
 from app.gateways.http.router_assembly import build_application_routers
 from app.gateways.worker.background_worker import BackgroundWorker
+from app.registries.demo.demo_dataset_registry import (
+    DEMO_OWNER_EMAIL,
+    DEMO_OWNER_PHONE_NUMBER,
+)
 from app.schemas.configurations.app_settings import AppSettings
 from app.schemas.constants.environment import DeploymentEnvironment
 from app.schemas.constants.localization import OtpDeliveryChannel
 from app.schemas.dto.channels import PlatformBotWebhookSetup, TelegramBotProfile
+from app.schemas.dto.demo_data import DemoDataSeedReport, SeedDemoDataCommand
 from app.schemas.exceptions.application_errors import ValidationFailedError
 from app.schemas.exceptions.base_exception import ApplicationError
 from app.schemas.typings.compliance.constrained_strings import DpaDocumentVersion
@@ -64,7 +69,8 @@ def build_lifespan(app_container: AppContainer) -> Lifespan[FastAPI]:
     """
     Startup: warm the country catalog (every country's profile is built
     once), check that the configured DPA has its text in this build, report
-    the login code channels, point the platform Telegram bot
+    the login code channels, with SEED_DEMO_DATA fill the instance with the
+    demo businesses (once), point the platform Telegram bot
     at this API when it is configured, start flushing model-call traces and,
     with EMBEDDED_WORKER, start the background worker in a thread. Shutdown:
     stop the worker after its current tick, flush the remaining traces and
@@ -77,6 +83,7 @@ def build_lifespan(app_container: AppContainer) -> Lifespan[FastAPI]:
         app_container.registries.country_registry().list_all()
         check_dpa_document(app_container)
         report_login_code_channels(app_container)
+        seed_demo_data(app_container)
         configure_platform_bot(app_container)
         trace_facilitator: LlmTraceFacilitatorContract = (
             app_container.adapters.llm_trace_facilitator()
@@ -159,6 +166,28 @@ def report_login_code_channels(app_container: AppContainer) -> None:
         "No login code provider is configured, so nobody can sign in. Set "
         "TWILIO_* (SMS), TELEGRAM_GATEWAY_API_TOKEN, WHATSAPP_OTP_* or SMTP_* "
         '(see .env.example, "Login codes").',
+    )
+
+
+def seed_demo_data(app_container: AppContainer) -> None:
+    """
+    SEED_DEMO_DATA (development only): create the demo businesses unless they
+    exist, before the worker starts. Nothing is sent to any provider.
+    """
+
+    if not app_container.config.app_settings().is_demo_data_seeding_enabled:
+        return
+
+    report: DemoDataSeedReport = (
+        app_container.operators.seed_demo_data_operator().operate(SeedDemoDataCommand())
+    )
+    LOGGER.info(
+        "Demo data: %d business(es) created, %d already there. Sign in with "
+        "%s or %s; in development the login code is printed in this log.",
+        len(report.created_business_ids),
+        len(report.kept_business_ids),
+        DEMO_OWNER_PHONE_NUMBER,
+        DEMO_OWNER_EMAIL,
     )
 
 

@@ -41,6 +41,9 @@ from app.orchestrators.conversations.owner_test_chat_orchestrator import (
 from app.orchestrators.conversations.voice_tool_call_orchestrator import (
     VoiceToolCallOrchestrator,
 )
+from app.orchestrators.demo.seed_demo_data_orchestrator import (
+    SeedDemoDataOrchestrator,
+)
 from app.orchestrators.localization.call_forwarding_instructions_orchestrator import (
     CallForwardingInstructionsOrchestrator,
 )
@@ -57,6 +60,7 @@ from app.schemas.dto.catalog import (
 )
 from app.schemas.dto.conversation_feed import OwnerTestChatCommand
 from app.schemas.dto.conversations import InboundMessage, VoiceToolCallResult
+from app.schemas.dto.demo_data import DemoDataSeedReport, SeedDemoDataCommand
 from app.schemas.dto.jobs import JobReport, JobTick, QueuedJobInput
 from app.schemas.dto.voice_webhooks import (
     PostCallWebhookOutcome,
@@ -510,4 +514,15 @@ class OrchestratorsContainer(containers.DeclarativeContainer):
     )
     flush_llm_traces_orchestrator = use_case_orchestrator(
         use_cases.flush_llm_traces_use_case
+    )
+
+    # --- Development demo data (SEED_DEMO_DATA, API startup).
+    seed_demo_data_orchestrator: Factory[
+        OrchestratorContract[SeedDemoDataCommand, DemoDataSeedReport]
+    ] = Factory(
+        SeedDemoDataOrchestrator,
+        prepare_demo_accounts=use_cases.prepare_demo_accounts_use_case,
+        store_demo_foundation=use_cases.store_demo_foundation_use_case,
+        assemble_assistant_version=use_cases.assemble_assistant_version_use_case,
+        store_demo_activity=use_cases.store_demo_activity_use_case,
     )

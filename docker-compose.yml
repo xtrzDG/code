@@ -44,6 +44,9 @@ x-backend: &backend
     # here (see above), so the per-address cap of login codes is higher. Set
     # here, not interpolated: the 10 of a copied .env.example would win.
     OTP_SENDS_PER_IP_PER_HOUR: "100"
+    # Opt-in demo businesses for a first look (docs/LAUNCH.md, "Демо-данные");
+    # refused with APP_ENV=production.
+    SEED_DEMO_DATA: ${SEED_DEMO_DATA:-false}
   volumes:
     - recordings:/app/var/recordings
   restart: unless-stopped

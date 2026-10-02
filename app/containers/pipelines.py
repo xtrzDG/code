@@ -450,3 +450,8 @@ class PipelinesContainer(containers.DeclarativeContainer):
     flush_llm_traces_pipeline = orchestrator_pipeline(
         orchestrators.flush_llm_traces_orchestrator
     )
+
+    # --- Development demo data (SEED_DEMO_DATA, API startup).
+    seed_demo_data_pipeline = orchestrator_pipeline(
+        orchestrators.seed_demo_data_orchestrator
+    )

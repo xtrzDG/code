@@ -6,6 +6,7 @@ from app.containers.repositories import RepositoriesContainer
 from app.containers.time_provider import TimeProviderContainer
 from app.registries.billing.exchange_rate_registry import ExchangeRateRegistry
 from app.registries.billing.plan_registry import PlanRegistry
+from app.registries.demo.demo_dataset_registry import DemoDatasetRegistry
 from app.registries.legal.legal_document_registry import LegalDocumentRegistry
 from app.registries.limits.request_rate_limit_registry import (
     RequestRateLimitRegistry,
@@ -68,4 +69,9 @@ class RegistriesContainer(containers.DeclarativeContainer):
     # One lock for reserving login code sends (the hourly limits).
     login_code_send_lock_registry: Singleton[LoginCodeSendLockRegistry] = Singleton(
         LoginCodeSendLockRegistry
+    )
+    # Development demo businesses (SEED_DEMO_DATA), built for the moment of
+    # seeding.
+    demo_dataset_registry: Singleton[DemoDatasetRegistry] = Singleton(
+        DemoDatasetRegistry, plan_registry=plan_registry
     )
