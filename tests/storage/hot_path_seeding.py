@@ -5,7 +5,7 @@ tests that check query plans and timings on realistic table sizes.
 
 from collections.abc import Callable, Generator, Sequence
 from contextlib import contextmanager
-from typing import cast
+from typing import LiteralString, cast
 
 from base_pydantic_schemas import PersistentDocument
 from psycopg import sql
@@ -21,7 +21,7 @@ from app.clients.postgres.postgres_connection_pool_client import (
 from app.schemas.typings.platform.strings import DatabaseUrl
 from app.utilities.storage.document_tenancy import read_document_business_id
 
-BYPASS_RLS: str = "select set_config('app.bypass_rls', 'on', true)"
+BYPASS_RLS: LiteralString = "select set_config('app.bypass_rls', 'on', true)"
 
 
 def insert_documents(
@@ -136,12 +136,14 @@ def explain(
     plans: list[dict[str, object]] = []
     with connection_pool.transaction() as connection:
         for statement, parameters in transaction:
+            # Replays SQL the application composed itself (sql.SQL objects).
+            replayed: LiteralString = statement  # pyright: ignore[reportAssignmentType]
             if "set_config" in statement:
-                connection.execute(statement, parameters or None)
+                connection.execute(replayed, parameters or None)
                 continue
 
             row: TupleRow | None = connection.execute(
-                f"explain (format json) {statement}", parameters or None
+                f"explain (format json) {replayed}", parameters or None
             ).fetchone()
             assert row is not None
             plan: object = cast(list[dict[str, object]], row[0])[0]["Plan"]

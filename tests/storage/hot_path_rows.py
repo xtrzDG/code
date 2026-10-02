@@ -8,6 +8,7 @@ conversations each, as a busy platform has).
 """
 
 from dataclasses import dataclass
+from typing import LiteralString
 
 from psycopg import sql
 
@@ -27,7 +28,7 @@ class SeededTable:
     """A table and the SQL of one generated document (`n` is the row number)."""
 
     name: str
-    document_sql: str
+    document_sql: LiteralString
     has_business: bool = True
 
 
@@ -113,21 +114,19 @@ def seed_hot_path_tables(
     with connection_pool.transaction() as connection:
         connection.execute(BYPASS_RLS)
         for table in SEEDED_TABLES:
-            business_sql: str = (
+            business_sql: LiteralString = (
                 "(%(businesses)s::text[])[1 + n %% %(business_count)s]"
                 if table.has_business
                 else "null"
             )
-            statement: str = (
+            statement: LiteralString = (
                 "insert into {table} "
                 "(document_key, business_id, document, created_at, updated_at) "
                 f"select 'seeded_' || n, {business_sql}, {table.document_sql}, n, n "
                 "from generate_series(1, %(rows)s) as n"
             )
             connection.execute(
-                sql.SQL(statement).format(  # pyright: ignore[reportArgumentType]
-                    table=sql.Identifier("workshop", table.name)
-                ),
+                sql.SQL(statement).format(table=sql.Identifier("workshop", table.name)),
                 {
                     "businesses": [str(business_id) for business_id in business_ids],
                     "business_count": len(business_ids),

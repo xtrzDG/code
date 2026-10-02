@@ -1,5 +1,7 @@
 """The daily purge of stale rows, in memory and on Postgres."""
 
+from typing import cast
+
 from typed_time_provider import Microseconds
 
 from app.containers.app import AppContainer
@@ -121,7 +123,7 @@ def test_stale_sessions_codes_and_receipts_are_purged_and_audited(
 
 
 def test_the_worker_runs_the_purge_once_a_day() -> None:
-    specs: list[PeriodicJobSpec] = list(AppContainer().gateways.periodic_jobs())
+    specs = cast(list[PeriodicJobSpec], AppContainer().gateways.periodic_jobs())
     purge: list[PeriodicJobSpec] = [
         spec for spec in specs if spec.name == PURGE_STALE_ROWS_JOB
     ]

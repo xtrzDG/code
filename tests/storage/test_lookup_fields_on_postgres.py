@@ -5,6 +5,7 @@ even across processes, and purges delete in batches.
 """
 
 import threading
+from typing import LiteralString
 
 from psycopg.rows import TupleRow
 from typed_time_provider import Microseconds
@@ -38,17 +39,17 @@ COLUMN_TYPES: dict[LookupFieldKind, str] = {
     LookupFieldKind.FILTER_TEXT: "text",
     LookupFieldKind.INTEGER: "bigint",
 }
-GENERATED_COLUMNS_SQL: str = (
+GENERATED_COLUMNS_SQL: LiteralString = (
     "select table_name, column_name, data_type from information_schema.columns "
     "where table_schema = 'workshop' and is_generated = 'ALWAYS'"
 )
-INDEXED_COLUMNS_SQL: str = (
+INDEXED_COLUMNS_SQL: LiteralString = (
     "select t.relname, a.attname from pg_index i "
     "join pg_class t on t.oid = i.indrelid "
     "join pg_namespace n on n.oid = t.relnamespace and n.nspname = 'workshop' "
     "join pg_attribute a on a.attrelid = t.oid and a.attnum = any(i.indkey)"
 )
-TRIGGERS_SQL: str = (
+TRIGGERS_SQL: LiteralString = (
     "select c.relname, encode(t.tgargs, 'escape') from pg_trigger t "
     "join pg_class c on c.oid = t.tgrelid where not t.tgisinternal"
 )
