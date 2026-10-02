@@ -8,14 +8,16 @@ from app.schemas.exceptions.application_errors import (
 )
 from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.schemas.typings.localization.strings import LocalizedTextValue
-from app.utilities.localization.language_tags import (
+from app.utilities.localization.babel_locales import (
     find_babel_locale,
-    find_likely_script_code,
-    is_known_language_tag,
-    is_right_to_left_script,
-    parse_language_tag,
     require_babel_locale,
 )
+from app.utilities.localization.cldr_language_names import is_known_language_tag
+from app.utilities.localization.language_scripts import (
+    find_likely_script_code,
+    is_right_to_left_script,
+)
+from app.utilities.localization.language_tags import parse_language_tag
 from app.utilities.localization.localized_text_resolver import (
     LocalizedTextResolver,
     build_lookup_chain,

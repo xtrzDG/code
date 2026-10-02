@@ -7,10 +7,8 @@ from app.schemas.dto.catalog.countries import (
     LanguageListItem,
     LanguageListRequest,
 )
-from app.utilities.localization.display_names import (
-    build_language_display_name_or_tag,
-)
-from app.utilities.localization.language_tags import require_babel_locale
+from app.utilities.localization.babel_locales import require_babel_locale
+from app.utilities.localization.display_names import build_language_display_name_or_tag
 
 
 class ListLanguagesUseCase(UseCaseContract[LanguageListRequest, LanguageList]):

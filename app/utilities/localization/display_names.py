@@ -13,10 +13,12 @@ from app.schemas.typings.localization.strings import (
     CurrencyDisplayName,
     LanguageDisplayName,
 )
-from app.utilities.localization.language_tags import (
-    LanguageTagParts,
+from app.utilities.localization.cldr_language_names import (
     get_english_locale,
     read_locale_name,
+)
+from app.utilities.localization.language_tags import (
+    LanguageTagParts,
     split_language_tag,
 )
 

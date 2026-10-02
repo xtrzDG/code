@@ -19,7 +19,7 @@ from app.schemas.typings.localization.constrained_strings import (
     CurrencyCode,
     LanguageTag,
 )
-from app.utilities.localization.language_tags import require_babel_locale
+from app.utilities.localization.babel_locales import require_babel_locale
 from app.utilities.money.money_formatting import format_money
 from app.utilities.money.money_math import (
     build_discount_factor,

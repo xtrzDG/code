@@ -10,7 +10,7 @@ from app.schemas.dto.compliance import DpaAcceptanceView, DpaStatusView
 from app.schemas.typings.compliance.constrained_strings import DpaDocumentVersion
 from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.utilities.compliance.legal_endpoints import build_dpa_document_url
-from app.utilities.localization.language_tags import ENGLISH_LOCALE_IDENTIFIER
+from app.utilities.localization.cldr_language_names import ENGLISH_LOCALE_IDENTIFIER
 
 
 class GetDpaStatusUseCase(UseCaseContract[BusinessQuery, DpaStatusView]):

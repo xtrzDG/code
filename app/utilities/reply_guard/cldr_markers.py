@@ -20,7 +20,7 @@ from babel.dates import get_month_names
 from babel.numbers import get_currency_name, list_currencies
 
 from app.schemas.typings.localization.constrained_strings import LanguageTag
-from app.utilities.localization.language_tags import find_babel_locale
+from app.utilities.localization.babel_locales import find_babel_locale
 
 WORD_PATTERN: re.Pattern[str] = re.compile(r"[^\W\d_]+")
 MIN_CURRENCY_WORD_LENGTH: int = 3

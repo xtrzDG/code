@@ -52,7 +52,7 @@ from app.utilities.billing.billing_periods import (
     to_local_calendar_day,
 )
 from app.utilities.billing.return_urls import require_allowed_return_url
-from app.utilities.localization.language_tags import require_babel_locale
+from app.utilities.localization.babel_locales import require_babel_locale
 
 
 class StartCheckoutUseCase(UseCaseContract[StartCheckoutCommand, CheckoutSessionView]):

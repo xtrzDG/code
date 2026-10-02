@@ -19,7 +19,7 @@ from app.transformers.billing.billing_texts import (
     select_text_language,
 )
 from app.utilities.billing.billing_periods import to_local_datetime
-from app.utilities.localization.language_tags import require_babel_locale
+from app.utilities.localization.babel_locales import require_babel_locale
 from app.utilities.money.money_formatting import format_money
 
 DATE_FORMAT: str = "long"

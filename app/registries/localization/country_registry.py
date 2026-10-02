@@ -45,7 +45,7 @@ from app.schemas.typings.localization.constrained_strings import (
     TimezoneName,
 )
 from app.schemas.typings.localization.strings import CountryDisplayName
-from app.utilities.localization.language_tags import (
+from app.utilities.localization.cldr_language_names import (
     get_english_locale,
     read_locale_name,
 )

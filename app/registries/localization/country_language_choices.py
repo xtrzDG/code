@@ -22,10 +22,8 @@ from app.schemas.typings.localization.constrained_strings import (
     CountryCode,
     LanguageTag,
 )
-from app.utilities.localization.language_tags import (
-    base_language_code,
-    find_babel_locale,
-)
+from app.utilities.localization.babel_locales import find_babel_locale
+from app.utilities.localization.language_tags import base_language_code
 
 
 def find_owner_language(

@@ -15,10 +15,8 @@ from app.utilities.conversations.language_evidence.writing_scripts import (
     COMPATIBLE_TAG_SCRIPTS,
     SCRIPT_RANGES,
 )
-from app.utilities.localization.language_tags import (
-    base_language_code,
-    find_likely_script_code,
-)
+from app.utilities.localization.language_scripts import find_likely_script_code
+from app.utilities.localization.language_tags import base_language_code
 
 WORD_PATTERN: re.Pattern[str] = re.compile(r"[^\W\d_]+")
 KANA_SCRIPT: str = "Kana"

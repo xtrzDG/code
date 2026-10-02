@@ -30,7 +30,7 @@ from app.schemas.exceptions.application_errors import ValidationFailedError
 from app.schemas.exceptions.base_exception import ApplicationError
 from app.schemas.typings.compliance.constrained_strings import DpaDocumentVersion
 from app.schemas.typings.localization.constrained_strings import LanguageTag
-from app.utilities.localization.language_tags import ENGLISH_LOCALE_IDENTIFIER
+from app.utilities.localization.cldr_language_names import ENGLISH_LOCALE_IDENTIFIER
 
 LOGGER: logging.Logger = logging.getLogger(__name__)
 # Buffered model-call traces of the API process go to Langfuse this often

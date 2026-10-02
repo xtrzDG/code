@@ -25,7 +25,7 @@ from app.schemas.typings.compliance.strings import (
 )
 from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.utilities.compliance.legal_endpoints import build_dpa_document_url
-from app.utilities.localization.language_tags import ENGLISH_LOCALE_IDENTIFIER
+from app.utilities.localization.cldr_language_names import ENGLISH_LOCALE_IDENTIFIER
 
 
 class AcceptDpaUseCase(UseCaseContract[AcceptDpaCommand, DpaStatusView]):

@@ -3,7 +3,7 @@ from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.dto.compliance import DpaDocumentQuery, DpaDocumentView
 from app.schemas.exceptions.application_errors import NotFoundError
 from app.schemas.typings.localization.constrained_strings import LanguageTag
-from app.utilities.localization.language_tags import ENGLISH_LOCALE_IDENTIFIER
+from app.utilities.localization.cldr_language_names import ENGLISH_LOCALE_IDENTIFIER
 
 
 class GetDpaDocumentUseCase(UseCaseContract[DpaDocumentQuery, DpaDocumentView]):
