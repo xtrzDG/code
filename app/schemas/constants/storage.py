@@ -15,6 +15,27 @@ class CollectionIsolation(StrEnum):
     PLATFORM = "platform"
 
 
+class LookupFieldKind(StrEnum):
+    """
+    How a document field is indexed for lookups.
+
+    TEXT and INTEGER fields are top-level fields stored by Postgres in a
+    generated column `doc_<field>` (plain columns keep btree indexes usable
+    under row-level security; expressions on the JSON document are not).
+    TEXT fields are matched for equality, INTEGER fields by range and order.
+    FILTER_TEXT fields have a column but no index of their own: they only
+    narrow a query that an indexed field already selects (a message's
+    direction within its conversation). ELEMENT_TEXT fields are a field of
+    the objects of a top-level list (`members[].user_id`); a trigger keeps
+    one row per value in `workshop.document_lookup_keys`.
+    """
+
+    TEXT = "text"
+    FILTER_TEXT = "filter_text"
+    INTEGER = "integer"
+    ELEMENT_TEXT = "element_text"
+
+
 class StorageScopeKind(StrEnum):
     """Whose rows a storage operation may see: one business or the platform."""
 

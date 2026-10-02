@@ -1,0 +1,160 @@
+"""
+The lookup fields on Postgres: every declared field is indexed by the
+migrations, list fields follow row-level security, receipts are unique
+even across processes, and purges delete in batches.
+"""
+
+import threading
+from typing import LiteralString
+
+from psycopg.rows import TupleRow
+from typed_time_provider import Microseconds
+
+from app.adapters.storage.postgres.document_lookup_sql import lookup_column_name
+from app.clients.postgres.postgres_connection_pool_client import (
+    PostgresConnectionPoolClient,
+)
+from app.repositories.channel_repositories import ChannelMessageReceiptRepository
+from app.repositories.conversation_repositories import ContactRepository
+from app.repositories.user_repositories import UserSessionRepository
+from app.schemas.constants.channels import ChannelKind
+from app.schemas.constants.storage import LookupFieldKind
+from app.schemas.domain.channel_receipts import ChannelMessageReceiptDocument
+from app.schemas.domain.contacts import ContactDocument
+from app.schemas.domain.users import UserSessionDocument
+from app.schemas.typings.businesses.prefixed_id import BusinessId
+from app.schemas.typings.channels.strings import ProviderMessageId
+from app.utilities.storage.document_lookup_fields import (
+    DOCUMENT_LOOKUP_FIELDS,
+    split_element_path,
+)
+from app.utilities.storage.storage_scope_context import StorageScopeContext
+from tests.storage.builders import COUNTRY_SAMPLES, build_contact
+from tests.storage.conftest import PostgresCollectionFactory
+from tests.storage.hot_path_seeding import insert_session_rows
+from tests.storage.postgres_server import ThrowawayPostgresServer
+
+COLUMN_TYPES: dict[LookupFieldKind, str] = {
+    LookupFieldKind.TEXT: "text",
+    LookupFieldKind.FILTER_TEXT: "text",
+    LookupFieldKind.INTEGER: "bigint",
+}
+GENERATED_COLUMNS_SQL: LiteralString = (
+    "select table_name, column_name, data_type from information_schema.columns "
+    "where table_schema = 'workshop' and is_generated = 'ALWAYS'"
+)
+INDEXED_COLUMNS_SQL: LiteralString = (
+    "select t.relname, a.attname from pg_index i "
+    "join pg_class t on t.oid = i.indrelid "
+    "join pg_namespace n on n.oid = t.relnamespace and n.nspname = 'workshop' "
+    "join pg_attribute a on a.attrelid = t.oid and a.attnum = any(i.indkey)"
+)
+TRIGGERS_SQL: LiteralString = (
+    "select c.relname, encode(t.tgargs, 'escape') from pg_trigger t "
+    "join pg_class c on c.oid = t.tgrelid where not t.tgisinternal"
+)
+
+
+def text_rows(rows: list[TupleRow]) -> set[tuple[str, ...]]:
+    return {tuple(str(value) for value in row) for row in rows}
+
+
+def test_every_declared_lookup_field_is_indexed_by_the_migrations(
+    postgres_server: ThrowawayPostgresServer,
+    database_name: str,
+) -> None:
+    with postgres_server.admin_connection(database_name) as connection:
+        columns = text_rows(connection.execute(GENERATED_COLUMNS_SQL).fetchall())
+        indexed = text_rows(connection.execute(INDEXED_COLUMNS_SQL).fetchall())
+        triggers = text_rows(connection.execute(TRIGGERS_SQL).fetchall())
+
+    for collection_name, fields in DOCUMENT_LOOKUP_FIELDS.items():
+        table: str = str(collection_name)
+        for field in fields:
+            if field.kind is LookupFieldKind.ELEMENT_TEXT:
+                list_field, element_field = split_element_path(field.path)
+                arguments: str = f"{list_field}\\000{element_field}\\000"
+                assert (table, arguments) in triggers, field
+                continue
+
+            column: str = lookup_column_name(field.path)
+            assert (table, column, COLUMN_TYPES[field.kind]) in columns, field
+            if field.kind is not LookupFieldKind.FILTER_TEXT:
+                assert (table, column) in indexed, f"{table}.{column} has no index"
+
+
+def test_list_field_lookups_keep_to_the_business_scope(
+    postgres_collections: PostgresCollectionFactory,
+    storage_scope: StorageScopeContext,
+) -> None:
+    contacts = ContactRepository(postgres_collections(ContactDocument, "contacts"))
+    first = build_contact(COUNTRY_SAMPLES[0], BusinessId())
+    second = build_contact(COUNTRY_SAMPLES[1], BusinessId())
+    second.channel_identities = list(first.channel_identities)
+    contacts.save(first)
+    contacts.save(second)
+    identity = first.channel_identities[0]
+    assert identity.channel is not ChannelKind.TELEGRAM
+
+    with storage_scope.scoped_to_business(first.business_id):
+        found = contacts.find_by_channel_identity(
+            first.business_id, identity.channel, identity.channel_user_id
+        )
+        foreign = contacts.find_by_channel_identity(
+            second.business_id, identity.channel, identity.channel_user_id
+        )
+        other_channel = contacts.find_by_channel_identity(
+            first.business_id, ChannelKind.TELEGRAM, identity.channel_user_id
+        )
+
+    assert found is not None and found.id == first.id
+    assert foreign is None
+    assert other_channel is None
+    found_platform_wide = contacts.find_by_channel_identity(
+        second.business_id, identity.channel, identity.channel_user_id
+    )
+    assert found_platform_wide is not None and found_platform_wide.id == second.id
+
+
+def test_receipts_are_unique_even_for_concurrent_deliveries(
+    postgres_collections: PostgresCollectionFactory,
+) -> None:
+    collection = postgres_collections(
+        ChannelMessageReceiptDocument, "channel_message_receipts"
+    )
+    receipts = ChannelMessageReceiptRepository(collection)
+    business_id = BusinessId()
+    results: list[bool] = []
+
+    def receipt() -> ChannelMessageReceiptDocument:
+        return ChannelMessageReceiptDocument(
+            business_id=business_id,
+            channel=ChannelKind.TELEGRAM,
+            provider_message_id=ProviderMessageId("42"),
+        )
+
+    def deliver() -> None:
+        results.append(receipts.record_if_new(receipt()))
+
+    threads = [threading.Thread(target=deliver) for _ in range(6)]
+    for thread in threads:
+        thread.start()
+    for thread in threads:
+        thread.join()
+
+    assert sorted(results) == [False] * 5 + [True]
+    # The unique index refuses the same message under another key too.
+    assert collection.insert_if_absent("another-key", receipt()) is False
+
+
+def test_the_session_purge_deletes_in_batches(
+    postgres_collections: PostgresCollectionFactory,
+    connection_pool: PostgresConnectionPoolClient,
+) -> None:
+    insert_session_rows(connection_pool, count=2_500, expires_at=0)
+    sessions = UserSessionRepository(
+        postgres_collections(UserSessionDocument, "user_sessions")
+    )
+    assert sessions.delete_expired(Microseconds(2_000)) == 2_000
+    assert sessions.delete_expired(Microseconds(2_000)) == 0
+    assert sessions.delete_expired(Microseconds(10_000)) == 500

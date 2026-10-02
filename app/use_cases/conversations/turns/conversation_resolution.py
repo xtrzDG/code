@@ -89,25 +89,26 @@ def find_open_conversation(
     """
     The contact's conversation in this channel and sandbox mode that staff
     still own (HANDOFF, however long ago), else one with a message in the
-    last 24 hours.
+    last 24 hours. Two indexed lookups of the contact's conversations: its
+    handoffs, and those with a recent message.
     """
 
-    window_start: int = int(now) - to_microseconds(CONVERSATION_WINDOW)
-    recent: ConversationDocument | None = None
-    for conversation in conversation_repo.list_by_business(business.id):
-        if (
-            conversation.contact_id != contact.id
-            or conversation.channel is not channel
-            or conversation.is_sandbox != is_sandbox
-            or conversation.status is ConversationStatus.CLOSED
-        ):
-            continue
-
+    for conversation in conversation_repo.list_by_contact(
+        business.id, contact.id, status=ConversationStatus.HANDOFF
+    ):
         # Staff own it until they close the handoff, however long ago.
-        if conversation.status is ConversationStatus.HANDOFF:
+        if conversation.channel is channel and conversation.is_sandbox == is_sandbox:
             return conversation
 
-        if recent is None and int(conversation.last_message_at) >= window_start:
-            recent = conversation
+    window_start = Microseconds(int(now) - to_microseconds(CONVERSATION_WINDOW))
+    for conversation in conversation_repo.list_by_contact(
+        business.id, contact.id, last_message_from=window_start
+    ):
+        if (
+            conversation.channel is channel
+            and conversation.is_sandbox == is_sandbox
+            and conversation.status is not ConversationStatus.CLOSED
+        ):
+            return conversation
 
-    return recent
+    return None

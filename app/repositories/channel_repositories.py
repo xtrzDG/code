@@ -1,4 +1,4 @@
-import threading
+from typed_time_provider import Microseconds
 
 from app.contracts.channels import (
     ChannelMessageReceiptRepoContract,
@@ -6,17 +6,26 @@ from app.contracts.channels import (
 )
 from app.contracts.document_store import DocumentCollectionAdapterContract
 from app.repositories.business_scoped_repository import BusinessScopedRepository
+from app.repositories.document_queries import time_range
 from app.schemas.domain.channel_receipts import ChannelMessageReceiptDocument
 from app.schemas.domain.manager_links import ManagerTelegramLinkDocument
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.channels.strings import ManagerLinkCodeHash
+from app.schemas.typings.storage.constrained_integers import DocumentCount
+from app.schemas.typings.storage.constrained_strings import DocumentFieldPath
+from app.schemas.typings.storage.strings import DocumentFieldText
+
+RECEIPT_CREATED_AT_FIELD: DocumentFieldPath = DocumentFieldPath("created_at")
+CODE_HASH_FIELD: DocumentFieldPath = DocumentFieldPath("code_hash")
 
 
 class ChannelMessageReceiptRepository(ChannelMessageReceiptRepoContract):
     """
-    Receipts keyed by business, channel and provider message id, so a
-    repeated delivery finds the first receipt with one lookup (a unique key
-    in a relational store).
+    Receipts keyed by business, channel and provider message id. A receipt
+    is inserted in one atomic step that fails on a taken key (and, on
+    Postgres, on the unique index of the same three values), so two
+    deliveries of one message are never both accepted, not even by two
+    instances at the same moment.
     """
 
     def __init__(
@@ -26,16 +35,14 @@ class ChannelMessageReceiptRepository(ChannelMessageReceiptRepoContract):
         self._collection: DocumentCollectionAdapterContract[
             ChannelMessageReceiptDocument
         ] = collection
-        self._lock: threading.Lock = threading.Lock()
 
     def record_if_new(self, receipt: ChannelMessageReceiptDocument) -> bool:
-        receipt_key: str = build_receipt_key(receipt)
-        with self._lock:
-            if self._collection.get(receipt_key) is not None:
-                return False
+        return self._collection.insert_if_absent(build_receipt_key(receipt), receipt)
 
-            self._collection.upsert(receipt_key, receipt)
-            return True
+    def delete_created_before(self, created_before: Microseconds) -> DocumentCount:
+        return self._collection.delete_by_range(
+            time_range(RECEIPT_CREATED_AT_FIELD, ending_before=created_before)
+        )
 
 
 def build_receipt_key(receipt: ChannelMessageReceiptDocument) -> str:
@@ -55,14 +62,14 @@ class ManagerTelegramLinkRepository(
         self,
         code_hash: ManagerLinkCodeHash,
     ) -> ManagerTelegramLinkDocument | None:
-        for link in self._collection.list_all():
-            if link.code_hash == code_hash:
-                return link
-
-        return None
+        return self._collection.find_one_by_field(
+            CODE_HASH_FIELD, DocumentFieldText(str(code_hash))
+        )
 
     def list_by_business(
         self,
         business_id: BusinessId,
     ) -> list[ManagerTelegramLinkDocument]:
-        return sorted(self._list(business_id), key=lambda link: link.created_at)
+        return sorted(
+            self._list_in_business(business_id), key=lambda link: link.created_at
+        )

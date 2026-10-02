@@ -30,3 +30,6 @@ class PlatformPipelinesContainer(containers.DeclarativeContainer):
     flush_llm_traces_pipeline = orchestrator_pipeline(
         platform_orchestrators.flush_llm_traces_orchestrator
     )
+    purge_stale_rows_pipeline = orchestrator_pipeline(
+        platform_orchestrators.purge_stale_rows_orchestrator
+    )

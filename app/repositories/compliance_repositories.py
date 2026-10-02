@@ -4,6 +4,7 @@ from app.contracts.repositories.compliance_repositories import (
     DpaAcceptanceRepoContract,
 )
 from app.repositories.business_scoped_repository import BusinessScopedRepository
+from app.repositories.document_queries import of_business
 from app.schemas.domain.compliance import AuditLogEntryDocument, DpaAcceptanceDocument
 from app.schemas.exceptions.application_errors import ConflictError
 from app.schemas.typings.businesses.prefixed_id import BusinessId
@@ -30,12 +31,10 @@ class AuditLogRepository(AuditLogRepoContract):
         self,
         business_id: BusinessId,
     ) -> list[AuditLogEntryDocument]:
-        entries: list[AuditLogEntryDocument] = [
-            entry
-            for entry in self._collection.list_all()
-            if entry.business_id == business_id
-        ]
-        return sorted(entries, key=lambda entry: entry.created_at)
+        return sorted(
+            self._collection.list_by_fields([of_business(business_id)]),
+            key=lambda entry: entry.created_at,
+        )
 
 
 class DpaAcceptanceRepository(
@@ -50,6 +49,6 @@ class DpaAcceptanceRepository(
         business_id: BusinessId,
     ) -> list[DpaAcceptanceDocument]:
         return sorted(
-            self._list(business_id),
+            self._list_in_business(business_id),
             key=lambda acceptance: acceptance.accepted_at,
         )

@@ -1,5 +1,7 @@
 """GET /v1/widget/{business_id}/messages: what one poll costs in storage reads."""
 
+from collections.abc import Sequence
+
 from base_pydantic_schemas import PersistentDocument
 
 from app.adapters.storage.in_memory_document_collection import (
@@ -7,9 +9,11 @@ from app.adapters.storage.in_memory_document_collection import (
 )
 from app.schemas.constants.channels import ChannelKind
 from app.schemas.domain.conversations import ConversationDocument, MessageDocument
+from app.schemas.dto.storage_queries import DocumentFieldMatch, DocumentFieldOrder
 from app.schemas.typings.assistants.prefixed_id import AssistantVersionId
 from app.schemas.typings.contacts.prefixed_id import ContactId
 from app.schemas.typings.conversations.strings import ChannelUserId
+from app.schemas.typings.storage.constrained_integers import DocumentQueryLimit
 from tests.channels.test_widget import SESSION_KEY, enable_widget
 from tests.channels.testbed import ChannelsTestbed
 from tests.channels.widget_polling_steps import (
@@ -34,8 +38,13 @@ class CountingCollection[StoredDocument: PersistentDocument](
         self.read_count += len(documents)
         return documents
 
-    def list_by_field(self, field_name: str, value: str) -> list[StoredDocument]:
-        documents = super().list_by_field(field_name, value)
+    def list_by_fields(
+        self,
+        matches: Sequence[DocumentFieldMatch],
+        order: DocumentFieldOrder | None = None,
+        limit: DocumentQueryLimit | None = None,
+    ) -> list[StoredDocument]:
+        documents = super().list_by_fields(matches, order, limit)
         self.read_count += len(documents)
         return documents
 

@@ -7,6 +7,7 @@ from app.contracts.repositories.business_repositories import (
     ChannelRepoContract,
 )
 from app.repositories.business_scoped_repository import BusinessScopedRepository
+from app.repositories.document_queries import field_equals
 from app.schemas.constants.channels import ChannelKind
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.channels import ChannelDocument
@@ -16,7 +17,13 @@ from app.schemas.typings.businesses.constrained_integers import BusinessRevision
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.channels.prefixed_id import ChannelId
 from app.schemas.typings.channels.strings import ChannelExternalId
+from app.schemas.typings.storage.constrained_integers import DocumentQueryLimit
+from app.schemas.typings.storage.constrained_strings import DocumentFieldPath
 from app.schemas.typings.users.prefixed_id import UserId
+
+MEMBER_USER_ID_FIELD: DocumentFieldPath = DocumentFieldPath("members[].user_id")
+CHANNEL_KIND_FIELD: DocumentFieldPath = DocumentFieldPath("kind")
+EXTERNAL_ID_FIELD: DocumentFieldPath = DocumentFieldPath("external_id")
 
 
 class BusinessRepository(BusinessRepoContract):
@@ -95,13 +102,12 @@ class BusinessRepository(BusinessRepoContract):
         return self._collection.get(str(business_id))
 
     def list_by_member(self, user_id: UserId) -> list[BusinessDocument]:
-        return [
-            business
-            for business in self._collection.list_all()
-            if any(member.user_id == user_id for member in business.members)
-        ]
+        return self._collection.list_by_fields(
+            [field_equals(MEMBER_USER_ID_FIELD, user_id)]
+        )
 
     def list_all(self) -> list[BusinessDocument]:
+        # Admin client list and the jobs that walk every business.
         return self._collection.list_all()
 
 
@@ -116,18 +122,21 @@ class ChannelRepository(
         return self._collection.get(str(channel_id))
 
     def list_by_business(self, business_id: BusinessId) -> list[ChannelDocument]:
-        return self._list(business_id)
+        return self._list_in_business(business_id)
 
     def find_by_external_id(
         self,
         kind: ChannelKind,
         external_id: ChannelExternalId,
     ) -> ChannelDocument | None:
-        for channel in self._collection.list_all():
-            if channel.kind is kind and channel.external_id == external_id:
-                return channel
-
-        return None
+        found: list[ChannelDocument] = self._collection.list_by_fields(
+            [
+                field_equals(CHANNEL_KIND_FIELD, kind),
+                field_equals(EXTERNAL_ID_FIELD, external_id),
+            ],
+            limit=DocumentQueryLimit(1),
+        )
+        return found[0] if found else None
 
 
 class BusinessProfileRepository(BusinessProfileRepoContract):

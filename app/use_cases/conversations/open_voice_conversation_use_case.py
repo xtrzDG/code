@@ -141,14 +141,12 @@ class OpenVoiceConversationUseCase(
         business: BusinessDocument,
         call_user_id: ChannelUserId,
     ) -> ConversationDocument | None:
-        for conversation in self._conversation_repo.list_by_business(business.id):
-            if (
-                conversation.channel is ChannelKind.PHONE
-                and conversation.channel_user_id == call_user_id
-            ):
-                return conversation
-
-        return None
+        conversations: list[ConversationDocument] = (
+            self._conversation_repo.list_by_channel_user(
+                business.id, ChannelKind.PHONE, call_user_id
+            )
+        )
+        return conversations[0] if conversations else None
 
     def _resolve_contact(
         self,

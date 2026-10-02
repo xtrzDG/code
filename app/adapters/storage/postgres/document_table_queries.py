@@ -17,10 +17,12 @@ class DocumentTableQueries:
 
     Each read, lock and delete exists twice: platform-wide, and filtered by
     the business of a business scope (so the index on business_id is used).
+    Queries by lookup field are composed per call (`document_lookup_sql`).
     """
 
     table: sql.Identifier
     upsert: sql.Composed
+    insert_if_absent: sql.Composed
     get: sql.Composed
     get_in_business: sql.Composed
     lock: sql.Composed
@@ -29,28 +31,6 @@ class DocumentTableQueries:
     list_in_business: sql.Composed
     delete: sql.Composed
     delete_in_business: sql.Composed
-
-    def list_by_field(self, field_name: str, is_in_business: bool) -> sql.Composed:
-        """
-        Documents whose top-level field equals a value. The field is a
-        literal (not a bind parameter), so the expression matches an index
-        on (document ->> 'field').
-        """
-
-        field: sql.Composable = sql.SQL("document ->> {field}").format(
-            field=sql.Literal(field_name)
-        )
-        if not is_in_business:
-            return sql.SQL(
-                "select document::text from {table} where {field} = %s "
-                "order by created_at, row_sequence"
-            ).format(table=self.table, field=field)
-
-        return sql.SQL(
-            "select document::text from {table} "
-            "where business_id = %s and {field} = %s "
-            "order by created_at, row_sequence"
-        ).format(table=self.table, field=field)
 
 
 def build_document_table_queries(
@@ -67,6 +47,11 @@ def build_document_table_queries(
             "business_id = excluded.business_id, "
             "document = excluded.document, "
             "updated_at = excluded.updated_at"
+        ).format(table=table),
+        insert_if_absent=sql.SQL(
+            "insert into {table} "
+            "(document_key, business_id, document, created_at, updated_at) "
+            "values (%s, %s, %s::jsonb, %s, %s) on conflict do nothing"
         ).format(table=table),
         get=sql.SQL(
             "select document::text from {table} where document_key = %s"

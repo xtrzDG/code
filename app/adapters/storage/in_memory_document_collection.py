@@ -1,10 +1,29 @@
-import json
 import threading
-from collections.abc import Callable
+from collections.abc import Callable, Mapping, Sequence
 
 from base_pydantic_schemas import PersistentDocument
 
+from app.adapters.storage.in_memory_document_lookup import select_entries
 from app.contracts.document_store import DocumentCollectionAdapterContract
+from app.schemas.constants.storage import LookupFieldKind
+from app.schemas.dto.storage_queries import (
+    DocumentFieldMatch,
+    DocumentFieldOrder,
+    DocumentFieldRange,
+    DocumentLookup,
+)
+from app.schemas.typings.storage.booleans import IsDescendingOrder, IsDocumentInserted
+from app.schemas.typings.storage.constrained_integers import (
+    DocumentCount,
+    DocumentQueryLimit,
+)
+from app.schemas.typings.storage.constrained_strings import DocumentFieldPath
+from app.schemas.typings.storage.strings import DocumentFieldText
+from app.utilities.storage.document_lookup_fields import (
+    catalog_name_of,
+    declared_lookup_fields,
+    require_valid_lookup,
+)
 
 
 class InMemoryDocumentCollectionAdapter[StoredDocument: PersistentDocument](
@@ -15,18 +34,43 @@ class InMemoryDocumentCollectionAdapter[StoredDocument: PersistentDocument](
 
     Documents are stored as JSON and validated on every read, so callers get
     independent instances and persistence-incompatible fields fail early.
-    Data lives until the process restarts.
+    Data lives until the process restarts. Queries by field accept the same
+    lookup fields as the Postgres collection (by default those the catalog
+    declares for the document type), so a query without an index fails in
+    in-memory tests too; they scan, which is fine for tests and demos.
     """
 
-    def __init__(self, document_type: type[StoredDocument]) -> None:
+    def __init__(
+        self,
+        document_type: type[StoredDocument],
+        lookup_fields: Mapping[DocumentFieldPath, LookupFieldKind] | None = None,
+    ) -> None:
         self._document_type: type[StoredDocument] = document_type
         self._serialized_documents: dict[str, str] = {}
         self._lock: threading.Lock = threading.Lock()
+        self._lookup_fields: dict[DocumentFieldPath, LookupFieldKind] = (
+            declared_lookup_fields(catalog_name_of(document_type), document_type)
+            if lookup_fields is None
+            else dict(lookup_fields)
+        )
 
     def upsert(self, document_key: str, document: StoredDocument) -> None:
         serialized_document: str = document.model_dump_json()
         with self._lock:
             self._serialized_documents[document_key] = serialized_document
+
+    def insert_if_absent(
+        self,
+        document_key: str,
+        document: StoredDocument,
+    ) -> IsDocumentInserted:
+        serialized_document: str = document.model_dump_json()
+        with self._lock:
+            if document_key in self._serialized_documents:
+                return False
+
+            self._serialized_documents[document_key] = serialized_document
+            return True
 
     def get(self, document_key: str) -> StoredDocument | None:
         with self._lock:
@@ -43,20 +87,77 @@ class InMemoryDocumentCollectionAdapter[StoredDocument: PersistentDocument](
         with self._lock:
             serialized_documents: list[str] = list(self._serialized_documents.values())
 
-        return [
-            self._document_type.model_validate_json(serialized_document)
-            for serialized_document in serialized_documents
-        ]
+        return self._validate_all(serialized_documents)
 
-    def list_by_field(self, field_name: str, value: str) -> list[StoredDocument]:
+    def find_one_by_field(
+        self,
+        field: DocumentFieldPath,
+        value: DocumentFieldText,
+    ) -> StoredDocument | None:
+        found: list[StoredDocument] = self._select(
+            DocumentLookup(
+                matches=(DocumentFieldMatch(field=field, value=value),),
+                limit=DocumentQueryLimit(1),
+            )
+        )
+        return found[0] if found else None
+
+    def list_by_fields(
+        self,
+        matches: Sequence[DocumentFieldMatch],
+        order: DocumentFieldOrder | None = None,
+        limit: DocumentQueryLimit | None = None,
+    ) -> list[StoredDocument]:
+        return self._select(
+            DocumentLookup(matches=tuple(matches), order=order, limit=limit)
+        )
+
+    def count_by_fields(
+        self,
+        matches: Sequence[DocumentFieldMatch],
+        within: DocumentFieldRange | None = None,
+    ) -> DocumentCount:
+        lookup = DocumentLookup(matches=tuple(matches), within=within)
+        return DocumentCount(len(self._select_serialized(lookup)))
+
+    def list_by_range(
+        self,
+        within: DocumentFieldRange,
+        matches: Sequence[DocumentFieldMatch] = (),
+        is_descending: IsDescendingOrder = False,
+        limit: DocumentQueryLimit | None = None,
+    ) -> list[StoredDocument]:
+        return self._select(
+            DocumentLookup(
+                matches=tuple(matches),
+                within=within,
+                order=DocumentFieldOrder(
+                    field=within.field, is_descending=is_descending
+                ),
+                limit=limit,
+            )
+        )
+
+    def delete_by_range(
+        self,
+        within: DocumentFieldRange,
+        matches: Sequence[DocumentFieldMatch] = (),
+    ) -> DocumentCount:
+        lookup = DocumentLookup(matches=tuple(matches), within=within)
+        require_valid_lookup(self._lookup_fields, lookup, self._label())
         with self._lock:
-            serialized_documents: list[str] = list(self._serialized_documents.values())
+            deleted_keys: list[str] = [
+                key
+                for key, _ in select_entries(
+                    list(self._serialized_documents.items()),
+                    lookup,
+                    self._lookup_fields,
+                )
+            ]
+            for key in deleted_keys:
+                del self._serialized_documents[key]
 
-        return [
-            self._document_type.model_validate_json(serialized_document)
-            for serialized_document in serialized_documents
-            if read_field_text(serialized_document, field_name) == value
-        ]
+        return DocumentCount(len(deleted_keys))
 
     def modify(
         self,
@@ -100,19 +201,26 @@ class InMemoryDocumentCollectionAdapter[StoredDocument: PersistentDocument](
         with self._lock:
             self._serialized_documents.pop(document_key, None)
 
+    def _select(self, lookup: DocumentLookup) -> list[StoredDocument]:
+        return self._validate_all(self._select_serialized(lookup))
 
-def read_field_text(serialized_document: str, field_name: str) -> str | None:
-    """A top-level field as Postgres `document ->> field` gives it (text)."""
+    def _select_serialized(self, lookup: DocumentLookup) -> list[str]:
+        require_valid_lookup(self._lookup_fields, lookup, self._label())
+        with self._lock:
+            entries: list[tuple[str, str]] = list(self._serialized_documents.items())
 
-    document: object = json.loads(serialized_document)
-    if not isinstance(document, dict):
-        return None
+        return [
+            serialized_document
+            for _, serialized_document in select_entries(
+                entries, lookup, self._lookup_fields
+            )
+        ]
 
-    field_value: object = document.get(field_name)  # pyright: ignore[reportUnknownMemberType, reportUnknownVariableType]
-    if field_value is None:
-        return None
+    def _validate_all(self, serialized_documents: list[str]) -> list[StoredDocument]:
+        return [
+            self._document_type.model_validate_json(serialized_document)
+            for serialized_document in serialized_documents
+        ]
 
-    if isinstance(field_value, str):
-        return field_value
-
-    return json.dumps(field_value)
+    def _label(self) -> str:
+        return f"the {self._document_type.__name__} collection"

@@ -22,15 +22,10 @@ def find_call_conversation(
     business: BusinessDocument,
     report: FinishedCallReport,
 ) -> ConversationDocument | None:
-    call_user_id = ChannelUserId(str(report.provider_call_id))
-    for conversation in conversation_repo.list_by_business(business.id):
-        if (
-            conversation.channel is ChannelKind.PHONE
-            and conversation.channel_user_id == call_user_id
-        ):
-            return conversation
-
-    return None
+    conversations: list[ConversationDocument] = conversation_repo.list_by_channel_user(
+        business.id, ChannelKind.PHONE, ChannelUserId(str(report.provider_call_id))
+    )
+    return conversations[0] if conversations else None
 
 
 def list_call_bookings(

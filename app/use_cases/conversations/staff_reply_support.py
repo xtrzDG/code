@@ -58,14 +58,16 @@ def last_customer_message_at(
     not read.
     """
 
-    window_start: int = int(now) - CUSTOMER_SERVICE_WINDOW_MICROSECONDS
+    window_start = Microseconds(int(now) - CUSTOMER_SERVICE_WINDOW_MICROSECONDS)
     latest: Microseconds | None = None
-    for candidate in conversation_repo.list_by_business(conversation.business_id):
+    for candidate in conversation_repo.list_by_contact(
+        conversation.business_id,
+        conversation.contact_id,
+        last_message_from=window_start,
+    ):
         if (
-            candidate.contact_id != conversation.contact_id
-            or candidate.channel is not conversation.channel
+            candidate.channel is not conversation.channel
             or candidate.is_sandbox != conversation.is_sandbox
-            or int(candidate.last_message_at) < window_start
         ):
             continue
 

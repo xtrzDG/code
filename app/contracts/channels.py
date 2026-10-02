@@ -28,6 +28,7 @@ from app.schemas.typings.channels.constrained_strings import (
 from app.schemas.typings.channels.strings import ChannelSecret, ManagerLinkCodeHash
 from app.schemas.typings.conversations.strings import ChannelUserId, MessageText
 from app.schemas.typings.localization.strings import RawPhoneNumberInput
+from app.schemas.typings.storage.constrained_integers import DocumentCount
 
 
 class ChannelAdapterContract(AdapterContract, Protocol):
@@ -131,8 +132,13 @@ class ChannelMessageReceiptRepoContract(RepoContract, Protocol):
     def record_if_new(self, receipt: ChannelMessageReceiptDocument) -> bool:
         """
         Store the receipt and return True, or return False when a receipt
-        for the same business, channel and provider message id exists.
+        for the same business, channel and provider message id exists
+        (atomic: of two concurrent deliveries exactly one gets True).
         """
+        raise NotImplementedError
+
+    def delete_created_before(self, created_before: Microseconds) -> DocumentCount:
+        """Purge receipts created before a moment; returns how many."""
         raise NotImplementedError
 
 

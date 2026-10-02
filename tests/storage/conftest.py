@@ -48,6 +48,13 @@ from tests.storage.storage_testing import (
 )
 
 
+def pytest_configure(config: pytest.Config) -> None:
+    config.addinivalue_line(
+        "markers",
+        "perf: timing budgets on large tables (deselect with -m 'not perf')",
+    )
+
+
 class CollectionFactory(Protocol):
     """Builds a document collection of one storage kind for a test."""
 
