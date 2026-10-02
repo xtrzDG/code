@@ -86,7 +86,7 @@ export function Tabs<Key extends string>({
                 className={cn(
                   "inline-flex h-9 items-center gap-1.5 rounded-lg px-3 text-sm font-medium whitespace-nowrap transition-colors",
                   "focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-focus",
-                  isSelected ? "bg-surface text-ink shadow-sm" : "text-ink-muted hover:text-ink",
+                  isSelected ? "bg-surface text-ink ring-1 ring-line-strong/40" : "text-ink-muted hover:text-ink",
                 )}
               >
                 {tab.label}

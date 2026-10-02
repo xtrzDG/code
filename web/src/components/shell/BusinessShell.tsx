@@ -60,6 +60,7 @@ export function BusinessShell({ children }: { children: ReactNode }) {
   return (
     <ShellFrame
       items={items}
+      context={business.name}
       userName={userDisplayName(me.user)}
       sidebarTop={(onNavigate) => (
         <BusinessSwitcher

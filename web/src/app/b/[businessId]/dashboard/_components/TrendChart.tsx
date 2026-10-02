@@ -17,15 +17,14 @@ const WIDTH = 600;
 const HEIGHT = 160;
 
 /**
- * Categorical slots 1–3 of the reference palette (blue, orange, aqua), each
- * stepped for the dark surface; validated as a set in both modes. Identity
- * never rests on color alone: the legend names each line and the table view
- * lists every value.
+ * The chart tokens 1–3 of globals.css (blue, orange, green), stepped for
+ * each theme and at least 3:1 on the card. Identity never rests on color
+ * alone: the legend names each line and the table view lists every value.
  */
 const SERIES_STYLE: Record<TrendSeries, { label: MessageKey; color: string }> = {
-  conversation_count: { label: "dashboard.trend.requests", color: "text-[#2a78d6] dark:text-[#3987e5]" },
-  booking_count: { label: "dashboard.trend.bookings", color: "text-[#eb6834] dark:text-[#d95926]" },
-  handoff_count: { label: "dashboard.trend.handoffs", color: "text-[#1baf7a] dark:text-[#199e70]" },
+  conversation_count: { label: "dashboard.trend.requests", color: "text-chart-1" },
+  booking_count: { label: "dashboard.trend.bookings", color: "text-chart-2" },
+  handoff_count: { label: "dashboard.trend.handoffs", color: "text-chart-3" },
 };
 
 /**

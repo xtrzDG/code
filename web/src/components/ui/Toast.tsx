@@ -153,7 +153,7 @@ function ToastViewport({
           <div
             key={item.id}
             role={item.tone === "error" ? "alert" : "status"}
-            className="pointer-events-auto flex w-full max-w-sm items-start gap-3 rounded-xl border border-line bg-surface p-4 shadow-lg shadow-black/5"
+            className="pointer-events-auto flex w-full max-w-sm items-start gap-3 rounded-xl border border-line bg-surface p-3.5 shadow-lg"
           >
             <Icon className={cn("mt-0.5 size-5 shrink-0", className)} aria-hidden />
             <div className="min-w-0 flex-1">

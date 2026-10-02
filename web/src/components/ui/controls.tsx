@@ -14,11 +14,11 @@ import { cn } from "@/lib/cn";
 import { IconChevronDown } from "../icons";
 
 const CONTROL =
-  "block rounded-lg border border-line-strong bg-surface text-ink shadow-sm transition-colors " +
+  "block rounded-lg border border-line-strong bg-surface text-ink transition-colors " +
   "placeholder:text-ink-subtle hover:border-ink-subtle " +
-  "focus:border-focus focus:outline-none focus:ring-2 focus:ring-focus/30 " +
+  "focus:border-focus focus:outline-none focus:ring-3 focus:ring-focus/20 " +
   "disabled:cursor-not-allowed disabled:bg-surface-muted disabled:text-ink-subtle " +
-  "aria-invalid:border-danger aria-invalid:focus:ring-danger/25";
+  "aria-invalid:border-danger aria-invalid:focus:ring-danger/20";
 
 export type InputProps = ComponentPropsWithRef<"input">;
 
@@ -35,7 +35,7 @@ export function Input({ className, type = "text", dir, ...props }: InputProps) {
     <input
       type={type}
       dir={dir ?? (FREE_TEXT_TYPES.has(type) ? "auto" : undefined)}
-      className={mergeClassOverrides(`${CONTROL} w-full h-10 px-3 text-sm`, className)}
+      className={mergeClassOverrides(`${CONTROL} w-full h-9 px-3 text-sm`, className)}
       {...props}
     />
   );
@@ -55,7 +55,7 @@ export type SelectProps = ComponentPropsWithRef<"select">;
 export function Select({ className, children, ...props }: SelectProps) {
   return (
     <div className={cn("relative", className)}>
-      <select className={cn(CONTROL, "h-10 w-full appearance-none pr-9 pl-3 text-sm")} {...props}>
+      <select className={cn(CONTROL, "h-9 w-full cursor-pointer appearance-none pr-9 pl-3 text-sm")} {...props}>
         {children}
       </select>
       <IconChevronDown

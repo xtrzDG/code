@@ -1,11 +1,13 @@
 # Assistant Workshop — owner cabinet (web)
 
-The owner cabinet of the AI front-line assistant: sign-in by phone (any country)
+The owner cabinet of the AI front-line assistant and its public landing page:
+the product, prices by country and FAQ at `/`, sign-in by phone (any country)
 or e-mail, businesses, the six-step profile wizard, every business section of
 concept section 8 (dashboard, conversations, bookings, leads, handoffs,
 knowledge, assistant, channels, billing, settings) and the platform admin.
 Next.js (App Router) + TypeScript (strict) + Tailwind CSS v4.
 Interface languages: Georgian (`ka`), Russian (`ru`), English (`en`).
+Colour themes: dark (the default), light and the system's setting.
 
 The browser never talks to the Python API directly and never sees the bearer
 token: every call goes through the cabinet's own route handlers (a
@@ -87,7 +89,9 @@ npm run e2e -- onboarding         # one file
   a test. Prefer `getByRole`/`getByLabel`; avoid CSS classes.
 - Scenarios that need the voice platform or Meta (a call recording, a WhatsApp chat past its
   24-hour window) answer the card's own BFF calls with `page.route` (`e2e/card.spec.ts`).
-- Scenarios: sign-in with a German number and with e-mail (and a wrong code),
+- Scenarios: the landing page (prices of a chosen country, theme and language
+  kept after a reload, signed-in users sent to their businesses),
+  sign-in with a German number and with e-mail (and a wrong code),
   a business in Turkey with Turkish, English and Arabic, a failed save shown
   above the open dialog, the six wizard steps, every section from the sidebar
   and from the phone menu (no sideways scrolling at 390 px), switching the
@@ -112,10 +116,21 @@ web/
   src/
     proxy.ts                   runs before pages: sign-in redirects, current path header, language cookie
     app/                       routes (App Router)
-      layout.tsx               <html lang>, I18nProvider, ToastProvider
+      layout.tsx               <html lang data-theme> from the cookies, I18nProvider, ThemeProvider,
+                               ToastProvider; the browser's theme-color
+      globals.css              design tokens (colours of both themes, radii, shadows), `dark:` variant
+      page.tsx                 "/": the public landing page (signed-in users go to /businesses)
+      _landing/                its sections: Hero (+ HeroChat), Facts, Steps, Features, Channels, Niches,
+                               World, Pricing (+ PlanCard, CountryPicker), Faq, FinalCta, header, footer;
+                               landingData.ts reads the public catalog on the server
+      robots.ts                robots.txt: only "/" is for search engines
       login/                   sign-in by phone (country picker, only the code channels that work now)
-                               or e-mail, 6-digit code
-      businesses/              list and creation of businesses (a new account gets the form at once)
+                               or e-mail, 6-digit code: LoginScreen (layout), _components/ (DestinationForm,
+                               PhoneFields, CodeForm), _lib/ (useLoginFlow, useDestination, loginTexts,
+                               loginOptions)
+      businesses/              list and creation of businesses (a new account gets the form at once):
+                               CreateBusinessForm, _components/ (CountryDefaults, CreatedSummary),
+                               _lib/ (useCreateBusiness, languageOptions)
       b/[businessId]/          one business: layout.tsx loads it + the user and renders the sidebar
         onboarding/            the six-step profile wizard (?step=…) and "what to add" (+ _components/)
         dashboard/             next step, KPI tiles for a period (?period=), daily trend chart (plain SVG),
@@ -157,10 +172,13 @@ web/
       auth.ts                  startLogin / verifyLogin (browser)
     server/                    server-only code
       api.ts                   getServerApi(), serverFetch(), getCurrentUser(), getBusiness()
+      theme.ts                 getTheme(): the aw_theme cookie of the request
       backend.ts               BACKEND_URL, cookies, header allow-lists, CSRF check
       relay.ts                 streaming relay used by the route handlers
     i18n/                      config.ts (locales, negotiation), translate.ts, server.ts, client.tsx
-      messages/en.ts ru.ts ka.ts   shared texts (common, auth, nav, onboarding, errors …); English is the reference
+      messages/en.ts ru.ts ka.ts   shared texts (common, auth, nav, theme, errors …); English is the reference
+      messages/onboarding/     the profile wizard's texts, one file per language
+      messages/landing/        the landing page's texts, one file per language
       messages/sections/       section texts, spread into en/ru/ka: insights.ts (dashboard, conversations,
                                bookings, leads, handoffs), content.ts (knowledge, assistant),
                                workspace.ts (channels, billing, settings, admin)
@@ -169,7 +187,10 @@ web/
                                Select, Textarea, Checkbox, Radio, Field, Fieldset, Card, Table, Badge,
                                Modal, Drawer, useModalDialog, Toast, EmptyState, ErrorState, Spinner,
                                LoadingBlock, PageHeader, Alert
-      shell/                   ShellFrame (sidebar + phone menu), BusinessShell, AdminShell, TopBar
+      shell/                   ShellFrame (frame), Sidebar (navigation, user), ShellTopBar (business / section,
+                               language and theme), BusinessShell, AdminShell, TopBar (pages outside a
+                               business), Brand, SignOutButton
+      theme/                   ThemeProvider (useTheme) and ThemeSwitcher (dark / light / system)
       business/                BusinessContext (useBusiness, useBusinessFormat), status badges,
                                sectionMetadata (page titles)
       insights/                shared by dashboard … handoffs: status badges and label maps, segmented
@@ -190,7 +211,8 @@ web/
     lib/                       pure helpers with unit tests (*.test.ts): navigation (sections, paths,
                                safeNextPath), format (Intl, money units), countries (phone/country),
                                hours (opening hours), wizard (profile answers), knowledge, resources,
-                               assistant, validation (zod), classMerge (className overrides), cn
+                               assistant, validation (zod), classMerge (className overrides), cn,
+                               theme (cookie, theme colours), landing (country guess, plan prices)
 ```
 
 ## Sections
@@ -267,6 +289,8 @@ web/
   component's own width, height, padding, radius, font size and colour
   classes of the same kind (`w-40`, `text-danger`, `hover:bg-…`; see
   `lib/classMerge.ts`). Destructive quiet buttons: `variant="danger-ghost"`.
+- `Button` and `ButtonLink` take `leadingIcon` and `trailingIcon` (an arrow
+  after the label); sizes `sm` 32 px, `md` 36 px (like inputs), `lg` 44 px.
 - Customer texts (names, messages, questions) get `dir="auto"`; so do
   `Input` (text and search) and `Textarea`, so a name typed in Arabic reads
   right to left in any interface language.
@@ -339,10 +363,12 @@ as `reasonMessages` to `useApiMutation`); never match the English message.
 
 ### Translations
 
-- Shared texts (common, auth, nav, pages, onboarding, errors, validation) live
+- Shared texts (common, auth, nav, theme, pages, errors, validation) live
   in `src/i18n/messages/{en,ru,ka}.ts`; section texts in
   `src/i18n/messages/sections/{insights,content,workspace}.ts`, whose
-  `*En`/`*Ru`/`*Ka` objects are spread into those files. English is the
+  `*En`/`*Ru`/`*Ka` objects are spread into those files; the wizard's and the
+  landing page's in `messages/onboarding/` and `messages/landing/` (one file
+  per language, translations typed `Translation<typeof …En>`). English is the
   reference; `ru` and `ka` are typed as `Messages`, so a key added in English
   and missing in another language fails `npm run typecheck` (and a unit test).
   At runtime a missing text falls back to English, then to the key.
@@ -366,7 +392,10 @@ as `reasonMessages` to `useApiMutation`); never match the English message.
 
 The interface language is chosen by the `aw_locale` cookie (set at sign-in from
 the account language, by the language switcher, or by the proxy from
-`GET /v1/me`), else the browser's `Accept-Language`, else English.
+`GET /v1/me`), else the browser's `Accept-Language`, else English. The
+language switcher (a native select showing each language by its own name)
+is in the top bar of every page and in the "New business" dialog; it keeps
+the current page and re-renders it in the new language.
 
 ### Forms
 
@@ -381,13 +410,53 @@ the account language, by the language switcher, or by the proxy from
 
 ### Styling
 
-Tailwind CSS v4 with semantic tokens defined in `src/app/globals.css`
-(`bg-canvas`, `bg-surface`, `bg-surface-muted`, `text-ink`, `text-ink-muted`,
-`text-ink-subtle`, `border-line`, `bg-accent-solid`, `text-accent`,
-`bg-accent-soft`, `text-success|warning|danger|info` and `-soft` backgrounds).
-They follow the system light/dark scheme, so `dark:` variants are rarely
-needed. Layouts are mobile-first: the sidebar becomes a drawer below `lg`.
-Use semantic HTML, visible focus, and labels for icon-only buttons.
+Tailwind CSS v4 with semantic tokens defined in `src/app/globals.css`:
+
+| Token | Use |
+| --- | --- |
+| `bg-canvas`, `bg-surface`, `bg-surface-muted` | page, cards and dialogs, quiet fills (table heads, chips, inactive tracks) |
+| `text-ink`, `text-ink-muted`, `text-ink-subtle` | text, secondary text, hints and meta |
+| `border-line`, `border-line-strong` | 1px hairlines between blocks; borders of form controls |
+| `bg-accent-solid` (+ `-hover`, `text-on-accent`), `text-accent`, `bg-accent-soft` + `text-accent-ink` | the one accent colour: primary buttons, links, selected items |
+| `text-success|warning|danger|info` and `bg-…-soft`, `bg-danger-solid` | statuses, alerts, badges, destructive buttons |
+| `text-chart-1|2|3` | chart series (blue, orange, green) |
+| `outline-focus` | focus rings (`:focus-visible` gets one everywhere) |
+
+Each token holds a light and a dark value, `light-dark(<light>, <dark>)`, and
+`color-scheme` picks one, so pages never need `dark:` variants (the variant
+exists and follows the theme). Both themes are checked for WCAG AA: text
+tokens ≥ 4.5:1 on canvas, surface and surface-muted; status colours ≥ 4.5:1
+on their `-soft` backgrounds; `line-strong`, `focus` and the chart colours
+≥ 3:1. The look is flat: blocks are separated by hairlines, not shadows
+(`shadow-sm` is none and the larger shadows are faint), corners are
+restrained (`rounded-xl` 10 px, `rounded-2xl` 12 px). Fonts are the system's
+(Georgian, Cyrillic and Latin), nothing is downloaded. Layouts are
+mobile-first: the sidebar becomes a drawer below `lg`. Use semantic HTML,
+visible focus, and labels for icon-only buttons.
+
+### Theme
+
+`<html data-theme="dark | light | system">` is rendered by the root layout
+from the `aw_theme` cookie (dark when there is none), so the first paint has
+the right colours; "system" is `color-scheme: light dark` and follows the
+operating system live. `ThemeSwitcher` (a radio group of three icons with
+their names for screen readers and as tooltips) sits in the top bar of every
+signed-in page, on the landing, sign-in and business list pages; it rewrites
+the attribute, the cookie (a year) and `<meta name="theme-color">` without a
+reload. `useTheme()` gives `{ theme, setTheme }`.
+
+### Landing page
+
+`/` is a Server Component for visitors without a session (signed-in users are
+redirected to `/businesses`). It reads the public catalog with
+`loadLandingData`: countries, niches and `GET /v1/catalog/plans` for the
+country in `?country=` (else the visitor's country from `x-vercel-ip-country`
+/ `cf-ipcountry`, else a guess from Accept-Language, else Georgia). The
+country picker is a GET form (`next/form`, works without JavaScript); prices
+show in the country's currency, with the plan's euro price beside them when
+they differ and "≈" for converted amounts. It has its own metadata for search
+engines (the cabinet's pages are `noindex`) and texts in
+`i18n/messages/landing/`.
 
 ## Channels and sign-in
 

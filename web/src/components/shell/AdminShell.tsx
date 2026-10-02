@@ -16,6 +16,7 @@ export function AdminShell({ me, children }: { me: CurrentUserView; children: Re
   return (
     <ShellFrame
       userName={userDisplayName(me.user)}
+      context={t("shell.platformAdmin")}
       items={[
         { href: ADMIN_PATH, label: t("nav.admin"), icon: IconShield },
         { href: HOME_PATH, label: t("nav.allBusinesses"), icon: IconBuilding, secondary: true },

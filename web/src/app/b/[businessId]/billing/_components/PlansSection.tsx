@@ -78,7 +78,7 @@ export function PlansSection({
               className={cn(
                 "relative flex cursor-pointer items-center gap-2 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors",
                 "has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-focus",
-                period === value ? "bg-surface text-ink shadow-sm" : "text-ink-muted hover:text-ink",
+                period === value ? "bg-surface text-ink ring-1 ring-line-strong/40" : "text-ink-muted hover:text-ink",
               )}
             >
               <input

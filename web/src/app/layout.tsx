@@ -1,8 +1,11 @@
 import type { Metadata, Viewport } from "next";
 
+import { ThemeProvider } from "@/components/theme/ThemeProvider";
 import { ToastProvider } from "@/components/ui/Toast";
 import { I18nProvider } from "@/i18n/client";
 import { getI18n } from "@/i18n/server";
+import { themeColors } from "@/lib/theme";
+import { getTheme } from "@/server/theme";
 
 import "./globals.css";
 
@@ -15,22 +18,25 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export const viewport: Viewport = {
-  width: "device-width",
-  initialScale: 1,
-  themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f5f6f8" },
-    { media: "(prefers-color-scheme: dark)", color: "#0b0d12" },
-  ],
-};
+/** The browser's colour around the page follows the theme of the cookie. */
+export async function generateViewport(): Promise<Viewport> {
+  return {
+    width: "device-width",
+    initialScale: 1,
+    themeColor: themeColors(await getTheme()),
+  };
+}
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {
-  const { locale, messages } = await getI18n();
+  const [{ locale, messages }, theme] = await Promise.all([getI18n(), getTheme()]);
   return (
-    <html lang={locale} className="h-full">
+    // data-theme is rendered on the server, so the first paint already has the right colours.
+    <html lang={locale} data-theme={theme} className="h-full">
       <body className="min-h-full bg-canvas text-ink antialiased">
         <I18nProvider locale={locale} messages={messages}>
-          <ToastProvider>{children}</ToastProvider>
+          <ThemeProvider initialTheme={theme}>
+            <ToastProvider>{children}</ToastProvider>
+          </ThemeProvider>
         </I18nProvider>
       </body>
     </html>

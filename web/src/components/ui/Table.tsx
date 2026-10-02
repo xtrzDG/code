@@ -32,7 +32,7 @@ export function Table({
 }
 
 export function THead({ className, ...props }: ComponentPropsWithRef<"thead">) {
-  return <thead className={cn("bg-surface-muted text-xs tracking-wide text-ink-muted uppercase", className)} {...props} />;
+  return <thead className={cn("border-b border-line text-xs text-ink-muted", className)} {...props} />;
 }
 
 export function TBody({ className, ...props }: ComponentPropsWithRef<"tbody">) {
@@ -40,7 +40,7 @@ export function TBody({ className, ...props }: ComponentPropsWithRef<"tbody">) {
 }
 
 export function Tr({ className, ...props }: ComponentPropsWithRef<"tr">) {
-  return <tr className={cn("transition-colors hover:bg-surface-muted/60", className)} {...props} />;
+  return <tr className={cn("transition-colors hover:bg-surface-muted/50", className)} {...props} />;
 }
 
 type Align = "left" | "right" | "center";
@@ -52,7 +52,7 @@ export function Th({
   scope = "col",
   ...props
 }: ComponentPropsWithRef<"th"> & { align?: Align }) {
-  return <th scope={scope} className={cn("px-4 py-3 font-medium whitespace-nowrap", ALIGN[align], className)} {...props} />;
+  return <th scope={scope} className={cn("px-4 py-2.5 font-medium whitespace-nowrap", ALIGN[align], className)} {...props} />;
 }
 
 export function Td({ align = "left", className, ...props }: ComponentPropsWithRef<"td"> & { align?: Align }) {
