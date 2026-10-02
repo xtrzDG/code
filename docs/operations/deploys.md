@@ -54,11 +54,14 @@ pull request ──► CI (ci.yml: backend, cabinet, images, security, e2e)
    also `SMOKE_WIDGET_BUSINESS_ID` (step 3) and
    `SMOKE_EXPECT_REPLY=staging server`. Production gets no business id
    unless one real model answer per deploy is wanted.
-5. Render reports each deploy to GitHub as a deployment named after the
-   service (`workshop-staging-api`, `workshop-api`), which starts the smoke
-   workflow. Where that is not available, relay a Render deploy webhook as
-   a repository dispatch `render-deploy-succeeded` with
-   `{"service": "<service name>", "sha": "<commit>"}`.
+5. Render reports each deploy of a GitHub-connected service to GitHub as a
+   deployment whose environment is the service's name
+   (`workshop-staging-api`, `workshop-api`); a successful one starts the
+   smoke workflow. Check Actions after the first deploy: if no run
+   appears, relay a Render deploy webhook as a repository dispatch
+   `render-deploy-succeeded` with
+   `{"service": "<service name>", "sha": "<commit>"}`, or start the
+   workflow by hand (Run workflow → staging or production).
 6. If `release` is a protected branch, allow GitHub Actions to push to it.
    Set the repository variable `PROMOTE_AFTER_STAGING_SMOKE=false` to
    promote by hand instead.
