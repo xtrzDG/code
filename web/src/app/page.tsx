@@ -8,6 +8,7 @@ import { HOME_PATH } from "@/lib/navigation";
 import { hasSession } from "@/server/api";
 
 import { Channels } from "./_landing/Channels";
+import { Demo } from "./_landing/Demo";
 import { Facts } from "./_landing/Facts";
 import { Faq } from "./_landing/Faq";
 import { Features } from "./_landing/Features";
@@ -20,6 +21,8 @@ import { Niches } from "./_landing/Niches";
 import { Pricing } from "./_landing/Pricing";
 import { Steps } from "./_landing/Steps";
 import { World } from "./_landing/World";
+
+const NO_SCRIPT_STYLE = "[data-reveal]{opacity:1!important;transform:none!important}";
 
 export async function generateMetadata(): Promise<Metadata> {
   const { t, locale } = await getI18n();
@@ -51,11 +54,17 @@ export default async function RootPage({ searchParams }: PageProps<"/">) {
   const supportedCountries = data.countries.filter(isCountryAvailable).length;
 
   return (
-    <div className="flex min-h-dvh flex-col">
+    <div className="relative isolate flex min-h-dvh flex-col">
+      {/* Without scripts nothing would reveal itself: show every block as it is. */}
+      <noscript>
+        <style>{NO_SCRIPT_STYLE}</style>
+      </noscript>
+      <div aria-hidden className="landing-grain -z-10" />
       <LandingHeader t={t} />
       <main id="main" className="flex-1">
         <Hero t={t} trialDays={data.plans ? sharedTrialDays(data.plans.quotes) : null} />
         <Facts t={t} />
+        <Demo t={t} />
         <Steps t={t} />
         <Features t={t} />
         <Channels t={t} />

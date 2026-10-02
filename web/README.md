@@ -55,6 +55,7 @@ Behind a reverse proxy, run the API with
 | `npm run typecheck` | `next typegen` (route types) + `tsc --noEmit` |
 | `npm test` | Vitest unit tests (`src/**/*.test.ts`) |
 | `npm run e2e` | Playwright end-to-end tests against the real API (see [End-to-end tests](#end-to-end-tests)) |
+| `npm run measure:first-load` | After `npm run build`: the gzipped first-load JavaScript of `/` and `/login` (or the pages given) as a browser downloads it, and the size of the lazy 3D chunk (see [Motion](#motion)); `MEASURE_VERBOSE=1` lists every file |
 | `npm run gen:api` | Regenerate `openapi.json` from the backend (`uv run python -m scripts.export_openapi`) and `src/api/schema.d.ts` from it (openapi-typescript). Run after any backend API change and commit both files. It also runs `gen:currencies` and `gen:names`. |
 | `npm run gen:currencies` | Regenerate `src/lib/currencyDigits.generated.ts`: the digits after the decimal point of every currency, from the backend's CLDR data (Babel). Money is converted between minor and major units with this table, not with the browser's Intl data, which differs between browser versions. A backend test fails when the file is stale. |
 | `npm run gen:names` | Regenerate `src/lib/displayNames.generated.ts`: country and language names in Georgian, Russian and English from the backend's CLDR data. `countryName` and `languageName` read it before Intl: Chrome has no Georgian display names, so the server and the browser would disagree (a hydration error) and Georgian owners would see codes. A backend test fails when the file is stale. |
@@ -84,6 +85,9 @@ npm run e2e -- onboarding         # one file
   tests type codes.
 - Every test fails on a browser console error or an uncaught exception;
   `consoleErrors.allow(/…/)` accepts one a test provokes on purpose.
+- The browser prefers reduced motion (`contextOptions.reducedMotion`), so
+  animations end at once and the landing shows its still hero; a test about
+  motion opts out with `test.use({ contextOptions: { reducedMotion: "no-preference" } })`.
 - Selectors are roles and labels with texts from the cabinet's own
   dictionaries (`e2e/support/messages.ts`), so rewording a text does not break
   a test. Prefer `getByRole`/`getByLabel`; avoid CSS classes.
@@ -93,7 +97,8 @@ npm run e2e -- onboarding         # one file
   `e2e/support/conversation-card.ts`); the widget tests run the API's
   `/widget.js` on a fake host site (`e2e/support/widget-site.ts`).
 - Scenarios: the landing page (prices of a chosen country, theme and language
-  kept after a reload, signed-in users sent to their businesses),
+  kept after a reload, signed-in users sent to their businesses, the still
+  hero with reduced motion and the 3D one without, every section revealed),
   sign-in with a German number and with e-mail (and a wrong code),
   a business in Turkey with Turkish, English and Arabic, a failed save shown
   above the open dialog, the six wizard steps, every section from the sidebar
@@ -123,12 +128,18 @@ web/
     proxy.ts                   runs before pages: sign-in redirects, current path header, language cookie
     app/                       routes (App Router)
       layout.tsx               <html lang data-theme> from the cookies, I18nProvider, ThemeProvider,
-                               ToastProvider; the browser's theme-color
-      globals.css              design tokens (colours of both themes, radii, shadows), `dark:` variant
+                               MotionProvider, ToastProvider; the browser's theme-color
+      globals.css              design tokens (colours of both themes, radii, shadows), `dark:` variant;
+                               imports src/styles/motion.css and landing.css
+      */template.tsx           business, admin, login, businesses: each page rises in (PageTransition)
       page.tsx                 "/": the public landing page (signed-in users go to /businesses)
-      _landing/                its sections: Hero (+ HeroChat), Facts, Steps, Features, Channels, Niches,
-                               World, Pricing (+ PlanCard, CountryPicker), Faq, FinalCta, header, footer;
-                               landingData.ts reads the public catalog on the server
+      _landing/                its sections: Hero (+ HeroBackdrop, HeroVisual: the 3D scene or HeroFallback,
+                               its still picture), Facts, Demo (a WhatsApp conversation), Steps, Features,
+                               Channels, Niches, World, Pricing (+ PlanCard, CountryPicker), Faq, FinalCta,
+                               header, footer; Section (heading reveal, depth glow); scene/ (the lazy
+                               react-three-fiber hero: HeroScene, AssistantOrb + orbShader, ChannelBubbles,
+                               SceneAtmosphere, sceneTextures, scenePalette); landingData.ts reads the
+                               public catalog on the server
       robots.ts                robots.txt: only "/" is for search engines
       login/                   sign-in by phone (country picker, only the code channels that work now)
                                or e-mail, 6-digit code: LoginScreen (layout), _components/ (DestinationForm,
@@ -204,11 +215,16 @@ web/
                                ErrorState, Skeleton kit (Skeleton, SkeletonText, SkeletonRows,
                                SkeletonCard, SkeletonCardList, SkeletonPageHeader, LoadingRegion),
                                Spinner, LoadingBlock, PageHeader, Alert
-      icons/                   the one icon set (import from "@/components/icons"): interface, sections, brands
+      motion/                  motion primitives (import from "@/components/motion"): MotionProvider,
+                               Reveal, FadeIn, Stagger/StaggerItem, PageTransition, TiltCard/TiltLayer,
+                               AnimatedNumber, AnimatedPresenceList, MagneticButton, Parallax
+      icons/                   the one icon set (import from "@/components/icons"): interface, sections,
+                               brands (channel marks shared with the 3D scene: lib/channelMarks.ts)
       shell/                   ShellFrame (frame), Sidebar (navigation, user), ShellTopBar (business / section,
                                language and theme), BusinessShell, AdminShell, TopBar (pages outside a
                                business), Brand, SignOutButton
-      theme/                   ThemeProvider (useTheme) and ThemeSwitcher (dark / light / system)
+      theme/                   ThemeProvider (useTheme), ThemeSwitcher (dark / light / system),
+                               useResolvedScheme (the scheme showing now, for the WebGL scene)
       business/                BusinessContext (useBusiness, useBusinessFormat), status badges,
                                sectionMetadata (page titles), SectionLoading (a section's loading.tsx)
       insights/                shared by dashboard … handoffs: status badges and label maps, segmented
@@ -228,7 +244,10 @@ web/
                                (kinds, item form, menu import), resources, assistant/ (versions,
                                autotests, go-live, test chat), validation (zod), classMerge (className
                                overrides), cn, theme (cookie, theme colours), landing (country guess,
-                               plan prices)
+                               plan prices), motion (motion tokens), motionMath (springs, tilt, count-up),
+                               heroScene (3D hero: device check, orbits, camera), channelMarks
+    styles/                    motion.css (motion tokens, keyframes, press/lift/shimmer/dialog motion),
+                               landing.css (backdrop, hero entrance, the still hero picture)
 ```
 
 ## Sections
@@ -312,9 +331,11 @@ web/
   `confirmationText` makes the person type a word first. Cancel takes the
   focus; Enter confirms.
 - Icons come from `@/components/icons` only (24×24 outline, `currentColor`).
-- Motion tokens in `globals.css`: `animate-shimmer` (skeletons),
-  `animate-settle` (data arriving), `animate-toast-in`, `animate-countdown`;
-  all stop under `prefers-reduced-motion`.
+- Motion is part of the kit (see [Motion](#motion)): buttons give a little
+  and spring back, `Card interactive` and link tiles lift under the pointer
+  (`motion-lift`), Modal, Drawer and the phone menu spring in and fade out
+  (keeping their content while they fade), toasts rise in and make room for
+  each other, skeletons shimmer and data settles in (`animate-settle`).
 - `Alert`'s `action` sits beside the text when the alert is wide and under it
   when it is narrow (a container query).
 - `className` on `Button`, `ButtonLink`, `Input` and `Textarea` replaces the
@@ -503,6 +524,79 @@ signed-in page, on the landing, sign-in and business list pages; it rewrites
 the attribute, the cookie (a year) and `<meta name="theme-color">` without a
 reload. `useTheme()` gives `{ theme, setTheme }`.
 
+### Motion
+
+The site moves with one set of tokens: subtle and quick in the cabinet,
+expressive on the landing page, and still for anyone who asks for less
+motion.
+
+- **Tokens** (`src/lib/motion.ts`): durations, easings, springs (`press`,
+  `snappy`, `layout`, `gentle`, `bouncy`), rise distances, stagger steps,
+  tilt angles. `src/styles/motion.css` declares the same values for CSS,
+  springs sampled into `linear()` easings with the duration they need
+  (`ease-spring-snappy` + `duration-(--motion-spring-snappy)`);
+  `src/lib/motion.test.ts` fails when the two drift (paste the new values
+  from `cssMotionTokens()`).
+- **Primitives** (`@/components/motion`): `Reveal` (on scroll) and `FadeIn`
+  (on mount), `Stagger`/`StaggerItem`, `PageTransition` (CSS, used by the
+  route templates), `TiltCard`/`TiltLayer` (3D tilt with glare and layers
+  at depth; mouse only), `AnimatedNumber` (counts up when seen, rewrites the
+  text node only), `AnimatedPresenceList` (items arrive and leave, the rest
+  slide), `MagneticButton`, `Parallax` (depth layers drifting with the
+  scroll). The animation code of `m.*` elements loads after the page
+  (LazyMotion + domMax, `strict`: use `m.div`, never `motion.div`).
+- **Cabinet**: page rise per route, the sidebar's active marker glides
+  between sections (`layoutId`, one LayoutGroup per menu), dashboard numbers
+  count up, handoff and lead lists animate removals, dialogs and toasts as
+  above.
+- **Landing**: the hero text rises in with CSS from the first paint; the 3D
+  hero (react-three-fiber, `_landing/scene/`): the assistant's orb with the
+  six channels' bubbles orbiting it and sending it messages, mouse parallax,
+  a camera that pulls back while the hero scrolls away. Every section
+  reveals on scroll, glows drift as depth layers, steps stand like a
+  corridor, plan and world cards tilt, the final card has a running edge
+  light; a backdrop of aurora clouds, a floor grid running towards the
+  viewer and grain.
+- **Reduced motion**: MotionConfig `reducedMotion="user"` drops transforms
+  and layout animations (fades stay, short); every CSS animation and
+  transition ends at once (globals.css); tilt, magnetic pull and parallax
+  stay still; numbers show their value; the hero keeps its still picture
+  and never loads the 3D chunk. The markup is the same on the server and in
+  the browser whatever the setting (no hydration mismatch); without
+  scripts a `<noscript>` style shows every revealed block.
+- **3D hero rules** (`HeroVisual`): everyone first sees `HeroFallback`, a
+  CSS picture of the same scene in the same box (no layout shift). The
+  scene loads when the browser is idle, only with WebGL, without reduced
+  motion or data saver and with at least 4 cores and 4 GB of memory
+  (`heroSceneMode`, `lib/heroScene.ts`), and fades in after its first
+  frame. It stops drawing off screen, lowers its resolution when frames are
+  slow and hands back to the picture if they stay slow, the WebGL context is
+  lost or setup fails. `data-scene="static" | "3d"` on the hero tells which
+  one shows. Nothing is downloaded at run time: bubble textures are drawn on
+  canvases, reflections come from a generated studio environment.
+- **e2e**: `playwright.config.ts` runs every test with
+  `contextOptions.reducedMotion: "reduce"` (and SwiftShader for WebGL);
+  `e2e/landing-motion.spec.ts` checks the still picture with reduced motion,
+  the canvas without it (no layout shift) and the switch back when reduced
+  motion is turned on.
+
+Budgets, measured with `npm run build && npm run measure:first-load`
+(gzipped JavaScript a first visit downloads; the 3D chunk excluded):
+
+| Page | Before | Now | Budget |
+| --- | --- | --- | --- |
+| `/` (landing) | 168.7 KB | 204.9 KB (+36.2) | +40 KB |
+| `/login` (any cabinet page carries the same motion code) | 272.5 KB | 293.0 KB (+20.5) | — |
+| 3D chunk (three.js 0.182 + react-three-fiber + the scene), loaded later on capable devices only | — | 235.6 KB | — |
+
+No layout shift (the e2e test asserts CLS = 0 with the scene). The scene is
+one draw call per object (orb, shell, halo, six bubbles, six message
+lights, three rings, 220 dust points): 60 fps on a laptop GPU; three.js
+stays at 0.182 because react-three-fiber 9 still uses `THREE.Clock`, which
+logs a deprecation warning from r183. `@react-three/drei` is not used: the
+scene needs nothing from it (three's own RoomEnvironment and PMREM give the
+reflections, the floating and billboarding are a few lines in `useFrame`).
+
 ### Landing page
 
 `/` is a Server Component for visitors without a session (signed-in users are
@@ -514,7 +608,7 @@ country picker is a GET form (`next/form`, works without JavaScript); prices
 show in the country's currency, with the plan's euro price beside them when
 they differ and "≈" for converted amounts. It has its own metadata for search
 engines (the cabinet's pages are `noindex`) and texts in
-`i18n/messages/landing/`.
+`i18n/messages/landing/`. Its motion and 3D hero: see [Motion](#motion).
 
 ## Channels and sign-in
 

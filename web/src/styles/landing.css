@@ -1,0 +1,296 @@
+/*
+ * The public landing page: its moving backdrop (aurora, a floor grid running
+ * towards the viewer, film grain), the hero's entrance, the still picture
+ * of the 3D scene and a few depth effects. Imported by src/app/globals.css.
+ * Everything here is transform and opacity animation (no repaints), and
+ * stops under prefers-reduced-motion (globals.css).
+ */
+
+@theme {
+  --animate-rise: aw-rise 0.9s var(--ease-emphasized) backwards;
+  --animate-float: aw-float 7s ease-in-out infinite;
+  --animate-drift: aw-drift 26s ease-in-out infinite alternate;
+  --animate-spin-slow: aw-spin 22s linear infinite;
+  --animate-grid-run: aw-grid-run 3.2s linear infinite;
+
+  @keyframes aw-rise {
+    from {
+      opacity: 0;
+      transform: translateY(18px);
+      filter: blur(6px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+      filter: none;
+    }
+  }
+  @keyframes aw-float {
+    0%,
+    100% {
+      transform: translate(-50%, -50%) translateY(0) rotate(-1deg);
+    }
+    50% {
+      transform: translate(-50%, -50%) translateY(-10px) rotate(1deg);
+    }
+  }
+  @keyframes aw-drift {
+    from {
+      transform: translate3d(-6%, -4%, 0) scale(1);
+    }
+    to {
+      transform: translate3d(6%, 5%, 0) scale(1.15);
+    }
+  }
+  @keyframes aw-spin {
+    to {
+      transform: rotate(1turn);
+    }
+  }
+  @keyframes aw-grid-run {
+    from {
+      transform: translateY(0);
+    }
+    to {
+      transform: translateY(64px);
+    }
+  }
+}
+
+/* ── Backdrop ─────────────────────────────────────────────────────────── */
+
+.landing-aurora {
+  position: absolute;
+  inset: -20% -10% auto;
+  height: 120%;
+  pointer-events: none;
+  overflow: hidden;
+}
+.landing-aurora > span {
+  position: absolute;
+  width: 55%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  opacity: 0.55;
+  animation: var(--animate-drift);
+  will-change: transform;
+}
+.landing-aurora > span:nth-child(1) {
+  left: 45%;
+  top: 0;
+  background: radial-gradient(circle, color-mix(in oklab, var(--accent-solid) 45%, transparent), transparent 65%);
+}
+.landing-aurora > span:nth-child(2) {
+  left: 60%;
+  top: 25%;
+  background: radial-gradient(circle, color-mix(in oklab, #3cc6f5 28%, transparent), transparent 62%);
+  animation-duration: 31s;
+  animation-direction: alternate-reverse;
+}
+.landing-aurora > span:nth-child(3) {
+  left: 5%;
+  top: 10%;
+  background: radial-gradient(circle, color-mix(in oklab, #d55cf0 20%, transparent), transparent 60%);
+  animation-duration: 37s;
+}
+:root[data-theme="light"] .landing-aurora > span {
+  opacity: 0.4;
+}
+
+/* A floor of lines running towards the viewer, fading into the distance. */
+.landing-floor {
+  position: absolute;
+  inset: auto -40% 0;
+  height: 46%;
+  pointer-events: none;
+  perspective: 520px;
+  mask-image: linear-gradient(to top, black 10%, transparent 85%);
+}
+.landing-floor-plane > span {
+  position: absolute;
+  inset: -64px 0 0;
+  transform-origin: 50% 100%;
+  background-image:
+    linear-gradient(to right, color-mix(in oklab, var(--accent-solid) 22%, transparent) 1px, transparent 1px),
+    linear-gradient(to bottom, color-mix(in oklab, var(--accent-solid) 22%, transparent) 1px, transparent 1px);
+  background-size: 64px 64px;
+  animation: var(--animate-grid-run);
+}
+.landing-floor-plane {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  transform: rotateX(68deg);
+  transform-origin: 50% 100%;
+}
+
+/* Film grain over the whole page: a fixed SVG noise, barely there. */
+.landing-grain {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.05;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  mix-blend-mode: overlay;
+}
+
+/* Gradient text for one phrase of a heading. */
+.landing-gradient-text {
+  background: linear-gradient(100deg, var(--ink) 20%, color-mix(in oklab, var(--accent) 85%, #3cc6f5) 60%, var(--accent) 90%);
+  background-clip: text;
+  color: transparent;
+}
+
+@media (forced-colors: active) {
+  .landing-gradient-text {
+    background: none;
+    color: CanvasText;
+  }
+}
+
+/* A light running around a card's edge (the final call to action). */
+@property --beam-angle {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+.landing-beam {
+  position: relative;
+  isolation: isolate;
+}
+.landing-beam::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  padding: 1px;
+  background: conic-gradient(from var(--beam-angle), transparent 70%, var(--accent-solid) 85%, #3cc6f5 92%, transparent);
+  mask:
+    linear-gradient(#000 0 0) content-box exclude,
+    linear-gradient(#000 0 0);
+  animation: aw-beam 6s linear infinite;
+}
+@keyframes aw-beam {
+  to {
+    --beam-angle: 1turn;
+  }
+}
+
+/* Answers of the questions open smoothly where the browser can animate to `auto`. */
+@supports (interpolate-size: allow-keywords) {
+  .landing-faq {
+    interpolate-size: allow-keywords;
+  }
+  .landing-faq details::details-content {
+    height: 0;
+    overflow: clip;
+    transition:
+      height var(--motion-slow) var(--ease-emphasized),
+      content-visibility var(--motion-slow) allow-discrete;
+  }
+  .landing-faq details[open]::details-content {
+    height: auto;
+  }
+}
+
+/* ── The still picture of the hero scene ─────────────────────────────── */
+
+.hero-still {
+  position: absolute;
+  inset: 0;
+}
+.hero-still-glow {
+  position: absolute;
+  inset: 12%;
+  border-radius: 50%;
+  background: radial-gradient(circle, color-mix(in oklab, var(--accent-solid) 50%, transparent), transparent 66%);
+}
+.hero-still-ring {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 74%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  border: 1px solid color-mix(in oklab, var(--accent-solid) 40%, transparent);
+  transform: translate(-50%, -50%) rotateX(72deg) rotateZ(-14deg);
+}
+.hero-still-ring-wide {
+  width: 96%;
+  transform: translate(-50%, -50%) rotateX(66deg) rotateZ(18deg);
+  opacity: 0.7;
+}
+.hero-still-orb {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 36%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  overflow: hidden;
+  transform: translate(-50%, -50%);
+  box-shadow:
+    0 0 90px -12px color-mix(in oklab, var(--accent-solid) 80%, transparent),
+    inset 0 0 0 1px rgb(255 255 255 / 0.25);
+}
+.hero-still-orb::before {
+  content: "";
+  position: absolute;
+  inset: -30%;
+  background: conic-gradient(from 200deg, #5b5bd6, #3cc6f5, #8f8ff7, #d55cf0, #5b5bd6);
+  filter: blur(14px);
+  animation: var(--animate-spin-slow);
+}
+.hero-still-orb::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 34% 28%, rgb(255 255 255 / 0.85), rgb(255 255 255 / 0) 22%),
+    radial-gradient(circle at 50% 50%, transparent 58%, rgb(255 255 255 / 0.45) 100%),
+    radial-gradient(circle at 70% 80%, rgb(8 8 30 / 0.35), transparent 55%);
+}
+.hero-still-bubble {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  gap: 7%;
+  width: 27%;
+  aspect-ratio: 1.75;
+  padding: 0 5%;
+  border-radius: 999px 999px 999px 18px;
+  border: 1px solid var(--line);
+  background: linear-gradient(to bottom, var(--surface), var(--surface-muted));
+  box-shadow: 0 14px 30px -18px rgb(0 0 0 / 0.55);
+  transform: translate(-50%, -50%);
+  animation: var(--animate-float);
+}
+.hero-still-badge {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 34%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+}
+.hero-still-badge > svg {
+  width: 62%;
+  height: 62%;
+}
+.hero-still-lines {
+  display: grid;
+  flex: 1;
+  gap: 0.35rem;
+}
+.hero-still-lines > i {
+  display: block;
+  height: 0.4rem;
+  border-radius: 999px;
+  background: color-mix(in oklab, var(--ink) 75%, transparent);
+}
+.hero-still-lines > i + i {
+  width: 65%;
+  background: color-mix(in oklab, var(--ink) 25%, transparent);
+}

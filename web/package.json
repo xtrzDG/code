@@ -15,6 +15,7 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "e2e": "playwright test --config e2e/playwright.config.ts",
+    "measure:first-load": "node scripts/measure-first-load.mjs",
     "gen:api": "npm run gen:api:spec && npm run gen:api:types && npm run gen:currencies && npm run gen:names",
     "gen:api:spec": "cd .. && uv run python -m scripts.export_openapi web/openapi.json",
     "gen:api:types": "openapi-typescript openapi.json --output src/api/schema.d.ts",
@@ -22,11 +23,14 @@
     "gen:names": "cd .. && uv run python -m scripts.export_display_names web/src/lib/displayNames.generated.ts"
   },
   "dependencies": {
+    "@react-three/fiber": "9.8.1",
     "clsx": "2.1.1",
+    "motion": "13.4.6",
     "next": "16.3.8",
     "openapi-fetch": "0.17.0",
     "react": "19.2.8",
     "react-dom": "19.2.8",
+    "three": "0.182.0",
     "zod": "4.6.5"
   },
   "devDependencies": {
@@ -35,6 +39,7 @@
     "@types/node": "22.20.4",
     "@types/react": "19.2.18",
     "@types/react-dom": "19.2.7",
+    "@types/three": "0.182.0",
     "@vitest/coverage-v8": "5.0.3",
     "eslint": "9.39.5",
     "eslint-config-next": "16.3.8",

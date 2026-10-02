@@ -1,3 +1,4 @@
+import { Stagger, StaggerItem } from "@/components/motion";
 import type { Translator } from "@/i18n/translate";
 import { cn } from "@/lib/cn";
 
@@ -8,13 +9,13 @@ const FACTS = [
   ["landing.facts.peopleTitle", "landing.facts.peopleText"],
 ] as const;
 
-/** Four short facts under the hero, in one hairline grid. */
+/** Four short facts under the hero, in one hairline grid; they arrive one after another. */
 export function Facts({ t }: { t: Translator["t"] }) {
   return (
     <section aria-label={t("landing.facts.label")} className="border-t border-line">
-      <dl className="mx-auto grid w-full max-w-6xl grid-cols-2 lg:grid-cols-4">
+      <Stagger as="dl" className="mx-auto grid w-full max-w-6xl grid-cols-2 lg:grid-cols-4">
         {FACTS.map(([title, text], index) => (
-          <div
+          <StaggerItem
             key={title}
             // Hairlines between the cells: two columns on phones, four in a row on large screens.
             className={cn(
@@ -26,9 +27,9 @@ export function Facts({ t }: { t: Translator["t"] }) {
           >
             <dt className="text-base font-semibold tracking-tight text-ink sm:text-lg">{t(title)}</dt>
             <dd className="text-sm text-ink-muted">{t(text)}</dd>
-          </div>
+          </StaggerItem>
         ))}
-      </dl>
+      </Stagger>
     </section>
   );
 }

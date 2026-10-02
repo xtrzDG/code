@@ -44,7 +44,8 @@ export function LeadCard({
   const format = useBusinessFormat();
   const name = lead.contact_name ?? t("insights.unknownCustomer");
   return (
-    <li className="rounded-2xl border border-line bg-surface p-4 shadow-sm sm:p-5">
+    // The list item around it comes from the list (AnimatedPresenceList).
+    <article className="rounded-2xl border border-line bg-surface p-4 shadow-sm sm:p-5">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
         <div className="min-w-0 flex-1 space-y-2">
           <div className="flex flex-wrap items-center gap-2">
@@ -73,6 +74,6 @@ export function LeadCard({
           </Button>
         </div>
       </div>
-    </li>
+    </article>
   );
 }

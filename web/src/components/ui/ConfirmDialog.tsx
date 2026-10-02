@@ -44,12 +44,7 @@ export interface ConfirmDialogProps {
  * publish, cancel a booking, disconnect a channel. Cancel takes the focus
  * (the safe choice) unless a confirmation must be typed; Enter confirms.
  */
-export function ConfirmDialog(props: ConfirmDialogProps) {
-  // A new body per opening resets the typed confirmation.
-  return <ConfirmDialogBody key={props.open ? "open" : "closed"} {...props} />;
-}
-
-function ConfirmDialogBody({
+export function ConfirmDialog({
   open,
   onClose,
   onConfirm,
@@ -68,6 +63,14 @@ function ConfirmDialogBody({
 }: ConfirmDialogProps) {
   const { t } = useI18n();
   const [typed, setTyped] = useState("");
+  // Each opening starts with an empty confirmation (one dialog element, so it can fade out).
+  const [wasOpen, setWasOpen] = useState(open);
+  if (wasOpen !== open) {
+    setWasOpen(open);
+    if (open) {
+      setTyped("");
+    }
+  }
   const isUnlocked = confirmationText === undefined || isConfirmationTyped(typed, confirmationText);
   const canConfirm = isUnlocked && !confirmDisabled && !isPending;
 

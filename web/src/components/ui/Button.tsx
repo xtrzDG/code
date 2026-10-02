@@ -10,7 +10,8 @@ export type ButtonVariant = "primary" | "secondary" | "ghost" | "danger" | "dang
 export type ButtonSize = "sm" | "md" | "lg";
 
 const VARIANTS: Record<ButtonVariant, string> = {
-  primary: "bg-accent-solid text-on-accent hover:bg-accent-solid-hover",
+  primary:
+    "bg-accent-solid text-on-accent hover:bg-accent-solid-hover hover:shadow-[0_6px_20px_-8px_color-mix(in_oklab,var(--accent-solid)_70%,transparent)]",
   secondary: "border border-line bg-surface text-ink hover:border-line-strong hover:bg-surface-muted",
   ghost: "text-ink-muted hover:bg-surface-muted hover:text-ink",
   danger: "bg-danger-solid text-white hover:opacity-90",
@@ -35,7 +36,8 @@ export function buttonClasses(
   const { variant = "primary", size = "md", fullWidth = false, className } = options;
   return mergeClassOverrides(
     cn(
-      "inline-flex shrink-0 cursor-pointer items-center justify-center font-medium whitespace-nowrap transition-colors select-none",
+      // motion-press: colours fade, the press is a spring (src/styles/motion.css).
+      "motion-press inline-flex shrink-0 cursor-pointer items-center justify-center font-medium whitespace-nowrap select-none",
       "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus",
       "disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50",
       VARIANTS[variant],

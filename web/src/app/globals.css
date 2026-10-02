@@ -1,4 +1,6 @@
 @import "tailwindcss";
+@import "../styles/motion.css";
+@import "../styles/landing.css";
 
 /*
  * Design tokens. Components use the semantic utilities below (bg-canvas,
@@ -127,56 +129,6 @@
   --shadow-md: 0 4px 12px -4px rgb(0 0 0 / 0.08);
   --shadow-lg: 0 8px 24px -8px rgb(0 0 0 / 0.18);
   --shadow-2xl: 0 24px 64px -16px rgb(0 0 0 / 0.35);
-}
-
-/*
- * Motion: skeletons shimmer while data loads, content settles in when it
- * arrives, toasts rise from the corner and an undo window runs down. All of
- * it stops under prefers-reduced-motion (below).
- */
-@theme {
-  --animate-shimmer: aw-shimmer 1.8s ease-in-out infinite;
-  /* No fill mode: once settled, the element's own opacity (a dimmed placeholder) applies. */
-  --animate-settle: aw-settle 240ms cubic-bezier(0.2, 0.8, 0.2, 1);
-  --animate-toast-in: aw-toast-in 280ms cubic-bezier(0.2, 0.9, 0.25, 1.15) both;
-  --animate-countdown: aw-countdown 5s linear forwards;
-
-  @keyframes aw-shimmer {
-    from {
-      background-position: 120% 0;
-    }
-    to {
-      background-position: -20% 0;
-    }
-  }
-  @keyframes aw-settle {
-    from {
-      opacity: 0;
-      transform: translateY(4px);
-    }
-    to {
-      opacity: 1;
-      transform: none;
-    }
-  }
-  @keyframes aw-toast-in {
-    from {
-      opacity: 0;
-      transform: perspective(640px) translateY(14px) rotateX(-22deg) scale(0.96);
-    }
-    to {
-      opacity: 1;
-      transform: none;
-    }
-  }
-  @keyframes aw-countdown {
-    from {
-      transform: scaleX(1);
-    }
-    to {
-      transform: scaleX(0);
-    }
-  }
 }
 
 html {

@@ -12,6 +12,7 @@ import { useState, type ReactNode } from "react";
 import { useI18n } from "@/i18n/client";
 
 import { IconX } from "../icons";
+import { useClosingContent } from "../ui/useClosingContent";
 import { useModalDialog } from "../ui/useModalDialog";
 import { ShellTopBar } from "./ShellTopBar";
 import { SidebarContent, type ShellNavItem } from "./Sidebar";
@@ -37,6 +38,8 @@ export function ShellFrame({
   const [drawerOpen, setDrawerOpen] = useState(false);
   const closeDrawer = () => setDrawerOpen(false);
   const drawer = useModalDialog(drawerOpen, closeDrawer);
+  // The menu slides out with its links still in it.
+  const menu = useClosingContent(drawerOpen, [] as const);
 
   return (
     <div className="min-h-dvh">
@@ -54,9 +57,10 @@ export function ShellFrame({
       <dialog
         {...drawer}
         aria-label={t("nav.mainNavigation")}
+        data-motion="drawer-start"
         className="m-0 h-dvh max-h-dvh w-[min(18rem,85vw)] max-w-none border-r border-line bg-canvas p-0 text-ink lg:hidden"
       >
-        {drawerOpen ? (
+        {menu.isMounted ? (
           <div className="relative h-full">
             <button
               type="button"

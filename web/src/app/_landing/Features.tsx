@@ -9,6 +9,7 @@ import {
   IconInbox,
   type IconProps,
 } from "@/components/icons";
+import { Stagger, StaggerItem } from "@/components/motion";
 import type { MessageKey, Translator } from "@/i18n/translate";
 
 import { IconTile, Section } from "./Section";
@@ -22,13 +23,13 @@ const FEATURES: { icon: ComponentType<IconProps>; title: MessageKey; text: Messa
   { icon: IconHandoff, title: "landing.features.handoffTitle", text: "landing.features.handoffText" },
 ];
 
-/** What the assistant does, in six short blocks. */
+/** What the assistant does, in six short blocks arriving one after another. */
 export function Features({ t }: { t: Translator["t"] }) {
   return (
     <Section id="features" title={t("landing.features.title")}>
-      <ul className="grid gap-x-8 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
+      <Stagger as="ul" className="grid gap-x-8 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
         {FEATURES.map(({ icon: Icon, title, text }) => (
-          <li key={title} className="flex gap-4">
+          <StaggerItem as="li" key={title} className="flex gap-4">
             <IconTile>
               <Icon className="size-[1.125rem]" />
             </IconTile>
@@ -36,9 +37,9 @@ export function Features({ t }: { t: Translator["t"] }) {
               <h3 className="text-base font-semibold tracking-tight text-ink">{t(title)}</h3>
               <p className="text-sm text-pretty text-ink-muted">{t(text)}</p>
             </div>
-          </li>
+          </StaggerItem>
         ))}
-      </ul>
+      </Stagger>
     </Section>
   );
 }

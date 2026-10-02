@@ -4,6 +4,8 @@ import { cn } from "@/lib/cn";
 
 /**
  * A surface for a block of content, with an optional header and footer.
+ * `interactive` (a card that is itself a link or opens something) lifts it
+ * a little under the pointer.
  *
  *     <Card title="Opening hours" description="..." actions={<Button>…</Button>}>
  *       …
@@ -15,6 +17,7 @@ export function Card({
   actions,
   footer,
   padded = true,
+  interactive = false,
   className,
   children,
   ...props
@@ -25,10 +28,11 @@ export function Card({
   footer?: ReactNode;
   /** False for edge-to-edge content such as tables. */
   padded?: boolean;
+  interactive?: boolean;
 }) {
   const hasHeader = title !== undefined || description !== undefined || actions !== undefined;
   return (
-    <section className={cn("rounded-2xl border border-line bg-surface", className)} {...props}>
+    <section className={cn("rounded-2xl border border-line bg-surface", interactive && "motion-lift", className)} {...props}>
       {hasHeader ? (
         <header className="flex flex-wrap items-start justify-between gap-3 border-b border-line px-5 py-4">
           <div className="min-w-0 space-y-1">

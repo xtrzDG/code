@@ -4,6 +4,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 
 import { IconAlert, IconCheck, IconInfo } from "@/components/icons";
+import { AnimatedNumber } from "@/components/motion";
 import { ButtonLink, Card } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { cn } from "@/lib/cn";
@@ -57,8 +58,8 @@ export function NextStepCard({
   );
 }
 
-/** One headline number: label, value and an optional hint line. */
-export function StatTile({ label, value, hint }: { label: string; value: string; hint?: string }) {
+/** One headline number: label, value (an <AnimatedNumber> counts up) and an optional hint line. */
+export function StatTile({ label, value, hint }: { label: string; value: ReactNode; hint?: string }) {
   return (
     <div className="rounded-2xl border border-line bg-surface p-4 shadow-sm sm:p-5">
       <dt className="text-sm text-ink-muted">{label}</dt>
@@ -74,22 +75,25 @@ export function AttentionTile({
   label,
   hint,
   count,
+  formatCount,
   actionLabel,
   icon,
 }: {
   href: string;
   label: string;
   hint: string;
-  count: string;
+  /** Undefined while it loads (a dash). */
+  count: number | undefined;
+  formatCount: (count: number) => string;
   actionLabel: string;
   icon: ReactNode;
 }) {
-  const isZero = count === "0";
+  const isZero = count === 0;
   return (
     <Link
       href={href}
       className={cn(
-        "group flex items-center gap-4 rounded-2xl border bg-surface p-4 shadow-sm transition-colors hover:border-accent/40 sm:p-5",
+        "group motion-lift flex items-center gap-4 rounded-2xl border bg-surface p-4 shadow-sm hover:border-accent/40 sm:p-5",
         isZero ? "border-line" : "border-warning/40",
       )}
     >
@@ -106,7 +110,9 @@ export function AttentionTile({
         <span className="block text-sm font-medium text-ink">{label}</span>
         <span className="block text-xs text-ink-muted">{hint}</span>
       </span>
-      <span className="text-2xl font-semibold text-ink tabular-nums">{count}</span>
+      <span className="text-2xl font-semibold text-ink tabular-nums">
+        {count === undefined ? "–" : <AnimatedNumber value={count} format={formatCount} />}
+      </span>
       <span className="sr-only">{actionLabel}</span>
     </Link>
   );

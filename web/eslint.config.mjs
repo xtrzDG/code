@@ -26,6 +26,14 @@ const eslintConfig = defineConfig([
     },
   },
   {
+    // The landing's 3D scene (react-three-fiber): useFrame callbacks run in the
+    // render loop, outside React's render, and move three.js objects in place
+    // (positions, uniforms, scene.environment) by design. The React Compiler's
+    // immutability check cannot tell those callbacks from render code.
+    files: ["src/app/_landing/scene/**/*.{ts,tsx}"],
+    rules: { "react-hooks/immutability": "off" },
+  },
+  {
     // Playwright fixtures receive a `use` callback that is not React's `use`.
     files: ["e2e/**/*.ts"],
     rules: { "react-hooks/rules-of-hooks": "off" },

@@ -22,13 +22,18 @@ export const landingEn = {
       title: "Every call and message answered. Day and night, in any language.",
       subtitle:
         "The assistant picks up the phone and replies in WhatsApp, Instagram, Messenger, Telegram and your website chat. It books tables, rooms and appointments, collects requests and hands complex cases to your team with a short summary.",
-      primary: "Get started",
+      primary: "Create an AI assistant",
       secondary: "See pricing",
       trial: "{days} days free on every plan",
       note: "Sign in with a phone number of any country or with e-mail.",
+      sceneLabel:
+        "The assistant in the centre receives messages and calls from WhatsApp, Telegram, Instagram, Messenger, the website chat and the phone",
     },
     demo: {
       label: "An example conversation in WhatsApp",
+      title: "A message at midnight, answered in seconds",
+      subtitle:
+        "What your customer sees, and what lands in your cabinet: the table is booked and the special request goes to the manager.",
       business: "Café Rustaveli",
       time: "23:47",
       customer: "Hi! Do you have a table for four tomorrow at eight?",
@@ -130,7 +135,7 @@ export const landingEn = {
     cta: {
       title: "Put an assistant on your front line",
       text: "Create an account with your phone number or e-mail, fill in the profile and try the assistant before it talks to customers.",
-      button: "Get started",
+      button: "Create an AI assistant",
     },
     footer: {
       rights: "© {year} {name}",

@@ -1,0 +1,190 @@
+/*
+ * Motion: tokens, keyframes and the UI kit's motion classes. Imported by
+ * src/app/globals.css.
+ *
+ * The tokens come from src/lib/motion.ts (cssMotionTokens()): durations,
+ * easings and two springs sampled into CSS linear() easings. A unit test
+ * (src/lib/motion.test.ts) fails when the values here drift from the
+ * TypeScript ones, so change them there and paste the new output here.
+ *
+ * Everything stops under prefers-reduced-motion (the rule at the end of
+ * globals.css shortens every animation and transition to nothing).
+ */
+
+:root {
+  --motion-instant: 100ms;
+  --motion-fast: 150ms;
+  --motion-base: 240ms;
+  --motion-slow: 420ms;
+  --motion-reveal: 700ms;
+  --motion-spring-press: 480ms;
+  --motion-spring-snappy: 400ms;
+
+  /* The lift of a hovered card: a soft shadow under it. */
+  --shadow-lift: 0 14px 32px -16px rgb(0 0 0 / 0.35);
+}
+
+/* `ease-standard`, `ease-spring-snappy`… utilities; always emitted (the classes below use them). */
+@theme static {
+  --ease-standard: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-emphasized: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-exit: cubic-bezier(0.4, 0, 1, 1);
+  --ease-spring-press: linear(0, 0.087, 0.276, 0.498, 0.714, 0.883, 1.003, 1.078, 1.109, 1.112, 1.097, 1.073, 1.048, 1.025, 1.008, 0.996, 0.989, 0.987, 0.988, 0.99, 0.993, 0.996, 0.998, 1, 1.001, 1.001, 1.001, 1.001, 1.001, 1);
+  --ease-spring-snappy: linear(0, 0.064, 0.201, 0.365, 0.531, 0.673, 0.789, 0.88, 0.943, 0.984, 1.01, 1.024, 1.028, 1.028, 1.025, 1.02, 1.015, 1.011, 1.007, 1.004, 1.002, 1.001, 1, 0.999, 1);
+}
+
+/*
+ * Skeletons shimmer while data loads, content settles in when it arrives,
+ * pages rise into place, an undo window runs down.
+ */
+@theme {
+  --animate-shimmer: aw-shimmer 1.6s var(--ease-standard) infinite;
+  /* No fill mode: once settled, the element's own opacity (a dimmed placeholder) applies. */
+  --animate-settle: aw-settle var(--motion-base) var(--ease-standard);
+  /* Backwards only: when it ends nothing stays applied, so no transform lingers on the page. */
+  --animate-page-in: aw-page-in var(--motion-slow) var(--ease-emphasized) backwards;
+  --animate-countdown: aw-countdown 5s linear forwards;
+
+  @keyframes aw-shimmer {
+    from {
+      transform: translateX(-100%);
+    }
+    to {
+      transform: translateX(100%);
+    }
+  }
+  @keyframes aw-settle {
+    from {
+      opacity: 0;
+      transform: translateY(4px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+  @keyframes aw-page-in {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+  @keyframes aw-countdown {
+    from {
+      transform: scaleX(1);
+    }
+    to {
+      transform: scaleX(0);
+    }
+  }
+}
+
+@layer components {
+  /*
+   * Buttons: colours change quickly, the press is a spring (it gives a little
+   * and bounces back on release).
+   */
+  .motion-press {
+    transition-property: color, background-color, border-color, box-shadow, opacity, transform;
+    transition-duration:
+      var(--motion-fast), var(--motion-fast), var(--motion-fast), var(--motion-base), var(--motion-fast),
+      var(--motion-spring-press);
+    transition-timing-function:
+      var(--ease-standard), var(--ease-standard), var(--ease-standard), var(--ease-standard), var(--ease-standard),
+      var(--ease-spring-press);
+  }
+  .motion-press:active:not(:disabled, [aria-disabled="true"]) {
+    transform: scale(0.97);
+  }
+
+  /* Clickable cards and tiles rise a little under the pointer (only where there is hover). */
+  .motion-lift {
+    transition-property: transform, box-shadow, border-color, background-color;
+    transition-duration: var(--motion-spring-snappy), var(--motion-base), var(--motion-fast), var(--motion-fast);
+    transition-timing-function: var(--ease-spring-snappy), var(--ease-standard), var(--ease-standard), var(--ease-standard);
+  }
+  @media (hover: hover) {
+    .motion-lift:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-lift);
+    }
+  }
+  .motion-lift:active {
+    transform: translateY(0);
+  }
+
+  /* One light sweeping over a skeleton (a transform, so it never repaints the page). */
+  .skeleton-shimmer {
+    position: relative;
+    overflow: hidden;
+  }
+  .skeleton-shimmer::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      100deg,
+      transparent 20%,
+      color-mix(in oklab, var(--ink) 7%, transparent) 50%,
+      transparent 80%
+    );
+    transform: translateX(-100%);
+    animation: var(--animate-shimmer);
+  }
+
+  /*
+   * Native dialogs (Modal, Drawer, the phone menu) with data-motion: they
+   * spring in from their @starting-style and fade out quickly; `overlay`
+   * and `display` keep a closing dialog on top until it has faded.
+   */
+  dialog[data-motion] {
+    opacity: 0;
+    transform: var(--dialog-from);
+    transition-property: opacity, transform, overlay, display;
+    transition-duration: var(--motion-fast);
+    transition-timing-function: var(--ease-exit);
+    transition-behavior: allow-discrete;
+  }
+  dialog[data-motion][open] {
+    opacity: 1;
+    transform: none;
+    transition-duration: var(--motion-base), var(--motion-spring-snappy), 0s, 0s;
+    transition-timing-function: var(--ease-standard), var(--ease-spring-snappy), linear, linear;
+
+    @starting-style {
+      opacity: 0;
+      transform: var(--dialog-from);
+    }
+  }
+  dialog[data-motion="modal"] {
+    --dialog-from: perspective(1200px) translateY(14px) rotateX(6deg) scale(0.96);
+  }
+  dialog[data-motion="drawer-end"] {
+    --dialog-from: translateX(100%);
+  }
+  dialog[data-motion="drawer-end"]:dir(rtl),
+  dialog[data-motion="drawer-start"] {
+    --dialog-from: translateX(-100%);
+  }
+  dialog[data-motion="drawer-start"]:dir(rtl) {
+    --dialog-from: translateX(100%);
+  }
+  dialog[data-motion]::backdrop {
+    opacity: 0;
+    transition-property: opacity, overlay, display;
+    transition-duration: var(--motion-base);
+    transition-timing-function: var(--ease-standard);
+    transition-behavior: allow-discrete;
+  }
+  dialog[data-motion][open]::backdrop {
+    opacity: 1;
+
+    @starting-style {
+      opacity: 0;
+    }
+  }
+}
