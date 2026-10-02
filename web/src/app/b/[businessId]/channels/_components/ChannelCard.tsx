@@ -9,8 +9,8 @@ import { cn } from "@/lib/cn";
 import { businessPath } from "@/lib/navigation";
 
 import {
-  CHANNEL_STATE_TONES,
   accountLabel,
+  CHANNEL_STATE_TONES,
   channelState,
   isChannelOn,
   type ChannelView,

@@ -9,12 +9,8 @@ import { Button, Field, Input, useToast } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import type { MessageKey } from "@/i18n/translate";
 
-import {
-  buildStaffTemplateBody,
-  type ChannelView,
-  type StaffTemplateBody,
-  type StaffTemplateFieldError,
-} from "../_lib/channels";
+import type { ChannelView } from "../_lib/channels";
+import { buildStaffTemplateBody, type StaffTemplateBody, type StaffTemplateFieldError } from "../_lib/staffTemplate";
 
 const FIELD_ERRORS: Record<StaffTemplateFieldError, MessageKey> = {
   required: "channels.fieldErrors.required",

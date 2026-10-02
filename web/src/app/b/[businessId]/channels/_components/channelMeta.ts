@@ -11,7 +11,8 @@ import {
 } from "@/components/workspace/icons";
 import type { MessageKey } from "@/i18n/translate";
 
-import type { ChannelState, ConnectField, ConnectFieldError, ConnectableChannel } from "../_lib/channels";
+import type { ChannelState, ConnectableChannel } from "../_lib/channels";
+import type { ConnectField, ConnectFieldError } from "../_lib/connectForm";
 
 export { CHANNEL_NAMES } from "@/components/workspace/channelNames";
 
