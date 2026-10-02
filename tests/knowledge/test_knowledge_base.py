@@ -61,7 +61,8 @@ from app.schemas.typings.localization.constrained_strings import (
 )
 from app.schemas.typings.platform.constrained_integers import PageSize
 from app.schemas.typings.users.prefixed_id import UserId
-from tests.knowledge.harness import DEFAULT_NOW, KnowledgeHarness
+from tests.knowledge.harness import KnowledgeHarness
+from tests.knowledge.knowledge_store import DEFAULT_NOW
 
 
 def add_item(
