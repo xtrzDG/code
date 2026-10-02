@@ -73,7 +73,15 @@ export default defineConfig({
     timezoneId: "Europe/Berlin",
     trace: "retain-on-failure",
     screenshot: "only-on-failure",
-    launchOptions: chromiumExecutable ? { executablePath: chromiumExecutable } : {},
+    // Animations jump to their end (CSS, motion and the landing's 3D hero,
+    // which shows its still picture), so tests never wait on or race them.
+    // A test about motion opts out: test.use({ contextOptions: { reducedMotion: "no-preference" } }).
+    contextOptions: { reducedMotion: "reduce" },
+    launchOptions: {
+      ...(chromiumExecutable ? { executablePath: chromiumExecutable } : {}),
+      // WebGL on machines without a GPU (CI): SwiftShader, asked for explicitly.
+      args: ["--enable-unsafe-swiftshader"],
+    },
   },
   projects: [
     {

@@ -27,7 +27,7 @@ export function Hero({ t, trialDays }: { t: Translator["t"]; trialDays: number |
           </p>
           <h1
             id="hero-title"
-            className="landing-gradient-text animate-rise text-4xl font-semibold tracking-tight text-balance [animation-delay:80ms] sm:text-5xl lg:max-w-[34rem] lg:text-[3.25rem] lg:leading-[1.08]"
+            className="landing-gradient-text animate-rise text-4xl font-semibold tracking-tight text-balance [animation-delay:80ms] sm:text-5xl lg:max-w-[34rem] lg:leading-[1.08]"
           >
             {t("landing.hero.title")}
           </h1>

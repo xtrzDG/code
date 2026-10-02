@@ -8,6 +8,7 @@
  *
  *   npm run build && npm run measure:first-load            # "/" and "/login"
  *   npm run measure:first-load -- / /businesses           # other pages
+ *   MEASURE_VERBOSE=1 npm run measure:first-load            # and every file
  *
  * The API does not have to run: the landing renders without the catalog.
  */
@@ -52,6 +53,9 @@ async function measurePage(page) {
     const body = Buffer.from(await (await fetch(new URL(source, ORIGIN))).arrayBuffer());
     raw += body.length;
     gzip += gzipSize(body);
+    if (process.env.MEASURE_VERBOSE) {
+      process.stdout.write(`  ${source}: ${kilobytes(gzipSize(body))} gzip\n`);
+    }
   }
   return { page, scripts: sources.length, raw, gzip };
 }
@@ -75,6 +79,11 @@ function lazyThreeChunks() {
   };
   walk(directory);
   return files;
+}
+
+// A server left on the port would be measured instead of this build.
+if (await fetch(`${ORIGIN}/login`).then(() => true, () => false)) {
+  throw new Error(`Port ${PORT} is already in use; stop that server or set MEASURE_PORT.`);
 }
 
 const server = spawn("npx", ["next", "start", "--port", String(PORT), "--hostname", "127.0.0.1"], {
