@@ -176,6 +176,20 @@ services:
         sync: false
       - key: ZADARMA_API_SECRET
         sync: false
+      # call recordings: s3 = encrypted in an EU bucket (docs/LAUNCH.md 4.6);
+      # empty: they stay with ElevenLabs
+      - key: RECORDINGS_STORAGE
+        sync: false
+      - key: RECORDINGS_S3_ENDPOINT_URL
+        sync: false
+      - key: RECORDINGS_S3_REGION
+        sync: false
+      - key: RECORDINGS_S3_BUCKET
+        sync: false
+      - key: RECORDINGS_S3_ACCESS_KEY_ID
+        sync: false
+      - key: RECORDINGS_S3_SECRET_ACCESS_KEY
+        sync: false
       # WhatsApp, Instagram, Messenger
       - key: META_APP_ID
         sync: false
@@ -399,6 +413,36 @@ services:
           type: web
           name: workshop-api
           envVarKey: ZADARMA_API_SECRET
+      - key: RECORDINGS_STORAGE
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: RECORDINGS_STORAGE
+      - key: RECORDINGS_S3_ENDPOINT_URL
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: RECORDINGS_S3_ENDPOINT_URL
+      - key: RECORDINGS_S3_REGION
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: RECORDINGS_S3_REGION
+      - key: RECORDINGS_S3_BUCKET
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: RECORDINGS_S3_BUCKET
+      - key: RECORDINGS_S3_ACCESS_KEY_ID
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: RECORDINGS_S3_ACCESS_KEY_ID
+      - key: RECORDINGS_S3_SECRET_ACCESS_KEY
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: RECORDINGS_S3_SECRET_ACCESS_KEY
       - key: META_APP_ID
         fromService:
           type: web

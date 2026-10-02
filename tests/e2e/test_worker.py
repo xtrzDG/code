@@ -25,6 +25,9 @@ from app.gateways.worker.periodic.sweep_rate_limit_buckets import (
 )
 from app.schemas.typings.platform.constrained_strings import JobName
 from app.use_cases.autotests.enqueue_autotest_run_use_case import RUN_AUTOTESTS_JOB
+from app.use_cases.voice.recordings.recording_archive_paths import (
+    ARCHIVE_CALL_RECORDING_JOB,
+)
 from app.utilities.deliveries.delivery_jobs import (
     DELIVER_OUTBOUND_JOB,
     PROCESS_INBOUND_MESSAGE_JOB,
@@ -72,6 +75,7 @@ def test_worker_ticks_once_with_every_job_registered() -> None:
         PROCESS_INBOUND_MESSAGE_JOB,
         PROCESS_PLATFORM_BOT_UPDATE_JOB,
         PROCESS_POST_CALL_JOB,
+        ARCHIVE_CALL_RECORDING_JOB,
         DELIVER_OUTBOUND_JOB,
     ]
     assert (first.periodic_runs, first.queued_runs, first.failures) == (10, 0, 0)

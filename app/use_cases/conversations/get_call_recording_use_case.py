@@ -9,7 +9,11 @@ from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.compliance import AuditLogEntryDocument
 from app.schemas.domain.conversations import CallDocument
 from app.schemas.dto.access import BusinessAccessRequest
-from app.schemas.dto.call_recordings import CallRecordingQuery, RecordingAudio
+from app.schemas.dto.call_recordings import (
+    CallRecordingQuery,
+    RecordingLocation,
+    RecordingPart,
+)
 from app.schemas.exceptions.application_errors import NotFoundError
 from app.schemas.typings.compliance.strings import (
     AuditEntityName,
@@ -23,12 +27,13 @@ NO_RECORDING_MESSAGE: str = (
 )
 
 
-class GetCallRecordingUseCase(UseCaseContract[CallRecordingQuery, RecordingAudio]):
+class GetCallRecordingUseCase(UseCaseContract[CallRecordingQuery, RecordingPart]):
     """
     Owners and staff play back the recording of a phone call from the
-    conversation card (concept sections 7 and 8). The audio stays with the
-    voice platform (ElevenLabs keeps it in the EU) or the recording storage
-    and is read only when someone presses play; each playback is a view of
+    conversation card (concept sections 7 and 8). The audio stays in the
+    business's encrypted EU object storage (or with the voice platform until
+    it is archived) and is read only when someone presses play, and only
+    the part a player asks for (a byte range). Each playback is a view of
     personal data and is written to the audit log (concept section 10), once
     (the parts a player asks for while it plays and seeks are not new
     playbacks; access is checked for every one of them).
@@ -56,7 +61,7 @@ class GetCallRecordingUseCase(UseCaseContract[CallRecordingQuery, RecordingAudio
         self._audit_log_repo: AuditLogRepoContract = audit_log_repo
         self._wall_clock: WallClock[Microseconds] = wall_clock
 
-    def run(self, input_data: CallRecordingQuery) -> RecordingAudio:
+    def run(self, input_data: CallRecordingQuery) -> RecordingPart:
         business: BusinessDocument = self._authorize_business_access.run(
             BusinessAccessRequest(
                 user_id=input_data.user_id,
@@ -70,7 +75,10 @@ class GetCallRecordingUseCase(UseCaseContract[CallRecordingQuery, RecordingAudio
         if call.recording_path is None:
             raise NotFoundError(NO_RECORDING_MESSAGE)
 
-        audio: RecordingAudio | None = self._recording_storage.read(call.recording_path)
+        audio: RecordingPart | None = self._recording_storage.read(
+            RecordingLocation(business_id=business.id, path=call.recording_path),
+            input_data.byte_range,
+        )
         if audio is None:
             raise NotFoundError(NO_RECORDING_MESSAGE)
 

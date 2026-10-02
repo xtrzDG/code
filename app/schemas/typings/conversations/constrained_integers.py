@@ -34,6 +34,18 @@ class LlmTurnSequenceNumber(BaseConstrainedTypedInt):
     ge = 0
 
 
+class RecordingByteCount(BaseConstrainedTypedInt):
+    """How many bytes of a call recording (its length, or a part's)."""
+
+    ge = 0
+
+
+class RecordingByteOffset(BaseConstrainedTypedInt):
+    """Where a byte of a call recording lies, counted from 0."""
+
+    ge = 0
+
+
 class StaffTemplateReplyMaxLength(BaseConstrainedTypedInt):
     """Most characters a staff reply sent as a WhatsApp template may have."""
 

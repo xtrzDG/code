@@ -283,6 +283,18 @@ API работает в нескольких экземплярах (`numInstanc
   потоков (ограничитель AnyIO задаётся при старте), вызовы модели — не больше
   `LLM_MAX_CONCURRENCY` в процессе (`ConcurrencyLimitedLlmAdapter`, вокруг
   трассирующего адаптера: ожидание места не попадает в трассу).
+- **Записи звонков** (`RecordingStorageAdapterContract`): с
+  `RECORDINGS_STORAGE=s3` — `EncryptedObjectRecordingStorageAdapter` над
+  S3-совместимым хранилищем в ЕС (`S3ObjectStorageClient`: запросы по ссылкам
+  с подписью SigV4 на 60 с, чтение диапазонами байт). Запись шифруется до
+  отправки (`app/utilities/security/recording_encryption.py`: ключ бизнеса —
+  HKDF от `ENCRYPTION_KEY` и id бизнеса, ключ записи — HKDF от ключа бизнеса,
+  соли и пути; AES-256-GCM блоками по 64 КиБ с номером блока и меткой
+  последнего в AAD), поэтому диапазон плеера читает и открывает только свои
+  блоки. После звонка задача `archive_call_recording` переносит запись из
+  ElevenLabs в бакет (CAS по пути записи звонка: очистка по сроку или
+  удаление контакта в это время побеждают) и удаляет разговор у ElevenLabs.
+  Локальные файлы (`LocalRecordingStorageAdapter`) — только разработка.
 - **Проверка.** `tests/storage/test_two_processes.py` запускает два процесса API
   (uvicorn) на одной тестовой базе: последнюю бронь получает ровно один,
   лимит виджета общий, ответы одному клиенту идут по очереди.

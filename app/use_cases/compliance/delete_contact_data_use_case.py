@@ -22,6 +22,7 @@ from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.compliance import AuditLogEntryDocument
 from app.schemas.domain.contacts import ContactDocument
 from app.schemas.dto.access import BusinessAccessRequest
+from app.schemas.dto.call_recordings import RecordingLocation
 from app.schemas.dto.compliance import (
     ContactDataCommand,
     ContactErasureResult,
@@ -159,7 +160,11 @@ class DeleteContactDataUseCase(
         deleted_recordings: int = 0
         for call in records.calls:
             if call.recording_path is not None:
-                self._recording_storage.delete(call.recording_path)
+                self._recording_storage.delete(
+                    RecordingLocation(
+                        business_id=call.business_id, path=call.recording_path
+                    )
+                )
                 deleted_recordings += 1
 
         return deleted_recordings

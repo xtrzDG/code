@@ -11,8 +11,14 @@ from app.clients.elevenlabs.unconfigured_elevenlabs_client import (
     UnconfiguredElevenLabsClient,
 )
 from app.contracts.recording_storage import RecordingStorageAdapterContract
-from app.schemas.dto.call_recordings import RecordingAudio
+from app.schemas.dto.call_recordings import (
+    RecordingAudio,
+    RecordingByteRange,
+    RecordingLocation,
+    RecordingPart,
+)
 from app.schemas.exceptions.application_errors import ExternalServiceError
+from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.channels.constrained_strings import PublicBaseUrl
 from app.schemas.typings.conversations.constrained_strings import RecordingMediaType
 from app.schemas.typings.conversations.strings import (
@@ -20,6 +26,7 @@ from app.schemas.typings.conversations.strings import (
     RecordingStoragePath,
 )
 from app.schemas.typings.platform.strings import PlatformSecret
+from app.utilities.recordings.recording_byte_ranges import cut_recording_part
 
 EU_BASE_URL: PublicBaseUrl = PublicBaseUrl("https://api.eu.residency.elevenlabs.io")
 MP3: bytes = b"ID3\x04\x00\x00frames"
@@ -140,14 +147,26 @@ class FallbackStorage(RecordingStorageAdapterContract):
     def __init__(self) -> None:
         self.reads: list[str] = []
 
-    def read(self, recording_path: RecordingStoragePath) -> RecordingAudio | None:
-        self.reads.append(str(recording_path))
-        return RecordingAudio(
+    def read(
+        self,
+        location: RecordingLocation,
+        wanted: RecordingByteRange | None = None,
+    ) -> RecordingPart | None:
+        self.reads.append(str(location.path))
+        audio = RecordingAudio(
             content=b"OggS", media_type=RecordingMediaType("audio/ogg")
         )
+        return cut_recording_part(audio, wanted)
 
-    def delete(self, recording_path: RecordingStoragePath) -> None:
+    def store(self, location: RecordingLocation, audio: RecordingAudio) -> None:
+        raise AssertionError("Playback stores nothing.")
+
+    def delete(self, location: RecordingLocation) -> None:
         raise AssertionError("Playback deletes nothing.")
+
+
+def at(path: str) -> RecordingLocation:
+    return RecordingLocation(business_id=BusinessId(), path=RecordingStoragePath(path))
 
 
 def test_platform_paths_play_from_the_platform_and_others_from_the_fallback() -> None:
@@ -157,15 +176,17 @@ def test_platform_paths_play_from_the_platform_and_others_from_the_fallback() ->
     fallback = FallbackStorage()
     storage = ElevenLabsRecordingStorageAdapter(platform.client(), fallback)
 
-    from_platform = storage.read(
-        RecordingStoragePath("elevenlabs/conversations/conv_7")
-    )
-    from_fallback = storage.read(RecordingStoragePath("calls/2026/call.ogg"))
+    from_platform = storage.read(at("elevenlabs/conversations/conv_7"))
+    from_fallback = storage.read(at("calls/2026/call.ogg"))
     without_fallback = ElevenLabsRecordingStorageAdapter(platform.client()).read(
-        RecordingStoragePath("calls/2026/call.ogg")
+        at("calls/2026/call.ogg")
     )
 
     assert from_platform is not None and from_platform.content == MP3
+    assert (int(from_platform.first_byte), int(from_platform.total_bytes)) == (
+        0,
+        len(MP3),
+    )
     assert from_fallback is not None and from_fallback.content == b"OggS"
     assert without_fallback is None
     assert [request.url.path for request in platform.requests] == [

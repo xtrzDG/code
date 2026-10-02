@@ -29,7 +29,10 @@ dependencies = [
 [dependency-groups]
 dev = [
     "bandit>=1.9.4",
+    "flask>=3.1",
+    "flask-cors>=6.0",
     "import-linter>=2.15",
+    "moto[s3]>=5.1",
     "mypy",
     "pyright",
     "pytest",

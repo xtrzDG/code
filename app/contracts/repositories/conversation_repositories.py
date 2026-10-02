@@ -20,6 +20,7 @@ from app.schemas.domain.conversations import (
     LlmTurnDocument,
     MessageDocument,
 )
+from app.schemas.dto.call_recordings import CallRecordingMove
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.contacts.prefixed_id import ContactId
 from app.schemas.typings.conversations.constrained_integers import (
@@ -202,4 +203,17 @@ class CallRepoContract(RepoContract, Protocol):
         raise NotImplementedError
 
     def list_by_business(self, business_id: BusinessId) -> list[CallDocument]:
+        raise NotImplementedError
+
+    def move_recording(
+        self,
+        business_id: BusinessId,
+        call_id: CallId,
+        moved: CallRecordingMove,
+    ) -> bool:
+        """
+        Point the call at the recording's new path, in one step and only
+        while it still points at the old one (a retention purge or a
+        contact's erasure in between wins). True when it moved.
+        """
         raise NotImplementedError

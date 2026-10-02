@@ -414,7 +414,10 @@ UI-тестов); `color`, `position` и `language` в ней показываю
 | `RESTRICTED_COUNTRY_CODES` | `CU,IR,KP,SY`: из этих стран нельзя войти по номеру и создать бизнес; пустое значение снимает ограничение (список сверить с юристом) |
 | `DEFAULT_DATA_REGION` | `eu` — регион обработки данных в профилях стран (`eu` или `us`) |
 | `RECORDING_RETENTION_DAYS` | 90 дней хранения записей и расшифровок звонков (бизнес может поменять свой срок) |
-| `RECORDINGS_DIRECTORY` | `var/recordings` (записи звонков на этом сервере; ElevenLabs хранит свои) |
+| `RECORDINGS_DIRECTORY` | `var/recordings` (записи звонков на этом сервере при `RECORDINGS_STORAGE=local`) |
+| `RECORDINGS_STORAGE` | `local`: записи, которые платформа хранит сама, — файлы этого сервера (разработка; ElevenLabs держит свои). `s3` — объектное хранилище в ЕС: каждая запись зашифрована ключом своего бизнеса (HKDF от `ENCRYPTION_KEY`, AES-256-GCM блоками по 64 КиБ), запись звонка после него переносится туда из ElevenLabs и удаляется там; без `RECORDINGS_S3_*` или `ENCRYPTION_KEY` — ошибка запуска |
+| `RECORDINGS_S3_ENDPOINT_URL`, `RECORDINGS_S3_REGION`, `RECORDINGS_S3_BUCKET` | при `s3`: адрес S3-совместимого хранилища в ЕС (AWS `eu-central-1`, Cloudflare R2 с юрисдикцией ЕС, Hetzner, Scaleway), регион подписи (`auto` у R2) и закрытый бакет без версий |
+| `RECORDINGS_S3_ACCESS_KEY_ID`, `RECORDINGS_S3_SECRET_ACCESS_KEY` | при `s3`: ключ, которому разрешены только чтение, запись и удаление в этом бакете; запросы подписываются (Signature V4, ссылки на одну минуту) |
 | `CONTACT_MESSAGE_LIMIT_PER_HOUR` | 60 сообщений одного клиента за последний час во всех каналах: на 60-м помощник предупреждает о лимите, дальше молчит |
 | `DPA_DOCUMENT_VERSION` | `2026-10-01` — действующая версия договора из `docs/legal/` |
 | `ELEVENLABS_API_KEY`, `ELEVENLABS_WEBHOOK_SECRET`, `ELEVENLABS_API_BASE_URL` | голосовой агент не создаётся: в `production` публикация версии с голосом отклоняется (409, причина `voice_configuration`), в `development`/`test` версия выходит без голосового агента (предупреждение в логе). Адрес по умолчанию — `https://api.eu.residency.elevenlabs.io` (хранение в ЕС) |

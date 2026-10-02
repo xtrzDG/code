@@ -119,6 +119,35 @@ class JobSerialKey(BaseConstrainedTypedString):
     pattern = r"^[a-z][a-z0-9_]*:[A-Za-z0-9_.:\-]+$"
 
 
+class ObjectStorageBucketName(BaseConstrainedTypedString):
+    """
+    A bucket of S3-compatible object storage (RECORDINGS_S3_BUCKET): the
+    S3 naming rules, lowercase letters, digits, dots and hyphens.
+
+    Example:
+        bucket = ObjectStorageBucketName("workshop-recordings-eu")
+    """
+
+    min_length = 3
+    max_length = 63
+    pattern = r"^[a-z0-9][a-z0-9.\-]{1,61}[a-z0-9]\Z"
+
+
+class ObjectStorageRegion(BaseConstrainedTypedString):
+    """
+    The signing region of S3-compatible object storage
+    (RECORDINGS_S3_REGION): "eu-central-1" on AWS, "auto" on Cloudflare R2,
+    "fsn1" on Hetzner.
+
+    Example:
+        region = ObjectStorageRegion("eu-central-1")
+    """
+
+    min_length = 2
+    max_length = 64
+    pattern = r"^[a-z0-9][a-z0-9\-]*\Z"
+
+
 class PageCursor(BaseConstrainedTypedString):
     """
     Opaque position in a list sorted newest first, returned as `next_cursor`

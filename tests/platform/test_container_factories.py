@@ -1,7 +1,5 @@
 """Builders the containers use for optional, settings-dependent providers."""
 
-from pathlib import Path
-
 import pytest
 
 from app.clients.elevenlabs.elevenlabs_client import ElevenLabsClient
@@ -17,7 +15,6 @@ from app.containers.factories import (
     build_google_calendar_client,
     build_langfuse_ingestion_client,
     build_llm_trace_facilitator,
-    resolve_recordings_directory,
     select_menu_extraction_model_id,
 )
 from app.facilitators.observability.langfuse_trace_facilitator import (
@@ -91,14 +88,6 @@ def test_menu_import_always_reads_with_an_openai_model(
     settings = assemble_app_settings(environment)
 
     assert select_menu_extraction_model_id(settings) == expected_model
-
-
-def test_recordings_directory_has_a_default_and_can_be_set() -> None:
-    default = assemble_app_settings({})
-    custom = assemble_app_settings({"RECORDINGS_DIRECTORY": "/srv/recordings"})
-
-    assert resolve_recordings_directory(default) == Path("var/recordings")
-    assert resolve_recordings_directory(custom) == Path("/srv/recordings")
 
 
 def test_google_calendar_needs_the_cabinet_to_finish_connecting() -> None:

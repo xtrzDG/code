@@ -11,7 +11,7 @@ from app.orchestrators.conversations.owner_test_chat_orchestrator import (
 from app.orchestrators.use_case_orchestrator import UseCaseOrchestrator
 from app.pipelines.conversations.owner_test_chat_pipeline import OwnerTestChatPipeline
 from app.pipelines.orchestrator_pipeline import OrchestratorPipeline
-from app.schemas.dto.call_recordings import CallRecordingQuery, RecordingAudio
+from app.schemas.dto.call_recordings import CallRecordingQuery, RecordingPart
 from app.schemas.dto.conversation_feed.conversation_actions import (
     RateConversationCommand,
     SendStaffMessageCommand,
@@ -77,7 +77,7 @@ class CabinetOperators:
     ]
     owner_test_chat: OperatorContract[OwnerTestChatCommand, AssistantReply]
     send_staff_message: OperatorContract[SendStaffMessageCommand, StaffMessageResult]
-    get_call_recording: OperatorContract[CallRecordingQuery, RecordingAudio]
+    get_call_recording: OperatorContract[CallRecordingQuery, RecordingPart]
     import_menu: OperatorContract[ImportMenuCommand, MenuImportResult]
     confirm_imported_items: OperatorContract[
         ConfirmImportedItemsCommand, ConfirmImportedItemsResult

@@ -7,6 +7,8 @@ from app.schemas.constants.jobs import JobLane
 from app.schemas.constants.localization import DataRegion
 from app.schemas.constants.messaging import SmtpSecurity
 from app.schemas.constants.observability import LogFormat
+from app.schemas.constants.storage import RecordingStorageKind
+from app.schemas.dto.object_storage import ObjectStorageConnection
 from app.schemas.typings.assistants.constrained_integers import (
     AutotestTurnLimit,
     LlmCallTimeoutSeconds,
@@ -200,3 +202,8 @@ class AppSettings(ImmutableDTO):
     release_version: ReleaseVersion | None = None
     log_format: LogFormat = LogFormat.TEXT
     recordings_directory: LocalDirectoryPath = LocalDirectoryPath("var/recordings")
+    # Where recordings this platform keeps live (RECORDINGS_STORAGE): files
+    # under RECORDINGS_DIRECTORY in development, EU object storage
+    # (RECORDINGS_S3_*), encrypted per business, in production.
+    recording_storage_kind: RecordingStorageKind = RecordingStorageKind.LOCAL
+    recordings_object_storage: ObjectStorageConnection | None = None

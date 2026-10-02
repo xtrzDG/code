@@ -120,6 +120,10 @@ class ConversationOrchestratorsContainer(containers.DeclarativeContainer):
         audit_call_replies=voice_use_cases.audit_call_replies_use_case,
         send_call_confirmation=voice_use_cases.send_call_confirmation_use_case,
         send_call_links=voice_use_cases.send_call_links_use_case,
+        schedule_recording_archive=voice_use_cases.schedule_recording_archive_use_case,
+    )
+    archive_call_recording_orchestrator = use_case_orchestrator(
+        voice_use_cases.archive_call_recording_use_case
     )
     process_post_call_orchestrator: Factory[
         OrchestratorContract[QueuedJobInput, JobReport]

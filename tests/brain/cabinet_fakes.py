@@ -13,7 +13,12 @@ from app.repositories.knowledge_repositories import ResourceRepository
 from app.schemas.constants.channels import ChannelKind
 from app.schemas.domain.bookings import BookingDocument, LeadDocument
 from app.schemas.domain.resources import ResourceDocument
-from app.schemas.dto.call_recordings import RecordingAudio
+from app.schemas.dto.call_recordings import (
+    RecordingAudio,
+    RecordingByteRange,
+    RecordingLocation,
+    RecordingPart,
+)
 from app.schemas.dto.menu_import import MenuExtraction, MenuExtractionRequest
 from app.schemas.exceptions.application_errors import (
     AuthenticationRequiredError,
@@ -29,11 +34,11 @@ from app.schemas.typings.conversations.constrained_strings import RecordingMedia
 from app.schemas.typings.conversations.strings import (
     ChannelUserId,
     MessageText,
-    RecordingStoragePath,
 )
 from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.schemas.typings.users.prefixed_id import UserId
 from app.schemas.typings.users.strings import AccessToken
+from app.utilities.recordings.recording_byte_ranges import cut_recording_part
 
 
 class TokenAuthenticationOperator(OperatorContract[AccessToken, UserId]):
@@ -113,21 +118,31 @@ class InMemoryRecordingStorage(RecordingStorageAdapterContract):
         self.reads: list[str] = []
         self.failure: str | None = None
 
-    def read(self, recording_path: RecordingStoragePath) -> RecordingAudio | None:
-        self.reads.append(str(recording_path))
+    def read(
+        self,
+        location: RecordingLocation,
+        wanted: RecordingByteRange | None = None,
+    ) -> RecordingPart | None:
+        self.reads.append(str(location.path))
         if self.failure is not None:
             raise ExternalServiceError(self.failure)
 
-        content: bytes | None = self.recordings.get(str(recording_path))
+        content: bytes | None = self.recordings.get(str(location.path))
         if content is None:
             return None
 
-        return RecordingAudio(
-            content=content, media_type=RecordingMediaType("audio/mpeg")
+        return cut_recording_part(
+            RecordingAudio(
+                content=content, media_type=RecordingMediaType("audio/mpeg")
+            ),
+            wanted,
         )
 
-    def delete(self, recording_path: RecordingStoragePath) -> None:
-        self.recordings.pop(str(recording_path), None)
+    def store(self, location: RecordingLocation, audio: RecordingAudio) -> None:
+        self.recordings[str(location.path)] = audio.content
+
+    def delete(self, location: RecordingLocation) -> None:
+        self.recordings.pop(str(location.path), None)
 
 
 @dataclass

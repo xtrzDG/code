@@ -39,6 +39,7 @@ from app.schemas.domain.conversations import (
     LlmTurnDocument,
     MessageDocument,
 )
+from app.schemas.dto.call_recordings import CallRecordingMove
 from app.schemas.dto.storage_queries import DocumentFieldMatch, DocumentFieldRange
 from app.schemas.exceptions.application_errors import ConflictError
 from app.schemas.typings.businesses.prefixed_id import BusinessId
@@ -53,6 +54,7 @@ from app.schemas.typings.conversations.prefixed_id import (
 )
 from app.schemas.typings.conversations.strings import ChannelUserId, ProviderCallId
 from app.schemas.typings.localization.constrained_strings import E164PhoneNumber
+from app.utilities.recordings.recording_moves import recording_moved
 
 
 class ContactRepository(
@@ -287,3 +289,9 @@ class CallRepository(BusinessScopedRepository[CallDocument], CallRepoContract):
             key=lambda call: call.started_at,
             reverse=True,
         )
+
+    def move_recording(
+        self, business_id: BusinessId, call_id: CallId, moved: CallRecordingMove
+    ) -> bool:
+        change = recording_moved(moved)
+        return self._modify_in_business(business_id, str(call_id), change) is not None

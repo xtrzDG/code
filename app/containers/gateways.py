@@ -17,6 +17,9 @@ from app.gateways.worker.periodic.sweep_rate_limit_buckets import (
 from app.schemas.typings.platform.constrained_integers import JobIntervalSeconds
 from app.schemas.typings.platform.constrained_strings import JobName
 from app.use_cases.autotests.enqueue_autotest_run_use_case import RUN_AUTOTESTS_JOB
+from app.use_cases.voice.recordings.recording_archive_paths import (
+    ARCHIVE_CALL_RECORDING_JOB,
+)
 from app.utilities.deliveries.delivery_jobs import (
     DELIVER_OUTBOUND_JOB,
     PROCESS_INBOUND_MESSAGE_JOB,
@@ -130,6 +133,10 @@ class GatewaysContainer(containers.DeclarativeContainer):
                 operators.channels.process_platform_bot_update_operator
             ),
             PROCESS_POST_CALL_JOB: operators.conversations.process_post_call_operator,
+            # A finished call's recording moved into the EU object storage.
+            ARCHIVE_CALL_RECORDING_JOB: (
+                operators.conversations.archive_call_recording_operator
+            ),
             # The outbox: replies and staff notifications sent with retries.
             DELIVER_OUTBOUND_JOB: operators.channels.deliver_outbound_operator,
         }

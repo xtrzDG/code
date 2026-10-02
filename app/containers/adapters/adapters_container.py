@@ -38,8 +38,8 @@ from app.adapters.rate_limits.rate_limit_bucket_adapter_factory import (
 from app.adapters.recordings.cached_recording_storage_adapter import (
     CachedRecordingStorageAdapter,
 )
-from app.adapters.recordings.local_recording_storage_adapter import (
-    LocalRecordingStorageAdapter,
+from app.adapters.recordings.recording_storage_factory import (
+    build_own_recording_storage,
 )
 from app.adapters.security.secret_cipher_adapter import SecretCipherAdapter
 from app.adapters.storage.postgres.sql_file_migration_source_adapter import (
@@ -62,7 +62,6 @@ from app.containers.clients import ClientsContainer
 from app.containers.config import ConfigContainer
 from app.containers.factories import (
     build_llm_trace_facilitator,
-    resolve_recordings_directory,
     select_menu_extraction_model_id,
 )
 from app.containers.time_provider import TimeProviderContainer
@@ -72,6 +71,7 @@ from app.contracts.llm import LlmAdapterContract
 from app.contracts.locks import AdvisoryLockAdapterContract
 from app.contracts.observability import LlmTraceFacilitatorContract
 from app.contracts.rate_limits import RateLimitBucketAdapterContract
+from app.contracts.recording_storage import RecordingStorageAdapterContract
 from app.schemas.dto.conversations import LlmCallLimits
 
 
@@ -126,24 +126,25 @@ class AdaptersContainer(containers.DeclarativeContainer):
         SecretCipherAdapter,
         app_settings=config.app_settings,
     )
-    local_recording_storage: Singleton[LocalRecordingStorageAdapter] = Singleton(
-        LocalRecordingStorageAdapter,
-        root_directory=Callable(
-            resolve_recordings_directory,
-            settings=config.app_settings,
-        ),
+    # Recordings the platform keeps itself: EU object storage encrypted per
+    # business (RECORDINGS_STORAGE=s3), files of this server in development.
+    own_recording_storage: Singleton[RecordingStorageAdapterContract] = Singleton(
+        build_own_recording_storage,
+        settings=config.app_settings,
+        object_storage_client=clients.object_storage_client,
     )
-    # ElevenLabs keeps call audio in its own (EU) storage; other paths are
-    # files of this server.
+    # ElevenLabs keeps call audio in its own (EU) storage until it is
+    # archived; other paths are the platform's own.
     platform_recording_storage: Singleton[ElevenLabsRecordingStorageAdapter] = (
         Singleton(
             ElevenLabsRecordingStorageAdapter,
             elevenlabs_client=clients.elevenlabs_client,
-            fallback=local_recording_storage,
+            fallback=own_recording_storage,
         )
     )
-    # A player asks for parts of a recording while it plays and seeks: keep
-    # a played one in memory for a few minutes instead of downloading it again.
+    # The voice platform hands out a recording only whole, and a player asks
+    # for parts while it plays and seeks: keep a played one in memory for a
+    # few minutes instead of downloading it again.
     recording_storage: Singleton[CachedRecordingStorageAdapter] = Singleton(
         CachedRecordingStorageAdapter,
         storage=platform_recording_storage,

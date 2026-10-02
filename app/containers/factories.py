@@ -3,8 +3,6 @@ Small builders the containers use where a provider depends on optional
 settings (a missing key switches to a stand-in instead of failing startup).
 """
 
-from pathlib import Path
-
 from app.clients.elevenlabs.elevenlabs_client import ElevenLabsClient
 from app.clients.elevenlabs.unconfigured_elevenlabs_client import (
     UnconfiguredElevenLabsClient,
@@ -57,6 +55,7 @@ from app.facilitators.users.whatsapp_otp_delivery_facilitator import (
 from app.schemas.configurations.app_settings import AppSettings
 from app.schemas.constants.assistants import LlmProvider
 from app.schemas.constants.localization import OtpDeliveryChannel
+from app.schemas.constants.storage import RecordingStorageKind
 from app.schemas.typings.assistants.constrained_strings import LlmModelId
 from app.utilities.conversations.llm_models import resolve_llm_provider
 
@@ -272,7 +271,7 @@ def select_menu_extraction_model_id(settings: AppSettings) -> LlmModelId:
     return DEFAULT_MENU_EXTRACTION_MODEL_ID
 
 
-def resolve_recordings_directory(settings: AppSettings) -> Path:
-    """Directory of call recordings kept on this server."""
+def is_recording_archive_enabled(settings: AppSettings) -> bool:
+    """Recordings move into the EU object storage when it is configured."""
 
-    return Path(str(settings.recordings_directory))
+    return settings.recording_storage_kind is RecordingStorageKind.OBJECT_STORAGE
