@@ -52,7 +52,8 @@ class RecordOutboundAttemptUseCase(
         job_queue: JobQueueFacilitatorContract,
         channel_repo: ChannelRepoContract,
         handoff_repo: HandoffRepoContract,
-        jitter: Callable[[], float] = random.random,  # nosec B311 - jitter only
+        # Spreads retry times only; nothing secret depends on it.
+        jitter: Callable[[], float] = random.random,  # nosec B311
     ) -> None:
         self._outbound_message_repo: OutboundMessageRepoContract = outbound_message_repo
         self._job_queue: JobQueueFacilitatorContract = job_queue
