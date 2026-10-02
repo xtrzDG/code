@@ -125,9 +125,6 @@ from app.use_cases.authorize_business_access_use_case import (
 from app.use_cases.conversations.build_call_greeting_use_case import (
     BuildCallGreetingUseCase,
 )
-from app.use_cases.conversations.generate_assistant_reply_use_case import (
-    GenerateAssistantReplyUseCase,
-)
 from app.use_cases.conversations.open_voice_conversation_use_case import (
     OpenVoiceConversationUseCase,
 )
@@ -136,6 +133,9 @@ from app.use_cases.conversations.record_assistant_reply_use_case import (
 )
 from app.use_cases.conversations.record_voice_tool_call_use_case import (
     RecordVoiceToolCallUseCase,
+)
+from app.use_cases.conversations.replies.generate_assistant_reply_use_case import (
+    GenerateAssistantReplyUseCase,
 )
 from app.use_cases.conversations.tools.run_assistant_tool_use_case import (
     RunAssistantToolUseCase,
