@@ -1,22 +1,14 @@
 import logging
 
-from typed_time_provider import Microseconds, WallClock
-
-from app.contracts.channels import (
-    ChannelAdapterContract,
-    ChannelMessageReceiptRepoContract,
-)
+from app.contracts.channels import ChannelAdapterContract
 from app.contracts.repositories.business_repositories import ChannelRepoContract
-from app.contracts.secret_cipher import SecretCipherAdapterContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.domain.channels import ChannelDocument
 from app.schemas.dto.channels.channel_webhooks import (
-    ChannelInboundDelivery,
     ChannelInboundMessage,
     MetaWebhookRequest,
 )
-from app.schemas.exceptions.application_errors import ExternalServiceError
-from app.use_cases.channels.channel_webhook_support import accept_inbound_message
+from app.schemas.dto.deliveries import RoutedInboundMessage
 from app.utilities.channels.channel_health import is_channel_active
 from app.utilities.channels.json_values import JsonObject, parse_json_object, read_text
 
@@ -28,11 +20,11 @@ INSTAGRAM_OBJECT: str = "instagram"
 
 
 class ReceiveMetaWebhookUseCase(
-    UseCaseContract[MetaWebhookRequest, list[ChannelInboundDelivery]]
+    UseCaseContract[MetaWebhookRequest, list[RoutedInboundMessage]]
 ):
     """
-    Accept a webhook of the platform's Meta app (one endpoint for WhatsApp,
-    Messenger and Instagram).
+    Verify and read a webhook of the platform's Meta app (one endpoint for
+    WhatsApp, Messenger and Instagram).
 
     The X-Hub-Signature-256 header must be the HMAC-SHA256 of the raw body
     with META_APP_SECRET. Each message is routed to the business whose
@@ -44,25 +36,19 @@ class ReceiveMetaWebhookUseCase(
     def __init__(
         self,
         channel_repo: ChannelRepoContract,
-        secret_cipher: SecretCipherAdapterContract,
         whatsapp_adapter: ChannelAdapterContract,
         messenger_adapter: ChannelAdapterContract,
         instagram_adapter: ChannelAdapterContract,
-        receipt_repo: ChannelMessageReceiptRepoContract,
-        wall_clock: WallClock[Microseconds],
     ) -> None:
         self._channel_repo: ChannelRepoContract = channel_repo
-        self._secret_cipher: SecretCipherAdapterContract = secret_cipher
         self._whatsapp_adapter: ChannelAdapterContract = whatsapp_adapter
         self._adapters_by_object: dict[str, ChannelAdapterContract] = {
             WHATSAPP_OBJECT: whatsapp_adapter,
             PAGE_OBJECT: messenger_adapter,
             INSTAGRAM_OBJECT: instagram_adapter,
         }
-        self._receipt_repo: ChannelMessageReceiptRepoContract = receipt_repo
-        self._wall_clock: WallClock[Microseconds] = wall_clock
 
-    def run(self, input_data: MetaWebhookRequest) -> list[ChannelInboundDelivery]:
+    def run(self, input_data: MetaWebhookRequest) -> list[RoutedInboundMessage]:
         root: JsonObject | None = parse_json_object(input_data.payload.body)
         object_name: str | None = None if root is None else read_text(root, "object")
         adapter: ChannelAdapterContract | None = (
@@ -74,20 +60,15 @@ class ReceiveMetaWebhookUseCase(
         if adapter is None:
             return []
 
-        now: Microseconds = self._wall_clock.now_unix()
-        deliveries: list[ChannelInboundDelivery] = []
+        routed: list[RoutedInboundMessage] = []
         for message in adapter.parse_webhook(input_data.payload):
-            delivery: ChannelInboundDelivery | None = self._accept(message, now)
-            if delivery is not None:
-                deliveries.append(delivery)
+            routed_message: RoutedInboundMessage | None = self._route(message)
+            if routed_message is not None:
+                routed.append(routed_message)
 
-        return deliveries
+        return routed
 
-    def _accept(
-        self,
-        message: ChannelInboundMessage,
-        now: Microseconds,
-    ) -> ChannelInboundDelivery | None:
+    def _route(self, message: ChannelInboundMessage) -> RoutedInboundMessage | None:
         if message.account_id is None:
             return None
 
@@ -103,19 +84,9 @@ class ReceiveMetaWebhookUseCase(
             )
             return None
 
-        try:
-            return accept_inbound_message(
-                message,
-                channel,
-                self._secret_cipher,
-                self._receipt_repo,
-                now,
-            )
-        except ExternalServiceError as error:
-            logger.warning(
-                "Dropped a %s message of business %s: %s",
-                message.channel.value,
-                channel.business_id,
-                error,
-            )
-            return None
+        return RoutedInboundMessage(
+            business_id=channel.business_id,
+            channel_id=channel.id,
+            channel=channel.kind,
+            message=message,
+        )

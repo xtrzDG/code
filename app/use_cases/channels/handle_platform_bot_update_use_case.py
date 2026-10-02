@@ -16,15 +16,13 @@ from app.schemas.domain.businesses import BusinessDocument, ManagerContact
 from app.schemas.domain.compliance import AuditLogEntryDocument
 from app.schemas.domain.manager_links import ManagerTelegramLinkDocument
 from app.schemas.dto.channels.staff_links import (
+    PlatformBotUpdate,
     PlatformBotWebhookOutcome,
-    PlatformBotWebhookRequest,
 )
 from app.schemas.dto.localization import LocalizedText
 from app.schemas.exceptions.application_errors import (
-    AuthenticationRequiredError,
     ExternalServiceError,
     NotFoundError,
-    UnsupportedLanguageError,
 )
 from app.schemas.typings.channels.constrained_strings import ManagerLinkCode
 from app.schemas.typings.channels.strings import OutboundMessagePart
@@ -42,35 +40,25 @@ from app.utilities.channels.channel_texts import (
     PLATFORM_BOT_LINKED_TEXT,
     PLATFORM_BOT_REJECTED_CODE_TEXT,
 )
-from app.utilities.channels.json_values import (
-    JsonObject,
-    parse_json_object,
-    read_flag,
-    read_identifier,
-    read_object,
-    read_text,
-)
 from app.utilities.channels.manager_link_codes import hash_link_code, read_link_code
-from app.utilities.channels.webhook_signatures import (
-    derive_telegram_webhook_secret,
-    is_matching_secret,
+from app.utilities.channels.platform_bot_updates import (
+    StaffBotMessage,
+    read_staff_bot_message,
 )
-from app.utilities.localization.language_tags import parse_language_tag
 
 logger: logging.Logger = logging.getLogger(__name__)
 
 START_COMMAND: str = "/start"
-PRIVATE_CHAT_TYPE: str = "private"
-FALLBACK_LANGUAGE: LanguageTag = LanguageTag("en")
 # Same limit as the cabinet's manager contacts.
 MAX_MANAGER_CONTACTS: int = 20
 
 
 class HandlePlatformBotUpdateUseCase(
-    UseCaseContract[PlatformBotWebhookRequest, PlatformBotWebhookOutcome]
+    UseCaseContract[PlatformBotUpdate, PlatformBotWebhookOutcome]
 ):
     """
-    Webhook of the platform Telegram bot that notifies staff.
+    A staff message to the platform Telegram bot, answered by the worker
+    after the webhook stored it (the webhook checked its secret token).
 
     "/start <code>" with a valid one-time code links the chat: the chat id
     becomes a Telegram manager contact of the code's business, in the
@@ -97,27 +85,25 @@ class HandlePlatformBotUpdateUseCase(
         self._app_settings: AppSettings = app_settings
         self._wall_clock: WallClock[Microseconds] = wall_clock
 
-    def run(self, input_data: PlatformBotWebhookRequest) -> PlatformBotWebhookOutcome:
-        bot_token: PlatformSecret = self._authenticate(input_data)
-        update: JsonObject = parse_json_object(input_data.payload.body) or {}
-        message: JsonObject = read_object(update, "message") or {}
-        chat: JsonObject = read_object(message, "chat") or {}
-        sender: JsonObject = read_object(message, "from") or {}
-        chat_id: str | None = read_identifier(chat, "id")
-        text: str | None = read_text(message, "text")
-        if (
-            chat_id is None
-            or text is None
-            or read_text(chat, "type") != PRIVATE_CHAT_TYPE
-            or read_flag(sender, "is_bot")
-        ):
+    def run(self, input_data: PlatformBotUpdate) -> PlatformBotWebhookOutcome:
+        bot_token: PlatformSecret | None = (
+            self._app_settings.telegram_platform_bot_token
+        )
+        if bot_token is None:
+            raise NotFoundError("The platform bot is not configured.")
+
+        message: StaffBotMessage | None = read_staff_bot_message(input_data.body)
+        if message is None:
             return PlatformBotWebhookOutcome(result=PlatformBotCommandResult.IGNORED)
 
-        sender_language: LanguageTag = read_sender_language(sender)
-        command, _, argument = text.strip().partition(" ")
+        chat_id: str = str(message.chat_id)
+        command, _, argument = message.text.strip().partition(" ")
         if command != START_COMMAND or argument.strip() == "":
             self._reply(
-                bot_token, chat_id, PLATFORM_BOT_INSTRUCTIONS_TEXT, sender_language
+                bot_token,
+                chat_id,
+                PLATFORM_BOT_INSTRUCTIONS_TEXT,
+                message.sender_language,
             )
             return PlatformBotWebhookOutcome(
                 result=PlatformBotCommandResult.INSTRUCTIONS_SENT
@@ -127,28 +113,9 @@ class HandlePlatformBotUpdateUseCase(
             bot_token,
             chat_id,
             argument,
-            sender_language,
+            message.sender_language,
         )
         return PlatformBotWebhookOutcome(result=result)
-
-    def _authenticate(self, input_data: PlatformBotWebhookRequest) -> PlatformSecret:
-        bot_token: PlatformSecret | None = (
-            self._app_settings.telegram_platform_bot_token
-        )
-        encryption_key: PlatformSecret | None = self._app_settings.encryption_key
-        if bot_token is None or encryption_key is None:
-            raise NotFoundError("The platform bot is not configured.")
-
-        expected_secret = derive_telegram_webhook_secret(encryption_key, bot_token)
-        if not is_matching_secret(
-            str(expected_secret),
-            input_data.payload.signature_header,
-        ):
-            raise AuthenticationRequiredError(
-                "The Telegram webhook secret token is missing or wrong."
-            )
-
-        return bot_token
 
     def _link(
         self,
@@ -257,15 +224,3 @@ class HandlePlatformBotUpdateUseCase(
         except ExternalServiceError as error:
             logger.warning("The platform bot could not reply: %s", error)
 
-
-def read_sender_language(sender: JsonObject) -> LanguageTag:
-    """The language of the sender's Telegram app, English when unknown."""
-
-    raw_language: str | None = read_text(sender, "language_code")
-    if raw_language is None:
-        return FALLBACK_LANGUAGE
-
-    try:
-        return parse_language_tag(raw_language)
-    except UnsupportedLanguageError:
-        return FALLBACK_LANGUAGE

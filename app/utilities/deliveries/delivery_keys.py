@@ -81,12 +81,13 @@ def bounded_provider_message_id(
 
 
 def reply_idempotency_key(
-    conversation_id: ConversationId,
+    conversation_id: ConversationId | None,
     reply_message_id: MessageId,
 ) -> OutboundIdempotencyKey:
-    """One outbox message per stored assistant reply."""
+    """One outbox message per stored assistant reply of a conversation."""
 
-    return OutboundIdempotencyKey(f"reply:{conversation_id}:{reply_message_id}")
+    conversation: str = "none" if conversation_id is None else str(conversation_id)
+    return OutboundIdempotencyKey(f"reply:{conversation}:{reply_message_id}")
 
 
 def staff_idempotency_key(
