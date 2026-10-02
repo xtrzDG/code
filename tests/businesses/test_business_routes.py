@@ -118,8 +118,9 @@ def test_team_routes_invite_and_remove_staff() -> None:
         f"/v1/businesses/{business['id']}/members/{staff_member['user_id']}",
         headers=owner,
     )
-    assert removed.status_code == 200
-    assert len(removed.json()["members"]) == 1
+    assert (removed.status_code, removed.content) == (204, b"")
+    remaining = client.get(f"/v1/businesses/{business['id']}", headers=owner).json()
+    assert len(remaining["members"]) == 1
 
     last_owner = client.delete(
         f"/v1/businesses/{business['id']}/members/{business['members'][0]['user_id']}",

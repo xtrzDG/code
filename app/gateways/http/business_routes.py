@@ -5,6 +5,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, Request, status
 
 from app.contracts.operator_contract import OperatorContract
+from app.gateways.http.openapi_error_contract import standard_error_responses
 from app.gateways.http.strict_request_parsing import (
     build_json_body_dependency,
     describe_json_body,
@@ -68,7 +69,7 @@ def build_business_router(
     changes and the answer is 409 with the reason `stale_revision`.
     """
 
-    router = APIRouter(tags=["businesses"])
+    router = APIRouter(tags=["businesses"], responses=standard_error_responses())
 
     @router.post(
         "/v1/businesses",
@@ -161,14 +162,17 @@ def build_business_router(
             )
         )
 
-    @router.delete("/v1/businesses/{business_id}/members/{user_id}")
+    @router.delete(
+        "/v1/businesses/{business_id}/members/{user_id}",
+        status_code=status.HTTP_204_NO_CONTENT,
+    )
     def remove_member(
         request: Request,
         business_id: str,
         user_id: str,
         current_user_id: Annotated[UserId, Depends(current_user)],
-    ) -> BusinessView:
-        return remove_member_operator.operate(
+    ) -> None:
+        remove_member_operator.operate(
             RemoveMemberCommand(
                 user_id=current_user_id,
                 business_id=parse_path_identifier(business_id, BusinessId, "Business"),

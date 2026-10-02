@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends, Header, Query, Request, Response, status
 from fastapi.responses import PlainTextResponse
 
 from app.contracts.operator_contract import OperatorContract
+from app.gateways.http.openapi_error_contract import standard_error_responses
 from app.gateways.http.strict_request_parsing import (
     build_json_body_dependency,
     describe_json_body,
@@ -97,7 +98,7 @@ def build_channel_router(
                                                           ?after=<message id>)
     """
 
-    router = APIRouter(tags=["channels"])
+    router = APIRouter(tags=["channels"], responses=standard_error_responses())
 
     @router.post(TELEGRAM_WEBHOOK_PATH_TEMPLATE)
     def receive_telegram_webhook(

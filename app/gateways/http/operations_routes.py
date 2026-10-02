@@ -11,6 +11,7 @@ Lists are paged with `?limit=N&cursor=…`.
 from fastapi import APIRouter
 
 from app.contracts.operator_contract import OperatorContract
+from app.gateways.http.openapi_error_contract import standard_error_responses
 from app.gateways.http.operations.booking_routes import build_booking_routes
 from app.gateways.http.operations.business_access import build_business_authorizer
 from app.gateways.http.operations.dashboard_routes import build_dashboard_routes
@@ -115,7 +116,7 @@ def build_operations_router(
     """
 
     authorize = build_business_authorizer(authorize_business_access)
-    router = APIRouter(tags=["operations"])
+    router = APIRouter(tags=["operations"], responses=standard_error_responses())
     router.include_router(
         build_booking_routes(
             current_user=current_user,

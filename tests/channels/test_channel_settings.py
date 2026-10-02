@@ -64,7 +64,8 @@ class TestConnectPhoneAndWeb:
         assert response.status_code == 200
         assert response.json()["channel"] == "web_chat"
         assert setup.stored(ChannelKind.WEB_CHAT).status is ChannelStatus.CONNECTED
-        assert setup.delete("web_chat").json()["status"] == "disabled"
+        assert setup.delete("web_chat").status_code == 204
+        assert setup.stored(ChannelKind.WEB_CHAT).status is ChannelStatus.DISABLED
 
 
 class TestChannelAccess:

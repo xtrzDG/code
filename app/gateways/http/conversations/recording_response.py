@@ -4,9 +4,13 @@ media player asked for.
 """
 
 from fastapi import Response
+from fastapi.responses import JSONResponse
 
 from app.gateways.http.byte_ranges import ByteRange, resolve_byte_range
+from app.schemas.constants.errors import ApiErrorCode
 from app.schemas.dto.call_recordings import RecordingAudio
+from app.schemas.dto.errors import ErrorBody
+from app.schemas.typings.platform.strings import ErrorMessageText
 
 # A recording is personal data: no HTTP cache keeps it (shared proxies and
 # CDNs least of all); the browser's player buffers it in memory and asks for
@@ -15,6 +19,7 @@ RECORDING_RESPONSE_HEADERS: dict[str, str] = {
     "Cache-Control": "private, no-store",
     "X-Content-Type-Options": "nosniff",
 }
+RANGE_OUTSIDE_RECORDING: str = "The requested range lies outside the recording."
 RECORDING_OPENAPI_RESPONSES: dict[int | str, dict[str, object]] = {
     200: {
         "description": "The call recording (audio/mpeg from the voice platform).",
@@ -25,7 +30,7 @@ RECORDING_OPENAPI_RESPONSES: dict[int | str, dict[str, object]] = {
         "for (media players ask for parts while they play and seek).",
         "content": {"audio/*": {"schema": {"type": "string", "format": "binary"}}},
     },
-    416: {"description": "The requested range lies outside the recording."},
+    416: {"model": ErrorBody, "description": RANGE_OUTSIDE_RECORDING},
 }
 
 
@@ -51,8 +56,12 @@ def build_recording_response(
 
     span: tuple[int, int] | None = resolve_byte_range(requested_range, total_length)
     if span is None:
-        return Response(
+        return JSONResponse(
             status_code=416,
+            content=ErrorBody(
+                error=ApiErrorCode.VALIDATION_FAILED,
+                message=ErrorMessageText(RANGE_OUTSIDE_RECORDING),
+            ).model_dump(mode="json", exclude_none=True),
             headers={**headers, "Content-Range": f"bytes */{total_length}"},
         )
 

@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends, Request, status
 from typed_time_provider import Microseconds
 
 from app.contracts.operator_contract import OperatorContract
+from app.gateways.http.openapi_error_contract import standard_error_responses
 from app.gateways.http.paging_query import parse_page_request
 from app.gateways.http.query_parsing import parse_optional
 from app.gateways.http.strict_request_parsing import (
@@ -86,7 +87,7 @@ def build_compliance_router(
     customers and one customer is audited.
     """
 
-    router = APIRouter(tags=["compliance"])
+    router = APIRouter(tags=["compliance"], responses=standard_error_responses())
 
     @router.get("/v1/businesses/{business_id}/dpa")
     def get_dpa_status(
@@ -205,14 +206,17 @@ def build_compliance_router(
             build_contact_data_command(request, business_id, contact_id, user_id)
         )
 
-    @router.delete("/v1/businesses/{business_id}/contacts/{contact_id}")
+    @router.delete(
+        "/v1/businesses/{business_id}/contacts/{contact_id}",
+        status_code=status.HTTP_204_NO_CONTENT,
+    )
     def delete_contact_data(
         request: Request,
         business_id: str,
         contact_id: str,
         user_id: Annotated[UserId, Depends(current_user)],
-    ) -> ContactErasureResult:
-        return delete_contact_data_operator.operate(
+    ) -> None:
+        delete_contact_data_operator.operate(
             build_contact_data_command(request, business_id, contact_id, user_id)
         )
 

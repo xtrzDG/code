@@ -151,17 +151,18 @@ def build_google_calendar_routes(
             )
         )
 
-    @router.delete(f"{BUSINESS_PREFIX}/integrations/google-calendar")
+    @router.delete(
+        f"{BUSINESS_PREFIX}/integrations/google-calendar",
+        status_code=status.HTTP_204_NO_CONTENT,
+    )
     def delete_google_calendar(
         business_id: str,
         user_id: Annotated[UserId, Depends(current_user)],
-    ) -> CalendarDisconnectResult:
+    ) -> None:
         business: BusinessDocument = authorize(
             user_id, business_id, BusinessMemberRole.OWNER
         )
-        return disconnect_calendar.operate(
-            DisconnectCalendarCommand(business_id=business.id)
-        )
+        disconnect_calendar.operate(DisconnectCalendarCommand(business_id=business.id))
 
     return router
 

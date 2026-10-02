@@ -17,6 +17,7 @@ from app.gateways.http.conversations.recording_response import (
     RECORDING_OPENAPI_RESPONSES,
     build_recording_response,
 )
+from app.gateways.http.openapi_error_contract import standard_error_responses
 from app.gateways.http.paging_query import parse_page_request
 from app.gateways.http.strict_request_parsing import (
     build_json_body_dependency,
@@ -99,7 +100,7 @@ def build_conversation_router(
                                                      assistant_version_id?}
     """
 
-    router = APIRouter(tags=["conversations"])
+    router = APIRouter(tags=["conversations"], responses=standard_error_responses())
 
     @router.get("/v1/businesses/{business_id}/conversations")
     def list_conversations(

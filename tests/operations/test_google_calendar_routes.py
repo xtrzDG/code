@@ -97,10 +97,7 @@ def test_google_calendar_connection_routes() -> None:
     disconnected = api.send(
         "DELETE", "/integrations/google-calendar", token=OWNER_TOKEN
     )
-    assert disconnected.json() == {
-        "business_id": str(api.business.id),
-        "was_connected": True,
-    }
+    assert (disconnected.status_code, disconnected.content) == (204, b"")
     assert api.get("/integrations/google-calendar").json()["is_connected"] is False
 
 

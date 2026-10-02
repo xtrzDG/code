@@ -122,17 +122,15 @@ def test_import_creates_inactive_drafts_and_confirm_activates_them() -> None:
     world.knowledge_item_repo.save(lemonade)
     discarded = client.delete(f"{base_url}/{batch_id}", headers=bearer("staff"))
 
-    assert discarded.status_code == 200, discarded.text
-    assert discarded.json()["batch_id"] == batch_id
-    assert sorted(discarded.json()["discarded_item_ids"]) == sorted(
-        [rows[2]["item"]["id"], rows[3]["item"]["id"]]
-    )
+    assert (discarded.status_code, discarded.content) == (204, b""), discarded.text
     assert sorted(str(item.title) for item in items_of(world)) == [
         "Adjarian khachapuri",
         "Lemonade",
     ]
+    # Discarding again finds nothing left and changes nothing.
     again = client.delete(f"{base_url}/{batch_id}", headers=bearer("owner"))
-    assert again.json()["discarded_item_ids"] == []
+    assert again.status_code == 204
+    assert len(items_of(world)) == 2
 
 
 def test_discarding_an_import_touches_only_its_own_drafts() -> None:
@@ -162,7 +160,7 @@ def test_discarding_an_import_touches_only_its_own_drafts() -> None:
     )
 
     assert (stranger.status_code, malformed.status_code) == (404, 404)
-    assert discarded.json()["discarded_item_ids"] == [first["items"][0]["item"]["id"]]
+    assert discarded.status_code == 204
     assert sorted(item.id for item in items_of(world)) == sorted(
         [KnowledgeItemId(second["items"][0]["item"]["id"]), owner_draft.id]
     )

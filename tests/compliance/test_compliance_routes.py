@@ -35,9 +35,8 @@ def test_dpa_audit_log_export_and_erasure_over_http() -> None:
     assert len(export["records"]["calls"]) == 2
 
     erased = client.delete(f"{base_url}/contacts/{visitor.contact.id}", headers=headers)
-    assert erased.status_code == 200
-    assert erased.json()["deleted_messages"] == 3
-    assert erased.json()["deleted_recordings"] == 2
+    # What was erased is counted by the use case tests; the route answers 204.
+    assert (erased.status_code, erased.content) == (204, b"")
 
     audit_log = client.get(f"{base_url}/audit-log", headers=headers)
     limited = client.get(f"{base_url}/audit-log?limit=1", headers=headers)

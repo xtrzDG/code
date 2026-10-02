@@ -5,6 +5,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, Request, status
 
 from app.contracts.operator_contract import OperatorContract
+from app.gateways.http.openapi_error_contract import standard_error_responses
 from app.gateways.http.strict_request_parsing import (
     build_json_body_dependency,
     describe_json_body,
@@ -74,7 +75,7 @@ def build_channel_settings_router(
     (web_chat). Credentials are never returned.
     """
 
-    router = APIRouter(tags=["channels"])
+    router = APIRouter(tags=["channels"], responses=standard_error_responses())
 
     @router.get("/v1/businesses/{business_id}/channels")
     def list_channels(
@@ -142,14 +143,17 @@ def build_channel_settings_router(
             )
         )
 
-    @router.delete("/v1/businesses/{business_id}/channels/{channel}")
+    @router.delete(
+        "/v1/businesses/{business_id}/channels/{channel}",
+        status_code=status.HTTP_204_NO_CONTENT,
+    )
     def disable_channel(
         request: Request,
         business_id: str,
         channel: str,
         user_id: Annotated[UserId, Depends(current_user)],
-    ) -> ChannelView:
-        return disable_channel_operator.operate(
+    ) -> None:
+        disable_channel_operator.operate(
             DisableChannelCommand(
                 user_id=user_id,
                 business_id=parse_path_identifier(business_id, BusinessId, "Business"),

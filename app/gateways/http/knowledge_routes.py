@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends, Query, status
 
 from app.contracts.operator_contract import OperatorContract
 from app.gateways.http.language_negotiation import parse_language_parameter
+from app.gateways.http.openapi_error_contract import standard_error_responses
 from app.gateways.http.paging_query import parse_page_request
 from app.gateways.http.query_parsing import parse_boolean_text, parse_optional
 from app.gateways.http.strict_request_parsing import (
@@ -75,7 +76,9 @@ def build_knowledge_router(
     search_knowledge tool, so the owner can test it.
     """
 
-    router: APIRouter = APIRouter(tags=["knowledge"])
+    router: APIRouter = APIRouter(
+        tags=["knowledge"], responses=standard_error_responses()
+    )
 
     def authorize(user_id: UserId, raw_business_id: str) -> BusinessDocument:
         business_id: BusinessId = parse_path_identifier(

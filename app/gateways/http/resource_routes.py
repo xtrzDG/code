@@ -5,6 +5,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, Query, status
 
 from app.contracts.operator_contract import OperatorContract
+from app.gateways.http.openapi_error_contract import standard_error_responses
 from app.gateways.http.query_parsing import parse_boolean_text, parse_optional
 from app.gateways.http.strict_request_parsing import (
     build_json_body_dependency,
@@ -67,7 +68,9 @@ def build_resource_router(
     "YYYY-MM-DD" and hours are local minutes of the day.
     """
 
-    router: APIRouter = APIRouter(tags=["resources"])
+    router: APIRouter = APIRouter(
+        tags=["resources"], responses=standard_error_responses()
+    )
 
     def authorize(user_id: UserId, raw_business_id: str) -> BusinessDocument:
         business_id: BusinessId = parse_path_identifier(
