@@ -71,13 +71,13 @@ def test_failing_migration_is_rolled_back_and_can_be_fixed(
 ) -> None:
     database_url = postgres_server.app_database_url(empty_database_name)
     migrations_directory = copy_migrations(tmp_path / "migrations")
-    broken_file = migrations_directory / "0099_broken_step.sql"
+    broken_file = migrations_directory / "9999_broken_step.sql"
     broken_file.write_text(
         "select workshop.create_document_collection('half_done');\nselect 1 / 0;\n",
         encoding="utf-8",
     )
 
-    with pytest.raises(ExternalServiceError, match="0099_broken_step") as error:
+    with pytest.raises(ExternalServiceError, match="9999_broken_step") as error:
         run_migrations(database_url, migrations_directory)
 
     assert "DivisionByZero" in str(error.value)
@@ -89,7 +89,7 @@ def test_failing_migration_is_rolled_back_and_can_be_fixed(
         encoding="utf-8",
     )
     report = run_migrations(database_url, migrations_directory)
-    assert report.newly_applied == ["0099_broken_step"]
+    assert report.newly_applied == ["9999_broken_step"]
     assert "half_done" in workshop_tables(postgres_server, empty_database_name)
 
 

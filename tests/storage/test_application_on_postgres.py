@@ -68,7 +68,8 @@ def test_published_assistant_books_a_table_with_everything_in_postgres(
         tick = workshop.container.gateways.background_worker().run_once()
 
     assert [booking["time"] for booking in bookings] == ["19:00"]
-    assert (tick.periodic_runs, tick.failures) == (7, 0)
+    # The trace flush; the rest already ran this period (autotests tick).
+    assert (tick.periodic_runs, tick.failures) == (1, 0)
     assert connection_pool.open_connection_count() == 0  # closed at shutdown
     stored: dict[str, int] = {
         str(definition.name): count_rows(

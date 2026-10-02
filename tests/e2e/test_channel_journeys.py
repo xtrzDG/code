@@ -90,7 +90,9 @@ def test_telegram_customer_books_and_the_worker_sends_the_reminder(
     workshop.clock.advance(15 * 60)
     again = worker.run_once()
 
-    assert too_early.periodic_runs == 7
+    # Only the trace flush: the other jobs already ran in this period, when
+    # the worker played the autotests (a new worker never repeats them).
+    assert too_early.periodic_runs == 1
     assert [too_early.failures, due.failures, again.failures] == [0, 0, 0]
     assert len(reminders()) == 1
     reminder_text = str(reminders()[0]["text"])

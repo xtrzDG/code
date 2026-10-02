@@ -340,6 +340,25 @@
         "title": "AdminInvoiceView",
         "type": "object"
       },
+      "AdminJobActionResult": {
+        "additionalProperties": false,
+        "description": "The job after a retry or discard, and the audit entry that records it.",
+        "properties": {
+          "audit_log_entry_id": {
+            "title": "Audit Log Entry Id",
+            "type": "string"
+          },
+          "job": {
+            "$ref": "#/components/schemas/QueuedJobView"
+          }
+        },
+        "required": [
+          "job",
+          "audit_log_entry_id"
+        ],
+        "title": "AdminJobActionResult",
+        "type": "object"
+      },
       "AdminPaymentView": {
         "additionalProperties": false,
         "description": "A checkout at the payment provider and how it ended.",
@@ -5789,6 +5808,17 @@
         "title": "InvoiceView",
         "type": "object"
       },
+      "JobLane": {
+        "description": "Worker lane of a queued job. Each lane has its own threads in every\nworker (WORKER_LANE_CONCURRENCY), so a long autotest run never holds up\na customer message or a notification.",
+        "enum": [
+          "inbound",
+          "outbound",
+          "default",
+          "autotests"
+        ],
+        "title": "JobLane",
+        "type": "string"
+      },
       "JudgeCriterion": {
         "description": "The five things the judge scores (concept section 11).",
         "enum": [
@@ -8378,6 +8408,136 @@
         "title": "QuestionAnswerType",
         "type": "string"
       },
+      "QueuedJobPage": {
+        "additionalProperties": false,
+        "description": "Queued jobs, the most recently changed first.",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/QueuedJobView"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "minLength": 1,
+                "pattern": "^[A-Za-z0-9_-]+$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "QueuedJobPage",
+        "type": "object"
+      },
+      "QueuedJobStatus": {
+        "description": "State of a job in the background queue.\n\nPENDING waits for its `run_at`; RUNNING is claimed by a worker under a\nlease; DONE succeeded; DEAD ran out of attempts (a platform admin may\nretry it); DISCARDED was dropped by a platform admin.",
+        "enum": [
+          "pending",
+          "running",
+          "done",
+          "dead",
+          "discarded"
+        ],
+        "title": "QueuedJobStatus",
+        "type": "string"
+      },
+      "QueuedJobView": {
+        "additionalProperties": false,
+        "description": "One queued job as the platform admin sees it (no payload).\n\n`lease_until` is set while a worker runs the job; `last_error` is the\nerror of the latest failed attempt.",
+        "properties": {
+          "attempts": {
+            "maximum": 1000.0,
+            "minimum": 0.0,
+            "title": "Attempts",
+            "type": "integer"
+          },
+          "business_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Business Id"
+          },
+          "created_at": {
+            "title": "Created At",
+            "type": "integer"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "lane": {
+            "$ref": "#/components/schemas/JobLane"
+          },
+          "last_error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Error"
+          },
+          "lease_until": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lease Until"
+          },
+          "name": {
+            "maxLength": 64,
+            "minLength": 2,
+            "pattern": "^[a-z][a-z0-9_]*$",
+            "title": "Name",
+            "type": "string"
+          },
+          "run_at": {
+            "title": "Run At",
+            "type": "integer"
+          },
+          "status": {
+            "$ref": "#/components/schemas/QueuedJobStatus"
+          },
+          "updated_at": {
+            "title": "Updated At",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "lane",
+          "status",
+          "attempts",
+          "run_at",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "QueuedJobView",
+        "type": "object"
+      },
       "QuotedMoney": {
         "additionalProperties": false,
         "description": "A price and its text in the display language.\n\n`is_estimated` marks a conversion by an exchange rate rather than a price\nfrom the price book; the owner is charged the price-book amount.",
@@ -10019,6 +10179,235 @@
           }
         },
         "summary": "Open Client Cabinet",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/v1/admin/jobs": {
+      "get": {
+        "operationId": "list_queued_jobs_v1_admin_jobs_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Limit"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          },
+          {
+            "in": "query",
+            "name": "name",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Name"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QueuedJobPage"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Queued Jobs",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/v1/admin/jobs/{job_id}/discard": {
+      "post": {
+        "operationId": "discard_queued_job_v1_admin_jobs__job_id__discard_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "job_id",
+            "required": true,
+            "schema": {
+              "title": "Job Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminJobActionResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Discard Queued Job",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/v1/admin/jobs/{job_id}/retry": {
+      "post": {
+        "operationId": "retry_queued_job_v1_admin_jobs__job_id__retry_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "job_id",
+            "required": true,
+            "schema": {
+              "title": "Job Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminJobActionResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Retry Queued Job",
         "tags": [
           "admin"
         ]

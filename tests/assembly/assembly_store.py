@@ -8,6 +8,8 @@ from typed_time_provider import Microseconds, WallClock
 from app.adapters.storage.in_memory_document_collection import (
     InMemoryDocumentCollectionAdapter,
 )
+from app.contracts.jobs import QueuedJobOperator, QueuedJobRepoContract
+from app.gateways.worker.background_worker import BackgroundWorker
 from app.registries.billing.plan_registry import PlanRegistry
 from app.repositories.assistant_repositories import (
     AssistantVersionRepository,
@@ -23,7 +25,6 @@ from app.repositories.compliance_repositories import (
     DpaAcceptanceRepository,
 )
 from app.repositories.conversation_repositories import MessageRepository
-from app.repositories.job_repositories import QueuedJobRepository
 from app.repositories.knowledge_repositories import (
     KnowledgeItemRepository,
     ResourceRepository,
@@ -31,6 +32,7 @@ from app.repositories.knowledge_repositories import (
 )
 from app.repositories.user_repositories import UserRepository
 from app.schemas.configurations.app_settings import AppSettings
+from app.schemas.constants.jobs import QueuedJobStatus
 from app.schemas.constants.users import LoginMethod
 from app.schemas.domain.assistants import AssistantVersionDocument, AutotestRunDocument
 from app.schemas.domain.billing import SubscriptionDocument
@@ -42,18 +44,30 @@ from app.schemas.domain.knowledge import KnowledgeItemDocument
 from app.schemas.domain.profiles import BusinessProfileDocument
 from app.schemas.domain.resources import ResourceDocument, ScheduleExceptionDocument
 from app.schemas.domain.users import UserDocument
+from app.schemas.dto.job_queue import QueuedJobPageQuery
 from app.schemas.typings.assistants.prefixed_id import AssistantVersionId
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.localization.constrained_strings import LanguageTag
+from app.schemas.typings.platform.constrained_integers import (
+    PageSize,
+    WorkerPollSeconds,
+)
+from app.schemas.typings.platform.constrained_strings import JobName
 from app.schemas.typings.users.prefixed_id import UserId
 from app.utilities.config_helpers.app_settings.app_settings_assembler import (
     assemble_app_settings,
 )
+from app.utilities.storage.storage_scope_context import StorageScopeContext
 from tests.assembly.fake_locale_registries import (
     FakeCountryRegistry,
     FakeLanguageRegistry,
 )
 from tests.assembly.fake_niche_templates import FakeNicheTemplateRegistry
+from tests.platform.worker_fakes import (
+    TEST_LANE_CONCURRENCY,
+    JobStores,
+    build_job_stores,
+)
 
 # Thursday 1 October 2026, 09:00 UTC (13:00 in Tbilisi, 18:00 in Tokyo).
 START_MOMENT: datetime = datetime(2026, 10, 1, 9, 0, tzinfo=UTC)
@@ -123,9 +137,8 @@ class AssemblyStore:
         self.dpa_repo = DpaAcceptanceRepository(
             InMemoryDocumentCollectionAdapter(DpaAcceptanceDocument)
         )
-        self.job_repo = QueuedJobRepository(
-            InMemoryDocumentCollectionAdapter(QueuedJobDocument)
-        )
+        self.job_stores: JobStores = build_job_stores()
+        self.job_repo: QueuedJobRepoContract = self.job_stores.job_repo
         self.worker_errors = RecordingErrorReporter()
 
         self.niche_registry = FakeNicheTemplateRegistry()
@@ -139,7 +152,28 @@ class AssemblyStore:
     def pending_jobs(self) -> list[QueuedJobDocument]:
         """Queued jobs still waiting for a (first or repeated) attempt."""
 
-        return self.job_repo.list_due(Microseconds(2**62))
+        return self.job_repo.list_page(
+            QueuedJobPageQuery(status=QueuedJobStatus.PENDING, page_size=PageSize(200))
+        )
+
+    def background_worker(
+        self,
+        queued_job_operators: Mapping[JobName, QueuedJobOperator],
+    ) -> BackgroundWorker:
+        """A worker over this testbed's job queue and clock."""
+
+        return BackgroundWorker(
+            periodic_jobs=[],
+            queued_job_operators=queued_job_operators,
+            job_repo=self.job_repo,
+            periodic_run_repo=self.job_stores.periodic_run_repo,
+            wall_clock=self.wall_clock,
+            error_reporter=self.worker_errors,
+            poll_seconds=WorkerPollSeconds(5),
+            storage_scope=StorageScopeContext(),
+            job_wakeup=self.job_stores.job_wakeup,
+            lane_concurrency=TEST_LANE_CONCURRENCY,
+        )
 
     def add_platform_admin(self) -> UserId:
         admin = UserDocument(

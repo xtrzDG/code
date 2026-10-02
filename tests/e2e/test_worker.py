@@ -14,6 +14,7 @@ from app.containers.gateways import (
     FLUSH_LLM_TRACES_JOB,
     INVOICE_USAGE_OVERAGE_JOB,
     PURGE_EXPIRED_RECORDINGS_JOB,
+    PURGE_FINISHED_JOBS_JOB,
     SEND_BOOKING_REMINDERS_JOB,
 )
 from app.contracts.jobs import QueuedJobOperator
@@ -36,6 +37,7 @@ def test_worker_ticks_once_with_every_job_registered() -> None:
     a_minute_later = worker.run_once()
     workshop.clock.advance(60 * 60)
     an_hour_later = worker.run_once()
+    after_a_restart = container.gateways.background_worker().run_once()
 
     assert [(job.name, int(job.interval_seconds)) for job in jobs] == [
         (PURGE_EXPIRED_RECORDINGS_JOB, 86_400),
@@ -44,19 +46,23 @@ def test_worker_ticks_once_with_every_job_registered() -> None:
         (ENFORCE_GRACE_PERIODS_JOB, 3_600),
         (CHECK_PACKAGE_USAGE_JOB, 86_400),
         (SEND_BOOKING_REMINDERS_JOB, 900),
+        (PURGE_FINISHED_JOBS_JOB, 86_400),
         (FLUSH_LLM_TRACES_JOB, 60),
     ]
+    assert [job.name for job in jobs if job.is_process_local] == [FLUSH_LLM_TRACES_JOB]
     # The worker plays queued autotest runs (concept: assembly autotests run
     # in the background worker).
     queued_operators = cast(
         dict[JobName, QueuedJobOperator], container.gateways.queued_job_operators()
     )
     assert list(queued_operators) == [RUN_AUTOTESTS_JOB]
-    assert (first.periodic_runs, first.queued_runs, first.failures) == (7, 0, 0)
+    assert (first.periodic_runs, first.queued_runs, first.failures) == (8, 0, 0)
     assert right_after.periodic_runs == 0
     assert a_minute_later.periodic_runs == 1  # the trace flush
     # Trials, overage, grace periods, reminders and the trace flush.
     assert (an_hour_later.periodic_runs, an_hour_later.failures) == (5, 0)
+    # A new worker process (a deploy) only flushes its own trace buffer.
+    assert (after_a_restart.periodic_runs, after_a_restart.failures) == (1, 0)
 
 
 @pytest.fixture

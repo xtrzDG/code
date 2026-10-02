@@ -3,7 +3,6 @@
 from collections.abc import Sequence
 
 from app.facilitators.jobs.job_queue_facilitator import JobQueueFacilitator
-from app.gateways.worker.background_worker import BackgroundWorker
 from app.operators.pipeline_operator import PipelineOperator
 from app.orchestrators.assistants.queue_autotest_run_orchestrator import (
     QueueAutotestRunOrchestrator,
@@ -19,7 +18,6 @@ from app.schemas.dto.assistants.assembly_sources import LlmTokenPrice
 from app.schemas.typings.assistants.constrained_integers import (
     PriceQuestionScenarioLimit,
 )
-from app.schemas.typings.platform.constrained_integers import WorkerPollSeconds
 from app.transformers.assembly.assistant_instruction_transformer import (
     AssistantInstructionTransformer,
 )
@@ -72,7 +70,6 @@ from app.use_cases.autotests.run_autotest_scenario_use_case import (
 )
 from app.use_cases.autotests.start_autotest_run_use_case import StartAutotestRunUseCase
 from app.utilities.assembly.llm_costs import DEFAULT_LLM_TOKEN_PRICES
-from app.utilities.storage.storage_scope_context import StorageScopeContext
 from tests.assembly.assembly_scripted_models import AssemblyScriptedModels
 
 
@@ -166,7 +163,9 @@ class AssemblyAutotestWiring(AssemblyScriptedModels):
             self.start_autotest_run_use_case,
             EnqueueAutotestRunUseCase(
                 self.run_repo,
-                JobQueueFacilitator(self.job_repo, self.wall_clock),
+                JobQueueFacilitator(
+                    self.job_repo, self.wall_clock, self.job_stores.job_wakeup
+                ),
                 run_view_transformer,
             ),
         )
@@ -192,16 +191,10 @@ class AssemblyAutotestWiring(AssemblyScriptedModels):
             self.abandon_autotest_run_use_case,
             self.record_autotest_progress_use_case,
         )
-        self.worker = BackgroundWorker(
-            periodic_jobs=[],
-            queued_job_operators={
+        self.worker = self.background_worker(
+            {
                 RUN_AUTOTESTS_JOB: PipelineOperator(
                     OrchestratorPipeline(self.run_queued_autotests_orchestrator)
                 )
-            },
-            job_repo=self.job_repo,
-            wall_clock=self.wall_clock,
-            error_reporter=self.worker_errors,
-            poll_seconds=WorkerPollSeconds(5),
-            storage_scope=StorageScopeContext(),
+            }
         )

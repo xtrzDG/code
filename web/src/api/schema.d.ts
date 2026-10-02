@@ -55,6 +55,57 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/admin/jobs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Queued Jobs */
+        get: operations["list_queued_jobs_v1_admin_jobs_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/admin/jobs/{job_id}/discard": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Discard Queued Job */
+        post: operations["discard_queued_job_v1_admin_jobs__job_id__discard_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/admin/jobs/{job_id}/retry": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Retry Queued Job */
+        post: operations["retry_queued_job_v1_admin_jobs__job_id__retry_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/auth/login-options": {
         parameters: {
             query?: never;
@@ -1652,6 +1703,15 @@ export interface components {
             /** Period Start */
             period_start: number;
             status: components["schemas"]["InvoiceStatus"];
+        };
+        /**
+         * AdminJobActionResult
+         * @description The job after a retry or discard, and the audit entry that records it.
+         */
+        AdminJobActionResult: {
+            /** Audit Log Entry Id */
+            audit_log_entry_id: string;
+            job: components["schemas"]["QueuedJobView"];
         };
         /**
          * AdminPaymentView
@@ -3730,6 +3790,14 @@ export interface components {
             status: components["schemas"]["InvoiceStatus"];
         };
         /**
+         * JobLane
+         * @description Worker lane of a queued job. Each lane has its own threads in every
+         *     worker (WORKER_LANE_CONCURRENCY), so a long autotest run never holds up
+         *     a customer message or a notification.
+         * @enum {string}
+         */
+        JobLane: "inbound" | "outbound" | "default" | "autotests";
+        /**
          * JudgeCriterion
          * @description The five things the judge scores (concept section 11).
          * @enum {string}
@@ -4703,6 +4771,55 @@ export interface components {
          */
         QuestionAnswerType: "short_text" | "long_text" | "number" | "yes_no" | "single_choice" | "multiple_choice" | "url" | "phone_number";
         /**
+         * QueuedJobPage
+         * @description Queued jobs, the most recently changed first.
+         */
+        QueuedJobPage: {
+            /** Items */
+            items: components["schemas"]["QueuedJobView"][];
+            /** Next Cursor */
+            next_cursor?: string | null;
+        };
+        /**
+         * QueuedJobStatus
+         * @description State of a job in the background queue.
+         *
+         *     PENDING waits for its `run_at`; RUNNING is claimed by a worker under a
+         *     lease; DONE succeeded; DEAD ran out of attempts (a platform admin may
+         *     retry it); DISCARDED was dropped by a platform admin.
+         * @enum {string}
+         */
+        QueuedJobStatus: "pending" | "running" | "done" | "dead" | "discarded";
+        /**
+         * QueuedJobView
+         * @description One queued job as the platform admin sees it (no payload).
+         *
+         *     `lease_until` is set while a worker runs the job; `last_error` is the
+         *     error of the latest failed attempt.
+         */
+        QueuedJobView: {
+            /** Attempts */
+            attempts: number;
+            /** Business Id */
+            business_id?: string | null;
+            /** Created At */
+            created_at: number;
+            /** Id */
+            id: string;
+            lane: components["schemas"]["JobLane"];
+            /** Last Error */
+            last_error?: string | null;
+            /** Lease Until */
+            lease_until?: number | null;
+            /** Name */
+            name: string;
+            /** Run At */
+            run_at: number;
+            status: components["schemas"]["QueuedJobStatus"];
+            /** Updated At */
+            updated_at: number;
+        };
+        /**
          * QuotedMoney
          * @description A price and its text in the display language.
          *
@@ -5356,6 +5473,108 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ClientCabinetAccess"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_queued_jobs_v1_admin_jobs_get: {
+        parameters: {
+            query?: {
+                limit?: string | null;
+                cursor?: string | null;
+                status?: string | null;
+                name?: string | null;
+            };
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QueuedJobPage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    discard_queued_job_v1_admin_jobs__job_id__discard_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                job_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminJobActionResult"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    retry_queued_job_v1_admin_jobs__job_id__retry_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                job_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminJobActionResult"];
                 };
             };
             /** @description Validation Error */

@@ -4,8 +4,11 @@ Background worker entry point:
     uv run python -m app.worker_main
 
 Runs the periodic jobs (retention purge, trials and grace periods, package
-usage, booking reminders, trace flush) and drains the job queue until
-SIGINT or SIGTERM; the current tick finishes before the process exits.
+usage, booking reminders, purge of finished jobs, trace flush) once per
+period, and the queued jobs of every lane on their own threads, until SIGINT
+or SIGTERM. Any number of workers may run side by side (leased claims). On
+stop, running jobs get up to 25 seconds; a job cut off then runs again on
+another worker once its lease ends.
 """
 
 import logging
@@ -44,14 +47,14 @@ def main(
 
 
 def install_stop_signal_handlers(stop_event: threading.Event) -> None:
-    """SIGINT and SIGTERM ask the worker to stop after the current tick."""
+    """SIGINT and SIGTERM ask the worker to stop (running jobs may finish)."""
 
     if threading.current_thread() is not threading.main_thread():
         return
 
     def request_stop(signal_number: int, frame: FrameType | None) -> None:
         del frame
-        LOGGER.info("Signal %d received; stopping after this tick", signal_number)
+        LOGGER.info("Signal %d received; stopping the worker", signal_number)
         stop_event.set()
 
     for stop_signal in STOP_SIGNALS:
