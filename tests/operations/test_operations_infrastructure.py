@@ -72,7 +72,12 @@ def test_broadcast_counts_deliveries_and_survives_failures() -> None:
     ]
 
     delivered = broadcaster.broadcast(
-        [StaffMessage(contact=contact, text=MessageText("Hi")) for contact in contacts]
+        [
+            StaffMessage(
+                business_id=BusinessId(), contact=contact, text=MessageText("Hi")
+            )
+            for contact in contacts
+        ]
     )
 
     assert delivered == 2

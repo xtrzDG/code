@@ -10,6 +10,7 @@ from app.orchestrators.use_case_orchestrator import UseCaseOrchestrator
 from app.pipelines.orchestrator_pipeline import OrchestratorPipeline
 from app.repositories.user_repositories import UserRepository
 from app.schemas.domain.businesses import ManagerContact
+from app.schemas.dto.deliveries import StaffNotification
 from app.schemas.exceptions.application_errors import AuthenticationRequiredError
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.conversations.strings import MessageText
@@ -63,8 +64,8 @@ class RecordingNotifier(ManagerNotificationFacilitatorContract):
         self.sent: list[tuple[ManagerContact, MessageText]] = []
         self.is_delivering: bool = True
 
-    def notify(self, contact: ManagerContact, text: MessageText) -> bool:
-        self.sent.append((contact, text))
+    def notify(self, notification: StaffNotification) -> bool:
+        self.sent.append((notification.contact, notification.text))
         return self.is_delivering
 
     def texts(self) -> list[str]:

@@ -4,10 +4,7 @@ from app.contracts.jobs import JobQueueFacilitatorContract
 from app.contracts.repositories.delivery_repositories import InboundEventRepoContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.deliveries import InboundEventKind
-from app.schemas.domain.inbound_events import (
-    InboundCustomerMessage,
-    InboundEventDocument,
-)
+from app.schemas.domain.inbound_events import InboundEventDocument
 from app.schemas.dto.channels.channel_webhooks import ChannelInboundMessage
 from app.schemas.dto.deliveries import InboxIntake, RoutedInboundMessage
 from app.schemas.typings.channels.constrained_integers import WebhookMessageCount
@@ -19,6 +16,7 @@ from app.utilities.deliveries.delivery_keys import (
     derive_inbound_event_id,
     inbound_serial_key,
 )
+from app.utilities.deliveries.inbox_messages import build_inbound_customer_message
 
 
 class StoreInboundMessagesUseCase(
@@ -87,11 +85,11 @@ def build_customer_event(
         channel=routed.channel,
         channel_id=routed.channel_id,
         provider_message_id=provider_message_id,
-        customer_message=InboundCustomerMessage(
-            channel_user_id=message.channel_user_id,
-            text=message.text,
-            contact_name=message.contact_name,
-            contact_phone_number=message.contact_phone_number,
+        customer_message=build_inbound_customer_message(
+            message.channel_user_id,
+            message.text,
+            message.contact_name,
+            message.contact_phone_number,
         ),
         created_at=now,
         updated_at=now,

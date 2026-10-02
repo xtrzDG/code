@@ -27,7 +27,8 @@ def test_handoff_in_opening_hours_notifies_staff_and_silences_the_bot() -> None:
 
     result = fixture.hand_off(language="ar")
 
-    assert result.status is HandoffStatus.NOTIFIED
+    # Queued for every staff contact; delivery marks it NOTIFIED later.
+    assert result.status is HandoffStatus.PENDING
     assert str(result.customer_message) == (
         "تم تحويل طلبك إلى أحد الزملاء. سيتم الرد عليك قريبًا."
     )

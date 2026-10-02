@@ -18,6 +18,7 @@ from fastapi.testclient import TestClient
 
 from app.adapters.llm.scripted_llm_adapter import ScriptedLlmAdapter
 from app.containers.app import AppContainer
+from app.gateways.worker.background_worker import WorkerTickReport
 from app.main import build_application
 from tests.e2e.edge_fakes import CapturingOtpDelivery, MovableClock, RecordedHttp
 from tests.e2e.harness_settings import E2E_ENVIRONMENT, START, JsonObject
@@ -41,6 +42,14 @@ class Workshop:
     elevenlabs: RecordedHttp
     google: RecordedHttp
     langfuse: RecordedHttp
+
+    def run_queued_jobs(self) -> WorkerTickReport:
+        """
+        What the background worker does with the queue right now: answer
+        the inbox, send the outbox (webhooks only store their messages).
+        """
+
+        return self.container.gateways.background_worker().run_queued_jobs()
 
     def sign_in_with_phone(self, raw_phone: str) -> tuple[str, JsonObject]:
         started = self.client.post(

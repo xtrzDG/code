@@ -16,6 +16,7 @@ from app.contracts.secret_cipher import SecretCipherAdapterContract
 from app.schemas.constants.localization import PhoneNumberKind
 from app.schemas.domain.bookings import BookingDocument
 from app.schemas.domain.businesses import ManagerContact
+from app.schemas.dto.deliveries import StaffNotification
 from app.schemas.dto.localization import LocalizedText, PhoneNumberDetails
 from app.schemas.exceptions.application_errors import (
     InvalidPhoneNumberError,
@@ -112,13 +113,16 @@ class RecordingManagerNotifier(ManagerNotificationFacilitatorContract):
         self._raising_addresses: frozenset[str] = raising_addresses
         self._lock: threading.Lock = threading.Lock()
         self.sent: list[tuple[ManagerContact, MessageText]] = []
+        self.notifications: list[StaffNotification] = []
 
-    def notify(self, contact: ManagerContact, text: MessageText) -> bool:
+    def notify(self, notification: StaffNotification) -> bool:
+        contact: ManagerContact = notification.contact
         if str(contact.address) in self._raising_addresses:
             raise RuntimeError("Notifier exploded.")
 
         with self._lock:
-            self.sent.append((contact, text))
+            self.sent.append((contact, notification.text))
+            self.notifications.append(notification)
 
         return str(contact.address) not in self._failing_addresses
 

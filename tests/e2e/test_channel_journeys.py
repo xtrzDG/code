@@ -61,7 +61,11 @@ def test_telegram_customer_books_and_the_worker_sends_the_reminder(
     )
     assert unsigned.status_code == 401
     assert delivered.status_code == 200, delivered.text
+    assert delivered.json()["queued"] == 1
     assert repeated.status_code == 200
+    assert repeated.json()["duplicates"] == 1
+    # The webhook only stored the message; the worker answers it.
+    workshop.run_queued_jobs()
     customer_replies = [
         body
         for body in workshop.telegram.bodies("sendMessage")

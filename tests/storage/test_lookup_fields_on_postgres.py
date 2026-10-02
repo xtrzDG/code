@@ -1,10 +1,9 @@
 """
 The lookup fields on Postgres: every declared field is indexed by the
-migrations, list fields follow row-level security, receipts are unique
-even across processes, and purges delete in batches.
+migrations, list fields follow row-level security, and purges delete in
+batches (inbox and outbox uniqueness: test_inbox_outbox_on_postgres.py).
 """
 
-import threading
 from typing import LiteralString
 
 from psycopg.rows import TupleRow
@@ -14,16 +13,13 @@ from app.adapters.storage.postgres.document_lookup_sql import lookup_column_name
 from app.clients.postgres.postgres_connection_pool_client import (
     PostgresConnectionPoolClient,
 )
-from app.repositories.channel_repositories import ChannelMessageReceiptRepository
 from app.repositories.conversation_repositories import ContactRepository
 from app.repositories.user_repositories import UserSessionRepository
 from app.schemas.constants.channels import ChannelKind
 from app.schemas.constants.storage import LookupFieldKind
-from app.schemas.domain.channel_receipts import ChannelMessageReceiptDocument
 from app.schemas.domain.contacts import ContactDocument
 from app.schemas.domain.users import UserSessionDocument
 from app.schemas.typings.businesses.prefixed_id import BusinessId
-from app.schemas.typings.channels.strings import ProviderMessageId
 from app.utilities.storage.document_lookup_fields import (
     DOCUMENT_LOOKUP_FIELDS,
     split_element_path,
@@ -114,37 +110,6 @@ def test_list_field_lookups_keep_to_the_business_scope(
         second.business_id, identity.channel, identity.channel_user_id
     )
     assert found_platform_wide is not None and found_platform_wide.id == second.id
-
-
-def test_receipts_are_unique_even_for_concurrent_deliveries(
-    postgres_collections: PostgresCollectionFactory,
-) -> None:
-    collection = postgres_collections(
-        ChannelMessageReceiptDocument, "channel_message_receipts"
-    )
-    receipts = ChannelMessageReceiptRepository(collection)
-    business_id = BusinessId()
-    results: list[bool] = []
-
-    def receipt() -> ChannelMessageReceiptDocument:
-        return ChannelMessageReceiptDocument(
-            business_id=business_id,
-            channel=ChannelKind.TELEGRAM,
-            provider_message_id=ProviderMessageId("42"),
-        )
-
-    def deliver() -> None:
-        results.append(receipts.record_if_new(receipt()))
-
-    threads = [threading.Thread(target=deliver) for _ in range(6)]
-    for thread in threads:
-        thread.start()
-    for thread in threads:
-        thread.join()
-
-    assert sorted(results) == [False] * 5 + [True]
-    # The unique index refuses the same message under another key too.
-    assert collection.insert_if_absent("another-key", receipt()) is False
 
 
 def test_the_session_purge_deletes_in_batches(

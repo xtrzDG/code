@@ -4,10 +4,7 @@ from app.contracts.jobs import JobQueueFacilitatorContract
 from app.contracts.repositories.delivery_repositories import InboundEventRepoContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.deliveries import InboundEventKind, InboundEventStatus
-from app.schemas.domain.inbound_events import (
-    InboundCustomerMessage,
-    InboundEventDocument,
-)
+from app.schemas.domain.inbound_events import InboundEventDocument
 from app.schemas.dto.conversations import InboundMessage
 from app.schemas.dto.deliveries import InboundEventClaim
 from app.schemas.typings.channels.strings import ProviderMessageId
@@ -22,6 +19,7 @@ from app.utilities.deliveries.delivery_keys import (
     new_provider_message_id,
 )
 from app.utilities.deliveries.inbound_claims import inbound_lease_end
+from app.utilities.deliveries.inbox_messages import build_inbound_customer_message
 
 
 class OpenWidgetEventUseCase(UseCaseContract[InboundMessage, InboundEventClaim]):
@@ -55,11 +53,11 @@ class OpenWidgetEventUseCase(UseCaseContract[InboundMessage, InboundEventClaim])
             kind=InboundEventKind.CUSTOMER_MESSAGE,
             channel=input_data.channel,
             provider_message_id=provider_message_id,
-            customer_message=InboundCustomerMessage(
-                channel_user_id=input_data.channel_user_id,
-                text=input_data.text,
-                contact_name=input_data.contact_name,
-                contact_phone_number=input_data.contact_phone_number,
+            customer_message=build_inbound_customer_message(
+                input_data.channel_user_id,
+                input_data.text,
+                input_data.contact_name,
+                input_data.contact_phone_number,
             ),
             status=InboundEventStatus.PROCESSING,
             attempts=InboundProcessingAttemptCount(1),
