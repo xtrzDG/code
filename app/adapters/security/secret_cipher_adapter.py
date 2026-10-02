@@ -19,6 +19,11 @@ FERNET_KEY_PATTERN: re.Pattern[str] = re.compile(r"^[A-Za-z0-9_\-]{43}=$")
 FERNET_KEY_BYTES: int = 32
 MIN_DERIVED_SECRET_LENGTH: int = 32
 KEY_DERIVATION_INFO: bytes = b"assistant-workshop/channel-secrets/fernet/v1"
+# Defaults printed in the repository (docker-compose.yml) for a local run:
+# anyone can read them, so production refuses them like a missing key.
+PUBLIC_ENCRYPTION_KEYS: frozenset[str] = frozenset(
+    {"local-compose-key-for-this-machine-only"}
+)
 
 
 class SecretCipherAdapter(SecretCipherAdapterContract):
@@ -29,8 +34,9 @@ class SecretCipherAdapter(SecretCipherAdapterContract):
     rejected. The key comes from `ENCRYPTION_KEY`: a Fernet key
     (`Fernet.generate_key()`) is used as is; any other secret of at least 32
     characters is stretched into one with HKDF-SHA256. Production refuses to
-    start without a key; development uses a temporary key and warns, so
-    secrets stored then do not survive a restart.
+    start without a key or with the public default of docker-compose.yml;
+    development uses a temporary key and warns, so secrets stored then do
+    not survive a restart.
     """
 
     def __init__(self, app_settings: AppSettings) -> None:
@@ -73,6 +79,12 @@ def resolve_fernet_key(
             "temporary key and become unreadable after a restart."
         )
         return Fernet.generate_key()
+
+    if is_production and secret_text in PUBLIC_ENCRYPTION_KEYS:
+        raise ValidationFailedError(
+            "ENCRYPTION_KEY is the public default of docker-compose.yml; set your "
+            "own key in .env for production."
+        )
 
     if FERNET_KEY_PATTERN.fullmatch(secret_text) is not None:
         return secret_text.encode("ascii")

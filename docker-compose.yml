@@ -6,10 +6,11 @@
 # Defaults suit a local run: APP_ENV=development (sign-in codes appear in the
 # API log until a provider is configured), APP_BASE_URL=http://localhost:8000,
 # CABINET_BASE_URL=http://localhost:3000 and
-# CORS_ALLOWED_ORIGINS=http://localhost:3000 (the cabinet), one local
-# ENCRYPTION_KEY for the API and the worker, the cabinet's cookies without
-# "Secure" (plain http). Anything reachable from outside this machine needs
-# its own ENCRYPTION_KEY in .env (docs/LAUNCH.md).
+# CORS_ALLOWED_ORIGINS=http://localhost:3000 (the cabinet; all three follow
+# API_PORT and WEB_PORT), one local ENCRYPTION_KEY for the API and the worker,
+# the cabinet's cookies without "Secure" (plain http). Anything reachable
+# from outside this machine needs its own ENCRYPTION_KEY in .env
+# (docs/LAUNCH.md); APP_ENV=production refuses the public default.
 name: assistant-workshop
 
 x-backend: &backend
@@ -22,7 +23,9 @@ x-backend: &backend
       required: false
   environment:
     APP_ENV: ${APP_ENV:-development}
-    APP_BASE_URL: ${APP_BASE_URL:-http://localhost:8000}
+    # The API's public address follows its published port (API_PORT): the
+    # widget code and its live preview link point there.
+    APP_BASE_URL: ${APP_BASE_URL:-http://localhost:${API_PORT:-8000}}
     # The cabinet's address: Google Calendar sends owners back there.
     CABINET_BASE_URL: ${CABINET_BASE_URL:-http://localhost:${WEB_PORT:-3000}}
     # The cabinet's origin: the payment page returns payers there.
@@ -38,8 +41,9 @@ x-backend: &backend
     # client address, so the API logs the cabinet container's address.
     FORWARDED_ALLOW_IPS: "172.16.0.0/12"
     # Every sign-in through the cabinet comes from its container's address
-    # here (see above), so the per-address cap of login codes is higher.
-    OTP_SENDS_PER_IP_PER_HOUR: ${OTP_SENDS_PER_IP_PER_HOUR:-100}
+    # here (see above), so the per-address cap of login codes is higher. Set
+    # here, not interpolated: the 10 of a copied .env.example would win.
+    OTP_SENDS_PER_IP_PER_HOUR: "100"
   volumes:
     - recordings:/app/var/recordings
   restart: unless-stopped

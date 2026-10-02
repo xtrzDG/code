@@ -133,3 +133,24 @@ def test_compose_runs_migrations_before_the_api_and_the_worker() -> None:
     assert "BACKEND_URL: http://api:8000" in compose
     assert 'COOKIE_SECURE: "false"' in compose
     assert "./docker/postgres/init:/docker-entrypoint-initdb.d:ro" in compose
+
+
+def test_copying_env_example_keeps_the_compose_defaults() -> None:
+    # Both guides say `cp .env.example .env`, and Compose interpolates
+    # ${NAME:-default} from that .env: a non-empty value there replaces the
+    # local default docker-compose.yml chose.
+    example = dict(
+        re.findall(r"^([A-Z0-9_]+)=(.*)$", read(".env.example"), re.MULTILINE)
+    )
+    compose = read("docker-compose.yml")
+
+    overridden = {
+        name: (default, example[name])
+        for name, default in re.findall(r"\$\{([A-Z0-9_]+):-([^}$]*)", compose)
+        if example.get(name) and example[name] != default
+    }
+
+    assert overridden == {}
+    # Every local sign-in shares the cabinet container's address, so the
+    # per-address cap of login codes is set outright, not interpolated.
+    assert 'OTP_SENDS_PER_IP_PER_HOUR: "100"' in compose

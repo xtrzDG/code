@@ -3,7 +3,10 @@ import logging
 import pytest
 from cryptography.fernet import Fernet
 
-from app.adapters.security.secret_cipher_adapter import SecretCipherAdapter
+from app.adapters.security.secret_cipher_adapter import (
+    PUBLIC_ENCRYPTION_KEYS,
+    SecretCipherAdapter,
+)
 from app.schemas.exceptions.application_errors import ValidationFailedError
 from app.schemas.typings.channels.strings import ChannelSecret, EncryptedChannelSecret
 from app.utilities.config_helpers.app_settings_assembler import assemble_app_settings
@@ -105,6 +108,21 @@ def test_production_refuses_to_start_without_a_strong_key() -> None:
     )
     encrypted = production_cipher.encrypt(ChannelSecret("token"))
     assert production_cipher.decrypt(encrypted) == "token"
+
+
+def test_production_refuses_the_public_compose_key() -> None:
+    for public_key in PUBLIC_ENCRYPTION_KEYS:
+        with pytest.raises(ValidationFailedError, match="docker-compose"):
+            build_cipher({"APP_ENV": "production", "ENCRYPTION_KEY": public_key})
+        with pytest.raises(ValidationFailedError, match="docker-compose"):
+            build_cipher(
+                {"APP_ENV": "production", "ENCRYPTION_KEY": f"  {public_key} "}
+            )
+
+        # A local run keeps working with it.
+        development_cipher = build_cipher({"ENCRYPTION_KEY": public_key})
+        encrypted = development_cipher.encrypt(ChannelSecret("token"))
+        assert development_cipher.decrypt(encrypted) == "token"
 
 
 def test_development_without_a_key_uses_a_temporary_one_and_warns(

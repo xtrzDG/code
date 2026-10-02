@@ -27,7 +27,10 @@ import anthropic
 import openai
 import pytest
 
-from app.adapters.security.secret_cipher_adapter import MIN_DERIVED_SECRET_LENGTH
+from app.adapters.security.secret_cipher_adapter import (
+    MIN_DERIVED_SECRET_LENGTH,
+    PUBLIC_ENCRYPTION_KEYS,
+)
 from app.clients.anthropic import anthropic_messages_client
 from app.clients.openai import openai_responses_client
 from app.utilities.channels.channel_endpoints import (
@@ -390,12 +393,23 @@ def test_compose_sets_what_a_local_run_needs() -> None:
 
     assert set(backend) >= REQUIRED_BACKEND_VARIABLES
     assert set(web) >= REQUIRED_CABINET_VARIABLES
-    # API and worker share one key by default, long enough to use as is.
+    # API and worker share one key by default, long enough to use as is;
+    # production refuses it, since it is printed here.
     assert len(compose_default(backend["ENCRYPTION_KEY"])) >= MIN_DERIVED_SECRET_LENGTH
+    assert compose_default(backend["ENCRYPTION_KEY"]) in PUBLIC_ENCRYPTION_KEYS
     # The cabinet's address is also its origin; its server reaches the API
     # inside the Compose network.
     assert compose_default(backend["CABINET_BASE_URL"]) == compose_default(
         backend["CORS_ALLOWED_ORIGINS"]
+    )
+    # Addresses follow the published ports, so changing API_PORT or WEB_PORT
+    # in .env (docs/LAUNCH.md) keeps the widget code, its preview and the
+    # cabinet's address reachable.
+    assert compose_default(backend["APP_BASE_URL"]) == (
+        "http://localhost:${API_PORT:-8000}"
+    )
+    assert compose_default(backend["CABINET_BASE_URL"]) == (
+        "http://localhost:${WEB_PORT:-3000}"
     )
     assert web["BACKEND_URL"] == "http://api:8000"
 
