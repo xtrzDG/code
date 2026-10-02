@@ -1,3 +1,5 @@
+"""Background job: remind customers of their bookings the day before."""
+
 import logging
 from zoneinfo import ZoneInfo
 
@@ -18,53 +20,39 @@ from app.contracts.repositories.knowledge_repositories import ResourceRepoContra
 from app.contracts.transformer_contract import TransformerContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.bookings import BookingStatus
-from app.schemas.constants.businesses import BusinessStatus, ServiceMode
-from app.schemas.constants.channels import ChannelKind, MessageDirection
+from app.schemas.constants.channels import ChannelKind
 from app.schemas.domain.bookings import BookingDocument
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.contacts import ChannelIdentity, ContactDocument
-from app.schemas.domain.profiles import BusinessProfileDocument
 from app.schemas.domain.resources import ResourceDocument
 from app.schemas.dto.jobs import JobReport, JobTick
 from app.schemas.dto.operations.message_texts import BookingMessageInput
 from app.schemas.exceptions.base_exception import ApplicationError
-from app.schemas.typings.bookings.constrained_integers import (
-    BookingReminderLeadSeconds,
-)
+from app.schemas.typings.bookings.constrained_integers import BookingReminderLeadSeconds
 from app.schemas.typings.channels.constrained_strings import WhatsAppTemplateName
 from app.schemas.typings.conversations.strings import MessageText
-from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.schemas.typings.platform.constrained_integers import ProcessedItemCount
 from app.schemas.typings.profiles.strings import CancellationPolicyText
-from app.use_cases.bookings.booking_support import booking_unit_of
-from app.utilities.scheduling.booking_views import build_booking_view
+from app.use_cases.bookings.reminders.messaging_window import (
+    WINDOWED_CHANNELS,
+    is_messaging_window_open,
+)
+from app.use_cases.bookings.reminders.reminder_rules import (
+    build_reminder_message,
+    choose_reminder_identities,
+    is_reminder_due,
+    read_cancellation_policy,
+    sends_reminders,
+)
 from app.utilities.scheduling.zoned_time import (
     load_time_zone,
     microseconds_to_seconds,
 )
 
 logger: logging.Logger = logging.getLogger(__name__)
-MICROSECONDS_PER_SECOND: int = 1_000_000
-
 # The concept's reminder goes out the day before (configurable per process).
 DEFAULT_REMINDER_LEAD: BookingReminderLeadSeconds = BookingReminderLeadSeconds(
     24 * 60 * 60
-)
-# Channels a reminder can be written to, best first after the booking's own
-# channel: Telegram has no messaging window and costs nothing; WhatsApp is
-# where most customers are.
-MESSAGING_CHANNELS: tuple[ChannelKind, ...] = (
-    ChannelKind.TELEGRAM,
-    ChannelKind.WHATSAPP,
-    ChannelKind.MESSENGER,
-    ChannelKind.INSTAGRAM,
-)
-# Free-form messages are allowed within 24 hours of the customer's last
-# message in WhatsApp, Messenger and Instagram (concept section 6); later
-# a WhatsApp reminder is an approved template, and the other two skip.
-CUSTOMER_SERVICE_WINDOW_SECONDS: int = 24 * 60 * 60
-WINDOWED_CHANNELS: frozenset[ChannelKind] = frozenset(
-    {ChannelKind.WHATSAPP, ChannelKind.MESSENGER, ChannelKind.INSTAGRAM}
 )
 
 
@@ -158,7 +146,7 @@ class SendBookingRemindersUseCase(UseCaseContract[JobTick, JobReport]):
 
             zone: ZoneInfo = load_time_zone(business.timezone)
             cancellation_policy: CancellationPolicyText | None = (
-                self._read_cancellation_policy(business)
+                read_cancellation_policy(self._business_profile_repo, business)
             )
             for due_booking in due_bookings:
                 booking: BookingDocument | None = self._reread_if_still_due(
@@ -216,19 +204,10 @@ class SendBookingRemindersUseCase(UseCaseContract[JobTick, JobReport]):
             business.id,
             booking.resource_id,
         )
-        message_input = BookingMessageInput(
-            business_name=business.name,
-            booking=build_booking_view(
-                booking,
-                business.timezone,
-                zone,
-                resource,
-                contact,
-            ),
-            booking_unit=booking_unit_of(resource),
-            language=choose_reminder_language(contact, business),
-            cancellation_policy=cancellation_policy,
+        message_input: BookingMessageInput = build_reminder_message(
+            business, zone, cancellation_policy, booking, resource, contact
         )
+
         for identity in identities:
             try:
                 if not self._deliver(business, contact, identity, message_input):
@@ -256,8 +235,13 @@ class SendBookingRemindersUseCase(UseCaseContract[JobTick, JobReport]):
     ) -> bool:
         """Send through one identity; False when that channel cannot carry it."""
 
-        if identity.channel not in WINDOWED_CHANNELS or self._is_window_open(
-            business, contact, identity.channel
+        if identity.channel not in WINDOWED_CHANNELS or is_messaging_window_open(
+            self._conversation_repo,
+            self._message_repo,
+            business,
+            contact,
+            identity.channel,
+            self._wall_clock.now_unix(),
         ):
             self._channel_message_sender.send(
                 business.id,
@@ -292,37 +276,6 @@ class SendBookingRemindersUseCase(UseCaseContract[JobTick, JobReport]):
         )
         return True
 
-    def _is_window_open(
-        self,
-        business: BusinessDocument,
-        contact: ContactDocument,
-        channel: ChannelKind,
-    ) -> bool:
-        """Did the customer write in this channel within the last 24 hours?"""
-
-        window_start: int = int(self._wall_clock.now_unix()) - (
-            CUSTOMER_SERVICE_WINDOW_SECONDS * MICROSECONDS_PER_SECOND
-        )
-        for conversation in self._conversation_repo.list_by_business(business.id):
-            if (
-                conversation.contact_id != contact.id
-                or conversation.channel is not channel
-                or conversation.is_sandbox
-                or int(conversation.last_message_at) < window_start
-            ):
-                continue
-
-            for message in self._message_repo.list_by_conversation(
-                business.id, conversation.id
-            ):
-                if (
-                    message.direction is MessageDirection.INBOUND
-                    and int(message.created_at) >= window_start
-                ):
-                    return True
-
-        return False
-
     def _mark_reminded(self, booking: BookingDocument) -> None:
         """
         Set only `reminder_sent_at` on the booking as stored now; a booking
@@ -344,75 +297,3 @@ class SendBookingRemindersUseCase(UseCaseContract[JobTick, JobReport]):
         current.reminder_sent_at = now
         current.updated_at = now
         self._booking_repo.save(current)
-
-    def _read_cancellation_policy(
-        self,
-        business: BusinessDocument,
-    ) -> CancellationPolicyText | None:
-        profile: BusinessProfileDocument | None = (
-            self._business_profile_repo.get_by_business(business.id)
-        )
-        if profile is None or profile.booking_rules is None:
-            return None
-
-        return profile.booking_rules.cancellation_policy
-
-
-def sends_reminders(business: BusinessDocument) -> bool:
-    """Paused businesses and leads-only service send no reminders."""
-
-    return (
-        business.status is not BusinessStatus.PAUSED
-        and business.service_mode is ServiceMode.FULL
-    )
-
-
-def is_reminder_due(
-    booking: BookingDocument,
-    now_seconds: int,
-    window_end_seconds: int,
-) -> bool:
-    """Confirmed, real, not yet reminded, starting within the window."""
-
-    return (
-        booking.status is BookingStatus.CONFIRMED
-        and not booking.is_sandbox
-        and booking.reminder_sent_at is None
-        and now_seconds < int(booking.starts_at) <= window_end_seconds
-    )
-
-
-def choose_reminder_identities(
-    contact: ContactDocument,
-    source_channel: ChannelKind,
-) -> list[ChannelIdentity]:
-    """
-    Messaging identities to try, best first: the booking's own channel, then
-    the other messengers the customer is known in. Phone and web chat cannot
-    carry a message later, so they are never used.
-    """
-
-    preferred_channels: list[ChannelKind] = [
-        channel
-        for channel in (source_channel, *MESSAGING_CHANNELS)
-        if channel in MESSAGING_CHANNELS
-    ]
-    identities: list[ChannelIdentity] = []
-    for channel in preferred_channels:
-        for identity in contact.channel_identities:
-            if identity.channel is channel and identity not in identities:
-                identities.append(identity)
-
-    return identities
-
-
-def choose_reminder_language(
-    contact: ContactDocument,
-    business: BusinessDocument,
-) -> LanguageTag:
-    """The customer's language when known, else the business default."""
-
-    if contact.language is not None:
-        return contact.language
-
-    return business.default_language

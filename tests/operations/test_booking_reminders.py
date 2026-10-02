@@ -55,9 +55,11 @@ from app.transformers.notifications.booking_reminder_template_transformer import
 from app.transformers.notifications.booking_reminder_transformer import (
     BookingReminderTransformer,
 )
-from app.use_cases.bookings.send_booking_reminders_use_case import (
-    SendBookingRemindersUseCase,
+from app.use_cases.bookings.reminders.reminder_rules import (
     choose_reminder_identities,
+)
+from app.use_cases.bookings.reminders.send_booking_reminders_use_case import (
+    SendBookingRemindersUseCase,
 )
 from app.utilities.localization.localized_text_resolver import LocalizedTextResolver
 from tests.operations.builders import DEFAULT_NOW, OperationsWorld

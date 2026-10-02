@@ -35,10 +35,10 @@ from app.use_cases.bookings.create_manual_booking_use_case import (
     CreateManualBookingUseCase,
 )
 from app.use_cases.bookings.list_bookings_use_case import ListBookingsUseCase
-from app.use_cases.bookings.reschedule_booking_use_case import RescheduleBookingUseCase
-from app.use_cases.bookings.send_booking_reminders_use_case import (
+from app.use_cases.bookings.reminders.send_booking_reminders_use_case import (
     SendBookingRemindersUseCase,
 )
+from app.use_cases.bookings.reschedule_booking_use_case import RescheduleBookingUseCase
 from app.use_cases.bookings.update_booking_use_case import UpdateBookingUseCase
 
 
