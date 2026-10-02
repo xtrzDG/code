@@ -11,7 +11,9 @@ from app.adapters.channels.messenger_channel_adapter import MessengerChannelAdap
 from app.adapters.channels.telegram_channel_adapter import TelegramChannelAdapter
 from app.adapters.channels.whatsapp_channel_adapter import WhatsAppChannelAdapter
 from app.adapters.llm.anthropic_llm_adapter import AnthropicLlmAdapter
-from app.adapters.llm.menu_extraction_adapter import MenuExtractionAdapter
+from app.adapters.llm.menu_extraction.menu_extraction_adapter import (
+    MenuExtractionAdapter,
+)
 from app.adapters.llm.openai_llm_adapter import OpenAiLlmAdapter
 from app.adapters.llm.routing_llm_adapter import RoutingLlmAdapter
 from app.adapters.llm.tracing_llm_adapter import TracingLlmAdapter
