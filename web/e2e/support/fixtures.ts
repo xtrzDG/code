@@ -6,12 +6,15 @@
  *     error the test provokes on purpose);
  *   - `account`: a new account created through the API, with the browser
  *     context signed in as it (interface in English);
- *   - `owner`: the same plus one business (a hair salon in Berlin).
+ *   - `newOwner`: the same plus one business (a hair salon in Berlin) whose
+ *     assistant does not exist yet: the cabinet shows "Create an AI assistant";
+ *   - `owner`: that business with its assistant created (the setup done), so
+ *     the five sections are open.
  */
 
 import { test as base, expect, type BrowserContext } from "@playwright/test";
 
-import { createBusiness, signInByEmail, uniqueEmail, type NewBusiness } from "./api";
+import { createAssistant, createBusiness, signInByEmail, uniqueEmail, type NewBusiness } from "./api";
 import { WEB_URL } from "./env";
 
 export interface Account {
@@ -25,7 +28,7 @@ export interface Owner extends Account {
 }
 
 /** The cabinet's session and language cookies, as the sign-in route sets them. */
-async function signInContext(context: BrowserContext, token: string): Promise<void> {
+export async function signInContext(context: BrowserContext, token: string): Promise<void> {
   await context.addCookies([
     { name: "aw_session", value: token, url: WEB_URL, httpOnly: true, sameSite: "Lax" },
     { name: "aw_locale", value: "en", url: WEB_URL, sameSite: "Lax" },
@@ -47,7 +50,7 @@ export interface ConsoleErrors {
   allow: (pattern: RegExp) => void;
 }
 
-export const test = base.extend<{ consoleErrors: ConsoleErrors; account: Account; owner: Owner }>({
+export const test = base.extend<{ consoleErrors: ConsoleErrors; account: Account; newOwner: Owner; owner: Owner }>({
   consoleErrors: [
     async ({ page }, use) => {
       const errors: string[] = [];
@@ -72,9 +75,14 @@ export const test = base.extend<{ consoleErrors: ConsoleErrors; account: Account
     await use({ email, token });
   },
 
-  owner: async ({ request, account }, use) => {
+  newOwner: async ({ request, account }, use) => {
     const businessId = await createBusiness(request, account.token, BERLIN_SALON);
     await use({ ...account, businessId, businessName: BERLIN_SALON.name });
+  },
+
+  owner: async ({ request, newOwner }, use) => {
+    await createAssistant(request, newOwner.token, newOwner.businessId);
+    await use(newOwner);
   },
 });
 

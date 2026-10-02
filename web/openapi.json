@@ -5679,6 +5679,33 @@
         "title": "ImportedMenuItemView",
         "type": "object"
       },
+      "InboxCounts": {
+        "additionalProperties": false,
+        "description": "Handoffs nobody has resolved yet and requests still new. Sandbox activity\n(the owner's test chat, autotests) is not counted.",
+        "properties": {
+          "business_id": {
+            "title": "Business Id",
+            "type": "string"
+          },
+          "new_lead_count": {
+            "minimum": 0.0,
+            "title": "New Lead Count",
+            "type": "integer"
+          },
+          "open_handoff_count": {
+            "minimum": 0.0,
+            "title": "Open Handoff Count",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "business_id",
+          "open_handoff_count",
+          "new_lead_count"
+        ],
+        "title": "InboxCounts",
+        "type": "object"
+      },
       "InvoiceKind": {
         "description": "What an invoice charges for.",
         "enum": [
@@ -18664,6 +18691,65 @@
           }
         },
         "summary": "Post Handoff Resolve",
+        "tags": [
+          "operations"
+        ]
+      }
+    },
+    "/v1/businesses/{business_id}/inbox-counts": {
+      "get": {
+        "description": "Open handoffs and new requests (sandbox excluded): the badges on\nMessages. Counts only, so the cabinet polls it without recording a\nview of personal data.",
+        "operationId": "get_inbox_counts_route_v1_businesses__business_id__inbox_counts_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InboxCounts"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Inbox Counts Route",
         "tags": [
           "operations"
         ]

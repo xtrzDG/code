@@ -46,14 +46,14 @@ test("a general settings save after someone else's is refused, reloaded and expl
 });
 
 test("general settings opened after a save made elsewhere earlier still save", async ({ page, owner, request }) => {
-  await page.goto(`/b/${owner.businessId}/dashboard`);
+  await page.goto(`/b/${owner.businessId}/overview`);
   await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
   // The platform bot adds a manager: no field of the General form changes,
   // the revision does; the layout keeps the business it loaded.
   await saveElsewhere(request, owner, { manager_contacts: [{ name: "Levan", channel: "telegram", address: "777000111" }] });
   await page
     .getByRole("navigation", { name: en.nav.mainNavigation })
-    .getByRole("link", { name: en.nav.settings, exact: true })
+    .getByRole("link", { name: en.navigation.sections.settings, exact: true })
     .click();
   const city = page.getByRole("textbox", { name: new RegExp(`^${en.settings.general.city}`) });
   await expect(city).toHaveValue("Berlin");
@@ -140,8 +140,15 @@ test("a notification contact saved after the list changed elsewhere is refused a
   consoleErrors,
 }) => {
   consoleErrors.allow(/status of 409/);
-  await page.goto(`/b/${owner.businessId}/settings#notifications`);
-  await expect(page.getByText(en.settings.contacts.empty)).toBeVisible();
+  // The list is drawn by the server at once; the save starts from the copy the browser loads.
+  const loaded = page.waitForResponse(
+    (response) =>
+      response.request().method() === "GET" &&
+      new URL(response.url()).pathname === `/api/backend/v1/businesses/${owner.businessId}`,
+  );
+  await page.goto(`/b/${owner.businessId}/settings/notifications`);
+  await expect(page.getByRole("heading", { name: en.settings.contacts.empty })).toBeVisible();
+  await loaded;
 
   await saveElsewhere(request, owner, {
     manager_contacts: [{ name: "Levan", channel: "telegram", address: "777000111" }],

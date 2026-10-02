@@ -2,9 +2,11 @@
 
 The owner cabinet of the AI front-line assistant and its public landing page:
 the product, prices by country and FAQ at `/`, sign-in by phone (any country)
-or e-mail, businesses, the six-step profile wizard, every business section of
-concept section 8 (dashboard, conversations, bookings, leads, handoffs,
-knowledge, assistant, channels, billing, settings) and the platform admin.
+or e-mail, businesses, "Create an AI assistant" (the setup flow: the six-step
+profile ending in the first version), then five calm sections (Overview,
+Messages, Bookings, Assistant, Settings; see [Navigation](#navigation)) and
+the platform admin. It installs as an app (manifest, icons, service worker,
+offline page).
 Next.js (App Router) + TypeScript (strict) + Tailwind CSS v4.
 Interface languages: Georgian (`ka`), Russian (`ru`), English (`en`).
 Colour themes: dark (the default), light and the system's setting.
@@ -58,6 +60,7 @@ Behind a reverse proxy, run the API with
 | `npm run typecheck` | `next typegen` (route types) + `tsc --noEmit` |
 | `npm test` | Vitest unit tests (`src/**/*.test.ts`) |
 | `npm run e2e` | Playwright end-to-end tests against the real API (see [End-to-end tests](#end-to-end-tests)) |
+| `npm run gen:icons` | Draw the installed app's PNG icons (`public/icons/`, `src/app/apple-icon.png`) from `src/app/icon.svg` in Chromium; run after changing the mark and commit the files |
 | `npm run measure:first-load` | After `npm run build`: the gzipped first-load JavaScript of `/` and `/login` (or the pages given) as a browser downloads it, and the size of the lazy 3D chunk (see [Motion](#motion)); `MEASURE_VERBOSE=1` lists every file |
 | `npm run gen:api` | Regenerate `openapi.json` from the backend (`uv run python -m scripts.export_openapi`) and `src/api/schema.d.ts` from it (openapi-typescript). Run after any backend API change and commit both files. It also runs `gen:currencies` and `gen:names`. |
 | `npm run gen:currencies` | Regenerate `src/lib/currencyDigits.generated.ts`: the digits after the decimal point of every currency, from the backend's CLDR data (Babel). Money is converted between minor and major units with this table, not with the browser's Intl data, which differs between browser versions. A backend test fails when the file is stale. |
@@ -99,17 +102,31 @@ npm run e2e -- onboarding         # one file
   (`e2e/card-recordings.spec.ts`, `e2e/card-whatsapp.spec.ts`, served by
   `e2e/support/conversation-card.ts`); the widget tests run the API's
   `/widget.js` on a fake host site (`e2e/support/widget-site.ts`).
+- Fixtures: `newOwner` has a business whose assistant does not exist yet (the
+  cabinet shows "Create an AI assistant"); `owner` is the same with its first
+  version built through the API (`createAssistant`), so the five sections are
+  open.
+- The cabinet's service worker is blocked (`serviceWorkers: "block"`): it
+  would take requests out of reach of `page.route()`; `e2e/pwa.spec.ts` opts in.
 - Scenarios: the landing page (prices of a chosen country, theme and language
   kept after a reload, signed-in users sent to their businesses, the still
   hero with reduced motion and the 3D one without, every section revealed),
   sign-in with a German number and with e-mail (and a wrong code),
   a business in Turkey with Turkish, English and Arabic, a failed save shown
-  above the open dialog, the six wizard steps, every section from the sidebar
-  and from the phone menu (no sideways scrolling at 390 px), switching the
-  interface language ru/ka/en, the website chat demo page of the API, going
-  back to a section showing its data from the cache (no skeleton, no
-  spinner), a lead's status changing at once, rolling back on a 500 and
-  being undone (`e2e/instant.spec.ts`, leads served by `e2e/support/leads.ts`).
+  above the open dialog, the six wizard steps, every section and page from
+  the sidebar (`e2e/navigation.spec.ts`: the open section's pages under it,
+  Advanced, folding the sidebar, the user menu) and on a phone from the tab
+  bar and "More" (no sideways scrolling at 390 px, 44 px targets), the setup
+  invitation before the assistant exists and the cabinet after
+  (`e2e/setup.spec.ts`), what staff see and owner pages explaining themselves
+  (`e2e/roles.spec.ts`), old addresses redirected with their query
+  (`e2e/redirects.spec.ts`), the manifest, icons, service worker and offline
+  page (`e2e/pwa.spec.ts`), an axe audit of every page in both themes and on
+  a phone (`e2e/a11y.spec.ts`), switching the interface language ru/ka/en
+  from the user menu, the website chat demo page of the API, going back to a
+  section showing its data from the cache (no skeleton, no spinner), a lead's
+  status changing at once, rolling back on a 500 and being undone
+  (`e2e/instant.spec.ts`, leads served by `e2e/support/leads.ts`).
 
 | Variable | Default | Meaning |
 | --- | --- | --- |
@@ -127,13 +144,19 @@ and the API log as the `e2e-report` artifact.
 web/
   openapi.json                 API description exported from the backend (generated)
   e2e/                         Playwright end-to-end tests (playwright.config.ts, *.spec.ts, support/)
+  public/                      sw.js (the service worker: offline page, build files, push), icons/
+                               (the installed app's PNG icons, `npm run gen:icons`)
+  scripts/                     measure-first-load.mjs, render-app-icons.mjs
   src/
     proxy.ts                   runs before pages: sign-in redirects, current path header, language cookie
     app/                       routes (App Router)
       layout.tsx               <html lang data-theme> from the cookies, I18nProvider, ThemeProvider,
                                MotionProvider, ToastProvider; the browser's theme-color
       globals.css              design tokens (colours of both themes, radii, shadows), `dark:` variant;
-                               imports src/styles/motion.css and landing.css
+                               imports src/styles/motion.css, landing.css and shell.css
+      manifest.ts              /manifest.webmanifest: the installed app (name in the interface language,
+                               colours of the theme, icons); apple-icon.png for iOS home screens
+      offline/                 the page the service worker shows without a connection
       */template.tsx           business, admin, login, businesses: each page rises in (PageTransition)
       page.tsx                 "/": the public landing page (signed-in users go to /businesses)
       _landing/                its sections: Hero (+ HeroBackdrop, HeroVisual: the 3D scene or HeroFallback,
@@ -151,29 +174,36 @@ web/
       businesses/              list and creation of businesses (a new account gets the form at once):
                                CreateBusinessForm, _components/ (CountryDefaults, CreatedSummary),
                                _lib/ (useCreateBusiness, languageOptions)
-      b/[businessId]/          one business: layout.tsx loads it + the user and renders the sidebar
-        onboarding/            the six-step profile wizard (?step=…) and "what to add" (+ _components/)
-        dashboard/             next step, KPI tiles for a period (?period=), daily trend chart (plain SVG),
+      b/[businessId]/          one business: layout.tsx loads it + the user and renders the frame
+                               (the five sections, or "Create an AI assistant" before the assistant
+                               exists); /b/{id} redirects to its overview (next.config.ts)
+        onboarding/            the setup flow: the six-step profile shown on its own; once the
+                               assistant exists it redirects to assistant/profile (keeping ?step=)
+        overview/              next step, KPI tiles for a period (?period=), daily trend chart (plain SVG),
                                package meters (owners and staff), breakdowns
-        conversations/         server-paged feed with filters + card (calls with a recording player,
-                               rating, linked bookings/leads/handoffs, staff reply box, WhatsApp
-                               template after 24 hours); layout.tsx keeps the feed mounted beside
+        messages/              layout.tsx: the Messages frame and its tabs (badges for what waits)
+          (inbox)/             all conversations: server-paged feed with filters + card (calls with a
+                               recording player, rating, linked bookings/leads/handoffs, staff reply box,
+                               WhatsApp template after 24 hours); layout.tsx keeps the feed mounted beside
                                the card, [conversationId]/ on phones
+          handoffs/            "Needs a person": server-paged open/resolved handoffs by urgency, resolve
+          leads/               "Requests": server-paged requests by status with tab counts, status changes
         bookings/              server-paged bookings by day ("show more"), manual booking with free
                                slots (whole-day mode), details, edit, move, cancel
-        leads/                 server-paged requests by status with tab counts, status changes, details
-        handoffs/              server-paged open/resolved handoffs by urgency, resolve
-        knowledge/             items (layout.tsx: tabs; server-paged, filtered by the API) + questions/
+        assistant/             layout.tsx: the Assistant frame (live version, "Apply changes", tabs);
+                               page.tsx: the test chat ("Try it", `?version=…`)
+          knowledge/           items (layout.tsx: pill tabs; server-paged, filtered by the API) + questions/
                                (unanswered, server-paged), import/ (menu photo, PDF or link; discard a
                                whole batch), resources/ (bookable resources, special days)
-        assistant/             test chat (layout.tsx: live version + tabs), versions/,
-                               versions/[versionId]/ (go-live checklist, autotests with live progress,
-                               publish, rollback)
-        channels/              chat channels (with the platform's last error; WhatsApp's template for
+          profile/             "Hours and rules": the six-step profile wizard (?step=…) and "what to add"
+          channels/            chat channels (with the platform's last error; WhatsApp's template for
                                staff replies), website chat code and look, call forwarding, Google
                                Calendar (state, last sync), staff Telegram link
-        billing/               plan, trial, usage, plans of the country, invoices, payment
-        settings/              tabs in the URL hash: general, team, notifications, privacy, audit
+          versions/            Advanced: versions, versions/[versionId]/ (go-live checklist, autotests
+                               with live progress, publish, rollback)
+        settings/              layout.tsx: the Settings frame and tabs; page.tsx: business (old
+                               #team-style links move to their page), team/, notifications/, billing/
+                               (plan, trial, usage, plans of the country, invoices, payment), privacy/, audit/
       admin/                   platform admin: clients (filters, sorts) and clients/[businessId]/
       api/
         auth/start|verify|logout|expired   sign-in route handlers (cookie handling)
@@ -211,8 +241,9 @@ web/
       messages/landing/        the landing page's texts, one file per language
       messages/sections/       section texts, spread into en/ru/ka: insights.ts (dashboard, conversations,
                                bookings, leads, handoffs), content.ts (knowledge, assistant),
-                               workspace.ts (channels, billing, settings, admin); each composes one file
-                               per namespace and language from its folder (insights/bookings.ru.ts)
+                               workspace.ts (channels, billing, settings, admin), shell.ts (navigation,
+                               account, setup, app); each composes one file per namespace and language
+                               from its folder (insights/bookings.ru.ts)
     components/
       ui/                      the UI kit (import from "@/components/ui"): Button, ButtonLink, Input,
                                Select, Textarea, Checkbox, Radio, Field, Fieldset, Card, Table, Badge,
@@ -226,26 +257,31 @@ web/
                                AnimatedNumber, AnimatedPresenceList, MagneticButton, Parallax
       icons/                   the one icon set (import from "@/components/icons"): interface, sections,
                                brands (channel marks shared with the 3D scene: lib/channelMarks.ts)
-      shell/                   ShellFrame (frame), Sidebar (navigation, user), ShellTopBar (business / section,
-                               language and theme), BusinessShell, AdminShell, TopBar (pages outside a
-                               business), Brand, SignOutButton
+      shell/                   the frame (see Navigation): ShellFrame, Sidebar (+ SidebarNav, UserMenu,
+                               AccountPanel), PhoneTopBar, PhoneTabBar, MoreSheet, SectionFrame (a
+                               section's title and tabs), BusinessShell (sections, roles, badges, the
+                               setup gate), setup/ (SetupEntry, SetupHero, SetupStages), OwnersOnlyPage,
+                               InboxCounts (badges), ServiceWorker (registration), useInstallPrompt,
+                               AdminShell, TopBar (pages outside a business), Brand, SignOutButton
       theme/                   ThemeProvider (useTheme), ThemeSwitcher (dark / light / system),
                                useResolvedScheme (the scheme showing now, for the WebGL scene)
-      business/                BusinessContext (useBusiness, useBusinessFormat), status badges,
-                               sectionMetadata (page titles), SectionLoading (a section's loading.tsx)
+      business/                BusinessContext (useBusiness, useBusinessFormat, isSetUp), status badges,
+                               pageMetadata (page titles), SectionLoading (a page's loading.tsx)
       insights/                shared by dashboard … handoffs: status badges and label maps, segmented
                                control, customer-message dialog, LoadMore, refresh, business-local dates, useToday (moves on at the business's
                                midnight), replaceUrlQuery, useAutoReload (lists whose every load
                                is audited pass `intervalMs: null` and reload only on return)
-      content/                 shared by knowledge and assistant: SectionTabs (route tabs), Tabs,
-                               Switch, subPageMetadata
-      workspace/               shared by channels, billing, settings, admin: CopyButton, hash Tabs
-                               (useHashTab), UsageMeter, Facts, OwnerOnly notes, channel names,
+      content/                 shared by knowledge and assistant: SectionTabs (route tabs with a gliding
+                               marker; pills inside a section frame), Tabs, Switch
+      workspace/               shared by channels, billing, settings, admin: CopyButton,
+                               UsageMeter, Facts, OwnerOnly notes, channel names,
                                MarkdownDocument (renders the DPA text without HTML), helpers (zoned
                                dates, usage)
       BusinessSwitcher.tsx LanguageSwitcher.tsx CountrySelect.tsx
-    lib/                       pure helpers with unit tests (*.test.ts): navigation (sections, paths,
-                               safeNextPath), format (Intl, money units), countries (phone/country),
+    lib/                       pure helpers with unit tests (*.test.ts): navigation (pages, paths,
+                               where a path is, safeNextPath), sections (the five sections, their pages,
+                               roles, titles), legacyRoutes (old addresses), inboxBadges, shellPreferences
+                               (sidebar cookie), installPrompt, serviceWorker.test.ts (public/sw.js), format (Intl, money units), countries (phone/country),
                                hours (opening hours), wizard/ (niche answers, offers, FAQ), knowledge/
                                (kinds, item form, menu import), resources, assistant/ (versions,
                                autotests, go-live, test chat), validation (zod), classMerge (className
@@ -253,43 +289,140 @@ web/
                                plan prices), motion (motion tokens), motionMath (springs, tilt, count-up),
                                heroScene (3D hero: device check, orbits, camera), channelMarks
     styles/                    motion.css (motion tokens, keyframes, press/lift/shimmer/dialog motion),
-                               landing.css (backdrop, hero entrance, the still hero picture)
+                               landing.css (backdrop, hero entrance, the still hero picture), shell.css
+                               (the phone sheet, the user menu, the setup entry's running light)
 ```
 
-## Sections
+## Navigation
 
-| Section | Path | What the owner does there |
+The cabinet is five places, the same on every screen size
+(`src/lib/sections.ts` is the one table; the sidebar, the phone tab bar, the
+section tabs, page titles and the e2e suite read it):
+
+| Section | Pages (`/b/{id}/…`) | Who |
 | --- | --- | --- |
-| Profile | `onboarding?step=…` | Six steps (niche and languages, contacts and hours, offer, booking rules, FAQ and handoff, channels), each saved on its own; the "what to add" summary opens the full list in a side panel |
-| Dashboard | `dashboard?period=…` | The next step for the business status, KPI tiles, a daily trend chart with a table view, package minutes and dialogs (staff too, without prices), languages/channels/handoff reasons |
-| Conversations | `conversations[/{id}]` | Server filters and search kept in the URL, transcript with tool calls and calls (a recording is downloaded once and audited when "Play recording" is pressed, then plays and seeks from memory; an expired session goes to sign-in, a deleted recording says so), rating, linked bookings, leads and handoffs, staff reply (after the WhatsApp 24-hour window: in the owner's approved template, or a pointer to Channels; a template WhatsApp refuses says what to fix), booking confirmation prefilled into the reply box whenever it can send it, booking for the customer |
-| Bookings | `bookings` | Server-paged day groups with place and order filters, manual booking with free slots (whole day), edit, confirm / complete / no-show / move / cancel and the customer text |
-| Leads | `leads` | Server-paged status tabs with counts, inline status change, details |
-| Handoffs | `handoffs` | Open first by urgency, resolve, call and conversation links |
-| Knowledge | `knowledge`, `/questions`, `/import`, `/resources` | Server-paged items and search, unanswered questions to FAQ, menu import with review and batch discard, resources and special days |
-| Assistant | `assistant`, `/versions`, `/versions/{id}` | Test chat with tool calls, versions, go-live checklist with fix links, autotests with live progress, publish and rollback with reasons |
-| Channels | `channels` | Connect messengers and see why one stopped, WhatsApp's template for staff replies after 24 hours (name and language), website chat snippet, colour and corner, call forwarding codes, Google Calendar state and last sync, staff Telegram link |
-| Billing | `billing` | Trial, subscribe with payment (after the trial, an overdue payment or a cancellation), plan change, usage meters, invoices, payment (owners only) |
-| Settings | `settings#general`, `#team`, `#notifications`, `#privacy`, `#audit` | Business settings and pause, team with owner/staff roles, manager contacts, reading and accepting the data processing agreement, the customer list with export and erasure, the audit log with server filters. General and Notifications save with the business `revision` they showed (`expected_revision`); when someone saved since (another owner, the Telegram bot adding a manager), the API answers 409 `stale_revision` and the tab reloads and says so instead of overwriting. General starts from the business as stored when it opens, and after a stale refusal keeps what was typed: fields nobody else changed are saved again at once, fields changed on both sides show the stored value |
-| Admin | `/admin`, `/admin/clients/{id}` | Platform admins: all clients (server filters, sorts and paging, totals), health, opening a client's cabinet |
+| Overview | `overview?period=…` | owners, staff |
+| Messages | `messages[/{conversationId}]` (all conversations), `messages/handoffs` ("Needs a person"), `messages/leads` ("Requests") | owners, staff |
+| Bookings | `bookings` | owners, staff |
+| Assistant | `assistant` ("Try it", the test chat), `assistant/knowledge[/questions\|/import\|/resources]`, `assistant/profile?step=…` ("Hours and rules"), `assistant/channels`; under Advanced `assistant/versions[/{versionId}]` | staff: "Try it" only |
+| Settings | `settings` (business), `settings/team`, `settings/notifications`, `settings/billing`, `settings/privacy`, `settings/audit` | owners |
+
+- **Sidebar** (large screens): the mark, the business switcher (it keeps the
+  page when switching), the sections with icons and a marker that glides to
+  the open one, the open section's pages under it (Advanced as a disclosure),
+  and the user menu at the bottom: who is signed in, the interface language,
+  the theme, "Install the app", all businesses, the platform admin, sign out
+  (a native popover). The arrow folds the sidebar to a rail of icons; the
+  choice lives in the `aw_sidebar` cookie, so the server draws it right.
+- **Phones**: a calm top bar (the mark, the business, where you are), the
+  bottom tab bar (Overview, Messages, Bookings, Assistant, More; places of at
+  least 56 px, above the home indicator) and "More", a sheet with Settings and
+  its pages, the business switcher and the account panel. An open
+  conversation takes the whole screen (no tab bar, the frame steps aside).
+- **Section frames** (`components/shell/SectionFrame.tsx`): Messages,
+  Assistant and Settings show the section's `<h1>`, what it is for and the
+  tabs of its pages; a page's own `PageHeader` inside becomes an `<h2>` for
+  screen readers and shows only its description and actions (`SubPages`).
+- **Roles**: staff see Overview, Messages, Bookings and the test chat; a page
+  their role does not open (an old link to settings) explains itself
+  (`OwnersOnlyPage`) instead of failing. Platform admins see what owners see.
+- **Badges**: open handoffs and new requests on Messages and its tabs, from
+  `GET /v1/businesses/{id}/inbox-counts` (counts only, not audited, so it is
+  polled every minute and when the tab comes back; resolving a handoff or
+  moving a request on invalidates it). The overview's "open handoffs" tile
+  reads the same counts.
+- **Before the assistant exists** (`business.status` is `onboarding`): the
+  sidebar holds one big "Create an AI assistant" entry, every page shows the
+  invitation (`SetupHero`: the assistant's orb among its channels in a
+  tilting card, a floor of light running towards the viewer, the three
+  stages, progress once a step is done, one button), and the setup flow is
+  `/b/{id}/onboarding` (the six profile steps, ending in "Create my
+  assistant", which builds the first version and opens the cabinet). Staff
+  read that the owner is setting it up.
+- **Old addresses** (`src/lib/legacyRoutes.ts`, 307 redirects in
+  `next.config.ts`, the query kept): `dashboard` → `overview`,
+  `conversations[/…]` → `messages[/…]`, `handoffs` → `messages/handoffs`,
+  `leads` → `messages/leads`, `knowledge[/…]` → `assistant/knowledge[/…]`,
+  `channels` → `assistant/channels`, `billing` → `settings/billing`, `/b/{id}`
+  → `overview`; `settings#team` (a hash never reaches the server) is moved by
+  the settings page, and `onboarding?step=…` by the setup page once the
+  assistant exists.
+
+### What each page does
+
+| Page | What the owner does there |
+| --- | --- |
+| Overview | The next step for the business status, open handoffs and unanswered questions, KPI tiles, a daily trend chart with a table view, package minutes and dialogs (staff too, without prices), languages/channels/handoff reasons |
+| Messages → all conversations | Server filters and search kept in the URL, transcript with tool calls and calls (a recording is downloaded once and audited when "Play recording" is pressed, then plays and seeks from memory; an expired session goes to sign-in, a deleted recording says so), rating, linked bookings, leads and handoffs, staff reply (after the WhatsApp 24-hour window: in the owner's approved template, or a pointer to Channels; a template WhatsApp refuses says what to fix), booking confirmation prefilled into the reply box whenever it can send it, booking for the customer |
+| Messages → Needs a person | Open handoffs first by urgency, resolve, call and conversation links |
+| Messages → Requests | Server-paged status tabs with counts, inline status change, details |
+| Bookings | Server-paged day groups with place and order filters, manual booking with free slots (whole day), edit, confirm / complete / no-show / move / cancel and the customer text |
+| Assistant → Try it | Test chat with tool calls (`?version=…` talks to a chosen version); "Apply changes" builds a new version from the profile and knowledge |
+| Assistant → Knowledge | Server-paged items and search, unanswered questions to FAQ, menu import with review and batch discard, resources and special days |
+| Assistant → Hours and rules | The six profile steps (niche and languages, contacts and hours, offer, booking rules, FAQ and handoff, channels), each saved on its own; the "what to add" summary opens the full list in a side panel |
+| Assistant → Channels | Connect messengers and see why one stopped, WhatsApp's template for staff replies after 24 hours (name and language), website chat snippet, colour and corner, call forwarding codes, Google Calendar state and last sync, staff Telegram link |
+| Assistant → Advanced | Versions, go-live checklist with fix links, autotests with live progress, publish and rollback with reasons |
+| Settings → Plan and billing | Trial, subscribe with payment (after the trial, an overdue payment or a cancellation), plan change, usage meters, invoices, payment |
+| Settings → the rest | Business settings and pause, team with owner/staff roles, manager contacts, reading and accepting the data processing agreement, the customer list with export and erasure, the audit log with server filters. Business and Notifications save with the business `revision` they showed (`expected_revision`); when someone saved since (another owner, the Telegram bot adding a manager), the API answers 409 `stale_revision` and the page reloads and says so instead of overwriting. Business starts from the business as stored when it opens, and after a stale refusal keeps what was typed: fields nobody else changed are saved again at once, fields changed on both sides show the stored value |
+| Admin (`/admin`, `/admin/clients/{id}`) | Platform admins: all clients (server filters, sorts and paging, totals), health, opening a client's cabinet |
+
+### Installable app
+
+- `app/manifest.ts` (`/manifest.webmanifest`): the app opens on the
+  businesses in its own window; name, short name and language follow the
+  interface language, colours the theme; icons in `public/icons/` (192 and
+  512, plain and maskable) and `app/apple-icon.png`, drawn from `icon.svg` by
+  `npm run gen:icons`.
+- `public/sw.js`, registered on signed-in pages of a production build
+  (`components/shell/ServiceWorker.tsx`): keeps the offline page
+  (`/offline`, in the language and theme of the moment, kept again when they
+  change) with its build files and the icons; pages always come from the
+  network and are never stored (they hold personal data), the offline page
+  answers when there is none; build files (`/_next/static/`) are served from
+  the cache once loaded; API calls (`/api/*`) and other sites pass straight
+  through. It shows a pushed `{title, body, url, tag}` as a notification and
+  opens its (same-site) url when pressed, ready for web push.
+- "Install the app" in the user menu (and "More" on phones): the browser's
+  own prompt where there is one (`beforeinstallprompt`), the Share → Add to
+  Home Screen steps on iPhone and iPad, nothing once installed.
+- A Content Security Policy must allow `worker-src 'self'` and
+  `manifest-src 'self'` (both follow `default-src 'self'`).
+
+### Accessibility
+
+- `e2e/a11y.spec.ts` runs axe-core (WCAG 2.1 A and AA rules) on every page of
+  a business in the dark and the light theme, on the setup invitation, the
+  setup flow, the businesses, sign-in and the offline page, and on a phone
+  with the "More" sheet open; any serious or critical violation fails it.
+- Landmarks: one `<h1>` per page (the section's, inside a section frame),
+  the main navigation, the tab bar and the section tabs are named `<nav>`s,
+  `aria-current="page"` marks where you are everywhere, badges read as "3
+  waiting", folded icons keep their names, and touch targets are at least
+  44 px on coarse pointers.
+- What axe cannot check needs a person: a screen reader pass of the
+  sidebar, the user menu popover and the "More" sheet (VoiceOver on macOS
+  and iOS Safari) after changing the frame.
 
 ## Conventions
 
 ### Adding a business page
 
-1. Every section of concept section 8 already has its page; extend it in its
-   folder. A new section gets `src/app/b/[businessId]/<section>/page.tsx`, an
-   entry in `BUSINESS_SECTIONS` and `BUSINESS_SECTION_LABELS`
-   (`src/lib/navigation.ts`) and an icon in `SECTION_ICONS`
-   (`src/components/shell/BusinessShell.tsx`); the e2e suite then opens it too.
+1. Prefer a page inside one of the five sections over a new section (see
+   [Navigation](#navigation)). A new page gets its folder
+   (`src/app/b/[businessId]/<section>/<page>/page.tsx`), its path in
+   `BUSINESS_PAGES` (`src/lib/navigation.ts`) and an entry with its label and
+   roles in `SECTION_PAGES` (`src/lib/sections.ts`); the sidebar, the tabs,
+   the titles and the e2e suite then pick it up. A new section also needs an
+   icon in `SECTION_ICONS` (`src/components/shell/BusinessShell.tsx`) and,
+   when it has several pages, a `layout.tsx` with `<SectionFrame section=…>`.
 2. Keep `page.tsx` a small Server Component: metadata + one client screen.
 
    ```tsx
    // src/app/b/[businessId]/bookings/page.tsx
-   import { sectionMetadata } from "@/components/business/SectionPlaceholder";
+   import { pageMetadata } from "@/components/business/pageMetadata";
    import { BookingsScreen } from "./BookingsScreen";
 
-   export const generateMetadata = sectionMetadata("bookings");
+   export const generateMetadata = pageMetadata("bookings");
 
    export default function BookingsPage() {
      return <BookingsScreen />;
@@ -479,8 +612,9 @@ The interface language is chosen by the `aw_locale` cookie (set at sign-in from
 the account language, by the language switcher, or by the proxy from
 `GET /v1/me`), else the browser's `Accept-Language`, else English. The
 language switcher (a native select showing each language by its own name)
-is in the top bar of every page and in the "New business" dialog; it keeps
-the current page and re-renders it in the new language.
+is in the user menu of the cabinet (the sidebar's bottom, "More" on phones),
+in the top bar of the pages outside a business and in the "New business"
+dialog; it keeps the current page and re-renders it in the new language.
 
 ### Forms
 
@@ -525,8 +659,8 @@ visible focus, and labels for icon-only buttons.
 from the `aw_theme` cookie (dark when there is none), so the first paint has
 the right colours; "system" is `color-scheme: light dark` and follows the
 operating system live. `ThemeSwitcher` (a radio group of three icons with
-their names for screen readers and as tooltips) sits in the top bar of every
-signed-in page, on the landing, sign-in and business list pages; it rewrites
+their names for screen readers and as tooltips) sits in the user menu of the
+cabinet and in the top bar of the landing, sign-in and business list pages; it rewrites
 the attribute, the cookie (a year) and `<meta name="theme-color">` without a
 reload. `useTheme()` gives `{ theme, setTheme }`.
 
@@ -552,9 +686,18 @@ motion.
   scroll). The animation code of `m.*` elements loads after the page
   (LazyMotion + domMax, `strict`: use `m.div`, never `motion.div`).
 - **Cabinet**: page rise per route, the sidebar's active marker glides
-  between sections (`layoutId`, one LayoutGroup per menu), dashboard numbers
-  count up, handoff and lead lists animate removals, dialogs and toasts as
-  above.
+  between sections and a thinner one between the open section's pages, which
+  unfold under it (`layoutId`, one LayoutGroup per menu); the section tabs'
+  underline (or pill) and the phone tab bar's pill glide too; the sidebar
+  folds with a width transition; "More" rises from the bottom and the user
+  menu springs up from its button (CSS, `src/styles/shell.css`); badges pop
+  in; dashboard numbers count up, handoff and lead lists animate removals,
+  dialogs and toasts as above.
+- **Setup invitation**: the landing's still orb among its channels in a
+  tilting card (`TiltCard`), aurora and the floor of light running towards
+  the viewer behind it, the stages standing in perspective and rising one
+  after another, a magnetic main button, and a light running around the
+  sidebar's "Create an AI assistant".
 - **Landing**: the hero text rises in with CSS from the first paint; the 3D
   hero (react-three-fiber, `_landing/scene/`): the assistant's orb with the
   six channels' bubbles orbiting it and sending it messages, mouse parallax,

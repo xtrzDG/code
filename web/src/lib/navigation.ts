@@ -1,43 +1,40 @@
 /**
- * Routes of the cabinet. Business pages live under /b/{businessId}/{section};
- * each section here appears in the sidebar (see components/shell/BusinessNav).
+ * Routes of the cabinet. Business pages live under /b/{businessId}/{page},
+ * where a page is one of BUSINESS_PAGES ("overview", "messages/handoffs",
+ * "assistant/knowledge", …); which of them a person sees, and how they are
+ * grouped into the five sections of the sidebar, is in lib/sections.ts.
+ * Addresses of earlier versions are redirected by lib/legacyRoutes.ts.
  */
 
-import type { MessageKey } from "@/i18n/translate";
+import type { BusinessSection } from "./sections";
 
-export const BUSINESS_SECTIONS = [
-  "onboarding",
-  "dashboard",
-  "conversations",
+/** Every page of a business, as its path under /b/{businessId}/. */
+export const BUSINESS_PAGES = [
+  "overview",
+  "messages",
+  "messages/handoffs",
+  "messages/leads",
   "bookings",
-  "leads",
-  "handoffs",
-  "knowledge",
   "assistant",
-  "channels",
-  "billing",
+  "assistant/knowledge",
+  "assistant/profile",
+  "assistant/channels",
+  "assistant/versions",
   "settings",
+  "settings/team",
+  "settings/notifications",
+  "settings/billing",
+  "settings/privacy",
+  "settings/audit",
 ] as const;
 
-export type BusinessSection = (typeof BUSINESS_SECTIONS)[number];
-
-export const BUSINESS_SECTION_LABELS: Record<BusinessSection, MessageKey> = {
-  onboarding: "nav.onboarding",
-  dashboard: "nav.dashboard",
-  conversations: "nav.conversations",
-  bookings: "nav.bookings",
-  leads: "nav.leads",
-  handoffs: "nav.handoffs",
-  knowledge: "nav.knowledge",
-  assistant: "nav.assistant",
-  channels: "nav.channels",
-  billing: "nav.billing",
-  settings: "nav.settings",
-};
+export type BusinessPage = (typeof BUSINESS_PAGES)[number];
 
 export const HOME_PATH = "/businesses";
 export const LOGIN_PATH = "/login";
 export const ADMIN_PATH = "/admin";
+/** Shown by the service worker (public/sw.js) when a page cannot be loaded. */
+export const OFFLINE_PATH = "/offline";
 
 /** Pages that need a session (the proxy sends visitors to /login). */
 const PROTECTED_PREFIXES = [HOME_PATH, "/b/", ADMIN_PATH, "/integrations/"] as const;
@@ -48,19 +45,69 @@ export function isProtectedPath(pathname: string): boolean {
   );
 }
 
-/** `/b/{id}/{section}`; `businessPath(id)` is the dashboard. */
-export function businessPath(businessId: string, section: BusinessSection = "dashboard"): string {
-  return `/b/${encodeURIComponent(businessId)}/${section}`;
+/** `/b/{id}/{page}`; `businessPath(id)` is the overview. */
+export function businessPath(businessId: string, page: BusinessPage = "overview"): string {
+  return `/b/${encodeURIComponent(businessId)}/${page}`;
 }
 
-export function isBusinessSection(value: string | undefined): value is BusinessSection {
-  return value !== undefined && (BUSINESS_SECTIONS as readonly string[]).includes(value);
+/** The setup flow ("Create an AI assistant"), the only page before the assistant exists. */
+export function setupPath(businessId: string): string {
+  return `/b/${encodeURIComponent(businessId)}/onboarding`;
+}
+
+export function isBusinessPage(value: string | undefined): value is BusinessPage {
+  return value !== undefined && (BUSINESS_PAGES as readonly string[]).includes(value);
+}
+
+/** Pages ordered longest first, so the most specific one matches a path. */
+const PAGES_BY_DEPTH: readonly BusinessPage[] = [...BUSINESS_PAGES].sort(
+  (left, right) => right.split("/").length - left.split("/").length,
+);
+
+export interface BusinessLocation {
+  businessId: string;
+  /** The page the path is in ("/b/x/messages/conv_1" is in "messages"); null outside them. */
+  page: BusinessPage | null;
+  /** True for the setup flow (/b/{id}/onboarding). */
+  isSetup: boolean;
+}
+
+/** Where a path is in the cabinet: "/b/biz_1/assistant/knowledge/import" -> assistant/knowledge. */
+export function businessLocation(pathname: string): BusinessLocation | null {
+  const [, root, rawId, ...rest] = pathname.split("/");
+  if (root !== "b" || !rawId) {
+    return null;
+  }
+  let businessId: string;
+  try {
+    businessId = decodeURIComponent(rawId);
+  } catch {
+    return null;
+  }
+  const segments = rest.filter(Boolean);
+  const page =
+    PAGES_BY_DEPTH.find((candidate) => {
+      const parts = candidate.split("/");
+      return parts.every((part, index) => segments[index] === part);
+    }) ?? null;
+  return { businessId, page, isSetup: segments[0] === "onboarding" };
 }
 
 /** The section of a business page path: "/b/biz_1/bookings/x" -> "bookings". */
 export function sectionFromPathname(pathname: string): BusinessSection | null {
-  const [, root, , section] = pathname.split("/");
-  return root === "b" && isBusinessSection(section) ? section : null;
+  const page = businessLocation(pathname)?.page;
+  return page ? (page.split("/")[0] as BusinessSection) : null;
+}
+
+/** An open conversation ("/b/x/messages/conv_1"): on phones it takes the whole screen. */
+export function isConversationPath(pathname: string): boolean {
+  const location = businessLocation(pathname);
+  return location?.page === "messages" && pathname.split("/").filter(Boolean).length > 3;
+}
+
+/** The same place in another business (the business switcher keeps the section). */
+export function samePageIn(businessId: string, pathname: string): string {
+  return businessPath(businessId, businessLocation(pathname)?.page ?? "overview");
 }
 
 /** Base used only to check that a path cannot leave the site. */

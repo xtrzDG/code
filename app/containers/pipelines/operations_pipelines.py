@@ -55,6 +55,9 @@ class OperationsPipelinesContainer(containers.DeclarativeContainer):
     get_dashboard_stats_pipeline = orchestrator_pipeline(
         operations_orchestrators.get_dashboard_stats_orchestrator
     )
+    get_inbox_counts_pipeline = orchestrator_pipeline(
+        operations_orchestrators.get_inbox_counts_orchestrator
+    )
     start_google_calendar_connection_pipeline = orchestrator_pipeline(
         operations_orchestrators.start_google_calendar_connection_orchestrator
     )

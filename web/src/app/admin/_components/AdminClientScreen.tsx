@@ -43,7 +43,7 @@ export function AdminClientScreen({ businessId }: { businessId: string }) {
   const onOpen = async () => {
     const result = await open.run();
     if (result.ok) {
-      router.push(businessPath(result.data.business_id, "dashboard"));
+      router.push(businessPath(result.data.business_id, "overview"));
     } else {
       setOpenError(result.error);
     }

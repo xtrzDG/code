@@ -68,6 +68,7 @@ export function useDataRequests() {
         queryKeys.bookings.all(business.id),
         queryKeys.leads.all(business.id),
         queryKeys.handoffs.all(business.id),
+        queryKeys.inbox.all(business.id),
       ],
     },
   );

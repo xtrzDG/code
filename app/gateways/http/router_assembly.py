@@ -155,6 +155,7 @@ def build_application_routers(app_container: AppContainer) -> list[APIRouter]:
             list_unanswered_questions=operations.list_unanswered_questions_operator(),
             answer_unanswered_question=operations.answer_unanswered_question_operator(),
             get_dashboard_stats=operations.get_dashboard_stats_operator(),
+            get_inbox_counts=operations.get_inbox_counts_operator(),
             start_calendar_connection=(
                 operations.start_google_calendar_connection_operator()
             ),

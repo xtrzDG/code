@@ -6,7 +6,7 @@ import { Alert, Button, ButtonLink } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { countryName } from "@/lib/countries";
 import { languageName } from "@/lib/format";
-import { businessPath } from "@/lib/navigation";
+import { setupPath } from "@/lib/navigation";
 
 import { languageOptions } from "../_lib/languageOptions";
 
@@ -63,7 +63,7 @@ export function CreatedSummary({
         <Button variant="secondary" onClick={onClose}>
           {t("common.close")}
         </Button>
-        <ButtonLink href={businessPath(business.id, "onboarding")}>{t("businesses.continueToProfile")}</ButtonLink>
+        <ButtonLink href={setupPath(business.id)}>{t("businesses.continueToProfile")}</ButtonLink>
       </div>
     </div>
   );

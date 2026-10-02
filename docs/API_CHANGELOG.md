@@ -11,6 +11,18 @@ Kinds of change: **Added**, **Changed** (additive), **Deprecated** (with
 sunset date), **Removed** and **Breaking** (only with the `api-breaking`
 label and a migration path).
 
+## 2026-10-02 — inbox counts for the cabinet's navigation
+
+Spec: `f5a7d64f13ad3ace`
+
+- **Added** `GET /v1/businesses/{business_id}/inbox-counts` (owners and
+  staff): `open_handoff_count` (handoffs nobody has resolved) and
+  `new_lead_count` (requests still `new`), sandbox activity left out. The
+  cabinet shows them as badges on Messages and polls them; they are counts
+  only, so a read writes no audit entry (unlike the handoff and lead
+  lists).
+- **Added** schema `InboxCounts`.
+
 ## 2026-10-02 — login abuse protection, body limits and security headers
 
 Spec: `15dd0984bdea39f3`

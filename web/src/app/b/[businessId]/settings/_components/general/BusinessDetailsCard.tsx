@@ -68,7 +68,7 @@ export function BusinessDetailsCard({ settings }: { settings: GeneralSettings })
             {
               label: t("settings.general.plan"),
               value: (
-                <Link href={businessPath(baseline.id, "billing")} className="text-accent hover:underline" title={t("settings.general.planHint")}>
+                <Link href={businessPath(baseline.id, "settings/billing")} className="text-accent hover:underline" title={t("settings.general.planHint")}>
                   {t(PLAN_NAMES[baseline.plan_key])}
                 </Link>
               ),

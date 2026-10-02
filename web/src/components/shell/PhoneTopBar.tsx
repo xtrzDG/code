@@ -1,0 +1,29 @@
+"use client";
+
+/**
+ * The bar above a page on phones: the mark, the business and where you
+ * are. The language and theme moved to the account panel ("More"), so the
+ * bar stays calm; `action` adds one button at its end (the account, when
+ * there is no tab bar).
+ */
+
+import type { ReactNode } from "react";
+
+import { HOME_PATH } from "@/lib/navigation";
+
+import { Brand } from "./Brand";
+
+export function PhoneTopBar({ title, context, action }: { title?: string; context?: string; action?: ReactNode }) {
+  return (
+    <header className="sticky top-0 z-20 border-b border-line bg-canvas/85 pt-[env(safe-area-inset-top)] backdrop-blur-xl lg:hidden">
+      <div className="flex h-14 items-center gap-3 px-4">
+        <Brand href={HOME_PATH} hideName />
+        <div className="min-w-0 flex-1 leading-tight">
+          {context ? <p className="truncate text-xs text-ink-subtle">{context}</p> : null}
+          {title ? <p className="truncate text-sm font-semibold text-ink">{title}</p> : null}
+        </div>
+        {action}
+      </div>
+    </header>
+  );
+}

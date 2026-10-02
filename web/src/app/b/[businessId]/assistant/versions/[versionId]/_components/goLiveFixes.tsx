@@ -34,10 +34,10 @@ function isGapKind(value: string): value is ProfileGapKind {
 export function useFixLinks(): Partial<Record<GoLiveCheckCode, { href: string; label: MessageKey }>> {
   const { business } = useBusiness();
   return {
-    subscription_or_trial: { href: businessPath(business.id, "billing"), label: "assistant.checklist.fixBilling" },
-    dpa: { href: `${businessPath(business.id, "settings")}#privacy`, label: "assistant.checklist.fixDpa" },
-    profile_gaps: { href: businessPath(business.id, "onboarding"), label: "assistant.checklist.fixProfile" },
-    staff_contact: { href: `${businessPath(business.id, "settings")}#notifications`, label: "assistant.checklist.fixStaffContact" },
+    subscription_or_trial: { href: businessPath(business.id, "settings/billing"), label: "assistant.checklist.fixBilling" },
+    dpa: { href: businessPath(business.id, "settings/privacy"), label: "assistant.checklist.fixDpa" },
+    profile_gaps: { href: businessPath(business.id, "assistant/profile"), label: "assistant.checklist.fixProfile" },
+    staff_contact: { href: businessPath(business.id, "settings/notifications"), label: "assistant.checklist.fixStaffContact" },
   };
 }
 

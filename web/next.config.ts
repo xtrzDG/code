@@ -1,5 +1,7 @@
 import type { NextConfig } from "next";
 
+import { legacyRedirects } from "./src/lib/legacyRoutes";
+
 /**
  * Browsers take HSTS only over HTTPS, so a production build always sends it
  * (two years, subdomains, preload-ready); `next dev` does not. The Content
@@ -16,6 +18,8 @@ const nextConfig: NextConfig = {
   // (src/app/api/*), so no rewrites or CORS are needed.
   poweredByHeader: false,
   reactStrictMode: true,
+  // Addresses from before the five sections (src/lib/legacyRoutes.ts).
+  redirects: async () => legacyRedirects(),
   async headers() {
     return [
       {

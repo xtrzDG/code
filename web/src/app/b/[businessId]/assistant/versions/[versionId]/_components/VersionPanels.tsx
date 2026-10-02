@@ -148,7 +148,7 @@ export function ToolsPanel({ details }: { details: AssistantVersionDetails }) {
             </span>
           </li>
         </ul>
-        <Link href={businessPath(business.id, "channels")} className="inline-block text-sm font-medium text-accent hover:underline">
+        <Link href={businessPath(business.id, "assistant/channels")} className="inline-block text-sm font-medium text-accent hover:underline">
           {t("assistant.detail.openChannels")}
         </Link>
       </section>

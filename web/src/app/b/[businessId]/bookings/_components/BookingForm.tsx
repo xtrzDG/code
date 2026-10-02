@@ -99,7 +99,7 @@ export function BookingForm({
         <Alert tone="info">
           <p>{t("bookings.form.noResources")}</p>
           <Link
-            href={`${businessPath(businessId, "onboarding")}?step=booking_rules`}
+            href={`${businessPath(businessId, "assistant/profile")}?step=booking_rules`}
             className="mt-1 inline-block font-medium text-accent hover:underline"
           >
             {t("bookings.form.toProfile")}

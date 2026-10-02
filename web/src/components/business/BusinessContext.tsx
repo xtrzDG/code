@@ -10,7 +10,7 @@
  *     format.money(item.price_minor);       // business currency
  */
 
-import { createContext, useContext, useMemo, type ReactNode } from "react";
+import { createContext, useContext, useMemo, useState, type ReactNode } from "react";
 
 import type { BusinessView, CurrentUserView } from "@/api/types";
 import { useI18n } from "@/i18n/client";
@@ -28,6 +28,10 @@ export interface BusinessContextValue {
   me: CurrentUserView;
   isOwner: boolean;
   isPlatformAdmin: boolean;
+  /** The assistant exists (the business left "onboarding"): the cabinet's sections open. */
+  isSetUp: boolean;
+  /** The first version was just built: open the sections now, before the refreshed business arrives. */
+  markSetUp: () => void;
 }
 
 const BusinessContext = createContext<BusinessContextValue | null>(null);
@@ -41,14 +45,17 @@ export function BusinessProvider({
   me: CurrentUserView;
   children: ReactNode;
 }) {
+  const [isBuiltHere, setBuiltHere] = useState(false);
   const value = useMemo<BusinessContextValue>(
     () => ({
       business,
       me,
       isOwner: business.viewer_role === "owner",
       isPlatformAdmin: me.user.is_platform_admin,
+      isSetUp: business.status !== "onboarding" || isBuiltHere,
+      markSetUp: () => setBuiltHere(true),
     }),
-    [business, me],
+    [business, me, isBuiltHere],
   );
   return <BusinessContext.Provider value={value}>{children}</BusinessContext.Provider>;
 }

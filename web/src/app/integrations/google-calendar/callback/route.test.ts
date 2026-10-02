@@ -22,10 +22,10 @@ describe("calendar completion helpers", () => {
 
   it("returns to the business's Channels page, or to the businesses list", () => {
     expect(calendarReturnPath({ business_id: "biz_1", connection: { calendar_id: "primary" } })).toBe(
-      "/b/biz_1/channels?calendar=connected",
+      "/b/biz_1/assistant/channels?calendar=connected",
     );
     expect(calendarReturnPath({ business_id: "biz_1", failure: "access_denied" })).toBe(
-      "/b/biz_1/channels?calendar=error&reason=access_denied",
+      "/b/biz_1/assistant/channels?calendar=error&reason=access_denied",
     );
     expect(calendarReturnPath({ business_id: null, failure: "link_expired" })).toBe(
       "/businesses?calendar=error&reason=link_expired",
@@ -44,7 +44,7 @@ describe("GET /integrations/google-calendar/callback", () => {
     const response = await GET(callback("aw_session=tok_owner"));
 
     expect(response.status).toBe(303);
-    expect(response.headers.get("location")).toBe("https://cabinet.example/b/biz_1/channels?calendar=connected");
+    expect(response.headers.get("location")).toBe("https://cabinet.example/b/biz_1/assistant/channels?calendar=connected");
     const [url, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
     expect(url).toMatch(/\/v1\/integrations\/google-calendar\/complete$/);
     expect(init.method).toBe("POST");

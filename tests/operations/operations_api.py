@@ -148,6 +148,7 @@ class Api:
                 list_unanswered_questions=operator(world.list_unanswered_questions()),
                 answer_unanswered_question=operator(world.answer_unanswered_question()),
                 get_dashboard_stats=operator(world.dashboard()),
+                get_inbox_counts=operator(world.inbox_counts()),
                 start_calendar_connection=operator(
                     StartGoogleCalendarConnectionUseCase(
                         business_repo=world.business_repo,

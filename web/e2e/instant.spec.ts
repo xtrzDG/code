@@ -11,20 +11,22 @@ import { LEAD_CUSTOMER, leadOf, onLeadPatch, serveLeads, type LeadListItem } fro
 const LOADING_REGION = '[role="status"][aria-busy="true"]';
 
 test("going back shows the section's data at once, from the cache", async ({ page, owner }) => {
-  await page.goto(`/b/${owner.businessId}/dashboard`);
+  await page.goto(`/b/${owner.businessId}/overview`);
   const navigation = page.getByRole("navigation", { name: en.nav.mainNavigation });
   const customerChannels = page.getByRole("heading", { name: en.channels.sectionCustomer });
 
-  await navigation.getByRole("link", { name: en.nav.channels, exact: true }).click();
+  // The Assistant's pages open under it in the sidebar.
+  await navigation.getByRole("link", { name: en.navigation.sections.assistant, exact: true }).click();
+  await navigation.getByRole("link", { name: en.navigation.pages.assistantChannels, exact: true }).click();
   await expect(customerChannels).toBeVisible();
-  await navigation.getByRole("link", { name: en.nav.knowledge, exact: true }).click();
-  await expect(page).toHaveURL(new RegExp(`/b/${owner.businessId}/knowledge$`));
+  await navigation.getByRole("link", { name: en.navigation.pages.assistantKnowledge, exact: true }).click();
+  await expect(page).toHaveURL(new RegExp(`/b/${owner.businessId}/assistant/knowledge$`));
   await expect(customerChannels).toBeHidden();
 
   // From here on the channels never answer: only the cache can show them.
   await page.route(`**/api/backend/v1/businesses/${owner.businessId}/channels`, () => new Promise<void>(() => undefined));
   await page.goBack();
-  await expect(page).toHaveURL(new RegExp(`/b/${owner.businessId}/channels$`));
+  await expect(page).toHaveURL(new RegExp(`/b/${owner.businessId}/assistant/channels$`));
   await expect(customerChannels).toBeVisible({ timeout: 1_500 });
   await expect(page.locator(LOADING_REGION)).toHaveCount(0);
   await expect(page.getByRole("status").filter({ hasText: en.common.loading })).toHaveCount(0);
@@ -42,7 +44,7 @@ test.describe("a lead's status", () => {
       await route.fulfill({ status: 500, json: { error: "internal_error", message: "Database is down." } });
     });
 
-    await page.goto(`/b/${owner.businessId}/leads`);
+    await page.goto(`/b/${owner.businessId}/messages/leads`);
     const status = page.getByLabel(en.leads.statusOf.replace("{name}", LEAD_CUSTOMER));
     await expect(status).toHaveValue("new");
 
@@ -69,7 +71,7 @@ test.describe("a lead's status", () => {
       await route.fulfill({ json: stored });
     });
 
-    await page.goto(`/b/${owner.businessId}/leads`);
+    await page.goto(`/b/${owner.businessId}/messages/leads`);
     const status = page.getByLabel(en.leads.statusOf.replace("{name}", LEAD_CUSTOMER));
     await status.selectOption("lost");
     const toast = page.getByRole("status").filter({ hasText: en.leads.updated.replace("{status}", en.leads.status.lost) });

@@ -48,6 +48,6 @@ export function calendarReturnPath(outcome: CalendarCompletionOutcome | null): s
   const query = new URLSearchParams(
     connected ? { calendar: "connected" } : { calendar: "error", reason: outcome?.failure || "provider_error" },
   );
-  const path = outcome?.business_id ? businessPath(outcome.business_id, "channels") : HOME_PATH;
+  const path = outcome?.business_id ? businessPath(outcome.business_id, "assistant/channels") : HOME_PATH;
   return `${path}?${query.toString()}`;
 }

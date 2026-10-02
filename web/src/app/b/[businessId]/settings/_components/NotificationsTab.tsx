@@ -73,7 +73,7 @@ export function NotificationsTab() {
       <Card>
         <div className="flex flex-wrap items-center justify-between gap-3">
           <p className="text-sm text-ink-muted">{t("settings.contacts.telegramLinkHint")}</p>
-          <ButtonLink href={businessPath(business.id, "channels")} variant="secondary" size="sm">
+          <ButtonLink href={businessPath(business.id, "assistant/channels")} variant="secondary" size="sm">
             {t("settings.contacts.openChannels")}
           </ButtonLink>
         </div>

@@ -22,6 +22,7 @@ from app.use_cases.handoffs.record_unanswered_question_use_case import (
 )
 from app.use_cases.handoffs.resolve_handoff_use_case import ResolveHandoffUseCase
 from app.use_cases.insights.get_dashboard_stats_use_case import GetDashboardStatsUseCase
+from app.use_cases.insights.get_inbox_counts_use_case import GetInboxCountsUseCase
 from app.use_cases.leads.create_lead_use_case import CreateLeadUseCase
 from app.use_cases.leads.list_leads_use_case import ListLeadsUseCase
 from app.use_cases.leads.update_lead_status_use_case import UpdateLeadStatusUseCase
@@ -113,6 +114,13 @@ class OperationsWorld(OperationsBookingFactories):
             unanswered_question_repo=self.question_repo,
             knowledge_item_repo=self.knowledge_repo,
             wall_clock=self.clock.wall_clock,
+        )
+
+    def inbox_counts(self) -> GetInboxCountsUseCase:
+        return GetInboxCountsUseCase(
+            business_repo=self.business_repo,
+            handoff_repo=self.handoff_repo,
+            lead_repo=self.lead_repo,
         )
 
     def dashboard(self) -> GetDashboardStatsUseCase:

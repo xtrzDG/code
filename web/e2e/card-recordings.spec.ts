@@ -24,7 +24,7 @@ test("a call recording loads only when played, seeks, and a missing one says so"
       : route.fulfill({ status: 404, json: { error: "not_found", message: "This call has no recording." } });
   });
 
-  await page.goto(`/b/${owner.businessId}/conversations/${CONVERSATION_ID}`);
+  await page.goto(`/b/${owner.businessId}/messages/${CONVERSATION_ID}`);
   const playButtons = page.getByRole("button", { name: datedLabel(en.conversations.calls.playLabel) });
   await expect(playButtons).toHaveCount(2);
   await page.waitForLoadState("networkidle");
@@ -70,7 +70,7 @@ test("a recording the service could not give can be tried again from the keyboar
       : route.fulfill({ status: 200, contentType: "audio/wav", body: silentWav() });
   });
 
-  await page.goto(`/b/${owner.businessId}/conversations/${CONVERSATION_ID}`);
+  await page.goto(`/b/${owner.businessId}/messages/${CONVERSATION_ID}`);
   await page.getByRole("button", { name: datedLabel(en.conversations.calls.playLabel) }).click();
   const failure = page.getByRole("alert").filter({ hasText: en.conversations.calls.playError });
   await expect(failure).toBeVisible();
@@ -96,10 +96,10 @@ test("an expired session sends the player to sign-in", async ({ page, owner, con
     route.fulfill({ status: 401, json: { error: "authentication_required", message: "Sign in again." } }),
   );
 
-  await page.goto(`/b/${owner.businessId}/conversations/${CONVERSATION_ID}`);
+  await page.goto(`/b/${owner.businessId}/messages/${CONVERSATION_ID}`);
   await page.getByRole("button", { name: datedLabel(en.conversations.calls.playLabel) }).click();
 
   await expect(page).toHaveURL(/\/login\?.*reason=expired/);
   const next = new URL(page.url()).searchParams.get("next");
-  expect(next).toBe(`/b/${owner.businessId}/conversations/${CONVERSATION_ID}`);
+  expect(next).toBe(`/b/${owner.businessId}/messages/${CONVERSATION_ID}`);
 });

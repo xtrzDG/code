@@ -1,58 +1,18 @@
-import { BUSINESS_SECTIONS } from "../src/lib/navigation";
+/**
+ * Sections whose data needs care: lists whose every load is written to the
+ * audit log, and "today" moving on at the business's midnight. Opening every
+ * section and page: navigation.spec.ts.
+ */
 
 import { expect, test } from "./support/fixtures";
 import { en } from "./support/messages";
 
-test.describe("every section of a business", () => {
-  test("opens from the sidebar without errors", async ({ page, owner }) => {
-    await page.goto(`/b/${owner.businessId}/dashboard`);
-    const navigation = page.getByRole("navigation", { name: en.nav.mainNavigation });
-
-    for (const section of BUSINESS_SECTIONS) {
-      await test.step(section, async () => {
-        await navigation.getByRole("link", { name: en.nav[section], exact: true }).click();
-        await expect(page).toHaveURL(new RegExp(`/b/${owner.businessId}/${section}(\\?|$)`));
-        await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
-        await expect(navigation.getByRole("link", { name: en.nav[section], exact: true })).toHaveAttribute(
-          "aria-current",
-          "page",
-        );
-        await page.waitForLoadState("networkidle");
-        // No section failed to load its data.
-        await expect(page.getByRole("button", { name: en.common.retry })).toHaveCount(0);
-      });
-    }
-  });
-
-  test.describe("on a phone", () => {
-    test.use({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
-
-    test("opens from the menu and fits the screen", async ({ page, owner }) => {
-      await page.goto(`/b/${owner.businessId}/dashboard`);
-
-      for (const section of BUSINESS_SECTIONS) {
-        await test.step(section, async () => {
-          await page.getByRole("button", { name: en.nav.openMenu }).click();
-          const menu = page.getByRole("dialog", { name: en.nav.mainNavigation });
-          await expect(menu).toBeVisible();
-          await menu.getByRole("link", { name: en.nav[section], exact: true }).click();
-          await expect(menu).toBeHidden();
-          await expect(page).toHaveURL(new RegExp(`/b/${owner.businessId}/${section}(\\?|$)`));
-          await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
-          await page.waitForLoadState("networkidle");
-          // Nothing makes the page wider than the phone.
-          const overflow = await page.evaluate(
-            () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
-          );
-          expect(overflow, `${section} scrolls sideways`).toBeLessThanOrEqual(0);
-        });
-      }
-    });
-  });
-});
-
 test.describe("lists whose every load is audited", () => {
-  for (const section of ["handoffs", "conversations"] as const) {
+  const lists = [
+    { section: "handoffs", page: "messages/handoffs" },
+    { section: "conversations", page: "messages" },
+  ] as const;
+  for (const { section, page: path } of lists) {
     test(`${section} reload on return and on Refresh, never on a timer`, async ({ page, owner }) => {
       await page.clock.install();
       const loads: string[] = [];
@@ -61,7 +21,7 @@ test.describe("lists whose every load is audited", () => {
           loads.push(request.url());
         }
       });
-      await page.goto(`/b/${owner.businessId}/${section}`);
+      await page.goto(`/b/${owner.businessId}/${path}`);
       await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
       await expect.poll(() => loads.length).toBe(1);
 

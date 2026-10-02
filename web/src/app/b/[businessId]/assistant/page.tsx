@@ -1,8 +1,8 @@
-import { sectionMetadata } from "@/components/business/SectionPlaceholder";
+import { pageMetadata } from "@/components/business/pageMetadata";
 
 import { TestChatScreen } from "./TestChatScreen";
 
-export const generateMetadata = sectionMetadata("assistant");
+export const generateMetadata = pageMetadata("assistant");
 
 /** Assistant: the test chat; `?version=…` talks to a chosen version. */
 export default async function AssistantPage({ searchParams }: PageProps<"/b/[businessId]/assistant">) {

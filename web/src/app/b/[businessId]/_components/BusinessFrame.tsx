@@ -6,7 +6,11 @@ import { BusinessShell } from "@/components/shell/BusinessShell";
 
 import { useSectionPrefetch } from "./useSectionPrefetch";
 
-/** The business sidebar, loading a section's first data ahead of the click. */
-export function BusinessFrame({ children }: { children: ReactNode }) {
-  return <BusinessShell prefetch={useSectionPrefetch()}>{children}</BusinessShell>;
+/** The business frame, loading a page's first data ahead of the click. */
+export function BusinessFrame({ children, initialCollapsed }: { children: ReactNode; initialCollapsed: boolean }) {
+  return (
+    <BusinessShell prefetch={useSectionPrefetch()} initialCollapsed={initialCollapsed}>
+      {children}
+    </BusinessShell>
+  );
 }

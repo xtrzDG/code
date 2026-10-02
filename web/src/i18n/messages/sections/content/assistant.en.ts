@@ -4,11 +4,6 @@
  */
 
 export const assistantEn = {
-  tabs: {
-    label: "Assistant sections",
-    chat: "Test chat",
-    versions: "Versions",
-  },
   live: "Customers talk to version {number}",
   liveSince: "Customers talk to version {number} since {date}",
   notLive: "The assistant is not live yet: build a version, test it and publish it.",

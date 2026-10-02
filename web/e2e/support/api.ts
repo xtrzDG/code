@@ -45,3 +45,31 @@ export async function createBusiness(request: APIRequestContext, token: string, 
   expect(response.status(), await response.text()).toBe(201);
   return ((await response.json()) as { id: string }).id;
 }
+
+/**
+ * Creates the business's assistant (its first version, without autotests),
+ * as the setup flow ends: the business leaves "onboarding" and the cabinet's
+ * sections open. One saved profile step is enough for the API to build it.
+ */
+export async function createAssistant(request: APIRequestContext, token: string, businessId: string): Promise<void> {
+  const headers = { authorization: `Bearer ${token}` };
+  const step = await request.put(`${API_URL}/v1/businesses/${businessId}/profile/steps/niche_and_languages`, {
+    data: { answers: [] },
+    headers,
+  });
+  expect(step.status(), await step.text()).toBe(200);
+  const built = await request.post(`${API_URL}/v1/businesses/${businessId}/assistant-versions`, {
+    data: { run_autotests: false },
+    headers,
+  });
+  expect(built.ok(), await built.text()).toBe(true);
+}
+
+/** Invites a staff member by e-mail into the business. */
+export async function inviteStaff(request: APIRequestContext, token: string, businessId: string, email: string): Promise<void> {
+  const response = await request.post(`${API_URL}/v1/businesses/${businessId}/members`, {
+    data: { email, role: "staff" },
+    headers: { authorization: `Bearer ${token}` },
+  });
+  expect(response.ok(), await response.text()).toBe(true);
+}

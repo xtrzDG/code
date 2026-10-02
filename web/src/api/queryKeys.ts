@@ -65,8 +65,12 @@ export const queryKeys = {
     all: (businessId: Id) => ["handoffs", businessId] as const,
     list: (businessId: Id, tab: string, includeTest: boolean) =>
       ["handoffs", businessId, "list", tab, includeTest] as const,
-    /** One open handoff and the totals (the dashboard's count). */
-    openCount: (businessId: Id) => ["handoffs", businessId, "openCount"] as const,
+  },
+
+  inbox: {
+    all: (businessId: Id) => ["inbox", businessId] as const,
+    /** Open handoffs and new requests: the badges on Messages (counts only, not audited). */
+    counts: (businessId: Id) => ["inbox", businessId, "counts"] as const,
   },
 
   knowledge: {

@@ -20,7 +20,7 @@ export function BuildVersionDialog({ onClose, onBuilt }: { onClose: () => void; 
   const { t, tp, locale } = useI18n();
   const toast = useToast();
   const router = useRouter();
-  const { business } = useBusiness();
+  const { business, isSetUp, markSetUp } = useBusiness();
   const [runAutotests, setRunAutotests] = useState(true);
 
   const gaps = useQuery(
@@ -49,6 +49,10 @@ export function BuildVersionDialog({ onClose, onBuilt }: { onClose: () => void; 
     }
     toast.success(t("assistant.build.built", { number: result.data.version_number }));
     onBuilt();
+    if (!isSetUp) {
+      // The first version: the assistant exists, the cabinet's sections open now.
+      markSetUp();
+    }
     router.push(`${businessPath(business.id, "assistant")}/versions/${encodeURIComponent(result.data.id)}`);
     // The business moves from "filling in the profile" to "testing".
     router.refresh();
@@ -75,7 +79,7 @@ export function BuildVersionDialog({ onClose, onBuilt }: { onClose: () => void; 
           tone="warning"
           title={tp("onboarding.gaps.notReady", blocking.length)}
           action={
-            <ButtonLink href={businessPath(business.id, "onboarding")} size="sm" variant="secondary">
+            <ButtonLink href={businessPath(business.id, "assistant/profile")} size="sm" variant="secondary">
               {t("assistant.build.openProfile")}
             </ButtonLink>
           }

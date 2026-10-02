@@ -7,14 +7,6 @@ import type { Translation } from "../../../translate";
 import type { settingsEn } from "./settings.en";
 
 export const settingsRu: Translation<typeof settingsEn> = {
-  tabsLabel: "Разделы настроек",
-  tabs: {
-    general: "Общие",
-    team: "Команда",
-    notifications: "Уведомления",
-    privacy: "Данные и приватность",
-    audit: "Журнал действий",
-  },
   general: {
     businessTitle: "Бизнес",
     name: "Название бизнеса",

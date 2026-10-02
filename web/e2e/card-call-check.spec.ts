@@ -19,7 +19,7 @@ test("a checked call is labelled and one with values missing from the data says 
   );
   await serveCard(page, owner.businessId, card);
 
-  await page.goto(`/b/${owner.businessId}/conversations/${CONVERSATION_ID}`);
+  await page.goto(`/b/${owner.businessId}/messages/${CONVERSATION_ID}`);
 
   const guard = en.conversations.calls.guard;
   await expect(page.getByText(guard.clean, { exact: true })).toBeVisible();
@@ -39,7 +39,7 @@ test("on a phone the findings fit the screen", async ({ page, owner }) => {
   card.calls = (card.calls ?? []).map((call) => ({ ...call, guard_verdict: "flagged", unverified_values: ["50 GEL"] }));
   await serveCard(page, owner.businessId, card);
 
-  await page.goto(`/b/${owner.businessId}/conversations/${CONVERSATION_ID}`);
+  await page.goto(`/b/${owner.businessId}/messages/${CONVERSATION_ID}`);
 
   const title = page.getByText(en.conversations.calls.guard.flaggedTitle, { exact: true });
   await expect(title).toBeVisible();

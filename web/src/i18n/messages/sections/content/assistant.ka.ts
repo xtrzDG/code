@@ -7,11 +7,6 @@ import type { Translation } from "../../../translate";
 import type { assistantEn } from "./assistant.en";
 
 export const assistantKa: Translation<typeof assistantEn> = {
-  tabs: {
-    label: "ასისტენტის განყოფილებები",
-    chat: "სატესტო ჩატი",
-    versions: "ვერსიები",
-  },
   live: "კლიენტები ვერსია {number}-ს ესაუბრებიან",
   liveSince: "კლიენტები ვერსია {number}-ს ესაუბრებიან {date}-დან",
   notLive: "ასისტენტი ჯერ არ მუშაობს კლიენტებთან: ააწყვეთ ვერსია, გატესტეთ და გამოაქვეყნეთ.",

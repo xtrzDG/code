@@ -1,4 +1,4 @@
-"""Cabinet route of the dashboard."""
+"""Cabinet routes of the dashboard and of the inbox counts on the navigation."""
 
 from typing import Annotated
 
@@ -13,6 +13,7 @@ from app.gateways.http.operations.query_values import parse_optional_text
 from app.gateways.http.user_authentication import CurrentUserDependency
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.dto.operations.dashboard import DashboardStats, DashboardStatsQuery
+from app.schemas.dto.operations.inbox_counts import InboxCounts, InboxCountsQuery
 from app.schemas.typings.bookings.constrained_strings import LocalDate
 from app.schemas.typings.users.prefixed_id import UserId
 
@@ -22,9 +23,11 @@ def build_dashboard_routes(
     current_user: CurrentUserDependency,
     authorize: BusinessAuthorizer,
     get_dashboard_stats: OperatorContract[DashboardStatsQuery, DashboardStats],
+    get_inbox_counts: OperatorContract[InboxCountsQuery, InboxCounts],
 ) -> APIRouter:
     """
-    The dashboard of a business (Bearer auth; owners and staff).
+    The dashboard of a business and how much waits in its inbox (Bearer
+    auth; owners and staff).
     """
 
     router = APIRouter()
@@ -44,5 +47,19 @@ def build_dashboard_routes(
                 date_to=parse_optional_text(date_to, LocalDate, "to"),
             )
         )
+
+    @router.get(f"{BUSINESS_PREFIX}/inbox-counts")
+    def get_inbox_counts_route(
+        business_id: str,
+        user_id: Annotated[UserId, Depends(current_user)],
+    ) -> InboxCounts:
+        """
+        Open handoffs and new requests (sandbox excluded): the badges on
+        Messages. Counts only, so the cabinet polls it without recording a
+        view of personal data.
+        """
+
+        business: BusinessDocument = authorize(user_id, business_id)
+        return get_inbox_counts.operate(InboxCountsQuery(business_id=business.id))
 
     return router

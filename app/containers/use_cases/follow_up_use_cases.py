@@ -25,6 +25,7 @@ from app.schemas.dto.operations.handoffs import (
     ListHandoffsQuery,
     ResolveHandoffCommand,
 )
+from app.schemas.dto.operations.inbox_counts import InboxCounts, InboxCountsQuery
 from app.schemas.dto.operations.leads import (
     LeadPage,
     ListLeadsQuery,
@@ -49,6 +50,7 @@ from app.use_cases.handoffs.record_unanswered_question_use_case import (
 )
 from app.use_cases.handoffs.resolve_handoff_use_case import ResolveHandoffUseCase
 from app.use_cases.insights.get_dashboard_stats_use_case import GetDashboardStatsUseCase
+from app.use_cases.insights.get_inbox_counts_use_case import GetInboxCountsUseCase
 from app.use_cases.leads.create_lead_use_case import CreateLeadUseCase
 from app.use_cases.leads.list_leads_use_case import ListLeadsUseCase
 from app.use_cases.leads.update_lead_status_use_case import UpdateLeadStatusUseCase
@@ -169,4 +171,12 @@ class FollowUpUseCasesContainer(containers.DeclarativeContainer):
         subscription_repo=repositories.subscription_repo,
         plan_registry=registries.plan_registry,
         wall_clock=time_provider.microsecond_wall_clock,
+    )
+    get_inbox_counts_use_case: Factory[
+        UseCaseContract[InboxCountsQuery, InboxCounts]
+    ] = Factory(
+        GetInboxCountsUseCase,
+        business_repo=repositories.business_repo,
+        handoff_repo=repositories.handoff_repo,
+        lead_repo=repositories.lead_repo,
     )

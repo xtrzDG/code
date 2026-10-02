@@ -16,6 +16,7 @@
     "test:coverage": "vitest run --coverage",
     "e2e": "playwright test --config e2e/playwright.config.ts",
     "measure:first-load": "node scripts/measure-first-load.mjs",
+    "gen:icons": "node scripts/render-app-icons.mjs",
     "gen:api": "npm run gen:api:spec && npm run gen:api:types && npm run gen:currencies && npm run gen:names",
     "gen:api:spec": "cd .. && uv run python -m scripts.export_openapi web/openapi.json",
     "gen:api:types": "openapi-typescript openapi.json --output src/api/schema.d.ts",
@@ -35,6 +36,7 @@
     "zod": "4.6.5"
   },
   "devDependencies": {
+    "@axe-core/playwright": "4.13.0",
     "@playwright/test": "1.56.1",
     "@tailwindcss/postcss": "4.3.3",
     "@types/node": "22.20.4",
