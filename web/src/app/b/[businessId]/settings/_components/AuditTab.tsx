@@ -15,17 +15,17 @@ import { useI18n } from "@/i18n/client";
 import type { MessageKey } from "@/i18n/translate";
 
 import {
+  actorLabel,
   AUDIT_ACTION_TONES,
   AUDIT_PAGE_SIZE,
-  EMPTY_AUDIT_FILTERS,
-  actorLabel,
   auditQuery,
+  EMPTY_AUDIT_FILTERS,
   hasAuditFilters,
   type AuditAction,
   type AuditFilters,
   type AuditLogEntry,
   type AuditLogPage,
-} from "../_lib/settings";
+} from "../_lib/audit";
 
 const ACTION_LABELS: Record<AuditAction, MessageKey> = {
   view: "settings.audit.actions.view",

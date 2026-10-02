@@ -21,16 +21,16 @@ import { useCursorList } from "@/components/workspace/useCursorList";
 import { useI18n } from "@/i18n/client";
 import { languageName } from "@/lib/format";
 
+import { memberLabel } from "../_lib/team";
 import {
   CONTACTS_PAGE_SIZE,
   contactSearchParam,
   erasureConfirmation,
   markErased,
-  memberLabel,
   type ContactPage,
   type ContactSummary,
   type ErasureResult,
-} from "../_lib/settings";
+} from "../_lib/customers";
 
 const SEARCH_DELAY_MS = 300;
 

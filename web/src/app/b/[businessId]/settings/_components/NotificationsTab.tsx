@@ -17,16 +17,15 @@ import type { MessageKey } from "@/i18n/translate";
 import { languageName } from "@/lib/format";
 import { businessPath } from "@/lib/navigation";
 
+import { languageChoices, type BusinessView } from "../_lib/general";
+import { isStaleRevision } from "../_lib/revision";
 import {
-  MAX_MANAGER_CONTACTS,
-  MAX_MANAGER_NAME_LENGTH,
   applyContactChange,
   contactFromForm,
   contactKey,
-  isStaleRevision,
-  languageChoices,
+  MAX_MANAGER_CONTACTS,
+  MAX_MANAGER_NAME_LENGTH,
   validateContact,
-  type BusinessView,
   type ContactChange,
   type ContactError,
   type ContactField,
@@ -34,7 +33,7 @@ import {
   type ManagerContact,
   type ManagerContactChannel,
   type ManagerContactInput,
-} from "../_lib/settings";
+} from "../_lib/contacts";
 
 const CHANNELS: readonly ManagerContactChannel[] = ["telegram", "whatsapp", "email", "sms"];
 

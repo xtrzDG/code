@@ -37,25 +37,22 @@ import { capitalizeFirst, languageName } from "@/lib/format";
 import { businessPath } from "@/lib/navigation";
 
 import {
+  buildGeneralChanges,
+  generalFormFrom,
+  hasChanges,
+  languageChoices,
   MAX_BUSINESS_NAME_LENGTH,
   MAX_CITY_LENGTH,
   MAX_RETENTION_DAYS,
   MIN_RETENTION_DAYS,
-  afterStatusSwitch,
-  buildGeneralChanges,
-  changesFromRevision,
-  generalFormFrom,
-  hasChanges,
-  isStaleRevision,
-  languageChoices,
-  rebaseGeneralForm,
   toggleLanguage,
   type BusinessView,
   type GeneralError,
   type GeneralField,
   type GeneralForm,
   type SettingsChanges,
-} from "../_lib/settings";
+} from "../_lib/general";
+import { afterStatusSwitch, changesFromRevision, isStaleRevision, rebaseGeneralForm } from "../_lib/revision";
 
 const GENERAL_ERRORS: Record<GeneralError, MessageKey> = {
   required: "settings.general.errors.required",

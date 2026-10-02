@@ -31,7 +31,7 @@ import {
   type InviteError,
   type InviteForm,
   type MemberRole,
-} from "../_lib/settings";
+} from "../_lib/team";
 
 const ROLE_NAMES: Record<MemberRole, "settings.roles.owner" | "settings.roles.staff"> = {
   owner: "settings.roles.owner",
