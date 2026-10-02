@@ -1,4 +1,4 @@
-"""Lock registry, staff broadcast and calendar repositories."""
+"""Lock registry and calendar repositories."""
 
 import threading
 import time
@@ -6,28 +6,20 @@ import time
 from app.adapters.storage.in_memory_document_collection import (
     InMemoryDocumentCollectionAdapter,
 )
-from app.facilitators.staff.manager_broadcast_facilitator import (
-    ManagerBroadcastFacilitator,
-)
 from app.registries.locks.business_lock_registry import BusinessLockRegistry
 from app.repositories.calendar_repositories import (
     CalendarConnectionRepository,
     CalendarEventLinkRepository,
 )
-from app.schemas.constants.handoffs import ManagerContactChannel
 from app.schemas.domain.calendar import (
     CalendarConnectionDocument,
     CalendarEventLinkDocument,
 )
-from app.schemas.dto.operations.message_texts import StaffMessage
 from app.schemas.typings.bookings.prefixed_id import BookingId
 from app.schemas.typings.bookings.strings import CalendarEventId, ExternalCalendarId
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.channels.strings import EncryptedChannelSecret
-from app.schemas.typings.conversations.strings import MessageText
 from app.schemas.typings.users.prefixed_id import UserId
-from tests.operations.builders import manager
-from tests.operations.fakes import RecordingManagerNotifier
 
 
 def test_lock_registry_serializes_one_business_but_not_others() -> None:
@@ -56,32 +48,6 @@ def test_lock_registry_serializes_one_business_but_not_others() -> None:
 
     assert events == ["first-start", "second", "first-end", "first-again"]
     assert registry.lock_for(first) is registry.lock_for(first)
-
-
-def test_broadcast_counts_deliveries_and_survives_failures() -> None:
-    notifier = RecordingManagerNotifier(
-        failing_addresses=frozenset({"+995555000111"}),
-        raising_addresses=frozenset({"boom@example.com"}),
-    )
-    broadcaster = ManagerBroadcastFacilitator(notifier)
-    contacts = [
-        manager("Nino", ManagerContactChannel.TELEGRAM, "4242", "ka"),
-        manager("Boom", ManagerContactChannel.EMAIL, "boom@example.com", "en"),
-        manager("Daniel", ManagerContactChannel.WHATSAPP, "+995555000111", "ru"),
-        manager("Anna", ManagerContactChannel.SMS, "+995555000222", "en"),
-    ]
-
-    delivered = broadcaster.broadcast(
-        [
-            StaffMessage(
-                business_id=BusinessId(), contact=contact, text=MessageText("Hi")
-            )
-            for contact in contacts
-        ]
-    )
-
-    assert delivered == 2
-    assert broadcaster.broadcast([]) == 0
 
 
 def test_calendar_repositories_are_scoped_by_business() -> None:

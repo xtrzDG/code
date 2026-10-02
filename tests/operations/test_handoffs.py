@@ -4,9 +4,6 @@ from datetime import datetime
 
 import pytest
 
-from app.facilitators.staff.manager_broadcast_facilitator import (
-    ManagerBroadcastFacilitator,
-)
 from app.schemas.constants.channels import ChannelKind
 from app.schemas.constants.conversations import ConversationStatus
 from app.schemas.constants.handoffs import HandoffReason, HandoffStatus, HandoffUrgency
@@ -46,7 +43,10 @@ def test_handoff_in_opening_hours_notifies_staff_and_silences_the_bot() -> None:
         "Канал: Telegram",
     ]
     assert texts["ka"].startswith("[მაღალი] კლიენტს ადამიანი სჭირდება")
-    assert texts["en"].startswith("[High] A customer needs a person")
+    # E-mail gets the brief: urgency and reason, no summary, name or phone.
+    assert texts["en"] == (
+        "Urgent: a customer needs a person\nTel Aviv Smile · Complaint"
+    )
 
 
 def test_handoff_after_hours_promises_a_reply_when_the_business_opens() -> None:
@@ -81,7 +81,7 @@ def test_failed_delivery_and_no_managers_mark_the_handoff() -> None:
     fixture.world.notifier = RecordingManagerNotifier(
         failing_addresses=frozenset({"4242", "+995555000111", "anna@example.com"})
     )
-    fixture.world.broadcaster = ManagerBroadcastFacilitator(fixture.world.notifier)
+    fixture.world.rebuild_staff_alerts()
 
     assert fixture.hand_off().status is HandoffStatus.NOTIFICATION_FAILED
 

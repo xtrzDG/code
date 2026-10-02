@@ -419,7 +419,8 @@ UI-тестов); `color`, `position` и `language` в ней показываю
 | `ZADARMA_API_KEY`, `ZADARMA_API_SECRET` | пока не используются: номер помощника покупается в Zadarma вручную и вводится в кабинете (канал «Телефон») |
 | `META_APP_SECRET`, `META_VERIFY_TOKEN`, `WHATSAPP_SYSTEM_USER_TOKEN` | WhatsApp, Instagram и Messenger не принимают вебхуки, WhatsApp не подключается и не отправляет сообщения |
 | `META_APP_ID` | пока не используется |
-| `TELEGRAM_PLATFORM_BOT_TOKEN`, `WHATSAPP_NOTIFICATION_PHONE_NUMBER_ID`, `WHATSAPP_NOTIFICATION_TEMPLATE` | уведомления сотрудникам только пишутся в лог |
+| `TELEGRAM_PLATFORM_BOT_TOKEN`, `WHATSAPP_NOTIFICATION_PHONE_NUMBER_ID`, `WHATSAPP_NOTIFICATION_TEMPLATE` | уведомления сотрудникам в Telegram и WhatsApp не уходят (контакт показывает причину). Почта и SMS сотрудникам идут через `SMTP_*` и `TWILIO_*` (как коды входа); без них вне `production` пишутся в лог |
+| `WEB_PUSH_VAPID_PUBLIC_KEY`, `WEB_PUSH_VAPID_PRIVATE_KEY`, `WEB_PUSH_VAPID_SUBJECT` | уведомлений на устройства (Web Push) нет: кнопка «Включить на этом устройстве» скрыта; задаются все три или ни одной, пара ключей проверяется при запуске |
 | `WHATSAPP_REMINDER_TEMPLATE` | напоминание о брони в WhatsApp уходит, только если клиент писал туда за последние 24 часа |
 | `GOOGLE_OAUTH_CLIENT_ID`, `GOOGLE_OAUTH_CLIENT_SECRET` | нет синхронизации с Google Calendar |
 | `FLITT_MERCHANT_ID`, `FLITT_SECRET_KEY` | оплата недоступна (502), вебхук оплаты отклоняется |

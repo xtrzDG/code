@@ -4,9 +4,6 @@ import threading
 
 import pytest
 
-from app.facilitators.staff.manager_broadcast_facilitator import (
-    ManagerBroadcastFacilitator,
-)
 from app.schemas.constants.bookings import BookingStatus
 from app.schemas.constants.compliance import AuditAction
 from app.schemas.exceptions.application_errors import (
@@ -79,9 +76,11 @@ def test_every_manager_is_notified_in_their_language() -> None:
     assert texts["ru"].startswith("Новая бронь · Salobie Bia")
     assert "Телефон: +995 555 12 34 56" in texts["ru"]
     assert "Пожелания: Window seat" in texts["ru"]
-    assert "Channel: WhatsApp" in texts["en"]
-    assert "Table 4" in texts["en"] and "19:00–21:00" in texts["en"]
-    assert "October 6, 2026" in texts["en"]
+    # E-mail gets the brief: when and how many, nothing about the customer.
+    assert texts["en"] == (
+        "New booking · Salobie Bia\nTuesday, October 6, 2026, 19:00–21:00 · guests: 4"
+    )
+    assert "Phone" not in texts["en"] and "Window seat" not in texts["en"]
     assert restaurant.world.calendar_sync.synced[0].id == (
         restaurant.world.bookings_of(restaurant.business.id)[0].id
     )
@@ -103,7 +102,7 @@ def test_failing_notifier_never_breaks_the_booking() -> None:
         failing_addresses=frozenset({"+995555000111"}),
         raising_addresses=frozenset({"4242"}),
     )
-    world.broadcaster = ManagerBroadcastFacilitator(world.notifier)
+    world.rebuild_staff_alerts()
     restaurant = Restaurant(world)
 
     result = restaurant.book(restaurant.command())

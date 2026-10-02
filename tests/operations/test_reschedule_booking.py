@@ -36,7 +36,9 @@ class TestReschedule:
         assert "has been moved to Wednesday, October 7, 2026, 20:00" in text
         assert "Cancellation policy:" in text
         assert any(
-            str(message).startswith("Booking moved to a new time")
+            str(message).startswith(
+                ("Booking moved to a new time", "Booking moved · ")
+            )
             for _, message in restaurant.world.notifier.sent
         )
         assert restaurant.world.calendar_sync.synced[-1].id == restaurant.dinner.id

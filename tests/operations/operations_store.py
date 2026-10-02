@@ -5,8 +5,8 @@ from datetime import datetime
 from app.adapters.storage.in_memory_document_collection import (
     InMemoryDocumentCollectionAdapter,
 )
-from app.facilitators.staff.manager_broadcast_facilitator import (
-    ManagerBroadcastFacilitator,
+from app.facilitators.notifications.staff_alert_facilitator import (
+    StaffAlertFacilitator,
 )
 from app.registries.billing.plan_registry import PlanRegistry
 from app.registries.locks.business_lock_registry import BusinessLockRegistry
@@ -47,6 +47,7 @@ from app.schemas.domain.knowledge import KnowledgeItemDocument
 from app.schemas.domain.profiles import BusinessProfileDocument
 from app.schemas.domain.resources import ResourceDocument, ScheduleExceptionDocument
 from app.schemas.domain.users import UserDocument
+from tests.notifications.staff_alert_fakes import RecordingPushQueue, build_staff_alerts
 from tests.operations.builders import DEFAULT_NOW
 from tests.operations.fakes import (
     FakeLocalizedTextResolver,
@@ -128,6 +129,18 @@ class OperationsStore:
         self.resolver = FakeLocalizedTextResolver()
         self.phone_parser = PhonenumbersParser()
         self.notifier = RecordingManagerNotifier()
-        self.broadcaster = ManagerBroadcastFacilitator(self.notifier)
+        self.push_queue = RecordingPushQueue()
+        self.staff_alerts: StaffAlertFacilitator = self.rebuild_staff_alerts()
         self.calendar_sync = RecordingCalendarSync()
         self.lock_registry = BusinessLockRegistry()
+
+    def rebuild_staff_alerts(self) -> StaffAlertFacilitator:
+        """Staff alerts over the current notifier (after replacing it)."""
+
+        self.staff_alerts = build_staff_alerts(
+            self.notifier,
+            self.resolver,
+            self.clock.wall_clock,
+            push_queue=self.push_queue,
+        )
+        return self.staff_alerts

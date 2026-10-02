@@ -3,8 +3,17 @@
 from app.facilitators.notifications.manager_notification_facilitator import (
     ManagerNotificationFacilitator,
 )
+from app.facilitators.notifications.push_notification_sender_facilitator import (
+    PushNotificationSenderFacilitator,
+)
+from app.facilitators.notifications.staff_delivery_recorder_facilitator import (
+    StaffDeliveryRecorderFacilitator,
+)
 from app.facilitators.notifications.staff_notification_sender_facilitator import (
     StaffNotificationSenderFacilitator,
+)
+from app.registries.limits.request_rate_limit_registry import (
+    RequestRateLimitRegistry,
 )
 from app.schemas.configurations.app_settings import AppSettings
 from app.use_cases.channels.inbox.accept_platform_bot_update_use_case import (
@@ -47,6 +56,11 @@ from app.use_cases.channels.outbox.take_due_outbound_message_use_case import (
     TakeDueOutboundMessageUseCase,
 )
 from tests.channels.channels_use_cases import ChannelsUseCases
+from tests.notifications.staff_alert_fakes import push_subscription_repo
+from tests.notifications.web_push_fakes import (
+    FakeWebPushClient,
+    staff_delivery_state_repo,
+)
 
 # Retries come exactly after the base backoff (no jitter) in these tests.
 NO_JITTER: float = 0.5
@@ -60,8 +74,23 @@ class ChannelsInbox(ChannelsUseCases):
         self.staff_sender = StaffNotificationSenderFacilitator(
             self.telegram_client, self.whatsapp_adapter, self.settings
         )
+        self.push_subscription_repo = push_subscription_repo()
+        self.staff_delivery_state_repo = staff_delivery_state_repo()
+        self.delivery_recorder = StaffDeliveryRecorderFacilitator(
+            self.staff_delivery_state_repo, self.push_subscription_repo
+        )
+        self.rate_limits = RequestRateLimitRegistry()
+        self.web_push_client = FakeWebPushClient()
+        self.push_sender = PushNotificationSenderFacilitator(
+            self.push_subscription_repo, self.web_push_client
+        )
         self.staff_notifier = ManagerNotificationFacilitator(
-            self.outbound_message_repo, self.job_queue, self.settings, self.wall_clock
+            self.outbound_message_repo,
+            self.job_queue,
+            self.settings,
+            self.rate_limits,
+            self.delivery_recorder,
+            self.wall_clock,
         )
         self.store_inbound_messages = StoreInboundMessagesUseCase(
             self.inbound_event_repo, self.job_queue, self.wall_clock
@@ -102,6 +131,7 @@ class ChannelsInbox(ChannelsUseCases):
             self.channel_repo,
             self.secret_cipher,
             self.staff_sender,
+            self.push_sender,
             self.usage_event_repo,
             self.wall_clock,
         )
@@ -110,6 +140,7 @@ class ChannelsInbox(ChannelsUseCases):
             self.job_queue,
             self.channel_repo,
             self.handoff_repo,
+            self.delivery_recorder,
             jitter=lambda: NO_JITTER,
         )
         self.build_undelivered_reply_handoff = BuildUndeliveredReplyHandoffUseCase(

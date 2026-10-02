@@ -26,6 +26,7 @@ OPTIONAL_PROVIDERS: frozenset[str] = frozenset(
         "clients.whatsapp_authentication_client",
         "clients.smtp_email_client",
         "clients.turnstile_verification_client",
+        "clients.web_push_client",
     }
 )
 
