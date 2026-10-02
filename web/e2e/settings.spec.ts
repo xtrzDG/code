@@ -45,6 +45,94 @@ test("a general settings save after someone else's is refused, reloaded and expl
   await expect(city).toHaveValue("Potsdam");
 });
 
+test("general settings opened after a save made elsewhere earlier still save", async ({ page, owner, request }) => {
+  await page.goto(`/b/${owner.businessId}/dashboard`);
+  await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+  // The platform bot adds a manager: no field of the General form changes,
+  // the revision does; the layout keeps the business it loaded.
+  await saveElsewhere(request, owner, { manager_contacts: [{ name: "Levan", channel: "telegram", address: "777000111" }] });
+  await page
+    .getByRole("navigation", { name: en.nav.mainNavigation })
+    .getByRole("link", { name: en.nav.settings, exact: true })
+    .click();
+  const city = page.getByRole("textbox", { name: new RegExp(`^${en.settings.general.city}`) });
+  await expect(city).toHaveValue("Berlin");
+
+  await city.fill("Potsdam");
+  await page.getByRole("button", { name: en.settings.general.save }).click();
+
+  await expect(page.getByText(en.settings.general.saved)).toBeVisible();
+  await expect(page.getByText(en.settings.general.staleDescription)).toBeHidden();
+  await expect(city).toHaveValue("Potsdam");
+});
+
+test("a general settings save after an unrelated save elsewhere keeps what was typed", async ({
+  page,
+  owner,
+  request,
+  consoleErrors,
+}) => {
+  consoleErrors.allow(/status of 409/);
+  await page.goto(`/b/${owner.businessId}/settings`);
+  const name = page.getByRole("textbox", { name: new RegExp(`^${en.settings.general.name}`) });
+  const city = page.getByRole("textbox", { name: new RegExp(`^${en.settings.general.city}`) });
+  await expect(city).toHaveValue("Berlin");
+
+  await name.fill("Renamed Bistro");
+  await city.fill("Potsdam");
+  await saveElsewhere(request, owner, { manager_contacts: [{ name: "Levan", channel: "telegram", address: "777000111" }] });
+  await page.getByRole("button", { name: en.settings.general.save }).click();
+
+  // Nobody else changed these fields: they are saved on top of the newer
+  // business, which keeps its new contact.
+  await expect(page.getByText(en.settings.general.saved)).toBeVisible();
+  await expect(page.getByText(en.settings.general.staleDescription)).toBeHidden();
+  await page.reload();
+  await expect(name).toHaveValue("Renamed Bistro");
+  await expect(city).toHaveValue("Potsdam");
+  const stored = await request.get(`${API_URL}/v1/businesses/${owner.businessId}`, {
+    headers: { authorization: `Bearer ${owner.token}` },
+  });
+  const business = (await stored.json()) as { manager_contacts: { name: string }[] };
+  expect(business.manager_contacts.map((contact) => contact.name)).toEqual(["Levan"]);
+});
+
+test("a stale save whose reload fails does not claim the current settings are shown", async ({
+  page,
+  owner,
+  request,
+  consoleErrors,
+}) => {
+  consoleErrors.allow(/status of (409|503)/);
+  await page.goto(`/b/${owner.businessId}/settings`);
+  const city = page.getByRole("textbox", { name: new RegExp(`^${en.settings.general.city}`) });
+  await expect(city).toHaveValue("Berlin");
+
+  await city.fill("Potsdam");
+  await saveElsewhere(request, owner, { city: "Hamburg" });
+  // The reload after the refused save fails once (the save itself and later
+  // reloads reach the API).
+  let failedReloads = 0;
+  await page.route(`**/api/backend/v1/businesses/${owner.businessId}`, (route) => {
+    if (route.request().method() !== "GET" || failedReloads > 0) {
+      return route.fallback();
+    }
+    failedReloads += 1;
+    return route.fulfill({ status: 503, json: { error: "external_service_error", message: "Try later." } });
+  });
+  await page.getByRole("button", { name: en.settings.general.save }).click();
+
+  await expect(page.getByText(en.settings.general.staleReloadFailed)).toBeVisible();
+  await expect(page.getByText(en.settings.general.staleDescription)).toBeHidden();
+  await expect(city).toHaveValue("Potsdam");
+
+  await page.getByRole("button", { name: en.settings.general.staleReload }).click();
+  await expect(page.getByText(en.settings.general.staleDescription)).toBeVisible();
+  await expect(page.getByText(en.settings.general.staleReloadFailed)).toBeHidden();
+  // The city was changed on both sides: it shows the stored value.
+  await expect(city).toHaveValue("Hamburg");
+});
+
 test("a notification contact saved after the list changed elsewhere is refused and the list reloads", async ({
   page,
   owner,

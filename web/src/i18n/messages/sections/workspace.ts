@@ -463,7 +463,9 @@ export const workspaceEn = {
       noChanges: "Nothing has changed",
       unsaved: "You have unsaved changes.",
       staleTitle: "Someone else saved these settings while you were editing",
-      staleDescription: "Your changes were not saved. The current settings are shown now: check them and make your changes again.",
+      staleDescription: "Your changes were not saved. Fields someone else changed now show their saved values; your other changes are kept. Check them and save again.",
+      staleReloadFailed: "Your changes were not saved, and the current settings could not be loaded. The form still shows your changes.",
+      staleReload: "Load current settings",
       errors: {
         required: "Fill in this field",
         tooLong: "The text is too long",
@@ -1319,7 +1321,9 @@ export const workspaceRu: Translation<typeof workspaceEn> = {
       noChanges: "Ничего не изменилось",
       unsaved: "Есть несохранённые изменения.",
       staleTitle: "Пока вы редактировали, настройки сохранил кто-то другой",
-      staleDescription: "Ваши изменения не сохранены. Сейчас показаны актуальные настройки: проверьте их и внесите изменения ещё раз.",
+      staleDescription: "Ваши изменения не сохранены. Поля, которые изменил кто-то другой, теперь показывают сохранённые значения; остальные ваши изменения остались. Проверьте их и сохраните ещё раз.",
+      staleReloadFailed: "Ваши изменения не сохранены, а актуальные настройки загрузить не удалось. В форме по-прежнему ваши изменения.",
+      staleReload: "Загрузить актуальные настройки",
       errors: {
         required: "Заполните это поле",
         tooLong: "Слишком длинный текст",
@@ -2180,7 +2184,9 @@ export const workspaceKa: Translation<typeof workspaceEn> = {
       noChanges: "არაფერი შეცვლილა",
       unsaved: "გაქვთ შეუნახავი ცვლილებები.",
       staleTitle: "სანამ არედაქტირებდით, ეს პარამეტრები სხვამ შეინახა",
-      staleDescription: "თქვენი ცვლილებები არ შენახულა. ახლა ნაჩვენებია მიმდინარე პარამეტრები: გადაამოწმეთ და ცვლილებები ხელახლა შეიტანეთ.",
+      staleDescription: "თქვენი ცვლილებები არ შენახულა. ველები, რომლებიც სხვამ შეცვალა, ახლა შენახულ მნიშვნელობებს აჩვენებს; თქვენი დანარჩენი ცვლილებები დარჩა. გადაამოწმეთ და ხელახლა შეინახეთ.",
+      staleReloadFailed: "თქვენი ცვლილებები არ შენახულა და მიმდინარე პარამეტრების ჩატვირთვა ვერ მოხერხდა. ფორმაში კვლავ თქვენი ცვლილებებია.",
+      staleReload: "მიმდინარე პარამეტრების ჩატვირთვა",
       errors: {
         required: "შეავსეთ ეს ველი",
         tooLong: "ტექსტი ძალიან გრძელია",

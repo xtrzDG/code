@@ -10,7 +10,21 @@ import type { ApiError } from "@/api/errors";
 import { useApiMutation, useApiQuery } from "@/api/hooks";
 import { BusinessStatusBadge } from "@/components/business/BusinessStatusBadge";
 import { useBusiness } from "@/components/business/BusinessContext";
-import { Alert, Badge, Button, ButtonLink, Card, Checkbox, Field, Fieldset, Input, Select, useToast } from "@/components/ui";
+import {
+  Alert,
+  Badge,
+  Button,
+  ButtonLink,
+  Card,
+  Checkbox,
+  ErrorState,
+  Field,
+  Fieldset,
+  Input,
+  LoadingBlock,
+  Select,
+  useToast,
+} from "@/components/ui";
 import { ConfirmDialog } from "@/components/workspace/ConfirmDialog";
 import { Facts } from "@/components/workspace/Facts";
 import { IconPause, IconPlay } from "@/components/workspace/icons";
@@ -34,6 +48,7 @@ import {
   hasChanges,
   isStaleRevision,
   languageChoices,
+  rebaseGeneralForm,
   toggleLanguage,
   type BusinessView,
   type GeneralError,
@@ -66,32 +81,53 @@ function allTimeZones(): string[] {
 
 /**
  * Business details, languages and time, recording retention; and the
- * assistant's live/paused switch. Saves carry the business revision they
- * were made from: a save after someone else's is refused, and the form
- * reloads and says so instead of overwriting it.
+ * assistant's live/paused switch. The form starts from the business as
+ * stored when the tab opens (the layout's copy may be older), and saves
+ * carry the business revision they were made from. A save refused because
+ * someone saved since is put on top of what is stored now: when nobody
+ * else changed the same fields, it is saved again at once; otherwise those
+ * fields show the stored values, the rest keeps what was typed, and the
+ * form says so.
  */
 export function GeneralTab() {
+  const { t } = useI18n();
   const { business } = useBusiness();
+  // The layout loads the business once and keeps it across pages, so a save
+  // made since (platform bot, billing, another owner) leaves its revision
+  // behind: start from the business as stored now, else the first save is
+  // refused as stale.
+  const stored = useApiQuery(
+    () => api.GET("/v1/businesses/{business_id}", { params: { path: { business_id: business.id } } }),
+    [business.id],
+  );
   // The business as the status switch last saved it: the form takes over
   // its revision, so its next save is not refused for this tab's own change.
   const [switched, setSwitched] = useState<BusinessView | null>(null);
   return (
     <div className="space-y-6">
       <AssistantStatusCard onSaved={setSwitched} />
-      <GeneralSettingsForm key={business.id} switched={switched} />
+      {stored.data ? (
+        <GeneralSettingsForm key={business.id} initial={stored.data} switched={switched} />
+      ) : stored.error ? (
+        <ErrorState error={stored.error} onRetry={stored.reload} className="py-6" />
+      ) : (
+        <LoadingBlock label={t("common.loading")} className="min-h-48" />
+      )}
     </div>
   );
 }
 
-function GeneralSettingsForm({ switched }: { switched: BusinessView | null }) {
+function GeneralSettingsForm({ initial, switched }: { initial: BusinessView; switched: BusinessView | null }) {
   const { t, locale } = useI18n();
   const toast = useToast();
   const router = useRouter();
   const { business, isOwner } = useBusiness();
-  const [loaded, setLoaded] = useState<BusinessView>(business);
-  const [form, setForm] = useState<GeneralForm>(() => generalFormFrom(business));
+  const [loaded, setLoaded] = useState<BusinessView>(initial);
+  const [form, setForm] = useState<GeneralForm>(() => generalFormFrom(initial));
   const [errors, setErrors] = useState<Partial<Record<GeneralField, GeneralError>>>({});
   const [isStale, setStale] = useState(false);
+  // Refused as stale, but what is stored now could not be loaded either.
+  const [isReloadFailed, setReloadFailed] = useState(false);
   // The status switch changes no field of this form, only the revision.
   const baseline = afterStatusSwitch(loaded, switched);
 
@@ -101,6 +137,11 @@ function GeneralSettingsForm({ switched }: { switched: BusinessView | null }) {
   const save = useApiMutation(
     (changes: SettingsChanges) =>
       api.PATCH("/v1/businesses/{business_id}", { params: { path: { business_id: business.id } }, body: changes }),
+    { errorToast: false },
+  );
+  // Both a refused answer and a network failure come back as a result.
+  const reload = useApiMutation(
+    () => api.GET("/v1/businesses/{business_id}", { params: { path: { business_id: business.id } } }),
     { errorToast: false },
   );
 
@@ -131,11 +172,64 @@ function GeneralSettingsForm({ switched }: { switched: BusinessView | null }) {
 
   const result = buildGeneralChanges(baseline, form);
   const isDirty = !result.ok || hasChanges(result.changes);
-  const disabled = !isOwner || save.isPending;
+  const disabled = !isOwner || save.isPending || reload.isPending;
 
   const update = <Field extends GeneralField>(field: Field, value: GeneralForm[Field]) => {
     setForm((current) => ({ ...current, [field]: value }));
     setErrors((current) => ({ ...current, [field]: undefined }));
+  };
+
+  const saved = (stored: BusinessView) => {
+    setLoaded(stored);
+    setForm(generalFormFrom(stored));
+    router.refresh();
+    toast.success(t("settings.general.saved"));
+  };
+
+  /**
+   * Save `typed` (made from `base`). Refused because someone saved since:
+   * put it on top of what is stored now, and save once more when nobody
+   * else changed the same fields.
+   */
+  const store = async (base: BusinessView, typed: GeneralForm, mayRetry: boolean): Promise<void> => {
+    const built = buildGeneralChanges(base, typed);
+    if (!built.ok) {
+      setErrors(built.errors);
+      return;
+    }
+    if (!hasChanges(built.changes)) {
+      // What was typed is what is stored now.
+      saved(base);
+      return;
+    }
+    const answer = await save.run(changesFromRevision(built.changes, base));
+    if (answer.ok) {
+      saved(answer.data);
+      return;
+    }
+    if (!isStaleRevision(answer.error)) {
+      toast.error(answer.error);
+      return;
+    }
+    const latest = await reload.run();
+    router.refresh();
+    if (!latest.ok) {
+      // Do not claim the form shows what is stored: it still shows the
+      // owner's own (refused) changes.
+      setReloadFailed(true);
+      toast.show({ tone: "error", title: t("settings.general.staleTitle") });
+      return;
+    }
+    const rebased = rebaseGeneralForm(base, latest.data, typed);
+    setLoaded(latest.data);
+    setForm(rebased.form);
+    setErrors({});
+    if (rebased.conflicts.length === 0 && mayRetry) {
+      await store(latest.data, rebased.form, false);
+      return;
+    }
+    setStale(true);
+    toast.show({ tone: "error", title: t("settings.general.staleTitle") });
   };
 
   const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -149,34 +243,42 @@ function GeneralSettingsForm({ switched }: { switched: BusinessView | null }) {
       return;
     }
     setStale(false);
-    const saved = await save.run(changesFromRevision(result.changes, baseline));
-    if (saved.ok) {
-      setLoaded(saved.data);
-      setForm(generalFormFrom(saved.data));
-      router.refresh();
-      toast.success(t("settings.general.saved"));
+    setReloadFailed(false);
+    await store(baseline, form, true);
+  };
+
+  const loadCurrent = async () => {
+    const latest = await reload.run();
+    if (!latest.ok) {
+      toast.error(latest.error);
       return;
     }
-    if (!isStaleRevision(saved.error)) {
-      toast.error(saved.error);
-      return;
-    }
-    // Someone saved since this form was loaded: show what is stored now.
-    const latest = await api.GET("/v1/businesses/{business_id}", { params: { path: { business_id: business.id } } });
-    if (latest.data) {
-      setLoaded(latest.data);
-      setForm(generalFormFrom(latest.data));
-      setErrors({});
-    }
+    const rebased = rebaseGeneralForm(baseline, latest.data, form);
+    setLoaded(latest.data);
+    setForm(rebased.form);
+    setErrors({});
+    setReloadFailed(false);
     setStale(true);
     router.refresh();
-    toast.show({ tone: "error", title: t("settings.general.staleTitle") });
   };
 
   const errorText = (field: GeneralField) => (errors[field] ? t(GENERAL_ERRORS[errors[field]]) : undefined);
 
   return (
     <form onSubmit={onSubmit} noValidate className="space-y-6">
+      {isReloadFailed ? (
+        <Alert
+          tone="danger"
+          title={t("settings.general.staleTitle")}
+          action={
+            <Button variant="secondary" size="sm" isLoading={reload.isPending} onClick={() => void loadCurrent()}>
+              {t("settings.general.staleReload")}
+            </Button>
+          }
+        >
+          {t("settings.general.staleReloadFailed")}
+        </Alert>
+      ) : null}
       {isStale ? (
         <Alert
           tone="warning"

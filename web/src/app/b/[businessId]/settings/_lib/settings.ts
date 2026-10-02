@@ -159,6 +159,41 @@ export function afterStatusSwitch(loaded: BusinessView, switched: BusinessView |
   return isSameForm ? switched : loaded;
 }
 
+export interface RebasedGeneralForm {
+  form: GeneralForm;
+  /** Fields changed both here and elsewhere: they now show the stored value. */
+  conflicts: GeneralField[];
+}
+
+function sameFormValue(left: GeneralForm[GeneralField], right: GeneralForm[GeneralField]): boolean {
+  return Array.isArray(left) && Array.isArray(right) ? sameList(left, right) : left === right;
+}
+
+/**
+ * After a save refused as stale: the business as stored now (`latest`)
+ * with the owner's own changes (the form against `shown`) on top. A field
+ * someone else changed too takes the stored value and is reported; a
+ * revision raised by an unrelated save (a manager linked, billing) keeps
+ * everything that was typed.
+ */
+export function rebaseGeneralForm(shown: BusinessView, latest: BusinessView, form: GeneralForm): RebasedGeneralForm {
+  const before = generalFormFrom(shown);
+  const stored = generalFormFrom(latest);
+  const next: Record<GeneralField, GeneralForm[GeneralField]> = { ...stored };
+  const conflicts: GeneralField[] = [];
+  for (const field of Object.keys(before) as GeneralField[]) {
+    if (sameFormValue(form[field], before[field])) {
+      continue;
+    }
+    if (sameFormValue(stored[field], before[field]) || sameFormValue(stored[field], form[field])) {
+      next[field] = form[field];
+    } else {
+      conflicts.push(field);
+    }
+  }
+  return { form: next as unknown as GeneralForm, conflicts };
+}
+
 /** Languages to offer: the business's own first, then the others, without repeats. */
 export function languageChoices(...groups: readonly (readonly string[])[]): string[] {
   return [...new Set(groups.flat())];
