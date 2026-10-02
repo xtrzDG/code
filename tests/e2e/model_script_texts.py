@@ -3,7 +3,6 @@
 import re
 
 LANGUAGE_TAG_PATTERN: re.Pattern[str] = re.compile(r"language tag ([A-Za-z\-]+)\)")
-
 GOAL_PATTERN: re.Pattern[str] = re.compile(r"^Your goal: (.+)$", re.MULTILINE)
 
 # What the AI customer writes, by scenario language and intent.
@@ -52,11 +51,8 @@ ASSISTANT_TEXTS: dict[str, dict[str, str]] = {
         "fine": "All right.",
     },
 }
-
 HANDOFF_WORDS: tuple[str, ...] = ("менеджер", "მენეჯერ", "manager")
-
 BOOKING_WORDS: tuple[str, ...] = ("забронировать", "დაჯავშნა", "book a table")
-
 PRICE_WORDS: tuple[str, ...] = ("ღირს", "Сколько стоит", "How much")
 
 

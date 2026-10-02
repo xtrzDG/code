@@ -5,17 +5,11 @@ from typing import Any
 
 # Monday 2026-10-05 08:00 UTC: 12:00 in Tbilisi, 10:00 in Rome.
 START: datetime = datetime(2026, 10, 5, 8, 0, tzinfo=UTC)
-
 API_BASE_URL: str = "https://api.workshop.example"
-
 CABINET_ORIGIN: str = "https://cabinet.workshop.example"
-
 ADMIN_EMAIL: str = "admin@workshop.example"
-
 PLATFORM_BOT_TOKEN: str = "123456:platform-bot-token"
-
 ELEVENLABS_BASE_URL: str = "https://elevenlabs.test"
-
 E2E_ENVIRONMENT: dict[str, str] = {
     "APP_ENV": "test",
     "APP_BASE_URL": API_BASE_URL,

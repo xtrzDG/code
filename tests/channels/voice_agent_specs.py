@@ -25,11 +25,9 @@ from tests.channels.channels_settings import ELEVENLABS_WEBHOOK_SECRET
 from tests.channels.testbed import ChannelsTestbed
 
 BUSINESS_ID = BusinessId()
-
 TOOL_SECRET: str = str(
     derive_voice_tool_secret(PlatformSecret(ELEVENLABS_WEBHOOK_SECRET), BUSINESS_ID)
 )
-
 BOOKING_SCHEMA: str = json.dumps(
     {
         "type": "object",

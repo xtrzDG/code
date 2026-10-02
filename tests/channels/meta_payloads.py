@@ -7,9 +7,7 @@ from tests.channels.channels_payloads import HttpResponse, sign_meta, to_json_by
 from tests.channels.testbed import ChannelsTestbed
 
 PHONE_NUMBER_ID: str = "106540352242922"
-
 PAGE_ID: str = "4410001"
-
 INSTAGRAM_ID: str = "17841400000000001"
 
 

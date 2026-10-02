@@ -30,24 +30,18 @@ from app.utilities.config_helpers.app_settings.app_settings_assembler import (
 )
 
 PHONE = E164PhoneNumber("+995555123456")
-
 EMAIL = EmailAddress("owner@example.com")
-
 CODE = OtpCode("042317")
-
 ALL_CHANNELS = frozenset(OtpDeliveryChannel)
-
 TWILIO_ENVIRONMENT: dict[str, str] = {
     "TWILIO_ACCOUNT_SID": "AC" + "1f" * 16,
     "TWILIO_AUTH_TOKEN": "twilio-token",
     "TWILIO_FROM_NUMBER": "Workshop",
 }
-
 SMTP_ENVIRONMENT: dict[str, str] = {
     "SMTP_HOST": "smtp.workshop.example",
     "SMTP_FROM": "Assistant Workshop <no-reply@workshop.example>",
 }
-
 WHATSAPP_ENVIRONMENT: dict[str, str] = {
     "WHATSAPP_OTP_PHONE_NUMBER_ID": "106540352242922",
     "WHATSAPP_OTP_TEMPLATE": "login_code",

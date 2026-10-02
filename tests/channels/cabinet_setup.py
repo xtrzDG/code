@@ -10,9 +10,7 @@ from tests.channels.channels_payloads import HttpResponse, bearer, telegram_ok
 from tests.channels.testbed import ChannelsTestbed
 
 PAGE_ID: str = "4410001"
-
 INSTAGRAM_ID: str = "17841400000000001"
-
 PHONE_NUMBER_ID: str = "106540352242922"
 
 

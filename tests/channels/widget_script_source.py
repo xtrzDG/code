@@ -6,7 +6,6 @@ from app.gateways.http.widget_script_assembly import assemble_widget_script
 from app.gateways.http.widget_script_routes import STATIC_DIRECTORY
 
 SCRIPT_SOURCE: str = assemble_widget_script(STATIC_DIRECTORY)
-
 BUSINESS_ID: str = "business_0b6c2f5e-1d1a-4c55-9a3e-2f1d5b7c9e01"
 
 

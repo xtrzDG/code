@@ -20,7 +20,6 @@ PLATFORM_SECRET: str = str(
         PlatformSecret(ENCRYPTION_KEY), PlatformSecret(PLATFORM_BOT_TOKEN)
     )
 )
-
 STAFF_CHAT_ID: int = 31_337
 
 
