@@ -69,7 +69,10 @@ def add_context_tags(event: Event, fields: Mapping[str, str]) -> None:
 
     tags: object = event.get("tags")
     merged: dict[str, str] = (
-        {str(name): str(value) for name, value in cast(dict[object, object], tags).items()}
+        {
+            str(name): str(value)
+            for name, value in cast(dict[object, object], tags).items()
+        }
         if isinstance(tags, dict)
         else {}
     )

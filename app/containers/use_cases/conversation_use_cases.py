@@ -105,7 +105,7 @@ class ConversationUseCasesContainer(containers.DeclarativeContainer):
         UseCaseContract[PreparedTurn, GeneratedReply]
     ] = Factory(
         GenerateAssistantReplyUseCase,
-        llm_adapter=adapters.llm_adapter,
+        llm_adapter=adapters.chat_llm_adapter,
         llm_turn_repo=repositories.llm_turn_repo,
         message_repo=repositories.message_repo,
         tool_registry=registries.assistant_tool_registry,

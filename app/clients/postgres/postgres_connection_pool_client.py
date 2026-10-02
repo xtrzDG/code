@@ -191,9 +191,6 @@ class PostgresConnectionPoolClient(ClientContract):
                 self._condition.wait(remaining_seconds)
 
     def _open_new_connection(self) -> PostgresConnection:
-        session_options: dict[str, str] = (
-            {"options": self._session_options} if self._session_options else {}
-        )
         try:
             return psycopg.connect(
                 str(self._database_url),
@@ -201,7 +198,8 @@ class PostgresConnectionPoolClient(ClientContract):
                 prepare_threshold=self._prepare_threshold,
                 connect_timeout=self._connect_timeout_seconds,
                 application_name=self._application_name,
-                **session_options,
+                # None leaves the server's defaults (psycopg drops it).
+                options=self._session_options or None,
             )
         except psycopg.Error as error:
             self._forget_slot()

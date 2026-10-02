@@ -55,8 +55,17 @@ class AnthropicMessagesClient(AnthropicMessagesClientContract):
         messages: list[dict[str, object]],
         effort: str | None,
         is_fallback_enabled: bool,
+        timeout_seconds: float | None = None,
+        max_retries: int | None = None,
     ) -> BetaMessage:
         sdk_client: anthropic.Anthropic = self._get_sdk_client()
+        if timeout_seconds is not None or max_retries is not None:
+            sdk_client = sdk_client.with_options(
+                timeout=REQUEST_TIMEOUT_SECONDS
+                if timeout_seconds is None
+                else timeout_seconds,
+                max_retries=MAX_RETRIES if max_retries is None else max_retries,
+            )
         try:
             return sdk_client.beta.messages.create(
                 model=model,

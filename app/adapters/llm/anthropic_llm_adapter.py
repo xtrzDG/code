@@ -2,6 +2,7 @@ import json
 
 from anthropic.types.beta import BetaMessage, BetaTextBlock, BetaToolUseBlock
 
+from app.adapters.llm.llm_call_limits import call_max_retries, call_timeout_seconds
 from app.adapters.llm.llm_payloads import (
     build_tool_results_payload,
     build_user_text_payload,
@@ -110,6 +111,8 @@ class AnthropicLlmAdapter(LlmAdapterContract):
                 OUTPUT_EFFORTS[request.effort] if features.supports_effort else None
             ),
             is_fallback_enabled=features.supports_default_fallbacks,
+            timeout_seconds=call_timeout_seconds(request),
+            max_retries=call_max_retries(request),
         )
         return parse_anthropic_message(message)
 

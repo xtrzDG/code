@@ -59,8 +59,17 @@ class OpenAiResponsesClient(OpenAiResponsesClientContract):
         reasoning_effort: str | None,
         max_output_tokens: int,
         text_format: dict[str, object] | None = None,
+        timeout_seconds: float | None = None,
+        max_retries: int | None = None,
     ) -> Response:
         sdk_client: openai.OpenAI = self._get_sdk_client()
+        if timeout_seconds is not None or max_retries is not None:
+            sdk_client = sdk_client.with_options(
+                timeout=REQUEST_TIMEOUT_SECONDS
+                if timeout_seconds is None
+                else timeout_seconds,
+                max_retries=MAX_RETRIES if max_retries is None else max_retries,
+            )
         reasoning: Reasoning | openai.Omit = openai.omit
         include: list[ResponseIncludable] | openai.Omit = openai.omit
         if reasoning_effort is not None:

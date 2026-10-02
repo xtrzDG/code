@@ -6,7 +6,6 @@ import pytest
 from typed_time_provider import Microseconds
 
 from app.contracts.health import WorkerHeartbeatRepoContract
-from app.gateways.worker import heartbeat_recorder
 from app.gateways.worker.background_worker import BackgroundWorker, PeriodicJobSpec
 from app.gateways.worker.heartbeat_recorder import (
     UNKNOWN_HOST_NAME,
@@ -178,6 +177,6 @@ def test_the_host_name_falls_back_when_it_is_not_a_plain_name(
 ) -> None:
     assert current_host_name() == WorkerHostName(socket.gethostname())
 
-    monkeypatch.setattr(heartbeat_recorder.socket, "gethostname", lambda: "bad host!")
+    monkeypatch.setattr(socket, "gethostname", lambda: "bad host!")
 
     assert current_host_name() == UNKNOWN_HOST_NAME

@@ -7,6 +7,8 @@ from app.schemas.constants.conversations import LlmStopReason, ReplyGuardVerdict
 from app.schemas.dto.conversation_feed.conversation_views import ToolCallView
 from app.schemas.typings.assistants.constrained_integers import (
     AssistantVersionNumber,
+    LlmCallRetryLimit,
+    LlmCallTimeoutSeconds,
     LlmMaxOutputTokens,
 )
 from app.schemas.typings.assistants.constrained_strings import LlmModelId
@@ -120,6 +122,16 @@ class LlmToolResult(ImmutableDTO):
     is_error: IsLlmToolError = False
 
 
+class LlmCallLimits(ImmutableDTO):
+    """
+    How long one model call may take and how often it is retried: a
+    customer waits for the answer, so the chat path bounds both.
+    """
+
+    timeout_seconds: LlmCallTimeoutSeconds
+    retry_limit: LlmCallRetryLimit
+
+
 class LlmRequest(ImmutableDTO):
     """
     One language-model request.
@@ -136,6 +148,9 @@ class LlmRequest(ImmutableDTO):
     transcript: list[LlmProviderPayload]
     max_output_tokens: LlmMaxOutputTokens
     effort: LlmEffort
+    # None: the provider client's own timeout and retries (long background
+    # work such as autotest judges and menu imports).
+    call_limits: LlmCallLimits | None = None
 
 
 class LlmResponse(ImmutableDTO):

@@ -68,12 +68,8 @@ class CheckReadinessUseCase(UseCaseContract[ReadinessQuery, ReadinessReport]):
         wall_clock: WallClock[Microseconds],
     ) -> None:
         self._database_probe: DatabaseProbeAdapterContract = database_probe
-        self._migration_source: SchemaMigrationSourceAdapterContract = (
-            migration_source
-        )
-        self._worker_heartbeat_repo: WorkerHeartbeatRepoContract = (
-            worker_heartbeat_repo
-        )
+        self._migration_source: SchemaMigrationSourceAdapterContract = migration_source
+        self._worker_heartbeat_repo: WorkerHeartbeatRepoContract = worker_heartbeat_repo
         self._storage_scope: StorageScopeContract = storage_scope
         self._wall_clock: WallClock[Microseconds] = wall_clock
         self._expected_migrations: list[SchemaMigrationName] | None = None
