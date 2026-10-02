@@ -8,7 +8,7 @@ import { useMutation } from "@/api/useMutation";
 import { useQuery } from "@/api/useQuery";
 import { useBusiness, useBusinessFormat } from "@/components/business/BusinessContext";
 import { IconCalendar, IconExternal } from "@/components/icons";
-import { Alert, Badge, Button, Card, ErrorState, LoadingBlock, useToast } from "@/components/ui";
+import { Alert, Badge, Button, Card, ErrorState, LoadingRegion, SkeletonText, useToast } from "@/components/ui";
 import { ConfirmDialog } from "@/components/ui";
 import { Facts } from "@/components/workspace/Facts";
 import { useI18n } from "@/i18n/client";
@@ -92,7 +92,7 @@ export function GoogleCalendarCard({ canManage }: { canManage: boolean }) {
         {status.error && !view ? (
           <ErrorState error={status.error} onRetry={status.reload} className="py-4" />
         ) : !view ? (
-          <LoadingBlock label={t("common.loading")} className="min-h-20" />
+          <LoadingRegion label={t("common.loading")} className="py-1"><SkeletonText lines={2} /></LoadingRegion>
         ) : (
           <>
             {isConnected ? (

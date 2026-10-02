@@ -4,7 +4,7 @@ import type { useNiches } from "@/api/catalog";
 import type { BusinessView, CurrentUserView } from "@/api/types";
 import { CountrySelect } from "@/components/CountrySelect";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
-import { Alert, Button, ErrorState, Field, Input, LoadingBlock, Select } from "@/components/ui";
+import { Alert, Button, ErrorState, Field, Input, LoadingRegion, Select, SkeletonCard } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 
 import { CountryDefaults } from "./_components/CountryDefaults";
@@ -42,7 +42,7 @@ export function CreateBusinessForm({
     return <ErrorState error={countries.error} onRetry={countries.reload} />;
   }
   if (!niches.data || !countries.data) {
-    return <LoadingBlock label={t("common.loading")} />;
+    return <LoadingRegion label={t("common.loading")} className="py-1"><SkeletonCard lines={5} header={false} /></LoadingRegion>;
   }
 
   return (

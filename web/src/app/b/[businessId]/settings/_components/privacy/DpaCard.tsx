@@ -7,7 +7,7 @@ import { queryKeys } from "@/api/queryKeys";
 import { useMutation } from "@/api/useMutation";
 import { useQuery } from "@/api/useQuery";
 import { useBusiness, useBusinessFormat } from "@/components/business/BusinessContext";
-import { Alert, Badge, Button, Card, Checkbox, ErrorState, LoadingBlock, useToast } from "@/components/ui";
+import { Alert, Badge, Button, Card, Checkbox, ErrorState, LoadingRegion, SkeletonText, useToast } from "@/components/ui";
 import { IconFile } from "@/components/icons";
 import { OwnerOnlyState } from "@/components/workspace/OwnerOnly";
 import { useI18n } from "@/i18n/client";
@@ -61,7 +61,7 @@ export function DpaCard() {
       ) : dpa.error && !data ? (
         <ErrorState error={dpa.error} onRetry={dpa.reload} className="py-6" />
       ) : !data ? (
-        <LoadingBlock label={t("common.loading")} className="min-h-24" />
+        <LoadingRegion label={t("common.loading")} className="py-1"><SkeletonText lines={3} /></LoadingRegion>
       ) : (
         <div className="space-y-5">
           <dl className="grid gap-4 text-sm sm:grid-cols-2">

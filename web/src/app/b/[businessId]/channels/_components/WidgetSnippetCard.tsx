@@ -2,7 +2,7 @@
 
 import type { Query } from "@/api/useQuery";
 import type { Schema } from "@/api/types";
-import { Card, ErrorState, LoadingBlock } from "@/components/ui";
+import { Card, ErrorState, LoadingRegion, SkeletonText } from "@/components/ui";
 import { CopyButton } from "@/components/workspace/CopyButton";
 import { useI18n } from "@/i18n/client";
 
@@ -19,7 +19,7 @@ export function WidgetSnippetCard({ snippet }: { snippet: Query<Schema<"WidgetSn
       {snippet.error && !snippet.data ? (
         <ErrorState error={snippet.error} onRetry={snippet.reload} className="py-6" />
       ) : !snippet.data ? (
-        <LoadingBlock label={t("common.loading")} className="min-h-24" />
+        <LoadingRegion label={t("common.loading")} className="py-1"><SkeletonText lines={4} /></LoadingRegion>
       ) : (
         <div className="space-y-5">
           <figure className="space-y-2">

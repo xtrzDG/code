@@ -6,7 +6,7 @@ import { useQuery } from "@/api/useQuery";
 import type { Schema } from "@/api/types";
 import { useBusiness } from "@/components/business/BusinessContext";
 import { IconChevronDown, IconInfo, IconPhone } from "@/components/icons";
-import { Card, ErrorState, LoadingBlock } from "@/components/ui";
+import { Card, ErrorState, LoadingRegion, SkeletonText } from "@/components/ui";
 import { CopyButton } from "@/components/workspace/CopyButton";
 import { useI18n } from "@/i18n/client";
 import type { MessageKey } from "@/i18n/translate";
@@ -39,7 +39,7 @@ export function CallForwardingCard() {
       {instructions.error && !data ? (
         <ErrorState error={instructions.error} onRetry={instructions.reload} className="py-6" />
       ) : !data ? (
-        <LoadingBlock label={t("common.loading")} className="min-h-24" />
+        <LoadingRegion label={t("common.loading")} className="py-1"><SkeletonText lines={4} /></LoadingRegion>
       ) : (
         <div className="space-y-6" lang={data.display_language}>
           <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-line bg-surface-muted/60 px-4 py-3">

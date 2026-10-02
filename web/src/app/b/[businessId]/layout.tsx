@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 
 import { BusinessProvider } from "@/components/business/BusinessContext";
-import { BusinessShell } from "@/components/shell/BusinessShell";
 import { getBusiness, getCurrentUser } from "@/server/api";
+
+import { BusinessFrame } from "./_components/BusinessFrame";
 
 export async function generateMetadata({ params }: LayoutProps<"/b/[businessId]">): Promise<Metadata> {
   const { businessId } = await params;
@@ -20,7 +21,7 @@ export default async function BusinessLayout({ children, params }: LayoutProps<"
 
   return (
     <BusinessProvider business={business} me={me}>
-      <BusinessShell>{children}</BusinessShell>
+      <BusinessFrame>{children}</BusinessFrame>
     </BusinessProvider>
   );
 }

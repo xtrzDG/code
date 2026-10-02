@@ -6,7 +6,7 @@ import { api } from "@/api/client";
 import { queryKeys } from "@/api/queryKeys";
 import { useQuery } from "@/api/useQuery";
 import { useBusiness } from "@/components/business/BusinessContext";
-import { ErrorState, LoadingBlock } from "@/components/ui";
+import { ErrorState, LoadingRegion, SkeletonCard } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 
 import type { BusinessView } from "../_lib/general";
@@ -47,7 +47,7 @@ export function GeneralTab() {
       ) : stored.error ? (
         <ErrorState error={stored.error} onRetry={stored.reload} className="py-6" />
       ) : (
-        <LoadingBlock label={t("common.loading")} className="min-h-48" />
+        <LoadingRegion label={t("common.loading")} className="py-1"><SkeletonCard lines={6} /></LoadingRegion>
       )}
     </div>
   );
