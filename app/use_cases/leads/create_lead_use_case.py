@@ -13,7 +13,7 @@ from app.schemas.domain.bookings import LeadDocument
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.contacts import ContactDocument
 from app.schemas.dto.bookings import CreateLeadCommand, LeadView
-from app.schemas.dto.operations import LeadStaffNotificationInput
+from app.schemas.dto.operations.message_texts import LeadStaffNotificationInput
 from app.schemas.typings.conversations.strings import MessageText
 from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.schemas.typings.localization.strings import FormattedPhoneNumber

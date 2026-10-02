@@ -22,7 +22,7 @@ from app.schemas.dto.jobs import (
     JobReport,
     JobTick,
 )
-from app.schemas.dto.operations import (
+from app.schemas.dto.operations.bookings import (
     BookingPage,
     ListBookingsQuery,
     ManualBookingCommand,

@@ -28,7 +28,7 @@ from app.schemas.domain.profiles import (
 )
 from app.schemas.domain.resources import ResourceDocument, ScheduleExceptionDocument
 from app.schemas.dto.bookings import BookingView
-from app.schemas.dto.operations import BookingStaffNotificationInput
+from app.schemas.dto.operations.message_texts import BookingStaffNotificationInput
 from app.schemas.exceptions.application_errors import (
     ConflictError,
     NotFoundError,

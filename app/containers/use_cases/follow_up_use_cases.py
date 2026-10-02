@@ -18,20 +18,23 @@ from app.schemas.dto.handoffs import (
     RecordUnansweredQuestionCommand,
     UnansweredQuestionView,
 )
-from app.schemas.dto.operations import (
-    AnsweredQuestionResult,
-    AnswerUnansweredQuestionCommand,
-    DashboardStats,
-    DashboardStatsQuery,
+from app.schemas.dto.operations.dashboard import DashboardStats, DashboardStatsQuery
+from app.schemas.dto.operations.handoffs import (
     HandoffListItem,
     HandoffPage,
-    LeadPage,
     ListHandoffsQuery,
-    ListLeadsQuery,
-    ListUnansweredQuestionsQuery,
     ResolveHandoffCommand,
-    UnansweredQuestionPage,
+)
+from app.schemas.dto.operations.leads import (
+    LeadPage,
+    ListLeadsQuery,
     UpdateLeadStatusCommand,
+)
+from app.schemas.dto.operations.unanswered_questions import (
+    AnsweredQuestionResult,
+    AnswerUnansweredQuestionCommand,
+    ListUnansweredQuestionsQuery,
+    UnansweredQuestionPage,
 )
 from app.use_cases.handoffs.answer_unanswered_question_use_case import (
     AnswerUnansweredQuestionUseCase,

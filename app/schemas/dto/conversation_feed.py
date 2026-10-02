@@ -20,7 +20,8 @@ from app.schemas.domain.conversations import (
     MessageDocument,
 )
 from app.schemas.dto.bookings import BookingView
-from app.schemas.dto.operations import HandoffListItem, LeadListItem
+from app.schemas.dto.operations.handoffs import HandoffListItem
+from app.schemas.dto.operations.leads import LeadListItem
 from app.schemas.dto.paging import PageRequest
 from app.schemas.dto.staff_reply_templates import StaffReplyTemplateView
 from app.schemas.typings.assistants.constrained_strings import LlmModelId

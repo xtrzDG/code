@@ -10,7 +10,7 @@ from app.schemas.constants.handoffs import HandoffStatus, HandoffUrgency
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.contacts import ContactDocument
 from app.schemas.domain.handoffs import HandoffDocument
-from app.schemas.dto.operations import HandoffPage, ListHandoffsQuery
+from app.schemas.dto.operations.handoffs import HandoffPage, ListHandoffsQuery
 from app.schemas.typings.compliance.strings import AuditEntityName
 from app.schemas.typings.contacts.prefixed_id import ContactId
 from app.schemas.typings.platform.constrained_integers import ListItemCount

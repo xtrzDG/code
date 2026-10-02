@@ -12,7 +12,7 @@ from app.schemas.dto.calendar import (
     CalendarConnectionStatusQuery,
     CalendarConnectionStatusView,
 )
-from app.schemas.dto.operations import (
+from app.schemas.dto.operations.calendar_connection import (
     CalendarConnectUrlView,
     CalendarDisconnectResult,
     CompleteCalendarConnectionCommand,

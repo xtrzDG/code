@@ -27,7 +27,7 @@ from app.schemas.domain.conversations import ConversationDocument
 from app.schemas.domain.handoffs import HandoffDocument
 from app.schemas.domain.profiles import BusinessProfileDocument, OpeningInterval
 from app.schemas.dto.handoffs import HandoffCommand, HandoffResult
-from app.schemas.dto.operations import (
+from app.schemas.dto.operations.message_texts import (
     HandoffCustomerMessageInput,
     HandoffStaffNotificationInput,
 )

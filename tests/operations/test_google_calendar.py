@@ -11,9 +11,7 @@ from app.clients.google.google_calendar_client import (
     GoogleCalendarClient,
     build_google_calendar_redirect_url,
 )
-from app.schemas.dto.operations import (
-    CalendarEventDraft,
-)
+from app.schemas.dto.operations.calendar_connection import CalendarEventDraft
 from app.schemas.exceptions.application_errors import (
     ExternalServiceError,
 )

@@ -22,12 +22,12 @@ from app.schemas.domain.calendar import (
     CalendarEventLinkDocument,
 )
 from app.schemas.dto.bookings import BookingView
-from app.schemas.dto.operations import (
+from app.schemas.dto.operations.calendar_connection import (
     CalendarEventDraft,
     CalendarEventText,
-    CalendarEventTextInput,
     CalendarTokenGrant,
 )
+from app.schemas.dto.operations.message_texts import CalendarEventTextInput
 from app.schemas.exceptions.application_errors import InvalidPhoneNumberError
 from app.schemas.exceptions.base_exception import ApplicationError
 from app.schemas.typings.bookings.constrained_strings import CalendarSyncErrorSummary

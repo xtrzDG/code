@@ -12,7 +12,7 @@ from app.schemas.constants.channels import ChannelKind
 from app.schemas.constants.compliance import AuditAction
 from app.schemas.domain.profiles import BookingRules, OpeningInterval
 from app.schemas.dto.bookings import AvailabilityQuery, BookingView
-from app.schemas.dto.operations import (
+from app.schemas.dto.operations.bookings import (
     BookingPage,
     ListBookingsQuery,
     ManualBookingCommand,

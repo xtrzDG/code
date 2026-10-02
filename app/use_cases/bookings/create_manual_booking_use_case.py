@@ -31,7 +31,8 @@ from app.schemas.domain.contacts import ContactDocument
 from app.schemas.domain.conversations import ConversationDocument
 from app.schemas.domain.resources import ResourceDocument
 from app.schemas.dto.bookings import BookingResult, BookingView
-from app.schemas.dto.operations import BookingMessageInput, ManualBookingCommand
+from app.schemas.dto.operations.bookings import ManualBookingCommand
+from app.schemas.dto.operations.message_texts import BookingMessageInput
 from app.schemas.exceptions.application_errors import (
     NotFoundError,
     ValidationFailedError,

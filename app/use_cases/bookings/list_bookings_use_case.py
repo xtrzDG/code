@@ -15,7 +15,7 @@ from app.schemas.domain.bookings import BookingDocument
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.contacts import ContactDocument
 from app.schemas.domain.resources import ResourceDocument
-from app.schemas.dto.operations import BookingPage, ListBookingsQuery
+from app.schemas.dto.operations.bookings import BookingPage, ListBookingsQuery
 from app.schemas.exceptions.application_errors import ValidationFailedError
 from app.schemas.typings.bookings.prefixed_id import ResourceId
 from app.schemas.typings.compliance.strings import AuditEntityName

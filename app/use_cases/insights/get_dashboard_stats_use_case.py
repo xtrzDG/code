@@ -36,7 +36,7 @@ from app.schemas.domain.conversations import ConversationDocument
 from app.schemas.domain.profiles import BusinessProfileDocument, OpeningInterval
 from app.schemas.dto.billing import PlanDefinition
 from app.schemas.dto.billing_ledger import PackageUsageTotals
-from app.schemas.dto.operations import (
+from app.schemas.dto.operations.dashboard import (
     BookingStatusCount,
     ChannelCount,
     DashboardDay,

@@ -46,34 +46,41 @@ from app.schemas.dto.calendar import (
     CalendarConnectionStatusView,
     CompleteCalendarConnectionRequest,
 )
-from app.schemas.dto.operations import (
-    AnsweredQuestionResult,
-    AnswerUnansweredQuestionCommand,
-    AnswerUnansweredQuestionRequest,
+from app.schemas.dto.operations.bookings import (
     BookingPage,
-    CalendarConnectUrlView,
-    CalendarDisconnectResult,
-    CompleteCalendarConnectionCommand,
-    DashboardStats,
-    DashboardStatsQuery,
-    DisconnectCalendarCommand,
-    HandoffListItem,
-    HandoffPage,
-    LeadPage,
     ListBookingsQuery,
-    ListHandoffsQuery,
-    ListLeadsQuery,
-    ListUnansweredQuestionsQuery,
     ManualBookingCommand,
     ManualBookingRequest,
     RescheduleBookingRequest,
-    ResolveHandoffCommand,
-    StartCalendarConnectionCommand,
-    UnansweredQuestionPage,
     UpdateBookingCommand,
     UpdateBookingRequest,
+)
+from app.schemas.dto.operations.calendar_connection import (
+    CalendarConnectUrlView,
+    CalendarDisconnectResult,
+    CompleteCalendarConnectionCommand,
+    DisconnectCalendarCommand,
+    StartCalendarConnectionCommand,
+)
+from app.schemas.dto.operations.dashboard import DashboardStats, DashboardStatsQuery
+from app.schemas.dto.operations.handoffs import (
+    HandoffListItem,
+    HandoffPage,
+    ListHandoffsQuery,
+    ResolveHandoffCommand,
+)
+from app.schemas.dto.operations.leads import (
+    LeadPage,
+    ListLeadsQuery,
     UpdateLeadStatusCommand,
     UpdateLeadStatusRequest,
+)
+from app.schemas.dto.operations.unanswered_questions import (
+    AnsweredQuestionResult,
+    AnswerUnansweredQuestionCommand,
+    AnswerUnansweredQuestionRequest,
+    ListUnansweredQuestionsQuery,
+    UnansweredQuestionPage,
 )
 from app.schemas.exceptions.application_errors import (
     NotFoundError,

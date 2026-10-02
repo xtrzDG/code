@@ -26,7 +26,7 @@ from app.schemas.domain.bookings import BookingDocument
 from app.schemas.domain.contacts import ContactDocument
 from app.schemas.domain.resources import ResourceDocument
 from app.schemas.dto.bookings import BookingResult, BookingView, CreateBookingCommand
-from app.schemas.dto.operations import (
+from app.schemas.dto.operations.message_texts import (
     BookingMessageInput,
     BookingStaffNotificationInput,
 )

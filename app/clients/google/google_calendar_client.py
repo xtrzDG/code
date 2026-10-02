@@ -7,7 +7,10 @@ from urllib.parse import quote, urlencode
 import httpx
 
 from app.contracts.operations import GoogleCalendarClientContract
-from app.schemas.dto.operations import CalendarEventDraft, CalendarTokenGrant
+from app.schemas.dto.operations.calendar_connection import (
+    CalendarEventDraft,
+    CalendarTokenGrant,
+)
 from app.schemas.exceptions.application_errors import ExternalServiceError
 from app.schemas.typings.bookings.constrained_integers import (
     CalendarTokenLifetimeSeconds,

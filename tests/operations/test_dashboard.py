@@ -16,7 +16,7 @@ from app.schemas.domain.billing import SubscriptionDocument, UsageEventDocument
 from app.schemas.domain.bookings import BookingDocument, LeadDocument
 from app.schemas.domain.conversations import ConversationDocument, MessageDocument
 from app.schemas.domain.handoffs import HandoffDocument, UnansweredQuestionDocument
-from app.schemas.dto.operations import DashboardStats, DashboardStatsQuery
+from app.schemas.dto.operations.dashboard import DashboardStats, DashboardStatsQuery
 from app.schemas.exceptions.application_errors import ValidationFailedError
 from app.schemas.typings.billing.constrained_integers import (
     MoneyAmountMinor,

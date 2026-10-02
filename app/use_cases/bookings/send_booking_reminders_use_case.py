@@ -26,7 +26,7 @@ from app.schemas.domain.contacts import ChannelIdentity, ContactDocument
 from app.schemas.domain.profiles import BusinessProfileDocument
 from app.schemas.domain.resources import ResourceDocument
 from app.schemas.dto.jobs import JobReport, JobTick
-from app.schemas.dto.operations import BookingMessageInput
+from app.schemas.dto.operations.message_texts import BookingMessageInput
 from app.schemas.exceptions.base_exception import ApplicationError
 from app.schemas.typings.bookings.constrained_integers import (
     BookingReminderLeadSeconds,

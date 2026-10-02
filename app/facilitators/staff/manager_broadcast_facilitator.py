@@ -2,7 +2,7 @@ import logging
 
 from app.contracts.facilitators import ManagerNotificationFacilitatorContract
 from app.contracts.operations import ManagerBroadcastFacilitatorContract
-from app.schemas.dto.operations import StaffMessage
+from app.schemas.dto.operations.message_texts import StaffMessage
 from app.schemas.typings.handoffs.constrained_integers import (
     DeliveredNotificationCount,
 )

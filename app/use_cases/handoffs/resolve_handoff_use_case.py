@@ -10,7 +10,7 @@ from app.schemas.constants.conversations import ConversationStatus
 from app.schemas.constants.handoffs import HandoffStatus
 from app.schemas.domain.conversations import ConversationDocument
 from app.schemas.domain.handoffs import HandoffDocument
-from app.schemas.dto.operations import HandoffListItem, ResolveHandoffCommand
+from app.schemas.dto.operations.handoffs import HandoffListItem, ResolveHandoffCommand
 from app.schemas.exceptions.application_errors import NotFoundError
 from app.use_cases.handoffs.handoff_views import build_handoff_list_item
 

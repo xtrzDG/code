@@ -6,7 +6,7 @@ from app.schemas.constants.bookings import LeadStatus, LeadType
 from app.schemas.constants.channels import ChannelKind
 from app.schemas.constants.compliance import AuditAction
 from app.schemas.dto.bookings import CreateLeadCommand, LeadView
-from app.schemas.dto.operations import (
+from app.schemas.dto.operations.leads import (
     LeadPage,
     ListLeadsQuery,
     UpdateLeadStatusCommand,

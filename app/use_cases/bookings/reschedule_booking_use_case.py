@@ -28,7 +28,7 @@ from app.schemas.dto.bookings import (
     BookingView,
     RescheduleBookingCommand,
 )
-from app.schemas.dto.operations import (
+from app.schemas.dto.operations.message_texts import (
     BookingMessageInput,
     BookingStaffNotificationInput,
 )

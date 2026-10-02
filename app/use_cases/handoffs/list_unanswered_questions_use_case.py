@@ -3,7 +3,7 @@ from app.contracts.repositories.booking_repositories import (
 )
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.domain.handoffs import UnansweredQuestionDocument
-from app.schemas.dto.operations import (
+from app.schemas.dto.operations.unanswered_questions import (
     ListUnansweredQuestionsQuery,
     UnansweredQuestionPage,
 )

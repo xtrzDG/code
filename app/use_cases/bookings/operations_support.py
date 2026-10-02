@@ -14,7 +14,7 @@ from app.schemas.constants.compliance import AuditAction
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.compliance import AuditLogEntryDocument
 from app.schemas.domain.contacts import ContactDocument
-from app.schemas.dto.operations import StaffMessage
+from app.schemas.dto.operations.message_texts import StaffMessage
 from app.schemas.exceptions.application_errors import (
     InvalidPhoneNumberError,
     NotFoundError,

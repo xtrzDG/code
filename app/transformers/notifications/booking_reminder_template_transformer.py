@@ -1,5 +1,5 @@
 from app.contracts.transformer_contract import TransformerContract
-from app.schemas.dto.operations import BookingMessageInput
+from app.schemas.dto.operations.message_texts import BookingMessageInput
 from app.schemas.typings.conversations.strings import MessageText
 from app.transformers.notifications.message_rendering import (
     describe_date,
