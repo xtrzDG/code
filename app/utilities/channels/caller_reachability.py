@@ -9,10 +9,8 @@ no messaging window and no cost; then WhatsApp, where most callers are).
 
 from app.contracts.repositories.business_repositories import ChannelRepoContract
 from app.schemas.constants.channels import ChannelKind, ChannelStatus
-from app.schemas.domain.channels import ChannelDocument
 from app.schemas.domain.contacts import ChannelIdentity, ContactDocument
 from app.schemas.typings.businesses.prefixed_id import BusinessId
-from app.utilities.channels.delivery_targets import find_business_channel
 
 CALLER_MESSAGE_CHANNELS: tuple[ChannelKind, ...] = (
     ChannelKind.TELEGRAM,
@@ -29,13 +27,13 @@ def list_reachable_identities(
 ) -> list[ChannelIdentity]:
     """The caller's identities on connected messengers, best channel first."""
 
-    connected_channels: set[ChannelKind] = set()
-    for channel_kind in CALLER_MESSAGE_CHANNELS:
-        channel: ChannelDocument | None = find_business_channel(
-            channel_repo, business_id, channel_kind
-        )
-        if channel is not None and channel.status is ChannelStatus.CONNECTED:
-            connected_channels.add(channel_kind)
+    # One read of the business's channels: this runs on every voice tool call.
+    connected_channels: set[ChannelKind] = {
+        channel.kind
+        for channel in channel_repo.list_by_business(business_id)
+        if channel.kind in CALLER_MESSAGE_CHANNELS
+        and channel.status is ChannelStatus.CONNECTED
+    }
 
     identities: list[ChannelIdentity] = [
         identity
