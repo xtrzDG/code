@@ -5,10 +5,17 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, Query, Request, Response
 
 from app.contracts.operator_contract import OperatorContract
-from app.gateways.http.byte_ranges import (
-    ByteRange,
-    read_byte_range,
-    resolve_byte_range,
+from app.gateways.http.byte_ranges import ByteRange, read_byte_range
+from app.gateways.http.conversations.feed_query_values import (
+    parse_channel,
+    parse_include_sandbox,
+    parse_local_date,
+    parse_search,
+    parse_status,
+)
+from app.gateways.http.conversations.recording_response import (
+    RECORDING_OPENAPI_RESPONSES,
+    build_recording_response,
 )
 from app.gateways.http.paging_query import parse_page_request
 from app.gateways.http.strict_request_parsing import (
@@ -18,8 +25,6 @@ from app.gateways.http.strict_request_parsing import (
     read_client_ip_address,
 )
 from app.gateways.http.user_authentication import CurrentUserDependency
-from app.schemas.constants.channels import ChannelKind
-from app.schemas.constants.conversations import ConversationStatus
 from app.schemas.dto.call_recordings import CallRecordingQuery, RecordingAudio
 from app.schemas.dto.conversation_feed.conversation_actions import (
     ConversationRatingRequest,
@@ -40,40 +45,13 @@ from app.schemas.dto.conversation_feed.owner_test_chat import (
     OwnerTestChatRequest,
 )
 from app.schemas.dto.conversations import AssistantReply
-from app.schemas.exceptions.application_errors import ValidationFailedError
-from app.schemas.typings.bookings.constrained_strings import LocalDate
 from app.schemas.typings.businesses.prefixed_id import BusinessId
-from app.schemas.typings.conversations.booleans import IncludeSandboxConversations
-from app.schemas.typings.conversations.constrained_strings import (
-    ConversationSearchText,
-)
 from app.schemas.typings.conversations.prefixed_id import CallId, ConversationId
 from app.schemas.typings.users.prefixed_id import UserId
 
 read_test_chat_body = build_json_body_dependency(OwnerTestChatRequest)
 read_rating_body = build_json_body_dependency(ConversationRatingRequest)
 read_staff_message_body = build_json_body_dependency(StaffMessageRequest)
-# A recording is personal data: no HTTP cache keeps it (shared proxies and
-# CDNs least of all); the browser's player buffers it in memory and asks for
-# parts of it (byte ranges) while it plays and seeks.
-RECORDING_RESPONSE_HEADERS: dict[str, str] = {
-    "Cache-Control": "private, no-store",
-    "X-Content-Type-Options": "nosniff",
-}
-RECORDING_OPENAPI_RESPONSES: dict[int | str, dict[str, object]] = {
-    200: {
-        "description": "The call recording (audio/mpeg from the voice platform).",
-        "content": {"audio/*": {"schema": {"type": "string", "format": "binary"}}},
-    },
-    206: {
-        "description": "The part of the recording a `Range: bytes=…` header asks "
-        "for (media players ask for parts while they play and seek).",
-        "content": {"audio/*": {"schema": {"type": "string", "format": "binary"}}},
-    },
-    416: {"description": "The requested range lies outside the recording."},
-}
-TRUE_FLAGS: frozenset[str] = frozenset({"1", "true", "yes"})
-FALSE_FLAGS: frozenset[str] = frozenset({"0", "false", "no"})
 
 
 def build_conversation_router(
@@ -268,106 +246,3 @@ def build_conversation_router(
         )
 
     return router
-
-
-def build_recording_response(
-    audio: RecordingAudio,
-    requested_range: ByteRange | None,
-) -> Response:
-    """
-    The whole recording, or the one range a media player asked for (206),
-    or 416 for a range outside it. Every answer says ranges are served:
-    Safari and iOS play only media that supports them, and other browsers
-    can then seek.
-    """
-
-    total_length: int = len(audio.content)
-    headers: dict[str, str] = {**RECORDING_RESPONSE_HEADERS, "Accept-Ranges": "bytes"}
-    if requested_range is None:
-        return Response(
-            content=audio.content,
-            media_type=str(audio.media_type),
-            headers=headers,
-        )
-
-    span: tuple[int, int] | None = resolve_byte_range(requested_range, total_length)
-    if span is None:
-        return Response(
-            status_code=416,
-            headers={**headers, "Content-Range": f"bytes */{total_length}"},
-        )
-
-    first_byte, last_byte = span
-    return Response(
-        content=audio.content[first_byte : last_byte + 1],
-        status_code=206,
-        media_type=str(audio.media_type),
-        headers={
-            **headers,
-            "Content-Range": f"bytes {first_byte}-{last_byte}/{total_length}",
-        },
-    )
-
-
-def parse_channel(raw_channel: str | None) -> ChannelKind | None:
-    if raw_channel is None or raw_channel.strip() == "":
-        return None
-
-    try:
-        return ChannelKind(raw_channel.strip().lower())
-    except ValueError as error:
-        known_channels: str = ", ".join(kind.value for kind in ChannelKind)
-        raise ValidationFailedError(
-            f"channel must be one of: {known_channels}."
-        ) from error
-
-
-def parse_status(raw_status: str | None) -> ConversationStatus | None:
-    if raw_status is None or raw_status.strip() == "":
-        return None
-
-    try:
-        return ConversationStatus(raw_status.strip().lower())
-    except ValueError as error:
-        known_statuses: str = ", ".join(status.value for status in ConversationStatus)
-        raise ValidationFailedError(
-            f"status must be one of: {known_statuses}."
-        ) from error
-
-
-def parse_local_date(raw_date: str | None, name: str) -> LocalDate | None:
-    if raw_date is None or raw_date.strip() == "":
-        return None
-
-    try:
-        return LocalDate(raw_date.strip())
-    except (ValueError, TypeError) as error:
-        raise ValidationFailedError(
-            f"{name} must be a date like 2026-10-01."
-        ) from error
-
-
-def parse_search(raw_search: str | None) -> ConversationSearchText | None:
-    if raw_search is None or raw_search.strip() == "":
-        return None
-
-    try:
-        return ConversationSearchText(raw_search.strip())
-    except (ValueError, TypeError) as error:
-        raise ValidationFailedError(
-            f"search may be at most {ConversationSearchText.max_length} characters."
-        ) from error
-
-
-def parse_include_sandbox(raw_flag: str | None) -> IncludeSandboxConversations:
-    if raw_flag is None:
-        return False
-
-    flag: str = raw_flag.strip().lower()
-    if flag in TRUE_FLAGS:
-        return True
-
-    if flag in FALSE_FLAGS:
-        return False
-
-    raise ValidationFailedError("include_sandbox must be true or false.")
