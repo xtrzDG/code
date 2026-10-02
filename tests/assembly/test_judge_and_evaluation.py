@@ -44,7 +44,7 @@ from app.utilities.assembly.script_detection import (
     is_detectable_script,
     is_written_in_script,
 )
-from tests.assembly.testbed import build_reply
+from tests.assembly.autotest_scripts import build_reply
 
 PERFECT: dict[str, int] = {criterion.value: 5 for criterion in JudgeCriterion}
 
