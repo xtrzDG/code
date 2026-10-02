@@ -19,10 +19,14 @@ class PublishedLiveEvent:
 
 
 class RecordingEventPublisher(EventPublisherFacilitatorContract):
-    """Records every announced change; sandbox ones are dropped, as in the app."""
+    """
+    Records every announced change (sandbox ones are dropped, as in the app)
+    and hands it on to `forward_to` when a test sets a real publisher there.
+    """
 
     def __init__(self) -> None:
         self.events: list[PublishedLiveEvent] = []
+        self.forward_to: EventPublisherFacilitatorContract | None = None
 
     def publish(
         self,
@@ -37,6 +41,8 @@ class RecordingEventPublisher(EventPublisherFacilitatorContract):
         self.events.append(
             PublishedLiveEvent(business_id, event, tuple(str(item) for item in ids))
         )
+        if self.forward_to is not None:
+            self.forward_to.publish(business_id, event, ids)
 
     def kinds(self) -> list[LiveEventKind]:
         return [published.event for published in self.events]

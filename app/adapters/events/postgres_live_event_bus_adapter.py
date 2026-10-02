@@ -1,5 +1,7 @@
 """Live events between processes through Postgres NOTIFY / LISTEN."""
 
+from typing import LiteralString
+
 import psycopg
 
 from app.adapters.events.live_event_fanout import LiveEventFanout
@@ -20,7 +22,7 @@ from app.schemas.exceptions.application_errors import ExternalServiceError
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.live_events.constrained_strings import LiveEventId
 
-NOTIFY_STATEMENT: str = "select pg_notify(%s, %s)"
+NOTIFY_STATEMENT: LiteralString = "select pg_notify(%s, %s)"
 # A busy pool delays the change's own request only this long for its event.
 PUBLISH_ACQUIRE_TIMEOUT_SECONDS: float = 2.0
 

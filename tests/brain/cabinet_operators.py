@@ -64,9 +64,9 @@ from app.use_cases.menu_import.discard_import_batch_use_case import (
     DiscardImportBatchUseCase,
 )
 from app.use_cases.menu_import.import_menu_use_case import ImportMenuUseCase
-from tests.live_events.recording_event_publisher import RecordingEventPublisher
 from tests.brain.brain_world import BrainWorld
 from tests.brain.cabinet_fakes import CabinetStorage
+from tests.live_events.recording_event_publisher import RecordingEventPublisher
 
 
 @dataclass(frozen=True)

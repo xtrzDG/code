@@ -10,6 +10,7 @@ import logging
 import threading
 import time
 from collections.abc import Callable
+from typing import LiteralString
 
 import psycopg
 from psycopg.rows import TupleRow
@@ -21,7 +22,8 @@ from app.schemas.typings.platform.strings import DatabaseUrl
 
 LOGGER: logging.Logger = logging.getLogger(__name__)
 
-LIVE_EVENTS_CHANNEL: str = "workshop_live_events"
+LIVE_EVENTS_CHANNEL: LiteralString = "workshop_live_events"
+LISTEN_STATEMENT: LiteralString = f"listen {LIVE_EVENTS_CHANNEL}"
 LISTENER_APPLICATION_NAME: str = "assistant-workshop-live-events"
 LISTENER_THREAD_NAME: str = "live-event-listener"
 # How long one wait for notifications lasts; a stop request is noticed
@@ -102,7 +104,7 @@ class PostgresLiveEventListener:
         while not self._stop_event.is_set():
             try:
                 with self._connect() as connection:
-                    connection.execute(f"listen {LIVE_EVENTS_CHANNEL}")
+                    connection.execute(LISTEN_STATEMENT)
                     self._is_listening.set()
                     # Anything published before LISTEN (or while away) is lost.
                     self._fanout.resync_all()
