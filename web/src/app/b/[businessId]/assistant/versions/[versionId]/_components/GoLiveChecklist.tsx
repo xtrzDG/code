@@ -10,9 +10,9 @@ import { useI18n } from "@/i18n/client";
 import type { MessageKey } from "@/i18n/translate";
 import { blockingChecks, checkState, type GoLiveCheckCode } from "@/lib/assistant/goLive";
 
-import { CheckDetail } from "./_components/CheckDetail";
-import { CheckRow } from "./_components/CheckRow";
-import { ActionButton, FixLink, useFixLinks } from "./_components/goLiveFixes";
+import { CheckDetail } from "./CheckDetail";
+import { CheckRow } from "./CheckRow";
+import { ActionButton, FixLink, useFixLinks } from "./goLiveFixes";
 
 const CHECK_TITLES: Record<GoLiveCheckCode, MessageKey> = {
   subscription_or_trial: "assistant.checklist.billing",

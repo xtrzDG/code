@@ -14,11 +14,13 @@ import { businessPath } from "@/lib/navigation";
 
 import { useAssistant } from "../../_components/AssistantContext";
 import { VersionHeaderCard, type VersionDialog } from "./_components/VersionHeaderCard";
+import { PublishDialog } from "./_components/PublishDialog";
+import { RollbackDialog } from "./_components/RollbackDialog";
+import { RunAutotestsDialog } from "./_components/RunAutotestsDialog";
 import { FactsPanel, InstructionPanel, ToolsPanel } from "./_components/VersionPanels";
 import { useVersionDetail } from "./_lib/useVersionDetail";
-import { AutotestsPanel } from "./AutotestsPanel";
-import { GoLiveChecklist } from "./GoLiveChecklist";
-import { PublishDialog, RollbackDialog, RunAutotestsDialog } from "./VersionDialogs";
+import { AutotestsPanel } from "./_components/AutotestsPanel";
+import { GoLiveChecklist } from "./_components/GoLiveChecklist";
 
 type DetailTab = "autotests" | "facts" | "instruction" | "tools";
 

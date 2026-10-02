@@ -16,8 +16,8 @@ import {
 import { cn } from "@/lib/cn";
 import { languageName } from "@/lib/format";
 
-import { RunSummary } from "./_components/RunSummary";
-import { ScenarioResult } from "./_components/ScenarioResult";
+import { RunSummary } from "./RunSummary";
+import { ScenarioResult } from "./ScenarioResult";
 
 /** The latest autotest run of a version: summary, progress and every scenario with its transcript. */
 export function AutotestsPanel({
