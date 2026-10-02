@@ -1,7 +1,9 @@
-from app.contracts.repositories import (
+from app.contracts.repositories.business_repositories import (
     BusinessProfileRepoContract,
     BusinessRepoContract,
     ChannelRepoContract,
+)
+from app.contracts.repositories.knowledge_repositories import (
     KnowledgeItemRepoContract,
     ResourceRepoContract,
     ScheduleExceptionRepoContract,

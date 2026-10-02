@@ -1,16 +1,18 @@
 from app.contracts.localization_utilities import LocalizedTextResolverContract
-from app.contracts.repositories import BusinessRepoContract
+from app.contracts.repositories.business_repositories import BusinessRepoContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.dto.conversations import CallGreeting, CallGreetingRequest
 from app.schemas.exceptions.application_errors import NotFoundError
 from app.schemas.typings.conversations.strings import MessageText
 from app.schemas.typings.localization.constrained_strings import LanguageTag
-from app.utilities.conversations.assistant_texts import (
+from app.utilities.conversations.assistant_texts.business_name_placeholder import (
+    fill_business_name,
+)
+from app.utilities.conversations.assistant_texts.call_texts import (
     CALL_GREETING,
     CALL_OPERATOR_HINT,
     CALL_RECORDING_NOTICE,
-    fill_business_name,
 )
 from app.utilities.localization.language_tags import base_language_code
 from app.utilities.scheduling.localized_formatting import choose_template_language

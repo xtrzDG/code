@@ -14,11 +14,11 @@ from app.schemas.domain.calendar import (
     CalendarConnectionDocument,
     CalendarEventLinkDocument,
 )
-from app.schemas.dto.operations import (
+from app.schemas.dto.operations.calendar_connection import (
     CalendarEventDraft,
     CalendarTokenGrant,
-    StaffMessage,
 )
+from app.schemas.dto.operations.message_texts import StaffMessage
 from app.schemas.typings.bookings.constrained_strings import CalendarAuthorizationUrl
 from app.schemas.typings.bookings.prefixed_id import BookingId
 from app.schemas.typings.bookings.strings import (

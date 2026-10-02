@@ -16,15 +16,19 @@ from app.schemas.constants.assistants import (
 from app.schemas.constants.channels import ChannelKind
 from app.schemas.constants.conversations import MessageAuthor
 from app.schemas.domain.businesses import BusinessDocument
-from app.schemas.dto.assistants import (
-    AssistantVersionDetails,
+from app.schemas.dto.assistants.assembly_sources import LlmTokenPrice
+from app.schemas.dto.assistants.assistant_commands import (
     AssistantVersionQuery,
-    AutotestRunCompletion,
-    AutotestRunProgress,
+    RunAutotestsCommand,
+)
+from app.schemas.dto.assistants.assistant_views import (
+    AssistantVersionDetails,
     AutotestRunView,
     AutotestScenarioResultView,
-    LlmTokenPrice,
-    RunAutotestsCommand,
+)
+from app.schemas.dto.assistants.autotest_runs import (
+    AutotestRunCompletion,
+    AutotestRunProgress,
 )
 from app.schemas.dto.conversations import AssistantReply, InboundMessage, LlmRequest
 from app.schemas.exceptions.application_errors import (

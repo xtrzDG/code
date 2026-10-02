@@ -3,7 +3,8 @@
 from app.schemas.domain.contacts import ContactDocument
 from app.schemas.domain.handoffs import HandoffDocument, UnansweredQuestionDocument
 from app.schemas.dto.handoffs import UnansweredQuestionView
-from app.schemas.dto.operations import HandoffListItem, UnansweredQuestionDetails
+from app.schemas.dto.operations.handoffs import HandoffListItem
+from app.schemas.dto.operations.unanswered_questions import UnansweredQuestionDetails
 
 
 def build_handoff_list_item(

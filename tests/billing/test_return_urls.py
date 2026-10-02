@@ -8,7 +8,9 @@ from app.utilities.billing.return_urls import (
     list_return_origins,
     require_allowed_return_url,
 )
-from app.utilities.config_helpers.app_settings_assembler import assemble_app_settings
+from app.utilities.config_helpers.app_settings.app_settings_assembler import (
+    assemble_app_settings,
+)
 
 
 def test_the_cabinet_base_url_origin_is_an_allowed_return_origin() -> None:

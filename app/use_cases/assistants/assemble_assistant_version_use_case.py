@@ -6,10 +6,14 @@ from app.contracts.registries import (
     NicheTemplateRegistryContract,
     PlanRegistryContract,
 )
-from app.contracts.repositories import (
+from app.contracts.repositories.assistant_repositories import (
     AssistantVersionRepoContract,
+)
+from app.contracts.repositories.business_repositories import (
     BusinessProfileRepoContract,
     BusinessRepoContract,
+)
+from app.contracts.repositories.knowledge_repositories import (
     KnowledgeItemRepoContract,
     ResourceRepoContract,
     ScheduleExceptionRepoContract,
@@ -26,13 +30,15 @@ from app.schemas.domain.knowledge import KnowledgeItemDocument
 from app.schemas.domain.profiles import BusinessProfileDocument
 from app.schemas.domain.resources import ResourceDocument
 from app.schemas.dto.access import BusinessAccessRequest
-from app.schemas.dto.assistants import (
-    AssembleAssistantVersionCommand,
-    AssembleAssistantVersionRequest,
+from app.schemas.dto.assistants.assembly_sources import (
     AssistantInstructionSource,
-    AssistantVersionDetails,
     BusinessFactsSource,
 )
+from app.schemas.dto.assistants.assistant_commands import (
+    AssembleAssistantVersionCommand,
+    AssembleAssistantVersionRequest,
+)
+from app.schemas.dto.assistants.assistant_views import AssistantVersionDetails
 from app.schemas.dto.billing import PlanDefinition
 from app.schemas.dto.localization import CountryProfile, LanguageProfile
 from app.schemas.dto.niches import NicheTemplate

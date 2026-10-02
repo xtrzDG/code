@@ -4,7 +4,7 @@ from base_pydantic_schemas import ImmutableDTO
 from typed_time_provider import Microseconds
 
 from app.schemas.constants.calendar import CalendarConnectionFailure
-from app.schemas.dto.operations import CalendarConnectionView
+from app.schemas.dto.operations.calendar_connection import CalendarConnectionView
 from app.schemas.typings.bookings.booleans import (
     IsCalendarConnected,
     IsCalendarIntegrationConfigured,

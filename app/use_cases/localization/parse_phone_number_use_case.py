@@ -1,6 +1,6 @@
 from app.contracts.localization_utilities import PhoneNumberParserContract
 from app.contracts.use_case_contract import UseCaseContract
-from app.schemas.dto.catalog import ParsePhoneNumberRequest
+from app.schemas.dto.catalog.countries import ParsePhoneNumberRequest
 from app.schemas.dto.localization import PhoneNumberDetails
 
 

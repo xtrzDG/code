@@ -3,7 +3,7 @@ from typed_time_provider import Microseconds, WallClock
 
 from app.contracts.registries import CountryRegistryContract, LanguageRegistryContract
 from app.contracts.use_case_contract import UseCaseContract
-from app.schemas.dto.catalog import (
+from app.schemas.dto.catalog.countries import (
     CountryProfileRequest,
     CountryProfileView,
     LanguageOption,
@@ -14,12 +14,12 @@ from app.schemas.typings.localization.constrained_strings import (
     LanguageTag,
     TimezoneName,
 )
+from app.utilities.localization.babel_locales import require_babel_locale
 from app.utilities.localization.display_names import (
     build_country_display_name,
     build_currency_display_name,
     build_language_display_name_or_tag,
 )
-from app.utilities.localization.language_tags import require_babel_locale
 from app.utilities.localization.timezones import build_timezone_display_name
 
 

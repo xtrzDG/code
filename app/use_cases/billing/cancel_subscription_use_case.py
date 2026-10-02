@@ -1,7 +1,10 @@
 from typed_time_provider import Microseconds, WallClock
 
 from app.contracts.billing import PaymentGatewayAdapterContract
-from app.contracts.repositories import InvoiceRepoContract, SubscriptionRepoContract
+from app.contracts.repositories.billing_repositories import (
+    InvoiceRepoContract,
+    SubscriptionRepoContract,
+)
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.billing import InvoiceStatus, SubscriptionStatus
 from app.schemas.constants.users import BusinessMemberRole

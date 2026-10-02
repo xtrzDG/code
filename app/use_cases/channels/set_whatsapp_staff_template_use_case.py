@@ -1,6 +1,7 @@
 from typed_time_provider import Microseconds, WallClock
 
-from app.contracts.repositories import AuditLogRepoContract, ChannelRepoContract
+from app.contracts.repositories.business_repositories import ChannelRepoContract
+from app.contracts.repositories.compliance_repositories import AuditLogRepoContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.channels import ChannelKind
 from app.schemas.constants.compliance import AuditAction
@@ -9,7 +10,7 @@ from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.channels import ChannelDocument, WhatsAppStaffTemplate
 from app.schemas.domain.compliance import AuditLogEntryDocument
 from app.schemas.dto.access import BusinessAccessRequest
-from app.schemas.dto.channels import ChannelView
+from app.schemas.dto.channels.channel_settings import ChannelView
 from app.schemas.dto.staff_reply_templates import (
     SetWhatsAppStaffTemplateCommand,
     WhatsAppStaffTemplateRequest,

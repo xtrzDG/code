@@ -27,7 +27,7 @@ from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.conversations.prefixed_id import ConversationId
 from app.schemas.typings.conversations.strings import MessageText
 from app.schemas.typings.localization.constrained_strings import CurrencyCode
-from app.use_cases.billing.compute_client_cost_use_case import (
+from app.utilities.billing.client_cost_math import (
     compute_margin_percent,
     compute_period_share,
 )

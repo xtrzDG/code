@@ -7,7 +7,7 @@ from app.schemas.dto.handoffs import (
     RecordUnansweredQuestionCommand,
     UnansweredQuestionView,
 )
-from app.schemas.dto.operations import (
+from app.schemas.dto.operations.unanswered_questions import (
     AnswerUnansweredQuestionCommand,
     ListUnansweredQuestionsQuery,
 )

@@ -1,11 +1,13 @@
 from app.contracts.orchestrator_contract import OrchestratorContract
 from app.contracts.pipeline_contract import PipelineContract
-from app.schemas.dto.assistants import (
+from app.schemas.dto.assistants.assistant_commands import (
     AssembleAssistantVersionCommand,
-    AssistantVersionDetails,
     AssistantVersionQuery,
-    AutotestRunView,
     RunAutotestsCommand,
+)
+from app.schemas.dto.assistants.assistant_views import (
+    AssistantVersionDetails,
+    AutotestRunView,
 )
 
 

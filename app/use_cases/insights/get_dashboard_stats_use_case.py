@@ -1,77 +1,65 @@
+"""The cabinet dashboard of a business for a period of local dates."""
+
 from collections import Counter
-from collections.abc import Hashable, Iterable
 from datetime import date, timedelta
 from zoneinfo import ZoneInfo
 
 from typed_time_provider import Microseconds, WallClock
 
 from app.contracts.registries import PlanRegistryContract
-from app.contracts.repositories import (
-    BookingRepoContract,
-    BusinessProfileRepoContract,
-    BusinessRepoContract,
-    ConversationRepoContract,
-    HandoffRepoContract,
-    LeadRepoContract,
-    MessageRepoContract,
-    ScheduleExceptionRepoContract,
+from app.contracts.repositories.billing_repositories import (
     SubscriptionRepoContract,
-    UnansweredQuestionRepoContract,
     UsageEventRepoContract,
 )
+from app.contracts.repositories.booking_repositories import (
+    BookingRepoContract,
+    HandoffRepoContract,
+    LeadRepoContract,
+    UnansweredQuestionRepoContract,
+)
+from app.contracts.repositories.business_repositories import (
+    BusinessProfileRepoContract,
+    BusinessRepoContract,
+)
+from app.contracts.repositories.conversation_repositories import (
+    ConversationRepoContract,
+    MessageRepoContract,
+)
+from app.contracts.repositories.knowledge_repositories import (
+    ScheduleExceptionRepoContract,
+)
 from app.contracts.use_case_contract import UseCaseContract
-from app.schemas.constants.billing import SubscriptionStatus, UsageKind
 from app.schemas.constants.conversations import MessageAuthor
-from app.schemas.domain.billing import SubscriptionDocument
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.conversations import ConversationDocument
-from app.schemas.domain.profiles import BusinessProfileDocument, OpeningInterval
-from app.schemas.dto.billing import PlanDefinition
-from app.schemas.dto.billing_ledger import PackageUsageTotals
-from app.schemas.dto.operations import (
+from app.schemas.dto.operations.dashboard import (
     BookingStatusCount,
     ChannelCount,
     DashboardDay,
-    DashboardPackageUsage,
     DashboardStats,
     DashboardStatsQuery,
     HandoffReasonCount,
     HandoffUrgencyCount,
     LanguageCount,
 )
-from app.schemas.exceptions.application_errors import ValidationFailedError
 from app.schemas.typings.conversations.prefixed_id import ConversationId
-from app.schemas.typings.insights.constrained_floats import AfterHoursSharePercent
-from app.schemas.typings.insights.constrained_integers import (
-    PeriodItemCount,
-    UsedVoiceMinutes,
-)
-from app.use_cases.billing.billing_records import find_current_subscription
-from app.use_cases.billing.package_usage import (
-    compute_overage_minutes,
-    compute_usage_percent,
-    summarize_package_usage,
-)
+from app.schemas.typings.insights.constrained_integers import PeriodItemCount
 from app.use_cases.bookings.operations_support import require_business
-from app.utilities.billing.billing_periods import find_usage_window
-from app.utilities.scheduling.opening_hours import (
-    DayRanges,
-    business_day_ranges,
-    is_open_at,
+from app.use_cases.insights.dashboard_counts import (
+    count_after_hours,
+    count_used_voice_minutes,
+    ranked,
+    share_percent,
 )
+from app.use_cases.insights.dashboard_package_usage import build_dashboard_package_usage
+from app.use_cases.insights.dashboard_period import choose_dashboard_period
 from app.utilities.scheduling.zoned_time import (
-    SECONDS_PER_MINUTE,
     load_time_zone,
     local_day_start_microseconds,
     microseconds_to_seconds,
-    parse_local_date,
     to_local_date,
     to_local_moment,
 )
-
-DEFAULT_PERIOD_DAYS: int = 30
-MAX_PERIOD_DAYS: int = 366
-SHARE_DECIMALS: int = 1
 
 
 class GetDashboardStatsUseCase(UseCaseContract[DashboardStatsQuery, DashboardStats]):
@@ -129,7 +117,9 @@ class GetDashboardStatsUseCase(UseCaseContract[DashboardStatsQuery, DashboardSta
             self._business_repo, input_data.business_id
         )
         zone: ZoneInfo = load_time_zone(business.timezone)
-        date_from, date_to = self._period(input_data, zone)
+        date_from, date_to = choose_dashboard_period(
+            input_data, zone, self._wall_clock.now_unix()
+        )
         period_start: int = local_day_start_microseconds(date_from, zone)
         period_end: int = local_day_start_microseconds(
             date_to + timedelta(days=1), zone
@@ -151,7 +141,13 @@ class GetDashboardStatsUseCase(UseCaseContract[DashboardStatsQuery, DashboardSta
             for conversation in all_conversations
             if not conversation.is_sandbox and in_period(conversation.created_at)
         ]
-        after_hours_count: int = self._count_after_hours(business, zone, conversations)
+        after_hours_count: int = count_after_hours(
+            self._business_profile_repo,
+            self._schedule_exception_repo,
+            business,
+            zone,
+            conversations,
+        )
         bookings = [
             booking
             for booking in self._booking_repo.list_by_business(business.id)
@@ -238,7 +234,8 @@ class GetDashboardStatsUseCase(UseCaseContract[DashboardStatsQuery, DashboardSta
                     if not question.is_resolved and not question.is_sandbox
                 )
             ),
-            used_voice_minutes=self._used_voice_minutes(
+            used_voice_minutes=count_used_voice_minutes(
+                self._usage_event_repo,
                 business,
                 period_start,
                 period_end,
@@ -256,137 +253,11 @@ class GetDashboardStatsUseCase(UseCaseContract[DashboardStatsQuery, DashboardSta
                     for offset in range((date_to - date_from).days + 1)
                 )
             ],
-            package=self._package_usage(business),
-        )
-
-    def _package_usage(
-        self, business: BusinessDocument
-    ) -> DashboardPackageUsage | None:
-        """
-        The current billing window's package; None without a subscription or
-        while it waits for its first payment (INCOMPLETE: no service yet).
-        """
-
-        subscription: SubscriptionDocument | None = find_current_subscription(
-            self._subscription_repo, business.id
-        )
-        if subscription is None or subscription.status is SubscriptionStatus.INCOMPLETE:
-            return None
-
-        plan: PlanDefinition = self._plan_registry.get(subscription.plan_key)
-        window_start, window_end = find_usage_window(
-            subscription, self._wall_clock.now_unix(), business.timezone
-        )
-        totals: PackageUsageTotals = summarize_package_usage(
-            self._usage_event_repo.list_by_business_between(
-                business.id, window_start, window_end
-            ),
-            window_start,
-            window_end,
-        )
-        return DashboardPackageUsage(
-            period_start=window_start,
-            period_end=window_end,
-            used_voice_minutes=totals.used_voice_minutes,
-            included_voice_minutes=plan.included_voice_minutes,
-            voice_usage_percent=compute_usage_percent(
-                int(totals.used_voice_minutes), int(plan.included_voice_minutes)
-            ),
-            overage_voice_minutes=compute_overage_minutes(
-                totals.used_voice_minutes, int(plan.included_voice_minutes)
-            ),
-            used_dialogs=totals.used_dialogs,
-            included_dialogs=plan.included_dialogs,
-            dialog_usage_percent=compute_usage_percent(
-                int(totals.used_dialogs), int(plan.included_dialogs)
+            package=build_dashboard_package_usage(
+                self._subscription_repo,
+                self._plan_registry,
+                self._usage_event_repo,
+                self._wall_clock,
+                business,
             ),
         )
-
-    def _period(self, query: DashboardStatsQuery, zone: ZoneInfo) -> tuple[date, date]:
-        today: date = to_local_moment(
-            microseconds_to_seconds(int(self._wall_clock.now_unix())), zone
-        ).date()
-        date_to: date = (
-            today if query.date_to is None else parse_local_date(query.date_to)
-        )
-        date_from: date = (
-            date_to - timedelta(days=DEFAULT_PERIOD_DAYS - 1)
-            if query.date_from is None
-            else parse_local_date(query.date_from)
-        )
-        if date_from > date_to:
-            raise ValidationFailedError("The start date is after the end date.")
-
-        if (date_to - date_from).days + 1 > MAX_PERIOD_DAYS:
-            raise ValidationFailedError(
-                f"The period may be at most {MAX_PERIOD_DAYS} days long."
-            )
-
-        return date_from, date_to
-
-    def _count_after_hours(
-        self,
-        business: BusinessDocument,
-        zone: ZoneInfo,
-        conversations: list[ConversationDocument],
-    ) -> int:
-        profile: BusinessProfileDocument | None = (
-            self._business_profile_repo.get_by_business(business.id)
-        )
-        hours: list[OpeningInterval] = [] if profile is None else list(profile.hours)
-        ranges_starting_on: DayRanges | None = (
-            business_day_ranges(
-                hours, self._schedule_exception_repo.list_by_business(business.id)
-            )
-            if hours
-            else None
-        )
-        return sum(
-            1
-            for conversation in conversations
-            if conversation.is_after_hours
-            or (
-                ranges_starting_on is not None
-                and not is_open_at(
-                    microseconds_to_seconds(int(conversation.created_at)),
-                    zone,
-                    ranges_starting_on,
-                )
-            )
-        )
-
-    def _used_voice_minutes(
-        self,
-        business: BusinessDocument,
-        period_start: int,
-        period_end: int,
-        sandbox_conversation_ids: set[ConversationId],
-    ) -> UsedVoiceMinutes:
-        voice_seconds: int = sum(
-            int(event.quantity)
-            for event in self._usage_event_repo.list_by_business_between(
-                business.id, Microseconds(period_start), Microseconds(period_end)
-            )
-            if event.kind is UsageKind.VOICE_SECONDS
-            and event.conversation_id not in sandbox_conversation_ids
-        )
-        return UsedVoiceMinutes(-(-voice_seconds // SECONDS_PER_MINUTE))
-
-
-def ranked[Key: Hashable](keys: Iterable[Key]) -> list[tuple[Key, PeriodItemCount]]:
-    """Counts per key, largest first (ties in key order)."""
-
-    counts: Counter[Key] = Counter(keys)
-    return [
-        (key, PeriodItemCount(count))
-        for key, count in sorted(
-            counts.items(), key=lambda item: (-item[1], str(item[0]))
-        )
-    ]
-
-
-def share_percent(part: int, total: int) -> AfterHoursSharePercent:
-    if total == 0:
-        return AfterHoursSharePercent(0.0)
-
-    return AfterHoursSharePercent(round(part * 100.0 / total, SHARE_DECIMALS))

@@ -3,7 +3,7 @@ from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.channels import ChannelKind
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.dto.access import BusinessAccessRequest
-from app.schemas.dto.conversation_feed import (
+from app.schemas.dto.conversation_feed.owner_test_chat import (
     OwnerTestChatCommand,
     OwnerTestChatVersionQuery,
 )

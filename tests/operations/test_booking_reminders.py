@@ -20,7 +20,7 @@ from app.schemas.domain.conversations import ConversationDocument, MessageDocume
 from app.schemas.domain.resources import ResourceDocument
 from app.schemas.dto.bookings import BookingView, RescheduleBookingCommand
 from app.schemas.dto.jobs import JobReport, JobTick
-from app.schemas.dto.operations import BookingMessageInput
+from app.schemas.dto.operations.message_texts import BookingMessageInput
 from app.schemas.exceptions.application_errors import ExternalServiceError
 from app.schemas.typings.assistants.prefixed_id import AssistantVersionId
 from app.schemas.typings.bookings.constrained_integers import (
@@ -55,9 +55,11 @@ from app.transformers.notifications.booking_reminder_template_transformer import
 from app.transformers.notifications.booking_reminder_transformer import (
     BookingReminderTransformer,
 )
-from app.use_cases.bookings.send_booking_reminders_use_case import (
-    SendBookingRemindersUseCase,
+from app.use_cases.bookings.reminders.reminder_rules import (
     choose_reminder_identities,
+)
+from app.use_cases.bookings.reminders.send_booking_reminders_use_case import (
+    SendBookingRemindersUseCase,
 )
 from app.utilities.localization.localized_text_resolver import LocalizedTextResolver
 from tests.operations.builders import DEFAULT_NOW, OperationsWorld

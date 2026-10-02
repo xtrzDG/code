@@ -3,7 +3,8 @@ import logging
 from typed_time_provider import Microseconds, WallClock
 
 from app.contracts.channel_clients import TelegramBotApiClientContract
-from app.contracts.repositories import AuditLogRepoContract, ChannelRepoContract
+from app.contracts.repositories.business_repositories import ChannelRepoContract
+from app.contracts.repositories.compliance_repositories import AuditLogRepoContract
 from app.contracts.secret_cipher import SecretCipherAdapterContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.channels import ChannelKind, ChannelStatus
@@ -13,7 +14,7 @@ from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.channels import ChannelDocument
 from app.schemas.domain.compliance import AuditLogEntryDocument
 from app.schemas.dto.access import BusinessAccessRequest
-from app.schemas.dto.channels import ChannelView, DisableChannelCommand
+from app.schemas.dto.channels.channel_settings import ChannelView, DisableChannelCommand
 from app.schemas.exceptions.application_errors import NotFoundError
 from app.schemas.exceptions.base_exception import ApplicationError
 from app.schemas.typings.businesses.prefixed_id import BusinessId

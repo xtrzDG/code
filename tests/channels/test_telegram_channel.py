@@ -6,7 +6,7 @@ import pytest
 from app.schemas.constants.channels import ChannelKind, ChannelStatus
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.channels import ChannelDocument
-from app.schemas.dto.channels import ChannelWebhookPayload
+from app.schemas.dto.channels.channel_webhooks import ChannelWebhookPayload
 from app.schemas.exceptions.application_errors import (
     AuthenticationRequiredError,
     ExternalServiceError,

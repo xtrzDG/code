@@ -1,7 +1,8 @@
 from typed_time_provider import Microseconds, WallClock
 
 from app.contracts.demo_data import DemoDatasetRegistryContract
-from app.contracts.repositories import BusinessRepoContract, UserRepoContract
+from app.contracts.repositories.business_repositories import BusinessRepoContract
+from app.contracts.repositories.user_repositories import UserRepoContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.users import UserDocument

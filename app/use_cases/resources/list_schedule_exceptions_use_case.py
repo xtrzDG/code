@@ -1,11 +1,13 @@
-from app.contracts.repositories import ScheduleExceptionRepoContract
+from app.contracts.repositories.knowledge_repositories import (
+    ScheduleExceptionRepoContract,
+)
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.domain.resources import ScheduleExceptionDocument
 from app.schemas.dto.resources import (
     ScheduleExceptionList,
     ScheduleExceptionListQuery,
 )
-from app.utilities.knowledge.resource_rules import to_schedule_exception_view
+from app.utilities.knowledge.schedule_exception_rules import to_schedule_exception_view
 
 
 class ListScheduleExceptionsUseCase(

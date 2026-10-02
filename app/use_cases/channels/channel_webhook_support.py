@@ -8,7 +8,7 @@ from app.contracts.channels import ChannelMessageReceiptRepoContract
 from app.contracts.secret_cipher import SecretCipherAdapterContract
 from app.schemas.domain.channel_receipts import ChannelMessageReceiptDocument
 from app.schemas.domain.channels import ChannelDocument
-from app.schemas.dto.channels import (
+from app.schemas.dto.channels.channel_webhooks import (
     ChannelDeliveryTarget,
     ChannelInboundDelivery,
     ChannelInboundMessage,

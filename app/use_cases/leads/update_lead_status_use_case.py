@@ -1,10 +1,10 @@
 from typed_time_provider import Microseconds, WallClock
 
-from app.contracts.repositories import LeadRepoContract
+from app.contracts.repositories.booking_repositories import LeadRepoContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.domain.bookings import LeadDocument
 from app.schemas.dto.bookings import LeadView
-from app.schemas.dto.operations import UpdateLeadStatusCommand
+from app.schemas.dto.operations.leads import UpdateLeadStatusCommand
 from app.schemas.exceptions.application_errors import NotFoundError
 from app.use_cases.leads.lead_views import build_lead_view
 

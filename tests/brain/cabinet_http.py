@@ -29,17 +29,19 @@ from app.schemas.constants.channels import ChannelKind
 from app.schemas.domain.bookings import BookingDocument, LeadDocument
 from app.schemas.domain.resources import ResourceDocument
 from app.schemas.dto.call_recordings import CallRecordingQuery, RecordingAudio
-from app.schemas.dto.conversation_feed import (
+from app.schemas.dto.conversation_feed.conversation_actions import (
+    RateConversationCommand,
+    SendStaffMessageCommand,
+    StaffMessageResult,
+)
+from app.schemas.dto.conversation_feed.conversation_views import (
     ConversationDetailView,
     ConversationListQuery,
     ConversationPage,
     ConversationQuery,
     ConversationSummaryView,
-    OwnerTestChatCommand,
-    RateConversationCommand,
-    SendStaffMessageCommand,
-    StaffMessageResult,
 )
+from app.schemas.dto.conversation_feed.owner_test_chat import OwnerTestChatCommand
 from app.schemas.dto.conversations import AssistantReply
 from app.schemas.dto.menu_import import (
     ConfirmImportedItemsCommand,

@@ -2,9 +2,13 @@ from babel import Locale
 
 from app.contracts.registries import CountryRegistryContract
 from app.contracts.use_case_contract import UseCaseContract
-from app.schemas.dto.catalog import CountryList, CountryListItem, CountryListRequest
+from app.schemas.dto.catalog.countries import (
+    CountryList,
+    CountryListItem,
+    CountryListRequest,
+)
+from app.utilities.localization.babel_locales import require_babel_locale
 from app.utilities.localization.display_names import build_country_display_name
-from app.utilities.localization.language_tags import require_babel_locale
 
 
 class ListCountriesUseCase(UseCaseContract[CountryListRequest, CountryList]):

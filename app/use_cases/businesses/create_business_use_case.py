@@ -5,7 +5,8 @@ from app.contracts.registries import (
     LanguageRegistryContract,
     NicheTemplateRegistryContract,
 )
-from app.contracts.repositories import BusinessRepoContract, UserRepoContract
+from app.contracts.repositories.business_repositories import BusinessRepoContract
+from app.contracts.repositories.user_repositories import UserRepoContract
 from app.contracts.transformer_contract import TransformerContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.configurations.app_settings import AppSettings

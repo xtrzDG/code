@@ -1,7 +1,7 @@
 from collections.abc import Callable
 
 from app.contracts.document_store import DocumentCollectionAdapterContract
-from app.contracts.repositories import (
+from app.contracts.repositories.business_repositories import (
     BusinessProfileRepoContract,
     BusinessRepoContract,
     ChannelRepoContract,

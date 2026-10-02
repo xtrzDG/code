@@ -1,6 +1,8 @@
 import logging
 
-from app.contracts.repositories import AssistantVersionRepoContract
+from app.contracts.repositories.assistant_repositories import (
+    AssistantVersionRepoContract,
+)
 from app.contracts.use_case_contract import UseCaseContract
 from app.contracts.voice_platform import VoiceAgentProvisionerAdapterContract
 from app.schemas.exceptions.base_exception import ApplicationError

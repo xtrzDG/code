@@ -91,7 +91,14 @@ def test_dockerfile_copies_what_the_image_needs() -> None:
 
 
 def test_every_documented_variable_is_read() -> None:
-    assembler = read("app/utilities/config_helpers/app_settings_assembler.py")
+    assembler = "".join(
+        module_path.read_text(encoding="utf-8")
+        for module_path in sorted(
+            (ROOT / "app" / "utilities" / "config_helpers" / "app_settings").glob(
+                "*.py"
+            )
+        )
+    )
 
     unread = {
         variable

@@ -2,23 +2,31 @@ from typed_time_provider import Microseconds
 
 from app.contracts.billing import PackageUsageWarningRepoContract
 from app.contracts.demo_data import DemoDatasetRegistryContract
-from app.contracts.repositories import (
+from app.contracts.repositories.assistant_repositories import (
     AssistantVersionRepoContract,
-    AuditLogRepoContract,
     AutotestRunRepoContract,
+)
+from app.contracts.repositories.billing_repositories import (
+    InvoiceRepoContract,
+    SubscriptionRepoContract,
+    UsageEventRepoContract,
+)
+from app.contracts.repositories.booking_repositories import (
     BookingRepoContract,
-    BusinessRepoContract,
+    HandoffRepoContract,
+    LeadRepoContract,
+    UnansweredQuestionRepoContract,
+)
+from app.contracts.repositories.business_repositories import BusinessRepoContract
+from app.contracts.repositories.compliance_repositories import (
+    AuditLogRepoContract,
+    DpaAcceptanceRepoContract,
+)
+from app.contracts.repositories.conversation_repositories import (
     CallRepoContract,
     ContactRepoContract,
     ConversationRepoContract,
-    DpaAcceptanceRepoContract,
-    HandoffRepoContract,
-    InvoiceRepoContract,
-    LeadRepoContract,
     MessageRepoContract,
-    SubscriptionRepoContract,
-    UnansweredQuestionRepoContract,
-    UsageEventRepoContract,
 )
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.configurations.app_settings import AppSettings

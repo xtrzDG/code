@@ -10,7 +10,10 @@ from dataclasses import dataclass, field
 
 from typed_time_provider import Microseconds, WallClock
 
-from app.contracts.repositories import ConversationRepoContract, HandoffRepoContract
+from app.contracts.repositories.booking_repositories import HandoffRepoContract
+from app.contracts.repositories.conversation_repositories import (
+    ConversationRepoContract,
+)
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.bookings import (
     BookingStatus,

@@ -7,12 +7,10 @@ from app.schemas.typings.localization.constrained_strings import (
     CurrencyCode,
     LanguageTag,
 )
+from app.utilities.reply_guard.guard_lexicon import build_guard_lexicon
 from app.utilities.reply_guard.invented_numbers import find_unverified_values
-from app.utilities.reply_guard.lexicons import build_guard_lexicon
-from app.utilities.reply_guard.number_mentions import (
-    NumberMention,
-    extract_number_mentions,
-)
+from app.utilities.reply_guard.number_mention import NumberMention
+from app.utilities.reply_guard.number_mentions import extract_number_mentions
 from app.utilities.reply_guard.numerals import (
     normalize_digits,
     parse_amount_candidates,

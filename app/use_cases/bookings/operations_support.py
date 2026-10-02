@@ -7,16 +7,14 @@ from typing import NamedTuple
 from typed_time_provider import Microseconds
 
 from app.contracts.localization_utilities import PhoneNumberParserContract
-from app.contracts.repositories import (
-    AuditLogRepoContract,
-    BusinessRepoContract,
-    ContactRepoContract,
-)
+from app.contracts.repositories.business_repositories import BusinessRepoContract
+from app.contracts.repositories.compliance_repositories import AuditLogRepoContract
+from app.contracts.repositories.conversation_repositories import ContactRepoContract
 from app.schemas.constants.compliance import AuditAction
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.compliance import AuditLogEntryDocument
 from app.schemas.domain.contacts import ContactDocument
-from app.schemas.dto.operations import StaffMessage
+from app.schemas.dto.operations.message_texts import StaffMessage
 from app.schemas.exceptions.application_errors import (
     InvalidPhoneNumberError,
     NotFoundError,

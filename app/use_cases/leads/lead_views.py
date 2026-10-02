@@ -3,7 +3,7 @@
 from app.schemas.domain.bookings import LeadDocument
 from app.schemas.domain.contacts import ContactDocument
 from app.schemas.dto.bookings import LeadView
-from app.schemas.dto.operations import LeadListItem
+from app.schemas.dto.operations.leads import LeadListItem
 
 
 def build_lead_view(lead: LeadDocument) -> LeadView:

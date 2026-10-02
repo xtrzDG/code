@@ -1,7 +1,7 @@
 from typed_time_provider import Microseconds, WallClock
 
-from app.contracts.repositories import (
-    BusinessRepoContract,
+from app.contracts.repositories.business_repositories import BusinessRepoContract
+from app.contracts.repositories.knowledge_repositories import (
     ResourceRepoContract,
     ScheduleExceptionRepoContract,
 )
@@ -14,7 +14,7 @@ from app.schemas.dto.resources import (
 )
 from app.schemas.exceptions.application_errors import NotFoundError
 from app.schemas.typings.bookings.prefixed_id import ResourceId
-from app.utilities.knowledge.resource_rules import (
+from app.utilities.knowledge.schedule_exception_rules import (
     build_schedule_exception,
     to_schedule_exception_view,
 )

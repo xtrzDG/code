@@ -7,11 +7,13 @@ from zoneinfo import ZoneInfo
 
 from app.contracts.localization_utilities import PhoneNumberParserContract
 from app.contracts.operations import ManagerBroadcastFacilitatorContract
-from app.contracts.repositories import (
-    BookingRepoContract,
+from app.contracts.repositories.booking_repositories import BookingRepoContract
+from app.contracts.repositories.business_repositories import (
     BusinessProfileRepoContract,
     BusinessRepoContract,
-    ContactRepoContract,
+)
+from app.contracts.repositories.conversation_repositories import ContactRepoContract
+from app.contracts.repositories.knowledge_repositories import (
     ResourceRepoContract,
     ScheduleExceptionRepoContract,
 )
@@ -26,7 +28,7 @@ from app.schemas.domain.profiles import (
 )
 from app.schemas.domain.resources import ResourceDocument, ScheduleExceptionDocument
 from app.schemas.dto.bookings import BookingView
-from app.schemas.dto.operations import BookingStaffNotificationInput
+from app.schemas.dto.operations.message_texts import BookingStaffNotificationInput
 from app.schemas.exceptions.application_errors import (
     ConflictError,
     NotFoundError,

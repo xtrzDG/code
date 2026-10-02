@@ -2,10 +2,12 @@
 
 from typed_time_provider import Microseconds
 
-from app.contracts.repositories import (
+from app.contracts.repositories.booking_repositories import (
     BookingRepoContract,
-    ConversationRepoContract,
     LeadRepoContract,
+)
+from app.contracts.repositories.conversation_repositories import (
+    ConversationRepoContract,
 )
 from app.schemas.constants.channels import ChannelKind
 from app.schemas.domain.bookings import BookingDocument, LeadDocument

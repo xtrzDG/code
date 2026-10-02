@@ -9,11 +9,9 @@ from app.contracts.operations import (
     CalendarEventLinkRepoContract,
     GoogleCalendarClientContract,
 )
-from app.contracts.repositories import (
-    BusinessRepoContract,
-    ContactRepoContract,
-    ResourceRepoContract,
-)
+from app.contracts.repositories.business_repositories import BusinessRepoContract
+from app.contracts.repositories.conversation_repositories import ContactRepoContract
+from app.contracts.repositories.knowledge_repositories import ResourceRepoContract
 from app.contracts.secret_cipher import SecretCipherAdapterContract
 from app.contracts.transformer_contract import TransformerContract
 from app.schemas.constants.bookings import BookingStatus
@@ -24,12 +22,12 @@ from app.schemas.domain.calendar import (
     CalendarEventLinkDocument,
 )
 from app.schemas.dto.bookings import BookingView
-from app.schemas.dto.operations import (
+from app.schemas.dto.operations.calendar_connection import (
     CalendarEventDraft,
     CalendarEventText,
-    CalendarEventTextInput,
     CalendarTokenGrant,
 )
+from app.schemas.dto.operations.message_texts import CalendarEventTextInput
 from app.schemas.exceptions.application_errors import InvalidPhoneNumberError
 from app.schemas.exceptions.base_exception import ApplicationError
 from app.schemas.typings.bookings.constrained_strings import CalendarSyncErrorSummary

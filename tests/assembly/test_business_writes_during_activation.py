@@ -10,7 +10,7 @@ from app.schemas.constants.assistants import AssistantVersionStatus
 from app.schemas.constants.businesses import BusinessStatus
 from app.schemas.constants.handoffs import ManagerContactChannel
 from app.schemas.domain.businesses import BusinessDocument, ManagerContact
-from app.schemas.dto.assistants import AssistantVersionDetails
+from app.schemas.dto.assistants.assistant_views import AssistantVersionDetails
 from app.schemas.dto.businesses import (
     BusinessSettingsChanges,
     ManagerContactInput,

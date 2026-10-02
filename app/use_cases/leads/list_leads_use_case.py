@@ -1,18 +1,16 @@
 from typed_time_provider import Microseconds, WallClock
 
-from app.contracts.repositories import (
-    AuditLogRepoContract,
-    BusinessRepoContract,
-    ContactRepoContract,
-    LeadRepoContract,
-)
+from app.contracts.repositories.booking_repositories import LeadRepoContract
+from app.contracts.repositories.business_repositories import BusinessRepoContract
+from app.contracts.repositories.compliance_repositories import AuditLogRepoContract
+from app.contracts.repositories.conversation_repositories import ContactRepoContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.bookings import LeadStatus
 from app.schemas.constants.compliance import AuditAction
 from app.schemas.domain.bookings import LeadDocument
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.contacts import ContactDocument
-from app.schemas.dto.operations import LeadPage, LeadStatusCount, ListLeadsQuery
+from app.schemas.dto.operations.leads import LeadPage, LeadStatusCount, ListLeadsQuery
 from app.schemas.typings.compliance.strings import AuditEntityName
 from app.schemas.typings.contacts.prefixed_id import ContactId
 from app.schemas.typings.platform.constrained_integers import ListItemCount

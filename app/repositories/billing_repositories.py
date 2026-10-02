@@ -1,6 +1,6 @@
 from typed_time_provider import Microseconds
 
-from app.contracts.repositories import (
+from app.contracts.repositories.billing_repositories import (
     InvoiceRepoContract,
     SubscriptionRepoContract,
     UsageEventRepoContract,

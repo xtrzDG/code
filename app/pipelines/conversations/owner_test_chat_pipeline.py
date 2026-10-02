@@ -1,7 +1,7 @@
 from app.contracts.conversation_flow import ConversationTurnOrchestratorContract
 from app.contracts.orchestrator_contract import OrchestratorContract
 from app.contracts.pipeline_contract import PipelineContract
-from app.schemas.dto.conversation_feed import OwnerTestChatCommand
+from app.schemas.dto.conversation_feed.owner_test_chat import OwnerTestChatCommand
 from app.schemas.dto.conversations import AssistantReply, InboundMessage
 
 

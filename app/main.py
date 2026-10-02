@@ -28,13 +28,14 @@ from app.registries.demo.demo_dataset_registry import (
 from app.schemas.configurations.app_settings import AppSettings
 from app.schemas.constants.environment import DeploymentEnvironment
 from app.schemas.constants.localization import OtpDeliveryChannel
-from app.schemas.dto.channels import PlatformBotWebhookSetup, TelegramBotProfile
+from app.schemas.dto.channels.provider_profiles import TelegramBotProfile
+from app.schemas.dto.channels.staff_links import PlatformBotWebhookSetup
 from app.schemas.dto.demo_data import DemoDataSeedReport, SeedDemoDataCommand
 from app.schemas.exceptions.application_errors import ValidationFailedError
 from app.schemas.exceptions.base_exception import ApplicationError
 from app.schemas.typings.compliance.constrained_strings import DpaDocumentVersion
 from app.schemas.typings.localization.constrained_strings import LanguageTag
-from app.utilities.localization.language_tags import ENGLISH_LOCALE_IDENTIFIER
+from app.utilities.localization.cldr_language_names import ENGLISH_LOCALE_IDENTIFIER
 
 LOGGER: logging.Logger = logging.getLogger(__name__)
 # Buffered model-call traces of the API process go to Langfuse this often
@@ -179,7 +180,9 @@ def seed_demo_data(app_container: AppContainer) -> None:
         return
 
     report: DemoDataSeedReport = (
-        app_container.operators.seed_demo_data_operator().operate(SeedDemoDataCommand())
+        app_container.operators.demo.seed_demo_data_operator().operate(
+            SeedDemoDataCommand()
+        )
     )
     # A warning, like the development login codes, so that uvicorn's default
     # log shows how to sign in.
@@ -204,9 +207,10 @@ def configure_platform_bot(app_container: AppContainer) -> None:
     ):
         return
 
+    channel_operators = app_container.operators.channels
     try:
         profile: TelegramBotProfile = (
-            app_container.operators.configure_platform_bot_webhook_operator().operate(
+            channel_operators.configure_platform_bot_webhook_operator().operate(
                 PlatformBotWebhookSetup()
             )
         )

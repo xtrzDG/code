@@ -2,7 +2,7 @@ from app.contracts.localization_utilities import LocalizedTextResolverContract
 from app.contracts.registries import NicheTemplateRegistryContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.dto.niches import NicheTemplate
-from app.schemas.dto.profiles import NicheDetailsView, NicheTemplateQuery
+from app.schemas.dto.profiles.niche_catalog import NicheDetailsView, NicheTemplateQuery
 from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.utilities.knowledge.localized_texts import FALLBACK_LANGUAGE_TAG
 from app.utilities.knowledge.niche_views import (

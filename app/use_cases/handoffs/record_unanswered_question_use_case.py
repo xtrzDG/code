@@ -1,9 +1,9 @@
 from typed_time_provider import Microseconds, WallClock
 
-from app.contracts.repositories import (
-    BusinessRepoContract,
+from app.contracts.repositories.booking_repositories import (
     UnansweredQuestionRepoContract,
 )
+from app.contracts.repositories.business_repositories import BusinessRepoContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.domain.handoffs import UnansweredQuestionDocument
 from app.schemas.dto.handoffs import (

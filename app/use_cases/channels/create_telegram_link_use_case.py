@@ -11,9 +11,9 @@ from app.schemas.constants.users import BusinessMemberRole
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.manager_links import ManagerTelegramLinkDocument
 from app.schemas.dto.access import BusinessAccessRequest
-from app.schemas.dto.channels import (
+from app.schemas.dto.channels.provider_profiles import TelegramBotProfile
+from app.schemas.dto.channels.staff_links import (
     CreateTelegramLinkCommand,
-    TelegramBotProfile,
     TelegramLinkView,
 )
 from app.schemas.exceptions.application_errors import (

@@ -141,12 +141,23 @@ repositories ─ adapters (app/adapters/) ─ clients (app/clients/)  внешн
   цепочки `PipelineOperator(OrchestratorPipeline(UseCaseOrchestrator(...)))`
   строятся типизированными помощниками `app/containers/provider_chains.py`, поэтому
   вызов каждого `build_<раздел>_router` проверяется mypy и pyright.
+- Большие контейнеры ролей собраны из дочерних контейнеров по ограниченным
+  контекстам: `app/containers/<роль>/<роль>_container.py` компонует
+  `<контекст>_<роль>.py` (use case — по пакетам `app/use_cases/`, оркестраторы,
+  пайплайны и операторы — по разделам API: accounts, compliance, knowledge,
+  operations, conversations, assistants, channels, billing, platform, а также
+  demo — демо-данные разработки, `SEED_DEMO_DATA`). Провайдер
+  читается по пути контекста: `use_cases.bookings.create_booking_use_case`,
+  `operators.billing.end_trials_operator`. Дочерний контейнер получает рёбрами
+  только нужные ему контексты; контейнер уровнем выше видит вложенные контексты
+  через `composed_container_edge` (`app/containers/container_edges.py`).
 - Где модуль нарушает направление ролей, провайдер стоит в контейнере уровнем выше:
   прогон сценария автотеста (use case, которому нужен оркестратор разговора) — в
-  `OrchestratorsContainer`, оркестраторы вебхуков каналов и виджета (им нужен
-  пайплайн сообщения клиента) — в `PipelinesContainer`.
+  `AssistantOrchestratorsContainer`, оркестраторы вебхуков каналов и виджета (им
+  нужен пайплайн сообщения клиента) — в `ChannelPipelinesContainer`.
 - Синглтоны: клиенты, адаптеры (в том числе все коллекции документов на одном пуле
-  Postgres и одном `StorageScopeContext`), репозитории, реестры (общий
+  Postgres и одном `StorageScopeContext`, дочерний `DocumentCollectionsContainer`
+  контейнера адаптеров), репозитории, реестры (общий
   `BusinessLockRegistry`), фасилитаторы, пайплайн сообщения клиента (замки по
   клиенту общие для всех каналов). Use case, оркестраторы и операторы — фабрики.
 - Журнал вызовов модели (`llm_trace_facilitator`) живёт в `AdaptersContainer`:

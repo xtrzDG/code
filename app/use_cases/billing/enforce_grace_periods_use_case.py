@@ -2,23 +2,22 @@ from typed_time_provider import Microseconds, WallClock
 
 from app.contracts.facilitators import ManagerNotificationFacilitatorContract
 from app.contracts.registries import PlanRegistryContract
-from app.contracts.repositories import (
-    BusinessRepoContract,
+from app.contracts.repositories.billing_repositories import (
     InvoiceRepoContract,
     SubscriptionRepoContract,
-    UserRepoContract,
 )
+from app.contracts.repositories.business_repositories import BusinessRepoContract
+from app.contracts.repositories.user_repositories import UserRepoContract
 from app.contracts.transformer_contract import TransformerContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.billing import (
     BillingNoticeKind,
-    InvoiceKind,
     SubscriptionStatus,
 )
 from app.schemas.constants.businesses import BusinessStatus, ServiceMode
 from app.schemas.domain.billing import InvoiceDocument, SubscriptionDocument
 from app.schemas.domain.businesses import BusinessDocument
-from app.schemas.dto.billing import Money, PlanDefinition
+from app.schemas.dto.billing import Money
 from app.schemas.dto.billing_ledger import BillingNotice, DueInvoicesRequest
 from app.schemas.dto.jobs import JobReport, JobTick
 from app.schemas.typings.conversations.strings import MessageText
@@ -28,11 +27,14 @@ from app.use_cases.billing.billing_records import (
     find_covering_paid_invoice,
     find_current_subscription,
     find_next_period_start,
-    list_open_invoices,
     list_subscription_invoices,
 )
+from app.use_cases.billing.grace_periods import (
+    start_grace_period,
+    start_overage_grace,
+)
 from app.use_cases.billing.owner_notifications import notify_business_owners
-from app.utilities.billing.billing_periods import add_local_days
+from app.use_cases.billing.service_mode_switch import switch_service_mode
 
 # An automatic charge is dated by day; wait this long past the period end
 # for its notification before treating the renewal as missed.
@@ -100,7 +102,8 @@ class EnforceGracePeriodsUseCase(UseCaseContract[JobTick, JobReport]):
                 business.id,
             )
             if subscription is None:
-                if business.status is BusinessStatus.LIVE and self._set_service_mode(
+                if business.status is BusinessStatus.LIVE and switch_service_mode(
+                    self._business_repo,
                     business,
                     ServiceMode.LEADS_ONLY,
                     self._wall_clock.now_unix(),
@@ -123,7 +126,9 @@ class EnforceGracePeriodsUseCase(UseCaseContract[JobTick, JobReport]):
         match subscription.status:
             case SubscriptionStatus.INCOMPLETE:
                 return business.status is BusinessStatus.LIVE and (
-                    self._set_service_mode(business, ServiceMode.LEADS_ONLY, now)
+                    switch_service_mode(
+                        self._business_repo, business, ServiceMode.LEADS_ONLY, now
+                    )
                 )
             case SubscriptionStatus.ACTIVE:
                 return self._enforce_active(business, subscription, now)
@@ -132,7 +137,8 @@ class EnforceGracePeriodsUseCase(UseCaseContract[JobTick, JobReport]):
                     subscription.trial_ends_at is None
                     or now < subscription.trial_ends_at
                 )
-                return is_trial_running and self._set_service_mode(
+                return is_trial_running and switch_service_mode(
+                    self._business_repo,
                     business,
                     ServiceMode.FULL,
                     now,
@@ -160,7 +166,9 @@ class EnforceGracePeriodsUseCase(UseCaseContract[JobTick, JobReport]):
         if (
             now < subscription.period_end
             or find_covering_paid_invoice(invoices, now) is not None
-            or not self._set_service_mode(business, ServiceMode.LEADS_ONLY, now)
+            or not switch_service_mode(
+                self._business_repo, business, ServiceMode.LEADS_ONLY, now
+            )
         ):
             return has_moved
 
@@ -178,7 +186,9 @@ class EnforceGracePeriodsUseCase(UseCaseContract[JobTick, JobReport]):
             subscription,
         )
         has_moved: bool = advance_to_paid_periods(subscription, invoices, now)
-        if self._start_overage_grace(business, subscription, invoices, now):
+        if start_overage_grace(self._plan_registry, subscription, business, invoices):
+            subscription.updated_at = now
+            self._subscription_repo.save(subscription)
             return True
 
         if now < subscription.period_end + RENEWAL_TOLERANCE_MICROSECONDS:
@@ -186,7 +196,12 @@ class EnforceGracePeriodsUseCase(UseCaseContract[JobTick, JobReport]):
                 subscription.updated_at = now
                 self._subscription_repo.save(subscription)
 
-            return self._set_service_mode(business, ServiceMode.FULL, now) or has_moved
+            return (
+                switch_service_mode(
+                    self._business_repo, business, ServiceMode.FULL, now
+                )
+                or has_moved
+            )
 
         issued: list[InvoiceDocument] = self._issue_due_invoices.run(
             DueInvoicesRequest(
@@ -207,38 +222,6 @@ class EnforceGracePeriodsUseCase(UseCaseContract[JobTick, JobReport]):
         )
         return True
 
-    def _start_overage_grace(
-        self,
-        business: BusinessDocument,
-        subscription: SubscriptionDocument,
-        invoices: list[InvoiceDocument],
-        now: Microseconds,
-    ) -> bool:
-        """
-        An unpaid bill for minutes above the package makes the subscription
-        past due; grace runs from the day the bill was issued (the owners
-        were told the deadline then).
-        """
-
-        unpaid_overage: list[InvoiceDocument] = [
-            invoice
-            for invoice in list_open_invoices(invoices)
-            if invoice.kind is InvoiceKind.USAGE_OVERAGE
-        ]
-        if unpaid_overage == []:
-            return False
-
-        plan: PlanDefinition = self._plan_registry.get(subscription.plan_key)
-        subscription.status = SubscriptionStatus.PAST_DUE
-        subscription.grace_until = add_local_days(
-            min(invoice.created_at for invoice in unpaid_overage),
-            int(plan.grace_period_days),
-            business.timezone,
-        )
-        subscription.updated_at = now
-        self._subscription_repo.save(subscription)
-        return True
-
     def _enforce_past_due(
         self,
         business: BusinessDocument,
@@ -249,7 +232,8 @@ class EnforceGracePeriodsUseCase(UseCaseContract[JobTick, JobReport]):
             self._start_grace(business, subscription, now)
             return True
 
-        if now < subscription.grace_until or not self._set_service_mode(
+        if now < subscription.grace_until or not switch_service_mode(
+            self._business_repo,
             business,
             ServiceMode.LEADS_ONLY,
             now,
@@ -265,39 +249,9 @@ class EnforceGracePeriodsUseCase(UseCaseContract[JobTick, JobReport]):
         subscription: SubscriptionDocument,
         now: Microseconds,
     ) -> None:
-        plan: PlanDefinition = self._plan_registry.get(subscription.plan_key)
-        subscription.status = SubscriptionStatus.PAST_DUE
-        subscription.grace_until = add_local_days(
-            now,
-            int(plan.grace_period_days),
-            business.timezone,
-        )
+        start_grace_period(self._plan_registry, subscription, business, now)
         subscription.updated_at = now
         self._subscription_repo.save(subscription)
-
-    def _set_service_mode(
-        self,
-        business: BusinessDocument,
-        service_mode: ServiceMode,
-        now: Microseconds,
-    ) -> bool:
-        """
-        Switch the mode of the business as stored now (one atomic change, so
-        an owner's edit saved meanwhile is kept); return False when it
-        already was that mode.
-        """
-
-        switched: list[bool] = []
-
-        def switch_mode(current: BusinessDocument) -> None:
-            if current.service_mode is not service_mode:
-                current.service_mode = service_mode
-                current.updated_at = now
-                switched.append(True)
-
-        self._business_repo.update(business.id, switch_mode)
-        business.service_mode = service_mode
-        return bool(switched)
 
     def _notify(
         self,

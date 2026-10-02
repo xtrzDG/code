@@ -2,12 +2,12 @@ from typed_time_provider import Microseconds, WallClock
 
 from app.contracts.localization_utilities import PhoneNumberParserContract
 from app.contracts.registries import NicheTemplateRegistryContract
-from app.contracts.repositories import (
-    AuditLogRepoContract,
+from app.contracts.repositories.business_repositories import (
     BusinessProfileRepoContract,
     BusinessRepoContract,
-    KnowledgeItemRepoContract,
 )
+from app.contracts.repositories.compliance_repositories import AuditLogRepoContract
+from app.contracts.repositories.knowledge_repositories import KnowledgeItemRepoContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.knowledge import KnowledgeItemSource
 from app.schemas.constants.niches import ProfileWizardStep
@@ -16,7 +16,7 @@ from app.schemas.domain.knowledge import KnowledgeItemDocument
 from app.schemas.domain.profiles import BusinessContacts, BusinessProfileDocument
 from app.schemas.dto.knowledge_admin import KnowledgeItemUpsertInput
 from app.schemas.dto.niches import NicheTemplate
-from app.schemas.dto.profiles import (
+from app.schemas.dto.profiles.profile_steps import (
     BookingRulesStepInput,
     ChannelsStepInput,
     ContactsAndHoursStepInput,
@@ -28,9 +28,9 @@ from app.schemas.dto.profiles import (
     SaveProfileStepCommand,
 )
 from app.schemas.exceptions.application_errors import NotFoundError
+from app.utilities.knowledge.knowledge_item_views import to_item_details
 from app.utilities.knowledge.knowledge_items import (
     faq_entry_to_upsert_input,
-    to_item_details,
     upsert_knowledge_items,
 )
 from app.utilities.knowledge.niche_answers import merge_niche_answers

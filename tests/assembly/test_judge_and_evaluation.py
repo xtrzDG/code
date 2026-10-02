@@ -8,7 +8,8 @@ from app.schemas.constants.assistants import (
     JudgeCriterion,
 )
 from app.schemas.domain.assistants import AutotestScenarioResult, JudgeCriterionScore
-from app.schemas.dto.assistants import AutotestScenario, LlmTokenPrice
+from app.schemas.dto.assistants.assembly_sources import LlmTokenPrice
+from app.schemas.dto.assistants.autotest_runs import AutotestScenario
 from app.schemas.dto.conversations import AssistantReply
 from app.schemas.typings.assistants.constrained_integers import (
     JudgeScore,

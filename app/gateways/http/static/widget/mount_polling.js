@@ -1,0 +1,196 @@
+    // --- answers the widget has not shown yet -----------------------------
+
+    function shouldPoll() {
+      if (state.pollStopped || document.visibilityState === "hidden") {
+        return false;
+      }
+      if (state.isHandedOff) {
+        return true;
+      }
+      if (awaitingAnswer() && !state.isSending) {
+        return true;
+      }
+      var lastAt = Math.max(state.handoffAt, state.activityAt);
+      return state.isOpen && lastAt > 0 && Date.now() - lastAt < HANDOFF_MEMORY_MS;
+    }
+
+    // The visitor's last message was sent (maybe from a page since left) and
+    // its answer has not been shown yet.
+    function awaitingAnswer() {
+      for (var index = state.history.length - 1; index >= 0; index -= 1) {
+        var item = state.history[index];
+        if (item.role === "visitor") {
+          return isAwaiting(item);
+        }
+      }
+      return false;
+    }
+
+    function isAwaiting(item) {
+      return item.pending === true && Date.now() - (item.sentAt || 0) < REQUEST_TIMEOUT_MS;
+    }
+
+    function clearPending() {
+      state.history.forEach(function (item) {
+        if (item.role === "visitor") {
+          item.pending = false;
+        }
+      });
+    }
+
+    function markActivity() {
+      state.activityAt = Date.now();
+      storageSet(localStorageOrNull(), storagePrefix + "activity-at", String(state.activityAt));
+    }
+
+    // The history and position another tab saved; this tab's unsent and
+    // failed messages stay at the end.
+    function adoptStoredState() {
+      if (state.isSending) {
+        // Adopted after the answer: the message being sent is in the history.
+        return;
+      }
+      var raw = storageGet(localStorageOrNull(), storagePrefix + "history");
+      if (raw !== state.storedHistory) {
+        var unsaved = state.history.filter(function (item) {
+          return item.failed;
+        });
+        state.history = loadHistory().concat(unsaved);
+        state.storedHistory = raw;
+        state.handoffNoticeShown = state.history.some(function (item) {
+          return item.role === "notice";
+        });
+        renderLog();
+      }
+      var cursor = storageGet(localStorageOrNull(), storagePrefix + "cursor");
+      if (cursor) {
+        state.cursor = cursor;
+      }
+      state.activityAt = Math.max(
+        state.activityAt,
+        Number(storageGet(localStorageOrNull(), storagePrefix + "activity-at")) || 0
+      );
+    }
+
+    function schedulePoll(delay) {
+      stopPolling();
+      if (!shouldPoll() || state.isSending) {
+        return;
+      }
+      state.pollTimer = window.setTimeout(function () {
+        poll(false);
+      }, delay);
+    }
+
+    function stopPolling() {
+      if (state.pollTimer !== null) {
+        window.clearTimeout(state.pollTimer);
+        state.pollTimer = null;
+      }
+    }
+
+    function nextDelay() {
+      var limit = state.isOpen ? POLL_MAX_DELAY_OPEN_MS : POLL_MAX_DELAY_CLOSED_MS;
+      state.pollDelay = Math.min(Math.round(state.pollDelay * POLL_BACKOFF_FACTOR), limit);
+      return state.pollDelay;
+    }
+
+    function poll(isCatchUp) {
+      state.pollTimer = null;
+      if (state.isPolling || state.isSending || state.pollStopped) {
+        return;
+      }
+      if (isCatchUp !== true && !shouldPoll()) {
+        return;
+      }
+      // Start from the shared position, so another tab's answers are not
+      // appended out of order.
+      adoptStoredState();
+      state.isPolling = true;
+      var url = messagesUrl;
+      if (state.cursor) {
+        url += "?after=" + encodeURIComponent(state.cursor);
+      }
+      requestJson(url, null, state.sessionKey).then(
+        function (result) {
+          state.isPolling = false;
+          if (result.status === 404) {
+            // The chat was switched off: stop asking.
+            state.pollStopped = true;
+            return;
+          }
+          if (!result.ok || !result.body || !Array.isArray(result.body.items)) {
+            schedulePoll(Math.max(nextDelay(), waitAfter(result)));
+            return;
+          }
+          var added = receiveMessages(result.body);
+          if (result.body.has_more === true) {
+            schedulePoll(POLL_MORE_DELAY_MS);
+          } else if (added > 0) {
+            state.pollDelay = POLL_FIRST_DELAY_MS;
+            schedulePoll(POLL_FIRST_DELAY_MS);
+          } else {
+            schedulePoll(nextDelay());
+          }
+        },
+        function () {
+          state.isPolling = false;
+          schedulePoll(nextDelay());
+        }
+      );
+    }
+
+    function receiveMessages(page) {
+      var known = {};
+      state.history.forEach(function (item) {
+        if (item.id) {
+          known[item.id] = true;
+        }
+      });
+      var added = 0;
+      var lastText = "";
+      page.items.forEach(function (message) {
+        if (!message || typeof message.id !== "string" || typeof message.text !== "string") {
+          return;
+        }
+        if (known[message.id] || !message.text) {
+          return;
+        }
+        known[message.id] = true;
+        state.history.push({
+          role: message.author === "staff" ? "staff" : "assistant",
+          id: message.id,
+          text: message.text,
+          direction: message.direction === "rtl" ? "rtl" : "ltr"
+        });
+        lastText = message.text;
+        added += 1;
+      });
+      if (typeof page.cursor === "string" && page.cursor) {
+        saveCursor(page.cursor);
+      }
+      setHandedOff(page.is_handed_off === true);
+      if (added > 0) {
+        clearPending();
+        markActivity();
+        saveHistory();
+        renderLog();
+        noteReply(lastText);
+      }
+      return added;
+    }
+
+    function saveCursor(cursor) {
+      state.cursor = cursor;
+      storageSet(localStorageOrNull(), storagePrefix + "cursor", cursor);
+    }
+
+    function setHandedOff(isHandedOff) {
+      state.isHandedOff = isHandedOff;
+      storageSet(localStorageOrNull(), storagePrefix + "handoff", isHandedOff ? "1" : "0");
+      if (isHandedOff) {
+        state.handoffAt = Date.now();
+        storageSet(localStorageOrNull(), storagePrefix + "handoff-at", String(state.handoffAt));
+      }
+    }
+

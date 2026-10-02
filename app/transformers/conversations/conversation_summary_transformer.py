@@ -1,7 +1,7 @@
 from app.contracts.transformer_contract import TransformerContract
 from app.schemas.constants.conversations import MessageAuthor
 from app.schemas.domain.conversations import ConversationDocument, MessageDocument
-from app.schemas.dto.conversation_feed import (
+from app.schemas.dto.conversation_feed.conversation_views import (
     ConversationSummaryView,
     ConversationViewSource,
 )

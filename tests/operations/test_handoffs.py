@@ -15,7 +15,7 @@ from app.schemas.constants.handoffs import (
 )
 from app.schemas.domain.conversations import ConversationDocument
 from app.schemas.dto.handoffs import HandoffCommand, HandoffResult
-from app.schemas.dto.operations import (
+from app.schemas.dto.operations.handoffs import (
     HandoffPage,
     ListHandoffsQuery,
     ResolveHandoffCommand,

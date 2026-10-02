@@ -15,7 +15,7 @@ from app.schemas.domain.calendar import (
     CalendarConnectionDocument,
 )
 from app.schemas.dto.calendar import CalendarConnectionOutcome
-from app.schemas.dto.operations import (
+from app.schemas.dto.operations.calendar_connection import (
     CalendarConnectionView,
     CalendarTokenGrant,
     CompleteCalendarConnectionCommand,

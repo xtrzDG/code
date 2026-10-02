@@ -1,10 +1,10 @@
 from typed_time_provider import Microseconds, WallClock
 
-from app.contracts.repositories import (
+from app.contracts.repositories.assistant_repositories import (
     AssistantVersionRepoContract,
-    AuditLogRepoContract,
-    UserRepoContract,
 )
+from app.contracts.repositories.compliance_repositories import AuditLogRepoContract
+from app.contracts.repositories.user_repositories import UserRepoContract
 from app.contracts.transformer_contract import TransformerContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.assistants import (
@@ -18,11 +18,9 @@ from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.compliance import AuditLogEntryDocument
 from app.schemas.domain.users import UserDocument
 from app.schemas.dto.access import BusinessAccessRequest
-from app.schemas.dto.assistants import (
-    AssistantVersionActivation,
-    AssistantVersionDetails,
-    PublishAssistantVersionCommand,
-)
+from app.schemas.dto.assistants.assembly_sources import AssistantVersionActivation
+from app.schemas.dto.assistants.assistant_commands import PublishAssistantVersionCommand
+from app.schemas.dto.assistants.assistant_views import AssistantVersionDetails
 from app.schemas.dto.go_live import (
     GoLiveCheck,
     GoLiveReadiness,

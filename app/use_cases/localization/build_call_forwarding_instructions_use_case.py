@@ -3,13 +3,13 @@ from app.contracts.localization_utilities import (
     LocalizedTextResolverContract,
     PhoneNumberParserContract,
 )
-from app.contracts.repositories import ChannelRepoContract
+from app.contracts.repositories.business_repositories import ChannelRepoContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.channels import ChannelKind, ChannelStatus
 from app.schemas.constants.localization import CallForwardingCondition
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.channels import ChannelDocument
-from app.schemas.dto.catalog import (
+from app.schemas.dto.catalog.call_forwarding import (
     CallForwardingCode,
     CallForwardingCodeTemplate,
     CallForwardingGuide,

@@ -85,7 +85,7 @@ from app.schemas.domain.payments import PaymentOrderDocument
 from app.schemas.domain.users import UserDocument
 from app.schemas.dto.billing import Money, PlanDefinition
 from app.schemas.dto.billing_ledger import BillingNotice, InvoiceDescriptionInput
-from app.schemas.dto.catalog import ExchangeRateQuote
+from app.schemas.dto.catalog.plan_quotes import ExchangeRateQuote
 from app.schemas.dto.jobs import JobReport, JobTick
 from app.schemas.dto.payments import PaymentWebhookDelivery, PaymentWebhookReceipt
 from app.schemas.exceptions.application_errors import AuthenticationRequiredError
@@ -165,12 +165,14 @@ from app.use_cases.billing.issue_due_invoices_use_case import (
 from app.use_cases.billing.open_subscription_use_case import (
     OpenSubscriptionUseCase,
 )
-from app.use_cases.billing.process_payment_webhook_use_case import (
+from app.use_cases.billing.payment_webhook.process_payment_webhook_use_case import (
     ProcessPaymentWebhookUseCase,
 )
 from app.use_cases.billing.start_checkout_use_case import StartCheckoutUseCase
 from app.use_cases.billing.start_trial_use_case import StartTrialUseCase
-from app.utilities.config_helpers.app_settings_assembler import assemble_app_settings
+from app.utilities.config_helpers.app_settings.app_settings_assembler import (
+    assemble_app_settings,
+)
 from app.utilities.localization.localized_text_resolver import LocalizedTextResolver
 
 # 2026-10-01 09:00 UTC, the concept's date.

@@ -6,7 +6,7 @@ from app.schemas.constants.compliance import AuditAction
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.compliance import AuditLogEntryDocument
 from app.schemas.domain.profiles import BusinessContacts, BusinessProfileDocument
-from app.schemas.dto.profiles import BusinessProfileView
+from app.schemas.dto.profiles.business_profile import BusinessProfileView
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.compliance.strings import (
     AuditEntityName,

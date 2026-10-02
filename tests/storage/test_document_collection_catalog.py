@@ -9,7 +9,9 @@ from dependency_injector import providers
 from app.adapters.storage.postgres.document_collection_factory import (
     build_document_collection,
 )
-from app.containers.adapters import AdaptersContainer
+from app.containers.adapters.document_collections_container import (
+    DocumentCollectionsContainer,
+)
 from app.schemas.constants.compliance import AuditAction
 from app.schemas.constants.storage import CollectionIsolation
 from app.schemas.domain.assistants import AssistantVersionDocument
@@ -62,10 +64,10 @@ PLATFORM_DOCUMENT_TYPES: frozenset[type[PersistentDocument]] = frozenset(
 
 
 def container_document_types() -> list[type[PersistentDocument]]:
-    """Document types of the collection providers of AdaptersContainer."""
+    """Document types of the collection providers of the container."""
 
     document_types: list[type[PersistentDocument]] = []
-    for provider in AdaptersContainer.providers.values():
+    for provider in DocumentCollectionsContainer.providers.values():
         if not isinstance(provider, providers.Singleton):
             continue
 
@@ -111,7 +113,7 @@ def test_every_catalog_entry_is_wired_in_the_container_once() -> None:
 
 
 def test_container_collection_names_match_the_catalog() -> None:
-    for provider in AdaptersContainer.providers.values():
+    for provider in DocumentCollectionsContainer.providers.values():
         if not isinstance(provider, providers.Singleton):
             continue
 

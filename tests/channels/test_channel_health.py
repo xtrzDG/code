@@ -12,7 +12,7 @@ from app.facilitators.channels.channel_message_sender_facilitator import (
 from app.schemas.constants.billing import UsageKind
 from app.schemas.constants.channels import ChannelKind, ChannelStatus
 from app.schemas.domain.channels import ChannelDocument
-from app.schemas.dto.channels import ChannelDeliveryTarget
+from app.schemas.dto.channels.channel_webhooks import ChannelDeliveryTarget
 from app.schemas.exceptions.application_errors import (
     ChannelCredentialRejectedError,
     ExternalServiceError,

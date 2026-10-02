@@ -1,14 +1,14 @@
 from typed_time_provider import Microseconds, WallClock
 
-from app.contracts.repositories import (
-    KnowledgeItemRepoContract,
+from app.contracts.repositories.booking_repositories import (
     UnansweredQuestionRepoContract,
 )
+from app.contracts.repositories.knowledge_repositories import KnowledgeItemRepoContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.knowledge import KnowledgeItemKind, KnowledgeItemSource
 from app.schemas.domain.handoffs import UnansweredQuestionDocument
 from app.schemas.domain.knowledge import KnowledgeItemDocument
-from app.schemas.dto.operations import (
+from app.schemas.dto.operations.unanswered_questions import (
     AnsweredQuestionResult,
     AnswerUnansweredQuestionCommand,
 )

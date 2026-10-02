@@ -1,6 +1,6 @@
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.configurations.app_settings import AppSettings
-from app.schemas.dto.channels import MetaWebhookVerificationRequest
+from app.schemas.dto.channels.channel_webhooks import MetaWebhookVerificationRequest
 from app.schemas.exceptions.application_errors import AccessDeniedError
 from app.schemas.typings.channels.strings import MetaWebhookChallenge
 from app.schemas.typings.platform.strings import PlatformSecret

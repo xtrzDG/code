@@ -1,4 +1,4 @@
-from app.contracts.repositories import KnowledgeItemRepoContract
+from app.contracts.repositories.knowledge_repositories import KnowledgeItemRepoContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.domain.knowledge import KnowledgeItemDocument
 from app.schemas.dto.knowledge_admin import (

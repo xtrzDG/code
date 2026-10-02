@@ -1,6 +1,6 @@
 from typed_time_provider import Microseconds, WallClock
 
-from app.contracts.repositories import (
+from app.contracts.repositories.conversation_repositories import (
     ContactRepoContract,
     ConversationRepoContract,
     MessageRepoContract,
@@ -10,10 +10,12 @@ from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.conversations import ConversationDocument
 from app.schemas.dto.access import BusinessAccessRequest
-from app.schemas.dto.conversation_feed import (
+from app.schemas.dto.conversation_feed.conversation_actions import (
+    RateConversationCommand,
+)
+from app.schemas.dto.conversation_feed.conversation_views import (
     ConversationSummaryView,
     ConversationViewSource,
-    RateConversationCommand,
 )
 from app.schemas.exceptions.application_errors import NotFoundError
 

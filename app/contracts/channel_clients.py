@@ -5,7 +5,7 @@ from typing import Protocol
 from app.contracts.client_contract import ClientContract
 from app.schemas.constants.assistants import AssistantToolName
 from app.schemas.dto.call_recordings import RecordingAudio
-from app.schemas.dto.channels import (
+from app.schemas.dto.channels.provider_profiles import (
     MetaPageProfile,
     TelegramBotProfile,
     WhatsAppPhoneNumberProfile,

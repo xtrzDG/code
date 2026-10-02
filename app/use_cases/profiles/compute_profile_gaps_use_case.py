@@ -1,11 +1,15 @@
 from app.contracts.localization_utilities import LocalizedTextResolverContract
 from app.contracts.registries import NicheTemplateRegistryContract
-from app.contracts.repositories import (
+from app.contracts.repositories.booking_repositories import (
+    UnansweredQuestionRepoContract,
+)
+from app.contracts.repositories.business_repositories import (
     BusinessProfileRepoContract,
     BusinessRepoContract,
+)
+from app.contracts.repositories.knowledge_repositories import (
     KnowledgeItemRepoContract,
     ResourceRepoContract,
-    UnansweredQuestionRepoContract,
 )
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.niches import ProfileWizardStep
@@ -13,7 +17,7 @@ from app.schemas.constants.profiles import ProfileGapKind
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.handoffs import UnansweredQuestionDocument
 from app.schemas.dto.niches import NicheTemplate, QuestionDefinition
-from app.schemas.dto.profiles import (
+from app.schemas.dto.profiles.profile_gaps import (
     ProfileGap,
     ProfileGapFinding,
     ProfileGapsQuery,

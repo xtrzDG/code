@@ -8,12 +8,14 @@ from app.contracts.operations import (
     BusinessLockRegistryContract,
     ManagerBroadcastFacilitatorContract,
 )
-from app.contracts.repositories import (
-    AuditLogRepoContract,
-    BookingRepoContract,
+from app.contracts.repositories.booking_repositories import BookingRepoContract
+from app.contracts.repositories.business_repositories import (
     BusinessProfileRepoContract,
     BusinessRepoContract,
-    ContactRepoContract,
+)
+from app.contracts.repositories.compliance_repositories import AuditLogRepoContract
+from app.contracts.repositories.conversation_repositories import ContactRepoContract
+from app.contracts.repositories.knowledge_repositories import (
     ResourceRepoContract,
     ScheduleExceptionRepoContract,
 )
@@ -24,7 +26,7 @@ from app.schemas.domain.bookings import BookingDocument
 from app.schemas.domain.contacts import ContactDocument
 from app.schemas.domain.resources import ResourceDocument
 from app.schemas.dto.bookings import BookingResult, BookingView, CreateBookingCommand
-from app.schemas.dto.operations import (
+from app.schemas.dto.operations.message_texts import (
     BookingMessageInput,
     BookingStaffNotificationInput,
 )
@@ -44,17 +46,17 @@ from app.use_cases.bookings.operations_support import (
     require_contact,
     update_contact_details,
 )
-from app.utilities.scheduling.booking_placement import (
-    Placement,
-    PlacementRequest,
-    booking_refusal_reason,
+from app.utilities.scheduling.booking_placement import place_booking
+from app.utilities.scheduling.booking_views import build_booking_view
+from app.utilities.scheduling.placement import Placement
+from app.utilities.scheduling.placement_errors import booking_refusal_reason
+from app.utilities.scheduling.placement_request import PlacementRequest
+from app.utilities.scheduling.resource_selection import (
     ensure_party_size_allowed,
     min_notice_seconds,
-    place_booking,
     seating_resources,
     select_resources,
 )
-from app.utilities.scheduling.booking_views import build_booking_view
 from app.utilities.scheduling.zoned_time import (
     microseconds_to_seconds,
     parse_local_date,

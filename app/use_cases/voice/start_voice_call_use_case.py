@@ -3,11 +3,15 @@ from typed_time_provider import Microseconds, WallClock
 from app.contracts.channels import VoiceWebhookAdapterContract
 from app.contracts.localization_utilities import PhoneNumberParserContract
 from app.contracts.registries import PlanRegistryContract
-from app.contracts.repositories import (
+from app.contracts.repositories.assistant_repositories import (
     AssistantVersionRepoContract,
+)
+from app.contracts.repositories.business_repositories import (
     BusinessProfileRepoContract,
     BusinessRepoContract,
     ChannelRepoContract,
+)
+from app.contracts.repositories.knowledge_repositories import (
     ScheduleExceptionRepoContract,
 )
 from app.contracts.use_case_contract import UseCaseContract

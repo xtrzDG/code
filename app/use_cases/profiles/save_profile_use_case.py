@@ -2,16 +2,16 @@ from typed_time_provider import Microseconds, WallClock
 
 from app.contracts.localization_utilities import PhoneNumberParserContract
 from app.contracts.registries import NicheTemplateRegistryContract
-from app.contracts.repositories import (
-    AuditLogRepoContract,
+from app.contracts.repositories.business_repositories import (
     BusinessProfileRepoContract,
     BusinessRepoContract,
 )
+from app.contracts.repositories.compliance_repositories import AuditLogRepoContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.profiles import BusinessContacts, BusinessProfileDocument
 from app.schemas.dto.niches import NicheTemplate
-from app.schemas.dto.profiles import (
+from app.schemas.dto.profiles.business_profile import (
     BusinessProfileView,
     ProfileInput,
     SaveProfileCommand,

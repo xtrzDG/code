@@ -29,7 +29,9 @@ from app.facilitators.observability.null_trace_facilitator import (
 from app.schemas.exceptions.application_errors import ExternalServiceError
 from app.schemas.typings.assistants.strings import VoiceAgentId
 from app.schemas.typings.conversations.strings import ProviderCallId
-from app.utilities.config_helpers.app_settings_assembler import assemble_app_settings
+from app.utilities.config_helpers.app_settings.app_settings_assembler import (
+    assemble_app_settings,
+)
 
 
 def test_voice_without_a_key_uses_a_stand_in_that_reports_it() -> None:

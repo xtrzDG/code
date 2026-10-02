@@ -1,12 +1,12 @@
 from app.contracts.orchestrator_contract import OrchestratorContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.domain.assistants import AutotestScenarioResult
-from app.schemas.dto.assistants import (
+from app.schemas.dto.assistants.assistant_commands import RunAutotestsCommand
+from app.schemas.dto.assistants.assistant_views import AutotestRunView
+from app.schemas.dto.assistants.autotest_runs import (
     AutotestRunCompletion,
     AutotestRunPlan,
-    AutotestRunView,
     AutotestScenarioRun,
-    RunAutotestsCommand,
 )
 
 

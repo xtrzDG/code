@@ -1,0 +1,123 @@
+from dependency_injector import containers
+from dependency_injector.providers import DependenciesContainer, Factory
+
+from app.containers.adapters.adapters_container import AdaptersContainer
+from app.containers.config import ConfigContainer
+from app.containers.facilitators import FacilitatorsContainer
+from app.containers.registries import RegistriesContainer
+from app.containers.repositories import RepositoriesContainer
+from app.containers.time_provider import TimeProviderContainer
+from app.containers.use_cases.conversation_use_cases import (
+    ConversationUseCasesContainer,
+)
+from app.containers.utilities import UtilitiesContainer
+from app.contracts.use_case_contract import UseCaseContract
+from app.schemas.dto.conversations import VoiceToolCallRequest
+from app.schemas.dto.voice_webhooks import (
+    CallInitiationData,
+    CallInitiationWebhookRequest,
+    FinishedCallReport,
+    PostCallWebhookRequest,
+    RecordedCall,
+    VoiceToolWebhookRequest,
+)
+from app.schemas.typings.businesses.prefixed_id import BusinessId
+from app.use_cases.voice.authenticate_post_call_use_case import (
+    AuthenticatePostCallUseCase,
+)
+from app.use_cases.voice.authenticate_voice_tool_call_use_case import (
+    AuthenticateVoiceToolCallUseCase,
+)
+from app.use_cases.voice.finished_call.record_finished_call_use_case import (
+    RecordFinishedCallUseCase,
+)
+from app.use_cases.voice.remove_voice_agent_use_case import RemoveVoiceAgentUseCase
+from app.use_cases.voice.send_call_confirmation_use_case import (
+    SendCallConfirmationUseCase,
+)
+from app.use_cases.voice.start_voice_call_use_case import StartVoiceCallUseCase
+
+
+class VoiceUseCasesContainer(containers.DeclarativeContainer):
+    """
+    Voice calls (ElevenLabs Agents): webhooks, finished calls, confirmations,
+    and switching the voice agent off when voice leaves the live service.
+    """
+
+    adapters: AdaptersContainer = DependenciesContainer()  # type: ignore[assignment]
+    config: ConfigContainer = DependenciesContainer()  # type: ignore[assignment]
+    facilitators: FacilitatorsContainer = DependenciesContainer()  # type: ignore[assignment]
+    registries: RegistriesContainer = DependenciesContainer()  # type: ignore[assignment]
+    repositories: RepositoriesContainer = DependenciesContainer()  # type: ignore[assignment]
+    time_provider: TimeProviderContainer = DependenciesContainer()  # type: ignore[assignment]
+    utilities: UtilitiesContainer = DependenciesContainer()  # type: ignore[assignment]
+    conversation_use_cases: ConversationUseCasesContainer = DependenciesContainer()  # type: ignore[assignment]
+
+    # Switches the voice agent off when voice leaves the live service.
+    remove_voice_agent_use_case: Factory[UseCaseContract[BusinessId, None]] = Factory(
+        RemoveVoiceAgentUseCase,
+        assistant_version_repo=repositories.assistant_version_repo,
+        voice_agent_provisioner=adapters.voice_agent_provisioner,
+    )
+
+    # --- Voice webhooks (ElevenLabs Agents).
+    authenticate_voice_tool_call_use_case: Factory[
+        UseCaseContract[VoiceToolWebhookRequest, VoiceToolCallRequest]
+    ] = Factory(
+        AuthenticateVoiceToolCallUseCase,
+        business_repo=repositories.business_repo,
+        voice_webhook_adapter=adapters.voice_webhook_adapter,
+        phone_number_parser=utilities.phone_number_parser,
+        app_settings=config.app_settings,
+    )
+    start_voice_call_use_case: Factory[
+        UseCaseContract[CallInitiationWebhookRequest, CallInitiationData]
+    ] = Factory(
+        StartVoiceCallUseCase,
+        business_repo=repositories.business_repo,
+        assistant_version_repo=repositories.assistant_version_repo,
+        channel_repo=repositories.channel_repo,
+        plan_registry=registries.plan_registry,
+        business_profile_repo=repositories.business_profile_repo,
+        schedule_exception_repo=repositories.schedule_exception_repo,
+        wall_clock=time_provider.microsecond_wall_clock,
+        voice_webhook_adapter=adapters.voice_webhook_adapter,
+        phone_number_parser=utilities.phone_number_parser,
+        build_call_greeting=conversation_use_cases.build_call_greeting_use_case,
+        app_settings=config.app_settings,
+    )
+    authenticate_post_call_use_case: Factory[
+        UseCaseContract[PostCallWebhookRequest, FinishedCallReport | None]
+    ] = Factory(
+        AuthenticatePostCallUseCase,
+        voice_webhook_adapter=adapters.voice_webhook_adapter,
+        wall_clock=time_provider.microsecond_wall_clock,
+    )
+    record_finished_call_use_case: Factory[
+        UseCaseContract[FinishedCallReport, RecordedCall]
+    ] = Factory(
+        RecordFinishedCallUseCase,
+        channel_repo=repositories.channel_repo,
+        business_repo=repositories.business_repo,
+        assistant_version_repo=repositories.assistant_version_repo,
+        conversation_repo=repositories.conversation_repo,
+        call_repo=repositories.call_repo,
+        booking_repo=repositories.booking_repo,
+        lead_repo=repositories.lead_repo,
+        handoff_repo=repositories.handoff_repo,
+        usage_event_repo=repositories.usage_event_repo,
+        audit_log_repo=repositories.audit_log_repo,
+        phone_number_parser=utilities.phone_number_parser,
+        wall_clock=time_provider.microsecond_wall_clock,
+    )
+    send_call_confirmation_use_case: Factory[UseCaseContract[RecordedCall, bool]] = (
+        Factory(
+            SendCallConfirmationUseCase,
+            business_repo=repositories.business_repo,
+            booking_repo=repositories.booking_repo,
+            contact_repo=repositories.contact_repo,
+            channel_repo=repositories.channel_repo,
+            channel_message_sender=facilitators.channel_message_sender,
+            text_resolver=utilities.localized_text_resolver,
+        )
+    )

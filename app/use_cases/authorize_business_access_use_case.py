@@ -1,10 +1,8 @@
 from typed_time_provider import Microseconds, WallClock
 
-from app.contracts.repositories import (
-    AuditLogRepoContract,
-    BusinessRepoContract,
-    UserRepoContract,
-)
+from app.contracts.repositories.business_repositories import BusinessRepoContract
+from app.contracts.repositories.compliance_repositories import AuditLogRepoContract
+from app.contracts.repositories.user_repositories import UserRepoContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.compliance import AuditAction
 from app.schemas.constants.users import BusinessMemberRole

@@ -5,7 +5,7 @@ from app.contracts.localization_utilities import LocalizedTextResolverContract
 from app.contracts.registries import CountryRegistryContract, PlanRegistryContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.dto.billing import Money, PlanDefinition
-from app.schemas.dto.catalog import (
+from app.schemas.dto.catalog.plan_quotes import (
     ExchangeRateQuote,
     PlanQuote,
     PlanQuoteList,
@@ -19,7 +19,7 @@ from app.schemas.typings.localization.constrained_strings import (
     CurrencyCode,
     LanguageTag,
 )
-from app.utilities.localization.language_tags import require_babel_locale
+from app.utilities.localization.babel_locales import require_babel_locale
 from app.utilities.money.money_formatting import format_money
 from app.utilities.money.money_math import (
     build_discount_factor,

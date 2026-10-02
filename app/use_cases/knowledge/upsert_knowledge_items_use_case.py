@@ -1,7 +1,8 @@
 from typed_time_provider import Microseconds, WallClock
 
 from app.contracts.registries import NicheTemplateRegistryContract
-from app.contracts.repositories import BusinessRepoContract, KnowledgeItemRepoContract
+from app.contracts.repositories.business_repositories import BusinessRepoContract
+from app.contracts.repositories.knowledge_repositories import KnowledgeItemRepoContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.knowledge import KnowledgeItemDocument
@@ -11,10 +12,8 @@ from app.schemas.dto.knowledge_admin import (
 )
 from app.schemas.exceptions.application_errors import NotFoundError
 from app.schemas.typings.localization.constrained_strings import LanguageTag
-from app.utilities.knowledge.knowledge_items import (
-    to_item_details,
-    upsert_knowledge_items,
-)
+from app.utilities.knowledge.knowledge_item_views import to_item_details
+from app.utilities.knowledge.knowledge_items import upsert_knowledge_items
 
 
 class UpsertKnowledgeItemsUseCase(

@@ -1,19 +1,23 @@
+"""One client's summary for the platform admin."""
+
 from typed_time_provider import Microseconds, WallClock
 
 from app.contracts.registries import PlanRegistryContract
-from app.contracts.repositories import (
+from app.contracts.repositories.assistant_repositories import (
     AssistantVersionRepoContract,
     AutotestRunRepoContract,
-    HandoffRepoContract,
-    MessageRepoContract,
+)
+from app.contracts.repositories.billing_repositories import (
     SubscriptionRepoContract,
-    UnansweredQuestionRepoContract,
     UsageEventRepoContract,
 )
+from app.contracts.repositories.booking_repositories import (
+    HandoffRepoContract,
+    UnansweredQuestionRepoContract,
+)
+from app.contracts.repositories.conversation_repositories import MessageRepoContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.assistants import AutotestOutcome
-from app.schemas.constants.billing import SubscriptionStatus
-from app.schemas.constants.businesses import ServiceMode
 from app.schemas.constants.client_health import ClientHealthIssue, ClientHealthStatus
 from app.schemas.domain.assistants import AssistantVersionDocument, AutotestRunDocument
 from app.schemas.domain.billing import SubscriptionDocument
@@ -31,18 +35,15 @@ from app.schemas.typings.client_health.constrained_integers import (
     OpenQuestionCount,
     ToolErrorCount,
 )
+from app.use_cases.admin.client_health_rules import find_health_issues, judge_health
+from app.use_cases.admin.client_usage_window import (
+    MICROSECONDS_PER_DAY,
+    find_client_usage_window,
+)
 from app.use_cases.billing.billing_records import find_current_subscription
 from app.use_cases.billing.package_usage import summarize_package_usage
-from app.utilities.billing.billing_periods import find_usage_window
 
-MICROSECONDS_PER_DAY: int = 24 * 60 * 60 * 1_000_000
 RECENT_ACTIVITY_DAYS: int = 7
-NO_SUBSCRIPTION_WINDOW_DAYS: int = 30
-MANY_HANDOFFS_THRESHOLD: int = 20
-OPEN_QUESTIONS_THRESHOLD: int = 5
-CRITICAL_ISSUES: frozenset[ClientHealthIssue] = frozenset(
-    {ClientHealthIssue.LEADS_ONLY_MODE, ClientHealthIssue.NEGATIVE_MARGIN}
-)
 
 
 class SummarizeClientUseCase(UseCaseContract[ClientSummarySource, AdminClientSummary]):
@@ -99,7 +100,7 @@ class SummarizeClientUseCase(UseCaseContract[ClientSummarySource, AdminClientSum
         plan: PlanDefinition = self._plan_registry.get(
             business.plan_key if subscription is None else subscription.plan_key
         )
-        window_start, window_end = self._find_window(business, subscription, now)
+        window_start, window_end = find_client_usage_window(business, subscription, now)
         usage: PackageUsageTotals = summarize_package_usage(
             self._usage_event_repo.list_by_business_between(
                 business.id,
@@ -172,25 +173,6 @@ class SummarizeClientUseCase(UseCaseContract[ClientSummarySource, AdminClientSum
                 "health_issues": issues,
                 "health_status": judge_health(issues),
             }
-        )
-
-    def _find_window(
-        self,
-        business: BusinessDocument,
-        subscription: SubscriptionDocument | None,
-        now: Microseconds,
-    ) -> tuple[Microseconds, Microseconds]:
-        # A subscription still waiting for its first payment has an empty
-        # period; it is metered like no subscription at all.
-        if (
-            subscription is not None
-            and subscription.period_end > subscription.period_start
-        ):
-            return find_usage_window(subscription, now, business.timezone)
-
-        return (
-            Microseconds(int(now) - NO_SUBSCRIPTION_WINDOW_DAYS * MICROSECONDS_PER_DAY),
-            Microseconds(int(now) + 1),
         )
 
     def _find_published(
@@ -280,62 +262,3 @@ class SummarizeClientUseCase(UseCaseContract[ClientSummarySource, AdminClientSum
                 if not question.is_resolved and not question.is_sandbox
             )
         )
-
-
-def find_health_issues(
-    summary: AdminClientSummary,
-    subscription: SubscriptionDocument | None,
-) -> list[ClientHealthIssue]:
-    """Every reason the client needs a look, most important first."""
-
-    issues: list[ClientHealthIssue] = []
-    if summary.service_mode is ServiceMode.LEADS_ONLY:
-        issues.append(ClientHealthIssue.LEADS_ONLY_MODE)
-
-    if summary.cost.margin is not None and int(summary.cost.margin.amount_minor) < 0:
-        issues.append(ClientHealthIssue.NEGATIVE_MARGIN)
-
-    if subscription is None:
-        issues.append(ClientHealthIssue.NO_SUBSCRIPTION)
-    elif subscription.status is SubscriptionStatus.INCOMPLETE:
-        issues.append(ClientHealthIssue.FIRST_PAYMENT_PENDING)
-    elif subscription.status is SubscriptionStatus.PAST_DUE:
-        issues.append(ClientHealthIssue.PAYMENT_PAST_DUE)
-    elif subscription.status is SubscriptionStatus.CANCELLED:
-        issues.append(ClientHealthIssue.SUBSCRIPTION_CANCELLED)
-
-    if subscription is not None and summary.published_version_number is None:
-        issues.append(ClientHealthIssue.NOT_PUBLISHED)
-
-    if int(summary.failed_tests) > 0:
-        issues.append(ClientHealthIssue.AUTOTESTS_FAILED)
-
-    if int(summary.tool_errors_last_7_days) > 0:
-        issues.append(ClientHealthIssue.TOOL_ERRORS)
-
-    if int(summary.handoffs_last_7_days) >= MANY_HANDOFFS_THRESHOLD:
-        issues.append(ClientHealthIssue.MANY_HANDOFFS)
-
-    if int(summary.open_unanswered_questions) >= OPEN_QUESTIONS_THRESHOLD:
-        issues.append(ClientHealthIssue.OPEN_QUESTIONS)
-
-    is_minutes_exceeded: bool = int(summary.included_voice_minutes) > 0 and int(
-        summary.used_voice_minutes
-    ) > int(summary.included_voice_minutes)
-    is_dialogs_exceeded: bool = int(summary.included_dialogs) > 0 and int(
-        summary.used_dialogs
-    ) > int(summary.included_dialogs)
-    if is_minutes_exceeded or is_dialogs_exceeded:
-        issues.append(ClientHealthIssue.PACKAGE_EXCEEDED)
-
-    return issues
-
-
-def judge_health(issues: list[ClientHealthIssue]) -> ClientHealthStatus:
-    if any(issue in CRITICAL_ISSUES for issue in issues):
-        return ClientHealthStatus.CRITICAL
-
-    if issues != []:
-        return ClientHealthStatus.ATTENTION
-
-    return ClientHealthStatus.HEALTHY

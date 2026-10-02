@@ -1,9 +1,9 @@
 from typed_time_provider import Microseconds, WallClock
 
 from app.contracts.facilitators import ChannelMessageSenderFacilitatorContract
-from app.contracts.repositories import (
-    AuditLogRepoContract,
-    ChannelRepoContract,
+from app.contracts.repositories.business_repositories import ChannelRepoContract
+from app.contracts.repositories.compliance_repositories import AuditLogRepoContract
+from app.contracts.repositories.conversation_repositories import (
     ConversationRepoContract,
     MessageRepoContract,
 )
@@ -21,10 +21,12 @@ from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.compliance import AuditLogEntryDocument
 from app.schemas.domain.conversations import ConversationDocument, MessageDocument
 from app.schemas.dto.access import BusinessAccessRequest
-from app.schemas.dto.conversation_feed import (
-    MessageView,
+from app.schemas.dto.conversation_feed.conversation_actions import (
     SendStaffMessageCommand,
     StaffMessageResult,
+)
+from app.schemas.dto.conversation_feed.conversation_views import (
+    MessageView,
     StaffReplyView,
 )
 from app.schemas.dto.errors import ErrorReason

@@ -6,11 +6,11 @@ from app.contracts.channels import (
     ChannelAdapterContract,
     ChannelMessageReceiptRepoContract,
 )
-from app.contracts.repositories import ChannelRepoContract
+from app.contracts.repositories.business_repositories import ChannelRepoContract
 from app.contracts.secret_cipher import SecretCipherAdapterContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.domain.channels import ChannelDocument
-from app.schemas.dto.channels import (
+from app.schemas.dto.channels.channel_webhooks import (
     ChannelInboundDelivery,
     ChannelInboundMessage,
     MetaWebhookRequest,

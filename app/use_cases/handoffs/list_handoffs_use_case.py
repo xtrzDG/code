@@ -1,18 +1,16 @@
 from typed_time_provider import Microseconds, WallClock
 
-from app.contracts.repositories import (
-    AuditLogRepoContract,
-    BusinessRepoContract,
-    ContactRepoContract,
-    HandoffRepoContract,
-)
+from app.contracts.repositories.booking_repositories import HandoffRepoContract
+from app.contracts.repositories.business_repositories import BusinessRepoContract
+from app.contracts.repositories.compliance_repositories import AuditLogRepoContract
+from app.contracts.repositories.conversation_repositories import ContactRepoContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.compliance import AuditAction
 from app.schemas.constants.handoffs import HandoffStatus, HandoffUrgency
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.contacts import ContactDocument
 from app.schemas.domain.handoffs import HandoffDocument
-from app.schemas.dto.operations import HandoffPage, ListHandoffsQuery
+from app.schemas.dto.operations.handoffs import HandoffPage, ListHandoffsQuery
 from app.schemas.typings.compliance.strings import AuditEntityName
 from app.schemas.typings.contacts.prefixed_id import ContactId
 from app.schemas.typings.platform.constrained_integers import ListItemCount

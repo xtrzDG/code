@@ -1,0 +1,97 @@
+"""Assemble AppSettings from environment variables (the external boundary).
+
+Each `*_settings_section` module reads the variables of one topic; the
+assembler checks what spans topics first and composes the sections in the
+order of the `AppSettings` fields.
+"""
+
+import os
+from collections.abc import Mapping
+
+from app.schemas.configurations.app_settings import AppSettings
+from app.schemas.constants.environment import DeploymentEnvironment
+from app.schemas.typings.platform.strings import DatabaseUrl, PlatformSecret
+from app.utilities.config_helpers.app_settings.compliance_settings_section import (
+    read_compliance_settings,
+)
+from app.utilities.config_helpers.app_settings.environment_variable_readers import (
+    optional_text,
+    read_text,
+)
+from app.utilities.config_helpers.app_settings.integration_settings_section import (
+    read_integration_settings,
+)
+from app.utilities.config_helpers.app_settings.llm_settings_section import (
+    read_llm_provider,
+    read_llm_settings,
+)
+from app.utilities.config_helpers.app_settings.login_settings_section import (
+    read_login_settings,
+    read_otp_code_logging,
+)
+from app.utilities.config_helpers.app_settings.observability_settings_section import (
+    read_observability_settings,
+)
+from app.utilities.config_helpers.app_settings.otp_provider_settings_section import (
+    check_login_code_providers,
+    read_otp_provider_settings,
+    read_smtp_security,
+)
+from app.utilities.config_helpers.app_settings.platform_admin_settings_section import (
+    read_platform_admin_settings,
+)
+from app.utilities.config_helpers.app_settings.public_address_settings_section import (
+    read_public_address_settings,
+)
+from app.utilities.config_helpers.app_settings.runtime_settings_section import (
+    read_runtime_settings,
+)
+from app.utilities.config_helpers.app_settings.voice_settings_section import (
+    read_voice_settings,
+)
+
+
+def get_app_settings() -> AppSettings:
+    """Assemble validated settings from the process environment."""
+
+    return assemble_app_settings(os.environ)
+
+
+def assemble_app_settings(environment_variables: Mapping[str, str]) -> AppSettings:
+    """Assemble validated settings from an explicit variable mapping."""
+
+    environment = DeploymentEnvironment(
+        read_text(environment_variables, "APP_ENV", DeploymentEnvironment.DEVELOPMENT)
+    )
+    is_development: bool = environment is not DeploymentEnvironment.PRODUCTION
+    llm_provider = read_llm_provider(environment_variables)
+    is_otp_code_logging_enabled: bool = read_otp_code_logging(
+        environment_variables, is_development
+    )
+    check_login_code_providers(environment_variables)
+    smtp_security = read_smtp_security(environment_variables)
+    database_url: DatabaseUrl | None = optional_text(
+        environment_variables, "DATABASE_URL", DatabaseUrl
+    )
+
+    return AppSettings(
+        environment=environment,
+        **read_public_address_settings(environment_variables, is_development),
+        database_url=database_url,
+        encryption_key=optional_text(
+            environment_variables, "ENCRYPTION_KEY", PlatformSecret
+        ),
+        **read_llm_settings(environment_variables, llm_provider),
+        **read_login_settings(environment_variables, is_otp_code_logging_enabled),
+        **read_compliance_settings(environment_variables),
+        **read_platform_admin_settings(environment_variables),
+        **read_otp_provider_settings(environment_variables, smtp_security),
+        **read_voice_settings(environment_variables, is_production=not is_development),
+        **read_integration_settings(environment_variables),
+        **read_observability_settings(environment_variables),
+        **read_runtime_settings(
+            environment_variables,
+            environment=environment,
+            has_database=database_url is not None,
+        ),
+    )

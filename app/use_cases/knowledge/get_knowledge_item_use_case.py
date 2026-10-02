@@ -1,10 +1,11 @@
-from app.contracts.repositories import BusinessRepoContract, KnowledgeItemRepoContract
+from app.contracts.repositories.business_repositories import BusinessRepoContract
+from app.contracts.repositories.knowledge_repositories import KnowledgeItemRepoContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.knowledge import KnowledgeItemDocument
 from app.schemas.dto.knowledge_admin import KnowledgeItemDetails, KnowledgeItemQuery
 from app.schemas.exceptions.application_errors import NotFoundError
-from app.utilities.knowledge.knowledge_items import to_item_details
+from app.utilities.knowledge.knowledge_item_views import to_item_details
 
 
 class GetKnowledgeItemUseCase(

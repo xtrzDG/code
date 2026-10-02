@@ -1,3 +1,5 @@
+"""Staff change a booking in the cabinet."""
+
 from datetime import datetime
 
 from typed_time_provider import Microseconds, WallClock
@@ -6,23 +8,25 @@ from app.contracts.operations import (
     BookingCalendarSyncFacilitatorContract,
     BusinessLockRegistryContract,
 )
-from app.contracts.repositories import (
-    AuditLogRepoContract,
-    BookingRepoContract,
+from app.contracts.repositories.booking_repositories import BookingRepoContract
+from app.contracts.repositories.business_repositories import (
     BusinessProfileRepoContract,
     BusinessRepoContract,
-    ContactRepoContract,
+)
+from app.contracts.repositories.compliance_repositories import AuditLogRepoContract
+from app.contracts.repositories.conversation_repositories import ContactRepoContract
+from app.contracts.repositories.knowledge_repositories import (
     ResourceRepoContract,
     ScheduleExceptionRepoContract,
 )
 from app.contracts.use_case_contract import UseCaseContract
-from app.schemas.constants.bookings import BookingStatus, BookingUnit
+from app.schemas.constants.bookings import BookingUnit
 from app.schemas.constants.compliance import AuditAction
 from app.schemas.domain.bookings import BookingDocument
 from app.schemas.domain.contacts import ContactDocument
 from app.schemas.domain.resources import ResourceDocument
 from app.schemas.dto.bookings import BookingView
-from app.schemas.dto.operations import UpdateBookingCommand
+from app.schemas.dto.operations.bookings import UpdateBookingCommand
 from app.schemas.exceptions.application_errors import (
     ConflictError,
     NotFoundError,
@@ -32,8 +36,12 @@ from app.schemas.typings.bookings.constrained_integers import (
     BookingDurationMinutes,
     PartySize,
 )
-from app.schemas.typings.bookings.strings import BookingNote
 from app.schemas.typings.compliance.strings import AuditEntityName
+from app.use_cases.bookings.booking_edits import (
+    apply_notes_change,
+    apply_status_change,
+    booking_unit_label,
+)
 from app.use_cases.bookings.booking_support import (
     SchedulingInputs,
     find_resource,
@@ -46,12 +54,10 @@ from app.use_cases.bookings.operations_support import (
     update_contact_details,
 )
 from app.utilities.scheduling.availability import BLOCKING_BOOKING_STATUSES
-from app.utilities.scheduling.booking_placement import (
-    PlacementRequest,
-    place_booking,
-    select_resources,
-)
+from app.utilities.scheduling.booking_placement import place_booking
 from app.utilities.scheduling.booking_views import build_booking_view
+from app.utilities.scheduling.placement_request import PlacementRequest
+from app.utilities.scheduling.resource_selection import select_resources
 from app.utilities.scheduling.zoned_time import (
     SECONDS_PER_MINUTE,
     minute_of_day,
@@ -59,13 +65,6 @@ from app.utilities.scheduling.zoned_time import (
 )
 
 BOOKING_ENTITY: AuditEntityName = AuditEntityName("booking")
-# Target status -> statuses it may be reached from.
-ALLOWED_TRANSITIONS: dict[BookingStatus, frozenset[BookingStatus]] = {
-    BookingStatus.COMPLETED: BLOCKING_BOOKING_STATUSES,
-    BookingStatus.NO_SHOW: BLOCKING_BOOKING_STATUSES,
-    BookingStatus.CANCELLED: BLOCKING_BOOKING_STATUSES,
-    BookingStatus.CONFIRMED: frozenset({BookingStatus.PENDING}),
-}
 
 
 class UpdateBookingUseCase(UseCaseContract[UpdateBookingCommand, BookingView]):
@@ -137,8 +136,8 @@ class UpdateBookingUseCase(UseCaseContract[UpdateBookingCommand, BookingView]):
                 raise NotFoundError(f"Booking {input_data.booking_id} was not found.")
 
             is_changed: bool = self._apply_placement(booking, input_data, inputs)
-            is_changed = self._apply_notes(booking, input_data.notes) or is_changed
-            is_changed = self._apply_status(booking, input_data.status) or is_changed
+            is_changed = apply_notes_change(booking, input_data.notes) or is_changed
+            is_changed = apply_status_change(booking, input_data.status) or is_changed
             if is_changed:
                 booking.updated_at = now
                 self._booking_repo.save(booking)
@@ -176,36 +175,6 @@ class UpdateBookingUseCase(UseCaseContract[UpdateBookingCommand, BookingView]):
             find_resource(inputs.resources, booking.resource_id),
             contact,
         )
-
-    def _apply_status(
-        self,
-        booking: BookingDocument,
-        status: BookingStatus | None,
-    ) -> bool:
-        if status is None or booking.status is status:
-            return False
-
-        allowed_from: frozenset[BookingStatus] = ALLOWED_TRANSITIONS.get(
-            status, frozenset()
-        )
-        if booking.status not in allowed_from:
-            raise ConflictError(f"A {booking.status} booking cannot become {status}.")
-
-        booking.status = status
-        return True
-
-    def _apply_notes(self, booking: BookingDocument, notes: BookingNote | None) -> bool:
-        """Notes as given (the cabinet trims them); blank notes are removed."""
-
-        if notes is None:
-            return False
-
-        new_notes: BookingNote | None = notes if str(notes).strip() else None
-        if new_notes == booking.notes:
-            return False
-
-        booking.notes = new_notes
-        return True
 
     def _apply_placement(
         self,
@@ -296,7 +265,3 @@ class UpdateBookingUseCase(UseCaseContract[UpdateBookingCommand, BookingView]):
                 excluded_booking_id=booking.id,
             ),
         )
-
-
-def booking_unit_label(resource: ResourceDocument) -> str:
-    return "nights" if resource.booking_unit is BookingUnit.NIGHT else "time slots"

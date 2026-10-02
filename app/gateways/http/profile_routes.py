@@ -11,28 +11,33 @@ from app.schemas.constants.niches import NicheKey, ProfileWizardStep
 from app.schemas.constants.users import BusinessMemberRole
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.dto.access import BusinessAccessRequest
-from app.schemas.dto.profiles import (
-    BookingRulesStepInput,
+from app.schemas.dto.profiles.business_profile import (
     BusinessProfileQuery,
     BusinessProfileView,
-    ChannelsStepInput,
-    ContactsAndHoursStepInput,
-    FaqAndHandoffStepInput,
-    NicheAndLanguagesStepInput,
+    ProfileInput,
+    SaveProfileCommand,
+)
+from app.schemas.dto.profiles.niche_catalog import (
     NicheCatalogQuery,
     NicheCatalogView,
     NicheDetailsView,
     NicheTemplateQuery,
+)
+from app.schemas.dto.profiles.profile_gaps import ProfileGapsQuery, ProfileGapsView
+from app.schemas.dto.profiles.profile_steps import (
+    BookingRulesStepInput,
+    ChannelsStepInput,
+    ContactsAndHoursStepInput,
+    FaqAndHandoffStepInput,
+    NicheAndLanguagesStepInput,
     OfferStepInput,
-    ProfileGapsQuery,
-    ProfileGapsView,
-    ProfileInput,
     ProfileStepInput,
     ProfileStepSaveResult,
+    SaveProfileStepCommand,
+)
+from app.schemas.dto.profiles.profile_wizard import (
     ProfileWizardQuery,
     ProfileWizardView,
-    SaveProfileCommand,
-    SaveProfileStepCommand,
 )
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.localization.constrained_strings import LanguageTag

@@ -19,7 +19,7 @@ from app.schemas.domain.calendar import (
     CalendarConnectionDocument,
     CalendarEventLinkDocument,
 )
-from app.schemas.dto.operations import StaffMessage
+from app.schemas.dto.operations.message_texts import StaffMessage
 from app.schemas.typings.bookings.prefixed_id import BookingId
 from app.schemas.typings.bookings.strings import CalendarEventId, ExternalCalendarId
 from app.schemas.typings.businesses.prefixed_id import BusinessId

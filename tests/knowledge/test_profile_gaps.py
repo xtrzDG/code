@@ -10,19 +10,20 @@ from app.schemas.dto.knowledge_admin import (
     CreateKnowledgeItemCommand,
     KnowledgeItemInput,
 )
-from app.schemas.dto.profiles import (
+from app.schemas.dto.profiles.business_profile import (
     BookingRulesInput,
+    ContactsInput,
+    ProfileAnswerInput,
+)
+from app.schemas.dto.profiles.profile_gaps import ProfileGapsQuery, ProfileGapsView
+from app.schemas.dto.profiles.profile_steps import (
     BookingRulesStepInput,
     ContactsAndHoursStepInput,
-    ContactsInput,
     NicheAndLanguagesStepInput,
-    ProfileAnswerInput,
-    ProfileGapsQuery,
-    ProfileGapsView,
     ProfileStepInput,
-    ProfileWizardQuery,
     SaveProfileStepCommand,
 )
+from app.schemas.dto.profiles.profile_wizard import ProfileWizardQuery
 from app.schemas.dto.resources import CreateResourceCommand, ResourceInput
 from app.schemas.typings.billing.constrained_integers import MoneyAmountMinor
 from app.schemas.typings.bookings.constrained_integers import (

@@ -3,13 +3,11 @@ from zoneinfo import ZoneInfo
 
 from typed_time_provider import Microseconds, WallClock
 
-from app.contracts.repositories import (
-    AuditLogRepoContract,
-    BookingRepoContract,
-    BusinessRepoContract,
-    ContactRepoContract,
-    ResourceRepoContract,
-)
+from app.contracts.repositories.booking_repositories import BookingRepoContract
+from app.contracts.repositories.business_repositories import BusinessRepoContract
+from app.contracts.repositories.compliance_repositories import AuditLogRepoContract
+from app.contracts.repositories.conversation_repositories import ContactRepoContract
+from app.contracts.repositories.knowledge_repositories import ResourceRepoContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.bookings import BookingOrder
 from app.schemas.constants.compliance import AuditAction
@@ -17,7 +15,7 @@ from app.schemas.domain.bookings import BookingDocument
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.contacts import ContactDocument
 from app.schemas.domain.resources import ResourceDocument
-from app.schemas.dto.operations import BookingPage, ListBookingsQuery
+from app.schemas.dto.operations.bookings import BookingPage, ListBookingsQuery
 from app.schemas.exceptions.application_errors import ValidationFailedError
 from app.schemas.typings.bookings.prefixed_id import ResourceId
 from app.schemas.typings.compliance.strings import AuditEntityName

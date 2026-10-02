@@ -3,7 +3,8 @@
 from typing import Protocol
 
 from app.contracts.registry_contract import RegistryContract
-from app.schemas.dto.catalog import CallForwardingGuide, ExchangeRateQuote
+from app.schemas.dto.catalog.call_forwarding import CallForwardingGuide
+from app.schemas.dto.catalog.plan_quotes import ExchangeRateQuote
 from app.schemas.typings.localization.constrained_strings import (
     CountryCode,
     CurrencyCode,

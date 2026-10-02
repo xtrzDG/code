@@ -4,7 +4,7 @@ from pydantic import Field
 from app.schemas.constants.assistants import AssistantToolName, LlmEffort
 from app.schemas.constants.channels import ChannelKind
 from app.schemas.constants.conversations import LlmStopReason, ReplyGuardVerdict
-from app.schemas.dto.conversation_feed import ToolCallView
+from app.schemas.dto.conversation_feed.conversation_views import ToolCallView
 from app.schemas.typings.assistants.constrained_integers import (
     AssistantVersionNumber,
     LlmMaxOutputTokens,

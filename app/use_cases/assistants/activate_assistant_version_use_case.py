@@ -3,8 +3,10 @@ import logging
 from typed_time_provider import Microseconds, WallClock
 
 from app.contracts.assistant_assembly import AssistantToolCatalogContract
-from app.contracts.repositories import (
+from app.contracts.repositories.assistant_repositories import (
     AssistantVersionRepoContract,
+)
+from app.contracts.repositories.business_repositories import (
     BusinessProfileRepoContract,
     BusinessRepoContract,
 )
@@ -15,7 +17,7 @@ from app.schemas.constants.assistants import AssistantVersionStatus, GoLiveCheck
 from app.schemas.constants.businesses import BusinessStatus
 from app.schemas.domain.assistants import AssistantVersionDocument
 from app.schemas.domain.businesses import BusinessDocument
-from app.schemas.dto.assistants import AssistantVersionActivation
+from app.schemas.dto.assistants.assembly_sources import AssistantVersionActivation
 from app.schemas.dto.conversations import CallGreeting, CallGreetingRequest
 from app.schemas.dto.go_live import (
     GoLiveCheck,

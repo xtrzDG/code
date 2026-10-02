@@ -1,10 +1,14 @@
 from typed_time_provider import Microseconds, WallClock
 
 from app.contracts.registries import PlanRegistryContract
-from app.contracts.repositories import (
+from app.contracts.repositories.assistant_repositories import (
     AssistantVersionRepoContract,
+)
+from app.contracts.repositories.business_repositories import (
     BusinessRepoContract,
     ChannelRepoContract,
+)
+from app.contracts.repositories.conversation_repositories import (
     ContactRepoContract,
     ConversationRepoContract,
 )

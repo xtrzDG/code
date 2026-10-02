@@ -10,9 +10,11 @@ from fastapi import APIRouter, Depends, Query
 
 from app.contracts.operator_contract import OperatorContract
 from app.gateways.http.user_authentication import CurrentUserDependency
-from app.schemas.dto.catalog import (
+from app.schemas.dto.catalog.call_forwarding import (
     CallForwardingInstructions,
     CallForwardingInstructionsRequest,
+)
+from app.schemas.dto.catalog.countries import (
     CountryList,
     CountryListRequest,
     CountryProfileRequest,
@@ -20,9 +22,8 @@ from app.schemas.dto.catalog import (
     LanguageList,
     LanguageListRequest,
     ParsePhoneNumberRequest,
-    PlanQuoteList,
-    PlanQuoteRequest,
 )
+from app.schemas.dto.catalog.plan_quotes import PlanQuoteList, PlanQuoteRequest
 from app.schemas.dto.localization import PhoneNumberDetails
 from app.schemas.exceptions.application_errors import (
     NotFoundError,

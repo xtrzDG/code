@@ -8,7 +8,7 @@ from app.contracts.operations import (
 from app.contracts.secret_cipher import SecretCipherAdapterContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.domain.calendar import CalendarConnectionDocument
-from app.schemas.dto.operations import (
+from app.schemas.dto.operations.calendar_connection import (
     CalendarDisconnectResult,
     DisconnectCalendarCommand,
 )

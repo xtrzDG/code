@@ -1,4 +1,4 @@
-from app.contracts.repositories import UserRepoContract
+from app.contracts.repositories.user_repositories import UserRepoContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.domain.users import UserDocument
 from app.schemas.exceptions.application_errors import AccessDeniedError

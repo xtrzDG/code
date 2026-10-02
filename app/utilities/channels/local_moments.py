@@ -12,7 +12,7 @@ from app.schemas.typings.localization.constrained_strings import (
     LanguageTag,
     TimezoneName,
 )
-from app.utilities.localization.language_tags import find_babel_locale
+from app.utilities.localization.babel_locales import find_babel_locale
 
 FALLBACK_LOCALE_IDENTIFIER: str = "en"
 DATETIME_FORMAT_LENGTH: str = "medium"

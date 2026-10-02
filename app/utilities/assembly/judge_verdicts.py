@@ -12,7 +12,7 @@ from typing import cast
 
 from app.schemas.constants.assistants import JudgeCriterion
 from app.schemas.domain.assistants import JudgeCriterionScore
-from app.schemas.dto.assistants import JudgeVerdict
+from app.schemas.dto.assistants.autotest_runs import JudgeVerdict
 from app.schemas.typings.assistants.constrained_integers import JudgeScore
 from app.schemas.typings.assistants.strings import JudgeNote
 

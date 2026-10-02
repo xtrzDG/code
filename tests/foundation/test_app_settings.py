@@ -4,7 +4,9 @@ from app.schemas.constants.assistants import LlmEffort, LlmProvider
 from app.schemas.constants.environment import DeploymentEnvironment
 from app.schemas.exceptions.application_errors import ValidationFailedError
 from app.schemas.typings.localization.constrained_strings import CountryCode
-from app.utilities.config_helpers.app_settings_assembler import assemble_app_settings
+from app.utilities.config_helpers.app_settings.app_settings_assembler import (
+    assemble_app_settings,
+)
 
 
 def test_defaults_follow_the_concept_stack() -> None:

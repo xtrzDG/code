@@ -35,9 +35,7 @@ from app.operators.pipeline_operator import PipelineOperator
 from app.orchestrators.use_case_orchestrator import UseCaseOrchestrator
 from app.pipelines.orchestrator_pipeline import OrchestratorPipeline
 from app.registries.legal.legal_document_registry import LegalDocumentRegistry
-from app.registries.locks.login_code_send_lock_registry import (
-    LoginCodeSendLockRegistry,
-)
+from app.registries.locks.login_code_send_lock_registry import LoginCodeSendLockRegistry
 from app.repositories.billing_repositories import SubscriptionRepository
 from app.repositories.booking_repositories import (
     BookingRepository,
@@ -148,15 +146,11 @@ from app.transformers.users.user_view_transformer import UserViewTransformer
 from app.use_cases.authorize_business_access_use_case import (
     AuthorizeBusinessAccessUseCase,
 )
-from app.use_cases.businesses.change_member_role_use_case import (
-    ChangeMemberRoleUseCase,
-)
+from app.use_cases.businesses.change_member_role_use_case import ChangeMemberRoleUseCase
 from app.use_cases.businesses.create_business_use_case import CreateBusinessUseCase
 from app.use_cases.businesses.get_business_use_case import GetBusinessUseCase
 from app.use_cases.businesses.invite_staff_use_case import InviteStaffUseCase
-from app.use_cases.businesses.list_my_businesses_use_case import (
-    ListMyBusinessesUseCase,
-)
+from app.use_cases.businesses.list_my_businesses_use_case import ListMyBusinessesUseCase
 from app.use_cases.businesses.remove_member_use_case import RemoveMemberUseCase
 from app.use_cases.businesses.update_business_settings_use_case import (
     UpdateBusinessSettingsUseCase,
@@ -171,9 +165,7 @@ from app.use_cases.compliance.delete_contact_data_use_case import (
 from app.use_cases.compliance.export_contact_data_use_case import (
     ExportContactDataUseCase,
 )
-from app.use_cases.compliance.get_dpa_document_use_case import (
-    GetDpaDocumentUseCase,
-)
+from app.use_cases.compliance.get_dpa_document_use_case import GetDpaDocumentUseCase
 from app.use_cases.compliance.get_dpa_status_use_case import GetDpaStatusUseCase
 from app.use_cases.compliance.list_audit_log_use_case import ListAuditLogUseCase
 from app.use_cases.compliance.purge_expired_recordings_use_case import (
@@ -185,12 +177,12 @@ from app.use_cases.users.authenticate_user_use_case import AuthenticateUserUseCa
 from app.use_cases.users.get_current_user_use_case import GetCurrentUserUseCase
 from app.use_cases.users.get_login_options_use_case import GetLoginOptionsUseCase
 from app.use_cases.users.logout_use_case import LogoutUseCase
-from app.use_cases.users.start_otp_login_use_case import StartOtpLoginUseCase
-from app.use_cases.users.update_current_user_use_case import (
-    UpdateCurrentUserUseCase,
-)
+from app.use_cases.users.otp_login.start_otp_login_use_case import StartOtpLoginUseCase
+from app.use_cases.users.update_current_user_use_case import UpdateCurrentUserUseCase
 from app.use_cases.users.verify_otp_login_use_case import VerifyOtpLoginUseCase
-from app.utilities.config_helpers.app_settings_assembler import assemble_app_settings
+from app.utilities.config_helpers.app_settings.app_settings_assembler import (
+    assemble_app_settings,
+)
 
 START_UNIX_NANOSECONDS: int = 1_790_000_000_000_000_000
 NANOSECONDS_PER_SECOND: int = 1_000_000_000

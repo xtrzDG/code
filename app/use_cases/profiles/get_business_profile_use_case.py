@@ -1,8 +1,14 @@
-from app.contracts.repositories import BusinessProfileRepoContract, BusinessRepoContract
+from app.contracts.repositories.business_repositories import (
+    BusinessProfileRepoContract,
+    BusinessRepoContract,
+)
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.profiles import BusinessProfileDocument
-from app.schemas.dto.profiles import BusinessProfileQuery, BusinessProfileView
+from app.schemas.dto.profiles.business_profile import (
+    BusinessProfileQuery,
+    BusinessProfileView,
+)
 from app.schemas.exceptions.application_errors import NotFoundError
 from app.utilities.knowledge.profile_views import to_profile_view
 

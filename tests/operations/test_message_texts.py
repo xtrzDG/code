@@ -13,7 +13,7 @@ from app.schemas.constants.bookings import (
 from app.schemas.constants.channels import ChannelKind
 from app.schemas.constants.handoffs import HandoffReason, HandoffUrgency
 from app.schemas.dto.bookings import BookingView, LeadView
-from app.schemas.dto.operations import (
+from app.schemas.dto.operations.message_texts import (
     BookingMessageInput,
     BookingStaffNotificationInput,
     CalendarEventTextInput,

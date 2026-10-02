@@ -13,19 +13,21 @@ from app.gateways.http.strict_request_parsing import (
     parse_path_identifier,
 )
 from app.gateways.http.user_authentication import CurrentUserDependency
-from app.schemas.dto.assistants import (
+from app.schemas.dto.assistants.assistant_commands import (
     AssembleAssistantVersionCommand,
     AssembleAssistantVersionRequest,
-    AssistantVersionDetails,
     AssistantVersionQuery,
     AssistantVersionsQuery,
-    AssistantVersionSummary,
-    AutotestRunView,
     PublishAssistantVersionCommand,
     PublishAssistantVersionRequest,
     RollbackAssistantVersionCommand,
     RunAutotestsCommand,
     RunAutotestsRequest,
+)
+from app.schemas.dto.assistants.assistant_views import (
+    AssistantVersionDetails,
+    AssistantVersionSummary,
+    AutotestRunView,
 )
 from app.schemas.dto.errors import ErrorBody
 from app.schemas.dto.go_live import GoLiveReadiness

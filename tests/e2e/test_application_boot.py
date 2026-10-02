@@ -4,12 +4,14 @@ import os
 from collections.abc import Iterator
 
 import pytest
-from dependency_injector import providers
+from dependency_injector import containers, providers
 from fastapi.testclient import TestClient
 
 from app.containers.app import AppContainer
 from app.main import create_application
-from app.utilities.config_helpers.app_settings_assembler import assemble_app_settings
+from app.utilities.config_helpers.app_settings.app_settings_assembler import (
+    assemble_app_settings,
+)
 from tests.e2e.harness import E2E_ENVIRONMENT, replace_provider, start_workshop
 
 OPTIONAL_PROVIDERS: frozenset[str] = frozenset(
@@ -83,6 +85,28 @@ def test_openapi_document_describes_every_module() -> None:
     assert expected_paths <= set(paths)
 
 
+def resolve_every_provider(
+    container: containers.Container,
+    prefix: str,
+    resolved: list[str],
+) -> None:
+    """Call every provider of `container`, descending into child containers."""
+
+    for provider_name, provider in container.providers.items():
+        if isinstance(provider, providers.DependenciesContainer):
+            continue
+
+        name = f"{prefix}.{provider_name}"
+        if isinstance(provider, providers.Container):
+            resolve_every_provider(provider(), name, resolved)
+            continue
+
+        instance: object = provider()
+        # Optional clients are None until their settings are present.
+        assert instance is not None or name in OPTIONAL_PROVIDERS, name
+        resolved.append(name)
+
+
 def test_every_provider_of_the_container_resolves() -> None:
     container = AppContainer()
     replace_provider(
@@ -91,19 +115,10 @@ def test_every_provider_of_the_container_resolves() -> None:
     )
     resolved: list[str] = []
     for container_name, child_provider in container.providers.items():
-        child = child_provider()
-        for provider_name, provider in child.providers.items():
-            if isinstance(provider, providers.DependenciesContainer):
-                continue
-
-            instance: object = provider()
-            name = f"{container_name}.{provider_name}"
-            # Optional clients are None until their settings are present.
-            assert instance is not None or name in OPTIONAL_PROVIDERS, name
-            resolved.append(name)
+        resolve_every_provider(child_provider(), container_name, resolved)
 
     assert len(resolved) > 400
-    assert "operators.widget_message_operator" in resolved
+    assert "operators.channels.widget_message_operator" in resolved
     assert "gateways.background_worker" in resolved
 
 
@@ -112,17 +127,17 @@ def test_stateful_collaborators_are_shared_singletons() -> None:
     container = workshop.container
 
     assert (
-        container.pipelines.customer_message_pipeline()
-        is container.pipelines.customer_message_pipeline()
+        container.pipelines.conversations.customer_message_pipeline()
+        is container.pipelines.conversations.customer_message_pipeline()
     )
     assert (
         container.registries.business_lock_registry()
         is container.registries.business_lock_registry()
     )
     assert (
-        container.use_cases.create_telegram_link_use_case()
-        is container.use_cases.create_telegram_link_use_case()
+        container.use_cases.channels.create_telegram_link_use_case()
+        is container.use_cases.channels.create_telegram_link_use_case()
     )
-    assert container.adapters.booking_collection() is (
-        container.adapters.booking_collection()
+    assert container.adapters.collections.booking_collection() is (
+        container.adapters.collections.booking_collection()
     )

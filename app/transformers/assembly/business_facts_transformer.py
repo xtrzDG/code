@@ -7,7 +7,7 @@ from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.knowledge import KnowledgeItemDocument
 from app.schemas.domain.profiles import BusinessProfileDocument
 from app.schemas.domain.resources import ResourceDocument, ScheduleExceptionDocument
-from app.schemas.dto.assistants import BusinessFactsSource
+from app.schemas.dto.assistants.assembly_sources import BusinessFactsSource
 from app.utilities.assembly.fact_descriptions import (
     KNOWLEDGE_KIND_LABELS,
     LINK_LABELS,

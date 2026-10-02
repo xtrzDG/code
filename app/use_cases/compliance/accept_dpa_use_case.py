@@ -1,7 +1,10 @@
 from typed_time_provider import Microseconds, WallClock
 
 from app.contracts.legal_registries import LegalDocumentRegistryContract
-from app.contracts.repositories import AuditLogRepoContract, DpaAcceptanceRepoContract
+from app.contracts.repositories.compliance_repositories import (
+    AuditLogRepoContract,
+    DpaAcceptanceRepoContract,
+)
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.configurations.app_settings import AppSettings
 from app.schemas.constants.compliance import AuditAction
@@ -22,7 +25,7 @@ from app.schemas.typings.compliance.strings import (
 )
 from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.utilities.compliance.legal_endpoints import build_dpa_document_url
-from app.utilities.localization.language_tags import ENGLISH_LOCALE_IDENTIFIER
+from app.utilities.localization.cldr_language_names import ENGLISH_LOCALE_IDENTIFIER
 
 
 class AcceptDpaUseCase(UseCaseContract[AcceptDpaCommand, DpaStatusView]):

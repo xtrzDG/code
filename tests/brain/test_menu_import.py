@@ -6,7 +6,9 @@ from typing import Any
 import httpx
 import pytest
 
-from app.adapters.llm.menu_extraction_adapter import MenuExtractionAdapter
+from app.adapters.llm.menu_extraction.menu_extraction_adapter import (
+    MenuExtractionAdapter,
+)
 from app.schemas.constants.knowledge import KnowledgeItemKind, KnowledgeItemSource
 from app.schemas.domain.knowledge import KnowledgeItemDocument
 from app.schemas.dto.menu_import import (
@@ -382,7 +384,9 @@ def test_unknown_hosts_and_huge_pages_name_their_problem(
     with pytest.raises(ValidationFailedError) as unknown_host:
         adapter.extract(link_request())
 
-    monkeypatch.setattr("app.adapters.llm.menu_extraction_adapter.MAX_PAGE_BYTES", 8)
+    monkeypatch.setattr(
+        "app.adapters.llm.menu_extraction.menu_page_download.MAX_PAGE_BYTES", 8
+    )
     huge = build_adapter(
         ScriptedHttp([]),
         respond(200, {"content-type": "text/html"}, b"<p>long menu</p>"),

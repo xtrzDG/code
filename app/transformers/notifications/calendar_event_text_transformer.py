@@ -1,7 +1,8 @@
 from app.contracts.localization_utilities import LocalizedTextResolverContract
 from app.contracts.transformer_contract import TransformerContract
 from app.schemas.dto.localization import LocalizedText
-from app.schemas.dto.operations import CalendarEventText, CalendarEventTextInput
+from app.schemas.dto.operations.calendar_connection import CalendarEventText
+from app.schemas.dto.operations.message_texts import CalendarEventTextInput
 from app.schemas.typings.bookings.strings import (
     CalendarEventDescription,
     CalendarEventTitle,

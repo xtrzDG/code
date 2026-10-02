@@ -10,8 +10,8 @@ from app.schemas.typings.compliance.strings import (
     LegalDocumentTitle,
 )
 from app.schemas.typings.localization.constrained_strings import LanguageTag
+from app.utilities.localization.cldr_language_names import ENGLISH_LOCALE_IDENTIFIER
 from app.utilities.localization.language_tags import (
-    ENGLISH_LOCALE_IDENTIFIER,
     base_language_code,
     parse_language_tag,
 )

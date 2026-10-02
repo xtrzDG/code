@@ -2,7 +2,7 @@
 
 from app.contracts.localization_utilities import LocalizedTextResolverContract
 from app.schemas.dto.niches import NicheTemplate, QuestionDefinition
-from app.schemas.dto.profiles import (
+from app.schemas.dto.profiles.niche_catalog import (
     LocalizedChoiceView,
     LocalizedQuestionView,
     NicheSummaryView,

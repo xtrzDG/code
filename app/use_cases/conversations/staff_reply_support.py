@@ -2,15 +2,15 @@
 
 from typed_time_provider import Microseconds
 
-from app.contracts.repositories import (
-    ChannelRepoContract,
+from app.contracts.repositories.business_repositories import ChannelRepoContract
+from app.contracts.repositories.conversation_repositories import (
     ConversationRepoContract,
     MessageRepoContract,
 )
 from app.schemas.constants.channels import MessageDirection
 from app.schemas.domain.channels import ChannelDocument
 from app.schemas.domain.conversations import ConversationDocument
-from app.schemas.dto.conversation_feed import StaffReplyView
+from app.schemas.dto.conversation_feed.conversation_views import StaffReplyView
 from app.utilities.channels.channel_health import is_channel_active
 from app.utilities.channels.delivery_targets import find_business_channel
 from app.utilities.conversations.staff_replies import (

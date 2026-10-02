@@ -13,7 +13,7 @@ from app.schemas.constants.channels import ChannelKind
 from app.schemas.constants.handoffs import HandoffReason, HandoffUrgency
 from app.schemas.dto.bookings import BookingView
 from app.schemas.dto.localization import LocalizedText
-from app.schemas.dto.operations import BookingStaffNotificationInput
+from app.schemas.dto.operations.message_texts import BookingStaffNotificationInput
 from app.schemas.typings.bookings.constrained_strings import LocalDate
 from app.schemas.typings.localization.constrained_strings import (
     E164PhoneNumber,

@@ -8,11 +8,13 @@ from app.contracts.operations import (
     BusinessLockRegistryContract,
     ManagerBroadcastFacilitatorContract,
 )
-from app.contracts.repositories import (
-    BookingRepoContract,
+from app.contracts.repositories.booking_repositories import BookingRepoContract
+from app.contracts.repositories.business_repositories import (
     BusinessProfileRepoContract,
     BusinessRepoContract,
-    ContactRepoContract,
+)
+from app.contracts.repositories.conversation_repositories import ContactRepoContract
+from app.contracts.repositories.knowledge_repositories import (
     ResourceRepoContract,
     ScheduleExceptionRepoContract,
 )
@@ -22,7 +24,7 @@ from app.schemas.constants.bookings import BookingStatus
 from app.schemas.domain.bookings import BookingDocument
 from app.schemas.domain.resources import ResourceDocument
 from app.schemas.dto.bookings import BookingResult, BookingView, CancelBookingCommand
-from app.schemas.dto.operations import (
+from app.schemas.dto.operations.message_texts import (
     BookingMessageInput,
     BookingStaffNotificationInput,
 )

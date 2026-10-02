@@ -23,17 +23,21 @@ from app.schemas.typings.localization.constrained_strings import (
     ScriptCode,
 )
 from app.schemas.typings.localization.strings import LanguageDisplayName
-from app.utilities.localization.display_names import build_language_display_name
-from app.utilities.localization.language_tags import (
-    LanguageTagParts,
+from app.utilities.localization.babel_locales import (
     find_babel_locale,
-    find_likely_script_code,
+    load_locale_identifiers,
+)
+from app.utilities.localization.cldr_language_names import (
     get_english_locale,
     is_known_language_tag,
-    is_right_to_left_script,
-    load_locale_identifiers,
     require_known_language_tag,
 )
+from app.utilities.localization.display_names import build_language_display_name
+from app.utilities.localization.language_scripts import (
+    find_likely_script_code,
+    is_right_to_left_script,
+)
+from app.utilities.localization.language_tags import LanguageTagParts
 
 BARE_LANGUAGE_IDENTIFIER_PATTERN: re.Pattern[str] = re.compile(r"^[a-z]{2,3}$")
 # Tags may come from requests; past this many, profiles are built uncached.

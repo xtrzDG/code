@@ -1,8 +1,10 @@
-from app.contracts.repositories import AssistantVersionRepoContract
+from app.contracts.repositories.assistant_repositories import (
+    AssistantVersionRepoContract,
+)
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.assistants import AssistantVersionStatus
 from app.schemas.domain.assistants import AssistantVersionDocument
-from app.schemas.dto.conversation_feed import OwnerTestChatVersionQuery
+from app.schemas.dto.conversation_feed.owner_test_chat import OwnerTestChatVersionQuery
 from app.schemas.exceptions.application_errors import ConflictError, NotFoundError
 from app.schemas.typings.assistants.prefixed_id import AssistantVersionId
 

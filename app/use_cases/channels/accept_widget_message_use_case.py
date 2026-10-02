@@ -1,12 +1,15 @@
 from typed_time_provider import Microseconds, WallClock
 
 from app.contracts.registries import RequestRateLimitRegistryContract
-from app.contracts.repositories import BusinessRepoContract, ChannelRepoContract
+from app.contracts.repositories.business_repositories import (
+    BusinessRepoContract,
+    ChannelRepoContract,
+)
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.channels import ChannelKind, ChannelStatus
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.channels import ChannelDocument
-from app.schemas.dto.channels import WidgetMessageCommand
+from app.schemas.dto.channels.widget import WidgetMessageCommand
 from app.schemas.dto.conversations import InboundMessage
 from app.schemas.exceptions.application_errors import (
     NotFoundError,

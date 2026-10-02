@@ -1,7 +1,7 @@
 """Billing messages to the owners of a business."""
 
 from app.contracts.facilitators import ManagerNotificationFacilitatorContract
-from app.contracts.repositories import UserRepoContract
+from app.contracts.repositories.user_repositories import UserRepoContract
 from app.schemas.constants.handoffs import ManagerContactChannel
 from app.schemas.constants.users import BusinessMemberRole
 from app.schemas.domain.businesses import BusinessDocument, ManagerContact

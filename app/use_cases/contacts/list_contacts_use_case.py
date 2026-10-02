@@ -1,12 +1,14 @@
 from typed_time_provider import Microseconds, WallClock
 
 from app.contracts.localization_utilities import PhoneNumberParserContract
-from app.contracts.repositories import (
-    AuditLogRepoContract,
+from app.contracts.repositories.booking_repositories import (
     BookingRepoContract,
+    LeadRepoContract,
+)
+from app.contracts.repositories.compliance_repositories import AuditLogRepoContract
+from app.contracts.repositories.conversation_repositories import (
     ContactRepoContract,
     ConversationRepoContract,
-    LeadRepoContract,
 )
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.compliance import AuditAction

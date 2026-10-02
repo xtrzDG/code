@@ -4,10 +4,10 @@ from app.contracts.operations import (
     CalendarAuthorizationStateRepoContract,
     GoogleCalendarClientContract,
 )
-from app.contracts.repositories import BusinessRepoContract
+from app.contracts.repositories.business_repositories import BusinessRepoContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.domain.calendar import CalendarAuthorizationStateDocument
-from app.schemas.dto.operations import (
+from app.schemas.dto.operations.calendar_connection import (
     CalendarConnectUrlView,
     StartCalendarConnectionCommand,
 )

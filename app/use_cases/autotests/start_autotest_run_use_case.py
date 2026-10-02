@@ -1,6 +1,6 @@
 from typed_time_provider import Microseconds, WallClock
 
-from app.contracts.repositories import (
+from app.contracts.repositories.assistant_repositories import (
     AssistantVersionRepoContract,
     AutotestRunRepoContract,
 )
@@ -10,11 +10,11 @@ from app.schemas.constants.users import BusinessMemberRole
 from app.schemas.domain.assistants import AssistantVersionDocument, AutotestRunDocument
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.dto.access import BusinessAccessRequest
-from app.schemas.dto.assistants import (
+from app.schemas.dto.assistants.assistant_commands import RunAutotestsCommand
+from app.schemas.dto.assistants.autotest_runs import (
     AutotestPlanningRequest,
     AutotestRunPlan,
     AutotestScenarioPlanning,
-    RunAutotestsCommand,
 )
 from app.schemas.exceptions.application_errors import (
     ConflictError,

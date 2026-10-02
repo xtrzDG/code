@@ -30,7 +30,7 @@ from app.schemas.domain.calendar import (
 )
 from app.schemas.dto.bookings import CreateBookingCommand
 from app.schemas.dto.calendar import CalendarConnectionOutcome
-from app.schemas.dto.operations import (
+from app.schemas.dto.operations.calendar_connection import (
     CalendarConnectUrlView,
     CompleteCalendarConnectionCommand,
     DisconnectCalendarCommand,

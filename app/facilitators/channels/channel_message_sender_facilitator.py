@@ -8,13 +8,14 @@ from app.contracts.channels import (
     WhatsAppTemplateAdapterContract,
 )
 from app.contracts.facilitators import ChannelMessageSenderFacilitatorContract
-from app.contracts.repositories import ChannelRepoContract, UsageEventRepoContract
+from app.contracts.repositories.billing_repositories import UsageEventRepoContract
+from app.contracts.repositories.business_repositories import ChannelRepoContract
 from app.contracts.secret_cipher import SecretCipherAdapterContract
 from app.schemas.constants.billing import UsageKind
 from app.schemas.constants.channels import ChannelKind
 from app.schemas.domain.billing import UsageEventDocument
 from app.schemas.domain.channels import ChannelDocument
-from app.schemas.dto.channels import ChannelDeliveryTarget
+from app.schemas.dto.channels.channel_webhooks import ChannelDeliveryTarget
 from app.schemas.exceptions.application_errors import (
     ChannelCredentialRejectedError,
     ExternalServiceError,

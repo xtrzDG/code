@@ -1,4 +1,4 @@
-from app.contracts.repositories import UserSessionRepoContract
+from app.contracts.repositories.user_repositories import UserSessionRepoContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.domain.users import UserSessionDocument
 from app.schemas.dto.users import LogoutCommand

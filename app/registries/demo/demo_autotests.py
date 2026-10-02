@@ -19,7 +19,7 @@ from app.schemas.domain.assistants import (
     AutotestTranscriptLine,
     JudgeCriterionScore,
 )
-from app.schemas.dto.assistants import AutotestRunSummary
+from app.schemas.dto.assistants.autotest_runs import AutotestRunSummary
 from app.schemas.typings.assistants.constrained_integers import (
     AutotestScenarioCount,
     JudgeScore,

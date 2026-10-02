@@ -3,12 +3,14 @@ from contextlib import contextmanager
 
 import psycopg
 from base_pydantic_schemas import PersistentDocument
-from psycopg import sql
 from psycopg.rows import TupleRow
 from typed_time_provider import Microseconds, WallClock
 
+from app.adapters.storage.postgres.document_table_queries import (
+    DocumentTableQueries,
+    build_document_table_queries,
+)
 from app.adapters.storage.postgres.postgres_session_settings import (
-    DOCUMENT_SCHEMA_NAME,
     apply_storage_scope,
     translate_storage_error,
 )
@@ -77,46 +79,9 @@ class PostgresDocumentCollectionAdapter[StoredDocument: PersistentDocument](
         self._isolation: CollectionIsolation = isolation
         self._platform_scope: StorageScope = StorageScope.platform_wide()
 
-        table: sql.Identifier = sql.Identifier(
-            DOCUMENT_SCHEMA_NAME, str(collection_name)
+        self._queries: DocumentTableQueries = build_document_table_queries(
+            collection_name
         )
-        self._upsert_query: sql.Composed = sql.SQL(
-            "insert into {table} "
-            "(document_key, business_id, document, created_at, updated_at) "
-            "values (%s, %s, %s::jsonb, %s, %s) "
-            "on conflict (document_key) do update set "
-            "business_id = excluded.business_id, "
-            "document = excluded.document, "
-            "updated_at = excluded.updated_at"
-        ).format(table=table)
-        self._get_query: sql.Composed = sql.SQL(
-            "select document::text from {table} where document_key = %s"
-        ).format(table=table)
-        self._get_in_business_query: sql.Composed = sql.SQL(
-            "select document::text from {table} "
-            "where document_key = %s and business_id = %s"
-        ).format(table=table)
-        self._lock_query: sql.Composed = sql.SQL(
-            "select document::text from {table} where document_key = %s for update"
-        ).format(table=table)
-        self._lock_in_business_query: sql.Composed = sql.SQL(
-            "select document::text from {table} "
-            "where document_key = %s and business_id = %s for update"
-        ).format(table=table)
-        self._list_query: sql.Composed = sql.SQL(
-            "select document::text from {table} order by created_at, row_sequence"
-        ).format(table=table)
-        self._list_in_business_query: sql.Composed = sql.SQL(
-            "select document::text from {table} where business_id = %s "
-            "order by created_at, row_sequence"
-        ).format(table=table)
-        self._table: sql.Identifier = table
-        self._delete_query: sql.Composed = sql.SQL(
-            "delete from {table} where document_key = %s"
-        ).format(table=table)
-        self._delete_in_business_query: sql.Composed = sql.SQL(
-            "delete from {table} where document_key = %s and business_id = %s"
-        ).format(table=table)
 
     @property
     def collection_name(self) -> DocumentCollectionName:
@@ -132,7 +97,7 @@ class PostgresDocumentCollectionAdapter[StoredDocument: PersistentDocument](
         written_at: int = int(self._wall_clock.now_unix())
         with self._transaction() as (connection, _):
             connection.execute(
-                self._upsert_query,
+                self._queries.upsert,
                 (
                     document_key,
                     None if business_id is None else str(business_id),
@@ -156,12 +121,12 @@ class PostgresDocumentCollectionAdapter[StoredDocument: PersistentDocument](
         with self._transaction() as (connection, scoped_business_id):
             if scoped_business_id is None:
                 row: TupleRow | None = connection.execute(
-                    self._lock_query,
+                    self._queries.lock,
                     (document_key,),
                 ).fetchone()
             else:
                 row = connection.execute(
-                    self._lock_in_business_query,
+                    self._queries.lock_in_business,
                     (document_key, scoped_business_id),
                 ).fetchone()
 
@@ -178,7 +143,7 @@ class PostgresDocumentCollectionAdapter[StoredDocument: PersistentDocument](
             business_id: BusinessId | None = read_document_business_id(changed)
             written_at: int = int(self._wall_clock.now_unix())
             connection.execute(
-                self._upsert_query,
+                self._queries.upsert,
                 (
                     document_key,
                     None if business_id is None else str(business_id),
@@ -208,12 +173,12 @@ class PostgresDocumentCollectionAdapter[StoredDocument: PersistentDocument](
         with self._transaction() as (connection, scoped_business_id):
             if scoped_business_id is None:
                 row: TupleRow | None = connection.execute(
-                    self._get_query,
+                    self._queries.get,
                     (document_key,),
                 ).fetchone()
             else:
                 row = connection.execute(
-                    self._get_in_business_query,
+                    self._queries.get_in_business,
                     (document_key, scoped_business_id),
                 ).fetchone()
 
@@ -225,10 +190,12 @@ class PostgresDocumentCollectionAdapter[StoredDocument: PersistentDocument](
     def list_all(self) -> list[StoredDocument]:
         with self._transaction() as (connection, scoped_business_id):
             if scoped_business_id is None:
-                rows: list[TupleRow] = connection.execute(self._list_query).fetchall()
+                rows: list[TupleRow] = connection.execute(
+                    self._queries.list_all
+                ).fetchall()
             else:
                 rows = connection.execute(
-                    self._list_in_business_query,
+                    self._queries.list_in_business,
                     (scoped_business_id,),
                 ).fetchall()
 
@@ -238,27 +205,15 @@ class PostgresDocumentCollectionAdapter[StoredDocument: PersistentDocument](
         ]
 
     def list_by_field(self, field_name: str, value: str) -> list[StoredDocument]:
-        # The field is a literal (not a bind parameter), so the expression
-        # matches an index on (document ->> 'field').
-        field: sql.Composable = sql.SQL("document ->> {field}").format(
-            field=sql.Literal(field_name)
-        )
         with self._transaction() as (connection, scoped_business_id):
             if scoped_business_id is None:
                 rows: list[TupleRow] = connection.execute(
-                    sql.SQL(
-                        "select document::text from {table} where {field} = %s "
-                        "order by created_at, row_sequence"
-                    ).format(table=self._table, field=field),
+                    self._queries.list_by_field(field_name, is_in_business=False),
                     (value,),
                 ).fetchall()
             else:
                 rows = connection.execute(
-                    sql.SQL(
-                        "select document::text from {table} "
-                        "where business_id = %s and {field} = %s "
-                        "order by created_at, row_sequence"
-                    ).format(table=self._table, field=field),
+                    self._queries.list_by_field(field_name, is_in_business=True),
                     (scoped_business_id, value),
                 ).fetchall()
 
@@ -270,10 +225,10 @@ class PostgresDocumentCollectionAdapter[StoredDocument: PersistentDocument](
     def delete(self, document_key: str) -> None:
         with self._transaction() as (connection, scoped_business_id):
             if scoped_business_id is None:
-                connection.execute(self._delete_query, (document_key,))
+                connection.execute(self._queries.delete, (document_key,))
             else:
                 connection.execute(
-                    self._delete_in_business_query,
+                    self._queries.delete_in_business,
                     (document_key, scoped_business_id),
                 )
 

@@ -1,10 +1,10 @@
 from typed_time_provider import Microseconds, WallClock
 
 from app.contracts.localization_utilities import LocalizedTextResolverContract
-from app.contracts.repositories import (
+from app.contracts.repositories.billing_repositories import UsageEventRepoContract
+from app.contracts.repositories.conversation_repositories import (
     ConversationRepoContract,
     MessageRepoContract,
-    UsageEventRepoContract,
 )
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.billing import UsageKind
@@ -13,15 +13,17 @@ from app.schemas.constants.conversations import ConversationStatus, MessageAutho
 from app.schemas.domain.billing import UsageEventDocument
 from app.schemas.domain.conversations import ConversationDocument, MessageDocument
 from app.schemas.dto.conversation_engine import PreparedTurn, ReplyRecord
-from app.schemas.dto.conversation_feed import ToolCallView
+from app.schemas.dto.conversation_feed.conversation_views import ToolCallView
 from app.schemas.dto.conversations import AssistantReply
 from app.schemas.typings.billing.constrained_integers import (
     CostMicroUsd,
     UsageQuantity,
 )
 from app.schemas.typings.conversations.strings import MessageText
-from app.utilities.conversations.assistant_texts import (
+from app.utilities.conversations.assistant_texts.ai_disclosure_texts import (
     AI_DISCLOSURE,
+)
+from app.utilities.conversations.assistant_texts.business_name_placeholder import (
     fill_business_name,
 )
 from app.utilities.conversations.llm_models import LlmCallCost, compute_llm_call_cost

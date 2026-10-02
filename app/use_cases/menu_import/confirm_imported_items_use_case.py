@@ -1,6 +1,6 @@
 from typed_time_provider import Microseconds, WallClock
 
-from app.contracts.repositories import KnowledgeItemRepoContract
+from app.contracts.repositories.knowledge_repositories import KnowledgeItemRepoContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.knowledge import KnowledgeItemSource
 from app.schemas.domain.businesses import BusinessDocument

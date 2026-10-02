@@ -3,7 +3,9 @@
 import pytest
 
 from app.schemas.exceptions.application_errors import ValidationFailedError
-from app.utilities.config_helpers.app_settings_assembler import assemble_app_settings
+from app.utilities.config_helpers.app_settings.app_settings_assembler import (
+    assemble_app_settings,
+)
 
 
 def test_demo_data_is_off_by_default() -> None:

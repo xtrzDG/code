@@ -8,14 +8,14 @@ from httpx2 import Response
 from app.adapters.storage.in_memory_document_collection import (
     InMemoryDocumentCollectionAdapter,
 )
-from app.clients.google.google_calendar_client import GOOGLE_CALENDAR_CALLBACK_PATH
+from app.clients.google.google_calendar_redirect import GOOGLE_CALENDAR_CALLBACK_PATH
 from app.contracts.operator_contract import OperatorContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.gateways.http.error_responses import install_error_handlers
-from app.gateways.http.operations_routes import (
+from app.gateways.http.operations.google_calendar_routes import (
     GOOGLE_CALENDAR_CALLBACK_PATH as ROUTE_CALLBACK_PATH,
 )
-from app.gateways.http.operations_routes import (
+from app.gateways.http.operations.google_calendar_routes import (
     GOOGLE_CALENDAR_COMPLETE_PATH as COMPLETE_PATH,
 )
 from app.gateways.http.operations_routes import build_operations_router

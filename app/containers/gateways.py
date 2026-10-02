@@ -2,8 +2,9 @@ from dependency_injector import containers
 from dependency_injector.providers import DependenciesContainer, Dict, Factory, List
 
 from app.containers.config import ConfigContainer
+from app.containers.container_edges import composed_container_edge
 from app.containers.facilitators import FacilitatorsContainer
-from app.containers.operators import OperatorsContainer
+from app.containers.operators.operators_container import OperatorsContainer
 from app.containers.repositories import RepositoriesContainer
 from app.containers.time_provider import TimeProviderContainer
 from app.containers.utilities import UtilitiesContainer
@@ -34,7 +35,7 @@ class GatewaysContainer(containers.DeclarativeContainer):
 
     config: ConfigContainer = DependenciesContainer()  # type: ignore[assignment]
     facilitators: FacilitatorsContainer = DependenciesContainer()  # type: ignore[assignment]
-    operators: OperatorsContainer = DependenciesContainer()  # type: ignore[assignment]
+    operators: OperatorsContainer = composed_container_edge(OperatorsContainer)  # type: ignore[assignment]
     repositories: RepositoriesContainer = DependenciesContainer()  # type: ignore[assignment]
     time_provider: TimeProviderContainer = DependenciesContainer()  # type: ignore[assignment]
     utilities: UtilitiesContainer = DependenciesContainer()  # type: ignore[assignment]
@@ -48,49 +49,49 @@ class GatewaysContainer(containers.DeclarativeContainer):
             PeriodicJobSpec,
             name=PURGE_EXPIRED_RECORDINGS_JOB,
             interval_seconds=JobIntervalSeconds(DAY_SECONDS),
-            operator=operators.purge_expired_recordings_operator,
+            operator=operators.compliance.purge_expired_recordings_operator,
         ),
         Factory(
             PeriodicJobSpec,
             name=END_TRIALS_JOB,
             interval_seconds=JobIntervalSeconds(HOUR_SECONDS),
-            operator=operators.end_trials_operator,
+            operator=operators.billing.end_trials_operator,
         ),
         Factory(
             PeriodicJobSpec,
             name=INVOICE_USAGE_OVERAGE_JOB,
             interval_seconds=JobIntervalSeconds(HOUR_SECONDS),
-            operator=operators.invoice_usage_overage_operator,
+            operator=operators.billing.invoice_usage_overage_operator,
         ),
         Factory(
             PeriodicJobSpec,
             name=ENFORCE_GRACE_PERIODS_JOB,
             interval_seconds=JobIntervalSeconds(HOUR_SECONDS),
-            operator=operators.enforce_grace_periods_operator,
+            operator=operators.billing.enforce_grace_periods_operator,
         ),
         Factory(
             PeriodicJobSpec,
             name=CHECK_PACKAGE_USAGE_JOB,
             interval_seconds=JobIntervalSeconds(DAY_SECONDS),
-            operator=operators.check_package_usage_operator,
+            operator=operators.billing.check_package_usage_operator,
         ),
         Factory(
             PeriodicJobSpec,
             name=SEND_BOOKING_REMINDERS_JOB,
             interval_seconds=JobIntervalSeconds(15 * MINUTE_SECONDS),
-            operator=operators.send_booking_reminders_operator,
+            operator=operators.operations.send_booking_reminders_operator,
         ),
         Factory(
             PeriodicJobSpec,
             name=FLUSH_LLM_TRACES_JOB,
             interval_seconds=JobIntervalSeconds(MINUTE_SECONDS),
-            operator=operators.flush_llm_traces_operator,
+            operator=operators.platform.flush_llm_traces_operator,
         ),
     )
     # Handlers of queued jobs by job name (the queue is filled by use cases
     # through the job queue facilitator).
     queued_job_operators: Dict = Dict(
-        {RUN_AUTOTESTS_JOB: operators.run_queued_autotests_operator}
+        {RUN_AUTOTESTS_JOB: operators.assistants.run_queued_autotests_operator}
     )
     background_worker: Factory[BackgroundWorker] = Factory(
         BackgroundWorker,

@@ -5,7 +5,7 @@ from typed_time_provider import Microseconds
 from app.schemas.constants.channels import ChannelKind, MessageDirection
 from app.schemas.constants.conversations import MessageAuthor
 from app.schemas.domain.conversations import ConversationDocument, MessageDocument
-from app.schemas.dto.conversation_feed import ConversationViewSource
+from app.schemas.dto.conversation_feed.conversation_views import ConversationViewSource
 from app.schemas.typings.assistants.prefixed_id import AssistantVersionId
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.contacts.prefixed_id import ContactId

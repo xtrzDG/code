@@ -1,5 +1,5 @@
 from app.contracts.document_store import DocumentCollectionAdapterContract
-from app.contracts.repositories import (
+from app.contracts.repositories.conversation_repositories import (
     CallRepoContract,
     ContactRepoContract,
     ConversationRepoContract,

@@ -3,7 +3,7 @@ Collection (table) names of every stored document type.
 
 One source of truth for the container wiring and the migrations: a test
 checks that `migrations/` creates a table for every entry here and that
-every collection of `AdaptersContainer` has an entry.
+every collection of `DocumentCollectionsContainer` has an entry.
 """
 
 from dataclasses import dataclass

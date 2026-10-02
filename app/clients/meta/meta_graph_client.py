@@ -1,7 +1,10 @@
 import httpx
 
 from app.contracts.channel_clients import MetaGraphApiClientContract, ProviderToken
-from app.schemas.dto.channels import MetaPageProfile, WhatsAppPhoneNumberProfile
+from app.schemas.dto.channels.provider_profiles import (
+    MetaPageProfile,
+    WhatsAppPhoneNumberProfile,
+)
 from app.schemas.exceptions.application_errors import (
     ChannelCredentialRejectedError,
     ExternalServiceError,

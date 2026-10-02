@@ -2,7 +2,7 @@ from collections.abc import Callable
 
 from typed_time_provider import Microseconds, WallClock
 
-from app.contracts.repositories import BusinessRepoContract
+from app.contracts.repositories.business_repositories import BusinessRepoContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.client_health import AdminClientSort, ClientHealthStatus
 from app.schemas.domain.users import UserDocument

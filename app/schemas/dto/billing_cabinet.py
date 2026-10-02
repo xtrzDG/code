@@ -13,7 +13,7 @@ from app.schemas.constants.billing import (
 )
 from app.schemas.constants.businesses import ServiceMode
 from app.schemas.domain.businesses import BusinessDocument
-from app.schemas.dto.catalog import QuotedMoney
+from app.schemas.dto.catalog.plan_quotes import QuotedMoney
 from app.schemas.typings.billing.booleans import (
     IsAutoDebitActive,
     IsSubscriptionCreated,

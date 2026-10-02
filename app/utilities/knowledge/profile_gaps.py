@@ -17,7 +17,7 @@ from app.schemas.domain.knowledge import KnowledgeItemDocument
 from app.schemas.domain.profiles import BusinessProfileDocument
 from app.schemas.domain.resources import ResourceDocument
 from app.schemas.dto.niches import NicheTemplate
-from app.schemas.dto.profiles import ProfileGapFinding
+from app.schemas.dto.profiles.profile_gaps import ProfileGapFinding
 from app.schemas.typings.profiles.constrained_strings import QuestionKey
 from app.utilities.knowledge.profile_texts import WIZARD_STEP_ORDER
 

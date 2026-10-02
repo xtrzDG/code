@@ -6,7 +6,7 @@ from babel.numbers import format_currency
 from app.schemas.dto.billing import Money
 from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.schemas.typings.localization.strings import FormattedMoneyText
-from app.utilities.localization.language_tags import require_babel_locale
+from app.utilities.localization.babel_locales import require_babel_locale
 from app.utilities.money.money_math import convert_money_to_major_units
 
 

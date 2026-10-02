@@ -1,6 +1,6 @@
 from typed_time_provider import Microseconds, WallClock
 
-from app.contracts.repositories import (
+from app.contracts.repositories.assistant_repositories import (
     AssistantVersionRepoContract,
     AutotestRunRepoContract,
 )
@@ -11,11 +11,11 @@ from app.schemas.domain.assistants import (
     AssistantVersionDocument,
     AutotestRunDocument,
 )
-from app.schemas.dto.assistants import (
+from app.schemas.dto.assistants.assistant_views import AutotestRunView
+from app.schemas.dto.assistants.autotest_runs import (
     AutotestRunCompletion,
     AutotestRunPlan,
     AutotestRunSummary,
-    AutotestRunView,
     AutotestRunViewSource,
 )
 from app.schemas.exceptions.application_errors import NotFoundError

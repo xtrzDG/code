@@ -2,18 +2,20 @@ from zoneinfo import ZoneInfo
 
 from typed_time_provider import Microseconds, WallClock
 
-from app.contracts.repositories import (
-    AuditLogRepoContract,
+from app.contracts.repositories.booking_repositories import (
     BookingRepoContract,
-    CallRepoContract,
-    ChannelRepoContract,
-    ContactRepoContract,
-    ConversationRepoContract,
     HandoffRepoContract,
     LeadRepoContract,
-    MessageRepoContract,
-    ResourceRepoContract,
 )
+from app.contracts.repositories.business_repositories import ChannelRepoContract
+from app.contracts.repositories.compliance_repositories import AuditLogRepoContract
+from app.contracts.repositories.conversation_repositories import (
+    CallRepoContract,
+    ContactRepoContract,
+    ConversationRepoContract,
+    MessageRepoContract,
+)
+from app.contracts.repositories.knowledge_repositories import ResourceRepoContract
 from app.contracts.transformer_contract import TransformerContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.compliance import AuditAction
@@ -29,7 +31,7 @@ from app.schemas.domain.conversations import (
 from app.schemas.domain.resources import ResourceDocument
 from app.schemas.dto.access import BusinessAccessRequest
 from app.schemas.dto.bookings import BookingView
-from app.schemas.dto.conversation_feed import (
+from app.schemas.dto.conversation_feed.conversation_views import (
     CallView,
     ConversationDetailView,
     ConversationQuery,

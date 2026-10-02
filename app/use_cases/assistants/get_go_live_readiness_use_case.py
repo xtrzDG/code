@@ -1,9 +1,11 @@
-from app.contracts.repositories import AssistantVersionRepoContract
+from app.contracts.repositories.assistant_repositories import (
+    AssistantVersionRepoContract,
+)
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.domain.assistants import AssistantVersionDocument
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.dto.access import BusinessAccessRequest
-from app.schemas.dto.assistants import AssistantVersionQuery
+from app.schemas.dto.assistants.assistant_commands import AssistantVersionQuery
 from app.schemas.dto.go_live import GoLiveReadiness, GoLiveReadinessRequest
 from app.schemas.exceptions.application_errors import NotFoundError
 

@@ -1,7 +1,7 @@
 from typed_time_provider import Microseconds, Seconds, WallClock
 
-from app.contracts.repositories import (
-    AuditLogRepoContract,
+from app.contracts.repositories.compliance_repositories import AuditLogRepoContract
+from app.contracts.repositories.user_repositories import (
     OtpChallengeRepoContract,
     UserRepoContract,
     UserSessionRepoContract,

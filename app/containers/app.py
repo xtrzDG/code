@@ -1,19 +1,21 @@
 from dependency_injector import containers
 from dependency_injector.providers import Container
 
-from app.containers.adapters import AdaptersContainer
+from app.containers.adapters.adapters_container import AdaptersContainer
 from app.containers.clients import ClientsContainer
 from app.containers.config import ConfigContainer
 from app.containers.facilitators import FacilitatorsContainer
 from app.containers.gateways import GatewaysContainer
-from app.containers.operators import OperatorsContainer
-from app.containers.orchestrators import OrchestratorsContainer
-from app.containers.pipelines import PipelinesContainer
+from app.containers.operators.operators_container import OperatorsContainer
+from app.containers.orchestrators.orchestrators_container import (
+    OrchestratorsContainer,
+)
+from app.containers.pipelines.pipelines_container import PipelinesContainer
 from app.containers.registries import RegistriesContainer
 from app.containers.repositories import RepositoriesContainer
 from app.containers.time_provider import TimeProviderContainer
 from app.containers.transformers import TransformersContainer
-from app.containers.use_cases import UseCasesContainer
+from app.containers.use_cases.use_cases_container import UseCasesContainer
 from app.containers.utilities import UtilitiesContainer
 
 
@@ -47,7 +49,7 @@ class AppContainer(containers.DeclarativeContainer):
     )
     repositories: RepositoriesContainer = Container(  # type: ignore[assignment]
         RepositoriesContainer,
-        adapters=adapters,
+        collections=adapters.collections,
     )
     registries: RegistriesContainer = Container(  # type: ignore[assignment]
         RegistriesContainer,

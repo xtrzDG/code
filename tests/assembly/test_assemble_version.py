@@ -7,7 +7,7 @@ from app.schemas.constants.assistants import (
 from app.schemas.constants.billing import PlanKey
 from app.schemas.constants.businesses import BusinessStatus
 from app.schemas.constants.niches import NicheKey
-from app.schemas.dto.assistants import (
+from app.schemas.dto.assistants.assistant_commands import (
     AssembleAssistantVersionCommand,
     AssembleAssistantVersionRequest,
     AssistantVersionQuery,

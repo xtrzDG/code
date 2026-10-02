@@ -8,11 +8,13 @@ from app.contracts.operations import (
     BusinessLockRegistryContract,
     ManagerBroadcastFacilitatorContract,
 )
-from app.contracts.repositories import (
-    BookingRepoContract,
+from app.contracts.repositories.booking_repositories import BookingRepoContract
+from app.contracts.repositories.business_repositories import (
     BusinessProfileRepoContract,
     BusinessRepoContract,
-    ContactRepoContract,
+)
+from app.contracts.repositories.conversation_repositories import ContactRepoContract
+from app.contracts.repositories.knowledge_repositories import (
     ResourceRepoContract,
     ScheduleExceptionRepoContract,
 )
@@ -26,7 +28,7 @@ from app.schemas.dto.bookings import (
     BookingView,
     RescheduleBookingCommand,
 )
-from app.schemas.dto.operations import (
+from app.schemas.dto.operations.message_texts import (
     BookingMessageInput,
     BookingStaffNotificationInput,
 )
@@ -50,14 +52,14 @@ from app.use_cases.bookings.booking_support import (
     stay_night_count,
 )
 from app.utilities.scheduling.availability import BLOCKING_BOOKING_STATUSES
-from app.utilities.scheduling.booking_placement import (
-    Placement,
-    PlacementRequest,
+from app.utilities.scheduling.booking_placement import place_booking
+from app.utilities.scheduling.booking_views import build_booking_view
+from app.utilities.scheduling.placement import Placement
+from app.utilities.scheduling.placement_request import PlacementRequest
+from app.utilities.scheduling.resource_selection import (
     min_notice_seconds,
-    place_booking,
     seating_resources,
 )
-from app.utilities.scheduling.booking_views import build_booking_view
 from app.utilities.scheduling.zoned_time import (
     SECONDS_PER_MINUTE,
     microseconds_to_seconds,
