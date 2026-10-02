@@ -436,6 +436,7 @@
           "authentication_required",
           "access_denied",
           "rate_limited",
+          "payload_too_large",
           "external_service_error",
           "internal_error"
         ],
@@ -16125,6 +16126,7 @@
                   "data_base64": {
                     "anyOf": [
                       {
+                        "maxLength": 20971520,
                         "type": "string"
                       },
                       {

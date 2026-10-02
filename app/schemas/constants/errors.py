@@ -13,5 +13,6 @@ class ApiErrorCode(StrEnum):
     AUTHENTICATION_REQUIRED = "authentication_required"
     ACCESS_DENIED = "access_denied"
     RATE_LIMITED = "rate_limited"
+    PAYLOAD_TOO_LARGE = "payload_too_large"
     EXTERNAL_SERVICE_ERROR = "external_service_error"
     INTERNAL_ERROR = "internal_error"

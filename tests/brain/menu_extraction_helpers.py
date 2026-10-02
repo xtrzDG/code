@@ -18,8 +18,10 @@ from app.schemas.typings.localization.constrained_strings import (
     CurrencyCode,
     LanguageTag,
 )
-from app.schemas.typings.menu_import.constrained_strings import MenuSourceMediaType
-from app.schemas.typings.menu_import.strings import MenuSourceBase64
+from app.schemas.typings.menu_import.constrained_strings import (
+    MenuSourceBase64,
+    MenuSourceMediaType,
+)
 from tests.brain.provider_http_fakes import (
     ScriptedHttp,
     build_openai_client,

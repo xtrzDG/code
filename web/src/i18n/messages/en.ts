@@ -206,6 +206,7 @@ export const en = {
       authentication_required: "Please sign in again.",
       access_denied: "You do not have permission for this action.",
       rate_limited: "Too many attempts. Wait a little and try again.",
+      payload_too_large: "This is too large to send. Choose a smaller file or shorten the text.",
       external_service_error: "An external service is not responding. Try again in a minute.",
       internal_error: "Server error. We already know about it.",
       backend_unavailable: "The server is not reachable. Check the connection and try again.",

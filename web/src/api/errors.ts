@@ -20,6 +20,7 @@ export const API_ERROR_CODES = [
   "authentication_required",
   "access_denied",
   "rate_limited",
+  "payload_too_large",
   "external_service_error",
   "internal_error",
   // Cabinet route handlers and the browser
@@ -90,6 +91,8 @@ export function codeForStatus(status: number): ApiErrorCode {
       return "not_found";
     case 409:
       return "conflict";
+    case 413:
+      return "payload_too_large";
     case 429:
       return "rate_limited";
     case 502:
@@ -221,6 +224,7 @@ const ERROR_MESSAGE_KEYS: Record<ApiErrorCode, MessageKey> = {
   authentication_required: "errors.codes.authentication_required",
   access_denied: "errors.codes.access_denied",
   rate_limited: "errors.codes.rate_limited",
+  payload_too_large: "errors.codes.payload_too_large",
   external_service_error: "errors.codes.external_service_error",
   internal_error: "errors.codes.internal_error",
   backend_unavailable: "errors.codes.backend_unavailable",

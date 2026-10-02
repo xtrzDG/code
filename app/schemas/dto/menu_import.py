@@ -23,10 +23,10 @@ from app.schemas.typings.menu_import.constrained_floats import ExtractionConfide
 from app.schemas.typings.menu_import.constrained_integers import MenuLineCount
 from app.schemas.typings.menu_import.constrained_strings import (
     ExtractedPriceAmount,
+    MenuSourceBase64,
     MenuSourceMediaType,
 )
 from app.schemas.typings.menu_import.prefixed_id import MenuImportBatchId
-from app.schemas.typings.menu_import.strings import MenuSourceBase64
 from app.schemas.typings.users.prefixed_id import UserId
 
 

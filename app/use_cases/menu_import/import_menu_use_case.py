@@ -42,8 +42,6 @@ UPLOAD_MEDIA_TYPES: frozenset[str] = frozenset(
         "text/html",
     }
 )
-# 15 MB of file as base64 (4 characters per 3 bytes).
-MAX_UPLOAD_BASE64_LENGTH: int = 20 * 1024 * 1024
 
 
 class ImportMenuUseCase(UseCaseContract[ImportMenuCommand, MenuImportResult]):
@@ -129,9 +127,6 @@ def validate_import_request(request: MenuImportRequest) -> None:
         raise ValidationFailedError(
             "A menu file must be a JPEG, PNG, WebP or GIF photo, a PDF or text."
         )
-
-    if len(str(request.data_base64)) > MAX_UPLOAD_BASE64_LENGTH:
-        raise ValidationFailedError("A menu file may be at most 15 MB.")
 
 
 def build_draft(

@@ -60,6 +60,7 @@ def build_application(app_container: AppContainer) -> FastAPI:
         error_reporter=app_container.facilitators.error_reporter(),
         cors_allowed_origins=settings.cors_allowed_origins,
         lifespan=build_lifespan(app_container),
+        environment=settings.environment,
     )
 
 
