@@ -2,17 +2,13 @@
 
 from typed_time_provider import Microseconds
 
-from app.contracts.registries import PlanRegistryContract
 from app.contracts.repositories.billing_repositories import InvoiceRepoContract
 from app.schemas.constants.billing import SubscriptionStatus
 from app.schemas.domain.billing import InvoiceDocument, SubscriptionDocument
-from app.schemas.domain.businesses import BusinessDocument
-from app.schemas.dto.billing import PlanDefinition
 from app.use_cases.billing.billing_records import (
     find_covering_paid_invoice,
     list_subscription_invoices,
 )
-from app.utilities.billing.billing_periods import add_local_days
 
 
 def resume_cancelled_subscription(
@@ -61,20 +57,3 @@ def activate_paid_period(
     subscription.period_start = covering.period_start
     subscription.period_end = covering.period_end
     subscription.grace_until = None
-
-
-def start_grace_period(
-    plan_registry: PlanRegistryContract,
-    subscription: SubscriptionDocument,
-    business: BusinessDocument,
-    now: Microseconds,
-) -> None:
-    """A declined renewal: past due, with the plan's grace days to pay."""
-
-    plan: PlanDefinition = plan_registry.get(subscription.plan_key)
-    subscription.status = SubscriptionStatus.PAST_DUE
-    subscription.grace_until = add_local_days(
-        now,
-        int(plan.grace_period_days),
-        business.timezone,
-    )

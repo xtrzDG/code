@@ -29,6 +29,7 @@ from app.schemas.dto.payments import (
 from app.schemas.exceptions.application_errors import NotFoundError
 from app.schemas.typings.billing.strings import PaymentNotificationKey
 from app.schemas.typings.conversations.strings import MessageText
+from app.use_cases.billing.grace_periods import start_grace_period
 from app.use_cases.billing.owner_notifications import notify_business_owners
 from app.use_cases.billing.payment_webhook.checkout_payment_settlement import (
     decline_checkout_payment,
@@ -55,7 +56,6 @@ from app.use_cases.billing.payment_webhook.service_mode_restoration import (
 )
 from app.use_cases.billing.payment_webhook.subscription_payment_transitions import (
     activate_paid_period,
-    start_grace_period,
 )
 
 

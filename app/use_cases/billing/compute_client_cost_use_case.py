@@ -1,5 +1,5 @@
 from collections import defaultdict
-from decimal import ROUND_HALF_UP, Decimal
+from decimal import Decimal
 
 from app.contracts.catalog_registries import ExchangeRateRegistryContract
 from app.contracts.repositories.billing_repositories import (
@@ -10,9 +10,8 @@ from app.contracts.repositories.billing_repositories import (
 from app.contracts.repositories.business_repositories import BusinessRepoContract
 from app.contracts.repositories.conversation_repositories import MessageRepoContract
 from app.contracts.use_case_contract import UseCaseContract
-from app.schemas.constants.billing import InvoiceStatus, UsageKind
+from app.schemas.constants.billing import InvoiceStatus
 from app.schemas.domain.billing import (
-    InvoiceDocument,
     SubscriptionDocument,
     UsageEventDocument,
 )
@@ -33,7 +32,6 @@ from app.schemas.typings.billing.constrained_floats import GrossMarginPercent
 from app.schemas.typings.billing.constrained_integers import (
     CostMicroUsd,
     MoneyAmountMinor,
-    UsageQuantityTotal,
 )
 from app.schemas.typings.billing.integers import MarginAmountMinor
 from app.schemas.typings.conversations.prefixed_id import ConversationId
@@ -42,16 +40,18 @@ from app.use_cases.billing.billing_records import find_current_subscription
 from app.use_cases.billing.planned_provider_costs import (
     PLANNED_MONTHLY_PROVIDER_COSTS,
 )
+from app.utilities.billing.client_cost_math import (
+    LLM_USAGE_KINDS,
+    MICRO_UNITS_PER_UNIT,
+    PROVIDER_COST_CURRENCY,
+    compute_margin_percent,
+    compute_period_share,
+    convert_amount,
+    summarize_usage_costs,
+    to_minor_units,
+)
 from app.utilities.money.money_math import get_currency_minor_unit_digits
 
-PROVIDER_COST_CURRENCY: CurrencyCode = CurrencyCode("USD")
-MICRO_UNITS_PER_UNIT: Decimal = Decimal(1_000_000)
-ONE_HUNDRED: Decimal = Decimal(100)
-MARGIN_PERCENT_STEP: Decimal = Decimal("0.01")
-WHOLE_MINOR_UNIT: Decimal = Decimal(1)
-LLM_USAGE_KINDS: frozenset[UsageKind] = frozenset(
-    {UsageKind.LLM_INPUT_TOKENS, UsageKind.LLM_OUTPUT_TOKENS}
-)
 type ConversationKey = ConversationId | None
 
 
@@ -221,94 +221,3 @@ class ComputeClientCostUseCase(UseCaseContract[ClientCostQuery, ClientCostReport
                 revenue += conversion[0] * share
 
         return to_minor_units(revenue, report_currency)
-
-
-def summarize_usage_costs(events: list[UsageEventDocument]) -> list[UsageCostLine]:
-    """Quantity and cost per usage kind, in the order of UsageKind."""
-
-    quantities: defaultdict[UsageKind, int] = defaultdict(int)
-    costs: defaultdict[UsageKind, int] = defaultdict(int)
-    for event in events:
-        quantities[event.kind] += int(event.quantity)
-        costs[event.kind] += int(event.cost_micro_usd)
-
-    return [
-        UsageCostLine(
-            kind=kind,
-            quantity=UsageQuantityTotal(quantities[kind]),
-            cost_micro_usd=CostMicroUsd(costs[kind]),
-        )
-        for kind in UsageKind
-        if kind in quantities
-    ]
-
-
-def compute_period_share(invoice: InvoiceDocument, query: ClientCostQuery) -> Decimal:
-    """Share of the invoice's service period inside the query window."""
-
-    period_length: int = int(invoice.period_end) - int(invoice.period_start)
-    if period_length <= 0:
-        is_inside: bool = query.period_start <= invoice.period_start < query.period_end
-        return Decimal(1) if is_inside else Decimal(0)
-
-    overlap: int = min(int(invoice.period_end), int(query.period_end)) - max(
-        int(invoice.period_start),
-        int(query.period_start),
-    )
-    if overlap <= 0:
-        return Decimal(0)
-
-    return Decimal(overlap) / Decimal(period_length)
-
-
-def convert_amount(
-    amount: Decimal,
-    source_currency: CurrencyCode,
-    target_currency: CurrencyCode,
-    exchange_rate_registry: ExchangeRateRegistryContract,
-) -> tuple[Decimal, ExchangeRateQuote | None] | None:
-    """
-    Convert major units with an official rate: the direct pair, else the
-    published opposite pair read the other way. None without a rate.
-    """
-
-    if source_currency == target_currency:
-        return amount, None
-
-    direct_rate: ExchangeRateQuote | None = exchange_rate_registry.find_rate(
-        source_currency,
-        target_currency,
-    )
-    if direct_rate is not None:
-        return amount * Decimal(repr(float(direct_rate.rate))), direct_rate
-
-    opposite_rate: ExchangeRateQuote | None = exchange_rate_registry.find_rate(
-        target_currency,
-        source_currency,
-    )
-    if opposite_rate is not None:
-        return amount / Decimal(repr(float(opposite_rate.rate))), opposite_rate
-
-    return None
-
-
-def to_minor_units(amount: Decimal, currency_code: CurrencyCode) -> int:
-    """Major units -> whole minor units, rounded half up."""
-
-    digits: int = int(get_currency_minor_unit_digits(currency_code))
-    return int(amount.scaleb(digits).quantize(WHOLE_MINOR_UNIT, rounding=ROUND_HALF_UP))
-
-
-def compute_margin_percent(
-    revenue_minor: int,
-    cost_minor: int,
-) -> GrossMarginPercent | None:
-    """(revenue - cost) / revenue in percent, two decimals; None without revenue."""
-
-    if revenue_minor <= 0:
-        return None
-
-    percent: Decimal = (
-        (Decimal(revenue_minor - cost_minor) / Decimal(revenue_minor)) * ONE_HUNDRED
-    ).quantize(MARGIN_PERCENT_STEP, rounding=ROUND_HALF_UP)
-    return GrossMarginPercent(float(percent))

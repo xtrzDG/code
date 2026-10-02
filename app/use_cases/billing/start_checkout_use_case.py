@@ -13,7 +13,6 @@ from app.schemas.configurations.app_settings import AppSettings
 from app.schemas.constants.billing import (
     InvoiceKind,
     InvoiceStatus,
-    SubscriptionStatus,
 )
 from app.schemas.constants.payments import PaymentProvider
 from app.schemas.constants.users import BusinessMemberRole
@@ -34,16 +33,18 @@ from app.schemas.dto.payments import (
 )
 from app.schemas.exceptions.application_errors import ConflictError
 from app.schemas.typings.billing.prefixed_id import InvoiceId
-from app.schemas.typings.billing.strings import InvoiceDescription
 from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.use_cases.billing.billing_records import (
     OPEN_INVOICE_STATUSES,
-    find_covering_paid_invoice,
     find_next_period_start,
     list_open_invoices,
     list_subscription_invoices,
     require_current_subscription,
     sum_invoice_amounts,
+)
+from app.use_cases.billing.checkout_rules import (
+    is_service_unpaid,
+    select_order_description,
 )
 from app.use_cases.billing.subscription_pricing import quote_money
 from app.utilities.billing.billing_periods import (
@@ -203,7 +204,7 @@ class StartCheckoutUseCase(UseCaseContract[StartCheckoutCommand, CheckoutSession
             )
 
         if open_invoices != []:
-            if self._is_service_unpaid(subscription, invoices, open_invoices, now):
+            if is_service_unpaid(subscription, invoices, open_invoices, now):
                 open_ids: set[InvoiceId] = {invoice.id for invoice in open_invoices}
                 return open_invoices + [
                     invoice
@@ -226,34 +227,6 @@ class StartCheckoutUseCase(UseCaseContract[StartCheckoutCommand, CheckoutSession
             business,
             subscription,
             max(find_next_period_start(subscription, invoices), now),
-        )
-
-    def _is_service_unpaid(
-        self,
-        subscription: SubscriptionDocument,
-        invoices: list[InvoiceDocument],
-        open_invoices: list[InvoiceDocument],
-        now: Microseconds,
-    ) -> bool:
-        """
-        Only other bills (e.g. minutes above the package) are open while the
-        subscription is not active and no paid period or running trial
-        covers now: the service itself must be paid too, or paying would
-        not restore it. An active subscription is renewed by its automatic
-        charges instead.
-        """
-
-        is_trial_running: bool = (
-            subscription.trial_ends_at is not None and now < subscription.trial_ends_at
-        )
-        return (
-            subscription.status is not SubscriptionStatus.ACTIVE
-            and not is_trial_running
-            and find_covering_paid_invoice(invoices, now) is None
-            and all(
-                invoice.kind is not InvoiceKind.SERVICE_PERIOD
-                for invoice in open_invoices
-            )
         )
 
     def _rebill_from_now(
@@ -312,13 +285,3 @@ class StartCheckoutUseCase(UseCaseContract[StartCheckoutCommand, CheckoutSession
             raise ConflictError("There is nothing to pay.")
 
         return payable
-
-
-def select_order_description(invoices: list[InvoiceDocument]) -> InvoiceDescription:
-    """The service-period line when there is one, else the first invoice line."""
-
-    for invoice in invoices:
-        if invoice.kind is InvoiceKind.SERVICE_PERIOD:
-            return invoice.description
-
-    return invoices[0].description
