@@ -21,15 +21,13 @@ import { BookingFiltersBar } from "./_components/BookingFiltersBar";
 import { BookingForm } from "./_components/BookingForm";
 import { BookingDays, BookingDetails, useBookingWhen } from "./_components/BookingList";
 import {
-  bookingActions,
   bookingApiQuery,
   bookingFiltersQuery,
-  customerLanguage,
   isRangeValid,
-  nightsOf,
   rangeDates,
   type BookingFilters,
-} from "./_components/bookingModel";
+} from "./_lib/bookingFilters";
+import { bookingActions, customerLanguage, nightsOf } from "./_lib/bookingList";
 import { CustomerLanguageSelect } from "./_components/CustomerLanguageSelect";
 import { RescheduleForm } from "./_components/RescheduleForm";
 

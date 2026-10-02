@@ -1,6 +1,6 @@
 import { sectionMetadata } from "@/components/business/SectionPlaceholder";
 
-import { parseBookingFilters } from "./_components/bookingModel";
+import { parseBookingFilters } from "./_lib/bookingFilters";
 import { BookingsScreen } from "./BookingsScreen";
 
 export const generateMetadata = sectionMetadata("bookings");

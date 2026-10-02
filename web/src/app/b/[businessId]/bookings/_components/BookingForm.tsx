@@ -15,12 +15,12 @@ import { countryFlag, countryName, formatCallingCode } from "@/lib/countries";
 import { businessPath } from "@/lib/navigation";
 
 import {
-  BOOKING_REFUSAL_MESSAGES,
   bookingUnitFor,
   validateBookingForm,
   type BookingFormErrors,
   type BookingFormValues,
-} from "./bookingModel";
+} from "../_lib/manualBooking";
+import { BOOKING_REFUSAL_MESSAGES } from "../_lib/bookingRefusals";
 import { CustomerLanguageSelect } from "./CustomerLanguageSelect";
 import { SlotPicker } from "./SlotPicker";
 

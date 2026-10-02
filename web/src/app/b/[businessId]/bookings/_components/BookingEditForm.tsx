@@ -10,14 +10,14 @@ import { Alert, Button, Field, Input, Select, Textarea } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 
 import {
-  BOOKING_REFUSAL_MESSAGES,
   bookingEditValues,
   canChangePlacement,
   placesForEdit,
   validateBookingEdit,
   type BookingEditErrors,
   type BookingEditValues,
-} from "./bookingModel";
+} from "../_lib/bookingEdit";
+import { BOOKING_REFUSAL_MESSAGES } from "../_lib/bookingRefusals";
 
 /**
  * Changes the details of a booking (PATCH …/bookings/{id}): the customer's

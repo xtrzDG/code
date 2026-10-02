@@ -14,7 +14,7 @@ import { useI18n } from "@/i18n/client";
 import { languageName } from "@/lib/format";
 import { businessPath } from "@/lib/navigation";
 
-import { groupBookingsByDate, nightsOf, reminderState } from "./bookingModel";
+import { groupBookingsByDate, nightsOf, reminderState } from "../_lib/bookingList";
 
 /** "20:00–22:00" for slots, "3 nights · until Oct 6" for stays. */
 export function useBookingWhen() {

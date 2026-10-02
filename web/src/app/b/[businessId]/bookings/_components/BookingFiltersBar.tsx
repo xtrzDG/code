@@ -7,7 +7,7 @@ import type { BookingStatus, ResourceView } from "@/components/insights/types";
 import { Field, Input, Select } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 
-import { BOOKING_RANGES, type BookingFilters } from "./bookingModel";
+import { BOOKING_RANGES, type BookingFilters } from "../_lib/bookingFilters";
 
 export function BookingFiltersBar({
   filters,
