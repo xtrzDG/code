@@ -305,7 +305,7 @@ section tabs, page titles and the e2e suite read it):
 | Messages | `messages[/{conversationId}]` (all conversations), `messages/handoffs` ("Needs a person"), `messages/leads` ("Requests") | owners, staff |
 | Bookings | `bookings` | owners, staff |
 | Assistant | `assistant` ("Try it", the test chat), `assistant/knowledge[/questions\|/import\|/resources]`, `assistant/profile?step=…` ("Hours and rules"), `assistant/channels`; under Advanced `assistant/versions[/{versionId}]` | staff: "Try it" only |
-| Settings | `settings` (business), `settings/team`, `settings/notifications`, `settings/billing`, `settings/privacy`, `settings/audit` | owners |
+| Settings | `settings` (business), `settings/team`, `settings/notifications`, `settings/billing`, `settings/privacy`, `settings/audit` | owners; staff: Notifications only (their own devices, events and quiet hours) |
 
 - **Sidebar** (large screens): the mark, the business switcher (it keeps the
   page when switching), the sections with icons and a marker that glides to
@@ -363,6 +363,8 @@ section tabs, page titles and the e2e suite read it):
 | Assistant → Channels | Connect messengers and see why one stopped, WhatsApp's template for staff replies after 24 hours (name and language), website chat snippet, colour and corner, call forwarding codes, Google Calendar state and last sync, staff Telegram link |
 | Assistant → Advanced | Versions, go-live checklist with fix links, autotests with live progress, publish and rollback with reasons |
 | Settings → Plan and billing | Trial, subscribe with payment (after the trial, an overdue payment or a cancellation), plan change, usage meters, invoices, payment |
+| Settings → Notifications | For everyone: **On this device** (Web Push: the browser asks for permission, subscribes with the server's VAPID key and the subscription goes to the API; "Send a test" answers whether it arrived; "Turn off"; my other devices), **What reaches me** (events and quiet hours of my devices, in the business time zone). For the staff contacts: how notifications reach each one (channel without a provider on the server, the latest one delivered, waiting or failed with the reason), the linked Telegram chat's @username, and for owners "Send a test" (at most 5 per contact and hour) and each contact's events and quiet hours in its dialog |
+| Notification links (`/n/{token}`) | The link at the end of every staff e-mail, SMS, chat message and device notification: signed in first (the proxy sends visitors to `/login?next=…`), then the API says where it leads (a conversation, the requests, the bookings of the booking's day, the notification settings) and the page opens there; an expired (7 days), altered or foreign link says so (`app/n/[token]/page.tsx`, `lib/notificationLinks.ts`) |
 | Settings → the rest | Business settings and pause, team with owner/staff roles, manager contacts, reading and accepting the data processing agreement, the customer list with export and erasure, the audit log with server filters. Business and Notifications save with the business `revision` they showed (`expected_revision`); when someone saved since (another owner, the Telegram bot adding a manager), the API answers 409 `stale_revision` and the page reloads and says so instead of overwriting. Business starts from the business as stored when it opens, and after a stale refusal keeps what was typed: fields nobody else changed are saved again at once, fields changed on both sides show the stored value |
 | Admin (`/admin`, `/admin/clients/{id}`) | Platform admins: all clients (server filters, sorts and paging, totals), health, opening a client's cabinet |
 
@@ -381,7 +383,15 @@ section tabs, page titles and the e2e suite read it):
   answers when there is none; build files (`/_next/static/`) are served from
   the cache once loaded; API calls (`/api/*`) and other sites pass straight
   through. It shows a pushed `{title, body, url, tag}` as a notification and
-  opens its (same-site) url when pressed, ready for web push.
+  opens its (same-site) url when pressed. "Enable notifications on this
+  device" (`lib/webPush.ts`) subscribes through it; on a development server
+  (no worker registered) it registers `/sw.js?push-only=1`, which only shows
+  notifications and keeps nothing. Which device in the list is this browser
+  is remembered per business in localStorage; a browser has one push
+  subscription for the cabinet, so turning one business off keeps it for
+  the others. `e2e/notifications.spec.ts` mocks the browser's Push API and
+  starts a local push service (`e2e/support/push.ts`) that decrypts what the
+  API posts (RFC 8291), so no real push service is ever called.
 - "Install the app" in the user menu (and "More" on phones): the browser's
   own prompt where there is one (`beforeinstallprompt`), the Share → Add to
   Home Screen steps on iPhone and iPad, nothing once installed.
