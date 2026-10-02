@@ -38,7 +38,7 @@ from app.schemas.exceptions.base_exception import ApplicationError
 from app.use_cases.maintenance.apply_database_migrations_use_case import (
     ApplyDatabaseMigrationsUseCase,
 )
-from app.utilities.config_helpers.app_settings_assembler import assemble_app_settings
+from app.utilities.config_helpers.app_settings.app_settings_assembler import assemble_app_settings
 
 DEFAULT_MIGRATIONS_DIRECTORY: Path = Path(__file__).resolve().parents[4] / "migrations"
 EXIT_OK: int = 0

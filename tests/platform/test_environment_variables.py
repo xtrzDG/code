@@ -5,9 +5,9 @@ working installation needs.
 
 Sources of truth:
 
-- the settings assembler (`app_settings_assembler.py`) and the provider SDKs
-  for the backend; `.env.example` and the "Окружение" table of `README.md`
-  for people;
+- the settings assembler (`app/utilities/config_helpers/app_settings/`) and
+  the provider SDKs for the backend; `.env.example` and the "Окружение"
+  table of `README.md` for people;
 - `web/src` (the cabinet's server code) for the cabinet; `web/.env.example`
   and the "Environment" table of `web/README.md` for people;
 - `docker-compose.yml` and `render.yaml` for the deployments.
@@ -37,14 +37,17 @@ from app.utilities.channels.channel_endpoints import (
     WIDGET_DEMO_PATH,
     WIDGET_SCRIPT_PATH,
 )
-from app.utilities.config_helpers.app_settings_assembler import (
-    DEFAULT_OPENAI_BASE_URL,
+from app.utilities.config_helpers.app_settings.app_settings_assembler import (
     assemble_app_settings,
+)
+from app.utilities.config_helpers.app_settings.llm_settings_section import (
+    DEFAULT_OPENAI_BASE_URL,
 )
 
 ROOT: Path = Path(__file__).resolve().parents[2]
-ASSEMBLER: Path = (
-    ROOT / "app" / "utilities" / "config_helpers" / "app_settings_assembler.py"
+# The assembler and its sections, one module per topic.
+ASSEMBLER_DIRECTORY: Path = (
+    ROOT / "app" / "utilities" / "config_helpers" / "app_settings"
 )
 VARIABLE_NAME: re.Pattern[str] = re.compile(r"[A-Z][A-Z0-9]*(?:_[A-Z0-9]+)+")
 LAUNCH_GUIDE: str = "docs/LAUNCH.md"
@@ -160,10 +163,10 @@ def indentation(line: str) -> int:
 def assembler_variables() -> set[str]:
     """Every variable name written in the settings assembler."""
 
-    tree = ast.parse(ASSEMBLER.read_text(encoding="utf-8"))
     return {
         node.value
-        for node in ast.walk(tree)
+        for module_path in sorted(ASSEMBLER_DIRECTORY.glob("*.py"))
+        for node in ast.walk(ast.parse(module_path.read_text(encoding="utf-8")))
         if isinstance(node, ast.Constant)
         and isinstance(node.value, str)
         and VARIABLE_NAME.fullmatch(node.value) is not None

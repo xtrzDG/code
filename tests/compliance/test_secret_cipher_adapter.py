@@ -9,7 +9,7 @@ from app.adapters.security.secret_cipher_adapter import (
 )
 from app.schemas.exceptions.application_errors import ValidationFailedError
 from app.schemas.typings.channels.strings import ChannelSecret, EncryptedChannelSecret
-from app.utilities.config_helpers.app_settings_assembler import assemble_app_settings
+from app.utilities.config_helpers.app_settings.app_settings_assembler import assemble_app_settings
 
 LONG_PASSPHRASE: str = "correct horse battery staple, Tbilisi 2026!"
 

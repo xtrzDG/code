@@ -177,7 +177,7 @@ from app.use_cases.autotests.start_autotest_run_use_case import (
 )
 from app.use_cases.voice.remove_voice_agent_use_case import RemoveVoiceAgentUseCase
 from app.utilities.assembly.llm_costs import DEFAULT_LLM_TOKEN_PRICES
-from app.utilities.config_helpers.app_settings_assembler import assemble_app_settings
+from app.utilities.config_helpers.app_settings.app_settings_assembler import assemble_app_settings
 from app.utilities.storage.storage_scope_context import StorageScopeContext
 from tests.assembly.fakes import (
     FakeAssistantToolCatalog,

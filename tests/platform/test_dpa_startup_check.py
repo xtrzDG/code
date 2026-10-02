@@ -14,7 +14,9 @@ from app.containers.app import AppContainer
 from app.main import check_dpa_document
 from app.registries.legal.legal_document_registry import LegalDocumentRegistry
 from app.schemas.exceptions.application_errors import ValidationFailedError
-from app.utilities.config_helpers.app_settings_assembler import assemble_app_settings
+from app.utilities.config_helpers.app_settings.app_settings_assembler import (
+    assemble_app_settings,
+)
 from tests.e2e.harness import replace_provider
 
 PRODUCTION: dict[str, str] = {"APP_ENV": "production", "ENCRYPTION_KEY": "x" * 32}

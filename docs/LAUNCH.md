@@ -5,7 +5,7 @@
 внешние аккаунты и вписать их ключи. Названия переменных, адреса вебхуков и то,
 что происходит без ключа, взяты из репозитория: `.env.example`, `render.yaml`,
 `docker-compose.yml`, `README.md`, `web/README.md`, настроек приложения
-(`app/utilities/config_helpers/app_settings_assembler.py`) и `docs/legal`. Полный
+(`app/utilities/config_helpers/app_settings/`) и `docs/legal`. Полный
 список переменных с поведением по умолчанию — таблица «Окружение» в
 [`README.md`](../README.md#окружение); тест
 `tests/platform/test_environment_variables.py` не даёт ей разойтись с кодом.

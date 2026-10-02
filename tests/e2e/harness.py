@@ -51,7 +51,7 @@ from app.schemas.typings.localization.constrained_strings import (
 from app.schemas.typings.platform.strings import PlatformSecret
 from app.schemas.typings.users.constrained_strings import EmailAddress, OtpCode
 from app.utilities.assembly.autotest_prompts import DONE_MARKER, JUDGE_SYSTEM_PROMPT
-from app.utilities.config_helpers.app_settings_assembler import assemble_app_settings
+from app.utilities.config_helpers.app_settings.app_settings_assembler import assemble_app_settings
 
 # Monday 2026-10-05 08:00 UTC: 12:00 in Tbilisi, 10:00 in Rome.
 START: datetime = datetime(2026, 10, 5, 8, 0, tzinfo=UTC)

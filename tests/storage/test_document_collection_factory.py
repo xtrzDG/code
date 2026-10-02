@@ -27,7 +27,7 @@ from app.schemas.exceptions.application_errors import ValidationFailedError
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.platform.strings import DatabaseUrl
 from app.schemas.typings.users.prefixed_id import UserId
-from app.utilities.config_helpers.app_settings_assembler import assemble_app_settings
+from app.utilities.config_helpers.app_settings.app_settings_assembler import assemble_app_settings
 from app.utilities.storage.storage_scope_context import StorageScopeContext
 from tests.storage.builders import COUNTRY_SAMPLES, build_business, build_contact
 from tests.storage.storage_testing import build_fixed_wall_clock
