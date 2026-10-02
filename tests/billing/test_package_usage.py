@@ -20,13 +20,13 @@ from app.schemas.dto.billing_cabinet import (
     StartTrialRequest,
 )
 from app.schemas.typings.localization.constrained_strings import LanguageTag
-from tests.billing.billing_testbed import (
+from tests.billing.billing_settings import (
     GEORGIA,
     ITALY,
     MICROSECONDS_PER_DAY,
-    BillingTestbed,
     CountryPreset,
 )
+from tests.billing.billing_testbed import BillingTestbed
 
 SECONDS_IN_MINUTE: int = 60
 

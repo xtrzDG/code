@@ -57,13 +57,13 @@ from app.schemas.typings.localization.constrained_strings import (
     LanguageTag,
 )
 from app.schemas.typings.platform.strings import PlatformIdentifier, PlatformSecret
-from tests.billing.billing_testbed import (
+from tests.billing.billing_settings import (
     APP_BASE_URL,
     CHECKOUT_URL,
     FLITT_MERCHANT_ID,
     FLITT_SECRET_KEY,
-    FlittSandbox,
 )
+from tests.billing.flitt_sandbox import FlittSandbox
 
 
 def sha1(text: str) -> str:

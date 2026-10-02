@@ -17,7 +17,7 @@ from app.use_cases.billing.subscription_pricing import (
     quote_money,
     select_subscription_currency,
 )
-from tests.billing.billing_testbed import PriceBookPlanRegistry
+from tests.billing.billing_registries import PriceBookPlanRegistry
 
 
 def money(amount_minor: int, currency_code: str) -> Money:

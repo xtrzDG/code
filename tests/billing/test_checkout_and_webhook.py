@@ -37,16 +37,16 @@ from app.schemas.exceptions.application_errors import (
 from app.schemas.typings.billing.constrained_strings import PaymentReturnUrl
 from app.schemas.typings.billing.prefixed_id import PaymentOrderId, SubscriptionId
 from app.utilities.billing.billing_periods import to_local_calendar_day
-from tests.billing.billing_testbed import (
+from tests.billing.billing_settings import (
     APP_BASE_URL,
     CABINET_ORIGIN,
     CHECKOUT_URL,
     GEORGIA,
     ITALY,
-    BillingTestbed,
     CountryPreset,
     sign_flitt_callback,
 )
+from tests.billing.billing_testbed import BillingTestbed
 
 
 @dataclass(frozen=True)

@@ -94,13 +94,8 @@ from app.use_cases.admin.authorize_platform_admin_use_case import (
     AuthorizePlatformAdminUseCase,
 )
 from app.use_cases.admin.list_clients_use_case import ListClientsUseCase
-from tests.billing.billing_testbed import (
-    GEORGIA,
-    ITALY,
-    MICROSECONDS_PER_DAY,
-    USA,
-    BillingTestbed,
-)
+from tests.billing.billing_settings import GEORGIA, ITALY, MICROSECONDS_PER_DAY, USA
+from tests.billing.billing_testbed import BillingTestbed
 from tests.billing.test_trial_and_plan import start_trial
 
 

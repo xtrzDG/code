@@ -30,17 +30,17 @@ from app.schemas.exceptions.application_errors import (
     ValidationFailedError,
 )
 from app.schemas.typings.localization.constrained_strings import LanguageTag
-from tests.billing.billing_testbed import (
+from tests.billing.billing_registries import PriceBookPlanRegistry
+from tests.billing.billing_settings import (
     GEORGIA,
     ISRAEL,
     ITALY,
     JAPAN,
     MICROSECONDS_PER_DAY,
     USA,
-    BillingTestbed,
     CountryPreset,
-    PriceBookPlanRegistry,
 )
+from tests.billing.billing_testbed import BillingTestbed
 
 
 def start_trial(

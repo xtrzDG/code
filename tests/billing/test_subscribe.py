@@ -34,12 +34,8 @@ from app.schemas.exceptions.application_errors import (
 from app.schemas.typings.billing.constrained_strings import PaymentReturnUrl
 from app.use_cases.billing.billing_records import is_service_paid_for
 from app.utilities.billing.billing_periods import to_local_calendar_day
-from tests.billing.billing_testbed import (
-    CABINET_ORIGIN,
-    GEORGIA,
-    BillingTestbed,
-    bearer,
-)
+from tests.billing.billing_settings import CABINET_ORIGIN, GEORGIA
+from tests.billing.billing_testbed import BillingTestbed, bearer
 
 
 class World:

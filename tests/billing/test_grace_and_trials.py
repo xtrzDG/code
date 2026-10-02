@@ -20,13 +20,13 @@ from app.schemas.dto.billing_cabinet import (
 from app.schemas.typings.businesses.strings import BusinessName
 from app.schemas.typings.conversations.strings import MessageText
 from app.utilities.billing.billing_periods import to_local_calendar_day
-from tests.billing.billing_testbed import (
+from tests.billing.billing_settings import (
     GEORGIA,
     ITALY,
     MICROSECONDS_PER_DAY,
-    BillingTestbed,
     CountryPreset,
 )
+from tests.billing.billing_testbed import BillingTestbed
 
 
 def start_trial(

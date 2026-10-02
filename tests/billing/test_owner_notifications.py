@@ -7,7 +7,8 @@ from app.use_cases.billing.owner_notifications import (
     build_owner_contact,
     notify_business_owners,
 )
-from tests.billing.billing_testbed import GEORGIA, ISRAEL, BillingTestbed
+from tests.billing.billing_settings import GEORGIA, ISRAEL
+from tests.billing.billing_testbed import BillingTestbed
 
 
 def test_every_owner_is_told_and_staff_is_not() -> None:

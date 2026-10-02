@@ -9,14 +9,13 @@ from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.payments import PaymentOrderDocument
 from app.schemas.domain.users import UserDocument
 from app.schemas.typings.billing.prefixed_id import PaymentOrderId
-from tests.billing.billing_testbed import (
+from tests.billing.billing_settings import (
     CABINET_ORIGIN,
     CHECKOUT_URL,
     GEORGIA,
-    BillingTestbed,
-    bearer,
     sign_flitt_callback,
 )
+from tests.billing.billing_testbed import BillingTestbed, bearer
 
 WEBHOOK_PATH: str = "/v1/payments/flitt/webhook"
 

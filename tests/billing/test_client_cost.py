@@ -31,14 +31,14 @@ from app.utilities.billing.client_cost_math import (
     compute_margin_percent,
     compute_period_share,
 )
-from tests.billing.billing_testbed import (
+from tests.billing.billing_registries import StaticExchangeRateRegistry
+from tests.billing.billing_settings import (
     GEORGIA,
     ITALY,
     MICROSECONDS_PER_DAY,
-    BillingTestbed,
     CountryPreset,
-    StaticExchangeRateRegistry,
 )
+from tests.billing.billing_testbed import BillingTestbed
 from tests.billing.test_trial_and_plan import start_trial
 
 PERIOD_DAYS: int = 30
