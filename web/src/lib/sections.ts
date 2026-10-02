@@ -4,8 +4,8 @@
  * may open them. The sidebar, the phone tab bar, the section tabs and the
  * page titles are all built from these tables.
  *
- * Staff see Overview, Messages, Bookings and the assistant's test chat;
- * owners see everything. Versions and autotests sit in the "advanced"
+ * Staff see Overview, Messages, Bookings, the assistant's test chat and
+ * Settings → Notifications (their own devices); owners see everything. Versions and autotests sit in the "advanced"
  * group of the Assistant.
  */
 
@@ -67,7 +67,8 @@ export const SECTION_PAGES: Record<BusinessSection, readonly PageEntry[]> = {
   settings: [
     { page: "settings", label: "navigation.pages.settingsGeneral", roles: OWNERS },
     { page: "settings/team", label: "navigation.pages.settingsTeam", roles: OWNERS },
-    { page: "settings/notifications", label: "navigation.pages.settingsNotifications", roles: OWNERS },
+    // Everyone turns notifications on for their own devices; owners also manage the staff contacts.
+    { page: "settings/notifications", label: "navigation.pages.settingsNotifications", roles: EVERYONE },
     { page: "settings/billing", label: "navigation.pages.settingsBilling", roles: OWNERS },
     { page: "settings/privacy", label: "navigation.pages.settingsPrivacy", roles: OWNERS },
     { page: "settings/audit", label: "navigation.pages.settingsAudit", roles: OWNERS },

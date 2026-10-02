@@ -36,8 +36,11 @@ export const ADMIN_PATH = "/admin";
 /** Shown by the service worker (public/sw.js) when a page cannot be loaded. */
 export const OFFLINE_PATH = "/offline";
 
+/** Where a notification link (`{cabinet}/n/{token}`) lands; see lib/notificationLinks.ts. */
+export const NOTIFICATION_LINK_PREFIX = "/n/";
+
 /** Pages that need a session (the proxy sends visitors to /login). */
-const PROTECTED_PREFIXES = [HOME_PATH, "/b/", ADMIN_PATH, "/integrations/"] as const;
+const PROTECTED_PREFIXES = [HOME_PATH, "/b/", ADMIN_PATH, "/integrations/", NOTIFICATION_LINK_PREFIX] as const;
 
 export function isProtectedPath(pathname: string): boolean {
   return PROTECTED_PREFIXES.some(

@@ -3,6 +3,7 @@
 import type { Schema } from "@/api/types";
 
 import type { SettingsChanges } from "./general";
+import { isEverything, preferencesFromForm, type PreferencesForm } from "./notifications";
 import { EMAIL } from "./team";
 
 export type ManagerContact = Schema<"ManagerContactView">;
@@ -18,6 +19,8 @@ export interface ContactForm {
   channel: ManagerContactChannel;
   address: string;
   language: string;
+  /** Which events reach the contact and their quiet hours (absent: every event, at any hour). */
+  preferences?: PreferencesForm;
 }
 
 export type ContactField = "name" | "address";
@@ -55,13 +58,18 @@ export function validateContact(
   return errors;
 }
 
-/** The stored contacts as the PATCH input (the list is replaced as a whole). */
+/**
+ * The stored contacts as the PATCH input (the list is replaced as a
+ * whole, so every contact's choices go with it; the server keeps the
+ * Telegram @username of a linked chat by itself).
+ */
 export function contactsToInput(contacts: readonly ManagerContact[]): ManagerContactInput[] {
   return contacts.map((contact) => ({
     name: contact.name,
     channel: contact.channel,
     address: contact.address,
     language: contact.language,
+    ...(contact.preferences ? { preferences: contact.preferences } : {}),
   }));
 }
 
@@ -104,10 +112,12 @@ export function applyContactChange(shown: readonly ManagerContact[], change: Con
 }
 
 export function contactFromForm(form: ContactForm): ManagerContactInput {
+  const preferences = form.preferences ? preferencesFromForm(form.preferences) : null;
   return {
     name: form.name.trim(),
     channel: form.channel,
     address: form.address.trim(),
     language: form.language,
+    ...(preferences && !isEverything(preferences) ? { preferences } : {}),
   };
 }

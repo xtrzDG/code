@@ -26,6 +26,9 @@ import { workspaceCommonRu } from "./workspace/common.ru";
 import { loginOptionsEn } from "./workspace/loginOptions.en";
 import { loginOptionsKa } from "./workspace/loginOptions.ka";
 import { loginOptionsRu } from "./workspace/loginOptions.ru";
+import { notificationsEn } from "./workspace/notifications.en";
+import { notificationsKa } from "./workspace/notifications.ka";
+import { notificationsRu } from "./workspace/notifications.ru";
 import { settingsEn } from "./workspace/settings.en";
 import { settingsKa } from "./workspace/settings.ka";
 import { settingsRu } from "./workspace/settings.ru";
@@ -39,6 +42,7 @@ export const workspaceEn = {
   loginOptions: loginOptionsEn,
   billing: billingEn,
   settings: { ...settingsEn, ...settingsRecordsEn },
+  notifications: notificationsEn,
   admin: adminEn,
 } as const;
 
@@ -48,6 +52,7 @@ export const workspaceRu: Translation<typeof workspaceEn> = {
   loginOptions: loginOptionsRu,
   billing: billingRu,
   settings: { ...settingsRu, ...settingsRecordsRu },
+  notifications: notificationsRu,
   admin: adminRu,
 };
 
@@ -57,5 +62,6 @@ export const workspaceKa: Translation<typeof workspaceEn> = {
   loginOptions: loginOptionsKa,
   billing: billingKa,
   settings: { ...settingsKa, ...settingsRecordsKa },
+  notifications: notificationsKa,
   admin: adminKa,
 };

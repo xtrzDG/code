@@ -14,6 +14,10 @@
  * - The page posts {type: "refresh-offline-page"} after a change of
  *   language or theme, so the offline page follows it; messages from any
  *   other origin are ignored.
+ * - Registered as /sw.js?push-only=1 (a development server, where a device
+ *   was turned on for notifications) it only shows notifications: nothing
+ *   is kept and every request is left to the browser, as the build files
+ *   change while the code does.
  *
  * Registered by src/components/shell/ServiceWorker.tsx. Tests:
  * src/lib/serviceWorker.test.ts runs this file against fakes.
@@ -26,6 +30,7 @@ const OFFLINE_PATH = "/offline";
 const ICONS = ["/icons/icon-192.png", "/icons/icon-512.png", "/icons/maskable-192.png", "/icons/maskable-512.png"];
 const STATIC_PREFIX = "/_next/static/";
 const ASSET_PATTERN = /\/_next\/static\/[^"'\s)<>\\]+/g;
+const PUSH_ONLY = new URLSearchParams(self.location.search || "").has("push-only");
 
 /** The /_next/static/ files a page's HTML loads (scripts, styles, fonts). */
 function assetsOf(html) {
@@ -52,6 +57,10 @@ async function keepOfflinePage() {
 }
 
 async function install() {
+  if (PUSH_ONLY) {
+    await self.skipWaiting();
+    return;
+  }
   const shell = await caches.open(SHELL_CACHE);
   await shell.addAll(ICONS);
   await keepOfflinePage();
@@ -110,6 +119,9 @@ function routeOf(request) {
 }
 
 function onFetch(event) {
+  if (PUSH_ONLY) {
+    return;
+  }
   const route = routeOf(event.request);
   if (route === "page") {
     event.respondWith(fromNetworkOrOffline(event.request));
