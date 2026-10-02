@@ -14,7 +14,12 @@ from app.clients.meta.meta_graph_client import MetaGraphClient
 from app.clients.openai.openai_responses_client import OpenAiResponsesClient
 from app.clients.telegram.telegram_bot_client import TelegramBotClient
 from app.containers.app import AppContainer
+from app.schemas.dto.live_events import LiveStreamLimits
 from app.schemas.typings.channels.constrained_strings import PublicBaseUrl
+from app.schemas.typings.live_events.constrained_floats import (
+    LiveStreamHeartbeatSeconds,
+    LiveStreamLifetimeSeconds,
+)
 from app.schemas.typings.platform.strings import PlatformSecret
 from app.utilities.config_helpers.app_settings.app_settings_assembler import (
     assemble_app_settings,
@@ -35,6 +40,14 @@ from tests.e2e.harness_settings import ELEVENLABS_BASE_URL
 
 class OverridableProvider(Protocol):
     def override(self, provider: object) -> object: ...
+
+
+# A test client reads a response to its end: live streams here end after a
+# moment (after what was published while they were open).
+E2E_LIVE_STREAM_LIMITS: LiveStreamLimits = LiveStreamLimits(
+    heartbeat_seconds=LiveStreamHeartbeatSeconds(0.05),
+    lifetime_seconds=LiveStreamLifetimeSeconds(0.1),
+)
 
 
 def replace_provider[Provided](
@@ -65,6 +78,7 @@ def build_workshop_container(
     replace_provider(container.time_provider.microsecond_wall_clock, clock.wall_clock)
     replace_provider(container.adapters.routing_llm_adapter, llm)
     replace_provider(container.facilitators.otp_delivery_facilitator, otp)
+    replace_provider(container.facilitators.live_stream_limits, E2E_LIVE_STREAM_LIMITS)
     replace_provider(
         container.clients.openai_responses_client,
         OpenAiResponsesClient(

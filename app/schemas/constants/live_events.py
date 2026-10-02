@@ -11,7 +11,6 @@ class LiveEventKind(StrEnum):
     """
 
     AUTOTEST_PROGRESS = "autotest.progress"
-    BILLING_CHANGED = "billing.changed"
     BOOKING_CHANGED = "booking.changed"
     BOOKING_CREATED = "booking.created"
     CHANNEL_CHANGED = "channel.changed"

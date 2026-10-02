@@ -80,6 +80,7 @@ from tests.channels.channels_settings import build_settings
 from tests.channels.faulty_outbox import FaultyOutboundMessageRepository
 from tests.channels.recording_transport import RecordingTransport
 from tests.channels.scripted_customer_pipeline import ScriptedCustomerPipeline
+from tests.live_events.recording_event_publisher import RecordingEventPublisher
 from tests.platform.worker_fakes import JobStores, build_job_stores
 
 
@@ -90,6 +91,8 @@ class ChannelsInfrastructure:
         self.settings: AppSettings = settings or build_settings()
         self.clock: AdjustableClock = AdjustableClock()
         self.wall_clock: WallClock[Microseconds] = self.clock.build_wall_clock()
+        # What the use cases announce to open cabinets.
+        self.live_events: RecordingEventPublisher = RecordingEventPublisher()
         self.business_repo = BusinessRepository(
             InMemoryDocumentCollectionAdapter(BusinessDocument)
         )

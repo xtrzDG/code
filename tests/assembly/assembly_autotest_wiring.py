@@ -74,6 +74,7 @@ from app.use_cases.autotests.run_autotest_scenario_use_case import (
 from app.use_cases.autotests.start_autotest_run_use_case import StartAutotestRunUseCase
 from app.utilities.assembly.llm_costs import DEFAULT_LLM_TOKEN_PRICES
 from tests.assembly.assembly_scripted_models import AssemblyScriptedModels
+from tests.live_events.recording_event_publisher import RecordingEventPublisher
 
 
 class AssemblyAutotestWiring(AssemblyScriptedModels):
@@ -130,11 +131,13 @@ class AssemblyAutotestWiring(AssemblyScriptedModels):
             language_registry=self.language_registry,
             price_question_limit=price_question_limit,
         )
+        self.autotest_events = RecordingEventPublisher()
         self.start_autotest_run_use_case = StartAutotestRunUseCase(
             authorize_business_access=authorize,
             assistant_version_repo=self.version_repo,
             autotest_run_repo=self.run_repo,
             plan_autotest_scenarios=plan_scenarios,
+            live_events=self.autotest_events,
             wall_clock=self.wall_clock,
         )
         self.run_scenario_use_case = RunAutotestScenarioUseCase(
@@ -149,6 +152,7 @@ class AssemblyAutotestWiring(AssemblyScriptedModels):
             self.version_repo,
             self.run_repo,
             run_view_transformer,
+            self.autotest_events,
             self.wall_clock,
         )
         self.get_autotest_run_use_case = GetAutotestRunUseCase(
@@ -182,10 +186,12 @@ class AssemblyAutotestWiring(AssemblyScriptedModels):
         self.abandon_autotest_run_use_case = AbandonAutotestRunUseCase(
             self.version_repo,
             self.run_repo,
+            self.autotest_events,
             self.wall_clock,
         )
         self.record_autotest_progress_use_case = RecordAutotestProgressUseCase(
             self.run_repo,
+            self.autotest_events,
             self.wall_clock,
         )
         self.run_queued_autotests_orchestrator = RunQueuedAutotestsOrchestrator(

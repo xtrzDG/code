@@ -1,5 +1,6 @@
 from typed_time_provider import Microseconds, WallClock
 
+from app.contracts.live_events import EventPublisherFacilitatorContract
 from app.contracts.repositories.assistant_repositories import (
     AssistantVersionRepoContract,
     AutotestRunRepoContract,
@@ -7,6 +8,7 @@ from app.contracts.repositories.assistant_repositories import (
 from app.contracts.transformer_contract import TransformerContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.assistants import AutotestRunStatus
+from app.schemas.constants.live_events import LiveEventKind
 from app.schemas.domain.assistants import (
     AssistantVersionDocument,
     AutotestRunDocument,
@@ -47,6 +49,7 @@ class FinishAutotestRunUseCase(UseCaseContract[AutotestRunCompletion, AutotestRu
             AutotestRunViewSource,
             AutotestRunView,
         ],
+        live_events: EventPublisherFacilitatorContract,
         wall_clock: WallClock[Microseconds],
     ) -> None:
         self._assistant_version_repo: AssistantVersionRepoContract = (
@@ -58,6 +61,7 @@ class FinishAutotestRunUseCase(UseCaseContract[AutotestRunCompletion, AutotestRu
             AutotestRunView,
         ] = autotest_run_view_transformer
         self._wall_clock: WallClock[Microseconds] = wall_clock
+        self._live_events: EventPublisherFacilitatorContract = live_events
 
     def run(self, input_data: AutotestRunCompletion) -> AutotestRunView:
         plan: AutotestRunPlan = input_data.plan
@@ -105,6 +109,11 @@ class FinishAutotestRunUseCase(UseCaseContract[AutotestRunCompletion, AutotestRu
         # it again and lands on the same status.
         self._assistant_version_repo.save(version)
         self._autotest_run_repo.save(run)
+        self._live_events.publish(
+            run.business_id,
+            LiveEventKind.AUTOTEST_PROGRESS,
+            (run.id, run.assistant_version_id),
+        )
         return self._autotest_run_view_transformer.transform(
             AutotestRunViewSource(run=run, version=version)
         )

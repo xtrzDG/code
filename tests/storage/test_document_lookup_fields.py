@@ -18,7 +18,9 @@ from app.utilities.storage.document_lookup_fields import (
     split_element_path,
 )
 
-INTEGER_NAMES: frozenset[str] = frozenset({"Microseconds", "LlmTurnSequenceNumber"})
+INTEGER_NAMES: frozenset[str] = frozenset(
+    {"BookingStartsAtUnixSeconds", "LlmTurnSequenceNumber", "Microseconds"}
+)
 
 
 class LooseNote(BaseDocument):

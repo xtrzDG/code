@@ -8,7 +8,7 @@ import logging
 import threading
 from collections import deque
 from collections.abc import Callable
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 from app.contracts.live_events import (
     LiveEventSubscriberContract,
@@ -33,7 +33,6 @@ class _Subscription(LiveEventSubscriptionContract):
     fanout: LiveEventFanout
     business_id: BusinessId
     subscriber: LiveEventSubscriberContract
-    is_cancelled: bool = field(default=False)
 
     def cancel(self) -> None:
         self.fanout.remove(self)
@@ -60,14 +59,12 @@ class LiveEventFanout:
                 self._subscriptions.setdefault(business_id, []).append(subscription)
 
         if is_closed:
-            subscription.is_cancelled = True
             subscriber.end()
 
         return subscription
 
     def remove(self, subscription: _Subscription) -> None:
         with self._lock:
-            subscription.is_cancelled = True
             business_subscriptions = self._subscriptions.get(subscription.business_id)
             if (
                 business_subscriptions is None
@@ -78,10 +75,6 @@ class LiveEventFanout:
             business_subscriptions.remove(subscription)
             if not business_subscriptions:
                 del self._subscriptions[subscription.business_id]
-
-    def has_subscribers(self) -> bool:
-        with self._lock:
-            return bool(self._subscriptions)
 
     def dispatch(self, event: LiveEvent) -> None:
         """Keep the event for replay and hand it to its business's streams."""
@@ -135,7 +128,6 @@ class LiveEventFanout:
             self._subscriptions.clear()
 
         for subscription in receivers:
-            subscription.is_cancelled = True
             self._call(subscription, lambda target: target.end())
 
     def _all_subscriptions(self) -> list[_Subscription]:

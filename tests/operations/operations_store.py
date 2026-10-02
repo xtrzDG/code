@@ -10,6 +10,7 @@ from app.facilitators.staff.manager_broadcast_facilitator import (
 )
 from app.registries.billing.plan_registry import PlanRegistry
 from app.registries.locks.business_lock_registry import BusinessLockRegistry
+from app.repositories.attention_count_repository import AttentionCountRepository
 from app.repositories.billing_repositories import (
     SubscriptionRepository,
     UsageEventRepository,
@@ -39,6 +40,7 @@ from app.repositories.user_repositories import UserRepository
 from app.schemas.domain.billing import SubscriptionDocument, UsageEventDocument
 from app.schemas.domain.bookings import BookingDocument, LeadDocument
 from app.schemas.domain.businesses import BusinessDocument
+from app.schemas.domain.channels import ChannelDocument
 from app.schemas.domain.compliance import AuditLogEntryDocument
 from app.schemas.domain.contacts import ContactDocument
 from app.schemas.domain.conversations import ConversationDocument, MessageDocument
@@ -47,6 +49,7 @@ from app.schemas.domain.knowledge import KnowledgeItemDocument
 from app.schemas.domain.profiles import BusinessProfileDocument
 from app.schemas.domain.resources import ResourceDocument, ScheduleExceptionDocument
 from app.schemas.domain.users import UserDocument
+from tests.live_events.recording_event_publisher import RecordingEventPublisher
 from tests.operations.builders import DEFAULT_NOW
 from tests.operations.fakes import (
     FakeLocalizedTextResolver,
@@ -78,9 +81,10 @@ class OperationsStore:
                 ScheduleExceptionDocument
             )
         )
-        self.booking_repo = BookingRepository(
-            InMemoryDocumentCollectionAdapter[BookingDocument](BookingDocument)
+        self.booking_collection = InMemoryDocumentCollectionAdapter[BookingDocument](
+            BookingDocument
         )
+        self.booking_repo = BookingRepository(self.booking_collection)
         self.contact_repo = ContactRepository(
             InMemoryDocumentCollectionAdapter[ContactDocument](ContactDocument)
         )
@@ -92,12 +96,22 @@ class OperationsStore:
         self.message_repo = MessageRepository(
             InMemoryDocumentCollectionAdapter[MessageDocument](MessageDocument)
         )
-        self.lead_repo = LeadRepository(
-            InMemoryDocumentCollectionAdapter[LeadDocument](LeadDocument)
+        lead_collection = InMemoryDocumentCollectionAdapter[LeadDocument](LeadDocument)
+        self.lead_repo = LeadRepository(lead_collection)
+        handoff_collection = InMemoryDocumentCollectionAdapter[HandoffDocument](
+            HandoffDocument
         )
-        self.handoff_repo = HandoffRepository(
-            InMemoryDocumentCollectionAdapter[HandoffDocument](HandoffDocument)
+        self.handoff_repo = HandoffRepository(handoff_collection)
+        self.channel_collection = InMemoryDocumentCollectionAdapter[ChannelDocument](
+            ChannelDocument
         )
+        self.attention_count_repo = AttentionCountRepository(
+            handoff_collection,
+            lead_collection,
+            self.booking_collection,
+            self.channel_collection,
+        )
+        self.live_events = RecordingEventPublisher()
         self.question_repo = UnansweredQuestionRepository(
             InMemoryDocumentCollectionAdapter[UnansweredQuestionDocument](
                 UnansweredQuestionDocument

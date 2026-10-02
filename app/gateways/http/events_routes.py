@@ -78,6 +78,7 @@ def build_events_router(
 
     @router.get(
         f"{BUSINESS_PREFIX}/events",
+        status_code=200,
         response_class=EventStreamResponse,
         responses=EVENT_STREAM_RESPONSES,
     )

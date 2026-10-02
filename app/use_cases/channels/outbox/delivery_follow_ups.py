@@ -7,6 +7,7 @@ from collections.abc import Callable
 
 from typed_time_provider import Microseconds
 
+from app.contracts.live_events import EventPublisherFacilitatorContract
 from app.contracts.repositories.booking_repositories import HandoffRepoContract
 from app.contracts.repositories.business_repositories import ChannelRepoContract
 from app.schemas.constants.deliveries import DeliveryFailureKind, OutboundMessageStatus
@@ -31,6 +32,7 @@ NOTIFIABLE_HANDOFF_STATUSES: frozenset[HandoffStatus] = frozenset(
 
 def update_channel_health(
     channel_repo: ChannelRepoContract,
+    live_events: EventPublisherFacilitatorContract,
     message: OutboundMessageDocument,
     attempt: OutboundAttempt,
     now: Microseconds,
@@ -53,17 +55,21 @@ def update_channel_health(
         return
 
     if message.status is OutboundMessageStatus.DELIVERED:
-        mark_channel_working(channel_repo, channel, now)
+        mark_channel_working(channel_repo, live_events, channel, now)
         return
 
     if message.status is not OutboundMessageStatus.DEAD or message.last_error is None:
         return
 
     if attempt.failure is DeliveryFailureKind.CREDENTIAL_REJECTED:
-        mark_channel_failing(channel_repo, channel, str(message.last_error), now)
+        mark_channel_failing(
+            channel_repo, live_events, channel, str(message.last_error), now
+        )
         return
 
-    note_channel_refusal(channel_repo, channel, str(message.last_error), now)
+    note_channel_refusal(
+        channel_repo, live_events, channel, str(message.last_error), now
+    )
 
 
 def update_handoff_notification(

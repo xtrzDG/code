@@ -1,6 +1,7 @@
 from typed_time_provider import Microseconds, WallClock
 
 from app.contracts.facilitators import ChannelMessageSenderFacilitatorContract
+from app.contracts.live_events import EventPublisherFacilitatorContract
 from app.contracts.repositories.business_repositories import ChannelRepoContract
 from app.contracts.repositories.compliance_repositories import AuditLogRepoContract
 from app.contracts.repositories.conversation_repositories import (
@@ -17,6 +18,7 @@ from app.schemas.constants.conversations import (
     StaffReplyBlock,
     StaffReplyRefusalCode,
 )
+from app.schemas.constants.live_events import LiveEventKind
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.compliance import AuditLogEntryDocument
 from app.schemas.domain.conversations import ConversationDocument, MessageDocument
@@ -102,6 +104,7 @@ class SendStaffMessageUseCase(
         audit_log_repo: AuditLogRepoContract,
         channel_message_sender: ChannelMessageSenderFacilitatorContract,
         message_transformer: TransformerContract[MessageDocument, MessageView],
+        live_events: EventPublisherFacilitatorContract,
         wall_clock: WallClock[Microseconds],
     ) -> None:
         self._authorize_business_access: UseCaseContract[
@@ -118,6 +121,7 @@ class SendStaffMessageUseCase(
             message_transformer
         )
         self._wall_clock: WallClock[Microseconds] = wall_clock
+        self._live_events: EventPublisherFacilitatorContract = live_events
 
     def run(self, input_data: SendStaffMessageCommand) -> StaffMessageResult:
         business: BusinessDocument = self._authorize_business_access.run(
@@ -176,6 +180,12 @@ class SendStaffMessageUseCase(
         )
         self._message_repo.save(message)
         self._touch_conversation(business, conversation, now)
+        self._live_events.publish(
+            business.id,
+            LiveEventKind.CONVERSATION_MESSAGE,
+            (conversation.id,),
+            is_sandbox=conversation.is_sandbox,
+        )
         self._audit_log_repo.append(
             AuditLogEntryDocument(
                 business_id=business.id,

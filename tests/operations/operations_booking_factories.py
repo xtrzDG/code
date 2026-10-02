@@ -64,6 +64,7 @@ class OperationsBookingFactories(OperationsSeeding):
             ),
             manager_broadcaster=self.broadcaster,
             calendar_sync=calendar_sync or self.calendar_sync,
+            live_events=self.live_events,
             wall_clock=self.clock.wall_clock,
         )
 
@@ -83,6 +84,7 @@ class OperationsBookingFactories(OperationsSeeding):
             ),
             manager_broadcaster=self.broadcaster,
             calendar_sync=self.calendar_sync,
+            live_events=self.live_events,
             wall_clock=self.clock.wall_clock,
         )
 
@@ -102,6 +104,7 @@ class OperationsBookingFactories(OperationsSeeding):
             ),
             manager_broadcaster=self.broadcaster,
             calendar_sync=self.calendar_sync,
+            live_events=self.live_events,
             wall_clock=self.clock.wall_clock,
         )
 
@@ -129,6 +132,7 @@ class OperationsBookingFactories(OperationsSeeding):
             phone_number_parser=self.phone_parser,
             confirmation_transformer=BookingConfirmationTransformer(self.resolver),
             calendar_sync=self.calendar_sync,
+            live_events=self.live_events,
             wall_clock=self.clock.wall_clock,
         )
 
@@ -143,5 +147,6 @@ class OperationsBookingFactories(OperationsSeeding):
             audit_log_repo=self.audit_repo,
             lock_registry=self.lock_registry,
             calendar_sync=self.calendar_sync,
+            live_events=self.live_events,
             wall_clock=self.clock.wall_clock,
         )

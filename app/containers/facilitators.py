@@ -152,6 +152,7 @@ class FacilitatorsContainer(containers.DeclarativeContainer):
         instagram_adapter=adapters.instagram_channel_adapter,
         whatsapp_templates=adapters.whatsapp_channel_adapter,
         usage_event_repo=repositories.usage_event_repo,
+        live_events=event_publisher,
         wall_clock=time_provider.microsecond_wall_clock,
     )
     calendar_sync_facilitator: Singleton[GoogleCalendarSyncFacilitator] = Singleton(

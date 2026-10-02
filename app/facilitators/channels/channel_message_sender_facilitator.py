@@ -8,6 +8,7 @@ from app.contracts.channels import (
     WhatsAppTemplateAdapterContract,
 )
 from app.contracts.facilitators import ChannelMessageSenderFacilitatorContract
+from app.contracts.live_events import EventPublisherFacilitatorContract
 from app.contracts.repositories.billing_repositories import UsageEventRepoContract
 from app.contracts.repositories.business_repositories import ChannelRepoContract
 from app.contracts.secret_cipher import SecretCipherAdapterContract
@@ -78,6 +79,7 @@ class ChannelMessageSenderFacilitator(ChannelMessageSenderFacilitatorContract):
         instagram_adapter: ChannelAdapterContract,
         whatsapp_templates: WhatsAppTemplateAdapterContract,
         usage_event_repo: UsageEventRepoContract,
+        live_events: EventPublisherFacilitatorContract,
         wall_clock: WallClock[Microseconds],
     ) -> None:
         self._channel_repo: ChannelRepoContract = channel_repo
@@ -90,6 +92,7 @@ class ChannelMessageSenderFacilitator(ChannelMessageSenderFacilitatorContract):
         }
         self._whatsapp_templates: WhatsAppTemplateAdapterContract = whatsapp_templates
         self._usage_event_repo: UsageEventRepoContract = usage_event_repo
+        self._live_events: EventPublisherFacilitatorContract = live_events
         self._wall_clock: WallClock[Microseconds] = wall_clock
 
     def send(
@@ -288,6 +291,8 @@ class ChannelMessageSenderFacilitator(ChannelMessageSenderFacilitatorContract):
 
         now: Microseconds = self._wall_clock.now_unix()
         if failure is None:
-            mark_channel_working(self._channel_repo, channel, now)
+            mark_channel_working(self._channel_repo, self._live_events, channel, now)
         else:
-            mark_channel_failing(self._channel_repo, channel, failure, now)
+            mark_channel_failing(
+                self._channel_repo, self._live_events, channel, failure, now
+            )

@@ -2,6 +2,7 @@ from datetime import date
 
 from typed_time_provider import Microseconds, WallClock
 
+from app.contracts.live_events import EventPublisherFacilitatorContract
 from app.contracts.localization_utilities import PhoneNumberParserContract
 from app.contracts.operations import (
     BookingCalendarSyncFacilitatorContract,
@@ -21,6 +22,7 @@ from app.contracts.repositories.knowledge_repositories import (
 from app.contracts.transformer_contract import TransformerContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.bookings import BookingStatus
+from app.schemas.constants.live_events import LiveEventKind
 from app.schemas.domain.bookings import BookingDocument
 from app.schemas.domain.resources import ResourceDocument
 from app.schemas.dto.bookings import BookingResult, BookingView, CancelBookingCommand
@@ -74,6 +76,7 @@ class CancelBookingUseCase(UseCaseContract[CancelBookingCommand, BookingResult])
         ],
         manager_broadcaster: ManagerBroadcastFacilitatorContract,
         calendar_sync: BookingCalendarSyncFacilitatorContract,
+        live_events: EventPublisherFacilitatorContract,
         wall_clock: WallClock[Microseconds],
     ) -> None:
         self._business_repo: BusinessRepoContract = business_repo
@@ -97,6 +100,7 @@ class CancelBookingUseCase(UseCaseContract[CancelBookingCommand, BookingResult])
         )
         self._calendar_sync: BookingCalendarSyncFacilitatorContract = calendar_sync
         self._wall_clock: WallClock[Microseconds] = wall_clock
+        self._live_events: EventPublisherFacilitatorContract = live_events
 
     def run(self, input_data: CancelBookingCommand) -> BookingResult:
         inputs: SchedulingInputs = load_scheduling_inputs(
@@ -145,6 +149,14 @@ class CancelBookingUseCase(UseCaseContract[CancelBookingCommand, BookingResult])
             resource,
             self._contact_repo.get(input_data.business_id, booking.contact_id),
         )
+        if is_newly_cancelled:
+            self._live_events.publish(
+                booking.business_id,
+                LiveEventKind.BOOKING_CHANGED,
+                (booking.id,),
+                is_sandbox=booking.is_sandbox,
+            )
+
         if is_newly_cancelled and not booking.is_sandbox:
             is_customer_request: bool = (
                 input_data.contact_id is not None

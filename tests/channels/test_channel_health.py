@@ -157,6 +157,7 @@ def test_a_reconnect_during_a_send_is_not_undone_by_the_old_outcome(
         testbed.instagram_adapter,
         testbed.whatsapp_adapter,
         testbed.usage_event_repo,
+        testbed.live_events,
         testbed.wall_clock,
     )
 

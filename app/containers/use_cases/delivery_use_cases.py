@@ -185,6 +185,7 @@ class DeliveryUseCasesContainer(containers.DeclarativeContainer):
         job_queue=facilitators.job_queue_facilitator,
         channel_repo=repositories.channel_repo,
         handoff_repo=repositories.handoff_repo,
+        live_events=facilitators.event_publisher,
     )
     build_undelivered_reply_handoff_use_case: Factory[
         UseCaseContract[OutboundMessageDocument, HandoffCommand | None]

@@ -107,6 +107,7 @@ class ConversationFeedUseCasesContainer(containers.DeclarativeContainer):
         audit_log_repo=repositories.audit_log_repo,
         channel_message_sender=facilitators.channel_message_sender,
         message_transformer=transformers.message_view_transformer,
+        live_events=facilitators.event_publisher,
         wall_clock=time_provider.microsecond_wall_clock,
     )
     rate_conversation_use_case: Factory[

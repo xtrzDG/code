@@ -2,6 +2,7 @@ from datetime import date
 
 from typed_time_provider import Microseconds, WallClock
 
+from app.contracts.live_events import EventPublisherFacilitatorContract
 from app.contracts.localization_utilities import PhoneNumberParserContract
 from app.contracts.operations import (
     BookingCalendarSyncFacilitatorContract,
@@ -22,6 +23,7 @@ from app.contracts.repositories.knowledge_repositories import (
 from app.contracts.transformer_contract import TransformerContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.bookings import BookingRefusalCode, BookingStatus
+from app.schemas.constants.live_events import LiveEventKind
 from app.schemas.domain.bookings import BookingDocument
 from app.schemas.domain.contacts import ContactDocument
 from app.schemas.domain.resources import ResourceDocument
@@ -94,6 +96,7 @@ class CreateBookingUseCase(UseCaseContract[CreateBookingCommand, BookingResult])
         ],
         manager_broadcaster: ManagerBroadcastFacilitatorContract,
         calendar_sync: BookingCalendarSyncFacilitatorContract,
+        live_events: EventPublisherFacilitatorContract,
         wall_clock: WallClock[Microseconds],
     ) -> None:
         self._business_repo: BusinessRepoContract = business_repo
@@ -118,6 +121,7 @@ class CreateBookingUseCase(UseCaseContract[CreateBookingCommand, BookingResult])
         )
         self._calendar_sync: BookingCalendarSyncFacilitatorContract = calendar_sync
         self._wall_clock: WallClock[Microseconds] = wall_clock
+        self._live_events: EventPublisherFacilitatorContract = live_events
 
     def run(self, input_data: CreateBookingCommand) -> BookingResult:
         inputs: SchedulingInputs = load_scheduling_inputs(
@@ -217,6 +221,12 @@ class CreateBookingUseCase(UseCaseContract[CreateBookingCommand, BookingResult])
             inputs.zone,
             placement.resource,
             contact,
+        )
+        self._live_events.publish(
+            booking.business_id,
+            LiveEventKind.BOOKING_CREATED,
+            (booking.id,),
+            is_sandbox=booking.is_sandbox,
         )
         if not input_data.is_sandbox:
             notify_staff_about_booking(

@@ -2,6 +2,7 @@ from datetime import datetime
 
 from typed_time_provider import Microseconds, WallClock
 
+from app.contracts.live_events import EventPublisherFacilitatorContract
 from app.contracts.localization_utilities import LanguageDetectorContract
 from app.contracts.repositories.assistant_repositories import (
     AssistantVersionRepoContract,
@@ -24,6 +25,7 @@ from app.schemas.constants.businesses import BusinessStatus, ServiceMode
 from app.schemas.constants.channels import ChannelKind, MessageDirection
 from app.schemas.constants.conversation_engine import TurnGate
 from app.schemas.constants.conversations import MessageAuthor
+from app.schemas.constants.live_events import LiveEventKind
 from app.schemas.domain.assistants import AssistantVersionDocument
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.contacts import ContactDocument
@@ -96,6 +98,7 @@ class PrepareConversationTurnUseCase(UseCaseContract[InboundMessage, PreparedTur
         conversation_repo: ConversationRepoContract,
         message_repo: MessageRepoContract,
         language_detector: LanguageDetectorContract,
+        live_events: EventPublisherFacilitatorContract,
         wall_clock: WallClock[Microseconds],
         contact_message_limit: ContactMessageLimit,
     ) -> None:
@@ -112,6 +115,7 @@ class PrepareConversationTurnUseCase(UseCaseContract[InboundMessage, PreparedTur
         self._message_repo: MessageRepoContract = message_repo
         self._language_detector: LanguageDetectorContract = language_detector
         self._wall_clock: WallClock[Microseconds] = wall_clock
+        self._live_events: EventPublisherFacilitatorContract = live_events
         self._contact_message_limit: ContactMessageLimit = contact_message_limit
 
     def run(self, input_data: InboundMessage) -> PreparedTurn:
@@ -199,6 +203,12 @@ class PrepareConversationTurnUseCase(UseCaseContract[InboundMessage, PreparedTur
         conversation.last_message_at = now
         conversation.updated_at = now
         self._conversation_repo.save(conversation)
+        self._live_events.publish(
+            business.id,
+            LiveEventKind.CONVERSATION_MESSAGE,
+            (conversation.id,),
+            is_sandbox=conversation.is_sandbox,
+        )
         if contact.language is None:
             contact.language = language
             contact.updated_at = now

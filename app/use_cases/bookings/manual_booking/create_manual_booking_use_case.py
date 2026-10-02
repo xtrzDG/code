@@ -4,6 +4,7 @@ from datetime import date
 
 from typed_time_provider import Microseconds, WallClock
 
+from app.contracts.live_events import EventPublisherFacilitatorContract
 from app.contracts.localization_utilities import PhoneNumberParserContract
 from app.contracts.operations import (
     BookingCalendarSyncFacilitatorContract,
@@ -27,6 +28,7 @@ from app.contracts.transformer_contract import TransformerContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.bookings import BookingStatus
 from app.schemas.constants.compliance import AuditAction
+from app.schemas.constants.live_events import LiveEventKind
 from app.schemas.domain.bookings import BookingDocument
 from app.schemas.domain.contacts import ContactDocument
 from app.schemas.domain.conversations import ConversationDocument
@@ -103,6 +105,7 @@ class CreateManualBookingUseCase(UseCaseContract[ManualBookingCommand, BookingRe
         phone_number_parser: PhoneNumberParserContract,
         confirmation_transformer: TransformerContract[BookingMessageInput, MessageText],
         calendar_sync: BookingCalendarSyncFacilitatorContract,
+        live_events: EventPublisherFacilitatorContract,
         wall_clock: WallClock[Microseconds],
     ) -> None:
         self._business_repo: BusinessRepoContract = business_repo
@@ -122,6 +125,7 @@ class CreateManualBookingUseCase(UseCaseContract[ManualBookingCommand, BookingRe
         ] = confirmation_transformer
         self._calendar_sync: BookingCalendarSyncFacilitatorContract = calendar_sync
         self._wall_clock: WallClock[Microseconds] = wall_clock
+        self._live_events: EventPublisherFacilitatorContract = live_events
 
     def run(self, input_data: ManualBookingCommand) -> BookingResult:
         inputs: SchedulingInputs = load_scheduling_inputs(
@@ -237,6 +241,12 @@ class CreateManualBookingUseCase(UseCaseContract[ManualBookingCommand, BookingRe
             inputs.zone,
             placement.resource,
             contact,
+        )
+        self._live_events.publish(
+            booking.business_id,
+            LiveEventKind.BOOKING_CREATED,
+            (booking.id,),
+            is_sandbox=booking.is_sandbox,
         )
         if not booking.is_sandbox:
             self._calendar_sync.sync(booking)
