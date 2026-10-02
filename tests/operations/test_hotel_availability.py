@@ -4,10 +4,7 @@ from datetime import datetime
 
 from app.schemas.constants.bookings import BookingUnit, ResourceKind
 from app.schemas.dto.bookings import AvailabilityQuery, AvailabilityResult
-from app.schemas.typings.bookings.constrained_integers import (
-    NightCount,
-    PartySize,
-)
+from app.schemas.typings.bookings.constrained_integers import NightCount, PartySize
 from app.schemas.typings.bookings.constrained_strings import LocalDate
 from tests.operations.operations_world import OperationsWorld
 

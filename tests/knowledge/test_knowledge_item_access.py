@@ -13,9 +13,7 @@ from app.schemas.dto.knowledge_admin import (
     UpdateKnowledgeItemCommand,
 )
 from app.schemas.dto.paging import PageRequest
-from app.schemas.exceptions.application_errors import (
-    NotFoundError,
-)
+from app.schemas.exceptions.application_errors import NotFoundError
 from app.schemas.typings.platform.constrained_integers import PageSize
 from tests.knowledge.harness import KnowledgeHarness
 from tests.knowledge.knowledge_base_helpers import add_item, price_titles, search

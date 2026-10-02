@@ -9,9 +9,7 @@ from app.schemas.constants.bookings import ResourceKind
 from app.schemas.constants.businesses import Weekday
 from app.schemas.constants.knowledge import KnowledgeItemKind
 from app.schemas.constants.niches import NicheKey
-from app.schemas.domain.businesses import (
-    BusinessDocument,
-)
+from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.profiles import (
     BookingRules,
     BusinessAddress,
@@ -31,9 +29,7 @@ from app.schemas.typings.localization.constrained_strings import (
     E164PhoneNumber,
     LanguageTag,
 )
-from app.schemas.typings.profiles.strings import (
-    HandoffRuleText,
-)
+from app.schemas.typings.profiles.strings import HandoffRuleText
 from tests.assembly.builders import build_business, build_menu_item, interval
 from tests.assembly.testbed import AssemblyTestbed
 

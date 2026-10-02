@@ -5,10 +5,7 @@ from datetime import date
 from babel.dates import format_date
 from typed_time_provider import Microseconds
 
-from app.schemas.constants.bookings import (
-    BookingStatus,
-    BookingUnit,
-)
+from app.schemas.constants.bookings import BookingStatus, BookingUnit
 from app.schemas.constants.channels import ChannelKind
 from app.schemas.dto.bookings import BookingView
 from app.schemas.dto.operations.message_texts import (
@@ -30,9 +27,7 @@ from app.schemas.typings.localization.constrained_strings import (
 )
 from app.schemas.typings.localization.strings import FormattedPhoneNumber
 from app.schemas.typings.profiles.strings import CancellationPolicyText
-from app.utilities.scheduling.localized_formatting import (
-    find_locale,
-)
+from app.utilities.scheduling.localized_formatting import find_locale
 from tests.operations.fakes import FakeLocalizedTextResolver
 
 CUSTOMER_LANGUAGES: tuple[str, ...] = (

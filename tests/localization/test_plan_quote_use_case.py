@@ -27,9 +27,7 @@ from app.schemas.typings.localization.constrained_strings import (
 )
 from app.use_cases.catalog.quote_plans_use_case import QuotePlansUseCase
 from app.utilities.localization.localized_text_resolver import LocalizedTextResolver
-from tests.localization.builders import (
-    get_country_registry,
-)
+from tests.localization.builders import get_country_registry
 
 
 def build_quote_plans_use_case(

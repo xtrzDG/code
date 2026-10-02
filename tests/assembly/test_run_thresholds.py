@@ -2,13 +2,8 @@
 
 import pytest
 
-from app.schemas.constants.assistants import (
-    AutotestOutcome,
-    AutotestScenarioKind,
-)
-from app.utilities.assembly.autotest_evaluation import (
-    summarize_run,
-)
+from app.schemas.constants.assistants import AutotestOutcome, AutotestScenarioKind
+from app.utilities.assembly.autotest_evaluation import summarize_run
 from tests.assembly.judge_helpers import result, scores
 
 

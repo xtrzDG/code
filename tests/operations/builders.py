@@ -4,20 +4,14 @@ from datetime import datetime
 
 from app.schemas.constants.businesses import Weekday
 from app.schemas.constants.handoffs import ManagerContactChannel
-from app.schemas.domain.businesses import (
-    ManagerContact,
-)
-from app.schemas.domain.profiles import (
-    OpeningInterval,
-)
+from app.schemas.domain.businesses import ManagerContact
+from app.schemas.domain.profiles import OpeningInterval
 from app.schemas.typings.businesses.constrained_integers import (
     ClosingMinuteOfDay,
     OpeningMinuteOfDay,
 )
 from app.schemas.typings.handoffs.strings import ManagerContactAddress, ManagerName
-from app.schemas.typings.localization.constrained_strings import (
-    LanguageTag,
-)
+from app.schemas.typings.localization.constrained_strings import LanguageTag
 
 # Monday 2026-10-05 08:00 UTC = 12:00 in Tbilisi.
 DEFAULT_NOW: datetime = datetime.fromisoformat("2026-10-05T08:00:00+00:00")

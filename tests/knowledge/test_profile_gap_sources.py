@@ -7,18 +7,12 @@ from app.schemas.dto.knowledge_admin import (
     CreateKnowledgeItemCommand,
     KnowledgeItemInput,
 )
-from app.schemas.dto.profiles.business_profile import (
-    ProfileAnswerInput,
-)
+from app.schemas.dto.profiles.business_profile import ProfileAnswerInput
 from app.schemas.dto.profiles.profile_gaps import ProfileGapsQuery
-from app.schemas.dto.profiles.profile_steps import (
-    NicheAndLanguagesStepInput,
-)
+from app.schemas.dto.profiles.profile_steps import NicheAndLanguagesStepInput
 from app.schemas.dto.resources import CreateResourceCommand, ResourceInput
 from app.schemas.typings.billing.constrained_integers import MoneyAmountMinor
-from app.schemas.typings.bookings.constrained_integers import (
-    ResourceCapacity,
-)
+from app.schemas.typings.bookings.constrained_integers import ResourceCapacity
 from app.schemas.typings.bookings.strings import ResourceName
 from app.schemas.typings.knowledge.strings import KnowledgeTitle
 from app.schemas.typings.profiles.constrained_strings import (

@@ -26,16 +26,12 @@ from app.schemas.exceptions.application_errors import (
     NotFoundError,
     ValidationFailedError,
 )
-from app.schemas.typings.bookings.constrained_integers import (
-    PartySize,
-)
+from app.schemas.typings.bookings.constrained_integers import PartySize
 from app.schemas.typings.businesses.constrained_strings import WebLink
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.businesses.strings import AddressText
 from app.schemas.typings.knowledge.strings import KnowledgeBody, KnowledgeTitle
-from app.schemas.typings.localization.constrained_strings import (
-    LanguageTag,
-)
+from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.schemas.typings.localization.strings import RawPhoneNumberInput
 from app.schemas.typings.profiles.strings import (
     CancellationPolicyText,

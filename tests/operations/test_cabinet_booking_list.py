@@ -4,20 +4,11 @@ from datetime import datetime
 
 import pytest
 
-from app.schemas.constants.bookings import (
-    BookingOrder,
-    BookingStatus,
-    BookingUnit,
-)
+from app.schemas.constants.bookings import BookingOrder, BookingStatus, BookingUnit
 from app.schemas.constants.compliance import AuditAction
 from app.schemas.dto.bookings import AvailabilityQuery
-from app.schemas.exceptions.application_errors import (
-    ValidationFailedError,
-)
-from app.schemas.typings.bookings.constrained_integers import (
-    NightCount,
-    PartySize,
-)
+from app.schemas.exceptions.application_errors import ValidationFailedError
+from app.schemas.typings.bookings.constrained_integers import NightCount, PartySize
 from app.schemas.typings.bookings.constrained_strings import LocalDate
 from tests.operations.cabinet_bookings_helpers import Cabinet
 

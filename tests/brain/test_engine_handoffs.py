@@ -6,13 +6,9 @@ from datetime import timedelta
 from app.adapters.llm.scripted_llm_adapter import ScriptedLlmAdapter
 from app.schemas.constants.assistants import AssistantToolName
 from app.schemas.constants.channels import ChannelKind, MessageDirection
-from app.schemas.constants.conversations import (
-    ConversationStatus,
-)
+from app.schemas.constants.conversations import ConversationStatus
 from app.schemas.constants.handoffs import HandoffReason
-from app.schemas.dto.conversations import (
-    LlmRequest,
-)
+from app.schemas.dto.conversations import LlmRequest
 from app.schemas.dto.llm_scripts import ScriptedLlmTurn
 from app.schemas.exceptions.application_errors import (
     ExternalServiceError,

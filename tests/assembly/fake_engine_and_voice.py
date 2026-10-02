@@ -36,9 +36,7 @@ from app.schemas.typings.assistants.strings import (
 from app.schemas.typings.billing.constrained_integers import CostMicroUsd
 from app.schemas.typings.conversations.prefixed_id import ConversationId
 from app.schemas.typings.conversations.strings import MessageText
-from app.schemas.typings.localization.constrained_strings import (
-    LanguageTag,
-)
+from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.schemas.typings.platform.constrained_strings import EnvironmentVariableName
 from app.schemas.typings.users.prefixed_id import UserId
 from app.schemas.typings.users.strings import AccessToken

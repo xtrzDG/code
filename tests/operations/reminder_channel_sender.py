@@ -11,9 +11,7 @@ from app.schemas.typings.channels.constrained_strings import (
     WhatsAppTemplateName,
 )
 from app.schemas.typings.conversations.strings import ChannelUserId, MessageText
-from app.schemas.typings.localization.constrained_strings import (
-    LanguageTag,
-)
+from app.schemas.typings.localization.constrained_strings import LanguageTag
 
 
 class RecordingChannelSender(ChannelMessageSenderFacilitatorContract):

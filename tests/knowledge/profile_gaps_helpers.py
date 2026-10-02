@@ -31,15 +31,11 @@ from app.schemas.typings.businesses.constrained_integers import (
 )
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.businesses.strings import AddressText
-from app.schemas.typings.handoffs.constrained_integers import (
-    QuestionOccurrenceCount,
-)
+from app.schemas.typings.handoffs.constrained_integers import QuestionOccurrenceCount
 from app.schemas.typings.handoffs.strings import UnansweredQuestionText
 from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.schemas.typings.localization.strings import RawPhoneNumberInput
-from app.schemas.typings.profiles.constrained_strings import (
-    QuestionKey,
-)
+from app.schemas.typings.profiles.constrained_strings import QuestionKey
 from app.schemas.typings.profiles.strings import RawProfileAnswerText
 from app.schemas.typings.users.prefixed_id import UserId
 from tests.knowledge.harness import KnowledgeHarness

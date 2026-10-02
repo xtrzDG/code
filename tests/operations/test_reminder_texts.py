@@ -8,13 +8,8 @@ from app.schemas.constants.channels import ChannelKind
 from app.schemas.constants.niches import NicheKey
 from app.schemas.dto.bookings import BookingView
 from app.schemas.dto.operations.message_texts import BookingMessageInput
-from app.schemas.typings.bookings.constrained_integers import (
-    PartySize,
-)
-from app.schemas.typings.bookings.constrained_strings import (
-    LocalDate,
-    LocalTimeOfDay,
-)
+from app.schemas.typings.bookings.constrained_integers import PartySize
+from app.schemas.typings.bookings.constrained_strings import LocalDate, LocalTimeOfDay
 from app.schemas.typings.bookings.prefixed_id import BookingId, ResourceId
 from app.schemas.typings.bookings.strings import ResourceName
 from app.schemas.typings.businesses.prefixed_id import BusinessId

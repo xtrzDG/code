@@ -57,8 +57,10 @@ from app.schemas.domain.conversations import (
 from app.schemas.domain.handoffs import HandoffDocument
 from app.schemas.dto.conversations import AssistantReply, InboundMessage
 from app.schemas.dto.knowledge import KnowledgeItemView
+from app.schemas.typings.assistants.constrained_integers import LlmToolRoundLimit
 from app.schemas.typings.assistants.prefixed_id import AssistantVersionId
 from app.schemas.typings.contacts.strings import ContactName
+from app.schemas.typings.conversations.constrained_integers import ContactMessageLimit
 from app.schemas.typings.conversations.strings import ChannelUserId, MessageText
 from app.schemas.typings.localization.constrained_strings import E164PhoneNumber
 from app.schemas.typings.users.prefixed_id import UserId
@@ -220,8 +222,8 @@ def build_world(
         brain_tools,
         texts,
         wall_clock,
-        contact_message_limit=contact_message_limit,
-        tool_round_limit=tool_round_limit,
+        contact_message_limit=ContactMessageLimit(contact_message_limit),
+        tool_round_limit=LlmToolRoundLimit(tool_round_limit),
     )
     return BrainWorld(
         clock=clock,

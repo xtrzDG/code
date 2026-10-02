@@ -9,11 +9,7 @@ from app.facilitators.staff.manager_broadcast_facilitator import (
 )
 from app.schemas.constants.channels import ChannelKind
 from app.schemas.constants.conversations import ConversationStatus
-from app.schemas.constants.handoffs import (
-    HandoffReason,
-    HandoffStatus,
-    HandoffUrgency,
-)
+from app.schemas.constants.handoffs import HandoffReason, HandoffStatus, HandoffUrgency
 from app.schemas.dto.handoffs import HandoffCommand
 from app.schemas.exceptions.application_errors import NotFoundError
 from app.schemas.typings.conversations.prefixed_id import ConversationId

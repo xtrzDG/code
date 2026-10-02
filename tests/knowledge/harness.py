@@ -9,9 +9,7 @@ from app.use_cases.knowledge.create_knowledge_item_use_case import (
 from app.use_cases.knowledge.delete_knowledge_item_use_case import (
     DeleteKnowledgeItemUseCase,
 )
-from app.use_cases.knowledge.get_knowledge_item_use_case import (
-    GetKnowledgeItemUseCase,
-)
+from app.use_cases.knowledge.get_knowledge_item_use_case import GetKnowledgeItemUseCase
 from app.use_cases.knowledge.get_price_use_case import GetPriceUseCase
 from app.use_cases.knowledge.list_knowledge_items_use_case import (
     ListKnowledgeItemsUseCase,
@@ -30,12 +28,8 @@ from app.use_cases.profiles.compute_profile_gaps_use_case import (
 from app.use_cases.profiles.get_business_profile_use_case import (
     GetBusinessProfileUseCase,
 )
-from app.use_cases.profiles.get_niche_template_use_case import (
-    GetNicheTemplateUseCase,
-)
-from app.use_cases.profiles.get_profile_wizard_use_case import (
-    GetProfileWizardUseCase,
-)
+from app.use_cases.profiles.get_niche_template_use_case import GetNicheTemplateUseCase
+from app.use_cases.profiles.get_profile_wizard_use_case import GetProfileWizardUseCase
 from app.use_cases.profiles.list_niche_templates_use_case import (
     ListNicheTemplatesUseCase,
 )

@@ -4,11 +4,7 @@ import json
 from typing import cast
 
 from app.contracts.llm import LlmAdapterContract
-from app.schemas.dto.conversations import (
-    LlmRequest,
-    LlmResponse,
-    LlmToolResult,
-)
+from app.schemas.dto.conversations import LlmRequest, LlmResponse, LlmToolResult
 from app.schemas.typings.conversations.constrained_integers import LlmTokenCount
 from app.schemas.typings.conversations.strings import LlmProviderPayload, MessageText
 

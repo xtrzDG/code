@@ -4,9 +4,7 @@ from datetime import datetime
 
 import pytest
 
-from app.schemas.constants.billing import (
-    UsageKind,
-)
+from app.schemas.constants.billing import UsageKind
 from app.schemas.constants.bookings import BookingStatus, LeadType
 from app.schemas.constants.channels import ChannelKind
 from app.schemas.constants.conversations import MessageAuthor
@@ -16,9 +14,7 @@ from app.schemas.domain.handoffs import UnansweredQuestionDocument
 from app.schemas.exceptions.application_errors import ValidationFailedError
 from app.schemas.typings.bookings.strings import LeadDetails
 from app.schemas.typings.handoffs.strings import UnansweredQuestionText
-from app.schemas.typings.localization.constrained_strings import (
-    LanguageTag,
-)
+from app.schemas.typings.localization.constrained_strings import LanguageTag
 from tests.operations.dashboard_fixture import DashboardFixture
 from tests.operations.fakes import to_microseconds
 

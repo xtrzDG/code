@@ -6,16 +6,9 @@ from app.schemas.constants.bookings import ResourceKind
 from app.schemas.constants.knowledge import KnowledgeItemKind, KnowledgeItemSource
 from app.schemas.constants.niches import NicheKey
 from app.schemas.dto.knowledge_admin import KnowledgeItemUpsertInput
-from app.schemas.dto.profiles.business_profile import (
-    BookingRulesInput,
-)
-from app.schemas.dto.profiles.profile_steps import (
-    BookingRulesStepInput,
-    OfferStepInput,
-)
-from app.schemas.exceptions.application_errors import (
-    ValidationFailedError,
-)
+from app.schemas.dto.profiles.business_profile import BookingRulesInput
+from app.schemas.dto.profiles.profile_steps import BookingRulesStepInput, OfferStepInput
+from app.schemas.exceptions.application_errors import ValidationFailedError
 from app.schemas.typings.billing.constrained_integers import MoneyAmountMinor
 from app.schemas.typings.bookings.constrained_integers import (
     MinNoticeMinutes,
@@ -23,12 +16,8 @@ from app.schemas.typings.bookings.constrained_integers import (
     SlotDurationMinutes,
 )
 from app.schemas.typings.knowledge.strings import KnowledgeTitle
-from app.schemas.typings.localization.constrained_strings import (
-    CurrencyCode,
-)
-from app.schemas.typings.profiles.strings import (
-    CancellationPolicyText,
-)
+from app.schemas.typings.localization.constrained_strings import CurrencyCode
+from app.schemas.typings.profiles.strings import CancellationPolicyText
 from tests.knowledge.harness import KnowledgeHarness
 from tests.knowledge.wizard_helpers import answer, save_step
 

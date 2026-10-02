@@ -14,12 +14,8 @@ from app.schemas.domain.conversations import ConversationDocument, MessageDocume
 from app.schemas.domain.resources import ResourceDocument
 from app.schemas.dto.jobs import JobReport, JobTick
 from app.schemas.typings.assistants.prefixed_id import AssistantVersionId
-from app.schemas.typings.bookings.constrained_integers import (
-    BookingReminderLeadSeconds,
-)
-from app.schemas.typings.channels.constrained_strings import (
-    WhatsAppTemplateName,
-)
+from app.schemas.typings.bookings.constrained_integers import BookingReminderLeadSeconds
+from app.schemas.typings.channels.constrained_strings import WhatsAppTemplateName
 from app.schemas.typings.conversations.strings import ChannelUserId, MessageText
 from app.schemas.typings.platform.constrained_strings import JobName
 from app.transformers.notifications.booking_reminder_template_transformer import (

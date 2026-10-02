@@ -1,9 +1,6 @@
 """Country and language registries holding the few profiles the tests use."""
 
-from app.contracts.registries import (
-    CountryRegistryContract,
-    LanguageRegistryContract,
-)
+from app.contracts.registries import CountryRegistryContract, LanguageRegistryContract
 from app.schemas.constants.localization import (
     CountryOnboardingStatus,
     DataRegion,

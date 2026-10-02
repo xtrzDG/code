@@ -26,9 +26,7 @@ from app.utilities.assembly.fact_table import build_unique_fact_key
 from tests.assembly.builders import interval
 from tests.assembly.business_facts_helpers import as_table, build_source
 from tests.assembly.georgian_restaurant_seed import seed_georgian_restaurant
-from tests.assembly.international_business_seeds import (
-    seed_online_shop,
-)
+from tests.assembly.international_business_seeds import seed_online_shop
 from tests.assembly.testbed import AssemblyTestbed
 
 

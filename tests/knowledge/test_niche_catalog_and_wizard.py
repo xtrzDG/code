@@ -5,16 +5,10 @@ import pytest
 from app.schemas.constants.niches import NicheKey, ProfileWizardStep
 from app.schemas.dto.profiles.niche_catalog import NicheCatalogQuery, NicheTemplateQuery
 from app.schemas.dto.profiles.profile_wizard import ProfileWizardQuery
-from app.schemas.exceptions.application_errors import (
-    NotFoundError,
-)
+from app.schemas.exceptions.application_errors import NotFoundError
 from app.schemas.typings.businesses.prefixed_id import BusinessId
-from app.schemas.typings.localization.constrained_strings import (
-    LanguageTag,
-)
-from app.schemas.typings.profiles.strings import (
-    ForbiddenRuleText,
-)
+from app.schemas.typings.localization.constrained_strings import LanguageTag
+from app.schemas.typings.profiles.strings import ForbiddenRuleText
 from tests.knowledge.harness import KnowledgeHarness
 
 

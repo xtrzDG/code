@@ -8,9 +8,7 @@ from app.schemas.constants.channels import ChannelKind
 from app.schemas.domain.contacts import ChannelIdentity, ContactDocument
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.conversations.strings import ChannelUserId
-from app.use_cases.bookings.reminders.reminder_rules import (
-    choose_reminder_identities,
-)
+from app.use_cases.bookings.reminders.reminder_rules import choose_reminder_identities
 from tests.operations.builders import DEFAULT_NOW
 from tests.operations.fakes import to_microseconds
 from tests.operations.reminder_scene import ReminderScene

@@ -15,9 +15,7 @@ from app.schemas.typings.billing.constrained_integers import (
     MoneyAmountMinor,
     UsageQuantity,
 )
-from app.schemas.typings.localization.constrained_strings import (
-    CurrencyCode,
-)
+from app.schemas.typings.localization.constrained_strings import CurrencyCode
 from tests.operations.dashboard_fixture import DashboardFixture
 from tests.operations.fakes import to_microseconds
 

@@ -53,9 +53,7 @@ from app.schemas.typings.profiles.strings import (
 )
 from app.schemas.typings.users.prefixed_id import UserId
 from tests.operations.builders import DEFAULT_MANAGERS, every_day
-from tests.operations.fakes import (
-    to_microseconds,
-)
+from tests.operations.fakes import to_microseconds
 from tests.operations.operations_store import OperationsStore
 
 

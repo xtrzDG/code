@@ -1,10 +1,6 @@
 """The conversation feed's paging, filters and search, and the card's linked items."""
 
-from app.schemas.constants.bookings import (
-    BookingStatus,
-    LeadType,
-    ResourceKind,
-)
+from app.schemas.constants.bookings import BookingStatus, LeadType, ResourceKind
 from app.schemas.constants.channels import ChannelKind
 from app.schemas.constants.handoffs import HandoffReason
 from app.schemas.domain.bookings import BookingDocument, LeadDocument

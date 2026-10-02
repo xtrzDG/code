@@ -4,10 +4,7 @@ from decimal import Decimal
 
 import pytest
 
-from app.utilities.reply_guard.numerals import (
-    normalize_digits,
-    parse_amount_candidates,
-)
+from app.utilities.reply_guard.numerals import normalize_digits, parse_amount_candidates
 from tests.brain.reply_guard_helpers import mentions
 
 

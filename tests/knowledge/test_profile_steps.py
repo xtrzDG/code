@@ -20,9 +20,7 @@ from app.schemas.exceptions.application_errors import (
 )
 from app.schemas.typings.businesses.constrained_strings import WebLink
 from app.schemas.typings.businesses.strings import AddressText
-from app.schemas.typings.localization.constrained_strings import (
-    LanguageTag,
-)
+from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.schemas.typings.localization.strings import RawPhoneNumberInput
 from app.schemas.typings.users.prefixed_id import UserId
 from tests.knowledge.harness import KnowledgeHarness

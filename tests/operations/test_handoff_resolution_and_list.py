@@ -5,10 +5,7 @@ from datetime import datetime
 import pytest
 
 from app.schemas.constants.conversations import ConversationStatus
-from app.schemas.constants.handoffs import (
-    HandoffStatus,
-    HandoffUrgency,
-)
+from app.schemas.constants.handoffs import HandoffStatus, HandoffUrgency
 from app.schemas.dto.handoffs import HandoffResult
 from app.schemas.dto.operations.handoffs import (
     HandoffPage,

@@ -7,10 +7,7 @@ from app.gateways.http.operations.google_calendar_routes import (
 from app.schemas.constants.channels import ChannelKind
 from app.schemas.constants.handoffs import HandoffReason, HandoffUrgency
 from app.schemas.dto.handoffs import HandoffCommand, RecordUnansweredQuestionCommand
-from app.schemas.typings.handoffs.strings import (
-    HandoffSummary,
-    UnansweredQuestionText,
-)
+from app.schemas.typings.handoffs.strings import HandoffSummary, UnansweredQuestionText
 from app.schemas.typings.localization.constrained_strings import LanguageTag
 from tests.operations.operations_api import (
     OWNER_TOKEN,

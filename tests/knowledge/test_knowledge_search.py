@@ -2,22 +2,12 @@
 
 import pytest
 
-from app.schemas.dto.knowledge import (
-    KnowledgeSearchRequest,
-)
-from app.schemas.exceptions.application_errors import (
-    NotFoundError,
-)
+from app.schemas.dto.knowledge import KnowledgeSearchRequest
+from app.schemas.exceptions.application_errors import NotFoundError
 from app.schemas.typings.businesses.prefixed_id import BusinessId
-from app.schemas.typings.knowledge.constrained_integers import (
-    KnowledgeSearchLimit,
-)
-from app.schemas.typings.knowledge.strings import (
-    KnowledgeSearchQuery,
-)
-from app.schemas.typings.localization.constrained_strings import (
-    LanguageTag,
-)
+from app.schemas.typings.knowledge.constrained_integers import KnowledgeSearchLimit
+from app.schemas.typings.knowledge.strings import KnowledgeSearchQuery
+from app.schemas.typings.localization.constrained_strings import LanguageTag
 from tests.knowledge.harness import KnowledgeHarness
 from tests.knowledge.knowledge_base_helpers import add_item, search
 

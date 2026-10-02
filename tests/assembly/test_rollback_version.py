@@ -12,9 +12,7 @@ from app.schemas.exceptions.application_errors import (
     NotFoundError,
 )
 from app.schemas.typings.assistants.prefixed_id import AssistantVersionId
-from tests.assembly.international_business_seeds import (
-    seed_online_shop,
-)
+from tests.assembly.international_business_seeds import seed_online_shop
 from tests.assembly.publish_helpers import (
     only_subscription,
     ready_version,

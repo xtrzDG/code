@@ -2,24 +2,17 @@
 
 import pytest
 
-from app.schemas.constants.bookings import (
-    BookingStatus,
-    BookingUnit,
-)
+from app.schemas.constants.bookings import BookingStatus, BookingUnit
 from app.schemas.constants.compliance import AuditAction
 from app.schemas.domain.profiles import OpeningInterval
 from app.schemas.dto.bookings import AvailabilityQuery, BookingView
-from app.schemas.dto.operations.bookings import (
-    UpdateBookingCommand,
-)
+from app.schemas.dto.operations.bookings import UpdateBookingCommand
 from app.schemas.exceptions.application_errors import (
     ConflictError,
     NotFoundError,
     ValidationFailedError,
 )
-from app.schemas.typings.bookings.constrained_integers import (
-    PartySize,
-)
+from app.schemas.typings.bookings.constrained_integers import PartySize
 from app.schemas.typings.bookings.constrained_strings import LocalDate, LocalTimeOfDay
 from app.schemas.typings.bookings.prefixed_id import BookingId, ResourceId
 from app.schemas.typings.bookings.strings import BookingNote

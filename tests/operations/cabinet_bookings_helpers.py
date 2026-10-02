@@ -1,9 +1,6 @@
 """A cabinet over the operations world: a business, places and booking commands."""
 
-from app.schemas.constants.bookings import (
-    BookingOrder,
-    BookingStatus,
-)
+from app.schemas.constants.bookings import BookingOrder, BookingStatus
 from app.schemas.constants.channels import ChannelKind
 from app.schemas.dto.operations.bookings import (
     BookingPage,
@@ -11,9 +8,7 @@ from app.schemas.dto.operations.bookings import (
     ManualBookingCommand,
 )
 from app.schemas.dto.paging import PageRequest
-from app.schemas.typings.bookings.constrained_integers import (
-    PartySize,
-)
+from app.schemas.typings.bookings.constrained_integers import PartySize
 from app.schemas.typings.bookings.constrained_strings import LocalDate, LocalTimeOfDay
 from app.schemas.typings.bookings.prefixed_id import ResourceId
 from app.schemas.typings.contacts.strings import ContactName

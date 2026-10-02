@@ -10,13 +10,9 @@ from app.schemas.constants.businesses import BusinessStatus
 from app.schemas.constants.channels import ChannelKind
 from app.schemas.domain.contacts import ContactDocument
 from app.schemas.dto.bookings import CancelBookingCommand
-from app.schemas.exceptions.application_errors import (
-    ConflictError,
-)
+from app.schemas.exceptions.application_errors import ConflictError
 from app.schemas.typings.contacts.strings import ContactName
-from app.schemas.typings.localization.constrained_strings import (
-    E164PhoneNumber,
-)
+from app.schemas.typings.localization.constrained_strings import E164PhoneNumber
 from tests.brain.brain_world import build_world
 from tests.brain.scripted_turns import call_tool, say, scripted
 

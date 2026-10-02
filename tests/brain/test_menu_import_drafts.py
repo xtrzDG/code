@@ -12,13 +12,9 @@ from app.schemas.dto.menu_import import (
 )
 from app.schemas.typings.knowledge.prefixed_id import KnowledgeItemId
 from app.schemas.typings.knowledge.strings import KnowledgeTitle
-from app.schemas.typings.localization.constrained_strings import (
-    CurrencyCode,
-)
+from app.schemas.typings.localization.constrained_strings import CurrencyCode
 from app.schemas.typings.menu_import.constrained_floats import ExtractionConfidence
-from app.schemas.typings.menu_import.constrained_strings import (
-    ExtractedPriceAmount,
-)
+from app.schemas.typings.menu_import.constrained_strings import ExtractedPriceAmount
 from app.schemas.typings.users.prefixed_id import UserId
 from tests.brain.brain_world import BrainWorld, build_world
 from tests.brain.business_setups import ISRAEL

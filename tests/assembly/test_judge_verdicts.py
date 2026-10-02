@@ -4,9 +4,7 @@ import json
 
 import pytest
 
-from app.schemas.constants.assistants import (
-    JudgeCriterion,
-)
+from app.schemas.constants.assistants import JudgeCriterion
 from app.utilities.assembly.judge_verdicts import parse_judge_verdict
 from tests.assembly.judge_helpers import PERFECT
 

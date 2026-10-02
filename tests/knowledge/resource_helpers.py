@@ -11,9 +11,7 @@ from app.schemas.dto.resources import (
     ScheduleExceptionInput,
     ScheduleExceptionView,
 )
-from app.schemas.typings.bookings.constrained_integers import (
-    ResourceCapacity,
-)
+from app.schemas.typings.bookings.constrained_integers import ResourceCapacity
 from app.schemas.typings.bookings.constrained_strings import LocalDate
 from app.schemas.typings.bookings.prefixed_id import ResourceId
 from app.schemas.typings.bookings.strings import ResourceName, ScheduleExceptionNote

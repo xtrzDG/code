@@ -13,26 +13,19 @@ from app.contracts.repositories.conversation_repositories import (
     ConversationRepoContract,
 )
 from app.contracts.use_case_contract import UseCaseContract
-from app.schemas.constants.bookings import (
-    LeadStatus,
-)
+from app.schemas.constants.bookings import LeadStatus
 from app.schemas.constants.conversations import ConversationStatus
 from app.schemas.constants.handoffs import HandoffStatus
 from app.schemas.domain.conversations import ConversationDocument
 from app.schemas.domain.handoffs import HandoffDocument
-from app.schemas.dto.bookings import (
-    CreateLeadCommand,
-    LeadView,
-)
+from app.schemas.dto.bookings import CreateLeadCommand, LeadView
 from app.schemas.dto.handoffs import (
     HandoffCommand,
     HandoffResult,
     RecordUnansweredQuestionCommand,
     UnansweredQuestionView,
 )
-from app.schemas.exceptions.application_errors import (
-    NotFoundError,
-)
+from app.schemas.exceptions.application_errors import NotFoundError
 from app.schemas.typings.bookings.prefixed_id import LeadId
 from app.schemas.typings.contacts.prefixed_id import ContactId
 from app.schemas.typings.conversations.strings import MessageText

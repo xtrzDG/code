@@ -2,10 +2,7 @@
 
 from app.schemas.constants.knowledge import KnowledgeItemKind
 from app.schemas.domain.businesses import BusinessDocument
-from app.schemas.dto.knowledge import (
-    KnowledgeSearchRequest,
-    PriceLookupQuery,
-)
+from app.schemas.dto.knowledge import KnowledgeSearchRequest, PriceLookupQuery
 from app.schemas.dto.knowledge_admin import (
     CreateKnowledgeItemCommand,
     KnowledgeItemDetails,
@@ -16,17 +13,13 @@ from app.schemas.dto.profiles.profile_steps import (
     SaveProfileStepCommand,
 )
 from app.schemas.typings.billing.constrained_integers import MoneyAmountMinor
-from app.schemas.typings.knowledge.constrained_integers import (
-    KnowledgeSearchLimit,
-)
+from app.schemas.typings.knowledge.constrained_integers import KnowledgeSearchLimit
 from app.schemas.typings.knowledge.strings import (
     KnowledgeBody,
     KnowledgeSearchQuery,
     KnowledgeTitle,
 )
-from app.schemas.typings.localization.constrained_strings import (
-    LanguageTag,
-)
+from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.schemas.typings.users.prefixed_id import UserId
 from tests.knowledge.harness import KnowledgeHarness
 

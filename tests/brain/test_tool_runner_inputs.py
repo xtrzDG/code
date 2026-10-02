@@ -8,9 +8,7 @@ import pytest
 
 from app.schemas.constants.assistants import AssistantToolName
 from app.schemas.constants.channels import ChannelKind
-from app.schemas.dto.bookings import (
-    CreateBookingCommand,
-)
+from app.schemas.dto.bookings import CreateBookingCommand
 from tests.brain.brain_world import build_world
 from tests.brain.scripted_turns import scripted
 from tests.brain.tool_runner_helpers import BOOKING_ARGUMENTS, build_context, run_tool

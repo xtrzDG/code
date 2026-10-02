@@ -70,9 +70,7 @@ from app.use_cases.autotests.resume_autotest_run_use_case import (
 from app.use_cases.autotests.run_autotest_scenario_use_case import (
     RunAutotestScenarioUseCase,
 )
-from app.use_cases.autotests.start_autotest_run_use_case import (
-    StartAutotestRunUseCase,
-)
+from app.use_cases.autotests.start_autotest_run_use_case import StartAutotestRunUseCase
 from app.utilities.assembly.llm_costs import DEFAULT_LLM_TOKEN_PRICES
 from app.utilities.storage.storage_scope_context import StorageScopeContext
 from tests.assembly.assembly_scripted_models import AssemblyScriptedModels

@@ -17,9 +17,7 @@ from app.schemas.domain.businesses import (
 )
 from app.schemas.domain.compliance import DpaAcceptanceDocument
 from app.schemas.domain.knowledge import KnowledgeItemDocument
-from app.schemas.domain.profiles import (
-    OpeningInterval,
-)
+from app.schemas.domain.profiles import OpeningInterval
 from app.schemas.typings.billing.constrained_integers import MoneyAmountMinor
 from app.schemas.typings.businesses.constrained_integers import (
     ClosingMinuteOfDay,
@@ -28,13 +26,8 @@ from app.schemas.typings.businesses.constrained_integers import (
 from app.schemas.typings.businesses.strings import BusinessName, CityName
 from app.schemas.typings.handoffs.strings import ManagerContactAddress, ManagerName
 from app.schemas.typings.knowledge.constrained_integers import ServiceDurationMinutes
-from app.schemas.typings.knowledge.constrained_strings import (
-    KnowledgeTag,
-)
-from app.schemas.typings.knowledge.strings import (
-    KnowledgeBody,
-    KnowledgeTitle,
-)
+from app.schemas.typings.knowledge.constrained_strings import KnowledgeTag
+from app.schemas.typings.knowledge.strings import KnowledgeBody, KnowledgeTitle
 from app.schemas.typings.localization.constrained_strings import (
     CountryCode,
     CurrencyCode,

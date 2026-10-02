@@ -13,9 +13,7 @@ from app.schemas.exceptions.application_errors import (
 from app.schemas.typings.businesses.constrained_strings import WebLink
 from app.schemas.typings.knowledge.constrained_strings import KnowledgeTag
 from app.schemas.typings.knowledge.strings import KnowledgeTitle
-from app.schemas.typings.localization.constrained_strings import (
-    CurrencyCode,
-)
+from app.schemas.typings.localization.constrained_strings import CurrencyCode
 from app.schemas.typings.menu_import.constrained_strings import (
     ExtractedPriceAmount,
     MenuSourceMediaType,
@@ -28,9 +26,7 @@ from tests.brain.menu_extraction_helpers import (
     extraction_request,
     menu_response,
 )
-from tests.brain.provider_http_fakes import (
-    ScriptedHttp,
-)
+from tests.brain.provider_http_fakes import ScriptedHttp
 
 
 def test_photo_menu_is_read_with_vision_and_strict_json() -> None:

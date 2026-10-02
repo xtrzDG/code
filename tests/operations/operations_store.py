@@ -38,17 +38,13 @@ from app.repositories.knowledge_repositories import (
 from app.repositories.user_repositories import UserRepository
 from app.schemas.domain.billing import SubscriptionDocument, UsageEventDocument
 from app.schemas.domain.bookings import BookingDocument, LeadDocument
-from app.schemas.domain.businesses import (
-    BusinessDocument,
-)
+from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.compliance import AuditLogEntryDocument
 from app.schemas.domain.contacts import ContactDocument
 from app.schemas.domain.conversations import ConversationDocument, MessageDocument
 from app.schemas.domain.handoffs import HandoffDocument, UnansweredQuestionDocument
 from app.schemas.domain.knowledge import KnowledgeItemDocument
-from app.schemas.domain.profiles import (
-    BusinessProfileDocument,
-)
+from app.schemas.domain.profiles import BusinessProfileDocument
 from app.schemas.domain.resources import ResourceDocument, ScheduleExceptionDocument
 from app.schemas.domain.users import UserDocument
 from tests.operations.builders import DEFAULT_NOW

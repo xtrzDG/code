@@ -8,9 +8,7 @@ from app.schemas.constants.bookings import ResourceKind
 from app.schemas.constants.businesses import BusinessLinkKind, Weekday
 from app.schemas.constants.knowledge import KnowledgeItemKind
 from app.schemas.constants.niches import NicheKey
-from app.schemas.domain.businesses import (
-    BusinessDocument,
-)
+from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.knowledge import KnowledgeAttribute
 from app.schemas.domain.profiles import (
     BookingRules,
@@ -33,12 +31,8 @@ from app.schemas.typings.bookings.constrained_strings import LocalDate
 from app.schemas.typings.bookings.strings import ResourceName, ScheduleExceptionNote
 from app.schemas.typings.businesses.constrained_strings import WebLink
 from app.schemas.typings.businesses.strings import AddressText
-from app.schemas.typings.knowledge.constrained_strings import (
-    KnowledgeAttributeKey,
-)
-from app.schemas.typings.knowledge.strings import (
-    KnowledgeAttributeValue,
-)
+from app.schemas.typings.knowledge.constrained_strings import KnowledgeAttributeKey
+from app.schemas.typings.knowledge.strings import KnowledgeAttributeValue
 from app.schemas.typings.localization.constrained_strings import (
     E164PhoneNumber,
     LanguageTag,

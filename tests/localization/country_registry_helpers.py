@@ -6,9 +6,7 @@ from app.schemas.typings.localization.constrained_strings import (
     CountryCode,
     LanguageTag,
 )
-from tests.localization.builders import (
-    get_country_registry,
-)
+from tests.localization.builders import get_country_registry
 
 REGISTRY: CountryRegistryContract = get_country_registry()
 

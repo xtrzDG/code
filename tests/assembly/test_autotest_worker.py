@@ -8,17 +8,12 @@ from app.orchestrators.assistants.run_queued_autotests_orchestrator import (
     RunQueuedAutotestsOrchestrator,
 )
 from app.pipelines.orchestrator_pipeline import OrchestratorPipeline
-from app.schemas.constants.assistants import (
-    AssistantVersionStatus,
-    AutotestRunStatus,
-)
+from app.schemas.constants.assistants import AssistantVersionStatus, AutotestRunStatus
 from app.schemas.dto.assistants.assistant_commands import (
     AssistantVersionQuery,
     RunAutotestsCommand,
 )
-from app.schemas.dto.assistants.assistant_views import (
-    AutotestRunView,
-)
+from app.schemas.dto.assistants.assistant_views import AutotestRunView
 from app.schemas.dto.assistants.autotest_runs import (
     AutotestRunCompletion,
     AutotestRunProgress,

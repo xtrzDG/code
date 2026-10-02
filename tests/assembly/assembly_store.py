@@ -32,16 +32,10 @@ from app.repositories.knowledge_repositories import (
 from app.repositories.user_repositories import UserRepository
 from app.schemas.configurations.app_settings import AppSettings
 from app.schemas.constants.users import LoginMethod
-from app.schemas.domain.assistants import (
-    AssistantVersionDocument,
-    AutotestRunDocument,
-)
+from app.schemas.domain.assistants import AssistantVersionDocument, AutotestRunDocument
 from app.schemas.domain.billing import SubscriptionDocument
 from app.schemas.domain.businesses import BusinessDocument
-from app.schemas.domain.compliance import (
-    AuditLogEntryDocument,
-    DpaAcceptanceDocument,
-)
+from app.schemas.domain.compliance import AuditLogEntryDocument, DpaAcceptanceDocument
 from app.schemas.domain.conversations import MessageDocument
 from app.schemas.domain.jobs import QueuedJobDocument
 from app.schemas.domain.knowledge import KnowledgeItemDocument

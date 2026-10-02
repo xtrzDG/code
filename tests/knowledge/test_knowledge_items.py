@@ -11,13 +11,9 @@ from app.schemas.dto.knowledge_admin import (
     CreateKnowledgeItemCommand,
     KnowledgeItemInput,
 )
-from app.schemas.exceptions.application_errors import (
-    ValidationFailedError,
-)
+from app.schemas.exceptions.application_errors import ValidationFailedError
 from app.schemas.typings.billing.constrained_integers import MoneyAmountMinor
-from app.schemas.typings.knowledge.constrained_integers import (
-    ServiceDurationMinutes,
-)
+from app.schemas.typings.knowledge.constrained_integers import ServiceDurationMinutes
 from app.schemas.typings.knowledge.constrained_strings import (
     KnowledgeAttributeKey,
     KnowledgeTag,

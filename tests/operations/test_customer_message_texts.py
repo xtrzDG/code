@@ -4,16 +4,10 @@ from datetime import date
 
 import pytest
 
-from app.schemas.constants.bookings import (
-    BookingUnit,
-)
-from app.schemas.dto.operations.message_texts import (
-    HandoffCustomerMessageInput,
-)
+from app.schemas.constants.bookings import BookingUnit
+from app.schemas.dto.operations.message_texts import HandoffCustomerMessageInput
 from app.schemas.typings.bookings.constrained_strings import LocalDate, LocalTimeOfDay
-from app.schemas.typings.localization.constrained_strings import (
-    LanguageTag,
-)
+from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.transformers.notifications.booking_confirmation_transformer import (
     TIME_SLOT_CONFIRMATION,
     BookingConfirmationTransformer,

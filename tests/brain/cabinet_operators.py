@@ -44,9 +44,7 @@ from app.transformers.conversations.message_view_transformer import (
 from app.use_cases.conversations.get_call_recording_use_case import (
     GetCallRecordingUseCase,
 )
-from app.use_cases.conversations.get_conversation_use_case import (
-    GetConversationUseCase,
-)
+from app.use_cases.conversations.get_conversation_use_case import GetConversationUseCase
 from app.use_cases.conversations.list_conversations_use_case import (
     ListConversationsUseCase,
 )

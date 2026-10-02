@@ -2,9 +2,7 @@
 
 from app.schemas.constants.businesses import Weekday
 from app.schemas.domain.profiles import OpeningInterval
-from app.schemas.dto.profiles.business_profile import (
-    ProfileAnswerInput,
-)
+from app.schemas.dto.profiles.business_profile import ProfileAnswerInput
 from app.schemas.dto.profiles.profile_steps import (
     ProfileStepInput,
     ProfileStepSaveResult,
@@ -19,9 +17,7 @@ from app.schemas.typings.profiles.constrained_strings import (
     QuestionChoiceKey,
     QuestionKey,
 )
-from app.schemas.typings.profiles.strings import (
-    RawProfileAnswerText,
-)
+from app.schemas.typings.profiles.strings import RawProfileAnswerText
 from app.schemas.typings.users.prefixed_id import UserId
 from tests.knowledge.harness import KnowledgeHarness
 

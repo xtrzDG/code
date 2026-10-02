@@ -1,12 +1,8 @@
 """Starting an autotest run on a seeded testbed and reading its results."""
 
-from app.schemas.constants.assistants import (
-    AutotestScenarioKind,
-)
+from app.schemas.constants.assistants import AutotestScenarioKind
 from app.schemas.domain.businesses import BusinessDocument
-from app.schemas.dto.assistants.assistant_commands import (
-    RunAutotestsCommand,
-)
+from app.schemas.dto.assistants.assistant_commands import RunAutotestsCommand
 from app.schemas.dto.assistants.assistant_views import (
     AssistantVersionDetails,
     AutotestRunView,

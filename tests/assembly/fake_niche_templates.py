@@ -1,8 +1,6 @@
 """A niche template registry with a restaurant, a clinic and an online shop."""
 
-from app.contracts.registries import (
-    NicheTemplateRegistryContract,
-)
+from app.contracts.registries import NicheTemplateRegistryContract
 from app.schemas.constants.assistants import AutotestScenarioKind
 from app.schemas.constants.billing import PlanKey
 from app.schemas.constants.bookings import BookingUnit, ResourceKind
@@ -15,18 +13,10 @@ from app.schemas.constants.niches import (
 )
 from app.schemas.dto.localization import LocalizedText
 from app.schemas.dto.niches import NicheTemplate, QuestionChoice, QuestionDefinition
-from app.schemas.exceptions.application_errors import (
-    NotFoundError,
-)
-from app.schemas.typings.assistants.strings import (
-    PromptRuleText,
-)
-from app.schemas.typings.localization.constrained_strings import (
-    LanguageTag,
-)
-from app.schemas.typings.localization.strings import (
-    LocalizedTextValue,
-)
+from app.schemas.exceptions.application_errors import NotFoundError
+from app.schemas.typings.assistants.strings import PromptRuleText
+from app.schemas.typings.localization.constrained_strings import LanguageTag
+from app.schemas.typings.localization.strings import LocalizedTextValue
 from app.schemas.typings.profiles.constrained_strings import (
     FactKey,
     QuestionChoiceKey,

@@ -18,9 +18,7 @@ from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.exceptions.application_errors import AuthenticationRequiredError
 from app.schemas.typings.users.prefixed_id import UserId
 from app.schemas.typings.users.strings import AccessToken
-from app.use_cases.catalog.get_country_profile_use_case import (
-    GetCountryProfileUseCase,
-)
+from app.use_cases.catalog.get_country_profile_use_case import GetCountryProfileUseCase
 from app.use_cases.catalog.list_countries_use_case import ListCountriesUseCase
 from app.use_cases.catalog.list_languages_use_case import ListLanguagesUseCase
 from app.use_cases.catalog.quote_plans_use_case import QuotePlansUseCase

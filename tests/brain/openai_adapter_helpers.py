@@ -3,10 +3,7 @@
 import json
 
 from app.schemas.constants.assistants import AssistantToolName, LlmEffort
-from app.schemas.dto.conversations import (
-    LlmRequest,
-    LlmToolDefinition,
-)
+from app.schemas.dto.conversations import LlmRequest, LlmToolDefinition
 from app.schemas.typings.assistants.constrained_integers import LlmMaxOutputTokens
 from app.schemas.typings.assistants.constrained_strings import LlmModelId
 from app.schemas.typings.assistants.strings import (
@@ -14,9 +11,7 @@ from app.schemas.typings.assistants.strings import (
     LlmToolInputSchemaJson,
     SystemPromptText,
 )
-from app.schemas.typings.conversations.strings import (
-    LlmProviderPayload,
-)
+from app.schemas.typings.conversations.strings import LlmProviderPayload
 
 PRICE_TOOL = LlmToolDefinition(
     name=AssistantToolName.GET_PRICE,

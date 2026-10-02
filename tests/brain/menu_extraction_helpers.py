@@ -10,21 +10,15 @@ import httpx
 from app.adapters.llm.menu_extraction.menu_extraction_adapter import (
     MenuExtractionAdapter,
 )
-from app.schemas.dto.menu_import import (
-    MenuExtractionRequest,
-)
-from app.schemas.exceptions.application_errors import (
-    ValidationFailedError,
-)
+from app.schemas.dto.menu_import import MenuExtractionRequest
+from app.schemas.exceptions.application_errors import ValidationFailedError
 from app.schemas.typings.assistants.constrained_strings import LlmModelId
 from app.schemas.typings.businesses.constrained_strings import WebLink
 from app.schemas.typings.localization.constrained_strings import (
     CurrencyCode,
     LanguageTag,
 )
-from app.schemas.typings.menu_import.constrained_strings import (
-    MenuSourceMediaType,
-)
+from app.schemas.typings.menu_import.constrained_strings import MenuSourceMediaType
 from app.schemas.typings.menu_import.strings import MenuSourceBase64
 from tests.brain.provider_http_fakes import (
     ScriptedHttp,

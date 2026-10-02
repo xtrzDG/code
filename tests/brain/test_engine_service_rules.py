@@ -8,17 +8,12 @@ from app.schemas.constants.assistants import AssistantToolName
 from app.schemas.constants.businesses import ServiceMode
 from app.schemas.domain.assistants import AssistantVersionDocument
 from app.schemas.domain.resources import ScheduleExceptionDocument
-from app.schemas.exceptions.application_errors import (
-    ConflictError,
-    NotFoundError,
-)
+from app.schemas.exceptions.application_errors import ConflictError, NotFoundError
 from app.schemas.typings.assistants.constrained_integers import AssistantVersionNumber
 from app.schemas.typings.assistants.prefixed_id import AssistantVersionId
 from app.schemas.typings.assistants.strings import SystemPromptText
 from app.schemas.typings.bookings.constrained_strings import LocalDate
-from app.schemas.typings.localization.constrained_strings import (
-    LanguageTag,
-)
+from app.schemas.typings.localization.constrained_strings import LanguageTag
 from tests.brain.brain_world import build_world
 from tests.brain.engine_helpers import requests_of, user_turn_text
 from tests.brain.scripted_turns import call_tool, say, scripted

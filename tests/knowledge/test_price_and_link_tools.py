@@ -5,22 +5,15 @@ import pytest
 from app.schemas.constants.businesses import BusinessLinkKind
 from app.schemas.constants.knowledge import KnowledgeItemKind
 from app.schemas.domain.profiles import BusinessAddress, BusinessLink
-from app.schemas.dto.knowledge import (
-    PriceLookupQuery,
-    SendLinkQuery,
-)
+from app.schemas.dto.knowledge import PriceLookupQuery, SendLinkQuery
 from app.schemas.dto.profiles.profile_steps import (
     ChannelsStepInput,
     ContactsAndHoursStepInput,
 )
 from app.schemas.typings.businesses.constrained_strings import WebLink
 from app.schemas.typings.businesses.strings import AddressText
-from app.schemas.typings.knowledge.strings import (
-    KnowledgeTitle,
-)
-from app.schemas.typings.localization.constrained_strings import (
-    LanguageTag,
-)
+from app.schemas.typings.knowledge.strings import KnowledgeTitle
+from app.schemas.typings.localization.constrained_strings import LanguageTag
 from tests.knowledge.harness import KnowledgeHarness
 from tests.knowledge.knowledge_base_helpers import add_item, price_titles, save_step
 

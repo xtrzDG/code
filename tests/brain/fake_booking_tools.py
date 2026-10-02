@@ -8,10 +8,7 @@ from dataclasses import dataclass, field
 from typed_time_provider import Microseconds
 
 from app.contracts.use_case_contract import UseCaseContract
-from app.schemas.constants.bookings import (
-    BookingStatus,
-    BookingUnit,
-)
+from app.schemas.constants.bookings import BookingStatus, BookingUnit
 from app.schemas.dto.bookings import (
     AvailabilityQuery,
     AvailabilityResult,
@@ -22,10 +19,7 @@ from app.schemas.dto.bookings import (
     CreateBookingCommand,
     RescheduleBookingCommand,
 )
-from app.schemas.exceptions.application_errors import (
-    ConflictError,
-    NotFoundError,
-)
+from app.schemas.exceptions.application_errors import ConflictError, NotFoundError
 from app.schemas.typings.bookings.constrained_strings import LocalTimeOfDay
 from app.schemas.typings.bookings.prefixed_id import BookingId, ResourceId
 from app.schemas.typings.bookings.strings import ResourceName

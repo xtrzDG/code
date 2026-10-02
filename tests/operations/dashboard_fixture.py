@@ -2,9 +2,7 @@
 
 from datetime import datetime
 
-from app.schemas.constants.billing import (
-    UsageKind,
-)
+from app.schemas.constants.billing import UsageKind
 from app.schemas.constants.bookings import BookingStatus
 from app.schemas.constants.channels import ChannelKind, MessageDirection
 from app.schemas.constants.conversations import MessageAuthor
@@ -14,9 +12,7 @@ from app.schemas.domain.bookings import BookingDocument
 from app.schemas.domain.conversations import ConversationDocument, MessageDocument
 from app.schemas.domain.handoffs import HandoffDocument
 from app.schemas.dto.operations.dashboard import DashboardStats, DashboardStatsQuery
-from app.schemas.typings.billing.constrained_integers import (
-    UsageQuantity,
-)
+from app.schemas.typings.billing.constrained_integers import UsageQuantity
 from app.schemas.typings.bookings.constrained_integers import (
     BookingEndsAtUnixSeconds,
     BookingStartsAtUnixSeconds,

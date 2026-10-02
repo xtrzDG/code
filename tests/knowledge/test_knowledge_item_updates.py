@@ -17,9 +17,7 @@ from app.schemas.exceptions.application_errors import (
 )
 from app.schemas.typings.billing.constrained_integers import MoneyAmountMinor
 from app.schemas.typings.knowledge.prefixed_id import KnowledgeItemId
-from app.schemas.typings.knowledge.strings import (
-    KnowledgeTitle,
-)
+from app.schemas.typings.knowledge.strings import KnowledgeTitle
 from app.schemas.typings.localization.constrained_strings import (
     CurrencyCode,
     LanguageTag,

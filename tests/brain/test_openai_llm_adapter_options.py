@@ -14,9 +14,7 @@ from app.schemas.exceptions.application_errors import (
     LlmRefusedError,
 )
 from app.schemas.typings.channels.constrained_strings import PublicBaseUrl
-from app.schemas.typings.conversations.strings import (
-    MessageText,
-)
+from app.schemas.typings.conversations.strings import MessageText
 from tests.brain.openai_adapter_helpers import build_request
 from tests.brain.provider_http_fakes import (
     ScriptedHttp,

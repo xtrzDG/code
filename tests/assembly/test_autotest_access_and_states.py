@@ -2,12 +2,8 @@
 
 import pytest
 
-from app.schemas.constants.assistants import (
-    AssistantVersionStatus,
-)
-from app.schemas.dto.assistants.assistant_commands import (
-    AssistantVersionQuery,
-)
+from app.schemas.constants.assistants import AssistantVersionStatus
+from app.schemas.dto.assistants.assistant_commands import AssistantVersionQuery
 from app.schemas.exceptions.application_errors import (
     AccessDeniedError,
     ConflictError,

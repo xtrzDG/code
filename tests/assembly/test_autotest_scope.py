@@ -7,12 +7,8 @@ from app.schemas.constants.assistants import (
     AutotestOutcome,
     AutotestScenarioKind,
 )
-from app.schemas.dto.assistants.assistant_commands import (
-    RunAutotestsCommand,
-)
-from app.schemas.exceptions.application_errors import (
-    ConflictError,
-)
+from app.schemas.dto.assistants.assistant_commands import RunAutotestsCommand
+from app.schemas.exceptions.application_errors import ConflictError
 from app.schemas.typings.localization.constrained_strings import LanguageTag
 from tests.assembly.autotest_run_helpers import (
     GEORGIAN_SCENARIO_COUNT,

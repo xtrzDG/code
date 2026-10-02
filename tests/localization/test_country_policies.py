@@ -13,9 +13,7 @@ from app.schemas.constants.localization import (
     OtpDeliveryChannel,
     RecordingConsentRule,
 )
-from app.schemas.typings.localization.constrained_strings import (
-    CountryCode,
-)
+from app.schemas.typings.localization.constrained_strings import CountryCode
 from tests.localization.builders import (
     JUNE_2025_NANOSECONDS,
     build_wall_clock,

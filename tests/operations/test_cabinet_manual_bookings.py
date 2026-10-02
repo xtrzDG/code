@@ -4,9 +4,7 @@ from datetime import datetime
 
 import pytest
 
-from app.schemas.constants.bookings import (
-    ResourceKind,
-)
+from app.schemas.constants.bookings import ResourceKind
 from app.schemas.constants.channels import ChannelKind
 from app.schemas.constants.compliance import AuditAction
 from app.schemas.domain.profiles import BookingRules

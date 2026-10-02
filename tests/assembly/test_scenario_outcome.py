@@ -2,25 +2,16 @@
 
 import pytest
 
-from app.schemas.constants.assistants import (
-    AutotestOutcome,
-    AutotestScenarioKind,
-)
+from app.schemas.constants.assistants import AutotestOutcome, AutotestScenarioKind
 from app.schemas.dto.conversations import AssistantReply
-from app.schemas.typings.assistants.strings import (
-    AutotestCheckNote,
-)
+from app.schemas.typings.assistants.strings import AutotestCheckNote
 from app.schemas.typings.conversations.strings import MessageText
-from app.schemas.typings.localization.constrained_strings import (
-    ScriptCode,
-)
+from app.schemas.typings.localization.constrained_strings import ScriptCode
 from app.utilities.assembly.autotest_evaluation import (
     check_conversation,
     decide_outcome,
 )
-from app.utilities.assembly.script_detection import (
-    is_written_in_script,
-)
+from app.utilities.assembly.script_detection import is_written_in_script
 from tests.assembly.autotest_scripts import build_reply
 from tests.assembly.judge_helpers import scenario, scores
 

@@ -8,14 +8,10 @@ import pytest
 from app.adapters.llm.menu_extraction.menu_extraction_adapter import (
     MenuExtractionAdapter,
 )
-from app.schemas.exceptions.application_errors import (
-    ValidationFailedError,
-)
+from app.schemas.exceptions.application_errors import ValidationFailedError
 from app.schemas.typings.assistants.constrained_strings import LlmModelId
 from app.schemas.typings.businesses.constrained_strings import WebLink
-from app.schemas.typings.menu_import.constrained_strings import (
-    MenuSourceMediaType,
-)
+from app.schemas.typings.menu_import.constrained_strings import MenuSourceMediaType
 from tests.brain.menu_extraction_helpers import (
     build_adapter,
     extraction_request,
@@ -24,10 +20,7 @@ from tests.brain.menu_extraction_helpers import (
     link_request,
     respond,
 )
-from tests.brain.provider_http_fakes import (
-    ScriptedHttp,
-    build_openai_client,
-)
+from tests.brain.provider_http_fakes import ScriptedHttp, build_openai_client
 
 
 @pytest.mark.parametrize(

@@ -12,13 +12,8 @@ from app.schemas.typings.bookings.constrained_integers import (
     BookingReminderLeadSeconds,
     BookingStartsAtUnixSeconds,
 )
-from app.schemas.typings.bookings.constrained_strings import (
-    LocalDate,
-    LocalTimeOfDay,
-)
-from app.schemas.typings.localization.constrained_strings import (
-    LanguageTag,
-)
+from app.schemas.typings.bookings.constrained_strings import LocalDate, LocalTimeOfDay
+from app.schemas.typings.localization.constrained_strings import LanguageTag
 from tests.operations.reminder_scene import ReminderScene
 
 

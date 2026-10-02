@@ -9,9 +9,7 @@ from app.schemas.constants.assistants import (
 )
 from app.schemas.constants.conversations import MessageAuthor
 from app.schemas.dto.conversations import AssistantReply, InboundMessage
-from app.schemas.exceptions.application_errors import (
-    ExternalServiceError,
-)
+from app.schemas.exceptions.application_errors import ExternalServiceError
 from tests.assembly.autotest_run_helpers import (
     GEORGIAN_SCENARIO_COUNT,
     results_by_key,

@@ -7,19 +7,10 @@ from app.schemas.constants.assistants import (
 )
 from app.schemas.domain.assistants import AutotestScenarioResult, JudgeCriterionScore
 from app.schemas.dto.assistants.autotest_runs import AutotestScenario
-from app.schemas.typings.assistants.constrained_integers import (
-    JudgeScore,
-)
-from app.schemas.typings.assistants.constrained_strings import (
-    AutotestScenarioKey,
-)
-from app.schemas.typings.assistants.strings import (
-    AutotestScenarioGoal,
-)
-from app.schemas.typings.localization.constrained_strings import (
-    LanguageTag,
-    ScriptCode,
-)
+from app.schemas.typings.assistants.constrained_integers import JudgeScore
+from app.schemas.typings.assistants.constrained_strings import AutotestScenarioKey
+from app.schemas.typings.assistants.strings import AutotestScenarioGoal
+from app.schemas.typings.localization.constrained_strings import LanguageTag, ScriptCode
 from app.schemas.typings.localization.strings import LanguageDisplayName
 
 PERFECT: dict[str, int] = {criterion.value: 5 for criterion in JudgeCriterion}

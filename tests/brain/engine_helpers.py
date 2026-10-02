@@ -5,11 +5,7 @@ from typing import Any
 
 from app.adapters.llm.scripted_llm_adapter import ScriptedLlmAdapter
 from app.contracts.llm import LlmAdapterContract
-from app.schemas.dto.conversations import (
-    LlmRequest,
-    LlmResponse,
-    LlmToolResult,
-)
+from app.schemas.dto.conversations import LlmRequest, LlmResponse, LlmToolResult
 from app.schemas.typings.conversations.constrained_integers import LlmTokenCount
 from app.schemas.typings.conversations.strings import LlmProviderPayload, MessageText
 from tests.brain.brain_world import BrainWorld

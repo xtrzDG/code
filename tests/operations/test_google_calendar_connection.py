@@ -7,9 +7,7 @@ from urllib.parse import parse_qs, urlsplit
 import pytest
 
 from app.schemas.constants.calendar import CalendarConnectionFailure
-from app.schemas.exceptions.application_errors import (
-    NotFoundError,
-)
+from app.schemas.exceptions.application_errors import NotFoundError
 from app.schemas.typings.bookings.strings import (
     CalendarAuthorizationState,
     CalendarAuthorizationStateHash,

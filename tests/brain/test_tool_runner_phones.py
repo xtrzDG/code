@@ -13,9 +13,7 @@ from app.schemas.dto.bookings import (
     CreateBookingCommand,
     RescheduleBookingCommand,
 )
-from app.schemas.typings.localization.constrained_strings import (
-    E164PhoneNumber,
-)
+from app.schemas.typings.localization.constrained_strings import E164PhoneNumber
 from tests.brain.brain_world import build_world
 from tests.brain.business_setups import ISRAEL
 from tests.brain.scripted_turns import scripted

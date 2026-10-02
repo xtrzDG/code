@@ -3,21 +3,15 @@
 import pytest
 
 from app.schemas.constants.niches import NicheKey
-from app.schemas.dto.profiles.business_profile import (
-    ProfileAnswerInput,
-)
+from app.schemas.dto.profiles.business_profile import ProfileAnswerInput
 from app.schemas.dto.profiles.profile_steps import (
     ContactsAndHoursStepInput,
     NicheAndLanguagesStepInput,
     OfferStepInput,
 )
 from app.schemas.dto.profiles.profile_wizard import ProfileWizardQuery
-from app.schemas.exceptions.application_errors import (
-    ValidationFailedError,
-)
-from app.schemas.typings.profiles.constrained_strings import (
-    QuestionKey,
-)
+from app.schemas.exceptions.application_errors import ValidationFailedError
+from app.schemas.typings.profiles.constrained_strings import QuestionKey
 from tests.knowledge.harness import KnowledgeHarness
 from tests.knowledge.wizard_helpers import answer, choices, save_step
 

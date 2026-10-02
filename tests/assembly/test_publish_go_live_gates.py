@@ -5,14 +5,10 @@ from typed_time_provider import Microseconds
 
 from app.schemas.constants.assistants import AssistantVersionStatus
 from app.schemas.constants.billing import SubscriptionStatus
-from app.schemas.exceptions.application_errors import (
-    ConflictError,
-)
+from app.schemas.exceptions.application_errors import ConflictError
 from app.schemas.typings.compliance.constrained_strings import DpaDocumentVersion
 from tests.assembly.builders import make_launch_ready
-from tests.assembly.international_business_seeds import (
-    seed_italian_restaurant,
-)
+from tests.assembly.international_business_seeds import seed_italian_restaurant
 from tests.assembly.publish_helpers import (
     assert_nothing_went_live,
     only_subscription,

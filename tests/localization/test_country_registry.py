@@ -21,9 +21,7 @@ from app.schemas.typings.localization.constrained_strings import (
     TimezoneName,
 )
 from app.utilities.localization.timezones import is_known_timezone_name
-from tests.localization.builders import (
-    get_language_registry,
-)
+from tests.localization.builders import get_language_registry
 from tests.localization.country_registry_helpers import REGISTRY, get_profile, tags
 
 

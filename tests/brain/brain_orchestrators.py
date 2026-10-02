@@ -18,9 +18,7 @@ from app.schemas.typings.assistants.constrained_integers import (
     LlmMaxOutputTokens,
     LlmToolRoundLimit,
 )
-from app.schemas.typings.conversations.constrained_integers import (
-    ContactMessageLimit,
-)
+from app.schemas.typings.conversations.constrained_integers import ContactMessageLimit
 from app.use_cases.conversations.open_voice_conversation_use_case import (
     OpenVoiceConversationUseCase,
 )
@@ -56,8 +54,8 @@ def build_brain_orchestrators(
     texts: LocalizedTextResolver,
     wall_clock: WallClock[Microseconds],
     *,
-    contact_message_limit: int,
-    tool_round_limit: int,
+    contact_message_limit: ContactMessageLimit,
+    tool_round_limit: LlmToolRoundLimit,
 ) -> BrainOrchestrators:
     storage_scope = StorageScopeContext()
     orchestrator = ConversationTurnOrchestrator(
@@ -71,7 +69,7 @@ def build_brain_orchestrators(
             message_repo=repos.message_repo,
             language_detector=LanguageDetector(),
             wall_clock=wall_clock,
-            contact_message_limit=ContactMessageLimit(contact_message_limit),
+            contact_message_limit=contact_message_limit,
         ),
         generate_reply=GenerateAssistantReplyUseCase(
             llm_adapter=llm,
@@ -82,7 +80,7 @@ def build_brain_orchestrators(
             wall_clock=wall_clock,
             max_output_tokens=LlmMaxOutputTokens(4000),
             effort=LlmEffort.LOW,
-            tool_round_limit=LlmToolRoundLimit(tool_round_limit),
+            tool_round_limit=tool_round_limit,
         ),
         handoff_to_human=tools.handoff,
         record_reply=RecordAssistantReplyUseCase(

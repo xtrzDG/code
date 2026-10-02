@@ -2,10 +2,7 @@
 
 import pytest
 
-from app.schemas.constants.localization import (
-    CountryOnboardingStatus,
-    TextDirection,
-)
+from app.schemas.constants.localization import CountryOnboardingStatus, TextDirection
 from app.schemas.dto.catalog.countries import (
     CountryListRequest,
     CountryProfileRequest,
@@ -22,9 +19,7 @@ from app.schemas.typings.localization.constrained_strings import (
     LanguageTag,
 )
 from app.schemas.typings.localization.strings import RawPhoneNumberInput
-from app.use_cases.catalog.get_country_profile_use_case import (
-    GetCountryProfileUseCase,
-)
+from app.use_cases.catalog.get_country_profile_use_case import GetCountryProfileUseCase
 from app.use_cases.catalog.list_countries_use_case import ListCountriesUseCase
 from app.use_cases.catalog.list_languages_use_case import ListLanguagesUseCase
 from app.use_cases.localization.parse_phone_number_use_case import (

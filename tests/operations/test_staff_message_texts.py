@@ -1,9 +1,6 @@
 """Texts for staff: booking, stay, lead and handoff notices, and calendar events."""
 
-from app.schemas.constants.bookings import (
-    LeadStatus,
-    LeadType,
-)
+from app.schemas.constants.bookings import LeadStatus, LeadType
 from app.schemas.constants.channels import ChannelKind
 from app.schemas.constants.handoffs import HandoffReason, HandoffUrgency
 from app.schemas.dto.bookings import LeadView
@@ -18,9 +15,7 @@ from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.businesses.strings import BusinessName
 from app.schemas.typings.contacts.prefixed_id import ContactId
 from app.schemas.typings.handoffs.strings import HandoffSummary
-from app.schemas.typings.localization.constrained_strings import (
-    LanguageTag,
-)
+from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.schemas.typings.localization.strings import FormattedPhoneNumber
 from app.transformers.notifications.booking_cancelled_notification_transformer import (
     BookingCancelledNotificationTransformer,

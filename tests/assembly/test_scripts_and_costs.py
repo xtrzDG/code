@@ -6,17 +6,10 @@ from app.schemas.dto.assistants.assembly_sources import LlmTokenPrice
 from app.schemas.typings.assistants.constrained_integers import (
     LlmPricePerMillionTokensMicroUsd,
 )
-from app.schemas.typings.assistants.constrained_strings import (
-    LlmModelId,
-)
+from app.schemas.typings.assistants.constrained_strings import LlmModelId
 from app.schemas.typings.conversations.constrained_integers import LlmTokenCount
-from app.schemas.typings.localization.constrained_strings import (
-    ScriptCode,
-)
-from app.utilities.assembly.llm_costs import (
-    DEFAULT_LLM_TOKEN_PRICES,
-    estimate_llm_cost,
-)
+from app.schemas.typings.localization.constrained_strings import ScriptCode
+from app.utilities.assembly.llm_costs import DEFAULT_LLM_TOKEN_PRICES, estimate_llm_cost
 from app.utilities.assembly.script_detection import (
     is_detectable_script,
     is_written_in_script,

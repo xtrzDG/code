@@ -5,10 +5,7 @@ from datetime import datetime
 from app.schemas.constants.businesses import Weekday
 from app.schemas.constants.channels import ChannelKind
 from app.schemas.constants.conversations import ConversationStatus
-from app.schemas.constants.handoffs import (
-    HandoffReason,
-    HandoffUrgency,
-)
+from app.schemas.constants.handoffs import HandoffReason, HandoffUrgency
 from app.schemas.domain.conversations import ConversationDocument
 from app.schemas.dto.handoffs import HandoffCommand, HandoffResult
 from app.schemas.typings.conversations.prefixed_id import ConversationId

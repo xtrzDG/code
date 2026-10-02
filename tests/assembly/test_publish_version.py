@@ -5,9 +5,7 @@ import pytest
 from app.schemas.constants.assistants import AssistantVersionStatus
 from app.schemas.constants.businesses import BusinessStatus
 from app.schemas.constants.compliance import AuditAction
-from app.schemas.dto.assistants.assistant_commands import (
-    PublishAssistantVersionCommand,
-)
+from app.schemas.dto.assistants.assistant_commands import PublishAssistantVersionCommand
 from app.schemas.exceptions.application_errors import (
     AccessDeniedError,
     ConflictError,
