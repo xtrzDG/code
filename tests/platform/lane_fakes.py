@@ -2,7 +2,7 @@
 
 import threading
 import time
-from collections.abc import Callable, Iterator
+from collections.abc import Callable, Generator
 from contextlib import contextmanager
 
 from app.gateways.worker.background_worker import BackgroundWorker
@@ -91,7 +91,7 @@ class GatedQueuedOperator:
 def running_worker(
     worker: BackgroundWorker,
     on_exit: Callable[[], None] | None = None,
-) -> Iterator[threading.Event]:
+) -> Generator[threading.Event]:
     """Run the worker in a thread for the block; stop and join it after."""
 
     stop_event = threading.Event()

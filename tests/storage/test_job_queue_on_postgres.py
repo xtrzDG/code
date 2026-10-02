@@ -9,10 +9,14 @@ from typed_time_provider import Microseconds
 from app.clients.postgres.postgres_connection_pool_client import (
     PostgresConnectionPoolClient,
 )
+from app.gateways.worker.background_worker import PeriodicJobSpec
 from app.schemas.constants.jobs import JobLane, QueuedJobStatus
 from app.schemas.dto.job_queue import JobClaimRequest, PeriodicRunStart
 from app.schemas.dto.jobs import JobReport, QueuedJobInput
-from app.schemas.typings.platform.constrained_integers import JobClaimLimit
+from app.schemas.typings.platform.constrained_integers import (
+    JobClaimLimit,
+    JobIntervalSeconds,
+)
 from app.schemas.typings.platform.constrained_strings import (
     JobLeaseToken,
     JobName,
@@ -23,7 +27,12 @@ from app.schemas.typings.platform.prefixed_id import QueuedJobId
 from app.schemas.typings.platform.strings import JobPayloadJson
 from app.utilities.jobs.periodic_runs import decide_periodic_run_start
 from tests.platform.lane_fakes import running_worker, wait_until
-from tests.platform.worker_fakes import RUN_AUTOTESTS, ControlledClock, build_worker
+from tests.platform.worker_fakes import (
+    RUN_AUTOTESTS,
+    ControlledClock,
+    CountingPeriodicOperator,
+    build_worker,
+)
 from tests.storage.conftest import PostgresCollectionFactory
 from tests.storage.job_stores import build_postgres_job_stores
 
@@ -166,3 +175,30 @@ def test_a_periodic_run_is_left_alone_while_another_worker_decides(
     assert while_locked is None
     assert after_unlock is not None
     assert stores.periodic_run_repo.get(digest, today) == after_unlock
+
+
+def test_a_worker_restart_does_not_rerun_todays_daily_job_on_postgres(
+    connection_pool: PostgresConnectionPoolClient,
+    postgres_collections: PostgresCollectionFactory,
+) -> None:
+    clock = ControlledClock()
+    stores = build_postgres_job_stores(connection_pool, postgres_collections)
+    digest = CountingPeriodicOperator()
+    spec = PeriodicJobSpec(
+        name=JobName("send_daily_digest"),
+        interval_seconds=JobIntervalSeconds(86_400),
+        operator=digest,
+    )
+
+    first = build_worker(clock, [spec], stores=stores).worker.run_once()
+    clock.advance(30 * 60)  # a deploy: a new worker process
+    restarted = build_worker(clock, [spec], stores=stores).worker.run_once()
+    clock.advance(10 * 3600)  # past midnight UTC
+    next_day = build_worker(clock, [spec], stores=stores).worker.run_once()
+
+    assert (first.periodic_runs, restarted.periodic_runs, next_day.periodic_runs) == (
+        1,
+        0,
+        1,
+    )
+    assert len(digest.ticks) == 2

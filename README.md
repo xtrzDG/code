@@ -387,6 +387,7 @@ UI-тестов); `color`, `position` и `language` в ней показываю
 | Голос | `POST /v1/voice/tools/{tool}`, `POST /v1/voice/webhooks/conversation-initiation`, `POST /v1/voice/webhooks/post-call` |
 | Оплата | `GET …/billing`, `POST …/billing/trial`, `POST …/billing/plan`, `POST …/billing/cancel`, `POST …/billing/checkout`, `POST …/billing/subscribe` (тариф и период с оплатой сразу: после пробного периода, после отмены или без него), `POST /v1/payments/flitt/webhook` |
 | Админка платформы | `GET /v1/admin/clients` (страницы, фильтры `status`, `health`, `country`, `niche`, `search`, сортировка `sort`), `GET /v1/admin/clients/{business_id}`, `POST /v1/admin/clients/{business_id}/open` |
+| Очередь фоновых задач (платформенный админ) | `GET /v1/admin/jobs` (страницы, фильтры `status` — `pending`, `running`, `done`, `dead`, `discarded` — и `name`; без содержимого задач), `POST /v1/admin/jobs/{job_id}/retry` (снова в очередь «мёртвую» или отброшенную задачу), `POST /v1/admin/jobs/{job_id}/discard` (отбросить «мёртвую» или ожидающую); перезапуск и отказ пишутся в журнал аудита |
 
 `…` — это `/v1/businesses/{business_id}`.
 

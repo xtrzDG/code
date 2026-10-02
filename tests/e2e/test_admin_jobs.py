@@ -2,8 +2,6 @@
 
 from typing import cast
 
-from dependency_injector import providers
-
 from app.containers.app import AppContainer
 from app.contracts.jobs import QueuedJobOperator
 from app.schemas.constants.compliance import AuditAction
@@ -14,6 +12,7 @@ from app.schemas.typings.platform.constrained_strings import JobName
 from app.schemas.typings.platform.strings import JobPayloadJson
 from tests.e2e.harness import Workshop, bearer, start_workshop
 from tests.e2e.harness_settings import ADMIN_EMAIL
+from tests.e2e.workshop_container import replace_provider
 from tests.platform.worker_fakes import FlakyQueuedOperator
 
 SEND_DIGEST: JobName = JobName("send_owner_digest")
@@ -28,8 +27,9 @@ def start_with_flaky_job(failures: int) -> tuple[Workshop, FlakyQueuedOperator]:
             dict[JobName, QueuedJobOperator],
             container.gateways.queued_job_operators(),
         )
-        container.gateways.queued_job_operators.override(
-            providers.Object({**handlers, SEND_DIGEST: operator})
+        replace_provider(
+            container.gateways.queued_job_operators,
+            {**handlers, SEND_DIGEST: operator},
         )
 
     return start_workshop(prepare=register), operator
