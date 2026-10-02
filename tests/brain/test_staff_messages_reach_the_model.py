@@ -10,8 +10,8 @@ from app.schemas.constants.conversations import ConversationStatus, MessageAutho
 from app.schemas.domain.conversations import MessageDocument
 from app.schemas.typings.conversations.strings import MessageText
 from tests.brain.brain_world import BrainWorld, build_world
+from tests.brain.engine_helpers import requests_of, user_turn_text
 from tests.brain.scripted_turns import call_tool, say, scripted
-from tests.brain.test_conversation_engine import requests_of, user_turn_text
 
 STAFF_TEXT: str = "Yes, 10% for 8+ guests, Friday 19:00 is held for you"
 
