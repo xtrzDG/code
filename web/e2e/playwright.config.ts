@@ -5,8 +5,10 @@
  *   E2E_SKIP_BUILD=1 npm run e2e     # reuse the last `next build`
  *
  * The API runs in development mode with in-memory storage, so each run starts
- * empty; login codes are read from its log (e2e/.artifacts/api.log). See
- * support/env.ts for ports and the Chromium override.
+ * with only the demo businesses (SEED_DEMO_DATA, used by live.spec.ts; every
+ * other test signs up its own owner); login codes are read from its log
+ * (e2e/.artifacts/api.log). See support/env.ts for ports and the Chromium
+ * override.
  */
 
 import { mkdirSync } from "node:fs";
@@ -106,6 +108,8 @@ export default defineConfig({
         ...UNSET_FOR_API,
         APP_ENV: "development",
         OTP_LOG_CODES: "true",
+        // The demo restaurant is live with its website chat on (live.spec.ts).
+        SEED_DEMO_DATA: "true",
         // Every test signs in from 127.0.0.1: lift the per-address caps.
         OTP_SENDS_PER_IP_PER_HOUR: "100000",
         OTP_VERIFIES_PER_IP_PER_10_MINUTES: "100000",
