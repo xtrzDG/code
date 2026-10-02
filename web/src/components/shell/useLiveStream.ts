@@ -18,6 +18,9 @@ export interface LiveStreamState {
  * lists it touches out of date (they reload if shown), a resync reloads
  * everything, and `onEvent` hears each change (the chime, the toast). The
  * stream reconnects by itself, and at once when the browser is back online.
+ * A page put away in the back/forward cache closes its stream (an open one
+ * would hold one of the browser's few connections to the cabinet) and
+ * resumes it, from the last event, when it is shown again.
  */
 export function useLiveStream(
   businessId: string,
@@ -45,12 +48,22 @@ export function useLiveStream(
     streamRef.current = stream;
     const onOnline = () => stream.reconnectNow();
     const onVisible = () => invalidation.resume();
+    const onPageHide = () => stream.stop();
+    const onPageShow = (event: PageTransitionEvent) => {
+      if (event.persisted) {
+        stream.start();
+      }
+    };
     window.addEventListener("online", onOnline);
     document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("pagehide", onPageHide);
+    window.addEventListener("pageshow", onPageShow);
     stream.start();
     return () => {
       window.removeEventListener("online", onOnline);
       document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("pagehide", onPageHide);
+      window.removeEventListener("pageshow", onPageShow);
       stream.stop();
       invalidation.dispose();
       streamRef.current = null;

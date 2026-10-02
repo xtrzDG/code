@@ -10,6 +10,7 @@ import type { Page } from "@playwright/test";
 
 import { WEB_URL } from "./support/env";
 import { expect, test } from "./support/fixtures";
+import { waitForNetworkQuiet } from "./support/network";
 import { en } from "./support/messages";
 
 const OWNER_PAGES = [
@@ -42,7 +43,7 @@ async function seriousViolations(page: Page): Promise<string[]> {
 async function audit(page: Page, path: string): Promise<void> {
   await page.goto(path);
   await expect(page.getByRole("heading", { level: 1 }).first()).toBeVisible();
-  await page.waitForLoadState("networkidle");
+  await waitForNetworkQuiet(page);
   expect(await seriousViolations(page), path).toEqual([]);
 }
 

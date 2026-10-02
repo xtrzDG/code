@@ -5,6 +5,7 @@
  */
 
 import { expect, test } from "./support/fixtures";
+import { waitForNetworkQuiet } from "./support/network";
 
 test.describe("lists whose every load is audited", () => {
   const lists = [
@@ -26,7 +27,7 @@ test.describe("lists whose every load is audited", () => {
 
       // An open tab does not add an audit entry every minute.
       await page.clock.fastForward(121_000);
-      await page.waitForLoadState("networkidle");
+      await waitForNetworkQuiet(page);
       expect(loads).toHaveLength(1);
 
       // Coming back to the tab reloads (the live stream does the rest).

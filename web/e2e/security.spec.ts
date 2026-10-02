@@ -11,6 +11,7 @@ import { BUSINESS_PAGES, setupPath } from "../src/lib/navigation";
 
 import { uniqueEmail } from "./support/api";
 import { expect, test } from "./support/fixtures";
+import { waitForNetworkQuiet } from "./support/network";
 import { en } from "./support/messages";
 
 const TURNSTILE_SCRIPT = "https://challenges.cloudflare.com/turnstile/v0/api.js*";
@@ -49,7 +50,7 @@ async function policyViolations(page: Page): Promise<string[]> {
 async function openAndCheck(page: Page, path: string): Promise<string> {
   const response = await page.goto(path);
   expect(response, path).not.toBeNull();
-  await page.waitForLoadState("networkidle");
+  await waitForNetworkQuiet(page);
   expect(await policyViolations(page), `${path} broke the Content Security Policy`).toEqual([]);
   const policy = response?.headers()["content-security-policy"] ?? "";
   expect(policy, path).toMatch(/script-src 'self' 'nonce-[A-Za-z0-9+/=]+' 'strict-dynamic'/);
