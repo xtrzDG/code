@@ -6,6 +6,7 @@ from typing import TypedDict
 from app.schemas.constants.assistants import LlmEffort, LlmProvider
 from app.schemas.typings.assistants.constrained_integers import (
     AutotestTurnLimit,
+    LlmCallTimeoutSeconds,
     LlmMaxOutputTokens,
     LlmToolRoundLimit,
 )
@@ -14,6 +15,7 @@ from app.schemas.typings.channels.constrained_strings import PublicBaseUrl
 from app.schemas.typings.platform.strings import PlatformIdentifier
 from app.utilities.config_helpers.app_settings.environment_variable_readers import (
     optional_text,
+    parse_setting,
     read_integer,
     read_text,
 )
@@ -26,6 +28,9 @@ DEFAULT_MODEL_IDS: dict[str, str] = {
     LlmProvider.SCRIPTED: "scripted",
 }
 DEFAULT_OPENAI_BASE_URL: str = "https://eu.api.openai.com/v1"
+# One model call of a customer chat (retried once) may take this long, so a
+# slow provider costs a customer at most about a minute, not three.
+DEFAULT_LLM_CALL_TIMEOUT_SECONDS: int = 25
 
 
 class LlmSettingsSection(TypedDict):
@@ -38,6 +43,7 @@ class LlmSettingsSection(TypedDict):
     llm_judge_effort: LlmEffort
     llm_max_output_tokens: LlmMaxOutputTokens
     llm_tool_round_limit: LlmToolRoundLimit
+    llm_call_timeout_seconds: LlmCallTimeoutSeconds
     openai_base_url: PublicBaseUrl
     openai_project_id: PlatformIdentifier | None
     autotest_turn_limit: AutotestTurnLimit
@@ -75,6 +81,15 @@ def read_llm_settings(
         ),
         llm_tool_round_limit=LlmToolRoundLimit(
             read_integer(environment_variables, "LLM_TOOL_ROUND_LIMIT", 8)
+        ),
+        llm_call_timeout_seconds=parse_setting(
+            "LLM_CALL_TIMEOUT_SECONDS",
+            read_integer(
+                environment_variables,
+                "LLM_CALL_TIMEOUT_SECONDS",
+                DEFAULT_LLM_CALL_TIMEOUT_SECONDS,
+            ),
+            LlmCallTimeoutSeconds,
         ),
         openai_base_url=PublicBaseUrl(
             read_text(environment_variables, "OPENAI_BASE_URL", DEFAULT_OPENAI_BASE_URL)

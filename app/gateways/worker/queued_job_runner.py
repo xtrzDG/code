@@ -19,6 +19,7 @@ from app.schemas.typings.platform.constrained_integers import (
 )
 from app.schemas.typings.platform.constrained_strings import JobLeaseToken, JobName
 from app.schemas.typings.platform.strings import JobErrorText
+from app.utilities.observability.log_context import bound_log_context
 
 LOGGER: logging.Logger = logging.getLogger(__name__)
 MICROSECONDS_PER_SECOND: int = 1_000_000
@@ -93,15 +94,21 @@ class QueuedJobRunner:
     def run(
         self, job: QueuedJobDocument, lease_token: JobLeaseToken
     ) -> QueuedJobOutcome:
-        """Run one claimed job and settle it; never raises for a job failure."""
+        """
+        Run one claimed job and settle it; never raises for a job failure.
+        Its log lines and error reports name the job and its business.
+        """
 
-        try:
-            return self._run_and_settle(job, lease_token)
-        except Exception as error:  # noqa: BLE001 - one job never stops others
-            self._failure_reporter.report(job.name, error)
-            return QueuedJobOutcome(has_run=False, has_failed=True)
-        finally:
-            self._held_leases.release_job(job.id)
+        with bound_log_context(
+            job_name=job.name, job_id=job.id, business_id=job.business_id
+        ):
+            try:
+                return self._run_and_settle(job, lease_token)
+            except Exception as error:  # noqa: BLE001 - one job never stops others
+                self._failure_reporter.report(job.name, error)
+                return QueuedJobOutcome(has_run=False, has_failed=True)
+            finally:
+                self._held_leases.release_job(job.id)
 
     def release_expired_leases(self) -> int:
         """The reaper: jobs whose worker died run again (or die); their count."""

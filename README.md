@@ -333,6 +333,7 @@ UI-тестов); `color`, `position` и `language` в ней показываю
 | `LLM_PROVIDER`, `LLM_MODEL_ID`, `LLM_JUDGE_MODEL_ID` | `openai` и `gpt-5-mini` (`anthropic` — `claude-opus-5-5`; `scripted` — без модели и ключей: каждый ответ — одна фиксированная фраза, для staging и проверок); `LLM_JUDGE_MODEL_ID` — модель клиента и судьи автотестов, по умолчанию та же модель провайдера |
 | `LLM_CHAT_EFFORT`, `LLM_JUDGE_EFFORT` | усилие рассуждений: `low` в чате, `medium` у судьи автотестов (`minimal`, `low`, `medium`, `high`) |
 | `LLM_MAX_OUTPUT_TOKENS`, `LLM_TOOL_ROUND_LIMIT` | 16000 токенов ответа, 8 кругов вызова инструментов на один ответ |
+| `LLM_CALL_TIMEOUT_SECONDS` | 25: столько секунд ждём один вызов модели в чате с клиентом, затем одна повторная попытка; после второй неудачи разговор передаётся сотруднику |
 | `OPENAI_API_KEY`, `OPENAI_PROJECT_ID`, `OPENAI_BASE_URL` | ответы модели — ошибка 502 при первом вызове; ключ читает SDK OpenAI; адрес по умолчанию — `https://eu.api.openai.com/v1` (проект с хранением в ЕС) |
 | `ANTHROPIC_API_KEY` | нужен только при `LLM_PROVIDER=anthropic` (ключ читает SDK Anthropic) |
 | `AUTOTEST_TURN_LIMIT` | 4 сообщения клиента в одном сценарии автотеста |
@@ -363,6 +364,11 @@ UI-тестов); `color`, `position` и `language` в ней показываю
 | `LANGFUSE_PUBLIC_KEY`, `LANGFUSE_SECRET_KEY`, `LANGFUSE_HOST` | журнал вызовов модели не ведётся; адрес по умолчанию — `https://cloud.langfuse.com` (ЕС) |
 | `LANGFUSE_CAPTURE_CONTENT` | `false`: тексты сообщений в журнал не пишутся |
 | `SENTRY_DSN` | неожиданные ошибки только в логе |
+| `SENTRY_TRACES_SAMPLE_RATE` | `0.05`: доля запросов API, чья трассировка уходит в Sentry (от 0 до 1) |
+| `APP_RELEASE`, `RENDER_GIT_COMMIT` | версия сборки в отчётах Sentry и в пульсе воркера; `RENDER_GIT_COMMIT` Render задаёт сам, `APP_RELEASE` — для других платформ |
+| `LOG_FORMAT` | `json` в `production` (одна строка JSON с `request_id`, `business_id`, `conversation_id`, `channel`, `job_name`, `job_id`), `text` в остальных окружениях |
+| `THREADPOOL_SIZE` | 64 обработчика запросов API одновременно (потоки AnyIO) |
+| `DB_POOL_SIZE` | равен `THREADPOOL_SIZE`: столько соединений с Postgres держит один процесс; сумма по всем экземплярам API и воркерам должна быть меньше лимита базы |
 | `WORKER_POLL_SECONDS` | фоновый воркер проверяет задачи раз в 15 секунд |
 | `WORKER_LANE_CONCURRENCY` | `inbound=8,outbound=4,default=2,autotests=2`: столько задач каждой полосы один процесс воркера выполняет одновременно (не указанные полосы — по умолчанию, от 1 до 64) |
 | `EMBEDDED_WORKER` | `auto`: воркер работает потоком внутри API только при `APP_ENV=development` и пустом `DATABASE_URL`; `true` — всегда (в `production` — ошибка запуска), `false` — никогда (см. «Запуск») |

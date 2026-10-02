@@ -1,6 +1,6 @@
 """
-CORS_ALLOWED_ORIGINS, the background worker, the development demo data and
-the recordings directory.
+CORS_ALLOWED_ORIGINS, the request threads and database connections, the
+background worker, the development demo data and the recordings directory.
 """
 
 from collections.abc import Mapping
@@ -15,6 +15,8 @@ from app.schemas.typings.platform.booleans import (
     IsEmbeddedWorkerEnabled,
 )
 from app.schemas.typings.platform.constrained_integers import (
+    DatabasePoolSize,
+    ThreadPoolSize,
     WorkerLaneConcurrency,
     WorkerPollSeconds,
 )
@@ -22,6 +24,7 @@ from app.schemas.typings.platform.strings import LocalDirectoryPath
 from app.utilities.config_helpers.app_settings.environment_variable_readers import (
     FALSE_VALUES,
     TRUE_VALUES,
+    parse_setting,
     read_boolean,
     read_integer,
     read_raw_list,
@@ -36,12 +39,17 @@ from app.utilities.config_helpers.app_settings.worker_lane_settings import (
 DEFAULT_RECORDINGS_DIRECTORY: str = "var/recordings"
 # EMBEDDED_WORKER: "auto" decides by the environment (see read_embedded_worker).
 EMBEDDED_WORKER_AUTO: str = "auto"
+# Request handlers that may run at once in threads (AnyIO's default is 40).
+# Each may hold a database connection, so the pool has as many by default.
+DEFAULT_THREADPOOL_SIZE: int = 64
 
 
 class RuntimeSettingsSection(TypedDict):
     """The `AppSettings` fields of how the processes run."""
 
     cors_allowed_origins: list[PublicBaseUrl]
+    threadpool_size: ThreadPoolSize
+    db_pool_size: DatabasePoolSize
     worker_poll_seconds: WorkerPollSeconds
     worker_lane_concurrency: dict[JobLane, WorkerLaneConcurrency]
     is_embedded_worker_enabled: IsEmbeddedWorkerEnabled
@@ -54,11 +62,22 @@ def read_runtime_settings(
     environment: DeploymentEnvironment,
     has_database: bool,
 ) -> RuntimeSettingsSection:
+    threadpool_size: int = read_integer(
+        environment_variables, "THREADPOOL_SIZE", DEFAULT_THREADPOOL_SIZE
+    )
     return RuntimeSettingsSection(
         cors_allowed_origins=[
             PublicBaseUrl(origin)
             for origin in read_raw_list(environment_variables, "CORS_ALLOWED_ORIGINS")
         ],
+        threadpool_size=parse_setting(
+            "THREADPOOL_SIZE", threadpool_size, ThreadPoolSize
+        ),
+        db_pool_size=parse_setting(
+            "DB_POOL_SIZE",
+            read_integer(environment_variables, "DB_POOL_SIZE", threadpool_size),
+            DatabasePoolSize,
+        ),
         worker_poll_seconds=WorkerPollSeconds(
             read_integer(environment_variables, "WORKER_POLL_SECONDS", 15)
         ),

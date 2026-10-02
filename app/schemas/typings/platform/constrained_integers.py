@@ -3,8 +3,24 @@
 from base_typed_int import BaseConstrainedTypedInt
 
 
+class DatabasePoolSize(BaseConstrainedTypedInt):
+    """
+    How many Postgres connections one process may hold at once (DB_POOL_SIZE);
+    by default as many as the API runs request threads.
+    """
+
+    ge = 1
+    le = 512
+
+
 class ElapsedMilliseconds(BaseConstrainedTypedInt):
     """Measured duration of an operation, in milliseconds."""
+
+    ge = 0
+
+
+class HeartbeatAgeSeconds(BaseConstrainedTypedInt):
+    """How long ago the freshest background worker heartbeat was written."""
 
     ge = 0
 
@@ -53,6 +69,12 @@ class ListItemCount(BaseConstrainedTypedInt):
     ge = 0
 
 
+class MigrationCount(BaseConstrainedTypedInt):
+    """How many SQL migrations of this build a database has not applied yet."""
+
+    ge = 0
+
+
 class PageSize(BaseConstrainedTypedInt):
     """How many items one page of a cabinet list holds."""
 
@@ -71,6 +93,16 @@ class RetryAfterSeconds(BaseConstrainedTypedInt):
 
     ge = 1
     le = 24 * 60 * 60
+
+
+class ThreadPoolSize(BaseConstrainedTypedInt):
+    """
+    How many request handlers of the API run at the same time in worker
+    threads (THREADPOOL_SIZE): the AnyIO thread limiter of the process.
+    """
+
+    ge = 1
+    le = 512
 
 
 class WorkerLaneConcurrency(BaseConstrainedTypedInt):

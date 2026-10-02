@@ -88,7 +88,9 @@ def assemble_app_settings(environment_variables: Mapping[str, str]) -> AppSettin
         **read_otp_provider_settings(environment_variables, smtp_security),
         **read_voice_settings(environment_variables, is_production=not is_development),
         **read_integration_settings(environment_variables),
-        **read_observability_settings(environment_variables),
+        **read_observability_settings(
+            environment_variables, is_production=not is_development
+        ),
         **read_runtime_settings(
             environment_variables,
             environment=environment,

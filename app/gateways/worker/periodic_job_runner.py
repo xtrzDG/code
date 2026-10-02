@@ -22,6 +22,7 @@ from app.schemas.typings.platform.constrained_strings import (
     JobPeriodKey,
 )
 from app.utilities.jobs.periodic_runs import decide_periodic_run_start
+from app.utilities.observability.log_context import bound_log_context
 
 LOGGER: logging.Logger = logging.getLogger(__name__)
 MICROSECONDS_PER_SECOND: int = 1_000_000
@@ -65,15 +66,16 @@ class PeriodicJobRunner:
         runs: int = 0
         failures: int = 0
         for job in self._periodic_jobs:
-            try:
-                has_run, has_failed = (
-                    self._run_local_job(job)
-                    if job.is_process_local
-                    else self._run_shared_job(job)
-                )
-            except Exception as error:  # noqa: BLE001 - e.g. the database is down
-                has_run, has_failed = False, True
-                self._failure_reporter.report(job.name, error)
+            with bound_log_context(job_name=job.name):
+                try:
+                    has_run, has_failed = (
+                        self._run_local_job(job)
+                        if job.is_process_local
+                        else self._run_shared_job(job)
+                    )
+                except Exception as error:  # noqa: BLE001 - e.g. the database is down
+                    has_run, has_failed = False, True
+                    self._failure_reporter.report(job.name, error)
 
             runs += int(has_run)
             failures += int(has_failed)

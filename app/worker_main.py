@@ -21,6 +21,7 @@ from app.clients.postgres.postgres_connection_pool_client import (
 )
 from app.containers.app import AppContainer
 from app.gateways.worker.background_worker import BackgroundWorker
+from app.utilities.observability.logging_setup import configure_logging
 
 LOGGER: logging.Logger = logging.getLogger(__name__)
 STOP_SIGNALS: tuple[signal.Signals, ...] = (signal.SIGINT, signal.SIGTERM)
@@ -72,9 +73,13 @@ def shut_down(app_container: AppContainer) -> None:
         connection_pool.close()
 
 
+def run_from_environment() -> int:
+    """`python -m app.worker_main`: settings and logging from the environment."""
+
+    app_container = AppContainer()
+    configure_logging(app_container.config.app_settings().log_format)
+    return main(app_container)
+
+
 if __name__ == "__main__":
-    logging.basicConfig(
-        level=logging.INFO,
-        format="%(asctime)s %(levelname)s %(name)s: %(message)s",
-    )
-    raise SystemExit(main())
+    raise SystemExit(run_from_environment())
