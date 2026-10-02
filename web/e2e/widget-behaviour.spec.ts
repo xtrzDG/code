@@ -158,9 +158,13 @@ test("an open chat shows a staff message written without a handoff", async ({ pa
   await ask(page, "Is the terrace open?");
   await expect(chat(page).getByText("Answer to Is the terrace open?")).toBeVisible();
   api.add("staff", "Correction: the terrace opens at 18:00.");
-  await page.clock.fastForward(60_000);
-
-  await expect(chat(page).getByText("Correction: the terrace opens at 18:00.")).toBeVisible();
+  // The widget schedules its next poll after it has drawn the answer, so a
+  // single jump can land before that timer exists. Keep moving the clock
+  // until the staff message arrives.
+  await expect(async () => {
+    await page.clock.fastForward(15_000);
+    await expect(chat(page).getByText("Correction: the terrace opens at 18:00.")).toBeVisible({ timeout: 1_000 });
+  }).toPass({ timeout: 30_000 });
   // The visitor key travels in a header, never in the URL.
   expect(api.polls.length).toBeGreaterThan(1);
   for (const poll of api.polls) {
