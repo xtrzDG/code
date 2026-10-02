@@ -3,6 +3,7 @@ import { insightsRu } from "./sections/insights";
 import { contentRu } from "./sections/content";
 import { workspaceRu } from "./sections/workspace";
 import { onboardingRu } from "./onboarding/ru";
+import { landingRu } from "./landing/ru";
 
 /** Русские тексты. Ключи — как в en.ts. */
 export const ru: Messages = {
@@ -183,6 +184,7 @@ export const ru: Messages = {
     admin: { title: "Админка платформы", description: "Все клиенты, их здоровье, расход и маржа." },
   },
   ...onboardingRu,
+  ...landingRu,
   errors: {
     title: "Что-то пошло не так",
     description: "Попробуйте ещё раз. Если ошибка повторяется, пришлите нам номер запроса.",

@@ -2,6 +2,7 @@ import { insightsEn } from "./sections/insights";
 import { contentEn } from "./sections/content";
 import { workspaceEn } from "./sections/workspace";
 import { onboardingEn } from "./onboarding/en";
+import { landingEn } from "./landing/en";
 
 /**
  * English texts: the reference dictionary. Every key added here must be
@@ -189,6 +190,7 @@ export const en = {
     admin: { title: "Platform admin", description: "All clients, their health, usage and margin." },
   },
   ...onboardingEn,
+  ...landingEn,
   errors: {
     title: "Something went wrong",
     description: "Try again. If it keeps happening, send us the request ID.",

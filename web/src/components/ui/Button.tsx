@@ -54,6 +54,8 @@ export interface ButtonProps extends ComponentPropsWithRef<"button"> {
   isLoading?: boolean;
   loadingText?: string;
   leadingIcon?: ReactNode;
+  /** After the label (an arrow); hidden while loading. */
+  trailingIcon?: ReactNode;
 }
 
 export function Button({
@@ -63,6 +65,7 @@ export function Button({
   isLoading = false,
   loadingText,
   leadingIcon,
+  trailingIcon,
   className,
   children,
   disabled,
@@ -79,6 +82,7 @@ export function Button({
     >
       {isLoading ? <Spinner size="sm" /> : leadingIcon}
       <span>{isLoading && loadingText ? loadingText : children}</span>
+      {isLoading ? null : trailingIcon}
     </button>
   );
 }
@@ -88,6 +92,7 @@ export interface ButtonLinkProps extends ComponentPropsWithRef<typeof Link> {
   size?: ButtonSize;
   fullWidth?: boolean;
   leadingIcon?: ReactNode;
+  trailingIcon?: ReactNode;
 }
 
 /** A link styled as a button (navigation, not actions). */
@@ -96,6 +101,7 @@ export function ButtonLink({
   size,
   fullWidth,
   leadingIcon,
+  trailingIcon,
   className,
   children,
   ...props
@@ -104,6 +110,7 @@ export function ButtonLink({
     <Link className={buttonClasses({ variant, size, fullWidth, className })} {...props}>
       {leadingIcon}
       <span>{children}</span>
+      {trailingIcon}
     </Link>
   );
 }

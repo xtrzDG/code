@@ -3,6 +3,7 @@ import { insightsKa } from "./sections/insights";
 import { contentKa } from "./sections/content";
 import { workspaceKa } from "./sections/workspace";
 import { onboardingKa } from "./onboarding/ka";
+import { landingKa } from "./landing/ka";
 
 /** ქართული ტექსტები. გასაღებები — როგორც en.ts-ში. */
 export const ka: Messages = {
@@ -183,6 +184,7 @@ export const ka: Messages = {
     admin: { title: "პლატფორმის ადმინისტრირება", description: "ყველა კლიენტი, მათი მდგომარეობა, ხარჯი და მარჟა." },
   },
   ...onboardingKa,
+  ...landingKa,
   errors: {
     title: "რაღაც შეცდომა მოხდა",
     description: "სცადეთ ხელახლა. თუ შეცდომა მეორდება, გამოგვიგზავნეთ მოთხოვნის ID.",

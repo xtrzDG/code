@@ -1,0 +1,60 @@
+import { IconCheck } from "@/components/icons";
+import { ButtonLink } from "@/components/ui";
+import { CHANNEL_NAMES } from "@/components/workspace/channelNames";
+import type { Translator } from "@/i18n/translate";
+import { landingPrices, moneyText, type PlanQuote } from "@/lib/landing";
+import { LOGIN_PATH } from "@/lib/navigation";
+
+/** One plan: monthly price in the country's currency (and in euros), what is included, a call to action. */
+export function PlanCard({ quote, translator }: { quote: PlanQuote; translator: Translator }) {
+  const { t, tp, locale } = translator;
+  const prices = landingPrices(quote);
+  const number = new Intl.NumberFormat(locale);
+  const features = [
+    quote.is_voice_included && quote.included_voice_minutes > 0
+      ? t("billing.plans.voiceMinutes", { count: number.format(quote.included_voice_minutes) })
+      : t("billing.plans.noVoice"),
+    t("billing.plans.dialogs", { count: number.format(quote.included_dialogs) }),
+    quote.is_voice_included ? t("billing.plans.overage", { price: moneyText(prices.overage) }) : null,
+    t("billing.plans.setupFee", { price: moneyText(prices.setupFee) }),
+    quote.trial_days > 0 ? tp("billing.plans.trial", quote.trial_days) : null,
+  ].filter((feature): feature is string => feature !== null);
+  const channels = new Intl.ListFormat(locale, { type: "conjunction" }).format(
+    quote.channels.map((channel) => t(CHANNEL_NAMES[channel])),
+  );
+
+  return (
+    <li className="flex flex-col rounded-2xl border border-line bg-surface p-6">
+      <h3 className="text-base font-semibold tracking-tight text-ink">{quote.name}</h3>
+      <p className="mt-1.5 text-sm text-pretty text-ink-muted lg:min-h-20">{quote.description}</p>
+      <div className="mt-6">
+        <p className="flex flex-wrap items-baseline gap-x-1.5">
+          <span className="text-3xl font-semibold tracking-tight text-ink tabular-nums">{moneyText(prices.monthly)}</span>
+          <span className="text-sm text-ink-muted">{t("landing.pricing.perMonth")}</span>
+        </p>
+        {prices.plan ? (
+          <p className="mt-1 text-sm text-ink-subtle">{t("landing.pricing.inEuros", { price: prices.plan.text })}</p>
+        ) : null}
+        {quote.annual_discount_percent > 0 ? (
+          <p className="mt-1 text-sm text-ink-subtle">
+            {t("landing.pricing.annual", { price: moneyText(prices.annual), percent: quote.annual_discount_percent })}
+          </p>
+        ) : null}
+      </div>
+      <ul className="mt-6 space-y-2.5 border-t border-line pt-5 text-sm text-ink">
+        {features.map((feature) => (
+          <li key={feature} className="flex gap-2.5">
+            <IconCheck className="mt-0.5 size-4 shrink-0 text-accent" aria-hidden />
+            <span>{feature}</span>
+          </li>
+        ))}
+      </ul>
+      <p className="mt-4 text-xs text-ink-subtle">{t("landing.pricing.channels", { list: channels })}</p>
+      <div className="mt-auto pt-6">
+        <ButtonLink href={LOGIN_PATH} variant="secondary" fullWidth>
+          {t("landing.pricing.choose", { plan: quote.name })}
+        </ButtonLink>
+      </div>
+    </li>
+  );
+}
