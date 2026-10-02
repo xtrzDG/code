@@ -35,9 +35,7 @@ from app.schemas.typings.users.strings import AccessToken
 from app.use_cases.authorize_business_access_use_case import (
     AuthorizeBusinessAccessUseCase,
 )
-from app.use_cases.businesses.change_member_role_use_case import (
-    ChangeMemberRoleUseCase,
-)
+from app.use_cases.businesses.change_member_role_use_case import ChangeMemberRoleUseCase
 from app.use_cases.businesses.create_business_use_case import CreateBusinessUseCase
 from app.use_cases.businesses.get_business_use_case import GetBusinessUseCase
 from app.use_cases.businesses.invite_staff_use_case import InviteStaffUseCase
@@ -47,7 +45,7 @@ from app.use_cases.users.authenticate_user_use_case import AuthenticateUserUseCa
 from app.use_cases.users.get_current_user_use_case import GetCurrentUserUseCase
 from app.use_cases.users.get_login_options_use_case import GetLoginOptionsUseCase
 from app.use_cases.users.logout_use_case import LogoutUseCase
-from app.use_cases.users.start_otp_login_use_case import StartOtpLoginUseCase
+from app.use_cases.users.otp_login.start_otp_login_use_case import StartOtpLoginUseCase
 from app.use_cases.users.update_current_user_use_case import UpdateCurrentUserUseCase
 from app.use_cases.users.verify_otp_login_use_case import VerifyOtpLoginUseCase
 
