@@ -99,13 +99,14 @@ class RecordingConnection:
     def execute(
         self,
         query: str | sql.Composable,
-        parameters: Sequence[object] = (),
+        parameters: Sequence[object] | None = None,
     ) -> object:
         text: str = (
             query if isinstance(query, str) else query.as_string(self._connection)
         )
-        self._transaction.append((text, tuple(parameters)))
-        return self._connection.execute(text, parameters or None)
+        recorded: tuple[object, ...] = () if parameters is None else tuple(parameters)
+        self._transaction.append((text, recorded))
+        return self._connection.execute(text, recorded or None)  # pyright: ignore[reportArgumentType, reportCallIssue]
 
 
 class RecordingConnectionPool(PostgresConnectionPoolClient):
