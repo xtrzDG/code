@@ -1,6 +1,6 @@
 /** Texts and input rules of the sign-in page. */
 
-import { z } from "zod";
+import { z } from "@/lib/zod";
 
 import type { OtpDeliveryChannel } from "@/api/types";
 import type { MessageKey } from "@/i18n/translate";

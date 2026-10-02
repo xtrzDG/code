@@ -14,6 +14,11 @@ const eslintConfig = defineConfig([
         { argsIgnorePattern: "^_", varsIgnorePattern: "^_" },
       ],
       "no-console": ["error", { allow: ["warn", "error"] }],
+      // Zod without its eval-based JIT (src/lib/zod.ts): the CSP forbids eval.
+      "no-restricted-imports": [
+        "error",
+        { paths: [{ name: "zod", message: 'Import { z } from "@/lib/zod" (no eval under the CSP).' }] },
+      ],
     },
   },
   {

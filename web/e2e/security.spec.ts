@@ -71,6 +71,19 @@ test.describe("Content Security Policy", () => {
     expect(nonce).toBeTruthy();
   });
 
+  test.describe("with motion", () => {
+    test.use({ contextOptions: { reducedMotion: "no-preference" } });
+
+    test("the landing's 3D hero does not break it", async ({ page }) => {
+      await watchPolicyViolations(page);
+
+      await openAndCheck(page, "/");
+      // Give the scene time to load its chunk and draw.
+      await page.waitForTimeout(1500);
+      expect(await policyViolations(page)).toEqual([]);
+    });
+  });
+
   test("no page of a business breaks it", async ({ page, owner }) => {
     await watchPolicyViolations(page);
 
