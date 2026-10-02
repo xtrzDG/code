@@ -10,6 +10,7 @@ from fastapi import APIRouter, Header, Query, Response, status
 from fastapi.responses import HTMLResponse
 
 from app.gateways.http.strict_request_parsing import parse_path_identifier
+from app.gateways.http.widget_script_assembly import assemble_widget_script
 from app.schemas.constants.channels import WidgetPosition
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.channels.constrained_strings import WidgetAccentColor
@@ -21,7 +22,6 @@ from app.utilities.channels.channel_endpoints import (
 )
 
 STATIC_DIRECTORY: Path = Path(__file__).resolve().parent / "static"
-WIDGET_SCRIPT_FILE_NAME: str = "widget.js"
 WIDGET_DEMO_TEMPLATE_FILE_NAME: str = "widget_demo.html"
 WIDGET_SCRIPT_MEDIA_TYPE: str = "text/javascript; charset=utf-8"
 # The embed URL has no version, so browsers re-check the script every five
@@ -60,12 +60,13 @@ def build_widget_script_router(static_directory: Path = STATIC_DIRECTORY) -> API
                                              (hex) and `position` (left or
                                              right) preview unsaved choices
 
-    The script is read once, when the router is built, and served with an
-    ETag; the demo page shows the widget even while the chat is switched off
-    (a preview for owners), so the widget can be checked before going live.
+    The script is assembled from its parts once, when the router is built,
+    and served with an ETag over the assembled text; the demo page shows the
+    widget even while the chat is switched off (a preview for owners), so the
+    widget can be checked before going live.
     """
 
-    script_body: bytes = (static_directory / WIDGET_SCRIPT_FILE_NAME).read_bytes()
+    script_body: bytes = assemble_widget_script(static_directory).encode("utf-8")
     script_etag: str = '"' + hashlib.sha256(script_body).hexdigest()[:32] + '"'
     demo_template = Template(
         (static_directory / WIDGET_DEMO_TEMPLATE_FILE_NAME).read_text(encoding="utf-8")

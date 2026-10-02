@@ -20,9 +20,13 @@ from app.gateways.http.widget_cors_middleware import (
     WIDGET_CORS_HEADERS,
     WIDGET_SESSION_KEY_HEADER,
 )
+from app.gateways.http.widget_script_assembly import (
+    WIDGET_SCRIPT_PART_FILE_NAMES,
+    WIDGET_SCRIPT_PARTS_DIRECTORY_NAME,
+    assemble_widget_script,
+)
 from app.gateways.http.widget_script_routes import (
     STATIC_DIRECTORY,
-    WIDGET_SCRIPT_FILE_NAME,
     build_widget_script_router,
 )
 from app.registries.localization.curated_country_languages import (
@@ -44,9 +48,7 @@ from app.utilities.localization.language_tags import base_language_code
 from tests.channels.testbed import ChannelsTestbed, bearer
 from tests.e2e.harness import start_workshop
 
-SCRIPT_SOURCE: str = (STATIC_DIRECTORY / WIDGET_SCRIPT_FILE_NAME).read_text(
-    encoding="utf-8"
-)
+SCRIPT_SOURCE: str = assemble_widget_script(STATIC_DIRECTORY)
 BUSINESS_ID: str = "business_0b6c2f5e-1d1a-4c55-9a3e-2f1d5b7c9e01"
 
 
@@ -209,11 +211,19 @@ class TestScriptAgreesWithTheApi:
     def test_links_in_answers_keep_the_bubble_text_colour(self) -> None:
         assert ".aw-assistant a,.aw-staff a{color:inherit;}" in SCRIPT_SOURCE
 
+    def test_every_part_of_the_script_is_assembled(self) -> None:
+        parts_directory: Path = STATIC_DIRECTORY / WIDGET_SCRIPT_PARTS_DIRECTORY_NAME
+        part_file_names = {path.name for path in parts_directory.glob("*.js")}
+
+        assert part_file_names == set(WIDGET_SCRIPT_PART_FILE_NAMES)
+        assert len(WIDGET_SCRIPT_PART_FILE_NAMES) == len(part_file_names)
+
     @pytest.mark.skipif(shutil.which("node") is None, reason="node is not installed")
-    def test_script_parses_with_node(self) -> None:
+    def test_script_parses_with_node(self, tmp_path: Path) -> None:
         node = shutil.which("node")
         assert node is not None
-        script_path: Path = STATIC_DIRECTORY / WIDGET_SCRIPT_FILE_NAME
+        script_path: Path = tmp_path / "widget.js"
+        script_path.write_text(SCRIPT_SOURCE, encoding="utf-8")
 
         result = subprocess.run(
             [node, "--check", str(script_path)],

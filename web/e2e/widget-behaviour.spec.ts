@@ -1,19 +1,23 @@
 /**
- * The website chat widget (app/gateways/http/static/widget.js) on a host
- * site, against a fake widget API: polling, page changes, several tabs,
- * screen readers and text direction. No server is needed; the shipped
- * script is served as it is.
+ * The website chat widget (assembled by the API from
+ * app/gateways/http/static/widget/) on a host site, against a fake widget
+ * API: polling, page changes, several tabs, screen readers and text
+ * direction. The script is the one the real API serves at /widget.js, as it
+ * is; everything else is faked.
  */
-
-import { readFileSync } from "node:fs";
-import path from "node:path";
 
 import type { BrowserContext, Page, Route } from "@playwright/test";
 
-import { REPOSITORY_ROOT } from "./support/env";
+import { API_URL } from "./support/env";
 import { expect, test } from "./support/fixtures";
 
-const WIDGET_SOURCE = readFileSync(path.join(REPOSITORY_ROOT, "app/gateways/http/static/widget.js"), "utf8");
+let WIDGET_SOURCE = "";
+
+test.beforeAll(async () => {
+  const response = await fetch(`${API_URL}/widget.js`);
+  expect(response.ok).toBe(true);
+  WIDGET_SOURCE = await response.text();
+});
 const SITE = "https://shop.example";
 const API = "https://api.example";
 const BUSINESS = "business_0b6c2f5e-1d1a-4c55-9a3e-2f1d5b7c9e01";
