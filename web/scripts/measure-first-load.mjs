@@ -14,7 +14,7 @@
  */
 
 import { spawn } from "node:child_process";
-import { readdirSync, readFileSync, statSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { gzipSync } from "node:zlib";
@@ -65,11 +65,13 @@ function lazyThreeChunks() {
   const directory = path.join(WEB_DIRECTORY, ".next", "static", "chunks");
   const files = [];
   const walk = (folder) => {
-    for (const name of readdirSync(folder)) {
-      const file = path.join(folder, name);
-      if (statSync(file).isDirectory()) {
+    // The entry types come with the listing: no separate check of a file
+    // before it is read.
+    for (const entry of readdirSync(folder, { withFileTypes: true })) {
+      const file = path.join(folder, entry.name);
+      if (entry.isDirectory()) {
         walk(file);
-      } else if (name.endsWith(".js")) {
+      } else if (entry.isFile() && entry.name.endsWith(".js")) {
         const body = readFileSync(file);
         if (body.includes("WebGLRenderer")) {
           files.push({ name: path.relative(directory, file), raw: body.length, gzip: gzipSize(body) });
