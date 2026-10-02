@@ -77,7 +77,7 @@ class SendLoginCodeUseCase(UseCaseContract[SendLoginCodeCommand, OtpChallengeDoc
         # The bot check calls Cloudflare: before the lock, on a first read.
         require_bot_check_when_risky(
             self._bot_check,
-            self._list_recent_challenges(),
+            self._list_recent_challenges,
             destination,
             input_data.turnstile_token,
             self._app_settings,

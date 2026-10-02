@@ -3,6 +3,8 @@ When a login code request needs a bot check (Cloudflare Turnstile) before
 the paid send, and the check itself.
 """
 
+from collections.abc import Callable
+
 from app.contracts.login_protection import BotCheckFacilitatorContract
 from app.schemas.configurations.app_settings import AppSettings
 from app.schemas.constants.users import LoginMethod, LoginRiskSignal
@@ -81,14 +83,15 @@ def find_login_risk_signals(
 
 def require_bot_check_when_risky(
     bot_check: BotCheckFacilitatorContract,
-    recent: list[OtpChallengeDocument],
+    list_recent: Callable[[], list[OtpChallengeDocument]],
     destination: LoginCodeDestination,
     token: TurnstileResponseToken | None,
     app_settings: AppSettings,
 ) -> None:
     """
     Let a request through when the bot check is off, the request shows no
-    risk signal, or its token passes the check.
+    risk signal, or its token passes the check. `list_recent` (the
+    challenges of the last hour) is read only while the check is on.
 
     Raises:
         BotCheckRequiredError: the check is needed and was not passed; its
@@ -99,7 +102,7 @@ def require_bot_check_when_risky(
 
     site_key: TurnstileSiteKey | None = bot_check.site_key()
     if site_key is None or not find_login_risk_signals(
-        recent, destination, app_settings
+        list_recent(), destination, app_settings
     ):
         return
 
