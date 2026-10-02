@@ -49,6 +49,9 @@ from app.adapters.voice.elevenlabs_voice_webhook_adapter import (
 from app.containers.adapters.document_collections_container import (
     DocumentCollectionsContainer,
 )
+from app.containers.adapters.launch_collections_container import (
+    LaunchCollectionsContainer,
+)
 from app.containers.clients import ClientsContainer
 from app.containers.config import ConfigContainer
 from app.containers.factories import (
@@ -80,6 +83,13 @@ class AdaptersContainer(containers.DeclarativeContainer):
     # Document collections: Postgres with DATABASE_URL, else in memory.
     collections: DocumentCollectionsContainer = Container(  # type: ignore[assignment]
         DocumentCollectionsContainer,
+        clients=clients,
+        config=config,
+        time_provider=time_provider,
+        utilities=utilities,
+    )
+    launch_collections: LaunchCollectionsContainer = Container(  # type: ignore[assignment]
+        LaunchCollectionsContainer,
         clients=clients,
         config=config,
         time_provider=time_provider,

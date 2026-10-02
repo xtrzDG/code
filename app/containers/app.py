@@ -62,6 +62,7 @@ class AppContainer(containers.DeclarativeContainer):
     repositories: RepositoriesContainer = Container(  # type: ignore[assignment]
         RepositoriesContainer,
         collections=adapters.collections,
+        launch_collections=adapters.launch_collections,
     )
     registries: RegistriesContainer = Container(  # type: ignore[assignment]
         RegistriesContainer,

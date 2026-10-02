@@ -24,6 +24,7 @@ from app.registries.locks.login_code_send_lock_registry import (
     LoginCodeSendLockRegistry,
 )
 from app.registries.niches.niche_template_registry import NicheTemplateRegistry
+from app.registries.niches.starter_answer_registry import StarterAnswerRegistry
 from app.registries.tools.assistant_tool_registry import AssistantToolRegistry
 
 
@@ -44,6 +45,9 @@ class RegistriesContainer(containers.DeclarativeContainer):
     )
     niche_template_registry: Singleton[NicheTemplateRegistry] = Singleton(
         NicheTemplateRegistry
+    )
+    starter_answer_registry: Singleton[StarterAnswerRegistry] = Singleton(
+        StarterAnswerRegistry
     )
     plan_registry: Singleton[PlanRegistry] = Singleton(PlanRegistry)
     exchange_rate_registry: Singleton[ExchangeRateRegistry] = Singleton(

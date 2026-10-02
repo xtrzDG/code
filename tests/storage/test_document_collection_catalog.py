@@ -12,6 +12,9 @@ from app.adapters.storage.postgres.document_collection_factory import (
 from app.containers.adapters.document_collections_container import (
     DocumentCollectionsContainer,
 )
+from app.containers.adapters.launch_collections_container import (
+    LaunchCollectionsContainer,
+)
 from app.schemas.constants.compliance import AuditAction
 from app.schemas.constants.storage import CollectionIsolation
 from app.schemas.domain.assistants import AssistantVersionDocument
@@ -73,11 +76,23 @@ PLATFORM_DOCUMENT_TYPES: frozenset[type[PersistentDocument]] = frozenset(
 )
 
 
+# The containers of document collections (the guided launch's own sibling).
+COLLECTION_CONTAINERS = (DocumentCollectionsContainer, LaunchCollectionsContainer)
+
+
+def collection_providers() -> list[providers.Provider[object]]:
+    return [
+        provider
+        for container in COLLECTION_CONTAINERS
+        for provider in container.providers.values()
+    ]
+
+
 def container_document_types() -> list[type[PersistentDocument]]:
-    """Document types of the collection providers of the container."""
+    """Document types of the collection providers of the containers."""
 
     document_types: list[type[PersistentDocument]] = []
-    for provider in DocumentCollectionsContainer.providers.values():
+    for provider in collection_providers():
         if not isinstance(provider, providers.Singleton):
             continue
 
@@ -123,7 +138,7 @@ def test_every_catalog_entry_is_wired_in_the_container_once() -> None:
 
 
 def test_container_collection_names_match_the_catalog() -> None:
-    for provider in DocumentCollectionsContainer.providers.values():
+    for provider in collection_providers():
         if not isinstance(provider, providers.Singleton):
             continue
 

@@ -158,3 +158,15 @@ class BusinessProfileRepository(BusinessProfileRepoContract):
         business_id: BusinessId,
     ) -> BusinessProfileDocument | None:
         return self._collection.get(str(business_id))
+
+    def insert_if_absent(self, profile: BusinessProfileDocument) -> bool:
+        return bool(
+            self._collection.insert_if_absent(str(profile.business_id), profile)
+        )
+
+    def modify(
+        self,
+        business_id: BusinessId,
+        change: Callable[[BusinessProfileDocument], BusinessProfileDocument | None],
+    ) -> BusinessProfileDocument | None:
+        return self._collection.modify(str(business_id), change)

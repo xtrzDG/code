@@ -47,6 +47,11 @@ from app.schemas.domain.package_usage import PackageUsageWarningDocument
 from app.schemas.domain.payments import PaymentOrderDocument
 from app.schemas.domain.profiles import BusinessProfileDocument
 from app.schemas.domain.resources import ResourceDocument, ScheduleExceptionDocument
+from app.schemas.domain.setup import (
+    ActivationEventDocument,
+    AssistantApplyDocument,
+    SetupStateDocument,
+)
 from app.schemas.domain.users import (
     OtpChallengeDocument,
     UserDocument,
@@ -172,6 +177,17 @@ DOCUMENT_COLLECTIONS: tuple[DocumentCollectionDefinition, ...] = (
     DocumentCollectionDefinition(
         DocumentCollectionName("package_usage_warnings"),
         PackageUsageWarningDocument,
+    ),
+    # The guided launch: milestones, skipped setup steps and the current
+    # "Apply changes" of each business (1044).
+    DocumentCollectionDefinition(
+        DocumentCollectionName("activation_events"), ActivationEventDocument
+    ),
+    DocumentCollectionDefinition(
+        DocumentCollectionName("setup_states"), SetupStateDocument
+    ),
+    DocumentCollectionDefinition(
+        DocumentCollectionName("assistant_applies"), AssistantApplyDocument
     ),
 )
 
