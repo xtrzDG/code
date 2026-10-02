@@ -9,16 +9,9 @@ from app.schemas.dto.conversations import LlmRequest
 from app.schemas.dto.llm_scripts import ScriptedLlmTurn
 from app.schemas.exceptions.application_errors import ExternalServiceError
 from app.schemas.typings.conversations.strings import MessageText
-from tests.brain.brain_world import (
-    ARMENIA,
-    ISRAEL,
-    BrainWorld,
-    build_world,
-    call_tool,
-    knowledge_item,
-    say,
-    scripted,
-)
+from tests.brain.brain_world import BrainWorld, build_world
+from tests.brain.business_setups import ARMENIA, ISRAEL, knowledge_item
+from tests.brain.scripted_turns import call_tool, say, scripted
 
 
 def last_user_turn_text(world: BrainWorld, request_index: int) -> str:

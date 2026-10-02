@@ -39,7 +39,7 @@ from app.use_cases.businesses.update_business_settings_use_case import (
     UpdateBusinessSettingsUseCase,
 )
 from app.use_cases.voice.remove_voice_agent_use_case import RemoveVoiceAgentUseCase
-from tests.assembly.builders import seed_georgian_restaurant
+from tests.assembly.georgian_restaurant_seed import seed_georgian_restaurant
 from tests.assembly.testbed import AssemblyTestbed
 from tests.users.accounts_testbed import PhonenumbersParser
 

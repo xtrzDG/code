@@ -20,9 +20,9 @@ from app.schemas.exceptions.application_errors import (
 )
 from app.schemas.typings.assistants.prefixed_id import AssistantVersionId
 from app.schemas.typings.localization.constrained_strings import LanguageTag
-from tests.assembly.builders import (
-    build_business,
-    seed_georgian_restaurant,
+from tests.assembly.builders import build_business
+from tests.assembly.georgian_restaurant_seed import seed_georgian_restaurant
+from tests.assembly.international_business_seeds import (
     seed_italian_restaurant,
     seed_online_shop,
 )

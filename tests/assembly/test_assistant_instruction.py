@@ -16,8 +16,8 @@ from app.transformers.assembly.assistant_instruction_transformer import (
     AssistantInstructionTransformer,
 )
 from app.utilities.assembly.assistant_tools import select_assistant_tools
-from tests.assembly.builders import (
-    seed_georgian_restaurant,
+from tests.assembly.georgian_restaurant_seed import seed_georgian_restaurant
+from tests.assembly.international_business_seeds import (
     seed_israeli_clinic,
     seed_italian_restaurant,
     seed_japanese_restaurant,

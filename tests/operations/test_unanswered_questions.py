@@ -19,7 +19,7 @@ from app.schemas.typings.handoffs.strings import UnansweredQuestionText
 from app.schemas.typings.knowledge.strings import KnowledgeBody, KnowledgeTitle
 from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.schemas.typings.platform.constrained_integers import PageSize
-from tests.operations.builders import OperationsWorld
+from tests.operations.operations_world import OperationsWorld
 
 
 class QuestionsFixture:
