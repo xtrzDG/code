@@ -65,9 +65,7 @@ from app.orchestrators.channels.widget_message_orchestrator import (
 from app.orchestrators.use_case_orchestrator import UseCaseOrchestrator
 from app.pipelines.orchestrator_pipeline import OrchestratorPipeline
 from app.registries.billing.plan_registry import PlanRegistry
-from app.registries.limits.request_rate_limit_registry import (
-    RequestRateLimitRegistry,
-)
+from app.registries.limits.request_rate_limit_registry import RequestRateLimitRegistry
 from app.registries.localization.language_registry import LanguageRegistry
 from app.repositories.assistant_repositories import AssistantVersionRepository
 from app.repositories.billing_repositories import UsageEventRepository
@@ -159,7 +157,9 @@ from app.use_cases.channels.accept_widget_message_use_case import (
     AcceptWidgetMessageUseCase,
 )
 from app.use_cases.channels.build_widget_reply_use_case import BuildWidgetReplyUseCase
-from app.use_cases.channels.connect_channel_use_case import ConnectChannelUseCase
+from app.use_cases.channels.connection.connect_channel_use_case import (
+    ConnectChannelUseCase,
+)
 from app.use_cases.channels.create_telegram_link_use_case import (
     CreateTelegramLinkUseCase,
 )
@@ -168,9 +168,7 @@ from app.use_cases.channels.deliver_channel_reply_use_case import (
 )
 from app.use_cases.channels.disable_channel_use_case import DisableChannelUseCase
 from app.use_cases.channels.get_widget_config_use_case import GetWidgetConfigUseCase
-from app.use_cases.channels.get_widget_messages_use_case import (
-    GetWidgetMessagesUseCase,
-)
+from app.use_cases.channels.get_widget_messages_use_case import GetWidgetMessagesUseCase
 from app.use_cases.channels.get_widget_snippet_use_case import GetWidgetSnippetUseCase
 from app.use_cases.channels.handle_platform_bot_update_use_case import (
     HandlePlatformBotUpdateUseCase,
@@ -185,18 +183,14 @@ from app.use_cases.channels.receive_telegram_webhook_use_case import (
 from app.use_cases.channels.set_whatsapp_staff_template_use_case import (
     SetWhatsAppStaffTemplateUseCase,
 )
-from app.use_cases.channels.verify_meta_webhook_use_case import (
-    VerifyMetaWebhookUseCase,
-)
+from app.use_cases.channels.verify_meta_webhook_use_case import VerifyMetaWebhookUseCase
 from app.use_cases.voice.authenticate_post_call_use_case import (
     AuthenticatePostCallUseCase,
 )
 from app.use_cases.voice.authenticate_voice_tool_call_use_case import (
     AuthenticateVoiceToolCallUseCase,
 )
-from app.use_cases.voice.record_finished_call_use_case import (
-    RecordFinishedCallUseCase,
-)
+from app.use_cases.voice.record_finished_call_use_case import RecordFinishedCallUseCase
 from app.use_cases.voice.send_call_confirmation_use_case import (
     SendCallConfirmationUseCase,
 )

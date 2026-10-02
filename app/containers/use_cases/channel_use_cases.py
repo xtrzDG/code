@@ -42,9 +42,7 @@ from app.schemas.dto.channels.widget import (
     WidgetSnippetQuery,
     WidgetSnippetView,
 )
-from app.schemas.dto.conversations import (
-    InboundMessage,
-)
+from app.schemas.dto.conversations import InboundMessage
 from app.schemas.dto.staff_reply_templates import SetWhatsAppStaffTemplateCommand
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.channels.constrained_integers import DeliveredMessageCount
@@ -56,7 +54,9 @@ from app.use_cases.channels.build_widget_reply_use_case import BuildWidgetReplyU
 from app.use_cases.channels.configure_platform_bot_webhook_use_case import (
     ConfigurePlatformBotWebhookUseCase,
 )
-from app.use_cases.channels.connect_channel_use_case import ConnectChannelUseCase
+from app.use_cases.channels.connection.connect_channel_use_case import (
+    ConnectChannelUseCase,
+)
 from app.use_cases.channels.create_telegram_link_use_case import (
     CreateTelegramLinkUseCase,
 )
@@ -65,9 +65,7 @@ from app.use_cases.channels.deliver_channel_reply_use_case import (
 )
 from app.use_cases.channels.disable_channel_use_case import DisableChannelUseCase
 from app.use_cases.channels.get_widget_config_use_case import GetWidgetConfigUseCase
-from app.use_cases.channels.get_widget_messages_use_case import (
-    GetWidgetMessagesUseCase,
-)
+from app.use_cases.channels.get_widget_messages_use_case import GetWidgetMessagesUseCase
 from app.use_cases.channels.get_widget_snippet_use_case import GetWidgetSnippetUseCase
 from app.use_cases.channels.handle_platform_bot_update_use_case import (
     HandlePlatformBotUpdateUseCase,
