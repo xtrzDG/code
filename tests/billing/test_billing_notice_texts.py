@@ -1,171 +1,29 @@
+"""Billing notice texts: payment failures, usage warnings and placeholders."""
+
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
 import pytest
-from typed_time_provider import Microseconds
 
-from app.registries.billing.plan_registry import PlanRegistry
-from app.schemas.constants.billing import (
-    BillingNoticeKind,
-    BillingPeriod,
-    InvoiceKind,
-    PackageMetric,
-    PlanKey,
-)
-from app.schemas.dto.billing import Money
-from app.schemas.dto.billing_ledger import BillingNotice, InvoiceDescriptionInput
+from app.schemas.constants.billing import BillingNoticeKind, PackageMetric
+from app.schemas.dto.billing_ledger import BillingNotice
 from app.schemas.exceptions.application_errors import ValidationFailedError
 from app.schemas.typings.billing.constrained_integers import (
     IncludedDialogs,
     IncludedVoiceMinutes,
-    MoneyAmountMinor,
     PackageUsagePercent,
     UsedDialogs,
     UsedVoiceMinutes,
 )
 from app.schemas.typings.businesses.strings import BusinessName
 from app.schemas.typings.localization.constrained_strings import (
-    CurrencyCode,
     LanguageTag,
     TimezoneName,
 )
 from app.transformers.billing.billing_texts import fill_placeholders
 from app.utilities.billing.billing_periods import to_microseconds
-from tests.billing.billing_testbed import (
-    BillingTestbed,
-    describe_invoice,
-    describe_notice,
-)
-
-# Words the concept's tax rule forbids on invoices, in every language.
-FORBIDDEN_FRAGMENTS: tuple[str, ...] = (
-    "licen",
-    "consult",
-    "лиценз",
-    "консульт",
-    "ლიცენზ",
-    "კონსულტ",
-)
-TBILISI = "Asia/Tbilisi"
-
-
-def tbilisi(year: int, month: int, day: int, hour: int, minute: int) -> Microseconds:
-    return to_microseconds(
-        datetime(year, month, day, hour, minute, tzinfo=ZoneInfo(TBILISI))
-    )
-
-
-def invoice_input(
-    language: str,
-    kind: InvoiceKind = InvoiceKind.SERVICE_PERIOD,
-    billing_period: BillingPeriod = BillingPeriod.MONTHLY,
-    plan_key: PlanKey = PlanKey.VOICE_AND_CHAT,
-) -> InvoiceDescriptionInput:
-    return InvoiceDescriptionInput(
-        kind=kind,
-        language=LanguageTag(language),
-        timezone=TimezoneName(TBILISI),
-        plan_names=PlanRegistry().get(plan_key).names,
-        billing_period=billing_period,
-        period_start=tbilisi(2026, 10, 1, 0, 0),
-        period_end=tbilisi(2026, 11, 1, 0, 0),
-    )
-
-
-def gel(amount_minor: int) -> Money:
-    return Money(
-        amount_minor=MoneyAmountMinor(amount_minor),
-        currency_code=CurrencyCode("GEL"),
-    )
-
-
-@pytest.mark.parametrize(
-    ("language", "expected"),
-    [
-        (
-            "en",
-            "Call and message handling service — Voice + chat, monthly, "
-            "Oct 1, 2026 – Oct 31, 2026",
-        ),
-        (
-            "ru",
-            "Услуга приёма и обработки обращений — Голос + чат, помесячно, "
-            "1 окт. 2026 г. – 31 окт. 2026 г.",
-        ),
-        (
-            "ka",
-            "ზარებისა და შეტყობინებების მიღებისა და დამუშავების მომსახურება — "
-            "ხმა + ჩატი, ყოველთვიური, 1 ოქტ. 2026 – 31 ოქტ. 2026",
-        ),
-        (
-            "ru-KZ",
-            "Услуга приёма и обработки обращений — Голос + чат, помесячно, "
-            "1 окт. 2026 г. – 31 окт. 2026 г.",
-        ),
-    ],
-)
-def test_invoice_line_names_the_service_in_the_owner_language(
-    language: str,
-    expected: str,
-) -> None:
-    assert describe_invoice(BillingTestbed(), invoice_input(language)) == expected
-
-
-@pytest.mark.parametrize("language", ["he", "ar", "ja", "it", "zh-Hant"])
-def test_other_languages_read_the_english_invoice(language: str) -> None:
-    testbed = BillingTestbed()
-
-    assert describe_invoice(testbed, invoice_input(language)) == describe_invoice(
-        testbed, invoice_input("en")
-    )
-
-
-@pytest.mark.parametrize(
-    ("language", "expected"),
-    [
-        ("en", "Call and message handling service — setup"),
-        ("ru", "Услуга приёма и обработки обращений — подключение"),
-        (
-            "ka",
-            "ზარებისა და შეტყობინებების მიღებისა და დამუშავების მომსახურება — ჩართვა",
-        ),
-    ],
-)
-def test_setup_fee_line(language: str, expected: str) -> None:
-    assert (
-        describe_invoice(
-            BillingTestbed(),
-            invoice_input(language, kind=InvoiceKind.SETUP_FEE),
-        )
-        == expected
-    )
-
-
-@pytest.mark.parametrize("language", ["en", "ru", "ka", "he", "ar"])
-@pytest.mark.parametrize("kind", list(InvoiceKind))
-@pytest.mark.parametrize("billing_period", list(BillingPeriod))
-@pytest.mark.parametrize("plan_key", list(PlanKey))
-def test_invoices_never_mention_a_license_or_a_consultation(
-    language: str,
-    kind: InvoiceKind,
-    billing_period: BillingPeriod,
-    plan_key: PlanKey,
-) -> None:
-    line: str = describe_invoice(
-        BillingTestbed(),
-        invoice_input(language, kind, billing_period, plan_key),
-    ).casefold()
-
-    assert not any(fragment in line for fragment in FORBIDDEN_FRAGMENTS)
-
-
-def test_annual_invoice_line_says_annual() -> None:
-    line: str = describe_invoice(
-        BillingTestbed(),
-        invoice_input("ru", billing_period=BillingPeriod.ANNUAL),
-    )
-
-    assert "за год" in line
+from tests.billing.billing_testbed import BillingTestbed, describe_notice
+from tests.billing.billing_text_inputs import TBILISI, gel, tbilisi
 
 
 def test_payment_failed_notice_names_amount_and_deadline_per_language() -> None:
