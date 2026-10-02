@@ -39,9 +39,15 @@ WAIT: LockWaitSeconds = LockWaitSeconds(20)
 class LockingProcess:
     """What one API process has: a pool, a scope, locks and contacts."""
 
-    def __init__(self, database_url: DatabaseUrl, **pool_options: int) -> None:
+    def __init__(
+        self,
+        database_url: DatabaseUrl,
+        statement_timeout_seconds: int | None = None,
+    ) -> None:
         self.pool = PostgresConnectionPoolClient(
-            database_url, max_size=4, **pool_options
+            database_url,
+            max_size=4,
+            statement_timeout_seconds=statement_timeout_seconds,
         )
         self.scope = StorageScopeContext()
         self.locks = PostgresAdvisoryLockAdapter(
