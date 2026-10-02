@@ -4,6 +4,9 @@ from collections.abc import Mapping
 
 from typed_time_provider import Microseconds, WallClock
 
+from app.adapters.locks.in_memory_advisory_lock_adapter import (
+    InMemoryAdvisoryLockAdapter,
+)
 from app.registries.limits.request_rate_limit_registry import RequestRateLimitRegistry
 from app.registries.localization.high_cost_phone_number_registry import (
     HighCostPhoneNumberRegistry,
@@ -67,7 +70,7 @@ class AccountsUserUseCases(AccountsRepositories):
             otp_delivery_facilitator=self.otp_delivery,
             app_settings=self.settings,
             wall_clock=wall_clock,
-            send_lock_registry=LoginCodeSendLockRegistry(),
+            send_lock_registry=LoginCodeSendLockRegistry(InMemoryAdvisoryLockAdapter()),
             bot_check=self.bot_check,
             cap_alerts=self.cap_alerts,
         )

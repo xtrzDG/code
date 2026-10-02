@@ -5,6 +5,7 @@ from app.containers.orchestrators.conversation_orchestrators import (
     ConversationOrchestratorsContainer,
 )
 from app.containers.provider_chains import orchestrator_pipeline
+from app.containers.registries import RegistriesContainer
 from app.contracts.conversation_flow import CustomerMessagePipelineContract
 from app.contracts.pipeline_contract import PipelineContract
 from app.pipelines.conversations.customer_message_pipeline import (
@@ -27,12 +28,14 @@ class ConversationPipelinesContainer(containers.DeclarativeContainer):
     conversation_orchestrators: ConversationOrchestratorsContainer = (
         DependenciesContainer()  # type: ignore[assignment]
     )
+    registries: RegistriesContainer = DependenciesContainer()  # type: ignore[assignment]
 
-    # --- Customer messages of every channel. Singleton: its per-customer
-    # locks must be shared by every channel of the process.
+    # --- Customer messages of every channel, one turn per customer at a time
+    # across every API instance and worker (the customer's lock).
     customer_message_pipeline: Singleton[CustomerMessagePipelineContract] = Singleton(
         CustomerMessagePipeline,
         turn_orchestrator=conversation_orchestrators.conversation_turn_orchestrator,
+        customer_locks=registries.customer_message_lock_registry,
     )
 
     # --- The owner's test chat.

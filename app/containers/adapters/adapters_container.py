@@ -23,6 +23,9 @@ from app.adapters.llm.offline_llm_adapter import OfflineLlmAdapter
 from app.adapters.llm.openai_llm_adapter import OpenAiLlmAdapter
 from app.adapters.llm.routing_llm_adapter import RoutingLlmAdapter
 from app.adapters.llm.tracing_llm_adapter import TracingLlmAdapter
+from app.adapters.locks.advisory_lock_adapter_factory import (
+    build_advisory_lock_adapter,
+)
 from app.adapters.payments.flitt_payment_gateway_adapter import (
     FlittPaymentGatewayAdapter,
 )
@@ -60,6 +63,7 @@ from app.containers.time_provider import TimeProviderContainer
 from app.containers.utilities import UtilitiesContainer
 from app.contracts.health import DatabaseProbeAdapterContract
 from app.contracts.llm import LlmAdapterContract
+from app.contracts.locks import AdvisoryLockAdapterContract
 from app.contracts.observability import LlmTraceFacilitatorContract
 from app.schemas.dto.conversations import LlmCallLimits
 
@@ -95,6 +99,13 @@ class AdaptersContainer(containers.DeclarativeContainer):
     migration_source: Singleton[SqlFileMigrationSourceAdapter] = Singleton(
         SqlFileMigrationSourceAdapter,
         migrations_directory=BUILD_MIGRATIONS_DIRECTORY,
+    )
+    # Locks every process respects (Postgres advisory locks over the shared
+    # pool; in-process locks without a database).
+    advisory_locks: Singleton[AdvisoryLockAdapterContract] = Singleton(
+        build_advisory_lock_adapter,
+        connection_pool=clients.postgres_pool,
+        storage_scope=utilities.storage_scope,
     )
 
     # --- Security and recordings.

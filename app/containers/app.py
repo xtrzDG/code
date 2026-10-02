@@ -65,6 +65,7 @@ class AppContainer(containers.DeclarativeContainer):
     )
     registries: RegistriesContainer = Container(  # type: ignore[assignment]
         RegistriesContainer,
+        adapters=adapters,
         config=config,
         repositories=repositories,
         time_provider=time_provider,
@@ -106,6 +107,7 @@ class AppContainer(containers.DeclarativeContainer):
     pipelines: PipelinesContainer = Container(  # type: ignore[assignment]
         PipelinesContainer,
         orchestrators=orchestrators,
+        registries=registries,
         use_cases=use_cases,
     )
     operators: OperatorsContainer = Container(  # type: ignore[assignment]

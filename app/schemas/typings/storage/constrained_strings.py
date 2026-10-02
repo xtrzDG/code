@@ -3,6 +3,21 @@
 from base_typed_string import BaseConstrainedTypedString
 
 
+class AdvisoryLockKey(BaseConstrainedTypedString):
+    """
+    What a database advisory lock serializes, as text: a purpose and the
+    ids it covers ("bookings|biz_..."). Postgres locks its 64-bit hash
+    (`hashtextextended`), so every process that names the same key waits
+    for the same lock.
+
+    Example:
+        key = AdvisoryLockKey("login-code-sends")
+    """
+
+    min_length = 1
+    max_length = 400
+
+
 class DocumentCollectionName(BaseConstrainedTypedString):
     """
     Name of one document collection, which is also its Postgres table name.

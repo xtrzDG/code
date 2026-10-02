@@ -48,6 +48,17 @@ class StorageScopeContract(UtilityContract, Protocol):
         raise NotImplementedError
 
 
+class StorageUnitOfWorkContract(AdapterContract, Protocol):
+    def unit_of_work(self) -> AbstractContextManager[None]:
+        """
+        Run the block as one storage transaction on one connection, in the
+        current storage scope: its writes commit together when the block
+        ends, or none of them when it raises. A unit inside a unit is a
+        savepoint of the outer one.
+        """
+        raise NotImplementedError
+
+
 class SchemaMigrationSourceAdapterContract(AdapterContract, Protocol):
     def load_scripts(self) -> list[SchemaMigrationScript]:
         """

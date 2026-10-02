@@ -88,8 +88,9 @@ class CalendarEventLinkRepoContract(RepoContract, Protocol):
 class BusinessLockRegistryContract(RegistryContract, Protocol):
     def lock_for(self, business_id: BusinessId) -> AbstractContextManager[object]:
         """
-        Lock serializing booking changes of one business inside this process,
-        so a check-then-insert cannot double-book the last unit.
+        Lock serializing booking changes of one business across every
+        process, so a check-then-insert cannot double-book the last unit;
+        the block's storage writes commit with the lock's release.
         """
         raise NotImplementedError
 

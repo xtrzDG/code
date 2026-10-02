@@ -12,6 +12,9 @@ from dataclasses import dataclass, field
 
 from typed_time_provider import Microseconds, WallClock
 
+from app.adapters.locks.in_memory_advisory_lock_adapter import (
+    InMemoryAdvisoryLockAdapter,
+)
 from app.contracts.llm import LlmAdapterContract
 from app.orchestrators.conversations.conversation_turn_orchestrator import (
     ConversationTurnOrchestrator,
@@ -21,6 +24,9 @@ from app.orchestrators.conversations.voice_tool_call_orchestrator import (
 )
 from app.pipelines.conversations.customer_message_pipeline import (
     CustomerMessagePipeline,
+)
+from app.registries.locks.customer_message_lock_registry import (
+    CustomerMessageLockRegistry,
 )
 from app.repositories.assistant_repositories import AssistantVersionRepository
 from app.repositories.billing_repositories import UsageEventRepository
@@ -262,7 +268,10 @@ def build_world(
             wall_clock=wall_clock,
         ),
         orchestrator=orchestrators.orchestrator,
-        pipeline=CustomerMessagePipeline(orchestrators.orchestrator),
+        pipeline=CustomerMessagePipeline(
+            orchestrators.orchestrator,
+            CustomerMessageLockRegistry(InMemoryAdvisoryLockAdapter()),
+        ),
         voice_orchestrator=orchestrators.voice_orchestrator,
         greeting=BuildCallGreetingUseCase(
             business_repo=repos.business_repo,

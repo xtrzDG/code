@@ -2,31 +2,27 @@ import threading
 import time
 from collections.abc import Generator
 from contextlib import contextmanager
-from dataclasses import dataclass
 
 import psycopg
-from psycopg import pq
-from psycopg.rows import TupleRow
 
+from app.clients.postgres.pinned_connections import (
+    IdleConnection,
+    PinnedConnections,
+    PostgresConnection,
+    build_session_options,
+    is_idle,
+)
 from app.contracts.client_contract import ClientContract
 from app.schemas.exceptions.application_errors import ExternalServiceError
 from app.schemas.typings.platform.strings import DatabaseUrl
 
-type PostgresConnection = psycopg.Connection[TupleRow]
+__all__ = ["PostgresConnection", "PostgresConnectionPoolClient"]
 
 DEFAULT_MAX_POOL_SIZE: int = 10
 DEFAULT_ACQUIRE_TIMEOUT_SECONDS: float = 30.0
 DEFAULT_CONNECT_TIMEOUT_SECONDS: int = 10
 DEFAULT_IDLE_CHECK_SECONDS: float = 30.0
 DEFAULT_APPLICATION_NAME: str = "assistant-workshop"
-
-
-@dataclass
-class _IdleConnection:
-    """A pooled connection and when it was returned (monotonic seconds)."""
-
-    connection: PostgresConnection
-    idle_since: float
 
 
 class PostgresConnectionPoolClient(ClientContract):
@@ -49,6 +45,11 @@ class PostgresConnectionPoolClient(ClientContract):
     become the server settings of every connection (startup options), so a
     runaway query or a transaction left open by a stuck thread is ended by
     the server instead of holding locks and a connection for minutes.
+
+    `pinned_connection()` keeps one connection for a block of a thread
+    (a session advisory lock, a unit of work): inside it, `connection()`
+    and `transaction()` of that thread use the pinned connection, and a
+    nested `transaction()` becomes a savepoint.
     """
 
     def __init__(
@@ -81,9 +82,10 @@ class PostgresConnectionPoolClient(ClientContract):
             statement_timeout_seconds, idle_in_transaction_timeout_seconds
         )
         self._condition: threading.Condition = threading.Condition()
-        self._idle_connections: list[_IdleConnection] = []
+        self._idle_connections: list[IdleConnection] = []
         self._open_connection_count: int = 0
         self._is_closed: bool = False
+        self._pins: PinnedConnections = PinnedConnections()
 
     @property
     def max_size(self) -> int:
@@ -107,8 +109,13 @@ class PostgresConnectionPoolClient(ClientContract):
         """
         Borrow one connection (autocommit) for the duration of the block,
         waiting at most `acquire_timeout_seconds` (default: the pool's) for
-        a free one.
+        a free one. Inside a pin of this thread, the pinned connection.
         """
+
+        pinned_connection: PostgresConnection | None = self._pins.current()
+        if pinned_connection is not None:
+            yield pinned_connection
+            return
 
         connection: PostgresConnection = self._acquire(
             self._acquire_timeout_seconds
@@ -122,9 +129,29 @@ class PostgresConnectionPoolClient(ClientContract):
 
     @contextmanager
     def transaction(self) -> Generator[PostgresConnection]:
-        """Borrow a connection inside one transaction; an error rolls it back."""
+        """
+        Borrow a connection inside one transaction; an error rolls it back.
+        Inside a pin whose connection is already in a transaction, a
+        savepoint of it (its error rolls back only the savepoint).
+        """
 
         with self.connection() as connection, connection.transaction():
+            yield connection
+
+    @contextmanager
+    def pinned_connection(self) -> Generator[PostgresConnection]:
+        """
+        Keep one connection for this thread for the whole block (see the
+        class doc); a nested pin reuses the outer one. The connection goes
+        back to the pool when the outermost pin ends.
+        """
+
+        pinned_connection: PostgresConnection | None = self._pins.current()
+        if pinned_connection is not None:
+            yield pinned_connection
+            return
+
+        with self.connection() as connection, self._pins.pinned(connection):
             yield connection
 
     def close(self) -> None:
@@ -132,7 +159,7 @@ class PostgresConnectionPoolClient(ClientContract):
 
         with self._condition:
             self._is_closed = True
-            idle_connections: list[_IdleConnection] = self._idle_connections
+            idle_connections: list[IdleConnection] = self._idle_connections
             self._idle_connections = []
             self._open_connection_count -= len(idle_connections)
             self._condition.notify_all()
@@ -150,7 +177,7 @@ class PostgresConnectionPoolClient(ClientContract):
     def _acquire(self, timeout_seconds: float) -> PostgresConnection:
         deadline: float = time.monotonic() + timeout_seconds
         while True:
-            idle_connection: _IdleConnection | None = self._reserve(
+            idle_connection: IdleConnection | None = self._reserve(
                 deadline, timeout_seconds
             )
             if idle_connection is None:
@@ -163,7 +190,7 @@ class PostgresConnectionPoolClient(ClientContract):
 
     def _reserve(
         self, deadline: float, timeout_seconds: float
-    ) -> _IdleConnection | None:
+    ) -> IdleConnection | None:
         """Take an idle connection, or reserve a slot for a new one (None)."""
 
         with self._condition:
@@ -210,7 +237,7 @@ class PostgresConnectionPoolClient(ClientContract):
             self._forget_slot()
             raise
 
-    def _is_usable(self, idle_connection: _IdleConnection) -> bool:
+    def _is_usable(self, idle_connection: IdleConnection) -> bool:
         connection: PostgresConnection = idle_connection.connection
         if connection.closed or connection.broken:
             return False
@@ -231,7 +258,7 @@ class PostgresConnectionPoolClient(ClientContract):
         with self._condition:
             if is_reusable and not self._is_closed:
                 self._idle_connections.append(
-                    _IdleConnection(connection=connection, idle_since=time.monotonic())
+                    IdleConnection(connection=connection, idle_since=time.monotonic())
                 )
                 self._condition.notify()
                 return
@@ -263,27 +290,3 @@ class PostgresConnectionPoolClient(ClientContract):
         with self._condition:
             self._open_connection_count -= 1
             self._condition.notify()
-
-
-def build_session_options(
-    statement_timeout_seconds: int | None,
-    idle_in_transaction_timeout_seconds: int | None,
-) -> str:
-    """libpq `options` that set the server's timeouts for one connection."""
-
-    settings: list[str] = []
-    if statement_timeout_seconds is not None:
-        settings.append(f"-c statement_timeout={int(statement_timeout_seconds)}s")
-    if idle_in_transaction_timeout_seconds is not None:
-        settings.append(
-            "-c idle_in_transaction_session_timeout="
-            f"{int(idle_in_transaction_timeout_seconds)}s"
-        )
-
-    return " ".join(settings)
-
-
-def is_idle(connection: PostgresConnection) -> bool:
-    """True when the connection is outside any transaction."""
-
-    return connection.info.transaction_status is pq.TransactionStatus.IDLE

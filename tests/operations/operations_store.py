@@ -2,6 +2,9 @@
 
 from datetime import datetime
 
+from app.adapters.locks.in_memory_advisory_lock_adapter import (
+    InMemoryAdvisoryLockAdapter,
+)
 from app.adapters.storage.in_memory_document_collection import (
     InMemoryDocumentCollectionAdapter,
 )
@@ -130,4 +133,4 @@ class OperationsStore:
         self.notifier = RecordingManagerNotifier()
         self.broadcaster = ManagerBroadcastFacilitator(self.notifier)
         self.calendar_sync = RecordingCalendarSync()
-        self.lock_registry = BusinessLockRegistry()
+        self.lock_registry = BusinessLockRegistry(InMemoryAdvisoryLockAdapter())

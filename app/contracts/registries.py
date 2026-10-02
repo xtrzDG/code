@@ -7,10 +7,13 @@ from typed_time_provider import Microseconds
 
 from app.contracts.registry_contract import RegistryContract
 from app.schemas.constants.billing import PlanKey
+from app.schemas.constants.channels import ChannelKind
 from app.schemas.constants.niches import NicheKey
 from app.schemas.dto.billing import Money, PlanDefinition
 from app.schemas.dto.localization import CountryProfile, LanguageProfile
 from app.schemas.dto.niches import NicheTemplate
+from app.schemas.typings.businesses.prefixed_id import BusinessId
+from app.schemas.typings.conversations.strings import ChannelUserId
 from app.schemas.typings.localization.constrained_strings import (
     CountryCode,
     CurrencyCode,
@@ -71,8 +74,24 @@ class PlanRegistryContract(RegistryContract, Protocol):
 class LoginCodeSendLockRegistryContract(RegistryContract, Protocol):
     def lock(self) -> AbstractContextManager[object]:
         """
-        Lock serializing the check-and-reserve step of login code sends in
-        this process, so parallel requests cannot all pass the limits.
+        Lock serializing the check-and-reserve step of login code sends
+        across every process, so parallel requests cannot all pass the
+        limits. The block's storage writes commit with the lock's release.
+        """
+        raise NotImplementedError
+
+
+class CustomerMessageLockRegistryContract(RegistryContract, Protocol):
+    def lock_for_customer(
+        self,
+        business_id: BusinessId,
+        channel: ChannelKind,
+        channel_user_id: ChannelUserId,
+    ) -> AbstractContextManager[object]:
+        """
+        Lock serializing the turns of one customer in one channel across
+        every process (API instances answering the widget, workers answering
+        the inbox), held for a whole turn, model calls included.
         """
         raise NotImplementedError
 
