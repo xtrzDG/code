@@ -71,7 +71,7 @@ export function HandoffCard({ handoff, onResolve }: { handoff: HandoffListItem; 
         </p>
         <div className="flex flex-wrap gap-2">
           <ButtonLink
-            href={`${businessPath(business.id, "conversations")}/${encodeURIComponent(handoff.conversation_id)}`}
+            href={`${businessPath(business.id, "messages")}/${encodeURIComponent(handoff.conversation_id)}`}
             variant="secondary"
             size="sm"
           >

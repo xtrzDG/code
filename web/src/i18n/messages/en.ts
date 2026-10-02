@@ -1,6 +1,7 @@
 import { insightsEn } from "./sections/insights";
 import { contentEn } from "./sections/content";
 import { workspaceEn } from "./sections/workspace";
+import { shellEn } from "./sections/shell";
 import { onboardingEn } from "./onboarding/en";
 import { landingEn } from "./landing/en";
 
@@ -227,6 +228,7 @@ export const en = {
   ...insightsEn,
   ...contentEn,
   ...workspaceEn,
+  ...shellEn,
 } as const satisfies NestedMessages;
 
 interface NestedMessages {

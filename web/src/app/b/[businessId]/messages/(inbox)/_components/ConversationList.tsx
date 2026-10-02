@@ -114,7 +114,7 @@ function ConversationRow({
   const { t, tp, locale } = useI18n();
   const { business } = useBusiness();
   const format = useBusinessFormat();
-  const href = `${businessPath(business.id, "conversations")}/${encodeURIComponent(conversation.id)}${linkQuery ? `?${linkQuery}` : ""}`;
+  const href = `${businessPath(business.id, "messages")}/${encodeURIComponent(conversation.id)}${linkQuery ? `?${linkQuery}` : ""}`;
   const when = formatRelative(conversation.last_message_at, locale, { maxDays: 1 }) ?? format.date(conversation.last_message_at);
 
   return (

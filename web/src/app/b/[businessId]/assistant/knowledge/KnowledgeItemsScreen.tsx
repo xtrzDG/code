@@ -24,7 +24,7 @@ export function KnowledgeItemsScreen() {
   const { business } = useBusiness();
   const list = useKnowledgeItems();
   const { items, kinds, openQuestions, editor, deleting } = list;
-  const base = businessPath(business.id, "knowledge");
+  const base = businessPath(business.id, "assistant/knowledge");
   const all = items.items ?? [];
 
   return (

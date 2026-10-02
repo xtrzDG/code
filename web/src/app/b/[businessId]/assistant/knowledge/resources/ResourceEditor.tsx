@@ -25,7 +25,7 @@ import {
   type ResourceView,
 } from "@/lib/resources";
 
-import { HoursEditor, hoursToRows, rowsToHours, type DayRows } from "../../onboarding/_components/HoursEditor";
+import { HoursEditor, hoursToRows, rowsToHours, type DayRows } from "../../profile/_components/HoursEditor";
 
 export const RESOURCE_KIND_LABELS: Record<ResourceKind, MessageKey> = {
   table: "onboarding.booking.resourceKinds.table",

@@ -149,7 +149,7 @@ export function StaffTelegramCard({ canManage }: { canManage: boolean }) {
             <p className="text-ink-muted">{t("channels.telegramLink.noneLinked")}</p>
           )}
           <Link
-            href={`${businessPath(business.id, "settings")}#notifications`}
+            href={businessPath(business.id, "settings/notifications")}
             className="mt-3 inline-block font-medium text-accent hover:underline"
           >
             {t("channels.telegramLink.manage")}

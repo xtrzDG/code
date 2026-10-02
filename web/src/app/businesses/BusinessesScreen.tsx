@@ -62,7 +62,7 @@ export function BusinessesScreen({ me, businesses }: { me: CurrentUserView; busi
           {businesses.map((business) => (
             <li key={business.id}>
               <Link
-                href={businessPath(business.id, business.status === "onboarding" ? "onboarding" : "dashboard")}
+                href={businessPath(business.id)}
                 className="group motion-lift flex h-full flex-col rounded-2xl border border-line bg-surface p-5 hover:border-line-strong hover:bg-surface-muted/40"
               >
                 <div className="flex items-start justify-between gap-3">

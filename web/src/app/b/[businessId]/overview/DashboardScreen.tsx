@@ -113,7 +113,7 @@ export function DashboardScreen({ initialPeriod }: { initialPeriod: DashboardPer
           </h2>
           <div className="grid gap-3 sm:grid-cols-2">
             <AttentionTile
-              href={businessPath(businessId, "handoffs")}
+              href={businessPath(businessId, "messages/handoffs")}
               label={t("dashboard.attention.openHandoffs")}
               hint={t("dashboard.attention.openHandoffsHint")}
               count={openHandoffCount}
@@ -122,7 +122,7 @@ export function DashboardScreen({ initialPeriod }: { initialPeriod: DashboardPer
               icon={<IconHandoff className="size-5" />}
             />
             <AttentionTile
-              href={businessPath(businessId, "knowledge")}
+              href={businessPath(businessId, "assistant/knowledge")}
               label={t("dashboard.attention.questions")}
               hint={t("dashboard.attention.questionsHint")}
               count={data?.open_unanswered_question_count}

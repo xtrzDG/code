@@ -1,8 +1,8 @@
-import { sectionMetadata } from "@/components/business/SectionPlaceholder";
+import { pageMetadata } from "@/components/business/pageMetadata";
 
 import { KnowledgeItemsScreen } from "./KnowledgeItemsScreen";
 
-export const generateMetadata = sectionMetadata("knowledge");
+export const generateMetadata = pageMetadata("assistant/knowledge");
 
 /** Knowledge: menu, services, prices, questions and rules the assistant answers from. */
 export default function KnowledgePage() {

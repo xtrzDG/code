@@ -51,7 +51,7 @@ export function LinkedItems({
       ) : (
         <div className="space-y-4">
           {handoffs.length > 0 ? (
-            <LinkedGroup title={t("conversations.linked.handoffs")} href={businessPath(businessId, "handoffs")}>
+            <LinkedGroup title={t("conversations.linked.handoffs")} href={businessPath(businessId, "messages/handoffs")}>
               {handoffs.map((handoff) => (
                 <li key={handoff.id} className="flex flex-wrap items-center gap-2">
                   <span className="text-ink">{t(HANDOFF_REASONS[handoff.reason])}</span>
@@ -62,7 +62,7 @@ export function LinkedItems({
             </LinkedGroup>
           ) : null}
           {leads.length > 0 ? (
-            <LinkedGroup title={t("conversations.linked.leads")} href={businessPath(businessId, "leads")}>
+            <LinkedGroup title={t("conversations.linked.leads")} href={businessPath(businessId, "messages/leads")}>
               {leads.map((lead) => (
                 <li key={lead.id} className="flex flex-wrap items-center gap-2">
                   <span className="text-ink">{t(LEAD_TYPES[lead.lead_type])}</span>

@@ -95,7 +95,7 @@ export function BillingScreen({ isCheckoutReturn }: { isCheckoutReturn: boolean 
                   onClick={() => {
                     setShowReturnNotice(false);
                     overview.reload();
-                    router.replace(businessPath(business.id, "billing"));
+                    router.replace(businessPath(business.id, "settings/billing"));
                   }}
                 >
                   {t("workspace.refresh")}

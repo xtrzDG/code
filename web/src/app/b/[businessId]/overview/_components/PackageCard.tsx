@@ -45,7 +45,7 @@ export function PackageCard({
             {t(isOwner ? "dashboard.usage.noPlanDescription" : "dashboard.usage.noPlanStaff")}
           </p>
           {isOwner ? (
-            <ButtonLink href={businessPath(businessId, "billing")} variant="secondary" size="sm">
+            <ButtonLink href={businessPath(businessId, "settings/billing")} variant="secondary" size="sm">
               {t("dashboard.usage.toBilling")}
             </ButtonLink>
           ) : null}

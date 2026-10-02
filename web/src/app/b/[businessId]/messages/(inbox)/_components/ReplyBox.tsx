@@ -96,7 +96,7 @@ export function ReplyBox({
           tone="info"
           action={
             needsTemplate ? (
-              <ButtonLink href={businessPath(business.id, "channels")} variant="secondary" size="sm">
+              <ButtonLink href={businessPath(business.id, "assistant/channels")} variant="secondary" size="sm">
                 {t("conversations.reply.openChannels")}
               </ButtonLink>
             ) : undefined
@@ -170,7 +170,7 @@ export function ReplyBox({
           className="mb-3"
           action={
             isOwner ? (
-              <ButtonLink href={businessPath(business.id, "channels")} variant="secondary" size="sm">
+              <ButtonLink href={businessPath(business.id, "assistant/channels")} variant="secondary" size="sm">
                 {t("conversations.reply.openChannels")}
               </ButtonLink>
             ) : undefined

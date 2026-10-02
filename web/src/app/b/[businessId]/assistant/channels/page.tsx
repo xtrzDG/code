@@ -1,9 +1,9 @@
-import { sectionMetadata } from "@/components/business/SectionPlaceholder";
+import { pageMetadata } from "@/components/business/pageMetadata";
 
 import { ChannelsScreen } from "./ChannelsScreen";
 import { readCalendarReturn } from "./_lib/calendarReturn";
 
-export const generateMetadata = sectionMetadata("channels");
+export const generateMetadata = pageMetadata("assistant/channels");
 
 export default async function ChannelsPage({ searchParams }: PageProps<"/b/[businessId]/channels">) {
   const { calendar, reason } = await searchParams;

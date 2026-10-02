@@ -4,7 +4,7 @@ import { BillingSkeleton } from "./_components/BillingSkeleton";
 
 export default function BillingLoading() {
   return (
-    <SectionLoading section="billing" label="common.loading">
+    <SectionLoading page="settings/billing" label="common.loading">
       <BillingSkeleton />
     </SectionLoading>
   );

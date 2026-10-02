@@ -1,8 +1,8 @@
-import { sectionMetadata } from "@/components/business/SectionPlaceholder";
+import { pageMetadata } from "@/components/business/pageMetadata";
 
 import { BillingScreen } from "./BillingScreen";
 
-export const generateMetadata = sectionMetadata("billing");
+export const generateMetadata = pageMetadata("settings/billing");
 
 export default async function BillingPage({ searchParams }: PageProps<"/b/[businessId]/billing">) {
   const { checkout } = await searchParams;

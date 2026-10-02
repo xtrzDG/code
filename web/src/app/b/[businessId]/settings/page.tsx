@@ -1,9 +1,16 @@
-import { sectionMetadata } from "@/components/business/SectionPlaceholder";
+import { pageMetadata } from "@/components/business/pageMetadata";
 
-import { SettingsScreen } from "./SettingsScreen";
+import { GeneralTab } from "./_components/GeneralTab";
+import { LegacyTabRedirect } from "./_components/LegacyTabRedirect";
 
-export const generateMetadata = sectionMetadata("settings");
+export const generateMetadata = pageMetadata("settings");
 
+/** Settings → Business: details, languages and time, recordings, the assistant's state. */
 export default function SettingsPage() {
-  return <SettingsScreen />;
+  return (
+    <>
+      <LegacyTabRedirect />
+      <GeneralTab />
+    </>
+  );
 }

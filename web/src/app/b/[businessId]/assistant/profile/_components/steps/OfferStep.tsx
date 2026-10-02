@@ -208,7 +208,7 @@ function OfferStepForm({
           <Button variant="secondary" size="sm" leadingIcon={<IconPlus className="size-4" aria-hidden />} onClick={addRow}>
             {t("onboarding.offer.addItem")}
           </Button>
-          <Link href={businessPath(business.id, "knowledge")} className="text-sm font-medium text-accent hover:underline">
+          <Link href={businessPath(business.id, "assistant/knowledge")} className="text-sm font-medium text-accent hover:underline">
             {t("nav.knowledge")}
           </Link>
         </div>

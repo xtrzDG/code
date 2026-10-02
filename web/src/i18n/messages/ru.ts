@@ -2,6 +2,7 @@ import type { Messages } from "../translate";
 import { insightsRu } from "./sections/insights";
 import { contentRu } from "./sections/content";
 import { workspaceRu } from "./sections/workspace";
+import { shellRu } from "./sections/shell";
 import { onboardingRu } from "./onboarding/ru";
 import { landingRu } from "./landing/ru";
 
@@ -221,4 +222,5 @@ export const ru: Messages = {
   ...insightsRu,
   ...contentRu,
   ...workspaceRu,
+  ...shellRu,
 };

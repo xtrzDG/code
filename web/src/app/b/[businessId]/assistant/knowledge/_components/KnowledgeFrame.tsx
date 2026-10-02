@@ -12,7 +12,7 @@ import { businessPath } from "@/lib/navigation";
 export function KnowledgeFrame({ children }: { children: ReactNode }) {
   const { t } = useI18n();
   const { business } = useBusiness();
-  const base = businessPath(business.id, "knowledge");
+  const base = businessPath(business.id, "assistant/knowledge");
 
   return (
     <>

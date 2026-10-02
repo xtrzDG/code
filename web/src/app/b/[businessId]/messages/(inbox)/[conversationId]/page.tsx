@@ -1,8 +1,8 @@
-import { sectionMetadata } from "@/components/business/SectionPlaceholder";
+import { pageMetadata } from "@/components/business/pageMetadata";
 
 import { ConversationDetail } from "../_components/ConversationDetail";
 
-export const generateMetadata = sectionMetadata("conversations");
+export const generateMetadata = pageMetadata("messages");
 
 /** One conversation, next to the feed on wide screens and on its own on phones. */
 export default async function ConversationPage({

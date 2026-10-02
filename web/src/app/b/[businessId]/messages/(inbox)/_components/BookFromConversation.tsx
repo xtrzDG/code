@@ -10,7 +10,7 @@ import type { BookingResult, ConversationSummaryView } from "@/components/insigh
 import { ErrorState, LoadingRegion, Modal, SkeletonText } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 
-import { BookingForm } from "../../bookings/_components/BookingForm";
+import { BookingForm } from "../../../bookings/_components/BookingForm";
 
 /**
  * A booking made by staff for the customer of a conversation: the form is

@@ -44,7 +44,7 @@ export function MenuImportScreen() {
           description={t("knowledge.import.doneDescription")}
           action={
             <div className="flex flex-wrap justify-center gap-2">
-              <ButtonLink href={businessPath(business.id, "knowledge")}>{t("knowledge.import.openKnowledge")}</ButtonLink>
+              <ButtonLink href={businessPath(business.id, "assistant/knowledge")}>{t("knowledge.import.openKnowledge")}</ButtonLink>
               <Button variant="secondary" onClick={startOver}>
                 {t("knowledge.import.another")}
               </Button>

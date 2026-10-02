@@ -167,7 +167,7 @@ export function ChannelsStep({ wizard, step, canEdit, isSaving, isLastStep, onSa
       <Alert
         tone="info"
         action={
-          <ButtonLink href={businessPath(business.id, "channels")} variant="secondary" size="sm">
+          <ButtonLink href={businessPath(business.id, "assistant/channels")} variant="secondary" size="sm">
             {t("onboarding.channels.openChannels")}
           </ButtonLink>
         }

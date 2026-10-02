@@ -8,7 +8,13 @@ import { LOGIN_PATH } from "@/lib/navigation";
 
 import { IconLogout } from "../icons";
 
-/** Ends the session (POST /api/auth/logout) and opens the sign-in page. */
+const DEFAULT_LOOK =
+  "inline-flex h-8 items-center gap-2 rounded-lg px-2.5 text-sm text-ink-muted transition-colors hover:bg-surface-muted hover:text-ink";
+
+/**
+ * Ends the session (POST /api/auth/logout) and opens the sign-in page.
+ * `className` replaces the default look (a quiet button) when given.
+ */
 export function SignOutButton({ className, iconOnlyOnPhones = false }: { className?: string; iconOnlyOnPhones?: boolean }) {
   const { t } = useI18n();
   const [isPending, setPending] = useState(false);
@@ -26,12 +32,9 @@ export function SignOutButton({ className, iconOnlyOnPhones = false }: { classNa
           window.location.assign(LOGIN_PATH);
         }
       }}
-      className={cn(
-        "inline-flex h-8 cursor-pointer items-center gap-2 rounded-lg px-2.5 text-sm text-ink-muted transition-colors hover:bg-surface-muted hover:text-ink disabled:opacity-60",
-        className,
-      )}
+      className={cn("cursor-pointer disabled:opacity-60", className ?? DEFAULT_LOOK)}
     >
-      <IconLogout className="size-4" aria-hidden />
+      <IconLogout className="size-4 shrink-0" aria-hidden />
       <span className={cn(iconOnlyOnPhones && "sr-only sm:not-sr-only")}>
         {isPending ? t("shell.signingOut") : t("shell.signOut")}
       </span>

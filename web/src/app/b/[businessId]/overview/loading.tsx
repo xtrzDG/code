@@ -4,7 +4,7 @@ import { DashboardSkeleton } from "./_components/DashboardSkeleton";
 
 export default function DashboardLoading() {
   return (
-    <SectionLoading section="dashboard" label="dashboard.loading">
+    <SectionLoading page="overview" label="dashboard.loading">
       <DashboardSkeleton />
     </SectionLoading>
   );

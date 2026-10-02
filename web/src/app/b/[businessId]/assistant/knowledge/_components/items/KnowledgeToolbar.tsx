@@ -15,7 +15,7 @@ export function KnowledgeToolbar({ list }: { list: KnowledgeItemsState }) {
   const { t } = useI18n();
   const { business } = useBusiness();
   const { filter, setFilter, kinds } = list;
-  const base = businessPath(business.id, "knowledge");
+  const base = businessPath(business.id, "assistant/knowledge");
   return (
     <div className="flex flex-col gap-3 border-b border-line px-4 py-4 sm:flex-row sm:items-end sm:justify-between sm:px-6">
       <div className="grid grid-cols-2 gap-3 sm:flex sm:flex-wrap">

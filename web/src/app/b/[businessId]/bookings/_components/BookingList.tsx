@@ -186,7 +186,7 @@ export function BookingDetails({ booking, isStay }: { booking: BookingView; isSt
       </dl>
       {booking.conversation_id ? (
         <Link
-          href={`${businessPath(business.id, "conversations")}/${encodeURIComponent(booking.conversation_id)}`}
+          href={`${businessPath(business.id, "messages")}/${encodeURIComponent(booking.conversation_id)}`}
           className="inline-flex text-sm font-medium text-accent hover:underline"
         >
           {t("insights.openConversation")}

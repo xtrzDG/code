@@ -1,10 +1,14 @@
 import type { NextConfig } from "next";
 
+import { legacyRedirects } from "./src/lib/legacyRoutes";
+
 const nextConfig: NextConfig = {
   // The cabinet talks to the Python API only through its own route handlers
   // (src/app/api/*), so no rewrites or CORS are needed.
   poweredByHeader: false,
   reactStrictMode: true,
+  // Addresses from before the five sections (src/lib/legacyRoutes.ts).
+  redirects: async () => legacyRedirects(),
   async headers() {
     return [
       {

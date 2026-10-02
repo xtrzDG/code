@@ -3,30 +3,34 @@ import type { ReactNode } from "react";
 import { LoadingRegion, PageHeader } from "@/components/ui";
 import { getI18n } from "@/i18n/server";
 import type { MessageKey } from "@/i18n/translate";
-import { BUSINESS_SECTION_LABELS, type BusinessSection } from "@/lib/navigation";
+import type { BusinessPage } from "@/lib/navigation";
+import { PAGE_DESCRIPTIONS, pageLabel } from "@/lib/sections";
 
 /**
- * A section's `loading.tsx`: its real title at once, and skeletons shaped
- * like its content (the `children`) until the page arrives.
+ * A page's `loading.tsx`: its real title at once, and skeletons shaped
+ * like its content (the `children`) until the page arrives. Inside a
+ * section frame (Messages, Assistant, Settings) the title is the frame's
+ * and this header shrinks to the page's description (see PageHeader).
  *
  *     export default function Loading() {
- *       return <SectionLoading section="leads" label="leads.loading"><SkeletonCardList /></SectionLoading>;
+ *       return <SectionLoading page="messages/leads" label="leads.loading"><SkeletonCardList /></SectionLoading>;
  *     }
  */
 export async function SectionLoading({
-  section,
+  page,
   label,
   children,
 }: {
-  section: Exclude<BusinessSection, "onboarding">;
+  page: BusinessPage;
   /** What is loading, for screen readers. */
   label: MessageKey;
   children: ReactNode;
 }) {
   const { t } = await getI18n();
+  const description = PAGE_DESCRIPTIONS[page];
   return (
     <>
-      <PageHeader title={t(BUSINESS_SECTION_LABELS[section])} description={t(`pages.${section}.description`)} />
+      <PageHeader title={t(pageLabel(page))} description={description ? t(description) : undefined} />
       <LoadingRegion label={t(label)}>{children}</LoadingRegion>
     </>
   );

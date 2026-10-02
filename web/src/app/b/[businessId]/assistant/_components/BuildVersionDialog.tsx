@@ -75,7 +75,7 @@ export function BuildVersionDialog({ onClose, onBuilt }: { onClose: () => void; 
           tone="warning"
           title={tp("onboarding.gaps.notReady", blocking.length)}
           action={
-            <ButtonLink href={businessPath(business.id, "onboarding")} size="sm" variant="secondary">
+            <ButtonLink href={businessPath(business.id, "assistant/profile")} size="sm" variant="secondary">
               {t("assistant.build.openProfile")}
             </ButtonLink>
           }

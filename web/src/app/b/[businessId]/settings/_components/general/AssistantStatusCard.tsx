@@ -90,7 +90,7 @@ export function AssistantStatusCard({ onSaved }: { onSaved: (business: BusinessV
         {business.service_mode === "leads_only" ? (
           <Alert tone="warning">
             <p>{t("settings.status.leadsOnlyHint")}</p>
-            <ButtonLink href={businessPath(business.id, "billing")} size="sm" variant="secondary" className="mt-3">
+            <ButtonLink href={businessPath(business.id, "settings/billing")} size="sm" variant="secondary" className="mt-3">
               {t("channels.openBilling")}
             </ButtonLink>
           </Alert>

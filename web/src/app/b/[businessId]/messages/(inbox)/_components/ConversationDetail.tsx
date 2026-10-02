@@ -45,7 +45,7 @@ export function ConversationDetail({ conversationId }: { conversationId: string 
   const searchParams = useSearchParams();
   const businessId = business.id;
   const listQuery = searchParams.toString();
-  const backHref = `${businessPath(businessId, "conversations")}${listQuery ? `?${listQuery}` : ""}`;
+  const backHref = `${businessPath(businessId, "messages")}${listQuery ? `?${listQuery}` : ""}`;
   const [draft, setDraft] = useState("");
   const [isBooking, setIsBooking] = useState(false);
   const [confirmation, setConfirmation] = useState<string | null>(null);
@@ -122,7 +122,7 @@ export function ConversationDetail({ conversationId }: { conversationId: string 
         <Alert tone="warning">
           <p>{t("conversations.handoffNotice")}</p>
           <Link
-            href={businessPath(businessId, "handoffs")}
+            href={businessPath(businessId, "messages/handoffs")}
             className="mt-1 inline-block font-medium text-accent hover:underline"
           >
             {t("conversations.toHandoffs")}

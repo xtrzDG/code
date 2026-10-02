@@ -10,7 +10,7 @@ import { todayIn } from "@/components/insights/dates";
 import { useI18n } from "@/i18n/client";
 import type { BusinessSection } from "@/lib/navigation";
 
-import { DEFAULT_DASHBOARD_PERIOD, periodRange } from "../dashboard/_components/dashboardModel";
+import { DEFAULT_DASHBOARD_PERIOD, periodRange } from "../overview/_components/dashboardModel";
 
 /**
  * What each section loads first, for the sidebar to fetch while the pointer

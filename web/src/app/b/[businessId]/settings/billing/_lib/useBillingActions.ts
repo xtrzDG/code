@@ -109,7 +109,7 @@ export function useBillingActions(overview: Query<BillingOverview>) {
   const openPaymentPage = async (
     request: (returnUrl: string | null) => Promise<ApiResult<CheckoutSession>>,
   ): Promise<CheckoutSession> => {
-    const returnUrl = checkoutReturnUrl(window.location.origin, businessPath(business.id, "billing"));
+    const returnUrl = checkoutReturnUrl(window.location.origin, businessPath(business.id, "settings/billing"));
     try {
       return await unwrap(request(returnUrl));
     } catch (caught) {

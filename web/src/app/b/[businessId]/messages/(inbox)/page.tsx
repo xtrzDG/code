@@ -1,8 +1,8 @@
-import { sectionMetadata } from "@/components/business/SectionPlaceholder";
+import { pageMetadata } from "@/components/business/pageMetadata";
 
 import { NoConversationSelected } from "./_components/NoConversationSelected";
 
-export const generateMetadata = sectionMetadata("conversations");
+export const generateMetadata = pageMetadata("messages");
 
 /** The feed (in the layout); on wide screens a hint fills the card column. */
 export default function ConversationsPage() {

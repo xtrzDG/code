@@ -5,7 +5,7 @@ import { BookingDaysSkeleton } from "./_components/BookingsSkeleton";
 
 export default function BookingsLoading() {
   return (
-    <SectionLoading section="bookings" label="bookings.loading">
+    <SectionLoading page="bookings" label="bookings.loading">
       <div className="space-y-5">
         <div className="flex flex-wrap gap-3">
           <Skeleton className="h-9 w-full max-w-lg rounded-xl" />
