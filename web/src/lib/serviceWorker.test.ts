@@ -165,9 +165,10 @@ describe("service worker: requests", () => {
 
   it("keeps the offline page again when asked", async () => {
     worker.network.mockClear();
-    await worker.dispatch("message", { data: { type: "refresh-offline-page" } }).waited;
+    await worker.dispatch("message", { origin: ORIGIN, data: { type: "refresh-offline-page" } }).waited;
     expect(worker.network).toHaveBeenCalledWith("/offline", expect.objectContaining({ cache: "no-store" }));
-    expect(worker.dispatch("message", { data: { type: "other" } }).waited).toBeUndefined();
+    expect(worker.dispatch("message", { origin: ORIGIN, data: { type: "other" } }).waited).toBeUndefined();
+    expect(worker.dispatch("message", { origin: "https://elsewhere.example", data: { type: "refresh-offline-page" } }).waited).toBeUndefined();
   });
 });
 

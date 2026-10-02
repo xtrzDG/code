@@ -12,7 +12,8 @@
  * - A push message {title, body, url, tag} shows a notification; pressing
  *   it opens the url (a page of the cabinet) in a cabinet window.
  * - The page posts {type: "refresh-offline-page"} after a change of
- *   language or theme, so the offline page follows it.
+ *   language or theme, so the offline page follows it; messages from any
+ *   other origin are ignored.
  *
  * Registered by src/components/shell/ServiceWorker.tsx. Tests:
  * src/lib/serviceWorker.test.ts runs this file against fakes.
@@ -163,6 +164,11 @@ function onNotificationClick(event) {
 }
 
 function onMessage(event) {
+  // Only the cabinet's own pages may ask: a window of another site cannot
+  // reach this worker, but the origin is checked all the same.
+  if (event.origin !== self.location.origin) {
+    return;
+  }
   if (event.data && event.data.type === "refresh-offline-page") {
     event.waitUntil(keepOfflinePage());
   }
