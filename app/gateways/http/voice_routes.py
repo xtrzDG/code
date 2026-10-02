@@ -36,9 +36,16 @@ from app.utilities.channels.channel_endpoints import (
 )
 from app.utilities.channels.language_codes import to_voice_platform_language
 from app.utilities.channels.voice_service import (
+    CALLER_NAME_VARIABLE,
+    LOCAL_NOW_VARIABLE,
+    NEXT_DAYS_VARIABLE,
+    NO_BOOKING_VALUE,
     OPEN_NOW_NO,
     OPEN_NOW_VARIABLE,
     OPEN_NOW_YES,
+    TIMEZONE_VARIABLE,
+    UNKNOWN_VALUE,
+    UPCOMING_BOOKING_VARIABLE,
 )
 
 CALL_INITIATION_RESPONSE_TYPE: str = "conversation_initiation_client_data"
@@ -124,11 +131,7 @@ def build_voice_router(
                     "language": to_voice_platform_language(initiation.language),
                 }
             },
-            "dynamic_variables": {
-                OPEN_NOW_VARIABLE: (
-                    OPEN_NOW_YES if initiation.is_open_now else OPEN_NOW_NO
-                )
-            },
+            "dynamic_variables": build_call_variables(initiation),
         }
 
     @router.post(VOICE_POST_CALL_PATH)
@@ -149,6 +152,31 @@ def build_voice_router(
         )
 
     return router
+
+
+def build_call_variables(initiation: CallInitiationData) -> dict[str, str]:
+    """
+    The per-call variables of the agent's "Current call" block: whether the
+    business is open, the local date and time, the next days, the time
+    zone, and a known caller's name and next booking ("unknown" / "none").
+    """
+
+    return {
+        OPEN_NOW_VARIABLE: OPEN_NOW_YES if initiation.is_open_now else OPEN_NOW_NO,
+        LOCAL_NOW_VARIABLE: str(initiation.local_now_text),
+        NEXT_DAYS_VARIABLE: str(initiation.next_days_text),
+        TIMEZONE_VARIABLE: str(initiation.timezone),
+        CALLER_NAME_VARIABLE: (
+            UNKNOWN_VALUE
+            if initiation.caller_name is None
+            else str(initiation.caller_name)
+        ),
+        UPCOMING_BOOKING_VARIABLE: (
+            NO_BOOKING_VALUE
+            if initiation.upcoming_booking_text is None
+            else str(initiation.upcoming_booking_text)
+        ),
+    }
 
 
 def parse_tool_name(raw_tool_name: str) -> AssistantToolName:

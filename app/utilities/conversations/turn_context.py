@@ -89,17 +89,8 @@ def build_context_line(context: TurnContext) -> str:
         CONTEXT_HEADER,
         f"Business: {context.business_name}.",
         "Local time at the business: "
-        f"{WEEKDAY_NAMES[context.local_now.weekday()]} "
-        f"{context.local_now:%Y-%m-%d %H:%M} ({context.timezone_name}).",
-        "Next days: "
-        + ", ".join(
-            f"{WEEKDAY_NAMES[day.weekday()][:3]} {day:%Y-%m-%d}"
-            for day in (
-                context.local_now + timedelta(days=offset)
-                for offset in range(1, UPCOMING_DAY_COUNT + 1)
-            )
-        )
-        + ".",
+        f"{describe_local_now(context.local_now)} ({context.timezone_name}).",
+        f"Next days: {describe_next_days(context.local_now)}.",
     ]
     if context.is_after_hours:
         lines.append(AFTER_HOURS_NOTE)
@@ -122,6 +113,24 @@ def build_context_line(context: TurnContext) -> str:
         lines.append(FIRST_REPLY_NOTE)
 
     return "\n".join(lines)
+
+
+def describe_local_now(local_now: datetime) -> str:
+    """ "Thursday 2026-10-01 14:05" (chat context and phone call variables)."""
+
+    return f"{WEEKDAY_NAMES[local_now.weekday()]} {local_now:%Y-%m-%d %H:%M}"
+
+
+def describe_next_days(local_now: datetime) -> str:
+    """ "Fri 2026-10-02, Sat 2026-10-03, ..." for the next UPCOMING_DAY_COUNT days."""
+
+    return ", ".join(
+        f"{WEEKDAY_NAMES[day.weekday()][:3]} {day:%Y-%m-%d}"
+        for day in (
+            local_now + timedelta(days=offset)
+            for offset in range(1, UPCOMING_DAY_COUNT + 1)
+        )
+    )
 
 
 def build_user_turn_text(context_line: str, message_text: str, fence_key: str) -> str:

@@ -50,7 +50,16 @@ class TestCallInitiation:
                 }
             },
             # No opening hours in the profile: never put through to staff.
-            "dynamic_variables": {"is_open_now": "no"},
+            # The caller's contact has no verified phone yet: not known.
+            "dynamic_variables": {
+                "is_open_now": "no",
+                "local_now": "Thursday 2026-10-01 16:00",
+                "next_days": "Fri 2026-10-02, Sat 2026-10-03, Sun 2026-10-04, "
+                "Mon 2026-10-05, Tue 2026-10-06, Wed 2026-10-07, Thu 2026-10-08",
+                "timezone": "Asia/Tbilisi",
+                "caller_name": "unknown",
+                "upcoming_booking": "none",
+            },
         }
         [greeting_request] = setup.testbed.call_greeting.requests
         assert greeting_request.business_id == setup.business.id
@@ -127,7 +136,7 @@ class TestCallInitiation:
             },
         )
 
-        assert response.json()["dynamic_variables"] == {"is_open_now": expected}
+        assert response.json()["dynamic_variables"]["is_open_now"] == expected
 
     def test_initiation_needs_the_business_secret(self) -> None:
         setup = build_voice_setup()

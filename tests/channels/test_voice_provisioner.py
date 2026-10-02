@@ -182,3 +182,36 @@ class TestRecordingStorage:
             ElevenLabsRecordingStorageAdapter(testbed.elevenlabs_client).delete(
                 RecordingStoragePath("elevenlabs/conversations/conv_1")
             )
+
+
+class TestCurrentCallBlock:
+    def test_the_prompt_ends_with_the_per_call_variables(self) -> None:
+        testbed = ChannelsTestbed()
+        testbed.elevenlabs_transport.respond(
+            "POST", r"^/v1/convai/agents/create$", {"agent_id": "agent_cc"}
+        )
+
+        provisioner(testbed).upsert_agent(build_spec(tools=[]))
+
+        agent = testbed.elevenlabs_transport.requests_to("/agents/create")[0].json()
+        agent_config = agent["conversation_config"]["agent"]
+        prompt: str = agent_config["prompt"]["prompt"]
+        variables = set(
+            agent_config["dynamic_variables"]["dynamic_variable_placeholders"]
+        )
+        assert prompt.startswith(
+            "You are the AI assistant of Funicular VR.\n\n# Current call\n"
+        )
+        assert variables == {
+            "is_open_now",
+            "local_now",
+            "next_days",
+            "timezone",
+            "caller_name",
+            "upcoming_booking",
+        }
+        assert all("{{" + variable + "}}" in prompt for variable in variables)
+        assert "into a YYYY-MM-DD date from these lines before you call a tool" in (
+            prompt
+        )
+        assert "When the local date is unknown, ask the caller" in prompt

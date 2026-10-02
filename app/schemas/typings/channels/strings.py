@@ -3,6 +3,34 @@
 from base_typed_string import BaseTypedString
 
 
+class CallLocalTimeText(BaseTypedString):
+    """
+    The business-local weekday, date and time when a call starts, for the
+    voice agent: "Thursday 2026-10-01 14:05".
+    """
+
+
+class CallNextDaysText(BaseTypedString):
+    """
+    The days after a call's date for the voice agent:
+    "Fri 2026-10-02, Sat 2026-10-03, ...".
+    """
+
+
+class CallUpcomingBookingText(BaseTypedString):
+    """
+    The caller's next booking as the voice agent learns it when the call
+    starts: "Saturday 2026-10-03 20:00, Table 4, 4 people".
+    """
+
+
+class CallerNameText(BaseTypedString):
+    """
+    A known caller's name as the voice agent receives it: from the contact,
+    on one line, without brackets or markup, and short.
+    """
+
+
 class ChannelExternalId(BaseTypedString):
     """
     Business account inside a channel (concept channels.external_id).

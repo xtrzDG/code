@@ -16,6 +16,25 @@ TRANSFER_TOOL_NAME: str = "transfer_to_number"
 OPEN_NOW_VARIABLE: str = "is_open_now"
 OPEN_NOW_YES: str = "yes"
 OPEN_NOW_NO: str = "no"
+# Per-call variables of the "Current call" block: the business-local date
+# and time, the next days, the time zone, a known caller's name and their
+# next booking. The placeholders stand in until the call-initiation webhook
+# answers (or when it cannot).
+LOCAL_NOW_VARIABLE: str = "local_now"
+NEXT_DAYS_VARIABLE: str = "next_days"
+TIMEZONE_VARIABLE: str = "timezone"
+CALLER_NAME_VARIABLE: str = "caller_name"
+UPCOMING_BOOKING_VARIABLE: str = "upcoming_booking"
+UNKNOWN_VALUE: str = "unknown"
+NO_BOOKING_VALUE: str = "none"
+CALL_VARIABLE_PLACEHOLDERS: dict[str, str] = {
+    OPEN_NOW_VARIABLE: OPEN_NOW_NO,
+    LOCAL_NOW_VARIABLE: UNKNOWN_VALUE,
+    NEXT_DAYS_VARIABLE: UNKNOWN_VALUE,
+    TIMEZONE_VARIABLE: UNKNOWN_VALUE,
+    CALLER_NAME_VARIABLE: UNKNOWN_VALUE,
+    UPCOMING_BOOKING_VARIABLE: NO_BOOKING_VALUE,
+}
 PHONE_CONTACT_CHANNELS: frozenset[ManagerContactChannel] = frozenset(
     {ManagerContactChannel.WHATSAPP, ManagerContactChannel.SMS}
 )

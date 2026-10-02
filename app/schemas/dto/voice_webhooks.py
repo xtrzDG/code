@@ -16,6 +16,10 @@ from app.schemas.typings.channels.booleans import (
 )
 from app.schemas.typings.channels.constrained_integers import CallOffsetSeconds
 from app.schemas.typings.channels.strings import (
+    CallerNameText,
+    CallLocalTimeText,
+    CallNextDaysText,
+    CallUpcomingBookingText,
     PresentedWebhookSecret,
     WebhookSignatureHeader,
 )
@@ -32,6 +36,7 @@ from app.schemas.typings.conversations.strings import (
 from app.schemas.typings.localization.constrained_strings import (
     E164PhoneNumber,
     LanguageTag,
+    TimezoneName,
 )
 from app.schemas.typings.localization.strings import RawPhoneNumberInput
 
@@ -85,6 +90,10 @@ class CallInitiationData(ImmutableDTO):
     How the agent starts the call: the greeting with the AI disclosure and
     recording notice, in the business's default language, and whether the
     business is open now (a call is put through to staff only then).
+
+    The agent also learns the call's local date and time, the next days and
+    the time zone (so "tomorrow" becomes a date), and for a caller known by
+    their verified phone, their name and next booking.
     """
 
     business_id: BusinessId
@@ -92,6 +101,11 @@ class CallInitiationData(ImmutableDTO):
     language: LanguageTag
     caller_phone_number: E164PhoneNumber | None = None
     is_open_now: IsOpenNow = False
+    local_now_text: CallLocalTimeText
+    next_days_text: CallNextDaysText
+    timezone: TimezoneName
+    caller_name: CallerNameText | None = None
+    upcoming_booking_text: CallUpcomingBookingText | None = None
 
 
 # --- Post-call webhook -----------------------------------------------------
