@@ -51,7 +51,7 @@ Behind a reverse proxy, run the API with
 | Script | What it does |
 | --- | --- |
 | `npm run dev` / `build` / `start` | Next.js development server, production build, production server |
-| `npm run lint` | ESLint (`eslint-config-next` + strict project rules), zero warnings allowed |
+| `npm run lint` | ESLint (`eslint-config-next` + strict project rules), zero warnings allowed; every file in `src/` and `e2e/` has at most 300 lines (`max-lines`; the generated `schema.d.ts` and `*.generated.ts` are exempt) |
 | `npm run typecheck` | `next typegen` (route types) + `tsc --noEmit` |
 | `npm test` | Vitest unit tests (`src/**/*.test.ts`) |
 | `npm run e2e` | Playwright end-to-end tests against the real API (see [End-to-end tests](#end-to-end-tests)) |
@@ -214,9 +214,11 @@ web/
       BusinessSwitcher.tsx LanguageSwitcher.tsx CountrySelect.tsx icons.tsx
     lib/                       pure helpers with unit tests (*.test.ts): navigation (sections, paths,
                                safeNextPath), format (Intl, money units), countries (phone/country),
-                               hours (opening hours), wizard (profile answers), knowledge, resources,
-                               assistant, validation (zod), classMerge (className overrides), cn,
-                               theme (cookie, theme colours), landing (country guess, plan prices)
+                               hours (opening hours), wizard/ (niche answers, offers, FAQ), knowledge/
+                               (kinds, item form, menu import), resources, assistant/ (versions,
+                               autotests, go-live, test chat), validation (zod), classMerge (className
+                               overrides), cn, theme (cookie, theme colours), landing (country guess,
+                               plan prices)
 ```
 
 ## Sections
@@ -260,7 +262,10 @@ web/
    ```
 
 3. Put interactive parts in `"use client"` components next to the page
-   (`BookingsScreen.tsx`, helpers in a `_components/` folder). They get the
+   (`BookingsScreen.tsx`; its parts in a `_components/` folder, its hooks and
+   pure helpers with their tests in `_lib/`). Keep files small: one screen,
+   card, dialog, hook or helper group per file, at most 300 lines (`npm run
+   lint` fails on a longer one). They get the
    business and the user from the layout:
 
    ```tsx
@@ -361,8 +366,8 @@ version state, and a menu link the API cannot read is `menu_link_invalid`,
 `menu_link_unreachable` or `menu_link_unreadable`. A refused booking names
 why (`closed`, `too_soon`, `time_required`, `taken`, `party_too_large`,
 `no_seating_resource`; the numbers and days are in `details`). Screens map these
-codes to their own texts (`refusalReasons` in `src/lib/assistant.ts`,
-`menuLinkProblem` in `src/lib/knowledge.ts`, `BOOKING_REFUSAL_MESSAGES` passed
+codes to their own texts (`refusalReasons` in `src/lib/assistant/goLive.ts`,
+`menuLinkProblem` in `src/lib/knowledge/menuImport.ts`, `BOOKING_REFUSAL_MESSAGES` passed
 as `reasonMessages` to `useApiMutation`); never match the English message.
 
 ### Translations

@@ -21,6 +21,15 @@ const eslintConfig = defineConfig([
     },
   },
   {
+    // Many small files that each do a little: at most 300 lines, counting
+    // every line (blank lines and comments too). Generated files are exempt.
+    files: ["src/**/*.{ts,tsx,mts}", "e2e/**/*.{ts,tsx,mts}"],
+    ignores: ["src/**/*.generated.ts"],
+    rules: {
+      "max-lines": ["error", { max: 300, skipBlankLines: false, skipComments: false }],
+    },
+  },
+  {
     // Playwright fixtures receive a `use` callback that is not React's `use`.
     files: ["e2e/**/*.ts"],
     rules: { "react-hooks/rules-of-hooks": "off" },
