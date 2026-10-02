@@ -21,7 +21,12 @@ Every HTTP endpoint runs `operator.operate` -> `pipeline.start` ->
   owners, platform admins pass with an audit entry. A foreign business is
   reported as `NotFoundError`.
 - Tenant-owned documents are read only together with their `business_id`
-  (`BusinessScopedRepository`). The business of a channel message comes from the
+  (`BusinessScopedRepository`). Repositories never read a whole collection
+  to find documents: they query declared, indexed lookup fields
+  (`find_one_by_field`, `list_by_fields`, `count_by_fields`,
+  `list_by_range`; see `migrations/README.md`). `list_all()` is only for
+  admin views and jobs that walk every business
+  (`tests/architecture_policy/test_no_full_scans_in_hot_paths.py`). The business of a channel message comes from the
   server-side channel lookup, never from model output.
 - Use cases depend on contracts from `app/contracts/` (repositories, registries,
   utilities, facilitators, LLM adapter), never on concrete classes of another
