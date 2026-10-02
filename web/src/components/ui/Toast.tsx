@@ -11,7 +11,7 @@
  *
  * An undoable toast carries an Undo button for 5 seconds (the window runs
  * down under it and stops while the pointer or the keyboard focus is on
- * the toast). While a modal <dialog> is open everything outside it is inert
+ * the toast). Other toasts keep their time. While a modal <dialog> is open everything outside it is inert
  * and drawn below it, so the toasts move into the topmost open dialog.
  */
 

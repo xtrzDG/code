@@ -59,10 +59,7 @@ function useTopModalDialog(recheck: unknown): HTMLDialogElement | null {
   return top;
 }
 
-/**
- * Closes the toast after its time; the time stands still while the pointer
- * or the keyboard focus is on it (someone reading it or reaching for Undo).
- */
+/** Closes the toast after its time; the time stands still while `isPaused`. */
 function useDismissTimer(durationMs: number, isPaused: boolean, onExpire: () => void): void {
   const remaining = useRef(durationMs);
   const onExpireRef = useRef(onExpire);
@@ -86,7 +83,10 @@ function useDismissTimer(durationMs: number, isPaused: boolean, onExpire: () => 
 function ToastCard({ item, onDismiss, closeLabel }: { item: ToastItem; onDismiss: (id: number) => void; closeLabel: string }) {
   const [isHovered, setHovered] = useState(false);
   const [isFocused, setFocused] = useState(false);
-  const isPaused = isHovered || isFocused;
+  // Only a toast with an action (Undo) waits while it is pointed at or
+  // focused: someone is reaching for the button. A plain message keeps its
+  // time, so it never sits on top of what the person clicks next.
+  const isPaused = item.action !== undefined && (isHovered || isFocused);
   useDismissTimer(item.durationMs, isPaused, () => onDismiss(item.id));
   const { icon: Icon, className } = TONE_STYLES[item.tone];
 
