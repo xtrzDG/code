@@ -30,7 +30,7 @@
     "openapi-fetch": "0.17.0",
     "react": "19.2.8",
     "react-dom": "19.2.8",
-    "three": "0.186.1",
+    "three": "0.182.0",
     "zod": "4.6.5"
   },
   "devDependencies": {
@@ -39,7 +39,7 @@
     "@types/node": "22.20.4",
     "@types/react": "19.2.18",
     "@types/react-dom": "19.2.7",
-    "@types/three": "0.186.0",
+    "@types/three": "0.182.0",
     "@vitest/coverage-v8": "5.0.3",
     "eslint": "9.39.5",
     "eslint-config-next": "16.3.8",

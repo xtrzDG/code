@@ -99,11 +99,11 @@ export function revealVariants(tone: MotionTone, depth = 0, delay = 0): Variants
   };
 }
 
-/** A parent revealing its children one after another (`StaggerItem`s). */
-export function staggerVariants(tone: MotionTone, delayChildren = 0): Variants {
+/** A parent revealing its children one after another (`StaggerItem`s), `step` seconds apart. */
+export function staggerVariants(tone: MotionTone, delayChildren = 0, step: number = STAGGER[tone]): Variants {
   return {
     hidden: {},
-    visible: { transition: { staggerChildren: STAGGER[tone], delayChildren } },
+    visible: { transition: { staggerChildren: step, delayChildren } },
   };
 }
 

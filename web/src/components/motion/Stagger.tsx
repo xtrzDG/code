@@ -20,15 +20,23 @@ export function Stagger({
   as = "div",
   tone = "landing",
   delay = 0,
+  step,
   amount = 0.15,
   onMount = false,
   children,
   ...props
-}: MotionBlockProps & { tone?: MotionTone; delay?: number; amount?: number; onMount?: boolean }) {
+}: MotionBlockProps & {
+  tone?: MotionTone;
+  delay?: number;
+  /** Seconds between two items (the tone's own step unless given). */
+  step?: number;
+  amount?: number;
+  onMount?: boolean;
+}) {
   const Element = MOTION_ELEMENTS[as];
   const trigger = onMount ? { animate: "visible" } : { whileInView: "visible", viewport: { once: true, amount } };
   return (
-    <Element initial="hidden" variants={staggerVariants(tone, delay)} {...trigger} {...props}>
+    <Element initial="hidden" variants={staggerVariants(tone, delay, step)} {...trigger} {...props}>
       {children}
     </Element>
   );

@@ -6,7 +6,7 @@
 import * as m from "motion/react-m";
 import type { CSSProperties, ReactNode } from "react";
 
-export type MotionTag = "div" | "section" | "ul" | "ol" | "li" | "dl" | "span" | "figure" | "header";
+export type MotionTag = "div" | "section" | "ul" | "ol" | "li" | "dl" | "span" | "figure" | "header" | "p";
 
 /**
  * One element type for all of them: the primitives only pass the attributes
@@ -22,6 +22,7 @@ export const MOTION_ELEMENTS: Record<MotionTag, typeof m.div> = {
   span: m.span as typeof m.div,
   figure: m.figure as typeof m.div,
   header: m.header as typeof m.div,
+  p: m.p as typeof m.div,
 };
 
 export interface MotionBlockProps {

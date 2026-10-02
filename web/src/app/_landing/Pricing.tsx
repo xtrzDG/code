@@ -1,4 +1,5 @@
 import type { CountryListItem, Schema } from "@/api/types";
+import { Stagger } from "@/components/motion";
 import type { Translator } from "@/i18n/translate";
 import { hasEstimatedPrice } from "@/lib/landing";
 
@@ -21,7 +22,7 @@ export function Pricing({
   const { t } = translator;
   const quotes = plans?.quotes ?? null;
   return (
-    <Section id="pricing" title={t("landing.pricing.title")} subtitle={t("landing.pricing.subtitle")}>
+    <Section id="pricing" title={t("landing.pricing.title")} subtitle={t("landing.pricing.subtitle")} glow="right">
       {countries.length > 0 ? (
         <div className="mb-8">
           <CountryPicker countries={countries} value={countryCode} />
@@ -33,11 +34,11 @@ export function Pricing({
         <p className="rounded-2xl border border-line bg-surface p-6 text-sm text-ink-muted">{t("landing.pricing.empty")}</p>
       ) : (
         <>
-          <ul className="grid gap-4 lg:grid-cols-3">
+          <Stagger as="ul" step={0.12} className="grid gap-4 lg:grid-cols-3">
             {quotes.map((quote) => (
               <PlanCard key={quote.plan_key} quote={quote} translator={translator} />
             ))}
-          </ul>
+          </Stagger>
           <div className="mt-6 space-y-1 text-xs text-ink-subtle">
             <p>{t("landing.pricing.note")}</p>
             {plans?.exchange_rate && quotes.some(hasEstimatedPrice) ? (

@@ -62,5 +62,6 @@ describe("reveal variants", () => {
     expect(staggerVariants("landing", 0.1).visible).toEqual({ transition: { staggerChildren: 0.08, delayChildren: 0.1 } });
     expect(staggerVariants("cabinet").visible).toEqual({ transition: { staggerChildren: 0.035, delayChildren: 0 } });
     expect(staggerVariants("cabinet").hidden).toEqual({});
+    expect(staggerVariants("landing", 0.2, 0.5).visible).toEqual({ transition: { staggerChildren: 0.5, delayChildren: 0.2 } });
   });
 });
