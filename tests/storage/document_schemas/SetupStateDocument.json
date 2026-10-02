@@ -1,0 +1,48 @@
+{
+  "collection": "setup_states",
+  "document_type": "SetupStateDocument",
+  "schema_version": 1,
+  "shape": {
+    "additionalProperties": false,
+    "properties": {
+      "business_id": {
+        "pattern": "^business_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "created_at": {
+        "type": "integer"
+      },
+      "id": {
+        "pattern": "^setup_state_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "schema_version": {
+        "default": "1",
+        "type": "string"
+      },
+      "skipped_steps": {
+        "items": {
+          "enum": [
+            "business",
+            "offer",
+            "hours_and_bookings",
+            "staff_contact",
+            "channels",
+            "test",
+            "launch"
+          ],
+          "type": "string"
+        },
+        "type": "array"
+      },
+      "updated_at": {
+        "type": "integer"
+      }
+    },
+    "required": [
+      "id",
+      "business_id"
+    ],
+    "type": "object"
+  }
+}

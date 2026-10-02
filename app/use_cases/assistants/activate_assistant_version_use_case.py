@@ -214,7 +214,7 @@ class ActivateAssistantVersionUseCase(
         def go_live(target: BusinessDocument) -> None:
             target.published_assistant_version_id = version_id
             target.status = BusinessStatus.LIVE
-            if trial.plan_key is not None:
+            if trial.is_started and trial.plan_key is not None:
                 # The trial started now: its plan, served in full.
                 target.plan_key = trial.plan_key
                 target.service_mode = ServiceMode.FULL

@@ -13,6 +13,7 @@ CONSTRAINED_TEXT_SAMPLES: dict[str, str] = {
     "CountryCode": "GE",
     "CurrencyCode": "GEL",
     "DpaDocumentVersion": "2026-07",
+    "GoLiveCheckDetail": "no_opening_hours",
     "E164PhoneNumber": "+995599123456",
     "EmailAddress": "owner@example.com",
     "FactKey": "opening_hours",

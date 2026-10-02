@@ -2,6 +2,9 @@
 
 from dataclasses import dataclass
 
+from app.adapters.storage.in_memory_document_collection import (
+    InMemoryDocumentCollectionAdapter,
+)
 from app.contracts.brain import MenuExtractionAdapterContract
 from app.contracts.operator_contract import OperatorContract
 from app.operators.pipeline_operator import PipelineOperator
@@ -11,6 +14,8 @@ from app.orchestrators.conversations.owner_test_chat_orchestrator import (
 from app.orchestrators.use_case_orchestrator import UseCaseOrchestrator
 from app.pipelines.conversations.owner_test_chat_pipeline import OwnerTestChatPipeline
 from app.pipelines.orchestrator_pipeline import OrchestratorPipeline
+from app.repositories.setup_repositories import ActivationEventRepository
+from app.schemas.domain.setup import ActivationEventDocument
 from app.schemas.dto.call_recordings import CallRecordingQuery, RecordingAudio
 from app.schemas.dto.conversation_feed.conversation_actions import (
     RateConversationCommand,
@@ -64,6 +69,9 @@ from app.use_cases.menu_import.discard_import_batch_use_case import (
     DiscardImportBatchUseCase,
 )
 from app.use_cases.menu_import.import_menu_use_case import ImportMenuUseCase
+from app.use_cases.setup.record_activation_event_use_case import (
+    RecordActivationEventUseCase,
+)
 from tests.brain.brain_world import BrainWorld
 from tests.brain.cabinet_fakes import CabinetStorage
 
@@ -184,6 +192,14 @@ def build_cabinet_operators(
                     ),
                 ),
                 turn_orchestrator=world.orchestrator,
+                record_activation_event=UseCaseOrchestrator(
+                    RecordActivationEventUseCase(
+                        ActivationEventRepository(
+                            InMemoryDocumentCollectionAdapter(ActivationEventDocument)
+                        ),
+                        world.clock.wall_clock(),
+                    )
+                ),
             )
         ),
         import_menu=PipelineOperator(

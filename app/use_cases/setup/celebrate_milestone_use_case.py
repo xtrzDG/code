@@ -6,6 +6,7 @@ from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.setup import ActivationEventDocument
 from app.schemas.dto.access import BusinessAccessRequest
 from app.schemas.dto.setup.setup_progress import (
+    ActivationMilestoneCheck,
     ActivationMilestoneView,
     CelebrateMilestoneCommand,
 )
@@ -18,7 +19,8 @@ class CelebrateMilestoneUseCase(
     """
     The cabinet has shown a milestone's celebration (the first real
     customer, the first booking...): it is noted once, so no device shows
-    it again. A milestone the business has not reached is not found.
+    it again. Milestones reached but not noticed yet are noticed first; a
+    milestone the business has not reached is not found.
     """
 
     def __init__(
@@ -27,6 +29,7 @@ class CelebrateMilestoneUseCase(
             BusinessAccessRequest,
             BusinessDocument,
         ],
+        record_activation_milestones: UseCaseContract[ActivationMilestoneCheck, None],
         activation_event_repo: ActivationEventRepoContract,
         wall_clock: WallClock[Microseconds],
     ) -> None:
@@ -34,6 +37,9 @@ class CelebrateMilestoneUseCase(
             BusinessAccessRequest,
             BusinessDocument,
         ] = authorize_business_access
+        self._record_activation_milestones: UseCaseContract[
+            ActivationMilestoneCheck, None
+        ] = record_activation_milestones
         self._activation_event_repo: ActivationEventRepoContract = activation_event_repo
         self._wall_clock: WallClock[Microseconds] = wall_clock
 
@@ -43,6 +49,9 @@ class CelebrateMilestoneUseCase(
                 user_id=input_data.user_id,
                 business_id=input_data.business_id,
             )
+        )
+        self._record_activation_milestones.run(
+            ActivationMilestoneCheck(business_id=business.id)
         )
         event: ActivationEventDocument | None = (
             self._activation_event_repo.mark_celebrated(

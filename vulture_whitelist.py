@@ -200,3 +200,14 @@ _.saved_knowledge_items  # app/schemas/dto/profiles/profile_steps.py
 _.is_complete  # app/schemas/dto/profiles/profile_wizard.py
 _.expires_in_seconds  # app/schemas/dto/users.py
 _.international_phone_number  # app/schemas/dto/users.py
+_.does_trial_start_at_go_live  # app/schemas/dto/billing_cabinet.py
+_.checks_done  # app/schemas/dto/setup/apply_changes.py
+_.checks_total  # app/schemas/dto/setup/apply_changes.py
+_.starter_answers  # app/schemas/dto/setup/assistant_creation.py
+_.is_answering  # app/schemas/dto/setup/setup_progress.py
+_.milestones  # app/schemas/dto/setup/setup_progress.py
+_.minutes_left  # app/schemas/dto/setup/setup_progress.py
+_.next_action  # app/schemas/dto/setup/setup_progress.py
+_.applied_sections  # app/schemas/dto/setup/starter_answers.py
+_.kept_sections  # app/schemas/dto/setup/starter_answers.py
+_.offer_examples  # app/schemas/dto/setup/starter_answers.py

@@ -140,6 +140,7 @@ class SetupUseCasesContainer(containers.DeclarativeContainer):
     ] = Factory(
         CelebrateMilestoneUseCase,
         authorize_business_access=account_use_cases.authorize_business_access_use_case,
+        record_activation_milestones=record_activation_milestones_use_case,
         activation_event_repo=repositories.activation_event_repo,
         wall_clock=time_provider.microsecond_wall_clock,
     )

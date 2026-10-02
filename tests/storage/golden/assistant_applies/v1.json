@@ -1,0 +1,20 @@
+{
+  "assistant_version_id": "assistant_version_1387de0e-3d35-4f48-a5d7-0f1201a8f29e",
+  "attention": [
+    {
+      "code": "profile_incomplete",
+      "details": [
+        "no_opening_hours"
+      ]
+    }
+  ],
+  "business_id": "business_c5517c00-a64d-450d-8759-e220f4c4842e",
+  "created_at": 1790000000000000,
+  "finished_at": 1790000000000000,
+  "id": "assistant_apply_f1a174e5-6e4e-50ff-b88e-5a92e915ebe4",
+  "requested_by": "user_de59c37a-720b-4e1c-9e64-db124d6eb6ec",
+  "schema_version": "1",
+  "stage": "building",
+  "started_at": 1790000000000000,
+  "updated_at": 1790000000000000
+}

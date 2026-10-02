@@ -84,6 +84,7 @@ def test_a_run_the_worker_cannot_finish_does_not_leave_the_version_testing() -> 
                         UnfinishableRun(),
                         testbed.abandon_autotest_run_use_case,
                         testbed.record_autotest_progress_use_case,
+                        testbed.publish_applied_use_case,
                     )
                 )
             )
@@ -155,6 +156,7 @@ def test_a_running_run_shows_its_progress_scenario_by_scenario() -> None:
                         testbed.finish_autotest_run_use_case,
                         testbed.abandon_autotest_run_use_case,
                         progress,
+                        testbed.publish_applied_use_case,
                     )
                 )
             )

@@ -15,7 +15,10 @@ from app.repositories.assistant_repositories import (
     AssistantVersionRepository,
     AutotestRunRepository,
 )
-from app.repositories.billing_repositories import SubscriptionRepository
+from app.repositories.billing_repositories import (
+    InvoiceRepository,
+    SubscriptionRepository,
+)
 from app.repositories.business_repositories import (
     BusinessProfileRepository,
     BusinessRepository,
@@ -30,12 +33,16 @@ from app.repositories.knowledge_repositories import (
     ResourceRepository,
     ScheduleExceptionRepository,
 )
+from app.repositories.setup_repositories import (
+    ActivationEventRepository,
+    AssistantApplyRepository,
+)
 from app.repositories.user_repositories import UserRepository
 from app.schemas.configurations.app_settings import AppSettings
 from app.schemas.constants.jobs import QueuedJobStatus
 from app.schemas.constants.users import LoginMethod
 from app.schemas.domain.assistants import AssistantVersionDocument, AutotestRunDocument
-from app.schemas.domain.billing import SubscriptionDocument
+from app.schemas.domain.billing import InvoiceDocument, SubscriptionDocument
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.compliance import AuditLogEntryDocument, DpaAcceptanceDocument
 from app.schemas.domain.conversations import MessageDocument
@@ -43,6 +50,7 @@ from app.schemas.domain.jobs import QueuedJobDocument
 from app.schemas.domain.knowledge import KnowledgeItemDocument
 from app.schemas.domain.profiles import BusinessProfileDocument
 from app.schemas.domain.resources import ResourceDocument, ScheduleExceptionDocument
+from app.schemas.domain.setup import ActivationEventDocument, AssistantApplyDocument
 from app.schemas.domain.users import UserDocument
 from app.schemas.dto.job_queue import QueuedJobPageQuery
 from app.schemas.typings.assistants.prefixed_id import AssistantVersionId
@@ -136,6 +144,15 @@ class AssemblyStore:
         )
         self.dpa_repo = DpaAcceptanceRepository(
             InMemoryDocumentCollectionAdapter(DpaAcceptanceDocument)
+        )
+        self.invoice_repo = InvoiceRepository(
+            InMemoryDocumentCollectionAdapter(InvoiceDocument)
+        )
+        self.activation_event_repo = ActivationEventRepository(
+            InMemoryDocumentCollectionAdapter(ActivationEventDocument)
+        )
+        self.apply_repo = AssistantApplyRepository(
+            InMemoryDocumentCollectionAdapter(AssistantApplyDocument)
         )
         self.job_stores: JobStores = build_job_stores()
         self.job_repo: QueuedJobRepoContract = self.job_stores.job_repo

@@ -35,7 +35,7 @@ from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.users.prefixed_id import UserId
 
 SETUP_PATH: str = "/v1/businesses/{business_id}/setup"
-SKIPPED_STEP_PATH: str = SETUP_PATH + "/skipped-steps/{step}"
+SKIPPED_STEP_PATH: str = SETUP_PATH + "/skipped-steps/{setup_step}"
 
 read_create_assistant_body = build_json_body_dependency(CreateBusinessRequest)
 
@@ -63,9 +63,9 @@ def build_setup_router(
                the setup steps (business, offer, hours and bookings, staff
                contact, channels, test, launch), progress, next action,
                test-from-your-phone links, milestones and apply progress
-        PUT    /v1/businesses/{business_id}/setup/skipped-steps/{step}
+        PUT    /v1/businesses/{business_id}/setup/skipped-steps/{setup_step}
                skip an optional step (offer, channels, test)
-        DELETE /v1/businesses/{business_id}/setup/skipped-steps/{step}
+        DELETE /v1/businesses/{business_id}/setup/skipped-steps/{setup_step}
                bring a skipped step back (204)
         POST   /v1/businesses/{business_id}/setup/milestones/{kind}/celebrate
                the cabinet showed a milestone's celebration (once)
@@ -114,21 +114,21 @@ def build_setup_router(
     @router.put(SKIPPED_STEP_PATH)
     def skip_setup_step(
         business_id: str,
-        step: str,
+        setup_step: str,
         user_id: Annotated[UserId, Depends(current_user)],
     ) -> SetupView:
         return skip_setup_step_operator.operate(
-            build_skip_command(user_id, business_id, step, is_skipped=True)
+            build_skip_command(user_id, business_id, setup_step, is_skipped=True)
         )
 
     @router.delete(SKIPPED_STEP_PATH, status_code=status.HTTP_204_NO_CONTENT)
     def unskip_setup_step(
         business_id: str,
-        step: str,
+        setup_step: str,
         user_id: Annotated[UserId, Depends(current_user)],
     ) -> Response:
         skip_setup_step_operator.operate(
-            build_skip_command(user_id, business_id, step, is_skipped=False)
+            build_skip_command(user_id, business_id, setup_step, is_skipped=False)
         )
         return Response(status_code=status.HTTP_204_NO_CONTENT)
 

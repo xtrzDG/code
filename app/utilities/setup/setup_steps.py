@@ -15,7 +15,6 @@ from app.schemas.constants.setup import (
 )
 from app.schemas.dto.profiles.profile_gaps import ProfileGapFinding
 
-SETUP_STEP_ORDER: tuple[SetupStepCode, ...] = tuple(SetupStepCode)
 # Optional steps make the assistant better but never block going live.
 OPTIONAL_STEPS: frozenset[SetupStepCode] = frozenset(
     {SetupStepCode.OFFER, SetupStepCode.CHANNELS, SetupStepCode.TEST}

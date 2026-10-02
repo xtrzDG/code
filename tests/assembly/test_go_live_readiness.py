@@ -82,8 +82,9 @@ def test_every_missing_condition_is_listed_with_its_details() -> None:
     assert result.is_ready is False
     assert result.autotest_run is None
     assert result.subscription_status is None
+    # The trial is still due: it starts when the assistant goes live.
     assert summarize(result.checks) == [
-        ("subscription_or_trial", False, True, ["none"]),
+        ("subscription_or_trial", True, True, ["trial_at_go_live"]),
         ("dpa", False, True, ["2026-10-01"]),
         ("profile_gaps", False, True, ["no_opening_hours"]),
         ("staff_contact", False, True, ["no_handoff_contact"]),
@@ -165,7 +166,6 @@ def test_readiness_and_refusal_reasons_over_http() -> None:
     body: dict[str, Any] = response.json()
     assert body["is_ready"] is False
     assert [check["code"] for check in body["checks"] if not check["is_ok"]] == [
-        "subscription_or_trial",
         "dpa",
         "staff_contact",
     ]
@@ -177,7 +177,6 @@ def test_readiness_and_refusal_reasons_over_http() -> None:
     assert [
         (reason["code"], reason["details"]) for reason in refused.json()["reasons"]
     ] == [
-        ("subscription_or_trial", ["none"]),
         ("dpa", ["2026-10-01"]),
         ("staff_contact", ["no_handoff_contact"]),
     ]
