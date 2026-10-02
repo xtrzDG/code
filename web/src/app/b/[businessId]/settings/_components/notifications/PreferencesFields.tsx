@@ -50,7 +50,7 @@ export function PreferencesFields({
       </Fieldset>
       <Fieldset legend={t("notifications.preferences.quietHours")} hint={t("notifications.preferences.quietHoursHint")}>
         <Checkbox
-          label={t("notifications.preferences.quietHours")}
+          label={t("notifications.preferences.quietHoursToggle")}
           checked={value.hasQuietHours}
           disabled={disabled}
           onChange={(change) => onChange({ ...value, hasQuietHours: change.target.checked })}

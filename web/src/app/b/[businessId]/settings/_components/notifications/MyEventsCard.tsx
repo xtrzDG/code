@@ -25,7 +25,11 @@ export function MyEventsCard({ mine }: { mine: MyNotifications }) {
   const { business } = useBusiness();
   const stored = mine.settings.data;
   return (
-    <Card title={t("notifications.mine.title")} description={t("notifications.mine.description", { timeZone: business.timezone })}>
+    <Card
+      aria-label={t("notifications.mine.title")}
+      title={t("notifications.mine.title")}
+      description={t("notifications.mine.description", { timeZone: business.timezone })}
+    >
       {stored ? <MyEventsForm key={stored.business_id} stored={stored} mine={mine} /> : <SkeletonText lines={4} />}
     </Card>
   );

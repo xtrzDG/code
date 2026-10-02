@@ -180,12 +180,11 @@ export function useMyNotifications() {
     }
     const { status, last_error: error } = result.data.delivery;
     if (status === "delivered") {
-      toast.success(t("notifications.contacts.testDelivered", { name: t("notifications.device.title") }));
+      toast.success(t("notifications.device.testDelivered"));
     } else {
       toast.show({
         tone: status === "dead" ? "error" : "info",
-        title: t(status === "dead" ? "notifications.contacts.testFailed" : "notifications.contacts.testPending", {
-          name: t("notifications.device.title"),
+        title: t(status === "dead" ? "notifications.device.testFailed" : "notifications.device.testPending", {
           error: error ?? "",
         }),
       });

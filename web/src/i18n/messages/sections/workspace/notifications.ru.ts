@@ -30,6 +30,9 @@ export const notificationsRu: Translation<typeof notificationsEn> = {
     removeOther: "Выключить",
     removeOtherLabel: "Выключить уведомления на устройстве, добавленном {date}",
     removed: "Уведомления на том устройстве выключены",
+    testDelivered: "Проверочное уведомление отправлено на это устройство",
+    testFailed: "Проверка не дошла до этого устройства: {error}",
+    testPending: "Проверку на это устройство отправим ещё раз: {error}",
   },
   mine: {
     title: "Что приходит мне",
@@ -47,6 +50,7 @@ export const notificationsRu: Translation<typeof notificationsEn> = {
     },
     quietHours: "Тихие часы",
     quietHoursHint: "Уведомления ждут конца тихих часов. Срочные передачи приходят всё равно.",
+    quietHoursToggle: "Задерживать уведомления в эти часы",
     quietFrom: "С",
     quietUntil: "До",
     errors: {

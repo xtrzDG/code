@@ -29,6 +29,9 @@ export const notificationsEn = {
     removeOther: "Turn off",
     removeOtherLabel: "Turn off notifications on the device added {date}",
     removed: "Notifications are off on that device",
+    testDelivered: "The test notification is on its way to this device",
+    testFailed: "The test did not reach this device: {error}",
+    testPending: "The test to this device will be tried again: {error}",
   },
   mine: {
     title: "What reaches me",
@@ -46,6 +49,7 @@ export const notificationsEn = {
     },
     quietHours: "Quiet hours",
     quietHoursHint: "Notifications wait until the quiet hours end. Urgent handoffs still arrive.",
+    quietHoursToggle: "Hold notifications during these hours",
     quietFrom: "From",
     quietUntil: "Until",
     errors: {

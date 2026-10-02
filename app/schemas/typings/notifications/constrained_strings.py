@@ -48,7 +48,9 @@ class PushAuthSecret(BaseConstrainedTypedString):
 class PushEndpointUrl(BaseConstrainedTypedString):
     """
     The push service address of one browser subscription (Mozilla, Google,
-    Apple...), where encrypted messages are posted.
+    Apple...), where encrypted messages are posted. Which services are
+    accepted is decided when subscribing (only https in production; a local
+    test push service over http outside it).
 
     Example:
         endpoint = PushEndpointUrl("https://fcm.googleapis.com/fcm/send/c1...")
@@ -56,7 +58,7 @@ class PushEndpointUrl(BaseConstrainedTypedString):
 
     min_length = 12
     max_length = 2048
-    pattern = r"^https://[^\s]+$"
+    pattern = r"^https?://[^\s]+$"
 
 
 class PushNotificationTag(BaseConstrainedTypedString):

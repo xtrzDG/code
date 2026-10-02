@@ -13,7 +13,7 @@ label and a migration path).
 
 ## 2026-10-02 — staff notifications: checks, preferences, devices, links
 
-Spec: `bd375184ee8a5cc4`
+Spec: `1e527cb396131ef6`
 
 - **Added** `GET /v1/businesses/{business_id}/notification-contacts` (owners
   and staff): every staff contact with its `key`, preferences, Telegram
@@ -30,7 +30,8 @@ Spec: `bd375184ee8a5cc4`
   `booking`) and quiet hours for their devices, the devices, and
   `push_public_key` (None while Web Push is off).
 - **Added** `POST /v1/businesses/{business_id}/push-subscriptions` (201,
-  turn this device on; known push services only),
+  turn this device on; the https push services of the browsers only, and
+  outside production also a local test push service over http),
   `DELETE …/push-subscriptions/{subscription_id}` (204) and
   `POST …/push-subscriptions/{subscription_id}/test` (own devices only).
 - **Added** `GET /v1/businesses/{business_id}/notification-links/{token}`:

@@ -1,6 +1,6 @@
 "use client";
 
-import { useBusinessFormat } from "@/components/business/BusinessContext";
+import { useBusiness, useBusinessFormat } from "@/components/business/BusinessContext";
 import { IconCheckCircle, IconSend } from "@/components/icons";
 import { MagneticButton } from "@/components/motion";
 import { Alert, Badge, Button } from "@/components/ui";
@@ -37,6 +37,7 @@ function DeviceDelivery({ device }: { device: PushDevice }) {
  */
 export function ThisDeviceCard({ mine }: { mine: MyNotifications }) {
   const { t } = useI18n();
+  const { business } = useBusiness();
   const { support, problem, publicKey, thisDevice, isSwitching } = mine;
   const isOn = thisDevice !== null;
   const isReady = support === "supported" && publicKey !== null;
@@ -52,7 +53,7 @@ export function ThisDeviceCard({ mine }: { mine: MyNotifications }) {
         style={{ background: "radial-gradient(circle, color-mix(in oklab, var(--accent-solid) 26%, transparent), transparent 70%)" }}
       />
       <div className="flex flex-col gap-6 sm:flex-row sm:items-center">
-        <DeviceVisual isOn={isOn} title={t("notifications.device.title")} />
+        <DeviceVisual isOn={isOn} title={business.name} />
         <div className="min-w-0 flex-1 space-y-3">
           <div className="flex flex-wrap items-center gap-2">
             <h2 id="this-device-title" className="text-lg font-semibold tracking-tight text-ink">

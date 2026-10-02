@@ -37,6 +37,12 @@ def is_provider_configured(
             )
 
 
+# Channels whose notifications are written to the log when no provider is
+# configured outside production.
+LOGGED_IN_DEVELOPMENT: frozenset[ManagerContactChannel] = frozenset(
+    {ManagerContactChannel.EMAIL, ManagerContactChannel.SMS}
+)
+
 MISSING_PROVIDER_TEXTS: dict[ManagerContactChannel, str] = {
     ManagerContactChannel.TELEGRAM: "TELEGRAM_PLATFORM_BOT_TOKEN is not configured.",
     ManagerContactChannel.WHATSAPP: (
@@ -63,11 +69,7 @@ def missing_staff_provider(
     if is_provider_configured(settings, channel):
         return None
 
-    is_logged_in_development: bool = channel in (
-        ManagerContactChannel.EMAIL,
-        ManagerContactChannel.SMS,
-    )
-    if is_logged_in_development and (
+    if channel in LOGGED_IN_DEVELOPMENT and (
         settings.environment is not DeploymentEnvironment.PRODUCTION
     ):
         return None
@@ -78,10 +80,14 @@ def missing_staff_provider(
 def is_delivery_simulated(
     settings: AppSettings, channel: ManagerContactChannel
 ) -> bool:
-    """No provider outside production: the notification is only logged."""
+    """
+    E-mail or SMS without a provider outside production: the notification
+    is only logged (Telegram and WhatsApp without one are not delivered).
+    """
 
     return (
-        not is_provider_configured(settings, channel)
+        channel in LOGGED_IN_DEVELOPMENT
+        and not is_provider_configured(settings, channel)
         and settings.environment is not DeploymentEnvironment.PRODUCTION
     )
 

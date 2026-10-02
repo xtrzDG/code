@@ -60,6 +60,7 @@ def test_the_owner_sees_each_contact_and_checks_it() -> None:
         status, whatsapp = check(restaurant, str(contacts["Levan"]["key"]))
         assert status == 200
         assert whatsapp["delivery"]["status"] == "dead"  # type: ignore[index]
+        assert whatsapp["is_simulated"] is False
         assert "WHATSAPP_NOTIFICATION" in str(whatsapp["delivery"])
 
         after = contacts_by_name(restaurant)

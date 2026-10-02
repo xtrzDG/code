@@ -30,6 +30,9 @@ export const notificationsKa: Translation<typeof notificationsEn> = {
     removeOther: "გამორთვა",
     removeOtherLabel: "შეტყობინებების გამორთვა მოწყობილობაზე, დამატებული {date}",
     removed: "იმ მოწყობილობაზე შეტყობინებები გამორთულია",
+    testDelivered: "სატესტო შეტყობინება ამ მოწყობილობაზე გაიგზავნა",
+    testFailed: "სატესტო ამ მოწყობილობამდე ვერ მივიდა: {error}",
+    testPending: "სატესტოს ამ მოწყობილობაზე ხელახლა ვცდით: {error}",
   },
   mine: {
     title: "რა მოდის ჩემთან",
@@ -47,6 +50,7 @@ export const notificationsKa: Translation<typeof notificationsEn> = {
     },
     quietHours: "მშვიდი საათები",
     quietHoursHint: "შეტყობინებები მშვიდი საათების დასრულებას ელოდება. სასწრაფო გადამისამართებები მაინც მოდის.",
+    quietHoursToggle: "შეტყობინებების შეკავება ამ საათებში",
     quietFrom: "დან",
     quietUntil: "მდე",
     errors: {
