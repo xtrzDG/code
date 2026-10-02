@@ -61,3 +61,9 @@ DEFAULT_MANAGERS: tuple[ManagerContact, ...] = (
     manager("Daniel", ManagerContactChannel.WHATSAPP, "+995555000111", "ru"),
     manager("Anna", ManagerContactChannel.EMAIL, "anna@example.com", "en"),
 )
+
+
+def seconds(text: str) -> int:
+    """Unix seconds of an ISO datetime with an offset."""
+
+    return int(datetime.fromisoformat(text).timestamp())
