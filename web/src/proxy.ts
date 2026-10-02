@@ -4,7 +4,10 @@
  *  - visitors without a session go to /login?next=<page>;
  *  - signed-in users opening /login go to their businesses;
  *  - Server Components learn the current path (for "back after sign-in");
- *  - a signed-in user without a language cookie gets the account language.
+ *  - a signed-in user without a language cookie gets the account language;
+ *  - every page gets a Content Security Policy with a fresh nonce, which
+ *    Next.js puts on its own scripts (server/contentSecurityPolicy.ts);
+ *  - a session under the cookie's old name moves to `__Host-aw_session`.
  */
 
 import { NextResponse, type NextRequest } from "next/server";
@@ -13,12 +16,16 @@ import { LOCALE_COOKIE, matchLocale, negotiateLocale, DEFAULT_LOCALE } from "@/i
 import { HOME_PATH, LOGIN_PATH, isProtectedPath, loginPath, safeNextPath } from "@/lib/navigation";
 import {
   PATHNAME_HEADER,
-  SESSION_COOKIE,
   buildUpstreamHeaders,
   callBackend,
+  isCookieSecure,
   localeCookieOptions,
   sanitizeRequestId,
 } from "@/server/backend";
+import { NONCE_HEADER, buildContentSecurityPolicy, createNonce } from "@/server/contentSecurityPolicy";
+import { migrateLegacySessionCookie, readSessionToken } from "@/server/sessionCookie";
+
+const CSP_HEADER = "content-security-policy";
 
 const LOCALE_LOOKUP_TIMEOUT_MS = 3_000;
 
@@ -39,8 +46,14 @@ async function accountLocale(token: string): Promise<string | null> {
 }
 
 export async function proxy(request: NextRequest): Promise<NextResponse> {
+  const response = await route(request);
+  migrateLegacySessionCookie(request, response);
+  return response;
+}
+
+async function route(request: NextRequest): Promise<NextResponse> {
   const { pathname, search, searchParams } = request.nextUrl;
-  const token = request.cookies.get(SESSION_COOKIE)?.value;
+  const token = readSessionToken(request.cookies);
 
   // The payment page (Flitt) returns the payer with a cross-site form POST,
   // which never carries the SameSite=Lax session cookie. Pages take no plain
@@ -59,6 +72,15 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
 
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set(PATHNAME_HEADER, `${pathname}${search}`);
+  // Next.js reads the nonce from the request's policy while rendering.
+  const nonce = createNonce();
+  const policy = buildContentSecurityPolicy({
+    nonce,
+    isDevelopment: process.env.NODE_ENV === "development",
+    isHttps: isCookieSecure(),
+  });
+  requestHeaders.set(CSP_HEADER, policy);
+  requestHeaders.set(NONCE_HEADER, nonce);
 
   let newLocale: string | null = null;
   if (token && !request.cookies.has(LOCALE_COOKIE)) {
@@ -71,6 +93,7 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
   }
 
   const response = NextResponse.next({ request: { headers: requestHeaders } });
+  response.headers.set(CSP_HEADER, policy);
   if (newLocale) {
     response.cookies.set(LOCALE_COOKIE, newLocale, localeCookieOptions());
   }

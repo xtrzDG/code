@@ -196,6 +196,8 @@ export interface OtpStartBody {
   email?: string;
   country_hint?: string;
   locale?: string;
+  /** The answer of the bot check, when the API asked for one. */
+  turnstile_token?: string;
 }
 
 /** The body of POST /api/auth/start for the chosen sign-in method. */

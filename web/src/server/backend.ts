@@ -8,9 +8,6 @@
 import { LOCALE_COOKIE_MAX_AGE_SECONDS, type Locale } from "@/i18n/config";
 import type { ApiErrorCode } from "@/api/errors";
 
-/** httpOnly cookie with the API bearer token. */
-export const SESSION_COOKIE = "aw_session";
-
 /** Request header the proxy sets so Server Components know the current path. */
 export const PATHNAME_HEADER = "x-aw-pathname";
 

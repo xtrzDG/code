@@ -17,6 +17,7 @@ import { useI18n } from "@/i18n/client";
 import type { MessageKey } from "@/i18n/translate";
 import { buildOtpStartBody, classifyOtpStartError, classifyOtpVerifyError } from "@/lib/countries";
 
+import { findBotCheckSiteKey } from "./botCheck";
 import { withDeliveryChannel } from "./loginOptions";
 import { CodeSchema, EmailSchema, PROBLEM_MESSAGES, PhoneSchema, RESEND_INTERVAL_MS } from "./loginTexts";
 import { useDestination } from "./useDestination";
@@ -26,11 +27,20 @@ interface CodeStage {
   sentAt: number;
 }
 
+/** The API asked for a bot check before sending; `attempt` remounts the widget. */
+interface BotCheckStage {
+  siteKey: string;
+  channel: OtpDeliveryChannel | undefined;
+  isRetry: boolean;
+  attempt: number;
+}
+
 export function useLoginFlow(next: string) {
   const { t, locale } = useI18n();
   const toast = useToast();
   const destination = useDestination();
   const [isSending, setSending] = useState(false);
+  const [botCheck, setBotCheck] = useState<BotCheckStage | null>(null);
 
   const [codeStage, setCodeStage] = useState<CodeStage | null>(null);
   const [code, setCode] = useState("");
@@ -51,24 +61,37 @@ export function useLoginFlow(next: string) {
     return () => window.clearInterval(timer);
   }, [codeStage]);
 
-  async function sendCode(channelOverride?: OtpDeliveryChannel): Promise<boolean> {
+  async function sendCode(channelOverride?: OtpDeliveryChannel, turnstileToken?: string): Promise<boolean> {
     const { method, phoneNumber, email, countryCode, phoneChannels, deliveryChannel } = destination;
     setSending(true);
     try {
-      const challenge = await startLogin(
-        withDeliveryChannel(
+      const challenge = await startLogin({
+        ...withDeliveryChannel(
           buildOtpStartBody({ method, phoneNumber, email, countryCode, locale }),
           method,
           phoneChannels,
           channelOverride ?? deliveryChannel,
         ),
-      );
+        ...(turnstileToken ? { turnstile_token: turnstileToken } : {}),
+      });
       const sentAt = Date.now();
+      setBotCheck(null);
       setNow(sentAt);
       setCodeStage({ challenge, sentAt });
       return true;
     } catch (caught) {
       const error = toApiError(caught);
+      const siteKey = findBotCheckSiteKey(error);
+      if (siteKey) {
+        // A risky request: the code goes out once the visitor passes the check.
+        setBotCheck((previous) => ({
+          siteKey,
+          channel: channelOverride,
+          isRetry: turnstileToken !== undefined,
+          attempt: (previous?.attempt ?? 0) + 1,
+        }));
+        return false;
+      }
       const problem = classifyOtpStartError(error, method);
       if (problem) {
         destination.setError(PROBLEM_MESSAGES[problem]);
@@ -123,6 +146,14 @@ export function useLoginFlow(next: string) {
     }
   }
 
+  /** The check passed: ask for the code again with its one-time token. */
+  async function passBotCheck(token: string) {
+    const isResend = codeStage !== null;
+    if ((await sendCode(botCheck?.channel, token)) && isResend) {
+      toast.success(t("auth.codeResent"));
+    }
+  }
+
   function clearCode() {
     setCode("");
     setCodeError(null);
@@ -152,6 +183,8 @@ export function useLoginFlow(next: string) {
     destination,
     isSending,
     submitDestination,
+    botCheck,
+    passBotCheck,
     challenge: codeStage?.challenge ?? null,
     code,
     codeError,
@@ -167,6 +200,7 @@ export function useLoginFlow(next: string) {
     sendByOtherChannel,
     changeDestination: () => {
       setCodeStage(null);
+      setBotCheck(null);
       clearCode();
     },
   };

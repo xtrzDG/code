@@ -111,6 +111,12 @@ export const en = {
     welcome: "Welcome!",
     sessionExpired: "Your session has ended. Please sign in again.",
     countryUnavailable: "not available yet",
+    botCheck: {
+      title: "One more step",
+      hint: "Confirm that you are not a robot, and we will send the code right away.",
+      failed: "The check did not pass. Try it once more.",
+      unavailable: "The check could not load. Check the connection or turn off content blockers, then reload the page.",
+    },
     deliveryChannels: {
       sms: "SMS",
       whatsapp: "WhatsApp",

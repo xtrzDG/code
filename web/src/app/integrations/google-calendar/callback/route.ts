@@ -17,7 +17,8 @@ import {
   readCalendarCallback,
   type CalendarCompletionOutcome,
 } from "@/server/calendarCompletion";
-import { clearSessionCookie, prepareBackendCall } from "@/server/relay";
+import { prepareBackendCall } from "@/server/relay";
+import { clearSessionCookie } from "@/server/sessionCookie";
 
 export const dynamic = "force-dynamic";
 
