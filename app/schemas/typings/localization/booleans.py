@@ -5,5 +5,4 @@ Example:
 """
 
 IsMobilePhoneNumber = bool
-RequiresCallRecordingNotice = bool
 # Keep abc order for all non example types, if possible.

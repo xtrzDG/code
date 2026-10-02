@@ -3,7 +3,6 @@ from datetime import timedelta
 import pytest
 from typed_time_provider import Microseconds
 
-from app.schemas.exceptions.application_errors import ValidationFailedError
 from app.schemas.typings.localization.constrained_strings import TimezoneName
 from app.schemas.typings.localization.strings import TimezoneDisplayName
 from app.utilities.localization.timezones import (
@@ -11,7 +10,6 @@ from app.utilities.localization.timezones import (
     format_utc_offset,
     is_known_timezone_name,
     list_territory_timezone_names,
-    parse_timezone_name,
 )
 from tests.localization.builders import (
     JANUARY_2026_NANOSECONDS,
@@ -20,36 +18,6 @@ from tests.localization.builders import (
 
 JULY_2026: Microseconds = Microseconds(JULY_2026_NANOSECONDS // 1000)
 JANUARY_2026: Microseconds = Microseconds(JANUARY_2026_NANOSECONDS // 1000)
-
-
-@pytest.mark.parametrize(
-    ("raw_name", "expected_name"),
-    [
-        ("Asia/Tbilisi", "Asia/Tbilisi"),
-        ("asia/tbilisi", "Asia/Tbilisi"),
-        (" Asia/Jerusalem ", "Asia/Jerusalem"),
-        ("UTC", "UTC"),
-        ("America/Argentina/Buenos_Aires", "America/Argentina/Buenos_Aires"),
-        ("Asia/Kathmandu", "Asia/Kathmandu"),
-    ],
-)
-def test_parse_timezone_name_accepts_iana_names(
-    raw_name: str,
-    expected_name: str,
-) -> None:
-    timezone_name = parse_timezone_name(raw_name)
-
-    assert timezone_name == expected_name
-    assert type(timezone_name) is TimezoneName
-
-
-@pytest.mark.parametrize(
-    "raw_name",
-    ["Asia/Atlantis", "Tbilisi", "", "GMT+4 Georgia", "Etc/Unknown", "x" * 100],
-)
-def test_parse_timezone_name_rejects_unknown_names(raw_name: str) -> None:
-    with pytest.raises(ValidationFailedError):
-        parse_timezone_name(raw_name)
 
 
 @pytest.mark.parametrize(

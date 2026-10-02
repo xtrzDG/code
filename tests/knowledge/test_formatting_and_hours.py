@@ -2,9 +2,7 @@ import pytest
 
 from app.schemas.constants.businesses import Weekday
 from app.schemas.domain.profiles import OpeningInterval
-from app.schemas.dto.knowledge_admin import KnowledgeItemPatch
 from app.schemas.exceptions.application_errors import (
-    NotFoundError,
     ValidationFailedError,
 )
 from app.schemas.typings.billing.constrained_integers import MoneyAmountMinor
@@ -12,7 +10,6 @@ from app.schemas.typings.businesses.constrained_integers import (
     ClosingMinuteOfDay,
     OpeningMinuteOfDay,
 )
-from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.localization.constrained_strings import (
     CurrencyCode,
     LanguageTag,
@@ -28,16 +25,6 @@ from app.utilities.knowledge.money_formatting import (
 from app.utilities.knowledge.opening_hours import (
     format_minute,
     validate_opening_intervals,
-)
-from app.utilities.knowledge.request_parsing import (
-    canonical_language_tag,
-    json_body_openapi,
-    negotiate_language,
-    parse_boolean_text,
-    parse_json_body,
-    parse_language_parameter,
-    parse_path_value,
-    parse_query_value,
 )
 
 NBSP: str = "\xa0"
@@ -166,66 +153,3 @@ def test_rule_lines_round_trip_and_require_equal_counts() -> None:
     assert split_rule_lines(text.values[LanguageTag("ru")]) == ["А", "Б"]
     with pytest.raises(ValueError, match="same number"):
         build_localized_rule_lines(en=["A"], ru=["А", "Б"])
-
-
-def test_json_bodies_are_validated_in_json_mode() -> None:
-    patch = parse_json_body(KnowledgeItemPatch, b'{"kind": "faq", "body": null}')
-
-    assert patch.kind == "faq"
-    assert patch.model_fields_set == {"kind", "body"}
-    with pytest.raises(ValidationFailedError, match="kind"):
-        parse_json_body(KnowledgeItemPatch, b'{"kind": "spaceship"}')
-    with pytest.raises(ValidationFailedError, match="JSON object"):
-        parse_json_body(KnowledgeItemPatch, b"  ")
-    with pytest.raises(ValidationFailedError):
-        parse_json_body(KnowledgeItemPatch, b"{not json")
-
-
-def test_path_and_query_values_become_typed_or_application_errors() -> None:
-    business_id = BusinessId()
-
-    assert parse_path_value(BusinessId, str(business_id), "Business") == business_id
-    with pytest.raises(NotFoundError):
-        parse_path_value(BusinessId, "not-an-id", "Business")
-
-    assert parse_query_value(parse_boolean_text, "TRUE", "is_active") is True
-    assert parse_query_value(parse_boolean_text, "no", "is_active") is False
-    assert parse_query_value(parse_boolean_text, " ", "is_active") is None
-    with pytest.raises(ValidationFailedError, match="is_active"):
-        parse_query_value(parse_boolean_text, "maybe", "is_active")
-
-
-@pytest.mark.parametrize(
-    ("raw_tag", "expected"),
-    [
-        ("pt-br", "pt-BR"),
-        ("ZH_hant", "zh-Hant"),
-        ("sr-latn-rs", "sr-Latn-RS"),
-        ("ka", "ka"),
-        ("1234", None),
-    ],
-)
-def test_language_tags_are_normalized(raw_tag: str, expected: str | None) -> None:
-    assert canonical_language_tag(raw_tag) == expected
-
-
-def test_language_parameter_and_accept_language_negotiation() -> None:
-    assert parse_language_parameter("he") == "he"
-    assert parse_language_parameter(None) is None
-    with pytest.raises(ValidationFailedError, match="language"):
-        parse_language_parameter("123")
-
-    assert negotiate_language("ru-RU,ru;q=0.9,en;q=0.8") == "ru-RU"
-    assert negotiate_language("en;q=0.5, ka;q=0.9, *;q=0.1") == "ka"
-    assert negotiate_language("ar;q=0") is None
-    assert negotiate_language("de;q=abc, he") == "he"
-    assert negotiate_language(None) is None
-
-
-def test_openapi_body_schema_has_an_id_and_one_of_for_several_models() -> None:
-    single = json_body_openapi(KnowledgeItemPatch)
-    schema = single["requestBody"]["content"]["application/json"]["schema"]
-
-    assert schema["$id"].endswith("KnowledgeItemPatch")
-    several = json_body_openapi(KnowledgeItemPatch, KnowledgeItemPatch)
-    assert "oneOf" in several["requestBody"]["content"]["application/json"]["schema"]

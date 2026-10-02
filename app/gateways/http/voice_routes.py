@@ -5,7 +5,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, Header, Response
 
 from app.contracts.operator_contract import OperatorContract
-from app.gateways.http.channel_routes import read_raw_body
+from app.gateways.http.strict_request_parsing import read_raw_request_body
 from app.schemas.constants.assistants import AssistantToolName
 from app.schemas.dto.conversations import VoiceToolCallResult
 from app.schemas.dto.voice_webhooks import (
@@ -71,7 +71,7 @@ def build_voice_router(
     @router.post(VOICE_TOOL_PATH_TEMPLATE)
     def run_voice_tool(
         tool_name: str,
-        body: Annotated[bytes, Depends(read_raw_body)],
+        body: Annotated[bytes, Depends(read_raw_request_body)],
         business_id: Annotated[
             str | None,
             Header(alias=VOICE_BUSINESS_ID_HEADER),
@@ -96,7 +96,7 @@ def build_voice_router(
 
     @router.post(VOICE_CALL_INITIATION_PATH)
     def start_voice_call(
-        body: Annotated[bytes, Depends(read_raw_body)],
+        body: Annotated[bytes, Depends(read_raw_request_body)],
         business_id: Annotated[
             str | None,
             Header(alias=VOICE_BUSINESS_ID_HEADER),
@@ -133,7 +133,7 @@ def build_voice_router(
 
     @router.post(VOICE_POST_CALL_PATH)
     def receive_post_call(
-        body: Annotated[bytes, Depends(read_raw_body)],
+        body: Annotated[bytes, Depends(read_raw_request_body)],
         signature: Annotated[
             str | None,
             Header(alias=ELEVENLABS_SIGNATURE_HEADER),

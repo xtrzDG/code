@@ -27,6 +27,7 @@ dist/
 downloads/
 eggs/
 .ruff_cache/
+.import_linter_cache/
 .eggs/
 lib/
 lib64/
@@ -75,6 +76,7 @@ dmypy.json
 .pyright/
 .pytest_cache/
 .ruff_cache/
+.import_linter_cache/
 
 # Python tools and frameworks
 instance/

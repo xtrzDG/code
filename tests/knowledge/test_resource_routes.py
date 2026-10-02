@@ -92,7 +92,8 @@ def test_openapi_documents_json_request_bodies(fixture: RoutesFixture) -> None:
     ]
     body_schema = knowledge_post["requestBody"]["content"]["application/json"]["schema"]
 
-    assert body_schema["$id"].endswith("KnowledgeItemInput")
+    assert body_schema["title"] == "KnowledgeItemInput"
+    assert "$ref" not in str(body_schema)
     assert (
         len(step_put["requestBody"]["content"]["application/json"]["schema"]["oneOf"])
         == 6

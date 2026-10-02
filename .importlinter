@@ -1,0 +1,46 @@
+# Architecture contracts, checked in CI with `uv run lint-imports`.
+# Roles and their direction: docs/architecture.md, docs/conventions.md and
+# docs/adr/0002-role-chain-and-layers.md. Fix a broken contract by moving
+# the code to the role it belongs to; do not add ignore_imports.
+
+[importlinter]
+root_package = app
+include_external_packages = False
+
+[importlinter:contract:roles]
+name = Roles depend only downwards (gateways > ... > clients > utilities > contracts > schemas)
+type = layers
+layers =
+    app.gateways
+    app.operators
+    app.pipelines
+    app.orchestrators
+    app.use_cases
+    app.repositories | app.registries | app.facilitators | app.transformers
+    app.adapters
+    app.clients
+    app.utilities
+    app.contracts
+    app.schemas
+
+[importlinter:contract:composition-root]
+name = Only gateways and the entry points reach the composition root
+type = forbidden
+source_modules =
+    app.operators
+    app.pipelines
+    app.orchestrators
+    app.use_cases
+    app.repositories
+    app.registries
+    app.facilitators
+    app.transformers
+    app.adapters
+    app.clients
+    app.utilities
+    app.contracts
+    app.schemas
+forbidden_modules =
+    app.containers
+    app.main
+    app.worker_main

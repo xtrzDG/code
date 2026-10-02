@@ -2,10 +2,21 @@
 
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Header, Query, Request
+from fastapi import APIRouter, Depends, Header, Query
 from pydantic import BaseModel
 
 from app.contracts.operator_contract import OperatorContract
+from app.gateways.http.language_negotiation import (
+    negotiate_language,
+    parse_language_parameter,
+)
+from app.gateways.http.strict_request_parsing import (
+    build_json_body_dependency,
+    describe_json_body,
+    parse_json_body,
+    parse_path_identifier,
+    read_raw_request_body,
+)
 from app.gateways.http.user_authentication import CurrentUserDependency
 from app.schemas.constants.niches import NicheKey, ProfileWizardStep
 from app.schemas.constants.users import BusinessMemberRole
@@ -42,13 +53,6 @@ from app.schemas.dto.profiles.profile_wizard import (
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.schemas.typings.users.prefixed_id import UserId
-from app.utilities.knowledge.request_parsing import (
-    json_body_openapi,
-    negotiate_language,
-    parse_json_body,
-    parse_language_parameter,
-    parse_path_value,
-)
 
 type BusinessAccessOperator = OperatorContract[BusinessAccessRequest, BusinessDocument]
 
@@ -61,11 +65,7 @@ STEP_INPUT_TYPES: tuple[type[BaseModel], ...] = (
     ChannelsStepInput,
 )
 
-
-async def read_request_body(request: Request) -> bytes:
-    """Raw request body; routes validate it in JSON mode against strict DTOs."""
-
-    return await request.body()
+read_profile_input = build_json_body_dependency(ProfileInput)
 
 
 def build_profile_router(
@@ -103,9 +103,9 @@ def build_profile_router(
         raw_business_id: str,
         required_role: BusinessMemberRole | None = None,
     ) -> BusinessDocument:
-        business_id: BusinessId = parse_path_value(
-            BusinessId,
+        business_id: BusinessId = parse_path_identifier(
             raw_business_id,
+            BusinessId,
             "Business",
         )
         return business_access_operator.operate(
@@ -135,7 +135,7 @@ def build_profile_router(
     ) -> NicheDetailsView:
         return get_niche_template_operator.operate(
             NicheTemplateQuery(
-                niche_key=parse_path_value(NicheKey, niche_key, "Niche"),
+                niche_key=parse_path_identifier(niche_key, NicheKey, "Niche"),
                 language=catalog_language(language, accept_language),
             )
         )
@@ -166,12 +166,12 @@ def build_profile_router(
 
     @router.put(
         "/v1/businesses/{business_id}/profile",
-        openapi_extra=json_body_openapi(ProfileInput),
+        openapi_extra=describe_json_body(ProfileInput),
     )
     def save_profile(
         business_id: str,
         user_id: Annotated[UserId, Depends(current_user)],
-        raw_body: Annotated[bytes, Depends(read_request_body)],
+        profile: Annotated[ProfileInput, Depends(read_profile_input)],
     ) -> BusinessProfileView:
         business: BusinessDocument = authorize(
             user_id,
@@ -182,28 +182,28 @@ def build_profile_router(
             SaveProfileCommand(
                 business_id=business.id,
                 actor_id=user_id,
-                profile=parse_json_body(ProfileInput, raw_body),
+                profile=profile,
             )
         )
 
     @router.put(
         "/v1/businesses/{business_id}/profile/steps/{step}",
-        openapi_extra=json_body_openapi(*STEP_INPUT_TYPES),
+        openapi_extra=describe_json_body(*STEP_INPUT_TYPES),
     )
     def save_profile_step(
         business_id: str,
         step: str,
         user_id: Annotated[UserId, Depends(current_user)],
-        raw_body: Annotated[bytes, Depends(read_request_body)],
+        raw_body: Annotated[bytes, Depends(read_raw_request_body)],
     ) -> ProfileStepSaveResult:
         business: BusinessDocument = authorize(
             user_id,
             business_id,
             BusinessMemberRole.OWNER,
         )
-        wizard_step: ProfileWizardStep = parse_path_value(
-            ProfileWizardStep,
+        wizard_step: ProfileWizardStep = parse_path_identifier(
             step,
+            ProfileWizardStep,
             "Wizard step",
         )
         return save_profile_step_operator.operate(

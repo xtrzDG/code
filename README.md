@@ -31,7 +31,7 @@ uv, Python 3.14, ruff, mypy и pyright в строгом режиме, pytest, d
 | --- | --- | --- |
 | HTTP API | `app.main:create_application` (фабрика uvicorn) | кабинет, каталог, вебхуки каналов, голоса и оплаты, виджет сайта |
 | Фоновый воркер | `python -m app.worker_main` | периодические задачи и очередь задач (автотесты версий помощника); в разработке без Postgres — поток внутри API (`EMBEDDED_WORKER`) |
-| Миграции | `python -m app.adapters.storage.postgres.migrate` | схема Postgres (ЕС) с изоляцией по бизнесу (RLS) |
+| Миграции | `python -m app.gateways.cli.migrate` | схема Postgres (ЕС) с изоляцией по бизнесу (RLS) |
 
 Все три собираются в один образ (`Dockerfile`, роли `api`, `worker`, `migrate`);
 кабинет владельца на Next.js — отдельный образ `web/Dockerfile`.
@@ -182,8 +182,8 @@ Langfuse, Sentry — ненужные оставьте пустыми. Ворк�
 
 ```bash
 export DATABASE_URL=postgresql://app_user:...@host:5432/workshop?sslmode=require
-uv run python -m app.adapters.storage.postgres.migrate --dry-run   # что будет применено
-uv run python -m app.adapters.storage.postgres.migrate             # применить
+uv run python -m app.gateways.cli.migrate --dry-run   # что будет применено
+uv run python -m app.gateways.cli.migrate             # применить
 ```
 
 Миграции из `migrations/` применяются по порядку, каждая в своей транзакции;

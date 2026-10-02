@@ -11,6 +11,7 @@ from app.gateways.http.strict_request_parsing import (
     describe_json_body,
     parse_path_identifier,
     read_client_ip_address,
+    read_raw_request_body,
 )
 from app.gateways.http.widget_cors_middleware import (
     WIDGET_CORS_HEADERS,
@@ -60,12 +61,6 @@ WIDGET_MESSAGES_PATH: str = "/v1/widget/{business_id}/messages"
 read_widget_message_body = build_json_body_dependency(WidgetMessageRequest)
 
 
-async def read_raw_body(request: Request) -> bytes:
-    """Exact request body; webhook signatures are computed over these bytes."""
-
-    return await request.body()
-
-
 def build_channel_router(
     telegram_webhook_operator: OperatorContract[
         TelegramWebhookRequest,
@@ -107,7 +102,7 @@ def build_channel_router(
     @router.post(TELEGRAM_WEBHOOK_PATH_TEMPLATE)
     def receive_telegram_webhook(
         channel_id: str,
-        body: Annotated[bytes, Depends(read_raw_body)],
+        body: Annotated[bytes, Depends(read_raw_request_body)],
         secret_token: Annotated[
             str | None,
             Header(alias=TELEGRAM_SECRET_HEADER),
@@ -145,7 +140,7 @@ def build_channel_router(
 
     @router.post(META_WEBHOOK_PATH)
     def receive_meta_webhook(
-        body: Annotated[bytes, Depends(read_raw_body)],
+        body: Annotated[bytes, Depends(read_raw_request_body)],
         signature: Annotated[str | None, Header(alias=META_SIGNATURE_HEADER)] = None,
     ) -> ChannelWebhookOutcome:
         return meta_webhook_operator.operate(
@@ -154,7 +149,7 @@ def build_channel_router(
 
     @router.post(TELEGRAM_PLATFORM_WEBHOOK_PATH)
     def receive_platform_bot_webhook(
-        body: Annotated[bytes, Depends(read_raw_body)],
+        body: Annotated[bytes, Depends(read_raw_request_body)],
         secret_token: Annotated[
             str | None,
             Header(alias=TELEGRAM_SECRET_HEADER),

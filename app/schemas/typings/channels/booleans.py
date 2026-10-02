@@ -9,6 +9,5 @@ HasChannelCredential = bool
 HasMoreWidgetMessages = bool
 IsCallConfirmationSent = bool
 IsChannelConnected = bool
-IsDuplicateWebhookDelivery = bool
 IsWebChatEnabled = bool
 # Keep abc order for all non example types, if possible.

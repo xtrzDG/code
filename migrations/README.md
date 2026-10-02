@@ -4,8 +4,8 @@ SQL migrations of the Postgres document storage (EU region). Applied in
 version order by
 
 ```bash
-DATABASE_URL=postgresql://... uv run python -m app.adapters.storage.postgres.migrate
-DATABASE_URL=postgresql://... uv run python -m app.adapters.storage.postgres.migrate --dry-run
+DATABASE_URL=postgresql://... uv run python -m app.gateways.cli.migrate
+DATABASE_URL=postgresql://... uv run python -m app.gateways.cli.migrate --dry-run
 ```
 
 The runner records every applied file in `workshop.schema_migrations` with a

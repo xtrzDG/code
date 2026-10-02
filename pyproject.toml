@@ -48,6 +48,10 @@ target-version = "py314"
 select = ["E", "F", "I", "UP", "B", "SIM"]
 fixable = ["ALL"]
 
+[tool.ruff.lint.per-file-ignores]
+# Each line names an attribute so vulture counts it as used.
+"vulture_whitelist.py" = ["B018"]
+
 [tool.ruff.format]
 quote-style = "double"
 indent-style = "space"
@@ -66,6 +70,7 @@ typeCheckingMode = "strict"
 venvPath = "."
 venv = ".venv"
 exclude = [
+    "vulture_whitelist.py",
     ".venv",
     "venv",
     "node_modules",
@@ -73,4 +78,36 @@ exclude = [
     "dist",
     "build",
     ".dev_tools",
+]
+
+# Dead code: `uv run vulture` (CI runs it through
+# tests/architecture_policy/test_dead_code.py). Framework entry points are
+# recognised by decorator or name; everything else that looks unused but is
+# used from outside Python (serialized fields, enum values read by the
+# cabinet) is listed in vulture_whitelist.py with the reason.
+[tool.vulture]
+paths = ["app", "scripts", "vulture_whitelist.py"]
+min_confidence = 60
+sort_by_size = false
+ignore_decorators = [
+    "@router.*",
+    "@http_application.*",
+    "@model_validator",
+    "@field_validator",
+]
+ignore_names = [
+    # Value constraints of constrained primitives, read by their base class.
+    "min_length",
+    "max_length",
+    "pattern",
+    "gt",
+    "ge",
+    "lt",
+    "le",
+    "multiple_of",
+    "uuid_version",
+    # html.parser.HTMLParser callbacks.
+    "handle_starttag",
+    "handle_endtag",
+    "handle_data",
 ]

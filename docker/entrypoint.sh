@@ -29,7 +29,7 @@ case "$role" in
     exec python -m app.worker_main "$@"
     ;;
   migrate)
-    exec python -m app.adapters.storage.postgres.migrate "$@"
+    exec python -m app.gateways.cli.migrate "$@"
     ;;
   *)
     exec "$role" "$@"

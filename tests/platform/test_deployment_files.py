@@ -9,7 +9,7 @@ from pathlib import Path
 
 import pytest
 
-from app.adapters.storage.postgres.migrate import DEFAULT_MIGRATIONS_DIRECTORY
+from app.gateways.cli.migrate import DEFAULT_MIGRATIONS_DIRECTORY
 from app.registries.legal.legal_document_registry import (
     DEFAULT_LEGAL_DOCUMENTS_DIRECTORY,
 )

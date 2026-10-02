@@ -76,9 +76,16 @@ Every HTTP endpoint runs `operator.operate` -> `pipeline.start` ->
   (e.g. `BookingPage`). Use cases page with `take_page`
   (`app/utilities/paging/cursor_paging.py`): newest first by a timestamp, ties
   by id. Filters run before paging.
-- Request bodies read with `build_json_body_dependency` must also be described
-  for OpenAPI (`openapi_extra=describe_json_body(...)`), so the cabinet's
-  generated client knows them.
+- JSON request bodies have one parsing stack,
+  `app/gateways/http/strict_request_parsing.py`: read them with
+  `build_json_body_dependency(Body)` (or `optional=True` when an empty body
+  means all defaults) and describe them for OpenAPI with
+  `openapi_extra=describe_json_body(Body)` (same `optional`), so the
+  cabinet's generated client knows them. Signed webhooks and bodies whose
+  type depends on the path read `read_raw_request_body` and validate with
+  `parse_json_body`. Path ids go through `parse_path_identifier`, optional
+  query values through `parse_optional` (`query_parsing.py`), `?language=`
+  and Accept-Language through `language_negotiation.py`.
 - Router tests build a small `FastAPI()` with `install_error_handlers` and the
   module router, and call it with `fastapi.testclient.TestClient`.
 
@@ -100,4 +107,9 @@ Every HTTP endpoint runs `operator.operate` -> `pipeline.start` ->
   (`app/repositories/*` over `InMemoryDocumentCollectionAdapter`), and fakes
   that implement contracts.
 - Before committing: `uv run ruff check . && uv run ruff format --check . &&
-  uv run mypy . && uv run pyright && uv run pytest`.
+  uv run mypy . && uv run pyright && uv run pytest` (or `just check`, which
+  also runs the cabinet checks). pytest includes the architecture policies:
+  the role layers of `.importlinter` (`lint-imports`), dead code
+  (`vulture`, whitelist in `vulture_whitelist.py`) and the 300-line limit.
+  CI also enforces at least 95 % line-and-branch coverage of `app/`
+  (`uv run pytest -n auto --cov=app --cov-branch --cov-fail-under=95`).

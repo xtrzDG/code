@@ -58,10 +58,6 @@ def format_full_date(value: date, language: LanguageTag) -> str:
     return format_date(value, "full", locale=find_locale(language))
 
 
-def format_weekday(value: date, language: LanguageTag) -> str:
-    return format_date(value, "EEEE", locale=find_locale(language))
-
-
 def isolate(value: str, language: LanguageTag) -> str:
     """Wrap a value for safe embedding into text of the given language."""
 

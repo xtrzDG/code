@@ -1,8 +1,8 @@
 """
 Apply the SQL migrations in `migrations/` to the database in DATABASE_URL.
 
-    uv run python -m app.adapters.storage.postgres.migrate            # apply
-    uv run python -m app.adapters.storage.postgres.migrate --dry-run  # list
+    uv run python -m app.gateways.cli.migrate            # apply
+    uv run python -m app.gateways.cli.migrate --dry-run  # list
 
 Safe to run on every deploy and from several instances at once. Exit codes:
 0 done, 1 a migration could not be applied, 2 DATABASE_URL is not set.
@@ -42,7 +42,7 @@ from app.utilities.config_helpers.app_settings.app_settings_assembler import (
     assemble_app_settings,
 )
 
-DEFAULT_MIGRATIONS_DIRECTORY: Path = Path(__file__).resolve().parents[4] / "migrations"
+DEFAULT_MIGRATIONS_DIRECTORY: Path = Path(__file__).resolve().parents[3] / "migrations"
 EXIT_OK: int = 0
 EXIT_MIGRATION_FAILED: int = 1
 EXIT_NOT_CONFIGURED: int = 2
@@ -114,7 +114,7 @@ def main(
 
 def build_argument_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        prog="python -m app.adapters.storage.postgres.migrate",
+        prog="python -m app.gateways.cli.migrate",
         description="Apply SQL migrations to the database in DATABASE_URL.",
     )
     parser.add_argument(

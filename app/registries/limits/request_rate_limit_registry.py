@@ -26,29 +26,6 @@ class RequestRateLimitRegistry(RequestRateLimitRegistryContract):
         self._lock: threading.Lock = threading.Lock()
         self._calls: int = 0
 
-    def try_acquire(
-        self,
-        key: str,
-        limit: int,
-        window_seconds: int,
-        now: Microseconds,
-    ) -> bool:
-        window_start: int = int(now) - window_seconds * MICROSECONDS_PER_SECOND
-        with self._lock:
-            self._calls += 1
-            if self._calls % SWEEP_EVERY_CALLS == 0:
-                self._sweep(window_start)
-
-            moments: deque[int] = self._requests.setdefault(key, deque())
-            while moments and moments[0] <= window_start:
-                moments.popleft()
-
-            if len(moments) >= limit:
-                return False
-
-            moments.append(int(now))
-            return True
-
     def try_acquire_all(
         self,
         counters: list[tuple[str, int]],

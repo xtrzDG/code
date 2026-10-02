@@ -2,14 +2,12 @@
 
 from typing import Annotated, Any
 
-from fastapi import APIRouter, Depends, Request, status
-from pydantic import BaseModel, ValidationError
+from fastapi import APIRouter, Depends, status
 
 from app.contracts.operator_contract import OperatorContract
 from app.gateways.http.strict_request_parsing import (
-    JsonBodyDependency,
+    build_json_body_dependency,
     describe_json_body,
-    describe_validation_error,
     parse_path_identifier,
 )
 from app.gateways.http.user_authentication import CurrentUserDependency
@@ -31,14 +29,12 @@ from app.schemas.dto.assistants.assistant_views import (
 )
 from app.schemas.dto.errors import ErrorBody
 from app.schemas.dto.go_live import GoLiveReadiness
-from app.schemas.exceptions.application_errors import ValidationFailedError
 from app.schemas.typings.assistants.prefixed_id import AssistantVersionId
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.users.prefixed_id import UserId
 
 VERSIONS_PATH: str = "/v1/businesses/{business_id}/assistant-versions"
 VERSION_PATH: str = VERSIONS_PATH + "/{version_id}"
-EMPTY_JSON_OBJECT: bytes = b"{}"
 REFUSAL_RESPONSES: dict[int | str, dict[str, Any]] = {
     status.HTTP_403_FORBIDDEN: {
         "model": ErrorBody,
@@ -56,37 +52,18 @@ REFUSAL_RESPONSES: dict[int | str, dict[str, Any]] = {
 }
 
 
-def build_optional_json_body_dependency[Body: BaseModel](
-    body_type: type[Body],
-) -> JsonBodyDependency[Body]:
-    """
-    Like `build_json_body_dependency`, but an empty body means "all defaults"
-    (every field of these bodies is optional).
-    """
-
-    async def read_optional_json_body(request: Request) -> Body:
-        raw_body: bytes = await request.body()
-        try:
-            return body_type.model_validate_json(raw_body.strip() or EMPTY_JSON_OBJECT)
-        except ValidationError as error:
-            raise ValidationFailedError(describe_validation_error(error)) from error
-
-    return read_optional_json_body
-
-
-def describe_optional_json_body(body_type: type[BaseModel]) -> dict[str, Any]:
-    """OpenAPI request body of a route whose JSON body may be omitted."""
-
-    description: dict[str, Any] = describe_json_body(body_type)
-    description["requestBody"]["required"] = False
-    return description
-
-
-read_assemble_body = build_optional_json_body_dependency(
-    AssembleAssistantVersionRequest
+read_assemble_body = build_json_body_dependency(
+    AssembleAssistantVersionRequest,
+    optional=True,
 )
-read_run_autotests_body = build_optional_json_body_dependency(RunAutotestsRequest)
-read_publish_body = build_optional_json_body_dependency(PublishAssistantVersionRequest)
+read_run_autotests_body = build_json_body_dependency(
+    RunAutotestsRequest,
+    optional=True,
+)
+read_publish_body = build_json_body_dependency(
+    PublishAssistantVersionRequest,
+    optional=True,
+)
 
 
 def build_assistant_router(
@@ -156,7 +133,10 @@ def build_assistant_router(
     @router.post(
         VERSIONS_PATH,
         status_code=status.HTTP_201_CREATED,
-        openapi_extra=describe_optional_json_body(AssembleAssistantVersionRequest),
+        openapi_extra=describe_json_body(
+            AssembleAssistantVersionRequest,
+            optional=True,
+        ),
     )
     def assemble_assistant_version(
         business_id: str,
@@ -216,7 +196,7 @@ def build_assistant_router(
     @router.post(
         VERSION_PATH + "/autotests",
         status_code=status.HTTP_202_ACCEPTED,
-        openapi_extra=describe_optional_json_body(RunAutotestsRequest),
+        openapi_extra=describe_json_body(RunAutotestsRequest, optional=True),
     )
     def run_autotests(
         business_id: str,
@@ -236,7 +216,10 @@ def build_assistant_router(
 
     @router.post(
         VERSION_PATH + "/publish",
-        openapi_extra=describe_optional_json_body(PublishAssistantVersionRequest),
+        openapi_extra=describe_json_body(
+            PublishAssistantVersionRequest,
+            optional=True,
+        ),
         responses=REFUSAL_RESPONSES,
     )
     def publish_assistant_version(
