@@ -2,7 +2,7 @@ from app.contracts.repositories.business_repositories import ChannelRepoContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.dto.access import BusinessAccessRequest
-from app.schemas.dto.channels import ChannelListQuery, ChannelView
+from app.schemas.dto.channels.channel_settings import ChannelListQuery, ChannelView
 from app.use_cases.channels.channel_views import (
     build_channel_view,
     sort_channel_views,

@@ -3,7 +3,7 @@ from app.contracts.channels import ChannelAdapterContract
 from app.contracts.localization_utilities import PhoneNumberParserContract
 from app.schemas.configurations.app_settings import AppSettings
 from app.schemas.constants.channels import ChannelKind
-from app.schemas.dto.channels import (
+from app.schemas.dto.channels.channel_webhooks import (
     ChannelDeliveryTarget,
     ChannelInboundMessage,
     ChannelWebhookPayload,

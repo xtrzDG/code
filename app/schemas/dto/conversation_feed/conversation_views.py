@@ -1,4 +1,7 @@
-"""Owner cabinet: conversation feed and the owner's test chat (concept section 8)."""
+"""
+Owner cabinet: the conversation feed and one conversation with its
+messages, calls and staff replies (concept section 8).
+"""
 
 from base_pydantic_schemas import ImmutableDTO
 from pydantic import Field
@@ -15,10 +18,7 @@ from app.schemas.constants.conversations import (
     StaffReplyBlock,
 )
 from app.schemas.domain.contacts import ContactDocument
-from app.schemas.domain.conversations import (
-    ConversationDocument,
-    MessageDocument,
-)
+from app.schemas.domain.conversations import ConversationDocument, MessageDocument
 from app.schemas.dto.bookings import BookingView
 from app.schemas.dto.operations.handoffs import HandoffListItem
 from app.schemas.dto.operations.leads import LeadListItem
@@ -38,18 +38,13 @@ from app.schemas.typings.conversations.booleans import (
     IsLlmToolError,
     IsSandboxConversation,
     IsStaffReplyAvailable,
-    SendAsTemplate,
 )
 from app.schemas.typings.conversations.constrained_integers import (
     CallDurationSeconds,
     ConversationMessageCount,
     LlmTokenCount,
 )
-from app.schemas.typings.conversations.constrained_strings import (
-    ConversationSearchText,
-    OwnerTestChatSessionKey,
-    StaffReplyText,
-)
+from app.schemas.typings.conversations.constrained_strings import ConversationSearchText
 from app.schemas.typings.conversations.prefixed_id import (
     CallId,
     ConversationId,
@@ -217,87 +212,9 @@ class ConversationDetailView(ImmutableDTO):
     reply: StaffReplyView | None = None
 
 
-class ConversationRatingRequest(ImmutableDTO):
-    """HTTP body of rating a conversation; null clears the rating."""
-
-    rating: ConversationRating | None
-
-
-class RateConversationCommand(ImmutableDTO):
-    """Owner or staff rates how the assistant handled a conversation."""
-
-    user_id: UserId
-    business_id: BusinessId
-    conversation_id: ConversationId
-    rating: ConversationRating | None
-
-
-class StaffMessageRequest(ImmutableDTO):
-    """
-    HTTP body of a staff message to the customer of a conversation;
-    `as_template` sends it in the WhatsApp template the card offers once the
-    24-hour window has closed (while the window is open it travels as an
-    ordinary message).
-    """
-
-    text: StaffReplyText
-    as_template: SendAsTemplate = False
-
-
-class SendStaffMessageCommand(ImmutableDTO):
-    """An owner or staff member writes to the customer from the cabinet."""
-
-    user_id: UserId
-    business_id: BusinessId
-    conversation_id: ConversationId
-    text: StaffReplyText
-    as_template: SendAsTemplate = False
-    client_ip_address: ClientIpAddress | None = None
-
-
-class StaffMessageResult(ImmutableDTO):
-    """The stored staff message and how it reaches the customer."""
-
-    message: MessageView
-    delivery: StaffMessageDelivery
-
-
 class ConversationViewSource(ImmutableDTO):
     """A conversation with its contact and messages, ready to be rendered."""
 
     conversation: ConversationDocument
     contact: ContactDocument | None = None
     messages: list[MessageDocument] = Field(default_factory=list[MessageDocument])
-
-
-class OwnerTestChatRequest(ImmutableDTO):
-    """
-    HTTP body of the owner's test chat.
-
-    Without `assistant_version_id` the published version answers, or the
-    newest ready (then draft) version before the first publication.
-    `session_key` keeps parallel test chats apart.
-    """
-
-    text: MessageText
-    session_key: OwnerTestChatSessionKey | None = None
-    assistant_version_id: AssistantVersionId | None = None
-
-
-class OwnerTestChatCommand(ImmutableDTO):
-    """A signed-in owner or staff member writes to the assistant from the cabinet."""
-
-    user_id: UserId
-    business_id: BusinessId
-    request: OwnerTestChatRequest
-
-
-class OwnerTestChatVersionQuery(ImmutableDTO):
-    """
-    Which assistant version answers a test chat message: the requested one,
-    else the published one, else the newest ready (then draft) version.
-    """
-
-    business_id: BusinessId
-    requested_version_id: AssistantVersionId | None = None
-    published_version_id: AssistantVersionId | None = None

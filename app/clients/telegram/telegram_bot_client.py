@@ -1,7 +1,7 @@
 import httpx
 
 from app.contracts.channel_clients import ProviderToken, TelegramBotApiClientContract
-from app.schemas.dto.channels import TelegramBotProfile
+from app.schemas.dto.channels.provider_profiles import TelegramBotProfile
 from app.schemas.exceptions.application_errors import (
     ChannelCredentialRejectedError,
     ExternalServiceError,

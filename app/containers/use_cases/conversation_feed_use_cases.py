@@ -9,17 +9,19 @@ from app.containers.transformers import TransformersContainer
 from app.containers.use_cases.account_use_cases import AccountUseCasesContainer
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.dto.call_recordings import CallRecordingQuery, RecordingAudio
-from app.schemas.dto.conversation_feed import (
+from app.schemas.dto.conversation_feed.conversation_actions import (
+    RateConversationCommand,
+    SendStaffMessageCommand,
+    StaffMessageResult,
+)
+from app.schemas.dto.conversation_feed.conversation_views import (
     ConversationDetailView,
     ConversationListQuery,
     ConversationPage,
     ConversationQuery,
     ConversationSummaryView,
-    OwnerTestChatVersionQuery,
-    RateConversationCommand,
-    SendStaffMessageCommand,
-    StaffMessageResult,
 )
+from app.schemas.dto.conversation_feed.owner_test_chat import OwnerTestChatVersionQuery
 from app.schemas.typings.assistants.prefixed_id import AssistantVersionId
 from app.use_cases.conversations.get_call_recording_use_case import (
     GetCallRecordingUseCase,

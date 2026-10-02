@@ -8,7 +8,7 @@ from app.schemas.constants.niches import NicheKey
 from app.schemas.domain.assistants import BusinessFact
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.profiles import BusinessProfileDocument
-from app.schemas.dto.assistants import BusinessFactsSource
+from app.schemas.dto.assistants.assembly_sources import BusinessFactsSource
 from app.schemas.typings.billing.constrained_integers import MoneyAmountMinor
 from app.schemas.typings.bookings.constrained_strings import LocalDate
 from app.schemas.typings.localization.constrained_strings import (

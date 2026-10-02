@@ -16,14 +16,18 @@ from app.gateways.http.widget_cors_middleware import (
     WIDGET_CORS_HEADERS,
     WIDGET_SESSION_KEY_HEADER,
 )
-from app.schemas.dto.channels import (
+from app.schemas.dto.channels.channel_webhooks import (
     ChannelWebhookOutcome,
     ChannelWebhookPayload,
     MetaWebhookRequest,
     MetaWebhookVerificationRequest,
+    TelegramWebhookRequest,
+)
+from app.schemas.dto.channels.staff_links import (
     PlatformBotWebhookOutcome,
     PlatformBotWebhookRequest,
-    TelegramWebhookRequest,
+)
+from app.schemas.dto.channels.widget import (
     WidgetConfigView,
     WidgetMessageCommand,
     WidgetMessageRequest,

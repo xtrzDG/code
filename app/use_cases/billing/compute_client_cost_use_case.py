@@ -24,7 +24,7 @@ from app.schemas.dto.billing_ledger import (
     MarginMoney,
     UsageCostLine,
 )
-from app.schemas.dto.catalog import ExchangeRateQuote
+from app.schemas.dto.catalog.plan_quotes import ExchangeRateQuote
 from app.schemas.exceptions.application_errors import (
     NotFoundError,
     ValidationFailedError,

@@ -19,7 +19,7 @@ from app.schemas.domain.contacts import ChannelIdentity, ContactDocument
 from app.schemas.domain.conversations import CallDocument, ConversationDocument
 from app.schemas.domain.handoffs import HandoffDocument
 from app.schemas.domain.profiles import BusinessProfileDocument, OpeningInterval
-from app.schemas.dto.channels import DisableChannelCommand
+from app.schemas.dto.channels.channel_settings import DisableChannelCommand
 from app.schemas.typings.assistants.constrained_integers import AssistantVersionNumber
 from app.schemas.typings.assistants.constrained_strings import LlmModelId
 from app.schemas.typings.assistants.strings import SystemPromptText, VoiceAgentId

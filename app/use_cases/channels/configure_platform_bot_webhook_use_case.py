@@ -1,7 +1,8 @@
 from app.contracts.channel_clients import TelegramBotApiClientContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.configurations.app_settings import AppSettings
-from app.schemas.dto.channels import PlatformBotWebhookSetup, TelegramBotProfile
+from app.schemas.dto.channels.provider_profiles import TelegramBotProfile
+from app.schemas.dto.channels.staff_links import PlatformBotWebhookSetup
 from app.schemas.exceptions.application_errors import ExternalServiceError
 from app.schemas.typings.channels.constrained_strings import ChannelWebhookUrl
 from app.schemas.typings.platform.strings import PlatformSecret

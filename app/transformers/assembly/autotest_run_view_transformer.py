@@ -1,13 +1,13 @@
 from app.contracts.transformer_contract import TransformerContract
 from app.schemas.constants.assistants import AutotestOutcome
 from app.schemas.domain.assistants import AutotestRunDocument, AutotestScenarioResult
-from app.schemas.dto.assistants import (
+from app.schemas.dto.assistants.assistant_views import (
     AutotestRunView,
-    AutotestRunViewSource,
     AutotestScenarioResultView,
     AutotestTranscriptLineView,
     JudgeCriterionScoreView,
 )
+from app.schemas.dto.assistants.autotest_runs import AutotestRunViewSource
 from app.schemas.typings.assistants.constrained_integers import AutotestScenarioCount
 from app.schemas.typings.billing.constrained_integers import CostMicroUsd
 from app.utilities.assembly.autotest_evaluation import count_run_scenarios

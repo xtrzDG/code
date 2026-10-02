@@ -17,7 +17,7 @@ from app.schemas.constants.assistants import AssistantVersionStatus, GoLiveCheck
 from app.schemas.constants.businesses import BusinessStatus
 from app.schemas.domain.assistants import AssistantVersionDocument
 from app.schemas.domain.businesses import BusinessDocument
-from app.schemas.dto.assistants import AssistantVersionActivation
+from app.schemas.dto.assistants.assembly_sources import AssistantVersionActivation
 from app.schemas.dto.conversations import CallGreeting, CallGreetingRequest
 from app.schemas.dto.go_live import (
     GoLiveCheck,

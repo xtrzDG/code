@@ -12,7 +12,7 @@ from app.schemas.constants.localization import TextDirection
 from app.schemas.domain.assistants import AssistantVersionDocument
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.channels import ChannelDocument, WebChatAppearance
-from app.schemas.dto.channels import (
+from app.schemas.dto.channels.widget import (
     WidgetConfigView,
     WidgetGreetingView,
     WidgetLanguageView,

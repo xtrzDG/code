@@ -1,6 +1,9 @@
 from app.contracts.transformer_contract import TransformerContract
 from app.schemas.domain.conversations import MessageDocument
-from app.schemas.dto.conversation_feed import MessageView, ToolCallView
+from app.schemas.dto.conversation_feed.conversation_views import (
+    MessageView,
+    ToolCallView,
+)
 
 
 class MessageViewTransformer(TransformerContract[MessageDocument, MessageView]):

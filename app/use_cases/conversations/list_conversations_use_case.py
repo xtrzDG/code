@@ -18,7 +18,7 @@ from app.schemas.domain.compliance import AuditLogEntryDocument
 from app.schemas.domain.contacts import ContactDocument
 from app.schemas.domain.conversations import ConversationDocument, MessageDocument
 from app.schemas.dto.access import BusinessAccessRequest
-from app.schemas.dto.conversation_feed import (
+from app.schemas.dto.conversation_feed.conversation_views import (
     ConversationListQuery,
     ConversationPage,
     ConversationSummaryView,

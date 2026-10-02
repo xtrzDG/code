@@ -6,7 +6,7 @@ from app.contracts.repositories.business_repositories import ChannelRepoContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.channels import ChannelKind
 from app.schemas.domain.channels import ChannelDocument
-from app.schemas.dto.channels import ChannelReplyDelivery
+from app.schemas.dto.channels.channel_webhooks import ChannelReplyDelivery
 from app.schemas.exceptions.application_errors import (
     ChannelCredentialRejectedError,
     ExternalServiceError,

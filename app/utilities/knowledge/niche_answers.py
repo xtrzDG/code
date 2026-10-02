@@ -15,7 +15,7 @@ from app.schemas.constants.niches import ProfileWizardStep, QuestionAnswerType
 from app.schemas.domain.profiles import ProfileAnswer
 from app.schemas.dto.localization import PhoneNumberDetails
 from app.schemas.dto.niches import NicheTemplate, QuestionDefinition
-from app.schemas.dto.profiles import ProfileAnswerInput
+from app.schemas.dto.profiles.business_profile import ProfileAnswerInput
 from app.schemas.exceptions.application_errors import ValidationFailedError
 from app.schemas.typings.businesses.constrained_strings import WebLink
 from app.schemas.typings.localization.constrained_strings import CountryCode

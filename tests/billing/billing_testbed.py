@@ -85,7 +85,7 @@ from app.schemas.domain.payments import PaymentOrderDocument
 from app.schemas.domain.users import UserDocument
 from app.schemas.dto.billing import Money, PlanDefinition
 from app.schemas.dto.billing_ledger import BillingNotice, InvoiceDescriptionInput
-from app.schemas.dto.catalog import ExchangeRateQuote
+from app.schemas.dto.catalog.plan_quotes import ExchangeRateQuote
 from app.schemas.dto.jobs import JobReport, JobTick
 from app.schemas.dto.payments import PaymentWebhookDelivery, PaymentWebhookReceipt
 from app.schemas.exceptions.application_errors import AuthenticationRequiredError

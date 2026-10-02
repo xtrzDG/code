@@ -5,7 +5,7 @@ from app.registries.localization.call_forwarding_texts import (
     FORWARDING_STEPS,
     GSM_CODE_TEMPLATES,
 )
-from app.schemas.dto.catalog import CallForwardingGuide
+from app.schemas.dto.catalog.call_forwarding import CallForwardingGuide
 from app.schemas.typings.localization.constrained_strings import CountryCode
 
 

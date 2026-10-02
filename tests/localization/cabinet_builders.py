@@ -24,7 +24,7 @@ from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.channels import ChannelDocument
 from app.schemas.domain.compliance import AuditLogEntryDocument
 from app.schemas.domain.users import UserDocument
-from app.schemas.dto.catalog import (
+from app.schemas.dto.catalog.call_forwarding import (
     CallForwardingInstructions,
     CallForwardingInstructionsRequest,
 )

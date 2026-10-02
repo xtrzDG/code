@@ -6,9 +6,11 @@ from app.containers.repositories import RepositoriesContainer
 from app.containers.time_provider import TimeProviderContainer
 from app.containers.utilities import UtilitiesContainer
 from app.contracts.use_case_contract import UseCaseContract
-from app.schemas.dto.catalog import (
+from app.schemas.dto.catalog.call_forwarding import (
     CallForwardingInstructions,
     CallForwardingInstructionsQuery,
+)
+from app.schemas.dto.catalog.countries import (
     CountryList,
     CountryListRequest,
     CountryProfileRequest,
@@ -16,9 +18,8 @@ from app.schemas.dto.catalog import (
     LanguageList,
     LanguageListRequest,
     ParsePhoneNumberRequest,
-    PlanQuoteList,
-    PlanQuoteRequest,
 )
+from app.schemas.dto.catalog.plan_quotes import PlanQuoteList, PlanQuoteRequest
 from app.schemas.dto.localization import PhoneNumberDetails
 from app.use_cases.catalog.get_country_profile_use_case import GetCountryProfileUseCase
 from app.use_cases.catalog.list_countries_use_case import ListCountriesUseCase

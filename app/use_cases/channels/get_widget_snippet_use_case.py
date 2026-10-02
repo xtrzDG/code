@@ -5,7 +5,7 @@ from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.configurations.app_settings import AppSettings
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.dto.access import BusinessAccessRequest
-from app.schemas.dto.channels import WidgetSnippetQuery, WidgetSnippetView
+from app.schemas.dto.channels.widget import WidgetSnippetQuery, WidgetSnippetView
 from app.schemas.exceptions.application_errors import ExternalServiceError
 from app.schemas.typings.channels.constrained_strings import (
     WidgetDemoUrl,

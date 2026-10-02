@@ -1,6 +1,6 @@
 from app.contracts.transformer_contract import TransformerContract
 from app.schemas.domain.conversations import CallDocument
-from app.schemas.dto.conversation_feed import CallView
+from app.schemas.dto.conversation_feed.conversation_views import CallView
 
 
 class CallViewTransformer(TransformerContract[CallDocument, CallView]):

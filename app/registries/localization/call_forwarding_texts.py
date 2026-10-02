@@ -11,7 +11,10 @@ placeholders: {number}, {no_answer_code}, {busy_code}, {unreachable_code},
 """
 
 from app.schemas.constants.localization import CallForwardingCondition
-from app.schemas.dto.catalog import CallForwardingCodeTemplate, CarrierForwardingGuide
+from app.schemas.dto.catalog.call_forwarding import (
+    CallForwardingCodeTemplate,
+    CarrierForwardingGuide,
+)
 from app.schemas.dto.localization import LocalizedText
 from app.schemas.typings.localization.constrained_strings import (
     CallForwardingDialCodeTemplate,

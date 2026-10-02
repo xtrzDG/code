@@ -8,12 +8,14 @@ from app.schemas.constants.localization import (
     CountryOnboardingStatus,
     TextDirection,
 )
-from app.schemas.dto.catalog import (
+from app.schemas.dto.catalog.countries import (
     CountryListRequest,
     CountryProfileRequest,
-    ExchangeRateQuote,
     LanguageListRequest,
     ParsePhoneNumberRequest,
+)
+from app.schemas.dto.catalog.plan_quotes import (
+    ExchangeRateQuote,
     PlanQuote,
     PlanQuoteRequest,
 )

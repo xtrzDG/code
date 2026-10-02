@@ -16,7 +16,7 @@ from app.schemas.constants.channels import ChannelKind
 from app.schemas.constants.conversations import StaffMessageDelivery, StaffReplyBlock
 from app.schemas.domain.channels import WhatsAppStaffTemplate
 from app.schemas.domain.conversations import ConversationDocument
-from app.schemas.dto.conversation_feed import StaffReplyView
+from app.schemas.dto.conversation_feed.conversation_views import StaffReplyView
 from app.schemas.dto.staff_reply_templates import StaffReplyTemplateView
 from app.schemas.typings.channels.booleans import IsChannelConnected
 from app.schemas.typings.conversations.constrained_integers import (

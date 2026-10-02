@@ -13,7 +13,7 @@ from app.pipelines.conversations.customer_message_pipeline import (
 from app.pipelines.conversations.owner_test_chat_pipeline import (
     OwnerTestChatPipeline,
 )
-from app.schemas.dto.conversation_feed import OwnerTestChatCommand
+from app.schemas.dto.conversation_feed.owner_test_chat import OwnerTestChatCommand
 from app.schemas.dto.conversations import AssistantReply
 
 

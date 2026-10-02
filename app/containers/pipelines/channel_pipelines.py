@@ -16,13 +16,12 @@ from app.orchestrators.channels.channel_webhook_orchestrator import (
 from app.orchestrators.channels.widget_message_orchestrator import (
     WidgetMessageOrchestrator,
 )
-from app.schemas.dto.channels import (
+from app.schemas.dto.channels.channel_webhooks import (
     ChannelWebhookOutcome,
     MetaWebhookRequest,
     TelegramWebhookRequest,
-    WidgetMessageCommand,
-    WidgetReplyView,
 )
+from app.schemas.dto.channels.widget import WidgetMessageCommand, WidgetReplyView
 
 
 class ChannelPipelinesContainer(containers.DeclarativeContainer):

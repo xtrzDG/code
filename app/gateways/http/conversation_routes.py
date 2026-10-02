@@ -21,19 +21,23 @@ from app.gateways.http.user_authentication import CurrentUserDependency
 from app.schemas.constants.channels import ChannelKind
 from app.schemas.constants.conversations import ConversationStatus
 from app.schemas.dto.call_recordings import CallRecordingQuery, RecordingAudio
-from app.schemas.dto.conversation_feed import (
-    ConversationDetailView,
-    ConversationListQuery,
-    ConversationPage,
-    ConversationQuery,
+from app.schemas.dto.conversation_feed.conversation_actions import (
     ConversationRatingRequest,
-    ConversationSummaryView,
-    OwnerTestChatCommand,
-    OwnerTestChatRequest,
     RateConversationCommand,
     SendStaffMessageCommand,
     StaffMessageRequest,
     StaffMessageResult,
+)
+from app.schemas.dto.conversation_feed.conversation_views import (
+    ConversationDetailView,
+    ConversationListQuery,
+    ConversationPage,
+    ConversationQuery,
+    ConversationSummaryView,
+)
+from app.schemas.dto.conversation_feed.owner_test_chat import (
+    OwnerTestChatCommand,
+    OwnerTestChatRequest,
 )
 from app.schemas.dto.conversations import AssistantReply
 from app.schemas.exceptions.application_errors import ValidationFailedError

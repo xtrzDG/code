@@ -2,7 +2,7 @@ from typing import Any
 
 from app.schemas.constants.assistants import AssistantVersionStatus, GoLiveCheckCode
 from app.schemas.constants.billing import PlanKey
-from app.schemas.dto.assistants import AssistantVersionQuery
+from app.schemas.dto.assistants.assistant_commands import AssistantVersionQuery
 from app.schemas.dto.go_live import GoLiveCheck, GoLiveReadiness
 from app.schemas.typings.assistants.prefixed_id import AssistantVersionId
 from app.schemas.typings.businesses.prefixed_id import BusinessId

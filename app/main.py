@@ -24,7 +24,8 @@ from app.gateways.worker.background_worker import BackgroundWorker
 from app.schemas.configurations.app_settings import AppSettings
 from app.schemas.constants.environment import DeploymentEnvironment
 from app.schemas.constants.localization import OtpDeliveryChannel
-from app.schemas.dto.channels import PlatformBotWebhookSetup, TelegramBotProfile
+from app.schemas.dto.channels.provider_profiles import TelegramBotProfile
+from app.schemas.dto.channels.staff_links import PlatformBotWebhookSetup
 from app.schemas.exceptions.application_errors import ValidationFailedError
 from app.schemas.exceptions.base_exception import ApplicationError
 from app.schemas.typings.compliance.constrained_strings import DpaDocumentVersion

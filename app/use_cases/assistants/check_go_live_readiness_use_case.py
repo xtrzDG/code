@@ -28,7 +28,7 @@ from app.schemas.dto.go_live import (
     GoLiveReadiness,
     GoLiveReadinessRequest,
 )
-from app.schemas.dto.profiles import ProfileGapFinding
+from app.schemas.dto.profiles.profile_gaps import ProfileGapFinding
 from app.schemas.typings.assistants.constrained_integers import AutotestScenarioCount
 from app.schemas.typings.assistants.constrained_strings import GoLiveCheckDetail
 from app.schemas.typings.assistants.strings import GoLiveCheckMessage

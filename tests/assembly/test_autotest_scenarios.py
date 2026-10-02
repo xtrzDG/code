@@ -1,7 +1,7 @@
 import pytest
 
 from app.schemas.constants.assistants import AssistantToolName, AutotestScenarioKind
-from app.schemas.dto.assistants import AutotestLanguage
+from app.schemas.dto.assistants.autotest_runs import AutotestLanguage
 from app.schemas.exceptions.application_errors import ValidationFailedError
 from app.schemas.typings.localization.constrained_strings import (
     LanguageTag,

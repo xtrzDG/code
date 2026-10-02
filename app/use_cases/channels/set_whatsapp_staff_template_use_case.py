@@ -10,7 +10,7 @@ from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.channels import ChannelDocument, WhatsAppStaffTemplate
 from app.schemas.domain.compliance import AuditLogEntryDocument
 from app.schemas.dto.access import BusinessAccessRequest
-from app.schemas.dto.channels import ChannelView
+from app.schemas.dto.channels.channel_settings import ChannelView
 from app.schemas.dto.staff_reply_templates import (
     SetWhatsAppStaffTemplateCommand,
     WhatsAppStaffTemplateRequest,

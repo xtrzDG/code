@@ -9,7 +9,7 @@ without a list price costs 0 in the estimate.
 from collections.abc import Sequence
 from decimal import ROUND_HALF_UP, Decimal
 
-from app.schemas.dto.assistants import LlmTokenPrice
+from app.schemas.dto.assistants.assembly_sources import LlmTokenPrice
 from app.schemas.typings.assistants.constrained_integers import (
     LlmPricePerMillionTokensMicroUsd,
 )

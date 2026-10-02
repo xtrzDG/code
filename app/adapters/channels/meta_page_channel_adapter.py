@@ -4,7 +4,7 @@ from app.contracts.channel_clients import MetaGraphApiClientContract
 from app.contracts.channels import ChannelAdapterContract
 from app.schemas.configurations.app_settings import AppSettings
 from app.schemas.constants.channels import ChannelKind
-from app.schemas.dto.channels import (
+from app.schemas.dto.channels.channel_webhooks import (
     ChannelDeliveryTarget,
     ChannelInboundMessage,
     ChannelWebhookPayload,

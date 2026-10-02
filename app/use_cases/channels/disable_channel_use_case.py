@@ -14,7 +14,7 @@ from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.channels import ChannelDocument
 from app.schemas.domain.compliance import AuditLogEntryDocument
 from app.schemas.dto.access import BusinessAccessRequest
-from app.schemas.dto.channels import ChannelView, DisableChannelCommand
+from app.schemas.dto.channels.channel_settings import ChannelView, DisableChannelCommand
 from app.schemas.exceptions.application_errors import NotFoundError
 from app.schemas.exceptions.base_exception import ApplicationError
 from app.schemas.typings.businesses.prefixed_id import BusinessId

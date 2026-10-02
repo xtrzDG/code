@@ -16,7 +16,7 @@ from app.schemas.domain.knowledge import KnowledgeItemDocument
 from app.schemas.domain.profiles import BusinessContacts, BusinessProfileDocument
 from app.schemas.dto.knowledge_admin import KnowledgeItemUpsertInput
 from app.schemas.dto.niches import NicheTemplate
-from app.schemas.dto.profiles import (
+from app.schemas.dto.profiles.profile_steps import (
     BookingRulesStepInput,
     ChannelsStepInput,
     ContactsAndHoursStepInput,

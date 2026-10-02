@@ -3,10 +3,10 @@ from app.contracts.repositories.assistant_repositories import AutotestRunRepoCon
 from app.contracts.transformer_contract import TransformerContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.domain.assistants import AutotestRunDocument
-from app.schemas.dto.assistants import (
+from app.schemas.dto.assistants.assistant_views import AutotestRunView
+from app.schemas.dto.assistants.autotest_runs import (
     AutotestJobPayload,
     AutotestRunPlan,
-    AutotestRunView,
     AutotestRunViewSource,
 )
 from app.schemas.exceptions.application_errors import NotFoundError

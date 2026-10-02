@@ -7,11 +7,11 @@ from app.schemas.constants.businesses import BusinessStatus
 from app.schemas.constants.compliance import AuditAction
 from app.schemas.domain.billing import SubscriptionDocument
 from app.schemas.domain.businesses import BusinessDocument
-from app.schemas.dto.assistants import (
-    AssistantVersionDetails,
+from app.schemas.dto.assistants.assistant_commands import (
     PublishAssistantVersionCommand,
     RollbackAssistantVersionCommand,
 )
+from app.schemas.dto.assistants.assistant_views import AssistantVersionDetails
 from app.schemas.dto.voice import VoiceAgentSpec
 from app.schemas.exceptions.application_errors import (
     AccessDeniedError,

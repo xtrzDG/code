@@ -21,10 +21,12 @@ from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.channels import ChannelDocument, WebChatAppearance
 from app.schemas.domain.compliance import AuditLogEntryDocument
 from app.schemas.dto.access import BusinessAccessRequest
-from app.schemas.dto.channels import (
+from app.schemas.dto.channels.channel_settings import (
     ChannelView,
     ConnectChannelCommand,
     ConnectChannelRequest,
+)
+from app.schemas.dto.channels.provider_profiles import (
     MetaPageProfile,
     TelegramBotProfile,
     WhatsAppPhoneNumberProfile,

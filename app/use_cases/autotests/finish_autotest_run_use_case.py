@@ -11,11 +11,11 @@ from app.schemas.domain.assistants import (
     AssistantVersionDocument,
     AutotestRunDocument,
 )
-from app.schemas.dto.assistants import (
+from app.schemas.dto.assistants.assistant_views import AutotestRunView
+from app.schemas.dto.assistants.autotest_runs import (
     AutotestRunCompletion,
     AutotestRunPlan,
     AutotestRunSummary,
-    AutotestRunView,
     AutotestRunViewSource,
 )
 from app.schemas.exceptions.application_errors import NotFoundError

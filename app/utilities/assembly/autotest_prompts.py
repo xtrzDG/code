@@ -9,7 +9,7 @@ from collections.abc import Sequence
 
 from app.schemas.constants.conversations import MessageAuthor
 from app.schemas.domain.assistants import AutotestTranscriptLine, BusinessFact
-from app.schemas.dto.assistants import AutotestScenario
+from app.schemas.dto.assistants.autotest_runs import AutotestScenario
 from app.schemas.dto.conversations import AssistantReply
 from app.schemas.typings.assistants.strings import SystemPromptText
 from app.schemas.typings.conversations.strings import MessageText

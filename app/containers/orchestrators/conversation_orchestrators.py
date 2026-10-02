@@ -32,7 +32,7 @@ from app.orchestrators.conversations.owner_test_chat_orchestrator import (
 from app.orchestrators.conversations.voice_tool_call_orchestrator import (
     VoiceToolCallOrchestrator,
 )
-from app.schemas.dto.conversation_feed import OwnerTestChatCommand
+from app.schemas.dto.conversation_feed.owner_test_chat import OwnerTestChatCommand
 from app.schemas.dto.conversations import InboundMessage, VoiceToolCallResult
 from app.schemas.dto.voice_webhooks import (
     PostCallWebhookOutcome,

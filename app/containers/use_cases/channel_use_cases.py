@@ -11,22 +11,28 @@ from app.containers.use_cases.account_use_cases import AccountUseCasesContainer
 from app.containers.use_cases.voice_use_cases import VoiceUseCasesContainer
 from app.containers.utilities import UtilitiesContainer
 from app.contracts.use_case_contract import UseCaseContract
-from app.schemas.dto.channels import (
-    ChannelInboundDelivery,
+from app.schemas.dto.channels.channel_settings import (
     ChannelListQuery,
-    ChannelReplyDelivery,
     ChannelView,
     ConnectChannelCommand,
-    CreateTelegramLinkCommand,
     DisableChannelCommand,
+)
+from app.schemas.dto.channels.channel_webhooks import (
+    ChannelInboundDelivery,
+    ChannelReplyDelivery,
     MetaWebhookRequest,
     MetaWebhookVerificationRequest,
+    TelegramWebhookRequest,
+)
+from app.schemas.dto.channels.provider_profiles import TelegramBotProfile
+from app.schemas.dto.channels.staff_links import (
+    CreateTelegramLinkCommand,
     PlatformBotWebhookOutcome,
     PlatformBotWebhookRequest,
     PlatformBotWebhookSetup,
-    TelegramBotProfile,
     TelegramLinkView,
-    TelegramWebhookRequest,
+)
+from app.schemas.dto.channels.widget import (
     WidgetConfigView,
     WidgetMessageCommand,
     WidgetMessagesQuery,

@@ -10,7 +10,7 @@ name the language it must write in elsewhere (the persona prompt).
 from collections.abc import Sequence
 
 from app.schemas.constants.assistants import AssistantToolName, AutotestScenarioKind
-from app.schemas.dto.assistants import AutotestLanguage, AutotestScenario
+from app.schemas.dto.assistants.autotest_runs import AutotestLanguage, AutotestScenario
 from app.schemas.exceptions.application_errors import ValidationFailedError
 from app.schemas.typings.assistants.constrained_strings import AutotestScenarioKey
 from app.schemas.typings.assistants.strings import AutotestScenarioGoal

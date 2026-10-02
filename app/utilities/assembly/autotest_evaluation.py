@@ -19,7 +19,10 @@ from app.schemas.domain.assistants import (
     AutotestScenarioResult,
     JudgeCriterionScore,
 )
-from app.schemas.dto.assistants import AutotestRunSummary, AutotestScenario
+from app.schemas.dto.assistants.autotest_runs import (
+    AutotestRunSummary,
+    AutotestScenario,
+)
 from app.schemas.dto.conversations import AssistantReply
 from app.schemas.typings.assistants.constrained_floats import (
     AutotestPassRate,

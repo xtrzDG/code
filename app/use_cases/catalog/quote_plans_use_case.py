@@ -5,7 +5,7 @@ from app.contracts.localization_utilities import LocalizedTextResolverContract
 from app.contracts.registries import CountryRegistryContract, PlanRegistryContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.dto.billing import Money, PlanDefinition
-from app.schemas.dto.catalog import (
+from app.schemas.dto.catalog.plan_quotes import (
     ExchangeRateQuote,
     PlanQuote,
     PlanQuoteList,

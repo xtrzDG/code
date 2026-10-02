@@ -19,7 +19,7 @@ from app.schemas.constants.localization import TextDirection
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.channels import ChannelDocument
 from app.schemas.domain.conversations import ConversationDocument, MessageDocument
-from app.schemas.dto.channels import (
+from app.schemas.dto.channels.widget import (
     WidgetMessagesQuery,
     WidgetMessagesView,
     WidgetMessageView,

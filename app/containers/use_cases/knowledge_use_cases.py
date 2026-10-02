@@ -26,20 +26,25 @@ from app.schemas.dto.knowledge_admin import (
     UpdateKnowledgeItemCommand,
     UpsertKnowledgeItemsCommand,
 )
-from app.schemas.dto.profiles import (
+from app.schemas.dto.profiles.business_profile import (
     BusinessProfileQuery,
     BusinessProfileView,
+    SaveProfileCommand,
+)
+from app.schemas.dto.profiles.niche_catalog import (
     NicheCatalogQuery,
     NicheCatalogView,
     NicheDetailsView,
     NicheTemplateQuery,
-    ProfileGapsQuery,
-    ProfileGapsView,
+)
+from app.schemas.dto.profiles.profile_gaps import ProfileGapsQuery, ProfileGapsView
+from app.schemas.dto.profiles.profile_steps import (
     ProfileStepSaveResult,
+    SaveProfileStepCommand,
+)
+from app.schemas.dto.profiles.profile_wizard import (
     ProfileWizardQuery,
     ProfileWizardView,
-    SaveProfileCommand,
-    SaveProfileStepCommand,
 )
 from app.use_cases.knowledge.create_knowledge_item_use_case import (
     CreateKnowledgeItemUseCase,

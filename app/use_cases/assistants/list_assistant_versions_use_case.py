@@ -6,7 +6,8 @@ from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.domain.assistants import AssistantVersionDocument
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.dto.access import BusinessAccessRequest
-from app.schemas.dto.assistants import AssistantVersionsQuery, AssistantVersionSummary
+from app.schemas.dto.assistants.assistant_commands import AssistantVersionsQuery
+from app.schemas.dto.assistants.assistant_views import AssistantVersionSummary
 
 
 class ListAssistantVersionsUseCase(

@@ -13,7 +13,7 @@ from app.schemas.constants.conversations import ConversationStatus, MessageAutho
 from app.schemas.domain.billing import UsageEventDocument
 from app.schemas.domain.conversations import ConversationDocument, MessageDocument
 from app.schemas.dto.conversation_engine import PreparedTurn, ReplyRecord
-from app.schemas.dto.conversation_feed import ToolCallView
+from app.schemas.dto.conversation_feed.conversation_views import ToolCallView
 from app.schemas.dto.conversations import AssistantReply
 from app.schemas.typings.billing.constrained_integers import (
     CostMicroUsd,

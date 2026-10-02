@@ -6,7 +6,7 @@ from app.schemas.domain.channels import (
     WebChatAppearance,
     WhatsAppStaffTemplate,
 )
-from app.schemas.dto.channels import ChannelView
+from app.schemas.dto.channels.channel_settings import ChannelView
 from app.schemas.dto.staff_reply_templates import WhatsAppStaffTemplateView
 
 # Order of channels in the cabinet: free messengers first (concept: cheap

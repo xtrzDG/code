@@ -18,7 +18,7 @@ from app.schemas.domain.profiles import (
     BusinessLink,
 )
 from app.schemas.dto.niches import NicheTemplate
-from app.schemas.dto.profiles import BookingRulesInput, ContactsInput
+from app.schemas.dto.profiles.business_profile import BookingRulesInput, ContactsInput
 from app.schemas.exceptions.application_errors import ValidationFailedError
 from app.schemas.typings.bookings.constrained_integers import SlotDurationMinutes
 from app.schemas.typings.localization.constrained_strings import E164PhoneNumber

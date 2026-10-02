@@ -12,11 +12,8 @@ from app.schemas.domain.assistants import (
     AutotestScenarioResult,
     AutotestTranscriptLine,
 )
-from app.schemas.dto.assistants import (
-    AutotestScenarioRun,
-    JudgeVerdict,
-    LlmTokenPrice,
-)
+from app.schemas.dto.assistants.assembly_sources import LlmTokenPrice
+from app.schemas.dto.assistants.autotest_runs import AutotestScenarioRun, JudgeVerdict
 from app.schemas.dto.conversations import (
     AssistantReply,
     InboundMessage,

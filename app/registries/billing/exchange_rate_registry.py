@@ -1,6 +1,6 @@
 from app.contracts.catalog_registries import ExchangeRateRegistryContract
 from app.registries.billing.exchange_rate_catalog import OFFICIAL_EXCHANGE_RATES
-from app.schemas.dto.catalog import ExchangeRateQuote
+from app.schemas.dto.catalog.plan_quotes import ExchangeRateQuote
 from app.schemas.typings.localization.constrained_strings import CurrencyCode
 
 

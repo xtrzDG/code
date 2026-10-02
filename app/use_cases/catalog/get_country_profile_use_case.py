@@ -3,7 +3,7 @@ from typed_time_provider import Microseconds, WallClock
 
 from app.contracts.registries import CountryRegistryContract, LanguageRegistryContract
 from app.contracts.use_case_contract import UseCaseContract
-from app.schemas.dto.catalog import (
+from app.schemas.dto.catalog.countries import (
     CountryProfileRequest,
     CountryProfileView,
     LanguageOption,

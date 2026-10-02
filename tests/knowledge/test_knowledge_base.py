@@ -26,7 +26,7 @@ from app.schemas.dto.knowledge_admin import (
     UpsertKnowledgeItemsCommand,
 )
 from app.schemas.dto.paging import PageRequest
-from app.schemas.dto.profiles import (
+from app.schemas.dto.profiles.profile_steps import (
     ChannelsStepInput,
     ContactsAndHoursStepInput,
     ProfileStepInput,

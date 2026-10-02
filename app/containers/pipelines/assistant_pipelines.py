@@ -9,10 +9,10 @@ from app.contracts.pipeline_contract import PipelineContract
 from app.pipelines.assistants.assemble_assistant_version_pipeline import (
     AssembleAssistantVersionPipeline,
 )
-from app.schemas.dto.assistants import (
+from app.schemas.dto.assistants.assistant_commands import (
     AssembleAssistantVersionCommand,
-    AssistantVersionDetails,
 )
+from app.schemas.dto.assistants.assistant_views import AssistantVersionDetails
 
 
 class AssistantPipelinesContainer(containers.DeclarativeContainer):

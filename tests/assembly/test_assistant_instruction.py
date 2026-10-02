@@ -9,7 +9,7 @@ from app.schemas.constants.assistants import AssistantToolName
 from app.schemas.constants.localization import DataRegion
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.profiles import BusinessProfileDocument
-from app.schemas.dto.assistants import AssistantInstructionSource
+from app.schemas.dto.assistants.assembly_sources import AssistantInstructionSource
 from app.schemas.typings.localization.constrained_strings import CountryCode
 from app.schemas.typings.profiles.strings import ForbiddenRuleText, HandoffRuleText
 from app.transformers.assembly.assistant_instruction_transformer import (

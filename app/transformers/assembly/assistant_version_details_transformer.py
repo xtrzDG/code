@@ -1,6 +1,9 @@
 from app.contracts.transformer_contract import TransformerContract
 from app.schemas.domain.assistants import AssistantVersionDocument
-from app.schemas.dto.assistants import AssistantVersionDetails, BusinessFactView
+from app.schemas.dto.assistants.assistant_views import (
+    AssistantVersionDetails,
+    BusinessFactView,
+)
 
 
 class AssistantVersionDetailsTransformer(

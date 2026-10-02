@@ -80,14 +80,16 @@ from app.schemas.domain.knowledge import KnowledgeItemDocument
 from app.schemas.domain.profiles import BusinessProfileDocument
 from app.schemas.domain.resources import ResourceDocument, ScheduleExceptionDocument
 from app.schemas.domain.users import UserDocument
-from app.schemas.dto.assistants import (
+from app.schemas.dto.assistants.assembly_sources import LlmTokenPrice
+from app.schemas.dto.assistants.assistant_commands import (
     AssembleAssistantVersionCommand,
     AssembleAssistantVersionRequest,
-    AssistantVersionDetails,
-    AutotestRunView,
-    LlmTokenPrice,
     PublishAssistantVersionCommand,
     RunAutotestsCommand,
+)
+from app.schemas.dto.assistants.assistant_views import (
+    AssistantVersionDetails,
+    AutotestRunView,
 )
 from app.schemas.dto.conversations import AssistantReply, InboundMessage, LlmRequest
 from app.schemas.dto.llm_scripts import ScriptedLlmTurn

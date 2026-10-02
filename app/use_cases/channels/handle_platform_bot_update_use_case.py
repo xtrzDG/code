@@ -15,7 +15,7 @@ from app.schemas.constants.handoffs import ManagerContactChannel
 from app.schemas.domain.businesses import BusinessDocument, ManagerContact
 from app.schemas.domain.compliance import AuditLogEntryDocument
 from app.schemas.domain.manager_links import ManagerTelegramLinkDocument
-from app.schemas.dto.channels import (
+from app.schemas.dto.channels.staff_links import (
     PlatformBotWebhookOutcome,
     PlatformBotWebhookRequest,
 )

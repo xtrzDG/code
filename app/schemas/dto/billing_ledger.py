@@ -15,7 +15,7 @@ from app.schemas.constants.billing import (
 from app.schemas.domain.billing import SubscriptionDocument
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.dto.billing import Money
-from app.schemas.dto.catalog import ExchangeRateQuote
+from app.schemas.dto.catalog.plan_quotes import ExchangeRateQuote
 from app.schemas.dto.localization import LocalizedText
 from app.schemas.typings.billing.booleans import IsSetupFeeIncluded
 from app.schemas.typings.billing.constrained_floats import GrossMarginPercent

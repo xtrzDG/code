@@ -1,6 +1,6 @@
 from app.contracts.transformer_contract import TransformerContract
 from app.schemas.domain.assistants import AssistantVersionDocument
-from app.schemas.dto.assistants import AssistantVersionSummary
+from app.schemas.dto.assistants.assistant_views import AssistantVersionSummary
 
 
 class AssistantVersionSummaryTransformer(

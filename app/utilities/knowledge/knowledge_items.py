@@ -22,7 +22,7 @@ from app.schemas.dto.knowledge_admin import (
     KnowledgeItemUpsertInput,
 )
 from app.schemas.dto.niches import NicheTemplate
-from app.schemas.dto.profiles import FaqEntryInput
+from app.schemas.dto.profiles.business_profile import FaqEntryInput
 from app.schemas.exceptions.application_errors import (
     NotFoundError,
     ValidationFailedError,

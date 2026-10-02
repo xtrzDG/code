@@ -11,7 +11,7 @@ from app.schemas.domain.assistants import AssistantVersionDocument
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.knowledge import KnowledgeItemDocument
 from app.schemas.domain.profiles import BusinessProfileDocument
-from app.schemas.dto.assistants import (
+from app.schemas.dto.assistants.autotest_runs import (
     AutotestPlanningRequest,
     AutotestScenarioPlanning,
 )

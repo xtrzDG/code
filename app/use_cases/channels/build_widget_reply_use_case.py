@@ -4,7 +4,7 @@ from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.conversations import MessageAuthor
 from app.schemas.constants.localization import TextDirection
 from app.schemas.domain.conversations import MessageDocument
-from app.schemas.dto.channels import WidgetReplyInput, WidgetReplyView
+from app.schemas.dto.channels.widget import WidgetReplyInput, WidgetReplyView
 from app.schemas.dto.conversations import AssistantReply
 from app.schemas.exceptions.application_errors import UnsupportedLanguageError
 from app.schemas.typings.conversations.prefixed_id import MessageId

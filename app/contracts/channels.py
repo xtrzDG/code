@@ -8,7 +8,7 @@ from app.contracts.adapter_contract import AdapterContract
 from app.contracts.repo_contract import RepoContract
 from app.schemas.domain.channel_receipts import ChannelMessageReceiptDocument
 from app.schemas.domain.manager_links import ManagerTelegramLinkDocument
-from app.schemas.dto.channels import (
+from app.schemas.dto.channels.channel_webhooks import (
     ChannelDeliveryTarget,
     ChannelInboundMessage,
     ChannelWebhookPayload,

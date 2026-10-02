@@ -13,18 +13,19 @@ from app.gateways.http.strict_request_parsing import (
 )
 from app.gateways.http.user_authentication import CurrentUserDependency
 from app.schemas.constants.channels import ChannelKind
-from app.schemas.dto.channels import (
+from app.schemas.dto.channels.channel_settings import (
     ChannelListQuery,
     ChannelView,
     ConnectChannelCommand,
     ConnectChannelRequest,
-    CreateTelegramLinkCommand,
     DisableChannelCommand,
+)
+from app.schemas.dto.channels.staff_links import (
+    CreateTelegramLinkCommand,
     TelegramLinkRequest,
     TelegramLinkView,
-    WidgetSnippetQuery,
-    WidgetSnippetView,
 )
+from app.schemas.dto.channels.widget import WidgetSnippetQuery, WidgetSnippetView
 from app.schemas.dto.staff_reply_templates import (
     SetWhatsAppStaffTemplateCommand,
     WhatsAppStaffTemplateRequest,

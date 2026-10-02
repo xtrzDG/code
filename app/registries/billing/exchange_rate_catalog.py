@@ -6,7 +6,7 @@ for other currencies, so their local prices stay unknown until a rate or a
 price-book entry is added.
 """
 
-from app.schemas.dto.catalog import ExchangeRateQuote
+from app.schemas.dto.catalog.plan_quotes import ExchangeRateQuote
 from app.schemas.typings.billing.constrained_floats import ExchangeRate
 from app.schemas.typings.billing.constrained_strings import ExchangeRateDate
 from app.schemas.typings.billing.strings import ExchangeRateSourceName

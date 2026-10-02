@@ -3,7 +3,7 @@
 from collections.abc import Sequence
 
 from app.contracts.registries import LanguageRegistryContract
-from app.schemas.dto.assistants import AutotestLanguage
+from app.schemas.dto.assistants.autotest_runs import AutotestLanguage
 from app.schemas.dto.localization import LanguageProfile
 from app.schemas.exceptions.application_errors import UnsupportedLanguageError
 from app.schemas.typings.localization.constrained_strings import LanguageTag

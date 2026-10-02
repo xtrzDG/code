@@ -9,7 +9,7 @@ from app.contracts.orchestrator_contract import OrchestratorContract
 from app.orchestrators.localization.call_forwarding_instructions_orchestrator import (
     CallForwardingInstructionsOrchestrator,
 )
-from app.schemas.dto.catalog import (
+from app.schemas.dto.catalog.call_forwarding import (
     CallForwardingInstructions,
     CallForwardingInstructionsRequest,
 )

@@ -5,7 +5,7 @@ import pytest
 
 from app.schemas.constants.handoffs import ManagerContactChannel
 from app.schemas.domain.businesses import BusinessDocument, ManagerContact
-from app.schemas.dto.channels import PlatformBotWebhookSetup
+from app.schemas.dto.channels.staff_links import PlatformBotWebhookSetup
 from app.schemas.exceptions.application_errors import ExternalServiceError
 from app.schemas.typings.handoffs.strings import ManagerContactAddress, ManagerName
 from app.schemas.typings.localization.constrained_strings import LanguageTag

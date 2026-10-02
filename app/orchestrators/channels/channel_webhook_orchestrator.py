@@ -3,7 +3,7 @@ import logging
 from app.contracts.conversation_flow import CustomerMessagePipelineContract
 from app.contracts.orchestrator_contract import OrchestratorContract
 from app.contracts.use_case_contract import UseCaseContract
-from app.schemas.dto.channels import (
+from app.schemas.dto.channels.channel_webhooks import (
     ChannelInboundDelivery,
     ChannelReplyDelivery,
     ChannelWebhookOutcome,

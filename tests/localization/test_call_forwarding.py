@@ -9,7 +9,7 @@ from app.schemas.constants.localization import CallForwardingCondition
 from app.schemas.constants.users import LoginMethod
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.users import UserDocument
-from app.schemas.dto.catalog import (
+from app.schemas.dto.catalog.call_forwarding import (
     CallForwardingInstructions,
     CallForwardingInstructionsRequest,
 )

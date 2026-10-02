@@ -5,7 +5,10 @@ from typed_time_provider import Microseconds
 
 from app.schemas.constants.billing import UsageKind
 from app.schemas.constants.channels import ChannelKind, ChannelStatus
-from app.schemas.dto.channels import ChannelDeliveryTarget, ChannelWebhookPayload
+from app.schemas.dto.channels.channel_webhooks import (
+    ChannelDeliveryTarget,
+    ChannelWebhookPayload,
+)
 from app.schemas.exceptions.application_errors import (
     AuthenticationRequiredError,
     ExternalServiceError,

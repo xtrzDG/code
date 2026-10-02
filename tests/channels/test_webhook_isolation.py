@@ -6,7 +6,7 @@ from app.orchestrators.channels.channel_webhook_orchestrator import (
     ChannelWebhookOrchestrator,
 )
 from app.schemas.constants.channels import ChannelKind
-from app.schemas.dto.channels import (
+from app.schemas.dto.channels.channel_webhooks import (
     ChannelDeliveryTarget,
     ChannelInboundDelivery,
     ChannelReplyDelivery,

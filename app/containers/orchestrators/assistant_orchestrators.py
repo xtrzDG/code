@@ -22,11 +22,9 @@ from app.orchestrators.assistants.run_queued_autotests_orchestrator import (
     RunQueuedAutotestsOrchestrator,
 )
 from app.schemas.domain.assistants import AutotestScenarioResult
-from app.schemas.dto.assistants import (
-    AutotestRunView,
-    AutotestScenarioRun,
-    RunAutotestsCommand,
-)
+from app.schemas.dto.assistants.assistant_commands import RunAutotestsCommand
+from app.schemas.dto.assistants.assistant_views import AutotestRunView
+from app.schemas.dto.assistants.autotest_runs import AutotestScenarioRun
 from app.schemas.dto.jobs import JobReport, QueuedJobInput
 from app.use_cases.autotests.run_autotest_scenario_use_case import (
     RunAutotestScenarioUseCase,

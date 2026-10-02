@@ -11,11 +11,11 @@ from app.schemas.constants.users import BusinessMemberRole
 from app.schemas.domain.assistants import AssistantVersionDocument
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.dto.access import BusinessAccessRequest
-from app.schemas.dto.assistants import (
-    AssistantVersionActivation,
-    AssistantVersionDetails,
+from app.schemas.dto.assistants.assembly_sources import AssistantVersionActivation
+from app.schemas.dto.assistants.assistant_commands import (
     RollbackAssistantVersionCommand,
 )
+from app.schemas.dto.assistants.assistant_views import AssistantVersionDetails
 from app.schemas.exceptions.application_errors import ConflictError, NotFoundError
 from app.utilities.assembly.go_live_refusals import build_version_reason
 

@@ -16,15 +16,17 @@ from app.containers.utilities import UtilitiesContainer
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.domain.assistants import AssistantVersionDocument
 from app.schemas.domain.businesses import BusinessDocument
-from app.schemas.dto.assistants import (
+from app.schemas.dto.assistants.assembly_sources import AssistantVersionActivation
+from app.schemas.dto.assistants.assistant_commands import (
     AssembleAssistantVersionCommand,
-    AssistantVersionActivation,
-    AssistantVersionDetails,
     AssistantVersionQuery,
     AssistantVersionsQuery,
-    AssistantVersionSummary,
     PublishAssistantVersionCommand,
     RollbackAssistantVersionCommand,
+)
+from app.schemas.dto.assistants.assistant_views import (
+    AssistantVersionDetails,
+    AssistantVersionSummary,
 )
 from app.schemas.dto.businesses import (
     BusinessView,

@@ -8,7 +8,7 @@ from app.schemas.constants.billing import UsageKind
 from app.schemas.constants.channels import ChannelKind
 from app.schemas.domain.billing import UsageEventDocument
 from app.schemas.domain.channels import ChannelDocument
-from app.schemas.dto.channels import ChannelDeliveryTarget
+from app.schemas.dto.channels.channel_webhooks import ChannelDeliveryTarget
 from app.schemas.exceptions.application_errors import (
     ExternalServiceError,
     ValidationFailedError,

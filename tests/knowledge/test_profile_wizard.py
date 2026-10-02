@@ -7,27 +7,28 @@ from app.schemas.constants.knowledge import KnowledgeItemKind, KnowledgeItemSour
 from app.schemas.constants.niches import NicheKey, ProfileWizardStep
 from app.schemas.domain.profiles import BusinessAddress, BusinessLink, OpeningInterval
 from app.schemas.dto.knowledge_admin import KnowledgeItemUpsertInput
-from app.schemas.dto.profiles import (
+from app.schemas.dto.profiles.business_profile import (
     BookingRulesInput,
-    BookingRulesStepInput,
     BusinessProfileQuery,
-    ChannelsStepInput,
-    ContactsAndHoursStepInput,
     ContactsInput,
-    FaqAndHandoffStepInput,
     FaqEntryInput,
-    NicheAndLanguagesStepInput,
-    NicheCatalogQuery,
-    NicheTemplateQuery,
-    OfferStepInput,
     ProfileAnswerInput,
     ProfileInput,
+    SaveProfileCommand,
+)
+from app.schemas.dto.profiles.niche_catalog import NicheCatalogQuery, NicheTemplateQuery
+from app.schemas.dto.profiles.profile_steps import (
+    BookingRulesStepInput,
+    ChannelsStepInput,
+    ContactsAndHoursStepInput,
+    FaqAndHandoffStepInput,
+    NicheAndLanguagesStepInput,
+    OfferStepInput,
     ProfileStepInput,
     ProfileStepSaveResult,
-    ProfileWizardQuery,
-    SaveProfileCommand,
     SaveProfileStepCommand,
 )
+from app.schemas.dto.profiles.profile_wizard import ProfileWizardQuery
 from app.schemas.exceptions.application_errors import (
     InvalidPhoneNumberError,
     NotFoundError,

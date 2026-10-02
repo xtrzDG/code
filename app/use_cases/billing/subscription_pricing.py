@@ -14,7 +14,7 @@ from app.contracts.catalog_registries import ExchangeRateRegistryContract
 from app.contracts.registries import PlanRegistryContract
 from app.schemas.constants.billing import BillingPeriod, PlanKey
 from app.schemas.dto.billing import Money, PlanDefinition
-from app.schemas.dto.catalog import ExchangeRateQuote, QuotedMoney
+from app.schemas.dto.catalog.plan_quotes import ExchangeRateQuote, QuotedMoney
 from app.schemas.exceptions.application_errors import ValidationFailedError
 from app.schemas.typings.billing.booleans import IsPriceEstimated
 from app.schemas.typings.billing.constrained_integers import DiscountPercent

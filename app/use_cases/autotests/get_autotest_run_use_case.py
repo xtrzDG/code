@@ -10,11 +10,9 @@ from app.schemas.domain.assistants import (
 )
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.dto.access import BusinessAccessRequest
-from app.schemas.dto.assistants import (
-    AssistantVersionQuery,
-    AutotestRunView,
-    AutotestRunViewSource,
-)
+from app.schemas.dto.assistants.assistant_commands import AssistantVersionQuery
+from app.schemas.dto.assistants.assistant_views import AutotestRunView
+from app.schemas.dto.assistants.autotest_runs import AutotestRunViewSource
 from app.schemas.exceptions.application_errors import NotFoundError
 
 

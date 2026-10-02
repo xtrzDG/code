@@ -8,16 +8,18 @@ from app.containers.time_provider import TimeProviderContainer
 from app.containers.transformers import TransformersContainer
 from app.containers.use_cases.account_use_cases import AccountUseCasesContainer
 from app.contracts.use_case_contract import UseCaseContract
-from app.schemas.dto.assistants import (
+from app.schemas.dto.assistants.assistant_commands import (
     AssistantVersionQuery,
+    RunAutotestsCommand,
+)
+from app.schemas.dto.assistants.assistant_views import AutotestRunView
+from app.schemas.dto.assistants.autotest_runs import (
     AutotestPlanningRequest,
     AutotestRunCompletion,
     AutotestRunFailure,
     AutotestRunPlan,
     AutotestRunProgress,
-    AutotestRunView,
     AutotestScenarioPlanning,
-    RunAutotestsCommand,
 )
 from app.schemas.dto.jobs import (
     QueuedJobInput,

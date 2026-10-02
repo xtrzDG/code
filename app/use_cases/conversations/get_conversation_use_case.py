@@ -31,7 +31,7 @@ from app.schemas.domain.conversations import (
 from app.schemas.domain.resources import ResourceDocument
 from app.schemas.dto.access import BusinessAccessRequest
 from app.schemas.dto.bookings import BookingView
-from app.schemas.dto.conversation_feed import (
+from app.schemas.dto.conversation_feed.conversation_views import (
     CallView,
     ConversationDetailView,
     ConversationQuery,

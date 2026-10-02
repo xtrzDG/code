@@ -17,7 +17,7 @@ from app.schemas.constants.profiles import ProfileGapKind
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.handoffs import UnansweredQuestionDocument
 from app.schemas.dto.niches import NicheTemplate, QuestionDefinition
-from app.schemas.dto.profiles import (
+from app.schemas.dto.profiles.profile_gaps import (
     ProfileGap,
     ProfileGapFinding,
     ProfileGapsQuery,
