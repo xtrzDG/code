@@ -27,6 +27,10 @@ from tests.storage.rls_contacts import (
     save_two_businesses_contacts,
 )
 
+# Seeding and checking rows of several businesses runs platform-wide; the
+# business scopes a test enters nest inside (tests/storage/conftest.py).
+pytestmark = pytest.mark.usefixtures("platform_scope")
+
 
 def test_every_collection_table_has_forced_rls_and_the_policy(
     postgres_server: ThrowawayPostgresServer,

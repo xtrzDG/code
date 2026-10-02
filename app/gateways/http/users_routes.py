@@ -5,6 +5,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, Header, Query, Request, Response, status
 
 from app.contracts.operator_contract import OperatorContract
+from app.gateways.http.openapi_error_contract import standard_error_responses
 from app.gateways.http.strict_request_parsing import (
     build_json_body_dependency,
     describe_json_body,
@@ -62,7 +63,7 @@ def build_users_router(
         PATCH /v1/me               change display name or interface language
     """
 
-    router = APIRouter(tags=["auth"])
+    router = APIRouter(tags=["auth"], responses=standard_error_responses())
 
     @router.get("/v1/auth/login-options")
     def get_login_options(

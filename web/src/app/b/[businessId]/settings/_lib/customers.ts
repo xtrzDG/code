@@ -4,7 +4,6 @@ import type { Schema } from "@/api/types";
 
 export type ContactSummary = Schema<"ContactSummaryView">;
 export type ContactPage = Schema<"ContactPage">;
-export type ErasureResult = Schema<"ContactErasureResult">;
 
 export const CONTACTS_PAGE_SIZE = 20;
 

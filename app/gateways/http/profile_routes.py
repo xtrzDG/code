@@ -10,6 +10,7 @@ from app.gateways.http.language_negotiation import (
     negotiate_language,
     parse_language_parameter,
 )
+from app.gateways.http.openapi_error_contract import standard_error_responses
 from app.gateways.http.strict_request_parsing import (
     build_json_body_dependency,
     describe_json_body,
@@ -96,7 +97,9 @@ def build_profile_router(
     language (cabinet), then English.
     """
 
-    router: APIRouter = APIRouter(tags=["profile"])
+    router: APIRouter = APIRouter(
+        tags=["profile"], responses=standard_error_responses()
+    )
 
     def authorize(
         user_id: UserId,

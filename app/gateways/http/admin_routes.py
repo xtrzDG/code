@@ -5,6 +5,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, Request
 
 from app.contracts.operator_contract import OperatorContract
+from app.gateways.http.openapi_error_contract import standard_error_responses
 from app.gateways.http.paging_query import parse_page_request
 from app.gateways.http.query_parsing import parse_optional
 from app.gateways.http.strict_request_parsing import (
@@ -51,7 +52,7 @@ def build_admin_router(
                                                         (audited)
     """
 
-    router = APIRouter(tags=["admin"])
+    router = APIRouter(tags=["admin"], responses=standard_error_responses())
 
     @router.get("/v1/admin/clients")
     def list_clients(

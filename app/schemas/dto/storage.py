@@ -20,8 +20,11 @@ class StorageScope(ImmutableDTO):
 
     A BUSINESS scope carries the business id that Postgres row-level security
     compares with every row; the PLATFORM scope sees all businesses (server
-    code that is not acting for one business: webhook routing, sign-in,
-    admin views, background jobs that walk all businesses).
+    code that is not acting for one business and says so explicitly: webhook
+    routing, admin views, background jobs that walk all businesses). The
+    UNSCOPED scope is what code gets that entered neither: tenant collections
+    refuse it (fail-closed), platform collections (users, businesses,
+    sessions) stay readable.
     """
 
     kind: StorageScopeKind
@@ -33,7 +36,7 @@ class StorageScope(ImmutableDTO):
         if has_business_id != (self.kind is StorageScopeKind.BUSINESS):
             raise ValueError(
                 "A business storage scope needs a business id; "
-                "the platform scope must not have one."
+                "the platform and unscoped scopes must not have one."
             )
 
         return self
@@ -45,6 +48,10 @@ class StorageScope(ImmutableDTO):
     @classmethod
     def for_business(cls, business_id: BusinessId) -> Self:
         return cls(kind=StorageScopeKind.BUSINESS, business_id=business_id)
+
+    @classmethod
+    def unscoped(cls) -> Self:
+        return cls(kind=StorageScopeKind.UNSCOPED)
 
 
 class SchemaMigrationScript(ImmutableDTO):

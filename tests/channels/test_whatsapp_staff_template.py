@@ -2,7 +2,7 @@
 
 import pytest
 
-from app.schemas.constants.channels import ChannelKind
+from app.schemas.constants.channels import ChannelKind, ChannelStatus
 from tests.channels.cabinet_setup import PHONE_NUMBER_ID, CabinetSetup
 from tests.channels.channels_payloads import bearer
 
@@ -59,11 +59,12 @@ class TestWhatsAppStaffTemplate:
 
         disabled = setup.delete("whatsapp")
 
-        assert disabled.status_code == 200
-        assert disabled.json()["staff_reply_template"] == {
-            "name": "staff_reply",
-            "language_code": "en",
-        }
+        assert disabled.status_code == 204
+        stored = setup.stored(ChannelKind.WHATSAPP)
+        assert stored.status is ChannelStatus.DISABLED
+        assert stored.whatsapp_staff_template is not None
+        assert str(stored.whatsapp_staff_template.name) == "staff_reply"
+        assert str(stored.whatsapp_staff_template.language_code) == "en"
 
     @pytest.mark.parametrize(
         "body",

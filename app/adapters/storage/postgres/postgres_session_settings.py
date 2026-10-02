@@ -9,13 +9,15 @@ Every collection table has the policy (see migrations/0001):
 The adapter sets both values with `set_config(..., is_local => true)` (the
 parameterized form of SET LOCAL) at the start of each transaction, so they
 end with it and never leak to the next user of a pooled connection. With no
-settings at all a session sees and writes nothing (default deny).
+settings at all, and in the UNSCOPED scope, a session sees and writes no
+tenant row (default deny); only the PLATFORM scope turns the bypass on.
 """
 
 import psycopg
 from psycopg import errors as database_errors
 
 from app.clients.postgres.postgres_connection_pool_client import PostgresConnection
+from app.schemas.constants.storage import StorageScopeKind
 from app.schemas.dto.storage import StorageScope
 from app.schemas.exceptions.application_errors import (
     AccessDeniedError,
@@ -30,19 +32,18 @@ ROW_LEVEL_SECURITY_MARKER: str = "row-level security"
 
 
 def apply_storage_scope(connection: PostgresConnection, scope: StorageScope) -> None:
-    """Set the RLS settings of the current transaction for `scope`."""
-
-    if scope.business_id is None:
-        connection.execute(
-            "select set_config('app.business_id', '', true), "
-            "set_config('app.bypass_rls', 'on', true)"
-        )
-        return
+    """
+    Set the RLS settings of the current transaction for `scope`: a business
+    sees its rows, the platform every row, an unscoped session none.
+    """
 
     connection.execute(
         "select set_config('app.business_id', %s, true), "
-        "set_config('app.bypass_rls', 'off', true)",
-        (str(scope.business_id),),
+        "set_config('app.bypass_rls', %s, true)",
+        (
+            "" if scope.business_id is None else str(scope.business_id),
+            "on" if scope.kind is StorageScopeKind.PLATFORM else "off",
+        ),
     )
 
 

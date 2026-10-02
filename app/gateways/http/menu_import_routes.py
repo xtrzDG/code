@@ -5,6 +5,7 @@ from typing import Annotated, Any
 from fastapi import APIRouter, Depends, status
 
 from app.contracts.operator_contract import OperatorContract
+from app.gateways.http.openapi_error_contract import standard_error_responses
 from app.gateways.http.strict_request_parsing import (
     build_json_body_dependency,
     describe_json_body,
@@ -73,7 +74,7 @@ def build_menu_import_router(
     MenuLinkProblem; an unavailable model is a 502.
     """
 
-    router = APIRouter(tags=["knowledge"])
+    router = APIRouter(tags=["knowledge"], responses=standard_error_responses())
 
     @router.post(
         "/v1/businesses/{business_id}/knowledge/import",
@@ -111,13 +112,16 @@ def build_menu_import_router(
             )
         )
 
-    @router.delete("/v1/businesses/{business_id}/knowledge/import/{batch_id}")
+    @router.delete(
+        "/v1/businesses/{business_id}/knowledge/import/{batch_id}",
+        status_code=status.HTTP_204_NO_CONTENT,
+    )
     def discard_import_batch(
         business_id: str,
         batch_id: str,
         user_id: Annotated[UserId, Depends(current_user)],
-    ) -> DiscardedImportBatch:
-        return discard_import_batch_operator.operate(
+    ) -> None:
+        discard_import_batch_operator.operate(
             DiscardImportBatchCommand(
                 user_id=user_id,
                 business_id=parse_path_identifier(business_id, BusinessId, "Business"),

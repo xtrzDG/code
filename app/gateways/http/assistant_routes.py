@@ -5,6 +5,7 @@ from typing import Annotated, Any
 from fastapi import APIRouter, Depends, status
 
 from app.contracts.operator_contract import OperatorContract
+from app.gateways.http.openapi_error_contract import standard_error_responses
 from app.gateways.http.strict_request_parsing import (
     build_json_body_dependency,
     describe_json_body,
@@ -128,7 +129,7 @@ def build_assistant_router(
     version_not_archived, force_publish_admin_only.
     """
 
-    router = APIRouter(tags=["assistant"])
+    router = APIRouter(tags=["assistant"], responses=standard_error_responses())
 
     @router.post(
         VERSIONS_PATH,

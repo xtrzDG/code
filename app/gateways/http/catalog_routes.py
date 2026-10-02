@@ -9,6 +9,7 @@ from base_typed_id import BaseTypedIdError
 from fastapi import APIRouter, Depends, Query
 
 from app.contracts.operator_contract import OperatorContract
+from app.gateways.http.openapi_error_contract import standard_error_responses
 from app.gateways.http.user_authentication import CurrentUserDependency
 from app.schemas.dto.catalog.call_forwarding import (
     CallForwardingInstructions,
@@ -78,7 +79,7 @@ def build_catalog_router(
     English, the forwarding route to the owner language of the business.
     """
 
-    router = APIRouter()
+    router = APIRouter(responses=standard_error_responses())
 
     @router.get("/v1/catalog/countries")
     def list_countries(

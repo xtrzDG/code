@@ -42,6 +42,10 @@ from tests.storage.builders import (
 )
 from tests.storage.conftest import CollectionFactory
 
+# Seeding and checking rows of several businesses runs platform-wide; the
+# business scopes a test enters nest inside (tests/storage/conftest.py).
+pytestmark = pytest.mark.usefixtures("platform_scope")
+
 
 def test_knowledge_bookings_and_usage(collections: CollectionFactory) -> None:
     knowledge_repo = KnowledgeItemRepository(

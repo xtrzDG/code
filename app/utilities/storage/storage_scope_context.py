@@ -9,18 +9,21 @@ from app.schemas.typings.businesses.prefixed_id import BusinessId
 
 class StorageScopeContext(StorageScopeContract):
     """
-    Storage scope kept in a context variable.
+    Storage scope kept in a context variable, fail-closed.
 
     Each request, job or thread sees its own scope: asyncio tasks and
     `contextvars.copy_context()` inherit it, a new `threading.Thread` starts
-    platform-wide. Scopes nest and are restored on exit, also on errors.
+    unscoped. Unscoped code cannot touch tenant collections at all: it must
+    enter `scoped_to_business(...)` or, explicitly, `platform_wide()`. Scopes
+    nest and are restored on exit, also on errors.
     """
 
     def __init__(self) -> None:
         self._platform_scope: StorageScope = StorageScope.platform_wide()
+        self._unscoped: StorageScope = StorageScope.unscoped()
         self._current_scope: ContextVar[StorageScope] = ContextVar(
             "storage_scope",
-            default=self._platform_scope,
+            default=self._unscoped,
         )
 
     def current(self) -> StorageScope:

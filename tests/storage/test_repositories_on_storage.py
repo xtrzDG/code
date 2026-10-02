@@ -57,6 +57,10 @@ from tests.storage.builders import (
 from tests.storage.conftest import CollectionFactory
 from tests.storage.storage_testing import FIXED_NANOSECONDS, build_fixed_wall_clock
 
+# Seeding and checking rows of several businesses runs platform-wide; the
+# business scopes a test enters nest inside (tests/storage/conftest.py).
+pytestmark = pytest.mark.usefixtures("platform_scope")
+
 GEORGIA, ISRAEL, EMIRATES, JAPAN, BRAZIL, KAZAKHSTAN = COUNTRY_SAMPLES
 NOW_MICROSECONDS: int = FIXED_NANOSECONDS // 1_000
 

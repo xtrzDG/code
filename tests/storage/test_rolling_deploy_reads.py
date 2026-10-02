@@ -5,6 +5,8 @@ rollback: each reads what the other wrote.
 
 from typing import cast
 
+import pytest
+
 from app.adapters.storage.document_upgrades import StoredJsonObject
 from app.adapters.storage.persisted_document_codec import parse_stored_object
 from app.clients.postgres.postgres_connection_pool_client import (
@@ -22,6 +24,10 @@ from tests.storage.evolution_documents import (
     build_note_v2,
 )
 from tests.storage.stored_rows import read_stored, write_stored
+
+# Seeding and checking rows of several businesses runs platform-wide; the
+# business scopes a test enters nest inside (tests/storage/conftest.py).
+pytestmark = pytest.mark.usefixtures("platform_scope")
 
 
 def test_the_previous_release_reads_and_rewrites_rows_of_the_next_one(

@@ -24,13 +24,16 @@ class StorageScopeContract(UtilityContract, Protocol):
     """
     Ambient storage scope of the current request, job or thread.
 
-    The Postgres adapter reads it on every operation of a tenant collection
-    and lets row-level security enforce it, as a second line of defence after
-    repositories that already filter by business id. Without an explicit
-    scope, code runs platform-wide.
+    The document collections read it on every operation of a tenant
+    collection, and on Postgres row-level security enforces it, as a second
+    line of defence after repositories that already filter by business id.
+    It is fail-closed: code that entered no scope is UNSCOPED, and tenant
+    collections refuse it (`UnscopedStorageAccessError`); platform-level
+    code says so with `platform_wide()`.
     """
 
     def current(self) -> StorageScope:
+        """The scope of the running code; UNSCOPED when it entered none."""
         raise NotImplementedError
 
     def scoped_to_business(

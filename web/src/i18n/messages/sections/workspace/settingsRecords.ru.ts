@@ -45,7 +45,7 @@ export const settingsRecordsRu: Translation<typeof settingsRecordsEn> = {
     deleteDescription: "Сообщения, расшифровки звонков и записи этого клиента будут удалены навсегда; разговоры, брони, заявки и передачи останутся без персональных данных. Это нельзя отменить.",
     deleteConfirm: "Удалить навсегда",
     deleted: "Данные клиента удалены",
-    deletedSummary: "Удалено: сообщений {messages}, записей {recordings}; обезличено: разговоров {conversations}, броней {bookings}, заявок {leads}, передач {handoffs}.",
+    deletedSummary: "{name}: сообщения, расшифровки и записи звонков удалены; разговоры, брони, заявки и передачи остались без персональных данных.",
     showMore: "Показать ещё клиентов",
   },
   audit: {

@@ -5,6 +5,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, Header, status
 
 from app.contracts.operator_contract import OperatorContract
+from app.gateways.http.openapi_error_contract import standard_error_responses
 from app.gateways.http.strict_request_parsing import (
     build_json_body_dependency,
     describe_json_body,
@@ -91,7 +92,7 @@ def build_billing_router(
     signature, 404 for an unknown order and 422 for a malformed body.
     """
 
-    router = APIRouter(tags=["billing"])
+    router = APIRouter(tags=["billing"], responses=standard_error_responses())
 
     @router.get("/v1/businesses/{business_id}/billing")
     def get_billing_overview(

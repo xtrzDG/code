@@ -7,11 +7,13 @@ another business's rows.
 
 from typing import cast
 
+import pytest
 from dependency_injector import providers
 
 from app.containers.app import AppContainer
 from app.repositories.knowledge_repositories import KnowledgeItemRepository
 from app.schemas.domain.knowledge import KnowledgeItemDocument
+from app.schemas.exceptions.storage_errors import UnscopedStorageAccessError
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.knowledge.prefixed_id import KnowledgeItemId
 from app.schemas.typings.platform.strings import DatabaseUrl
@@ -84,10 +86,15 @@ def test_a_business_request_cannot_read_another_business_rows(
             f"/v1/businesses/{first_id}/knowledge/{secret_id}",
             headers=bearer(first_token),
         )
-        # Platform-wide (no business scope) the bug does leak the item.
-        leaked = workshop.container.repositories.knowledge_item_repo().get(
-            BusinessId(first_id), KnowledgeItemId(secret_id)
-        )
+        # Platform-wide (no business scope) the bug does leak the item;
+        # without any scope the collection refuses (fail-closed).
+        forgetful_repo = workshop.container.repositories.knowledge_item_repo()
+        with workshop.container.utilities.storage_scope().platform_wide():
+            leaked = forgetful_repo.get(
+                BusinessId(first_id), KnowledgeItemId(secret_id)
+            )
+        with pytest.raises(UnscopedStorageAccessError):
+            forgetful_repo.get(BusinessId(first_id), KnowledgeItemId(secret_id))
 
     assert own_read.status_code == 200, own_read.text
     assert leaked is not None

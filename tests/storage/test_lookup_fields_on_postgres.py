@@ -6,6 +6,7 @@ batches (inbox and outbox uniqueness: test_inbox_outbox_on_postgres.py).
 
 from typing import LiteralString
 
+import pytest
 from psycopg.rows import TupleRow
 from typed_time_provider import Microseconds
 
@@ -29,6 +30,10 @@ from tests.storage.builders import COUNTRY_SAMPLES, build_contact
 from tests.storage.conftest import PostgresCollectionFactory
 from tests.storage.hot_path_seeding import insert_session_rows
 from tests.storage.postgres_server import ThrowawayPostgresServer
+
+# Seeding and checking rows of several businesses runs platform-wide; the
+# business scopes a test enters nest inside (tests/storage/conftest.py).
+pytestmark = pytest.mark.usefixtures("platform_scope")
 
 COLUMN_TYPES: dict[LookupFieldKind, str] = {
     LookupFieldKind.TEXT: "text",

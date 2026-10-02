@@ -2,7 +2,6 @@
 
 import { IconSearch, IconShield, IconUsers } from "@/components/icons";
 import { RefreshFailed } from "@/components/insights/common";
-import { useBusinessFormat } from "@/components/business/BusinessContext";
 import {
   Alert,
   Button,
@@ -26,9 +25,8 @@ import { CustomerRow } from "./CustomerRow";
 /** Customers' requests: find a customer, export their data or erase it. */
 export function DataRequestsCard() {
   const { t } = useI18n();
-  const format = useBusinessFormat();
   const requests = useDataRequests();
-  const { query, setQuery, search, contacts, exporting, erasing, erasureError, lastErasure, displayName } = requests;
+  const { query, setQuery, search, contacts, exporting, erasing, erasureError, lastErasedName, displayName } = requests;
 
   if (contacts.error?.code === "access_denied") {
     return (
@@ -44,16 +42,9 @@ export function DataRequestsCard() {
   return (
     <Card title={t("settings.requests.title")} description={t("settings.requests.description")}>
       <div className="space-y-6">
-        {lastErasure ? (
+        {lastErasedName ? (
           <Alert tone="success" title={t("settings.requests.deleted")}>
-            {t("settings.requests.deletedSummary", {
-              messages: format.number(lastErasure.deleted_messages),
-              recordings: format.number(lastErasure.deleted_recordings),
-              conversations: format.number(lastErasure.anonymized_conversations),
-              bookings: format.number(lastErasure.anonymized_bookings),
-              leads: format.number(lastErasure.anonymized_leads),
-              handoffs: format.number(lastErasure.anonymized_handoffs),
-            })}
+            {t("settings.requests.deletedSummary", { name: lastErasedName })}
           </Alert>
         ) : null}
 

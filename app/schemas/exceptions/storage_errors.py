@@ -17,3 +17,15 @@ class UnreadableStoredDocumentError(ValueError):
     A data error, not a business error: the row was written by something
     other than the document collections (a manual edit, a broken import).
     """
+
+
+class UnscopedStorageAccessError(RuntimeError):
+    """
+    Code touched a tenant collection without a storage scope (fail-closed,
+    see `StorageScopeContract`).
+
+    A programming error, not a business error: a request or job for one
+    business must run inside `scoped_to_business(...)` (operators and the
+    job runner do that from the business id of their input), and
+    platform-level code must say so with `platform_wide()`.
+    """

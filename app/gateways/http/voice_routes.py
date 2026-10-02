@@ -8,6 +8,7 @@ import anyio.to_thread
 from fastapi import APIRouter, Depends, Header, Response
 
 from app.contracts.operator_contract import OperatorContract
+from app.gateways.http.openapi_error_contract import standard_error_responses
 from app.gateways.http.strict_request_parsing import read_raw_request_body
 from app.schemas.constants.assistants import AssistantToolName
 from app.schemas.dto.conversations import VoiceToolCallResult
@@ -89,7 +90,7 @@ def build_voice_router(
     can say to the caller.
     """
 
-    router = APIRouter(tags=["voice"])
+    router = APIRouter(tags=["voice"], responses=standard_error_responses())
 
     @router.post(VOICE_TOOL_PATH_TEMPLATE)
     async def run_voice_tool(

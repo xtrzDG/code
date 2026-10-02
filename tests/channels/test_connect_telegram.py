@@ -5,7 +5,7 @@ from typing import Any
 import httpx
 import pytest
 
-from app.schemas.constants.channels import ChannelKind
+from app.schemas.constants.channels import ChannelKind, ChannelStatus
 from app.schemas.typings.channels.strings import ChannelSecret
 from app.schemas.typings.platform.strings import PlatformSecret
 from app.utilities.channels.delivery_targets import find_business_channel
@@ -120,11 +120,9 @@ class TestConnectTelegram:
 
         response = setup.delete("telegram")
 
-        assert response.status_code == 200
-        assert response.json()["status"] == "disabled"
-        assert response.json()["has_credential"] is False
-        assert response.json()["account_id"] is None
+        assert (response.status_code, response.content) == (204, b"")
         stored = setup.stored(ChannelKind.TELEGRAM)
+        assert stored.status is ChannelStatus.DISABLED
         assert stored.encrypted_secret is None and stored.external_id is None
         [delete_webhook] = setup.testbed.telegram_transport.requests_to(
             "/deleteWebhook"
@@ -142,4 +140,5 @@ class TestConnectTelegram:
         setup.put("telegram", {"bot_token": TELEGRAM_BOT_TOKEN})
         setup.testbed.telegram_transport.failure = httpx.ConnectError("down")
 
-        assert setup.delete("telegram").json()["status"] == "disabled"
+        assert setup.delete("telegram").status_code == 204
+        assert setup.stored(ChannelKind.TELEGRAM).status is ChannelStatus.DISABLED

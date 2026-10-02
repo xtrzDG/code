@@ -19,7 +19,6 @@ import {
   markErased,
   type ContactPage,
   type ContactSummary,
-  type ErasureResult,
 } from "./customers";
 
 const SEARCH_DELAY_MS = 300;
@@ -37,7 +36,8 @@ export function useDataRequests() {
   const [exporting, setExporting] = useState<string | null>(null);
   const [erasing, setErasing] = useState<ContactSummary | null>(null);
   const [erasureError, setErasureError] = useState<ApiError | null>(null);
-  const [lastErasure, setLastErasure] = useState<ErasureResult | null>(null);
+  // Whose data was erased last (the API answers 204), for the summary.
+  const [lastErasedName, setLastErasedName] = useState<string | null>(null);
 
   useEffect(() => {
     const timer = window.setTimeout(() => setSearch(contactSearchParam(query)), SEARCH_DELAY_MS);
@@ -103,7 +103,7 @@ export function useDataRequests() {
     const erasedId = erasing.id;
     const erasedAt = Date.now() * 1000;
     setErasing(null);
-    setLastErasure(result.data);
+    setLastErasedName(displayName(erasing));
     contacts.updateItems((items) => items.map((item) => (item.id === erasedId ? markErased(item, erasedAt) : item)));
     toast.success(t("settings.requests.deleted"));
   };
@@ -122,7 +122,7 @@ export function useDataRequests() {
     stopErasing: () => setErasing(null),
     erasureError,
     isErasing: erase.isPending,
-    lastErasure,
+    lastErasedName,
     displayName,
     onExport,
     onErase,

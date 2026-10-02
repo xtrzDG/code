@@ -180,7 +180,23 @@ def connection_pool(
 
 @pytest.fixture
 def storage_scope() -> StorageScopeContext:
+    """The tests' shared scope: unscoped, as in production, until entered."""
+
     return StorageScopeContext()
+
+
+@pytest.fixture
+def platform_scope(
+    storage_scope: StorageScopeContext,
+) -> Generator[StorageScopeContext]:
+    """
+    Run the test body platform-wide: it seeds and checks rows of several
+    businesses, and the business scopes it enters nest inside. Threads the
+    test starts are unscoped and enter their own scope.
+    """
+
+    with storage_scope.platform_wide():
+        yield storage_scope
 
 
 @pytest.fixture

@@ -16,6 +16,9 @@ from app.contracts.use_case_contract import UseCaseContract
 from app.operators.business_scoped_pipeline_operator import (
     BusinessScopedPipelineOperator,
 )
+from app.operators.platform_wide_pipeline_operator import (
+    PlatformWidePipelineOperator,
+)
 from app.orchestrators.use_case_orchestrator import UseCaseOrchestrator
 from app.pipelines.orchestrator_pipeline import OrchestratorPipeline
 
@@ -45,11 +48,30 @@ def pipeline_operator[InputData, OutputData](
 ) -> Factory[OperatorContract[InputData, OutputData]]:
     """
     Operator that runs one pipeline synchronously, inside the storage scope
-    of the business its input names.
+    of the business its input names (an input without a business runs in
+    the caller's scope: unscoped unless the caller entered one).
     """
 
     return Factory(
         BusinessScopedPipelineOperator[InputData, OutputData],
+        pipeline=pipeline,
+        storage_scope=storage_scope,
+    )
+
+
+def platform_pipeline_operator[InputData, OutputData](
+    pipeline: Provider[PipelineContract[InputData, OutputData]],
+    storage_scope: Provider[StorageScopeContract],
+) -> Factory[OperatorContract[InputData, OutputData]]:
+    """
+    Operator of platform-level work (webhooks before their business is
+    known, admin views, demo seeding, periodic jobs over every business):
+    it runs the pipeline platform-wide, the explicit escalation of the
+    fail-closed storage scope.
+    """
+
+    return Factory(
+        PlatformWidePipelineOperator[InputData, OutputData],
         pipeline=pipeline,
         storage_scope=storage_scope,
     )

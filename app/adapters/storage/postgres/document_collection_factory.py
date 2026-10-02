@@ -74,19 +74,32 @@ def build_document_collection[StoredDocument: PersistentDocument](
     A Postgres collection when `settings.database_url` is set, else in-memory.
 
     The name is validated in both cases, so a wiring mistake shows up in
-    tests too. Postgres-only arguments fall back to: a pool of its own (pass
-    the shared one instead), a platform-wide scope that cannot be narrowed
-    (pass the shared `StorageScopeContext`), the system clock, and the
-    isolation inferred from the document type (`infer_collection_isolation`).
+    tests too. A tenant collection refuses code outside a storage scope in
+    both (fail-closed); pass the process's shared `StorageScopeContext`.
+    Without one, the in-memory collection is not guarded and the Postgres
+    one gets a scope of its own that nothing enters (it refuses every call).
+    Postgres-only arguments fall back to: a pool of its own (pass the shared
+    one instead), the system clock, and the isolation inferred from the
+    document type (`infer_collection_isolation`).
     """
 
     validated_collection_name: DocumentCollectionName = validate_collection_name(
         collection_name
     )
+    effective_isolation: CollectionIsolation = (
+        isolation
+        if isolation is not None
+        else infer_collection_isolation(document_type)
+    )
     if settings.database_url is None:
         return InMemoryDocumentCollectionAdapter[StoredDocument](
             document_type,
             declared_lookup_fields(validated_collection_name, document_type),
+            tenant_scope=(
+                storage_scope
+                if effective_isolation is CollectionIsolation.TENANT
+                else None
+            ),
         )
 
     return PostgresDocumentCollectionAdapter[StoredDocument](
@@ -105,11 +118,7 @@ def build_document_collection[StoredDocument: PersistentDocument](
             if wall_clock is not None
             else WallClock(preferred_time_unit_type=Microseconds)
         ),
-        isolation=(
-            isolation
-            if isolation is not None
-            else infer_collection_isolation(document_type)
-        ),
+        isolation=effective_isolation,
     )
 
 

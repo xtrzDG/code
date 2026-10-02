@@ -50,7 +50,17 @@ export function isChannelOn(channel: ChannelView | undefined): boolean {
   return channel !== undefined && channel.status !== "disabled";
 }
 
-/** Replace (or add) one channel in the list after a connect or disconnect. */
+/**
+ * The list right after a disconnect (the API answers 204): the channel is
+ * off and its credential gone, as the server keeps it; a reload confirms.
+ */
+export function markChannelDisabled(channels: readonly ChannelView[] | undefined, kind: ChannelKind): ChannelView[] {
+  return (channels ?? []).map((channel) =>
+    channel.channel === kind ? { ...channel, status: "disabled", has_credential: false, account_id: null } : channel,
+  );
+}
+
+/** Replace (or add) one channel in the list after a connect. */
 export function upsertChannel(channels: readonly ChannelView[] | undefined, updated: ChannelView): ChannelView[] {
   const list = [...(channels ?? [])];
   const index = list.findIndex((channel) => channel.channel === updated.channel);

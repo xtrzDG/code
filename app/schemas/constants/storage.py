@@ -37,10 +37,15 @@ class LookupFieldKind(StrEnum):
 
 
 class StorageScopeKind(StrEnum):
-    """Whose rows a storage operation may see: one business or the platform."""
+    """
+    Whose rows a storage operation may see: one business, the platform (all
+    businesses, an explicit escalation), or nobody's (UNSCOPED, the default
+    of code that entered no scope: tenant collections are closed to it).
+    """
 
     BUSINESS = "business"
     PLATFORM = "platform"
+    UNSCOPED = "unscoped"
 
 
 class StoredDocumentVersionState(StrEnum):
