@@ -190,22 +190,21 @@ jobs:
 
       - name: Smoke test the backend image
         run: |
-          # Without DATABASE_URL the migration runner refuses with exit code 2.
-          status=0
-          docker run --rm assistant-workshop-backend:ci migrate --dry-run || status=$?
-          test "$status" -eq 2
-          docker run --detach --name api --publish 8000:8000 \
-            --env APP_ENV=development assistant-workshop-backend:ci api
-          for attempt in $(seq 1 30); do
-            if curl --silent --fail http://127.0.0.1:8000/healthz; then
-              curl --silent --fail --output /dev/null http://127.0.0.1:8000/widget.js
-              docker rm --force api
-              exit 0
-            fi
-            sleep 1
+          # Without DATABASE_URL both migration runners refuse with exit code 2.
+          for runner in migrate migrate-documents; do
+            status=0
+            docker run --rm assistant-workshop-backend:ci "$runner" --dry-run || status=$?
+            test "$status" -eq 2
           done
-          docker logs api
-          exit 1
+          docker run --detach --name api --publish 8000:8000 \
+            --env APP_ENV=development --env LLM_PROVIDER=scripted \
+            assistant-workshop-backend:ci api
+          # The checks that run after every deploy (docs/operations/deploys.md).
+          if ! SMOKE_WAIT_SECONDS=30 scripts/smoke.sh http://127.0.0.1:8000; then
+            docker logs api
+            exit 1
+          fi
+          docker rm --force api
 
       # Fails on HIGH and CRITICAL vulnerabilities that have a fix; reviewed
       # exceptions go to .trivyignore with a reason and an expiry date.
