@@ -94,7 +94,7 @@ def sample_of_type(annotation: type, path: str) -> JsonValue:
         return True
 
     if issubclass(annotation, BasePrefixedTypedId):
-        return str(annotation(stable_uuid(path)))
+        return str(annotation(stable_uuid(path, annotation.uuid_version or 4)))
 
     if issubclass(annotation, BaseConstrainedTypedString):
         return constrained_text(annotation)
@@ -121,10 +121,15 @@ def sample_of_type(annotation: type, path: str) -> JsonValue:
     raise TypeError(f"No sample for {annotation.__name__} at {path}.")
 
 
-def stable_uuid(path: str) -> uuid.UUID:
-    """A UUID v4 derived from the field path: same golden on every run."""
+def stable_uuid(path: str, version: int) -> uuid.UUID:
+    """
+    A UUID of the id's version (v4 when it takes any) derived from the field
+    path: the same golden on every run.
+    """
 
-    return uuid.UUID(bytes=hashlib.sha256(path.encode()).digest()[:16], version=4)
+    return uuid.UUID(
+        bytes=hashlib.sha256(path.encode()).digest()[:16], version=version
+    )
 
 
 def constrained_text(annotation: type[BaseConstrainedTypedString]) -> str:

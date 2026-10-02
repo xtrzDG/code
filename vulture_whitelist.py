@@ -26,6 +26,9 @@ _.run_queued_jobs  # app/gateways/worker/background_worker.py
 # The current schema version of every collection, read by the document
 # evolution policy (tests/architecture_policy/test_document_evolution.py).
 _.CURRENT_SCHEMA_VERSION  # app/adapters/storage/document_upgrades.py
+# A bumped `schema_version` default is read by the storage codec through the
+# model's fields, never by name (app/adapters/storage/document_upgrades.py).
+_.schema_version  # app/schemas/domain/assistants.py, conversations.py
 
 # Container providers kept for the template example and for tests that
 # build the synchronous autotest run and bulk knowledge upserts.

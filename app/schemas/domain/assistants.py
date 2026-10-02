@@ -1,4 +1,4 @@
-from base_pydantic_schemas import BaseDocument, PersistentDocument
+from base_pydantic_schemas import BaseDocument, PersistentDocument, SchemaVersion
 from pydantic import Field
 from typed_time_provider import Microseconds
 
@@ -63,6 +63,8 @@ class AssistantVersionDocument(BaseDocument):
     rollback publishes an earlier one.
     """
 
+    # 2: `phone_prompt_text` (optional, so version 1 needs no upcaster).
+    schema_version: SchemaVersion = SchemaVersion("2")
     id: AssistantVersionId = Field(default_factory=AssistantVersionId)
     business_id: BusinessId
     version_number: AssistantVersionNumber

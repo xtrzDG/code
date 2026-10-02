@@ -1,7 +1,7 @@
 {
   "collection": "calls",
   "document_type": "CallDocument",
-  "schema_version": 1,
+  "schema_version": 2,
   "shape": {
     "additionalProperties": false,
     "properties": {
@@ -48,6 +48,22 @@
         ],
         "default": null
       },
+      "guard_verdict": {
+        "anyOf": [
+          {
+            "enum": [
+              "clean",
+              "flagged",
+              "handed_off"
+            ],
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
       "id": {
         "pattern": "^call_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
         "type": "string"
@@ -86,7 +102,7 @@
         "default": null
       },
       "schema_version": {
-        "default": "1",
+        "default": "2",
         "type": "string"
       },
       "started_at": {
@@ -116,6 +132,12 @@
           }
         ],
         "default": null
+      },
+      "unverified_values": {
+        "items": {
+          "type": "string"
+        },
+        "type": "array"
       },
       "updated_at": {
         "type": "integer"

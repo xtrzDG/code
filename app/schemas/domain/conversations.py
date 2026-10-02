@@ -1,4 +1,4 @@
-from base_pydantic_schemas import BaseDocument, PersistentDocument
+from base_pydantic_schemas import BaseDocument, PersistentDocument, SchemaVersion
 from pydantic import Field
 from typed_time_provider import Microseconds
 
@@ -124,6 +124,9 @@ class LlmTurnDocument(BaseDocument):
 class CallDocument(BaseDocument):
     """Phone call handled by the voice agent (concept table `calls`)."""
 
+    # 2: `guard_verdict` and `unverified_values` (both optional, so version 1
+    # needs no upcaster).
+    schema_version: SchemaVersion = SchemaVersion("2")
     id: CallId = Field(default_factory=CallId)
     business_id: BusinessId
     conversation_id: ConversationId | None = None
