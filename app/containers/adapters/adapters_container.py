@@ -172,7 +172,10 @@ class AdaptersContainer(containers.DeclarativeContainer):
         client=clients.anthropic_messages_client,
     )
     # LLM_PROVIDER=scripted (staging, offline runs): fixed answers, no network.
-    offline_llm_adapter: Singleton[OfflineLlmAdapter] = Singleton(OfflineLlmAdapter)
+    offline_llm_adapter: Singleton[OfflineLlmAdapter] = Singleton(
+        OfflineLlmAdapter,
+        latency_ms=config.app_settings.provided.scripted_llm_latency_ms,
+    )
     # Typed by its contract: tests replace it with the scripted model.
     routing_llm_adapter: Singleton[LlmAdapterContract] = Singleton(
         RoutingLlmAdapter,

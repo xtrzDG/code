@@ -78,4 +78,15 @@ class PriceQuestionScenarioLimit(BaseConstrainedTypedInt):
     le = 100
 
 
+
+class ScriptedLlmLatencyMilliseconds(BaseConstrainedTypedInt):
+    """
+    How long the scripted model (`LLM_PROVIDER=scripted`) waits before it
+    answers (SCRIPTED_LLM_LATENCY_MS), in milliseconds: load tests give it
+    the latency of a real provider. 0 answers at once.
+    """
+
+    ge = 0
+    le = 60_000
+
 # Keep abc order for all non example types, if possible.

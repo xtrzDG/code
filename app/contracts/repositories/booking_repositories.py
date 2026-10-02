@@ -6,7 +6,7 @@ not change stored state until it is saved. Every business-owned document is
 looked up through its business id, so one tenant never sees another's data.
 """
 
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from typing import Protocol
 
 from app.contracts.repo_contract import RepoContract
@@ -25,6 +25,10 @@ from app.schemas.typings.handoffs.prefixed_id import HandoffId, UnansweredQuesti
 
 class BookingRepoContract(BookingListingContract, RepoContract, Protocol):
     def save(self, booking: BookingDocument) -> None:
+        raise NotImplementedError
+
+    def save_many(self, bookings: Sequence[BookingDocument]) -> None:
+        """Store many in one transaction: bulk loads (`workshop seed-load`)."""
         raise NotImplementedError
 
     def get(

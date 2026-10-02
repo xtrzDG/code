@@ -7,6 +7,7 @@ from app.containers.time_provider import TimeProviderContainer
 from app.registries.billing.exchange_rate_registry import ExchangeRateRegistry
 from app.registries.billing.plan_registry import PlanRegistry
 from app.registries.demo.demo_dataset_registry import DemoDatasetRegistry
+from app.registries.demo.load_dataset_registry import LoadDatasetRegistry
 from app.registries.legal.legal_document_registry import LegalDocumentRegistry
 from app.registries.limits.request_rate_limit_registry import (
     RequestRateLimitRegistry,
@@ -82,4 +83,8 @@ class RegistriesContainer(containers.DeclarativeContainer):
     # seeding.
     demo_dataset_registry: Singleton[DemoDatasetRegistry] = Singleton(
         DemoDatasetRegistry, plan_registry=plan_registry
+    )
+    # Bulk histories of load-test businesses (`workshop seed-load`).
+    load_dataset_registry: Singleton[LoadDatasetRegistry] = Singleton(
+        LoadDatasetRegistry
     )

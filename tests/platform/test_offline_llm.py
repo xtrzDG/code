@@ -2,12 +2,18 @@
 
 import json
 
+import pytest
+
 from app.adapters.llm.offline_llm_adapter import OFFLINE_REPLY, OfflineLlmAdapter
 from app.containers.app import AppContainer
 from app.schemas.constants.assistants import LlmEffort
 from app.schemas.constants.conversations import LlmStopReason
 from app.schemas.dto.conversations import LlmRequest, LlmToolResult
-from app.schemas.typings.assistants.constrained_integers import LlmMaxOutputTokens
+from app.schemas.exceptions.application_errors import ValidationFailedError
+from app.schemas.typings.assistants.constrained_integers import (
+    LlmMaxOutputTokens,
+    ScriptedLlmLatencyMilliseconds,
+)
 from app.schemas.typings.assistants.constrained_strings import LlmModelId
 from app.schemas.typings.assistants.strings import SystemPromptText
 from app.schemas.typings.conversations.strings import (
@@ -71,3 +77,42 @@ def test_the_application_routes_the_scripted_model_to_it() -> None:
     )
 
     assert response.text == OFFLINE_REPLY
+
+
+def test_a_latency_makes_every_answer_wait() -> None:
+    waits: list[float] = []
+    adapter = OfflineLlmAdapter(
+        latency_ms=ScriptedLlmLatencyMilliseconds(750), wait=waits.append
+    )
+
+    adapter.complete(build_request("scripted"))
+    adapter.complete(build_request("scripted"))
+    OfflineLlmAdapter(wait=waits.append).complete(build_request("scripted"))
+
+    assert waits == [0.75, 0.75]
+
+
+def test_the_latency_comes_from_the_environment() -> None:
+    container = AppContainer()
+    replace_provider(
+        container.config.app_settings,
+        assemble_app_settings(
+            {"LLM_PROVIDER": "scripted", "SCRIPTED_LLM_LATENCY_MS": "0"}
+        ),
+    )
+
+    assert assemble_app_settings({}).scripted_llm_latency_ms == 0
+    assert (
+        assemble_app_settings(
+            {"SCRIPTED_LLM_LATENCY_MS": "1200"}
+        ).scripted_llm_latency_ms
+        == 1200
+    )
+    assert (
+        container.adapters.offline_llm_adapter()
+        .complete(build_request("scripted"))
+        .text
+        == OFFLINE_REPLY
+    )
+    with pytest.raises(ValidationFailedError, match="SCRIPTED_LLM_LATENCY_MS"):
+        assemble_app_settings({"SCRIPTED_LLM_LATENCY_MS": "-1"})

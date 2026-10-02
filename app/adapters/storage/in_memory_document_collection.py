@@ -88,6 +88,10 @@ class InMemoryDocumentCollectionAdapter[StoredDocument: PersistentDocument](
         with self._lock:
             self._serialized_documents[document_key] = serialized_document
 
+    def upsert_many(self, entries: Sequence[tuple[str, StoredDocument]]) -> None:
+        for document_key, document in entries:
+            self.upsert(document_key, document)
+
     def insert_if_absent(
         self,
         document_key: str,

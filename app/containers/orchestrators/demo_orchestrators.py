@@ -7,14 +7,17 @@ from app.contracts.orchestrator_contract import OrchestratorContract
 from app.orchestrators.demo.seed_demo_data_orchestrator import (
     SeedDemoDataOrchestrator,
 )
+from app.orchestrators.demo.seed_load_orchestrator import SeedLoadOrchestrator
 from app.schemas.dto.demo_data import DemoDataSeedReport, SeedDemoDataCommand
+from app.schemas.dto.load_data import LoadSeedManifest, SeedLoadCommand
 
 
 class DemoOrchestratorsContainer(containers.DeclarativeContainer):
     """
     Development demo data (SEED_DEMO_DATA, API startup): the accounts, then
     per business its foundation, an assembled assistant version and its
-    activity.
+    activity; load-test datasets (`workshop seed-load`) the same way, with
+    a bulk history on top.
     """
 
     demo_use_cases: DemoUseCasesContainer = DependenciesContainer()  # type: ignore[assignment]
@@ -28,4 +31,14 @@ class DemoOrchestratorsContainer(containers.DeclarativeContainer):
         store_demo_foundation=demo_use_cases.store_demo_foundation_use_case,
         assemble_assistant_version=assistant_use_cases.assemble_assistant_version_use_case,
         store_demo_activity=demo_use_cases.store_demo_activity_use_case,
+    )
+    seed_load_orchestrator: Factory[
+        OrchestratorContract[SeedLoadCommand, LoadSeedManifest]
+    ] = Factory(
+        SeedLoadOrchestrator,
+        prepare_load_businesses=demo_use_cases.prepare_load_businesses_use_case,
+        store_demo_foundation=demo_use_cases.store_demo_foundation_use_case,
+        assemble_assistant_version=assistant_use_cases.assemble_assistant_version_use_case,
+        store_demo_activity=demo_use_cases.store_demo_activity_use_case,
+        store_load_volume=demo_use_cases.store_load_volume_use_case,
     )

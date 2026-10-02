@@ -1,4 +1,4 @@
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 
 from app.contracts.repositories.booking_repositories import (
     BookingRepoContract,
@@ -21,6 +21,9 @@ from app.schemas.typings.handoffs.prefixed_id import HandoffId, UnansweredQuesti
 class BookingRepository(BookingListing, BookingRepoContract):
     def save(self, booking: BookingDocument) -> None:
         self._store(str(booking.id), booking)
+
+    def save_many(self, bookings: Sequence[BookingDocument]) -> None:
+        self._store_many([(str(booking.id), booking) for booking in bookings])
 
     def get(
         self,

@@ -41,6 +41,9 @@ class BusinessScopedRepository[StoredDocument: PersistentDocument]:
     def _store(self, document_id: str, document: StoredDocument) -> None:
         self._collection.upsert(document_id, document)
 
+    def _store_many(self, entries: Sequence[tuple[str, StoredDocument]]) -> None:
+        self._collection.upsert_many(entries)
+
     def _load(
         self,
         business_id: BusinessId,

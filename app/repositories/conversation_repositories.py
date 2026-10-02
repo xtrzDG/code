@@ -1,3 +1,5 @@
+from collections.abc import Sequence
+
 from typed_time_provider import Microseconds
 
 from app.contracts.document_store import DocumentCollectionAdapterContract
@@ -61,6 +63,9 @@ class ContactRepository(ContactListing, ContactRepoContract):
     def save(self, contact: ContactDocument) -> None:
         self._store(str(contact.id), contact)
 
+    def save_many(self, contacts: Sequence[ContactDocument]) -> None:
+        self._store_many([(str(contact.id), contact) for contact in contacts])
+
     def get(
         self,
         business_id: BusinessId,
@@ -115,6 +120,11 @@ class ContactRepository(ContactListing, ContactRepoContract):
 class ConversationRepository(ConversationListing, ConversationRepoContract):
     def save(self, conversation: ConversationDocument) -> None:
         self._store(str(conversation.id), conversation)
+
+    def save_many(self, conversations: Sequence[ConversationDocument]) -> None:
+        self._store_many(
+            [(str(conversation.id), conversation) for conversation in conversations]
+        )
 
     def get(
         self,
@@ -174,6 +184,9 @@ class ConversationRepository(ConversationListing, ConversationRepoContract):
 class MessageRepository(MessageListing, MessageRepoContract):
     def save(self, message: MessageDocument) -> None:
         self._store(str(message.id), message)
+
+    def save_many(self, messages: Sequence[MessageDocument]) -> None:
+        self._store_many([(str(message.id), message) for message in messages])
 
     def get(
         self,

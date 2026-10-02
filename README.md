@@ -394,6 +394,7 @@ UI-тестов); `color`, `position` и `language` в ней показываю
 | `OPENAI_API_KEY`, `OPENAI_PROJECT_ID`, `OPENAI_BASE_URL` | ответы модели — ошибка 502 при первом вызове; ключ читает SDK OpenAI; адрес по умолчанию — `https://eu.api.openai.com/v1` (проект с хранением в ЕС) |
 | `ANTHROPIC_API_KEY` | нужен только при `LLM_PROVIDER=anthropic` (ключ читает SDK Anthropic) |
 | `AUTOTEST_TURN_LIMIT` | 4 сообщения клиента в одном сценарии автотеста |
+| `SCRIPTED_LLM_LATENCY_MS` | 0: сколько миллисекунд модель `scripted` ждёт перед каждым ответом, как настоящий провайдер; задают нагрузочные тесты (`perf/k6`, `docs/operations/capacity.md`) |
 | `OTP_LIFETIME_SECONDS`, `OTP_MAX_FAILED_ATTEMPTS` | код входа действует 600 секунд; после 5 неверных попыток нужен новый код |
 | `OTP_SENDS_PER_DESTINATION_PER_HOUR`, `OTP_SENDS_PER_IP_PER_HOUR`, `OTP_SENDS_PER_HOUR` | 5 кодов на номер или почту, 10 с одного адреса и 300 на новые номера и почты всего за час (см. «Защита входа») |
 | `OTP_SENDS_PER_COUNTRY_PER_HOUR`, `OTP_SENDS_TO_VERIFIED_USERS_PER_HOUR` | 100 кодов в час на новые номера одной страны; 300 в час подтверждённым пользователям — отдельный бюджет, который поток на новые номера не съедает |

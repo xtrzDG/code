@@ -1,6 +1,9 @@
-"""One document table: its statements, transactions with the RLS scope, decoding."""
+"""
+One document table: its statements, transactions with the RLS scope, batch
+writes and decoding.
+"""
 
-from collections.abc import Generator, Mapping
+from collections.abc import Generator, Mapping, Sequence
 from contextlib import contextmanager
 
 import psycopg
@@ -108,6 +111,16 @@ class PostgresDocumentTable[StoredDocument: PersistentDocument]:
                 raise
 
             raise application_error from error
+
+    def upsert_many(self, entries: Sequence[tuple[str, StoredDocument]]) -> None:
+        """Every upsert of a batch in one transaction (pipelined statements)."""
+
+        if not entries:
+            return
+
+        parameters = [self._write_parameters(key, document) for key, document in entries]
+        with self._transaction() as (connection, _), connection.cursor() as cursor:
+            cursor.executemany(self._queries.upsert, parameters)
 
     def _effective_scope(self) -> StorageScope:
         """

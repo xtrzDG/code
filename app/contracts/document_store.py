@@ -43,6 +43,11 @@ class DocumentCollectionAdapterContract(AdapterContract, Protocol[StoredDocument
     def upsert(self, document_key: str, document: StoredDocument) -> None:
         raise NotImplementedError
 
+    def upsert_many(self, entries: Sequence[tuple[str, StoredDocument]]) -> None:
+        """Write many (key, document) pairs in one transaction: bulk loads
+        (`workshop seed-load`), never a request's own writes."""
+        raise NotImplementedError
+
     def get(self, document_key: str) -> StoredDocument | None:
         raise NotImplementedError
 

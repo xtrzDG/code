@@ -9,6 +9,9 @@
 #                      rewrite stored documents of older schema versions
 #                      (one-shot, after a release is fully deployed), e.g.
 #                      --collection bookings --batch 500 --dry-run
+#   workshop seed-load store a load-test dataset and write its manifest
+#                      (never in production; docs/operations/capacity.md),
+#                      e.g. --businesses 20 --messages 40000 --manifest m.json
 #
 # Anything else is executed as given, so `workshop workshop api` (a platform
 # that keeps the ENTRYPOINT and passes the full command) also works.
@@ -40,6 +43,9 @@ case "$role" in
     ;;
   migrate-documents)
     exec python -m app.gateways.cli.migrate_documents "$@"
+    ;;
+  seed-load)
+    exec python -m app.gateways.cli.seed_load "$@"
     ;;
   *)
     exec "$role" "$@"

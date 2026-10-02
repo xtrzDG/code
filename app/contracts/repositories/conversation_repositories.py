@@ -6,6 +6,7 @@ not change stored state until it is saved. Every business-owned document is
 looked up through its business id, so one tenant never sees another's data.
 """
 
+from collections.abc import Sequence
 from typing import Protocol
 
 from typed_time_provider import Microseconds
@@ -42,6 +43,10 @@ from app.schemas.typings.localization.constrained_strings import E164PhoneNumber
 
 class ContactRepoContract(ContactListingContract, RepoContract, Protocol):
     def save(self, contact: ContactDocument) -> None:
+        raise NotImplementedError
+
+    def save_many(self, contacts: Sequence[ContactDocument]) -> None:
+        """Store many in one transaction: bulk loads (`workshop seed-load`)."""
         raise NotImplementedError
 
     def get(
@@ -83,6 +88,10 @@ class ContactRepoContract(ContactListingContract, RepoContract, Protocol):
 
 class ConversationRepoContract(ConversationListingContract, RepoContract, Protocol):
     def save(self, conversation: ConversationDocument) -> None:
+        raise NotImplementedError
+
+    def save_many(self, conversations: Sequence[ConversationDocument]) -> None:
+        """Store many in one transaction: bulk loads (`workshop seed-load`)."""
         raise NotImplementedError
 
     def get(
@@ -128,6 +137,10 @@ class ConversationRepoContract(ConversationListingContract, RepoContract, Protoc
 
 class MessageRepoContract(MessageListingContract, RepoContract, Protocol):
     def save(self, message: MessageDocument) -> None:
+        raise NotImplementedError
+
+    def save_many(self, messages: Sequence[MessageDocument]) -> None:
+        """Store many in one transaction: bulk loads (`workshop seed-load`)."""
         raise NotImplementedError
 
     def get(

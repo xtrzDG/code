@@ -1,4 +1,7 @@
-"""LLM_*, OPENAI_* and AUTOTEST_TURN_LIMIT: the language model of the assistants."""
+"""
+LLM_*, OPENAI_*, AUTOTEST_TURN_LIMIT and SCRIPTED_LLM_LATENCY_MS: the
+language model of the assistants.
+"""
 
 from collections.abc import Mapping
 from typing import TypedDict
@@ -9,6 +12,7 @@ from app.schemas.typings.assistants.constrained_integers import (
     LlmCallTimeoutSeconds,
     LlmMaxOutputTokens,
     LlmToolRoundLimit,
+    ScriptedLlmLatencyMilliseconds,
 )
 from app.schemas.typings.assistants.constrained_strings import LlmModelId
 from app.schemas.typings.channels.constrained_strings import PublicBaseUrl
@@ -47,6 +51,7 @@ class LlmSettingsSection(TypedDict):
     openai_base_url: PublicBaseUrl
     openai_project_id: PlatformIdentifier | None
     autotest_turn_limit: AutotestTurnLimit
+    scripted_llm_latency_ms: ScriptedLlmLatencyMilliseconds
 
 
 def read_llm_provider(environment_variables: Mapping[str, str]) -> LlmProvider:
@@ -99,5 +104,10 @@ def read_llm_settings(
         ),
         autotest_turn_limit=AutotestTurnLimit(
             read_integer(environment_variables, "AUTOTEST_TURN_LIMIT", 4)
+        ),
+        scripted_llm_latency_ms=parse_setting(
+            "SCRIPTED_LLM_LATENCY_MS",
+            read_integer(environment_variables, "SCRIPTED_LLM_LATENCY_MS", 0),
+            ScriptedLlmLatencyMilliseconds,
         ),
     )
