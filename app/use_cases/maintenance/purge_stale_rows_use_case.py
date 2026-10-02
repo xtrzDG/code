@@ -24,6 +24,9 @@ OTP_CHALLENGE_RETENTION_SECONDS: int = 24 * SECONDS_PER_HOUR
 # Platforms redeliver a webhook for hours (Meta up to 7 days); a month of
 # receipts is a wide margin.
 CHANNEL_RECEIPT_RETENTION_SECONDS: int = 30 * 24 * SECONDS_PER_HOUR
+USER_SESSION_ENTITY: AuditEntityName = AuditEntityName("user_session")
+OTP_CHALLENGE_ENTITY: AuditEntityName = AuditEntityName("otp_challenge")
+CHANNEL_RECEIPT_ENTITY: AuditEntityName = AuditEntityName("channel_message_receipt")
 
 
 class PurgeStaleRowsUseCase(UseCaseContract[JobTick, JobReport]):
@@ -57,10 +60,10 @@ class PurgeStaleRowsUseCase(UseCaseContract[JobTick, JobReport]):
     def run(self, input_data: JobTick) -> JobReport:
         del input_data
         now: Microseconds = self._wall_clock.now_unix()
-        purged: list[tuple[str, DocumentCount]] = [
-            ("user_session", self._user_session_repo.delete_expired(now)),
+        purged: list[tuple[AuditEntityName, DocumentCount]] = [
+            (USER_SESSION_ENTITY, self._user_session_repo.delete_expired(now)),
             (
-                "otp_challenge",
+                OTP_CHALLENGE_ENTITY,
                 self._otp_challenge_repo.delete_created_before(
                     self._wall_clock.now_unix_with_delta(
                         Seconds(-OTP_CHALLENGE_RETENTION_SECONDS)
@@ -68,7 +71,7 @@ class PurgeStaleRowsUseCase(UseCaseContract[JobTick, JobReport]):
                 ),
             ),
             (
-                "channel_message_receipt",
+                CHANNEL_RECEIPT_ENTITY,
                 self._channel_message_receipt_repo.delete_created_before(
                     self._wall_clock.now_unix_with_delta(
                         Seconds(-CHANNEL_RECEIPT_RETENTION_SECONDS)
@@ -82,7 +85,7 @@ class PurgeStaleRowsUseCase(UseCaseContract[JobTick, JobReport]):
                 self._audit_log_repo.append(
                     AuditLogEntryDocument(
                         action=AuditAction.RETENTION_PURGE,
-                        entity=AuditEntityName(entity),
+                        entity=entity,
                         created_at=now,
                         updated_at=now,
                     )
