@@ -103,7 +103,7 @@ describe("wizard answers", () => {
 
 describe("FAQ rows", () => {
   it("start unchanged from a saved item and change when edited", () => {
-    const row = faqRowFromItem(faqItem({ body: null, languages: null }));
+    const row = faqRowFromItem(faqItem({ body: null, languages: undefined }));
 
     expect(row).toMatchObject({ id: "knowledge_item_faq", answer: "", languages: [] });
     expect(isFaqRowChanged(row)).toBe(false);
@@ -146,13 +146,14 @@ describe("FAQ rows", () => {
 
     const rows = markFaqRowsSaved(
       [byQuestion, byId, unmatched, blank],
-      [faqItem(), faqItem({ id: "knowledge_item_2", title: "Other" }), faqItem({ kind: "rule", title: "Wifi?" })],
+      [faqItem(), faqItem({ id: "knowledge_item_2", title: "Other" }), faqItem({ kind: "policy", title: "Wifi?" })],
     );
 
-    expect(rows[0]).toMatchObject({ id: "knowledge_item_faq" });
-    expect(isFaqRowChanged(rows[0])).toBe(false);
-    expect(rows[1]).toMatchObject({ id: "knowledge_item_2" });
-    expect(isFaqRowChanged(rows[1])).toBe(false);
+    const [savedByQuestion, savedById] = rows;
+    expect(savedByQuestion).toMatchObject({ id: "knowledge_item_faq" });
+    expect(savedByQuestion && isFaqRowChanged(savedByQuestion)).toBe(false);
+    expect(savedById).toMatchObject({ id: "knowledge_item_2" });
+    expect(savedById && isFaqRowChanged(savedById)).toBe(false);
     expect(rows[2]).toBe(unmatched);
     expect(rows[3]).toBe(blank);
   });
