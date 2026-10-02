@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { prettyJson } from "@/lib/assistant/testChat";
 
-import { TOOL_LABELS } from "../../versions/[versionId]/VersionDetailScreen";
+import { TOOL_LABELS } from "../../_lib/toolLabels";
 import type { ToolCallView } from "../../_lib/chatEntries";
 
 /** The tools the assistant called for one reply, with their input and result (folded). */
