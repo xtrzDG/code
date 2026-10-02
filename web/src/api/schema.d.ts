@@ -827,6 +827,28 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/businesses/{business_id}/inbox-counts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Inbox Counts Route
+         * @description Open handoffs and new requests (sandbox excluded): the badges on
+         *     Messages. Counts only, so the cabinet polls it without recording a
+         *     view of personal data.
+         */
+        get: operations["get_inbox_counts_route_v1_businesses__business_id__inbox_counts_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/businesses/{business_id}/integrations/google-calendar": {
         parameters: {
             query?: never;
@@ -3790,6 +3812,19 @@ export interface components {
             printed_currency_code?: string | null;
             /** Printed Price */
             printed_price?: string | null;
+        };
+        /**
+         * InboxCounts
+         * @description Handoffs nobody has resolved yet and requests still new. Sandbox activity
+         *     (the owner's test chat, autotests) is not counted.
+         */
+        InboxCounts: {
+            /** Business Id */
+            business_id: string;
+            /** New Lead Count */
+            new_lead_count: number;
+            /** Open Handoff Count */
+            open_handoff_count: number;
         };
         /**
          * InvoiceKind
@@ -7615,6 +7650,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HandoffListItem"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_inbox_counts_route_v1_businesses__business_id__inbox_counts_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InboxCounts"];
                 };
             };
             /** @description Validation Error */
