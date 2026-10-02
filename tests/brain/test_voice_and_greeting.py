@@ -31,13 +31,9 @@ from app.utilities.conversations.assistant_texts.call_texts import (
     CALL_OPERATOR_HINT,
     CALL_RECORDING_NOTICE,
 )
-from tests.brain.brain_world import (
-    BrainWorld,
-    BusinessSetup,
-    build_world,
-    say,
-    scripted,
-)
+from tests.brain.brain_world import BrainWorld, build_world
+from tests.brain.business_setups import BusinessSetup
+from tests.brain.scripted_turns import say, scripted
 
 AVAILABILITY_INPUT: str = (
     '{"resource_type":"table","date":"2026-10-02","time":"19:00",'

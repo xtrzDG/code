@@ -34,7 +34,9 @@ from app.schemas.typings.localization.constrained_strings import (
     E164PhoneNumber,
     LanguageTag,
 )
-from tests.brain.brain_world import ISRAEL, BrainWorld, build_world, scripted
+from tests.brain.brain_world import BrainWorld, build_world
+from tests.brain.business_setups import ISRAEL
+from tests.brain.scripted_turns import scripted
 
 INPUT_MODELS: dict[AssistantToolName, type[Any]] = {
     AssistantToolName.SEARCH_KNOWLEDGE: SearchKnowledgeToolInput,

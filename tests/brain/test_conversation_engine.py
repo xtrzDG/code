@@ -45,16 +45,9 @@ from app.schemas.typings.localization.constrained_strings import (
     E164PhoneNumber,
     LanguageTag,
 )
-from tests.brain.brain_world import (
-    ARMENIA,
-    BRAZIL,
-    ISRAEL,
-    BrainWorld,
-    build_world,
-    call_tool,
-    say,
-    scripted,
-)
+from tests.brain.brain_world import BrainWorld, build_world
+from tests.brain.business_setups import ARMENIA, BRAZIL, ISRAEL
+from tests.brain.scripted_turns import call_tool, say, scripted
 
 
 class CountingLlmAdapter(LlmAdapterContract):

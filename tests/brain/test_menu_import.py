@@ -36,7 +36,8 @@ from app.schemas.typings.menu_import.constrained_strings import (
 )
 from app.schemas.typings.menu_import.strings import MenuSourceBase64
 from app.schemas.typings.users.prefixed_id import UserId
-from tests.brain.brain_world import ISRAEL, BrainWorld, build_world, scripted
+from tests.brain.brain_world import BrainWorld, build_world
+from tests.brain.business_setups import ISRAEL
 from tests.brain.cabinet_http import bearer, build_cabinet_client
 from tests.brain.provider_http_fakes import (
     ScriptedHttp,
@@ -44,6 +45,7 @@ from tests.brain.provider_http_fakes import (
     openai_message_item,
     openai_response,
 )
+from tests.brain.scripted_turns import scripted
 
 MENU_JSON: dict[str, Any] = {
     "items": [

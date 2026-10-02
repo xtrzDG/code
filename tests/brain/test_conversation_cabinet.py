@@ -36,8 +36,9 @@ from app.schemas.typings.conversations.prefixed_id import ConversationId
 from app.schemas.typings.handoffs.strings import HandoffSummary
 from app.schemas.typings.localization.constrained_strings import E164PhoneNumber
 from app.schemas.typings.users.prefixed_id import UserId
-from tests.brain.brain_world import BrainWorld, build_world, say, scripted
+from tests.brain.brain_world import BrainWorld, build_world
 from tests.brain.cabinet_http import CabinetStorage, bearer, build_cabinet_client
+from tests.brain.scripted_turns import say, scripted
 
 DAY_MICROSECONDS: int = 24 * 60 * 60 * 1_000_000
 STAFF_TEMPLATE: WhatsAppStaffTemplate = WhatsAppStaffTemplate(
