@@ -7,6 +7,7 @@ Example:
 CanGoLive = bool
 HasUnappliedChanges = bool
 IsApplyInProgress = bool
+IsApplyStarted = bool
 IsAssistantLive = bool
 IsPhoneTestAnswering = bool
 IsSetupComplete = bool

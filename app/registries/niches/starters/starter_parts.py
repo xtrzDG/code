@@ -53,9 +53,7 @@ def opening(workday: DayHours, weekend: DayHours | None) -> StarterOpening:
         workday_opens_at=OpeningMinuteOfDay(workday[0]),
         workday_closes_at=ClosingMinuteOfDay(workday[1]),
         weekend_opens_at=None if weekend is None else OpeningMinuteOfDay(weekend[0]),
-        weekend_closes_at=(
-            None if weekend is None else ClosingMinuteOfDay(weekend[1])
-        ),
+        weekend_closes_at=(None if weekend is None else ClosingMinuteOfDay(weekend[1])),
     )
 
 
@@ -68,7 +66,9 @@ def booking(
     """Typical booking rules; `slot_minutes` None for nights."""
 
     return StarterBookingDefaults(
-        slot_minutes=None if slot_minutes is None else SlotDurationMinutes(slot_minutes),
+        slot_minutes=None
+        if slot_minutes is None
+        else SlotDurationMinutes(slot_minutes),
         max_party_size=PartySize(max_party_size),
         min_notice_minutes=MinNoticeMinutes(min_notice_minutes),
         cancellation_policies=text(cancellation_policy),

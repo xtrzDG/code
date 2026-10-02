@@ -31,7 +31,9 @@ class ActivationEventRepoContract(RepoContract, Protocol):
         """
         raise NotImplementedError
 
-    def list_by_business(self, business_id: BusinessId) -> list[ActivationEventDocument]:
+    def list_by_business(
+        self, business_id: BusinessId
+    ) -> list[ActivationEventDocument]:
         """The milestones of a business, oldest first."""
         raise NotImplementedError
 
@@ -72,6 +74,10 @@ class AssistantApplyRepoContract(RepoContract, Protocol):
     def save(self, apply: AssistantApplyDocument) -> None:
         raise NotImplementedError
 
+    def insert_if_absent(self, apply: AssistantApplyDocument) -> bool:
+        """Store the first apply of a business (atomic); False when one exists."""
+        raise NotImplementedError
+
     def modify(
         self,
         business_id: BusinessId,
@@ -97,8 +103,12 @@ class ActivationProbeRepoContract(RepoContract, Protocol):
     ) -> Microseconds | None:
         raise NotImplementedError
 
-    def find_first_real_booking_at(self, business_id: BusinessId) -> Microseconds | None:
+    def find_first_real_booking_at(
+        self, business_id: BusinessId
+    ) -> Microseconds | None:
         raise NotImplementedError
 
-    def find_first_real_handoff_at(self, business_id: BusinessId) -> Microseconds | None:
+    def find_first_real_handoff_at(
+        self, business_id: BusinessId
+    ) -> Microseconds | None:
         raise NotImplementedError

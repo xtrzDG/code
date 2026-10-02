@@ -32,7 +32,9 @@ class ActivationEventRepository(
     def record_once(self, event: ActivationEventDocument) -> bool:
         return bool(self._collection.insert_if_absent(str(event.id), event))
 
-    def list_by_business(self, business_id: BusinessId) -> list[ActivationEventDocument]:
+    def list_by_business(
+        self, business_id: BusinessId
+    ) -> list[ActivationEventDocument]:
         return sorted(
             self._list_in_business(business_id),
             key=lambda event: (event.occurred_at, event.kind.value),
@@ -114,6 +116,9 @@ class AssistantApplyRepository(
     def save(self, apply: AssistantApplyDocument) -> None:
         self._store(str(apply.id), apply)
 
+    def insert_if_absent(self, apply: AssistantApplyDocument) -> bool:
+        return bool(self._collection.insert_if_absent(str(apply.id), apply))
+
     def modify(
         self,
         business_id: BusinessId,
@@ -122,4 +127,3 @@ class AssistantApplyRepository(
         return self._modify_in_business(
             business_id, str(derive_assistant_apply_id(business_id)), change
         )
-

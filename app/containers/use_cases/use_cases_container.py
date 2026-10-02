@@ -10,6 +10,7 @@ from app.containers.repositories import RepositoriesContainer
 from app.containers.time_provider import TimeProviderContainer
 from app.containers.transformers import TransformersContainer
 from app.containers.use_cases.account_use_cases import AccountUseCasesContainer
+from app.containers.use_cases.apply_use_cases import ApplyUseCasesContainer
 from app.containers.use_cases.assistant_use_cases import AssistantUseCasesContainer
 from app.containers.use_cases.autotest_use_cases import AutotestUseCasesContainer
 from app.containers.use_cases.billing_use_cases import BillingUseCasesContainer
@@ -27,9 +28,11 @@ from app.containers.use_cases.delivery_use_cases import DeliveryUseCasesContaine
 from app.containers.use_cases.demo_use_cases import DemoUseCasesContainer
 from app.containers.use_cases.follow_up_use_cases import FollowUpUseCasesContainer
 from app.containers.use_cases.knowledge_use_cases import KnowledgeUseCasesContainer
+from app.containers.use_cases.launch_use_cases import LaunchUseCasesContainer
 from app.containers.use_cases.menu_import_use_cases import MenuImportUseCasesContainer
 from app.containers.use_cases.platform_use_cases import PlatformUseCasesContainer
 from app.containers.use_cases.scheduling_use_cases import SchedulingUseCasesContainer
+from app.containers.use_cases.setup_use_cases import SetupUseCasesContainer
 from app.containers.use_cases.voice_use_cases import VoiceUseCasesContainer
 from app.containers.utilities import UtilitiesContainer
 from app.use_cases.example_use_case import ExampleUseCase
@@ -157,6 +160,12 @@ class UseCasesContainer(containers.DeclarativeContainer):
         conversation_use_cases=conversations,
         follow_up_use_cases=follow_ups,
     )
+    launch: LaunchUseCasesContainer = Container(  # type: ignore[assignment]
+        LaunchUseCasesContainer,
+        registries=registries,
+        repositories=repositories,
+        time_provider=time_provider,
+    )
     assistants: AssistantUseCasesContainer = Container(  # type: ignore[assignment]
         AssistantUseCasesContainer,
         adapters=adapters,
@@ -169,6 +178,26 @@ class UseCasesContainer(containers.DeclarativeContainer):
         account_use_cases=accounts,
         conversation_use_cases=conversations,
         voice_use_cases=voice,
+        launch_use_cases=launch,
+    )
+    apply: ApplyUseCasesContainer = Container(  # type: ignore[assignment]
+        ApplyUseCasesContainer,
+        repositories=repositories,
+        time_provider=time_provider,
+        utilities=utilities,
+        account_use_cases=accounts,
+        assistant_use_cases=assistants,
+    )
+    setup: SetupUseCasesContainer = Container(  # type: ignore[assignment]
+        SetupUseCasesContainer,
+        config=config,
+        registries=registries,
+        repositories=repositories,
+        time_provider=time_provider,
+        utilities=utilities,
+        account_use_cases=accounts,
+        apply_use_cases=apply,
+        launch_use_cases=launch,
     )
     autotests: AutotestUseCasesContainer = Container(  # type: ignore[assignment]
         AutotestUseCasesContainer,

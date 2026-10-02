@@ -1,4 +1,4 @@
-"""Starter answers of online shops and B2B suppliers (they take orders, not bookings)."""
+"""Starter answers of online shops and B2B suppliers (orders, not bookings)."""
 
 from app.registries.niches.starters.starter_parts import (
     at,
@@ -73,7 +73,9 @@ ONLINE_SHOP_STARTERS = NicheStarterDefinition(
         ),
     ],
     offers=[
-        offer("bestseller", Kind.PRODUCT, ("Our bestseller", "Хит продаж", "ბესტსელერი")),
+        offer(
+            "bestseller", Kind.PRODUCT, ("Our bestseller", "Хит продаж", "ბესტსელერი")
+        ),
         offer(
             "gift_set",
             Kind.PRODUCT,

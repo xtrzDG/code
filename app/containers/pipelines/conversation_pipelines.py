@@ -4,6 +4,9 @@ from dependency_injector.providers import DependenciesContainer, Factory, Single
 from app.containers.orchestrators.conversation_orchestrators import (
     ConversationOrchestratorsContainer,
 )
+from app.containers.orchestrators.setup_orchestrators import (
+    SetupOrchestratorsContainer,
+)
 from app.containers.provider_chains import orchestrator_pipeline
 from app.contracts.conversation_flow import CustomerMessagePipelineContract
 from app.contracts.pipeline_contract import PipelineContract
@@ -27,6 +30,7 @@ class ConversationPipelinesContainer(containers.DeclarativeContainer):
     conversation_orchestrators: ConversationOrchestratorsContainer = (
         DependenciesContainer()  # type: ignore[assignment]
     )
+    setup_orchestrators: SetupOrchestratorsContainer = DependenciesContainer()  # type: ignore[assignment]
 
     # --- Customer messages of every channel. Singleton: its per-customer
     # locks must be shared by every channel of the process.
@@ -42,6 +46,7 @@ class ConversationPipelinesContainer(containers.DeclarativeContainer):
         OwnerTestChatPipeline,
         prepare_test_message=conversation_orchestrators.owner_test_chat_orchestrator,
         turn_orchestrator=conversation_orchestrators.conversation_turn_orchestrator,
+        record_activation_event=setup_orchestrators.record_activation_event_orchestrator,
     )
 
     # --- Voice webhooks.

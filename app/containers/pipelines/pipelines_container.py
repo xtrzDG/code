@@ -17,6 +17,7 @@ from app.containers.pipelines.demo_pipelines import DemoPipelinesContainer
 from app.containers.pipelines.knowledge_pipelines import KnowledgePipelinesContainer
 from app.containers.pipelines.operations_pipelines import OperationsPipelinesContainer
 from app.containers.pipelines.platform_pipelines import PlatformPipelinesContainer
+from app.containers.pipelines.setup_pipelines import SetupPipelinesContainer
 from app.containers.use_cases.use_cases_container import UseCasesContainer
 
 
@@ -55,10 +56,15 @@ class PipelinesContainer(containers.DeclarativeContainer):
     conversations: ConversationPipelinesContainer = Container(  # type: ignore[assignment]
         ConversationPipelinesContainer,
         conversation_orchestrators=orchestrators.conversations,
+        setup_orchestrators=orchestrators.setup,
     )
     assistants: AssistantPipelinesContainer = Container(  # type: ignore[assignment]
         AssistantPipelinesContainer,
         assistant_orchestrators=orchestrators.assistants,
+    )
+    setup: SetupPipelinesContainer = Container(  # type: ignore[assignment]
+        SetupPipelinesContainer,
+        setup_orchestrators=orchestrators.setup,
     )
     channels: ChannelPipelinesContainer = Container(  # type: ignore[assignment]
         ChannelPipelinesContainer,

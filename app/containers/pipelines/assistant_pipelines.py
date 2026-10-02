@@ -38,6 +38,12 @@ class AssistantPipelinesContainer(containers.DeclarativeContainer):
     run_queued_autotests_pipeline = orchestrator_pipeline(
         assistant_orchestrators.run_queued_autotests_orchestrator
     )
+    apply_changes_pipeline = orchestrator_pipeline(
+        assistant_orchestrators.apply_changes_orchestrator
+    )
+    get_apply_changes_pipeline = orchestrator_pipeline(
+        assistant_orchestrators.get_apply_changes_orchestrator
+    )
 
     # --- Assistant versions and autotests.
     list_assistant_versions_pipeline = orchestrator_pipeline(

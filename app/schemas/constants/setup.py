@@ -33,16 +33,20 @@ class SetupStepStatus(StrEnum):
 
 class SetupActionTarget(StrEnum):
     """
-    The cabinet place that finishes a step; the cabinet maps it to a page
-    (PROFILE with a wizard step, KNOWLEDGE, STAFF_CONTACTS, CHANNELS,
-    TEST_CHAT, APPLY_CHANGES, or OVERVIEW once everything is done).
+    The cabinet place where the owner acts; the cabinet maps it to a page:
+    PROFILE (with a wizard step), STAFF_CONTACTS, CHANNELS,
+    TEST_CHAT, AGREEMENT (the data processing agreement), BILLING,
+    CHECKS (the automatic checks, under Advanced), APPLY_CHANGES, or
+    OVERVIEW once everything is done.
     """
 
     PROFILE = "profile"
-    KNOWLEDGE = "knowledge"
     STAFF_CONTACTS = "staff_contacts"
     CHANNELS = "channels"
     TEST_CHAT = "test_chat"
+    AGREEMENT = "agreement"
+    BILLING = "billing"
+    CHECKS = "checks"
     APPLY_CHANGES = "apply_changes"
     OVERVIEW = "overview"
 
@@ -107,14 +111,16 @@ class ApplyAttentionCode(StrEnum):
     Why applied changes did not go live, in words an owner can act on:
     something required is missing in the profile, nobody receives
     handoffs, the data processing agreement is not accepted, the plan needs
-    payment, the automatic checks found problems or stopped, voice could
-    not be set up, or the version could not be published.
+    payment, the version could not be built, the automatic checks found
+    problems or stopped, voice could not be set up, or the version could
+    not be published.
     """
 
     PROFILE_INCOMPLETE = "profile_incomplete"
     STAFF_CONTACT_MISSING = "staff_contact_missing"
     AGREEMENT_NOT_ACCEPTED = "agreement_not_accepted"
     PAYMENT_NEEDED = "payment_needed"
+    BUILD_FAILED = "build_failed"
     CHECKS_FAILED = "checks_failed"
     CHECKS_STOPPED = "checks_stopped"
     VOICE_NOT_READY = "voice_not_ready"

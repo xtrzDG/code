@@ -20,7 +20,11 @@ from app.schemas.typings.assistants.constrained_strings import GoLiveCheckDetail
 from app.schemas.typings.assistants.prefixed_id import AssistantVersionId
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.localization.constrained_strings import LanguageTag
-from app.schemas.typings.setup.booleans import HasUnappliedChanges, IsApplyInProgress
+from app.schemas.typings.setup.booleans import (
+    HasUnappliedChanges,
+    IsApplyInProgress,
+    IsApplyStarted,
+)
 from app.schemas.typings.setup.strings import ApplyAttentionMessage, SetupActionLabel
 from app.schemas.typings.users.prefixed_id import UserId
 
@@ -49,6 +53,13 @@ class ApplyChangesQuery(ImmutableDTO):
     user_id: UserId
     business_id: BusinessId
     language: LanguageTag | None = None
+
+
+class ApplyChangesSource(ImmutableDTO):
+    """An authorized business whose "Apply changes" progress is described."""
+
+    business: BusinessDocument
+    language: LanguageTag
 
 
 class ApplyAttentionView(ImmutableDTO):
@@ -86,15 +97,16 @@ class ApplyChangesView(ImmutableDTO):
 
 class ApplyStart(ImmutableDTO):
     """
-    How an apply goes on after it was registered: build a new version
-    (`version_to_publish` None) or publish an already checked one;
-    `is_running` when an apply was already under way (nothing new starts).
+    How an apply goes on once registered: build a new version, or publish
+    `version_to_publish` (already checked, nothing changed since). With
+    `is_new` False nothing starts: an apply is already under way, or what
+    is live is already up to date.
     """
 
     business: BusinessDocument
     apply: AssistantApplyDocument
     version_to_publish: AssistantVersionId | None = None
-    is_running: IsApplyInProgress = False
+    is_new: IsApplyStarted
 
 
 class AppliedVersion(ImmutableDTO):
@@ -105,8 +117,12 @@ class AppliedVersion(ImmutableDTO):
 
 
 class ApplyBuildFailure(ImmutableDTO):
-    """The version of an apply could not be built; the owner's message says why."""
+    """
+    An apply could not go on: its version could not be built (no version
+    yet) or its checks could not start; `code` says why in owner words.
+    """
 
     business_id: BusinessId
+    assistant_version_id: AssistantVersionId | None = None
     code: ApplyAttentionCode
     detail: GoLiveCheckDetail | None = None

@@ -11,6 +11,7 @@ from app.containers.use_cases.account_use_cases import AccountUseCasesContainer
 from app.containers.use_cases.conversation_use_cases import (
     ConversationUseCasesContainer,
 )
+from app.containers.use_cases.launch_use_cases import LaunchUseCasesContainer
 from app.containers.use_cases.voice_use_cases import VoiceUseCasesContainer
 from app.containers.utilities import UtilitiesContainer
 from app.contracts.use_case_contract import UseCaseContract
@@ -82,6 +83,7 @@ class AssistantUseCasesContainer(containers.DeclarativeContainer):
     account_use_cases: AccountUseCasesContainer = DependenciesContainer()  # type: ignore[assignment]
     conversation_use_cases: ConversationUseCasesContainer = DependenciesContainer()  # type: ignore[assignment]
     voice_use_cases: VoiceUseCasesContainer = DependenciesContainer()  # type: ignore[assignment]
+    launch_use_cases: LaunchUseCasesContainer = DependenciesContainer()  # type: ignore[assignment]
 
     assemble_assistant_version_use_case: Factory[
         UseCaseContract[AssembleAssistantVersionCommand, AssistantVersionDetails]
@@ -132,6 +134,7 @@ class AssistantUseCasesContainer(containers.DeclarativeContainer):
         resource_repo=repositories.resource_repo,
         autotest_run_repo=repositories.autotest_run_repo,
         niche_template_registry=registries.niche_template_registry,
+        plan_registry=registries.plan_registry,
         voice_agent_provisioner=adapters.voice_agent_provisioner,
         app_settings=config.app_settings,
         wall_clock=time_provider.microsecond_wall_clock,
@@ -156,6 +159,8 @@ class AssistantUseCasesContainer(containers.DeclarativeContainer):
         voice_agent_provisioner=adapters.voice_agent_provisioner,
         build_call_greeting=conversation_use_cases.build_call_greeting_use_case,
         assistant_tool_catalog=registries.assistant_tool_registry,
+        start_trial_at_go_live=launch_use_cases.start_trial_at_go_live_use_case,
+        record_activation_event=launch_use_cases.record_activation_event_use_case,
         app_settings=config.app_settings,
         wall_clock=time_provider.microsecond_wall_clock,
     )

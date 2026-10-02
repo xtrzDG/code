@@ -47,9 +47,7 @@ class StarterAnswerRegistry(StarterAnswerRegistryContract):
         self._weekends_by_country: dict[CountryCode, frozenset[Weekday]] = {}
 
     def get(self, niche_key: NicheKey, country_code: CountryCode) -> StarterAnswers:
-        definition: NicheStarterDefinition | None = self._starters_by_key.get(
-            niche_key
-        )
+        definition: NicheStarterDefinition | None = self._starters_by_key.get(niche_key)
         if definition is None:
             raise NotFoundError(f"Niche {niche_key} has no starter answers.")
 
@@ -64,9 +62,7 @@ class StarterAnswerRegistry(StarterAnswerRegistryContract):
         )
 
     def _weekend_of(self, country_code: CountryCode) -> frozenset[Weekday]:
-        weekend: frozenset[Weekday] | None = self._weekends_by_country.get(
-            country_code
-        )
+        weekend: frozenset[Weekday] | None = self._weekends_by_country.get(country_code)
         if weekend is None:
             weekend = find_weekend(country_code)
             self._weekends_by_country[country_code] = weekend
@@ -79,7 +75,7 @@ def find_weekend(country_code: CountryCode) -> frozenset[Weekday]:
 
     try:
         locale: Locale = Locale.parse(f"und_{country_code}")
-    except (UnknownLocaleError, ValueError):
+    except UnknownLocaleError, ValueError:
         return DEFAULT_WEEKEND
 
     start: int = locale.weekend_start

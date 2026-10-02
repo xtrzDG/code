@@ -104,7 +104,11 @@ REAL_ESTATE_STARTERS = NicheStarterDefinition(
         offer(
             "family_house",
             Kind.PRODUCT,
-            ("Family house with a garden", "Дом для семьи с садом", "საოჯახო სახლი ბაღით"),
+            (
+                "Family house with a garden",
+                "Дом для семьи с садом",
+                "საოჯახო სახლი ბაღით",
+            ),
         ),
         offer(
             "office_space",

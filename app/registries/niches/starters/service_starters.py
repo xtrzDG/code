@@ -175,7 +175,9 @@ CAR_RENTAL_AND_TOURS_STARTERS = NicheStarterDefinition(
                 "ეკონომ კლასის ავტომობილი დღეში",
             ),
         ),
-        offer("suv", Kind.VEHICLE, ("SUV per day", "Внедорожник на день", "ჯიპი დღეში")),
+        offer(
+            "suv", Kind.VEHICLE, ("SUV per day", "Внедорожник на день", "ჯიპი დღეში")
+        ),
         offer(
             "day_tour",
             Kind.PACKAGE,

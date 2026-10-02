@@ -39,12 +39,12 @@ class ActivationProbeRepository(ActivationProbeRepoContract):
         self._conversation_collection: DocumentCollectionAdapterContract[
             ConversationDocument
         ] = conversation_collection
-        self._booking_collection: DocumentCollectionAdapterContract[
-            BookingDocument
-        ] = booking_collection
-        self._handoff_collection: DocumentCollectionAdapterContract[
-            HandoffDocument
-        ] = handoff_collection
+        self._booking_collection: DocumentCollectionAdapterContract[BookingDocument] = (
+            booking_collection
+        )
+        self._handoff_collection: DocumentCollectionAdapterContract[HandoffDocument] = (
+            handoff_collection
+        )
 
     def find_first_real_conversation_at(
         self, business_id: BusinessId
@@ -52,18 +52,24 @@ class ActivationProbeRepository(ActivationProbeRepoContract):
         return find_first_at(
             self._conversation_collection,
             business_id,
-            lambda conversation: not conversation.is_sandbox
-            and conversation.channel is not ChannelKind.OWNER_TEST,
+            lambda conversation: (
+                not conversation.is_sandbox
+                and conversation.channel is not ChannelKind.OWNER_TEST
+            ),
         )
 
-    def find_first_real_booking_at(self, business_id: BusinessId) -> Microseconds | None:
+    def find_first_real_booking_at(
+        self, business_id: BusinessId
+    ) -> Microseconds | None:
         return find_first_at(
             self._booking_collection,
             business_id,
             lambda booking: not booking.is_sandbox,
         )
 
-    def find_first_real_handoff_at(self, business_id: BusinessId) -> Microseconds | None:
+    def find_first_real_handoff_at(
+        self, business_id: BusinessId
+    ) -> Microseconds | None:
         return find_first_at(
             self._handoff_collection,
             business_id,

@@ -8,10 +8,14 @@ from app.containers.orchestrators.conversation_orchestrators import (
 )
 from app.containers.provider_chains import use_case_orchestrator
 from app.containers.repositories import RepositoriesContainer
+from app.containers.use_cases.apply_use_cases import ApplyUseCasesContainer
 from app.containers.use_cases.assistant_use_cases import AssistantUseCasesContainer
 from app.containers.use_cases.autotest_use_cases import AutotestUseCasesContainer
 from app.contracts.orchestrator_contract import OrchestratorContract
 from app.contracts.use_case_contract import UseCaseContract
+from app.orchestrators.assistants.apply_changes_orchestrator import (
+    ApplyChangesOrchestrator,
+)
 from app.orchestrators.assistants.queue_autotest_run_orchestrator import (
     QueueAutotestRunOrchestrator,
 )
@@ -26,6 +30,7 @@ from app.schemas.dto.assistants.assistant_commands import RunAutotestsCommand
 from app.schemas.dto.assistants.assistant_views import AutotestRunView
 from app.schemas.dto.assistants.autotest_runs import AutotestScenarioRun
 from app.schemas.dto.jobs import JobReport, QueuedJobInput
+from app.schemas.dto.setup.apply_changes import ApplyChangesCommand, ApplyChangesView
 from app.use_cases.autotests.run_autotest_scenario_use_case import (
     RunAutotestScenarioUseCase,
 )
@@ -42,6 +47,7 @@ class AssistantOrchestratorsContainer(containers.DeclarativeContainer):
     repositories: RepositoriesContainer = DependenciesContainer()  # type: ignore[assignment]
     assistant_use_cases: AssistantUseCasesContainer = DependenciesContainer()  # type: ignore[assignment]
     autotest_use_cases: AutotestUseCasesContainer = DependenciesContainer()  # type: ignore[assignment]
+    apply_use_cases: ApplyUseCasesContainer = DependenciesContainer()  # type: ignore[assignment]
     conversation_orchestrators: ConversationOrchestratorsContainer = (
         DependenciesContainer()  # type: ignore[assignment]
     )
@@ -82,6 +88,24 @@ class AssistantOrchestratorsContainer(containers.DeclarativeContainer):
         finish_autotest_run=autotest_use_cases.finish_autotest_run_use_case,
         abandon_autotest_run=autotest_use_cases.abandon_autotest_run_use_case,
         record_autotest_progress=autotest_use_cases.record_autotest_progress_use_case,
+        publish_applied_version=apply_use_cases.publish_applied_version_use_case,
+    )
+    # "Apply changes": build, check in the background, publish when it passes.
+    apply_changes_orchestrator: Factory[
+        OrchestratorContract[ApplyChangesCommand, ApplyChangesView]
+    ] = Factory(
+        ApplyChangesOrchestrator,
+        start_apply_changes=apply_use_cases.start_apply_changes_use_case,
+        assemble_assistant_version=assistant_use_cases.assemble_assistant_version_use_case,
+        check_applied_version=apply_use_cases.check_applied_version_use_case,
+        start_autotest_run=autotest_use_cases.start_autotest_run_use_case,
+        enqueue_autotest_run=autotest_use_cases.enqueue_autotest_run_use_case,
+        publish_applied_version=apply_use_cases.publish_applied_version_use_case,
+        fail_apply_changes=apply_use_cases.fail_apply_changes_use_case,
+        get_apply_changes=apply_use_cases.get_apply_changes_use_case,
+    )
+    get_apply_changes_orchestrator = use_case_orchestrator(
+        apply_use_cases.get_apply_changes_use_case
     )
 
     # --- Assistant versions and autotests.

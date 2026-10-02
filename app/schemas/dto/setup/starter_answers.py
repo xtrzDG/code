@@ -146,9 +146,7 @@ class StarterAnswersApplied(ImmutableDTO):
     created.
     """
 
-    applied_sections: list[StarterSection] = Field(
-        default_factory=list[StarterSection]
-    )
+    applied_sections: list[StarterSection] = Field(default_factory=list[StarterSection])
     kept_sections: list[StarterSection] = Field(default_factory=list[StarterSection])
     profile: BusinessProfileView
     saved_knowledge_items: list[KnowledgeItemDetails] = Field(
