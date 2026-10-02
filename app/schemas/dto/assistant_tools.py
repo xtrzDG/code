@@ -33,7 +33,10 @@ from app.schemas.typings.bookings.strings import (
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.contacts.prefixed_id import ContactId
 from app.schemas.typings.contacts.strings import ContactName
-from app.schemas.typings.conversations.booleans import IsSandboxConversation
+from app.schemas.typings.conversations.booleans import (
+    CanTextCaller,
+    IsSandboxConversation,
+)
 from app.schemas.typings.conversations.prefixed_id import ConversationId
 from app.schemas.typings.handoffs.prefixed_id import HandoffId
 from app.schemas.typings.handoffs.strings import (
@@ -169,6 +172,9 @@ class AssistantToolContext(ImmutableDTO):
     available_tools: list[AssistantToolName]
     # Scheduling results state today in this zone (None: not stated).
     business_timezone: TimezoneName | None = None
+    # On the phone: a connected messenger reaches the caller, so the links
+    # the agent promises are texted after the call.
+    can_text_caller: CanTextCaller = False
 
 
 class AssistantToolInvocation(ImmutableDTO):

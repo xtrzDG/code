@@ -79,10 +79,10 @@ def build_phone_answer_format_section(
     if AssistantToolName.SEND_LINK in tools:
         lines.append(
             "When a link would help (the menu, a booking page, the map, a "
-            "payment), call send_link. When its result says the link will be "
-            'texted, say "I will text you the link". Otherwise never promise a '
-            "message: say where the caller can find it or offer to pass the "
-            "request to a colleague."
+            'payment), call send_link. When its result has "texted_after_call": '
+            'true, say "I will text you the link": the platform texts it right '
+            "after the call. Otherwise never promise a message: say where the "
+            "caller can find it or offer to pass the request to a colleague."
         )
 
     return lines

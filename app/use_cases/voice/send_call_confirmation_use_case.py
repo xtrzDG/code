@@ -10,34 +10,23 @@ from app.contracts.repositories.business_repositories import (
 from app.contracts.repositories.conversation_repositories import ContactRepoContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.channel_events import PostCallEventStatus
-from app.schemas.constants.channels import ChannelKind, ChannelStatus
 from app.schemas.constants.conversations import CallOutcome
 from app.schemas.domain.bookings import BookingDocument
 from app.schemas.domain.businesses import BusinessDocument
-from app.schemas.domain.channels import ChannelDocument
-from app.schemas.domain.contacts import ChannelIdentity, ContactDocument
+from app.schemas.domain.contacts import ContactDocument
 from app.schemas.dto.voice_webhooks import RecordedCall
 from app.schemas.exceptions.application_errors import ExternalServiceError
 from app.schemas.typings.channels.booleans import IsCallConfirmationSent
 from app.schemas.typings.conversations.strings import MessageText
 from app.schemas.typings.localization.constrained_strings import LanguageTag
+from app.utilities.channels.caller_reachability import list_reachable_identities
 from app.utilities.channels.channel_texts import (
     CALL_BOOKING_CONFIRMATION_TEXT,
     CALL_BOOKING_PARTY_TEXT,
 )
-from app.utilities.channels.delivery_targets import find_business_channel
 from app.utilities.channels.local_moments import format_local_moment
 
 logger: logging.Logger = logging.getLogger(__name__)
-
-# Messengers tried for the confirmation, best first: Telegram has no
-# messaging window and costs nothing; WhatsApp is where most callers are.
-CONFIRMATION_CHANNELS: tuple[ChannelKind, ...] = (
-    ChannelKind.TELEGRAM,
-    ChannelKind.WHATSAPP,
-    ChannelKind.MESSENGER,
-    ChannelKind.INSTAGRAM,
-)
 
 
 class SendCallConfirmationUseCase(
@@ -98,7 +87,9 @@ class SendCallConfirmationUseCase(
 
         language: LanguageTag = input_data.language or business.default_language
         text = MessageText(self._build_text(business, booking, language))
-        for identity in self._list_reachable_identities(business, contact):
+        for identity in list_reachable_identities(
+            self._channel_repo, business.id, contact
+        ):
             try:
                 self._channel_message_sender.send(
                     business.id,
@@ -139,28 +130,3 @@ class SendCallConfirmationUseCase(
             self._text_resolver.resolve(CALL_BOOKING_PARTY_TEXT, language)
         ).format(party_size=int(booking.party_size))
         return f"{confirmation} {party}"
-
-    def _list_reachable_identities(
-        self,
-        business: BusinessDocument,
-        contact: ContactDocument,
-    ) -> list[ChannelIdentity]:
-        connected_channels: set[ChannelKind] = set()
-        for channel_kind in CONFIRMATION_CHANNELS:
-            channel: ChannelDocument | None = find_business_channel(
-                self._channel_repo,
-                business.id,
-                channel_kind,
-            )
-            if channel is not None and channel.status is ChannelStatus.CONNECTED:
-                connected_channels.add(channel_kind)
-
-        identities: list[ChannelIdentity] = [
-            identity
-            for identity in contact.channel_identities
-            if identity.channel in connected_channels
-        ]
-        return sorted(
-            identities,
-            key=lambda identity: CONFIRMATION_CHANNELS.index(identity.channel),
-        )

@@ -40,6 +40,7 @@ from app.use_cases.voice.finished_call.record_finished_call_use_case import (
 from app.use_cases.voice.send_call_confirmation_use_case import (
     SendCallConfirmationUseCase,
 )
+from app.use_cases.voice.send_call_links_use_case import SendCallLinksUseCase
 from app.utilities.storage.storage_scope_context import StorageScopeContext
 from tests.brain.fake_contact_tools import FakeHandoff
 from tests.channels.channels_fakes import RecordingVoiceAgentRemoval
@@ -157,6 +158,15 @@ class ChannelsUseCases(ChannelsInfrastructure):
             self.booking_repo,
             self.contact_repo,
             self.channel_repo,
+            self.channel_message_sender,
+            self.text_resolver,
+        )
+        self.send_call_links = SendCallLinksUseCase(
+            self.business_repo,
+            self.profile_repo,
+            self.contact_repo,
+            self.channel_repo,
+            self.message_repo,
             self.channel_message_sender,
             self.text_resolver,
         )

@@ -177,6 +177,39 @@ def render_link(result: SendLinkResult) -> LlmToolResultJson:
     return render({"kind": result.kind.value, "url": str(result.url)})
 
 
+def render_phone_link(
+    result: SendLinkResult, can_text_caller: bool
+) -> LlmToolResultJson:
+    """
+    send_link on the phone: never the address itself (nobody can type it
+    while listening). Whether the platform texts it right after the call
+    decides what the agent may promise.
+    """
+
+    if result.url is None:
+        return render_link(result)
+
+    if can_text_caller:
+        return render(
+            {
+                "kind": result.kind.value,
+                "texted_after_call": True,
+                "note": 'Say "I will text you the link"; it is sent by message '
+                "right after the call. Never read it aloud.",
+            }
+        )
+
+    return render(
+        {
+            "kind": result.kind.value,
+            "texted_after_call": False,
+            "note": "This caller cannot get a message from the business: do not "
+            "promise one and never read the link aloud. Say where to find it "
+            "or offer to pass the request to a colleague.",
+        }
+    )
+
+
 def render_unanswered_question(question: UnansweredQuestionView) -> LlmToolResultJson:
     return render({"recorded": True, "question_id": str(question.id)})
 

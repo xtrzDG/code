@@ -1,8 +1,8 @@
 from app.contracts.repositories.business_repositories import BusinessProfileRepoContract
 from app.contracts.use_case_contract import UseCaseContract
-from app.schemas.constants.businesses import BusinessLinkKind
 from app.schemas.domain.profiles import BusinessProfileDocument
 from app.schemas.dto.knowledge import SendLinkQuery, SendLinkResult
+from app.utilities.knowledge.profile_links import find_profile_link
 
 
 class SendLinkUseCase(UseCaseContract[SendLinkQuery, SendLinkResult]):
@@ -23,11 +23,6 @@ class SendLinkUseCase(UseCaseContract[SendLinkQuery, SendLinkResult]):
         if profile is None:
             return SendLinkResult(kind=input_data.kind)
 
-        for link in profile.links:
-            if link.kind is input_data.kind:
-                return SendLinkResult(kind=input_data.kind, url=link.url)
-
-        if input_data.kind is BusinessLinkKind.MAP and profile.address is not None:
-            return SendLinkResult(kind=input_data.kind, url=profile.address.maps_url)
-
-        return SendLinkResult(kind=input_data.kind)
+        return SendLinkResult(
+            kind=input_data.kind, url=find_profile_link(profile, input_data.kind)
+        )

@@ -176,6 +176,7 @@ def build_channels_http_client(testbed: ChannelsUseCases) -> TestClient:
                     testbed.record_finished_call,
                     testbed.audit_call_replies,
                     testbed.send_call_confirmation,
+                    testbed.send_call_links,
                 )
             ),
         )

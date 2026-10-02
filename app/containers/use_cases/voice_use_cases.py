@@ -40,6 +40,7 @@ from app.use_cases.voice.remove_voice_agent_use_case import RemoveVoiceAgentUseC
 from app.use_cases.voice.send_call_confirmation_use_case import (
     SendCallConfirmationUseCase,
 )
+from app.use_cases.voice.send_call_links_use_case import SendCallLinksUseCase
 from app.use_cases.voice.start_voice_call_use_case import StartVoiceCallUseCase
 
 
@@ -132,6 +133,16 @@ class VoiceUseCasesContainer(containers.DeclarativeContainer):
         audit_log_repo=repositories.audit_log_repo,
         phone_number_parser=utilities.phone_number_parser,
         wall_clock=time_provider.microsecond_wall_clock,
+    )
+    send_call_links_use_case: Factory[UseCaseContract[RecordedCall, bool]] = Factory(
+        SendCallLinksUseCase,
+        business_repo=repositories.business_repo,
+        business_profile_repo=repositories.business_profile_repo,
+        contact_repo=repositories.contact_repo,
+        channel_repo=repositories.channel_repo,
+        message_repo=repositories.message_repo,
+        channel_message_sender=facilitators.channel_message_sender,
+        text_resolver=utilities.localized_text_resolver,
     )
     send_call_confirmation_use_case: Factory[UseCaseContract[RecordedCall, bool]] = (
         Factory(
