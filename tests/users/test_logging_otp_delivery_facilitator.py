@@ -12,7 +12,9 @@ from app.schemas.typings.localization.constrained_strings import (
     LanguageTag,
 )
 from app.schemas.typings.users.constrained_strings import EmailAddress, OtpCode
-from app.utilities.config_helpers.app_settings.app_settings_assembler import assemble_app_settings
+from app.utilities.config_helpers.app_settings.app_settings_assembler import (
+    assemble_app_settings,
+)
 
 
 def test_development_logs_the_code_with_a_masked_destination(

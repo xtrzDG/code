@@ -9,7 +9,9 @@ from fastapi.testclient import TestClient
 
 from app.containers.app import AppContainer
 from app.main import create_application
-from app.utilities.config_helpers.app_settings.app_settings_assembler import assemble_app_settings
+from app.utilities.config_helpers.app_settings.app_settings_assembler import (
+    assemble_app_settings,
+)
 from tests.e2e.harness import E2E_ENVIRONMENT, replace_provider, start_workshop
 
 OPTIONAL_PROVIDERS: frozenset[str] = frozenset(

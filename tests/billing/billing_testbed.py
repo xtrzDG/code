@@ -170,7 +170,9 @@ from app.use_cases.billing.process_payment_webhook_use_case import (
 )
 from app.use_cases.billing.start_checkout_use_case import StartCheckoutUseCase
 from app.use_cases.billing.start_trial_use_case import StartTrialUseCase
-from app.utilities.config_helpers.app_settings.app_settings_assembler import assemble_app_settings
+from app.utilities.config_helpers.app_settings.app_settings_assembler import (
+    assemble_app_settings,
+)
 from app.utilities.localization.localized_text_resolver import LocalizedTextResolver
 
 # 2026-10-01 09:00 UTC, the concept's date.

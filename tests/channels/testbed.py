@@ -201,7 +201,9 @@ from app.use_cases.voice.send_call_confirmation_use_case import (
     SendCallConfirmationUseCase,
 )
 from app.use_cases.voice.start_voice_call_use_case import StartVoiceCallUseCase
-from app.utilities.config_helpers.app_settings.app_settings_assembler import assemble_app_settings
+from app.utilities.config_helpers.app_settings.app_settings_assembler import (
+    assemble_app_settings,
+)
 from app.utilities.localization.localized_text_resolver import LocalizedTextResolver
 from app.utilities.localization.phone_number_parser import PhoneNumberParser
 from app.utilities.storage.storage_scope_context import StorageScopeContext

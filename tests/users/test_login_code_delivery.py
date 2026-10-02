@@ -57,7 +57,9 @@ from app.schemas.typings.messaging.strings import (
 )
 from app.schemas.typings.users.constrained_integers import OtpLifetimeSeconds
 from app.schemas.typings.users.constrained_strings import EmailAddress, OtpCode
-from app.utilities.config_helpers.app_settings.app_settings_assembler import assemble_app_settings
+from app.utilities.config_helpers.app_settings.app_settings_assembler import (
+    assemble_app_settings,
+)
 from app.utilities.localization.localized_text_resolver import LocalizedTextResolver
 from tests.e2e.harness import replace_provider
 

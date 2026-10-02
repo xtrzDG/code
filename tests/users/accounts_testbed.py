@@ -190,7 +190,9 @@ from app.use_cases.users.update_current_user_use_case import (
     UpdateCurrentUserUseCase,
 )
 from app.use_cases.users.verify_otp_login_use_case import VerifyOtpLoginUseCase
-from app.utilities.config_helpers.app_settings.app_settings_assembler import assemble_app_settings
+from app.utilities.config_helpers.app_settings.app_settings_assembler import (
+    assemble_app_settings,
+)
 
 START_UNIX_NANOSECONDS: int = 1_790_000_000_000_000_000
 NANOSECONDS_PER_SECOND: int = 1_000_000_000

@@ -2,7 +2,9 @@ import pytest
 from pydantic import ValidationError
 
 from app.schemas.exceptions.application_errors import ValidationFailedError
-from app.utilities.config_helpers.app_settings.app_settings_assembler import assemble_app_settings
+from app.utilities.config_helpers.app_settings.app_settings_assembler import (
+    assemble_app_settings,
+)
 
 
 def test_channel_settings_have_safe_defaults() -> None:
