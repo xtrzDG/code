@@ -13770,7 +13770,7 @@
             "application/json": {
               "schema": {
                 "additionalProperties": false,
-                "description": "HTTP body that connects a channel; the fields needed depend on the kind.\n\n- telegram: `bot_token` from @BotFather.\n- whatsapp: `phone_number_id` from Embedded Signup and, to subscribe the\n  app to its webhooks, `whatsapp_business_account_id`.\n- messenger, instagram: `page_id` and `page_access_token` (Facebook\n  Login); Instagram uses the professional account linked to the page.\n- phone: `phone_number` of the assistant line (any country; national\n  formats are read in `country_hint` or the business country).\n- web_chat: nothing to switch it on; optionally `widget_color` (hex brand\n  colour) and `widget_position` (left or right) for the widget. Fields\n  left out keep their saved values.",
+                "description": "HTTP body that connects a channel; the fields needed depend on the kind.\n\n- telegram: `bot_token` from @BotFather.\n- whatsapp: `phone_number_id` from WhatsApp Manager (API setup) and, to\n  subscribe the app to its webhooks, `whatsapp_business_account_id`.\n- messenger, instagram: `page_id` and `page_access_token` (Facebook\n  Login); Instagram uses the professional account linked to the page.\n- phone: `phone_number` of the assistant line (any country; national\n  formats are read in `country_hint` or the business country).\n- web_chat: nothing to switch it on; optionally `widget_color` (hex brand\n  colour) and `widget_position` (left or right) for the widget. Fields\n  left out keep their saved values.",
                 "properties": {
                   "bot_token": {
                     "anyOf": [

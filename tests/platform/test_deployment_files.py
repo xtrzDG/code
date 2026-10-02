@@ -154,3 +154,15 @@ def test_copying_env_example_keeps_the_compose_defaults() -> None:
     # Every local sign-in shares the cabinet container's address, so the
     # per-address cap of login codes is set outright, not interpolated.
     assert 'OTP_SENDS_PER_IP_PER_HOUR: "100"' in compose
+
+
+def test_the_cabinet_reaches_the_api_only_by_its_internal_address() -> None:
+    # Through the public address the API sees Render's egress IP for every
+    # owner: one OTP per-address cap for all sign-ins, no client IP in audit.
+    blueprint = read("render.yaml")
+    cabinet = blueprint.split("name: workshop-cabinet", 1)[1]
+    comment = cabinet.split("- key: BACKEND_URL", 1)[0].rsplit("envVars:", 1)[1]
+    assert "http://workshop-api:8000" in comment
+    assert "Never the public https" in comment
+    assert "подойдёт и публичный адрес API" not in read("docs/LAUNCH.md")
+    assert "или публичный)" not in read("README.md")

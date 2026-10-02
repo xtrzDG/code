@@ -9,8 +9,12 @@
 #
 # Secrets are `sync: false`: the dashboard asks for them when the Blueprint is
 # created (leave unused ones empty) and never overwrites them later. The
-# worker copies the API's values. ENCRYPTION_KEY is generated once and shared;
-# never change it, or stored channel credentials become unreadable.
+# worker copies exactly the API keys listed below (fromService copies one
+# named key, not the whole service). Any other variable (LLM_MODEL_ID,
+# OPENAI_BASE_URL, LANGFUSE_HOST, RECORDING_RETENTION_DAYS,
+# WORKER_POLL_SECONDS, ...) goes into the env group workshop-backend, which
+# both services read. ENCRYPTION_KEY is generated once and shared; never
+# change it, or stored channel credentials become unreadable.
 #
 # The image's ENTRYPOINT is `workshop`; the commands below also name it, so
 # they work whether a platform keeps the ENTRYPOINT or replaces it.
@@ -52,8 +56,10 @@ services:
     dockerCommand: workshop api
     preDeployCommand: workshop migrate
     healthCheckPath: /healthz
-    # docs/** is ignored, so a new DPA text in docs/legal alone does not
-    # redeploy: change DPA_DOCUMENT_VERSION too (or deploy by hand).
+    # docs/** is ignored, so a new DPA text in docs/legal is built into the
+    # image only by a rebuild: set DPA_DOCUMENT_VERSION with
+    # "Save, rebuild, and deploy" or use Manual Deploy -> "Deploy latest commit"
+    # ("Save and deploy" reuses the old build, without the new text).
     buildFilter:
       ignoredPaths:
         - web/**
@@ -419,7 +425,9 @@ services:
     envVars:
       # The API as the cabinet's server reaches it: its internal address from
       # the dashboard (workshop-api -> Connect -> Internal), with http:// and
-      # port 8000, e.g. http://workshop-api:8000; or its public https address.
+      # port 8000, e.g. http://workshop-api:8000. Never the public https
+      # address: those requests leave through Render's egress, so the API
+      # sees one egress IP for every owner (audit log, OTP_SENDS_PER_IP_PER_HOUR).
       - key: BACKEND_URL
         sync: false
       - key: COOKIE_SECURE

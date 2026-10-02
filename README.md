@@ -98,8 +98,11 @@ http). По умолчанию `APP_ENV=development`, поэтому коды в
 шифруют токены каналов одним ключом `ENCRYPTION_KEY`; значение по умолчанию в
 `docker-compose.yml` общеизвестно и годится только для этой машины — перед
 подключением настоящих каналов задайте в `.env` свой (например, `python -c "import
-secrets; print(secrets.token_urlsafe(32))"`) и не меняйте его потом. Порты меняются
-через `API_PORT` и `WEB_PORT`; `docker compose down -v` удаляет и данные. Пошагово,
+secrets; print(secrets.token_urlsafe(32))"`) и не меняйте его потом; с
+`APP_ENV=production` API это значение не принимает. Порты меняются через `API_PORT` и
+`WEB_PORT` (адреса `APP_BASE_URL` и `CABINET_BASE_URL` следуют за ними); вход через
+кабинет локально идёт с одного адреса контейнера, поэтому Compose поднимает лимит
+кодов с адреса до 100 в час. `docker compose down -v` удаляет и данные. Пошагово,
 со входом без SMS, — в [`docs/LAUNCH.md`](docs/LAUNCH.md).
 
 Образ бэкенда отдельно:
@@ -133,14 +136,18 @@ API запускается с `--proxy-headers`; адреса доверенны
 
 При создании Render спросит секреты (`sync: false`): провайдер и ключи модели,
 провайдеров кодов входа, Meta (и шаблоны WhatsApp), Telegram, ElevenLabs, Flitt,
-Langfuse, Sentry — ненужные оставьте пустыми. Воркер берёт все значения у API,
+Langfuse, Sentry — ненужные оставьте пустыми. Воркер копирует у API только ключи,
+перечисленные в `render.yaml`; остальные переменные (тонкая настройка модели,
+`OPENAI_BASE_URL`, `LANGFUSE_HOST`, `RECORDING_RETENTION_DAYS`, `WORKER_POLL_SECONDS`
+и т. п.) задавайте в группе окружения `workshop-backend` — её читают и API, и воркер.
 `ENCRYPTION_KEY` генерируется один раз (не меняйте его). После первого деплоя
 укажите `APP_BASE_URL` (публичный адрес API,
 например `https://workshop-api.onrender.com`), `CABINET_BASE_URL` (публичный адрес
 кабинета, например `https://workshop-cabinet.onrender.com`: туда Google Calendar и
 страница оплаты возвращают владельца), `CORS_ALLOWED_ORIGINS` API (тот же адрес
 кабинета) и `BACKEND_URL` кабинета (внутренний
-адрес API из Render: `http://<хост>:8000`, или публичный). Адреса вебхуков для
+адрес API из Render: `http://<хост>:8000`; не публичный — иначе все входы придут с
+одного адреса Render и упрутся в лимит кодов с одного адреса). Адреса вебхуков для
 внешних кабинетов — в разделе «Окружение».
 
 ### Postgres (ЕС)
@@ -212,7 +219,7 @@ API при старте пишет ошибку, и вход отвечает 50
 Кабинет выдаёт код для сайта (`GET …/channels/web/snippet`):
 
 ```html
-<script src="https://<APP_BASE_URL>/widget.js" data-tenant="<id бизнеса>" async></script>
+<script src="<APP_BASE_URL>/widget.js" data-tenant="<id бизнеса>" async></script>
 ```
 
 `/widget.js` — скрипт без зависимостей и без cookie: кнопка и окно чата в shadow
@@ -261,7 +268,7 @@ UI-тестов); `color`, `position` и `language` в ней показываю
 | `CABINET_BASE_URL` | вне `production` — `http://localhost:3000`; в `production` после согласия в Google владелец видит простую страницу вместо возврата в кабинет, а страница оплаты возвращает плательщика только на адреса из `CORS_ALLOWED_ORIGINS` |
 | `CORS_ALLOWED_ORIGINS` | CORS выключен (виджет сайта разрешает любой источник сам); страница оплаты возвращает плательщика только на источник `CABINET_BASE_URL` и `APP_BASE_URL`. Укажите адрес кабинета (`http://localhost:3000` локально; в `docker-compose.yml` он задан) |
 | `DATABASE_URL` | хранение в памяти |
-| `ENCRYPTION_KEY` | временный ключ: токены каналов не переживут перезапуск; в `production` — ошибка запуска. Ключ Fernet или любая случайная строка от 32 символов; после первого запуска не меняется |
+| `ENCRYPTION_KEY` | временный ключ: токены каналов не переживут перезапуск; в `production` — ошибка запуска (как и с общеизвестным значением по умолчанию из `docker-compose.yml`). Ключ Fernet или любая случайная строка от 32 символов; после первого запуска не меняется |
 | `LLM_PROVIDER`, `LLM_MODEL_ID`, `LLM_JUDGE_MODEL_ID` | `openai` и `gpt-5-mini` (`anthropic` — `claude-opus-5-5`); `LLM_JUDGE_MODEL_ID` — модель клиента и судьи автотестов, по умолчанию та же модель провайдера |
 | `LLM_CHAT_EFFORT`, `LLM_JUDGE_EFFORT` | усилие рассуждений: `low` в чате, `medium` у судьи автотестов (`minimal`, `low`, `medium`, `high`) |
 | `LLM_MAX_OUTPUT_TOKENS`, `LLM_TOOL_ROUND_LIMIT` | 16000 токенов ответа, 8 кругов вызова инструментов на один ответ |
@@ -324,9 +331,9 @@ UI-тестов); `color`, `position` и `language` в ней показываю
 | Ресурсы и расписание | `GET·POST …/resources`, `PATCH …/resources/{id}`, `GET·POST …/schedule-exceptions`, `DELETE …/schedule-exceptions/{id}` |
 | Брони, заявки, передачи | `GET …/availability` (`full_day=true` — весь день для сотрудников), `GET·POST …/bookings`, `PATCH …/bookings/{id}` (статус, гости, место, примечание, имя), `POST …/bookings/{id}/cancel`, `POST …/bookings/{id}/reschedule`, `GET …/leads`, `PATCH …/leads/{id}`, `GET …/handoffs`, `POST …/handoffs/{id}/resolve`, `GET …/unanswered-questions`, `POST …/unanswered-questions/{id}/answer`, `GET …/dashboard` |
 | Google Calendar | `GET·DELETE …/integrations/google-calendar`, `GET …/integrations/google-calendar/connect-url`, `GET /v1/integrations/google-calendar/callback` (ничего не обменивает, только передаёт `code`, `state`, `error` странице кабинета `CABINET_BASE_URL/integrations/google-calendar/callback`), `POST /v1/integrations/google-calendar/complete` (Bearer; завершает подключение только для того пользователя, который его начал; кабинет затем открывает `/b/{id}/channels?calendar=connected` или `?calendar=error&reason=…`) |
-| Разговоры | `GET …/conversations` (страницы, фильтры `channel`, `status`, `from`/`to`, `search`), `GET …/conversations/{id}` (расшифровка, звонки, брони, заявки, передачи), `PUT …/conversations/{id}/rating`, `POST …/conversations/{id}/messages` (ответ сотрудника клиенту), `POST …/test-chat` |
+| Разговоры | `GET …/conversations` (страницы, фильтры `channel`, `status`, `from`/`to`, `search`), `GET …/conversations/{id}` (расшифровка, звонки, брони, заявки, передачи), `PUT …/conversations/{id}/rating`, `POST …/conversations/{id}/messages` (ответ сотрудника клиенту; шаблон WhatsApp, который Meta не принял, — 409 `template_rejected`), `GET …/calls/{call_id}/recording` (запись звонка; отдаёт части по `Range`, прослушивание пишется в журнал аудита), `POST …/test-chat` |
 | Сборка помощника | `POST·GET …/assistant-versions`, `GET …/assistant-versions/{id}[/autotest-run]`, `GET …/assistant-versions/{id}/go-live-readiness`, `POST …/assistant-versions/{id}/autotests`, `POST …/assistant-versions/{id}/publish`, `POST …/assistant-versions/{id}/rollback` |
-| Каналы (кабинет) | `GET …/channels`, `PUT·DELETE …/channels/{channel}`, `GET …/channels/web/snippet`, `POST …/manager-contacts/telegram-link` |
+| Каналы (кабинет) | `GET …/channels`, `PUT·DELETE …/channels/{channel}`, `GET …/channels/web/snippet`, `PUT …/channels/whatsapp/staff-template` (шаблон WhatsApp для ответа сотрудника вне 24-часового окна), `POST …/manager-contacts/telegram-link` |
 | Вебхуки и виджет | `POST /v1/channels/telegram/{channel_id}/webhook`, `GET·POST /v1/channels/meta/webhook`, `POST /v1/channels/telegram-platform/webhook`, `GET /v1/widget/{id}/config`, `GET·POST /v1/widget/{id}/messages`, `GET /widget.js`, `GET /widget/demo` |
 | Голос | `POST /v1/voice/tools/{tool}`, `POST /v1/voice/webhooks/conversation-initiation`, `POST /v1/voice/webhooks/post-call` |
 | Оплата | `GET …/billing`, `POST …/billing/trial`, `POST …/billing/plan`, `POST …/billing/cancel`, `POST …/billing/checkout`, `POST …/billing/subscribe` (тариф и период с оплатой сразу: после пробного периода, после отмены или без него), `POST /v1/payments/flitt/webhook` |

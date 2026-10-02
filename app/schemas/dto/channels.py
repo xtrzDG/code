@@ -195,8 +195,8 @@ class ConnectChannelRequest(ImmutableDTO):
     HTTP body that connects a channel; the fields needed depend on the kind.
 
     - telegram: `bot_token` from @BotFather.
-    - whatsapp: `phone_number_id` from Embedded Signup and, to subscribe the
-      app to its webhooks, `whatsapp_business_account_id`.
+    - whatsapp: `phone_number_id` from WhatsApp Manager (API setup) and, to
+      subscribe the app to its webhooks, `whatsapp_business_account_id`.
     - messenger, instagram: `page_id` and `page_access_token` (Facebook
       Login); Instagram uses the professional account linked to the page.
     - phone: `phone_number` of the assistant line (any country; national

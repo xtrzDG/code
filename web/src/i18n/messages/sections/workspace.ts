@@ -121,7 +121,7 @@ export const workspaceEn = {
         step3: "Copy the token BotFather sends and paste it below.",
       },
       whatsapp: {
-        step1: "Register your business number in WhatsApp Business through Meta (Embedded Signup). We can help with it.",
+        step1: "Register your business number in the WhatsApp Business Platform (Cloud API) in WhatsApp Manager, and add the platform's business portfolio as a partner of that WhatsApp Business account (Business settings → WhatsApp accounts → Partners); ask us for the portfolio ID. We can help with it.",
         step2: "In WhatsApp Manager open “API setup” and copy the phone number ID and the WhatsApp Business Account ID.",
         step3: "Paste them below.",
       },
@@ -964,7 +964,7 @@ export const workspaceRu: Translation<typeof workspaceEn> = {
         step3: "Скопируйте токен, который пришлёт BotFather, и вставьте его ниже.",
       },
       whatsapp: {
-        step1: "Зарегистрируйте номер бизнеса в WhatsApp Business через Meta (Embedded Signup). Мы можем помочь.",
+        step1: "Зарегистрируйте номер бизнеса в WhatsApp Business Platform (Cloud API) в WhatsApp Manager и добавьте бизнес-портфолио платформы партнёром этого аккаунта WhatsApp Business («Настройки компании» → «Аккаунты WhatsApp» → «Партнёры»); ID портфолио спросите у нас. Мы можем помочь.",
         step2: "В WhatsApp Manager откройте «Настройка API» и скопируйте ID номера телефона и ID аккаунта WhatsApp Business.",
         step3: "Вставьте их ниже.",
       },
@@ -1842,7 +1842,7 @@ export const workspaceKa: Translation<typeof workspaceEn> = {
         step3: "დააკოპირეთ ტოკენი, რომელსაც BotFather გამოგიგზავნით, და ჩასვით ქვემოთ.",
       },
       whatsapp: {
-        step1: "დაარეგისტრირეთ ბიზნესის ნომერი WhatsApp Business-ში Meta-ს მეშვეობით (Embedded Signup). შეგვიძლია დაგეხმაროთ.",
+        step1: "დაარეგისტრირეთ ბიზნესის ნომერი WhatsApp Business Platform-ში (Cloud API) WhatsApp Manager-ში და დაამატეთ პლატფორმის ბიზნეს-პორტფოლიო ამ WhatsApp Business ანგარიშის პარტნიორად („კომპანიის პარამეტრები“ → „WhatsApp ანგარიშები“ → „პარტნიორები“); პორტფოლიოს ID გვკითხეთ ჩვენ. შეგვიძლია დაგეხმაროთ.",
         step2: "WhatsApp Manager-ში გახსენით „API-ის პარამეტრები“ და დააკოპირეთ ტელეფონის ნომრის ID და WhatsApp Business ანგარიშის ID.",
         step3: "ჩასვით ისინი ქვემოთ.",
       },

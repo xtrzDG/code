@@ -90,9 +90,11 @@ class ConnectChannelUseCase(UseCaseContract[ConnectChannelCommand, ChannelView])
     - Telegram: the @BotFather token is checked with getMe, the webhook is
       set to APP_BASE_URL/v1/channels/telegram/{channel id}/webhook with a
       secret derived from the token; the account is the bot username.
-    - WhatsApp: the phone number id from Embedded Signup must be reachable
-      with the platform system user token; the app is subscribed to the
-      business account's webhooks when its id is given.
+    - WhatsApp: the phone number id from WhatsApp Manager (API setup) must
+      be reachable with the platform system user token (the business shares
+      its WhatsApp Business account with the platform's portfolio, see
+      docs/LAUNCH.md); the app is subscribed to the business account's
+      webhooks when its id is given.
     - Messenger / Instagram: the page token must open the page; the app is
       subscribed to the page; Instagram uses the linked professional account.
     - Phone: the assistant line (bought from Zadarma by hand) as E.164.
@@ -260,7 +262,7 @@ class ConnectChannelUseCase(UseCaseContract[ConnectChannelCommand, ChannelView])
     ) -> _ChannelConnection:
         if request.phone_number_id is None:
             raise ValidationFailedError(
-                "phone_number_id from WhatsApp Embedded Signup is required."
+                "phone_number_id from WhatsApp Manager (API setup) is required."
             )
 
         access_token: PlatformSecret | None = (

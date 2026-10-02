@@ -25,7 +25,11 @@ from app.schemas.configurations.app_settings import AppSettings
 from app.schemas.constants.environment import DeploymentEnvironment
 from app.schemas.constants.localization import OtpDeliveryChannel
 from app.schemas.dto.channels import PlatformBotWebhookSetup, TelegramBotProfile
+from app.schemas.exceptions.application_errors import ValidationFailedError
 from app.schemas.exceptions.base_exception import ApplicationError
+from app.schemas.typings.compliance.constrained_strings import DpaDocumentVersion
+from app.schemas.typings.localization.constrained_strings import LanguageTag
+from app.utilities.localization.language_tags import ENGLISH_LOCALE_IDENTIFIER
 
 LOGGER: logging.Logger = logging.getLogger(__name__)
 # Buffered model-call traces of the API process go to Langfuse this often
@@ -59,7 +63,8 @@ def build_application(app_container: AppContainer) -> FastAPI:
 def build_lifespan(app_container: AppContainer) -> Lifespan[FastAPI]:
     """
     Startup: warm the country catalog (every country's profile is built
-    once), report the login code channels, point the platform Telegram bot
+    once), check that the configured DPA has its text in this build, report
+    the login code channels, point the platform Telegram bot
     at this API when it is configured, start flushing model-call traces and,
     with EMBEDDED_WORKER, start the background worker in a thread. Shutdown:
     stop the worker after its current tick, flush the remaining traces and
@@ -70,6 +75,7 @@ def build_lifespan(app_container: AppContainer) -> Lifespan[FastAPI]:
     async def lifespan(http_application: FastAPI) -> AsyncGenerator[None]:
         del http_application
         app_container.registries.country_registry().list_all()
+        check_dpa_document(app_container)
         report_login_code_channels(app_container)
         configure_platform_bot(app_container)
         trace_facilitator: LlmTraceFacilitatorContract = (
@@ -90,6 +96,39 @@ def build_lifespan(app_container: AppContainer) -> Lifespan[FastAPI]:
             close_postgres_pool(app_container)
 
     return lifespan
+
+
+def check_dpa_document(app_container: AppContainer) -> None:
+    """
+    The configured data processing agreement must have its text in this
+    build: owners cannot accept a version without one, and no business could
+    go live. The texts are built into the image (docs/legal), so a new
+    DPA_DOCUMENT_VERSION deployed onto an older build is refused in
+    production at startup (the previous deploy keeps serving) and logged as
+    a warning elsewhere.
+    """
+
+    settings: AppSettings = app_container.config.app_settings()
+    version: DpaDocumentVersion = settings.dpa_document_version
+    if (
+        app_container.registries.legal_document_registry().find_dpa(
+            version,
+            LanguageTag(ENGLISH_LOCALE_IDENTIFIER),
+        )
+        is not None
+    ):
+        return
+
+    message: str = (
+        f"DPA_DOCUMENT_VERSION is {version}, but this build has no "
+        f"docs/legal/dpa-{version}.<language>.md, so owners cannot accept it. "
+        "Rebuild from the commit with the texts (Render: Manual Deploy -> "
+        '"Deploy latest commit", or "Save, rebuild, and deploy").'
+    )
+    if settings.environment is DeploymentEnvironment.PRODUCTION:
+        raise ValidationFailedError(message)
+
+    LOGGER.warning(message)
 
 
 def report_login_code_channels(app_container: AppContainer) -> None:
