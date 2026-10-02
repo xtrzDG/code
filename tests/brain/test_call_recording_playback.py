@@ -26,7 +26,8 @@ from app.schemas.typings.conversations.strings import (
 )
 from app.schemas.typings.users.prefixed_id import UserId
 from tests.brain.brain_world import BrainWorld, build_world
-from tests.brain.cabinet_http import CabinetStorage, bearer, build_cabinet_client
+from tests.brain.cabinet_fakes import CabinetStorage
+from tests.brain.cabinet_http import bearer, build_cabinet_client
 from tests.brain.scripted_turns import say, scripted
 
 RECORDING_PATH: str = "elevenlabs/conversations/conv_1"

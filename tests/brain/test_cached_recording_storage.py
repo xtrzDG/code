@@ -4,7 +4,7 @@ from app.adapters.recordings.cached_recording_storage_adapter import (
     CachedRecordingStorageAdapter,
 )
 from app.schemas.typings.conversations.strings import RecordingStoragePath
-from tests.brain.cabinet_http import InMemoryRecordingStorage
+from tests.brain.cabinet_fakes import InMemoryRecordingStorage
 from tests.users.accounts_testbed import AdjustableClock
 
 FIRST: RecordingStoragePath = RecordingStoragePath("elevenlabs/conversations/conv_1")

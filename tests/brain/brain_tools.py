@@ -13,16 +13,20 @@ from app.use_cases.conversations.tools.run_assistant_tool_use_case import (
 )
 from app.utilities.localization.phone_number_parser import PhoneNumberParser
 from tests.brain.brain_repositories import BrainRepositories
-from tests.brain.fake_tools import (
+from tests.brain.fake_booking_tools import (
     FakeBookings,
     FakeCancelBooking,
     FakeCheckAvailability,
     FakeCreateBooking,
+    FakeRescheduleBooking,
+)
+from tests.brain.fake_contact_tools import (
     FakeCreateLead,
-    FakeGetPrice,
     FakeHandoff,
     FakeRecordUnansweredQuestion,
-    FakeRescheduleBooking,
+)
+from tests.brain.fake_knowledge_tools import (
+    FakeGetPrice,
     FakeSearchKnowledge,
     FakeSendLink,
 )

@@ -3,7 +3,7 @@ A complete in-memory conversation engine for tests.
 
 Real repositories over InMemoryDocumentCollectionAdapter, the real language
 detector, phone parser, tool registry and localized texts; fake tool use
-cases (tests/brain/fake_tools.py) and a scripted language model. The clock
+cases (tests/brain/fake_*_tools.py) and a scripted language model. The clock
 is manual, so tests can move time forward. The parts are built by
 brain_repositories, brain_business_seed, brain_tools and brain_orchestrators.
 """
@@ -77,15 +77,13 @@ from tests.brain.brain_orchestrators import build_brain_orchestrators
 from tests.brain.brain_repositories import build_brain_repositories
 from tests.brain.brain_tools import build_brain_tools
 from tests.brain.business_setups import GEORGIA, BusinessSetup, default_menu
-from tests.brain.fake_tools import (
-    FakeBookings,
-    FakeCheckAvailability,
+from tests.brain.fake_booking_tools import FakeBookings, FakeCheckAvailability
+from tests.brain.fake_contact_tools import (
     FakeCreateLead,
-    FakeGetPrice,
     FakeHandoff,
     FakeRecordUnansweredQuestion,
-    FakeSearchKnowledge,
 )
+from tests.brain.fake_knowledge_tools import FakeGetPrice, FakeSearchKnowledge
 from tests.brain.manual_clock import ManualClock
 
 CUSTOMER_PHONE: E164PhoneNumber = E164PhoneNumber("+995555123456")
