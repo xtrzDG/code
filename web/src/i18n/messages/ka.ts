@@ -39,7 +39,6 @@ export const ka: Messages = {
     requestId: "მოთხოვნის ID: {id}",
     typeToConfirm: "დასადასტურებლად ჩაწერეთ {text}",
     undo: "გაუქმება",
-    undone: "გაუქმდა",
   },
   language: {
     label: "ინტერფეისის ენა",

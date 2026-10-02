@@ -110,7 +110,7 @@ export function HandoffsScreen({ initialFilters }: { initialFilters: HandoffFilt
           </Card>
         ) : (
           <div
-            className={handoffs.isPlaceholder ? "opacity-60 transition-opacity" : "animate-settle"}
+            className={handoffs.isPlaceholder ? "animate-settle opacity-60 transition-opacity" : "animate-settle transition-opacity"}
             aria-busy={handoffs.isPlaceholder || undefined}
           >
             <ul className="space-y-3">

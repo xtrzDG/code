@@ -45,7 +45,6 @@ export const en = {
     requestId: "Request ID: {id}",
     typeToConfirm: "Type {text} to confirm",
     undo: "Undo",
-    undone: "Undone",
   },
   language: {
     label: "Interface language",

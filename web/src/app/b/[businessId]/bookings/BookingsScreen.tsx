@@ -76,7 +76,7 @@ export function BookingsScreen({ initialFilters }: { initialFilters: BookingFilt
           </Card>
         ) : (
           <div
-            className={bookings.isPlaceholder ? "opacity-60 transition-opacity" : "animate-settle"}
+            className={bookings.isPlaceholder ? "animate-settle opacity-60 transition-opacity" : "animate-settle transition-opacity"}
             aria-busy={bookings.isPlaceholder || undefined}
           >
             <BookingDays

@@ -39,7 +39,6 @@ export const ru: Messages = {
     requestId: "Номер запроса: {id}",
     typeToConfirm: "Введите {text} для подтверждения",
     undo: "Отменить",
-    undone: "Отменено",
   },
   language: {
     label: "Язык интерфейса",

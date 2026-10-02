@@ -141,7 +141,7 @@ export function DashboardScreen({ initialPeriod }: { initialPeriod: DashboardPer
         ) : (
           <section
             aria-labelledby="dashboard-period"
-            className={stats.isPlaceholder ? "space-y-4 opacity-60 transition-opacity" : "animate-settle space-y-4"}
+            className={stats.isPlaceholder ? "animate-settle space-y-4 opacity-60 transition-opacity" : "animate-settle space-y-4 transition-opacity"}
           >
             <div className="flex flex-wrap items-center justify-between gap-2">
               <h2 id="dashboard-period" className="text-sm font-semibold tracking-wide text-ink-muted uppercase">

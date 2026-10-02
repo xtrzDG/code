@@ -101,7 +101,7 @@ export function LeadsScreen({ initialFilters }: { initialFilters: LeadFilters })
           </Card>
         ) : (
           <div
-            className={leads.isPlaceholder ? "opacity-60 transition-opacity" : "animate-settle"}
+            className={leads.isPlaceholder ? "animate-settle opacity-60 transition-opacity" : "animate-settle transition-opacity"}
             aria-busy={leads.isPlaceholder || undefined}
           >
             <ul className="space-y-3">

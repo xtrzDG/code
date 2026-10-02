@@ -86,7 +86,7 @@ export function KnowledgeItemsScreen() {
             }
           />
         ) : (
-          <div className={items.isPlaceholder ? "opacity-60 transition-opacity" : "animate-settle"} aria-busy={items.isPlaceholder || undefined}>
+          <div className={items.isPlaceholder ? "animate-settle opacity-60 transition-opacity" : "animate-settle transition-opacity"} aria-busy={items.isPlaceholder || undefined}>
             <KnowledgeGroups list={list} />
           </div>
         )}

@@ -77,8 +77,8 @@ export function ConversationList({
   return (
     <div
       className={cn(
-        "overflow-hidden rounded-2xl border border-line bg-surface shadow-sm transition-opacity lg:min-h-0 lg:flex-1 lg:overflow-y-auto",
-        isStale ? "opacity-60" : "animate-settle",
+        "animate-settle overflow-hidden rounded-2xl border border-line bg-surface shadow-sm transition-opacity lg:min-h-0 lg:flex-1 lg:overflow-y-auto",
+        isStale && "opacity-60",
       )}
       aria-busy={isStale || undefined}
     >
