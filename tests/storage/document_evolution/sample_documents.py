@@ -127,9 +127,7 @@ def stable_uuid(path: str, version: int) -> uuid.UUID:
     path: the same golden on every run.
     """
 
-    return uuid.UUID(
-        bytes=hashlib.sha256(path.encode()).digest()[:16], version=version
-    )
+    return uuid.UUID(bytes=hashlib.sha256(path.encode()).digest()[:16], version=version)
 
 
 def constrained_text(annotation: type[BaseConstrainedTypedString]) -> str:

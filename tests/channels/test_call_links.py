@@ -24,7 +24,12 @@ from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.utilities.channels.call_links import read_promised_kind
 from tests.channels.channels_payloads import telegram_ok
 from tests.channels.channels_settings import TELEGRAM_BOT_TOKEN
-from tests.channels.post_call_steps import post_call, post_call_payload, stored_calls
+from tests.channels.post_call_steps import (
+    post_call,
+    post_call_payload,
+    process_call,
+    stored_calls,
+)
 from tests.channels.voice_setup import VoiceSetup, build_voice_setup
 
 MENU_URL: str = "https://funicular.example/menu"
@@ -112,9 +117,9 @@ def test_no_messenger_reaches_the_caller_and_the_call_is_still_stored() -> None:
     setup = links_setup(with_telegram=False)
     record_send_link(setup, "menu")
 
-    response = post_call(setup, post_call_payload(tool_names=("send_link",)))
+    outcome = process_call(setup, post_call_payload(tool_names=("send_link",)))
 
-    assert response.json()["status"] == "recorded"
+    assert outcome["status"] == "recorded"
     assert len(stored_calls(setup)) == 1
 
 
@@ -129,10 +134,10 @@ def test_a_failing_messenger_does_not_break_the_call_or_send_twice() -> None:
     record_send_link(setup, "menu")
     payload = post_call_payload(tool_names=("send_link",))
 
-    first = post_call(setup, payload)
+    first = process_call(setup, payload)
     repeated = post_call(setup, payload)
 
-    assert first.json()["status"] == "recorded"
+    assert first["status"] == "recorded"
     assert repeated.json()["status"] == "duplicate"
     assert len(setup.testbed.telegram_transport.requests_to("/sendMessage")) == 1
 

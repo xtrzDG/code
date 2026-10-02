@@ -23,6 +23,7 @@ from tests.channels.post_call_steps import (
     add_booking,
     post_call,
     post_call_payload,
+    process_call,
     stored_calls,
 )
 from tests.channels.voice_setup import VoiceSetup, build_voice_setup
@@ -116,7 +117,7 @@ def test_an_invented_price_in_a_booking_call_goes_to_staff() -> None:
     setup = priced_setup()
     add_booking(setup)
 
-    response = post_call(
+    outcome = process_call(
         setup,
         call_with_lines(
             [
@@ -128,7 +129,7 @@ def test_an_invented_price_in_a_booking_call_goes_to_staff() -> None:
         ),
     )
 
-    assert response.json()["outcome"] == "booking"
+    assert outcome["outcome"] == "booking"
     [call] = stored_calls(setup)
     assert call.guard_verdict is CallGuardVerdict.HANDED_OFF
     assert call.unverified_values == ["30 lari"]

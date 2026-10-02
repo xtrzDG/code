@@ -1,3 +1,5 @@
+import sys
+
 from dependency_injector import containers
 from dependency_injector.providers import Container
 
@@ -17,6 +19,16 @@ from app.containers.time_provider import TimeProviderContainer
 from app.containers.transformers import TransformersContainer
 from app.containers.use_cases.use_cases_container import UseCasesContainer
 from app.containers.utilities import UtilitiesContainer
+
+# Building AppContainer deep-copies the whole provider graph (how
+# dependency-injector instantiates a DeclarativeContainer), one Python frame
+# per edge of the deepest copy path: about 925 frames for this graph, too
+# close to CPython's default limit of 1000 once a server's or a test
+# runner's own frames sit below it. A process that builds the container gets
+# headroom; recursion stays bounded.
+CONTAINER_BUILD_RECURSION_LIMIT: int = 3000
+if sys.getrecursionlimit() < CONTAINER_BUILD_RECURSION_LIMIT:
+    sys.setrecursionlimit(CONTAINER_BUILD_RECURSION_LIMIT)
 
 
 class AppContainer(containers.DeclarativeContainer):
