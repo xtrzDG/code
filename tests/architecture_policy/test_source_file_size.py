@@ -7,20 +7,31 @@ in data modules), not cut at an arbitrary line.
 """
 
 from dataclasses import dataclass
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 
 MAX_SOURCE_FILE_LINES: int = 300
 PROJECT_ROOT: Path = Path(__file__).resolve().parents[2]
+CABINET_SUFFIXES: frozenset[str] = frozenset({".ts", ".tsx", ".mts", ".css"})
 # Checked folders (relative to the project root) and the suffixes of their
 # source files. The widget's parts are assembled into /widget.js at startup.
 # Tests follow the same rule: shared fixtures and fakes live in their own
 # modules next to the test files that use them. The cabinet (web/) has the
-# same limit in its ESLint config (max-lines).
+# same limit in its ESLint config (max-lines) as well.
 CHECKED_SOURCE_ROOTS: tuple[tuple[str, frozenset[str]], ...] = (
     ("app", frozenset({".py"})),
     ("scripts", frozenset({".py"})),
     ("app/gateways/http/static", frozenset({".js", ".html"})),
     ("tests", frozenset({".py"})),
+    ("web/src", CABINET_SUFFIXES),
+    ("web/e2e", CABINET_SUFFIXES),
+)
+# Not hand-written, or data rather than code: the generated API client and
+# tables (`npm run gen:api`), and the translation dictionaries, which are
+# split by section and language rather than by length.
+EXEMPT_PATH_PATTERNS: tuple[str, ...] = (
+    "web/src/api/schema.d.ts",
+    "web/src/**/*.generated.ts",
+    "web/src/i18n/messages/**",
 )
 
 
@@ -77,4 +88,20 @@ def list_source_files(root_path: Path, suffixes: frozenset[str]) -> list[Path]:
         if file_path.is_file()
         and file_path.suffix in suffixes
         and "__pycache__" not in file_path.parts
+        and "node_modules" not in file_path.parts
+        and not is_exempt(file_path)
     )
+
+
+def is_exempt(file_path: Path) -> bool:
+    relative_path = PurePosixPath(file_path.relative_to(PROJECT_ROOT).as_posix())
+    return any(relative_path.full_match(pattern) for pattern in EXEMPT_PATH_PATTERNS)
+
+
+def test_exempt_files_are_only_generated_files_and_dictionaries() -> None:
+    assert is_exempt(PROJECT_ROOT / "web/src/api/schema.d.ts")
+    assert is_exempt(PROJECT_ROOT / "web/src/lib/displayNames.generated.ts")
+    assert is_exempt(PROJECT_ROOT / "web/src/i18n/messages/sections/settings/en.ts")
+    assert not is_exempt(PROJECT_ROOT / "web/src/i18n/translate.ts")
+    assert not is_exempt(PROJECT_ROOT / "web/src/api/client.ts")
+    assert not is_exempt(PROJECT_ROOT / "app/main.py")
