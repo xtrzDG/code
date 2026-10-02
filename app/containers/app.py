@@ -7,7 +7,9 @@ from app.containers.config import ConfigContainer
 from app.containers.facilitators import FacilitatorsContainer
 from app.containers.gateways import GatewaysContainer
 from app.containers.operators import OperatorsContainer
-from app.containers.orchestrators import OrchestratorsContainer
+from app.containers.orchestrators.orchestrators_container import (
+    OrchestratorsContainer,
+)
 from app.containers.pipelines import PipelinesContainer
 from app.containers.registries import RegistriesContainer
 from app.containers.repositories import RepositoriesContainer
