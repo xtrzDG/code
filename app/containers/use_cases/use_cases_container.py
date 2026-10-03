@@ -22,6 +22,7 @@ from app.containers.use_cases.notification_use_cases import (
 from app.containers.use_cases.platform_use_cases import PlatformUseCasesContainer
 from app.containers.use_cases.setup_use_cases import SetupUseCasesContainer
 from app.containers.use_cases.sharing_use_cases import SharingUseCasesContainer
+from app.containers.use_cases.value_use_cases import ValueUseCasesContainer
 from app.containers.use_cases.voice_use_cases import VoiceUseCasesContainer
 from app.use_cases.example_use_case import ExampleUseCase
 
@@ -196,6 +197,15 @@ class UseCasesContainer(CoreUseCasesContainer):
         repositories=CoreUseCasesContainer.repositories,
         time_provider=CoreUseCasesContainer.time_provider,
         utilities=CoreUseCasesContainer.utilities,
+        account_use_cases=CoreUseCasesContainer.accounts,
+    )
+    value: ValueUseCasesContainer = Container(  # type: ignore[assignment]
+        ValueUseCasesContainer,
+        config=CoreUseCasesContainer.config,
+        facilitators=CoreUseCasesContainer.facilitators,
+        registries=CoreUseCasesContainer.registries,
+        repositories=CoreUseCasesContainer.repositories,
+        time_provider=CoreUseCasesContainer.time_provider,
         account_use_cases=CoreUseCasesContainer.accounts,
     )
     demo: DemoUseCasesContainer = Container(  # type: ignore[assignment]

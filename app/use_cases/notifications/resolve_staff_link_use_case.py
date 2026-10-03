@@ -72,6 +72,7 @@ class ResolveStaffLinkUseCase(UseCaseContract[StaffLinkQuery, StaffLinkView]):
             lead_id=claims.lead_id,
             booking_id=claims.booking_id,
             booking_date=self._booking_date(business, claims),
+            value_report_id=claims.value_report_id,
             expires_at=claims.expires_at,
         )
 

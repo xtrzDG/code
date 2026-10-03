@@ -29,6 +29,7 @@ from tests.e2e.workshop_container import OverridableProvider, replace_provider
 from tests.operations.fake_google import FakeGoogle
 from tests.platform.authorization_inbox import inbox_path_values
 from tests.platform.authorization_notifications import notification_path_values
+from tests.platform.authorization_value import value_path_values
 
 type JsonObject = dict[str, Any]
 type Headers = dict[str, str]
@@ -202,6 +203,9 @@ def discover_path_values(
         notification_path_values(
             world.workshop, world.storage_scope, world.business_b, world.owner_b
         )
+    )
+    values.update(
+        value_path_values(world.workshop, world.storage_scope, world.business_b)
     )
     values.update(
         inbox_path_values(

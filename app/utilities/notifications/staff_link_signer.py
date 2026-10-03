@@ -29,6 +29,7 @@ from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.conversations.prefixed_id import ConversationId
 from app.schemas.typings.notifications.constrained_strings import StaffLinkToken
 from app.schemas.typings.platform.strings import PlatformSecret
+from app.schemas.typings.value.prefixed_id import ValueReportId
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -45,6 +46,7 @@ TARGET_CODES: dict[StaffLinkTarget, int] = {
     StaffLinkTarget.LEAD: 2,
     StaffLinkTarget.BOOKING: 3,
     StaffLinkTarget.NOTIFICATIONS: 4,
+    StaffLinkTarget.REPORT: 5,
 }
 TARGETS_BY_CODE: dict[int, StaffLinkTarget] = {
     code: target for target, code in TARGET_CODES.items()
@@ -133,6 +135,9 @@ def target_id_bytes(claims: StaffLinkClaims) -> bytes:
     if claims.target is StaffLinkTarget.BOOKING and claims.booking_id:
         return uuid_bytes(str(claims.booking_id), BookingId.prefix)
 
+    if claims.target is StaffLinkTarget.REPORT and claims.value_report_id:
+        return uuid_bytes(str(claims.value_report_id), ValueReportId.prefix)
+
     return NO_TARGET_ID
 
 
@@ -158,6 +163,11 @@ def build_claims(
         booking_id=(
             BookingId(identifier)
             if has_id and target is StaffLinkTarget.BOOKING
+            else None
+        ),
+        value_report_id=(
+            ValueReportId(identifier)
+            if has_id and target is StaffLinkTarget.REPORT
             else None
         ),
         expires_at=expires_at,

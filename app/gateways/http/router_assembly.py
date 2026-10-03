@@ -31,6 +31,7 @@ from app.gateways.http.user_authentication import (
     build_current_user_dependency,
 )
 from app.gateways.http.users_routes import build_users_router
+from app.gateways.http.value_router_assembly import build_value_routers
 from app.gateways.http.voice_routes import build_voice_router
 from app.gateways.http.website_import_routes import build_website_import_router
 from app.gateways.http.widget_error_routes import build_widget_error_router
@@ -288,4 +289,5 @@ def build_application_routers(app_container: AppContainer) -> list[APIRouter]:
         *build_call_routers(operators, current_user),
         *build_inbox_routers(operators, current_user),
         *build_sharing_routers(operators, current_user),
+        *build_value_routers(operators, current_user),
     ]

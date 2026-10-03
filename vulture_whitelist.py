@@ -254,3 +254,11 @@ _.source_page_url  # app/schemas/dto/menu_import.py
 # HTMLParser calls handle_startendtag for "<br/>"-style tags.
 _.connect_unix_socket  # app/clients/http/vetting_network_backend.py
 _.handle_startendtag  # app/utilities/knowledge/website/html_to_text.py
+# The value of a business, its digests and reports: totals and settings the
+# cabinet shows (dashboard hero, Reports page, digest choices).
+_.assistant_reply_count  # app/schemas/dto/value/value_model.py, domain/value_reports.py
+_.call_count  # app/schemas/dto/value/value_model.py, domain/value_reports.py
+_.typical_check_minor  # app/schemas/dto/value/value_model.py, value_views.py
+_.is_email_ready  # app/schemas/dto/value/value_views.py
+_.device_count  # app/schemas/dto/value/value_views.py
+_.upcoming_booking_count  # app/schemas/dto/value/value_views.py

@@ -16,16 +16,18 @@ class ValueReportKind(StrEnum):
 class ValuePeriod(StrEnum):
     """
     A period the cabinet asks the value of, in the business time zone:
-    today, the last 7, 30 or 90 days up to today, the last full week
-    (Monday to Sunday) or the last full calendar month. Each is compared
-    with the period just before it (of the same length; the month before
-    for a month).
+    today, the last 7, 30 or 90 days up to today, this month so far, the
+    last full week (Monday to Sunday) or the last full calendar month.
+    Each is compared with the period just before it (of the same length;
+    the month before for a month, the same days of the month before for
+    this month so far).
     """
 
     TODAY = "today"
     LAST_7_DAYS = "7d"
     LAST_30_DAYS = "30d"
     LAST_90_DAYS = "90d"
+    THIS_MONTH = "this_month"
     LAST_WEEK = "last_week"
     LAST_MONTH = "last_month"
 
