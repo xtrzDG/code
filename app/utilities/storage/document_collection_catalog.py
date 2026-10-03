@@ -35,6 +35,7 @@ from app.schemas.domain.conversations import (
     LlmTurnDocument,
     MessageDocument,
 )
+from app.schemas.domain.exchange_rates import ExchangeRateDocument
 from app.schemas.domain.feedback import FeedbackRequestDocument, ReviewSettingsDocument
 from app.schemas.domain.handoffs import HandoffDocument, UnansweredQuestionDocument
 from app.schemas.domain.inbound_events import InboundEventDocument
@@ -271,6 +272,10 @@ DOCUMENT_COLLECTIONS: tuple[DocumentCollectionDefinition, ...] = (
     # Key management: the latest re-encryption of the stored secrets (1063).
     DocumentCollectionDefinition(
         DocumentCollectionName("key_rotations"), KeyRotationDocument
+    ),
+    # Dated exchange rates of the NBG and ECB feeds (1071).
+    DocumentCollectionDefinition(
+        DocumentCollectionName("exchange_rates"), ExchangeRateDocument
     ),
 )
 

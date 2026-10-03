@@ -10,7 +10,7 @@ from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.payments import PaymentOrderDocument
 from app.schemas.dto.billing_ledger import DueInvoicesRequest
 from app.schemas.typings.billing.strings import PaymentProviderReference
-from app.use_cases.billing.billing_records import (
+from app.use_cases.shared.billing_records import (
     OPEN_INVOICE_STATUSES,
     find_next_period_start,
     is_superseded_period,

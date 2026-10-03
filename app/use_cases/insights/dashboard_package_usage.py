@@ -13,8 +13,8 @@ from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.dto.billing import PlanDefinition
 from app.schemas.dto.billing_ledger import PackageUsageTotals
 from app.schemas.dto.operations.dashboard import DashboardPackageUsage
-from app.use_cases.billing.billing_records import find_current_subscription
-from app.use_cases.billing.package_usage import (
+from app.use_cases.shared.billing_records import find_current_subscription
+from app.use_cases.shared.package_usage import (
     compute_overage_minutes,
     compute_usage_percent,
     summarize_package_usage,

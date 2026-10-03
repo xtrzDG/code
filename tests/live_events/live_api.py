@@ -116,7 +116,7 @@ class LiveApi:
                         wall_clock=world.clock.wall_clock,
                     )
                 ),
-                get_attention_counts=operator(world.get_attention_counts()),
+                count_inbox_attention=operator(world.count_attention()),
                 stream_facilitator=self.streams,
                 limits=limits,
             )

@@ -50,7 +50,7 @@ from app.use_cases.conversations.feed.conversation_rows import build_view_source
 from app.use_cases.conversations.staff_reply_support import (
     assess_conversation_reply,
 )
-from app.use_cases.inbox.assignment.assignment_views import build_assignment_view
+from app.use_cases.shared.assignment_views import build_assignment_view
 from app.utilities.paging.keyset_paging import finish_page, read_slice
 
 CONVERSATION_ENTITY: AuditEntityName = AuditEntityName("conversation")

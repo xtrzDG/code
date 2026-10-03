@@ -18,7 +18,7 @@ from app.schemas.dto.billing_cabinet import (
     StartCheckoutRequest,
 )
 from app.schemas.exceptions.application_errors import ConflictError
-from app.use_cases.billing.billing_records import is_service_paid_for
+from app.use_cases.shared.billing_records import is_service_paid_for
 from app.utilities.billing.billing_periods import to_local_calendar_day
 from tests.billing.billing_settings import CABINET_ORIGIN
 from tests.billing.subscribe_world import World

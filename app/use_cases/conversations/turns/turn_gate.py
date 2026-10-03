@@ -17,7 +17,7 @@ from app.schemas.domain.conversations import ConversationDocument
 from app.schemas.typings.conversations.constrained_integers import (
     ContactMessageLimit,
 )
-from app.use_cases.conversations.turns.turn_time import to_microseconds
+from app.use_cases.shared.turn_time import to_microseconds
 
 CONTACT_LIMIT_WINDOW: timedelta = timedelta(hours=1)
 

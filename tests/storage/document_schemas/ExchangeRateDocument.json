@@ -1,0 +1,81 @@
+{
+  "collection": "exchange_rates",
+  "document_type": "ExchangeRateDocument",
+  "schema_version": 1,
+  "shape": {
+    "additionalProperties": false,
+    "properties": {
+      "base_currency_code": {
+        "maxLength": 3,
+        "minLength": 3,
+        "pattern": "^[A-Z]{3}$",
+        "type": "string"
+      },
+      "created_at": {
+        "type": "integer"
+      },
+      "fetched_at": {
+        "type": "integer"
+      },
+      "is_derived": {
+        "default": false,
+        "type": "boolean"
+      },
+      "pair": {
+        "maxLength": 7,
+        "minLength": 7,
+        "pattern": "^[A-Z]{3}/[A-Z]{3}$",
+        "type": "string"
+      },
+      "quote_currency_code": {
+        "maxLength": 3,
+        "minLength": 3,
+        "pattern": "^[A-Z]{3}$",
+        "type": "string"
+      },
+      "rate": {
+        "maxLength": 25,
+        "minLength": 1,
+        "pattern": "^(?=[0-9.]*[1-9])(0|[1-9][0-9]{0,11})(\\.[0-9]{1,12})?$",
+        "type": "string"
+      },
+      "rate_date": {
+        "maxLength": 10,
+        "minLength": 10,
+        "pattern": "^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$",
+        "type": "string"
+      },
+      "rate_day": {
+        "maximum": 99991231,
+        "minimum": 19700101,
+        "type": "integer"
+      },
+      "schema_version": {
+        "default": "1",
+        "type": "string"
+      },
+      "source": {
+        "enum": [
+          "nbg",
+          "ecb",
+          "planning"
+        ],
+        "type": "string"
+      },
+      "updated_at": {
+        "type": "integer"
+      }
+    },
+    "required": [
+      "base_currency_code",
+      "quote_currency_code",
+      "pair",
+      "rate",
+      "rate_date",
+      "rate_day",
+      "source",
+      "fetched_at"
+    ],
+    "type": "object"
+  }
+}

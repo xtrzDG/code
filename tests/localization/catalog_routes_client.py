@@ -12,7 +12,6 @@ from app.gateways.http.user_authentication import build_current_user_dependency
 from app.operators.pipeline_operator import PipelineOperator
 from app.orchestrators.use_case_orchestrator import UseCaseOrchestrator
 from app.pipelines.orchestrator_pipeline import OrchestratorPipeline
-from app.registries.billing.exchange_rate_registry import ExchangeRateRegistry
 from app.registries.billing.plan_registry import PlanRegistry
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.exceptions.application_errors import AuthenticationRequiredError
@@ -27,6 +26,7 @@ from app.use_cases.localization.parse_phone_number_use_case import (
 )
 from app.utilities.localization.localized_text_resolver import LocalizedTextResolver
 from app.utilities.localization.phone_number_parser import PhoneNumberParser
+from tests.billing.exchange_rate_fixtures import rate_registry
 from tests.localization.builders import (
     JULY_2026_NANOSECONDS,
     build_business,
@@ -97,7 +97,7 @@ def build_client() -> tuple[TestClient, BusinessDocument]:
                     QuotePlansUseCase(
                         plan_registry=PlanRegistry(),
                         country_registry=country_registry,
-                        exchange_rate_registry=ExchangeRateRegistry(),
+                        exchange_rate_registry=rate_registry(),
                         localized_text_resolver=LocalizedTextResolver(),
                     )
                 )

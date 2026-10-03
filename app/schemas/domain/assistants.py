@@ -5,6 +5,7 @@ from typed_time_provider import Microseconds
 from app.schemas.constants.assistants import (
     AssistantToolName,
     AssistantVersionStatus,
+    AutotestCheckCode,
     AutotestOutcome,
     AutotestRunStatus,
     AutotestScenarioKind,
@@ -56,6 +57,25 @@ class BusinessFact(PersistentDocument):
     value: FactValue
 
 
+class AutotestVerdict(PersistentDocument):
+    """
+    The verdict of the latest finished autotest run of a version, stored on
+    the version when the run finishes: the one place every screen reads
+    "passed or not" from (the version page, the platform admin, go-live).
+    `scenario_count - passed_count` scenarios failed; a run can pass with
+    a few of them failed (concept section 11: every price and booking
+    scenario passed and an average judge score of at least 4).
+    """
+
+    run_id: AutotestRunId
+    is_passed: IsAutotestRunPassed
+    scenario_count: AutotestScenarioCount
+    passed_count: AutotestScenarioCount
+    average_score: AverageJudgeScore | None = None
+    is_full_coverage: IsFullAutotestCoverage = False
+    finished_at: Microseconds
+
+
 class AssistantVersionDocument(BaseDocument):
     """
     Immutable result of assembling the profile with a niche template
@@ -64,7 +84,9 @@ class AssistantVersionDocument(BaseDocument):
     """
 
     # 2: `phone_prompt_text` (optional, so version 1 needs no upcaster).
-    schema_version: SchemaVersion = SchemaVersion("2")
+    # 3: `autotest_verdict` (optional: a version tested before it existed
+    #    has none, and readers fall back to its status).
+    schema_version: SchemaVersion = SchemaVersion("3")
     id: AssistantVersionId = Field(default_factory=AssistantVersionId)
     business_id: BusinessId
     version_number: AssistantVersionNumber
@@ -84,6 +106,7 @@ class AssistantVersionDocument(BaseDocument):
     voice_agent_id: VoiceAgentId | None = None
     test_score: AverageJudgeScore | None = None
     autotest_run_id: AutotestRunId | None = None
+    autotest_verdict: AutotestVerdict | None = None
     published_at: Microseconds | None = None
 
 
@@ -107,8 +130,9 @@ class AutotestScenarioResult(PersistentDocument):
 
     `check_notes` come from the test harness: failed deterministic checks
     (no booking created, no handoff, reply in another language) and why an
-    ERRORED scenario could not be evaluated. The judge explains its scores
-    in `judge_notes`.
+    ERRORED scenario could not be evaluated; `check_codes` say the same as
+    codes every language renders (empty on results stored before codes
+    existed). The judge explains its scores in `judge_notes`.
     """
 
     scenario_key: AutotestScenarioKey
@@ -119,6 +143,9 @@ class AutotestScenarioResult(PersistentDocument):
     judge_notes: list[JudgeNote] = Field(default_factory=list[JudgeNote])
     check_notes: list[AutotestCheckNote] = Field(
         default_factory=list[AutotestCheckNote]
+    )
+    check_codes: list[AutotestCheckCode] = Field(
+        default_factory=list[AutotestCheckCode]
     )
     transcript: list[AutotestTranscriptLine] = Field(
         default_factory=list[AutotestTranscriptLine]
@@ -140,6 +167,8 @@ class AutotestRunDocument(BaseDocument):
     is the version's status before the run, restored when the run errors.
     """
 
+    # 2: `check_codes` on the scenario results (optional, no upcaster).
+    schema_version: SchemaVersion = SchemaVersion("2")
     id: AutotestRunId = Field(default_factory=AutotestRunId)
     business_id: BusinessId
     assistant_version_id: AssistantVersionId

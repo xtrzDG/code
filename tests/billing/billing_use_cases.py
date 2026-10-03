@@ -205,7 +205,6 @@ class BillingUseCases(BillingInfrastructure):
         summarize_client = SummarizeClientUseCase(
             subscription_repo=self.subscription_repo,
             assistant_version_repo=self.assistant_version_repo,
-            autotest_run_repo=self.autotest_run_repo,
             handoff_repo=self.handoff_repo,
             unanswered_question_repo=self.question_repo,
             message_repo=self.message_repo,

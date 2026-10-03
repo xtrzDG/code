@@ -1,5 +1,6 @@
 "use client";
 
+import type { Schema } from "@/api/types";
 import { Badge, Card } from "@/components/ui";
 import { Facts } from "@/components/workspace/Facts";
 import { useI18n } from "@/i18n/client";
@@ -8,6 +9,29 @@ import { formatNumber } from "@/lib/format";
 import type { AdminClientSummary } from "../../_lib/clients";
 import { useClientFormat } from "../../_lib/useClientFormat";
 import { BUSINESS_STATUS_LABELS, PLAN_LABELS, SUBSCRIPTION_LABELS } from "../labels";
+
+/** The active version's stored verdict: passed or not, and how many scenarios passed when the run counted them. */
+function VerdictValue({ verdict }: { verdict: Schema<"ClientAutotestVerdict"> }) {
+  const { t, locale } = useI18n();
+  const counted = verdict.passed_count !== null && verdict.passed_count !== undefined && Boolean(verdict.scenario_count);
+  return (
+    <span className="inline-flex flex-wrap items-center gap-2">
+      <Badge tone={verdict.is_passed ? "success" : "danger"}>
+        {t(verdict.is_passed ? "admin.detail.facts.verdictPassed" : "admin.detail.facts.verdictFailed", {
+          number: verdict.version_number,
+        })}
+      </Badge>
+      {counted ? (
+        <span className="text-sm text-ink-muted">
+          {t("admin.detail.facts.verdictCounts", {
+            passed: formatNumber(verdict.passed_count ?? 0, locale),
+            total: formatNumber(verdict.scenario_count ?? 0, locale),
+          })}
+        </span>
+      ) : null}
+    </span>
+  );
+}
 
 /** The client's status, plan, subscription, published version and recent trouble. */
 export function OverviewCard({ summary, timeZone }: { summary: AdminClientSummary; timeZone: string }) {
@@ -64,6 +88,10 @@ export function OverviewCard({ summary, timeZone }: { summary: AdminClientSummar
               summary.last_test_score !== null && summary.last_test_score !== undefined
                 ? `${formatNumber(summary.last_test_score, locale, { maximumFractionDigits: 1 })} / 5`
                 : t("admin.unknown"),
+          },
+          {
+            label: t("admin.detail.facts.verdict"),
+            value: summary.autotest_verdict ? <VerdictValue verdict={summary.autotest_verdict} /> : t("admin.unknown"),
           },
           { label: t("admin.detail.facts.failedTests"), value: formatNumber(summary.failed_tests, locale) },
           { label: t("admin.detail.facts.handoffs"), value: formatNumber(summary.handoffs_last_7_days, locale) },

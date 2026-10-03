@@ -47,12 +47,12 @@ from app.schemas.typings.handoffs.constrained_integers import (
 from app.schemas.typings.handoffs.strings import HandoffSummary
 from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.schemas.typings.localization.strings import FormattedPhoneNumber
-from app.use_cases.bookings.operations_support import (
-    display_phone,
-    require_business,
-)
 from app.use_cases.handoffs.handoff_reopening import build_customer_message_input
-from app.use_cases.notifications.staff_alerts import StaffAlertTexts, handoff_alert
+from app.use_cases.shared.business_access import require_business
+from app.use_cases.shared.operations_support import (
+    display_phone,
+)
+from app.use_cases.shared.staff_alerts import StaffAlertTexts, handoff_alert
 
 
 class HandoffToHumanUseCase(UseCaseContract[HandoffCommand, HandoffResult]):

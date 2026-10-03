@@ -65,8 +65,11 @@ class RegistriesContainer(containers.DeclarativeContainer):
     # reply or a call takes (the value estimates).
     niche_value_registry: Singleton[NicheValueRegistry] = Singleton(NicheValueRegistry)
     plan_registry: Singleton[PlanRegistry] = Singleton(PlanRegistry)
+    # Dated rates of the NBG and ECB feeds, the catalog as fallback.
     exchange_rate_registry: Singleton[ExchangeRateRegistry] = Singleton(
-        ExchangeRateRegistry
+        ExchangeRateRegistry,
+        exchange_rate_repo=repositories.exchange_rate_repo,
+        wall_clock=time_provider.microsecond_wall_clock,
     )
     call_forwarding_guide_registry: Singleton[CallForwardingGuideRegistry] = Singleton(
         CallForwardingGuideRegistry

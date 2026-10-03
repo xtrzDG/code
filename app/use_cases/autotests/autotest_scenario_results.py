@@ -6,9 +6,12 @@ from app.schemas.domain.assistants import (
     AutotestScenarioResult,
     AutotestTranscriptLine,
 )
-from app.schemas.dto.assistants.autotest_runs import AutotestScenarioRun, JudgeVerdict
+from app.schemas.dto.assistants.autotest_runs import (
+    AutotestCheckFailure,
+    AutotestScenarioRun,
+    JudgeVerdict,
+)
 from app.schemas.dto.conversations import AssistantReply
-from app.schemas.typings.assistants.strings import AutotestCheckNote
 from app.schemas.typings.billing.constrained_integers import CostMicroUsd
 from app.schemas.typings.conversations.prefixed_id import ConversationId
 
@@ -41,7 +44,7 @@ def build_scenario_result(
     outcome: AutotestOutcome,
     *,
     transcript: list[AutotestTranscriptLine],
-    check_notes: list[AutotestCheckNote],
+    check_failures: list[AutotestCheckFailure],
     cost: CostMicroUsd,
     verdict: JudgeVerdict | None = None,
 ) -> AutotestScenarioResult:
@@ -52,7 +55,8 @@ def build_scenario_result(
         outcome=outcome,
         scores=list(verdict.scores) if verdict is not None else [],
         judge_notes=list(verdict.notes) if verdict is not None else [],
-        check_notes=check_notes,
+        check_notes=[failure.note for failure in check_failures],
+        check_codes=[failure.code for failure in check_failures],
         transcript=list(transcript),
         cost_micro_usd=cost,
     )

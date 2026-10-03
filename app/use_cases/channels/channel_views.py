@@ -8,6 +8,7 @@ from app.schemas.domain.channels import (
 )
 from app.schemas.dto.channels.channel_settings import ChannelView
 from app.schemas.dto.staff_reply_templates import WhatsAppStaffTemplateView
+from app.utilities.sharing.share_links import find_link_state
 
 # Order of channels in the cabinet: free messengers first (concept: cheap
 # channels are shown to customers first), then WhatsApp, web and phone.
@@ -46,6 +47,7 @@ def build_channel_view(channel: ChannelDocument) -> ChannelView:
                 language_code=staff_template.language_code,
             )
         ),
+        link_state=find_link_state(channel),
     )
 
 

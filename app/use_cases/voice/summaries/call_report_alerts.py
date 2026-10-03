@@ -18,7 +18,7 @@ from app.schemas.typings.notifications.constrained_strings import (
     PushNotificationTag,
     StaffAlertSubject,
 )
-from app.use_cases.notifications.staff_alerts import StaffAlertTexts
+from app.use_cases.shared.staff_alerts import StaffAlertTexts
 from app.use_cases.voice.summaries.call_summary_writer import pick_summary
 
 # A summary after every call goes to the chats staff linked (it carries the

@@ -48,7 +48,6 @@ from app.schemas.dto.operations.dashboard import (
 )
 from app.schemas.typings.conversations.prefixed_id import ConversationId
 from app.schemas.typings.insights.constrained_integers import PeriodItemCount
-from app.use_cases.bookings.operations_support import require_business
 from app.use_cases.insights.dashboard_activity import (
     ConversationActivity,
     DailyCounts,
@@ -68,6 +67,7 @@ from app.use_cases.insights.dashboard_timeline import (
     build_timeline,
     timeline_period,
 )
+from app.use_cases.shared.business_access import require_business
 from app.utilities.scheduling.opening_hours import DayRanges, business_day_ranges
 from app.utilities.scheduling.zoned_time import (
     load_time_zone,

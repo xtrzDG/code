@@ -2,21 +2,23 @@
 Exact money arithmetic on minor units with Decimal.
 
 Minor-unit precision comes from CLDR (Babel): EUR and GEL 2, JPY 0, KWD 3.
-Every result is rounded once, half up, to the precision of its currency.
+Every result is rounded once to the precision of its currency: prices half
+up, conversions between currencies half to even (no drift either way over
+many conversions).
 """
 
-from decimal import ROUND_HALF_UP, Decimal
+from decimal import ROUND_HALF_EVEN, ROUND_HALF_UP, Decimal
 
 from babel.numbers import get_currency_precision
 
 from app.schemas.dto.billing import Money
 from app.schemas.exceptions.application_errors import ValidationFailedError
-from app.schemas.typings.billing.constrained_floats import ExchangeRate
 from app.schemas.typings.billing.constrained_integers import (
     CurrencyMinorUnitDigits,
     DiscountPercent,
     MoneyAmountMinor,
 )
+from app.schemas.typings.billing.constrained_strings import ExchangeRateValue
 from app.schemas.typings.localization.constrained_strings import CurrencyCode
 
 WHOLE_MINOR_UNIT: Decimal = Decimal(1)
@@ -38,9 +40,13 @@ def convert_money_to_major_units(money: Money) -> Decimal:
     return Decimal(int(money.amount_minor)).scaleb(-digits)
 
 
-def build_money_from_major_units(amount: Decimal, currency_code: CurrencyCode) -> Money:
+def build_money_from_major_units(
+    amount: Decimal,
+    currency_code: CurrencyCode,
+    rounding: str = ROUND_HALF_UP,
+) -> Money:
     """
-    Decimal("0.44328") GEL -> 44 minor units, rounded half up.
+    Decimal("0.44328") GEL -> 44 minor units, rounded half up (or as asked).
 
     Raises:
         ValidationFailedError: the amount is negative or not finite.
@@ -52,7 +58,7 @@ def build_money_from_major_units(amount: Decimal, currency_code: CurrencyCode) -
     digits: int = int(get_currency_minor_unit_digits(currency_code))
     minor_units: Decimal = amount.scaleb(digits).quantize(
         WHOLE_MINOR_UNIT,
-        rounding=ROUND_HALF_UP,
+        rounding=rounding,
     )
     if minor_units < 0:
         raise ValidationFailedError("Money amount cannot be negative.")
@@ -65,19 +71,19 @@ def build_money_from_major_units(amount: Decimal, currency_code: CurrencyCode) -
 
 def convert_money(
     money: Money,
-    exchange_rate: ExchangeRate,
+    exchange_rate: ExchangeRateValue,
     target_currency_code: CurrencyCode,
 ) -> Money:
     """
     Convert with a rate in target units per source unit: 0.15 EUR x 2.9552 ->
-    0.44 GEL. The rate is read as its shortest decimal form, never as a binary
-    float product.
+    0.44 GEL. The rate is its exact decimal string, never a binary float;
+    the result is rounded half to even.
     """
 
-    rate: Decimal = Decimal(repr(float(exchange_rate)))
     return build_money_from_major_units(
-        convert_money_to_major_units(money) * rate,
+        convert_money_to_major_units(money) * Decimal(str(exchange_rate)),
         target_currency_code,
+        ROUND_HALF_EVEN,
     )
 
 

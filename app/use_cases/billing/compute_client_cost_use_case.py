@@ -36,10 +36,10 @@ from app.schemas.typings.billing.constrained_integers import (
 from app.schemas.typings.billing.integers import MarginAmountMinor
 from app.schemas.typings.conversations.prefixed_id import ConversationId
 from app.schemas.typings.localization.constrained_strings import CurrencyCode
-from app.use_cases.billing.billing_records import find_current_subscription
 from app.use_cases.billing.planned_provider_costs import (
     PLANNED_MONTHLY_PROVIDER_COSTS,
 )
+from app.use_cases.shared.billing_records import find_current_subscription
 from app.utilities.billing.client_cost_math import (
     LLM_USAGE_KINDS,
     MICRO_UNITS_PER_UNIT,
@@ -65,9 +65,10 @@ class ComputeClientCostUseCase(UseCaseContract[ClientCostQuery, ClientCostReport
     the two records, so that neither a missing message nor a missing event
     hides spend. Revenue: paid invoices prorated by the share of their
     service period inside the window (a setup fee counts when invoiced), in
-    the subscription currency. The USD cost is converted with an official
-    rate (direct, or the inverse of the published pair); without one, the
-    money cost and the margin stay empty rather than invented.
+    the subscription currency. The USD cost is converted with the newest
+    dated rate (published, inverse or a cross rate through the euro, shown
+    with its date and source); without one, the money cost and the margin
+    stay empty rather than invented.
     """
 
     def __init__(

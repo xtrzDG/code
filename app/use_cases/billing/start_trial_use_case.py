@@ -22,8 +22,8 @@ from app.schemas.exceptions.application_errors import (
     ConflictError,
     ValidationFailedError,
 )
-from app.use_cases.billing.billing_records import is_trial_available
-from app.use_cases.billing.trial_subscriptions import open_trial_subscription
+from app.use_cases.shared.billing_records import is_trial_available
+from app.use_cases.shared.trial_subscriptions import open_trial_subscription
 
 
 class StartTrialUseCase(UseCaseContract[StartTrialCommand, BillingOverview]):

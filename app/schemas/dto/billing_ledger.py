@@ -111,8 +111,9 @@ class ClientCostReport(ImmutableDTO):
 
     Provider costs are in micro US dollars (provider price lists); revenue is
     the paid invoices of the period in the subscription currency, prorated
-    by service time. The cost is converted with an official rate when the
-    catalog has one; without it the money cost and the margin stay empty.
+    by service time. The cost is converted with the newest dated rate
+    (`exchange_rate`, with its date, source and whether it is derived or
+    stale); without one the money cost and the margin stay empty.
     """
 
     business_id: BusinessId

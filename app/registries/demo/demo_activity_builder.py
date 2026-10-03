@@ -2,6 +2,7 @@ from collections.abc import Sequence
 
 from typed_time_provider import Microseconds
 
+from app.registries.demo.demo_billing import metered_usage
 from app.registries.demo.demo_clock import DemoClock
 from app.registries.demo.demo_conversation_recorder import DemoConversationRecorder
 from app.registries.demo.demo_feedback import (
@@ -13,16 +14,11 @@ from app.schemas.constants.assistants import AssistantVersionStatus
 from app.schemas.constants.conversations import ConversationStatus
 from app.schemas.constants.users import BusinessMemberRole
 from app.schemas.domain.assistants import AutotestRunDocument
-from app.schemas.domain.billing import (
-    InvoiceDocument,
-    SubscriptionDocument,
-    UsageEventDocument,
-)
+from app.schemas.domain.billing import InvoiceDocument, SubscriptionDocument
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.compliance import AuditLogEntryDocument
 from app.schemas.domain.conversations import ConversationDocument
 from app.schemas.domain.knowledge import KnowledgeItemDocument
-from app.schemas.domain.package_usage import PackageUsageWarningDocument
 from app.schemas.dto.demo_data import DemoActivityRequest, DemoBusinessActivity
 from app.schemas.typings.assistants.prefixed_id import AssistantVersionId
 from app.schemas.typings.inbox.constrained_integers import AssignmentRevision
@@ -84,12 +80,15 @@ class DemoActivityBuilder:
     def finish(
         self,
         subscription: SubscriptionDocument,
-        usage_events: Sequence[UsageEventDocument],
         autotest_run: AutotestRunDocument,
         invoices: Sequence[InvoiceDocument] = (),
-        package_usage_warnings: Sequence[PackageUsageWarningDocument] = (),
         audit_log_entries: Sequence[AuditLogEntryDocument] = (),
     ) -> DemoBusinessActivity:
+        """
+        The story with its billing: the usage is what the recorded
+        conversations and calls metered in the subscription's window.
+        """
+
         self._assign_oldest_waiting_conversation()
         return DemoBusinessActivity(
             contacts=self.talk.contacts,
@@ -102,8 +101,13 @@ class DemoActivityBuilder:
             unanswered_questions=self.desk.questions,
             subscription=subscription,
             invoices=list(invoices),
-            usage_events=list(usage_events),
-            package_usage_warnings=list(package_usage_warnings),
+            usage_events=metered_usage(
+                self.business,
+                self.talk.conversations,
+                self.talk.messages,
+                self.talk.calls,
+                subscription.period_start,
+            ),
             audit_log_entries=list(audit_log_entries),
             autotest_run=autotest_run,
             review_settings=build_demo_review_settings(self.business, self.clock.now),

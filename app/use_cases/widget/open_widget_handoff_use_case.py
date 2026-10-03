@@ -27,7 +27,7 @@ from app.schemas.exceptions.application_errors import ConflictError, NotFoundErr
 from app.schemas.typings.conversations.strings import ChannelUserId
 from app.schemas.typings.handoffs.strings import HandoffSummary
 from app.schemas.typings.localization.constrained_strings import LanguageTag
-from app.use_cases.conversations.turns.conversation_resolution import (
+from app.use_cases.shared.conversation_resolution import (
     find_open_conversation,
 )
 from app.utilities.channels.delivery_targets import find_business_channel

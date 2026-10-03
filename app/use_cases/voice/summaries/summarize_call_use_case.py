@@ -35,7 +35,7 @@ from app.schemas.dto.notifications.staff_alerts import StaffAlertBrief
 from app.schemas.dto.voice_webhooks import RecordedCall
 from app.schemas.typings.conversations.strings import MessageText
 from app.schemas.typings.notifications.constrained_strings import StaffAlertSubject
-from app.use_cases.bookings.operations_support import display_phone
+from app.use_cases.shared.operations_support import display_phone
 from app.use_cases.voice.summaries.call_report_alerts import (
     call_report_alert,
     call_report_texts,

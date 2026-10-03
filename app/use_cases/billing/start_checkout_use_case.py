@@ -34,7 +34,11 @@ from app.schemas.dto.payments import (
 from app.schemas.exceptions.application_errors import ConflictError
 from app.schemas.typings.billing.prefixed_id import InvoiceId
 from app.schemas.typings.localization.constrained_strings import LanguageTag
-from app.use_cases.billing.billing_records import (
+from app.use_cases.billing.checkout_rules import (
+    is_service_unpaid,
+    select_order_description,
+)
+from app.use_cases.shared.billing_records import (
     OPEN_INVOICE_STATUSES,
     find_next_period_start,
     list_open_invoices,
@@ -42,11 +46,7 @@ from app.use_cases.billing.billing_records import (
     require_current_subscription,
     sum_invoice_amounts,
 )
-from app.use_cases.billing.checkout_rules import (
-    is_service_unpaid,
-    select_order_description,
-)
-from app.use_cases.billing.subscription_pricing import quote_money
+from app.use_cases.shared.subscription_pricing import quote_money
 from app.utilities.billing.billing_periods import (
     get_interval_months,
     to_local_calendar_day,

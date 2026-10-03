@@ -29,21 +29,21 @@ from app.schemas.typings.localization.constrained_strings import (
     CurrencyCode,
     LanguageTag,
 )
-from app.use_cases.billing.billing_records import (
+from app.use_cases.shared.billing_records import (
     find_current_subscription,
     is_trial_available,
 )
-from app.use_cases.billing.package_usage import (
+from app.use_cases.shared.package_usage import (
     compute_overage_minutes,
     compute_usage_percent,
     summarize_package_usage,
 )
-from app.use_cases.billing.subscription_pricing import (
+from app.use_cases.shared.subscription_pricing import (
     price_overage_per_minute,
     quote_money,
     select_subscription_currency,
 )
-from app.use_cases.billing.trial_subscriptions import (
+from app.use_cases.shared.trial_subscriptions import (
     choose_go_live_trial,
     is_trial_due_at_go_live,
 )

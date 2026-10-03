@@ -111,6 +111,16 @@
         "additionalProperties": false,
         "description": "One client in the admin list: subscription, assistant quality, staff\nload, package use in the current period, cost and margin, and health.",
         "properties": {
+          "autotest_verdict": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ClientAutotestVerdict"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "billing_period": {
             "anyOf": [
               {
@@ -1104,45 +1114,6 @@
         "title": "AssistantVersionSummary",
         "type": "object"
       },
-      "AttentionCounts": {
-        "additionalProperties": false,
-        "description": "Handoffs nobody has resolved yet, requests still new, bookings still\nwaiting for confirmation and channels the platform refused. Sandbox\nactivity (the owner's test chat, autotests) is not counted.",
-        "properties": {
-          "business_id": {
-            "title": "Business Id",
-            "type": "string"
-          },
-          "channel_error_count": {
-            "minimum": 0.0,
-            "title": "Channel Error Count",
-            "type": "integer"
-          },
-          "new_lead_count": {
-            "minimum": 0.0,
-            "title": "New Lead Count",
-            "type": "integer"
-          },
-          "open_handoff_count": {
-            "minimum": 0.0,
-            "title": "Open Handoff Count",
-            "type": "integer"
-          },
-          "unconfirmed_booking_count": {
-            "minimum": 0.0,
-            "title": "Unconfirmed Booking Count",
-            "type": "integer"
-          }
-        },
-        "required": [
-          "business_id",
-          "open_handoff_count",
-          "new_lead_count",
-          "unconfirmed_booking_count",
-          "channel_error_count"
-        ],
-        "title": "AttentionCounts",
-        "type": "object"
-      },
       "AuditAction": {
         "description": "Operation on personal data recorded in the audit log (concept section\n10), or a launch decision that must stay traceable (publishing a version\nthat has not passed its autotests).",
         "enum": [
@@ -1266,6 +1237,21 @@
         ],
         "title": "AuditLogPage",
         "type": "object"
+      },
+      "AutotestCheckCode": {
+        "description": "Why the test harness failed a scenario, as a code each language renders:\na deterministic check of what the assistant did (no booking, no handoff,\nrecords nobody asked for, a reply in another script), or why the\nscenario could not be evaluated at all.",
+        "enum": [
+          "no_booking_created",
+          "not_handed_off",
+          "unexpected_records",
+          "wrong_reply_language",
+          "conversation_failed",
+          "no_customer_message",
+          "judge_unavailable",
+          "judge_unreadable"
+        ],
+        "title": "AutotestCheckCode",
+        "type": "string"
       },
       "AutotestOutcome": {
         "description": "Result of one autotest scenario.",
@@ -1407,6 +1393,13 @@
         "additionalProperties": false,
         "description": "Result of one autotest scenario.",
         "properties": {
+          "check_codes": {
+            "items": {
+              "$ref": "#/components/schemas/AutotestCheckCode"
+            },
+            "title": "Check Codes",
+            "type": "array"
+          },
           "check_notes": {
             "items": {
               "type": "string"
@@ -3537,6 +3530,15 @@
         "title": "ChannelKind",
         "type": "string"
       },
+      "ChannelLinkState": {
+        "description": "Whether customers can be sent a link to a connected channel: LINKED when\nits public address (Telegram bot, WhatsApp number, Instagram or page\nusername, phone number) is known; MISSING_PUBLIC_ADDRESS when the\nchannel answers but the platform never told its public address (it was\nconnected before addresses were learned): the share links skip it and\nreconnecting it once fixes that.",
+        "enum": [
+          "linked",
+          "missing_public_address"
+        ],
+        "title": "ChannelLinkState",
+        "type": "string"
+      },
       "ChannelStatus": {
         "description": "Connection state of a channel.",
         "enum": [
@@ -3550,7 +3552,7 @@
       },
       "ChannelView": {
         "additionalProperties": false,
-        "description": "A channel as the cabinet shows it; credentials are never returned.\n\n`account_id` is the public account inside the channel: bot username,\nWhatsApp phone number id, page id, Instagram account id, or the E.164\nnumber of the assistant line. With status ERROR, `last_error` is the\nplatform's short reason (no secrets) and `last_error_at` its time. The\nwebsite chat also reports its saved colour and launcher corner (None:\nthe widget's defaults). WhatsApp reports the template staff replies use\nonce the 24-hour window has closed (None: no template, such replies are\nrefused).",
+        "description": "A channel as the cabinet shows it; credentials are never returned.\n\n`account_id` is the public account inside the channel: bot username,\nWhatsApp phone number id, page id, Instagram account id, or the E.164\nnumber of the assistant line. With status ERROR, `last_error` is the\nplatform's short reason (no secrets) and `last_error_at` its time. The\nwebsite chat also reports its saved colour and launcher corner (None:\nthe widget's defaults). WhatsApp reports the template staff replies use\nonce the 24-hour window has closed (None: no template, such replies are\nrefused). `link_state` says whether a connected messenger or phone can\nbe shared as a link (the same rule the share links follow); None for a\nchannel that is not connected or has no link (the website chat).",
         "properties": {
           "account_id": {
             "anyOf": [
@@ -3602,6 +3604,16 @@
               }
             ],
             "title": "Last Error At"
+          },
+          "link_state": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ChannelLinkState"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "staff_reply_template": {
             "anyOf": [
@@ -3735,6 +3747,64 @@
         "title": "CheckoutSessionView",
         "type": "object"
       },
+      "ClientAutotestVerdict": {
+        "additionalProperties": false,
+        "description": "The autotest verdict of the client's active version (the published one,\nelse the latest tested), exactly as the version stores it, so the admin\nand the version page never disagree. Counts are None for a version\ntested before verdicts were stored: its status says passed or not.",
+        "properties": {
+          "average_score": {
+            "anyOf": [
+              {
+                "maximum": 5.0,
+                "minimum": 1.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Average Score"
+          },
+          "is_passed": {
+            "title": "Is Passed",
+            "type": "boolean"
+          },
+          "passed_count": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Passed Count"
+          },
+          "scenario_count": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Scenario Count"
+          },
+          "version_number": {
+            "minimum": 1.0,
+            "title": "Version Number",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "version_number",
+          "is_passed"
+        ],
+        "title": "ClientAutotestVerdict",
+        "type": "object"
+      },
       "ClientCabinetAccess": {
         "additionalProperties": false,
         "description": "What a platform admin may now open in the client's cabinet. Every later\ncabinet request of the admin is audited again by the access check.",
@@ -3791,7 +3861,7 @@
       },
       "ClientCostReport": {
         "additionalProperties": false,
-        "description": "What one client cost the platform and brought in for a period.\n\nProvider costs are in micro US dollars (provider price lists); revenue is\nthe paid invoices of the period in the subscription currency, prorated\nby service time. The cost is converted with an official rate when the\ncatalog has one; without it the money cost and the margin stay empty.",
+        "description": "What one client cost the platform and brought in for a period.\n\nProvider costs are in micro US dollars (provider price lists); revenue is\nthe paid invoices of the period in the subscription currency, prorated\nby service time. The cost is converted with the newest dated rate\n(`exchange_rate`, with its date, source and whether it is derived or\nstale); without one the money cost and the margin stay empty.",
         "properties": {
           "business_id": {
             "title": "Business Id",
@@ -5977,7 +6047,7 @@
       },
       "ExchangeRateQuote": {
         "additionalProperties": false,
-        "description": "An official rate: `rate` units of the quote currency for one base unit.\n\nExample: EUR -> GEL 2.9552, National Bank of Georgia, 2026-09-30.",
+        "description": "A rate the platform converts with: `rate_value` units of the quote\ncurrency for one base unit, exactly (`rate` is the same number as a\nJSON number, kept for older clients). Shown with its date and source\n(`source` in English, `sources` as codes a client names in its language);\n`is_derived` marks an inverse or a cross rate through the euro that no\nbank published itself, `is_stale` a rate older than a few days (the\nfeed has not been refreshed: the date says how old it is).\n\nExample: EUR -> GEL 2.9552, National Bank of Georgia, 2026-09-30.",
         "properties": {
           "base_currency_code": {
             "maxLength": 3,
@@ -5985,6 +6055,16 @@
             "pattern": "^[A-Z]{3}$",
             "title": "Base Currency Code",
             "type": "string"
+          },
+          "is_derived": {
+            "default": false,
+            "title": "Is Derived",
+            "type": "boolean"
+          },
+          "is_stale": {
+            "default": false,
+            "title": "Is Stale",
+            "type": "boolean"
           },
           "quote_currency_code": {
             "maxLength": 3,
@@ -5994,7 +6074,9 @@
             "type": "string"
           },
           "rate": {
+            "description": "The rate as a JSON number (use `rate_value` to compute).",
             "exclusiveMinimum": 0.0,
+            "readOnly": true,
             "title": "Rate",
             "type": "number"
           },
@@ -6005,25 +6087,57 @@
             "title": "Rate Date",
             "type": "string"
           },
+          "rate_value": {
+            "maxLength": 25,
+            "minLength": 1,
+            "pattern": "^(?=[0-9.]*[1-9])(0|[1-9][0-9]{0,11})(\\.[0-9]{1,12})?$",
+            "title": "Rate Value",
+            "type": "string"
+          },
           "source": {
             "title": "Source",
             "type": "string"
+          },
+          "sources": {
+            "items": {
+              "$ref": "#/components/schemas/ExchangeRateSource"
+            },
+            "title": "Sources",
+            "type": "array"
           }
         },
         "required": [
           "base_currency_code",
           "quote_currency_code",
-          "rate",
+          "rate_value",
           "rate_date",
-          "source"
+          "source",
+          "rate"
         ],
         "title": "ExchangeRateQuote",
         "type": "object"
       },
+      "ExchangeRateSource": {
+        "description": "Who set an exchange rate. NBG: the National Bank of Georgia's official\nrates against the lari (about 40 currencies, daily). ECB: the European\nCentral Bank's euro reference rates (about 30 currencies, each TARGET\nday). PLANNING: the rate of the platform's own cost model, the last\nfallback when no published rate is stored yet.",
+        "enum": [
+          "nbg",
+          "ecb",
+          "planning"
+        ],
+        "title": "ExchangeRateSource",
+        "type": "string"
+      },
       "FailedAutotestView": {
         "additionalProperties": false,
-        "description": "A scenario that did not pass in the latest autotest run.",
+        "description": "A scenario that did not pass in the run of the active version's verdict.\nWhy, as codes every language renders: the harness checks that failed\n(`check_codes`) and the judge's criteria scored below 3\n(`low_criteria`). `judge_notes` is the judge's own text (English).",
         "properties": {
+          "check_codes": {
+            "items": {
+              "$ref": "#/components/schemas/AutotestCheckCode"
+            },
+            "title": "Check Codes",
+            "type": "array"
+          },
           "judge_notes": {
             "items": {
               "type": "string"
@@ -6040,6 +6154,13 @@
             "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$",
             "title": "Language",
             "type": "string"
+          },
+          "low_criteria": {
+            "items": {
+              "$ref": "#/components/schemas/JudgeCriterion"
+            },
+            "title": "Low Criteria",
+            "type": "array"
           },
           "outcome": {
             "$ref": "#/components/schemas/AutotestOutcome"
@@ -7142,31 +7263,83 @@
         "title": "InboxAssigneeView",
         "type": "object"
       },
-      "InboxCounts": {
+      "InboxAttentionCounts": {
         "additionalProperties": false,
-        "description": "Handoffs nobody has resolved yet and requests still new. Sandbox activity\n(the owner's test chat, autotests) is not counted.",
+        "description": "Conversations waiting for the team (sandbox left out), by inbox view:\nthose that need a person, those with an open request, those nobody is\nassigned to, and those assigned to the viewer; plus pending bookings\nthat have not started yet and channels the platform refused. The inbox\nbadge is `needs_person + requests`, the sum of its two tabs.\n\nThe `*_count` fields are the names `/attention-counts` used before\n2026-10; they carry the same numbers and go away in /v2.",
         "properties": {
           "business_id": {
             "title": "Business Id",
             "type": "string"
           },
+          "channel_error_count": {
+            "deprecated": true,
+            "minimum": 0.0,
+            "title": "Channel Error Count",
+            "type": "integer"
+          },
+          "channel_errors": {
+            "minimum": 0.0,
+            "title": "Channel Errors",
+            "type": "integer"
+          },
+          "mine": {
+            "minimum": 0.0,
+            "title": "Mine",
+            "type": "integer"
+          },
+          "needs_person": {
+            "minimum": 0.0,
+            "title": "Needs Person",
+            "type": "integer"
+          },
           "new_lead_count": {
+            "deprecated": true,
             "minimum": 0.0,
             "title": "New Lead Count",
             "type": "integer"
           },
           "open_handoff_count": {
+            "deprecated": true,
             "minimum": 0.0,
             "title": "Open Handoff Count",
+            "type": "integer"
+          },
+          "requests": {
+            "minimum": 0.0,
+            "title": "Requests",
+            "type": "integer"
+          },
+          "unassigned": {
+            "minimum": 0.0,
+            "title": "Unassigned",
+            "type": "integer"
+          },
+          "unconfirmed_booking_count": {
+            "deprecated": true,
+            "minimum": 0.0,
+            "title": "Unconfirmed Booking Count",
+            "type": "integer"
+          },
+          "unconfirmed_bookings": {
+            "minimum": 0.0,
+            "title": "Unconfirmed Bookings",
             "type": "integer"
           }
         },
         "required": [
           "business_id",
+          "needs_person",
+          "requests",
+          "unassigned",
+          "mine",
+          "unconfirmed_bookings",
+          "channel_errors",
           "open_handoff_count",
-          "new_lead_count"
+          "new_lead_count",
+          "unconfirmed_booking_count",
+          "channel_error_count"
         ],
-        "title": "InboxCounts",
+        "title": "InboxAttentionCounts",
         "type": "object"
       },
       "InboxHandoffSummary": {
@@ -18317,7 +18490,7 @@
     },
     "/v1/businesses/{business_id}/attention-counts": {
       "get": {
-        "description": "What waits for a person (sandbox excluded): open handoffs, new\nrequests, upcoming bookings to confirm and channels in error; the\nbadges of the cabinet's navigation. Indexed counts only, no personal\ndata, so it records no view.",
+        "description": "What waits for a person (sandbox excluded): conversations that need\na person or have an open request, unassigned and mine, upcoming\nbookings to confirm and channels in error; the badges of the\ncabinet's navigation, the same numbers as …/inbox/counts. Indexed\ncounts only, no personal data, so it records no view.",
         "operationId": "get_attention_counts_route_v1_businesses__business_id__attention_counts_get",
         "parameters": [
           {
@@ -18351,7 +18524,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/AttentionCounts"
+                  "$ref": "#/components/schemas/InboxAttentionCounts"
                 }
               }
             },
@@ -25842,125 +26015,6 @@
         ]
       }
     },
-    "/v1/businesses/{business_id}/inbox-counts": {
-      "get": {
-        "description": "Open handoffs and new requests (sandbox excluded): the badges on\nMessages. Counts only, so the cabinet polls it without recording a\nview of personal data.",
-        "operationId": "get_inbox_counts_route_v1_businesses__business_id__inbox_counts_get",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "business_id",
-            "required": true,
-            "schema": {
-              "title": "Business Id",
-              "type": "string"
-            }
-          },
-          {
-            "in": "header",
-            "name": "authorization",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Authorization"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/InboxCounts"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "401": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorBody"
-                }
-              }
-            },
-            "description": "Sign-in required: the bearer token is missing, invalid or expired."
-          },
-          "403": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorBody"
-                }
-              }
-            },
-            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
-          },
-          "404": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorBody"
-                }
-              }
-            },
-            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
-          },
-          "409": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorBody"
-                }
-              }
-            },
-            "description": "Conflicts with the current state (stale revision, slot taken)."
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorBody"
-                }
-              }
-            },
-            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
-          },
-          "429": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorBody"
-                }
-              }
-            },
-            "description": "Too many requests; Retry-After, when present, says when to retry."
-          },
-          "502": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorBody"
-                }
-              }
-            },
-            "description": "A provider (model, messaging, payments, telephony) failed."
-          }
-        },
-        "summary": "Get Inbox Counts Route",
-        "tags": [
-          "operations"
-        ]
-      }
-    },
     "/v1/businesses/{business_id}/inbox/assignees": {
       "get": {
         "operationId": "list_inbox_assignees_v1_businesses__business_id__inbox_assignees_get",
@@ -26114,7 +26168,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/InboxViewCounts"
+                  "$ref": "#/components/schemas/InboxAttentionCounts"
                 }
               }
             },

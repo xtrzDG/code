@@ -1,24 +1,34 @@
 """
-Official exchange rates the platform may quote estimated prices with.
-
-Only rates with a named source and date belong here; no rate is invented
-for other currencies, so their local prices stay unknown until a rate or a
-price-book entry is added.
+Rates the platform falls back to before (or while not) the daily refresh
+has stored published ones (`refresh_exchange_rates`). Each has a named
+source and a date, and is shown as stale once it is old; a stored rate of
+the same pair that is as new or newer always wins.
 """
 
-from app.schemas.dto.catalog.plan_quotes import ExchangeRateQuote
-from app.schemas.typings.billing.constrained_floats import ExchangeRate
-from app.schemas.typings.billing.constrained_strings import ExchangeRateDate
-from app.schemas.typings.billing.strings import ExchangeRateSourceName
+from app.schemas.constants.billing import ExchangeRateSource
+from app.schemas.dto.billing_exchange_rates import PublishedExchangeRate
+from app.schemas.typings.billing.constrained_strings import (
+    ExchangeRateDate,
+    ExchangeRateValue,
+)
 from app.schemas.typings.localization.constrained_strings import CurrencyCode
 
-OFFICIAL_EXCHANGE_RATES: tuple[ExchangeRateQuote, ...] = (
+FALLBACK_EXCHANGE_RATES: tuple[PublishedExchangeRate, ...] = (
     # Concept: "1 € = 2,9552 ₾", official NBG rate on 30.09.2026.
-    ExchangeRateQuote(
+    PublishedExchangeRate(
         base_currency_code=CurrencyCode("EUR"),
         quote_currency_code=CurrencyCode("GEL"),
-        rate=ExchangeRate(2.9552),
+        rate=ExchangeRateValue("2.9552"),
         rate_date=ExchangeRateDate("2026-09-30"),
-        source=ExchangeRateSourceName("National Bank of Georgia"),
+        source=ExchangeRateSource.NBG,
+    ),
+    # The concept's cost model prices dollar costs in euros at $8 = 7.05 €
+    # (01.10.2026): its planning rate, until the ECB's is stored.
+    PublishedExchangeRate(
+        base_currency_code=CurrencyCode("EUR"),
+        quote_currency_code=CurrencyCode("USD"),
+        rate=ExchangeRateValue("1.1348"),
+        rate_date=ExchangeRateDate("2026-10-01"),
+        source=ExchangeRateSource.PLANNING,
     ),
 )

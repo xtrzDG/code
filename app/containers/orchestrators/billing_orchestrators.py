@@ -59,3 +59,6 @@ class BillingOrchestratorsContainer(containers.DeclarativeContainer):
     invoice_usage_overage_orchestrator = use_case_orchestrator(
         billing_use_cases.invoice_usage_overage_use_case
     )
+    refresh_exchange_rates_orchestrator = use_case_orchestrator(
+        billing_use_cases.refresh_exchange_rates_use_case
+    )

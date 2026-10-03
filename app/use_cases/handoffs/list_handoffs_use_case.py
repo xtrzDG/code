@@ -16,15 +16,15 @@ from app.schemas.typings.compliance.strings import AuditEntityName
 from app.schemas.typings.contacts.prefixed_id import ContactId
 from app.schemas.typings.platform.constrained_integers import ListItemCount
 from app.schemas.typings.platform.constrained_strings import PageCursor
-from app.use_cases.bookings.operations_support import (
-    build_audit_entry,
-    require_business,
-)
 from app.use_cases.handoffs.handoff_queue_paging import (
     handoff_sort_key,
     read_queue_page,
 )
-from app.use_cases.handoffs.handoff_views import build_handoff_list_item
+from app.use_cases.shared.business_access import require_business
+from app.use_cases.shared.handoff_views import build_handoff_list_item
+from app.use_cases.shared.operations_support import (
+    build_audit_entry,
+)
 from app.utilities.paging.keyset_paging import finish_page
 
 HANDOFF_ENTITY: AuditEntityName = AuditEntityName("handoff")

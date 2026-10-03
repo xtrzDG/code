@@ -10,6 +10,9 @@ from app.containers.adapters.feedback_collections_container import (
 from app.containers.adapters.inbox_collections_container import (
     InboxCollectionsContainer,
 )
+from app.containers.adapters.rate_collections_container import (
+    RateCollectionsContainer,
+)
 from app.containers.adapters.security_collections_container import (
     SecurityCollectionsContainer,
 )
@@ -103,8 +106,17 @@ class AppContainer(containers.DeclarativeContainer):
         time_provider=time_provider,
         utilities=utilities,
     )
+    # The dated exchange rates' collection (1071), a sibling as well.
+    rate_collections: RateCollectionsContainer = Container(  # type: ignore[assignment]
+        RateCollectionsContainer,
+        clients=clients,
+        config=config,
+        time_provider=time_provider,
+        utilities=utilities,
+    )
     repositories: RepositoriesContainer = Container(  # type: ignore[assignment]
         RepositoriesContainer,
+        rate_collections=rate_collections,
         inbox_collections=inbox_collections,
         security_collections=security_collections,
         value_collections=value_collections,

@@ -7,7 +7,7 @@ from app.contracts.repositories.billing_repositories import InvoiceRepoContract
 from app.contracts.repositories.business_repositories import BusinessRepoContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.assistants import AutotestOutcome
-from app.schemas.domain.assistants import AssistantVersionDocument, AutotestRunDocument
+from app.schemas.domain.assistants import AutotestRunDocument
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.users import UserDocument
 from app.schemas.dto.admin import (
@@ -21,7 +21,10 @@ from app.schemas.dto.admin import (
 )
 from app.schemas.dto.billing import Money
 from app.schemas.exceptions.application_errors import NotFoundError
+from app.schemas.typings.assistants.prefixed_id import AutotestRunId
 from app.schemas.typings.users.prefixed_id import UserId
+from app.use_cases.admin.active_version import find_active_version, find_verdict_run_id
+from app.utilities.assembly.autotest_evaluation import MIN_PASSING_CRITERION_SCORE
 
 MAX_LISTED_INVOICES: int = 24
 MAX_LISTED_PAYMENTS: int = 20
@@ -30,7 +33,8 @@ MAX_LISTED_PAYMENTS: int = 20
 class GetClientHealthUseCase(UseCaseContract[AdminClientQuery, ClientHealthView]):
     """
     One client in detail for the platform admin: the summary, the scenarios
-    that failed in the latest autotest run, recent invoices and payment
+    that failed in the run behind the active version's verdict (with why, as
+    codes), recent invoices and payment
     attempts with the provider's decline reasons. No visitor personal data
     is shown, so the view is not audited; entering the cabinet is.
     """
@@ -110,23 +114,14 @@ class GetClientHealthUseCase(UseCaseContract[AdminClientQuery, ClientHealthView]
         self,
         business: BusinessDocument,
     ) -> list[FailedAutotestView]:
-        runs: list[AutotestRunDocument] = []
-        versions: list[AssistantVersionDocument] = sorted(
-            self._assistant_version_repo.list_by_business(business.id),
-            key=lambda version: version.version_number,
-            reverse=True,
+        run_id: AutotestRunId | None = find_verdict_run_id(
+            find_active_version(self._assistant_version_repo, business)
         )
-        for version in versions:
-            if version.autotest_run_id is None:
-                continue
-
-            run: AutotestRunDocument | None = self._autotest_run_repo.get(
-                business.id,
-                version.autotest_run_id,
-            )
-            if run is not None:
-                runs.append(run)
-                break
+        run: AutotestRunDocument | None = (
+            None if run_id is None else self._autotest_run_repo.get(business.id, run_id)
+        )
+        if run is None:
+            return []
 
         return [
             FailedAutotestView(
@@ -135,8 +130,13 @@ class GetClientHealthUseCase(UseCaseContract[AdminClientQuery, ClientHealthView]
                 language=result.language,
                 outcome=result.outcome,
                 judge_notes=list(result.judge_notes),
+                check_codes=list(result.check_codes),
+                low_criteria=[
+                    score.criterion
+                    for score in result.scores
+                    if int(score.score) < MIN_PASSING_CRITERION_SCORE
+                ],
             )
-            for run in runs
             for result in run.results
             if result.outcome is not AutotestOutcome.PASSED
         ]

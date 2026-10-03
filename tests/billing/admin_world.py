@@ -44,6 +44,7 @@ from app.schemas.typings.conversations.strings import (
 )
 from app.schemas.typings.handoffs.strings import HandoffSummary, UnansweredQuestionText
 from app.schemas.typings.localization.constrained_strings import LanguageTag
+from app.utilities.assembly.autotest_evaluation import build_verdict
 from tests.billing.billing_settings import GEORGIA, ITALY, MICROSECONDS_PER_DAY, USA
 from tests.billing.billing_testbed import BillingTestbed
 from tests.billing.plan_steps import start_trial
@@ -69,6 +70,7 @@ def add_version(
     number: int,
     score: float | None,
     results: list[tuple[str, AutotestOutcome]],
+    is_passed: bool = False,
 ) -> AssistantVersionDocument:
     version = AssistantVersionDocument(
         business_id=business.id,
@@ -104,10 +106,12 @@ def add_version(
                 for key, outcome in results
             ],
             pass_rate=AutotestPassRate(0.5),
-            is_passed=False,
+            average_score=None if score is None else AverageJudgeScore(score),
+            is_passed=is_passed,
         )
         testbed.autotest_run_repo.save(run)
         version.autotest_run_id = run.id
+        version.autotest_verdict = build_verdict(run, testbed.clock.now())
 
     testbed.assistant_version_repo.save(version)
     return version
@@ -194,10 +198,12 @@ def build_admin_world() -> AdminWorld:
     start_trial(testbed, owner, georgian)
     start_trial(testbed, owner, italian)
 
-    published = add_version(
-        testbed, georgian, 1, 4.6, [("price__ka", AutotestOutcome.PASSED)]
-    )
+    # The live version was published although its run failed (the owner
+    # accepted the failed tests); the earlier one had passed.
     add_version(
+        testbed, georgian, 1, 4.6, [("price__ka", AutotestOutcome.PASSED)], True
+    )
+    published = add_version(
         testbed,
         georgian,
         2,

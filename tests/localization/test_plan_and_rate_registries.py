@@ -1,6 +1,5 @@
 from app.contracts.catalog_registries import ExchangeRateRegistryContract
 from app.contracts.registries import PlanRegistryContract
-from app.registries.billing.exchange_rate_registry import ExchangeRateRegistry
 from app.registries.billing.plan_registry import PlanRegistry
 from app.schemas.constants.billing import PlanKey
 from app.schemas.constants.channels import ChannelKind
@@ -10,9 +9,10 @@ from app.schemas.typings.localization.constrained_strings import (
     CurrencyCode,
     LanguageTag,
 )
+from tests.billing.exchange_rate_fixtures import rate_registry
 
 PLANS: PlanRegistryContract = PlanRegistry()
-RATES: ExchangeRateRegistryContract = ExchangeRateRegistry()
+RATES: ExchangeRateRegistryContract = rate_registry()
 
 
 def money(amount_minor: int, currency_code: str) -> Money:
@@ -94,13 +94,16 @@ def test_returned_plans_are_copies() -> None:
     assert ChannelKind.PHONE not in PLANS.get(PlanKey.CHAT).channels
 
 
-def test_exchange_rates_are_official_and_direct_only() -> None:
+def test_the_catalog_rates_are_dated_and_named() -> None:
     eur_to_gel = RATES.find_rate(CurrencyCode("EUR"), CurrencyCode("GEL"))
 
     assert eur_to_gel is not None
     assert eur_to_gel.rate == 2.9552
+    assert str(eur_to_gel.rate_value) == "2.9552"
     assert eur_to_gel.rate_date == "2026-09-30"
     assert eur_to_gel.source == "National Bank of Georgia"
-    assert RATES.find_rate(CurrencyCode("GEL"), CurrencyCode("EUR")) is None
-    assert RATES.find_rate(CurrencyCode("EUR"), CurrencyCode("USD")) is None
-    assert RATES.list_all() == [eur_to_gel]
+    assert eur_to_gel.is_derived is False
+    gel_to_eur = RATES.find_rate(CurrencyCode("GEL"), CurrencyCode("EUR"))
+    assert gel_to_eur is not None
+    assert gel_to_eur.is_derived is True
+    assert RATES.find_rate(CurrencyCode("EUR"), CurrencyCode("AMD")) is None

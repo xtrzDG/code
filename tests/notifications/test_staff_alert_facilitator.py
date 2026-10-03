@@ -23,7 +23,7 @@ from app.schemas.typings.notifications.strings import (
     StaffAlertTitle,
 )
 from app.schemas.typings.users.prefixed_id import UserId
-from app.use_cases.notifications.staff_alerts import StaffAlertTexts, handoff_alert
+from app.use_cases.shared.staff_alerts import StaffAlertTexts, handoff_alert
 from app.utilities.notifications.staff_delivery_keys import preferences_id_of
 from app.utilities.notifications.staff_link_signer import StaffLinkSigner
 from tests.notifications.alert_world import CABINET, AlertWorld

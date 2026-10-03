@@ -19,7 +19,8 @@ from app.schemas.dto.billing_ledger import BillingNotice, DueInvoicesRequest
 from app.schemas.dto.jobs import JobReport, JobTick
 from app.schemas.typings.conversations.strings import MessageText
 from app.schemas.typings.platform.constrained_integers import ProcessedItemCount
-from app.use_cases.billing.billing_records import (
+from app.use_cases.billing.owner_notifications import notify_business_owners
+from app.use_cases.shared.billing_records import (
     advance_to_paid_periods,
     find_covering_paid_invoice,
     find_current_subscription,
@@ -28,7 +29,6 @@ from app.use_cases.billing.billing_records import (
     list_subscription_invoices,
     sum_invoice_amounts,
 )
-from app.use_cases.billing.owner_notifications import notify_business_owners
 from app.utilities.billing.billing_periods import add_local_days
 
 

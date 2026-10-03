@@ -15,14 +15,6 @@ from app.schemas.typings.platform.constrained_integers import ListItemCount
 
 
 class AttentionCountRepoContract(RepoContract, Protocol):
-    def count_open_handoffs(self, business_id: BusinessId) -> ListItemCount:
-        """Handoffs nobody has resolved yet (pending, notified or not delivered)."""
-        raise NotImplementedError
-
-    def count_new_leads(self, business_id: BusinessId) -> ListItemCount:
-        """Requests still in the "new" status."""
-        raise NotImplementedError
-
     def count_unconfirmed_bookings(
         self,
         business_id: BusinessId,

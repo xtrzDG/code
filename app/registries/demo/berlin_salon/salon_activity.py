@@ -12,7 +12,7 @@ from app.registries.demo.berlin_salon.salon_chats import (
 from app.registries.demo.berlin_salon.salon_foundation import LENA, MEHMET
 from app.registries.demo.demo_activity_builder import DemoActivityBuilder
 from app.registries.demo.demo_autotests import finished_run
-from app.registries.demo.demo_billing import daily_usage, paid_subscription
+from app.registries.demo.demo_billing import paid_subscription
 from app.registries.demo.demo_lines import assistant, customer
 from app.schemas.constants.bookings import BookingStatus
 from app.schemas.constants.channels import ChannelKind
@@ -132,13 +132,6 @@ def build_salon_activity(
     return story.finish(
         subscription=subscription,
         invoices=[invoice],
-        usage_events=daily_usage(
-            story.business,
-            clock,
-            subscription.period_start,
-            dialogs=310,
-            voice_minutes=0,
-        ),
         autotest_run=finished_run(
             story.business.id,
             story.published_version_id,

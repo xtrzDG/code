@@ -5,7 +5,6 @@ from decimal import Decimal
 
 import pytest
 
-from app.registries.billing.exchange_rate_registry import ExchangeRateRegistry
 from app.registries.niches.niche_value_catalog import NICHE_VALUE_DEFAULTS
 from app.registries.niches.niche_value_registry import NicheValueRegistry
 from app.schemas.constants.niches import NicheKey
@@ -15,6 +14,7 @@ from app.schemas.typings.billing.constrained_integers import MoneyAmountMinor
 from app.schemas.typings.localization.constrained_strings import CurrencyCode
 from app.utilities.value.typical_check import round_significant, typical_check_in
 from app.utilities.value.value_periods import is_report_due, report_period
+from tests.billing.exchange_rate_fixtures import rate_registry
 
 GEL: CurrencyCode = CurrencyCode("GEL")
 EUR: CurrencyCode = CurrencyCode("EUR")
@@ -113,7 +113,7 @@ def test_converted_checks_round_like_prices_people_say(
 
 def test_the_typical_check_is_converted_only_with_an_official_rate() -> None:
     forty_euro = Money(amount_minor=MoneyAmountMinor(4_000), currency_code=EUR)
-    rates = ExchangeRateRegistry()
+    rates = rate_registry()
 
     assert typical_check_in(forty_euro, GEL, rates.find_rate(EUR, GEL)) == 12_000
     assert typical_check_in(forty_euro, EUR, None) == 4_000

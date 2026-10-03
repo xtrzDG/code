@@ -22,6 +22,7 @@ from app.schemas.dto.assistants.autotest_runs import (
 )
 from app.schemas.exceptions.application_errors import NotFoundError
 from app.utilities.assembly.autotest_evaluation import (
+    build_verdict,
     decide_version_status,
     summarize_run,
 )
@@ -38,7 +39,9 @@ class FinishAutotestRunUseCase(UseCaseContract[AutotestRunCompletion, AutotestRu
     proves nothing new and leaves the version as it was before the run (a
     failed version stays failed), while a narrowed run that fails still
     fails the version. A full run's average becomes the version's test
-    score. The version points to the run.
+    score. The version points to the run and keeps its verdict (passed or
+    not, passed of all scenarios, the average), which every other screen
+    reads instead of judging the results again.
     """
 
     def __init__(
@@ -102,6 +105,7 @@ class FinishAutotestRunUseCase(UseCaseContract[AutotestRunCompletion, AutotestRu
             version.test_score = summary.average_score
 
         version.autotest_run_id = run.id
+        version.autotest_verdict = build_verdict(run, now)
         version.updated_at = now
         # The version first: whoever sees the run finished (the cabinet
         # polls it) also sees the version's final status. A crash between

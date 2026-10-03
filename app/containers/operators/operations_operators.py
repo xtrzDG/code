@@ -61,12 +61,6 @@ class OperationsOperatorsContainer(containers.DeclarativeContainer):
     get_dashboard_stats_operator = pipeline_operator(
         operations_pipelines.get_dashboard_stats_pipeline, storage_scope
     )
-    get_inbox_counts_operator = pipeline_operator(
-        operations_pipelines.get_inbox_counts_pipeline, storage_scope
-    )
-    get_attention_counts_operator = pipeline_operator(
-        operations_pipelines.get_attention_counts_pipeline, storage_scope
-    )
     start_google_calendar_connection_operator = pipeline_operator(
         operations_pipelines.start_google_calendar_connection_pipeline, storage_scope
     )

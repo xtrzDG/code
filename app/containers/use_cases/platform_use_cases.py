@@ -84,7 +84,6 @@ class PlatformUseCasesContainer(containers.DeclarativeContainer):
         SummarizeClientUseCase,
         subscription_repo=repositories.subscription_repo,
         assistant_version_repo=repositories.assistant_version_repo,
-        autotest_run_repo=repositories.autotest_run_repo,
         handoff_repo=repositories.handoff_repo,
         unanswered_question_repo=repositories.unanswered_question_repo,
         message_repo=repositories.message_repo,

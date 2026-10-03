@@ -171,6 +171,7 @@ class UseCasesContainer(CoreUseCasesContainer):
     billing: BillingUseCasesContainer = Container(  # type: ignore[assignment]
         BillingUseCasesContainer,
         adapters=CoreUseCasesContainer.adapters,
+        clients=CoreUseCasesContainer.clients,
         config=CoreUseCasesContainer.config,
         facilitators=CoreUseCasesContainer.facilitators,
         registries=CoreUseCasesContainer.registries,

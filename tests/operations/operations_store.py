@@ -120,8 +120,6 @@ class OperationsStore:
             ChannelDocument
         )
         self.attention_count_repo = AttentionCountRepository(
-            handoff_collection,
-            lead_collection,
             self.booking_collection,
             self.channel_collection,
         )

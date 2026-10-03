@@ -3,11 +3,7 @@
 from app.contracts.registries import PlanRegistryContract
 from app.registries.demo.demo_activity_builder import DemoActivityBuilder
 from app.registries.demo.demo_autotests import finished_run
-from app.registries.demo.demo_billing import (
-    daily_usage,
-    trial_subscription,
-    usage_warning,
-)
+from app.registries.demo.demo_billing import trial_subscription
 from app.registries.demo.tbilisi_restaurant.restaurant_autotests import (
     build_restaurant_autotest_results,
 )
@@ -37,7 +33,6 @@ from app.registries.demo.tbilisi_restaurant.restaurant_chats_ru_requests import 
 )
 from app.registries.demo.tbilisi_restaurant.restaurant_desk import record_front_desk
 from app.registries.demo.tbilisi_restaurant.restaurant_guests import register_guests
-from app.schemas.constants.billing import PackageMetric
 from app.schemas.constants.compliance import AuditAction
 from app.schemas.domain.compliance import AuditLogEntryDocument
 from app.schemas.dto.demo_data import DemoActivityRequest, DemoBusinessActivity
@@ -46,11 +41,9 @@ from app.schemas.typings.compliance.strings import (
     AuditEntityReference,
 )
 
-# The trial started 12 days ago; calls used 81 % of the 400 included
-# minutes (the owners were warned at 80 %), dialogs 58 % of 1,500.
+# The trial started 12 days ago; its package usage is what the seeded
+# chats and calls of these 12 days metered (DemoActivityBuilder.finish).
 TRIAL_DAYS_AGO: int = -12
-USED_DIALOGS: int = 870
-USED_VOICE_MINUTES: int = 326
 
 
 def build_restaurant_activity(
@@ -82,24 +75,12 @@ def build_restaurant_activity(
     )
     return story.finish(
         subscription=subscription,
-        usage_events=daily_usage(
-            story.business,
-            clock,
-            subscription.period_start,
-            dialogs=USED_DIALOGS,
-            voice_minutes=USED_VOICE_MINUTES,
-        ),
         autotest_run=finished_run(
             story.business.id,
             story.published_version_id,
             clock.later(published.created_at, 14),
             build_restaurant_autotest_results(),
         ),
-        package_usage_warnings=[
-            usage_warning(
-                subscription, PackageMetric.VOICE_MINUTES, 80, clock.ago(hours=30)
-            )
-        ],
         audit_log_entries=build_audit_entries(story),
     )
 

@@ -49,7 +49,7 @@ from app.use_cases.bookings.booking_support import (
     notify_staff_about_booking,
 )
 from app.use_cases.bookings.bookings_in_play import bookings_not_over_on
-from app.use_cases.bookings.operations_support import (
+from app.use_cases.shared.operations_support import (
     ContactDetails,
     require_contact,
     update_contact_details,

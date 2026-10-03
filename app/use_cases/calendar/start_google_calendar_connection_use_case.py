@@ -13,11 +13,11 @@ from app.schemas.dto.operations.calendar_connection import (
 )
 from app.schemas.typings.bookings.constrained_strings import CalendarAuthorizationUrl
 from app.schemas.typings.bookings.strings import CalendarAuthorizationState
-from app.use_cases.bookings.operations_support import require_business
 from app.use_cases.calendar.calendar_state import (
     generate_authorization_state,
     hash_authorization_state,
 )
+from app.use_cases.shared.business_access import require_business
 from app.utilities.scheduling.zoned_time import MICROSECONDS_PER_SECOND
 
 AUTHORIZATION_STATE_LIFETIME_SECONDS: int = 10 * 60

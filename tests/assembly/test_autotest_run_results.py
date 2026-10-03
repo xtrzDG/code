@@ -49,6 +49,18 @@ def test_all_scenarios_pass_and_the_version_becomes_ready() -> None:
     assert stored_version.test_score is not None
     assert float(stored_version.test_score) == 5.0
     assert stored_version.autotest_run_id == run.id
+    verdict = stored_version.autotest_verdict
+    assert verdict is not None
+    assert (verdict.run_id, verdict.is_passed, verdict.is_full_coverage) == (
+        run.id,
+        True,
+        True,
+    )
+    assert (verdict.passed_count, verdict.scenario_count) == (
+        run.passed_count,
+        run.scenario_count,
+    )
+    assert verdict.average_score == run.average_score
     stored_run = testbed.run_repo.get(business.id, run.id)
     assert stored_run is not None
     assert stored_run.assistant_version_id == version.id

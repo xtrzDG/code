@@ -6,6 +6,7 @@ from typed_time_provider import Microseconds, WallClock
 from app.adapters.storage.in_memory_document_collection import (
     InMemoryDocumentCollectionAdapter,
 )
+from app.repositories.attention_count_repository import AttentionCountRepository
 from app.repositories.booking_repositories import (
     BookingRepository,
     HandoffRepository,
@@ -28,6 +29,7 @@ from app.repositories.user_repositories import UserRepository
 from app.schemas.constants.users import BusinessMemberRole, LoginMethod
 from app.schemas.domain.bookings import BookingDocument, LeadDocument
 from app.schemas.domain.businesses import BusinessDocument, BusinessMember
+from app.schemas.domain.channels import ChannelDocument
 from app.schemas.domain.compliance import AuditLogEntryDocument
 from app.schemas.domain.contacts import ContactDocument
 from app.schemas.domain.conversation_notes import ConversationNoteDocument
@@ -96,7 +98,12 @@ class InboxStore:
         self.handoff_repo = HandoffRepository(handoffs)
         self.lead_repo = LeadRepository(leads)
         self.inbox_work_repo = InboxWorkRepository(handoffs, leads)
-        self.booking_repo = BookingRepository(collection(BookingDocument))
+        bookings = collection(BookingDocument)
+        self.booking_repo = BookingRepository(bookings)
+        self.channel_collection = collection(ChannelDocument)
+        self.attention_count_repo = AttentionCountRepository(
+            bookings, self.channel_collection
+        )
         self.contact_repo = ContactRepository(collection(ContactDocument))
         self.conversation_repo = ConversationRepository(
             collection(ConversationDocument)

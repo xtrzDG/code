@@ -14,7 +14,7 @@ from app.schemas.domain.conversations import ConversationDocument
 from app.schemas.domain.handoffs import HandoffDocument
 from app.schemas.dto.operations.handoffs import HandoffListItem, ResolveHandoffCommand
 from app.schemas.exceptions.application_errors import NotFoundError
-from app.use_cases.handoffs.handoff_views import build_handoff_list_item
+from app.use_cases.shared.handoff_views import build_handoff_list_item
 
 
 class ResolveHandoffUseCase(UseCaseContract[ResolveHandoffCommand, HandoffListItem]):

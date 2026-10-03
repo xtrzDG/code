@@ -22,7 +22,6 @@ from app.schemas.exceptions.application_errors import (
     ConflictError,
     ValidationFailedError,
 )
-from app.use_cases.inbox.assignment.assignment_views import build_assignment_view
 from app.use_cases.inbox.inbox_support import (
     ASSIGNMENT_ENTITY,
     append_audit,
@@ -31,6 +30,7 @@ from app.use_cases.inbox.inbox_support import (
     require_conversation,
     require_members,
 )
+from app.use_cases.shared.assignment_views import build_assignment_view
 
 
 class AssignConversationUseCase(

@@ -39,6 +39,66 @@ Spec: `74e937607f65fc64`
   (with `exhausted_seconds`) and stays `200` for 30 s; only an unreachable
   database, a missing migration or a pool exhausted for longer is `503`.
 
+## 2026-10-03 — one source of truth: counts, autotest verdicts, exchange rates, channel addresses
+
+Spec: `35be369c1300ba27`
+
+- **Removed** (`api-breaking`) `GET /v1/businesses/{business_id}/inbox-counts`.
+  No client read it since the badges moved to `…/attention-counts`; it
+  counted handoffs and leads, while the inbox tabs count conversations.
+  Migration: read `needs_person` and `requests` of
+  `GET /v1/businesses/{business_id}/attention-counts` (or
+  `…/inbox/counts`).
+- **Changed** `GET /v1/businesses/{business_id}/attention-counts` and
+  `GET /v1/businesses/{business_id}/inbox/counts` answer the same
+  `InboxAttentionCounts`, counted once (`CountInboxAttentionUseCase`):
+  conversations waiting for the team by inbox view — `needs_person`,
+  `requests`, `unassigned`, `mine` (the viewer's) — plus
+  `unconfirmed_bookings` and `channel_errors`. The inbox badge is
+  `needs_person + requests`, the sum of its two tabs. `…/inbox/counts`
+  gains `business_id`, `unconfirmed_bookings` and `channel_errors`.
+- **Deprecated** (sunset 2027-04-01, removed in `/v2`) the old names of
+  `…/attention-counts`: `open_handoff_count`, `new_lead_count`,
+  `unconfirmed_booking_count`, `channel_error_count`. They stay in the
+  answer with the numbers of `needs_person`, `requests`,
+  `unconfirmed_bookings` and `channel_errors` (open handoffs and new
+  leads are now counted by their conversation, as the tabs count them).
+- **Added** `autotest_verdict` (`ClientAutotestVerdict`: version number,
+  `is_passed`, `passed_count`, `scenario_count`, `average_score`) to
+  `AdminClientSummary`: the verdict the active version (published, else
+  the latest tested) stores, the same one its version page shows.
+  `AUTOTESTS_FAILED` now follows it: a run that passed with a scenario
+  failed is no longer an issue. `failed_tests` is that run's failed
+  scenarios.
+- **Added** `check_codes` (`AutotestCheckCode`) and `low_criteria`
+  (`JudgeCriterion`) to `FailedAutotestView`, and `check_codes` to
+  `AutotestScenarioResultView`: why a scenario failed, as codes the
+  cabinet renders in every language (`judge_notes` and `check_notes`
+  stay English text).
+- **Added** `link_state` (`ChannelLinkState`: `linked`,
+  `missing_public_address`; null for a channel that is not connected or
+  has no link of its own) to `ChannelView`: whether customers can be sent
+  a link to the channel, by the same rule the share links follow. A
+  connected WhatsApp or Instagram whose public address the platform never
+  learned is `missing_public_address`; the share links keep skipping it
+  with the `reconnect_channel` gap.
+- **Added** `rate_value` (the exact rate as a decimal string, e.g.
+  `"2.9552"`), `sources` (`ExchangeRateSource` codes: `nbg`, `ecb`,
+  `planning`), `is_derived` and `is_stale` to `ExchangeRateQuote` (plan
+  quotes, a client's cost report). Rates are now dated rows refreshed
+  daily from the National Bank of Georgia and the European Central Bank;
+  a pair no bank publishes is the inverse of its opposite or a cross rate
+  through the euro (`is_derived`), and a rate older than four days is
+  `is_stale` (its `rate_date` says how old). `rate` stays, as the same
+  number in JSON (compute with `rate_value`). Prices outside the euro and
+  the lari (e.g. USD for the United States) are now estimated with such a
+  rate (`is_estimated`), and a client's dollar provider costs convert into
+  every subscription currency, so the admin margin is known.
+- **Changed** `negative_margin` (`ClientHealthIssue`) is raised only for a
+  client that pays (not during a free trial or without a subscription):
+  a trial costs the platform by design, and with every margin now known it
+  would otherwise make every trialing client critical.
+
 ## 2026-10-03 — encryption key rotation for platform admins
 
 Spec: `0ee9211ca86eb0d0`

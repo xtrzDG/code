@@ -15,11 +15,11 @@ from app.schemas.typings.compliance.strings import AuditEntityName
 from app.schemas.typings.contacts.prefixed_id import ContactId
 from app.schemas.typings.platform.constrained_integers import ListItemCount
 from app.schemas.typings.platform.constrained_strings import PageCursor
-from app.use_cases.bookings.operations_support import (
+from app.use_cases.shared.business_access import require_business
+from app.use_cases.shared.lead_views import build_lead_list_item
+from app.use_cases.shared.operations_support import (
     build_audit_entry,
-    require_business,
 )
-from app.use_cases.leads.lead_views import build_lead_list_item
 from app.utilities.paging.keyset_paging import finish_page, read_slice
 
 LEAD_ENTITY: AuditEntityName = AuditEntityName("lead")

@@ -149,7 +149,7 @@ def price_overage_per_minute(
     if exchange_rate is None:
         return overage_price, False
 
-    return convert_money(overage_price, exchange_rate.rate, currency_code), True
+    return convert_money(overage_price, exchange_rate.rate_value, currency_code), True
 
 
 def quote_money(

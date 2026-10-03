@@ -1,20 +1,40 @@
 /**
  * The numbers on the navigation (sidebar, phone tab bar, section tabs) and
  * in the browser tab's title: what waits for a person, from GET
- * …/attention-counts, kept fresh by the live event stream.
+ * …/attention-counts, kept fresh by the live event stream. The API counts
+ * them once (the same numbers as the inbox tabs, GET …/inbox/counts), so a
+ * badge never disagrees with the tabs it sums.
  */
+
+import type { Schema } from "@/api/types";
 
 import type { BusinessPage } from "./navigation";
 
 export interface AttentionCounts {
-  /** Handoffs nobody has resolved yet. */
-  openHandoffs: number;
-  /** Requests (leads) still in the "new" status. */
-  newLeads: number;
+  /** Conversations that need a person (the inbox tab "Needs a person"). */
+  needsPerson: number;
+  /** Conversations with an open request (the inbox tab "Requests"). */
+  requests: number;
+  /** Waiting conversations nobody is assigned to. */
+  unassigned: number;
+  /** Waiting conversations assigned to the viewer. */
+  mine: number;
   /** Pending bookings that have not started yet. */
   unconfirmedBookings: number;
   /** Channels the platform refused (owners fix them). */
   channelErrors: number;
+}
+
+/** The API's counts as the cabinet keeps them. */
+export function attentionCountsFrom(data: Schema<"InboxAttentionCounts">): AttentionCounts {
+  return {
+    needsPerson: data.needs_person,
+    requests: data.requests,
+    unassigned: data.unassigned,
+    mine: data.mine,
+    unconfirmedBookings: data.unconfirmed_bookings,
+    channelErrors: data.channel_errors,
+  };
 }
 
 /** The largest number a badge spells out; more shows as "99+". */
@@ -27,8 +47,8 @@ export function pageBadge(page: BusinessPage, counts: AttentionCounts | null): n
   }
   switch (page) {
     case "inbox":
-      // Everything that waits for the team: people asked for, new requests.
-      return counts.openHandoffs + counts.newLeads;
+      // The sum of the two inbox tabs that wait for the team.
+      return counts.needsPerson + counts.requests;
     case "bookings":
       return counts.unconfirmedBookings;
     case "assistant/channels":
@@ -41,6 +61,17 @@ export function pageBadge(page: BusinessPage, counts: AttentionCounts | null): n
 /** The badge of a section: everything waiting on the pages the person sees in it. */
 export function sectionBadge(pages: readonly BusinessPage[], counts: AttentionCounts | null): number {
   return pages.reduce((total, page) => total + pageBadge(page, counts), 0);
+}
+
+/**
+ * Everything waiting for this person, for the browser tab's title: the inbox,
+ * bookings to confirm and, for those who may open Channels, channels in error.
+ */
+export function waitingTotal(counts: AttentionCounts | null, canSeeChannels: boolean): number {
+  if (!counts) {
+    return 0;
+  }
+  return pageBadge("inbox", counts) + counts.unconfirmedBookings + (canSeeChannels ? counts.channelErrors : 0);
 }
 
 /** What the badge shows: "7", "99+". */

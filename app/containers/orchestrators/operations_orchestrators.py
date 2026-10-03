@@ -57,12 +57,6 @@ class OperationsOrchestratorsContainer(containers.DeclarativeContainer):
     get_dashboard_stats_orchestrator = use_case_orchestrator(
         follow_up_use_cases.get_dashboard_stats_use_case
     )
-    get_inbox_counts_orchestrator = use_case_orchestrator(
-        follow_up_use_cases.get_inbox_counts_use_case
-    )
-    get_attention_counts_orchestrator = use_case_orchestrator(
-        follow_up_use_cases.get_attention_counts_use_case
-    )
     start_google_calendar_connection_orchestrator = use_case_orchestrator(
         scheduling_use_cases.start_google_calendar_connection_use_case
     )

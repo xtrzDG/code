@@ -10,8 +10,8 @@ from app.schemas.domain.billing import SubscriptionDocument
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.dto.billing import PlanDefinition
 from app.schemas.dto.billing_go_live import GoLiveTrial, GoLiveTrialRequest
-from app.use_cases.billing.billing_records import find_current_subscription
-from app.use_cases.billing.trial_subscriptions import (
+from app.use_cases.shared.billing_records import find_current_subscription
+from app.use_cases.shared.trial_subscriptions import (
     choose_go_live_trial,
     is_trial_due_at_go_live,
     open_trial_subscription,

@@ -21,6 +21,10 @@ from app.schemas.dto.inbox.assignment import (
     AssignConversationRequest,
     ConversationAssignmentView,
 )
+from app.schemas.dto.inbox.inbox_attention import (
+    InboxAttentionCounts,
+    InboxAttentionQuery,
+)
 from app.schemas.dto.inbox.inbox_settings import (
     InboxSettingsQuery,
     InboxSettingsRequest,
@@ -32,8 +36,6 @@ from app.schemas.dto.inbox.inbox_views import (
     InboxAssigneesQuery,
     InboxPage,
     InboxQuery,
-    InboxViewCounts,
-    InboxViewCountsQuery,
 )
 from app.schemas.exceptions.application_errors import ValidationFailedError
 from app.schemas.typings.businesses.prefixed_id import BusinessId
@@ -47,7 +49,9 @@ read_settings_body = build_json_body_dependency(InboxSettingsRequest)
 def build_inbox_router(
     current_user: CurrentUserDependency,
     list_inbox_operator: OperatorContract[InboxQuery, InboxPage],
-    count_inbox_views_operator: OperatorContract[InboxViewCountsQuery, InboxViewCounts],
+    count_inbox_attention_operator: OperatorContract[
+        InboxAttentionQuery, InboxAttentionCounts
+    ],
     list_inbox_assignees_operator: OperatorContract[
         InboxAssigneesQuery, InboxAssigneeList
     ],
@@ -69,7 +73,8 @@ def build_inbox_router(
                                     all), the latest message first, with the
                                     views' counts (audited per viewer)
         GET  /v1/businesses/{business_id}/inbox/counts
-                                    the views' counts only (badges)
+                                    the views' counts and the other badges
+                                    (the same numbers as …/attention-counts)
         GET  /v1/businesses/{business_id}/inbox/assignees
                                     members to assign, with their workload
         POST /v1/businesses/{business_id}/conversations/{conversation_id}/assign
@@ -107,9 +112,9 @@ def build_inbox_router(
     def count_inbox_views(
         business_id: str,
         user_id: Annotated[UserId, Depends(current_user)],
-    ) -> InboxViewCounts:
-        return count_inbox_views_operator.operate(
-            InboxViewCountsQuery(
+    ) -> InboxAttentionCounts:
+        return count_inbox_attention_operator.operate(
+            InboxAttentionQuery(
                 user_id=user_id,
                 business_id=parse_path_identifier(business_id, BusinessId, "Business"),
             )

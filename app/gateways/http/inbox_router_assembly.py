@@ -19,7 +19,7 @@ def build_inbox_routers(
         build_inbox_router(
             current_user=current_user,
             list_inbox_operator=inbox.list_inbox_operator(),
-            count_inbox_views_operator=inbox.count_inbox_views_operator(),
+            count_inbox_attention_operator=inbox.count_inbox_attention_operator(),
             list_inbox_assignees_operator=inbox.list_inbox_assignees_operator(),
             assign_conversation_operator=inbox.assign_conversation_operator(),
             get_inbox_settings_operator=inbox.get_inbox_settings_operator(),

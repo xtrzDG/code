@@ -5,7 +5,7 @@ from typed_time_provider import Microseconds
 from app.schemas.constants.billing import InvoiceKind, SubscriptionStatus
 from app.schemas.domain.billing import InvoiceDocument, SubscriptionDocument
 from app.schemas.typings.billing.strings import InvoiceDescription
-from app.use_cases.billing.billing_records import find_covering_paid_invoice
+from app.use_cases.shared.billing_records import find_covering_paid_invoice
 
 
 def is_service_unpaid(

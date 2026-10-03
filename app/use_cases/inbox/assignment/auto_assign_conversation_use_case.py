@@ -20,8 +20,8 @@ from app.schemas.dto.inbox.assignment import (
     ConversationAssignmentChange,
 )
 from app.schemas.typings.users.prefixed_id import UserId
-from app.use_cases.inbox.assignment.assignment_views import build_assignment_view
 from app.use_cases.inbox.inbox_support import ASSIGNMENT_ENTITY, append_audit
+from app.use_cases.shared.assignment_views import build_assignment_view
 from app.utilities.inbox.auto_assignment import auto_assign_candidates, pick_assignee
 
 

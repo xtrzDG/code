@@ -107,6 +107,8 @@ _.latency_ms  # app/schemas/dto/health.py (GET /readyz)
 _.heartbeat_age_seconds  # app/schemas/dto/health.py (GET /readyz)
 _.error_name  # app/schemas/dto/widget_errors.py (read as a tag by model_dump)
 _.attention_count  # app/schemas/dto/admin.py
+_.failed_tests  # app/schemas/dto/admin.py
+_.low_criteria  # app/schemas/dto/admin.py
 _.audit_log_entry_id  # app/schemas/dto/admin.py
 _.client_count  # app/schemas/dto/admin.py
 _.critical_count  # app/schemas/dto/admin.py
@@ -193,8 +195,18 @@ _.open_unanswered_question_count  # app/schemas/dto/operations/dashboard.py
 _.package  # app/schemas/dto/operations/dashboard.py
 _.open_count  # app/schemas/dto/operations/handoffs.py
 _.resolved_count  # app/schemas/dto/operations/handoffs.py
-_.new_lead_count  # app/schemas/dto/operations/inbox_counts.py
-_.open_handoff_count  # app/schemas/dto/operations/inbox_counts.py
+_.channel_errors  # app/schemas/dto/inbox/inbox_attention.py
+_.channel_error_count  # app/schemas/dto/inbox/inbox_attention.py (deprecated name)
+_.new_lead_count  # app/schemas/dto/inbox/inbox_attention.py (deprecated name)
+_.open_handoff_count  # app/schemas/dto/inbox/inbox_attention.py (deprecated name)
+_.unconfirmed_bookings  # app/schemas/dto/inbox/inbox_attention.py
+_.unconfirmed_booking_count  # app/schemas/dto/inbox/inbox_attention.py (deprecated)
+# A channel's link state, read by the cabinet's Channels card.
+_.link_state  # app/schemas/dto/channels/channel_settings.py
+# Dated exchange rates: the stored day number is a lookup column (the newest
+# rate of a pair, migration 1071); staleness is shown by the cabinet.
+_.rate_day  # app/schemas/domain/exchange_rates.py
+_.is_stale  # app/schemas/dto/catalog/plan_quotes.py
 _.status_counts  # app/schemas/dto/operations/leads.py
 _.knowledge_item_id  # app/schemas/dto/operations/unanswered_questions.py
 _.requires_reassembly  # app/schemas/dto/operations/unanswered_questions.py
@@ -211,8 +223,6 @@ _.international_phone_number  # app/schemas/dto/users.py
 _.latest_message_id  # app/schemas/dto/load_data.py
 _.telegram_channel_id  # app/schemas/dto/load_data.py
 _.telegram_webhook_secret  # app/schemas/dto/load_data.py
-_.channel_error_count  # app/schemas/dto/operations/attention_counts.py
-_.unconfirmed_booking_count  # app/schemas/dto/operations/attention_counts.py
 _.provider_ready  # app/schemas/dto/notifications/notification_settings.py
 _.booking_date  # app/schemas/dto/notifications/staff_links.py
 _.does_trial_start_at_go_live  # app/schemas/dto/billing_cabinet.py

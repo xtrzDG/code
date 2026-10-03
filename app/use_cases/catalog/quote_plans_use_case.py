@@ -185,7 +185,7 @@ def price_locally(
     return quote_money(
         convert_money(
             base_price,
-            exchange_rate.rate,
+            exchange_rate.rate_value,
             exchange_rate.quote_currency_code,
         ),
         True,

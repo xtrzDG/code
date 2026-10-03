@@ -11,6 +11,7 @@ from app.schemas.exceptions.application_errors import (
 )
 from app.schemas.typings.bookings.constrained_strings import LocalDate
 from app.schemas.typings.users.prefixed_id import UserId
+from tests.billing.billing_registries import static_rate_registry
 from tests.value.value_scene import ValueScene
 
 
@@ -39,8 +40,11 @@ def test_a_euro_business_uses_the_typical_check_as_it_is() -> None:
     assert model.average_check_minor == 4_000
 
 
-def test_without_an_official_rate_there_is_no_money_estimate() -> None:
+def test_without_a_rate_there_is_no_money_estimate() -> None:
     scene = ValueScene(currency_code="USD", country_code="US")
+    scene.world.exchange_rate_registry = static_rate_registry(
+        [("EUR", "GEL", "2.9552")]
+    )
     scene.booking(
         "2026-10-04T13:00:00+04:00", scene.conversation("2026-10-04T13:00:00+04:00")
     )
@@ -51,6 +55,26 @@ def test_without_an_official_rate_there_is_no_money_estimate() -> None:
     assert model.average_check_minor is None and model.typical_check_minor is None
     assert model.current.assistant_booking_count == 1
     assert model.current.estimated_revenue_minor is None
+
+
+@pytest.mark.parametrize(
+    ("currency", "country", "rate", "typical_check_minor"),
+    [("USD", "US", "1.1351", 4_500), ("JPY", "JP", "168.12", 6_700)],
+)
+def test_money_is_estimated_outside_euro_and_lari_with_the_euro_rate(
+    currency: str, country: str, rate: str, typical_check_minor: int
+) -> None:
+    scene = ValueScene(currency_code=currency, country_code=country)
+    scene.world.exchange_rate_registry = static_rate_registry([("EUR", currency, rate)])
+    scene.booking(
+        "2026-10-04T13:00:00+04:00", scene.conversation("2026-10-04T13:00:00+04:00")
+    )
+
+    model = scene.world.business_value().run(value_query(scene))
+
+    assert model.average_check_source is AverageCheckSource.NICHE_DEFAULT
+    assert model.typical_check_minor == typical_check_minor
+    assert model.current.estimated_revenue_minor == typical_check_minor
 
 
 def test_a_shop_earns_by_the_requests_it_takes() -> None:

@@ -39,6 +39,13 @@ Every HTTP endpoint runs `operator.operate` -> `pipeline.start` ->
   utilities, facilitators, LLM adapter), never on concrete classes of another
   module. Constructor injection only; no globals, no service locators.
 - `app/services/` is forbidden.
+- Use-case packages (`app/use_cases/<package>/`) are independent of each
+  other (an import-linter `independence` contract, direct and indirect
+  imports). What several packages need — loading the business
+  (`require_business`), contact updates with audit, subscription records,
+  staff alert texts, list-item views — lives in `app/use_cases/shared/`,
+  which imports no use-case package; a new package joins the contract
+  (`tests/architecture_policy/test_import_layers.py`).
 
 ## Files and names
 

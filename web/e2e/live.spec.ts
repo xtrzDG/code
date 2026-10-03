@@ -15,14 +15,14 @@ import { en } from "./support/messages";
 
 test.describe.configure({ timeout: 120_000 });
 
-/** What the Inbox badge counts: customers waiting for a person and new requests. */
+/** What the Inbox badge counts: the inbox tabs "Needs a person" and "Requests". */
 async function waitingCount(request: APIRequestContext, owner: DemoOwner): Promise<number> {
   const response = await request.get(`${API_URL}/v1/businesses/${owner.businessId}/attention-counts`, {
     headers: { authorization: `Bearer ${owner.token}` },
   });
   expect(response.ok(), await response.text()).toBe(true);
-  const counts = (await response.json()) as { open_handoff_count: number; new_lead_count: number };
-  return counts.open_handoff_count + counts.new_lead_count;
+  const counts = (await response.json()) as { needs_person: number; requests: number };
+  return counts.needs_person + counts.requests;
 }
 
 /** Marks the document, so a test can tell it was never reloaded. */

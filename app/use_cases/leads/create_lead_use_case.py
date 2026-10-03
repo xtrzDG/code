@@ -30,16 +30,16 @@ from app.schemas.dto.operations.message_texts import LeadStaffNotificationInput
 from app.schemas.typings.conversations.strings import MessageText
 from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.schemas.typings.localization.strings import FormattedPhoneNumber
-from app.use_cases.bookings.operations_support import (
+from app.use_cases.shared.business_access import require_business
+from app.use_cases.shared.lead_views import build_lead_view
+from app.use_cases.shared.operations_support import (
     ContactDetails,
     display_phone,
-    require_business,
     require_contact,
     update_contact_details,
 )
-from app.use_cases.inbox.assignment.request_tracking import track_request
-from app.use_cases.leads.lead_views import build_lead_view
-from app.use_cases.notifications.staff_alerts import StaffAlertTexts, lead_alert
+from app.use_cases.shared.request_tracking import track_request
+from app.use_cases.shared.staff_alerts import StaffAlertTexts, lead_alert
 
 
 class CreateLeadUseCase(UseCaseContract[CreateLeadCommand, LeadView]):

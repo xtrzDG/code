@@ -40,6 +40,19 @@ class DiscountPercent(BaseConstrainedTypedInt):
     le = 100
 
 
+class ExchangeRateDayNumber(BaseConstrainedTypedInt):
+    """
+    The calendar day a rate was set for as the number YYYYMMDD, so the
+    newest rate of a pair is found by an index.
+
+    Example:
+        nbg_rate_day = ExchangeRateDayNumber(20260930)
+    """
+
+    ge = 19700101
+    le = 99991231
+
+
 class GracePeriodDays(BaseConstrainedTypedInt):
     """Days a failed payment is tolerated before leads-only mode (concept: 7)."""
 

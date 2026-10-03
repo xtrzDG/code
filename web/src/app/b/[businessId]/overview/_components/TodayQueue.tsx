@@ -52,7 +52,7 @@ export function TodayQueue() {
           href={inboxPath(business.id, "needs_person")}
           label={t("dashboard.attention.openHandoffs")}
           hint={t("dashboard.attention.openHandoffsHint")}
-          count={counts?.openHandoffs}
+          count={counts?.needsPerson}
           formatCount={format.number}
           actionLabel={t("dashboard.attention.open")}
           icon={<IconHandoff className="size-5" />}
@@ -61,7 +61,7 @@ export function TodayQueue() {
           href={inboxPath(business.id, "requests")}
           label={t("value.queue.requests")}
           hint={t("value.queue.requestsHint")}
-          count={counts?.newLeads}
+          count={counts?.requests}
           formatCount={format.number}
           actionLabel={t("dashboard.attention.open")}
           icon={<IconInbox className="size-5" />}

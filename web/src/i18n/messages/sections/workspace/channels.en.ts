@@ -51,6 +51,9 @@ export const channelsEn = {
   errorSince: "Stopped working {date}",
   errorReason: "What the platform said:",
   errorHeals: "It clears by itself once a message goes through. If it does not, update the details.",
+  noLinkTitle: "Connected, but its link is unavailable — reconnect it",
+  noLinkDescription:
+    "The assistant answers in {channel}, but the platform never told us its public address, so Share and the chat page leave it out. Press “Update details” once to fetch it.",
   pendingDescription: "We are finishing the connection. It usually takes a minute.",
   connect: "Connect",
   turnOn: "Turn on",

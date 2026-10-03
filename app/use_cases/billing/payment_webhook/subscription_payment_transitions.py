@@ -5,7 +5,7 @@ from typed_time_provider import Microseconds
 from app.contracts.repositories.billing_repositories import InvoiceRepoContract
 from app.schemas.constants.billing import SubscriptionStatus
 from app.schemas.domain.billing import InvoiceDocument, SubscriptionDocument
-from app.use_cases.billing.billing_records import (
+from app.use_cases.shared.billing_records import (
     find_covering_paid_invoice,
     list_subscription_invoices,
 )

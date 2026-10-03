@@ -2,6 +2,7 @@
 
 from app.schemas.constants.bookings import BookingStatus, LeadStatus, LeadType
 from app.schemas.constants.channels import ChannelKind, ChannelStatus
+from app.schemas.constants.conversations import ConversationStatus
 from app.schemas.constants.handoffs import HandoffReason, HandoffStatus, HandoffUrgency
 from app.schemas.domain.bookings import LeadDocument
 from app.schemas.domain.businesses import BusinessDocument
@@ -25,6 +26,9 @@ def add_handoff(
     is_sandbox: bool = False,
 ) -> None:
     conversation = world.add_conversation(business, contact, is_sandbox=is_sandbox)
+    if status is not HandoffStatus.RESOLVED:
+        conversation.status = ConversationStatus.HANDOFF
+        world.conversation_repo.save(conversation)
     world.handoff_repo.save(
         HandoffDocument(
             business_id=business.id,
@@ -46,10 +50,16 @@ def add_lead(
     status: LeadStatus,
     is_sandbox: bool = False,
 ) -> None:
+    conversation = world.add_conversation(business, contact, is_sandbox=is_sandbox)
+    if status in (LeadStatus.NEW, LeadStatus.IN_PROGRESS):
+        world.conversation_repo.set_open_request(
+            business.id, conversation.id, True, world.clock.now_microseconds()
+        )
     world.lead_repo.save(
         LeadDocument(
             business_id=business.id,
             contact_id=contact.id,
+            conversation_id=conversation.id,
             lead_type=LeadType.BANQUET,
             details=LeadDetails("A birthday for 30 guests"),
             source_channel=ChannelKind.WHATSAPP,
@@ -74,7 +84,11 @@ def seed_waiting_items(
     business: BusinessDocument,
     other_business: BusinessDocument,
 ) -> None:
-    """3 open handoffs, 2 new requests, 1 booking to confirm, 1 failing channel."""
+    """
+    3 conversations that need a person, 2 with an open request (none
+    assigned), 1 booking to confirm, 1 failing channel; the sandbox and the
+    other business add nothing.
+    """
 
     resource = world.add_resource(business, "Table 4")
     contact = world.add_contact(business, "Nino", "+995555123456")

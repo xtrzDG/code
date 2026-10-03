@@ -23,9 +23,7 @@ from app.schemas.dto.assistants.assistant_commands import (
 from app.schemas.dto.assistants.assistant_views import AssistantVersionDetails
 from app.schemas.dto.conversation_feed.owner_test_chat import OwnerTestChatCommand
 from app.schemas.exceptions.base_exception import ApplicationError
-from app.use_cases.conversations.resolve_test_chat_version_use_case import (
-    TESTABLE_STATUSES,
-)
+from app.use_cases.shared.test_chat_versions import TESTABLE_STATUSES
 from app.utilities.setup.pending_changes import has_unapplied_changes
 
 LOGGER: logging.Logger = logging.getLogger(__name__)

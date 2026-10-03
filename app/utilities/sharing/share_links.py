@@ -6,7 +6,7 @@ chat page first), the same links without tags for the hosted page's
 
 from collections.abc import Sequence
 
-from app.schemas.constants.channels import ChannelKind, ChannelStatus
+from app.schemas.constants.channels import ChannelKind, ChannelLinkState, ChannelStatus
 from app.schemas.constants.sharing import ShareLinkGap, ShareLinkKind
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.channels import ChannelDocument, ChannelPublicProfile
@@ -44,6 +44,7 @@ CHANNEL_LINK_KINDS: tuple[tuple[ChannelKind, ShareLinkKind], ...] = (
     (ChannelKind.WHATSAPP, ShareLinkKind.WHATSAPP),
     (ChannelKind.PHONE, ShareLinkKind.PHONE),
 )
+SHARE_LINK_KIND_OF: dict[ChannelKind, ShareLinkKind] = dict(CHANNEL_LINK_KINDS)
 
 
 def business_address(business: BusinessDocument) -> str:
@@ -78,6 +79,28 @@ def build_share_links(
             links.append(build_channel_link(link_kind, channel, profile, source))
 
     return links
+
+
+def find_link_state(
+    channel: ChannelDocument,
+    profile: BusinessProfileDocument | None = None,
+) -> ChannelLinkState | None:
+    """
+    Whether a connected channel can be shared as a link, by the very rule the
+    share links follow (`build_channel_link`); None for a channel that is not
+    connected or has no link of its own (the website chat).
+    """
+
+    link_kind: ShareLinkKind | None = SHARE_LINK_KIND_OF.get(channel.kind)
+    if link_kind is None or channel.status is not ChannelStatus.CONNECTED:
+        return None
+
+    link: ShareLinkView = build_channel_link(link_kind, channel, profile, None)
+    return (
+        ChannelLinkState.LINKED
+        if link.url is not None
+        else ChannelLinkState.MISSING_PUBLIC_ADDRESS
+    )
 
 
 def build_contact_links(

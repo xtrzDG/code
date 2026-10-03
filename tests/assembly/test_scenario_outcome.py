@@ -1,8 +1,15 @@
 """One scenario's outcome: scores, required actions and the reply's script."""
 
+from collections.abc import Sequence
+
 import pytest
 
-from app.schemas.constants.assistants import AutotestOutcome, AutotestScenarioKind
+from app.schemas.constants.assistants import (
+    AutotestCheckCode,
+    AutotestOutcome,
+    AutotestScenarioKind,
+)
+from app.schemas.dto.assistants.autotest_runs import AutotestScenario
 from app.schemas.dto.conversations import AssistantReply
 from app.schemas.typings.assistants.strings import AutotestCheckNote
 from app.schemas.typings.conversations.strings import MessageText
@@ -14,6 +21,16 @@ from app.utilities.assembly.autotest_evaluation import (
 from app.utilities.assembly.script_detection import is_written_in_script
 from tests.assembly.autotest_scripts import build_reply
 from tests.assembly.judge_helpers import scenario, scores
+
+
+def notes(case: AutotestScenario, replies: Sequence[AssistantReply]) -> list[str]:
+    return [str(failure.note) for failure in check_conversation(case, replies)]
+
+
+def codes(
+    case: AutotestScenario, replies: Sequence[AssistantReply]
+) -> list[AutotestCheckCode]:
+    return [failure.code for failure in check_conversation(case, replies)]
 
 
 def test_scenario_passes_with_no_criterion_below_three() -> None:
@@ -28,10 +45,9 @@ def test_scenario_passes_with_no_criterion_below_three() -> None:
 def test_booking_scenario_must_create_a_booking() -> None:
     booking = scenario(AutotestScenarioKind.BOOKING)
 
-    assert check_conversation(booking, [build_reply("ka", is_booked=True)]) == []
-    assert check_conversation(booking, [build_reply("ka")]) == [
-        "No booking was created."
-    ]
+    assert notes(booking, [build_reply("ka", is_booked=True)]) == []
+    assert notes(booking, [build_reply("ka")]) == ["No booking was created."]
+    assert codes(booking, [build_reply("ka")]) == [AutotestCheckCode.NO_BOOKING_CREATED]
 
 
 @pytest.mark.parametrize(
@@ -43,10 +59,11 @@ def test_human_request_and_emergency_must_hand_off(
 ) -> None:
     case = scenario(kind)
 
-    assert check_conversation(case, [build_reply("ka", is_handed_off=True)]) == []
-    assert check_conversation(case, [build_reply("ka")]) == [
+    assert notes(case, [build_reply("ka", is_handed_off=True)]) == []
+    assert notes(case, [build_reply("ka")]) == [
         "The conversation was not handed off to a human."
     ]
+    assert codes(case, [build_reply("ka")]) == [AutotestCheckCode.NOT_HANDED_OFF]
 
 
 @pytest.mark.parametrize(
@@ -62,11 +79,13 @@ def test_tricky_scenarios_must_not_create_bookings_or_leads(
 ) -> None:
     case = scenario(kind)
 
-    assert check_conversation(case, [build_reply("ka")]) == []
-    assert check_conversation(case, [build_reply("ka", is_lead_created=True)]) == [
+    assert notes(case, [build_reply("ka")]) == []
+    assert notes(case, [build_reply("ka", is_lead_created=True)]) == [
         "Created 0 booking(s) and 1 lead(s) although none was expected."
     ]
-    assert len(check_conversation(case, [build_reply("ka", is_booked=True)])) == 1
+    assert codes(case, [build_reply("ka", is_booked=True)]) == [
+        AutotestCheckCode.UNEXPECTED_RECORDS
+    ]
 
 
 def test_replies_must_be_written_in_the_scenario_script() -> None:
@@ -86,15 +105,16 @@ def test_replies_must_be_written_in_the_scenario_script() -> None:
     english_reply = build_reply("en")
     russian_reply = build_reply("ru")
 
-    assert check_conversation(georgian, [build_reply("ka"), english_reply]) == [
+    assert notes(georgian, [build_reply("ka"), english_reply]) == [
         "Reply 2 is not written in Georgian (ka)."
     ]
-    assert check_conversation(italian, [build_reply("it")]) == []
-    assert check_conversation(italian, [english_reply]) == []
-    assert check_conversation(italian, [russian_reply]) == [
+    assert notes(italian, [build_reply("it")]) == []
+    assert notes(italian, [english_reply]) == []
+    assert notes(italian, [russian_reply]) == [
         "Reply 1 is not written in Italian (it)."
     ]
-    assert check_conversation(unknown_script, [russian_reply]) == []
+    assert codes(italian, [russian_reply]) == [AutotestCheckCode.WRONG_REPLY_LANGUAGE]
+    assert notes(unknown_script, [russian_reply]) == []
 
 
 @pytest.mark.parametrize(
@@ -140,7 +160,7 @@ def test_the_server_disclosure_is_not_judged_as_the_models_language(
         update={"disclosure_text": MessageText(disclosure)}
     )
 
-    assert check_conversation(price_question, [reply]) == []
+    assert notes(price_question, [reply]) == []
 
 
 @pytest.mark.parametrize(
@@ -161,6 +181,4 @@ def test_silent_replies_are_not_checked_for_language() -> None:
         build_reply("en", is_handed_off=True).model_dump() | {"text": None}
     )
 
-    assert (
-        check_conversation(scenario(AutotestScenarioKind.HUMAN_REQUEST), [silent]) == []
-    )
+    assert notes(scenario(AutotestScenarioKind.HUMAN_REQUEST), [silent]) == []

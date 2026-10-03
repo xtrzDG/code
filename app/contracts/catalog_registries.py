@@ -17,10 +17,11 @@ class ExchangeRateRegistryContract(RegistryContract, Protocol):
         base_currency_code: CurrencyCode,
         quote_currency_code: CurrencyCode,
     ) -> ExchangeRateQuote | None:
-        """Official rate base -> quote, or None; rates are never invented."""
-        raise NotImplementedError
-
-    def list_all(self) -> list[ExchangeRateQuote]:
+        """
+        The newest rate base -> quote: a published one, else its inverse,
+        else a cross rate through the euro (both marked derived); None when
+        no bank publishes either currency. Rates are never invented.
+        """
         raise NotImplementedError
 
 

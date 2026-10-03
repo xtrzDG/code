@@ -1,16 +1,13 @@
 """Registries the billing tests swap in: a fixed price book and static rates."""
 
-from app.contracts.catalog_registries import ExchangeRateRegistryContract
 from app.contracts.registries import PlanRegistryContract
+from app.registries.billing.exchange_rate_registry import ExchangeRateRegistry
 from app.registries.billing.plan_registry import PlanRegistry
 from app.schemas.constants.billing import PlanKey
 from app.schemas.dto.billing import Money, PlanDefinition
-from app.schemas.dto.catalog.plan_quotes import ExchangeRateQuote
-from app.schemas.typings.billing.constrained_floats import ExchangeRate
 from app.schemas.typings.billing.constrained_integers import MoneyAmountMinor
-from app.schemas.typings.billing.constrained_strings import ExchangeRateDate
-from app.schemas.typings.billing.strings import ExchangeRateSourceName
 from app.schemas.typings.localization.constrained_strings import CurrencyCode
+from tests.billing.exchange_rate_fixtures import rate_registry
 
 
 class PriceBookPlanRegistry(PlanRegistryContract):
@@ -57,34 +54,10 @@ class PriceBookPlanRegistry(PlanRegistryContract):
         return Money(amount_minor=MoneyAmountMinor(amount), currency_code=currency_code)
 
 
-class StaticExchangeRateRegistry(ExchangeRateRegistryContract):
-    """Official rates given by the test."""
+def static_rate_registry(rates: list[tuple[str, str, str]]) -> ExchangeRateRegistry:
+    """
+    The real registry over only the rates the test gives (dated today, no
+    catalog fallback): inverses and euro cross rates still apply.
+    """
 
-    def __init__(self, rates: list[tuple[str, str, float]]) -> None:
-        self._quotes: list[ExchangeRateQuote] = [
-            ExchangeRateQuote(
-                base_currency_code=CurrencyCode(base),
-                quote_currency_code=CurrencyCode(quote),
-                rate=ExchangeRate(rate),
-                rate_date=ExchangeRateDate("2026-09-30"),
-                source=ExchangeRateSourceName("Test central bank"),
-            )
-            for base, quote, rate in rates
-        ]
-
-    def find_rate(
-        self,
-        base_currency_code: CurrencyCode,
-        quote_currency_code: CurrencyCode,
-    ) -> ExchangeRateQuote | None:
-        for quote in self._quotes:
-            if (
-                quote.base_currency_code == base_currency_code
-                and quote.quote_currency_code == quote_currency_code
-            ):
-                return quote
-
-        return None
-
-    def list_all(self) -> list[ExchangeRateQuote]:
-        return list(self._quotes)
+    return rate_registry(rates, fallback=())

@@ -61,7 +61,7 @@ from app.use_cases.bookings.manual_booking.manual_booking_customer import (
 from app.use_cases.bookings.manual_booking.manual_booking_resources import (
     choose_seating_candidates,
 )
-from app.use_cases.bookings.operations_support import build_audit_entry
+from app.use_cases.shared.operations_support import build_audit_entry
 from app.utilities.scheduling.booking_placement import place_booking
 from app.utilities.scheduling.booking_views import build_booking_view
 from app.utilities.scheduling.placement import Placement

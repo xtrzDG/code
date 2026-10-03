@@ -14,7 +14,7 @@ from app.schemas.dto.operations.unanswered_questions import (
 )
 from app.schemas.exceptions.application_errors import ConflictError, NotFoundError
 from app.schemas.typings.knowledge.strings import KnowledgeTitle
-from app.use_cases.handoffs.handoff_views import build_unanswered_question_details
+from app.use_cases.shared.handoff_views import build_unanswered_question_details
 
 
 class AnswerUnansweredQuestionUseCase(

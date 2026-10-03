@@ -27,14 +27,16 @@ from app.gateways.http.operations.business_access import (
     BUSINESS_PREFIX,
     build_business_authorizer,
 )
+from app.gateways.http.strict_request_parsing import parse_path_identifier
 from app.gateways.http.user_authentication import CurrentUserDependency
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.dto.access import BusinessAccessRequest
-from app.schemas.dto.live_events import LiveEventReplay, LiveStreamLimits
-from app.schemas.dto.operations.attention_counts import (
-    AttentionCounts,
-    AttentionCountsQuery,
+from app.schemas.dto.inbox.inbox_attention import (
+    InboxAttentionCounts,
+    InboxAttentionQuery,
 )
+from app.schemas.dto.live_events import LiveEventReplay, LiveStreamLimits
+from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.live_events.constrained_strings import LiveEventId
 from app.schemas.typings.users.prefixed_id import UserId
 
@@ -59,7 +61,7 @@ def build_events_router(
     authorize_business_access: OperatorContract[
         BusinessAccessRequest, BusinessDocument
     ],
-    get_attention_counts: OperatorContract[AttentionCountsQuery, AttentionCounts],
+    count_inbox_attention: OperatorContract[InboxAttentionQuery, InboxAttentionCounts],
     stream_facilitator: LiveEventStreamFacilitatorContract,
     limits: LiveStreamLimits,
 ) -> APIRouter:
@@ -112,17 +114,20 @@ def build_events_router(
     def get_attention_counts_route(
         business_id: str,
         user_id: Annotated[UserId, Depends(current_user)],
-    ) -> AttentionCounts:
+    ) -> InboxAttentionCounts:
         """
-        What waits for a person (sandbox excluded): open handoffs, new
-        requests, upcoming bookings to confirm and channels in error; the
-        badges of the cabinet's navigation. Indexed counts only, no personal
-        data, so it records no view.
+        What waits for a person (sandbox excluded): conversations that need
+        a person or have an open request, unassigned and mine, upcoming
+        bookings to confirm and channels in error; the badges of the
+        cabinet's navigation, the same numbers as …/inbox/counts. Indexed
+        counts only, no personal data, so it records no view.
         """
 
-        business: BusinessDocument = authorize(user_id, business_id)
-        return get_attention_counts.operate(
-            AttentionCountsQuery(business_id=business.id)
+        return count_inbox_attention.operate(
+            InboxAttentionQuery(
+                user_id=user_id,
+                business_id=parse_path_identifier(business_id, BusinessId, "Business"),
+            )
         )
 
     return router

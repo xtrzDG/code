@@ -23,7 +23,7 @@ def find_health_issues(
     if summary.service_mode is ServiceMode.LEADS_ONLY:
         issues.append(ClientHealthIssue.LEADS_ONLY_MODE)
 
-    if summary.cost.margin is not None and int(summary.cost.margin.amount_minor) < 0:
+    if is_losing_money(summary, subscription):
         issues.append(ClientHealthIssue.NEGATIVE_MARGIN)
 
     if subscription is None:
@@ -38,7 +38,9 @@ def find_health_issues(
     if subscription is not None and summary.published_version_number is None:
         issues.append(ClientHealthIssue.NOT_PUBLISHED)
 
-    if int(summary.failed_tests) > 0:
+    # The active version's own verdict: a run that passed with a scenario
+    # or two failed is a passed run, as on the version page.
+    if summary.autotest_verdict is not None and not summary.autotest_verdict.is_passed:
         issues.append(ClientHealthIssue.AUTOTESTS_FAILED)
 
     if int(summary.tool_errors_last_7_days) > 0:
@@ -70,3 +72,20 @@ def judge_health(issues: list[ClientHealthIssue]) -> ClientHealthStatus:
         return ClientHealthStatus.ATTENTION
 
     return ClientHealthStatus.HEALTHY
+
+
+def is_losing_money(
+    summary: AdminClientSummary,
+    subscription: SubscriptionDocument | None,
+) -> bool:
+    """
+    A paying client whose provider costs exceed its revenue. A free trial
+    (or no subscription yet) has no revenue by design: its cost is the
+    price of the trial, not a loss to act on.
+    """
+
+    if subscription is None or subscription.status is SubscriptionStatus.TRIALING:
+        return False
+
+    margin = summary.cost.margin
+    return margin is not None and int(margin.amount_minor) < 0

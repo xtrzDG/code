@@ -5,6 +5,7 @@ from app.adapters.storage.postgres.document_collection_factory import (
     build_postgres_connection_pool,
 )
 from app.clients.anthropic.anthropic_messages_client import AnthropicMessagesClient
+from app.clients.ecb.ecb_rates_client import EcbRatesClient
 from app.clients.email.smtp_email_client import SmtpEmailClient
 from app.clients.flitt.flitt_client import FlittClient
 from app.clients.google.google_calendar_client import GoogleCalendarClient
@@ -14,6 +15,7 @@ from app.clients.meta.meta_graph_client import MetaGraphClient
 from app.clients.meta.whatsapp_authentication_client import (
     WhatsAppAuthenticationClient,
 )
+from app.clients.nbg.nbg_rates_client import NbgRatesClient
 from app.clients.object_storage.object_storage_client_factory import (
     build_object_storage_client,
 )
@@ -123,3 +125,11 @@ class ClientsContainer(containers.DeclarativeContainer):
     # Outside web addresses (a business's website, menu links): public
     # addresses only, connected at the vetted address (the SSRF guard).
     safe_http_fetcher: Singleton[SafeHttpFetcherContract] = Singleton(SafeHttpFetcher)
+    # The central banks' daily exchange rates, read through the same guard:
+    # the National Bank of Georgia (lari) and the ECB (euro reference rates).
+    nbg_rates_client: Singleton[NbgRatesClient] = Singleton(
+        NbgRatesClient, safe_http_fetcher=safe_http_fetcher
+    )
+    ecb_rates_client: Singleton[EcbRatesClient] = Singleton(
+        EcbRatesClient, safe_http_fetcher=safe_http_fetcher
+    )

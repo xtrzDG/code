@@ -64,6 +64,24 @@ class JudgeCriterion(StrEnum):
     LANGUAGE = "language"
 
 
+class AutotestCheckCode(StrEnum):
+    """
+    Why the test harness failed a scenario, as a code each language renders:
+    a deterministic check of what the assistant did (no booking, no handoff,
+    records nobody asked for, a reply in another script), or why the
+    scenario could not be evaluated at all.
+    """
+
+    NO_BOOKING_CREATED = "no_booking_created"
+    NOT_HANDED_OFF = "not_handed_off"
+    UNEXPECTED_RECORDS = "unexpected_records"
+    WRONG_REPLY_LANGUAGE = "wrong_reply_language"
+    CONVERSATION_FAILED = "conversation_failed"
+    NO_CUSTOMER_MESSAGE = "no_customer_message"
+    JUDGE_UNAVAILABLE = "judge_unavailable"
+    JUDGE_UNREADABLE = "judge_unreadable"
+
+
 class AutotestOutcome(StrEnum):
     """Result of one autotest scenario."""
 

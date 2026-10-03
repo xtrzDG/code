@@ -19,10 +19,6 @@ from app.schemas.dto.handoffs import (
     RecordUnansweredQuestionCommand,
     UnansweredQuestionView,
 )
-from app.schemas.dto.operations.attention_counts import (
-    AttentionCounts,
-    AttentionCountsQuery,
-)
 from app.schemas.dto.operations.dashboard import DashboardStats, DashboardStatsQuery
 from app.schemas.dto.operations.handoffs import (
     HandoffListItem,
@@ -30,7 +26,6 @@ from app.schemas.dto.operations.handoffs import (
     ListHandoffsQuery,
     ResolveHandoffCommand,
 )
-from app.schemas.dto.operations.inbox_counts import InboxCounts, InboxCountsQuery
 from app.schemas.dto.operations.leads import (
     LeadPage,
     ListLeadsQuery,
@@ -57,11 +52,7 @@ from app.use_cases.handoffs.resolve_handoff_use_case import ResolveHandoffUseCas
 from app.use_cases.inbox.assignment.auto_assigning_handoff_use_case import (
     AutoAssigningHandoffUseCase,
 )
-from app.use_cases.insights.get_attention_counts_use_case import (
-    GetAttentionCountsUseCase,
-)
 from app.use_cases.insights.get_dashboard_stats_use_case import GetDashboardStatsUseCase
-from app.use_cases.insights.get_inbox_counts_use_case import GetInboxCountsUseCase
 from app.use_cases.leads.create_lead_use_case import CreateLeadUseCase
 from app.use_cases.leads.list_leads_use_case import ListLeadsUseCase
 from app.use_cases.leads.update_lead_status_use_case import UpdateLeadStatusUseCase
@@ -192,21 +183,6 @@ class FollowUpUseCasesContainer(containers.DeclarativeContainer):
         usage_event_repo=repositories.usage_event_repo,
         subscription_repo=repositories.subscription_repo,
         plan_registry=registries.plan_registry,
-        wall_clock=time_provider.microsecond_wall_clock,
-    )
-    get_inbox_counts_use_case: Factory[
-        UseCaseContract[InboxCountsQuery, InboxCounts]
-    ] = Factory(
-        GetInboxCountsUseCase,
-        business_repo=repositories.business_repo,
-        attention_count_repo=repositories.attention_count_repo,
-    )
-    get_attention_counts_use_case: Factory[
-        UseCaseContract[AttentionCountsQuery, AttentionCounts]
-    ] = Factory(
-        GetAttentionCountsUseCase,
-        business_repo=repositories.business_repo,
-        attention_count_repo=repositories.attention_count_repo,
         wall_clock=time_provider.microsecond_wall_clock,
     )
     # Every handoff (model tool, reply guard, calls) goes through the team

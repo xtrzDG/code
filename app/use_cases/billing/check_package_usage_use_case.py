@@ -26,13 +26,13 @@ from app.schemas.dto.jobs import JobReport, JobTick
 from app.schemas.typings.billing.constrained_integers import PackageUsagePercent
 from app.schemas.typings.conversations.strings import MessageText
 from app.schemas.typings.platform.constrained_integers import ProcessedItemCount
-from app.use_cases.billing.billing_records import find_current_subscription
 from app.use_cases.billing.owner_notifications import notify_business_owners
-from app.use_cases.billing.package_usage import (
+from app.use_cases.shared.billing_records import find_current_subscription
+from app.use_cases.shared.package_usage import (
     compute_usage_percent,
     summarize_package_usage,
 )
-from app.use_cases.billing.subscription_pricing import price_overage_per_minute
+from app.use_cases.shared.subscription_pricing import price_overage_per_minute
 from app.utilities.billing.billing_periods import find_usage_window
 
 WARNING_THRESHOLD_PERCENT: int = 80

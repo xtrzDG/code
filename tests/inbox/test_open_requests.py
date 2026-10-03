@@ -13,7 +13,7 @@ from app.schemas.dto.inbox.assignment import (
     OpenRequestState,
 )
 from app.schemas.exceptions.application_errors import ExternalServiceError
-from app.use_cases.inbox.assignment.request_tracking import track_request
+from app.use_cases.shared.request_tracking import track_request
 from tests.inbox.inbox_builders import reload, request, talk
 from tests.inbox.inbox_world import InboxWorld
 

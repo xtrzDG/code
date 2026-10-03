@@ -36,7 +36,7 @@ def typical_check_in(
     if rate is None or rate.quote_currency_code != currency_code:
         return None
 
-    converted: Money = convert_money(typical_check, rate.rate, currency_code)
+    converted: Money = convert_money(typical_check, rate.rate_value, currency_code)
     major: Decimal = round_significant(convert_money_to_major_units(converted))
     return AverageCheckMinor(
         int(build_money_from_major_units(major, currency_code).amount_minor)

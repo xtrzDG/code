@@ -21,8 +21,8 @@ from app.schemas.dto.operations.leads import LeadListItem
 from app.schemas.typings.bookings.prefixed_id import ResourceId
 from app.schemas.typings.contacts.prefixed_id import ContactId
 from app.schemas.typings.conversations.prefixed_id import ConversationId
-from app.use_cases.handoffs.handoff_views import build_handoff_list_item
-from app.use_cases.leads.lead_views import build_lead_list_item
+from app.use_cases.shared.handoff_views import build_handoff_list_item
+from app.use_cases.shared.lead_views import build_lead_list_item
 from app.utilities.scheduling.booking_views import build_booking_view
 from app.utilities.scheduling.zoned_time import load_time_zone
 
