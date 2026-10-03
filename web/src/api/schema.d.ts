@@ -1393,6 +1393,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/businesses/{business_id}/media/{media_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Message Media */
+        get: operations["get_message_media_v1_businesses__business_id__media__media_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/businesses/{business_id}/members": {
         parameters: {
             query?: never;
@@ -2918,6 +2935,25 @@ export interface components {
             /** Voice Agent Id */
             voice_agent_id?: string | null;
         };
+        /**
+         * AttachmentKind
+         * @description What a customer's message carries besides text. AUDIO (voice notes and
+         *     audio files) is transcribed, IMAGE is shown to the model, LOCATION is
+         *     read as coordinates; CONTACT (someone's contact card), STICKER and
+         *     OTHER (video, documents, polls, ...) get a polite request to write.
+         * @enum {string}
+         */
+        AttachmentKind: "audio" | "image" | "location" | "contact" | "sticker" | "other";
+        /**
+         * AttachmentProblem
+         * @description Why the assistant could not read an attachment: a kind it does not
+         *     read, a file over the size cap, a voice note over the length cap, a
+         *     file the platform no longer hands out, a format that is not audio or
+         *     an image after all, or a voice note without recognizable speech (or
+         *     with the transcription service unavailable).
+         * @enum {string}
+         */
+        AttachmentProblem: "unsupported_kind" | "too_large" | "too_long" | "unavailable" | "unrecognized_format" | "not_understood";
         /**
          * AuditAction
          * @description Operation on personal data recorded in the audit log (concept section
@@ -4510,6 +4546,7 @@ export interface components {
             language?: string | null;
             /** Last Message At */
             last_message_at: number;
+            last_message_attachment?: components["schemas"]["AttachmentKind"] | null;
             last_message_author?: components["schemas"]["MessageAuthor"] | null;
             /** Last Message Text */
             last_message_text?: string | null;
@@ -5517,6 +5554,7 @@ export interface components {
             language?: string | null;
             /** Last Message At */
             last_message_at: number;
+            last_message_attachment?: components["schemas"]["AttachmentKind"] | null;
             last_message_author?: components["schemas"]["MessageAuthor"] | null;
             /** Last Message Text */
             last_message_text?: string | null;
@@ -6194,6 +6232,64 @@ export interface components {
             skipped_line_count: number;
         };
         /**
+         * MessageAttachment
+         * @description One attachment of a stored customer message, as the assistant read it.
+         *
+         *     A voice note or photo the platform stored has `media_id` (its
+         *     `MessageMediaDocument`) and `storage_path`; a voice note's text is
+         *     `transcript`, a location its `location`. `problem` says why the
+         *     assistant could not read it (the customer was asked to write instead);
+         *     `media_deleted_at` is when the retention purge removed the file.
+         */
+        MessageAttachment: {
+            /** Byte Count */
+            byte_count?: number | null;
+            /** Duration Seconds */
+            duration_seconds?: number | null;
+            kind: components["schemas"]["AttachmentKind"];
+            location?: components["schemas"]["SharedLocation"] | null;
+            /** Media Deleted At */
+            media_deleted_at?: number | null;
+            /** Media Id */
+            media_id?: string | null;
+            /** Media Type */
+            media_type?: string | null;
+            problem?: components["schemas"]["AttachmentProblem"] | null;
+            /** Storage Path */
+            storage_path?: string | null;
+            /** Transcript */
+            transcript?: string | null;
+        };
+        /**
+         * MessageAttachmentView
+         * @description An attachment of a customer message in the cabinet's transcript: a voice
+         *     note to play (`media_id`) with its transcript, a photo (`media_id`), a
+         *     place with a map link, or what the assistant could not read (`problem`).
+         *     `is_media_deleted`: the retention purge removed the file.
+         */
+        MessageAttachmentView: {
+            /** Byte Count */
+            byte_count?: number | null;
+            /** Duration Seconds */
+            duration_seconds?: number | null;
+            /**
+             * Is Media Deleted
+             * @default false
+             */
+            is_media_deleted: boolean;
+            kind: components["schemas"]["AttachmentKind"];
+            location?: components["schemas"]["SharedLocation"] | null;
+            /** Map Url */
+            map_url?: string | null;
+            /** Media Id */
+            media_id?: string | null;
+            /** Media Type */
+            media_type?: string | null;
+            problem?: components["schemas"]["AttachmentProblem"] | null;
+            /** Transcript */
+            transcript?: string | null;
+        };
+        /**
          * MessageAuthor
          * @description Who wrote a message.
          * @enum {string}
@@ -6210,9 +6306,16 @@ export interface components {
          * @description Stored message with model usage and cost (concept table `messages`).
          *
          *     `sent_by` is the owner or staff member who wrote a STAFF message from
-         *     the cabinet.
+         *     the cabinet. `text` is what the author wrote (for a customer, the typed
+         *     text and captions); `attachments` are the voice notes, photos, places
+         *     and other files of a customer message, with the transcript of a voice
+         *     note.
+         *
+         *     Version 2: `attachments` (optional, so version 1 rows read as they are).
          */
         MessageDocument: {
+            /** Attachments */
+            attachments?: components["schemas"]["MessageAttachment"][];
             author: components["schemas"]["MessageAuthor"];
             /** Business Id */
             business_id: string;
@@ -6247,8 +6350,7 @@ export interface components {
             output_tokens: number;
             /**
              * Schema Version
-             * @description Persistence schema version. This is not the package version or application release version.
-             * @default 1
+             * @default 2
              */
             schema_version: string;
             /** Sent By */
@@ -6277,9 +6379,12 @@ export interface components {
         /**
          * MessageView
          * @description A message with the model usage behind it; `sent_by` is the owner or
-         *     staff member who wrote a staff message from the cabinet.
+         *     staff member who wrote a staff message from the cabinet; `attachments`
+         *     are a customer's voice notes, photos and places.
          */
         MessageView: {
+            /** Attachments */
+            attachments?: components["schemas"]["MessageAttachmentView"][];
             author: components["schemas"]["MessageAuthor"];
             /** Cost Micro Usd */
             cost_micro_usd: number;
@@ -7386,6 +7491,20 @@ export interface components {
             source?: string | null;
         };
         /**
+         * SharedLocation
+         * @description A place a customer shared: its coordinates, name and address.
+         */
+        SharedLocation: {
+            /** Address */
+            address?: string | null;
+            /** Latitude */
+            latitude: number;
+            /** Longitude */
+            longitude: number;
+            /** Name */
+            name?: string | null;
+        };
+        /**
          * SourceRowView
          * @description Owners from one acquisition source: sign-ups, live and paying today.
          */
@@ -7942,7 +8061,7 @@ export interface components {
          * @description Metered usage unit, as in the concept's usage_events table.
          * @enum {string}
          */
-        UsageKind: "voice_seconds" | "llm_input_tokens" | "llm_output_tokens" | "dialog" | "whatsapp_reply" | "whatsapp_template" | "transfer_seconds";
+        UsageKind: "voice_seconds" | "llm_input_tokens" | "llm_output_tokens" | "dialog" | "whatsapp_reply" | "whatsapp_template" | "transfer_seconds" | "transcription_seconds";
         /**
          * UserMembershipView
          * @description A business the user belongs to and the role there.
@@ -17523,6 +17642,95 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["TelegramLinkView"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    get_message_media_v1_businesses__business_id__media__media_id__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+                media_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The voice note or photo as the customer sent it. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "audio/*": string;
+                    "image/*": string;
                 };
             };
             /** @description Sign-in required: the bearer token is missing, invalid or expired. */

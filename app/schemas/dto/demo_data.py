@@ -37,6 +37,7 @@ from app.schemas.domain.conversations import (
 from app.schemas.domain.feedback import FeedbackRequestDocument, ReviewSettingsDocument
 from app.schemas.domain.handoffs import HandoffDocument, UnansweredQuestionDocument
 from app.schemas.domain.knowledge import KnowledgeItemDocument
+from app.schemas.domain.message_media import MessageAttachment, MessageMediaDocument
 from app.schemas.domain.package_usage import PackageUsageWarningDocument
 from app.schemas.domain.profiles import BusinessProfileDocument
 from app.schemas.domain.resources import ResourceDocument, ScheduleExceptionDocument
@@ -133,13 +134,33 @@ class DemoActivityRequest(ImmutableDTO):
     now: Microseconds
 
 
+class DemoAttachmentLine(ImmutableDTO):
+    """
+    An attachment of a demo customer message as the assistant read it, and
+    for a voice note or photo the file to store (`content`).
+    """
+
+    attachment: MessageAttachment
+    content: bytes | None = Field(default=None, repr=False)
+
+
 class DemoMessageLine(ImmutableDTO):
     """One message of a demo conversation, `pause_seconds` after the last."""
 
     author: MessageAuthor
     text: MessageText
     tool_calls: list[ToolCallRecord] = Field(default_factory=list[ToolCallRecord])
+    attachments: list[DemoAttachmentLine] = Field(
+        default_factory=list[DemoAttachmentLine]
+    )
     pause_seconds: DemoReplyPauseSeconds = DemoReplyPauseSeconds(40)
+
+
+class DemoMediaFile(ImmutableDTO):
+    """A voice note or photo a demo customer sent, with its bytes."""
+
+    media: MessageMediaDocument
+    content: bytes = Field(repr=False)
 
 
 class DemoBusinessActivity(ImmutableDTO):
@@ -171,6 +192,7 @@ class DemoBusinessActivity(ImmutableDTO):
     feedback_requests: list[FeedbackRequestDocument] = Field(
         default_factory=list[FeedbackRequestDocument]
     )
+    media_files: list[DemoMediaFile] = Field(default_factory=list[DemoMediaFile])
 
 
 class DemoSeedPlan(ImmutableDTO):

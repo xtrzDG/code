@@ -37,6 +37,7 @@ def build_cabinet_client(
             current_user=current_user,
             send_staff_message_operator=operators.send_staff_message,
             get_call_recording_operator=operators.get_call_recording,
+            get_message_media_operator=operators.get_message_media,
             list_conversation_messages_operator=operators.list_conversation_messages,
         )
     )

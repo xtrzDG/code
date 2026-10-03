@@ -11,8 +11,10 @@ from app.contracts.recording_storage import RecordingStorageAdapterContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.repositories.booking_repositories import BookingRepository, LeadRepository
 from app.repositories.knowledge_repositories import ResourceRepository
+from app.repositories.message_media_repository import MessageMediaRepository
 from app.schemas.constants.channels import ChannelKind
 from app.schemas.domain.bookings import BookingDocument, LeadDocument
+from app.schemas.domain.message_media import MessageMediaDocument
 from app.schemas.domain.resources import ResourceDocument
 from app.schemas.dto.call_recordings import (
     RecordingAudio,
@@ -41,6 +43,7 @@ from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.schemas.typings.users.prefixed_id import UserId
 from app.schemas.typings.users.strings import AccessToken
 from app.utilities.recordings.recording_byte_ranges import cut_recording_part
+from tests.media.media_fakes import InMemoryMediaStorage
 
 
 class TokenAuthenticationOperator(OperatorContract[AccessToken, UserId]):
@@ -172,6 +175,12 @@ class CabinetStorage:
     recording_storage: InMemoryRecordingStorage = field(
         default_factory=InMemoryRecordingStorage
     )
+    message_media_repo: MessageMediaRepository = field(
+        default_factory=lambda: MessageMediaRepository(
+            InMemoryDocumentCollectionAdapter(MessageMediaDocument)
+        )
+    )
+    media_storage: InMemoryMediaStorage = field(default_factory=InMemoryMediaStorage)
 
 
 class UnusedMenuExtractor:

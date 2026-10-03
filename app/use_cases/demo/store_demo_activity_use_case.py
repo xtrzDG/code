@@ -2,6 +2,7 @@ from typed_time_provider import Microseconds
 
 from app.contracts.billing import PackageUsageWarningRepoContract
 from app.contracts.demo_data import DemoDatasetRegistryContract
+from app.contracts.media_storage import MediaStorageAdapterContract
 from app.contracts.repositories.assistant_repositories import (
     AssistantVersionRepoContract,
     AutotestRunRepoContract,
@@ -32,6 +33,7 @@ from app.contracts.repositories.feedback_repositories import (
     FeedbackRequestRepoContract,
     ReviewSettingsRepoContract,
 )
+from app.contracts.repositories.media_repositories import MessageMediaRepoContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.configurations.app_settings import AppSettings
 from app.schemas.constants.assistants import AssistantVersionStatus
@@ -44,6 +46,7 @@ from app.schemas.dto.demo_data import (
     DemoActivityStorage,
     DemoBusinessActivity,
 )
+from app.schemas.dto.media import MediaLocation, StoredMediaFile
 from app.schemas.exceptions.application_errors import NotFoundError
 from app.schemas.typings.assistants.prefixed_id import AssistantVersionId
 from app.schemas.typings.businesses.prefixed_id import BusinessId
@@ -61,7 +64,7 @@ class StoreDemoActivityUseCase(UseCaseContract[DemoActivityStorage, BusinessId])
     the demo catalog describes: customers, conversations with tool calls,
     phone calls, bookings, leads, handoffs, unanswered questions, feedback
     after visits, the subscription with its usage, the accepted DPA and
-    audit entries.
+    audit entries, and the voice notes and photos customers sent.
     """
 
     def __init__(
@@ -86,6 +89,8 @@ class StoreDemoActivityUseCase(UseCaseContract[DemoActivityStorage, BusinessId])
         audit_log_repo: AuditLogRepoContract,
         review_settings_repo: ReviewSettingsRepoContract,
         feedback_request_repo: FeedbackRequestRepoContract,
+        message_media_repo: MessageMediaRepoContract,
+        media_storage: MediaStorageAdapterContract,
         app_settings: AppSettings,
     ) -> None:
         self._registry: DemoDatasetRegistryContract = demo_dataset_registry
@@ -108,6 +113,8 @@ class StoreDemoActivityUseCase(UseCaseContract[DemoActivityStorage, BusinessId])
         self._audit_log_repo: AuditLogRepoContract = audit_log_repo
         self._review_settings_repo: ReviewSettingsRepoContract = review_settings_repo
         self._feedback_request_repo: FeedbackRequestRepoContract = feedback_request_repo
+        self._message_media_repo: MessageMediaRepoContract = message_media_repo
+        self._media_storage: MediaStorageAdapterContract = media_storage
         self._app_settings: AppSettings = app_settings
 
     def run(self, input_data: DemoActivityStorage) -> BusinessId:
@@ -199,6 +206,14 @@ class StoreDemoActivityUseCase(UseCaseContract[DemoActivityStorage, BusinessId])
             self._handoff_repo.save(handoff)
         for question in activity.unanswered_questions:
             self._question_repo.save(question)
+        for file in activity.media_files:
+            self._media_storage.store(
+                MediaLocation(
+                    business_id=file.media.business_id, path=file.media.storage_path
+                ),
+                StoredMediaFile(content=file.content, media_type=file.media.media_type),
+            )
+            self._message_media_repo.save(file.media)
 
     def _store_feedback(self, activity: DemoBusinessActivity) -> None:
         if activity.review_settings is not None:

@@ -6,6 +6,7 @@ import httpx
 import pytest
 
 from app.schemas.constants.channels import ChannelKind
+from app.schemas.constants.media import AttachmentKind
 from app.schemas.dto.channels.channel_webhooks import ChannelWebhookPayload
 from app.schemas.exceptions.application_errors import (
     AuthenticationRequiredError,
@@ -149,10 +150,15 @@ class TestTelegramAdapter:
     def test_someone_elses_contact_is_not_the_customer_phone(self) -> None:
         testbed = ChannelsTestbed()
         friend = {"phone_number": "+48512345678", "user_id": 42}
-        messages = testbed.telegram_adapter.parse_webhook(
+        [card] = testbed.telegram_adapter.parse_webhook(
             self.payload(build_update(text=None, contact=friend))
         )
-        assert messages == []
+        # A contact card the assistant cannot read: it still gets an answer.
+        assert card.text == ""
+        assert card.contact_phone_number is None
+        assert [attachment.kind for attachment in card.attachments] == [
+            AttachmentKind.CONTACT
+        ]
 
         [message] = testbed.telegram_adapter.parse_webhook(
             self.payload(build_update(text="Call my friend", contact=friend))

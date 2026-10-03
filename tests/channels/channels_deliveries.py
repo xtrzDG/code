@@ -38,11 +38,11 @@ from app.utilities.deliveries.delivery_jobs import (
     PROCESS_POST_CALL_JOB,
 )
 from app.utilities.storage.storage_scope_context import StorageScopeContext
-from tests.channels.channels_call_follow_ups import ChannelsCallFollowUps
 from tests.channels.channels_fakes import (
     RecordingHandoffToHuman,
     RecordingOrchestrator,
 )
+from tests.channels.channels_media import ChannelsMedia
 from tests.platform.worker_fakes import TEST_LANE_CONCURRENCY, RecordingErrorReporter
 
 # Enough ticks to drain chains of jobs (a message, its reply, a retry).
@@ -55,7 +55,7 @@ def as_job_operator(
     return PipelineOperator(OrchestratorPipeline(orchestrator))
 
 
-class ChannelsDeliveries(ChannelsCallFollowUps):
+class ChannelsDeliveries(ChannelsMedia):
     """The worker's side: processing inbox events and sending the outbox."""
 
     def __init__(self, settings: AppSettings | None = None) -> None:
@@ -75,6 +75,7 @@ class ChannelsDeliveries(ChannelsCallFollowUps):
                     self.pipeline,
                     self.finish_inbound_event,
                     self.release_inbound_event,
+                    self.read_inbound_attachments,
                 )
             ),
             PROCESS_PLATFORM_BOT_UPDATE_JOB: as_job_operator(

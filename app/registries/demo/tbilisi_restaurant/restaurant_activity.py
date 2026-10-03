@@ -19,6 +19,9 @@ from app.registries.demo.tbilisi_restaurant.restaurant_chats_ka_bookings import 
 from app.registries.demo.tbilisi_restaurant.restaurant_chats_ka_questions import (
     record_georgian_question_chats,
 )
+from app.registries.demo.tbilisi_restaurant.restaurant_chats_media import (
+    record_media_chats,
+)
 from app.registries.demo.tbilisi_restaurant.restaurant_chats_rtl import (
     record_rtl_chats,
 )
@@ -60,6 +63,7 @@ def build_restaurant_activity(
         record_english_booking_chats,
         record_english_question_chats,
         record_rtl_chats,
+        record_media_chats,
         record_front_desk,
     ):
         record(story, guests)

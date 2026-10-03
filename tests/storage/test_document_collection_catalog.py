@@ -25,6 +25,9 @@ from app.containers.adapters.inbox_collections_container import (
 from app.containers.adapters.launch_collections_container import (
     LaunchCollectionsContainer,
 )
+from app.containers.adapters.media_collections_container import (
+    MediaCollectionsContainer,
+)
 from app.containers.adapters.notification_collections_container import (
     NotificationCollectionsContainer,
 )
@@ -123,6 +126,7 @@ COLLECTION_CONTAINERS = (
     FeedbackCollectionsContainer,
     RateCollectionsContainer,
     AnalyticsCollectionsContainer,
+    MediaCollectionsContainer,
 )
 
 

@@ -325,3 +325,9 @@ _.gross_margin_percent  # app/schemas/dto/analytics/revenue_views.py
 _.accounts_without_rate  # app/schemas/dto/analytics/revenue_views.py
 _.mrr  # app/schemas/dto/analytics/revenue_views.py
 _.tunnel_steps  # app/schemas/dto/analytics/telemetry.py
+
+# Customer media (voice notes, photos, places): fields the cabinet's
+# transcript and inbox preview read.
+_.last_message_attachment  # app/schemas/dto/inbox/inbox_views.py, conversation_views.py
+_.map_url  # app/schemas/dto/media.py (MessageAttachmentView)
+_.is_media_deleted  # app/schemas/dto/media.py (MessageAttachmentView)

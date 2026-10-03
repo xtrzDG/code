@@ -4,7 +4,12 @@ from collections.abc import Mapping
 
 from typed_time_provider import Microseconds, WallClock
 
+from app.adapters.storage.in_memory_document_collection import (
+    InMemoryDocumentCollectionAdapter,
+)
 from app.registries.legal.legal_document_registry import LegalDocumentRegistry
+from app.repositories.message_media_repository import MessageMediaRepository
+from app.schemas.domain.message_media import MessageMediaDocument
 from app.use_cases.compliance.accept_dpa_use_case import AcceptDpaUseCase
 from app.use_cases.compliance.collect_contact_records_use_case import (
     CollectContactRecordsUseCase,
@@ -23,6 +28,7 @@ from app.use_cases.compliance.purge_expired_recordings_use_case import (
 )
 from app.use_cases.contacts.get_contact_use_case import GetContactUseCase
 from app.use_cases.contacts.list_contacts_use_case import ListContactsUseCase
+from tests.media.media_fakes import InMemoryMediaStorage
 from tests.users.accounts_user_use_cases import AccountsUserUseCases
 
 
@@ -91,6 +97,11 @@ class AccountsComplianceUseCases(AccountsUserUseCases):
             audit_log_repo=self.audit_log_repo,
             wall_clock=wall_clock,
         )
+        # The voice notes and photos customers sent (erased with the data).
+        self.media_storage = InMemoryMediaStorage()
+        self.message_media_repo = MessageMediaRepository(
+            InMemoryDocumentCollectionAdapter(MessageMediaDocument)
+        )
         self.delete_contact_data = DeleteContactDataUseCase(
             authorize_business_access=self.authorize_business_access,
             collect_contact_records=collect_contact_records,
@@ -106,6 +117,8 @@ class AccountsComplianceUseCases(AccountsUserUseCases):
             audit_log_repo=self.audit_log_repo,
             wall_clock=wall_clock,
             note_repo=self.conversation_note_repo,
+            media_storage=self.media_storage,
+            message_media_repo=self.message_media_repo,
         )
         self.purge_expired_recordings = PurgeExpiredRecordingsUseCase(
             business_repo=self.business_repo,
