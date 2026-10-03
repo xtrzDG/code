@@ -149,6 +149,8 @@ export function fixPlace(action: Schema<"SetupActionView">): FixPlace {
     case "checks":
       return { kind: "checks" };
     case "overview":
+    case "phone_test":
+    case "share":
       return { kind: "finale" };
   }
 }

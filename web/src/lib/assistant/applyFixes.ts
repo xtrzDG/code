@@ -19,6 +19,10 @@ const FIX_PAGES: Record<SetupActionTarget, BusinessPage | null> = {
   billing: "settings/billing",
   checks: "assistant/versions",
   overview: "overview",
+  // The guide after the launch: its QR code lives on the Overview, the
+  // link and QR card on the Channels page.
+  phone_test: "overview",
+  share: "assistant/channels",
   // "Apply changes" itself: the button is right there.
   apply_changes: null,
 };

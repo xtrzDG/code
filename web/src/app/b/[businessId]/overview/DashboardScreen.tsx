@@ -2,8 +2,6 @@
 
 import { useState } from "react";
 
-import { api } from "@/api/client";
-import { queryKeys } from "@/api/queryKeys";
 import { sectionQueries } from "@/api/sectionQueries";
 import { useQuery } from "@/api/useQuery";
 import { useBusiness, useBusinessFormat } from "@/components/business/BusinessContext";
@@ -17,18 +15,20 @@ import { formatPercent } from "@/components/insights/numbers";
 import { SegmentedControl } from "@/components/insights/SegmentedControl";
 import { replaceUrlQuery } from "@/components/insights/urlQuery";
 import { Button, Card, EmptyState, ErrorState, LoadingRegion, PageHeader } from "@/components/ui";
+import { useSetupProgress } from "@/components/setupGuide/useSetupProgress";
 import { useValueOfDates } from "@/components/value/useValueQueries";
 import { useI18n } from "@/i18n/client";
 import { languageName } from "@/lib/format";
-import { businessPath, inboxPath, setupPath } from "@/lib/navigation";
+import { businessPath, inboxPath } from "@/lib/navigation";
+import { guideCard } from "@/lib/setupGuide/guide";
 
 import { DashboardPeriodSkeleton } from "./_components/DashboardSkeleton";
 import { AttentionTile, BarList, NextStepCard } from "./_components/DashboardWidgets";
 import {
   canTakeStep,
   DASHBOARD_PERIODS,
-  isLaunched,
   DEFAULT_DASHBOARD_PERIOD,
+  needsStatusCard,
   nextStep,
   periodRange,
   toBars,
@@ -36,6 +36,7 @@ import {
 } from "./_components/dashboardModel";
 import { PackageCard } from "./_components/PackageCard";
 import { PeriodTiles } from "./_components/PeriodTiles";
+import { SetupGuideCard } from "./_components/setupGuide/SetupGuideCard";
 import { TodayQueue } from "./_components/TodayQueue";
 import { TrendChart } from "./_components/TrendChart";
 import { ValueHero } from "./_components/ValueHero";
@@ -46,7 +47,7 @@ import { ValueHero } from "./_components/ValueHero";
  * handoffs and the package usage, for a period in the business time zone.
  */
 export function DashboardScreen({ initialPeriod }: { initialPeriod: DashboardPeriod | null }) {
-  const { t, tp, locale } = useI18n();
+  const { t, locale } = useI18n();
   const { business, isOwner } = useBusiness();
   const format = useBusinessFormat();
   const [period, setPeriod] = useState<DashboardPeriod>(initialPeriod ?? DEFAULT_DASHBOARD_PERIOD);
@@ -61,14 +62,10 @@ export function DashboardScreen({ initialPeriod }: { initialPeriod: DashboardPer
   const value = useValueOfDates(businessId, range.from, range.to);
   // The badges' counts: no list of handoffs is loaded (that would be an audited view).
   const inbox = useAttentionCounts();
-  const gaps = useQuery(
-    queryKeys.profile.gaps(businessId, locale),
-    () =>
-      api.GET("/v1/businesses/{business_id}/profile/gaps", {
-        params: { path: { business_id: businessId }, query: { language: locale } },
-      }),
-    { enabled: business.status === "onboarding" },
-  );
+  // The setup guide (owners): before the launch the way back into the setup,
+  // after it the way to the first customers.
+  const setup = useSetupProgress(businessId, { enabled: isOwner });
+  const guide = guideCard(setup.data, isOwner);
 
   const choosePeriod = (value: DashboardPeriod) => {
     setPeriod(value);
@@ -76,7 +73,6 @@ export function DashboardScreen({ initialPeriod }: { initialPeriod: DashboardPer
   };
 
   const step = nextStep(business);
-  const missingCount = (gaps.data?.gaps ?? []).filter((gap) => gap.is_blocking).length ?? 0;
   const openHandoffCount = inbox?.needsPerson;
   const data = stats.data;
   const hasActivity =
@@ -102,17 +98,15 @@ export function DashboardScreen({ initialPeriod }: { initialPeriod: DashboardPer
       <div className="space-y-6">
         {showsValue && value.data ? <ValueHero model={value.data} isPlaceholder={value.isPlaceholder} /> : null}
 
-        <NextStepCard
-          step={step}
-          status={<BusinessStatusBadge status={business.status} />}
-          href={canTakeStep(step, isOwner) ? businessPath(businessId, step.page) : null}
-          setupHref={isOwner && !isLaunched(business.status) ? setupPath(businessId) : null}
-          note={
-            business.status === "onboarding" && missingCount > 0
-              ? tp("dashboard.status.onboarding.missing", missingCount)
-              : null
-          }
-        />
+        {needsStatusCard(business, isOwner) || setup.error ? (
+          <NextStepCard
+            step={step}
+            status={<BusinessStatusBadge status={business.status} />}
+            href={canTakeStep(step, isOwner) ? businessPath(businessId, step.page) : null}
+          />
+        ) : null}
+
+        {guide !== "hidden" && setup.data ? <SetupGuideCard setup={setup.data} isFinished={guide === "finished"} /> : null}
 
         {isOwner ? (
           <section aria-labelledby="dashboard-attention" className="space-y-3">

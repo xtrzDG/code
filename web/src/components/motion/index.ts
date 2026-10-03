@@ -12,3 +12,4 @@ export { Parallax } from "./Parallax";
 export { FadeIn, Reveal, type RevealProps } from "./Reveal";
 export { Stagger, StaggerItem } from "./Stagger";
 export { TiltCard, TiltLayer } from "./TiltCard";
+export { Burst } from "./Burst";

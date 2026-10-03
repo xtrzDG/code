@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { Schema } from "@/api/types";
+import { guideFixture } from "@/lib/setupGuide/fixtures";
 
 import {
   FINALE,
@@ -46,6 +47,7 @@ function setup(statuses: Partial<Record<StepCode, Status>>, extra: Partial<Setup
     is_live: false,
     is_complete: false,
     apply: { business_id: "business_1", is_in_progress: false, has_unapplied_changes: true },
+    guide: guideFixture(),
     ...extra,
   };
 }
