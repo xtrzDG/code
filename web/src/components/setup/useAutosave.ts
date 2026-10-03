@@ -33,9 +33,9 @@ export function useAutosave<T>(value: T, save: (value: T) => Promise<boolean>, o
     latest.current = { value, key, save, isValid };
   });
 
-  const run = useCallback((): Promise<boolean> => {
+  const run = useCallback((force = false): Promise<boolean> => {
     const { value: current, key: currentKey, save: saveNow, isValid: valid } = latest.current;
-    if (currentKey === saved.current || (valid && !valid(current))) {
+    if ((!force && currentKey === saved.current) || (valid && !valid(current))) {
       return inFlight.current;
     }
     const previous = inFlight.current;
@@ -70,14 +70,20 @@ export function useAutosave<T>(value: T, save: (value: T) => Promise<boolean>, o
     };
   }, [enabled, key, delayMs, run]);
 
-  /** Save now what is not saved yet, and wait for every save of the screen. */
-  const flush = useCallback(async (): Promise<boolean> => {
-    if (timer.current) {
-      clearTimeout(timer.current);
-      timer.current = null;
-    }
-    return run();
-  }, [run]);
+  /**
+   * Save now what is not saved yet, and wait for every save of the screen.
+   * `force` saves the value even unchanged (suggestions shown but never stored).
+   */
+  const flush = useCallback(
+    async (options: { force?: boolean } = {}): Promise<boolean> => {
+      if (timer.current) {
+        clearTimeout(timer.current);
+        timer.current = null;
+      }
+      return run(options.force ?? false);
+    },
+    [run],
+  );
 
   return { flush };
 }

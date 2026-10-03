@@ -42,7 +42,7 @@ export function TunnelFrame({ place, direction, states, canOpen, onOpen, saveSta
       <TunnelHeader
         rail={place === FINALE ? <div className="flex-1" /> : <TunnelRail place={place} states={states} canOpen={canOpen} onOpen={onOpen} />}
         saveState={saveState}
-        exitHref={exitHref}
+        exitHref={place === FINALE ? false : exitHref}
         homeHref={homeHref}
       />
       <main id="main" className="relative z-10 flex flex-1 flex-col px-4 pt-6 pb-10 sm:px-6 sm:pt-12 lg:pt-16">

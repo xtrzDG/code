@@ -80,7 +80,8 @@ export function useHoursStep(ctx: StepContext) {
     }
     setSaving(true);
     try {
-      if (!(await autosave.flush())) {
+      // The suggested week is shown but not stored until now: save it whether changed or not.
+      if (!(await autosave.flush({ force: true }))) {
         throw new Error("profile");
       }
       const edited = needsResource && isResourceEdited(resource, starters.resource);

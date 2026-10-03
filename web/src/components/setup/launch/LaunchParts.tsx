@@ -126,13 +126,15 @@ export function LaunchAttention({
       <ul className="space-y-2">
         {reasons.map((reason) => {
           const place = fixPlace(reason.action);
+          // Plain sentences only: check codes ("booking_out_of_hours") mean nothing to an owner.
+          const details = (reason.details ?? []).filter((detail) => /\s/.test(detail.trim()));
           return (
             <li key={reason.code} className="flex flex-col gap-2 rounded-xl bg-surface/90 p-3 sm:flex-row sm:items-center">
               <div className="min-w-0 flex-1">
                 <p className="text-sm font-medium text-ink">{reason.message}</p>
-                {reason.details?.length ? (
+                {details.length > 0 ? (
                   <ul className="mt-1 list-disc ps-5 text-xs text-ink-muted">
-                    {reason.details.map((detail) => (
+                    {details.map((detail) => (
                       <li key={detail}>{detail}</li>
                     ))}
                   </ul>

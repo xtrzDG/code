@@ -29,6 +29,9 @@ export interface StepActions {
   canContinue?: boolean;
 }
 
+/** After Continue, how long the screen gets to show its problems before the first is scrolled to. */
+const REVEAL_DELAY_MS = 60;
+
 const OWN_ENTER = new Set(["TEXTAREA", "BUTTON", "A", "SELECT", "SUMMARY"]);
 
 /** Whether Enter pressed on this element means "continue". */
@@ -67,11 +70,24 @@ export function StepScreen({
 }) {
   const { t } = useI18n();
   const heading = useRef<HTMLHeadingElement>(null);
+  const screen = useRef<HTMLDivElement>(null);
   const { onContinue, onBack, onSkip, isBusy = false, canContinue = true } = actions;
 
   useEffect(() => {
     heading.current?.focus({ preventScroll: true });
   }, [step]);
+
+  // A refused answer may sit far below (a long list of kinds): bring the first problem into view.
+  const proceed = () => {
+    onContinue?.();
+    window.setTimeout(() => {
+      const problem = screen.current?.querySelector<HTMLElement>("[aria-invalid='true'], [role='alert']");
+      if (problem) {
+        const calm = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        problem.scrollIntoView({ block: "center", behavior: calm ? "auto" : "smooth" });
+      }
+    }, REVEAL_DELAY_MS);
+  };
 
   const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     if (!onContinue || isBusy || !canContinue || !(event.target instanceof HTMLElement)) {
@@ -79,19 +95,19 @@ export function StepScreen({
     }
     if (isContinueKey(event, event.target)) {
       event.preventDefault();
-      onContinue();
+      proceed();
     }
   };
 
   return (
-    <div onKeyDown={onKeyDown} className={cn("mx-auto w-full", wide ? "max-w-3xl" : "max-w-2xl")}>
+    <div ref={screen} onKeyDown={onKeyDown} className={cn("mx-auto w-full", wide ? "max-w-3xl" : "max-w-2xl")}>
       <p className="text-sm font-medium tracking-wide text-accent">
         {t("tunnel.stepOf", { number: stepNumber(step), total: TUNNEL_STEPS.length })}
       </p>
       <h1
         ref={heading}
         tabIndex={-1}
-        className="mt-3 text-3xl leading-tight font-semibold tracking-tight text-balance text-ink outline-none sm:text-4xl lg:text-[2.75rem]"
+        className="mt-3 text-3xl leading-tight font-semibold tracking-tight text-balance text-ink outline-none! sm:text-4xl lg:text-[2.75rem]"
       >
         {title}
       </h1>
@@ -114,7 +130,7 @@ export function StepScreen({
           {onContinue ? (
             <Button
               size="lg"
-              onClick={onContinue}
+              onClick={proceed}
               disabled={!canContinue}
               isLoading={isBusy}
               loadingText={actions.busyLabel ?? t("tunnel.saving")}

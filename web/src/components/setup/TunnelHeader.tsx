@@ -44,8 +44,12 @@ export function TunnelHeader({
 }: {
   rail: ReactNode;
   saveState: SaveState;
-  /** Where "Save and exit" leads; none offers signing out instead (an account with nothing else to open). */
-  exitHref: string | null;
+  /**
+   * Where "Save and exit" leads; null offers signing out instead (an
+   * account with nothing else to open); false shows neither (the finale
+   * has its own way into the cabinet).
+   */
+  exitHref: string | null | false;
   homeHref: string;
 }) {
   const { t } = useI18n();
@@ -73,9 +77,9 @@ export function TunnelHeader({
             <IconX className="size-4" aria-hidden />
             <span className="max-sm:sr-only">{t("tunnel.exit")}</span>
           </Link>
-        ) : (
+        ) : exitHref === null ? (
           <SignOutButton iconOnlyOnPhones />
-        )}
+        ) : null}
       </div>
     </header>
   );

@@ -8,9 +8,9 @@ import type { UserMembershipView } from "@/api/types";
 import { useI18n } from "@/i18n/client";
 import { cn } from "@/lib/cn";
 import { countryFlag } from "@/lib/countries";
-import { HOME_PATH, samePageIn } from "@/lib/navigation";
+import { CREATE_PATH, HOME_PATH, samePageIn } from "@/lib/navigation";
 
-import { IconBuilding, IconCheck, IconChevronDown } from "./icons";
+import { IconBuilding, IconCheck, IconChevronDown, IconPlus } from "./icons";
 
 /**
  * The current business and a menu to jump to another one, keeping the
@@ -118,6 +118,14 @@ export function BusinessSwitcher({
               );
             })}
           </ul>
+          <Link
+            href={CREATE_PATH}
+            onClick={close}
+            className="flex items-center gap-2 border-t border-line px-3 py-2.5 text-sm font-medium text-ink hover:bg-surface-muted"
+          >
+            <IconPlus className="size-4 text-accent" aria-hidden />
+            {t("tunnel.newAssistant")}
+          </Link>
           <Link
             href={HOME_PATH}
             onClick={close}

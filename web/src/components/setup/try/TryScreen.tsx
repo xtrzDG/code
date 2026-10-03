@@ -127,7 +127,7 @@ export function TryScreen({ ctx }: { ctx: StepContext }) {
         {suggestions.length > 0 ? (
           <div className="border-t border-line px-4 pt-3">
             <p className="text-xs font-medium text-ink-subtle">{t("tunnelLaunch.try.suggestions")}</p>
-            <ul className="mt-2 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none]">
+            <ul className="mt-2 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] sm:flex-wrap sm:overflow-visible">
               {suggestions.map((question) => (
                 <li key={suggestionKey(question)} className="shrink-0">
                   <button
