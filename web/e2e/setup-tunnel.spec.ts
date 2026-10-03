@@ -6,9 +6,10 @@
  * later visit continues where they left off; then the finale with the
  * assistant's link and QR code, and the cabinet.
  *
- * The suite's API has no language model: the test chat passes questions to
- * a person, and the launch's progress is played by the test (playLaunch in
- * support/tunnel.ts), since real checks cannot pass without a model.
+ * The suite's API has no language model: the rehearsal model
+ * (LLM_PROVIDER=scripted) answers the test chat, and the launch's progress
+ * is played by the test (playLaunch in support/tunnel.ts) so the screens
+ * stay quick to walk; apply-changes.spec.ts runs real checks.
  */
 
 import type { Page } from "@playwright/test";

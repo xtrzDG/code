@@ -7,8 +7,9 @@
  * tunnel's launch) and the one sheet that lists the changes and applies
  * them. Owners only: staff see neither the banner nor the button.
  *
- * Once the changes are live the owner gets a toast naming them ("Your
- * assistant now knows: …"), wherever they are in the cabinet.
+ * Once the changes are live the sheet closes and the owner gets a toast
+ * naming them ("Your assistant now knows: …"), wherever they are in the
+ * cabinet.
  */
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
@@ -45,8 +46,16 @@ export function useApplyChanges(): ApplyChangesContextValue {
   return value;
 }
 
-/** The toast once applied changes are live, and the changes read again after any end. */
-function useOutcome(apply: StagedApply<ApplyChangesView | null>, applied: PendingChange[] | null, reloadPending: () => void) {
+/**
+ * Once the changes are live: the sheet closes and a toast names them. After
+ * any end the changes are read again.
+ */
+function useOutcome(
+  apply: StagedApply<ApplyChangesView | null>,
+  applied: PendingChange[] | null,
+  reloadPending: () => void,
+  close: () => void,
+) {
   const translator = useI18n();
   const toast = useToast();
   const previous = useRef(apply.phase);
@@ -58,9 +67,10 @@ function useOutcome(apply: StagedApply<ApplyChangesView | null>, applied: Pendin
     }
     reloadPending();
     if (apply.phase === "live") {
+      close();
       toast.success(summarizeChanges(applied ?? [], translator) ?? translator.t("applyChanges.done.title"));
     }
-  }, [apply.phase, applied, reloadPending, toast, translator]);
+  }, [apply.phase, applied, reloadPending, close, toast, translator]);
 }
 
 export function ApplyChangesProvider({ children }: { children: ReactNode }) {
@@ -69,7 +79,8 @@ export function ApplyChangesProvider({ children }: { children: ReactNode }) {
   const apply = useStagedApply<ApplyChangesView | null>(business.id, null, { enabled: isOwner });
   const [isOpen, setOpen] = useState(false);
   const [applied, setApplied] = useState<PendingChange[] | null>(null);
-  useOutcome(apply, applied, pending.reload);
+  const close = useCallback(() => setOpen(false), []);
+  useOutcome(apply, applied, pending.reload, close);
 
   const changes = pending.data?.changes;
   const { start: startApply } = apply;
@@ -87,7 +98,7 @@ export function ApplyChangesProvider({ children }: { children: ReactNode }) {
   return (
     <ApplyChangesContext.Provider value={value}>
       {children}
-      {isOwner ? <ApplyChangesSheet open={isOpen} onClose={() => setOpen(false)} /> : null}
+      {isOwner ? <ApplyChangesSheet open={isOpen} onClose={close} /> : null}
     </ApplyChangesContext.Provider>
   );
 }

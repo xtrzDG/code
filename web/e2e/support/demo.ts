@@ -1,9 +1,9 @@
 /**
  * The demo restaurant (SEED_DEMO_DATA): live, with its website chat on, so
  * a visitor's message through the real widget API reaches its assistant.
- * The suite's API has no model key, so the assistant passes every
- * conversation to a person: a handoff, its live event and the team's
- * notifications, as in production.
+ * The suite's API runs the rehearsal model (LLM_PROVIDER=scripted), which
+ * passes a request for a manager to a person: a handoff, its live event and
+ * the team's notifications, as in production.
  *
  * The demo owner's address may ask for a login code every 30 seconds, and
  * several spec files sign in as them: one sign-in per worker, shared here,

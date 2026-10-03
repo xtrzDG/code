@@ -106,10 +106,10 @@ export async function answerTry(page: Page): Promise<void> {
 }
 
 /**
- * The launch's progress as the API reports it, played by the test: the
- * suite's API has no language model, so its automatic checks cannot pass
- * and owners cannot publish past them. Building, checking (three checks),
- * publishing, live.
+ * The launch's progress as the API reports it, played by the test: a first
+ * launch runs every automatic check, too long for walking the screens
+ * (apply-changes.spec.ts runs real checks on the rehearsal model).
+ * Building, checking (three checks), publishing, live.
  */
 export async function playLaunch(page: Page): Promise<void> {
   let reads = 0;
