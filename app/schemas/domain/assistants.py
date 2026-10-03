@@ -60,11 +60,14 @@ class AssistantVersionDocument(BaseDocument):
     """
     Immutable result of assembling the profile with a niche template
     (concept table `assistant_versions`). Every edit creates a new version;
-    rollback publishes an earlier one.
+    rollback publishes an earlier one. A version that never went live is
+    discarded (`discarded_at`) once a newer one does: it leaves the list of
+    versions but stays readable, since test chats may still point to it.
     """
 
     # 2: `phone_prompt_text` (optional, so version 1 needs no upcaster).
-    schema_version: SchemaVersion = SchemaVersion("2")
+    # 3: `discarded_at` (optional: a version stored before is not discarded).
+    schema_version: SchemaVersion = SchemaVersion("3")
     id: AssistantVersionId = Field(default_factory=AssistantVersionId)
     business_id: BusinessId
     version_number: AssistantVersionNumber
@@ -85,6 +88,7 @@ class AssistantVersionDocument(BaseDocument):
     test_score: AverageJudgeScore | None = None
     autotest_run_id: AutotestRunId | None = None
     published_at: Microseconds | None = None
+    discarded_at: Microseconds | None = None
 
 
 class AutotestTranscriptLine(PersistentDocument):

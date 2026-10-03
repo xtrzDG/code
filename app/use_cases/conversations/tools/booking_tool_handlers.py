@@ -65,6 +65,7 @@ def run_check_availability(
             duration_minutes=tool_input.duration_minutes,
             nights=tool_input.nights,
             is_sandbox=context.is_sandbox,
+            conversation_id=context.conversation_id,
         )
     )
     return success_outcome(call, render_availability(result, today_text(today)))

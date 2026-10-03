@@ -193,6 +193,9 @@ class CreateManualBookingUseCase(UseCaseContract[ManualBookingCommand, BookingRe
                     stay_times=inputs.stay_times,
                     earliest_start=microseconds_to_seconds(int(now)),
                     include_sandbox=is_sandbox,
+                    sandbox_conversation_id=(
+                        None if conversation is None else conversation.id
+                    ),
                 ),
             )
             contact = store_booking_contact(

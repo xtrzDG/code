@@ -13,7 +13,10 @@ from app.schemas.dto.assistants.assistant_views import AssistantVersionSummary
 class ListAssistantVersionsUseCase(
     UseCaseContract[AssistantVersionsQuery, list[AssistantVersionSummary]]
 ):
-    """Version history of a business, newest first (owners and staff)."""
+    """
+    Version history of a business, newest first (owners and staff), without
+    the drafts discarded when a newer version went live.
+    """
 
     def __init__(
         self,
@@ -47,7 +50,13 @@ class ListAssistantVersionsUseCase(
             )
         )
         versions: list[AssistantVersionDocument] = sorted(
-            self._assistant_version_repo.list_by_business(business.id),
+            (
+                version
+                for version in self._assistant_version_repo.list_by_business(
+                    business.id
+                )
+                if version.discarded_at is None
+            ),
             key=lambda version: int(version.version_number),
             reverse=True,
         )

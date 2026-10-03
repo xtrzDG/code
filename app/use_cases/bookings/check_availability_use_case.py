@@ -135,6 +135,7 @@ class CheckAvailabilityUseCase(UseCaseContract[AvailabilityQuery, AvailabilityRe
                 else now_seconds + min_notice_seconds(inputs.rules)
             ),
             include_sandbox=input_data.is_sandbox,
+            sandbox_conversation_id=input_data.conversation_id,
         )
         candidates: list[ResourceDocument] = seating_resources(
             matching, input_data.party_size

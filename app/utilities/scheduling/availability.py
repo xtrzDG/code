@@ -8,6 +8,7 @@ from app.schemas.domain.bookings import BookingDocument
 from app.schemas.domain.profiles import OpeningInterval
 from app.schemas.domain.resources import ResourceDocument, ScheduleExceptionDocument
 from app.schemas.typings.bookings.prefixed_id import BookingId
+from app.schemas.typings.conversations.prefixed_id import ConversationId
 from app.utilities.scheduling.opening_hours import (
     DayRanges,
     MinuteRange,
@@ -23,17 +24,30 @@ BLOCKING_BOOKING_STATUSES: frozenset[BookingStatus] = frozenset(
 )
 
 
-def is_blocking(booking: BookingDocument, include_sandbox: bool) -> bool:
+def is_blocking(
+    booking: BookingDocument,
+    include_sandbox: bool,
+    sandbox_conversation_id: ConversationId | None = None,
+) -> bool:
     """
     Whether a booking takes a unit. Real availability counts real bookings
     only; sandbox (owner test, autotests) counts real and sandbox ones, so
-    tests never take real customers' slots but still see them.
+    tests never take real customers' slots but still see them. A test
+    conversation (`sandbox_conversation_id`) counts only its own test
+    bookings: the bookings earlier checks and test chats left behind do
+    not fill the calendar of the next one.
     """
 
     if booking.status not in BLOCKING_BOOKING_STATUSES:
         return False
 
-    return include_sandbox or not booking.is_sandbox
+    if not booking.is_sandbox:
+        return True
+
+    return include_sandbox and (
+        sandbox_conversation_id is None
+        or booking.conversation_id == sandbox_conversation_id
+    )
 
 
 def busy_ranges(
@@ -41,13 +55,14 @@ def busy_ranges(
     resource: ResourceDocument,
     include_sandbox: bool,
     excluded_booking_id: BookingId | None = None,
+    sandbox_conversation_id: ConversationId | None = None,
 ) -> list[BusyRange]:
     return [
         BusyRange(int(booking.starts_at), int(booking.ends_at))
         for booking in bookings
         if booking.resource_id == resource.id
         and booking.id != excluded_booking_id
-        and is_blocking(booking, include_sandbox)
+        and is_blocking(booking, include_sandbox, sandbox_conversation_id)
     ]
 
 

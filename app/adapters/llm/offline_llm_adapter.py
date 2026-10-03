@@ -1,5 +1,6 @@
 import json
 import time
+import uuid
 from collections.abc import Callable
 
 from app.adapters.llm.llm_payloads import (
@@ -8,32 +9,52 @@ from app.adapters.llm.llm_payloads import (
 )
 from app.contracts.llm import LlmAdapterContract
 from app.schemas.constants.conversations import LlmStopReason
-from app.schemas.dto.conversations import LlmRequest, LlmResponse, LlmToolResult
+from app.schemas.dto.conversations import (
+    LlmRequest,
+    LlmResponse,
+    LlmToolCall,
+    LlmToolResult,
+)
+from app.schemas.dto.llm_scripts import ScriptedLlmTurn
 from app.schemas.typings.assistants.constrained_integers import (
     ScriptedLlmLatencyMilliseconds,
 )
-from app.schemas.typings.conversations.strings import LlmProviderPayload, MessageText
+from app.schemas.typings.conversations.strings import (
+    LlmProviderPayload,
+    LlmToolCallId,
+    MessageText,
+)
+from app.utilities.llm_rehearsal.assistant_phrases import (
+    ASSISTANT_PHRASES,
+    FALLBACK_LANGUAGE,
+    RehearsalReply,
+)
+from app.utilities.llm_rehearsal.rehearsal_turns import play_rehearsal_turn
 
 # Without SCRIPTED_LLM_LATENCY_MS the scripted model answers at once.
 NO_LATENCY: ScriptedLlmLatencyMilliseconds = ScriptedLlmLatencyMilliseconds(0)
-# What the staging assistant answers to everything.
+# What the staging assistant answers to an English message it has no
+# script for (in other languages, the same sentence translated).
 OFFLINE_REPLY: MessageText = MessageText(
-    "Thank you for your message! This is the test assistant of a staging "
-    "server: its answers are scripted, no language model reads your message."
+    ASSISTANT_PHRASES[FALLBACK_LANGUAGE][RehearsalReply.ANSWER]
 )
+TOOL_CALL_ID_PREFIX: str = "toolu_rehearsal_"
 
 
 class OfflineLlmAdapter(LlmAdapterContract):
     """
     The model of `LLM_PROVIDER=scripted` (model id "scripted"): a staging
-    deployment, or a local run without provider keys, answers every turn
-    with `OFFLINE_REPLY`, without tool calls, network or cost.
-
-    Conversations, the widget, notifications and the post-deploy smoke test
-    (scripts/smoke.sh) run end to end on it. It measures nothing about
-    answer quality: autotest judges get the same sentence, so their checks
-    fail on such a deployment. Unlike the tests' `ScriptedLlmAdapter` it
-    keeps no requests, so a long-running process does not grow.
+    deployment, a local run without provider keys or the end-to-end
+    suite. It plays a rehearsal instead of reading (see
+    `app/utilities/llm_rehearsal/rehearsal_turns.py`): the automatic checks'
+    AI customer and judge, and an assistant that answers in the customer's
+    language that it is a test assistant, books the first free time when
+    asked to book and passes the conversation to a colleague when asked
+    for a person. So "Apply changes" goes live on such a server, without
+    network or cost. It measures nothing about answer quality: its judge
+    scores every answer 5, and only the checks of what the assistant did
+    can fail. Unlike the tests' `ScriptedLlmAdapter` it keeps no requests,
+    so a long-running process does not grow.
 
     Load tests (perf/k6) set SCRIPTED_LLM_LATENCY_MS: every answer then
     waits that long, as a real provider would, so a thread stays busy
@@ -58,20 +79,43 @@ class OfflineLlmAdapter(LlmAdapterContract):
         return build_tool_results_payload(results)
 
     def complete(self, request: LlmRequest) -> LlmResponse:
-        del request
         if self._latency_seconds > 0:
             self._wait(self._latency_seconds)
 
-        return LlmResponse(
-            stop_reason=LlmStopReason.END_TURN,
-            text=OFFLINE_REPLY,
-            assistant_turn_payload=LlmProviderPayload(
-                json.dumps(
-                    {
-                        "role": "assistant",
-                        "content": [{"type": "text", "text": str(OFFLINE_REPLY)}],
-                    },
-                    ensure_ascii=False,
-                )
-            ),
+        return build_response(play_rehearsal_turn(request))
+
+
+def build_response(turn: ScriptedLlmTurn) -> LlmResponse:
+    """The rehearsal's turn as a provider answer, in the canonical payload shape."""
+
+    content: list[dict[str, object]] = []
+    tool_calls: list[LlmToolCall] = []
+    if turn.text is not None:
+        content.append({"type": "text", "text": str(turn.text)})
+
+    for scripted_call in turn.tool_calls:
+        call_id = LlmToolCallId(f"{TOOL_CALL_ID_PREFIX}{uuid.uuid4().hex[:16]}")
+        content.append(
+            {
+                "type": "tool_use",
+                "id": str(call_id),
+                "name": str(scripted_call.tool_name),
+                "input": json.loads(scripted_call.input_json),
+            }
         )
+        tool_calls.append(
+            LlmToolCall(
+                call_id=call_id,
+                tool_name=scripted_call.tool_name,
+                input_json=scripted_call.input_json,
+            )
+        )
+
+    return LlmResponse(
+        stop_reason=LlmStopReason.TOOL_USE if tool_calls else LlmStopReason.END_TURN,
+        text=turn.text,
+        tool_calls=tool_calls,
+        assistant_turn_payload=LlmProviderPayload(
+            json.dumps({"role": "assistant", "content": content}, ensure_ascii=False)
+        ),
+    )
