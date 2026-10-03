@@ -1485,6 +1485,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/businesses/{business_id}/public-slug": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Set Public Slug */
+        put: operations["set_public_slug_v1_businesses__business_id__public_slug_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/businesses/{business_id}/push-subscriptions": {
         parameters: {
             query?: never;
@@ -1722,6 +1739,23 @@ export interface paths {
         put?: never;
         /** Apply Starter Answers */
         post: operations["apply_starter_answers_v1_businesses__business_id__setup_starter_answers_apply_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/businesses/{business_id}/share-links": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Share Links */
+        get: operations["get_share_links_v1_businesses__business_id__share_links_get"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -2057,6 +2091,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/public/chat/{address}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Hosted Chat */
+        get: operations["get_hosted_chat_v1_public_chat__address__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/telephony/zadarma/notifications": {
         parameters: {
             query?: never;
@@ -2154,6 +2205,23 @@ export interface paths {
         get: operations["get_widget_config_v1_widget__business_id__config_get"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/widget/{business_id}/handoff": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Request Widget Handoff */
+        post: operations["request_widget_handoff_v1_widget__business_id__handoff_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3025,10 +3093,12 @@ export interface components {
         };
         /**
          * BusinessLinkKind
-         * @description Links from the profile the assistant may send (send_link tool).
+         * @description Links from the profile the assistant may send (send_link tool). PRIVACY
+         *     is the business's own privacy notice; the website chat links to it (or,
+         *     without one, to the platform's default notice for the business).
          * @enum {string}
          */
-        BusinessLinkKind: "menu" | "map" | "payment" | "booking_page" | "delivery" | "website";
+        BusinessLinkKind: "menu" | "map" | "payment" | "booking_page" | "delivery" | "website" | "privacy";
         /**
          * BusinessMemberRole
          * @description Role of a user inside one business.
@@ -4732,6 +4802,37 @@ export interface components {
             urgency: components["schemas"]["HandoffUrgency"];
         };
         /**
+         * HostedChatView
+         * @description What the hosted chat page needs before the widget loads: the business,
+         *     its current address (`slug`; a page opened under an older address or
+         *     the id moves there), its name, colour and customer languages, whether
+         *     the chat is on, where the widget script and API live (None while
+         *     APP_BASE_URL is not set), and the privacy notice.
+         */
+        HostedChatView: {
+            /** Accent Color */
+            accent_color?: string | null;
+            /** Api Base Url */
+            api_base_url?: string | null;
+            /** Business Id */
+            business_id: string;
+            /** Business Name */
+            business_name: string;
+            /** Default Language */
+            default_language: string;
+            /** Is Enabled */
+            is_enabled: boolean;
+            /** Languages */
+            languages: components["schemas"]["WidgetLanguageView"][];
+            position?: components["schemas"]["WidgetPosition"] | null;
+            /** Privacy Url */
+            privacy_url?: string | null;
+            /** Slug */
+            slug?: string | null;
+            /** Widget Script Url */
+            widget_script_url?: string | null;
+        };
+        /**
          * ImportedMenuItemView
          * @description An inactive knowledge item draft waiting for the owner's confirmation.
          *
@@ -6417,6 +6518,56 @@ export interface components {
             went_live_at?: number | null;
         };
         /**
+         * ShareLinkGap
+         * @description Why a channel that is switched on has no link yet: it was connected
+         *     before the platform learned its public address (reconnect it once), or
+         *     the hosted page has no address because CABINET_BASE_URL is not set.
+         * @enum {string}
+         */
+        ShareLinkGap: "reconnect_channel" | "not_configured";
+        /**
+         * ShareLinkKind
+         * @description A way customers start a conversation from a shared link or QR code: the
+         *     hosted chat page, a messenger chat (WhatsApp, Telegram, Messenger,
+         *     Instagram) or a phone call.
+         * @enum {string}
+         */
+        ShareLinkKind: "hosted_chat" | "whatsapp" | "telegram" | "messenger" | "instagram" | "phone";
+        /**
+         * ShareLinkView
+         * @description One way customers open a conversation: its link (with the source tag
+         *     where the platform carries one invisibly: `?src=` on the hosted page,
+         *     `?ref=` on m.me and ig.me) and how it names the account. `url` is None
+         *     with a `gap` when a channel that is switched on has no link yet.
+         */
+        ShareLinkView: {
+            gap?: components["schemas"]["ShareLinkGap"] | null;
+            kind: components["schemas"]["ShareLinkKind"];
+            /** Label */
+            label?: string | null;
+            /** Url */
+            url?: string | null;
+        };
+        /**
+         * ShareLinksView
+         * @description Everything the owner shares: the hosted chat page's address (`slug`,
+         *     `hosted_chat_url`: None until CABINET_BASE_URL is set) and a link per
+         *     channel that is switched on, hosted page first. `source` is the tag the
+         *     links carry.
+         */
+        ShareLinksView: {
+            /** Business Id */
+            business_id: string;
+            /** Hosted Chat Url */
+            hosted_chat_url?: string | null;
+            /** Links */
+            links: components["schemas"]["ShareLinkView"][];
+            /** Slug */
+            slug: string;
+            /** Source */
+            source?: string | null;
+        };
+        /**
          * StaffAlertEvent
          * @description What staff can be told about: a conversation passed to a person, a new
          *     request, a booking (new, moved or cancelled). Each staff contact and
@@ -7010,6 +7161,13 @@ export interface components {
          *     a text exists; the widget uses its own text for the others. `accent_color`
          *     and `position` are the owner's choices (None: the widget's defaults); the
          *     embed tag's data-color and data-position still win.
+         *
+         *     `starter_questions` are up to three of the business's FAQ questions per
+         *     language, shown as one-tap chips before the visitor writes;
+         *     `privacy_url` is the business's privacy notice (or the platform's
+         *     default one for it; None without CABINET_BASE_URL), linked from the
+         *     footer; `contact_links` are the other channels, offered on the hosted
+         *     chat page.
          */
         WidgetConfigView: {
             /** Accent Color */
@@ -7018,6 +7176,8 @@ export interface components {
             business_id: string;
             /** Business Name */
             business_name: string;
+            /** Contact Links */
+            contact_links?: components["schemas"]["WidgetContactLinkView"][];
             /** Default Language */
             default_language: string;
             /** Greetings */
@@ -7027,6 +7187,19 @@ export interface components {
             /** Languages */
             languages: components["schemas"]["WidgetLanguageView"][];
             position?: components["schemas"]["WidgetPosition"] | null;
+            /** Privacy Url */
+            privacy_url?: string | null;
+            /** Starter Questions */
+            starter_questions?: components["schemas"]["WidgetStarterQuestionView"][];
+        };
+        /**
+         * WidgetContactLinkView
+         * @description Another way to reach the business (WhatsApp, Telegram, a call...).
+         */
+        WidgetContactLinkView: {
+            kind: components["schemas"]["ShareLinkKind"];
+            /** Url */
+            url: string;
         };
         /**
          * WidgetGreetingView
@@ -7038,6 +7211,26 @@ export interface components {
             language: string;
             /** Text */
             text: string;
+        };
+        /**
+         * WidgetHandoffView
+         * @description The widget's answer to "Talk to a person": the conversation now with
+         *     staff and, for a new handoff, the message telling the visitor when
+         *     they hear back (stored in the chat, so polling skips it by
+         *     `message_id`). `text` is None when staff already had the conversation.
+         */
+        WidgetHandoffView: {
+            /** Conversation Id */
+            conversation_id: string;
+            direction: components["schemas"]["TextDirection"];
+            /** Is Handed Off */
+            is_handed_off: boolean;
+            /** Language */
+            language: string;
+            /** Message Id */
+            message_id?: string | null;
+            /** Text */
+            text?: string | null;
         };
         /**
          * WidgetLanguageView
@@ -7135,6 +7328,16 @@ export interface components {
             script_url: string;
             /** Snippet */
             snippet: string;
+        };
+        /**
+         * WidgetStarterQuestionView
+         * @description A question the visitor can send with one tap, in its language.
+         */
+        WidgetStarterQuestionView: {
+            /** Language */
+            language: string;
+            /** Text */
+            text: string;
         };
         /**
          * WizardQuestionView
@@ -16634,10 +16837,12 @@ export interface operations {
                     links?: {
                         /**
                          * BusinessLinkKind
-                         * @description Links from the profile the assistant may send (send_link tool).
+                         * @description Links from the profile the assistant may send (send_link tool). PRIVACY
+                         *     is the business's own privacy notice; the website chat links to it (or,
+                         *     without one, to the platform's default notice for the business).
                          * @enum {string}
                          */
-                        kind: "menu" | "map" | "payment" | "booking_page" | "delivery" | "website";
+                        kind: "menu" | "map" | "payment" | "booking_page" | "delivery" | "website" | "privacy";
                         /** Url */
                         url: string;
                     }[];
@@ -16801,10 +17006,12 @@ export interface operations {
                     links?: {
                         /**
                          * BusinessLinkKind
-                         * @description Links from the profile the assistant may send (send_link tool).
+                         * @description Links from the profile the assistant may send (send_link tool). PRIVACY
+                         *     is the business's own privacy notice; the website chat links to it (or,
+                         *     without one, to the platform's default notice for the business).
                          * @enum {string}
                          */
-                        kind: "menu" | "map" | "payment" | "booking_page" | "delivery" | "website";
+                        kind: "menu" | "map" | "payment" | "booking_page" | "delivery" | "website" | "privacy";
                         /** Url */
                         url: string;
                     }[] | null;
@@ -17163,10 +17370,12 @@ export interface operations {
                     links?: {
                         /**
                          * BusinessLinkKind
-                         * @description Links from the profile the assistant may send (send_link tool).
+                         * @description Links from the profile the assistant may send (send_link tool). PRIVACY
+                         *     is the business's own privacy notice; the website chat links to it (or,
+                         *     without one, to the platform's default notice for the business).
                          * @enum {string}
                          */
-                        kind: "menu" | "map" | "payment" | "booking_page" | "delivery" | "website";
+                        kind: "menu" | "map" | "payment" | "booking_page" | "delivery" | "website" | "privacy";
                         /** Url */
                         url: string;
                     }[];
@@ -17270,6 +17479,100 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ProfileWizardView"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    set_public_slug_v1_businesses__business_id__public_slug_put: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Slug */
+                    slug: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ShareLinksView"];
                 };
             };
             /** @description Sign-in required: the bearer token is missing, invalid or expired. */
@@ -19090,6 +19393,95 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["StarterAnswersApplied"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    get_share_links_v1_businesses__business_id__share_links_get: {
+        parameters: {
+            query?: {
+                src?: string | null;
+            };
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ShareLinksView"];
                 };
             };
             /** @description Sign-in required: the bearer token is missing, invalid or expired. */
@@ -21016,6 +21408,91 @@ export interface operations {
             };
         };
     };
+    get_hosted_chat_v1_public_chat__address__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                address: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HostedChatView"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
     echo_zadarma_check_v1_telephony_zadarma_notifications_get: {
         parameters: {
             query?: {
@@ -21575,6 +22052,100 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["WidgetConfigView"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    request_widget_handoff_v1_widget__business_id__handoff_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                business_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Language */
+                    language?: string | null;
+                    /** Session Key */
+                    session_key: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WidgetHandoffView"];
                 };
             };
             /** @description Sign-in required: the bearer token is missing, invalid or expired. */
