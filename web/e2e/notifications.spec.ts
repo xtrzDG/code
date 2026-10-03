@@ -49,10 +49,12 @@ test("the owner checks staff contacts and sees how notifications reach them", as
   await expect(page.getByText(fill(en.notifications.contacts.testSimulated, { name: "Anna" }))).toBeVisible();
   await expect(anna.getByText(en.notifications.contacts.status.delivered, { exact: true })).toBeVisible();
 
-  // Telegram without the platform bot cannot deliver, and says why.
-  await levan.getByRole("button", { name: fill(en.notifications.contacts.testLabel, { name: "Levan" }) }).click();
-  await expect(levan.getByText(en.notifications.contacts.status.dead, { exact: true })).toBeVisible();
-  await expect(levan.getByText("TELEGRAM_PLATFORM_BOT_TOKEN is not configured.")).toBeVisible();
+  // Telegram without the platform bot cannot deliver: no test to send, and why.
+  const levanTest = levan.getByRole("button", { name: fill(en.notifications.contacts.testLabel, { name: "Levan" }) });
+  await expect(levanTest).toBeDisabled();
+  const reason = fill(en.notifications.contacts.testUnavailable, { channel: en.settings.contacts.channels.telegram });
+  await expect(levanTest).toHaveAccessibleDescription(reason);
+  await expect(levan.getByText(reason)).toBeVisible();
 
   // The contact's quiet hours are switched off in its dialog.
   await anna.getByRole("button", { name: fill(en.settings.contacts.editLabel, { name: "Anna" }) }).click();

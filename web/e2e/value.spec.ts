@@ -51,8 +51,9 @@ test("the owner sees what the assistant is worth, with changes against the perio
   // The money estimate: the assistant's bookings times the typical check of a restaurant.
   await expect(hero.getByText(/≈/)).toBeVisible();
   await expect(hero.getByText(/Average check GEL\s?120, typical for your kind of business/)).toBeVisible();
-  // Every chip says in words how the number moved.
-  await expect(page.getByText(/^Up .+ vs the previous 30 days$/).first()).toBeAttached();
+  // Every chip says in words how the number moved (or that the period before had nothing to compare).
+  const moved = new RegExp(`^(Up .+ vs the previous 30 days|${en.value.delta.firstPeriodHint})$`);
+  await expect(page.getByText(moved).first()).toBeAttached();
 
   // A digest's link opens the report it is about.
   const listed = await request.get(`${API_URL}/v1/businesses/${owner.businessId}/value-reports?kind=monthly`, {
@@ -68,6 +69,26 @@ test("the owner sees what the assistant is worth, with changes against the perio
     // Unfolded: every number against the period before (a table on a desktop).
     await expect(opened.getByRole("rowheader", { name: en.reports.rows.assistantBookings })).toBeVisible();
   }
+});
+
+test("against a period without any activity, the chips say 'first period' instead of growth", async ({ page, context, request }) => {
+  const owner = await signInDemo(request, "demo@example.com");
+  await signInContext(context, owner.token);
+  // The period before had nothing at all: no conversation, booking, request, handoff or call.
+  await page.route(/\/api\/backend\/v1\/businesses\/[^/]+\/value(\?|$)/, async (route) => {
+    const response = await route.fetch();
+    const model = (await response.json()) as { previous: Record<string, number | null> };
+    const quiet = Object.fromEntries(Object.keys(model.previous).map((key) => [key, 0]));
+    await route.fulfill({ response, json: { ...model, previous: quiet } });
+  });
+  await page.goto(`/b/${owner.businessId}/overview`);
+
+  const hero = page.getByRole("region", { name: new RegExp(en.value.hero.title) });
+  await expect(hero.getByText(en.value.delta.firstPeriod).first()).toBeVisible();
+  await expect(page.getByText(en.value.delta.firstPeriodHint).first()).toBeAttached();
+  // No total is presented as growth ("+41", "+1 920 GEL").
+  await expect(page.getByText(/^Up .+ vs the previous/)).toHaveCount(0);
+  await expect(hero.getByText(/^▲ \+/)).toHaveCount(0);
 });
 
 test("the owner sets the average check and chooses the summaries", async ({ page, owner, request }) => {

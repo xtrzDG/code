@@ -4,7 +4,7 @@
  * screen's question first. Texts come from the cabinet's dictionaries.
  */
 
-import { expect, type Page } from "@playwright/test";
+import { expect, type Locator, type Page } from "@playwright/test";
 
 import { en } from "./messages";
 
@@ -152,4 +152,29 @@ export async function launch(page: Page): Promise<void> {
 
 async function pressLaunch(page: Page): Promise<void> {
   await page.getByRole("button", { name: en.tunnelLaunch.launch.start }).click();
+}
+
+/**
+ * Nothing of the tunnel's backdrop (rings, floor lines) lies on top of a
+ * heading: with the backdrop made hit-testable and the screen's content
+ * not, every point across the heading meets the screen's veil first.
+ */
+export async function expectBackdropBehind(page: Page, heading: Locator): Promise<void> {
+  const style = await page.addStyleTag({
+    content:
+      "[data-tunnel-backdrop], [data-tunnel-backdrop] * { pointer-events: auto !important; } " +
+      "main#main, main#main *:not([data-tunnel-veil]) { pointer-events: none !important; } " +
+      "[data-tunnel-veil] { pointer-events: auto !important; }",
+  });
+  const box = (await heading.boundingBox())!;
+  const hits = await page.evaluate(
+    ({ x, y, width, height }) =>
+      [0.1, 0.3, 0.5, 0.7, 0.9].map((share) => {
+        const hit = document.elementFromPoint(x + width * share, y + height / 2);
+        return hit?.closest("[data-tunnel-backdrop]") ? "backdrop" : hit?.hasAttribute("data-tunnel-veil") ? "veil" : (hit?.tagName ?? "nothing");
+      }),
+    box,
+  );
+  await style.evaluate((node) => (node as HTMLElement).remove());
+  expect(hits).toEqual(["veil", "veil", "veil", "veil", "veil"]);
 }

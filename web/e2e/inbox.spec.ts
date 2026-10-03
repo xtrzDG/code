@@ -156,3 +156,32 @@ test("the team's notes never reach the customer's chat or the transcript", async
   expect((await cardOf(request, owner.token, owner.businessId, conversationId)).messages.map((message) => message.text)).not.toContain(note);
   expect(await visitorTranscript(request, owner.businessId, visitor)).not.toContain(note);
 });
+
+test("the transcript's date sits in the flow and a right-to-left name stays beside the avatar", async ({ page, context, request }) => {
+  const owner = await signInAsDemoOwner(request);
+  await signInContext(context, owner.token);
+  await page.setViewportSize({ width: 1280, height: 900 });
+  const visitor = await visitorAsksForPerson(request, owner.businessId, `דנה כהן ${uniqueSuffix()}`);
+  const conversationId = await waitingConversationOf(request, owner.token, owner.businessId, visitor.name);
+  await page.goto(`/b/${owner.businessId}/inbox/${conversationId}`);
+
+  // The day's chip scrolls with the messages instead of covering them.
+  const transcript = page.getByRole("region", { name: en.conversations.transcript });
+  const chip = transcript.locator("[data-day-chip]").first();
+  const firstMessage = transcript.getByRole("listitem").first();
+  await expect(firstMessage).toBeVisible();
+  expect(await chip.evaluate((element) => getComputedStyle(element).position)).not.toBe("sticky");
+  const [chipBox, messageBox] = [(await chip.boundingBox())!, (await firstMessage.boundingBox())!];
+  expect(chipBox.y + chipBox.height).toBeLessThanOrEqual(messageBox.y);
+
+  // The Hebrew name starts right after the avatar, not at the far end of the bar.
+  const title = page.getByRole("heading", { level: 2, name: visitor.name });
+  await expect(title).toBeVisible();
+  const gap = await title.evaluate((heading) => {
+    const name = heading.querySelector("bdi")!.getBoundingClientRect();
+    const avatar = heading.parentElement!.previousElementSibling!.getBoundingClientRect();
+    return name.left - avatar.right;
+  });
+  expect(gap).toBeGreaterThanOrEqual(0);
+  expect(gap).toBeLessThan(24);
+});

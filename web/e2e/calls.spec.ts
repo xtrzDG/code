@@ -49,6 +49,18 @@ test("the owner turns text-backs on and the settings stay", async ({ page, owner
   await expect(page.getByText(/You called us and we could not answer/).first()).toBeVisible();
 });
 
+test("the SMS fallback waits until messages to missed callers are on", async ({ page, owner }) => {
+  await page.goto(`/b/${owner.businessId}/settings/calls`);
+  const sms = page.getByRole("switch", { name: calls.textBack.sms });
+  await expect(page.getByRole("switch", { name: calls.textBack.toggle })).toHaveAttribute("aria-checked", "false");
+  await expect(sms).toBeDisabled();
+  await expect(sms).toHaveAccessibleDescription(calls.textBack.smsNeedsTextBack);
+
+  await page.getByRole("switch", { name: calls.textBack.toggle }).click();
+  await expect(sms).toBeEnabled();
+  await expect(sms).toHaveAccessibleDescription(calls.textBack.smsHint);
+});
+
 test("the latest text-backs say what each caller got", async ({ page, owner }) => {
   const now = Date.now() * 1000;
   await serveTextBacks(page, [
