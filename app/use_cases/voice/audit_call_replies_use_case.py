@@ -18,12 +18,20 @@ from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.channel_events import PostCallEventStatus
 from app.schemas.constants.channels import ChannelKind
 from app.schemas.constants.conversations import CallGuardVerdict, CallOutcome
-from app.schemas.constants.handoffs import HandoffReason, HandoffUrgency
+from app.schemas.constants.handoffs import (
+    HandoffReason,
+    HandoffSummaryCode,
+    HandoffUrgency,
+)
 from app.schemas.domain.assistants import AssistantVersionDocument
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.conversations import CallDocument, ConversationDocument
 from app.schemas.dto.call_audits import CallAudit, CallAuditRequest
-from app.schemas.dto.handoffs import HandoffCommand, HandoffResult
+from app.schemas.dto.handoffs import (
+    CodedHandoffSummary,
+    HandoffCommand,
+    HandoffResult,
+)
 from app.schemas.dto.voice_webhooks import RecordedCall
 from app.schemas.exceptions.base_exception import ApplicationError
 from app.schemas.typings.conversations.strings import (
@@ -31,7 +39,6 @@ from app.schemas.typings.conversations.strings import (
     UnverifiedReplyValue,
 )
 from app.schemas.typings.handoffs.prefixed_id import HandoffId
-from app.schemas.typings.handoffs.strings import HandoffSummary
 from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.use_cases.voice.call_audit_evidence import (
     collect_call_evidence,
@@ -201,8 +208,11 @@ class AuditCallRepliesUseCase(UseCaseContract[CallAuditRequest, CallAudit]):
         ):
             return None
 
-        made: str = "booking" if recorded.outcome is CallOutcome.BOOKING else "request"
-        listed: str = ", ".join(str(value) for value in values[:MAX_LISTED_VALUES])
+        code: HandoffSummaryCode = (
+            HandoffSummaryCode.CALL_BOOKING_UNVERIFIED_VALUES
+            if recorded.outcome is CallOutcome.BOOKING
+            else HandoffSummaryCode.CALL_REQUEST_UNVERIFIED_VALUES
+        )
         try:
             result: HandoffResult = self._handoff_to_human.run(
                 HandoffCommand(
@@ -210,10 +220,8 @@ class AuditCallRepliesUseCase(UseCaseContract[CallAuditRequest, CallAudit]):
                     conversation_id=conversation.id,
                     contact_id=recorded.contact_id,
                     reason=HandoffReason.UNVERIFIED_NUMBERS,
-                    summary=HandoffSummary(
-                        "The phone assistant mentioned values missing from the "
-                        f"business data: {listed}. Check the {made} made in this "
-                        "call against the call transcript."
+                    summary=CodedHandoffSummary(
+                        code=code, flagged_values=values[:MAX_LISTED_VALUES]
                     ),
                     urgency=HandoffUrgency.LOW,
                     source_channel=ChannelKind.PHONE,

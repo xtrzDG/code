@@ -4,7 +4,7 @@ from typing import Any
 from app.adapters.llm.scripted_llm_adapter import ScriptedLlmAdapter
 from app.schemas.constants.assistants import AssistantToolName
 from app.schemas.constants.conversations import LlmTurnRole, ReplyGuardVerdict
-from app.schemas.constants.handoffs import HandoffReason
+from app.schemas.constants.handoffs import HandoffReason, HandoffSummaryCode
 from app.schemas.dto.conversations import LlmRequest
 from app.schemas.dto.llm_scripts import ScriptedLlmTurn
 from app.schemas.exceptions.application_errors import ExternalServiceError
@@ -76,8 +76,9 @@ def test_a_reply_still_inventing_numbers_is_replaced_by_a_handoff() -> None:
     assert "%" not in reply.text
     handoff = world.handoffs()[0]
     assert handoff.reason is HandoffReason.UNVERIFIED_NUMBERS
-    assert "15%" in handoff.summary
-    assert "40 ₾" in handoff.summary
+    assert handoff.summary_code is HandoffSummaryCode.UNVERIFIED_VALUES
+    assert handoff.flagged_values == ["15%", "40 ₾"]
+    assert handoff.quoted_text == "Дадите скидку?"
     stored = world.messages(reply.conversation_id)[-1]
     assert "50 ₾" not in stored.text
 

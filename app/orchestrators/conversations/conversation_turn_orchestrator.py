@@ -6,19 +6,27 @@ from app.contracts.storage import StorageScopeContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.channels import ChannelKind
 from app.schemas.constants.conversation_engine import ReplyFailureKind, TurnGate
-from app.schemas.constants.handoffs import HandoffReason, HandoffUrgency
+from app.schemas.constants.handoffs import (
+    HandoffReason,
+    HandoffSummaryCode,
+    HandoffUrgency,
+)
 from app.schemas.dto.conversation_engine import (
     GeneratedReply,
     PreparedTurn,
     ReplyRecord,
 )
 from app.schemas.dto.conversations import AssistantReply, InboundMessage
-from app.schemas.dto.handoffs import HandoffCommand, HandoffResult
+from app.schemas.dto.handoffs import (
+    CodedHandoffSummary,
+    HandoffCommand,
+    HandoffResult,
+)
 from app.schemas.dto.localization import LocalizedText
 from app.schemas.exceptions.base_exception import ApplicationError
 from app.schemas.typings.conversations.strings import MessageText
 from app.schemas.typings.handoffs.prefixed_id import HandoffId
-from app.schemas.typings.handoffs.strings import HandoffSummary
+from app.schemas.typings.handoffs.strings import HandoffQuotedText
 from app.utilities.conversations.assistant_texts.notice_texts import (
     COLLEAGUE_TAKES_OVER,
     COLLEAGUE_WILL_CALL_BACK,
@@ -35,13 +43,11 @@ FAILURE_HANDOFF_REASONS: dict[ReplyFailureKind, HandoffReason] = {
     ReplyFailureKind.NO_ANSWER: HandoffReason.NON_STANDARD_REQUEST,
     ReplyFailureKind.UNVERIFIED_NUMBERS: HandoffReason.UNVERIFIED_NUMBERS,
 }
-FAILURE_SUMMARIES: dict[ReplyFailureKind, str] = {
-    ReplyFailureKind.REFUSAL: "The AI model declined to answer this message.",
-    ReplyFailureKind.PROVIDER_ERROR: "The AI model was unavailable.",
-    ReplyFailureKind.NO_ANSWER: "The assistant could not finish an answer.",
-    ReplyFailureKind.UNVERIFIED_NUMBERS: (
-        "The assistant's answer contained values missing from the business data"
-    ),
+FAILURE_SUMMARY_CODES: dict[ReplyFailureKind, HandoffSummaryCode] = {
+    ReplyFailureKind.REFUSAL: HandoffSummaryCode.MODEL_DECLINED,
+    ReplyFailureKind.PROVIDER_ERROR: HandoffSummaryCode.MODEL_UNAVAILABLE,
+    ReplyFailureKind.NO_ANSWER: HandoffSummaryCode.ANSWER_UNFINISHED,
+    ReplyFailureKind.UNVERIFIED_NUMBERS: HandoffSummaryCode.UNVERIFIED_VALUES,
 }
 
 
@@ -193,15 +199,19 @@ class ConversationTurnOrchestrator(ConversationTurnOrchestratorContract):
 
 def build_failure_summary(
     turn: PreparedTurn, generated: GeneratedReply
-) -> HandoffSummary:
-    """Summary for staff: what went wrong and what the customer wrote."""
+) -> CodedHandoffSummary:
+    """
+    Summary for staff: what went wrong (a code each reader's language
+    renders), the values the guard flagged and what the customer wrote.
+    """
 
     failure: ReplyFailureKind = (
         ReplyFailureKind.NO_ANSWER if generated.failure is None else generated.failure
     )
-    details: str = FAILURE_SUMMARIES[failure]
-    if generated.unverified_values:
-        details += ": " + ", ".join(str(value) for value in generated.unverified_values)
-
-    customer_text: str = str(turn.customer_text)[:MAX_QUOTED_CUSTOMER_TEXT]
-    return HandoffSummary(f"{details.rstrip('.')}. Customer wrote: «{customer_text}»")
+    return CodedHandoffSummary(
+        code=FAILURE_SUMMARY_CODES[failure],
+        quoted_text=HandoffQuotedText(
+            str(turn.customer_text)[:MAX_QUOTED_CUSTOMER_TEXT]
+        ),
+        flagged_values=list(generated.unverified_values),
+    )

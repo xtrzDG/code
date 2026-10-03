@@ -7,7 +7,7 @@ from app.adapters.llm.scripted_llm_adapter import ScriptedLlmAdapter
 from app.schemas.constants.assistants import AssistantToolName
 from app.schemas.constants.channels import ChannelKind, MessageDirection
 from app.schemas.constants.conversations import ConversationStatus
-from app.schemas.constants.handoffs import HandoffReason
+from app.schemas.constants.handoffs import HandoffReason, HandoffSummaryCode
 from app.schemas.dto.conversations import LlmRequest
 from app.schemas.dto.llm_scripts import ScriptedLlmTurn
 from app.schemas.exceptions.application_errors import (
@@ -88,7 +88,8 @@ def test_refusal_passes_the_conversation_to_a_colleague() -> None:
     assert reply.text.startswith("Здравствуйте! Я AI-ассистент «Sakhli».")
     handoff = world.handoffs()[0]
     assert handoff.reason is HandoffReason.SENSITIVE_TOPIC
-    assert "Как сделать бомбу?" in handoff.summary
+    assert handoff.summary_code is HandoffSummaryCode.MODEL_DECLINED
+    assert handoff.quoted_text == "Как сделать бомбу?"
     assert follow_up.text is None
 
 

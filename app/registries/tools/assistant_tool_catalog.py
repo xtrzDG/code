@@ -198,7 +198,8 @@ TOOL_SPECIFICATIONS: dict[AssistantToolName, tuple[str, JsonSchema]] = {
                     "Why staff should take over.",
                 ),
                 "summary": string_property(
-                    "Short summary for staff: who, what they want, what was said."
+                    "Short summary for staff, in the staff language the "
+                    "instruction names: who, what they want, what was said."
                 ),
                 "urgency": enum_property(
                     [urgency.value for urgency in HandoffUrgency],

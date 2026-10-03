@@ -2,6 +2,8 @@
 
 from app.schemas.constants.conversations import ConversationStatus
 from app.schemas.constants.deliveries import OutboundMessageStatus
+from app.schemas.constants.handoffs import HandoffSummaryCode
+from app.schemas.dto.handoffs import CodedHandoffSummary
 from tests.channels.channels_payloads import telegram_ok
 from tests.channels.outbox_reads import outbox_of
 from tests.channels.telegram_updates import build_update, connect_bot, post_update
@@ -74,8 +76,11 @@ def test_exhausted_retries_give_the_conversation_to_staff() -> None:
     assert "502" in str(dead.last_error)
     [handoff] = testbed.handoffs_to_human.commands
     assert handoff.conversation_id == testbed.pipeline.conversation_id
-    assert "could not be delivered" in str(handoff.summary)
-    assert "Reply: «Reply: Do you have a table" in str(handoff.summary)
+    assert isinstance(handoff.summary, CodedHandoffSummary)
+    assert handoff.summary.code is HandoffSummaryCode.REPLY_UNDELIVERED
+    # The reply that never arrived is quoted; the platform's error is not.
+    assert str(handoff.summary.quoted_text).startswith("Reply: Do you have a table")
+    assert "502" not in str(handoff.summary.quoted_text)
     # The owner sees why replies of this channel do not arrive.
     stored = testbed.channel_repo.get(channel.id)
     assert stored is not None and "502" in str(stored.last_error)

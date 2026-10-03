@@ -65,6 +65,9 @@ from app.transformers.notifications.handoff_customer_message_transformer import 
 from app.transformers.notifications.handoff_notification_transformer import (
     HandoffNotificationTransformer,
 )
+from app.transformers.notifications.handoff_summary_transformer import (
+    HandoffSummaryTransformer,
+)
 from app.transformers.notifications.new_booking_notification_transformer import (
     NewBookingNotificationTransformer,
 )
@@ -192,6 +195,10 @@ class TransformersContainer(containers.DeclarativeContainer):
             HandoffNotificationTransformer,
             text_resolver=utilities.localized_text_resolver,
         )
+    )
+    handoff_summary_transformer: Singleton[HandoffSummaryTransformer] = Singleton(
+        HandoffSummaryTransformer,
+        text_resolver=utilities.localized_text_resolver,
     )
     handoff_customer_message_transformer: Singleton[
         HandoffCustomerMessageTransformer

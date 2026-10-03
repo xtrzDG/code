@@ -263,6 +263,7 @@ class RunAutotestScenarioUseCase(
                         scenario_run.version.facts,
                         transcript,
                         replies,
+                        scenario_run.business.owner_language,
                     )
                 )
             ],

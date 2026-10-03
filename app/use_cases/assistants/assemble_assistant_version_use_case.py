@@ -174,9 +174,10 @@ class AssembleAssistantVersionUseCase(
         niche: NicheTemplate = self._niche_template_registry.get(business.niche_key)
         country: CountryProfile = self._country_registry.get(business.country_code)
         plan: PlanDefinition = self._plan_registry.get(business.plan_key)
+        # The staff language too: handoff summaries are written in it.
         language_profiles: list[LanguageProfile] = collect_language_profiles(
             self._language_registry,
-            business.languages,
+            list(dict.fromkeys([*business.languages, business.owner_language])),
         )
         knowledge_items: list[KnowledgeItemDocument] = [
             item

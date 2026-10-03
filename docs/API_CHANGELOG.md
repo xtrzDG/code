@@ -11,6 +11,21 @@ Kinds of change: **Added**, **Changed** (additive), **Deprecated** (with
 sunset date), **Removed** and **Breaking** (only with the `api-breaking`
 label and a migration path).
 
+## 2026-10-03 — handoffs the platform creates are read in each reader's language
+
+Spec: `698675efc5aa8ded`
+
+- **Added** `summary_code`, `quoted_text` and `flagged_values` on
+  `HandoffListItem` (`GET /v1/businesses/{business_id}/handoffs` and the
+  resolve answer). A handoff the platform created itself (the model
+  declined or was unavailable, an answer held back for figures missing
+  from the business data, a call that named such figures, a reply that
+  never arrived, data erased at the customer's request) carries a
+  `HandoffSummaryCode`; the cabinet renders it from its own dictionary
+  with the quoted words and the flagged values. `summary` stays: the
+  model's own summary (now written in the business's staff language), or
+  the code rendered in the staff language.
+
 ## 2026-10-03 — guided launch: one-call creation, setup progress, starter answers, "Apply changes", trial at go-live
 
 Spec: `a4c5c025e7a96d6c`

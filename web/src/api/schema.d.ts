@@ -4090,6 +4090,15 @@ export interface components {
         /**
          * HandoffDocument
          * @description Conversation passed to staff (concept table `handoffs`).
+         *
+         *     `summary` is what staff read: the model's own summary (written in the
+         *     staff language), or, for a handoff the platform created, the
+         *     `summary_code` rendered in the business's staff language. The code,
+         *     `quoted_text` and `flagged_values` let the cabinet and notifications
+         *     render it again in each reader's language.
+         *
+         *     Version 2: `summary_code`, `quoted_text` and `flagged_values` (all
+         *     optional, so version 1 rows read as they are).
          */
         HandoffDocument: {
             /** Business Id */
@@ -4103,6 +4112,8 @@ export interface components {
              * @description Creation wall-clock UNIX timestamp in microseconds.
              */
             created_at?: number;
+            /** Flagged Values */
+            flagged_values?: string[];
             /** Id */
             id?: string;
             /**
@@ -4110,19 +4121,21 @@ export interface components {
              * @default false
              */
             is_sandbox: boolean;
+            /** Quoted Text */
+            quoted_text?: string | null;
             reason: components["schemas"]["HandoffReason"];
             /** Resolved At */
             resolved_at?: number | null;
             /**
              * Schema Version
-             * @description Persistence schema version. This is not the package version or application release version.
-             * @default 1
+             * @default 2
              */
             schema_version: string;
             /** @default pending */
             status: components["schemas"]["HandoffStatus"];
             /** Summary */
             summary: string;
+            summary_code?: components["schemas"]["HandoffSummaryCode"] | null;
             /**
              * Updated At
              * @description Last update wall-clock UNIX timestamp in microseconds.
@@ -4134,6 +4147,12 @@ export interface components {
         /**
          * HandoffListItem
          * @description Handoff with the contact to call back.
+         *
+         *     When `summary_code` is set the platform created the handoff: the
+         *     cabinet shows the code from its own dictionary in the reader's
+         *     language, with `quoted_text` and `flagged_values`; `summary` is the
+         *     same in the business's staff language. Otherwise `summary` is the
+         *     model's own.
          */
         HandoffListItem: {
             /** Business Id */
@@ -4148,6 +4167,8 @@ export interface components {
             conversation_id: string;
             /** Created At */
             created_at: number;
+            /** Flagged Values */
+            flagged_values?: string[];
             /** Id */
             id: string;
             /**
@@ -4155,12 +4176,15 @@ export interface components {
              * @default false
              */
             is_sandbox: boolean;
+            /** Quoted Text */
+            quoted_text?: string | null;
             reason: components["schemas"]["HandoffReason"];
             /** Resolved At */
             resolved_at?: number | null;
             status: components["schemas"]["HandoffStatus"];
             /** Summary */
             summary: string;
+            summary_code?: components["schemas"]["HandoffSummaryCode"] | null;
             urgency: components["schemas"]["HandoffUrgency"];
         };
         /**
@@ -4199,6 +4223,16 @@ export interface components {
          * @enum {string}
          */
         HandoffStatus: "pending" | "notified" | "notification_failed" | "resolved";
+        /**
+         * HandoffSummaryCode
+         * @description What happened, for a handoff the platform itself created (the model
+         *     writes its own summary for the ones it creates). Staff read it in
+         *     their own language: the cabinet and every notification render the
+         *     code, with the quoted text and the flagged values, from their own
+         *     dictionaries.
+         * @enum {string}
+         */
+        HandoffSummaryCode: "model_declined" | "model_unavailable" | "answer_unfinished" | "unverified_values" | "call_booking_unverified_values" | "call_request_unverified_values" | "reply_undelivered" | "data_erased";
         /**
          * HandoffUrgency
          * @description How fast staff should react.

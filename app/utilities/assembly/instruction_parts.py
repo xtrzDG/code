@@ -33,6 +33,7 @@ class InstructionParts:
     location: str
     language_names: str
     default_language_name: str
+    staff_language_name: str
     tone: str | None
     facts: list[BusinessFact]
     business_handoff_rules: list[str]
@@ -72,6 +73,9 @@ def collect_instruction_parts(source: AssistantInstructionSource) -> Instruction
         language_names=describe_languages(business.languages, source.language_profiles),
         default_language_name=describe_language(
             business.default_language, source.language_profiles
+        ),
+        staff_language_name=describe_language(
+            business.owner_language, source.language_profiles
         ),
         tone=str(profile.tone) if profile.tone else None,
         facts=limit_knowledge_facts(source.facts, source.knowledge_items),

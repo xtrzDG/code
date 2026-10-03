@@ -54,7 +54,9 @@ class AssistantInstructionTransformer(
                 input_data.tools, parts.country_name, parts.timezone_name
             ),
             build_handoff_section(
-                parts.business_handoff_rules, parts.niche_handoff_rules
+                parts.business_handoff_rules,
+                parts.niche_handoff_rules,
+                parts.staff_language_name,
             ),
             build_prohibition_section(parts.forbidden_rules),
             build_niche_rule_section(parts.niche_rules),

@@ -11,6 +11,7 @@ from app.schemas.domain.contacts import ContactDocument
 from app.schemas.domain.conversations import ConversationDocument
 from app.schemas.domain.handoffs import HandoffDocument, UnansweredQuestionDocument
 from app.schemas.domain.resources import ResourceDocument
+from app.schemas.dto.handoffs import CodedHandoffSummary
 from app.schemas.typings.bookings.constrained_integers import PartySize
 from app.schemas.typings.bookings.prefixed_id import BookingId, LeadId
 from app.schemas.typings.bookings.strings import (
@@ -150,8 +151,13 @@ class DemoOperationsRecorder:
         urgency: HandoffUrgency = HandoffUrgency.NORMAL,
         resolved_after_minutes: int | None = None,
         handoff_id: HandoffId | None = None,
+        coded: CodedHandoffSummary | None = None,
     ) -> HandoffDocument:
-        """Handed off at the conversation's last message; open unless resolved."""
+        """
+        Handed off at the conversation's last message; open unless resolved.
+        `coded` marks a handoff the platform made (`summary` is then its
+        text in the staff language).
+        """
 
         made_at: Microseconds = conversation.last_message_at
         is_resolved: bool = resolved_after_minutes is not None
@@ -162,6 +168,9 @@ class DemoOperationsRecorder:
             contact_id=conversation.contact_id,
             reason=reason,
             summary=HandoffSummary(summary),
+            summary_code=None if coded is None else coded.code,
+            quoted_text=None if coded is None else coded.quoted_text,
+            flagged_values=[] if coded is None else list(coded.flagged_values),
             urgency=urgency,
             status=HandoffStatus.RESOLVED if is_resolved else HandoffStatus.NOTIFIED,
             resolved_at=(

@@ -13,7 +13,10 @@ from app.schemas.dto.assistants.autotest_runs import AutotestScenario
 from app.schemas.dto.conversations import AssistantReply
 from app.schemas.typings.assistants.strings import SystemPromptText
 from app.schemas.typings.conversations.strings import MessageText
-from app.schemas.typings.localization.constrained_strings import E164PhoneNumber
+from app.schemas.typings.localization.constrained_strings import (
+    E164PhoneNumber,
+    LanguageTag,
+)
 from app.utilities.assembly.fact_formatting import format_international_phone_number
 
 DONE_MARKER: str = "[DONE]"
@@ -137,8 +140,12 @@ def build_judge_request_text(
     facts: Sequence[BusinessFact],
     transcript: Sequence[AutotestTranscriptLine],
     replies: Sequence[AssistantReply],
+    notes_language: LanguageTag,
 ) -> MessageText:
-    """Everything the judge needs, as one user message."""
+    """
+    Everything the judge needs, as one user message. The notes are for the
+    owner, so they are written in the staff language.
+    """
 
     booking_count: int = sum(len(reply.created_booking_ids) for reply in replies)
     lead_count: int = sum(len(reply.created_lead_ids) for reply in replies)
@@ -149,6 +156,8 @@ def build_judge_request_text(
         f"Scenario: {scenario.key} ({scenario.kind.value})",
         f"Language: {scenario.language_name} ({scenario.language})",
         f"Customer goal: {scenario.goal}",
+        f"Write the notes in the language with the tag {notes_language}: "
+        "the owner of the business reads them.",
         "",
         "Recorded by the system:",
         f"- bookings created: {booking_count}",

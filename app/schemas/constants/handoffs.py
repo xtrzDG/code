@@ -15,6 +15,25 @@ class HandoffReason(StrEnum):
     UNVERIFIED_NUMBERS = "unverified_numbers"
 
 
+class HandoffSummaryCode(StrEnum):
+    """
+    What happened, for a handoff the platform itself created (the model
+    writes its own summary for the ones it creates). Staff read it in
+    their own language: the cabinet and every notification render the
+    code, with the quoted text and the flagged values, from their own
+    dictionaries.
+    """
+
+    MODEL_DECLINED = "model_declined"
+    MODEL_UNAVAILABLE = "model_unavailable"
+    ANSWER_UNFINISHED = "answer_unfinished"
+    UNVERIFIED_VALUES = "unverified_values"
+    CALL_BOOKING_UNVERIFIED_VALUES = "call_booking_unverified_values"
+    CALL_REQUEST_UNVERIFIED_VALUES = "call_request_unverified_values"
+    REPLY_UNDELIVERED = "reply_undelivered"
+    DATA_ERASED = "data_erased"
+
+
 class HandoffUrgency(StrEnum):
     """How fast staff should react."""
 

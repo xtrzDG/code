@@ -17,6 +17,7 @@ from app.contracts.repositories.conversation_repositories import (
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.compliance import AuditAction
 from app.schemas.constants.conversations import ConversationStatus
+from app.schemas.constants.handoffs import HandoffSummaryCode
 from app.schemas.constants.users import BusinessMemberRole
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.compliance import AuditLogEntryDocument
@@ -219,6 +220,10 @@ class DeleteContactDataUseCase(
             self._lead_repo.save(lead)
 
         for handoff in records.handoffs:
+            # The cabinet shows the code in the reader's language.
             handoff.summary = HandoffSummary(ERASED_TEXT)
+            handoff.summary_code = HandoffSummaryCode.DATA_ERASED
+            handoff.quoted_text = None
+            handoff.flagged_values = []
             handoff.updated_at = now
             self._handoff_repo.save(handoff)

@@ -124,6 +124,7 @@ class FollowUpUseCasesContainer(containers.DeclarativeContainer):
         staff_brief_transformer=transformers.staff_alert_brief_transformer,
         staff_alerts=facilitators.staff_alert_facilitator,
         wall_clock=time_provider.microsecond_wall_clock,
+        summary_transformer=transformers.handoff_summary_transformer,
     )
     resolve_handoff_use_case: Factory[
         UseCaseContract[ResolveHandoffCommand, HandoffListItem]
