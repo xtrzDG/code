@@ -28,6 +28,10 @@ from app.contracts.repositories.conversation_repositories import (
     ConversationRepoContract,
     MessageRepoContract,
 )
+from app.contracts.repositories.feedback_repositories import (
+    FeedbackRequestRepoContract,
+    ReviewSettingsRepoContract,
+)
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.configurations.app_settings import AppSettings
 from app.schemas.constants.assistants import AssistantVersionStatus
@@ -54,8 +58,9 @@ class StoreDemoActivityUseCase(UseCaseContract[DemoActivityStorage, BusinessId])
     history (archived, published with a passed autotest run, a fresh
     draft), go live with the published one, and store the month of activity
     the demo catalog describes: customers, conversations with tool calls,
-    phone calls, bookings, leads, handoffs, unanswered questions, the
-    subscription with its usage, the accepted DPA and audit entries.
+    phone calls, bookings, leads, handoffs, unanswered questions, feedback
+    after visits, the subscription with its usage, the accepted DPA and
+    audit entries.
     """
 
     def __init__(
@@ -78,6 +83,8 @@ class StoreDemoActivityUseCase(UseCaseContract[DemoActivityStorage, BusinessId])
         package_usage_warning_repo: PackageUsageWarningRepoContract,
         dpa_acceptance_repo: DpaAcceptanceRepoContract,
         audit_log_repo: AuditLogRepoContract,
+        review_settings_repo: ReviewSettingsRepoContract,
+        feedback_request_repo: FeedbackRequestRepoContract,
         app_settings: AppSettings,
     ) -> None:
         self._registry: DemoDatasetRegistryContract = demo_dataset_registry
@@ -98,6 +105,8 @@ class StoreDemoActivityUseCase(UseCaseContract[DemoActivityStorage, BusinessId])
         self._warning_repo: PackageUsageWarningRepoContract = package_usage_warning_repo
         self._dpa_acceptance_repo: DpaAcceptanceRepoContract = dpa_acceptance_repo
         self._audit_log_repo: AuditLogRepoContract = audit_log_repo
+        self._review_settings_repo: ReviewSettingsRepoContract = review_settings_repo
+        self._feedback_request_repo: FeedbackRequestRepoContract = feedback_request_repo
         self._app_settings: AppSettings = app_settings
 
     def run(self, input_data: DemoActivityStorage) -> BusinessId:
@@ -116,6 +125,7 @@ class StoreDemoActivityUseCase(UseCaseContract[DemoActivityStorage, BusinessId])
         )
         self._go_live(business.id, published_id, input_data.seeded_at)
         self._store_customers(activity)
+        self._store_feedback(activity)
         self._store_billing(activity)
         self._store_compliance(input_data, activity)
         return business.id
@@ -185,6 +195,12 @@ class StoreDemoActivityUseCase(UseCaseContract[DemoActivityStorage, BusinessId])
             self._handoff_repo.save(handoff)
         for question in activity.unanswered_questions:
             self._question_repo.save(question)
+
+    def _store_feedback(self, activity: DemoBusinessActivity) -> None:
+        if activity.review_settings is not None:
+            self._review_settings_repo.save(activity.review_settings)
+        for request in activity.feedback_requests:
+            self._feedback_request_repo.insert_if_new(request)
 
     def _store_billing(self, activity: DemoBusinessActivity) -> None:
         self._subscription_repo.save(activity.subscription)

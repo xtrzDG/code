@@ -267,6 +267,7 @@ def build_restaurant_profile(
             ),
             BusinessLink(kind=BusinessLinkKind.WEBSITE, url=WebLink(SITE)),
         ],
+        google_review_url=WebLink(f"{SITE}/review"),
         niche_answers=[
             answer("cuisine", "Грузинская домашняя кухня и вино из Кахети"),
             answer("seating_capacity", "64"),

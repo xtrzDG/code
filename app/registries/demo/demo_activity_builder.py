@@ -4,6 +4,10 @@ from typed_time_provider import Microseconds
 
 from app.registries.demo.demo_clock import DemoClock
 from app.registries.demo.demo_conversation_recorder import DemoConversationRecorder
+from app.registries.demo.demo_feedback import (
+    build_demo_feedback_requests,
+    build_demo_review_settings,
+)
 from app.registries.demo.demo_operations_recorder import DemoOperationsRecorder
 from app.schemas.constants.assistants import AssistantVersionStatus
 from app.schemas.constants.conversations import ConversationStatus
@@ -102,6 +106,10 @@ class DemoActivityBuilder:
             package_usage_warnings=list(package_usage_warnings),
             audit_log_entries=list(audit_log_entries),
             autotest_run=autotest_run,
+            review_settings=build_demo_review_settings(self.business, self.clock.now),
+            feedback_requests=build_demo_feedback_requests(
+                self.business, self.desk.bookings, self.talk.contacts, self.clock.now
+            ),
         )
 
     def _assign_oldest_waiting_conversation(self) -> None:

@@ -34,6 +34,7 @@ from app.schemas.domain.conversations import (
     MessageDocument,
     ToolCallRecord,
 )
+from app.schemas.domain.feedback import FeedbackRequestDocument, ReviewSettingsDocument
 from app.schemas.domain.handoffs import HandoffDocument, UnansweredQuestionDocument
 from app.schemas.domain.knowledge import KnowledgeItemDocument
 from app.schemas.domain.package_usage import PackageUsageWarningDocument
@@ -166,6 +167,10 @@ class DemoBusinessActivity(ImmutableDTO):
         default_factory=list[AuditLogEntryDocument]
     )
     autotest_run: AutotestRunDocument
+    review_settings: ReviewSettingsDocument | None = None
+    feedback_requests: list[FeedbackRequestDocument] = Field(
+        default_factory=list[FeedbackRequestDocument]
+    )
 
 
 class DemoSeedPlan(ImmutableDTO):
