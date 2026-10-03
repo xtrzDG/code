@@ -86,7 +86,11 @@ def build_channels_http_client(testbed: ChannelsInbox) -> TestClient:
                     testbed.business_repo,
                     testbed.channel_repo,
                     testbed.assistant_version_repo,
+                    testbed.profile_repo,
+                    testbed.knowledge_item_repo,
                     testbed.language_registry,
+                    testbed.language_detector,
+                    testbed.settings,
                 )
             ),
             widget_message_operator=wrap(

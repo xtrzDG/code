@@ -10,6 +10,10 @@ from app.schemas.typings.channels.strings import (
     MetaPageName,
     WhatsAppDisplayPhoneNumber,
 )
+from app.schemas.typings.sharing.constrained_strings import (
+    InstagramUsername,
+    MetaPageUsername,
+)
 
 
 class TelegramBotProfile(ImmutableDTO):
@@ -19,11 +23,16 @@ class TelegramBotProfile(ImmutableDTO):
 
 
 class MetaPageProfile(ImmutableDTO):
-    """A Facebook page and its linked Instagram professional account."""
+    """
+    A Facebook page and its linked Instagram professional account, with
+    their public usernames (None when the page or account has none).
+    """
 
     page_id: MetaObjectId
     name: MetaPageName | None = None
+    username: MetaPageUsername | None = None
     instagram_account_id: MetaObjectId | None = None
+    instagram_username: InstagramUsername | None = None
 
 
 class WhatsAppPhoneNumberProfile(ImmutableDTO):

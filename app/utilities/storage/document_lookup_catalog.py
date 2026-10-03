@@ -2,7 +2,7 @@
 The declared lookup fields of the document collections, by collection.
 
 Each TEXT, FILTER_TEXT and INTEGER field is a generated column
-`doc_<field>` (migrations 1010, 1040, 1042 and 1043), each ELEMENT_TEXT
+`doc_<field>` (migrations 1010, 1040, 1042, 1043 and 1052), each ELEMENT_TEXT
 field a trigger over `workshop.document_lookup_keys`;
 `document_lookup_fields` explains the kinds and checks queries against
 this catalog.
@@ -163,4 +163,6 @@ DOCUMENT_LOOKUP_FIELDS: Mapping[
     DocumentCollectionName("worker_heartbeats"): (_integer("beat_at"),),
     # The devices of one user in a business (Settings, "this device").
     DocumentCollectionName("push_subscriptions"): (_text("user_id"),),
+    # The FAQ of a business: the website chat's starter questions (1052).
+    DocumentCollectionName("knowledge_items"): (_text("kind"),),
 }

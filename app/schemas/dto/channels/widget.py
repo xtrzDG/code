@@ -1,12 +1,15 @@
 """The website chat widget: its configuration, messages, replies and snippet."""
 
 from base_pydantic_schemas import ImmutableDTO
+from pydantic import Field
 from typed_time_provider import Microseconds
 
 from app.schemas.constants.channels import WidgetPosition
 from app.schemas.constants.conversations import MessageAuthor
 from app.schemas.constants.localization import TextDirection
+from app.schemas.constants.sharing import ShareLinkKind
 from app.schemas.dto.conversations import AssistantReply
+from app.schemas.typings.businesses.constrained_strings import WebLink
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.businesses.strings import BusinessName
 from app.schemas.typings.channels.booleans import (
@@ -24,6 +27,7 @@ from app.schemas.typings.channels.strings import (
     WidgetContactNameInput,
     WidgetEmbedSnippet,
     WidgetGreetingText,
+    WidgetStarterQuestionText,
 )
 from app.schemas.typings.compliance.strings import ClientIpAddress
 from app.schemas.typings.conversations.booleans import IsConversationHandedOff
@@ -31,6 +35,7 @@ from app.schemas.typings.conversations.prefixed_id import ConversationId, Messag
 from app.schemas.typings.conversations.strings import MessageText
 from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.schemas.typings.localization.strings import LanguageDisplayName
+from app.schemas.typings.sharing.constrained_strings import ShareLinkUrl
 from app.schemas.typings.users.prefixed_id import UserId
 
 
@@ -50,6 +55,20 @@ class WidgetGreetingView(ImmutableDTO):
     direction: TextDirection
 
 
+class WidgetStarterQuestionView(ImmutableDTO):
+    """A question the visitor can send with one tap, in its language."""
+
+    language: LanguageTag
+    text: WidgetStarterQuestionText
+
+
+class WidgetContactLinkView(ImmutableDTO):
+    """Another way to reach the business (WhatsApp, Telegram, a call...)."""
+
+    kind: ShareLinkKind
+    url: ShareLinkUrl
+
+
 class WidgetConfigView(ImmutableDTO):
     """
     Public configuration the widget script loads before it shows itself.
@@ -60,6 +79,13 @@ class WidgetConfigView(ImmutableDTO):
     a text exists; the widget uses its own text for the others. `accent_color`
     and `position` are the owner's choices (None: the widget's defaults); the
     embed tag's data-color and data-position still win.
+
+    `starter_questions` are up to three of the business's FAQ questions per
+    language, shown as one-tap chips before the visitor writes;
+    `privacy_url` is the business's privacy notice (or the platform's
+    default one for it; None without CABINET_BASE_URL), linked from the
+    footer; `contact_links` are the other channels, offered on the hosted
+    chat page.
     """
 
     business_id: BusinessId
@@ -70,6 +96,13 @@ class WidgetConfigView(ImmutableDTO):
     greetings: list[WidgetGreetingView]
     accent_color: WidgetAccentColor | None = None
     position: WidgetPosition | None = None
+    starter_questions: list[WidgetStarterQuestionView] = Field(
+        default_factory=list[WidgetStarterQuestionView]
+    )
+    privacy_url: WebLink | None = None
+    contact_links: list[WidgetContactLinkView] = Field(
+        default_factory=list[WidgetContactLinkView]
+    )
 
 
 class WidgetMessageRequest(ImmutableDTO):

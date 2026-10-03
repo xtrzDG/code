@@ -167,7 +167,11 @@ class ChannelUseCasesContainer(containers.DeclarativeContainer):
         business_repo=repositories.business_repo,
         channel_repo=repositories.channel_repo,
         assistant_version_repo=repositories.assistant_version_repo,
+        business_profile_repo=repositories.business_profile_repo,
+        knowledge_item_repo=repositories.knowledge_item_repo,
         language_registry=registries.language_registry,
+        language_detector=utilities.language_detector,
+        app_settings=config.app_settings,
     )
     get_widget_messages_use_case: Factory[
         UseCaseContract[WidgetMessagesQuery, WidgetMessagesView]

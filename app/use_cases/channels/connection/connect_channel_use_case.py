@@ -158,6 +158,7 @@ class ConnectChannelUseCase(UseCaseContract[ConnectChannelCommand, ChannelView])
             if connection.secret is None
             else self._secret_cipher.encrypt(connection.secret)
         )
+        channel.public_profile = connection.public_profile
         channel.status = ChannelStatus.CONNECTED
         channel.last_error = None
         channel.last_error_at = None

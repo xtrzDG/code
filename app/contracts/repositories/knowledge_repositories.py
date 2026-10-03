@@ -9,11 +9,13 @@ looked up through its business id, so one tenant never sees another's data.
 from typing import Protocol
 
 from app.contracts.repo_contract import RepoContract
+from app.schemas.constants.knowledge import KnowledgeItemKind
 from app.schemas.domain.knowledge import KnowledgeItemDocument
 from app.schemas.domain.resources import ResourceDocument, ScheduleExceptionDocument
 from app.schemas.typings.bookings.prefixed_id import ResourceId, ScheduleExceptionId
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.knowledge.prefixed_id import KnowledgeItemId
+from app.schemas.typings.storage.constrained_integers import DocumentQueryLimit
 
 
 class KnowledgeItemRepoContract(RepoContract, Protocol):
@@ -31,6 +33,15 @@ class KnowledgeItemRepoContract(RepoContract, Protocol):
         self,
         business_id: BusinessId,
     ) -> list[KnowledgeItemDocument]:
+        raise NotImplementedError
+
+    def list_by_kind(
+        self,
+        business_id: BusinessId,
+        kind: KnowledgeItemKind,
+        limit: DocumentQueryLimit,
+    ) -> list[KnowledgeItemDocument]:
+        """The business's first-written items of a kind (an indexed query)."""
         raise NotImplementedError
 
     def delete(self, business_id: BusinessId, item_id: KnowledgeItemId) -> None:

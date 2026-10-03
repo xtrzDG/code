@@ -13,5 +13,15 @@
 -- the business is known, explicitly platform-wide. No lookup columns are
 -- needed. The business's current address is the `public_slug` field of
 -- its document.
+--
+-- knowledge_items.doc_kind: the website chat shows the first FAQ questions
+-- of a business as one-tap starters on every widget load, so the FAQ of a
+-- business is found by an index, not among all its menu items.
 
 select workshop.create_document_collection('public_slug_claims');
+
+alter table workshop.knowledge_items
+    add column if not exists doc_kind text
+        generated always as (document ->> 'kind') stored;
+create index if not exists knowledge_items_doc_kind_idx
+    on workshop.knowledge_items (business_id, doc_kind, created_at, row_sequence);
