@@ -21,6 +21,8 @@ RESERVED_SLUGS: frozenset[str] = frozenset(
         "workshop", "www",
     }
 )  # fmt: skip
+# A name shorter than this gives no address of its own (BusinessPublicSlug).
+MIN_SLUG_LENGTH: int = 3
 # Words longer than this are cut at a word boundary where possible.
 MAX_BASE_LENGTH: int = 32
 # How many numbered variants ("cafe-batumi-2" ...) are tried before the
@@ -90,7 +92,7 @@ def suggest_slugs(
 
     candidates: list[BusinessPublicSlug] = []
     base: str = shorten(spell_in_latin(str(business_name)), MAX_BASE_LENGTH)
-    if len(base) >= BusinessPublicSlug.min_length:
+    if len(base) >= MIN_SLUG_LENGTH:
         slug = BusinessPublicSlug(base)
         if not is_reserved_slug(slug):
             candidates.append(slug)
