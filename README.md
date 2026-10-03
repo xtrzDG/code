@@ -469,7 +469,7 @@ UI-тестов); `color`, `position` и `language` в ней показываю
 | Данные и договор | `GET·POST …/dpa`, `GET /v1/legal/dpa/{version}?language=` (текст DPA, без токена), `GET …/audit-log` (страницы, фильтры `action`, `entity`, `actor_id`, `since`, `until`), `GET …/contacts` (страницы, `search`), `GET·DELETE …/contacts/{contact_id}`, `GET …/contacts/{contact_id}/export` |
 | Анкета | `GET …/profile/wizard`, `GET·PUT·PATCH …/profile` (PATCH — автосохранение: меняются только присланные поля; с `expected_updated_at` от устаревшей анкеты — 409 `stale_revision`), `PUT …/profile/steps/{step}`, `GET …/profile/gaps` |
 | Пошаговый запуск | `POST /v1/assistants` («Создать AI-помощника»: бизнес с умолчаниями страны, его шаги запуска и готовые ответы ниши; 201), `GET …/setup` (семь шагов по порядку — бизнес, предложение, часы и запись, кто получает заявки, каналы, проба, запуск — со статусами `done`, `skipped`, `next`, `todo`, процент, минуты до конца, следующее действие, ссылки «проверить с телефона», вехи и ход «Применить изменения»; `?language=`), `PUT·DELETE …/setup/skipped-steps/{setup_step}` (пропустить необязательный шаг `offer`, `channels`, `test` или вернуть его), `POST …/setup/milestones/{kind}/celebrate` (кабинет показал поздравление — один раз), `GET …/setup/starter-answers` (подсказки ниши для страны бизнеса: часы, правила брони, первый ресурс, передача человеку, запреты, тон, частые вопросы, примеры предложения без цен), `POST …/setup/starter-answers/apply` (принять одним вызовом: заполняются только пустые разделы, цены никогда не подставляются), `POST·GET …/assistant/apply` («Применить изменения»: версия из текущей анкеты, проверки в фоне и публикация, когда они прошли; 202; стадии `building`, `checking`, `publishing`, `live`, `needs_attention` с причинами простыми словами и местом, где их исправить) |
-| Знания | `GET·POST …/knowledge`, `GET·PATCH·DELETE …/knowledge/{item_id}`, `POST …/knowledge/search`, `POST …/knowledge/import[/confirm]`, `DELETE …/knowledge/import/{batch_id}` |
+| Знания | `GET·POST …/knowledge`, `GET·PATCH·DELETE …/knowledge/{item_id}`, `POST …/knowledge/search`, `POST …/knowledge/import[/confirm]`, `DELETE …/knowledge/import/{batch_id}`, `POST …/knowledge/import-website`, `GET …/knowledge/import-website/current` |
 | Ресурсы и расписание | `GET·POST …/resources`, `PATCH …/resources/{id}`, `GET·POST …/schedule-exceptions`, `DELETE …/schedule-exceptions/{id}` |
 | Брони, заявки, передачи | `GET …/availability` (`full_day=true` — весь день для сотрудников), `GET·POST …/bookings`, `PATCH …/bookings/{id}` (статус, гости, место, примечание, имя), `POST …/bookings/{id}/cancel`, `POST …/bookings/{id}/reschedule`, `GET …/leads`, `PATCH …/leads/{id}`, `GET …/handoffs`, `POST …/handoffs/{id}/resolve`, `GET …/unanswered-questions`, `POST …/unanswered-questions/{id}/answer`, `GET …/dashboard`, `GET …/inbox-counts` (открытые передачи и новые заявки, без записи в журнал) |
 | Живой кабинет | `GET …/events` (Server-Sent Events: что изменилось в бизнесе — передачи, сообщения, заявки, брони, каналы, автотесты — только виды и id, без текста клиентов; `Last-Event-ID` досылает пропущенное, не больше 5 потоков на человека в одном процессе), `GET …/attention-counts` (открытые передачи, новые заявки, неподтверждённые брони, каналы с ошибкой — индексные счётчики для значков меню, без записи в журнал) |
@@ -521,6 +521,26 @@ UI-тестов); `color`, `position` и `language` в ней показываю
 `?limit=&cursor=`, ответ `{"items", "next_cursor"}`, фильтры применяются до
 разбиения на страницы. Импорт меню возвращает `batch_id`; `DELETE
 …/knowledge/import/{batch_id}` удаляет неподтверждённые черновики этого импорта.
+
+Импорт с сайта бизнеса — `POST …/knowledge/import-website {"url"}` (`202`):
+задача воркера (`import_website`, обычная полоса) читает `sitemap.xml` или
+стартовую страницу и до 15 страниц того же сайта, по одному вызову модели на
+страницу; найденное становится такими же черновиками (выключенными), как у
+импорта меню, с адресом страницы-источника (`source_page_url`), и
+подтверждается или удаляется теми же `…/knowledge/import/confirm` и `DELETE
+…/knowledge/import/{batch_id}`. Ход виден в `GET
+…/knowledge/import-website/current` и в событиях `knowledge_import.progress`.
+Одновременно у бизнеса идёт один импорт (`409 website_import_running`), не
+больше 10 в час (`429`); стоимость вызовов модели записывается в расход.
+Страницы скачивает `SafeHttpFetcher` (`app/clients/http/`): только `http`/`https`
+на портах 80 и 443, без логина в адресе; адрес разрешается один раз, каждый
+IP проверяется (частные, loopback, link-local, CGNAT, метаданные облака,
+служебные IPv6 и IPv4 внутри IPv6 отклоняются), соединение идёт ровно на
+проверенный IP — и так после каждого из не более трёх редиректов; не больше
+5 МБ (после распаковки) и 10 с на страницу, только HTML/текст/XML. Текст
+страницы очищается от скриптов, стилей и скрытого текста и передаётся модели
+как недоверенные данные. Ссылка на меню читается тем же клиентом. Частный
+адрес отклоняется сразу: `422` с причиной `website_link_invalid`.
 
 ### Пошаговый запуск и «Применить изменения»
 

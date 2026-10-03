@@ -290,6 +290,10 @@ web/
                                is audited pass `intervalMs: null` and reload only on return)
       content/                 shared by knowledge and assistant: SectionTabs (route tabs with a gliding
                                marker; pills inside a section frame), Tabs, Switch
+      knowledge/websiteImport/ WebsiteImportPanel (import from the business's website: address, live
+                               progress, what was found; `bare` for a host's card, the drafts go to
+                               the host's review through `onReview`), useWebsiteImport, its form,
+                               progress and outcome
       workspace/               shared by channels, billing, settings, admin: CopyButton,
                                UsageMeter, Facts, OwnerOnly notes, channel names,
                                MarkdownDocument (renders the DPA text without HTML), helpers (zoned
@@ -300,7 +304,7 @@ web/
                                roles, titles), legacyRoutes (old addresses), inboxBadges, shellPreferences
                                (sidebar cookie), installPrompt, serviceWorker.test.ts (public/sw.js), format (Intl, money units), countries (phone/country),
                                hours (opening hours), wizard/ (niche answers, offers, FAQ), knowledge/
-                               (kinds, item form, menu import), resources, assistant/ (versions,
+                               (kinds, item form, menu import, websiteImport), resources, assistant/ (versions,
                                autotests, go-live, test chat), validation (zod), classMerge (className
                                overrides), cn, theme (cookie, theme colours), landing (country guess,
                                plan prices), motion (motion tokens), motionMath (springs, tilt, count-up),
@@ -377,7 +381,7 @@ section tabs, page titles and the e2e suite read it):
 | Messages → Requests | Server-paged status tabs with counts, inline status change, details |
 | Bookings | Server-paged day groups with place and order filters, manual booking with free slots (whole day), edit, confirm / complete / no-show / move / cancel and the customer text |
 | Assistant → Try it | Test chat with tool calls (`?version=…` talks to a chosen version); "Apply changes" builds a new version from the profile and knowledge |
-| Assistant → Knowledge | Server-paged items and search, unanswered questions to FAQ, menu import with review and batch discard, resources and special days |
+| Assistant → Knowledge | Server-paged items and search, unanswered questions to FAQ, menu import with review and batch discard, import from the business's website (queued, live progress, same review; `?source=website`), resources and special days |
 | Assistant → Hours and rules | The six profile steps (niche and languages, contacts and hours, offer, booking rules, FAQ and handoff, channels), each saved on its own; the "what to add" summary opens the full list in a side panel |
 | Assistant → Channels | Connect messengers and see why one stopped, WhatsApp's template for staff replies after 24 hours (name and language), website chat snippet, colour and corner, call forwarding codes, Google Calendar state and last sync, staff Telegram link |
 | Assistant → Advanced | Versions, go-live checklist with fix links, autotests with live progress, publish and rollback with reasons |
