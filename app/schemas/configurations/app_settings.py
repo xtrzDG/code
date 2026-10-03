@@ -1,6 +1,7 @@
 from base_pydantic_schemas import ImmutableDTO
 from pydantic import Field
 
+from app.schemas.configurations.backup_settings import BackupSettings
 from app.schemas.constants.assistants import LlmEffort, LlmProvider
 from app.schemas.constants.environment import DeploymentEnvironment
 from app.schemas.constants.jobs import JobLane
@@ -103,7 +104,13 @@ class AppSettings(ImmutableDTO):
     # when DATABASE_URL goes through a transaction pooler; DATABASE_URL
     # otherwise (LIVE_EVENTS_DATABASE_URL).
     live_events_database_url: DatabaseUrl | None = None
-    encryption_key: PlatformSecret | None = None
+    # The key ring (ENCRYPTION_KEYS, newest first, then ENCRYPTION_KEY): the
+    # current key encrypts and signs; the previous ones only decrypt and
+    # verify what they sealed until `rotate_encrypted_secrets` moved it.
+    encryption_key: PlatformSecret | None = Field(default=None, repr=False)
+    previous_encryption_keys: list[PlatformSecret] = Field(
+        default_factory=list[PlatformSecret], repr=False
+    )
     llm_provider: LlmProvider
     llm_model_id: LlmModelId
     llm_judge_model_id: LlmModelId
@@ -227,3 +234,6 @@ class AppSettings(ImmutableDTO):
     # (RECORDINGS_S3_*), encrypted per business, in production.
     recording_storage_kind: RecordingStorageKind = RecordingStorageKind.LOCAL
     recordings_object_storage: ObjectStorageConnection | None = None
+    # Off-site backups and the restore drill (BACKUP_*; `workshop backup`,
+    # `workshop restore-check`, docs/operations/backup-restore.md).
+    backup: BackupSettings = Field(default_factory=BackupSettings)

@@ -9,6 +9,7 @@ from app.containers.adapters.notification_collections_container import (
 from app.containers.call_repositories import CallRepositoriesContainer
 from app.containers.inbox_repositories import InboxRepositoriesContainer
 from app.containers.launch_repositories import LaunchRepositoriesContainer
+from app.containers.security_repositories import SecurityRepositoriesContainer
 from app.repositories.activation_probe_repository import ActivationProbeRepository
 from app.repositories.assistant_repositories import (
     AssistantVersionRepository,
@@ -83,11 +84,15 @@ from app.repositories.worker_heartbeat_repository import WorkerHeartbeatReposito
 
 
 class RepositoriesContainer(
-    CallRepositoriesContainer, InboxRepositoriesContainer, LaunchRepositoriesContainer
+    CallRepositoriesContainer,
+    InboxRepositoriesContainer,
+    LaunchRepositoriesContainer,
+    SecurityRepositoriesContainer,
 ):
     """
     The repositories (singletons); those of what follows a call, of the team
-    inbox and over the launch collections come from the three bases.
+    inbox, over the launch collections and of key management come from the
+    bases.
     """
 
     collections: DocumentCollectionsContainer = DependenciesContainer()  # type: ignore[assignment]

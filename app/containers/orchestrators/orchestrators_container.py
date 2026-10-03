@@ -41,6 +41,9 @@ from app.containers.orchestrators.operations_orchestrators import (
 from app.containers.orchestrators.platform_orchestrators import (
     PlatformOrchestratorsContainer,
 )
+from app.containers.orchestrators.security_orchestrators import (
+    SecurityOrchestratorsContainer,
+)
 from app.containers.orchestrators.setup_orchestrators import (
     SetupOrchestratorsContainer,
 )
@@ -145,6 +148,10 @@ class OrchestratorsContainer(containers.DeclarativeContainer):
     platform: PlatformOrchestratorsContainer = Container(  # type: ignore[assignment]
         PlatformOrchestratorsContainer,
         platform_use_cases=use_cases.platform,
+    )
+    security: SecurityOrchestratorsContainer = Container(  # type: ignore[assignment]
+        SecurityOrchestratorsContainer,
+        security_use_cases=use_cases.security,
     )
     sharing: SharingOrchestratorsContainer = Container(  # type: ignore[assignment]
         SharingOrchestratorsContainer,

@@ -52,6 +52,15 @@ jobs:
           fi
           "$POSTGRES_BIN_DIRECTORY/postgres" --version
 
+      # Backups must open with the age tool (tests/backups/test_age_cli_interop.py).
+      - name: Install age
+        run: |
+          if ! command -v age > /dev/null; then
+            sudo apt-get update
+            sudo apt-get install --yes --no-install-recommends age
+          fi
+          age --version
+
       - name: Install dependencies
         run: uv sync --frozen
 

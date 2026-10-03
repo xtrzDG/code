@@ -11,6 +11,21 @@ Kinds of change: **Added**, **Changed** (additive), **Deprecated** (with
 sunset date), **Removed** and **Breaking** (only with the `api-breaking`
 label and a migration path).
 
+## 2026-10-03 — encryption key rotation for platform admins
+
+Spec: `1f616b82ee8a0d61`
+
+- **Added** `GET /v1/admin/security/encryption-keys` (platform admins;
+  `EncryptionKeysView`): how many keys `ENCRYPTION_KEYS` holds (never the
+  keys) and the latest re-encryption run (`KeyRotationView`, `null`
+  before the first one) with its counts: secrets checked, already under
+  the current key, re-sealed, unreadable, Telegram webhooks renewed and
+  failed.
+- **Added** `POST /v1/admin/security/encryption-keys/rotate` (platform
+  admins; 202 `KeyRotationStarted`): queues the `rotate_encrypted_secrets`
+  job that seals every stored channel and calendar secret again with the
+  newest key; audited; 409 while a run is queued or running.
+
 ## 2026-10-03 — handoffs the platform creates are read in each reader's language
 
 Spec: `eced8ca70fcbb8b2`

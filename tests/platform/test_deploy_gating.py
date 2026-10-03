@@ -43,7 +43,12 @@ def services_of(blueprint_path: str) -> dict[str, str]:
 def test_production_deploys_only_checked_commits_of_release() -> None:
     services = services_of("render.yaml")
 
-    assert set(services) == {"workshop-api", "workshop-worker", "workshop-cabinet"}
+    assert set(services) == {
+        "workshop-api",
+        "workshop-worker",
+        "workshop-backup",
+        "workshop-cabinet",
+    }
     for name, body in services.items():
         assert "    branch: release\n" in body, name
         assert "    autoDeployTrigger: checksPass\n" in body, name

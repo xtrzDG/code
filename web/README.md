@@ -88,7 +88,9 @@ npm run e2e -- onboarding         # one file
   providers blanked, `SEED_DEMO_DATA=true`) with its output in
   `e2e/.artifacts/api.log`, and the cabinet with `next build && next start`.
   Each run starts with only the demo businesses; every test other than
-  `e2e/live.spec.ts` signs up its own owner.
+  `e2e/live.spec.ts` signs up its own owner. `PLATFORM_ADMIN_EMAILS` names
+  one platform admin (`PLATFORM_ADMIN_EMAIL` of `e2e/support/env.ts`), whom
+  `e2e/encryption-keys.spec.ts` signs in once per worker.
 - Sign-in codes are read from that log (`e2e/support/login-codes.ts`); the
   `account` and `owner` fixtures (`e2e/support/fixtures.ts`) sign up through
   the API and put the session cookie into the browser, so only the sign-in
@@ -221,7 +223,8 @@ web/
         settings/              layout.tsx: the Settings frame and tabs; page.tsx: business (old
                                #team-style links move to their page), team/, notifications/, billing/
                                (plan, trial, usage, plans of the country, invoices, payment), privacy/, audit/
-      admin/                   platform admin: clients (filters, sorts) and clients/[businessId]/
+      admin/                   platform admin: clients (filters, sorts) and clients/[businessId]/;
+                               security/ (encryption keys: the key ring and re-encryption runs)
       api/
         auth/start|verify|logout|expired   sign-in route handlers (cookie handling)
         backend/[...path]      BFF proxy: /api/backend/v1/... -> BACKEND_URL/v1/... (JSON, and audio
@@ -403,6 +406,7 @@ section tabs, page titles and the e2e suite read it):
 | Settings → Calls | Owners: **Call summaries** after every call (on by default; who gets them is the staff contacts in Notifications), **Text back missed callers** (off by default: the approved WhatsApp utility template's name, checked like Meta does, and the SMS fallback, with what a caller who did not get through would get now: the template, an SMS or nothing yet and why), **Template text** (the body to register with Meta in each language of the business, with Copy, and what callers read) and **Latest text-backs** (the last 20 callers who did not get through: number, when, why, Sent/Sending/Not delivered/Not sent with the reason, the channel and a link to the WhatsApp conversation their reply continues in). The call card in Messages shows each call's summary in the reader's language |
 | Settings → the rest | Business settings and pause, team with owner/staff roles, manager contacts, reading and accepting the data processing agreement, the customer list with export and erasure, the audit log with server filters. Business and Notifications save with the business `revision` they showed (`expected_revision`); when someone saved since (another owner, the Telegram bot adding a manager), the API answers 409 `stale_revision` and the page reloads and says so instead of overwriting. Business starts from the business as stored when it opens, and after a stale refusal keeps what was typed: fields nobody else changed are saved again at once, fields changed on both sides show the stored value |
 | Admin (`/admin`, `/admin/clients/{id}`) | Platform admins: all clients (server filters, sorts and paging, totals), health, opening a client's cabinet |
+| Admin → Encryption keys (`/admin/security`) | Platform admins: how many keys `ENCRYPTION_KEYS` holds (never the keys), the latest re-encryption run (status, tokens checked, already current, sealed again, unreadable, Telegram webhooks registered again or not) with what it means, and **Re-encrypt stored tokens** after a confirmation (one run at a time; the page follows it until the worker is done). The runbook: `docs/operations/backup-restore.md` |
 
 ### Installable app
 

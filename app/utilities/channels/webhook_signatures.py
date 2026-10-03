@@ -8,6 +8,7 @@ ElevenLabs webhook secret and the business id.
 
 import hashlib
 import hmac
+from collections.abc import Sequence
 
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.channels.constrained_strings import (
@@ -46,6 +47,26 @@ def derive_telegram_webhook_secret(
         hashlib.sha256,
     ).hexdigest()
     return TelegramWebhookSecret(digest)
+
+
+def is_matching_telegram_secret(
+    key_ring: Sequence[PlatformSecret],
+    bot_token: ChannelSecret | PlatformSecret,
+    presented: PresentedWebhookSecret | WebhookSignatureHeader | None,
+) -> bool:
+    """
+    True when the presented secret is the one derived with any key of the
+    ring: a webhook registered before a key rotation keeps working until
+    the rotation job registers it again with the current key.
+    """
+
+    matches: list[bool] = [
+        is_matching_secret(
+            str(derive_telegram_webhook_secret(key, bot_token)), presented
+        )
+        for key in key_ring
+    ]
+    return any(matches)
 
 
 def derive_voice_tool_secret(

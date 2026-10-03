@@ -10,9 +10,15 @@ from collections.abc import Mapping
 
 from app.schemas.configurations.app_settings import AppSettings
 from app.schemas.constants.environment import DeploymentEnvironment
-from app.schemas.typings.platform.strings import DatabaseUrl, PlatformSecret
+from app.schemas.typings.platform.strings import DatabaseUrl
+from app.utilities.config_helpers.app_settings.backup_settings_section import (
+    read_backup_settings,
+)
 from app.utilities.config_helpers.app_settings.compliance_settings_section import (
     read_compliance_settings,
+)
+from app.utilities.config_helpers.app_settings.encryption_key_settings_section import (
+    read_encryption_key_settings,
 )
 from app.utilities.config_helpers.app_settings.environment_variable_readers import (
     optional_text,
@@ -79,9 +85,7 @@ def assemble_app_settings(environment_variables: Mapping[str, str]) -> AppSettin
     database_url: DatabaseUrl | None = optional_text(
         environment_variables, "DATABASE_URL", DatabaseUrl
     )
-    encryption_key: PlatformSecret | None = optional_text(
-        environment_variables, "ENCRYPTION_KEY", PlatformSecret
-    )
+    key_ring = read_encryption_key_settings(environment_variables)
 
     return AppSettings(
         environment=environment,
@@ -90,7 +94,7 @@ def assemble_app_settings(environment_variables: Mapping[str, str]) -> AppSettin
         live_events_database_url=optional_text(
             environment_variables, "LIVE_EVENTS_DATABASE_URL", DatabaseUrl
         ),
-        encryption_key=encryption_key,
+        **key_ring,
         **read_llm_settings(environment_variables, llm_provider),
         **read_login_settings(environment_variables, is_otp_code_logging_enabled),
         **read_compliance_settings(environment_variables),
@@ -108,6 +112,8 @@ def assemble_app_settings(environment_variables: Mapping[str, str]) -> AppSettin
             has_database=database_url is not None,
         ),
         **read_recording_storage_settings(
-            environment_variables, has_encryption_key=encryption_key is not None
+            environment_variables,
+            has_encryption_key=key_ring["encryption_key"] is not None,
         ),
+        **read_backup_settings(environment_variables),
     )

@@ -204,6 +204,7 @@ API запускается с `--proxy-headers`; адреса доверенны
 | `workshop-db` | управляемый Postgres 16, доступен только изнутри Render |
 | `workshop-api` | API из `Dockerfile`; перед каждым деплоем `workshop migrate`, проверка готовности `/readyz`, 30 с на завершение запросов при остановке |
 | `workshop-worker` | фоновый воркер из того же образа; 60 с на завершение задач при остановке |
+| `workshop-backup` | ночная резервная копия (cron из того же образа): `workshop backup` |
 | `workshop-cabinet` | кабинет из `web/Dockerfile` |
 
 При создании Render спросит секреты (`sync: false`): провайдер и ключи модели,
@@ -212,7 +213,8 @@ Langfuse, Sentry — ненужные оставьте пустыми. Ворк�
 перечисленные в `render.yaml`; остальные переменные (тонкая настройка модели,
 `OPENAI_BASE_URL`, `LANGFUSE_HOST`, `RECORDING_RETENTION_DAYS`, `WORKER_POLL_SECONDS`
 и т. п.) задавайте в группе окружения `workshop-backend` — её читают и API, и воркер.
-`ENCRYPTION_KEY` генерируется один раз (не меняйте его). После первого деплоя
+`ENCRYPTION_KEY` генерируется один раз (не заменяйте его на месте: ключ меняют
+через `ENCRYPTION_KEYS`, см. «Резервные копии и ключи»). После первого деплоя
 укажите `APP_BASE_URL` (публичный адрес API,
 например `https://workshop-api.onrender.com`), `CABINET_BASE_URL` (публичный адрес
 кабинета, например `https://workshop-cabinet.onrender.com`: туда Google Calendar и
@@ -246,6 +248,27 @@ uv run python -m app.gateways.cli.migrate             # применить
 иначе Postgres не применяет политики изоляции. Подробнее — в
 [`migrations/README.md`](migrations/README.md).
 
+### Резервные копии и ключи
+
+```bash
+workshop backup          # снимок базы → age → бакет в ЕС; хранение 30 дней + 12 месяцев
+workshop restore-check   # восстановить свежую копию во временную базу и проверить
+```
+
+Render делает свои снимки базы и восстановление на момент времени (PITR); сверх
+этого cron-сервис `workshop-backup` каждую ночь снимает `pg_dump` одним
+согласованным снимком, шифрует его форматом age открытыми ключами
+`BACKUP_AGE_PUBLIC_KEY` (закрытого ключа на серверах нет) и кладёт в бакет
+другого провайдера в ЕС (`BACKUP_S3_*`) вместе с манифестом: строки каждой
+таблицы, миграции, таблицы под RLS. Учения восстановления
+(`.github/workflows/restore-drill.yml`): каждую ночь — круг «копия →
+восстановление» на текущем коде, по понедельникам — свежая копия production во
+временную базу; проверяются строки, миграции и изоляция бизнесов, отметки идут
+в Sentry Crons. Смена ключа шифрования: новый ключ первым в `ENCRYPTION_KEYS`,
+затем админ платформы запускает перешифровку (кабинет → «Ключи шифрования» или
+`POST /v1/admin/security/encryption-keys/rotate`). RPO, RTO, хранение ключей и пошаговое
+восстановление — в [`docs/operations/backup-restore.md`](docs/operations/backup-restore.md).
+
 ### Фоновые задачи
 
 | Задача | Интервал | Что делает |
@@ -258,6 +281,7 @@ uv run python -m app.gateways.cli.migrate             # применить
 | `purge_finished_jobs` | сутки | удаляет выполненные, «мёртвые» и отброшенные задачи очереди и записи периодических запусков старше 30 дней |
 | `flush_llm_traces` | минута | отправляет журнал вызовов модели в Langfuse (в каждом процессе воркера) |
 | `purge_stale_rows` | сутки | удаляет истёкшие сессии, коды входа старше суток и квитанции вебхуков старше 30 дней |
+| `rotate_encrypted_secrets` | по запуску админа | перешифровывает текущим ключом токены каналов и календаря и заново регистрирует вебхуки Telegram |
 
 ## Коды входа
 
@@ -414,7 +438,16 @@ e2e). В кабинете «Каналы → Поделиться»: ссылк�
 | `CORS_ALLOWED_ORIGINS` | CORS выключен (виджет сайта разрешает любой источник сам); страница оплаты возвращает плательщика только на источник `CABINET_BASE_URL` и `APP_BASE_URL`. Укажите адрес кабинета (`http://localhost:3000` локально; в `docker-compose.yml` он задан) |
 | `DATABASE_URL` | хранение в памяти |
 | `LIVE_EVENTS_DATABASE_URL` | живые обновления кабинета слушают события (`LISTEN`) через `DATABASE_URL`; задайте прямое (сессионное) подключение к той же базе, только если `DATABASE_URL` идёт через пулер транзакций (PgBouncer, Supavisor на порту 6543): там `LISTEN` не работает. Без `DATABASE_URL` события передаются внутри процесса |
-| `ENCRYPTION_KEY` | временный ключ: токены каналов не переживут перезапуск; в `production` — ошибка запуска (как и с общеизвестным значением по умолчанию из `docker-compose.yml`). Ключ Fernet или любая случайная строка от 32 символов; после первого запуска не меняется |
+| `ENCRYPTION_KEY` | временный ключ: токены каналов не переживут перезапуск; в `production` — ошибка запуска (как и с общеизвестным значением по умолчанию из `docker-compose.yml`). Ключ Fernet или любая случайная строка от 32 символов; на месте не заменяется |
+| `ENCRYPTION_KEYS` | только `ENCRYPTION_KEY`. Смена ключа: ключи через запятую, новый первым; `ENCRYPTION_KEY` идёт последним. Первый шифрует и подписывает всё новое, остальные только открывают старое, пока его не перешифрует `rotate_encrypted_secrets` |
+| `BACKUP_S3_ENDPOINT_URL`, `BACKUP_S3_REGION`, `BACKUP_S3_BUCKET`, `BACKUP_S3_ACCESS_KEY_ID`, `BACKUP_S3_SECRET_ACCESS_KEY` | резервных копий вне Render нет (`workshop backup` выходит с кодом 2). Бакет другого провайдера в ЕС с версиями и ключ, которому разрешены запись, список и удаление в папке копий; задаются все пять или ни одной |
+| `BACKUP_S3_PREFIX` | `workshop/` — папка копий в бакете; хранение не трогает ничего вне неё |
+| `BACKUP_AGE_PUBLIC_KEY` | с бакетом — ошибка запуска: копии хранятся только зашифрованными. Открытые ключи age (`age1…`) через запятую: ключ учений и офлайн-ключ на хранении |
+| `BACKUP_AGE_IDENTITY` | `workshop restore-check` не открывает копии. Закрытый ключ учений (`AGE-SECRET-KEY-1…`) — только там, где идут учения, не на серверах production |
+| `BACKUP_KEEP_DAILY`, `BACKUP_KEEP_MONTHLY` | 30 и 12: последняя копия каждого из 30 последних дней и 12 последних месяцев |
+| `BACKUP_MAX_AGE_HOURS` | 26: учения падают, если свежей копии больше 26 часов |
+| `RESTORE_CHECK_DATABASE_URL` | учения не запускаются. Временный сервер Postgres и роль, которой можно создавать базы; никогда не сервер production |
+| `POSTGRES_CLIENT_BIN_DIRECTORY` | `pg_dump` и `pg_restore` ищутся в `PATH` (в образе — клиент Postgres Debian) |
 | `LLM_PROVIDER`, `LLM_MODEL_ID`, `LLM_JUDGE_MODEL_ID` | `openai` и `gpt-5-mini` (`anthropic` — `claude-opus-5-5`; `scripted` — без модели и ключей: каждый ответ — одна фиксированная фраза, для staging и проверок); `LLM_JUDGE_MODEL_ID` — модель клиента и судьи автотестов, по умолчанию та же модель провайдера |
 | `LLM_SUMMARY_MODEL_ID` | модель итогов звонков для персонала (дешёвая, например `gpt-5-nano`); по умолчанию — `LLM_MODEL_ID` |
 | `LLM_CHAT_EFFORT`, `LLM_JUDGE_EFFORT` | усилие рассуждений: `low` в чате, `medium` у судьи автотестов (`minimal`, `low`, `medium`, `high`) |
@@ -512,6 +545,7 @@ e2e). В кабинете «Каналы → Поделиться»: ссылк�
 | Телефония | `GET /v1/telephony/zadarma/notifications?zd_echo=…` (проверка адреса Zadarma), `POST /v1/telephony/zadarma/notifications` (уведомления АТС с заголовком `Signature`; NOTIFY_END непринятого звонка — пропущенный звонок и сообщение звонящему) |
 | Оплата | `GET …/billing`, `POST …/billing/trial`, `POST …/billing/plan`, `POST …/billing/cancel`, `POST …/billing/checkout`, `POST …/billing/subscribe` (тариф и период с оплатой сразу: после пробного периода, после отмены или без него), `POST /v1/payments/flitt/webhook` |
 | Админка платформы | `GET /v1/admin/clients` (страницы, фильтры `status`, `health`, `country`, `niche`, `search`, сортировка `sort`), `GET /v1/admin/clients/{business_id}`, `POST /v1/admin/clients/{business_id}/open` |
+| Ключи шифрования (платформенный админ) | `GET /v1/admin/security/encryption-keys` (сколько ключей в кольце — без самих ключей — и итог последней перешифровки), `POST /v1/admin/security/encryption-keys/rotate` (202: в очередь задача `rotate_encrypted_secrets`, пишется в журнал аудита; 409, пока идёт предыдущая); в кабинете — «Ключи шифрования» (`/admin/security`) |
 | Очередь фоновых задач (платформенный админ) | `GET /v1/admin/jobs` (страницы, фильтры `status` — `pending`, `running`, `done`, `dead`, `discarded` — и `name`; без содержимого задач), `POST /v1/admin/jobs/{job_id}/retry` (снова в очередь «мёртвую» или отброшенную задачу), `POST /v1/admin/jobs/{job_id}/discard` (отбросить «мёртвую» или ожидающую); перезапуск и отказ пишутся в журнал аудита |
 
 `…` — это `/v1/businesses/{business_id}`.

@@ -5,6 +5,9 @@
 #   workshop-api      the API (Docker image of ./Dockerfile); migrations run
 #                     before every deploy (`workshop migrate`)
 #   workshop-worker   the background worker (same image)
+#   workshop-backup   the daily off-site backup (cron, same image): an
+#                     age-encrypted pg_dump to the EU backup bucket
+#                     (docs/operations/backup-restore.md)
 #   workshop-cabinet  the owner cabinet (./web/Dockerfile)
 #
 # Secrets are `sync: false`: the dashboard asks for them when the Blueprint is
@@ -14,7 +17,9 @@
 # OPENAI_BASE_URL, LANGFUSE_HOST, RECORDING_RETENTION_DAYS,
 # WORKER_POLL_SECONDS, ...) goes into the env group workshop-backend, which
 # both services read. ENCRYPTION_KEY is generated once and shared; never
-# change it, or stored channel credentials become unreadable.
+# replace it in place, or stored channel credentials become unreadable: to
+# rotate, put a new key first in ENCRYPTION_KEYS (the env group) and follow
+# docs/operations/backup-restore.md, "Key rotation".
 #
 # The image's ENTRYPOINT is `workshop`; the commands below also name it, so
 # they work whether a platform keeps the ENTRYPOINT or replaces it.
@@ -535,6 +540,59 @@ services:
           type: web
           name: workshop-api
           envVarKey: LANGFUSE_SECRET_KEY
+      - key: SENTRY_DSN
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: SENTRY_DSN
+
+  - type: cron
+    name: workshop-backup
+    # The off-site backup: every night a consistent pg_dump of workshop-db,
+    # encrypted with age to BACKUP_AGE_PUBLIC_KEY (public keys only: this
+    # service can write backups, never read them), into an EU bucket of
+    # another provider; retention keeps 30 daily and 12 monthly copies.
+    # Render's own snapshots and point-in-time recovery stay the first line;
+    # this copy survives losing the account or the region. Sentry Crons
+    # (monitor database-backup) alerts when a night is missed.
+    runtime: docker
+    region: frankfurt
+    plan: starter
+    branch: release
+    autoDeployTrigger: checksPass
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    dockerCommand: workshop backup
+    # 01:17 UTC, the quietest hour in the EU.
+    schedule: "17 1 * * *"
+    buildFilter:
+      ignoredPaths:
+        - web/**
+        - docs/**
+        - "**/*.md"
+    envVars:
+      - fromGroup: workshop-backend
+      - key: DATABASE_URL
+        fromDatabase:
+          name: workshop-db
+          property: connectionString
+      # The EU bucket of another provider (AWS eu-central-1, Hetzner,
+      # Scaleway, Cloudflare R2 with the EU jurisdiction): versioning on,
+      # a key allowed to put, list and delete under the prefix only.
+      - key: BACKUP_S3_ENDPOINT_URL
+        sync: false
+      - key: BACKUP_S3_REGION
+        sync: false
+      - key: BACKUP_S3_BUCKET
+        sync: false
+      - key: BACKUP_S3_ACCESS_KEY_ID
+        sync: false
+      - key: BACKUP_S3_SECRET_ACCESS_KEY
+        sync: false
+      # age public keys, comma-separated: the restore drill's and the
+      # offline escrow key's (never a private key here)
+      - key: BACKUP_AGE_PUBLIC_KEY
+        sync: false
       - key: SENTRY_DSN
         fromService:
           type: web

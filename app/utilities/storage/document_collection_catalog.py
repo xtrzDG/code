@@ -43,6 +43,7 @@ from app.schemas.domain.jobs import (
     QueuedJobDocument,
     WorkerHeartbeatDocument,
 )
+from app.schemas.domain.key_rotations import KeyRotationDocument
 from app.schemas.domain.knowledge import KnowledgeItemDocument
 from app.schemas.domain.manager_links import ManagerTelegramLinkDocument
 from app.schemas.domain.missed_calls import MissedCallDocument
@@ -240,6 +241,10 @@ DOCUMENT_COLLECTIONS: tuple[DocumentCollectionDefinition, ...] = (
     # The current knowledge import from each business's website (1054).
     DocumentCollectionDefinition(
         DocumentCollectionName("website_imports"), WebsiteImportDocument
+    ),
+    # Key management: the latest re-encryption of the stored secrets (1063).
+    DocumentCollectionDefinition(
+        DocumentCollectionName("key_rotations"), KeyRotationDocument
     ),
 )
 

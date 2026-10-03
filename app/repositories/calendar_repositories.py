@@ -1,3 +1,5 @@
+from collections.abc import Callable
+
 from app.contracts.document_store import DocumentCollectionAdapterContract
 from app.contracts.operations import (
     CalendarAuthorizationStateRepoContract,
@@ -43,6 +45,20 @@ class CalendarConnectionRepository(CalendarConnectionRepoContract):
 
     def delete_by_business(self, business_id: BusinessId) -> None:
         self._collection.delete(str(business_id))
+
+    def modify(
+        self,
+        business_id: BusinessId,
+        change: Callable[
+            [CalendarConnectionDocument], CalendarConnectionDocument | None
+        ],
+    ) -> CalendarConnectionDocument | None:
+        def change_own(
+            stored: CalendarConnectionDocument,
+        ) -> CalendarConnectionDocument | None:
+            return change(stored) if stored.business_id == business_id else None
+
+        return self._collection.modify(str(business_id), change_own)
 
 
 class CalendarAuthorizationStateRepository(CalendarAuthorizationStateRepoContract):

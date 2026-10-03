@@ -90,6 +90,14 @@ At run time:
   bodies over the route's limit (413). The cabinet sends a nonce-based CSP,
   HSTS, COOP and CORP, keeps the session in a `__Host-` cookie and applies
   the same body limits (web/README.md, "Security notes").
+- Channel and calendar tokens are stored sealed with the newest key of
+  `ENCRYPTION_KEYS`; older keys only open what they sealed until a platform
+  admin's re-encryption run (`POST /v1/admin/security/encryption-keys/rotate`)
+  moves everything to the newest one. Off-site backups are encrypted with
+  age before they leave Render; their private keys are held by the restore
+  drill (a GitHub environment secret) and in escrow, never by the service
+  that writes the backups. Custody, escrow and the rotation runbook:
+  [docs/operations/backup-restore.md](docs/operations/backup-restore.md).
 
 ## Triage of automated findings
 

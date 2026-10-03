@@ -7,6 +7,7 @@ from app.adapters.security.secret_cipher_adapter import (
     PUBLIC_ENCRYPTION_KEYS,
 )
 from tests.platform.deployment_variables import (
+    BACKUP_JOB_VARIABLES,
     COMPOSE_VARIABLES,
     DEPLOYMENT_VARIABLES,
     RENDER_OPTIONAL_VARIABLES,
@@ -47,7 +48,12 @@ def test_render_sets_what_a_deployment_needs() -> None:
     }
 
     assert api >= REQUIRED_BACKEND_VARIABLES | {"PORT"}
-    assert without_default - RENDER_OPTIONAL_VARIABLES - api == set()
+    assert (
+        without_default - RENDER_OPTIONAL_VARIABLES - BACKUP_JOB_VARIABLES - api
+        == set()
+    )
+    assert services["workshop-backup"] >= BACKUP_JOB_VARIABLES | {"DATABASE_URL"}
+    assert not BACKUP_JOB_VARIABLES & api
     # The worker runs the same code with the same settings.
     assert services["workshop-worker"] == api - {"PORT"}
     assert services["workshop-cabinet"] >= REQUIRED_CABINET_VARIABLES | {

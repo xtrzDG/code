@@ -27,6 +27,9 @@ def build_web_push_client(settings: AppSettings) -> WebPushClient | None:
 
 
 def build_staff_link_signer(settings: AppSettings) -> StaffLinkSigner:
-    """Notification links signed with a key derived from ENCRYPTION_KEY."""
+    """
+    Notification links signed with a key derived from the current key of
+    the ring; links of the previous keys still open until they expire.
+    """
 
-    return StaffLinkSigner(settings.encryption_key)
+    return StaffLinkSigner(settings.encryption_key, settings.previous_encryption_keys)

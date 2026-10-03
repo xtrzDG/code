@@ -1,5 +1,5 @@
 import os
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 
 from app.contracts.object_storage import ObjectStorageClientContract
 from app.contracts.recording_storage import RecordingStorageAdapterContract
@@ -21,6 +21,7 @@ from app.utilities.security.recording_encryption import (
     HEADER_SIZE,
     SALT_SIZE,
     RecordingCipherHeader,
+    master_key_id,
     open_chunks,
     read_header,
     seal_recording,
@@ -43,7 +44,10 @@ class EncryptedObjectRecordingStorageAdapter(RecordingStorageAdapterContract):
     header, then only the sealed chunks of the asked range (a byte-range GET
     of a presigned URL) and opens them with the business's key, so a seek
     in a long call costs a chunk or two, in any API instance alike, with
-    no copy on any server's disk.
+    no copy on any server's disk. New recordings are sealed under the
+    current key of the ring; a recording's header names the key it was
+    sealed under, so recordings of a previous key (ENCRYPTION_KEYS) still
+    play while that key is in the ring.
     """
 
     def __init__(
@@ -51,9 +55,14 @@ class EncryptedObjectRecordingStorageAdapter(RecordingStorageAdapterContract):
         client: ObjectStorageClientContract,
         master_secret: PlatformSecret,
         random_bytes: Callable[[int], bytes] = os.urandom,
+        previous_master_secrets: Sequence[PlatformSecret] = (),
     ) -> None:
         self._client: ObjectStorageClientContract = client
         self._master_secret: PlatformSecret = master_secret
+        self._secrets_by_key_id: dict[bytes, PlatformSecret] = {
+            master_key_id(secret): secret
+            for secret in reversed([master_secret, *previous_master_secrets])
+        }
         self._random_bytes: Callable[[int], bytes] = random_bytes
 
     def read(
@@ -88,7 +97,11 @@ class EncryptedObjectRecordingStorageAdapter(RecordingStorageAdapterContract):
             return None
 
         plaintext: bytes = open_chunks(
-            self._master_secret, location, header, first_chunk, sealed
+            self._secrets_by_key_id.get(header.key_id, self._master_secret),
+            location,
+            header,
+            first_chunk,
+            sealed,
         )
         start: int = first_byte - first_chunk * header.chunk_size
         return self._part(
