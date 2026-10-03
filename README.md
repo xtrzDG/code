@@ -228,7 +228,7 @@ Langfuse, Sentry — ненужные оставьте пустыми. Ворк�
 и разворачивают коммит, только когда все проверки GitHub по нему зелёные
 (`autoDeployTrigger: checksPass`). `render.staging.yaml` — такое же окружение
 staging на ветке `main` с отдельной базой и группой `workshop-staging`
-(`LLM_PROVIDER=scripted`: фиксированные ответы без модели). После каждого
+(`LLM_PROVIDER=scripted`: репетиция без модели, см. ниже). После каждого
 деплоя `.github/workflows/deploy-smoke.yml` прогоняет `scripts/smoke.sh`;
 зелёный staging переносит коммит в `release`. Правила изменения схемы
 (сначала расширить, потом сузить), миграция документов и откат — в
@@ -448,7 +448,7 @@ e2e). В кабинете «Каналы → Поделиться»: ссылк�
 | `BACKUP_MAX_AGE_HOURS` | 26: учения падают, если свежей копии больше 26 часов |
 | `RESTORE_CHECK_DATABASE_URL` | учения не запускаются. Временный сервер Postgres и роль, которой можно создавать базы; никогда не сервер production |
 | `POSTGRES_CLIENT_BIN_DIRECTORY` | `pg_dump` и `pg_restore` ищутся в `PATH` (в образе — клиент Postgres Debian) |
-| `LLM_PROVIDER`, `LLM_MODEL_ID`, `LLM_JUDGE_MODEL_ID` | `openai` и `gpt-5-mini` (`anthropic` — `claude-opus-5-5`; `scripted` — без модели и ключей: каждый ответ — одна фиксированная фраза, для staging и проверок); `LLM_JUDGE_MODEL_ID` — модель клиента и судьи автотестов, по умолчанию та же модель провайдера |
+| `LLM_PROVIDER`, `LLM_MODEL_ID`, `LLM_JUDGE_MODEL_ID` | `openai` и `gpt-5-mini` (`anthropic` — `claude-opus-5-5`; `scripted` — без модели и ключей: репетиция, в которой проверки «Применить изменения» проходят, для разработки, staging и e2e); `LLM_JUDGE_MODEL_ID` — модель клиента и судьи автотестов, по умолчанию та же модель провайдера |
 | `LLM_SUMMARY_MODEL_ID` | модель итогов звонков для персонала (дешёвая, например `gpt-5-nano`); по умолчанию — `LLM_MODEL_ID` |
 | `LLM_CHAT_EFFORT`, `LLM_JUDGE_EFFORT` | усилие рассуждений: `low` в чате, `medium` у судьи автотестов (`minimal`, `low`, `medium`, `high`) |
 | `LLM_MAX_OUTPUT_TOKENS`, `LLM_TOOL_ROUND_LIMIT` | 16000 токенов ответа, 8 кругов вызова инструментов на один ответ |
