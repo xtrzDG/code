@@ -7,7 +7,13 @@ import { IconCard } from "@/components/icons";
 import { useI18n } from "@/i18n/client";
 import type { MessageKey } from "@/i18n/translate";
 
-import { SUBSCRIPTION_STATUS_TONES, quotedMoneyText, type BillingOverview, type SubscriptionStatus } from "../_lib/billing";
+import {
+  SUBSCRIPTION_STATUS_TONES,
+  noSubscriptionText,
+  quotedMoneyText,
+  type BillingOverview,
+  type SubscriptionStatus,
+} from "../_lib/billing";
 
 export const SUBSCRIPTION_STATUS_LABELS: Record<SubscriptionStatus, MessageKey> = {
   incomplete: "billing.subscribe.statusIncomplete",
@@ -16,12 +22,6 @@ export const SUBSCRIPTION_STATUS_LABELS: Record<SubscriptionStatus, MessageKey> 
   past_due: "billing.status.past_due",
   cancelled: "billing.status.cancelled",
 };
-
-/** What an owner without a subscription is told: the trial starts at go-live, can start now, or is used. */
-export function noSubscriptionText(overview: BillingOverview): MessageKey {
-  if (overview.does_trial_start_at_go_live) return "billing.noSubscriptionTrialAtGoLive";
-  return overview.is_trial_available ? "billing.noSubscriptionDescription" : "billing.noSubscriptionNoTrial";
-}
 
 /** The current subscription: plan, price, dates, automatic payment and the owner's actions. */
 export function SubscriptionCard({

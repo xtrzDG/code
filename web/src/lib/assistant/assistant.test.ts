@@ -17,7 +17,7 @@ import {
   type AutotestRunView,
   type AutotestScenarioResult,
 } from "./autotests";
-import { blockingChecks, checkState, isTestingRefusal, refusalReasons, type GoLiveCheck } from "./goLive";
+import { billingCheckText, blockingChecks, checkState, isTestingRefusal, refusalReasons, type GoLiveCheck } from "./goLive";
 import { isSessionKey, newSessionKey, parseStoredTestChat, prettyJson } from "./testChat";
 
 const version = (id: string, versionNumber: number, status: "draft" | "testing" | "ready" | "tests_failed" | "published" | "archived") => ({
@@ -174,6 +174,14 @@ describe("going live", () => {
       { code: null, message: "A reason the cabinet does not know.", details: [] },
     ]);
     expect(refusalReasons(refusal(403, [{ code: "force_publish_admin_only" }]))[0]?.code).toBe("force_publish_admin_only");
+  });
+
+  it("words the billing check, including the trial that starts at go-live", () => {
+    expect(billingCheckText({ is_ok: true, details: ["trial_at_go_live"] }, null)).toBe("assistant.checklist.billingTrialAtGoLive");
+    expect(billingCheckText({ is_ok: true, details: ["trialing"] }, "trialing")).toBe("assistant.checklist.billingTrial");
+    expect(billingCheckText({ is_ok: true, details: ["active"] }, "active")).toBe("assistant.checklist.billingActive");
+    expect(billingCheckText({ is_ok: false, details: ["none"] }, null)).toBe("assistant.checklist.billingStartTrial");
+    expect(billingCheckText({ is_ok: false, details: ["past_due"] }, "past_due")).toBe("assistant.checklist.billingMissing");
   });
 
   it("ignores other errors and answers without reasons", () => {

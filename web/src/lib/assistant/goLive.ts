@@ -85,3 +85,30 @@ export function checkState(check: Pick<GoLiveCheck, "code" | "is_ok" | "is_block
 export function blockingChecks<T extends Pick<GoLiveCheck, "is_ok" | "is_blocking">>(checks: readonly T[]): T[] {
   return checks.filter((check) => !check.is_ok && check.is_blocking);
 }
+
+/** The detail of a passed billing check: the free trial starts at the first go-live. */
+export const TRIAL_AT_GO_LIVE_DETAIL = "trial_at_go_live";
+
+export type BillingCheckText =
+  | "assistant.checklist.billingTrialAtGoLive"
+  | "assistant.checklist.billingTrial"
+  | "assistant.checklist.billingActive"
+  | "assistant.checklist.billingStartTrial"
+  | "assistant.checklist.billingMissing";
+
+/**
+ * What the billing check of the go-live checklist says: the trial that
+ * starts at go-live, the running trial or paid subscription, or what is
+ * missing (no subscription at all, or one that needs paying).
+ */
+export function billingCheckText(
+  check: Pick<GoLiveCheck, "is_ok" | "details">,
+  subscriptionStatus: GoLiveReadiness["subscription_status"],
+): BillingCheckText {
+  const detail = (check.details ?? [])[0];
+  if (check.is_ok) {
+    if (detail === TRIAL_AT_GO_LIVE_DETAIL) return "assistant.checklist.billingTrialAtGoLive";
+    return subscriptionStatus === "trialing" ? "assistant.checklist.billingTrial" : "assistant.checklist.billingActive";
+  }
+  return detail === "none" ? "assistant.checklist.billingStartTrial" : "assistant.checklist.billingMissing";
+}

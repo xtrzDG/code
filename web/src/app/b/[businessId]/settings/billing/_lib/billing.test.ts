@@ -11,6 +11,7 @@ import {
   maxAnnualDiscount,
   monthlyEquivalentMinor,
   needsSubscription,
+  noSubscriptionText,
   planActions,
   planPrice,
   quotedMoneyText,
@@ -64,6 +65,7 @@ const overview = (overrides: Partial<BillingOverview> = {}): BillingOverview => 
   display_language: "en",
   service_mode: "full",
   is_trial_available: false,
+  does_trial_start_at_go_live: false,
   subscription: subscription(),
   usage: null,
   invoices: [],
@@ -261,5 +263,18 @@ describe("misc", () => {
     expect(checkoutReturnUrl("https://app.example.com/", "/b/business_1/billing")).toBe(
       "https://app.example.com/b/business_1/billing?checkout=return",
     );
+  });
+});
+
+describe("noSubscriptionText", () => {
+  it("says the trial starts at go-live before the first launch", () => {
+    expect(noSubscriptionText(overview({ subscription: null, is_trial_available: true, does_trial_start_at_go_live: true }))).toBe(
+      "billing.noSubscriptionTrialAtGoLive",
+    );
+  });
+
+  it("offers the trial or a plan otherwise", () => {
+    expect(noSubscriptionText(overview({ subscription: null, is_trial_available: true }))).toBe("billing.noSubscriptionDescription");
+    expect(noSubscriptionText(overview({ subscription: null, is_trial_available: false }))).toBe("billing.noSubscriptionNoTrial");
   });
 });
