@@ -106,6 +106,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/admin/security/encryption-keys": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Encryption Keys */
+        get: operations["get_encryption_keys_v1_admin_security_encryption_keys_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/admin/security/encryption-keys/rotate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Start Key Rotation */
+        post: operations["start_key_rotation_v1_admin_security_encryption_keys_rotate_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/assistants": {
         parameters: {
             query?: never;
@@ -4458,6 +4492,16 @@ export interface components {
             latest_acceptance?: components["schemas"]["DpaAcceptanceView"] | null;
         };
         /**
+         * EncryptionKeysView
+         * @description How many keys the ring holds now and the latest re-encryption run
+         *     (None before the first one).
+         */
+        EncryptionKeysView: {
+            /** Key Count */
+            key_count: number;
+            latest_rotation?: components["schemas"]["KeyRotationView"] | null;
+        };
+        /**
          * ErrorBody
          * @description Body of every failed request: the broad `error` code, an English
          *     `message`, and, when the server knows them, `reasons` with stable codes
@@ -5103,6 +5147,53 @@ export interface components {
             criterion: components["schemas"]["JudgeCriterion"];
             /** Score */
             score: number;
+        };
+        /** KeyRotationStarted */
+        KeyRotationStarted: {
+            /** Audit Log Entry Id */
+            audit_log_entry_id: string;
+            rotation: components["schemas"]["KeyRotationView"];
+        };
+        /**
+         * KeyRotationStatus
+         * @description State of a re-encryption of the stored secrets with the current key:
+         *     QUEUED until a worker takes the job, RUNNING while it walks every
+         *     business, then DONE (its counts tell whether an old key is still
+         *     needed) or FAILED (the job's last error; a platform admin may start a
+         *     new run).
+         * @enum {string}
+         */
+        KeyRotationStatus: "queued" | "running" | "done" | "failed";
+        /**
+         * KeyRotationView
+         * @description One re-encryption run and what it found (no secrets, no businesses).
+         */
+        KeyRotationView: {
+            /** Finished At */
+            finished_at?: number | null;
+            /** Id */
+            id: string;
+            /** Key Count */
+            key_count: number;
+            /** Last Error */
+            last_error?: string | null;
+            /** Requested At */
+            requested_at: number;
+            /** Secrets Current */
+            secrets_current: number;
+            /** Secrets Rotated */
+            secrets_rotated: number;
+            /** Secrets Total */
+            secrets_total: number;
+            /** Secrets Unreadable */
+            secrets_unreadable: number;
+            /** Started At */
+            started_at?: number | null;
+            status: components["schemas"]["KeyRotationStatus"];
+            /** Webhooks Failed */
+            webhooks_failed: number;
+            /** Webhooks Renewed */
+            webhooks_renewed: number;
         };
         /**
          * KnowledgeAttribute
@@ -7843,6 +7934,176 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AdminJobActionResult"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    get_encryption_keys_v1_admin_security_encryption_keys_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EncryptionKeysView"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    start_key_rotation_v1_admin_security_encryption_keys_rotate_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KeyRotationStarted"];
                 };
             };
             /** @description Sign-in required: the bearer token is missing, invalid or expired. */

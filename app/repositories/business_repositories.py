@@ -124,6 +124,14 @@ class ChannelRepository(
     def list_by_business(self, business_id: BusinessId) -> list[ChannelDocument]:
         return self._list_in_business(business_id)
 
+    def modify(
+        self,
+        business_id: BusinessId,
+        channel_id: ChannelId,
+        change: Callable[[ChannelDocument], ChannelDocument | None],
+    ) -> ChannelDocument | None:
+        return self._modify_in_business(business_id, str(channel_id), change)
+
     def find_by_external_id(
         self,
         kind: ChannelKind,

@@ -7,6 +7,9 @@ from app.containers.adapters.adapters_container import AdaptersContainer
 from app.containers.adapters.inbox_collections_container import (
     InboxCollectionsContainer,
 )
+from app.containers.adapters.security_collections_container import (
+    SecurityCollectionsContainer,
+)
 from app.containers.clients import ClientsContainer
 from app.containers.config import ConfigContainer
 from app.containers.facilitators import FacilitatorsContainer
@@ -70,9 +73,18 @@ class AppContainer(containers.DeclarativeContainer):
         time_provider=time_provider,
         utilities=utilities,
     )
+    # Key management's collection (1063), a sibling as well.
+    security_collections: SecurityCollectionsContainer = Container(  # type: ignore[assignment]
+        SecurityCollectionsContainer,
+        clients=clients,
+        config=config,
+        time_provider=time_provider,
+        utilities=utilities,
+    )
     repositories: RepositoriesContainer = Container(  # type: ignore[assignment]
         RepositoriesContainer,
         inbox_collections=inbox_collections,
+        security_collections=security_collections,
         collections=adapters.collections,
         notification_collections=adapters.notification_collections,
         launch_collections=adapters.launch_collections,

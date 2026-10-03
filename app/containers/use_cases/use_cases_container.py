@@ -20,6 +20,7 @@ from app.containers.use_cases.notification_use_cases import (
     NotificationUseCasesContainer,
 )
 from app.containers.use_cases.platform_use_cases import PlatformUseCasesContainer
+from app.containers.use_cases.security_use_cases import SecurityUseCasesContainer
 from app.containers.use_cases.setup_use_cases import SetupUseCasesContainer
 from app.containers.use_cases.sharing_use_cases import SharingUseCasesContainer
 from app.containers.use_cases.voice_use_cases import VoiceUseCasesContainer
@@ -187,6 +188,16 @@ class UseCasesContainer(CoreUseCasesContainer):
         time_provider=CoreUseCasesContainer.time_provider,
         utilities=CoreUseCasesContainer.utilities,
         billing_use_cases=billing,
+    )
+    security: SecurityUseCasesContainer = Container(  # type: ignore[assignment]
+        SecurityUseCasesContainer,
+        adapters=CoreUseCasesContainer.adapters,
+        clients=CoreUseCasesContainer.clients,
+        config=CoreUseCasesContainer.config,
+        facilitators=CoreUseCasesContainer.facilitators,
+        repositories=CoreUseCasesContainer.repositories,
+        time_provider=CoreUseCasesContainer.time_provider,
+        platform_use_cases=platform,
     )
     sharing: SharingUseCasesContainer = Container(  # type: ignore[assignment]
         SharingUseCasesContainer,

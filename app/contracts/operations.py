@@ -1,6 +1,7 @@
 """Seams of the operations module: calendar storage and sync, per-business
 locks, and staff notification broadcasting."""
 
+from collections.abc import Callable
 from contextlib import AbstractContextManager
 from typing import Protocol
 
@@ -45,6 +46,20 @@ class CalendarConnectionRepoContract(RepoContract, Protocol):
         raise NotImplementedError
 
     def delete_by_business(self, business_id: BusinessId) -> None:
+        raise NotImplementedError
+
+    def modify(
+        self,
+        business_id: BusinessId,
+        change: Callable[
+            [CalendarConnectionDocument], CalendarConnectionDocument | None
+        ],
+    ) -> CalendarConnectionDocument | None:
+        """
+        Store what `change` makes of the business's connection as stored
+        now, in one step; None, and nothing written, when there is none or
+        `change` returns None.
+        """
         raise NotImplementedError
 
 

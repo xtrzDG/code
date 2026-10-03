@@ -5799,6 +5799,33 @@
         "title": "DpaStatusView",
         "type": "object"
       },
+      "EncryptionKeysView": {
+        "additionalProperties": false,
+        "description": "How many keys the ring holds now and the latest re-encryption run\n(None before the first one).",
+        "properties": {
+          "key_count": {
+            "maximum": 32.0,
+            "minimum": 1.0,
+            "title": "Key Count",
+            "type": "integer"
+          },
+          "latest_rotation": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/KeyRotationView"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "key_count"
+        ],
+        "title": "EncryptionKeysView",
+        "type": "object"
+      },
       "ErrorBody": {
         "additionalProperties": false,
         "description": "Body of every failed request: the broad `error` code, an English\n`message`, and, when the server knows them, `reasons` with stable codes\n(absent otherwise, so older clients keep working).",
@@ -7336,6 +7363,135 @@
           "score"
         ],
         "title": "JudgeCriterionScoreView",
+        "type": "object"
+      },
+      "KeyRotationStarted": {
+        "additionalProperties": false,
+        "properties": {
+          "audit_log_entry_id": {
+            "title": "Audit Log Entry Id",
+            "type": "string"
+          },
+          "rotation": {
+            "$ref": "#/components/schemas/KeyRotationView"
+          }
+        },
+        "required": [
+          "rotation",
+          "audit_log_entry_id"
+        ],
+        "title": "KeyRotationStarted",
+        "type": "object"
+      },
+      "KeyRotationStatus": {
+        "description": "State of a re-encryption of the stored secrets with the current key:\nQUEUED until a worker takes the job, RUNNING while it walks every\nbusiness, then DONE (its counts tell whether an old key is still\nneeded) or FAILED (the job's last error; a platform admin may start a\nnew run).",
+        "enum": [
+          "queued",
+          "running",
+          "done",
+          "failed"
+        ],
+        "title": "KeyRotationStatus",
+        "type": "string"
+      },
+      "KeyRotationView": {
+        "additionalProperties": false,
+        "description": "One re-encryption run and what it found (no secrets, no businesses).",
+        "properties": {
+          "finished_at": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Finished At"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "key_count": {
+            "maximum": 32.0,
+            "minimum": 1.0,
+            "title": "Key Count",
+            "type": "integer"
+          },
+          "last_error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Error"
+          },
+          "requested_at": {
+            "title": "Requested At",
+            "type": "integer"
+          },
+          "secrets_current": {
+            "minimum": 0.0,
+            "title": "Secrets Current",
+            "type": "integer"
+          },
+          "secrets_rotated": {
+            "minimum": 0.0,
+            "title": "Secrets Rotated",
+            "type": "integer"
+          },
+          "secrets_total": {
+            "minimum": 0.0,
+            "title": "Secrets Total",
+            "type": "integer"
+          },
+          "secrets_unreadable": {
+            "minimum": 0.0,
+            "title": "Secrets Unreadable",
+            "type": "integer"
+          },
+          "started_at": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Started At"
+          },
+          "status": {
+            "$ref": "#/components/schemas/KeyRotationStatus"
+          },
+          "webhooks_failed": {
+            "minimum": 0.0,
+            "title": "Webhooks Failed",
+            "type": "integer"
+          },
+          "webhooks_renewed": {
+            "minimum": 0.0,
+            "title": "Webhooks Renewed",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "status",
+          "key_count",
+          "secrets_total",
+          "secrets_current",
+          "secrets_rotated",
+          "secrets_unreadable",
+          "webhooks_renewed",
+          "webhooks_failed",
+          "requested_at"
+        ],
+        "title": "KeyRotationView",
         "type": "object"
       },
       "KnowledgeAttribute": {
@@ -14007,6 +14163,224 @@
           }
         },
         "summary": "Retry Queued Job",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/v1/admin/security/encryption-keys": {
+      "get": {
+        "operationId": "get_encryption_keys_v1_admin_security_encryption_keys_get",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EncryptionKeysView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Get Encryption Keys",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/v1/admin/security/encryption-keys/rotate": {
+      "post": {
+        "operationId": "start_key_rotation_v1_admin_security_encryption_keys_rotate_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KeyRotationStarted"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Start Key Rotation",
         "tags": [
           "admin"
         ]

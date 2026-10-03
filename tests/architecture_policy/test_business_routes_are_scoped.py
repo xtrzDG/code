@@ -47,6 +47,7 @@ PLATFORM_WIDE_OPERATORS: dict[str, str] = {
     "operations.send_booking_reminders_operator": "periodic job over every business",
     "platform.list_clients_operator": "platform admin's client list",
     "platform.purge_stale_rows_operator": "periodic purge over every business",
+    "security.rotate_encrypted_secrets_operator": "re-encryption over every business",
 }
 
 

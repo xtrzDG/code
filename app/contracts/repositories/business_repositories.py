@@ -76,6 +76,20 @@ class ChannelRepoContract(RepoContract, Protocol):
     def list_by_business(self, business_id: BusinessId) -> list[ChannelDocument]:
         raise NotImplementedError
 
+    def modify(
+        self,
+        business_id: BusinessId,
+        channel_id: ChannelId,
+        change: Callable[[ChannelDocument], ChannelDocument | None],
+    ) -> ChannelDocument | None:
+        """
+        Store what `change` makes of the channel as stored now, in one step
+        (no other write in between); None, and nothing written, for a
+        missing channel, one of another business, or when `change` returns
+        None.
+        """
+        raise NotImplementedError
+
     def find_by_external_id(
         self,
         kind: ChannelKind,
