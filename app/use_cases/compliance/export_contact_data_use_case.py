@@ -24,7 +24,8 @@ class ExportContactDataUseCase(UseCaseContract[ContactDataCommand, ContactDataEx
     Owner exports all personal data of one visitor (right of access).
 
     The export holds the contact, their conversations and messages, calls,
-    bookings, leads and handoffs, and is written to the audit log.
+    bookings, leads, handoffs and the team's notes on their conversations,
+    and is written to the audit log.
     """
 
     def __init__(

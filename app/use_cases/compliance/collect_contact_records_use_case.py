@@ -9,6 +9,9 @@ from app.contracts.repositories.conversation_repositories import (
     ConversationRepoContract,
     MessageRepoContract,
 )
+from app.contracts.repositories.inbox_repositories import (
+    ConversationNoteRepoContract,
+)
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.domain.contacts import ContactDocument
 from app.schemas.domain.conversations import (
@@ -27,7 +30,8 @@ class CollectContactRecordsUseCase(
     """
     Gather every record about one visitor inside one business.
 
-    Every read goes through the business id, so a contact id of another
+    The team's internal notes on the visitor's conversations are records
+    about them too. Every read goes through the business id, so a contact id of another
     business is reported as missing, and so is an erased contact (nothing
     personal is left to export or erase). Callers check access first.
     """
@@ -41,6 +45,7 @@ class CollectContactRecordsUseCase(
         booking_repo: BookingRepoContract,
         lead_repo: LeadRepoContract,
         handoff_repo: HandoffRepoContract,
+        note_repo: ConversationNoteRepoContract,
     ) -> None:
         self._contact_repo: ContactRepoContract = contact_repo
         self._conversation_repo: ConversationRepoContract = conversation_repo
@@ -49,6 +54,7 @@ class CollectContactRecordsUseCase(
         self._booking_repo: BookingRepoContract = booking_repo
         self._lead_repo: LeadRepoContract = lead_repo
         self._handoff_repo: HandoffRepoContract = handoff_repo
+        self._note_repo: ConversationNoteRepoContract = note_repo
 
     def run(self, input_data: ContactRecordsQuery) -> ContactRecords:
         contact: ContactDocument | None = self._contact_repo.get(
@@ -110,5 +116,12 @@ class CollectContactRecordsUseCase(
                 handoff
                 for handoff in self._handoff_repo.list_by_business(contact.business_id)
                 if handoff.contact_id == contact.id
+            ],
+            notes=[
+                note
+                for conversation in conversations
+                for note in self._note_repo.list_by_conversation(
+                    contact.business_id, conversation.id
+                )
             ],
         )

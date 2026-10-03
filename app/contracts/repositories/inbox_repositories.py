@@ -145,6 +145,14 @@ class ConversationNoteRepoContract(RepoContract, Protocol):
         """One keyset page of a conversation's notes, newest first."""
         raise NotImplementedError
 
+    def list_by_conversation(
+        self,
+        business_id: BusinessId,
+        conversation_id: ConversationId,
+    ) -> list[ConversationNoteDocument]:
+        """Every note of a conversation, oldest first (data export)."""
+        raise NotImplementedError
+
     def count_by_conversations(
         self,
         business_id: BusinessId,

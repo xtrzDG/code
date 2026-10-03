@@ -16,6 +16,7 @@ from app.repositories.business_scoped_repository import BusinessScopedRepository
 from app.repositories.conversation_lookup_fields import CONVERSATION_ID_FIELD
 from app.repositories.document_queries import (
     CREATED_AT_FIELD,
+    ascending,
     field_among,
     field_equals,
 )
@@ -67,6 +68,17 @@ class ConversationNoteRepository(
             ),
         )
 
+    def list_by_conversation(
+        self,
+        business_id: BusinessId,
+        conversation_id: ConversationId,
+    ) -> list[ConversationNoteDocument]:
+        return self._list_in_business(
+            business_id,
+            [field_equals(CONVERSATION_ID_FIELD, conversation_id)],
+            order=ascending(CREATED_AT_FIELD),
+        )
+
     def count_by_conversations(
         self,
         business_id: BusinessId,
@@ -100,9 +112,7 @@ class ConversationNoteRepository(
         business_id: BusinessId,
         conversation_id: ConversationId,
     ) -> ConversationNoteCount:
-        notes: list[ConversationNoteDocument] = self._list_in_business(
-            business_id, [field_equals(CONVERSATION_ID_FIELD, conversation_id)]
-        )
+        notes = self.list_by_conversation(business_id, conversation_id)
         for note in notes:
             self._collection.delete(str(note.id))
 

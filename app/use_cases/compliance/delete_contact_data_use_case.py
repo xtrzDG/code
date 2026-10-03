@@ -160,6 +160,7 @@ class DeleteContactDataUseCase(
             anonymized_bookings=ErasedRecordCount(len(records.bookings)),
             anonymized_leads=ErasedRecordCount(len(records.leads)),
             anonymized_handoffs=ErasedRecordCount(len(records.handoffs)),
+            deleted_notes=ErasedRecordCount(len(records.notes)),
         )
 
     def _delete_recordings(self, records: ContactRecords) -> int:

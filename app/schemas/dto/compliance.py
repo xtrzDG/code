@@ -5,6 +5,7 @@ from typed_time_provider import Microseconds
 from app.schemas.constants.compliance import AuditAction
 from app.schemas.domain.bookings import BookingDocument, LeadDocument
 from app.schemas.domain.contacts import ContactDocument
+from app.schemas.domain.conversation_notes import ConversationNoteDocument
 from app.schemas.domain.conversations import (
     CallDocument,
     ConversationDocument,
@@ -160,7 +161,8 @@ class ContactRecords(ImmutableDTO):
     Every stored record that describes one visitor of one business.
 
     Calls belong to the visitor through one of their conversations or their
-    phone number. Raw language-model turns repeat the messages and are not
+    phone number; `notes` are the team's internal notes on their
+    conversations. Raw language-model turns repeat the messages and are not
     listed.
     """
 
@@ -173,6 +175,9 @@ class ContactRecords(ImmutableDTO):
     bookings: list[BookingDocument] = Field(default_factory=list[BookingDocument])
     leads: list[LeadDocument] = Field(default_factory=list[LeadDocument])
     handoffs: list[HandoffDocument] = Field(default_factory=list[HandoffDocument])
+    notes: list[ConversationNoteDocument] = Field(
+        default_factory=list[ConversationNoteDocument]
+    )
 
 
 class ContactDataExport(ImmutableDTO):
@@ -187,9 +192,9 @@ class ContactErasureResult(ImmutableDTO):
     """
     What a visitor's erasure removed.
 
-    Messages, model transcripts, call transcripts and recordings are deleted;
-    conversations, bookings, leads and handoffs stay as anonymous business
-    records.
+    Messages, model transcripts, the team's notes, call transcripts and
+    recordings are deleted; conversations, bookings, leads and handoffs stay
+    as anonymous business records.
     """
 
     business_id: BusinessId
@@ -202,6 +207,7 @@ class ContactErasureResult(ImmutableDTO):
     anonymized_bookings: ErasedRecordCount
     anonymized_leads: ErasedRecordCount
     anonymized_handoffs: ErasedRecordCount
+    deleted_notes: ErasedRecordCount = ErasedRecordCount(0)
 
 
 class PurgeExpiredRecordingsCommand(ImmutableDTO):

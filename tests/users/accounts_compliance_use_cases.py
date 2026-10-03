@@ -41,6 +41,7 @@ class AccountsComplianceUseCases(AccountsUserUseCases):
             booking_repo=self.booking_repo,
             lead_repo=self.lead_repo,
             handoff_repo=self.handoff_repo,
+            note_repo=self.conversation_note_repo,
         )
         self.legal_document_registry = LegalDocumentRegistry()
         self.accept_dpa = AcceptDpaUseCase(

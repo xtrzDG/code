@@ -50,4 +50,7 @@ def inbox_path_values(
         headers=owner_headers,
     )
     assert reply.status_code == 201, reply.text
-    return {"note_id": str(note.json()["id"]), "quick_reply_id": str(reply.json()["id"])}
+    return {
+        "note_id": str(note.json()["id"]),
+        "quick_reply_id": str(reply.json()["id"]),
+    }

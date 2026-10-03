@@ -138,6 +138,7 @@ class ComplianceUseCasesContainer(containers.DeclarativeContainer):
         booking_repo=repositories.booking_repo,
         lead_repo=repositories.lead_repo,
         handoff_repo=repositories.handoff_repo,
+        note_repo=repositories.conversation_note_repo,
     )
     export_contact_data_use_case: Factory[
         UseCaseContract[ContactDataCommand, ContactDataExport]

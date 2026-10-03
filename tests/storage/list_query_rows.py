@@ -91,12 +91,13 @@ LIST_TABLES: tuple[SeededTable, ...] = (
 def seed_list_tables(
     connection_pool: PostgresConnectionPoolClient,
     business_ids: list[BusinessId],
+    tables: tuple[SeededTable, ...] = LIST_TABLES,
 ) -> None:
-    """LIST_ROWS rows in every list table, spread over the businesses."""
+    """LIST_ROWS rows in every table, spread over the businesses."""
 
     with connection_pool.transaction() as connection:
         connection.execute(BYPASS_RLS)
-        for table in LIST_TABLES:
+        for table in tables:
             statement: LiteralString = (
                 "insert into {table} "
                 "(document_key, business_id, document, created_at, updated_at) "
