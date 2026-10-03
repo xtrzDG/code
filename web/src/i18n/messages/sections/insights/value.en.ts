@@ -37,6 +37,8 @@ export const valueEn = {
     hint: "What one booking brings on average. It turns bookings into money; real prices of your services will replace it later.",
   },
   delta: {
+    firstPeriod: "first period",
+    firstPeriodHint: "No activity in the period before: nothing to compare with yet",
     up: "Up {change} vs {against}",
     down: "Down {change} vs {against}",
     same: "No change vs {against}",

@@ -78,6 +78,11 @@ export function nextStep(business: Pick<BusinessView, "status" | "service_mode">
   return NEXT_STEPS[business.status];
 }
 
+/** Whether the assistant has gone live (it may be paused since); before that the tunnel is the way on. */
+export function isLaunched(status: BusinessStatus): boolean {
+  return status === "live" || status === "paused";
+}
+
 /** Whether the next step's button makes sense for the viewer (staff cannot open billing, settings or channels). */
 export function canTakeStep(step: Pick<NextStep, "page">, isOwner: boolean): boolean {
   return canOpenPage(step.page, isOwner ? "owner" : "staff");

@@ -44,6 +44,26 @@ export function changeOf(current: number, previous: number): Change | null {
   return { direction, percent: Math.round((Math.abs(difference) / previous) * 100), difference };
 }
 
+/**
+ * Whether a period had no activity at all (no conversation, message,
+ * booking, request, handoff or call): changes against it would present the
+ * whole total as growth ("+41"), so the chips say "first period" instead.
+ */
+export function hadNoActivity(totals: Pick<
+  ValueTotals,
+  "conversation_count" | "customer_message_count" | "booking_count" | "request_count" | "handoff_count" | "call_count"
+>): boolean {
+  return (
+    totals.conversation_count +
+      totals.customer_message_count +
+      totals.booking_count +
+      totals.request_count +
+      totals.handoff_count +
+      totals.call_count ===
+    0
+  );
+}
+
 /** Which way is good news for a number: more bookings is, more handoffs is neither. */
 export type Polarity = "more-is-better" | "neutral";
 

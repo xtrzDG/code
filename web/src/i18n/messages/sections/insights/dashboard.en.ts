@@ -72,7 +72,10 @@ export const dashboardEn = {
     leads: "Leads",
     handoffs: "Needed a person",
   },
+  continueSetup: "Continue setup",
   usage: {
+    trialAtLaunchTitle: "Your free trial starts at launch",
+    trialAtLaunchDescription: "No plan is needed before launch: the free trial starts by itself when the assistant goes live.",
     noPlanStaff: "The business has no active plan yet. The owner chooses it in billing.",
     overStaff: "The voice package is used up: {minutes} min above it so far.",
     warningStaff: "More than 80% of the package is used.",

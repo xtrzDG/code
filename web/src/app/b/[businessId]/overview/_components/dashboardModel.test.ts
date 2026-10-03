@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   canTakeStep,
   isDashboardPeriod,
+  isLaunched,
   nearestDayIndex,
   nextStep,
   periodRange,
@@ -98,5 +99,14 @@ describe("trend chart", () => {
     expect(nearestDayIndex(0.74, 3)).toBe(1);
     expect(nearestDayIndex(1.2, 3)).toBe(2);
     expect(nearestDayIndex(0.5, 1)).toBe(0);
+  });
+});
+
+describe("launch", () => {
+  it("counts a live or paused business as launched, not one still in setup", () => {
+    expect(isLaunched("live")).toBe(true);
+    expect(isLaunched("paused")).toBe(true);
+    expect(isLaunched("onboarding")).toBe(false);
+    expect(isLaunched("testing")).toBe(false);
   });
 });

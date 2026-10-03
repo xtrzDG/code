@@ -6,10 +6,10 @@ import { useBusiness, useBusinessFormat } from "@/components/business/BusinessCo
 import type { DashboardPackageUsage } from "@/components/insights/types";
 import { Alert, ButtonLink, Card } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
-import { businessPath } from "@/lib/navigation";
+import { businessPath, setupPath } from "@/lib/navigation";
 
 import { Meter } from "./DashboardWidgets";
-import { usageLevel } from "./dashboardModel";
+import { isLaunched, usageLevel } from "./dashboardModel";
 
 /**
  * Package minutes and dialogues of the current billing window (from the
@@ -31,22 +31,33 @@ export function PackageCard({
   const voiceLevel = usage ? usageLevel(usage.voice_usage_percent) : "ok";
   const dialogLevel = usage ? usageLevel(usage.dialog_usage_percent) : "ok";
   const needsPrice = isOwner && usage !== null && (voiceLevel !== "ok" || dialogLevel !== "ok");
+  const beforeLaunch = usage === null && !isLaunched(business.status);
 
   const billingQuery = sectionQueries.billingOverview(businessId, locale);
-  const billing = useQuery(billingQuery.key, billingQuery.fetch, { enabled: needsPrice });
+  const billing = useQuery(billingQuery.key, billingQuery.fetch, { enabled: needsPrice || (isOwner && beforeLaunch) });
   const prices = billing.data?.usage ?? null;
+  // Before the launch the trial starts by itself, unless the billing says otherwise (a trial already used).
+  const trialAtLaunch = beforeLaunch && billing.data?.does_trial_start_at_go_live !== false;
 
   if (!usage) {
     return (
       <Card title={t("dashboard.usage.title")}>
         <div className="space-y-3">
-          <p className="text-sm font-medium text-ink">{t("dashboard.usage.noPlanTitle")}</p>
+          <p className="text-sm font-medium text-ink">
+            {t(trialAtLaunch ? "dashboard.usage.trialAtLaunchTitle" : "dashboard.usage.noPlanTitle")}
+          </p>
           <p className="text-sm text-ink-muted">
-            {t(isOwner ? "dashboard.usage.noPlanDescription" : "dashboard.usage.noPlanStaff")}
+            {trialAtLaunch
+              ? t("dashboard.usage.trialAtLaunchDescription")
+              : t(isOwner ? "dashboard.usage.noPlanDescription" : "dashboard.usage.noPlanStaff")}
           </p>
           {isOwner ? (
-            <ButtonLink href={businessPath(businessId, "settings/billing")} variant="secondary" size="sm">
-              {t("dashboard.usage.toBilling")}
+            <ButtonLink
+              href={trialAtLaunch ? setupPath(businessId) : businessPath(businessId, "settings/billing")}
+              variant="secondary"
+              size="sm"
+            >
+              {t(trialAtLaunch ? "dashboard.continueSetup" : "dashboard.usage.toBilling")}
             </ButtonLink>
           ) : null}
         </div>

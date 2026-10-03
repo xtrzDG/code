@@ -55,6 +55,8 @@ export const valueRu: Translation<typeof valueEn> = {
     hint: "Сколько в среднем приносит одна бронь. По нему брони пересчитываются в деньги; позже его заменят настоящие цены ваших услуг.",
   },
   delta: {
+    firstPeriod: "первый период",
+    firstPeriodHint: "В предыдущем периоде активности не было: сравнивать пока не с чем",
     up: "Рост на {change} к {against}",
     down: "Снижение на {change} к {against}",
     same: "Без изменений к {against}",

@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   changeLabel,
   changeOf,
+  hadNoActivity,
   earningCount,
   formatMonth,
   formatWholeMoney,
@@ -97,5 +98,22 @@ describe("the periods", () => {
     expect(isReportKind("weekly")).toBe(true);
     expect(isReportKind("yearly")).toBe(false);
     expect(isReportKind(undefined)).toBe(false);
+  });
+});
+
+describe("hadNoActivity", () => {
+  const quiet = {
+    conversation_count: 0,
+    customer_message_count: 0,
+    booking_count: 0,
+    request_count: 0,
+    handoff_count: 0,
+    call_count: 0,
+  };
+
+  it("is true only when nothing at all happened in the period", () => {
+    expect(hadNoActivity(quiet)).toBe(true);
+    expect(hadNoActivity({ ...quiet, call_count: 1 })).toBe(false);
+    expect(hadNoActivity({ ...quiet, customer_message_count: 3 })).toBe(false);
   });
 });

@@ -3,7 +3,7 @@
 import { formatLocalDateRange } from "@/components/insights/dates";
 import { Table, TBody, Td, Th, THead, Tr } from "@/components/ui";
 import { DeltaChip } from "@/components/value/DeltaChip";
-import { formatWholeMoney, periodDays, type ValueReport } from "@/components/value/valueModel";
+import { formatWholeMoney, hadNoActivity, periodDays, type ValueReport } from "@/components/value/valueModel";
 import { useI18n } from "@/i18n/client";
 import { formatNumber } from "@/lib/format";
 
@@ -34,6 +34,7 @@ export function ReportDetails({ report }: { report: ValueReport }) {
   };
 
   const rows = visibleRows(report.current, report.previous);
+  const isFirstPeriod = hadNoActivity(report.previous);
   const chip = (row: (typeof rows)[number]) => (
     <DeltaChip
       current={report.current[row.field] ?? 0}
@@ -41,6 +42,7 @@ export function ReportDetails({ report }: { report: ValueReport }) {
       days={days}
       polarity={row.polarity}
       formatValue={row.kind === "count" ? undefined : (value) => show(value, row.kind)}
+      isFirstPeriod={isFirstPeriod}
     />
   );
 

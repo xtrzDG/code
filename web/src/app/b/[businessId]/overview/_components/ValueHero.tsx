@@ -8,7 +8,7 @@ import { IconArrowRight, IconChat, IconClock, IconMoon, IconSparkles } from "@/c
 import { AnimatedNumber, TiltCard, TiltLayer } from "@/components/motion";
 import { AverageCheckEditor } from "@/components/value/AverageCheckEditor";
 import { DeltaChip } from "@/components/value/DeltaChip";
-import { earningCount, formatWholeMoney, periodDays, savedTime, type ValueModel } from "@/components/value/valueModel";
+import { earningCount, formatWholeMoney, hadNoActivity, periodDays, savedTime, type ValueModel } from "@/components/value/valueModel";
 import { useI18n } from "@/i18n/client";
 import { cn } from "@/lib/cn";
 import { formatNumber } from "@/lib/format";
@@ -30,6 +30,7 @@ export function ValueHero({ model, isPlaceholder }: { model: ValueModel; isPlace
   const isRequests = model.value_basis === "requests";
   const estimate = current.estimated_revenue_minor;
   const money = (minor: number) => formatWholeMoney(minor, model.currency_code, locale);
+  const first = hadNoActivity(previous);
 
   return (
     <section
@@ -50,7 +51,13 @@ export function ValueHero({ model, isPlaceholder }: { model: ValueModel; isPlace
         <h2 id="value-hero-title" className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-sm font-semibold text-ink">
           <IconSparkles className="size-4 text-accent" aria-hidden />
           {t("value.hero.title")}
-          <span className="font-normal text-ink-muted">· {formatLocalDateRange(model.date_from, model.date_to, locale)}</span>
+          {/* On a phone the dates take their own line, so no "·" is left at its start. */}
+          <span aria-hidden className="font-normal text-ink-subtle max-sm:hidden">
+            ·
+          </span>
+          <span className="font-normal text-ink-muted max-sm:basis-full max-sm:ps-6">
+            {formatLocalDateRange(model.date_from, model.date_to, locale)}
+          </span>
         </h2>
         <Link
           href={businessPath(model.business_id, "overview/reports")}
@@ -83,9 +90,9 @@ export function ValueHero({ model, isPlaceholder }: { model: ValueModel; isPlace
           </TiltLayer>
           <TiltLayer depth={14} className="mt-3 flex flex-wrap items-center gap-2">
             {estimate === null || estimate === undefined ? (
-              <DeltaChip current={count} previous={earningCount(model.value_basis, previous)} days={days} />
+              <DeltaChip current={count} previous={earningCount(model.value_basis, previous)} days={days} isFirstPeriod={first} />
             ) : (
-              <DeltaChip current={estimate} previous={previous.estimated_revenue_minor ?? 0} days={days} formatValue={money} />
+              <DeltaChip current={estimate} previous={previous.estimated_revenue_minor ?? 0} days={days} formatValue={money} isFirstPeriod={first} />
             )}
             <span className="text-xs text-ink-subtle">{isRequests ? t("value.hero.requestsHint") : t("value.hero.bookingsHint")}</span>
           </TiltLayer>
@@ -105,7 +112,14 @@ export function ValueHero({ model, isPlaceholder }: { model: ValueModel; isPlace
               count: number(current.after_hours_conversation_count),
             })}
             hint={t("value.hero.afterHoursHint")}
-            chip={<DeltaChip current={current.after_hours_conversation_count} previous={previous.after_hours_conversation_count} days={days} />}
+            chip={
+              <DeltaChip
+                current={current.after_hours_conversation_count}
+                previous={previous.after_hours_conversation_count}
+                days={days}
+                isFirstPeriod={first}
+              />
+            }
           />
           <Fact
             icon={<IconClock className="size-4" />}
@@ -118,13 +132,14 @@ export function ValueHero({ model, isPlaceholder }: { model: ValueModel; isPlace
                 previous={previous.staff_minutes_saved}
                 days={days}
                 formatValue={(minutes) => t("reports.duration.minutes", { minutes: number(minutes) })}
+                isFirstPeriod={first}
               />}
           />
           <Fact
             icon={<IconChat className="size-4" />}
             text={tp("value.hero.conversations", current.conversation_count, { count: number(current.conversation_count) })}
             hint={t("value.hero.conversationsHint")}
-            chip={<DeltaChip current={current.conversation_count} previous={previous.conversation_count} days={days} />}
+            chip={<DeltaChip current={current.conversation_count} previous={previous.conversation_count} days={days} isFirstPeriod={first} />}
           />
         </ul>
       </div>
