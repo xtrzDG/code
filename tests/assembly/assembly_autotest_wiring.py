@@ -74,8 +74,8 @@ from app.use_cases.autotests.run_autotest_scenario_use_case import (
 )
 from app.use_cases.autotests.start_autotest_run_use_case import StartAutotestRunUseCase
 from app.utilities.assembly.llm_costs import DEFAULT_LLM_TOKEN_PRICES
-from tests.assembly.deferred_use_case import DeferredUseCase
 from tests.assembly.assembly_scripted_models import AssemblyScriptedModels
+from tests.assembly.deferred_use_case import DeferredUseCase
 
 
 class AssemblyAutotestWiring(AssemblyScriptedModels):

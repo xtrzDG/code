@@ -95,8 +95,16 @@ def build_business(
     return business
 
 
-def make_launch_ready(testbed: AssemblyTestbed, business: BusinessDocument) -> None:
-    """A manager contact, a running trial and the current DPA accepted."""
+def make_launch_ready(
+    testbed: AssemblyTestbed,
+    business: BusinessDocument,
+    *,
+    with_trial: bool = True,
+) -> None:
+    """
+    A manager contact, the current DPA accepted and (unless the trial is
+    left to start at go-live) a running trial.
+    """
 
     now = testbed.wall_clock.now_unix()
     business.manager_contacts = [
@@ -108,6 +116,22 @@ def make_launch_ready(testbed: AssemblyTestbed, business: BusinessDocument) -> N
         )
     ]
     testbed.business_repo.save(business)
+    if with_trial:
+        save_running_trial(testbed, business)
+    testbed.dpa_repo.save(
+        DpaAcceptanceDocument(
+            business_id=business.id,
+            document_version=testbed.settings.dpa_document_version,
+            accepted_by=testbed.owner_id,
+            accepted_at=now,
+            created_at=now,
+            updated_at=now,
+        )
+    )
+
+
+def save_running_trial(testbed: AssemblyTestbed, business: BusinessDocument) -> None:
+    now = testbed.wall_clock.now_unix()
     testbed.subscription_repo.save(
         SubscriptionDocument(
             business_id=business.id,
@@ -119,16 +143,6 @@ def make_launch_ready(testbed: AssemblyTestbed, business: BusinessDocument) -> N
             trial_ends_at=Microseconds(int(now) + TRIAL_SECONDS * 1_000_000),
             period_start=now,
             period_end=Microseconds(int(now) + TRIAL_SECONDS * 1_000_000),
-            created_at=now,
-            updated_at=now,
-        )
-    )
-    testbed.dpa_repo.save(
-        DpaAcceptanceDocument(
-            business_id=business.id,
-            document_version=testbed.settings.dpa_document_version,
-            accepted_by=testbed.owner_id,
-            accepted_at=now,
             created_at=now,
             updated_at=now,
         )
