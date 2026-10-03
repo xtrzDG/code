@@ -26,6 +26,9 @@ from app.containers.orchestrators.conversation_orchestrators import (
     ConversationOrchestratorsContainer,
 )
 from app.containers.orchestrators.demo_orchestrators import DemoOrchestratorsContainer
+from app.containers.orchestrators.inbox_orchestrators import (
+    InboxOrchestratorsContainer,
+)
 from app.containers.orchestrators.knowledge_orchestrators import (
     KnowledgeOrchestratorsContainer,
 )
@@ -73,6 +76,10 @@ class OrchestratorsContainer(containers.DeclarativeContainer):
     compliance: ComplianceOrchestratorsContainer = Container(  # type: ignore[assignment]
         ComplianceOrchestratorsContainer,
         compliance_use_cases=use_cases.compliance,
+    )
+    inbox: InboxOrchestratorsContainer = Container(  # type: ignore[assignment]
+        InboxOrchestratorsContainer,
+        inbox_use_cases=use_cases.inbox,
     )
     knowledge: KnowledgeOrchestratorsContainer = Container(  # type: ignore[assignment]
         KnowledgeOrchestratorsContainer,

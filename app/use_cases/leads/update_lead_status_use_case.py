@@ -6,23 +6,33 @@ from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.live_events import LiveEventKind
 from app.schemas.domain.bookings import LeadDocument
 from app.schemas.dto.bookings import LeadView
+from app.schemas.dto.inbox.assignment import OpenRequestRefresh, OpenRequestState
 from app.schemas.dto.operations.leads import UpdateLeadStatusCommand
 from app.schemas.exceptions.application_errors import NotFoundError
+from app.use_cases.inbox.assignment.request_tracking import track_request
 from app.use_cases.leads.lead_views import build_lead_view
 
 
 class UpdateLeadStatusUseCase(UseCaseContract[UpdateLeadStatusCommand, LeadView]):
-    """Staff moves a lead between NEW, IN_PROGRESS, WON and LOST (any order)."""
+    """
+    Staff moves a lead between NEW, IN_PROGRESS, WON and LOST (any order).
+    Its conversation stays in the team inbox's "Requests" view while one of
+    its requests is new or in progress.
+    """
 
     def __init__(
         self,
         lead_repo: LeadRepoContract,
         live_events: EventPublisherFacilitatorContract,
         wall_clock: WallClock[Microseconds],
+        refresh_open_request: UseCaseContract[OpenRequestRefresh, OpenRequestState],
     ) -> None:
         self._lead_repo: LeadRepoContract = lead_repo
         self._wall_clock: WallClock[Microseconds] = wall_clock
         self._live_events: EventPublisherFacilitatorContract = live_events
+        self._refresh_open_request: UseCaseContract[
+            OpenRequestRefresh, OpenRequestState
+        ] = refresh_open_request
 
     def run(self, input_data: UpdateLeadStatusCommand) -> LeadView:
         lead: LeadDocument | None = self._lead_repo.get(
@@ -41,5 +51,6 @@ class UpdateLeadStatusUseCase(UseCaseContract[UpdateLeadStatusCommand, LeadView]
                 (lead.id,),
                 is_sandbox=lead.is_sandbox,
             )
+            track_request(lead, self._refresh_open_request)
 
         return build_lead_view(lead)

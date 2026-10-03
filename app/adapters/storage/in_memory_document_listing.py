@@ -4,7 +4,8 @@ semantics of the Postgres collection (`document_listing_sql`): sort fields
 and buckets are integer fields (documents without them are left out), ties
 keep the first-write order (the position of the page's last key in the
 collection; a key that is gone skips the rest of its ties), an exclusion
-keeps documents without the field, and a group value is the field as
+keeps documents without the field, a missing field is absent or null,
+and a group value is the field as
 `document ->> field` gives it.
 """
 
@@ -201,6 +202,9 @@ def is_in_filter(
         field_text(document.get(str(exclusion.field))) == str(exclusion.value)
         for exclusion in where.excluding
     ):
+        return False
+
+    if any(document.get(str(field)) is not None for field in where.missing):
         return False
 
     return all(is_within(document, within) for within in where.ranges)

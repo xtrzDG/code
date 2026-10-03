@@ -15,6 +15,7 @@ from app.containers.pipelines.conversation_pipelines import (
     ConversationPipelinesContainer,
 )
 from app.containers.pipelines.demo_pipelines import DemoPipelinesContainer
+from app.containers.pipelines.inbox_pipelines import InboxPipelinesContainer
 from app.containers.pipelines.knowledge_pipelines import KnowledgePipelinesContainer
 from app.containers.pipelines.notification_pipelines import (
     NotificationPipelinesContainer,
@@ -50,6 +51,10 @@ class PipelinesContainer(containers.DeclarativeContainer):
     compliance: CompliancePipelinesContainer = Container(  # type: ignore[assignment]
         CompliancePipelinesContainer,
         compliance_orchestrators=orchestrators.compliance,
+    )
+    inbox: InboxPipelinesContainer = Container(  # type: ignore[assignment]
+        InboxPipelinesContainer,
+        inbox=orchestrators.inbox,
     )
     knowledge: KnowledgePipelinesContainer = Container(  # type: ignore[assignment]
         KnowledgePipelinesContainer,

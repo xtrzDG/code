@@ -39,6 +39,7 @@ CONSTRAINED_TEXT_SAMPLES: dict[str, str] = {
         "BCVxsr7N_eNgVRqvHtD0zTZsEc6-VV-JvLexhqUzORcxaOzi6-AYWXvTBHm4bjyPjs7Vd8pZGH6SRpkNtoIAiw4"
     ),
     "QuestionKey": "parking",
+    "QuickReplyShortcut": "hours",
     "ReleaseVersion": "4718714c0f2e9a1b",
     "TimezoneName": "Asia/Tbilisi",
     "WebLink": "https://example.com/menu",

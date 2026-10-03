@@ -138,6 +138,7 @@ class ComplianceUseCasesContainer(containers.DeclarativeContainer):
         booking_repo=repositories.booking_repo,
         lead_repo=repositories.lead_repo,
         handoff_repo=repositories.handoff_repo,
+        note_repo=repositories.conversation_note_repo,
     )
     export_contact_data_use_case: Factory[
         UseCaseContract[ContactDataCommand, ContactDataExport]
@@ -165,6 +166,7 @@ class ComplianceUseCasesContainer(containers.DeclarativeContainer):
         recording_storage=adapters.recording_storage,
         audit_log_repo=repositories.audit_log_repo,
         wall_clock=time_provider.microsecond_wall_clock,
+        note_repo=repositories.conversation_note_repo,
     )
     purge_expired_recordings_use_case: Factory[
         UseCaseContract[PurgeExpiredRecordingsCommand, RecordingPurgeResult]

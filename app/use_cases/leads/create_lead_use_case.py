@@ -15,6 +15,12 @@ from app.schemas.domain.bookings import LeadDocument
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.contacts import ContactDocument
 from app.schemas.dto.bookings import CreateLeadCommand, LeadView
+from app.schemas.dto.inbox.assignment import (
+    AutoAssignCommand,
+    AutoAssignResult,
+    OpenRequestRefresh,
+    OpenRequestState,
+)
 from app.schemas.dto.notifications.staff_alerts import (
     LeadBrief,
     StaffAlertBrief,
@@ -31,6 +37,7 @@ from app.use_cases.bookings.operations_support import (
     require_contact,
     update_contact_details,
 )
+from app.use_cases.inbox.assignment.request_tracking import track_request
 from app.use_cases.leads.lead_views import build_lead_view
 from app.use_cases.notifications.staff_alerts import StaffAlertTexts, lead_alert
 
@@ -41,7 +48,9 @@ class CreateLeadUseCase(UseCaseContract[CreateLeadCommand, LeadView]):
     corporate events and anything non-standard. The contact's name and phone
     are updated; real (non-sandbox) leads notify every staff contact and
     subscribed device in their language, with a link to the conversation.
-    Notification failures never lose the lead.
+    Notification failures never lose the lead. The lead's conversation
+    joins the team inbox's "Requests" view and, when the business asked for
+    it, is assigned automatically.
     """
 
     def __init__(
@@ -60,6 +69,8 @@ class CreateLeadUseCase(UseCaseContract[CreateLeadCommand, LeadView]):
         ],
         staff_alerts: StaffAlertFacilitatorContract,
         wall_clock: WallClock[Microseconds],
+        refresh_open_request: UseCaseContract[OpenRequestRefresh, OpenRequestState],
+        auto_assign: UseCaseContract[AutoAssignCommand, AutoAssignResult],
     ) -> None:
         self._business_repo: BusinessRepoContract = business_repo
         self._lead_repo: LeadRepoContract = lead_repo
@@ -75,6 +86,12 @@ class CreateLeadUseCase(UseCaseContract[CreateLeadCommand, LeadView]):
         self._staff_alerts: StaffAlertFacilitatorContract = staff_alerts
         self._wall_clock: WallClock[Microseconds] = wall_clock
         self._live_events: EventPublisherFacilitatorContract = live_events
+        self._refresh_open_request: UseCaseContract[
+            OpenRequestRefresh, OpenRequestState
+        ] = refresh_open_request
+        self._auto_assign: UseCaseContract[AutoAssignCommand, AutoAssignResult] = (
+            auto_assign
+        )
 
     def run(self, input_data: CreateLeadCommand) -> LeadView:
         business: BusinessDocument = require_business(
@@ -118,6 +135,7 @@ class CreateLeadUseCase(UseCaseContract[CreateLeadCommand, LeadView]):
         if not lead.is_sandbox:
             self._notify_staff(business, lead, view, contact)
 
+        track_request(lead, self._refresh_open_request, self._auto_assign)
         return view
 
     def _notify_staff(

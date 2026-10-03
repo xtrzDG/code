@@ -91,9 +91,10 @@ def require_valid_filter(
 ) -> None:
     """
     Matches and `among` are TEXT, FILTER_TEXT or ELEMENT_TEXT fields,
-    exclusions TEXT or FILTER_TEXT fields, ranges INTEGER fields; FILTER_TEXT
-    fields and exclusions need an indexed match (`business_id` counts), a
-    range or an index order that selects the rows they narrow.
+    exclusions and missing fields TEXT or FILTER_TEXT fields, ranges INTEGER
+    fields; FILTER_TEXT fields, exclusions and missing fields need an
+    indexed match (`business_id` counts), a range or an index order that
+    selects the rows they narrow.
     """
 
     matched_fields: list[DocumentFieldPath] = [
@@ -109,11 +110,16 @@ def require_valid_filter(
             fields, exclusion.field, COLUMN_TEXT_KINDS, collection_label
         )
 
+    for field in where.missing:
+        require_lookup_field(fields, field, COLUMN_TEXT_KINDS, collection_label)
+
     for within in where.ranges:
         require_lookup_field(fields, within.field, RANGE_KINDS, collection_label)
 
     is_narrowing: bool = (
-        LookupFieldKind.FILTER_TEXT in kinds or len(where.excluding) > 0
+        LookupFieldKind.FILTER_TEXT in kinds
+        or len(where.excluding) > 0
+        or len(where.missing) > 0
     )
     is_selected_by_index: bool = (
         is_ordered

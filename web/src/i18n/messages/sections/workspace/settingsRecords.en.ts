@@ -82,6 +82,11 @@ export const settingsRecordsEn = {
       business_cabinet: "Business cabinet",
       business: "Business",
       queued_job: "Background job",
+      inbox: "Messages",
+      conversation_assignment: "Assignment",
+      conversation_note: "Team note",
+      quick_reply: "Quick reply",
+      inbox_settings: "Auto-assignment",
     },
   },
   roles: {

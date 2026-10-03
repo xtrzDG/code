@@ -227,6 +227,12 @@ def compose_filter(
         conditions.extend(range_conditions)
         parameters.extend(range_parameters)
 
+    conditions.extend(
+        sql.SQL("{column} is null").format(
+            column=sql.Identifier(lookup_column_name(field))
+        )
+        for field in where.missing
+    )
     return conditions, parameters
 
 

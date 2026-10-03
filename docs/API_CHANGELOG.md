@@ -55,6 +55,41 @@ Spec: `049687053489b322`
   `call_initiation_failure` events (a call the voice platform could not
   start becomes a missed call; `status` `recorded` or `duplicate`).
 
+## 2026-10-03 — team inbox: views, assignment, internal notes, quick replies
+
+Spec: `730cfe4d3afda319`
+
+- **Added** `GET /v1/businesses/{business_id}/inbox` (owners and staff,
+  `?view=needs_person|requests|mine|unassigned|all`, `channel`, `limit`,
+  `cursor`; an unknown view is 422): one keyset page by `last_message_at`
+  with the `counts` of the views (`InboxPage`); rows are staff-safe
+  (`InboxItemView`: no model costs, tool calls, free-text request details
+  or note texts, only `note_count`) and the read is audited per viewer.
+- **Added** `GET …/inbox/counts` (`InboxViewCounts`) and
+  `GET …/inbox/assignees` (members with their `awaiting_count`).
+- **Added** `POST …/conversations/{conversation_id}/assign`
+  (`{"assignee_user_id": id|null, "expected_revision"}`): compare and set
+  on `assignment_revision`; a stale revision is 409 `assignment_changed`,
+  a colleague's conversation for staff 403 `assigned_to_colleague`, a
+  non-member 422 `not_a_member` (`ConversationAssignmentView`).
+- **Added** `GET` (owners and staff) and `PUT` (owners)
+  `…/inbox/settings`: auto-assignment of new handoffs and requests, to
+  chosen members or else by workload.
+- **Added** `GET·POST …/conversations/{conversation_id}/notes` and
+  `DELETE …/notes/{note_id}` (204; the author or an owner, else 403
+  `not_note_author`): internal notes, never sent to the model or the
+  customer.
+- **Added** `GET` (owners and staff), `POST` (201), `PUT` and `DELETE`
+  (204) `…/quick-replies[/{quick_reply_id}]` (owners): saved replies with
+  one variant per language (422 `unknown_variable` or
+  `duplicate_language`, 409 `shortcut_taken` or `too_many_quick_replies`),
+  and
+  `GET …/conversations/{conversation_id}/quick-replies`: each reply in the
+  conversation's language with `{name}`, `{booking_time}` and
+  `{business_name}` filled in and `missing_variables`.
+- **Changed** the contact export (`ContactRecords`) has `notes`; exported
+  conversations carry the assignment fields.
+
 ## 2026-10-03 — guided launch: one-call creation, setup progress, starter answers, "Apply changes", trial at go-live
 
 Spec: `a4c5c025e7a96d6c`

@@ -41,6 +41,7 @@ class AccountsComplianceUseCases(AccountsUserUseCases):
             booking_repo=self.booking_repo,
             lead_repo=self.lead_repo,
             handoff_repo=self.handoff_repo,
+            note_repo=self.conversation_note_repo,
         )
         self.legal_document_registry = LegalDocumentRegistry()
         self.accept_dpa = AcceptDpaUseCase(
@@ -103,6 +104,7 @@ class AccountsComplianceUseCases(AccountsUserUseCases):
             recording_storage=self.recording_storage,
             audit_log_repo=self.audit_log_repo,
             wall_clock=wall_clock,
+            note_repo=self.conversation_note_repo,
         )
         self.purge_expired_recordings = PurgeExpiredRecordingsUseCase(
             business_repo=self.business_repo,

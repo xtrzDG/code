@@ -45,6 +45,8 @@ from app.schemas.typings.conversations.strings import (
     RecordingStoragePath,
     UnverifiedReplyValue,
 )
+from app.schemas.typings.inbox.booleans import AwaitsTeam, HasOpenRequest
+from app.schemas.typings.inbox.constrained_integers import AssignmentRevision
 from app.schemas.typings.localization.constrained_strings import (
     E164PhoneNumber,
     LanguageTag,
@@ -58,8 +60,22 @@ class ConversationDocument(BaseDocument):
 
     Pinned to one assistant version so its instruction and tools never change
     mid-conversation. `rating` is the owner's or staff's good / bad verdict.
+
+    The team inbox fields belong to their own operations, and a plain save
+    of the conversation keeps their stored values
+    (`ConversationRepoContract.save`): the assignment (`assignee_user_id`,
+    who assigned it, when, and `assignment_revision`, the compare-and-set
+    version) changes only through `ConversationTeamRepoContract.assign`,
+    `has_open_request` (a request of the conversation is new or in
+    progress) only through `set_open_request`. `awaits_team` is derived on
+    every write: the conversation needs a person (HANDOFF) or has an open
+    request. `assigned_by` is None for an automatic assignment.
+
+    Version 2: the team inbox fields (all optional, so version 1 rows read
+    as they are).
     """
 
+    schema_version: SchemaVersion = SchemaVersion("2")
     id: ConversationId = Field(default_factory=ConversationId)
     business_id: BusinessId
     contact_id: ContactId
@@ -74,6 +90,12 @@ class ConversationDocument(BaseDocument):
     rating: ConversationRating | None = None
     rated_by: UserId | None = None
     rated_at: Microseconds | None = None
+    assignee_user_id: UserId | None = None
+    assigned_by: UserId | None = None
+    assigned_at: Microseconds | None = None
+    assignment_revision: AssignmentRevision = AssignmentRevision(0)
+    has_open_request: HasOpenRequest = False
+    awaits_team: AwaitsTeam = False
 
 
 class ToolCallRecord(PersistentDocument):

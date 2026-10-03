@@ -153,6 +153,7 @@ _.anonymized_handoffs  # app/schemas/dto/compliance.py
 _.anonymized_leads  # app/schemas/dto/compliance.py
 _.current_document_version  # app/schemas/dto/compliance.py
 _.deleted_messages  # app/schemas/dto/compliance.py
+_.deleted_notes  # app/schemas/dto/compliance.py
 _.document_url  # app/schemas/dto/compliance.py
 _.entities  # app/schemas/dto/compliance.py
 _.erased_calls  # app/schemas/dto/compliance.py
@@ -232,3 +233,11 @@ _.is_whatsapp_connected  # app/schemas/dto/calls/call_settings.py
 _.template_previews  # app/schemas/dto/calls/call_settings.py
 _.notified_count  # app/schemas/dto/calls/call_summaries.py
 _.text_back_status  # app/schemas/dto/calls/missed_calls.py
+
+# The team inbox's views: fields the cabinet reads (R6 inbox UI).
+_.is_assigned_automatically  # app/schemas/dto/inbox/assignment.py, inbox_views.py
+_.assignment  # app/schemas/dto/inbox/assignment.py
+_.author_name  # app/schemas/dto/inbox/conversation_notes.py
+_.awaiting_count  # app/schemas/dto/inbox/inbox_views.py
+_.variables  # app/schemas/dto/inbox/quick_replies.py
+_.missing_variables  # app/schemas/dto/inbox/quick_replies.py

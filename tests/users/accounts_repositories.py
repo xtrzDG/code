@@ -23,6 +23,7 @@ from app.repositories.conversation_repositories import (
     LlmTurnRepository,
     MessageRepository,
 )
+from app.repositories.inbox_repositories import ConversationNoteRepository
 from app.repositories.user_repositories import (
     OtpChallengeRepository,
     UserRepository,
@@ -34,6 +35,7 @@ from app.schemas.domain.bookings import BookingDocument, LeadDocument
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.compliance import AuditLogEntryDocument, DpaAcceptanceDocument
 from app.schemas.domain.contacts import ContactDocument
+from app.schemas.domain.conversation_notes import ConversationNoteDocument
 from app.schemas.domain.conversations import (
     CallDocument,
     ConversationDocument,
@@ -124,6 +126,11 @@ class AccountsRepositories:
         )
         self.handoff_repo = HandoffRepository(
             InMemoryDocumentCollectionAdapter[HandoffDocument](HandoffDocument)
+        )
+        self.conversation_note_repo = ConversationNoteRepository(
+            InMemoryDocumentCollectionAdapter[ConversationNoteDocument](
+                ConversationNoteDocument
+            )
         )
         self.subscription_repo = SubscriptionRepository(
             InMemoryDocumentCollectionAdapter[SubscriptionDocument](

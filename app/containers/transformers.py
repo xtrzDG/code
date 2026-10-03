@@ -38,6 +38,7 @@ from app.transformers.conversations.conversation_summary_transformer import (
 from app.transformers.conversations.message_view_transformer import (
     MessageViewTransformer,
 )
+from app.transformers.inbox.inbox_item_transformer import InboxItemTransformer
 from app.transformers.notifications.booking_cancelled_notification_transformer import (  # noqa: E501
     BookingCancelledNotificationTransformer,
 )
@@ -132,6 +133,10 @@ class TransformersContainer(containers.DeclarativeContainer):
     )
     message_view_transformer: Singleton[MessageViewTransformer] = Singleton(
         MessageViewTransformer
+    )
+    # The team inbox's staff-safe rows.
+    inbox_item_transformer: Singleton[InboxItemTransformer] = Singleton(
+        InboxItemTransformer
     )
 
     # --- Billing texts.

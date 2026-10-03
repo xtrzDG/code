@@ -28,6 +28,7 @@ from app.schemas.domain.channel_receipts import ChannelMessageReceiptDocument
 from app.schemas.domain.channels import ChannelDocument
 from app.schemas.domain.compliance import AuditLogEntryDocument, DpaAcceptanceDocument
 from app.schemas.domain.contacts import ContactDocument
+from app.schemas.domain.conversation_notes import ConversationNoteDocument
 from app.schemas.domain.conversations import (
     CallDocument,
     ConversationDocument,
@@ -36,6 +37,7 @@ from app.schemas.domain.conversations import (
 )
 from app.schemas.domain.handoffs import HandoffDocument, UnansweredQuestionDocument
 from app.schemas.domain.inbound_events import InboundEventDocument
+from app.schemas.domain.inbox_settings import InboxSettingsDocument
 from app.schemas.domain.jobs import (
     PeriodicJobRunDocument,
     QueuedJobDocument,
@@ -52,6 +54,7 @@ from app.schemas.domain.package_usage import PackageUsageWarningDocument
 from app.schemas.domain.payments import PaymentOrderDocument
 from app.schemas.domain.profiles import BusinessProfileDocument
 from app.schemas.domain.push_subscriptions import PushSubscriptionDocument
+from app.schemas.domain.quick_replies import QuickReplyLibraryDocument
 from app.schemas.domain.resources import ResourceDocument, ScheduleExceptionDocument
 from app.schemas.domain.setup import (
     ActivationEventDocument,
@@ -115,6 +118,17 @@ DOCUMENT_COLLECTIONS: tuple[DocumentCollectionDefinition, ...] = (
     DocumentCollectionDefinition(DocumentCollectionName("handoffs"), HandoffDocument),
     DocumentCollectionDefinition(
         DocumentCollectionName("unanswered_questions"), UnansweredQuestionDocument
+    ),
+    # The team inbox: internal notes on conversations, each business's saved
+    # replies and its auto-assignment settings (1053).
+    DocumentCollectionDefinition(
+        DocumentCollectionName("conversation_notes"), ConversationNoteDocument
+    ),
+    DocumentCollectionDefinition(
+        DocumentCollectionName("quick_reply_libraries"), QuickReplyLibraryDocument
+    ),
+    DocumentCollectionDefinition(
+        DocumentCollectionName("inbox_settings"), InboxSettingsDocument
     ),
     # Assistant versions and autotests.
     DocumentCollectionDefinition(

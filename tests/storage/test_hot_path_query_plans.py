@@ -89,6 +89,6 @@ def test_hot_query_uses_its_index(
         ], f"{query.name}: sequential scan of {query.table}: {plan}"
         assert any(
             node["Node Type"] in INDEX_NODE_TYPES
-            and node.get("Index Name") == query.index
+            and node.get("Index Name") in {query.index, *query.alternative_indexes}
             for node in nodes
         ), f"{query.name}: {query.index} is not used: {plan}"

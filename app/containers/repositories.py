@@ -10,6 +10,7 @@ from app.containers.adapters.notification_collections_container import (
     NotificationCollectionsContainer,
 )
 from app.containers.call_repositories import CallRepositoriesContainer
+from app.containers.inbox_repositories import InboxRepositoriesContainer
 from app.repositories.activation_probe_repository import ActivationProbeRepository
 from app.repositories.assistant_repositories import (
     AssistantVersionRepository,
@@ -56,6 +57,7 @@ from app.repositories.delivery_repositories import (
     InboundEventRepository,
     OutboundMessageRepository,
 )
+from app.repositories.inbox_work_repository import InboxWorkRepository
 from app.repositories.job_repositories import (
     PeriodicJobRunRepository,
     QueuedJobRepository,
@@ -87,11 +89,8 @@ from app.repositories.user_repositories import (
 from app.repositories.worker_heartbeat_repository import WorkerHeartbeatRepository
 
 
-class RepositoriesContainer(CallRepositoriesContainer):
-    """
-    The repositories over the document collections (singletons). The
-    repositories of what follows a call come from `CallRepositoriesContainer`.
-    """
+class RepositoriesContainer(CallRepositoriesContainer, InboxRepositoriesContainer):
+    """The repositories (singletons); the call and inbox ones come from the bases."""
 
     collections: DocumentCollectionsContainer = DependenciesContainer()  # type: ignore[assignment]
     notification_collections: NotificationCollectionsContainer = DependenciesContainer()  # type: ignore[assignment]
@@ -160,6 +159,11 @@ class RepositoriesContainer(CallRepositoriesContainer):
     lead_repo: Singleton[LeadRepository] = Singleton(
         LeadRepository,
         collection=collections.lead_collection,
+    )
+    inbox_work_repo: Singleton[InboxWorkRepository] = Singleton(
+        InboxWorkRepository,
+        handoff_collection=collections.handoff_collection,
+        lead_collection=collections.lead_collection,
     )
     handoff_repo: Singleton[HandoffRepository] = Singleton(
         HandoffRepository,

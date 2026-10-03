@@ -27,6 +27,12 @@ from app.use_cases.handoffs.record_unanswered_question_use_case import (
     RecordUnansweredQuestionUseCase,
 )
 from app.use_cases.handoffs.resolve_handoff_use_case import ResolveHandoffUseCase
+from app.use_cases.inbox.assignment.auto_assign_conversation_use_case import (
+    AutoAssignConversationUseCase,
+)
+from app.use_cases.inbox.assignment.refresh_open_request_use_case import (
+    RefreshOpenRequestUseCase,
+)
 from app.use_cases.insights.get_attention_counts_use_case import (
     GetAttentionCountsUseCase,
 )
@@ -55,6 +61,25 @@ class OperationsWorld(OperationsBookingFactories):
             staff_brief_transformer=StaffAlertBriefTransformer(self.resolver),
             staff_alerts=self.staff_alerts,
             wall_clock=self.clock.wall_clock,
+            refresh_open_request=self.refresh_open_request(),
+            auto_assign=self.auto_assign(),
+        )
+
+    def refresh_open_request(self) -> RefreshOpenRequestUseCase:
+        return RefreshOpenRequestUseCase(
+            conversation_repo=self.conversation_repo,
+            inbox_work_repo=self.inbox_work_repo,
+            wall_clock=self.clock.wall_clock,
+        )
+
+    def auto_assign(self) -> AutoAssignConversationUseCase:
+        return AutoAssignConversationUseCase(
+            business_repo=self.business_repo,
+            conversation_repo=self.conversation_repo,
+            inbox_settings_repo=self.inbox_settings_repo,
+            audit_log_repo=self.audit_repo,
+            live_events=self.live_events,
+            wall_clock=self.clock.wall_clock,
         )
 
     def list_leads(self) -> ListLeadsUseCase:
@@ -71,6 +96,7 @@ class OperationsWorld(OperationsBookingFactories):
             lead_repo=self.lead_repo,
             live_events=self.live_events,
             wall_clock=self.clock.wall_clock,
+            refresh_open_request=self.refresh_open_request(),
         )
 
     def handoff_to_human(self) -> HandoffToHumanUseCase:

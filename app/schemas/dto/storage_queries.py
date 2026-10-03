@@ -85,7 +85,8 @@ class DocumentLookup(ImmutableDTO):
 class DocumentFilter(ImmutableDTO):
     """
     The conditions of a page or an aggregation: every match, among, and
-    exclusion and every range must hold.
+    exclusion and every range must hold, and every `missing` field (a TEXT
+    or FILTER_TEXT column) must be absent or null.
     """
 
     matches: tuple[DocumentFieldMatch, ...] = Field(
@@ -99,6 +100,9 @@ class DocumentFilter(ImmutableDTO):
     )
     ranges: tuple[DocumentFieldRange, ...] = Field(
         default_factory=tuple[DocumentFieldRange, ...]
+    )
+    missing: tuple[DocumentFieldPath, ...] = Field(
+        default_factory=tuple[DocumentFieldPath, ...]
     )
 
 

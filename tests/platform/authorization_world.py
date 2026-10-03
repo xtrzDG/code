@@ -27,6 +27,7 @@ from tests.e2e.harness import Workshop, bearer, start_workshop
 from tests.e2e.harness_settings import E2E_ENVIRONMENT
 from tests.e2e.workshop_container import OverridableProvider, replace_provider
 from tests.operations.fake_google import FakeGoogle
+from tests.platform.authorization_inbox import inbox_path_values
 from tests.platform.authorization_notifications import notification_path_values
 
 type JsonObject = dict[str, Any]
@@ -200,6 +201,15 @@ def discover_path_values(
     values.update(
         notification_path_values(
             world.workshop, world.storage_scope, world.business_b, world.owner_b
+        )
+    )
+    values.update(
+        inbox_path_values(
+            world.workshop,
+            world.business_b,
+            values["conversation_id"],
+            world.owner_b,
+            world.staff_b,
         )
     )
     return values
