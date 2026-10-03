@@ -54,7 +54,7 @@ class StartWebsiteImportUseCase(
     connects), then at most 10 imports per hour per business are allowed,
     and only one at a time. The worker reads the site in the default lane,
     one import per business at a time; the cabinet follows it through live
-    events and GET .../knowledge/import-website.
+    events and GET .../knowledge/import-website/current.
     """
 
     def __init__(

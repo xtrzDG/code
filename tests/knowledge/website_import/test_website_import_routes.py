@@ -41,7 +41,7 @@ def test_an_import_is_started_followed_and_reviewed_over_http() -> None:
     client = build_client(world)
     url = f"/v1/businesses/{world.business.id}/knowledge/import-website"
 
-    assert client.get(url, headers=OWNER).json() == {"current": None}
+    assert client.get(f"{url}/current", headers=OWNER).json() == {"current": None}
 
     started = client.post(url, json={"url": "https://cafe.example"}, headers=STAFF)
     assert started.status_code == 202
@@ -50,7 +50,9 @@ def test_an_import_is_started_followed_and_reviewed_over_http() -> None:
     assert body["id"].startswith("website_import_")
 
     world.run_queued()
-    current: dict[str, Any] = client.get(url, headers=OWNER).json()["current"]
+    current: dict[str, Any] = client.get(f"{url}/current", headers=OWNER).json()[
+        "current"
+    ]
     assert current["id"] == body["id"]
     assert current["status"] == "done"
     assert current["pages_read"] == 5

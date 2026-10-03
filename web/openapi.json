@@ -4996,6 +4996,24 @@
         "title": "CurrentUserView",
         "type": "object"
       },
+      "CurrentWebsiteImport": {
+        "additionalProperties": false,
+        "description": "The business's latest website import, or null when it never had one.",
+        "properties": {
+          "current": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/WebsiteImportView"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "title": "CurrentWebsiteImport",
+        "type": "object"
+      },
       "DashboardDay": {
         "additionalProperties": false,
         "description": "What started on one local day of the dashboard period.",
@@ -6076,6 +6094,20 @@
               }
             ],
             "title": "Printed Price"
+          },
+          "source_page_url": {
+            "anyOf": [
+              {
+                "maxLength": 2048,
+                "minLength": 10,
+                "pattern": "^https?://[^\\s/?#]+([/?#][^\\s]*)?$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Page Url"
           }
         },
         "required": [
@@ -10809,6 +10841,138 @@
           "is_platform_admin"
         ],
         "title": "UserView",
+        "type": "object"
+      },
+      "WebsiteImportProblem": {
+        "description": "Why a website import failed (`problem` of the import, with a\nmachine-readable `problem_detail` such as \"not_public\" or\n\"http_status:404\"):\n\n- website_link_invalid: not a public http(s) address on port 80/443;\n- website_link_unreachable: the first page could not be fetched\n  (unknown host, timeout, no connection, HTTP error, redirects);\n- website_link_unreadable: the first page is not a web page or text,\n  or is too large;\n- website_reader_unavailable: no page could be read because the\n  reading model failed;\n- website_import_interrupted: the import stopped and was not finished\n  (the worker failed repeatedly).",
+        "enum": [
+          "website_link_invalid",
+          "website_link_unreachable",
+          "website_link_unreadable",
+          "website_reader_unavailable",
+          "website_import_interrupted"
+        ],
+        "title": "WebsiteImportProblem",
+        "type": "string"
+      },
+      "WebsiteImportStatus": {
+        "description": "Where a website import stands: waiting for a worker, reading pages,\ndone (its drafts wait for the owner's review), or failed.",
+        "enum": [
+          "queued",
+          "reading",
+          "done",
+          "failed"
+        ],
+        "title": "WebsiteImportStatus",
+        "type": "string"
+      },
+      "WebsiteImportView": {
+        "additionalProperties": false,
+        "description": "One website import and how far it got. `pages_planned` is 0 until the\nfirst page was read (then it is the number of pages the import will\nread, at most 15); `items_found` counts the drafts so far. When the\nimport is done, `result` holds its drafts still waiting for review (the\nsame shape as a menu import: confirm them with\nPOST .../knowledge/import/confirm, discard the rest with\nDELETE .../knowledge/import/{batch_id}). A failed import names its\n`problem` and a machine-readable `problem_detail`.",
+        "properties": {
+          "business_id": {
+            "title": "Business Id",
+            "type": "string"
+          },
+          "finished_at": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Finished At"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "items_found": {
+            "minimum": 0.0,
+            "title": "Items Found",
+            "type": "integer"
+          },
+          "pages_planned": {
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Pages Planned",
+            "type": "integer"
+          },
+          "pages_read": {
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Pages Read",
+            "type": "integer"
+          },
+          "pages_skipped": {
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Pages Skipped",
+            "type": "integer"
+          },
+          "problem": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/WebsiteImportProblem"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "problem_detail": {
+            "anyOf": [
+              {
+                "maxLength": 120,
+                "minLength": 1,
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:/+\\-]*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Problem Detail"
+          },
+          "result": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MenuImportResult"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "started_at": {
+            "title": "Started At",
+            "type": "integer"
+          },
+          "status": {
+            "$ref": "#/components/schemas/WebsiteImportStatus"
+          },
+          "url": {
+            "maxLength": 2048,
+            "minLength": 10,
+            "pattern": "^https?://[^\\s/]+(/[^\\s]*)?$",
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "business_id",
+          "status",
+          "url",
+          "pages_planned",
+          "pages_read",
+          "pages_skipped",
+          "items_found",
+          "started_at"
+        ],
+        "title": "WebsiteImportView",
         "type": "object"
       },
       "Weekday": {
@@ -22191,7 +22355,7 @@
                 }
               }
             },
-            "description": "The source cannot be read. For a link, reasons[].code is menu_link_invalid (not a public http(s) address), menu_link_unreachable (unknown host, timeout, no connection, HTTP error, redirect trouble) or menu_link_unreadable (too large, not a photo, PDF, text or web page), with details such as http_status:404 or media_type:application/zip."
+            "description": "The source cannot be read. For a link, reasons[].code is menu_link_invalid (not a public http(s) address on port 80 or 443), menu_link_unreachable (unknown host, timeout, no connection, HTTP error, redirect trouble) or menu_link_unreadable (too large, not a photo, PDF, text or web page), with details such as http_status:404 or media_type:application/zip."
           },
           "429": {
             "content": {
@@ -22215,6 +22379,267 @@
           }
         },
         "summary": "Import Menu",
+        "tags": [
+          "knowledge"
+        ]
+      }
+    },
+    "/v1/businesses/{business_id}/knowledge/import-website": {
+      "post": {
+        "operationId": "start_website_import_v1_businesses__business_id__knowledge_import_website_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "description": "HTTP body: the address of the business's website (its home page).",
+                "properties": {
+                  "url": {
+                    "maxLength": 2048,
+                    "minLength": 10,
+                    "pattern": "^https?://[^\\s/]+(/[^\\s]*)?$",
+                    "title": "Url",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "url"
+                ],
+                "title": "WebsiteImportRequest",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WebsiteImportView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The business's last website import is still reading its site (reasons[].code website_import_running)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The address cannot be read: reasons[].code website_link_invalid with details not_http, credentials_in_url, port_not_allowed or not_public (only public http(s) addresses on ports 80 and 443)."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The business started 10 website imports in the last hour (Retry-After says when the next one is allowed)."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Start Website Import",
+        "tags": [
+          "knowledge"
+        ]
+      }
+    },
+    "/v1/businesses/{business_id}/knowledge/import-website/current": {
+      "get": {
+        "operationId": "get_website_import_v1_businesses__business_id__knowledge_import_website_current_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CurrentWebsiteImport"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Get Website Import",
         "tags": [
           "knowledge"
         ]

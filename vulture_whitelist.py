@@ -225,3 +225,9 @@ _.next_action  # app/schemas/dto/setup/setup_progress.py
 _.applied_sections  # app/schemas/dto/setup/starter_answers.py
 _.kept_sections  # app/schemas/dto/setup/starter_answers.py
 _.offer_examples  # app/schemas/dto/setup/starter_answers.py
+_.source_page_url  # app/schemas/dto/menu_import.py
+
+# Hooks a library calls: httpcore asks a network backend for Unix sockets,
+# HTMLParser calls handle_startendtag for "<br/>"-style tags.
+_.connect_unix_socket  # app/clients/http/vetting_network_backend.py
+_.handle_startendtag  # app/utilities/knowledge/website/html_to_text.py

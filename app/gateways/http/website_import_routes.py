@@ -65,7 +65,7 @@ def build_website_import_router(
                  queue the reading of the site (202): its import id and
                  status; progress arrives as knowledge_import.progress live
                  events
-        GET  /v1/businesses/{business_id}/knowledge/import-website
+        GET  /v1/businesses/{business_id}/knowledge/import-website/current
                  the current import, with its drafts once it is done
     """
 
@@ -90,7 +90,9 @@ def build_website_import_router(
             )
         )
 
-    @router.get("/v1/businesses/{business_id}/knowledge/import-website")
+    # Not .../knowledge/import-website itself: GET .../knowledge/{item_id}
+    # would take that path for a knowledge item.
+    @router.get("/v1/businesses/{business_id}/knowledge/import-website/current")
     def get_website_import(
         business_id: str,
         user_id: Annotated[UserId, Depends(current_user)],
