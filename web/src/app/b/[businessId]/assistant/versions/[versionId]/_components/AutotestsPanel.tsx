@@ -25,14 +25,17 @@ export function AutotestsPanel({
   isRunning,
   canRun,
   onRun,
+  initialOutcome = "all",
 }: {
   run: AutotestRunView | null;
   isRunning: boolean;
   canRun: boolean;
   onRun: () => void;
+  /** "problems": open with only the checks that did not pass. */
+  initialOutcome?: ResultFilter;
 }) {
   const { t, locale } = useI18n();
-  const [outcome, setOutcome] = useState<ResultFilter>("all");
+  const [outcome, setOutcome] = useState<ResultFilter>(initialOutcome);
   const [language, setLanguage] = useState<string>("all");
 
   if (!run) {

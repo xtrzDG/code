@@ -2,6 +2,7 @@
 
 import { useSyncExternalStore } from "react";
 
+import { useApplyChanges } from "@/components/assistant/ApplyChangesContext";
 import { useBusiness } from "@/components/business/BusinessContext";
 import { IconChat, IconSparkles } from "@/components/icons";
 import { Button, Card, EmptyState, ErrorState, LoadingRegion } from "@/components/ui";
@@ -22,7 +23,8 @@ const subscribeNever = () => () => {};
 export function TestChatScreen({ initialVersionId }: { initialVersionId: string | null }) {
   const { t } = useI18n();
   const { business, isOwner } = useBusiness();
-  const { versions, openBuild } = useAssistant();
+  const { versions } = useAssistant();
+  const applyChanges = useApplyChanges();
   const list = sortVersions(versions.data ?? []);
   // The chat restores its conversation from this tab's storage, so it is rendered in the browser only.
   const isBrowser = useSyncExternalStore(subscribeNever, () => true, () => false);
@@ -50,8 +52,8 @@ export function TestChatScreen({ initialVersionId }: { initialVersionId: string 
           description={isOwner ? t("assistant.chat.noVersionsDescription") : t("assistant.versions.emptyStaff")}
           action={
             isOwner ? (
-              <Button leadingIcon={<IconSparkles className="size-4" aria-hidden />} onClick={openBuild}>
-                {t("assistant.build.open")}
+              <Button leadingIcon={<IconSparkles className="size-4" aria-hidden />} onClick={applyChanges.open} aria-haspopup="dialog">
+                {t("applyChanges.sheet.apply")}
               </Button>
             ) : undefined
           }

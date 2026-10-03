@@ -11,7 +11,6 @@ import { KnowledgeSearch } from "./_components/items/KnowledgeSearch";
 import { KnowledgeToolbar } from "./_components/items/KnowledgeToolbar";
 import { KnowledgeItemEditor } from "./_components/KnowledgeItemEditor";
 import { KnowledgeRowsSkeleton } from "./_components/KnowledgeSkeleton";
-import { ReassemblyNotice } from "./_components/ReassemblyNotice";
 import { useKnowledgeItems } from "./_lib/useKnowledgeItems";
 
 /**
@@ -46,7 +45,6 @@ export function KnowledgeItemsScreen() {
           {t("knowledge.items.questionsHint")}
         </Alert>
       ) : null}
-      {list.hasChanges ? <ReassemblyNotice /> : null}
 
       <KnowledgeSearch onOpen={list.openById} />
 

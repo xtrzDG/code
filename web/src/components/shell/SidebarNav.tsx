@@ -73,7 +73,7 @@ function SubPages({ pages, onNavigate }: { pages: readonly ShellSubLink[]; onNav
               aria-expanded={isAdvancedOpen}
               aria-controls={advancedId}
               onClick={() => setShowAdvanced((value) => !value)}
-              className="flex h-8 w-full cursor-pointer items-center gap-1.5 ps-3 pe-2 text-xs font-medium tracking-wide text-ink-subtle uppercase transition-colors hover:text-ink pointer-coarse:h-11"
+              className="flex h-8 w-full cursor-pointer items-center gap-1.5 ps-3 pe-2 text-[0.8125rem] text-ink-subtle transition-colors hover:text-ink pointer-coarse:h-11"
             >
               <IconChevronRight
                 className={cn("size-3.5 transition-transform rtl:-scale-x-100", isAdvancedOpen && "rotate-90 rtl:rotate-90")}

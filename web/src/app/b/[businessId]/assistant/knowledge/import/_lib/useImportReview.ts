@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 
 import { api } from "@/api/client";
+import { queryKeys } from "@/api/queryKeys";
 import { useMutation } from "@/api/useMutation";
 import type { KnowledgeItemDetails, Schema } from "@/api/types";
 import { useBusiness } from "@/components/business/BusinessContext";
@@ -34,11 +35,13 @@ export function useImportReview() {
   const [confirmDiscard, setConfirmDiscard] = useState(false);
   const [done, setDone] = useState<{ added: number } | null>(null);
 
-  const confirm = useMutation((itemIds: string[]) =>
-    api.POST("/v1/businesses/{business_id}/knowledge/import/confirm", {
-      params: { path: { business_id: business.id } },
-      body: { item_ids: itemIds },
-    }),
+  const confirm = useMutation(
+    (itemIds: string[]) =>
+      api.POST("/v1/businesses/{business_id}/knowledge/import/confirm", {
+        params: { path: { business_id: business.id } },
+        body: { item_ids: itemIds },
+      }),
+    { invalidate: [queryKeys.assistant.pendingAll(business.id)] },
   );
   const discardBatch = useMutation(
     (batchId: string) =>

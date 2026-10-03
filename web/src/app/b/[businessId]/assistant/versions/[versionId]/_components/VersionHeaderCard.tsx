@@ -65,6 +65,8 @@ export function VersionHeaderCard({
             href={`${base}?version=${encodeURIComponent(details.id)}`}
             variant="secondary"
             leadingIcon={<IconChat className="size-4" aria-hidden />}
+            // One line: "Проверить в чате" must not break between its words.
+            className="whitespace-nowrap"
           >
             {t("assistant.detail.testInChat")}
           </ButtonLink>

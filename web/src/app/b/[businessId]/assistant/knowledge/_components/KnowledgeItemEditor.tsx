@@ -3,6 +3,7 @@
 import { useId, useState, type FormEvent } from "react";
 
 import { api } from "@/api/client";
+import { queryKeys } from "@/api/queryKeys";
 import { useMutation } from "@/api/useMutation";
 import type { KnowledgeItemDetails, KnowledgeItemKind } from "@/api/types";
 import { useBusiness, useBusinessFormat } from "@/components/business/BusinessContext";
@@ -79,17 +80,23 @@ export function KnowledgeItemEditor({
   const [form, setForm] = useState<KnowledgeForm>(initial);
   const [errors, setErrors] = useState<KnowledgeFormErrors>({});
 
-  const create = useMutation((body: KnowledgeItemCreateBody) =>
-    api.POST("/v1/businesses/{business_id}/knowledge", {
-      params: { path: { business_id: business.id }, query: { language: locale } },
-      body,
-    }),
+  // What the assistant knows changed: the changes customers do not get yet are read again.
+  const settled = { invalidate: [queryKeys.assistant.pendingAll(business.id)] };
+  const create = useMutation(
+    (body: KnowledgeItemCreateBody) =>
+      api.POST("/v1/businesses/{business_id}/knowledge", {
+        params: { path: { business_id: business.id }, query: { language: locale } },
+        body,
+      }),
+    settled,
   );
-  const update = useMutation((itemId: string, body: KnowledgeItemPatchBody) =>
-    api.PATCH("/v1/businesses/{business_id}/knowledge/{item_id}", {
-      params: { path: { business_id: business.id, item_id: itemId }, query: { language: locale } },
-      body,
-    }),
+  const update = useMutation(
+    (itemId: string, body: KnowledgeItemPatchBody) =>
+      api.PATCH("/v1/businesses/{business_id}/knowledge/{item_id}", {
+        params: { path: { business_id: business.id, item_id: itemId }, query: { language: locale } },
+        body,
+      }),
+    settled,
   );
 
   const change = (patch: Partial<KnowledgeForm>) => {

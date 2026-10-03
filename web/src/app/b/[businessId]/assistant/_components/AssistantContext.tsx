@@ -8,7 +8,7 @@ import type { AssistantVersionSummary } from "@/lib/assistant/versions";
 export interface AssistantContextValue {
   /** The version history (newest first), shared by every Assistant sub-page. */
   versions: Query<AssistantVersionSummary[]>;
-  /** Opens "Build a new version" (owners). */
+  /** Opens "Build a new version" (owners, under Advanced: the versions page). */
   openBuild: () => void;
 }
 

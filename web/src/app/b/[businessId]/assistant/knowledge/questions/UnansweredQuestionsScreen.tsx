@@ -30,7 +30,6 @@ import type { MessageKey } from "@/i18n/translate";
 import { languageName } from "@/lib/format";
 import { MAX_BODY_LENGTH, MAX_TITLE_LENGTH } from "@/lib/knowledge/form";
 
-import { ReassemblyNotice } from "../_components/ReassemblyNotice";
 
 type UnansweredQuestion = Schema<"UnansweredQuestionDetails">;
 type AnsweredQuestionResult = Schema<"AnsweredQuestionResult">;
@@ -48,7 +47,6 @@ export function UnansweredQuestionsScreen() {
   const [includeResolved, setIncludeResolved] = useState(false);
   const [includeSandbox, setIncludeSandbox] = useState(false);
   const [answering, setAnswering] = useState<UnansweredQuestion | null>(null);
-  const [answeredCount, setAnsweredCount] = useState(0);
 
   const questions = useCursorPage<UnansweredQuestion, Schema<"UnansweredQuestionPage">>(
     queryKeys.knowledge.questions(business.id, includeResolved, includeSandbox),
@@ -71,7 +69,6 @@ export function UnansweredQuestionsScreen() {
 
   return (
     <div className="space-y-6">
-      {answeredCount > 0 ? <ReassemblyNotice /> : null}
       {!isOwner ? <Alert tone="info">{t("knowledge.questions.ownerOnly")}</Alert> : null}
 
       <Card padded={false}>
@@ -162,7 +159,6 @@ export function UnansweredQuestionsScreen() {
                 ? items.map((item) => (item.id === result.question.id ? result.question : item))
                 : items.filter((item) => item.id !== result.question.id),
             );
-            setAnsweredCount((count) => count + 1);
             setAnswering(null);
           }}
         />

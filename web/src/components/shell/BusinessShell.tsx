@@ -10,7 +10,8 @@
  * conversation takes the whole phone screen, its own bar on top. Before
  * that: one big "Create an AI assistant" entry, and every page shows the
  * invitation to create it. The setup flow itself (/b/{id}/setup) is full
- * screen, without the frame.
+ * screen, without the frame. Over the pages, owners see the changes their
+ * customers do not get yet, with "Apply changes" (components/assistant).
  */
 
 import { usePathname } from "next/navigation";
@@ -21,6 +22,8 @@ import { sectionBadge, pageBadge } from "@/lib/inboxBadges";
 import { ADMIN_PATH, businessLocation, businessPath, isConversationPath, type BusinessPage } from "@/lib/navigation";
 import { SECTION_LABELS, canOpenPage, pageLabel, sectionOf, visiblePages, visibleSections, type BusinessSection } from "@/lib/sections";
 
+import { ApplyChangesProvider } from "../assistant/ApplyChangesContext";
+import { PendingChangesBanner } from "../assistant/PendingChangesBanner";
 import { BusinessSwitcher } from "../BusinessSwitcher";
 import { useBusiness } from "../business/BusinessContext";
 import { IconCalendar, IconGauge, IconInbox, IconSettings, IconShield, IconSparkles, type IconProps } from "../icons";
@@ -111,7 +114,15 @@ function CabinetFrame({ children, prefetch, initialCollapsed }: { children: Reac
         />
       )}
     >
-      {page && !canOpenPage(page, role) ? <OwnersOnlyPage /> : children}
+      {page && !canOpenPage(page, role) ? (
+        <OwnersOnlyPage />
+      ) : (
+        <>
+          {/* Changes customers do not get yet; an open conversation keeps the whole phone screen. */}
+          {isConversationPath(pathname) ? null : <PendingChangesBanner />}
+          {children}
+        </>
+      )}
     </ShellFrame>
   );
 }
@@ -167,9 +178,11 @@ export function BusinessShell({
       {isTunnel ? (
         children
       ) : isSetUp ? (
-        <CabinetFrame prefetch={prefetch} initialCollapsed={initialCollapsed}>
-          {children}
-        </CabinetFrame>
+        <ApplyChangesProvider>
+          <CabinetFrame prefetch={prefetch} initialCollapsed={initialCollapsed}>
+            {children}
+          </CabinetFrame>
+        </ApplyChangesProvider>
       ) : (
         <SetupFrame initialCollapsed={initialCollapsed} />
       )}

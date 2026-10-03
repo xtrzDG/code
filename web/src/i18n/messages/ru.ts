@@ -4,6 +4,7 @@ import { contentRu } from "./sections/content";
 import { workspaceRu } from "./sections/workspace";
 import { shellRu } from "./sections/shell";
 import { setupFlowRu } from "./sections/setup";
+import { assistantFlowRu } from "./sections/assistant";
 import { onboardingRu } from "./onboarding/ru";
 import { landingRu } from "./landing/ru";
 
@@ -187,4 +188,5 @@ export const ru: Messages = {
   ...workspaceRu,
   ...shellRu,
   ...setupFlowRu,
+  ...assistantFlowRu,
 };

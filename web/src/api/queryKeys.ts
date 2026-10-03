@@ -141,6 +141,10 @@ export const queryKeys = {
     version: (businessId: Id, versionId: Id) => ["assistant", businessId, "version", versionId] as const,
     autotestRun: (businessId: Id, versionId: Id) => ["assistant", businessId, "version", versionId, "run"] as const,
     readiness: (businessId: Id, versionId: Id) => ["assistant", businessId, "version", versionId, "readiness"] as const,
+    /** What customers do not get yet: the changes since the live version. */
+    pending: (businessId: Id, locale: Locale) => ["assistant", businessId, "pending", locale] as const,
+    /** The same in every language: what the assistant knows changed. */
+    pendingAll: (businessId: Id) => ["assistant", businessId, "pending"] as const,
   },
 
   setup: {
@@ -151,6 +155,8 @@ export const queryKeys = {
     starters: (businessId: Id, locale: Locale) => ["setup", businessId, "starters", locale] as const,
     /** "Apply changes" (the launch) and its progress. */
     apply: (businessId: Id, locale: Locale) => ["setup", businessId, "apply", locale] as const,
+    /** "Apply changes" in every language (its progress moved on). */
+    applyAll: (businessId: Id) => ["setup", businessId, "apply"] as const,
   },
 
   channels: {

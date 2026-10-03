@@ -47,15 +47,16 @@ export function useKnowledgeItems() {
   const [expanded, setExpanded] = useState<ReadonlySet<KnowledgeItemKind>>(new Set());
   const [editor, setEditor] = useState<{ key: number; target: KnowledgeEditorTarget } | null>(null);
   const [deleting, setDeleting] = useState<KnowledgeItemDetails | null>(null);
-  const [hasChanges, setHasChanges] = useState(false);
-
-  const toggle = useKnowledgeToggle(() => setHasChanges(true));
+  const toggle = useKnowledgeToggle();
   const remove = useMutation(
     (itemId: string) =>
       api.DELETE("/v1/businesses/{business_id}/knowledge/{item_id}", {
         params: { path: { business_id: business.id, item_id: itemId } },
       }),
-    { stale: [queryKeys.knowledge.all(business.id), queryKeys.profile.all(business.id), queryKeys.assistant.all(business.id)] },
+    {
+      stale: [queryKeys.knowledge.all(business.id), queryKeys.profile.all(business.id), queryKeys.assistant.all(business.id)],
+      invalidate: [queryKeys.assistant.pendingAll(business.id)],
+    },
   );
 
   const all = items.items ?? [];
@@ -96,14 +97,12 @@ export function useKnowledgeItems() {
       const deletedId = deleting.id;
       items.updateItems((list) => list.filter((item) => item.id !== deletedId));
       toast.success(t("knowledge.items.deleted", { title: deleting.title }));
-      setHasChanges(true);
       setDeleting(null);
     }
   };
 
   const onSaved = (saved: KnowledgeItemDetails) => {
     replaceItem(saved);
-    setHasChanges(true);
     setEditor(null);
   };
 
@@ -128,7 +127,6 @@ export function useKnowledgeItems() {
     isDeleting: remove.isPending,
     confirmDelete,
     setActive: toggle.setActive,
-    hasChanges,
     defaultKind: filter.kind !== "all" ? filter.kind : (kinds[0] ?? "service"),
   };
 }

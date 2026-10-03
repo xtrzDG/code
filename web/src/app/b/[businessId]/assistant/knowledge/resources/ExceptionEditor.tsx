@@ -3,6 +3,7 @@
 import { useId, useRef, useState, type FormEvent } from "react";
 
 import { api } from "@/api/client";
+import { queryKeys } from "@/api/queryKeys";
 import { useMutation } from "@/api/useMutation";
 import { useBusiness, useBusinessFormat } from "@/components/business/BusinessContext";
 import { IconPlus, IconTrash } from "@/components/icons";
@@ -48,8 +49,10 @@ export function ExceptionEditor({
   const [note, setNote] = useState("");
   const [errors, setErrors] = useState<{ date?: MessageKey; hours?: MessageKey }>({});
 
-  const create = useMutation((body: ScheduleExceptionCreateBody) =>
-    api.POST("/v1/businesses/{business_id}/schedule-exceptions", { params: { path: { business_id: business.id } }, body }),
+  const create = useMutation(
+    (body: ScheduleExceptionCreateBody) =>
+      api.POST("/v1/businesses/{business_id}/schedule-exceptions", { params: { path: { business_id: business.id } }, body }),
+    { invalidate: [queryKeys.assistant.pendingAll(business.id)] },
   );
 
   const submit = async (event: FormEvent) => {

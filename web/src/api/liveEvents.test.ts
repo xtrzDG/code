@@ -49,8 +49,20 @@ describe("live events", () => {
     expect(invalidationsFor(event("lead.changed"), BUSINESS)).toContainEqual(queryKeys.leads.all(BUSINESS));
     expect(invalidationsFor(event("booking.created"), BUSINESS)).toContainEqual(queryKeys.bookings.all(BUSINESS));
     expect(invalidationsFor(event("channel.error"), BUSINESS)).toEqual([counts, queryKeys.channels.all(BUSINESS)]);
-    expect(invalidationsFor(event("autotest.progress"), BUSINESS)).toEqual([queryKeys.assistant.all(BUSINESS)]);
+    expect(invalidationsFor(event("autotest.progress"), BUSINESS)).toEqual([
+      queryKeys.assistant.all(BUSINESS),
+      queryKeys.setup.applyAll(BUSINESS),
+    ]);
     expect(invalidationsFor(event("knowledge_import.progress"), BUSINESS)).toEqual([queryKeys.knowledge.all(BUSINESS)]);
+  });
+
+  it("reload the progress of Apply changes, the versions and the pending changes when it moves on", () => {
+    const keys = invalidationsFor(event("assistant.apply", ["assistant_apply_1"]), BUSINESS);
+
+    expect(keys).toContainEqual(queryKeys.setup.all(BUSINESS));
+    expect(keys).toContainEqual(queryKeys.assistant.all(BUSINESS));
+    expect(keys).toContainEqual(queryKeys.dashboard.all(BUSINESS));
+    expect(keys).not.toContainEqual(queryKeys.inbox.all(BUSINESS));
   });
 
   it("reload only the conversation a message belongs to, never the counts", () => {

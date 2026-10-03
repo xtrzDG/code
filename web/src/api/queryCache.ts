@@ -45,6 +45,7 @@ interface Entry {
 
 export class QueryCache {
   private readonly entries = new Map<string, Entry>();
+  private readonly invalidationListeners = new Set<(prefix: QueryKey) => void>();
   private readonly now: () => number;
   private readonly gcMs: number;
 
@@ -155,6 +156,13 @@ export class QueryCache {
         this.write(entry, { isInvalidated: true });
       }
     }
+    [...this.invalidationListeners].forEach((listener) => listener(prefix));
+  }
+
+  /** Calls `listener` with each prefix marked out of date (views derived from other sections); returns the unsubscribe. */
+  onInvalidate(listener: (prefix: QueryKey) => void): () => void {
+    this.invalidationListeners.add(listener);
+    return () => void this.invalidationListeners.delete(listener);
   }
 
   /** Forgets every entry (tests; a session that ends without a page load). */
@@ -284,9 +292,8 @@ export class QueryCache {
 export const queryCache = new QueryCache();
 
 /**
- * Marks every query under `prefix` as out of date and reloads the ones on
- * screen: `invalidate(queryKeys.leads(businessId))`. Mutations call it after
- * they settle; the live event stream calls it when the server reports a change.
+ * Marks every query under `prefix` as out of date and reloads the ones on screen
+ * (`invalidate(queryKeys.leads(businessId))`): after mutations and live events.
  */
 export function invalidate(prefix: QueryKey, options?: { refetchActive?: boolean }): void {
   queryCache.invalidate(prefix, options);
