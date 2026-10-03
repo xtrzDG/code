@@ -29,6 +29,15 @@ def to_microseconds(day: date) -> Microseconds:
     return Microseconds(int(midnight.timestamp()) * MICROSECONDS_PER_SECOND)
 
 
+def calendar_day(day: MetricsDate) -> date:
+    """The day itself; a day the calendar does not have (02-30) is invalid."""
+
+    try:
+        return date.fromisoformat(str(day))
+    except ValueError as error:
+        raise ValidationFailedError(f"{day} is not a calendar day.") from error
+
+
 def resolve_period(
     first: MetricsDate | None,
     last: MetricsDate | None,
@@ -39,16 +48,16 @@ def resolve_period(
     missing first day 90 days before the last one.
 
     Raises:
-        ValidationFailedError: the first day is after the last one, or the
-            period is longer than two years.
+        ValidationFailedError: a day the calendar does not have, the first
+            day after the last one, or a period longer than two years.
     """
 
     today: date = datetime.fromtimestamp(int(now) / MICROSECONDS_PER_SECOND, UTC).date()
-    last_day: date = today if last is None else date.fromisoformat(str(last))
+    last_day: date = today if last is None else calendar_day(last)
     first_day: date = (
         last_day - timedelta(days=DEFAULT_PERIOD_DAYS - 1)
         if first is None
-        else date.fromisoformat(str(first))
+        else calendar_day(first)
     )
     if first_day > last_day:
         raise ValidationFailedError("The period must start before it ends.")

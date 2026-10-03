@@ -106,8 +106,11 @@ def build_mrr(
 
     by_business: dict[BusinessId, list[ProductEventDocument]] = defaultdict(list)
     for event in sorted(events, key=lambda item: (int(item.occurred_at), item.id)):
-        if event.business_id in in_scope and event.name in BILLING_EVENTS:
-            by_business[event.business_id].append(event)
+        business_id = event.business_id
+        if business_id is None or event.name not in BILLING_EVENTS:
+            continue
+        if business_id in in_scope:
+            by_business[business_id].append(event)
 
     start_total = end_total = paying = 0
     tally = MovementTally()
