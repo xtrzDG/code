@@ -8,7 +8,7 @@ export const knowledgeEn = {
     label: "Knowledge sections",
     items: "Items",
     questions: "Unanswered questions",
-    import: "Import a menu",
+    import: "Import",
     resources: "Resources and hours",
   },
   kindGroups: {

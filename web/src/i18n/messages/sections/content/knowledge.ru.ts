@@ -11,7 +11,7 @@ export const knowledgeRu: Translation<typeof knowledgeEn> = {
     label: "Разделы базы знаний",
     items: "Позиции",
     questions: "Вопросы без ответа",
-    import: "Импорт меню",
+    import: "Импорт",
     resources: "Ресурсы и часы",
   },
   kindGroups: {

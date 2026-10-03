@@ -33,6 +33,8 @@ export function WebsiteImportForm({
   // Null until the owner types: the offered address may arrive after the form.
   const [typed, setTyped] = useState<string | null>(null);
   const [addressError, setAddressError] = useState<MessageKey | null>(null);
+  // The API's refusal belongs to the address it refused: editing hides it.
+  const [isRefusalShown, setRefusalShown] = useState(true);
   const address = typed ?? initialUrl;
 
   const submit = (event: FormEvent<HTMLFormElement>) => {
@@ -47,15 +49,17 @@ export function WebsiteImportForm({
       return;
     }
     setAddressError(null);
+    setRefusalShown(true);
     setTyped(url);
     onStart(url);
   };
 
-  const refusal = startError ? startProblemText(startError) : null;
+  const shownError = isRefusalShown ? startError : null;
+  const refusal = shownError ? startProblemText(shownError) : null;
   const refusalText = refusal
     ? t(refusal.key, refusal.values)
-    : startError
-      ? describeError(startError, t).title
+    : shownError
+      ? describeError(shownError, t).title
       : null;
 
   return (
@@ -78,12 +82,13 @@ export function WebsiteImportForm({
             onChange={(event) => {
               setTyped(event.target.value);
               setAddressError(null);
+              setRefusalShown(false);
             }}
           />
         )}
       </Field>
 
-      {failure && !startError ? (
+      {failure && !shownError ? (
         <Alert tone="danger" title={t("knowledge.website.errors.failedTitle")}>
           {t(failure.key, failure.values)}
         </Alert>

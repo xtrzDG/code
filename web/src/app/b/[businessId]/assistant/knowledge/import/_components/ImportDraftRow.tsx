@@ -7,6 +7,7 @@ import { useI18n } from "@/i18n/client";
 import type { MessageKey } from "@/i18n/translate";
 import { cn } from "@/lib/cn";
 import { confidenceLevel, type ConfidenceLevel, type ImportedMenuItem } from "@/lib/knowledge/menuImport";
+import { kindHasPrice } from "@/lib/knowledge/kinds";
 import { pageLabel } from "@/lib/knowledge/websiteImport";
 
 import { KIND_LABELS } from "../../_components/hooks";
@@ -34,6 +35,13 @@ export function ImportDraftRow({
   const level = confidenceLevel(entry.confidence);
   const checkboxId = `import-${entry.item.id}`;
   const price = entry.item.price_minor !== null && entry.item.price_minor !== undefined ? format.money(entry.item.price_minor) : null;
+  // Questions and rules have no price: no "No price" under them.
+  const priceLine = [
+    price ?? (entry.is_currency_mismatch || !kindHasPrice(entry.item.kind) ? null : t("knowledge.import.noPrice")),
+    entry.item.duration_minutes ? t("knowledge.items.minutes", { count: entry.item.duration_minutes }) : null,
+  ]
+    .filter(Boolean)
+    .join(" · ");
   return (
     <li className={cn("flex items-start gap-3 px-4 py-4 sm:px-6", !isSelected && "bg-surface-muted/40")}>
       <input
@@ -60,10 +68,7 @@ export function ImportDraftRow({
             {entry.item.body}
           </p>
         ) : null}
-        <p className="mt-1.5 text-sm text-ink-subtle">
-          {price ?? (entry.is_currency_mismatch ? null : t("knowledge.import.noPrice"))}
-          {entry.item.duration_minutes ? ` · ${t("knowledge.items.minutes", { count: entry.item.duration_minutes })}` : null}
-        </p>
+        {priceLine ? <p className="mt-1.5 text-sm text-ink-subtle">{priceLine}</p> : null}
         {entry.source_page_url ? (
           <p className="mt-1 truncate text-xs text-ink-subtle">
             <a
