@@ -1,0 +1,11 @@
+{
+  "created_at": 1790000000000000,
+  "device_class": "mobile",
+  "id": "web_vital_sample_3b88bfdc-9d34-432b-8166-a458bf52df8d",
+  "metric": "lcp",
+  "route": "/b/[businessId]/inbox",
+  "schema_version": "1",
+  "updated_at": 1790000000000000,
+  "user_id": "user_b0f32851-eabf-44b3-a3ff-c24c6c260485",
+  "value": 1
+}

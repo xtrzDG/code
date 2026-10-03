@@ -9,6 +9,9 @@ from dependency_injector import providers
 from app.adapters.storage.postgres.document_collection_factory import (
     build_document_collection,
 )
+from app.containers.adapters.analytics_collections_container import (
+    AnalyticsCollectionsContainer,
+)
 from app.containers.adapters.call_adapters_container import CallAdaptersContainer
 from app.containers.adapters.document_collections_container import (
     DocumentCollectionsContainer,
@@ -45,12 +48,14 @@ from app.schemas.domain.jobs import (
     WorkerHeartbeatDocument,
 )
 from app.schemas.domain.key_rotations import KeyRotationDocument
+from app.schemas.domain.product_events import ProductEventDocument
 from app.schemas.domain.profiles import BusinessProfileDocument
 from app.schemas.domain.users import (
     OtpChallengeDocument,
     UserDocument,
     UserSessionDocument,
 )
+from app.schemas.domain.web_vitals import WebVitalSampleDocument
 from app.schemas.exceptions.application_errors import NotFoundError
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.compliance.strings import AuditEntityName
@@ -91,6 +96,10 @@ PLATFORM_DOCUMENT_TYPES: frozenset[type[PersistentDocument]] = frozenset(
         InboundEventDocument,
         # A re-encryption run covers every business at once.
         KeyRotationDocument,
+        # Growth analytics: a sign-in names no business, and the metrics
+        # read every business's steps.
+        ProductEventDocument,
+        WebVitalSampleDocument,
     }
 )
 
@@ -106,6 +115,7 @@ COLLECTION_CONTAINERS = (
     SecurityCollectionsContainer,
     ValueCollectionsContainer,
     FeedbackCollectionsContainer,
+    AnalyticsCollectionsContainer,
 )
 
 

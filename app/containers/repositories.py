@@ -6,6 +6,7 @@ from app.containers.adapters.document_collections_container import (
 from app.containers.adapters.notification_collections_container import (
     NotificationCollectionsContainer,
 )
+from app.containers.analytics_repositories import AnalyticsRepositoriesContainer
 from app.containers.call_repositories import CallRepositoriesContainer
 from app.containers.feedback_repositories import FeedbackRepositoriesContainer
 from app.containers.inbox_repositories import InboxRepositoriesContainer
@@ -93,11 +94,11 @@ class RepositoriesContainer(
     SecurityRepositoriesContainer,
     ValueRepositoriesContainer,
     FeedbackRepositoriesContainer,
+    AnalyticsRepositoriesContainer,
 ):
     """
-    The repositories (singletons); those of what follows a call, of the team
-    inbox, over the launch collections, of key management, of the value
-    reports and of the feedback after visits come from the bases.
+    The repositories (singletons); those of calls, the team inbox, launch,
+    key management, value reports, feedback and analytics: the bases.
     """
 
     collections: DocumentCollectionsContainer = DependenciesContainer()  # type: ignore[assignment]

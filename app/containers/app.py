@@ -4,6 +4,9 @@ from dependency_injector import containers
 from dependency_injector.providers import Container
 
 from app.containers.adapters.adapters_container import AdaptersContainer
+from app.containers.adapters.analytics_collections_container import (
+    AnalyticsCollectionsContainer,
+)
 from app.containers.adapters.feedback_collections_container import (
     FeedbackCollectionsContainer,
 )
@@ -103,8 +106,17 @@ class AppContainer(containers.DeclarativeContainer):
         time_provider=time_provider,
         utilities=utilities,
     )
+    # The growth analytics' collections (1074), one more sibling.
+    analytics_collections: AnalyticsCollectionsContainer = Container(  # type: ignore[assignment]
+        AnalyticsCollectionsContainer,
+        clients=clients,
+        config=config,
+        time_provider=time_provider,
+        utilities=utilities,
+    )
     repositories: RepositoriesContainer = Container(  # type: ignore[assignment]
         RepositoriesContainer,
+        analytics_collections=analytics_collections,
         inbox_collections=inbox_collections,
         security_collections=security_collections,
         value_collections=value_collections,
