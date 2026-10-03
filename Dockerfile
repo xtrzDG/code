@@ -7,6 +7,7 @@
 #   docker run -p 8000:8000 --env-file .env assistant-workshop-backend api
 #   docker run --env-file .env assistant-workshop-backend worker
 #   docker run --env-file .env assistant-workshop-backend migrate
+#   docker run --env-file .env assistant-workshop-backend backup
 
 # Base images are named once, in FROM lines, so Dependabot can update them.
 FROM ghcr.io/astral-sh/uv:0.12.21 AS uv
@@ -32,9 +33,12 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 FROM python-base AS runtime
 
 # Take the Debian security fixes published since the base image was built
-# (image scans fail on fixable HIGH/CRITICAL findings).
+# (image scans fail on fixable HIGH/CRITICAL findings). The Postgres client
+# (pg_dump, pg_restore) serves `workshop backup` and `workshop restore-check`
+# (docs/operations/backup-restore.md); it reads servers of older majors.
 RUN apt-get update \
     && apt-get upgrade --yes --no-install-recommends \
+    && apt-get install --yes --no-install-recommends postgresql-client \
     && rm -rf /var/lib/apt/lists/*
 
 RUN groupadd --system --gid 10001 workshop \

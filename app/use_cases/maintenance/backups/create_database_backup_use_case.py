@@ -13,6 +13,7 @@ from app.schemas.dto.backups import (
     DatabaseBackupReport,
     DatabaseFacts,
 )
+from app.schemas.exceptions.backup_errors import BackupToolError
 from app.schemas.typings.backups.constrained_integers import BackupCopyCount
 from app.schemas.typings.backups.constrained_strings import (
     BackupObjectKey,
@@ -39,7 +40,9 @@ class CreateDatabaseBackupUseCase(
     """
     The off-site backup (`workshop backup`, a daily Render cron job).
 
-    The database is dumped in one consistent snapshot, encrypted with age
+    The database is dumped in one consistent snapshot (a database without
+    the application schema is refused: the wrong DATABASE_URL), encrypted
+    with age
     to the configured public keys (the plaintext dump is deleted at once)
     and uploaded to the EU backup bucket, then its manifest (the snapshot's
     row counts, migrations and row-level security, the archive's size and
@@ -76,6 +79,13 @@ class CreateDatabaseBackupUseCase(
         )
         try:
             facts: DatabaseFacts = self._database_dump.dump(dump_file)
+            if not facts.applied_migrations:
+                # Retention would soon replace every good backup with this.
+                raise BackupToolError(
+                    "The database has no application schema (no applied "
+                    "migrations): DATABASE_URL names the wrong database. "
+                    "Nothing was uploaded."
+                )
             self._backup_cipher.encrypt_file(dump_file, archive_file)
         finally:
             remove_file(dump_file)

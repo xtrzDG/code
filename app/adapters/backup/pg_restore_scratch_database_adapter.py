@@ -109,10 +109,10 @@ class PgRestoreScratchDatabaseAdapter(ScratchDatabaseAdapterContract):
         with self._connect(str(name)) as connection:
             bypass_row_security(connection, True)
             facts: DatabaseFacts = read_database_facts(connection)
-            with bound_role(connection):
-                probes: list[IsolationProbe] = probe_isolation(
-                    connection, facts.secured_tables
-                )
+            probes: list[IsolationProbe] = []
+            if facts.secured_tables:
+                with bound_role(connection):
+                    probes = probe_isolation(connection, facts.secured_tables)
 
         return facts, probes
 

@@ -9,6 +9,14 @@
 #                      rewrite stored documents of older schema versions
 #                      (one-shot, after a release is fully deployed), e.g.
 #                      --collection bookings --batch 500 --dry-run
+#   workshop backup    dump the database in one snapshot, encrypt it with age
+#                      and upload it to the EU backup bucket, then apply the
+#                      retention (Render cron, daily); --work-directory DIR
+#   workshop restore-check
+#                      restore the newest backup into a scratch database of
+#                      RESTORE_CHECK_DATABASE_URL and check it (the weekly
+#                      drill); --keep-database keeps it for a real restore
+#                      (docs/operations/backup-restore.md)
 #   workshop seed-load store a load-test dataset and write its manifest
 #                      (never in production; docs/operations/capacity.md),
 #                      e.g. --businesses 20 --messages 40000 --manifest m.json
@@ -46,6 +54,12 @@ case "$role" in
     ;;
   seed-load)
     exec python -m app.gateways.cli.seed_load "$@"
+    ;;
+  backup)
+    exec python -m app.gateways.cli.backup "$@"
+    ;;
+  restore-check)
+    exec python -m app.gateways.cli.restore_check "$@"
     ;;
   *)
     exec "$role" "$@"

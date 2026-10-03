@@ -67,6 +67,28 @@ RENDER_OPTIONAL_VARIABLES: frozenset[str] = frozenset(
         # Render's database is a direct connection, so LISTEN works on
         # DATABASE_URL; only a transaction pooler needs a second address.
         "LIVE_EVENTS_DATABASE_URL",
+        # Empty until a key rotation; then set in the env group
+        # workshop-backend (docs/operations/backup-restore.md).
+        "ENCRYPTION_KEYS",
+        # The restore drill runs in GitHub Actions (restore-drill.yml), never
+        # on Render: production holds no private backup key.
+        "BACKUP_AGE_IDENTITY",
+        "RESTORE_CHECK_DATABASE_URL",
+        # The image has the Postgres client on the PATH.
+        "POSTGRES_CLIENT_BIN_DIRECTORY",
+    }
+)
+
+# Read only by the backup cron job (workshop-backup), which Render asks for
+# them; the API and the worker never get the bucket's credentials.
+BACKUP_JOB_VARIABLES: frozenset[str] = frozenset(
+    {
+        "BACKUP_S3_ENDPOINT_URL",
+        "BACKUP_S3_REGION",
+        "BACKUP_S3_BUCKET",
+        "BACKUP_S3_ACCESS_KEY_ID",
+        "BACKUP_S3_SECRET_ACCESS_KEY",
+        "BACKUP_AGE_PUBLIC_KEY",
     }
 )
 
