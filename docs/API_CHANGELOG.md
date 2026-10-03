@@ -11,6 +11,17 @@ Kinds of change: **Added**, **Changed** (additive), **Deprecated** (with
 sunset date), **Removed** and **Breaking** (only with the `api-breaking`
 label and a migration path).
 
+## 2026-10-03 — the conversation card names its assignment
+
+Spec: `0a10bb03c28bdc5a`
+
+- **Changed** `ConversationDetailView`
+  (`GET /v1/businesses/{business_id}/conversations/{conversation_id}`)
+  gains `assignment` (`ConversationAssignmentView`: the assignee, who
+  assigned and when, whether it was automatic, and the
+  `assignment_revision` that `POST …/assign` must name), so the cabinet's
+  conversation view assigns without reading the inbox list first.
+
 ## 2026-10-03 — handoffs the platform creates are read in each reader's language
 
 Spec: `eced8ca70fcbb8b2`

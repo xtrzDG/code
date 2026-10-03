@@ -50,6 +50,7 @@ from app.use_cases.conversations.feed.conversation_rows import build_view_source
 from app.use_cases.conversations.staff_reply_support import (
     assess_conversation_reply,
 )
+from app.use_cases.inbox.assignment.assignment_views import build_assignment_view
 from app.utilities.paging.keyset_paging import finish_page, read_slice
 
 CONVERSATION_ENTITY: AuditEntityName = AuditEntityName("conversation")
@@ -67,10 +68,11 @@ class GetConversationUseCase(
     with every tool call, model, tokens and cost, the usage of the whole
     conversation, the phone calls of the conversation with
     their transcripts, outcomes and recordings, the bookings, leads and
-    handoffs made in it, and whether staff can write to the customer now
-    (concept section 8). Reading a conversation is an operation on personal
-    data, so each view is written to the audit log, one entry per call
-    shown as well (concept section 10).
+    handoffs made in it, whether staff can write to the customer now
+    (concept section 8) and who of the team is assigned to it. Reading a
+    conversation is an operation on personal data, so each view is
+    written to the audit log, one entry per call shown as well (concept
+    section 10).
     """
 
     def __init__(
@@ -205,4 +207,5 @@ class GetConversationUseCase(
                 self._channel_repo,
                 now,
             ),
+            assignment=build_assignment_view(conversation),
         )

@@ -54,6 +54,14 @@ def test_the_team_shares_a_handed_off_conversation_and_notes_stay_internal(
     assert all(NOTE_MARKER not in str(body) for body in workshop.telegram.bodies(""))
     card = client.get(conversation_path, headers=headers)
     assert NOTE_MARKER not in card.text
+    assert card.json()["assignment"] == {
+        "conversation_id": conversation_id,
+        "assignee_user_id": None,
+        "assigned_by": None,
+        "assigned_at": None,
+        "is_assigned_automatically": False,
+        "assignment_revision": 0,
+    }
 
     # The inbox shows the conversation as needing a person, nobody assigned.
     needs_person: JsonObject = client.get(
@@ -87,6 +95,13 @@ def test_the_team_shares_a_handed_off_conversation_and_notes_stay_internal(
     )
     assert stale.status_code == 409, stale.text
     assert stale.json()["reasons"][0]["code"] == "assignment_changed"
+    # The card names the assignee and the revision the next change must name.
+    assigned = client.get(conversation_path, headers=headers).json()["assignment"]
+    assert (assigned["assignee_user_id"], assigned["assigned_by"]) == (
+        restaurant.owner_id,
+        restaurant.owner_id,
+    )
+    assert assigned["assignment_revision"] == revision + 1
     mine: JsonObject = client.get(
         f"{base}/inbox", params={"view": "mine"}, headers=headers
     ).json()

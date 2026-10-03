@@ -4491,8 +4491,18 @@
       },
       "ConversationDetailView": {
         "additionalProperties": false,
-        "description": "Conversation card: summary, the newest part of the transcript with tool\ncalls (oldest first; `earlier_messages_cursor` pages back through\n`GET .../messages` when there is more), the model usage of the whole\nconversation, for phone conversations the calls with their transcripts\nand recordings, the bookings, leads and handoffs made in it, and\nwhether staff can reply.",
+        "description": "Conversation card: summary, the newest part of the transcript with tool\ncalls (oldest first; `earlier_messages_cursor` pages back through\n`GET .../messages` when there is more), the model usage of the whole\nconversation, for phone conversations the calls with their transcripts\nand recordings, the bookings, leads and handoffs made in it, whether\nstaff can reply, and who of the team is assigned to it (its\n`assignment_revision` is what an assignment from the card must name).",
         "properties": {
+          "assignment": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ConversationAssignmentView"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "bookings": {
             "items": {
               "$ref": "#/components/schemas/BookingView"
