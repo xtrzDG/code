@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  burstSparks,
   approach,
   clamp,
   countUpValue,
@@ -123,5 +124,16 @@ describe("helpers", () => {
     expect(medianOf([])).toBe(0);
     expect(medianOf([30, 10, 20])).toBe(20);
     expect(medianOf([40, 10, 20, 30])).toBe(25);
+  });
+});
+
+describe("burst", () => {
+  it("spreads the sparks around a circle, every other one closer and later", () => {
+    const sparks = burstSparks(4, 10);
+    expect(sparks).toHaveLength(4);
+    expect(sparks[0]).toEqual({ x: 0, y: -10, delay: 0 });
+    expect(sparks[1]).toEqual({ x: 7, y: 0, delay: 0.05 });
+    expect(sparks[2]?.y).toBe(10);
+    expect(burstSparks(0, 10)).toEqual([]);
   });
 });
