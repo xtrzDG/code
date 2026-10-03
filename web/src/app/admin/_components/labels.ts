@@ -62,6 +62,7 @@ export const USAGE_KIND_LABELS: Record<Schema<"UsageKind">, MessageKey> = {
   whatsapp_reply: "admin.detail.usageKinds.whatsapp_reply",
   whatsapp_template: "admin.detail.usageKinds.whatsapp_template",
   transfer_seconds: "admin.detail.usageKinds.transfer_seconds",
+  transcription_seconds: "admin.detail.usageKinds.transcription_seconds",
 };
 
 export const OUTCOME_LABELS: Record<Schema<"AutotestOutcome">, MessageKey> = {

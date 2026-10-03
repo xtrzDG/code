@@ -199,3 +199,39 @@ export const IconMore = (props: IconProps) => (
     <circle cx="18.5" cy="12" r="1.2" fill="currentColor" />
   </Icon>
 );
+
+/* What customers send besides text: voice notes, photos, places, stickers, contact cards. */
+
+export const IconMic = (props: IconProps) => (
+  <Icon {...props}>
+    <path d="M12 3.5a3 3 0 00-3 3v5a3 3 0 006 0v-5a3 3 0 00-3-3zM5.5 11a6.5 6.5 0 0013 0M12 17.5v3M9 20.5h6" />
+  </Icon>
+);
+
+export const IconImage = (props: IconProps) => (
+  <Icon {...props}>
+    <path d="M5 4.5h14a1.5 1.5 0 011.5 1.5v12a1.5 1.5 0 01-1.5 1.5H5A1.5 1.5 0 013.5 18V6A1.5 1.5 0 015 4.5z" />
+    <path d="M3.5 16l5-5 4 4 2.5-2.5 5.5 5.5M15.5 9h.01" />
+  </Icon>
+);
+
+export const IconMapPin = (props: IconProps) => (
+  <Icon {...props}>
+    <path d="M12 21s-6.5-5.4-6.5-11a6.5 6.5 0 0113 0c0 5.6-6.5 11-6.5 11z" />
+    <path d="M12 12.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5z" />
+  </Icon>
+);
+
+export const IconSticker = (props: IconProps) => (
+  <Icon {...props}>
+    <path d="M20.5 12A8.5 8.5 0 1112 3.5h3.5l5 5z" />
+    <path d="M9 10h.01M15 10h.01M8.5 14.5a4.5 4.5 0 007 0" />
+  </Icon>
+);
+
+export const IconContactCard = (props: IconProps) => (
+  <Icon {...props}>
+    <path d="M4.5 5h15A1.5 1.5 0 0121 6.5v11a1.5 1.5 0 01-1.5 1.5h-15A1.5 1.5 0 013 17.5v-11A1.5 1.5 0 014.5 5z" />
+    <path d="M9 12a2 2 0 100-4 2 2 0 000 4zM5.75 16a3.25 3.25 0 016.5 0M14.5 9.5h3.5M14.5 13h3.5" />
+  </Icon>
+);
