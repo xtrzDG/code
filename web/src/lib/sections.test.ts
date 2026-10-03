@@ -26,21 +26,22 @@ describe("the five sections", () => {
   });
 
   it("show owners everything", () => {
-    expect(visibleSections("owner")).toEqual(["overview", "messages", "bookings", "assistant", "settings"]);
+    expect(visibleSections("owner")).toEqual(["overview", "inbox", "bookings", "assistant", "settings"]);
     expect(BUSINESS_PAGES.every((page) => canOpenPage(page, "owner"))).toBe(true);
   });
 
-  it("show staff the overview, messages, bookings, the test chat and their notifications", () => {
-    expect(visibleSections("staff")).toEqual(["overview", "messages", "bookings", "assistant", "settings"]);
+  it("show staff the overview, the inbox, bookings, the test chat and their notifications", () => {
+    expect(visibleSections("staff")).toEqual(["overview", "inbox", "bookings", "assistant", "settings"]);
     expect(visiblePages("settings", "staff").map((entry) => entry.page)).toEqual(["settings/notifications"]);
     expect(visiblePages("assistant", "staff").map((entry) => entry.page)).toEqual(["assistant"]);
     expect(visiblePages("overview", "staff").map((entry) => entry.page)).toEqual(["overview"]);
     expect(canOpenPage("overview/reports", "staff")).toBe(false);
-    expect(visiblePages("messages", "staff")).toHaveLength(3);
+    expect(visiblePages("inbox", "staff").map((entry) => entry.page)).toEqual(["inbox"]);
     expect(canOpenPage("settings/billing", "staff")).toBe(false);
     expect(canOpenPage("settings/calls", "staff")).toBe(false);
     expect(canOpenPage("assistant/knowledge", "staff")).toBe(false);
-    expect(canOpenPage("messages/leads", "staff")).toBe(true);
+    expect(canOpenPage("inbox", "staff")).toBe(true);
+    expect(canOpenPage("settings/quick-replies", "staff")).toBe(false);
   });
 
   it("keep versions and autotests under Advanced", () => {
@@ -50,12 +51,14 @@ describe("the five sections", () => {
 
   it("name pages and their titles", () => {
     expect(pageLabel("bookings")).toBe("navigation.sections.bookings");
-    expect(pageLabel("messages/handoffs")).toBe("navigation.pages.messagesHandoffs");
+    expect(pageLabel("inbox")).toBe("navigation.sections.inbox");
+    expect(pageLabel("settings/quick-replies")).toBe("navigation.pages.settingsQuickReplies");
     expect(pageTitleKeys("overview")).toEqual(["navigation.pages.overviewDashboard", "navigation.sections.overview"]);
     expect(pageTitleKeys("overview/reports")).toEqual(["navigation.pages.overviewReports", "navigation.sections.overview"]);
     expect(pageTitleKeys("settings/team")).toEqual(["navigation.pages.settingsTeam", "navigation.sections.settings"]);
     expect(pageTitleKeys("assistant")).toEqual(["navigation.pages.assistantTest", "navigation.sections.assistant"]);
-    expect(PAGE_DESCRIPTIONS["messages/leads"]).toBe("pages.leads.description");
+    expect(pageTitleKeys("inbox")).toEqual(["navigation.sections.inbox"]);
+    expect(PAGE_DESCRIPTIONS.inbox).toBe("navigation.descriptions.inbox");
   });
 
   it("refuses a page missing from the tables", () => {

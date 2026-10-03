@@ -26,8 +26,8 @@ export interface SectionTab {
  * the current one is marked with aria-current="page" and an underline
  * that glides between tabs. Inside a section frame (a page's own sub-pages,
  * like Knowledge inside Assistant) the row turns into quieter pills.
- * `activeHref` names the current tab when the address alone cannot (the
- * conversations tab is current on /messages/{id} but not on /messages/leads).
+ * `activeHref` names the current tab when the address alone cannot (a
+ * version's own page keeps the Versions tab current).
  */
 export function SectionTabs({
   label,

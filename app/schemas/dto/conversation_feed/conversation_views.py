@@ -25,6 +25,7 @@ from app.schemas.dto.conversation_feed.message_tallies import (
     ConversationMessageTally,
     ConversationUsageView,
 )
+from app.schemas.dto.inbox.assignment import ConversationAssignmentView
 from app.schemas.dto.operations.handoffs import HandoffListItem
 from app.schemas.dto.operations.leads import LeadListItem
 from app.schemas.dto.paging import PageRequest
@@ -237,8 +238,9 @@ class ConversationDetailView(ImmutableDTO):
     calls (oldest first; `earlier_messages_cursor` pages back through
     `GET .../messages` when there is more), the model usage of the whole
     conversation, for phone conversations the calls with their transcripts
-    and recordings, the bookings, leads and handoffs made in it, and
-    whether staff can reply.
+    and recordings, the bookings, leads and handoffs made in it, whether
+    staff can reply, and who of the team is assigned to it (its
+    `assignment_revision` is what an assignment from the card must name).
     """
 
     conversation: ConversationSummaryView
@@ -250,6 +252,7 @@ class ConversationDetailView(ImmutableDTO):
     leads: list[LeadListItem] = Field(default_factory=list[LeadListItem])
     handoffs: list[HandoffListItem] = Field(default_factory=list[HandoffListItem])
     reply: StaffReplyView | None = None
+    assignment: ConversationAssignmentView | None = None
 
 
 class ConversationViewSource(ImmutableDTO):

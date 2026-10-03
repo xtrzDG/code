@@ -1,5 +1,5 @@
 /**
- * Texts of the cabinet sections: Channels, billing, settings (Calls and Reviews among them) and the platform admin.
+ * Texts of the cabinet sections: Channels, billing, settings (Calls, Quick replies and Reviews among them) and the platform admin.
  *
  * Top-level keys are namespaces (one per section, e.g. `bookings`). They are
  * spread into en.ts, ru.ts and ka.ts, so they must not clash with the
@@ -38,6 +38,9 @@ import { notificationsRu } from "./workspace/notifications.ru";
 import { privacyNoticeEn } from "./workspace/privacyNotice.en";
 import { privacyNoticeKa } from "./workspace/privacyNotice.ka";
 import { privacyNoticeRu } from "./workspace/privacyNotice.ru";
+import { quickRepliesEn } from "./workspace/quickReplies.en";
+import { quickRepliesKa } from "./workspace/quickReplies.ka";
+import { quickRepliesRu } from "./workspace/quickReplies.ru";
 import { reviewSettingsEn } from "./workspace/reviewSettings.en";
 import { reviewSettingsKa } from "./workspace/reviewSettings.ka";
 import { reviewSettingsRu } from "./workspace/reviewSettings.ru";
@@ -60,6 +63,7 @@ export const workspaceEn = {
   notifications: notificationsEn,
   callSettings: callSettingsEn,
   reviewSettings: reviewSettingsEn,
+  quickReplies: quickRepliesEn,
   admin: adminEn,
   adminSecurity: adminSecurityEn,
   share: shareEn,
@@ -75,6 +79,7 @@ export const workspaceRu: Translation<typeof workspaceEn> = {
   notifications: notificationsRu,
   callSettings: callSettingsRu,
   reviewSettings: reviewSettingsRu,
+  quickReplies: quickRepliesRu,
   admin: adminRu,
   adminSecurity: adminSecurityRu,
   share: shareRu,
@@ -90,6 +95,7 @@ export const workspaceKa: Translation<typeof workspaceEn> = {
   notifications: notificationsKa,
   callSettings: callSettingsKa,
   reviewSettings: reviewSettingsKa,
+  quickReplies: quickRepliesKa,
   admin: adminKa,
   adminSecurity: adminSecurityKa,
   share: shareKa,

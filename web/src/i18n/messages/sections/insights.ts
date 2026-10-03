@@ -1,5 +1,5 @@
 /**
- * Texts of the cabinet sections: Dashboard, value and reports, conversations, bookings, leads and handoffs.
+ * Texts of the cabinet sections: Dashboard, value and reports, the inbox and its conversations, bookings, leads and handoffs.
  *
  * Top-level keys are namespaces (one per section, e.g. `bookings`). They are
  * spread into en.ts, ru.ts and ka.ts, so they must not clash with the
@@ -26,6 +26,12 @@ import { dashboardRu } from "./insights/dashboard.ru";
 import { handoffsEn } from "./insights/handoffs.en";
 import { handoffsKa } from "./insights/handoffs.ka";
 import { handoffsRu } from "./insights/handoffs.ru";
+import { inboxEn } from "./insights/inbox.en";
+import { inboxKa } from "./insights/inbox.ka";
+import { inboxRu } from "./insights/inbox.ru";
+import { inboxCardEn } from "./insights/inboxCard.en";
+import { inboxCardKa } from "./insights/inboxCard.ka";
+import { inboxCardRu } from "./insights/inboxCard.ru";
 import { leadsEn } from "./insights/leads.en";
 import { leadsKa } from "./insights/leads.ka";
 import { leadsRu } from "./insights/leads.ru";
@@ -45,6 +51,8 @@ export const insightsEn = {
   handoffs: handoffsEn,
   value: valueEn,
   reports: reportsEn,
+  inbox: inboxEn,
+  inboxCard: inboxCardEn,
 } as const;
 
 export const insightsRu: Translation<typeof insightsEn> = {
@@ -56,6 +64,8 @@ export const insightsRu: Translation<typeof insightsEn> = {
   handoffs: handoffsRu,
   value: valueRu,
   reports: reportsRu,
+  inbox: inboxRu,
+  inboxCard: inboxCardRu,
 };
 
 export const insightsKa: Translation<typeof insightsEn> = {
@@ -67,4 +77,6 @@ export const insightsKa: Translation<typeof insightsEn> = {
   handoffs: handoffsKa,
   value: valueKa,
   reports: reportsKa,
+  inbox: inboxKa,
+  inboxCard: inboxCardKa,
 };

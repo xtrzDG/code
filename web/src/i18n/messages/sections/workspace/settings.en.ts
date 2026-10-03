@@ -59,7 +59,7 @@ export const settingsEn = {
     pause: "Pause the assistant",
     resume: "Resume the assistant",
     pauseTitle: "Pause the assistant?",
-    pauseDescription: "Customers will not get answers from the assistant until you resume it. Messages still arrive in Conversations.",
+    pauseDescription: "Customers will not get answers from the assistant until you resume it. Messages still arrive in the Inbox.",
     pausedToast: "The assistant is paused",
     resumedToast: "The assistant answers customers again",
     serviceMode: "Service mode",

@@ -15,9 +15,8 @@ import { en } from "./support/messages";
 
 const OWNER_PAGES = [
   "overview",
-  "messages",
-  "messages/handoffs",
-  "messages/leads",
+  "inbox",
+  "inbox?view=all",
   "bookings",
   "assistant",
   "assistant/knowledge",
@@ -27,6 +26,7 @@ const OWNER_PAGES = [
   "settings",
   "settings/team",
   "settings/notifications",
+  "settings/quick-replies",
   "settings/calls",
   "settings/reviews",
   "settings/billing",
@@ -72,7 +72,7 @@ test.describe("on a phone", () => {
   test.use({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
 
   test("the main pages and the More sheet pass the audit", async ({ page, owner }) => {
-    for (const path of ["overview", "messages", "assistant", "settings"]) {
+    for (const path of ["overview", "inbox", "assistant", "settings"]) {
       await test.step(path, () => audit(page, `/b/${owner.businessId}/${path}`));
     }
     await page.getByRole("button", { name: en.navigation.more }).click();

@@ -6,17 +6,18 @@ import type { navigationEn } from "./navigation.en";
 export const navigationKa: Translation<typeof navigationEn> = {
   sections: {
     overview: "მიმოხილვა",
-    messages: "მიმოწერა",
+    // "შემოსული", not "შემოსულები": the word fits the phone tab bar on one line.
+    inbox: "შემოსული",
     bookings: "ჯავშნები",
     assistant: "ასისტენტი",
     settings: "პარამეტრები",
   },
   descriptions: {
     overview: "როგორ მუშაობს თქვენი ასისტენტი და რა საჭიროებს დღეს თქვენს ყურადღებას.",
-    messages: "ყველა საუბარი, ადამიანის მომლოდინე საუბრები და კლიენტების მოთხოვნები ერთ ადგილას.",
+    inbox: "ყველა საუბარი ერთ ადგილას: კლიენტები, რომლებსაც ადამიანი სჭირდებათ, მოთხოვნები და ვინ რას უძღვება გუნდში.",
     bookings: "ჯავშნები სტატუსებით; შეგიძლიათ ხელითაც დაამატოთ.",
     assistant: "გამოსცადეთ ასისტენტი, ასწავლეთ, აირჩიეთ, სად უპასუხოს, და გამოიყენეთ ცვლილებები.",
-    settings: "თქვენი ბიზნესი, გუნდი, შეტყობინებები, ზარები, შეფასებები, ტარიფი, კონფიდენციალურობა და მოქმედებების ჟურნალი.",
+    settings: "თქვენი ბიზნესი, გუნდი, შეტყობინებები, სწრაფი პასუხები, ზარები, შეფასებები, ტარიფი, კონფიდენციალურობა და მოქმედებების ჟურნალი.",
     assistantTest: "მისწერეთ ისე, როგორც კლიენტი მისწერდა. რეალურ კლიენტებთან არაფერი გაიგზავნება.",
     assistantProfile: "კონტაქტები, სამუშაო საათები, თქვენი შეთავაზება, დაჯავშნის წესები და როდის დაუძახოს ადამიანს — ანკეტა, რომლითაც ასისტენტი მუშაობს.",
     assistantVersions: "ასისტენტის ყველა განახლება შემოწმებებით, გამოქვეყნებითა და დაბრუნების შესაძლებლობით.",
@@ -24,9 +25,6 @@ export const navigationKa: Translation<typeof navigationEn> = {
   pages: {
     overviewDashboard: "დაფა",
     overviewReports: "ანგარიშები",
-    messagesAll: "ყველა საუბარი",
-    messagesHandoffs: "ადამიანის დახმარება",
-    messagesLeads: "მოთხოვნები",
     assistantTest: "გამოცდა",
     assistantKnowledge: "ცოდნა",
     assistantProfile: "საათები და წესები",
@@ -35,6 +33,7 @@ export const navigationKa: Translation<typeof navigationEn> = {
     settingsGeneral: "ბიზნესი",
     settingsTeam: "გუნდი",
     settingsNotifications: "შეტყობინებები",
+    settingsQuickReplies: "სწრაფი პასუხები",
     settingsCalls: "ზარები",
     settingsReviews: "შეფასებები",
     settingsBilling: "ტარიფი და გადახდა",

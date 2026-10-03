@@ -10,7 +10,7 @@ import type { Schema } from "../src/api/types";
 
 import { expect, test } from "./support/fixtures";
 import { en } from "./support/messages";
-import { CONVERSATION_ID, conversationCard, serveCard } from "./support/conversation-card";
+import { CONVERSATION_ID, conversationCard, openCard, serveCard } from "./support/conversation-card";
 
 type ChannelView = Schema<"ChannelView">;
 
@@ -49,7 +49,7 @@ test("after 24 hours a WhatsApp reply goes out in the owner's template", async (
     });
   });
 
-  await page.goto(`/b/${owner.businessId}/messages/${CONVERSATION_ID}`);
+  await openCard(page, owner.businessId);
   await expect(page.getByText(en.conversations.reply.template.intro)).toBeVisible();
   await expect(page.getByText(/“staff_reply”/)).toBeVisible();
   await page.getByLabel(en.conversations.reply.label).fill("Sua mesa está reservada.\nAté sábado!");
@@ -90,7 +90,7 @@ test("a template WhatsApp refuses points the owner to the Channels page", async 
     }),
   );
 
-  await page.goto(`/b/${owner.businessId}/messages/${CONVERSATION_ID}`);
+  await openCard(page, owner.businessId);
   await page.getByLabel(en.conversations.reply.label).fill("Your table is ready.");
   await page.getByRole("button", { name: en.conversations.reply.template.send }).click();
 
@@ -112,7 +112,7 @@ test("a template WhatsApp refuses points the owner to the Channels page", async 
 test("without a template the closed window points to the Channels page", async ({ page, owner }) => {
   await serveCard(page, owner.businessId, conversationCard(owner.businessId, {}));
 
-  await page.goto(`/b/${owner.businessId}/messages/${CONVERSATION_ID}`);
+  await openCard(page, owner.businessId);
 
   await expect(page.getByText(en.conversations.reply.noTemplateOwner)).toBeVisible();
   await expect(page.getByRole("link", { name: en.conversations.reply.openChannels })).toHaveAttribute(

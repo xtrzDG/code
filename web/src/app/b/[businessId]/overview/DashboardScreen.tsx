@@ -20,7 +20,7 @@ import { Button, Card, EmptyState, ErrorState, LoadingRegion, PageHeader } from 
 import { useValueOfDates } from "@/components/value/useValueQueries";
 import { useI18n } from "@/i18n/client";
 import { languageName } from "@/lib/format";
-import { businessPath } from "@/lib/navigation";
+import { businessPath, inboxPath } from "@/lib/navigation";
 
 import { DashboardPeriodSkeleton } from "./_components/DashboardSkeleton";
 import { AttentionTile, BarList, NextStepCard } from "./_components/DashboardWidgets";
@@ -119,7 +119,7 @@ export function DashboardScreen({ initialPeriod }: { initialPeriod: DashboardPer
             </h2>
             <div className="grid gap-3 sm:grid-cols-2">
               <AttentionTile
-                href={businessPath(businessId, "messages/handoffs")}
+                href={inboxPath(businessId, "needs_person")}
                 label={t("dashboard.attention.openHandoffs")}
                 hint={t("dashboard.attention.openHandoffsHint")}
                 count={openHandoffCount}

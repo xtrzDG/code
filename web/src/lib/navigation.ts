@@ -1,9 +1,13 @@
 /**
  * Routes of the cabinet. Business pages live under /b/{businessId}/{page},
- * where a page is one of BUSINESS_PAGES ("overview", "messages/handoffs",
+ * where a page is one of BUSINESS_PAGES ("overview", "inbox",
  * "assistant/knowledge", …); which of them a person sees, and how they are
  * grouped into the five sections of the sidebar, is in lib/sections.ts.
  * Addresses of earlier versions are redirected by lib/legacyRoutes.ts.
+ *
+ * The team inbox is one page with views (`?view=needs_person|requests|
+ * mine|unassigned|all`) and its conversations under it
+ * (/b/{id}/inbox/{conversationId}): `inboxPath` and `conversationPath`.
  */
 
 import type { BusinessSection } from "./sections";
@@ -12,9 +16,7 @@ import type { BusinessSection } from "./sections";
 export const BUSINESS_PAGES = [
   "overview",
   "overview/reports",
-  "messages",
-  "messages/handoffs",
-  "messages/leads",
+  "inbox",
   "bookings",
   "assistant",
   "assistant/knowledge",
@@ -24,6 +26,7 @@ export const BUSINESS_PAGES = [
   "settings",
   "settings/team",
   "settings/notifications",
+  "settings/quick-replies",
   "settings/calls",
   "settings/reviews",
   "settings/billing",
@@ -58,6 +61,29 @@ export function businessPath(businessId: string, page: BusinessPage = "overview"
   return `/b/${encodeURIComponent(businessId)}/${page}`;
 }
 
+/** The views of the team inbox, in the order of its tabs (the API's `InboxView`). */
+export const INBOX_VIEWS = ["needs_person", "requests", "mine", "unassigned", "all"] as const;
+
+export type InboxView = (typeof INBOX_VIEWS)[number];
+
+/** What the inbox opens on: the conversations waiting for a person. */
+export const DEFAULT_INBOX_VIEW: InboxView = "needs_person";
+
+export function isInboxView(value: string | null | undefined): value is InboxView {
+  return value !== null && value !== undefined && (INBOX_VIEWS as readonly string[]).includes(value);
+}
+
+/** The inbox on one of its views: `/b/{id}/inbox?view=requests` (the default view has no query). */
+export function inboxPath(businessId: string, view: InboxView = DEFAULT_INBOX_VIEW): string {
+  const path = businessPath(businessId, "inbox");
+  return view === DEFAULT_INBOX_VIEW ? path : `${path}?view=${view}`;
+}
+
+/** One conversation of the inbox: `/b/{id}/inbox/{conversationId}`. */
+export function conversationPath(businessId: string, conversationId: string): string {
+  return `${businessPath(businessId, "inbox")}/${encodeURIComponent(conversationId)}`;
+}
+
 /** The setup flow ("Create an AI assistant"), the only page before the assistant exists. */
 export function setupPath(businessId: string): string {
   return `/b/${encodeURIComponent(businessId)}/onboarding`;
@@ -74,7 +100,7 @@ const PAGES_BY_DEPTH: readonly BusinessPage[] = [...BUSINESS_PAGES].sort(
 
 export interface BusinessLocation {
   businessId: string;
-  /** The page the path is in ("/b/x/messages/conv_1" is in "messages"); null outside them. */
+  /** The page the path is in ("/b/x/inbox/conv_1" is in "inbox"); null outside them. */
   page: BusinessPage | null;
   /** True for the setup flow (/b/{id}/onboarding). */
   isSetup: boolean;
@@ -107,10 +133,10 @@ export function sectionFromPathname(pathname: string): BusinessSection | null {
   return page ? (page.split("/")[0] as BusinessSection) : null;
 }
 
-/** An open conversation ("/b/x/messages/conv_1"): on phones it takes the whole screen. */
+/** An open conversation ("/b/x/inbox/conv_1"): on phones it takes the whole screen. */
 export function isConversationPath(pathname: string): boolean {
   const location = businessLocation(pathname);
-  return location?.page === "messages" && pathname.split("/").filter(Boolean).length > 3;
+  return location?.page === "inbox" && pathname.split("/").filter(Boolean).length > 3;
 }
 
 /** The same place in another business (the business switcher keeps the section). */

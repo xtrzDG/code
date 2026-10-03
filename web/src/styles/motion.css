@@ -184,6 +184,18 @@
   dialog[data-motion="drawer-start"]:dir(rtl) {
     --dialog-from: translateX(100%);
   }
+  /* Sheet: rises from the bottom on phones, slides from the end edge on large screens. */
+  dialog[data-motion="sheet"] {
+    --dialog-from: translateY(100%);
+  }
+  @media (min-width: 64rem) {
+    dialog[data-motion="sheet"] {
+      --dialog-from: translateX(100%);
+    }
+    dialog[data-motion="sheet"]:dir(rtl) {
+      --dialog-from: translateX(-100%);
+    }
+  }
   dialog[data-motion]::backdrop {
     opacity: 0;
     transition-property: opacity, overlay, display;

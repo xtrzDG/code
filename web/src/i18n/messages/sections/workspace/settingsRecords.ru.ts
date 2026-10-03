@@ -89,7 +89,7 @@ export const settingsRecordsRu: Translation<typeof settingsRecordsEn> = {
       business_cabinet: "Кабинет бизнеса",
       business: "Бизнес",
       queued_job: "Фоновая задача",
-      inbox: "Сообщения",
+      inbox: "Входящие",
       conversation_assignment: "Назначение разговора",
       conversation_note: "Заметка команды",
       quick_reply: "Быстрый ответ",

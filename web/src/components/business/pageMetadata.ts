@@ -4,11 +4,11 @@ import type { BusinessPage } from "@/lib/navigation";
 import { pageTitleKeys } from "@/lib/sections";
 
 /**
- * A business page's `generateMetadata`: "Needs a person · Messages" (the
+ * A business page's `generateMetadata`: "Quick replies · Settings" (the
  * business layout appends the business name); `detail` goes in front
  * ("Version · Versions and autotests · Assistant").
  *
- *     export const generateMetadata = pageMetadata("messages/handoffs");
+ *     export const generateMetadata = pageMetadata("settings/quick-replies");
  */
 export function pageMetadata(page: BusinessPage, detail?: MessageKey) {
   return async () => {

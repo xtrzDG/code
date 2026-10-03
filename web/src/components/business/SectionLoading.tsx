@@ -9,11 +9,11 @@ import { PAGE_DESCRIPTIONS, pageLabel } from "@/lib/sections";
 /**
  * A page's `loading.tsx`: its real title at once, and skeletons shaped
  * like its content (the `children`) until the page arrives. Inside a
- * section frame (Messages, Assistant, Settings) the title is the frame's
+ * section frame (Assistant, Settings) the title is the frame's
  * and this header shrinks to the page's description (see PageHeader).
  *
  *     export default function Loading() {
- *       return <SectionLoading page="messages/leads" label="leads.loading"><SkeletonCardList /></SectionLoading>;
+ *       return <SectionLoading page="settings/quick-replies" label="quickReplies.loading"><SkeletonCardList /></SectionLoading>;
  *     }
  */
 export async function SectionLoading({

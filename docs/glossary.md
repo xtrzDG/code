@@ -14,6 +14,11 @@ the reviewers work from.
 
 | Concept (code name) | English | Russian | Georgian | Never write |
 |---|---|---|---|---|
+| The team's one list of conversations (`inbox`) | Inbox | Входящие | შემოსულები (in the navigation „შემოსული“, which fits the phone tab bar) | Messages, Сообщения, Мессенджер |
+| The inbox views (`needs_person`, `requests`, `mine`, `unassigned`, `all`) | Needs a person, Requests, Mine, Unassigned, All | Нужен человек, Заявки, Мои, Без ответственного, Все | ადამიანის დახმარება, მოთხოვნები, ჩემი, დაუნიშნავი, ყველა | Queue, Очередь, Тикеты |
+| Who handles a conversation (`assignee`, `assign`) | Handled by {name}; Assign; Take it; Unassign | Отвечает: {name}; Назначить; Взять себе; Снять назначение | პასუხისმგებელი: {name}; დანიშვნა; ჩემზე აღება; დანიშვნის მოხსნა | assignee, исполнитель, тикет |
+| An internal note on a conversation (`conversation note`) | note; "Only your team sees this" | заметка; «Это видит только ваша команда» | შენიშვნა; „ამას მხოლოდ თქვენი გუნდი ხედავს“ | comment (it is not sent), комментарий |
+| A saved reply staff insert with "/" (`quick reply`) | quick reply | быстрый ответ | სწრაფი პასუხი | template (that is WhatsApp's), canned response, шаблон |
 | The section with conversations the assistant passed to a person (`handoffs`) | Needs a person | Нужен человек | ადამიანის დახმარება | Handoffs (as a section), Передачи, გადაცემები |
 | One such conversation (`handoff`) | handoff; "needs a person" in lists and counters | разговор, где нужен человек; «Нужен человек» в счётчиках | საუბარი, სადაც ადამიანია საჭირო; „ადამიანის დახმარება“ მთვლელებში | передача, перевод (alone), გადაცემა |
 | Passing a conversation to staff | pass to a person | передать человеку / позвать человека | თანამშრომელთან გადამისამართება | передача (noun) |

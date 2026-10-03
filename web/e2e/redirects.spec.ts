@@ -10,10 +10,15 @@ test("old addresses open their new places and keep the query", async ({ page, ow
   const base = `/b/${owner.businessId}`;
   const moves: [string, string][] = [
     ["/dashboard?period=7d", "/overview?period=7d"],
-    ["/conversations", "/messages"],
-    ["/conversations/conversation_1?status=open", "/messages/conversation_1?status=open"],
-    ["/handoffs?tab=resolved", "/messages/handoffs?tab=resolved"],
-    ["/leads?status=new", "/messages/leads?status=new"],
+    ["/conversations", "/inbox"],
+    ["/conversations/conversation_1?status=open", "/inbox/conversation_1?status=open"],
+    ["/handoffs", "/inbox?view=needs_person"],
+    ["/leads", "/inbox?view=requests"],
+    // The Messages section of before the one inbox.
+    ["/messages", "/inbox"],
+    ["/messages/conversation_1", "/inbox/conversation_1"],
+    ["/messages/handoffs", "/inbox?view=needs_person"],
+    ["/messages/leads", "/inbox?view=requests"],
     ["/knowledge/import", "/assistant/knowledge/import"],
     ["/channels?calendar=connected", "/assistant/channels?calendar=connected"],
     ["/billing", "/settings/billing"],

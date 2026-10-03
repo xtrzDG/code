@@ -1,12 +1,15 @@
 /**
  * The cabinet feels instant: going back shows a section's data from the
- * cache (no skeleton, no spinner), and a lead's status changes at once,
- * goes back when the API refuses and can be undone for a few seconds.
+ * cache (no skeleton, no spinner), and a request's status changes at
+ * once, goes back when the API refuses and can be undone for a few seconds.
  */
 
+import type { Page } from "@playwright/test";
+
+import { openCard, serveCard } from "./support/conversation-card";
 import { expect, test } from "./support/fixtures";
+import { cardWithLead, leadOf, onLeadPatch, type LeadListItem } from "./support/leads";
 import { en } from "./support/messages";
-import { LEAD_CUSTOMER, leadOf, onLeadPatch, serveLeads, type LeadListItem } from "./support/leads";
 
 const LOADING_REGION = '[role="status"][aria-busy="true"]';
 
@@ -33,10 +36,12 @@ test("going back shows the section's data at once, from the cache", async ({ pag
   await page.unrouteAll({ behavior: "ignoreErrors" });
 });
 
-test.describe("a lead's status", () => {
+test.describe("a request's status on its conversation", () => {
+  const statusSelect = (page: Page) => page.getByRole("combobox", { name: en.inboxCard.work.requestStatus });
+
   test("changes at once and goes back when the API refuses", async ({ page, owner, consoleErrors }) => {
     consoleErrors.allow(/status of 500/);
-    await serveLeads(page, owner.businessId, () => leadOf(owner.businessId, "new"));
+    await serveCard(page, owner.businessId, cardWithLead(owner.businessId, leadOf(owner.businessId, "new")));
     let release = () => undefined as void;
     const refused = new Promise<void>((resolve) => (release = resolve));
     await onLeadPatch(page, owner.businessId, async (route) => {
@@ -44,16 +49,13 @@ test.describe("a lead's status", () => {
       await route.fulfill({ status: 500, json: { error: "internal_error", message: "Database is down." } });
     });
 
-    await page.goto(`/b/${owner.businessId}/messages/leads`);
-    const status = page.getByLabel(en.leads.statusOf.replace("{name}", LEAD_CUSTOMER));
+    await openCard(page, owner.businessId);
+    const status = statusSelect(page);
     await expect(status).toHaveValue("new");
 
-    await status.selectOption("won");
+    await status.selectOption("in_progress");
     // Shown while the API has not answered yet.
-    await expect(status).toHaveValue("won");
-    // The tab counts move with it: one lead won, none new.
-    await expect(page.getByRole("radio", { name: `${en.leads.status.won} 1` })).toBeAttached();
-    await expect(page.getByRole("radio", { name: `${en.leads.status.new} 0` })).toBeAttached();
+    await expect(status).toHaveValue("in_progress");
 
     release();
     await expect(status).toHaveValue("new");
@@ -62,7 +64,7 @@ test.describe("a lead's status", () => {
 
   test("can be undone for a few seconds after the change", async ({ page, owner }) => {
     let stored: LeadListItem = leadOf(owner.businessId, "new");
-    await serveLeads(page, owner.businessId, () => stored);
+    await serveCard(page, owner.businessId, () => cardWithLead(owner.businessId, stored));
     const sent: unknown[] = [];
     await onLeadPatch(page, owner.businessId, async (route) => {
       const body = route.request().postDataJSON() as { status: LeadListItem["status"] };
@@ -71,14 +73,15 @@ test.describe("a lead's status", () => {
       await route.fulfill({ json: stored });
     });
 
-    await page.goto(`/b/${owner.businessId}/messages/leads`);
-    const status = page.getByLabel(en.leads.statusOf.replace("{name}", LEAD_CUSTOMER));
-    await status.selectOption("lost");
-    const toast = page.getByRole("status").filter({ hasText: en.leads.updated.replace("{status}", en.leads.status.lost) });
+    await openCard(page, owner.businessId);
+    await statusSelect(page).selectOption("lost");
+    // A lost request is no longer work: it leaves the strip above the transcript.
+    await expect(statusSelect(page)).toHaveCount(0);
+    const toast = page.getByRole("status").filter({ hasText: en.inboxCard.request.updated.replace("{status}", en.leads.status.lost) });
     await expect(toast).toBeVisible();
 
     await toast.getByRole("button", { name: en.common.undo }).click();
-    await expect(status).toHaveValue("new");
+    await expect(statusSelect(page)).toHaveValue("new");
     await expect.poll(() => sent).toEqual([{ status: "lost" }, { status: "new" }]);
     await expect(page.getByRole("button", { name: en.common.undo })).toHaveCount(0);
   });

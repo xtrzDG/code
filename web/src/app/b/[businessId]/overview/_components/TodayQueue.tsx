@@ -8,7 +8,7 @@ import { IconCalendar, IconHandoff, IconInbox, IconUsers } from "@/components/ic
 import { useToday } from "@/components/insights/useToday";
 import { useAttentionCounts } from "@/components/shell/LiveEvents";
 import { useI18n } from "@/i18n/client";
-import { businessPath } from "@/lib/navigation";
+import { businessPath, inboxPath } from "@/lib/navigation";
 
 import { AttentionTile } from "./DashboardWidgets";
 
@@ -40,7 +40,7 @@ export function TodayQueue() {
       </h2>
       <div className="grid gap-3 sm:grid-cols-2">
         <AttentionTile
-          href={businessPath(business.id, "messages")}
+          href={inboxPath(business.id, "mine")}
           label={t("value.queue.mine")}
           hint={t("value.queue.mineHint")}
           count={views.data?.mine}
@@ -49,7 +49,7 @@ export function TodayQueue() {
           icon={<IconUsers className="size-5" />}
         />
         <AttentionTile
-          href={businessPath(business.id, "messages/handoffs")}
+          href={inboxPath(business.id, "needs_person")}
           label={t("dashboard.attention.openHandoffs")}
           hint={t("dashboard.attention.openHandoffsHint")}
           count={counts?.openHandoffs}
@@ -58,7 +58,7 @@ export function TodayQueue() {
           icon={<IconHandoff className="size-5" />}
         />
         <AttentionTile
-          href={businessPath(business.id, "messages/leads")}
+          href={inboxPath(business.id, "requests")}
           label={t("value.queue.requests")}
           hint={t("value.queue.requestsHint")}
           count={counts?.newLeads}

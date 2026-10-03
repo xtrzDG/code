@@ -6,16 +6,16 @@ const counts = { openHandoffs: 3, newLeads: 2, unconfirmedBookings: 4, channelEr
 
 describe("attention badges", () => {
   it("put each waiting item on its page", () => {
-    expect(pageBadge("messages/handoffs", counts)).toBe(3);
-    expect(pageBadge("messages/leads", counts)).toBe(2);
+    // The inbox waits on people asked for and new requests together.
+    expect(pageBadge("inbox", counts)).toBe(5);
     expect(pageBadge("bookings", counts)).toBe(4);
     expect(pageBadge("assistant/channels", counts)).toBe(1);
-    expect(pageBadge("messages", counts)).toBe(0);
-    expect(pageBadge("messages/leads", null)).toBe(0);
+    expect(pageBadge("overview", counts)).toBe(0);
+    expect(pageBadge("inbox", null)).toBe(0);
   });
 
   it("add up the pages a person sees in a section", () => {
-    expect(sectionBadge(["messages", "messages/handoffs", "messages/leads"], counts)).toBe(5);
+    expect(sectionBadge(["inbox"], counts)).toBe(5);
     expect(sectionBadge(["assistant", "assistant/channels"], counts)).toBe(1);
     expect(sectionBadge(["assistant"], counts)).toBe(0);
     expect(sectionBadge(["bookings"], null)).toBe(0);

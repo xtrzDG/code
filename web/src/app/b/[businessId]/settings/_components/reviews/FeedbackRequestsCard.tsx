@@ -8,7 +8,7 @@ import { IconStar } from "@/components/icons";
 import { ChannelBadge } from "@/components/insights/Badges";
 import { Badge, Card, EmptyState, ErrorState, SkeletonRows } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
-import { businessPath } from "@/lib/navigation";
+import { conversationPath } from "@/lib/navigation";
 
 import {
   REQUEST_STATUS_LABELS,
@@ -84,7 +84,7 @@ function RequestRow({ item }: { item: FeedbackRequestView }) {
         {item.review_clicks > 0 ? <Badge tone="accent">{t("reviewSettings.requests.openedLink")}</Badge> : null}
         {item.conversation_id ? (
           <Link
-            href={`${businessPath(business.id, "messages")}/${encodeURIComponent(item.conversation_id)}`}
+            href={conversationPath(business.id, item.conversation_id)}
             className="text-sm font-medium text-accent underline underline-offset-2 hover:no-underline"
           >
             {t("reviewSettings.requests.openConversation")}

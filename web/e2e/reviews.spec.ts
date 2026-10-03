@@ -113,7 +113,7 @@ test("the numbers and the latest requests say what customers answered", async ({
   await expect(answered.getByText(reviews.requests.openedLink, { exact: true })).toBeVisible();
   await expect(answered.getByRole("link", { name: reviews.requests.openConversation })).toHaveAttribute(
     "href",
-    `/b/${owner.businessId}/messages/${CONVERSATION_ID}`,
+    `/b/${owner.businessId}/inbox/${CONVERSATION_ID}`,
   );
   const skipped = page.getByRole("listitem").filter({ hasText: reviews.requests.customer });
   await expect(

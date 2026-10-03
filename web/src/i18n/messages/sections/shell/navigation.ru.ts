@@ -6,17 +6,17 @@ import type { navigationEn } from "./navigation.en";
 export const navigationRu: Translation<typeof navigationEn> = {
   sections: {
     overview: "Обзор",
-    messages: "Сообщения",
+    inbox: "Входящие",
     bookings: "Брони",
     assistant: "Помощник",
     settings: "Настройки",
   },
   descriptions: {
     overview: "Как работает помощник и что сегодня ждёт вашего внимания.",
-    messages: "Все разговоры, те, где нужен человек, и заявки клиентов — в одном месте.",
+    inbox: "Все разговоры в одном месте: клиенты, которым нужен человек, заявки и кто из команды чем занимается.",
     bookings: "Брони со статусами; можно добавить вручную.",
     assistant: "Попробуйте помощника, научите его, выберите, где он отвечает, и примените изменения.",
-    settings: "Ваш бизнес, команда, уведомления, звонки, отзывы, тариф, приватность и журнал действий.",
+    settings: "Ваш бизнес, команда, уведомления, быстрые ответы, звонки, отзывы, тариф, приватность и журнал действий.",
     assistantTest: "Пишите так, как написал бы клиент. Настоящим клиентам ничего не уйдёт.",
     assistantProfile: "Контакты, часы работы, что вы предлагаете, правила брони и когда звать человека — анкета, по которой работает помощник.",
     assistantVersions: "Каждое обновление помощника с проверками, публикацией и возвратом.",
@@ -24,9 +24,6 @@ export const navigationRu: Translation<typeof navigationEn> = {
   pages: {
     overviewDashboard: "Сводка",
     overviewReports: "Отчёты",
-    messagesAll: "Все разговоры",
-    messagesHandoffs: "Нужен человек",
-    messagesLeads: "Заявки",
     assistantTest: "Попробовать",
     assistantKnowledge: "Знания",
     assistantProfile: "Часы и правила",
@@ -35,6 +32,7 @@ export const navigationRu: Translation<typeof navigationEn> = {
     settingsGeneral: "Бизнес",
     settingsTeam: "Команда",
     settingsNotifications: "Уведомления",
+    settingsQuickReplies: "Быстрые ответы",
     settingsCalls: "Звонки",
     settingsReviews: "Отзывы",
     settingsBilling: "Тариф и оплата",

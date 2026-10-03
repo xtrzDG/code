@@ -13,7 +13,7 @@ import type { Schema } from "../src/api/types";
 
 import { expect, test } from "./support/fixtures";
 import { en } from "./support/messages";
-import { CONVERSATION_ID, cardWithCalls, serveCard } from "./support/conversation-card";
+import { CONVERSATION_ID, cardWithCalls, openCard, openDetails, serveCard } from "./support/conversation-card";
 
 const calls = en.callSettings;
 
@@ -84,7 +84,7 @@ test("the latest text-backs say what each caller got", async ({ page, owner }) =
   await expect(sent.getByText(calls.history.channels.whatsapp, { exact: true })).toBeVisible();
   await expect(sent.getByRole("link", { name: calls.history.openConversation })).toHaveAttribute(
     "href",
-    `/b/${owner.businessId}/messages/${CONVERSATION_ID}`,
+    `/b/${owner.businessId}/inbox/${CONVERSATION_ID}`,
   );
   const hidden = page.getByRole("listitem").filter({ hasText: calls.history.hiddenNumber });
   await expect(hidden.getByText(calls.history.statuses.skipped, { exact: true })).toBeVisible();
@@ -113,7 +113,8 @@ test("the call card shows the summary in the reader's language", async ({ page, 
   }));
   await serveCard(page, owner.businessId, card);
 
-  await page.goto(`/b/${owner.businessId}/messages/${CONVERSATION_ID}`);
+  await openCard(page, owner.businessId);
+  await openDetails(page);
 
   await expect(page.getByText(en.conversations.calls.summary, { exact: true })).toBeVisible();
   await expect(page.getByText("The caller wants a table for four on Saturday.")).toBeVisible();

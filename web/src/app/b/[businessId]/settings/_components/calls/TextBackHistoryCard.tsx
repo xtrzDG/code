@@ -7,7 +7,7 @@ import { useBusiness, useBusinessFormat } from "@/components/business/BusinessCo
 import { IconPhone } from "@/components/icons";
 import { Badge, Card, EmptyState, ErrorState, SkeletonRows } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
-import { businessPath } from "@/lib/navigation";
+import { conversationPath } from "@/lib/navigation";
 
 import {
   MISSED_CALL_REASON_LABELS,
@@ -86,7 +86,7 @@ function TextBackRow({ item }: { item: TextBackView }) {
         ) : null}
         {item.conversation_id ? (
           <Link
-            href={`${businessPath(business.id, "messages")}/${encodeURIComponent(item.conversation_id)}`}
+            href={conversationPath(business.id, item.conversation_id)}
             className="text-sm font-medium text-accent underline underline-offset-2 hover:no-underline"
           >
             {t("callSettings.history.openConversation")}

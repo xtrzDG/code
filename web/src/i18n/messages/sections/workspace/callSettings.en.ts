@@ -18,7 +18,7 @@ export const callSettingsEn = {
   textBack: {
     title: "Text back missed callers",
     description:
-      "When a caller does not get through (the line is busy, nobody answers, they hang up early, the assistant cannot take the call, or nobody picks up a transfer), we write to them within a minute or two, in their language. Their reply continues as a WhatsApp conversation in Messages.",
+      "When a caller does not get through (the line is busy, nobody answers, they hang up early, the assistant cannot take the call, or nobody picks up a transfer), we write to them within a minute or two, in their language. Their reply continues as a WhatsApp conversation in the Inbox.",
     toggle: "Text back callers who did not get through",
     template: "WhatsApp template name",
     templateHint: "The name of the approved utility template on your WhatsApp number: lowercase Latin letters, digits and underscores.",

@@ -4,7 +4,7 @@ The owner cabinet of the AI front-line assistant and its public landing page:
 the product, prices by country and FAQ at `/`, sign-in by phone (any country)
 or e-mail, businesses, "Create an AI assistant" (the setup flow: the six-step
 profile ending in the first version), then five calm sections (Overview,
-Messages, Bookings, Assistant, Settings; see [Navigation](#navigation)) and
+Inbox, Bookings, Assistant, Settings; see [Navigation](#navigation)) and
 the platform admin. It installs as an app (manifest, icons, service worker,
 offline page).
 Next.js (App Router) + TypeScript (strict) + Tailwind CSS v4.
@@ -134,9 +134,14 @@ npm run e2e -- onboarding         # one file
   page (`e2e/pwa.spec.ts`), an axe audit of every page in both themes and on
   a phone (`e2e/a11y.spec.ts`), switching the interface language ru/ka/en
   from the user menu, the website chat demo page of the API, going back to a
-  section showing its data from the cache (no skeleton, no spinner), a lead's
-  status changing at once, rolling back on a 500 and being undone
-  (`e2e/instant.spec.ts`, leads served by `e2e/support/leads.ts`), a
+  section showing its data from the cache (no skeleton, no spinner), a
+  request's status changing at once on its conversation, rolling back on a
+  500 and being undone (`e2e/instant.spec.ts`, the request served by
+  `e2e/support/leads.ts`), the team inbox (`e2e/inbox.spec.ts`: a staff
+  member opens a notification's link on a 390 px phone, replies without
+  scrolling and resolves the handoff; two people take a conversation at
+  once and the second is told; notes never reach the customer's chat or the
+  transcript; the demo restaurant's helpers in `e2e/support/demo.ts`), a
   customer who needs a person appearing in an open tab without a reload, with
   its badge, the tab title count and a toast elsewhere (`e2e/live.spec.ts`:
   the demo restaurant's real widget API and event stream), every page in
@@ -205,13 +210,12 @@ web/
                                breakdowns
           reports/             owners: the month so far, stored monthly/weekly/daily reports (?kind=,
                                ?report= opens one from a digest's link), the owner's summaries
-        messages/              layout.tsx: the Messages frame and its tabs (badges for what waits)
-          (inbox)/             all conversations: server-paged feed with filters + card (calls with a
-                               recording player, rating, linked bookings/leads/handoffs, staff reply box,
-                               WhatsApp template after 24 hours); layout.tsx keeps the feed mounted beside
-                               the card, [conversationId]/ on phones
-          handoffs/            "Needs a person": server-paged open/resolved handoffs by urgency, resolve
-          leads/               "Requests": server-paged requests by status with tab counts, status changes
+        inbox/                 the team inbox (see [Inbox](#inbox)): layout.tsx keeps the list (views
+                               Needs a person, Requests, Mine, Unassigned, All with live counts, search
+                               and filters, a sheet on phones) beside the conversation; page.tsx when
+                               none is open; [conversationId]/ the phone-first conversation (folded
+                               header, transcript, sticky reply box with Resolve, Call, Book, quick
+                               replies after "/", assign menu, notes and details in a panel or sheet)
         bookings/              server-paged bookings by day ("show more"), manual booking with free
                                slots (whole-day mode), details, edit, move, cancel
         assistant/             layout.tsx: the Assistant frame (live version, "Apply changes", tabs);
@@ -226,8 +230,10 @@ web/
           versions/            Advanced: versions, versions/[versionId]/ (go-live checklist, autotests
                                with live progress, publish, rollback)
         settings/              layout.tsx: the Settings frame and tabs; page.tsx: business (old
-                               #team-style links move to their page), team/, notifications/, billing/
-                               (plan, trial, usage, plans of the country, invoices, payment), privacy/, audit/
+                               #team-style links move to their page), team/, notifications/,
+                               quick-replies/ (owners: the replies staff insert with "/", a text per
+                               language, variables), billing/ (plan, trial, usage, plans of the
+                               country, invoices, payment), privacy/, audit/
       admin/                   platform admin: clients (filters, sorts) and clients/[businessId]/;
                                security/ (encryption keys: the key ring and re-encryption runs)
       api/
@@ -344,10 +350,10 @@ section tabs, page titles and the e2e suite read it):
 | Section | Pages (`/b/{id}/…`) | Who |
 | --- | --- | --- |
 | Overview | `overview?period=…` (dashboard), `overview/reports?kind=…&report=…` | owners; staff: the dashboard only |
-| Messages | `messages[/{conversationId}]` (all conversations), `messages/handoffs` ("Needs a person"), `messages/leads` ("Requests") | owners, staff |
+| Inbox | `inbox[?view=needs_person\|requests\|mine\|unassigned\|all]` (one page, its views; `needs_person` without a query), `inbox/{conversationId}` | owners, staff |
 | Bookings | `bookings` | owners, staff |
 | Assistant | `assistant` ("Try it", the test chat), `assistant/knowledge[/questions\|/import\|/resources]`, `assistant/profile?step=…` ("Hours and rules"), `assistant/channels`; under Advanced `assistant/versions[/{versionId}]` | staff: "Try it" only |
-| Settings | `settings` (business), `settings/team`, `settings/notifications`, `settings/calls`, `settings/billing`, `settings/privacy`, `settings/audit` | owners; staff: Notifications only (their own devices, events and quiet hours) |
+| Settings | `settings` (business), `settings/team`, `settings/notifications`, `settings/quick-replies`, `settings/calls`, `settings/billing`, `settings/privacy`, `settings/audit` | owners; staff: Notifications only (their own devices, events and quiet hours) |
 
 - **Sidebar** (large screens): the mark, the business switcher (it keeps the
   page when switching), the sections with icons and a marker that glides to
@@ -357,20 +363,20 @@ section tabs, page titles and the e2e suite read it):
   (a native popover). The arrow folds the sidebar to a rail of icons; the
   choice lives in the `aw_sidebar` cookie, so the server draws it right.
 - **Phones**: a calm top bar (the mark, the business, where you are), the
-  bottom tab bar (Overview, Messages, Bookings, Assistant, More; places of at
+  bottom tab bar (Overview, Inbox, Bookings, Assistant, More; places of at
   least 56 px, above the home indicator) and "More", a sheet with Settings and
   its pages, the business switcher and the account panel. An open
   conversation takes the whole screen (no tab bar, the frame steps aside).
-- **Section frames** (`components/shell/SectionFrame.tsx`): Messages,
-  Assistant and Settings show the section's `<h1>`, what it is for and the
+- **Section frames** (`components/shell/SectionFrame.tsx`): Assistant and
+  Settings show the section's `<h1>`, what it is for and the
   tabs of its pages; a page's own `PageHeader` inside becomes an `<h2>` for
   screen readers and shows only its description and actions (`SubPages`).
-- **Roles**: staff see Overview, Messages, Bookings and the test chat; a page
+- **Roles**: staff see Overview, Inbox, Bookings and the test chat; a page
   their role does not open (an old link to settings) explains itself
   (`OwnersOnlyPage`) instead of failing. Platform admins see what owners see.
 - **Badges**: what waits for a person, from
   `GET /v1/businesses/{id}/attention-counts` (counts only, not audited): open
-  handoffs and new requests on Messages and its tabs, upcoming bookings to
+  handoffs and new requests on Inbox, upcoming bookings to
   confirm on Bookings, channels in error on Assistant → Channels (owners).
   Every live event reloads them (polled every minute only while the stream is
   down); the tab title starts with their sum ("(3) Bookings · …"). The
@@ -385,8 +391,9 @@ section tabs, page titles and the e2e suite read it):
   read that the owner is setting it up.
 - **Old addresses** (`src/lib/legacyRoutes.ts`, 307 redirects in
   `next.config.ts`, the query kept): `dashboard` → `overview`,
-  `conversations[/…]` → `messages[/…]`, `handoffs` → `messages/handoffs`,
-  `leads` → `messages/leads`, `knowledge[/…]` → `assistant/knowledge[/…]`,
+  `conversations[/…]` and `messages[/…]` → `inbox[/…]`, `handoffs` and
+  `messages/handoffs` → `inbox?view=needs_person`, `leads` and
+  `messages/leads` → `inbox?view=requests`, `knowledge[/…]` → `assistant/knowledge[/…]`,
   `channels` → `assistant/channels`, `billing` → `settings/billing`, `/b/{id}`
   → `overview`; `settings#team` (a hash never reaches the server) is moved by
   the settings page, and `onboarding?step=…` by the setup page once the
@@ -398,9 +405,8 @@ section tabs, page titles and the e2e suite read it):
 | --- | --- |
 | Overview | What the assistant is worth (owners: its bookings times the average check, after-hours conversations, staff time saved, against the period before; the average check is edited in place), the next step for the business status, open handoffs and unanswered questions (staff: their queue of the day), KPI tiles with change chips, a daily trend chart with a table view, package minutes and dialogs (staff too, without prices), languages/channels/handoff reasons |
 | Overview → Reports | The month so far, stored monthly reports and weekly/daily digests with every number against the period before, the owner's choice of summaries (monthly, weekly, daily) |
-| Messages → all conversations | Server filters and search kept in the URL, transcript with tool calls and calls (a recording is downloaded once and audited when "Play recording" is pressed, then plays and seeks from memory; an expired session goes to sign-in, a deleted recording says so), rating, linked bookings, leads and handoffs, staff reply (after the WhatsApp 24-hour window: in the owner's approved template, or a pointer to Channels; a template WhatsApp refuses says what to fix), booking confirmation prefilled into the reply box whenever it can send it, booking for the customer |
-| Messages → Needs a person | Open handoffs first by urgency, resolve, call and conversation links |
-| Messages → Requests | Server-paged status tabs with counts, inline status change, details |
+| Inbox | The team's one list: views Needs a person, Requests, Mine, Unassigned and All with live counts; a search and the history filters (period, status, test conversations) look through All; who handles each conversation, its notes, what waits. See [Inbox](#inbox) |
+| Inbox → a conversation | Made for a phone: the transcript under a folded header (customer, channel, who handles it; the rest in Details), what waits above it (the handoff's reason and urgency, open requests with their status), a sticky reply box with Resolve, Call and Book and quick replies after "/"; the assign menu; notes and details in a side panel (a column of their own from 1536 px, a sheet below). Calls with their summary and recording (downloaded once and audited when "Play recording" is pressed), rating, linked bookings, staff reply (after the WhatsApp 24-hour window: in the owner's approved template, or a pointer to Channels), booking for the customer with the confirmation prefilled. Model, tokens, cost and tool calls stay behind "Technical details" (open by default for platform admins) |
 | Bookings | Server-paged day groups with place and order filters, manual booking with free slots (whole day), edit, confirm / complete / no-show / move / cancel and the customer text |
 | Assistant → Try it | Test chat with tool calls (`?version=…` talks to a chosen version); "Apply changes" builds a new version from the profile and knowledge |
 | Assistant → Knowledge | Server-paged items and search, unanswered questions to FAQ, menu import with review and batch discard, import from the business's website (queued, live progress, same review; `?source=website`), resources and special days |
@@ -410,12 +416,57 @@ section tabs, page titles and the e2e suite read it):
 | Hosted chat page (`/c/{address}`) | Public, for customers: the widget in page mode, full screen on phones, in the visitor's language (Accept-Language among the business's), the business's colour; older addresses and the business id move to the current one; `noindex`, a policy that allows only the API; texts in all widget languages (`lib/hostedChat/`); `/c/{address}/privacy` is the platform's default privacy notice (ka, ru, en) |
 | Assistant → Advanced | Versions, go-live checklist with fix links, autotests with live progress, publish and rollback with reasons |
 | Settings → Plan and billing | Trial (it starts by itself at the first go-live; the card says so until then, and the owner may start it earlier), subscribe with payment (after the trial, an overdue payment or a cancellation), plan change, usage meters, invoices, payment |
+| Settings → Quick replies | Owners: the replies the team sends often, each with a name, a shortcut typed after "/" and a text per language of the business; buttons insert the variables the API fills (`{name}`, `{booking_time}`, `{business_name}`) and a preview shows how a customer reads it; a shortcut already taken or too many replies are said in the form |
 | Settings → Notifications | For everyone: **On this device** (Web Push: the browser asks for permission, subscribes with the server's VAPID key and the subscription goes to the API; "Send a test" answers whether it arrived; "Turn off"; my other devices), **What reaches me** (events and quiet hours of my devices, in the business time zone). For the staff contacts: how notifications reach each one (channel without a provider on the server, the latest one delivered, waiting or failed with the reason), the linked Telegram chat's @username, and for owners "Send a test" (at most 5 per contact and hour) and each contact's events and quiet hours in its dialog |
 | Notification links (`/n/{token}`) | The link at the end of every staff e-mail, SMS, chat message and device notification: signed in first (the proxy sends visitors to `/login?next=…`), then the API says where it leads (a conversation, the requests, the bookings of the booking's day, the notification settings) and the page opens there; an expired (7 days), altered or foreign link says so (`app/n/[token]/page.tsx`, `lib/notificationLinks.ts`) |
-| Settings → Calls | Owners: **Call summaries** after every call (on by default; who gets them is the staff contacts in Notifications), **Text back missed callers** (off by default: the approved WhatsApp utility template's name, checked like Meta does, and the SMS fallback, with what a caller who did not get through would get now: the template, an SMS or nothing yet and why), **Template text** (the body to register with Meta in each language of the business, with Copy, and what callers read) and **Latest text-backs** (the last 20 callers who did not get through: number, when, why, Sent/Sending/Not delivered/Not sent with the reason, the channel and a link to the WhatsApp conversation their reply continues in). The call card in Messages shows each call's summary in the reader's language |
+| Settings → Calls | Owners: **Call summaries** after every call (on by default; who gets them is the staff contacts in Notifications), **Text back missed callers** (off by default: the approved WhatsApp utility template's name, checked like Meta does, and the SMS fallback, with what a caller who did not get through would get now: the template, an SMS or nothing yet and why), **Template text** (the body to register with Meta in each language of the business, with Copy, and what callers read) and **Latest text-backs** (the last 20 callers who did not get through: number, when, why, Sent/Sending/Not delivered/Not sent with the reason, the channel and a link to the WhatsApp conversation their reply continues in). A conversation's calls show each summary in the reader's language |
 | Settings → the rest | Business settings and pause, team with owner/staff roles, manager contacts, reading and accepting the data processing agreement, the customer list with export and erasure, the audit log with server filters. Business and Notifications save with the business `revision` they showed (`expected_revision`); when someone saved since (another owner, the Telegram bot adding a manager), the API answers 409 `stale_revision` and the page reloads and says so instead of overwriting. Business starts from the business as stored when it opens, and after a stale refusal keeps what was typed: fields nobody else changed are saved again at once, fields changed on both sides show the stored value |
 | Admin (`/admin`, `/admin/clients/{id}`) | Platform admins: all clients (server filters, sorts and paging, totals), health, opening a client's cabinet |
 | Admin → Encryption keys (`/admin/security`) | Platform admins: how many keys `ENCRYPTION_KEYS` holds (never the keys), the latest re-encryption run (status, tokens checked, already current, sealed again, unreadable, Telegram webhooks registered again or not) with what it means, and **Re-encrypt stored tokens** after a confirmation (one run at a time; the page follows it until the worker is done). The runbook: `docs/operations/backup-restore.md` |
+
+### Inbox
+
+One list for the whole team (`app/b/[businessId]/inbox/`), replacing the
+separate Messages, Needs a person and Requests pages (their addresses
+redirect):
+
+- **Views** (`?view=`, `lib/navigation.ts` `inboxPath`): Needs a person
+  (the default, no query), Requests, Mine, Unassigned, All. The four work
+  views come from `GET …/inbox` with live counts from `GET …/inbox/counts`
+  (not audited, kept fresh by every live event); a search or a history
+  filter (period, status, test conversations) belongs to All and is answered
+  by the conversation feed `GET …/conversations` (`_lib/inboxModel.ts`
+  decides). Both lists are audited reads, so they reload on a live event
+  only while shown. On phones the filters are a sheet; from `lg` the list
+  stays beside the open conversation.
+- **A conversation** (`[conversationId]/`, `ConversationView`): a phone
+  first layout. The header is folded (customer, channel, who handles it);
+  the transcript fills the screen; the reply box with Resolve, Call and Book
+  sticks to the bottom, so a notification's link (`/n/{token}`) leads
+  straight to a reply. Details (customer, calls, bookings, requests, rating)
+  and notes open in a panel: a sheet below 1536 px, a column of its own
+  above.
+- **Assigning** (`AssignMenu`, `_lib/useAssign.ts`): the team with avatars
+  and how many waiting conversations each handles, me first. The choice
+  shows at once and is sent with the `assignment_revision` the screen saw;
+  when someone changed it meanwhile (409 `assignment_changed`) the card and
+  the list reload and a toast says so. Staff may take or hand on a
+  conversation nobody (or they) handle; a colleague's stays theirs until an
+  owner moves it. Test conversations are not team work.
+- **Notes** (`notes/NotesPanel.tsx`): internal to the team, on a dashed
+  amber card with "Only your team sees this"; they live only in the notes
+  panel, never in the transcript, and the API never sends them to the
+  customer or the assistant (`e2e/inbox.spec.ts` checks the widget's poll).
+- **Quick replies**: typing "/" in the reply box (or the "/" button) opens
+  a picker of the business's replies, filled by the API for this
+  conversation (`GET …/conversations/{id}/quick-replies`: customer's name,
+  booking time, business name, in the conversation's language); a variable
+  it could not fill stays in braces with a field to fill it before sending.
+  Owners edit them in Settings → Quick replies.
+- **Technical details**: model, tokens, cost and tool calls of an assistant
+  message stay behind a "Technical details" disclosure (open by default for
+  platform admins); under each message the requests to the business's data
+  read as plain chips with what the assistant did (`TOOL_LABELS`).
 
 ### Installable app
 
@@ -639,7 +690,8 @@ through the BFF (`LiveEventsProvider` in `components/shell/LiveEvents.tsx`):
   isFetching={query.isFetching} />` shows "Live · Updated just now" (amber
   "Reconnecting…" with "Try now" while the stream is down).
 - A customer who needs a person (`handoff.created`) brings a toast with
-  "Open" unless the handoffs list is already open, and a short chime when the
+  "Open" (the inbox on Needs a person) unless the inbox list is already
+  open, and a short chime when the
   person turned it on (account panel; kept per device in `localStorage`, see
   `src/lib/chimePreference.ts`; the sound is unlocked by the first click).
 - The BFF passes the stream on unbuffered (`no-cache, no-transform`,

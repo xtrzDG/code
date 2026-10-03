@@ -31,6 +31,8 @@ export function ShellFrame({
   me,
   initialCollapsed,
   showTabBar = true,
+  showPhoneTopBar = true,
+  isWide = false,
   children,
 }: {
   items: readonly ShellNavItem[];
@@ -46,6 +48,10 @@ export function ShellFrame({
   initialCollapsed: boolean;
   /** False before the assistant exists and on an open conversation (its reply box needs the space). */
   showTabBar?: boolean;
+  /** False on an open conversation: its own bar (back, customer, actions) is the top of the phone screen. */
+  showPhoneTopBar?: boolean;
+  /** The page uses the full width of large screens (the inbox: a list beside a conversation). */
+  isWide?: boolean;
   children: ReactNode;
 }) {
   const { t } = useI18n();
@@ -85,6 +91,7 @@ export function ShellFrame({
       </aside>
 
       <div className="transition-[padding] duration-(--motion-base) ease-(--ease-emphasized) lg:ps-(--sidebar-width)">
+        {showPhoneTopBar ? (
         <PhoneTopBar
           title={title}
           context={context}
@@ -103,11 +110,13 @@ export function ShellFrame({
             )
           }
         />
+        ) : null}
         <main
           id="main"
           tabIndex={-1}
           className={cn(
-            "mx-auto w-full max-w-6xl px-4 py-6 focus:outline-none sm:px-6 lg:px-8 lg:py-8",
+            "mx-auto w-full px-4 py-6 focus:outline-none sm:px-6 lg:px-8 lg:py-8",
+            isWide ? "max-w-[100rem]" : "max-w-6xl",
             showTabBar && "pb-[calc(6.5rem+env(safe-area-inset-bottom))] lg:pb-8",
           )}
         >

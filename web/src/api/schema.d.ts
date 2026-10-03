@@ -4160,10 +4160,12 @@ export interface components {
          *     calls (oldest first; `earlier_messages_cursor` pages back through
          *     `GET .../messages` when there is more), the model usage of the whole
          *     conversation, for phone conversations the calls with their transcripts
-         *     and recordings, the bookings, leads and handoffs made in it, and
-         *     whether staff can reply.
+         *     and recordings, the bookings, leads and handoffs made in it, whether
+         *     staff can reply, and who of the team is assigned to it (its
+         *     `assignment_revision` is what an assignment from the card must name).
          */
         ConversationDetailView: {
+            assignment?: components["schemas"]["ConversationAssignmentView"] | null;
             /** Bookings */
             bookings?: components["schemas"]["BookingView"][];
             /** Calls */

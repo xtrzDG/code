@@ -8,16 +8,17 @@ import { expect, test } from "./support/fixtures";
 import { waitForNetworkQuiet } from "./support/network";
 
 test.describe("lists whose every load is audited", () => {
+  // The inbox views come from GET …/inbox, a search through the history from GET …/conversations.
   const lists = [
-    { section: "handoffs", page: "messages/handoffs" },
-    { section: "conversations", page: "messages" },
+    { name: "the inbox", endpoint: "inbox", page: "inbox" },
+    { name: "a search of all conversations", endpoint: "conversations", page: "inbox?view=all&status=open" },
   ] as const;
-  for (const { section, page: path } of lists) {
-    test(`${section} reload on return to the tab, never on a timer`, async ({ page, owner }) => {
+  for (const { name, endpoint, page: path } of lists) {
+    test(`${name} reloads on return to the tab, never on a timer`, async ({ page, owner }) => {
       await page.clock.install();
       const loads: string[] = [];
       page.on("request", (request) => {
-        if (new URL(request.url()).pathname.endsWith(`/v1/businesses/${owner.businessId}/${section}`)) {
+        if (new URL(request.url()).pathname.endsWith(`/v1/businesses/${owner.businessId}/${endpoint}`)) {
           loads.push(request.url());
         }
       });
