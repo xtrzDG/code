@@ -138,6 +138,7 @@ class PlatformUseCasesContainer(containers.DeclarativeContainer):
         channel_message_receipt_repo=repositories.channel_message_receipt_repo,
         inbound_event_repo=repositories.inbound_event_repo,
         outbound_message_repo=repositories.outbound_message_repo,
+        missed_call_repo=repositories.missed_call_repo,
         audit_log_repo=repositories.audit_log_repo,
         wall_clock=time_provider.microsecond_wall_clock,
     )

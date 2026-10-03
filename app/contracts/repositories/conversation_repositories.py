@@ -6,7 +6,7 @@ not change stored state until it is saved. Every business-owned document is
 looked up through its business id, so one tenant never sees another's data.
 """
 
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from typing import Protocol
 
 from typed_time_provider import Microseconds
@@ -222,6 +222,18 @@ class CallRepoContract(CallListingContract, RepoContract, Protocol):
         raise NotImplementedError
 
     def list_by_business(self, business_id: BusinessId) -> list[CallDocument]:
+        raise NotImplementedError
+
+    def update(
+        self,
+        business_id: BusinessId,
+        call_id: CallId,
+        change: Callable[[CallDocument], CallDocument | None],
+    ) -> CallDocument | None:
+        """
+        Store what `change` makes of the call as stored now; None, and
+        nothing written, when it is gone or `change` returns None.
+        """
         raise NotImplementedError
 
     def move_recording(

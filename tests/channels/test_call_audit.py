@@ -237,12 +237,13 @@ def test_a_call_that_reached_no_tool_is_checked_against_the_live_version() -> No
             ("agent", "With a friend it is 70 lari."),
         ]
     )
-    # No tool was called, so the call has no conversation of its own.
+    # No tool was called: the call gets its own conversation after it ends.
     payload["data"]["conversation_id"] = "conv_without_tools"
 
     post_call(setup, payload)
 
     [call] = stored_calls(setup)
-    assert call.conversation_id is None
+    assert call.conversation_id is not None
+    assert call.conversation_id != setup.conversation.id
     assert call.unverified_values == ["70 lari"]
     assert call.guard_verdict is CallGuardVerdict.FLAGGED

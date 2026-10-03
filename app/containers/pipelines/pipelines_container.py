@@ -8,6 +8,7 @@ from app.containers.orchestrators.orchestrators_container import (
 from app.containers.pipelines.account_pipelines import AccountPipelinesContainer
 from app.containers.pipelines.assistant_pipelines import AssistantPipelinesContainer
 from app.containers.pipelines.billing_pipelines import BillingPipelinesContainer
+from app.containers.pipelines.call_pipelines import CallPipelinesContainer
 from app.containers.pipelines.channel_pipelines import ChannelPipelinesContainer
 from app.containers.pipelines.compliance_pipelines import CompliancePipelinesContainer
 from app.containers.pipelines.conversation_pipelines import (
@@ -82,6 +83,10 @@ class PipelinesContainer(containers.DeclarativeContainer):
     billing: BillingPipelinesContainer = Container(  # type: ignore[assignment]
         BillingPipelinesContainer,
         billing_orchestrators=orchestrators.billing,
+    )
+    calls: CallPipelinesContainer = Container(  # type: ignore[assignment]
+        CallPipelinesContainer,
+        calls=orchestrators.calls,
     )
     notifications: NotificationPipelinesContainer = Container(  # type: ignore[assignment]
         NotificationPipelinesContainer,

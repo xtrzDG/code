@@ -32,6 +32,7 @@ export const conversationsKa: Translation<typeof conversationsEn> = {
     playMissing: "ეს ჩანაწერი აღარ არის ხელმისაწვდომი: ის წაიშალა შენახვის ვადის გასვლის შემდეგ ან კლიენტის მონაცემებთან ერთად.",
     playError: "ჩანაწერის ჩატვირთვა ვერ მოხერხდა: ხმოვანი სერვისი არ პასუხობს. სცადეთ ერთ წუთში.",
     playRetry: "ხელახლა ცდა",
+    summary: "შეჯამება",
     transcript: "ზარის ტრანსკრიპტი",
     noTranscript: "ამ ზარს ტრანსკრიპტი არ აქვს.",
     guard: {

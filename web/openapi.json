@@ -3014,13 +3014,31 @@
             "title": "Recording Path"
           },
           "schema_version": {
-            "default": "2",
+            "default": "3",
             "title": "Schema Version",
             "type": "string"
           },
           "started_at": {
             "title": "Started At",
             "type": "integer"
+          },
+          "summaries": {
+            "items": {
+              "$ref": "#/components/schemas/CallSummary"
+            },
+            "title": "Summaries",
+            "type": "array"
+          },
+          "summarized_at": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Summarized At"
           },
           "to_phone_number": {
             "anyOf": [
@@ -3203,9 +3221,115 @@
         "title": "CallOutcome",
         "type": "string"
       },
+      "CallSettingsView": {
+        "additionalProperties": false,
+        "description": "The settings with what they rely on: whether the business's WhatsApp\nnumber is connected, whether the platform can send SMS, and the\ntext-back in each language of the business.",
+        "properties": {
+          "is_sms_available": {
+            "title": "Is Sms Available",
+            "type": "boolean"
+          },
+          "is_sms_fallback_enabled": {
+            "title": "Is Sms Fallback Enabled",
+            "type": "boolean"
+          },
+          "is_summary_enabled": {
+            "title": "Is Summary Enabled",
+            "type": "boolean"
+          },
+          "is_text_back_enabled": {
+            "title": "Is Text Back Enabled",
+            "type": "boolean"
+          },
+          "is_whatsapp_connected": {
+            "title": "Is Whatsapp Connected",
+            "type": "boolean"
+          },
+          "template_previews": {
+            "items": {
+              "$ref": "#/components/schemas/TextBackTemplatePreview"
+            },
+            "title": "Template Previews",
+            "type": "array"
+          },
+          "text_back_template_name": {
+            "anyOf": [
+              {
+                "maxLength": 512,
+                "minLength": 1,
+                "pattern": "^[a-z0-9_]{1,512}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Text Back Template Name"
+          }
+        },
+        "required": [
+          "is_summary_enabled",
+          "is_text_back_enabled",
+          "is_sms_fallback_enabled",
+          "is_whatsapp_connected",
+          "is_sms_available"
+        ],
+        "title": "CallSettingsView",
+        "type": "object"
+      },
+      "CallSummary": {
+        "additionalProperties": false,
+        "description": "The summary of a call for staff in one language.",
+        "properties": {
+          "language": {
+            "maxLength": 16,
+            "minLength": 2,
+            "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$",
+            "title": "Language",
+            "type": "string"
+          },
+          "text": {
+            "maxLength": 600,
+            "minLength": 1,
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "language",
+          "text"
+        ],
+        "title": "CallSummary",
+        "type": "object"
+      },
+      "CallSummaryView": {
+        "additionalProperties": false,
+        "description": "The short summary of a call for staff, in one language.",
+        "properties": {
+          "language": {
+            "maxLength": 16,
+            "minLength": 2,
+            "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$",
+            "title": "Language",
+            "type": "string"
+          },
+          "text": {
+            "maxLength": 600,
+            "minLength": 1,
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "language",
+          "text"
+        ],
+        "title": "CallSummaryView",
+        "type": "object"
+      },
       "CallView": {
         "additionalProperties": false,
-        "description": "A phone call of the conversation: its transcript, duration, outcome and\nwhere its recording is kept (the platform reference; reading it is\naudited with the card), and what the after-call check of the\nassistant's spoken values found (`guard_verdict`, None while unchecked).",
+        "description": "A phone call of the conversation: its transcript, duration, outcome and\nwhere its recording is kept (the platform reference; reading it is\naudited with the card), what the after-call check of the assistant's\nspoken values found (`guard_verdict`, None while unchecked), and its\nsummary for staff in the owner's and the staff's languages (empty until\nthe call is summarized).",
         "properties": {
           "duration_seconds": {
             "minimum": 0.0,
@@ -3264,6 +3388,13 @@
           "started_at": {
             "title": "Started At",
             "type": "integer"
+          },
+          "summaries": {
+            "items": {
+              "$ref": "#/components/schemas/CallSummaryView"
+            },
+            "title": "Summaries",
+            "type": "array"
           },
           "to_phone_number": {
             "anyOf": [
@@ -3964,7 +4095,7 @@
       },
       "ContactDocument": {
         "additionalProperties": false,
-        "description": "A customer of one business (concept table `contacts`).\n\n`phone_number` may come from what the customer typed (the model passes\nit to booking and lead tools); `verified_phone_number` only ever comes\nfrom a channel that proves it (WhatsApp sender, a contact the Telegram\nuser shared about themselves, the caller ID of a call). Only the\nverified phone proves that bookings under that phone are the\ncustomer's own.\n\n`erased_at` marks a customer erased at their request: the document then\nkeeps no personal data (no name, phones, language or channel\nidentities), only its id, so records that point to it read as erased.",
+        "description": "A customer of one business (concept table `contacts`).\n\n`phone_number` may come from what the customer typed (the model passes\nit to booking and lead tools); `verified_phone_number` only ever comes\nfrom a channel that proves it (WhatsApp sender, a contact the Telegram\nuser shared about themselves, the caller ID of a call). Only the\nverified phone proves that bookings under that phone are the\ncustomer's own.\n\n`erased_at` marks a customer erased at their request: the document then\nkeeps no personal data (no name, phones, language or channel\nidentities), only its id, so records that point to it read as erased.\n\n`opted_out_channels`: channels the customer asked to get no messages in\nthat they did not ask for (reminders, text-backs after a missed call);\nPHONE covers SMS to their number. Version 2 adds it (optional).",
         "properties": {
           "business_id": {
             "title": "Business Id",
@@ -4022,6 +4153,13 @@
             ],
             "title": "Name"
           },
+          "opted_out_channels": {
+            "items": {
+              "$ref": "#/components/schemas/ChannelKind"
+            },
+            "title": "Opted Out Channels",
+            "type": "array"
+          },
           "phone_number": {
             "anyOf": [
               {
@@ -4037,8 +4175,7 @@
             "title": "Phone Number"
           },
           "schema_version": {
-            "default": "1",
-            "description": "Persistence schema version. This is not the package version or application release version.",
+            "default": "2",
             "title": "Schema Version",
             "type": "string"
           },
@@ -7774,6 +7911,29 @@
         "title": "MessageView",
         "type": "object"
       },
+      "MissedCallReason": {
+        "description": "Why a caller did not get through, or got nothing from the call.\n\nFrom the telephony line (PBX): NO_ANSWER (it rang out), BUSY, ABANDONED\n(the caller hung up before the assistant answered) and LINE_FAILED (the\nline could not put the call through). From the voice platform:\nNOT_STARTED (the assistant could not start the call), NO_SPEECH (the\nassistant answered, the caller hung up without a word) and\nTRANSFER_UNANSWERED (the caller asked for a person and nobody picked up).",
+        "enum": [
+          "no_answer",
+          "busy",
+          "abandoned",
+          "line_failed",
+          "not_started",
+          "no_speech",
+          "transfer_unanswered"
+        ],
+        "title": "MissedCallReason",
+        "type": "string"
+      },
+      "MissedCallSource": {
+        "description": "Who reported the missed call: the telephony line or the voice platform.",
+        "enum": [
+          "pbx",
+          "voice_platform"
+        ],
+        "title": "MissedCallSource",
+        "type": "string"
+      },
       "Money": {
         "additionalProperties": false,
         "description": "Amount in minor units of an ISO 4217 currency.",
@@ -8419,6 +8579,41 @@
           "outcome"
         ],
         "title": "PaymentWebhookReceipt",
+        "type": "object"
+      },
+      "PbxCallWebhookOutcome": {
+        "additionalProperties": false,
+        "description": "What one telephony notification did: IGNORED (not a missed call, or a\nline no business has), RECORDED (a new missed call) or DUPLICATE.",
+        "properties": {
+          "missed_call_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Missed Call Id"
+          },
+          "status": {
+            "$ref": "#/components/schemas/PostCallEventStatus"
+          },
+          "text_back_status": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TextBackStatus"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "status"
+        ],
+        "title": "PbxCallWebhookOutcome",
         "type": "object"
       },
       "PhoneNumberDetails": {
@@ -10529,6 +10724,208 @@
           "expires_at"
         ],
         "title": "TelegramLinkView",
+        "type": "object"
+      },
+      "TextBackChannel": {
+        "description": "How the message to a caller who did not get through travels.",
+        "enum": [
+          "whatsapp",
+          "sms"
+        ],
+        "title": "TextBackChannel",
+        "type": "string"
+      },
+      "TextBackPage": {
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/TextBackView"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "minLength": 1,
+                "pattern": "^[A-Za-z0-9_-]+$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "TextBackPage",
+        "type": "object"
+      },
+      "TextBackSkipReason": {
+        "description": "Why a caller who did not get through was not texted.\n\nTURNED_OFF: the owner keeps text-backs off. OPTED_OUT: the customer\nasked for no more messages. ALREADY_TEXTED: the caller got one in the\nlast day. DAILY_LIMIT: the business reached its daily number of\ntext-backs. IN_CONVERSATION: the caller is already writing with the\nbusiness. NO_CHANNEL: neither a WhatsApp template nor SMS can carry it.\nNOT_LIVE: the assistant is not live. NO_CALLER_NUMBER: the number was\nhidden. TOO_LATE: the call is too long ago to text about it now.",
+        "enum": [
+          "turned_off",
+          "opted_out",
+          "already_texted",
+          "daily_limit",
+          "in_conversation",
+          "no_channel",
+          "not_live",
+          "no_caller_number",
+          "too_late"
+        ],
+        "title": "TextBackSkipReason",
+        "type": "string"
+      },
+      "TextBackStatus": {
+        "description": "Where the message to a caller who did not get through stands: QUEUED\nwaits for the worker, SENT was accepted by WhatsApp or the SMS provider,\nFAILED could not be sent on any channel, SKIPPED was not sent on purpose\n(the reason is kept with it).",
+        "enum": [
+          "queued",
+          "sent",
+          "failed",
+          "skipped"
+        ],
+        "title": "TextBackStatus",
+        "type": "string"
+      },
+      "TextBackTemplatePreview": {
+        "additionalProperties": false,
+        "description": "The text-back in one language: the body to register as the WhatsApp\ntemplate (its one parameter {{1}} is the business name) and how a\ncaller reads it.",
+        "properties": {
+          "example": {
+            "title": "Example",
+            "type": "string"
+          },
+          "language": {
+            "maxLength": 16,
+            "minLength": 2,
+            "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$",
+            "title": "Language",
+            "type": "string"
+          },
+          "template_body": {
+            "title": "Template Body",
+            "type": "string"
+          }
+        },
+        "required": [
+          "language",
+          "template_body",
+          "example"
+        ],
+        "title": "TextBackTemplatePreview",
+        "type": "object"
+      },
+      "TextBackView": {
+        "additionalProperties": false,
+        "description": "One caller who did not get through, and what became of their message.",
+        "properties": {
+          "called_at": {
+            "title": "Called At",
+            "type": "integer"
+          },
+          "caller_phone_number": {
+            "anyOf": [
+              {
+                "maxLength": 16,
+                "minLength": 8,
+                "pattern": "^\\+[1-9][0-9]{6,14}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Caller Phone Number"
+          },
+          "channel": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TextBackChannel"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "conversation_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Conversation Id"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "language": {
+            "maxLength": 16,
+            "minLength": 2,
+            "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$",
+            "title": "Language",
+            "type": "string"
+          },
+          "last_error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Error"
+          },
+          "reason": {
+            "$ref": "#/components/schemas/MissedCallReason"
+          },
+          "sent_at": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sent At"
+          },
+          "skip_reason": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TextBackSkipReason"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "source": {
+            "$ref": "#/components/schemas/MissedCallSource"
+          },
+          "status": {
+            "$ref": "#/components/schemas/TextBackStatus"
+          }
+        },
+        "required": [
+          "id",
+          "reason",
+          "source",
+          "called_at",
+          "language",
+          "status"
+        ],
+        "title": "TextBackView",
         "type": "object"
       },
       "TextDirection": {
@@ -18026,6 +18423,284 @@
           }
         },
         "summary": "Get Call Forwarding Instructions"
+      }
+    },
+    "/v1/businesses/{business_id}/call-settings": {
+      "get": {
+        "operationId": "get_call_settings_v1_businesses__business_id__call_settings_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CallSettingsView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Get Call Settings",
+        "tags": [
+          "calls"
+        ]
+      },
+      "put": {
+        "operationId": "update_call_settings_v1_businesses__business_id__call_settings_put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "description": "The owner's choices: summaries to staff after every call, a message\nto a caller who did not get through (on WhatsApp, in the approved\ntemplate `text_back_template_name`, else by SMS when allowed).",
+                "properties": {
+                  "is_sms_fallback_enabled": {
+                    "default": true,
+                    "title": "Is Sms Fallback Enabled",
+                    "type": "boolean"
+                  },
+                  "is_summary_enabled": {
+                    "default": true,
+                    "title": "Is Summary Enabled",
+                    "type": "boolean"
+                  },
+                  "is_text_back_enabled": {
+                    "default": false,
+                    "title": "Is Text Back Enabled",
+                    "type": "boolean"
+                  },
+                  "text_back_template_name": {
+                    "anyOf": [
+                      {
+                        "maxLength": 512,
+                        "minLength": 1,
+                        "pattern": "^[a-z0-9_]{1,512}$",
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Text Back Template Name"
+                  }
+                },
+                "title": "CallSettingsRequest",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CallSettingsView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Update Call Settings",
+        "tags": [
+          "calls"
+        ]
       }
     },
     "/v1/businesses/{business_id}/calls/{call_id}/recording": {
@@ -29800,6 +30475,156 @@
         ]
       }
     },
+    "/v1/businesses/{business_id}/text-backs": {
+      "get": {
+        "operationId": "list_call_text_backs_v1_businesses__business_id__text_backs_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Limit"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TextBackPage"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "List Call Text Backs",
+        "tags": [
+          "calls"
+        ]
+      }
+    },
     "/v1/businesses/{business_id}/unanswered-questions": {
       "get": {
         "operationId": "get_unanswered_questions_v1_businesses__business_id__unanswered_questions_get",
@@ -32166,6 +32991,222 @@
           }
         },
         "summary": "Parse Phone Number"
+      }
+    },
+    "/v1/telephony/zadarma/notifications": {
+      "get": {
+        "operationId": "echo_zadarma_check_v1_telephony_zadarma_notifications_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "zd_echo",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Zd Echo"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Echo Zadarma Check",
+        "tags": [
+          "telephony"
+        ]
+      },
+      "post": {
+        "operationId": "receive_zadarma_notification_v1_telephony_zadarma_notifications_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Signature",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Signature"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PbxCallWebhookOutcome"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Receive Zadarma Notification",
+        "tags": [
+          "telephony"
+        ]
       }
     },
     "/v1/voice/tools/{tool_name}": {

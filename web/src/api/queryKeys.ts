@@ -125,6 +125,14 @@ export const queryKeys = {
     audit: (businessId: Id, filters: string) => ["settings", businessId, "audit", filters] as const,
   },
 
+  calls: {
+    all: (businessId: Id) => ["calls", businessId] as const,
+    /** Settings → Calls: summaries, text-backs, the template texts. */
+    settings: (businessId: Id) => ["calls", businessId, "settings"] as const,
+    /** The latest callers who did not get through (audited as a view). */
+    textBacks: (businessId: Id) => ["calls", businessId, "textBacks"] as const,
+  },
+
   notifications: {
     all: (businessId: Id) => ["notifications", businessId] as const,
     /** Staff contacts with their delivery state. */

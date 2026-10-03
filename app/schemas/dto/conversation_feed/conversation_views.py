@@ -34,6 +34,7 @@ from app.schemas.typings.assistants.prefixed_id import AssistantVersionId
 from app.schemas.typings.billing.constrained_integers import CostMicroUsd
 from app.schemas.typings.bookings.constrained_strings import LocalDate
 from app.schemas.typings.businesses.prefixed_id import BusinessId
+from app.schemas.typings.calls.constrained_strings import CallSummaryText
 from app.schemas.typings.compliance.strings import ClientIpAddress
 from app.schemas.typings.contacts.prefixed_id import ContactId
 from app.schemas.typings.contacts.strings import ContactName
@@ -182,12 +183,21 @@ class MessageView(ImmutableDTO):
     created_at: Microseconds
 
 
+class CallSummaryView(ImmutableDTO):
+    """The short summary of a call for staff, in one language."""
+
+    language: LanguageTag
+    text: CallSummaryText
+
+
 class CallView(ImmutableDTO):
     """
     A phone call of the conversation: its transcript, duration, outcome and
     where its recording is kept (the platform reference; reading it is
-    audited with the card), and what the after-call check of the
-    assistant's spoken values found (`guard_verdict`, None while unchecked).
+    audited with the card), what the after-call check of the assistant's
+    spoken values found (`guard_verdict`, None while unchecked), and its
+    summary for staff in the owner's and the staff's languages (empty until
+    the call is summarized).
     """
 
     id: CallId
@@ -202,6 +212,7 @@ class CallView(ImmutableDTO):
     unverified_values: list[UnverifiedReplyValue] = Field(
         default_factory=list[UnverifiedReplyValue]
     )
+    summaries: list[CallSummaryView] = Field(default_factory=list[CallSummaryView])
 
 
 class StaffReplyView(ImmutableDTO):

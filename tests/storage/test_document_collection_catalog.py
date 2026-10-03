@@ -9,6 +9,7 @@ from dependency_injector import providers
 from app.adapters.storage.postgres.document_collection_factory import (
     build_document_collection,
 )
+from app.containers.adapters.call_adapters_container import CallAdaptersContainer
 from app.containers.adapters.document_collections_container import (
     DocumentCollectionsContainer,
 )
@@ -85,6 +86,7 @@ COLLECTION_CONTAINERS = (
     DocumentCollectionsContainer,
     NotificationCollectionsContainer,
     LaunchCollectionsContainer,
+    CallAdaptersContainer,
 )
 
 

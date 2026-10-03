@@ -56,6 +56,12 @@ from app.transformers.notifications.booking_reminder_transformer import (
 from app.transformers.notifications.calendar_event_text_transformer import (
     CalendarEventTextTransformer,
 )
+from app.transformers.notifications.call_report_brief_transformer import (
+    CallReportBriefTransformer,
+)
+from app.transformers.notifications.call_report_text_transformer import (
+    CallReportTextTransformer,
+)
 from app.transformers.notifications.cancellation_confirmation_transformer import (
     CancellationConfirmationTransformer,
 )
@@ -223,4 +229,12 @@ class TransformersContainer(containers.DeclarativeContainer):
             StaffNotificationTextTransformer,
             text_resolver=utilities.localized_text_resolver,
         )
+    )
+    # Staff texts about calls: the summary after a call and the note about a
+    # caller who did not get through (detailed, and brief without details).
+    call_report_text_transformer: Singleton[CallReportTextTransformer] = Singleton(
+        CallReportTextTransformer, text_resolver=utilities.localized_text_resolver
+    )
+    call_report_brief_transformer: Singleton[CallReportBriefTransformer] = Singleton(
+        CallReportBriefTransformer, text_resolver=utilities.localized_text_resolver
     )

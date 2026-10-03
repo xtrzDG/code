@@ -1,6 +1,9 @@
 from app.contracts.transformer_contract import TransformerContract
 from app.schemas.domain.conversations import CallDocument
-from app.schemas.dto.conversation_feed.conversation_views import CallView
+from app.schemas.dto.conversation_feed.conversation_views import (
+    CallSummaryView,
+    CallView,
+)
 
 
 class CallViewTransformer(TransformerContract[CallDocument, CallView]):
@@ -18,4 +21,8 @@ class CallViewTransformer(TransformerContract[CallDocument, CallView]):
             recording_path=input_data.recording_path,
             guard_verdict=input_data.guard_verdict,
             unverified_values=list(input_data.unverified_values),
+            summaries=[
+                CallSummaryView(language=summary.language, text=summary.text)
+                for summary in input_data.summaries
+            ],
         )

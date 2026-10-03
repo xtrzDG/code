@@ -610,6 +610,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/businesses/{business_id}/call-settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Call Settings */
+        get: operations["get_call_settings_v1_businesses__business_id__call_settings_get"];
+        /** Update Call Settings */
+        put: operations["update_call_settings_v1_businesses__business_id__call_settings_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/businesses/{business_id}/calls/{call_id}/recording": {
         parameters: {
             query?: never;
@@ -1519,6 +1537,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/businesses/{business_id}/text-backs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Call Text Backs */
+        get: operations["list_call_text_backs_v1_businesses__business_id__text_backs_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/businesses/{business_id}/unanswered-questions": {
         parameters: {
             query?: never;
@@ -1808,6 +1843,24 @@ export interface paths {
         put?: never;
         /** Parse Phone Number */
         post: operations["parse_phone_number_v1_phone_numbers_parse_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/telephony/zadarma/notifications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Echo Zadarma Check */
+        get: operations["echo_zadarma_check_v1_telephony_zadarma_notifications_get"];
+        put?: never;
+        /** Receive Zadarma Notification */
+        post: operations["receive_zadarma_notification_v1_telephony_zadarma_notifications_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2998,11 +3051,15 @@ export interface components {
             recording_path?: string | null;
             /**
              * Schema Version
-             * @default 2
+             * @default 3
              */
             schema_version: string;
             /** Started At */
             started_at: number;
+            /** Summaries */
+            summaries?: components["schemas"]["CallSummary"][];
+            /** Summarized At */
+            summarized_at?: number | null;
             /** To Phone Number */
             to_phone_number?: string | null;
             /** Transcript */
@@ -3081,11 +3138,55 @@ export interface components {
          */
         CallOutcome: "booking" | "lead" | "handoff" | "unanswered_question" | "information" | "abandoned";
         /**
+         * CallSettingsView
+         * @description The settings with what they rely on: whether the business's WhatsApp
+         *     number is connected, whether the platform can send SMS, and the
+         *     text-back in each language of the business.
+         */
+        CallSettingsView: {
+            /** Is Sms Available */
+            is_sms_available: boolean;
+            /** Is Sms Fallback Enabled */
+            is_sms_fallback_enabled: boolean;
+            /** Is Summary Enabled */
+            is_summary_enabled: boolean;
+            /** Is Text Back Enabled */
+            is_text_back_enabled: boolean;
+            /** Is Whatsapp Connected */
+            is_whatsapp_connected: boolean;
+            /** Template Previews */
+            template_previews?: components["schemas"]["TextBackTemplatePreview"][];
+            /** Text Back Template Name */
+            text_back_template_name?: string | null;
+        };
+        /**
+         * CallSummary
+         * @description The summary of a call for staff in one language.
+         */
+        CallSummary: {
+            /** Language */
+            language: string;
+            /** Text */
+            text: string;
+        };
+        /**
+         * CallSummaryView
+         * @description The short summary of a call for staff, in one language.
+         */
+        CallSummaryView: {
+            /** Language */
+            language: string;
+            /** Text */
+            text: string;
+        };
+        /**
          * CallView
          * @description A phone call of the conversation: its transcript, duration, outcome and
          *     where its recording is kept (the platform reference; reading it is
-         *     audited with the card), and what the after-call check of the
-         *     assistant's spoken values found (`guard_verdict`, None while unchecked).
+         *     audited with the card), what the after-call check of the assistant's
+         *     spoken values found (`guard_verdict`, None while unchecked), and its
+         *     summary for staff in the owner's and the staff's languages (empty until
+         *     the call is summarized).
          */
         CallView: {
             /** Duration Seconds */
@@ -3100,6 +3201,8 @@ export interface components {
             recording_path?: string | null;
             /** Started At */
             started_at: number;
+            /** Summaries */
+            summaries?: components["schemas"]["CallSummaryView"][];
             /** To Phone Number */
             to_phone_number?: string | null;
             /** Transcript */
@@ -3395,6 +3498,10 @@ export interface components {
          *     `erased_at` marks a customer erased at their request: the document then
          *     keeps no personal data (no name, phones, language or channel
          *     identities), only its id, so records that point to it read as erased.
+         *
+         *     `opted_out_channels`: channels the customer asked to get no messages in
+         *     that they did not ask for (reminders, text-backs after a missed call);
+         *     PHONE covers SMS to their number. Version 2 adds it (optional).
          */
         ContactDocument: {
             /** Business Id */
@@ -3414,12 +3521,13 @@ export interface components {
             language?: string | null;
             /** Name */
             name?: string | null;
+            /** Opted Out Channels */
+            opted_out_channels?: components["schemas"]["ChannelKind"][];
             /** Phone Number */
             phone_number?: string | null;
             /**
              * Schema Version
-             * @description Persistence schema version. This is not the package version or application release version.
-             * @default 1
+             * @default 2
              */
             schema_version: string;
             /**
@@ -4902,6 +5010,25 @@ export interface components {
             tool_calls?: components["schemas"]["ToolCallView"][];
         };
         /**
+         * MissedCallReason
+         * @description Why a caller did not get through, or got nothing from the call.
+         *
+         *     From the telephony line (PBX): NO_ANSWER (it rang out), BUSY, ABANDONED
+         *     (the caller hung up before the assistant answered) and LINE_FAILED (the
+         *     line could not put the call through). From the voice platform:
+         *     NOT_STARTED (the assistant could not start the call), NO_SPEECH (the
+         *     assistant answered, the caller hung up without a word) and
+         *     TRANSFER_UNANSWERED (the caller asked for a person and nobody picked up).
+         * @enum {string}
+         */
+        MissedCallReason: "no_answer" | "busy" | "abandoned" | "line_failed" | "not_started" | "no_speech" | "transfer_unanswered";
+        /**
+         * MissedCallSource
+         * @description Who reported the missed call: the telephony line or the voice platform.
+         * @enum {string}
+         */
+        MissedCallSource: "pbx" | "voice_platform";
+        /**
          * Money
          * @description Amount in minor units of an ISO 4217 currency.
          */
@@ -5143,6 +5270,17 @@ export interface components {
             outcome: components["schemas"]["PaymentWebhookOutcome"];
             /** Payment Order Id */
             payment_order_id?: string | null;
+        };
+        /**
+         * PbxCallWebhookOutcome
+         * @description What one telephony notification did: IGNORED (not a missed call, or a
+         *     line no business has), RECORDED (a new missed call) or DUPLICATE.
+         */
+        PbxCallWebhookOutcome: {
+            /** Missed Call Id */
+            missed_call_id?: string | null;
+            status: components["schemas"]["PostCallEventStatus"];
+            text_back_status?: components["schemas"]["TextBackStatus"] | null;
         };
         /**
          * PhoneNumberDetails
@@ -5965,6 +6103,81 @@ export interface components {
             deep_link?: string | null;
             /** Expires At */
             expires_at: number;
+        };
+        /**
+         * TextBackChannel
+         * @description How the message to a caller who did not get through travels.
+         * @enum {string}
+         */
+        TextBackChannel: "whatsapp" | "sms";
+        /** TextBackPage */
+        TextBackPage: {
+            /** Items */
+            items: components["schemas"]["TextBackView"][];
+            /** Next Cursor */
+            next_cursor?: string | null;
+        };
+        /**
+         * TextBackSkipReason
+         * @description Why a caller who did not get through was not texted.
+         *
+         *     TURNED_OFF: the owner keeps text-backs off. OPTED_OUT: the customer
+         *     asked for no more messages. ALREADY_TEXTED: the caller got one in the
+         *     last day. DAILY_LIMIT: the business reached its daily number of
+         *     text-backs. IN_CONVERSATION: the caller is already writing with the
+         *     business. NO_CHANNEL: neither a WhatsApp template nor SMS can carry it.
+         *     NOT_LIVE: the assistant is not live. NO_CALLER_NUMBER: the number was
+         *     hidden. TOO_LATE: the call is too long ago to text about it now.
+         * @enum {string}
+         */
+        TextBackSkipReason: "turned_off" | "opted_out" | "already_texted" | "daily_limit" | "in_conversation" | "no_channel" | "not_live" | "no_caller_number" | "too_late";
+        /**
+         * TextBackStatus
+         * @description Where the message to a caller who did not get through stands: QUEUED
+         *     waits for the worker, SENT was accepted by WhatsApp or the SMS provider,
+         *     FAILED could not be sent on any channel, SKIPPED was not sent on purpose
+         *     (the reason is kept with it).
+         * @enum {string}
+         */
+        TextBackStatus: "queued" | "sent" | "failed" | "skipped";
+        /**
+         * TextBackTemplatePreview
+         * @description The text-back in one language: the body to register as the WhatsApp
+         *     template (its one parameter {{1}} is the business name) and how a
+         *     caller reads it.
+         */
+        TextBackTemplatePreview: {
+            /** Example */
+            example: string;
+            /** Language */
+            language: string;
+            /** Template Body */
+            template_body: string;
+        };
+        /**
+         * TextBackView
+         * @description One caller who did not get through, and what became of their message.
+         */
+        TextBackView: {
+            /** Called At */
+            called_at: number;
+            /** Caller Phone Number */
+            caller_phone_number?: string | null;
+            channel?: components["schemas"]["TextBackChannel"] | null;
+            /** Conversation Id */
+            conversation_id?: string | null;
+            /** Id */
+            id: string;
+            /** Language */
+            language: string;
+            /** Last Error */
+            last_error?: string | null;
+            reason: components["schemas"]["MissedCallReason"];
+            /** Sent At */
+            sent_at?: number | null;
+            skip_reason?: components["schemas"]["TextBackSkipReason"] | null;
+            source: components["schemas"]["MissedCallSource"];
+            status: components["schemas"]["TextBackStatus"];
         };
         /**
          * TextDirection
@@ -10027,6 +10240,202 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CallForwardingInstructions"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    get_call_settings_v1_businesses__business_id__call_settings_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CallSettingsView"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    update_call_settings_v1_businesses__business_id__call_settings_put: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /**
+                     * Is Sms Fallback Enabled
+                     * @default true
+                     */
+                    is_sms_fallback_enabled?: boolean;
+                    /**
+                     * Is Summary Enabled
+                     * @default true
+                     */
+                    is_summary_enabled?: boolean;
+                    /**
+                     * Is Text Back Enabled
+                     * @default false
+                     */
+                    is_text_back_enabled?: boolean;
+                    /** Text Back Template Name */
+                    text_back_template_name?: string | null;
+                };
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CallSettingsView"];
                 };
             };
             /** @description Sign-in required: the bearer token is missing, invalid or expired. */
@@ -16702,6 +17111,96 @@ export interface operations {
             };
         };
     };
+    list_call_text_backs_v1_businesses__business_id__text_backs_get: {
+        parameters: {
+            query?: {
+                limit?: string | null;
+                cursor?: string | null;
+            };
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TextBackPage"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
     get_unanswered_questions_v1_businesses__business_id__unanswered_questions_get: {
         parameters: {
             query?: {
@@ -18306,6 +18805,176 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PhoneNumberDetails"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    echo_zadarma_check_v1_telephony_zadarma_notifications_get: {
+        parameters: {
+            query?: {
+                zd_echo?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/plain": string;
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    receive_zadarma_notification_v1_telephony_zadarma_notifications_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                Signature?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PbxCallWebhookOutcome"];
                 };
             };
             /** @description Sign-in required: the bearer token is missing, invalid or expired. */

@@ -15,6 +15,7 @@ from app.schemas.typings.deliveries.constrained_strings import (
 from app.schemas.typings.handoffs.prefixed_id import HandoffId
 from app.schemas.typings.notifications.constrained_strings import (
     NotificationContactKey,
+    StaffAlertSubject,
 )
 from app.schemas.typings.notifications.prefixed_id import (
     NotificationPreferencesId,
@@ -77,11 +78,19 @@ def push_recipient_key(subscription_id: PushSubscriptionId) -> OutboundRecipient
 def push_idempotency_key(
     subscription_id: PushSubscriptionId,
     handoff_id: HandoffId | None,
+    subject: StaffAlertSubject | None = None,
 ) -> OutboundIdempotencyKey:
-    """A handoff reaches each device once; other alerts are new each time."""
+    """
+    A handoff, or another subject an alert names, reaches each device once;
+    other alerts are new each time.
+    """
 
-    subject: str = str(uuid4()) if handoff_id is None else f"handoff:{handoff_id}"
-    return OutboundIdempotencyKey(f"push:{subject}:{subscription_id}")
+    if handoff_id is not None:
+        about: str = f"handoff:{handoff_id}"
+    else:
+        about = str(uuid4()) if subject is None else str(subject)
+
+    return OutboundIdempotencyKey(f"push:{about}:{subscription_id}")
 
 
 def _recipient_digest(

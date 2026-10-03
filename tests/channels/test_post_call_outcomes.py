@@ -158,4 +158,12 @@ class TestPostCallWebhook:
         assert short["outcome"] == "abandoned"
         assert silent["outcome"] == "abandoned"
         assert informative["outcome"] == "information"
-        assert all(call.conversation_id is None for call in stored_calls(setup)[:2])
+        conversations = {
+            str(call.provider_call_id): call.conversation_id
+            for call in stored_calls(setup)
+        }
+        # Abandoned calls stay without a conversation; an answered call the
+        # caller spoke in gets one, so its card shows it.
+        assert conversations["conv_short"] is None
+        assert conversations["conv_silent"] is None
+        assert conversations["conv_info"] is not None

@@ -56,6 +56,7 @@ from app.adapters.voice.elevenlabs_voice_agent_provisioner import (
 from app.adapters.voice.elevenlabs_voice_webhook_adapter import (
     ElevenLabsVoiceWebhookAdapter,
 )
+from app.containers.adapters.call_adapters_container import CallAdaptersContainer
 from app.containers.adapters.document_collections_container import (
     DocumentCollectionsContainer,
 )
@@ -113,6 +114,13 @@ class AdaptersContainer(containers.DeclarativeContainer):
     )
     launch_collections: LaunchCollectionsContainer = Container(  # type: ignore[assignment]
         LaunchCollectionsContainer,
+        clients=clients,
+        config=config,
+        time_provider=time_provider,
+        utilities=utilities,
+    )
+    calls: CallAdaptersContainer = Container(  # type: ignore[assignment]
+        CallAdaptersContainer,
         clients=clients,
         config=config,
         time_provider=time_provider,

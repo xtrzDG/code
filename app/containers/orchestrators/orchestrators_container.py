@@ -13,6 +13,9 @@ from app.containers.orchestrators.assistant_orchestrators import (
 from app.containers.orchestrators.billing_orchestrators import (
     BillingOrchestratorsContainer,
 )
+from app.containers.orchestrators.call_orchestrators import (
+    CallOrchestratorsContainer,
+)
 from app.containers.orchestrators.channel_orchestrators import (
     ChannelOrchestratorsContainer,
 )
@@ -83,6 +86,10 @@ class OrchestratorsContainer(containers.DeclarativeContainer):
         booking_use_cases=use_cases.bookings,
         follow_up_use_cases=use_cases.follow_ups,
     )
+    calls: CallOrchestratorsContainer = Container(  # type: ignore[assignment]
+        CallOrchestratorsContainer,
+        call_use_cases=use_cases.calls,
+    )
     conversations: ConversationOrchestratorsContainer = Container(  # type: ignore[assignment]
         ConversationOrchestratorsContainer,
         utilities=utilities,
@@ -92,6 +99,8 @@ class OrchestratorsContainer(containers.DeclarativeContainer):
         conversation_feed_use_cases=use_cases.conversation_feed,
         voice_use_cases=use_cases.voice,
         delivery_use_cases=use_cases.deliveries,
+        call_use_cases=use_cases.calls,
+        call_orchestrators=calls,
     )
     assistants: AssistantOrchestratorsContainer = Container(  # type: ignore[assignment]
         AssistantOrchestratorsContainer,

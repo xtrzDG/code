@@ -2,13 +2,23 @@ import json
 
 from typed_time_provider import Microseconds
 
+from app.adapters.voice.elevenlabs_post_call_reading import (
+    read_call_language,
+    read_called_tools,
+    read_cost,
+    read_dynamic_variables,
+    read_failed_start_numbers,
+    read_raw_number,
+    read_transcript,
+    read_transfer_offset,
+    read_transfer_outcome,
+)
 from app.contracts.channels import VoiceWebhookAdapterContract
 from app.schemas.configurations.app_settings import AppSettings
-from app.schemas.constants.assistants import AssistantToolName
-from app.schemas.constants.conversations import MessageAuthor
+from app.schemas.constants.calls import MissedCallReason, MissedCallSource
+from app.schemas.dto.calls.missed_calls import MissedCallReport
 from app.schemas.dto.voice_webhooks import (
     FinishedCallReport,
-    FinishedCallTranscriptLine,
     PostCallWebhookRequest,
     VoiceToolCallArguments,
 )
@@ -17,44 +27,29 @@ from app.schemas.exceptions.application_errors import (
     ValidationFailedError,
 )
 from app.schemas.typings.assistants.strings import VoiceAgentId
-from app.schemas.typings.billing.constrained_integers import CostMicroUsd
-from app.schemas.typings.channels.constrained_integers import CallOffsetSeconds
 from app.schemas.typings.conversations.constrained_integers import (
     CallDurationSeconds,
 )
 from app.schemas.typings.conversations.strings import (
     LlmToolInputJson,
-    MessageText,
     ProviderCallId,
 )
-from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.schemas.typings.localization.strings import RawPhoneNumberInput
 from app.schemas.typings.platform.strings import PlatformSecret
 from app.utilities.channels.json_values import (
     JsonObject,
     parse_json_object,
     read_integer,
-    read_number,
     read_object,
     read_objects,
     read_text,
 )
 from app.utilities.channels.language_codes import from_voice_platform_language
-from app.utilities.channels.voice_service import (
-    TRANSFER_TOOL_NAME,
-)
 from app.utilities.channels.webhook_signatures import is_valid_elevenlabs_signature
 
 POST_CALL_TRANSCRIPTION_EVENT: str = "post_call_transcription"
+CALL_INITIATION_FAILURE_EVENT: str = "call_initiation_failure"
 MICROSECONDS_PER_SECOND: int = 1_000_000
-MICRO_USD_PER_USD: int = 1_000_000
-TRANSCRIPT_AUTHORS: dict[str, MessageAuthor] = {
-    "user": MessageAuthor.CUSTOMER,
-    "agent": MessageAuthor.ASSISTANT,
-}
-ASSISTANT_TOOL_NAMES: frozenset[str] = frozenset(
-    tool_name.value for tool_name in AssistantToolName
-)
 # Fields of a tool webhook body that ElevenLabs fills, not the model.
 RESERVED_TOOL_FIELDS: frozenset[str] = frozenset(
     {"arguments", "conversation_id", "caller_id", "language"}
@@ -69,6 +64,8 @@ class ElevenLabsVoiceWebhookAdapter(VoiceWebhookAdapterContract):
       "<t>.<raw body>" with ELEVENLABS_WEBHOOK_SECRET; stale deliveries
       (more than 30 minutes) are rejected. Only "post_call_transcription"
       events describe a finished call; cost comes from `cost_fiat` (USD).
+      "call_initiation_failure" events describe a call the platform could
+      not start (its caller did not get through).
     - Tool calls: the body the agent's webhook tools send ("arguments",
       "conversation_id", "caller_id", "language").
     - Call initiation: {"caller_id", "agent_id", "called_number", "call_sid"}.
@@ -140,6 +137,30 @@ class ElevenLabsVoiceWebhookAdapter(VoiceWebhookAdapterContract):
             language=read_call_language(metadata, data),
             has_recording=data.get("has_audio") is not False,
             transfer_offset_seconds=read_transfer_offset(transcript_items),
+            transfer_outcome=read_transfer_outcome(transcript_items),
+        )
+
+    def parse_call_start_failure(self, body: bytes) -> MissedCallReport | None:
+        root: JsonObject | None = parse_json_object(body)
+        if root is None or read_text(root, "type") != CALL_INITIATION_FAILURE_EVENT:
+            return None
+
+        data: JsonObject = read_object(root, "data") or {}
+        conversation_id: str | None = read_text(data, "conversation_id")
+        started_at_seconds: int | None = read_integer(root, "event_timestamp")
+        if conversation_id is None or started_at_seconds is None:
+            raise ValidationFailedError("The failed call start names no call.")
+
+        caller_number, called_number = read_failed_start_numbers(data)
+        return MissedCallReport(
+            source=MissedCallSource.VOICE_PLATFORM,
+            provider_call_id=ProviderCallId(conversation_id),
+            reason=MissedCallReason.NOT_STARTED,
+            called_at=Microseconds(
+                max(started_at_seconds, 0) * MICROSECONDS_PER_SECOND
+            ),
+            assistant_number=called_number,
+            caller_number=caller_number,
         )
 
     def parse_tool_call(self, body: bytes) -> VoiceToolCallArguments:
@@ -182,106 +203,3 @@ class ElevenLabsVoiceWebhookAdapter(VoiceWebhookAdapterContract):
 
         caller_id: str | None = read_text(root, "caller_id")
         return None if caller_id is None else RawPhoneNumberInput(caller_id)
-
-
-def read_dynamic_variables(data: JsonObject) -> JsonObject:
-    client_data: JsonObject = (
-        read_object(data, "conversation_initiation_client_data") or {}
-    )
-    return read_object(client_data, "dynamic_variables") or {}
-
-
-def read_raw_number(
-    phone_call: JsonObject,
-    phone_call_key: str,
-    dynamic_variables: JsonObject,
-    variable_key: str,
-) -> RawPhoneNumberInput | None:
-    raw_number: str | None = read_text(phone_call, phone_call_key) or read_text(
-        dynamic_variables, variable_key
-    )
-    return None if raw_number is None else RawPhoneNumberInput(raw_number)
-
-
-def read_transcript(items: list[JsonObject]) -> list[FinishedCallTranscriptLine]:
-    lines: list[FinishedCallTranscriptLine] = []
-    for item in items:
-        author: MessageAuthor | None = TRANSCRIPT_AUTHORS.get(
-            read_text(item, "role") or ""
-        )
-        text: str | None = read_text(item, "message")
-        if author is None or text is None:
-            continue
-
-        lines.append(
-            FinishedCallTranscriptLine(
-                author=author,
-                text=MessageText(text.strip()),
-                offset_seconds=CallOffsetSeconds(
-                    max(read_integer(item, "time_in_call_secs") or 0, 0)
-                ),
-            )
-        )
-
-    return lines
-
-
-def read_called_tools(items: list[JsonObject]) -> list[AssistantToolName]:
-    """Assistant tools the agent called, in first-call order."""
-
-    tool_names: list[AssistantToolName] = []
-    for item in items:
-        for tool_call in read_objects(item, "tool_calls"):
-            tool_name: str | None = read_text(tool_call, "tool_name")
-            if tool_name not in ASSISTANT_TOOL_NAMES:
-                continue
-
-            assistant_tool: AssistantToolName = AssistantToolName(tool_name)
-            if assistant_tool not in tool_names:
-                tool_names.append(assistant_tool)
-
-    return tool_names
-
-
-def read_transfer_offset(items: list[JsonObject]) -> CallOffsetSeconds | None:
-    """Seconds into the call when the agent put the caller through to staff."""
-
-    for item in items:
-        for tool_call in read_objects(item, "tool_calls"):
-            if read_text(tool_call, "tool_name") == TRANSFER_TOOL_NAME:
-                return CallOffsetSeconds(
-                    max(read_integer(item, "time_in_call_secs") or 0, 0)
-                )
-
-    return None
-
-
-def read_cost(metadata: JsonObject) -> CostMicroUsd:
-    """Call cost in micro-USD: `cost_fiat`, else LLM plus platform price."""
-
-    cost_usd: float | None = read_number(metadata, "cost_fiat")
-    if cost_usd is None:
-        charging: JsonObject = read_object(metadata, "charging") or {}
-        llm_price: float | None = read_number(charging, "llm_price")
-        platform_price: float | None = read_number(charging, "platform_price")
-        if llm_price is not None or platform_price is not None:
-            cost_usd = (llm_price or 0.0) + (platform_price or 0.0)
-
-    if cost_usd is None or cost_usd <= 0:
-        return CostMicroUsd(0)
-
-    return CostMicroUsd(round(cost_usd * MICRO_USD_PER_USD))
-
-
-def read_call_language(metadata: JsonObject, data: JsonObject) -> LanguageTag | None:
-    raw_language: str | None = read_text(metadata, "main_language")
-    if raw_language is None:
-        client_data: JsonObject = (
-            read_object(data, "conversation_initiation_client_data") or {}
-        )
-        override: JsonObject = (
-            read_object(client_data, "conversation_config_override") or {}
-        )
-        raw_language = read_text(read_object(override, "agent") or {}, "language")
-
-    return None if raw_language is None else from_voice_platform_language(raw_language)

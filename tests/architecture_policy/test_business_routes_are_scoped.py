@@ -31,6 +31,7 @@ PLATFORM_WIDE_OPERATORS: dict[str, str] = {
     "billing.enforce_grace_periods_operator": "periodic job over every business",
     "billing.check_package_usage_operator": "periodic job over every business",
     "billing.invoice_usage_overage_operator": "periodic job over every business",
+    "calls.pbx_call_webhook_operator": "telephony webhook: business from the line",
     "channels.telegram_webhook_operator": "webhook: business from the channel",
     "channels.meta_webhook_operator": "webhook: business from the channel",
     "channels.handle_platform_bot_update_operator": "staff bot: link codes",

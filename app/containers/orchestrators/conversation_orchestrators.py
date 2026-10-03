@@ -1,8 +1,12 @@
 from dependency_injector import containers
 from dependency_injector.providers import DependenciesContainer, Factory
 
+from app.containers.orchestrators.call_orchestrators import (
+    CallOrchestratorsContainer,
+)
 from app.containers.provider_chains import use_case_orchestrator
 from app.containers.use_cases.account_use_cases import AccountUseCasesContainer
+from app.containers.use_cases.call_use_cases import CallUseCasesContainer
 from app.containers.use_cases.conversation_feed_use_cases import (
     ConversationFeedUseCasesContainer,
 )
@@ -24,6 +28,7 @@ from app.orchestrators.channels.inbox.accept_post_call_webhook_orchestrator impo
 from app.orchestrators.channels.inbox.process_post_call_orchestrator import (
     ProcessPostCallOrchestrator,
 )
+from app.orchestrators.channels.post_call_follow_ups import PostCallFollowUps
 from app.orchestrators.channels.post_call_webhook_orchestrator import (
     PostCallWebhookOrchestrator,
 )
@@ -65,6 +70,8 @@ class ConversationOrchestratorsContainer(containers.DeclarativeContainer):
     )
     voice_use_cases: VoiceUseCasesContainer = DependenciesContainer()  # type: ignore[assignment]
     delivery_use_cases: DeliveryUseCasesContainer = DependenciesContainer()  # type: ignore[assignment]
+    call_use_cases: CallUseCasesContainer = DependenciesContainer()  # type: ignore[assignment]
+    call_orchestrators: CallOrchestratorsContainer = DependenciesContainer()  # type: ignore[assignment]
 
     # --- Conversation engine: one customer message, one voice tool call.
     conversation_turn_orchestrator: Factory[ConversationTurnOrchestratorContract] = (
@@ -110,6 +117,8 @@ class ConversationOrchestratorsContainer(containers.DeclarativeContainer):
         AcceptPostCallWebhookOrchestrator,
         authenticate_post_call=voice_use_cases.authenticate_post_call_use_case,
         store_post_call_report=delivery_use_cases.store_post_call_report_use_case,
+        read_failed_call_start=call_use_cases.read_failed_call_start_use_case,
+        handle_missed_call=call_orchestrators.missed_call_orchestrator,
     )
     post_call_webhook_orchestrator: Factory[
         OrchestratorContract[PostCallWebhookRequest, PostCallWebhookOutcome]
@@ -117,10 +126,17 @@ class ConversationOrchestratorsContainer(containers.DeclarativeContainer):
         PostCallWebhookOrchestrator,
         authenticate_post_call=delivery_use_cases.read_accepted_post_call_use_case,
         record_finished_call=voice_use_cases.record_finished_call_use_case,
-        audit_call_replies=voice_use_cases.audit_call_replies_use_case,
-        send_call_confirmation=voice_use_cases.send_call_confirmation_use_case,
-        send_call_links=voice_use_cases.send_call_links_use_case,
-        schedule_recording_archive=voice_use_cases.schedule_recording_archive_use_case,
+        follow_ups=Factory(
+            PostCallFollowUps,
+            open_call_conversation=call_use_cases.open_call_conversation_use_case,
+            audit_call_replies=voice_use_cases.audit_call_replies_use_case,
+            find_missed_voice_call=call_use_cases.find_missed_voice_call_use_case,
+            register_missed_call=call_use_cases.register_missed_call_use_case,
+            summarize_call=call_use_cases.summarize_call_use_case,
+            send_call_confirmation=voice_use_cases.send_call_confirmation_use_case,
+            send_call_links=voice_use_cases.send_call_links_use_case,
+            schedule_recording_archive=voice_use_cases.schedule_recording_archive_use_case,
+        ),
     )
     archive_call_recording_orchestrator = use_case_orchestrator(
         voice_use_cases.archive_call_recording_use_case

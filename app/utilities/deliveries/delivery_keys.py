@@ -19,6 +19,7 @@ from app.schemas.typings.deliveries.constrained_strings import (
 )
 from app.schemas.typings.deliveries.prefixed_id import InboundEventId, OutboundMessageId
 from app.schemas.typings.handoffs.prefixed_id import HandoffId
+from app.schemas.typings.notifications.constrained_strings import StaffAlertSubject
 from app.schemas.typings.platform.constrained_strings import JobSerialKey
 
 # Fixed namespaces of the derived ids (never change them: stored ids and
@@ -93,16 +94,30 @@ def reply_idempotency_key(
 def staff_idempotency_key(
     contact: ManagerContact,
     handoff_id: HandoffId | None,
+    subject: StaffAlertSubject | None = None,
 ) -> OutboundIdempotencyKey:
     """
-    A handoff notifies each contact once; other notifications are new each
-    time they are sent.
+    A handoff, or another subject an alert names (a call's summary),
+    notifies each contact once; other notifications are new each time they
+    are sent.
     """
 
-    subject: str = str(uuid4()) if handoff_id is None else f"handoff:{handoff_id}"
     return OutboundIdempotencyKey(
-        f"staff:{subject}:{contact.channel.value}:{contact.address}"
+        f"staff:{alert_subject(handoff_id, subject)}:{contact.channel.value}:"
+        f"{contact.address}"
     )
+
+
+def alert_subject(
+    handoff_id: HandoffId | None,
+    subject: StaffAlertSubject | None,
+) -> str:
+    """What makes alerts the same: their handoff, their subject, else nothing."""
+
+    if handoff_id is not None:
+        return f"handoff:{handoff_id}"
+
+    return str(uuid4()) if subject is None else str(subject)
 
 
 def customer_recipient_key(

@@ -32,6 +32,7 @@ export const conversationsEn = {
     playMissing: "This recording is no longer available: it was deleted after the retention period or with the customer's data.",
     playError: "The recording could not be loaded: the voice service is not responding. Try again in a minute.",
     playRetry: "Try again",
+    summary: "Summary",
     transcript: "Call transcript",
     noTranscript: "No transcript for this call.",
     guard: {

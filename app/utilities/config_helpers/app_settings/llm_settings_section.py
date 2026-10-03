@@ -47,6 +47,7 @@ class LlmSettingsSection(TypedDict):
     llm_provider: LlmProvider
     llm_model_id: LlmModelId
     llm_judge_model_id: LlmModelId
+    llm_summary_model_id: LlmModelId | None
     llm_chat_effort: LlmEffort
     llm_judge_effort: LlmEffort
     llm_max_output_tokens: LlmMaxOutputTokens
@@ -69,7 +70,11 @@ def read_llm_settings(
     environment_variables: Mapping[str, str],
     llm_provider: LlmProvider,
 ) -> LlmSettingsSection:
-    """Both models default to the provider's default model."""
+    """
+    The chat and judge models default to the provider's default model; call
+    summaries use the chat model unless LLM_SUMMARY_MODEL_ID names a
+    cheaper one.
+    """
 
     default_model_id: str = DEFAULT_MODEL_IDS[llm_provider]
     return LlmSettingsSection(
@@ -79,6 +84,10 @@ def read_llm_settings(
         ),
         llm_judge_model_id=LlmModelId(
             read_text(environment_variables, "LLM_JUDGE_MODEL_ID", default_model_id)
+        ),
+        # The model of call summaries for staff; the chat model when unset.
+        llm_summary_model_id=optional_text(
+            environment_variables, "LLM_SUMMARY_MODEL_ID", LlmModelId
         ),
         llm_chat_effort=LlmEffort(
             read_text(environment_variables, "LLM_CHAT_EFFORT", LlmEffort.LOW)

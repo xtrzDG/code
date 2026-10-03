@@ -89,6 +89,21 @@ class PushPublicKey(BaseConstrainedTypedString):
     pattern = r"^[A-Za-z0-9_-]+={0,2}$"
 
 
+class StaffAlertSubject(BaseConstrainedTypedString):
+    """
+    What one staff alert is about when it must reach each recipient once,
+    however often the step that raises it runs ("call:<call id>"): its
+    outbox messages derive their ids from it.
+
+    Example:
+        subject = StaffAlertSubject("call:call_01890a5d-ac96-774b-bcce-b302099a8057")
+    """
+
+    min_length = 3
+    max_length = 128
+    pattern = r"^[a-z_]+:[A-Za-z0-9_-]+$"
+
+
 class StaffLinkToken(BaseConstrainedTypedString):
     """
     The signed, expiring token of a notification link: which page of which

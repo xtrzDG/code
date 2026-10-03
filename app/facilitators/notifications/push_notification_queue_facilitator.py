@@ -80,7 +80,7 @@ class PushNotificationQueueFacilitator(PushNotificationQueueContract):
     def _queue(self, notification: PushNotification) -> bool:
         now: Microseconds = self._wall_clock.now_unix()
         idempotency_key: OutboundIdempotencyKey = push_idempotency_key(
-            notification.subscription_id, notification.handoff_id
+            notification.subscription_id, notification.handoff_id, notification.subject
         )
         message_id = derive_outbound_message_id(
             notification.business_id, idempotency_key

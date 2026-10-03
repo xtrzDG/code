@@ -36,6 +36,7 @@ export const conversationsRu: Translation<typeof conversationsEn> = {
     playMissing: "Этой записи больше нет: она удалена по истечении срока хранения или вместе с данными клиента.",
     playError: "Не удалось загрузить запись: голосовой сервис не отвечает. Попробуйте через минуту.",
     playRetry: "Попробовать ещё раз",
+    summary: "Итог",
     transcript: "Расшифровка звонка",
     noTranscript: "У этого звонка нет расшифровки.",
     guard: {

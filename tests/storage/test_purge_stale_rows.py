@@ -11,6 +11,7 @@ from app.gateways.worker.periodic.purge_stale_rows import (
     PURGE_STALE_ROWS_JOB,
     purge_stale_rows_job,
 )
+from app.repositories.call_follow_up_repositories import MissedCallRepository
 from app.repositories.channel_repositories import ChannelMessageReceiptRepository
 from app.repositories.compliance_repositories import AuditLogRepository
 from app.repositories.delivery_repositories import (
@@ -21,6 +22,12 @@ from app.repositories.user_repositories import (
     OtpChallengeRepository,
     UserSessionRepository,
 )
+from app.schemas.constants.calls import (
+    MissedCallReason,
+    MissedCallSource,
+    TextBackSkipReason,
+    TextBackStatus,
+)
 from app.schemas.constants.channels import ChannelKind
 from app.schemas.constants.compliance import AuditAction
 from app.schemas.constants.deliveries import InboundEventKind, OutboundMessageKind
@@ -29,12 +36,13 @@ from app.schemas.constants.users import LoginMethod
 from app.schemas.domain.channel_receipts import ChannelMessageReceiptDocument
 from app.schemas.domain.compliance import AuditLogEntryDocument
 from app.schemas.domain.inbound_events import InboundEventDocument
+from app.schemas.domain.missed_calls import MissedCallDocument
 from app.schemas.domain.outbound_messages import OutboundMessageDocument
 from app.schemas.domain.users import OtpChallengeDocument, UserSessionDocument
 from app.schemas.dto.jobs import JobTick
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.channels.strings import ProviderMessageId
-from app.schemas.typings.conversations.strings import MessageText
+from app.schemas.typings.conversations.strings import MessageText, ProviderCallId
 from app.schemas.typings.deliveries.constrained_strings import (
     OutboundIdempotencyKey,
     OutboundRecipientKey,
@@ -46,6 +54,7 @@ from app.schemas.typings.localization.constrained_strings import (
 from app.schemas.typings.users.prefixed_id import UserId
 from app.schemas.typings.users.strings import AccessTokenHash, OtpCodeHash
 from app.use_cases.maintenance.purge_stale_rows_use_case import PurgeStaleRowsUseCase
+from app.utilities.calls.call_follow_up_keys import missed_call_id_of
 from app.utilities.deliveries.delivery_keys import (
     derive_inbound_event_id,
     derive_outbound_message_id,
@@ -121,6 +130,25 @@ def outbound_message(created_at: int) -> OutboundMessageDocument:
     )
 
 
+def missed_call(created_at: int) -> MissedCallDocument:
+    business_id = BusinessId()
+    call_id = ProviderCallId(f"pbx-{created_at}")
+    return MissedCallDocument(
+        id=missed_call_id_of(business_id, MissedCallSource.PBX, call_id),
+        business_id=business_id,
+        source=MissedCallSource.PBX,
+        provider_call_id=call_id,
+        reason=MissedCallReason.BUSY,
+        caller_phone_number=E164PhoneNumber("+995555123456"),
+        called_at=Microseconds(created_at),
+        language=LanguageTag("ka"),
+        status=TextBackStatus.SKIPPED,
+        skip_reason=TextBackSkipReason.TURNED_OFF,
+        created_at=Microseconds(created_at),
+        updated_at=Microseconds(created_at),
+    )
+
+
 def test_stale_sessions_codes_and_receipts_are_purged_and_audited(
     collections: CollectionFactory,
 ) -> None:
@@ -150,12 +178,17 @@ def test_stale_sessions_codes_and_receipts_are_purged_and_audited(
         event_collection.upsert(str(event.id), event)
     for reply in (old_reply, fresh_reply):
         outbox_collection.upsert(str(reply.id), reply)
+    missed_collection = collections(MissedCallDocument, "missed_calls")
+    old_missed, fresh_missed = missed_call(NOW - 91 * DAY), missed_call(NOW - 89 * DAY)
+    for missed in (old_missed, fresh_missed):
+        missed_collection.upsert(str(missed.id), missed)
     use_case = PurgeStaleRowsUseCase(
         user_session_repo=sessions,
         otp_challenge_repo=challenges,
         channel_message_receipt_repo=receipts,
         inbound_event_repo=InboundEventRepository(event_collection),
         outbound_message_repo=OutboundMessageRepository(outbox_collection),
+        missed_call_repo=MissedCallRepository(missed_collection),
         audit_log_repo=audit,
         wall_clock=build_fixed_wall_clock(),
     )
@@ -163,7 +196,7 @@ def test_stale_sessions_codes_and_receipts_are_purged_and_audited(
     report = use_case.run(TICK)
     second_report = use_case.run(TICK)
 
-    assert report.processed_count == 6
+    assert report.processed_count == 7
     assert second_report.processed_count == 0
     assert sessions.find_by_token_hash(expired.token_hash) is None
     assert sessions.find_by_token_hash(at_expiry.token_hash) is None
@@ -172,10 +205,12 @@ def test_stale_sessions_codes_and_receipts_are_purged_and_audited(
     assert [r.id for r in receipt_collection.list_all()] == [fresh_receipt.id]
     assert [e.id for e in event_collection.list_all()] == [fresh_event.id]
     assert [m.id for m in outbox_collection.list_all()] == [fresh_reply.id]
+    assert [m.id for m in missed_collection.list_all()] == [fresh_missed.id]
     entries = audit_collection.list_all()
     assert sorted(str(entry.entity) for entry in entries) == [
         "channel_message_receipt",
         "inbound_event",
+        "missed_call",
         "otp_challenge",
         "outbound_message",
         "user_session",
