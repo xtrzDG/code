@@ -23,6 +23,7 @@ import {
   type PlanAction,
   type PlanQuote,
 } from "../_lib/billing";
+import { setupOptionFee } from "../_lib/setupOptions";
 
 export interface PlanChoice {
   quote: PlanQuote;
@@ -132,7 +133,9 @@ export function PlansSection({
                 t("billing.plans.dialogs", { count: format.number(quote.included_dialogs) }),
                 period === "annual"
                   ? t("billing.plans.setupFeeAnnual")
-                  : t("billing.plans.setupFee", { price: quotedMoneyText(planSetupFee(quote), format.money) }),
+                  : t("billing.plans.setupFee", {
+                      price: quotedMoneyText(setupOptionFee(quote, "done_for_you", period) ?? planSetupFee(quote), format.money),
+                    }),
                 quote.is_voice_included
                   ? t("billing.plans.overage", { price: quotedMoneyText(planOveragePrice(quote), format.money) })
                   : null,

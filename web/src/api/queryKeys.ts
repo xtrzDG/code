@@ -151,6 +151,10 @@ export const queryKeys = {
     all: (businessId: Id) => ["setup", businessId] as const,
     /** The guided setup: steps, progress, links, milestones and the launch. */
     progress: (businessId: Id, locale: Locale) => ["setup", businessId, "progress", locale] as const,
+    /** The guided setup in every language (live events: a booking or a channel moves the guide on). */
+    progressAll: (businessId: Id) => ["setup", businessId, "progress"] as const,
+    /** Whether the owner gets the setup reminders (Settings → Notifications). */
+    reminders: (businessId: Id) => ["setup", businessId, "reminders"] as const,
     /** The niche's starter answers (hours, booking rules, examples). */
     starters: (businessId: Id, locale: Locale) => ["setup", businessId, "starters", locale] as const,
     /** "Apply changes" (the launch) and its progress. */

@@ -49,6 +49,10 @@ describe("live events", () => {
     expect(invalidationsFor(event("lead.changed"), BUSINESS)).toContainEqual(queryKeys.leads.all(BUSINESS));
     expect(invalidationsFor(event("booking.created"), BUSINESS)).toContainEqual(queryKeys.bookings.all(BUSINESS));
     expect(invalidationsFor(event("channel.error"), BUSINESS)).toEqual([counts, queryKeys.channels.all(BUSINESS)]);
+    // A first booking and a second channel move the setup guide on.
+    expect(invalidationsFor(event("booking.created"), BUSINESS)).toContainEqual(queryKeys.setup.progressAll(BUSINESS));
+    expect(invalidationsFor(event("channel.changed"), BUSINESS)).toContainEqual(queryKeys.setup.progressAll(BUSINESS));
+    expect(invalidationsFor(event("booking.changed"), BUSINESS)).not.toContainEqual(queryKeys.setup.progressAll(BUSINESS));
     expect(invalidationsFor(event("autotest.progress"), BUSINESS)).toEqual([
       queryKeys.assistant.all(BUSINESS),
       queryKeys.setup.applyAll(BUSINESS),

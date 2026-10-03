@@ -33,7 +33,31 @@ function VerdictValue({ verdict }: { verdict: Schema<"ClientAutotestVerdict"> })
   );
 }
 
-/** The client's status, plan, subscription, published version and recent trouble. */
+/** Who sets the client up (the subscription's setup option) and the team's onboarding request. */
+function SetupValue({ summary, date }: { summary: AdminClientSummary; date: (microseconds: number) => string }) {
+  const { t } = useI18n();
+  const request = summary.onboarding_request;
+  const option =
+    summary.setup_option === "done_for_you"
+      ? t("admin.detail.facts.setupDoneForYou")
+      : summary.setup_option === "self_serve"
+        ? t("admin.detail.facts.setupSelfServe")
+        : t("admin.detail.facts.setupNotChosen");
+  return (
+    <span className="inline-flex flex-wrap items-center gap-2">
+      <span>{option}</span>
+      {request ? (
+        <Badge tone={request.status === "open" ? "warning" : "success"}>
+          {request.status === "open"
+            ? t("admin.detail.facts.onboardingOpen", { date: date(request.requested_at) })
+            : t("admin.detail.facts.onboardingDone")}
+        </Badge>
+      ) : null}
+    </span>
+  );
+}
+
+/** The client's status, plan, subscription, setup, published version and recent trouble. */
 export function OverviewCard({ summary, timeZone }: { summary: AdminClientSummary; timeZone: string }) {
   const { t, locale } = useI18n();
   const { date, dateTime } = useClientFormat(timeZone);
@@ -72,6 +96,7 @@ export function OverviewCard({ summary, timeZone }: { summary: AdminClientSummar
             label: t("admin.detail.facts.autoDebit"),
             value: summary.has_auto_debit ? t("billing.facts.autoDebitOn") : t("common.no"),
           },
+          { label: t("admin.detail.facts.setup"), value: <SetupValue summary={summary} date={date} /> },
           {
             label: t("admin.detail.facts.published"),
             value:
