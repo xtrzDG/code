@@ -10,6 +10,7 @@ import {
   normalizeWebsiteAddress,
   pageLabel,
   problemText,
+  profileWebsite,
   siteHost,
   startProblemText,
   type WebsiteImport,
@@ -55,6 +56,16 @@ describe("website addresses", () => {
     expect(pageLabel("https://cafe.ge/menu?lang=ka")).toBe("/menu?lang=ka");
     expect(pageLabel("https://cafe.ge")).toBe("/");
     expect(pageLabel("::")).toBe("::");
+  });
+
+  it("offers the website link of the profile", () => {
+    const links = [
+      { kind: "menu" as const, url: "https://cafe.ge/menu" },
+      { kind: "website" as const, url: "https://cafe.ge" },
+    ];
+    expect(profileWebsite({ links } as Parameters<typeof profileWebsite>[0])).toBe("https://cafe.ge");
+    expect(profileWebsite({ links: links.slice(0, 1) } as Parameters<typeof profileWebsite>[0])).toBeNull();
+    expect(profileWebsite(undefined)).toBeNull();
   });
 });
 
