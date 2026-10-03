@@ -154,9 +154,13 @@ everything new; the others only open and verify what they sealed.
 1. The newest archive (or `--archive <key>`) and its manifest are
    downloaded; the archive's size and SHA-256 must match the manifest.
 2. It is decrypted with `BACKUP_AGE_IDENTITY` (a changed, cut or extended
-   archive does not open) and restored with
-   `pg_restore --no-owner --no-acl --single-transaction --exit-on-error`
-   into a new database `restore_drill_<random>` of the throwaway server in
+   archive does not open) and restored: `pg_restore --no-owner --no-acl`
+   writes its SQL script and `psql --single-transaction` with
+   `ON_ERROR_STOP` runs it (a cut script is never committed). pg_restore 17
+   opens the script with `SET transaction_timeout = 0;`, which Postgres 16
+   does not know, so that line of the preamble is left out for older
+   servers. The target is a new database `restore_drill_<random>` of the
+   throwaway server in
    `RESTORE_CHECK_DATABASE_URL` (a role that may create databases; never
    production's server).
 3. Checks, each failure one line of the report:
@@ -238,13 +242,17 @@ aws s3 cp s3://<bucket>/workshop/2026/10/20261003T011700Z.manifest.json .
 sha256sum 20261003T011700Z.pgdump.age      # must equal archive_checksum of the manifest
 age --decrypt --identity key.txt --output dump.pgc 20261003T011700Z.pgdump.age
 createdb --host new-host --username app_role workshop
-pg_restore --host new-host --username app_role --dbname workshop \
-  --no-owner --no-acl --single-transaction --exit-on-error dump.pgc
+pg_restore --no-owner --no-acl --file=- dump.pgc \
+  | sed '1,40{/^SET transaction_timeout = 0;$/d}' \
+  | psql --host new-host --username app_role --dbname workshop \
+      --no-psqlrc --single-transaction --set ON_ERROR_STOP=1
 ```
 
 Restore as the application role so that it owns the tables (row-level
 security is forced, so it binds the owner as well); `pg_restore` 17 or
-newer.
+newer. The `sed` leaves out the one setting of pg_restore 17's preamble
+that a Postgres 16 server refuses (`unrecognized configuration parameter
+"transaction_timeout"`); on Postgres 17 it may stay.
 
 **Checks after either path.** `GET /readyz` answers 200 (database reached,
 every migration applied); `scripts/smoke.sh` against the API passes; an

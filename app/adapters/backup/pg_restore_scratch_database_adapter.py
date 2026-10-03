@@ -17,8 +17,8 @@ from app.adapters.backup.database_facts_reader import (
 from app.adapters.backup.postgres_programs import (
     locate_program,
     program_connection,
-    run_program,
 )
+from app.adapters.backup.restore_script import restore_through_script
 from app.contracts.backups import ScratchDatabaseAdapterContract
 from app.schemas.dto.backups import DatabaseFacts, IsolationProbe, RestoredDatabase
 from app.schemas.exceptions.backup_errors import BackupToolError
@@ -44,8 +44,10 @@ class PgRestoreScratchDatabaseAdapter(ScratchDatabaseAdapterContract):
     (RESTORE_CHECK_DATABASE_URL names the server and a role allowed to
     create databases), never into a database the platform uses.
 
-    `pg_restore --single-transaction --exit-on-error` loads it without
-    owners or grants (the drill's roles differ from production's). The
+    Its SQL script (`pg_restore --no-owner --no-acl`, without owners or
+    grants: the drill's roles differ from production's) runs through
+    `psql` in one transaction that stops at the first error, so a newer
+    pg_restore also loads into an older server (restore_script). The
     restored database is counted with the RLS bypass, then probed as a
     role bound by row-level security: the restoring role itself, or a
     throwaway NOLOGIN role when the restoring role is a superuser or has
@@ -67,28 +69,16 @@ class PgRestoreScratchDatabaseAdapter(ScratchDatabaseAdapterContract):
         is_kept: IsScratchDatabaseKept,
     ) -> RestoredDatabase:
         pg_restore: str = locate_program("pg_restore", self._bin_directory)
+        psql: str = locate_program("psql", self._bin_directory)
         name = ScratchDatabaseName(f"restore_drill_{secrets.token_hex(6)}")
-        self._run_on_server(
-            sql.SQL("create database {} template template0").format(
-                sql.Identifier(str(name))
-            )
-        )
+        server_version: int = self._create_database(name)
         try:
-            restore_connection = program_connection(self._server_url, name)
-            run_program(
+            restore_through_script(
                 pg_restore,
-                [
-                    "--no-owner",
-                    "--no-acl",
-                    "--exit-on-error",
-                    "--single-transaction",
-                    "--no-password",
-                    "--dbname",
-                    restore_connection.conninfo,
-                    str(archive),
-                ],
-                restore_connection,
-                "pg_restore",
+                psql,
+                archive,
+                program_connection(self._server_url, name),
+                server_version,
             )
             facts, probes = self._inspect(name)
         finally:
@@ -115,6 +105,17 @@ class PgRestoreScratchDatabaseAdapter(ScratchDatabaseAdapterContract):
                     probes = probe_isolation(connection, facts.secured_tables)
 
         return facts, probes
+
+    def _create_database(self, name: ScratchDatabaseName) -> int:
+        """Create the scratch database; the server's `server_version_num`."""
+
+        with self._connect(None) as connection:
+            connection.execute(
+                sql.SQL("create database {} template template0").format(
+                    sql.Identifier(str(name))
+                )
+            )
+            return connection.info.server_version
 
     def _run_on_server(self, statement: sql.Composed) -> None:
         with self._connect(None) as connection:
