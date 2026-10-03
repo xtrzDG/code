@@ -77,6 +77,7 @@ from app.use_cases.menu_import.import_menu_use_case import ImportMenuUseCase
 from app.use_cases.setup.record_activation_event_use_case import (
     RecordActivationEventUseCase,
 )
+from tests.analytics.recording_product_events import RecordingProductEvents
 from tests.brain.brain_world import BrainWorld
 from tests.brain.cabinet_fakes import CabinetStorage, KeepTestChatVersions
 from tests.live_events.recording_event_publisher import RecordingEventPublisher
@@ -222,6 +223,7 @@ def build_cabinet_operators(
                             InMemoryDocumentCollectionAdapter(ActivationEventDocument)
                         ),
                         world.clock.wall_clock(),
+                        product_events=RecordingProductEvents(),
                     )
                 ),
             )

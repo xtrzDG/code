@@ -1,5 +1,6 @@
 from typed_time_provider import Microseconds, WallClock
 
+from app.contracts.analytics import RecordProductEventFacilitatorContract
 from app.contracts.repositories.setup_repositories import SetupStateRepoContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.users import BusinessMemberRole
@@ -12,6 +13,7 @@ from app.schemas.dto.setup.setup_progress import (
     SkipSetupStepCommand,
 )
 from app.schemas.exceptions.application_errors import ValidationFailedError
+from app.utilities.analytics.product_event_drafts import tunnel_step_skipped_events
 from app.utilities.setup.setup_steps import OPTIONAL_STEPS
 
 
@@ -31,6 +33,7 @@ class SkipSetupStepUseCase(UseCaseContract[SkipSetupStepCommand, SetupView]):
         setup_state_repo: SetupStateRepoContract,
         get_setup_progress: UseCaseContract[SetupQuery, SetupView],
         wall_clock: WallClock[Microseconds],
+        product_events: RecordProductEventFacilitatorContract,
     ) -> None:
         self._authorize_business_access: UseCaseContract[
             BusinessAccessRequest,
@@ -41,6 +44,7 @@ class SkipSetupStepUseCase(UseCaseContract[SkipSetupStepCommand, SetupView]):
             get_setup_progress
         )
         self._wall_clock: WallClock[Microseconds] = wall_clock
+        self._product_events: RecordProductEventFacilitatorContract = product_events
 
     def run(self, input_data: SkipSetupStepCommand) -> SetupView:
         business: BusinessDocument = self._authorize_business_access.run(
@@ -64,6 +68,11 @@ class SkipSetupStepUseCase(UseCaseContract[SkipSetupStepCommand, SetupView]):
             state.skipped_steps = skipped
 
         self._setup_state_repo.change(business.id, toggle, self._wall_clock.now_unix())
+        self._product_events.record(
+            *tunnel_step_skipped_events(
+                input_data.user_id, business.id, input_data.step, input_data.is_skipped
+            )
+        )
         return self._get_setup_progress.run(
             SetupQuery(user_id=input_data.user_id, business_id=business.id)
         )

@@ -1,5 +1,6 @@
 from typed_time_provider import Microseconds, WallClock
 
+from app.contracts.analytics import RecordProductEventFacilitatorContract
 from app.contracts.legal_registries import LegalDocumentRegistryContract
 from app.contracts.repositories.compliance_repositories import (
     AuditLogRepoContract,
@@ -24,6 +25,7 @@ from app.schemas.typings.compliance.strings import (
     AuditEntityReference,
 )
 from app.schemas.typings.localization.constrained_strings import LanguageTag
+from app.utilities.analytics.product_event_drafts import dpa_accepted_event
 from app.utilities.compliance.legal_endpoints import build_dpa_document_url
 from app.utilities.localization.cldr_language_names import ENGLISH_LOCALE_IDENTIFIER
 
@@ -49,6 +51,7 @@ class AcceptDpaUseCase(UseCaseContract[AcceptDpaCommand, DpaStatusView]):
         legal_document_registry: LegalDocumentRegistryContract,
         app_settings: AppSettings,
         wall_clock: WallClock[Microseconds],
+        product_events: RecordProductEventFacilitatorContract,
     ) -> None:
         self._authorize_business_access: UseCaseContract[
             BusinessAccessRequest,
@@ -61,6 +64,7 @@ class AcceptDpaUseCase(UseCaseContract[AcceptDpaCommand, DpaStatusView]):
         )
         self._app_settings: AppSettings = app_settings
         self._wall_clock: WallClock[Microseconds] = wall_clock
+        self._product_events: RecordProductEventFacilitatorContract = product_events
 
     def run(self, input_data: AcceptDpaCommand) -> DpaStatusView:
         business: BusinessDocument = self._authorize_business_access.run(
@@ -104,6 +108,9 @@ class AcceptDpaUseCase(UseCaseContract[AcceptDpaCommand, DpaStatusView]):
                 created_at=now,
                 updated_at=now,
             )
+        )
+        self._product_events.record(
+            dpa_accepted_event(input_data.user_id, business.id, version)
         )
         return DpaStatusView(
             business_id=business.id,

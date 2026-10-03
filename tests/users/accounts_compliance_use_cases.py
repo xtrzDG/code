@@ -51,6 +51,7 @@ class AccountsComplianceUseCases(AccountsUserUseCases):
             legal_document_registry=self.legal_document_registry,
             app_settings=self.settings,
             wall_clock=wall_clock,
+            product_events=self.product_events,
         )
         self.get_dpa_status = GetDpaStatusUseCase(
             authorize_business_access=self.authorize_business_access,

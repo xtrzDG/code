@@ -3,6 +3,7 @@ from dependency_injector.providers import DependenciesContainer, Factory
 
 from app.containers.adapters.adapters_container import AdaptersContainer
 from app.containers.config import ConfigContainer
+from app.containers.facilitators import FacilitatorsContainer
 from app.containers.registries import RegistriesContainer
 from app.containers.repositories import RepositoriesContainer
 from app.containers.time_provider import TimeProviderContainer
@@ -63,6 +64,7 @@ class ComplianceUseCasesContainer(containers.DeclarativeContainer):
 
     adapters: AdaptersContainer = DependenciesContainer()  # type: ignore[assignment]
     config: ConfigContainer = DependenciesContainer()  # type: ignore[assignment]
+    facilitators: FacilitatorsContainer = DependenciesContainer()  # type: ignore[assignment]
     registries: RegistriesContainer = DependenciesContainer()  # type: ignore[assignment]
     repositories: RepositoriesContainer = DependenciesContainer()  # type: ignore[assignment]
     time_provider: TimeProviderContainer = DependenciesContainer()  # type: ignore[assignment]
@@ -78,6 +80,7 @@ class ComplianceUseCasesContainer(containers.DeclarativeContainer):
             legal_document_registry=registries.legal_document_registry,
             app_settings=config.app_settings,
             wall_clock=time_provider.microsecond_wall_clock,
+            product_events=facilitators.product_events,
         )
     )
     get_dpa_status_use_case: Factory[UseCaseContract[BusinessQuery, DpaStatusView]] = (

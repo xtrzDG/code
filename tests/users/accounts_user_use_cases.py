@@ -41,6 +41,7 @@ from app.use_cases.users.otp_login.send_login_code_use_case import (
 from app.use_cases.users.otp_login.start_otp_login_use_case import StartOtpLoginUseCase
 from app.use_cases.users.update_current_user_use_case import UpdateCurrentUserUseCase
 from app.use_cases.users.verify_otp_login_use_case import VerifyOtpLoginUseCase
+from tests.analytics.recording_product_events import RecordingProductEvents
 from tests.users.accounts_recorders import (
     RecordingAssistantResumption,
     RecordingVoiceAgentRemoval,
@@ -54,6 +55,7 @@ class AccountsUserUseCases(AccountsRepositories):
 
     def __init__(self, environment_variables: Mapping[str, str]) -> None:
         super().__init__(environment_variables)
+        self.product_events = RecordingProductEvents()
         wall_clock: WallClock[Microseconds] = self.clock.build_wall_clock()
 
         user_view_transformer = UserViewTransformer()
@@ -105,6 +107,7 @@ class AccountsUserUseCases(AccountsRepositories):
             app_settings=self.settings,
             wall_clock=wall_clock,
             rate_limit_registry=self.login_rate_limits,
+            product_events=self.product_events,
         )
         self.authenticate_user = AuthenticateUserUseCase(
             user_session_repo=self.user_session_repo,
@@ -133,6 +136,7 @@ class AccountsUserUseCases(AccountsRepositories):
             business_view_transformer=business_view_transformer,
             app_settings=self.settings,
             wall_clock=wall_clock,
+            product_events=self.product_events,
         )
         self.list_my_businesses = ListMyBusinessesUseCase(
             business_repo=self.business_repo,

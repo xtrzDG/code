@@ -1,5 +1,6 @@
 from typed_time_provider import Microseconds, WallClock
 
+from app.contracts.analytics import RecordProductEventFacilitatorContract
 from app.contracts.facilitators import ManagerNotificationFacilitatorContract
 from app.contracts.registries import PlanRegistryContract
 from app.contracts.repositories.billing_repositories import (
@@ -10,6 +11,7 @@ from app.contracts.repositories.business_repositories import BusinessRepoContrac
 from app.contracts.repositories.user_repositories import UserRepoContract
 from app.contracts.transformer_contract import TransformerContract
 from app.contracts.use_case_contract import UseCaseContract
+from app.schemas.constants.analytics import ProductEventName
 from app.schemas.constants.billing import BillingNoticeKind, SubscriptionStatus
 from app.schemas.constants.businesses import ServiceMode
 from app.schemas.domain.billing import InvoiceDocument, SubscriptionDocument
@@ -29,6 +31,7 @@ from app.use_cases.billing.billing_records import (
     sum_invoice_amounts,
 )
 from app.use_cases.billing.owner_notifications import notify_business_owners
+from app.utilities.analytics.billing_event_drafts import billing_event
 from app.utilities.billing.billing_periods import add_local_days
 
 
@@ -54,6 +57,7 @@ class EndTrialsUseCase(UseCaseContract[JobTick, JobReport]):
         manager_notifier: ManagerNotificationFacilitatorContract,
         billing_notice_transformer: TransformerContract[BillingNotice, MessageText],
         wall_clock: WallClock[Microseconds],
+        product_events: RecordProductEventFacilitatorContract,
     ) -> None:
         self._business_repo: BusinessRepoContract = business_repo
         self._subscription_repo: SubscriptionRepoContract = subscription_repo
@@ -72,6 +76,7 @@ class EndTrialsUseCase(UseCaseContract[JobTick, JobReport]):
             MessageText,
         ] = billing_notice_transformer
         self._wall_clock: WallClock[Microseconds] = wall_clock
+        self._product_events: RecordProductEventFacilitatorContract = product_events
 
     def run(self, input_data: JobTick) -> JobReport:
         processed: int = 0
@@ -118,6 +123,9 @@ class EndTrialsUseCase(UseCaseContract[JobTick, JobReport]):
             advance_to_paid_periods(subscription, invoices, now)
             subscription.updated_at = now
             self._subscription_repo.save(subscription)
+            self._product_events.record(
+                billing_event(ProductEventName.SUBSCRIBED, subscription)
+            )
 
             def restore_full_service(current: BusinessDocument) -> None:
                 # Changed on the business as stored now, so an owner's edit

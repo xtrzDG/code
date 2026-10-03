@@ -40,6 +40,7 @@ from app.use_cases.billing.payment_webhook.process_payment_webhook_use_case impo
 from app.use_cases.billing.start_checkout_use_case import StartCheckoutUseCase
 from app.use_cases.billing.start_trial_use_case import StartTrialUseCase
 from app.utilities.localization.localized_text_resolver import LocalizedTextResolver
+from tests.analytics.recording_product_events import RecordingProductEvents
 from tests.billing.billing_fakes import RecordingVoiceAgentRemoval
 from tests.billing.billing_infrastructure import BillingInfrastructure
 
@@ -53,6 +54,7 @@ class BillingUseCases(BillingInfrastructure):
         exchange_rate_registry: ExchangeRateRegistryContract | None = None,
     ) -> None:
         super().__init__(plan_registry, exchange_rate_registry)
+        self.product_events = RecordingProductEvents()
         resolver = LocalizedTextResolver()
         wall_clock: WallClock[Microseconds] = self.clock.wall_clock
         authorize = AuthorizeBusinessAccessUseCase(
@@ -88,6 +90,7 @@ class BillingUseCases(BillingInfrastructure):
             plan_registry=self.plan_registry,
             assemble_billing_overview=self.assemble_overview,
             wall_clock=wall_clock,
+            product_events=self.product_events,
         )
         self.voice_agent_removals = RecordingVoiceAgentRemoval()
         self.change_plan = ChangePlanUseCase(
@@ -100,6 +103,7 @@ class BillingUseCases(BillingInfrastructure):
             assemble_billing_overview=self.assemble_overview,
             wall_clock=wall_clock,
             remove_voice_agent=self.voice_agent_removals,
+            product_events=self.product_events,
         )
         self.cancel_subscription = CancelSubscriptionUseCase(
             authorize_business_access=authorize,
@@ -108,6 +112,7 @@ class BillingUseCases(BillingInfrastructure):
             payment_gateway=self.payment_gateway,
             assemble_billing_overview=self.assemble_overview,
             wall_clock=wall_clock,
+            product_events=self.product_events,
         )
         self.start_checkout = StartCheckoutUseCase(
             authorize_business_access=authorize,
@@ -145,6 +150,7 @@ class BillingUseCases(BillingInfrastructure):
             manager_notifier=self.notifier,
             billing_notice_transformer=self.notice_transformer,
             wall_clock=wall_clock,
+            product_events=self.product_events,
         )
         self.end_trials = EndTrialsUseCase(
             business_repo=self.business_repo,
@@ -156,6 +162,7 @@ class BillingUseCases(BillingInfrastructure):
             manager_notifier=self.notifier,
             billing_notice_transformer=self.notice_transformer,
             wall_clock=wall_clock,
+            product_events=self.product_events,
         )
         self.enforce_grace_periods = EnforceGracePeriodsUseCase(
             business_repo=self.business_repo,

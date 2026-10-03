@@ -90,6 +90,7 @@ class UseCasesContainer(CoreUseCasesContainer):
     )
     launch: LaunchUseCasesContainer = Container(  # type: ignore[assignment]
         LaunchUseCasesContainer,
+        facilitators=CoreUseCasesContainer.facilitators,
         registries=CoreUseCasesContainer.registries,
         repositories=CoreUseCasesContainer.repositories,
         time_provider=CoreUseCasesContainer.time_provider,
@@ -110,6 +111,7 @@ class UseCasesContainer(CoreUseCasesContainer):
     )
     apply: ApplyUseCasesContainer = Container(  # type: ignore[assignment]
         ApplyUseCasesContainer,
+        facilitators=CoreUseCasesContainer.facilitators,
         repositories=CoreUseCasesContainer.repositories,
         time_provider=CoreUseCasesContainer.time_provider,
         utilities=CoreUseCasesContainer.utilities,
@@ -118,6 +120,7 @@ class UseCasesContainer(CoreUseCasesContainer):
     )
     setup: SetupUseCasesContainer = Container(  # type: ignore[assignment]
         SetupUseCasesContainer,
+        facilitators=CoreUseCasesContainer.facilitators,
         config=CoreUseCasesContainer.config,
         registries=CoreUseCasesContainer.registries,
         repositories=CoreUseCasesContainer.repositories,
@@ -139,6 +142,7 @@ class UseCasesContainer(CoreUseCasesContainer):
     )
     channels: ChannelUseCasesContainer = Container(  # type: ignore[assignment]
         ChannelUseCasesContainer,
+        facilitators=CoreUseCasesContainer.facilitators,
         adapters=CoreUseCasesContainer.adapters,
         clients=CoreUseCasesContainer.clients,
         config=CoreUseCasesContainer.config,

@@ -2,6 +2,7 @@
 
 from typed_time_provider import Microseconds, WallClock
 
+from app.contracts.analytics import RecordProductEventFacilitatorContract
 from app.contracts.channel_clients import (
     MetaGraphApiClientContract,
     TelegramBotApiClientContract,
@@ -45,6 +46,9 @@ from app.use_cases.channels.connection.phone_connection import connect_phone
 from app.use_cases.channels.connection.telegram_connection import connect_telegram
 from app.use_cases.channels.connection.web_chat_appearance import (
     merge_web_chat_appearance,
+)
+from app.utilities.analytics.product_event_drafts import (
+    channel_connected_events,
 )
 from app.utilities.channels.delivery_targets import find_business_channel
 
@@ -98,6 +102,7 @@ class ConnectChannelUseCase(UseCaseContract[ConnectChannelCommand, ChannelView])
         app_settings: AppSettings,
         wall_clock: WallClock[Microseconds],
         storage_scope: StorageScopeContract,
+        product_events: RecordProductEventFacilitatorContract,
     ) -> None:
         self._authorize_business_access: UseCaseContract[
             BusinessAccessRequest,
@@ -112,6 +117,7 @@ class ConnectChannelUseCase(UseCaseContract[ConnectChannelCommand, ChannelView])
         self._app_settings: AppSettings = app_settings
         self._wall_clock: WallClock[Microseconds] = wall_clock
         self._storage_scope: StorageScopeContract = storage_scope
+        self._product_events: RecordProductEventFacilitatorContract = product_events
 
     def run(self, input_data: ConnectChannelCommand) -> ChannelView:
         business: BusinessDocument = self._authorize_business_access.run(
@@ -183,6 +189,11 @@ class ConnectChannelUseCase(UseCaseContract[ConnectChannelCommand, ChannelView])
                 ip_address=input_data.client_ip_address,
                 created_at=now,
                 updated_at=now,
+            )
+        )
+        self._product_events.record(
+            *channel_connected_events(
+                input_data.user_id, business.id, input_data.channel
             )
         )
         return build_channel_view(channel)

@@ -1,5 +1,6 @@
 from typed_time_provider import Microseconds, WallClock
 
+from app.contracts.analytics import RecordProductEventFacilitatorContract
 from app.contracts.billing import (
     PaymentGatewayAdapterContract,
     PaymentOrderRepoContract,
@@ -57,6 +58,7 @@ from app.use_cases.billing.payment_webhook.service_mode_restoration import (
 from app.use_cases.billing.payment_webhook.subscription_payment_transitions import (
     activate_paid_period,
 )
+from app.utilities.analytics.billing_event_drafts import payment_events
 
 
 class ProcessPaymentWebhookUseCase(
@@ -103,6 +105,7 @@ class ProcessPaymentWebhookUseCase(
         manager_notifier: ManagerNotificationFacilitatorContract,
         billing_notice_transformer: TransformerContract[BillingNotice, MessageText],
         wall_clock: WallClock[Microseconds],
+        product_events: RecordProductEventFacilitatorContract,
     ) -> None:
         self._payment_gateway: PaymentGatewayAdapterContract = payment_gateway
         self._payment_order_repo: PaymentOrderRepoContract = payment_order_repo
@@ -112,17 +115,16 @@ class ProcessPaymentWebhookUseCase(
         self._user_repo: UserRepoContract = user_repo
         self._plan_registry: PlanRegistryContract = plan_registry
         self._issue_due_invoices: UseCaseContract[
-            DueInvoicesRequest,
-            list[InvoiceDocument],
+            DueInvoicesRequest, list[InvoiceDocument]
         ] = issue_due_invoices
         self._manager_notifier: ManagerNotificationFacilitatorContract = (
             manager_notifier
         )
         self._billing_notice_transformer: TransformerContract[
-            BillingNotice,
-            MessageText,
+            BillingNotice, MessageText
         ] = billing_notice_transformer
         self._wall_clock: WallClock[Microseconds] = wall_clock
+        self._product_events: RecordProductEventFacilitatorContract = product_events
 
     def run(self, input_data: PaymentWebhookDelivery) -> PaymentWebhookReceipt:
         notification: PaymentNotification = self._payment_gateway.read_notification(
@@ -142,17 +144,17 @@ class ProcessPaymentWebhookUseCase(
             payment_order.business_id
         )
         subscription: SubscriptionDocument | None = self._subscription_repo.get(
-            payment_order.business_id,
-            payment_order.subscription_id,
+            payment_order.business_id, payment_order.subscription_id
         )
         if business is None or subscription is None:
             raise NotFoundError("The subscription of this payment was not found.")
 
+        previous_status: SubscriptionStatus = subscription.status
         outcome: PaymentWebhookOutcome = self._apply(
-            notification,
-            payment_order,
-            subscription,
-            business,
+            notification, payment_order, subscription, business
+        )
+        self._product_events.record(
+            *payment_events(notification.status, outcome, previous_status, subscription)
         )
         now: Microseconds = self._wall_clock.now_unix()
         payment_order.processed_notification_keys.append(notification_key)
@@ -164,10 +166,7 @@ class ProcessPaymentWebhookUseCase(
 
         payment_order.updated_at = now
         self._payment_order_repo.save(payment_order)
-        return PaymentWebhookReceipt(
-            outcome=outcome,
-            payment_order_id=payment_order.id,
-        )
+        return PaymentWebhookReceipt(outcome=outcome, payment_order_id=payment_order.id)
 
     def _apply(
         self,

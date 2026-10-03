@@ -39,6 +39,7 @@ from app.use_cases.voice.send_call_confirmation_use_case import (
 )
 from app.use_cases.voice.send_call_links_use_case import SendCallLinksUseCase
 from app.utilities.storage.storage_scope_context import StorageScopeContext
+from tests.analytics.recording_product_events import RecordingProductEvents
 from tests.brain.fake_contact_tools import FakeHandoff
 from tests.channels.channels_fakes import RecordingVoiceAgentRemoval
 from tests.channels.channels_infrastructure import ChannelsInfrastructure
@@ -49,6 +50,7 @@ class ChannelsUseCases(ChannelsInfrastructure):
 
     def __init__(self, settings: AppSettings | None = None) -> None:
         super().__init__(settings)
+        self.product_events = RecordingProductEvents()
         self.authorize_business_access = AuthorizeBusinessAccessUseCase(
             self.business_repo, self.user_repo, self.audit_log_repo, self.wall_clock
         )
@@ -84,6 +86,7 @@ class ChannelsUseCases(ChannelsInfrastructure):
             self.settings,
             self.wall_clock,
             StorageScopeContext(),
+            product_events=self.product_events,
         )
         self.voice_agent_removals: list[BusinessId] = []
         self.disable_channel = DisableChannelUseCase(

@@ -1,5 +1,6 @@
 from typed_time_provider import Microseconds, WallClock
 
+from app.contracts.analytics import RecordProductEventFacilitatorContract
 from app.contracts.registries import PlanRegistryContract
 from app.contracts.repositories.billing_repositories import (
     InvoiceRepoContract,
@@ -7,9 +8,11 @@ from app.contracts.repositories.billing_repositories import (
 )
 from app.contracts.repositories.business_repositories import BusinessRepoContract
 from app.contracts.use_case_contract import UseCaseContract
+from app.schemas.constants.analytics import ProductEventName
 from app.schemas.constants.billing import PlanKey
 from app.schemas.constants.businesses import ServiceMode
 from app.schemas.constants.users import BusinessMemberRole
+from app.schemas.domain.billing import SubscriptionDocument
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.dto.access import BusinessAccessRequest
 from app.schemas.dto.billing import PlanDefinition
@@ -24,6 +27,7 @@ from app.schemas.exceptions.application_errors import (
 )
 from app.use_cases.billing.billing_records import is_trial_available
 from app.use_cases.billing.trial_subscriptions import open_trial_subscription
+from app.utilities.analytics.billing_event_drafts import billing_event
 
 
 class StartTrialUseCase(UseCaseContract[StartTrialCommand, BillingOverview]):
@@ -54,6 +58,7 @@ class StartTrialUseCase(UseCaseContract[StartTrialCommand, BillingOverview]):
             BillingOverview,
         ],
         wall_clock: WallClock[Microseconds],
+        product_events: RecordProductEventFacilitatorContract,
     ) -> None:
         self._authorize_business_access: UseCaseContract[
             BusinessAccessRequest,
@@ -68,6 +73,7 @@ class StartTrialUseCase(UseCaseContract[StartTrialCommand, BillingOverview]):
             BillingOverview,
         ] = assemble_billing_overview
         self._wall_clock: WallClock[Microseconds] = wall_clock
+        self._product_events: RecordProductEventFacilitatorContract = product_events
 
     def run(self, input_data: StartTrialCommand) -> BillingOverview:
         business: BusinessDocument = self._authorize_business_access.run(
@@ -88,7 +94,7 @@ class StartTrialUseCase(UseCaseContract[StartTrialCommand, BillingOverview]):
             raise ValidationFailedError(f"Plan {plan_key.value} has no free trial.")
 
         now: Microseconds = self._wall_clock.now_unix()
-        open_trial_subscription(
+        trial: SubscriptionDocument = open_trial_subscription(
             self._subscription_repo,
             self._invoice_repo,
             self._plan_registry,
@@ -96,6 +102,9 @@ class StartTrialUseCase(UseCaseContract[StartTrialCommand, BillingOverview]):
             plan_key,
             input_data.request.billing_period,
             now,
+        )
+        self._product_events.record(
+            billing_event(ProductEventName.TRIAL_STARTED, trial, input_data.user_id)
         )
 
         def start_trial(current: BusinessDocument) -> None:

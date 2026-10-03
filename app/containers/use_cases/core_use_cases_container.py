@@ -60,6 +60,7 @@ class CoreUseCasesContainer(containers.DeclarativeContainer):
     )
     compliance: ComplianceUseCasesContainer = Container(  # type: ignore[assignment]
         ComplianceUseCasesContainer,
+        facilitators=facilitators,
         adapters=adapters,
         config=config,
         registries=registries,

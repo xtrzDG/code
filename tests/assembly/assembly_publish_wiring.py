@@ -48,6 +48,7 @@ from app.use_cases.setup.record_activation_event_use_case import (
 )
 from app.use_cases.voice.remove_voice_agent_use_case import RemoveVoiceAgentUseCase
 from app.utilities.localization.localized_text_resolver import LocalizedTextResolver
+from tests.analytics.recording_product_events import RecordingProductEvents
 from tests.assembly.assembly_autotest_wiring import AssemblyAutotestWiring
 
 
@@ -58,6 +59,7 @@ class AssemblyPublishWiring(AssemblyAutotestWiring):
     """
 
     def _build_publish_use_cases(self) -> None:
+        self.product_events = RecordingProductEvents()
         authorize = self.authorize
         details_transformer = self.details_transformer
         check_readiness = self.check_readiness_use_case = CheckGoLiveReadinessUseCase(
@@ -79,7 +81,9 @@ class AssemblyPublishWiring(AssemblyAutotestWiring):
             check_readiness,
         )
         self.record_event_use_case = RecordActivationEventUseCase(
-            self.activation_event_repo, self.wall_clock
+            self.activation_event_repo,
+            self.wall_clock,
+            product_events=self.product_events,
         )
         activate = self.activate_use_case = ActivateAssistantVersionUseCase(
             check_go_live_readiness=check_readiness,
@@ -98,6 +102,7 @@ class AssemblyPublishWiring(AssemblyAutotestWiring):
                 self.invoice_repo,
                 self.plan_registry,
                 self.wall_clock,
+                product_events=self.product_events,
             ),
             record_activation_event=self.record_event_use_case,
             app_settings=self.settings,
@@ -140,6 +145,7 @@ class AssemblyPublishWiring(AssemblyAutotestWiring):
             self.activate_use_case,
             self.audit_repo,
             self.wall_clock,
+            product_events=self.product_events,
         )
         self.publish_applied_later.target = self.publish_applied_use_case
         self.describe_apply_use_case = DescribeApplyChangesUseCase(
@@ -174,12 +180,15 @@ class AssemblyPublishWiring(AssemblyAutotestWiring):
                 self.business_repo,
                 self.check_readiness_use_case,
                 self.wall_clock,
+                product_events=self.product_events,
             ),
             start_autotest_run=self.start_autotest_run_use_case,
             enqueue_autotest_run=self.enqueue_autotest_run_use_case,
             publish_applied_version=self.publish_applied_use_case,
             fail_apply_changes=FailApplyChangesUseCase(
-                self.apply_repo, self.wall_clock
+                self.apply_repo,
+                self.wall_clock,
+                product_events=self.product_events,
             ),
             get_apply_changes=self.get_apply_use_case,
         )

@@ -1,6 +1,7 @@
 from dependency_injector import containers
 from dependency_injector.providers import DependenciesContainer, Factory
 
+from app.containers.facilitators import FacilitatorsContainer
 from app.containers.repositories import RepositoriesContainer
 from app.containers.time_provider import TimeProviderContainer
 from app.containers.use_cases.account_use_cases import AccountUseCasesContainer
@@ -44,6 +45,7 @@ class ApplyUseCasesContainer(containers.DeclarativeContainer):
     the progress the cabinet follows.
     """
 
+    facilitators: FacilitatorsContainer = DependenciesContainer()  # type: ignore[assignment]
     repositories: RepositoriesContainer = DependenciesContainer()  # type: ignore[assignment]
     time_provider: TimeProviderContainer = DependenciesContainer()  # type: ignore[assignment]
     utilities: UtilitiesContainer = DependenciesContainer()  # type: ignore[assignment]
@@ -73,12 +75,14 @@ class ApplyUseCasesContainer(containers.DeclarativeContainer):
         business_repo=repositories.business_repo,
         check_go_live_readiness=assistant_use_cases.check_go_live_readiness_use_case,
         wall_clock=time_provider.microsecond_wall_clock,
+        product_events=facilitators.product_events,
     )
     fail_apply_changes_use_case: Factory[UseCaseContract[ApplyBuildFailure, None]] = (
         Factory(
             FailApplyChangesUseCase,
             assistant_apply_repo=repositories.assistant_apply_repo,
             wall_clock=time_provider.microsecond_wall_clock,
+            product_events=facilitators.product_events,
         )
     )
     publish_applied_version_use_case: Factory[UseCaseContract[AppliedVersion, None]] = (
@@ -91,6 +95,7 @@ class ApplyUseCasesContainer(containers.DeclarativeContainer):
             activate_assistant_version=assistant_use_cases.activate_assistant_version_use_case,
             audit_log_repo=repositories.audit_log_repo,
             wall_clock=time_provider.microsecond_wall_clock,
+            product_events=facilitators.product_events,
         )
     )
     describe_apply_changes_use_case: Factory[

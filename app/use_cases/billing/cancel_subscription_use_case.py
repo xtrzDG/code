@@ -1,11 +1,13 @@
 from typed_time_provider import Microseconds, WallClock
 
+from app.contracts.analytics import RecordProductEventFacilitatorContract
 from app.contracts.billing import PaymentGatewayAdapterContract
 from app.contracts.repositories.billing_repositories import (
     InvoiceRepoContract,
     SubscriptionRepoContract,
 )
 from app.contracts.use_case_contract import UseCaseContract
+from app.schemas.constants.analytics import ProductEventName
 from app.schemas.constants.billing import InvoiceStatus, SubscriptionStatus
 from app.schemas.constants.users import BusinessMemberRole
 from app.schemas.domain.billing import SubscriptionDocument
@@ -21,6 +23,7 @@ from app.use_cases.billing.billing_records import (
     list_subscription_invoices,
     require_current_subscription,
 )
+from app.utilities.analytics.billing_event_drafts import billing_event
 
 
 class CancelSubscriptionUseCase(
@@ -49,6 +52,7 @@ class CancelSubscriptionUseCase(
             BillingOverview,
         ],
         wall_clock: WallClock[Microseconds],
+        product_events: RecordProductEventFacilitatorContract,
     ) -> None:
         self._authorize_business_access: UseCaseContract[
             BusinessAccessRequest,
@@ -62,6 +66,7 @@ class CancelSubscriptionUseCase(
             BillingOverview,
         ] = assemble_billing_overview
         self._wall_clock: WallClock[Microseconds] = wall_clock
+        self._product_events: RecordProductEventFacilitatorContract = product_events
 
     def run(self, input_data: CancelSubscriptionCommand) -> BillingOverview:
         business: BusinessDocument = self._authorize_business_access.run(
@@ -77,6 +82,11 @@ class CancelSubscriptionUseCase(
         )
         if subscription.status is not SubscriptionStatus.CANCELLED:
             self._cancel(subscription)
+            self._product_events.record(
+                billing_event(
+                    ProductEventName.CANCELLED, subscription, input_data.user_id
+                )
+            )
 
         return self._assemble_billing_overview.run(
             BillingOverviewSource(
