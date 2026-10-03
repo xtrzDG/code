@@ -90,9 +90,7 @@ def start_use_case(
         apply_repo or testbed.apply_repo,
         testbed.version_repo,
         testbed.profile_repo,
-        testbed.knowledge_repo,
-        testbed.resource_repo,
-        testbed.exception_repo,
+        testbed.collect_pending_changes_use_case,
         testbed.audit_repo,
         testbed.wall_clock,
     )

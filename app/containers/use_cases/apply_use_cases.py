@@ -5,6 +5,9 @@ from app.containers.repositories import RepositoriesContainer
 from app.containers.time_provider import TimeProviderContainer
 from app.containers.use_cases.account_use_cases import AccountUseCasesContainer
 from app.containers.use_cases.assistant_use_cases import AssistantUseCasesContainer
+from app.containers.use_cases.pending_change_use_cases import (
+    PendingChangeUseCasesContainer,
+)
 from app.containers.utilities import UtilitiesContainer
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.dto.setup.apply_changes import (
@@ -49,6 +52,7 @@ class ApplyUseCasesContainer(containers.DeclarativeContainer):
     utilities: UtilitiesContainer = DependenciesContainer()  # type: ignore[assignment]
     account_use_cases: AccountUseCasesContainer = DependenciesContainer()  # type: ignore[assignment]
     assistant_use_cases: AssistantUseCasesContainer = DependenciesContainer()  # type: ignore[assignment]
+    pending_change_use_cases: PendingChangeUseCasesContainer = DependenciesContainer()  # type: ignore[assignment]
 
     start_apply_changes_use_case: Factory[
         UseCaseContract[ApplyChangesCommand, ApplyStart]
@@ -58,9 +62,7 @@ class ApplyUseCasesContainer(containers.DeclarativeContainer):
         assistant_apply_repo=repositories.assistant_apply_repo,
         assistant_version_repo=repositories.assistant_version_repo,
         business_profile_repo=repositories.business_profile_repo,
-        knowledge_item_repo=repositories.knowledge_item_repo,
-        resource_repo=repositories.resource_repo,
-        schedule_exception_repo=repositories.schedule_exception_repo,
+        collect_pending_changes=pending_change_use_cases.collect_pending_changes_use_case,
         audit_log_repo=repositories.audit_log_repo,
         wall_clock=time_provider.microsecond_wall_clock,
     )
@@ -101,9 +103,7 @@ class ApplyUseCasesContainer(containers.DeclarativeContainer):
         assistant_version_repo=repositories.assistant_version_repo,
         autotest_run_repo=repositories.autotest_run_repo,
         business_profile_repo=repositories.business_profile_repo,
-        knowledge_item_repo=repositories.knowledge_item_repo,
-        resource_repo=repositories.resource_repo,
-        schedule_exception_repo=repositories.schedule_exception_repo,
+        collect_pending_changes=pending_change_use_cases.collect_pending_changes_use_case,
         localized_text_resolver=utilities.localized_text_resolver,
     )
     get_apply_changes_use_case: Factory[

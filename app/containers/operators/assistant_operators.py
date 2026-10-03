@@ -33,6 +33,9 @@ class AssistantOperatorsContainer(containers.DeclarativeContainer):
     get_apply_changes_operator = pipeline_operator(
         assistant_pipelines.get_apply_changes_pipeline, storage_scope
     )
+    get_pending_changes_operator = pipeline_operator(
+        assistant_pipelines.get_pending_changes_pipeline, storage_scope
+    )
 
     # --- Assistant versions and autotests.
     list_assistant_versions_operator = pipeline_operator(

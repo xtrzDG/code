@@ -46,6 +46,13 @@ from app.use_cases.assistants.get_assistant_version_use_case import (
 from app.use_cases.assistants.list_assistant_versions_use_case import (
     ListAssistantVersionsUseCase,
 )
+from app.use_cases.assistants.pending_changes.build_assistant_draft_use_case import (
+    BuildAssistantDraftUseCase,
+)
+from app.use_cases.assistants.pending_changes.collect_pending_changes_use_case import (
+    CollectPendingChangesUseCase,
+)
+from app.utilities.localization.localized_text_resolver import LocalizedTextResolver
 from app.use_cases.authorize_business_access_use_case import (
     AuthorizeBusinessAccessUseCase,
 )
@@ -97,14 +104,11 @@ class AssemblyAutotestWiring(AssemblyScriptedModels):
             AssistantVersionDetailsTransformer()
         )
         run_view_transformer = AutotestRunViewTransformer()
-        self.assemble_use_case = AssembleAssistantVersionUseCase(
-            authorize_business_access=authorize,
-            business_repo=self.business_repo,
+        self.build_draft_use_case = BuildAssistantDraftUseCase(
             business_profile_repo=self.profile_repo,
             knowledge_item_repo=self.knowledge_repo,
             resource_repo=self.resource_repo,
             schedule_exception_repo=self.exception_repo,
-            assistant_version_repo=self.version_repo,
             country_registry=self.country_registry,
             language_registry=self.language_registry,
             niche_template_registry=self.niche_registry,
@@ -112,6 +116,18 @@ class AssemblyAutotestWiring(AssemblyScriptedModels):
             business_facts_transformer=BusinessFactsTransformer(),
             assistant_instruction_transformer=AssistantInstructionTransformer(),
             phone_instruction_transformer=PhoneInstructionTransformer(),
+            wall_clock=self.wall_clock,
+        )
+        self.collect_pending_changes_use_case = CollectPendingChangesUseCase(
+            self.build_draft_use_case,
+            AssistantInstructionTransformer(),
+            LocalizedTextResolver(),
+        )
+        self.assemble_use_case = AssembleAssistantVersionUseCase(
+            authorize_business_access=authorize,
+            business_repo=self.business_repo,
+            assistant_version_repo=self.version_repo,
+            build_assistant_draft=self.build_draft_use_case,
             version_details_transformer=details_transformer,
             app_settings=self.settings,
             wall_clock=self.wall_clock,

@@ -130,6 +130,7 @@ class OrchestratorsContainer(containers.DeclarativeContainer):
         assistant_use_cases=use_cases.assistants,
         autotest_use_cases=use_cases.autotests,
         apply_use_cases=use_cases.apply,
+        pending_change_use_cases=use_cases.pending_changes,
         conversation_orchestrators=conversations,
     )
     setup: SetupOrchestratorsContainer = Container(  # type: ignore[assignment]

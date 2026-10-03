@@ -147,9 +147,7 @@ class AssemblyPublishWiring(AssemblyAutotestWiring):
             self.version_repo,
             self.run_repo,
             self.profile_repo,
-            self.knowledge_repo,
-            self.resource_repo,
-            self.exception_repo,
+            self.collect_pending_changes_use_case,
             LocalizedTextResolver(),
         )
         self.get_apply_use_case = GetApplyChangesUseCase(
@@ -161,9 +159,7 @@ class AssemblyPublishWiring(AssemblyAutotestWiring):
                 self.apply_repo,
                 self.version_repo,
                 self.profile_repo,
-                self.knowledge_repo,
-                self.resource_repo,
-                self.exception_repo,
+                self.collect_pending_changes_use_case,
                 self.audit_repo,
                 self.wall_clock,
             ),

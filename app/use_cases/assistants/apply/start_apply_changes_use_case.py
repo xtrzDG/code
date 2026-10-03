@@ -7,11 +7,6 @@ from app.contracts.repositories.business_repositories import (
     BusinessProfileRepoContract,
 )
 from app.contracts.repositories.compliance_repositories import AuditLogRepoContract
-from app.contracts.repositories.knowledge_repositories import (
-    KnowledgeItemRepoContract,
-    ResourceRepoContract,
-    ScheduleExceptionRepoContract,
-)
 from app.contracts.repositories.setup_repositories import AssistantApplyRepoContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.assistants import AssistantVersionStatus
@@ -24,12 +19,12 @@ from app.schemas.domain.compliance import AuditLogEntryDocument
 from app.schemas.domain.setup import AssistantApplyDocument
 from app.schemas.dto.access import BusinessAccessRequest
 from app.schemas.dto.setup.apply_changes import ApplyChangesCommand, ApplyStart
+from app.schemas.dto.setup.pending_changes import PendingChange, PendingChangesRequest
 from app.schemas.typings.compliance.strings import (
     AuditEntityName,
     AuditEntityReference,
 )
 from app.use_cases.assistants.apply.apply_records import is_apply_running
-from app.utilities.setup.pending_changes import has_unapplied_changes
 from app.utilities.setup.setup_keys import derive_assistant_apply_id
 
 APPLY_AUDIT_ENTITY: AuditEntityName = AuditEntityName("assistant_apply")
@@ -56,9 +51,9 @@ class StartApplyChangesUseCase(UseCaseContract[ApplyChangesCommand, ApplyStart])
         assistant_apply_repo: AssistantApplyRepoContract,
         assistant_version_repo: AssistantVersionRepoContract,
         business_profile_repo: BusinessProfileRepoContract,
-        knowledge_item_repo: KnowledgeItemRepoContract,
-        resource_repo: ResourceRepoContract,
-        schedule_exception_repo: ScheduleExceptionRepoContract,
+        collect_pending_changes: UseCaseContract[
+            PendingChangesRequest, list[PendingChange]
+        ],
         audit_log_repo: AuditLogRepoContract,
         wall_clock: WallClock[Microseconds],
     ) -> None:
@@ -71,11 +66,9 @@ class StartApplyChangesUseCase(UseCaseContract[ApplyChangesCommand, ApplyStart])
             assistant_version_repo
         )
         self._business_profile_repo: BusinessProfileRepoContract = business_profile_repo
-        self._knowledge_item_repo: KnowledgeItemRepoContract = knowledge_item_repo
-        self._resource_repo: ResourceRepoContract = resource_repo
-        self._schedule_exception_repo: ScheduleExceptionRepoContract = (
-            schedule_exception_repo
-        )
+        self._collect_pending_changes: UseCaseContract[
+            PendingChangesRequest, list[PendingChange]
+        ] = collect_pending_changes
         self._audit_log_repo: AuditLogRepoContract = audit_log_repo
         self._wall_clock: WallClock[Microseconds] = wall_clock
 
@@ -207,11 +200,15 @@ class StartApplyChangesUseCase(UseCaseContract[ApplyChangesCommand, ApplyStart])
         business: BusinessDocument,
         version: AssistantVersionDocument,
     ) -> bool:
-        return has_unapplied_changes(
-            business,
-            version,
-            self._business_profile_repo.get_by_business(business.id),
-            self._knowledge_item_repo.list_by_business(business.id),
-            self._resource_repo.list_by_business(business.id),
-            self._schedule_exception_repo.list_by_business(business.id),
+        if self._business_profile_repo.get_by_business(business.id) is None:
+            return False
+
+        return bool(
+            self._collect_pending_changes.run(
+                PendingChangesRequest(
+                    business=business,
+                    version=version,
+                    language=business.owner_language,
+                )
+            )
         )

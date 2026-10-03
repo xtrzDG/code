@@ -3,6 +3,18 @@
 from base_typed_int import BaseConstrainedTypedInt
 
 
+class PendingChangeCount(BaseConstrainedTypedInt):
+    """
+    How many changes the owner made that customers do not get yet.
+
+    Example:
+        count = PendingChangeCount(3)
+    """
+
+    ge = 0
+    le = 100_000
+
+
 class SetupMinutesLeft(BaseConstrainedTypedInt):
     """
     Estimated minutes of setup still ahead of the owner (0 when done).
