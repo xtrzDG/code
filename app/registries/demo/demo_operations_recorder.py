@@ -24,6 +24,10 @@ from app.schemas.typings.handoffs.strings import HandoffSummary, UnansweredQuest
 from app.schemas.typings.knowledge.prefixed_id import KnowledgeItemId
 from app.schemas.typings.localization.constrained_strings import LanguageTag
 
+# A request waits for the team while it is new or someone works on it.
+OPEN_REQUEST_STATUSES: frozenset[LeadStatus] = frozenset(
+    {LeadStatus.NEW, LeadStatus.IN_PROGRESS}
+)
 # The concept's reminder lead: bookings this close get their reminder.
 REMINDER_LEAD_SECONDS: int = 24 * 60 * 60
 # Channels the reminder job writes to (send_booking_reminders_use_case).
@@ -139,6 +143,10 @@ class DemoOperationsRecorder:
             created_at=made_at,
             updated_at=made_at,
         )
+        if conversation is not None and status in OPEN_REQUEST_STATUSES:
+            # The team inbox's "Requests" view (kept by the lead use cases).
+            conversation.has_open_request = True
+
         self.leads.append(lead)
         return lead
 
