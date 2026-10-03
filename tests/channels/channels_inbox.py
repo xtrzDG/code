@@ -137,6 +137,7 @@ class ChannelsInbox(ChannelsUseCases):
             self.push_sender,
             self.usage_event_repo,
             self.wall_clock,
+            self.whatsapp_adapter,
         )
         self.record_outbound_attempt = RecordOutboundAttemptUseCase(
             self.outbound_message_repo,
@@ -145,6 +146,7 @@ class ChannelsInbox(ChannelsUseCases):
             self.handoff_repo,
             self.live_events,
             self.delivery_recorder,
+            self.feedback_request_repo,
             jitter=lambda: NO_JITTER,
         )
         self.build_undelivered_reply_handoff = BuildUndeliveredReplyHandoffUseCase(

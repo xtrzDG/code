@@ -177,6 +177,7 @@ class DeliveryUseCasesContainer(containers.DeclarativeContainer):
         push_sender=facilitators.push_notification_sender,
         usage_event_repo=repositories.usage_event_repo,
         wall_clock=time_provider.microsecond_wall_clock,
+        whatsapp_templates=adapters.whatsapp_channel_adapter,
     )
     record_outbound_attempt_use_case: Factory[
         UseCaseContract[OutboundAttempt, OutboundMessageDocument | None]
@@ -188,6 +189,7 @@ class DeliveryUseCasesContainer(containers.DeclarativeContainer):
         handoff_repo=repositories.handoff_repo,
         live_events=facilitators.event_publisher,
         delivery_recorder=facilitators.staff_delivery_recorder,
+        feedback_request_repo=repositories.feedback_request_repo,
     )
     build_undelivered_reply_handoff_use_case: Factory[
         UseCaseContract[OutboundMessageDocument, HandoffCommand | None]

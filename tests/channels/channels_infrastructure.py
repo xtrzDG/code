@@ -44,6 +44,7 @@ from app.repositories.conversation_repositories import (
 from app.repositories.delivery_repositories import (
     InboundEventRepository,
 )
+from app.repositories.feedback_repositories import FeedbackRequestRepository
 from app.repositories.knowledge_repositories import (
     KnowledgeItemRepository,
     ResourceRepository,
@@ -63,6 +64,7 @@ from app.schemas.domain.conversations import (
     ConversationDocument,
     MessageDocument,
 )
+from app.schemas.domain.feedback import FeedbackRequestDocument
 from app.schemas.domain.handoffs import HandoffDocument
 from app.schemas.domain.inbound_events import InboundEventDocument
 from app.schemas.domain.knowledge import KnowledgeItemDocument
@@ -157,6 +159,9 @@ class ChannelsInfrastructure:
         self.jobs: JobStores = build_job_stores()
         self.job_queue = JobQueueFacilitator(
             self.jobs.job_repo, self.wall_clock, self.jobs.job_wakeup
+        )
+        self.feedback_request_repo = FeedbackRequestRepository(
+            InMemoryDocumentCollectionAdapter(FeedbackRequestDocument)
         )
         self.link_repo = ManagerTelegramLinkRepository(
             InMemoryDocumentCollectionAdapter(ManagerTelegramLinkDocument)

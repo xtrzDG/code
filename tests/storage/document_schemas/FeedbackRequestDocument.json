@@ -86,18 +86,6 @@
         ],
         "default": null
       },
-      "handoff_id": {
-        "anyOf": [
-          {
-            "pattern": "^handoff_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
-            "type": "string"
-          },
-          {
-            "type": "null"
-          }
-        ],
-        "default": null
-      },
       "id": {
         "pattern": "^feedback_request_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
         "type": "string"

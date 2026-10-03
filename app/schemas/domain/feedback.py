@@ -21,7 +21,6 @@ from app.schemas.typings.feedback.prefixed_id import (
     FeedbackRequestId,
     ReviewSettingsId,
 )
-from app.schemas.typings.handoffs.prefixed_id import HandoffId
 from app.schemas.typings.localization.constrained_strings import LanguageTag
 
 DEFAULT_FEEDBACK_DELAY: FeedbackDelayMinutes = FeedbackDelayMinutes(120)
@@ -55,8 +54,8 @@ class FeedbackRequestDocument(BaseDocument):
     about once. A SENT request went into the outbox (`outbound_message_id`)
     in `channel` and `language` and waits for the customer's rating; the
     outbox marks it delivered (`delivered_at`) or FAILED. The rating
-    (`score`) makes it ANSWERED; a low one also opened a handoff
-    (`handoff_id`). Everyone who answers gets the business's review link
+    (`score`) makes it ANSWERED; a low one also opens a handoff in the
+    conversation. Everyone who answers gets the business's review link
     through the platform's address with `review_token`, which counts the
     customer's visits (`review_clicks`). A SKIPPED request keeps why
     (`skip_reason`). No text the customer wrote is kept here: their words
@@ -80,6 +79,5 @@ class FeedbackRequestDocument(BaseDocument):
     last_error: DeliveryErrorText | None = None
     score: VisitScore | None = None
     answered_at: Microseconds | None = None
-    handoff_id: HandoffId | None = None
     review_clicks: ReviewLinkClickCount = ReviewLinkClickCount(0)
     first_clicked_at: Microseconds | None = None

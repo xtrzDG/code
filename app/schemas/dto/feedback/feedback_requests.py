@@ -18,7 +18,6 @@ from app.schemas.typings.feedback.constrained_integers import (
     VisitScore,
 )
 from app.schemas.typings.feedback.prefixed_id import FeedbackRequestId
-from app.schemas.typings.handoffs.prefixed_id import HandoffId
 from app.schemas.typings.platform.constrained_strings import PageCursor
 from app.schemas.typings.users.prefixed_id import UserId
 
@@ -36,8 +35,8 @@ class FeedbackRequestView(ImmutableDTO):
     """
     One visit and its request: the customer (their name when known), when
     the visit ended, whether they were asked and how (or why not), their
-    rating, whether they opened the review link, and the conversation and
-    handoff it led to.
+    rating, whether they opened the review link, and the conversation it
+    led to.
     """
 
     id: FeedbackRequestId
@@ -53,7 +52,6 @@ class FeedbackRequestView(ImmutableDTO):
     answered_at: Microseconds | None = None
     review_clicks: ReviewLinkClickCount
     conversation_id: ConversationId | None = None
-    handoff_id: HandoffId | None = None
     last_error: DeliveryErrorText | None = None
 
 

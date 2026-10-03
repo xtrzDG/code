@@ -26,6 +26,9 @@ from app.containers.orchestrators.conversation_orchestrators import (
     ConversationOrchestratorsContainer,
 )
 from app.containers.orchestrators.demo_orchestrators import DemoOrchestratorsContainer
+from app.containers.orchestrators.feedback_orchestrators import (
+    FeedbackOrchestratorsContainer,
+)
 from app.containers.orchestrators.inbox_orchestrators import (
     InboxOrchestratorsContainer,
 )
@@ -111,6 +114,7 @@ class OrchestratorsContainer(containers.DeclarativeContainer):
         delivery_use_cases=use_cases.deliveries,
         call_use_cases=use_cases.calls,
         call_orchestrators=calls,
+        feedback_use_cases=use_cases.feedback,
     )
     assistants: AssistantOrchestratorsContainer = Container(  # type: ignore[assignment]
         AssistantOrchestratorsContainer,
@@ -151,6 +155,10 @@ class OrchestratorsContainer(containers.DeclarativeContainer):
         sharing_use_cases=use_cases.sharing,
         follow_up_use_cases=use_cases.follow_ups,
         utilities=utilities,
+    )
+    feedback: FeedbackOrchestratorsContainer = Container(  # type: ignore[assignment]
+        FeedbackOrchestratorsContainer,
+        feedback_use_cases=use_cases.feedback,
     )
     demo: DemoOrchestratorsContainer = Container(  # type: ignore[assignment]
         DemoOrchestratorsContainer,
