@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { buildContentSecurityPolicy, createNonce } from "./contentSecurityPolicy";
+import { buildContentSecurityPolicy, buildHostedChatPolicy, createNonce } from "./contentSecurityPolicy";
 
 function directives(policy: string): Map<string, string> {
   return new Map(
@@ -43,5 +43,28 @@ describe("buildContentSecurityPolicy", () => {
 
     expect(development.get("script-src")).toContain("'unsafe-eval'");
     expect(development.has("upgrade-insecure-requests")).toBe(false);
+  });
+});
+
+describe("buildHostedChatPolicy", () => {
+  it("lets the hosted chat page talk only to itself and the API, with nothing framed or posted", () => {
+    const policy = directives(
+      buildHostedChatPolicy({ nonce: "abc", apiOrigin: "https://api.example", isDevelopment: false, isHttps: true }),
+    );
+
+    expect(policy.get("script-src")).toBe("'self' 'nonce-abc' 'strict-dynamic'");
+    expect(policy.get("connect-src")).toBe("'self' https://api.example");
+    expect(policy.get("frame-src")).toBe("'none'");
+    expect(policy.get("form-action")).toBe("'none'");
+    expect(policy.get("frame-ancestors")).toBe("'none'");
+    expect(policy.has("upgrade-insecure-requests")).toBe(true);
+  });
+
+  it("leaves the API out when it is unknown and allows eval only in development", () => {
+    const policy = directives(buildHostedChatPolicy({ nonce: "n", apiOrigin: null, isDevelopment: true, isHttps: false }));
+
+    expect(policy.get("connect-src")).toBe("'self'");
+    expect(policy.get("script-src")).toContain("'unsafe-eval'");
+    expect(policy.has("upgrade-insecure-requests")).toBe(false);
   });
 });

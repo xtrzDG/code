@@ -94,8 +94,8 @@
 
 .hc-notice h1 {
   margin: 0;
-  max-width: 24ch;
-  font-size: 22px;
+  max-width: 26ch;
+  font-size: 20px;
   font-weight: 650;
   line-height: 1.25;
   overflow-wrap: anywhere;
@@ -204,6 +204,7 @@
 .hc-document ul {
   margin: 0 0 10px;
   padding-inline-start: 22px;
+  list-style: disc;
 }
 
 .hc-document .hc-document-lead {
@@ -212,6 +213,8 @@
 
 .hc-document a {
   color: inherit;
+  font-weight: 500;
+  text-decoration-line: underline;
   text-decoration-color: var(--hc-accent);
   text-decoration-thickness: 2px;
   text-underline-offset: 3px;

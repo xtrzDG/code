@@ -55,8 +55,8 @@ export function ShareSection({ isWebChatOn, accent }: { isWebChatOn: boolean; ac
           </LoadingRegion>
         </Card>
       ) : (
-        <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,26rem)]">
-          <Card className={links.isPlaceholder ? "opacity-70 transition-opacity" : undefined}>
+        <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,26rem)]">
+          <Card className={links.isPlaceholder ? "min-w-0 opacity-70 transition-opacity" : "min-w-0"}>
             <div className="space-y-6">
               <Field label={t("share.sourceLabel")} hint={t("share.sourceHint")}>
                 {(control) => (

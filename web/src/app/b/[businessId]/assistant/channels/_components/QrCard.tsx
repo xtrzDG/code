@@ -52,7 +52,7 @@ export function QrCard({
   };
 
   return (
-    <Card title={t("share.qrTitle")} description={name}>
+    <Card title={t("share.qrTitle")} description={name} className="min-w-0">
       <div className="space-y-5">
         <figure className="space-y-3">
           <div className="mx-auto w-full max-w-60 rounded-xl bg-white p-2 shadow-sm ring-1 ring-line">

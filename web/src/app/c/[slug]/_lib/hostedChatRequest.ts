@@ -2,7 +2,8 @@ import "server-only";
 
 import { headers } from "next/headers";
 
-import { chooseLanguage, directionOf } from "@/lib/hostedChat/language";
+import { directionOf } from "@/lib/hostedChat/language";
+import { chooseLanguage } from "@/lib/hostedChat/negotiate";
 import { HOSTED_CHAT_LANGUAGES } from "@/lib/hostedChat/texts";
 import { NONCE_HEADER } from "@/server/contentSecurityPolicy";
 import { HOSTED_CHAT_HEADER, decodeLookup, type HostedChatLookup, type HostedChatView } from "@/server/hostedChat";
