@@ -13,6 +13,7 @@ import type { BookingView } from "@/components/insights/types";
 import { useI18n } from "@/i18n/client";
 import { languageName } from "@/lib/format";
 import { conversationPath } from "@/lib/navigation";
+import { formatPhone } from "@/lib/phone";
 
 import { groupBookingsByDate, nightsOf, reminderState } from "../_lib/bookingList";
 
@@ -124,7 +125,7 @@ function BookingRow({ booking, isStay, onOpen }: { booking: BookingView; isStay:
               <>
                 {" · "}
                 <span dir="ltr" className="tabular-nums">
-                  {booking.contact_phone_number}
+                  {formatPhone(booking.contact_phone_number)}
                 </span>
               </>
             ) : null}

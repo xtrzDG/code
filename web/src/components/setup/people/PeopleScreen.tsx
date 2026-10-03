@@ -17,6 +17,7 @@ import { IconTelegram, IconUsers, IconX } from "@/components/icons";
 import { Button } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { cn } from "@/lib/cn";
+import { formatContactAddress } from "@/lib/phone";
 import { isAlreadyContact, ownerChoices, ownerName } from "@/lib/tunnel/contacts";
 
 import { StepScreen } from "../StepScreen";
@@ -46,7 +47,7 @@ function ContactList({ contacts, onRemove }: { contacts: readonly Schema<"Manage
                 {contact.name}
               </span>
               <span className="block truncate text-xs text-ink-muted">
-                {t(`tunnelTeam.people.by.${contact.channel}`)} · <span dir="ltr">{contact.telegram_username ? `@${contact.telegram_username}` : contact.address}</span>
+                {t(`tunnelTeam.people.by.${contact.channel}`)} · <span dir="ltr">{contact.telegram_username ? `@${contact.telegram_username}` : formatContactAddress(contact.channel, contact.address)}</span>
               </span>
             </span>
             <Button
@@ -134,7 +135,7 @@ export function PeopleScreen({ ctx }: { ctx: StepContext }) {
                     {t("tunnelTeam.people.me")} {t(`tunnelTeam.people.by.${choice.channel}`)}
                   </span>
                   <span className="block truncate text-xs text-ink-muted" dir="ltr">
-                    {choice.address}
+                    {formatContactAddress(choice.channel, choice.address)}
                   </span>
                 </span>
               </button>

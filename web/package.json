@@ -22,7 +22,7 @@
     "gen:api:spec": "cd .. && uv run python -m scripts.export_openapi web/openapi.json",
     "gen:api:types": "openapi-typescript openapi.json --output src/api/schema.d.ts",
     "gen:currencies": "cd .. && uv run python -m scripts.export_currency_digits web/src/lib/currencyDigits.generated.ts",
-    "gen:names": "cd .. && uv run python -m scripts.export_display_names web/src/lib/displayNames.generated.ts"
+    "gen:names": "cd .. && uv run python -m scripts.export_display_names web/src/lib/displayNames.generated.ts && uv run python -m scripts.export_zone_cities web/src/lib/zoneCities.generated.ts"
   },
   "dependencies": {
     "@react-three/fiber": "9.8.1",

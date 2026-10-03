@@ -5,6 +5,7 @@ import { IconSend, IconTelegram } from "@/components/icons";
 import { Badge, Button } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { languageName } from "@/lib/format";
+import { formatContactAddress } from "@/lib/phone";
 
 import type { ManagerContact } from "../../_lib/contacts";
 import { isEverything, preferencesSummary, type NotificationContact } from "../../_lib/notifications";
@@ -51,7 +52,7 @@ export function ContactRow({
             </p>
           ) : (
             <p className="mt-0.5 truncate text-sm text-ink-subtle" dir="ltr">
-              {contact.address}
+              {formatContactAddress(contact.channel, contact.address)}
             </p>
           )}
         </div>

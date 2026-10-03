@@ -5,6 +5,7 @@ import { IconChevronRight } from "@/components/icons";
 import type { CallView } from "@/components/insights/types";
 import { Alert, Badge, Card } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
+import { formatPhone } from "@/lib/phone";
 
 import { CallRecordingPlayer } from "./CallRecordingPlayer";
 import { callGuardBadge, callGuardFindings } from "../../_lib/callGuard";
@@ -51,7 +52,7 @@ function CallItem({ call }: { call: CallView }) {
           <span className="text-ink-muted">
             {t("conversations.calls.from")}{" "}
             <span dir="ltr" className="tabular-nums">
-              {call.from_phone_number}
+              {formatPhone(call.from_phone_number)}
             </span>
           </span>
         ) : null}

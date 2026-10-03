@@ -13,6 +13,7 @@ import { CountrySelect } from "@/components/CountrySelect";
 import { ErrorState, Field, Input, LoadingRegion, Select, SkeletonText } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { countryFlag, countryName } from "@/lib/countries";
+import { timeZoneLabel } from "@/lib/timeZones";
 
 import { LanguageChoice } from "../fields/LanguageChoice";
 import { StepScreen } from "../StepScreen";
@@ -168,7 +169,7 @@ export function PlaceStep({
                     >
                       {place.zones.map((zone) => (
                         <option key={zone.name} value={zone.name}>
-                          {zone.display_name}
+                          {timeZoneLabel(zone.name, locale)}
                         </option>
                       ))}
                     </Select>

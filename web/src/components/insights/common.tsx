@@ -8,18 +8,20 @@ import { describeError } from "@/api/errors";
 import { Alert, Button, Checkbox } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { cn } from "@/lib/cn";
+import { formatPhone } from "@/lib/phone";
 
-/** A phone number in E.164 as a call link (kept left-to-right in any language). */
+/** A phone number in E.164 as a call link, grouped for reading (kept left-to-right in any language). */
 export function PhoneLink({ phone, className }: { phone: string; className?: string }) {
   const { t } = useI18n();
+  const shown = formatPhone(phone);
   return (
     <a
       href={`tel:${phone}`}
       dir="ltr"
       className={cn("whitespace-nowrap text-accent tabular-nums hover:underline", className)}
-      aria-label={t("insights.callPhone", { phone })}
+      aria-label={t("insights.callPhone", { phone: shown })}
     >
-      {phone}
+      {shown}
     </a>
   );
 }
