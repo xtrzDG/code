@@ -45,6 +45,7 @@ REQUEST_BODIES: dict[str, JsonObject] = {
     f"POST {B}/knowledge": {"kind": "faq", "title": "Parking"},
     f"POST {B}/knowledge/import": {"media_type": "text/plain", "data_base64": "VGVh"},
     f"POST {B}/knowledge/import/confirm": {"item_ids": []},
+    f"POST {B}/knowledge/import-website": {"url": "https://cafe.example"},
     f"POST {B}/knowledge/search": {"query": "tea"},
     f"PATCH {B}/leads/{{lead_id}}": {"status": "in_progress"},
     f"POST {B}/manager-contacts/telegram-link": {"name": "Nino"},

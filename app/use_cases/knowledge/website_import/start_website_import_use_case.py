@@ -126,7 +126,7 @@ class StartWebsiteImportUseCase(
             ),
             business.id,
             lane=JobLane.DEFAULT,
-            serial_key=JobSerialKey(f"website-import:{business.id}"),
+            serial_key=JobSerialKey(f"website_import:{business.id}"),
         )
         self._live_events.publish(
             business.id,
