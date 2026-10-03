@@ -7,7 +7,6 @@ from app.contracts.repositories.setup_repositories import SetupProbeRepoContract
 from app.repositories.activation_probe_repository import PROBE_LIMIT
 from app.repositories.document_queries import (
     CREATED_AT_FIELD,
-    IS_SANDBOX_FIELD,
     field_equals,
     of_business,
     time_range,
@@ -63,7 +62,6 @@ class SetupProbeRepository(SetupProbeRepoContract):
                     [
                         of_business(business_id),
                         field_equals(CHANNEL_USER_ID_FIELD, channel_user_id),
-                        field_equals(IS_SANDBOX_FIELD, False),
                     ],
                     limit=SENDER_PROBE_LIMIT,
                 )
@@ -80,7 +78,7 @@ class SetupProbeRepository(SetupProbeRepoContract):
         return earliest_real(
             self._conversation_collection.list_by_range(
                 time_range(CREATED_AT_FIELD, since, until),
-                [of_business(business_id), field_equals(IS_SANDBOX_FIELD, False)],
+                [of_business(business_id)],
                 limit=WINDOW_PROBE_LIMIT,
             )
         )
@@ -91,10 +89,9 @@ class SetupProbeRepository(SetupProbeRepoContract):
         bookings: list[BookingDocument] = [
             booking
             for booking in self._booking_collection.list_by_fields(
-                [of_business(business_id), field_equals(IS_SANDBOX_FIELD, False)],
-                limit=PROBE_LIMIT,
+                [of_business(business_id)], limit=PROBE_LIMIT
             )
-            if booking.conversation_id is not None
+            if not booking.is_sandbox and booking.conversation_id is not None
         ]
         if bookings == []:
             return None

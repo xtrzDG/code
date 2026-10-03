@@ -84,7 +84,6 @@ from app.utilities.storage.document_collection_definition import (
     DocumentCollectionDefinition,
 )
 
-
 DOCUMENT_COLLECTIONS: tuple[DocumentCollectionDefinition, ...] = (
     # Users and sign-in (platform-wide).
     DocumentCollectionDefinition(DocumentCollectionName("users"), UserDocument),

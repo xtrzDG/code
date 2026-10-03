@@ -17,6 +17,7 @@ from app.containers.use_cases.core_use_cases_container import CoreUseCasesContai
 from app.containers.use_cases.delivery_use_cases import DeliveryUseCasesContainer
 from app.containers.use_cases.demo_use_cases import DemoUseCasesContainer
 from app.containers.use_cases.feedback_use_cases import FeedbackUseCasesContainer
+from app.containers.use_cases.guide_use_cases import GuideUseCasesContainer
 from app.containers.use_cases.launch_use_cases import LaunchUseCasesContainer
 from app.containers.use_cases.notification_use_cases import (
     NotificationUseCasesContainer,
@@ -145,6 +146,14 @@ class UseCasesContainer(CoreUseCasesContainer):
         assistant_use_cases=assistants,
         apply_use_cases=apply,
         launch_use_cases=launch,
+    )
+    guide: GuideUseCasesContainer = Container(  # type: ignore[assignment]
+        GuideUseCasesContainer,
+        facilitators=CoreUseCasesContainer.facilitators,
+        repositories=CoreUseCasesContainer.repositories,
+        time_provider=CoreUseCasesContainer.time_provider,
+        account_use_cases=CoreUseCasesContainer.accounts,
+        setup_use_cases=setup,
     )
     autotests: AutotestUseCasesContainer = Container(  # type: ignore[assignment]
         AutotestUseCasesContainer,

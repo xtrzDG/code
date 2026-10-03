@@ -12,21 +12,19 @@ from app.contracts.repositories.knowledge_repositories import (
     KnowledgeItemRepoContract,
     ResourceRepoContract,
 )
-from app.contracts.repositories.setup_repositories import (
-    ActivationEventRepoContract,
-    SetupStateRepoContract,
-)
+from app.contracts.repositories.setup_repositories import ActivationEventRepoContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.configurations.app_settings import AppSettings
 from app.schemas.constants.billing import SubscriptionStatus
-from app.schemas.constants.channels import ChannelKind, ChannelStatus
 from app.schemas.constants.setup import (
     ActivationEventKind,
     SetupActionTarget,
+    SetupStepCode,
     SetupStepStatus,
 )
 from app.schemas.domain.billing import SubscriptionDocument
 from app.schemas.domain.businesses import BusinessDocument
+from app.schemas.domain.channels import ChannelDocument
 from app.schemas.domain.setup import ActivationEventDocument, SetupStateDocument
 from app.schemas.dto.access import BusinessAccessRequest
 from app.schemas.dto.setup.apply_changes import (
@@ -34,6 +32,7 @@ from app.schemas.dto.setup.apply_changes import (
     ApplyChangesView,
     SetupActionView,
 )
+from app.schemas.dto.setup.setup_guide import GuideProgressCheck
 from app.schemas.dto.setup.setup_progress import (
     ActivationMilestoneCheck,
     SetupQuery,
@@ -53,6 +52,13 @@ from app.use_cases.shared.trial_subscriptions import (
     is_trial_due_at_go_live,
 )
 from app.utilities.knowledge.profile_gaps import find_profile_gaps
+from app.utilities.setup.guide_steps import derive_after_launch_steps, derive_guide
+from app.utilities.setup.guide_views import (
+    after_hours_milestone,
+    count_customer_channels,
+    guide_facts,
+    guide_view,
+)
 from app.utilities.setup.setup_steps import (
     SetupFacts,
     StepState,
@@ -82,8 +88,11 @@ class GetSetupProgressUseCase(UseCaseContract[SetupQuery, SetupView]):
     contact, channels, test, launch), each done, skipped, next or to do with
     what it misses and where to fix it; the share done and the minutes
     left; links to try the assistant from a phone; the milestones reached
-    (noticed and stored first); and "Apply changes" progress. Owners and
-    staff may read it; texts are in the owner's language by default.
+    (noticed and stored first); "Apply changes" progress; and the guide
+    that goes on after the launch (a message from the owner's phone, a
+    second channel, the link where customers see it), whose progress is
+    noticed first too. Owners and staff may read it; texts are in the
+    owner's language by default.
     """
 
     def __init__(
@@ -93,6 +102,9 @@ class GetSetupProgressUseCase(UseCaseContract[SetupQuery, SetupView]):
             BusinessDocument,
         ],
         record_activation_milestones: UseCaseContract[ActivationMilestoneCheck, None],
+        notice_guide_progress: UseCaseContract[
+            GuideProgressCheck, SetupStateDocument | None
+        ],
         describe_apply_changes: UseCaseContract[ApplyChangesSource, ApplyChangesView],
         business_profile_repo: BusinessProfileRepoContract,
         knowledge_item_repo: KnowledgeItemRepoContract,
@@ -101,7 +113,6 @@ class GetSetupProgressUseCase(UseCaseContract[SetupQuery, SetupView]):
         subscription_repo: SubscriptionRepoContract,
         dpa_acceptance_repo: DpaAcceptanceRepoContract,
         activation_event_repo: ActivationEventRepoContract,
-        setup_state_repo: SetupStateRepoContract,
         niche_template_registry: NicheTemplateRegistryContract,
         plan_registry: PlanRegistryContract,
         localized_text_resolver: LocalizedTextResolverContract,
@@ -114,6 +125,9 @@ class GetSetupProgressUseCase(UseCaseContract[SetupQuery, SetupView]):
         self._record_activation_milestones: UseCaseContract[
             ActivationMilestoneCheck, None
         ] = record_activation_milestones
+        self._notice_guide_progress: UseCaseContract[
+            GuideProgressCheck, SetupStateDocument | None
+        ] = notice_guide_progress
         self._describe_apply_changes: UseCaseContract[
             ApplyChangesSource, ApplyChangesView
         ] = describe_apply_changes
@@ -124,7 +138,6 @@ class GetSetupProgressUseCase(UseCaseContract[SetupQuery, SetupView]):
         self._subscription_repo: SubscriptionRepoContract = subscription_repo
         self._dpa_acceptance_repo: DpaAcceptanceRepoContract = dpa_acceptance_repo
         self._activation_event_repo: ActivationEventRepoContract = activation_event_repo
-        self._setup_state_repo: SetupStateRepoContract = setup_state_repo
         self._niche_template_registry: NicheTemplateRegistryContract = (
             niche_template_registry
         )
@@ -146,13 +159,16 @@ class GetSetupProgressUseCase(UseCaseContract[SetupQuery, SetupView]):
         events: list[ActivationEventDocument] = (
             self._activation_event_repo.list_by_business(business.id)
         )
-        state: SetupStateDocument | None = self._setup_state_repo.get_by_business(
-            business.id
+        is_live: bool = business.published_assistant_version_id is not None
+        state: SetupStateDocument | None = self._notice_guide_progress.run(
+            GuideProgressCheck(business=business, is_live=is_live)
         )
         subscription: SubscriptionDocument | None = find_current_subscription(
             self._subscription_repo, business.id
         )
-        is_live: bool = business.published_assistant_version_id is not None
+        channels: list[ChannelDocument] = self._channel_repo.list_by_business(
+            business.id
+        )
         facts = SetupFacts(
             findings=find_profile_gaps(
                 template=self._niche_template_registry.get(business.niche_key),
@@ -162,11 +178,7 @@ class GetSetupProgressUseCase(UseCaseContract[SetupQuery, SetupView]):
                 resources=self._resource_repo.list_by_business(business.id),
             ),
             has_staff_contact=business.manager_contacts != [],
-            has_connected_channel=any(
-                channel.status is ChannelStatus.CONNECTED
-                and channel.kind is not ChannelKind.OWNER_TEST
-                for channel in self._channel_repo.list_by_business(business.id)
-            ),
+            has_connected_channel=count_customer_channels(channels) > 0,
             has_tried_assistant=any(event.kind in TRY_SIGNALS for event in events),
             is_live=is_live,
             is_agreement_accepted=self._is_agreement_accepted(business),
@@ -175,6 +187,12 @@ class GetSetupProgressUseCase(UseCaseContract[SetupQuery, SetupView]):
         )
         steps: list[StepState] = derive_steps(facts)
         statuses: list[SetupStepStatus] = assign_statuses(steps, facts.skipped)
+        after_launch: list[StepState] = derive_after_launch_steps(
+            guide_facts(state, channels, events)
+        )
+        skipped_after: frozenset[SetupStepCode] = frozenset(
+            () if state is None else state.skipped_after_launch
+        )
         apply: ApplyChangesView = self._describe_apply_changes.run(
             ApplyChangesSource(business=business, language=language)
         )
@@ -212,13 +230,19 @@ class GetSetupProgressUseCase(UseCaseContract[SetupQuery, SetupView]):
                 else None
             ),
             phone_test_links=phone_test_links(
-                business,
-                self._channel_repo.list_by_business(business.id),
-                self._app_settings.app_base_url,
-                is_live,
+                business, channels, self._app_settings.app_base_url, is_live
             ),
-            milestones=milestone_views(events),
+            milestones=[*milestone_views(events), *after_hours_milestone(state)],
             apply=apply,
+            guide=guide_view(
+                derive_guide(steps, after_launch, facts.skipped | skipped_after),
+                len(after_launch),
+                state,
+                is_live,
+                self._wall_clock.now_unix(),
+                language,
+                self._resolver,
+            ),
         )
 
     def _next_action(

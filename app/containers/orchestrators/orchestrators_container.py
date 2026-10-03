@@ -140,6 +140,7 @@ class OrchestratorsContainer(containers.DeclarativeContainer):
         SetupOrchestratorsContainer,
         setup_use_cases=use_cases.setup,
         launch_use_cases=use_cases.launch,
+        guide_use_cases=use_cases.guide,
     )
     channels: ChannelOrchestratorsContainer = Container(  # type: ignore[assignment]
         ChannelOrchestratorsContainer,

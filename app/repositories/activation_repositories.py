@@ -23,7 +23,9 @@ class NudgeSentRepository(
 ):
     """Sent nudges keyed by their derived id: one per business and code."""
 
-    def find(self, business_id: BusinessId, code: NudgeCode) -> NudgeSentDocument | None:
+    def find(
+        self, business_id: BusinessId, code: NudgeCode
+    ) -> NudgeSentDocument | None:
         return self._load(business_id, str(derive_nudge_sent_id(business_id, code)))
 
     def record_once(self, nudge: NudgeSentDocument) -> bool:

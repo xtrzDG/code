@@ -17,7 +17,11 @@ class StaffLinkTarget(StrEnum):
     """
     The cabinet page a notification link opens (after sign-in). REPORT is a
     stored digest or monthly report on the Reports page (owners), where its
-    reader also turns the summaries off. Link targets live only in signed
+    reader also turns the summaries off; OVERVIEW is the business's
+    Overview (a milestone's celebration waits there). The activation
+    reminders open SETUP (the guided setup, at the saved step), CHANNELS,
+    SHARE (the link and QR card on the Channels page) and BILLING (where
+    the done-for-you setup is chosen). Link targets live only in signed
     links, never in stored documents.
     """
 
@@ -26,6 +30,11 @@ class StaffLinkTarget(StrEnum):
     BOOKING = "booking"
     NOTIFICATIONS = "notifications"
     REPORT = "report"
+    OVERVIEW = "overview"
+    SETUP = "setup"
+    CHANNELS = "channels"
+    SHARE = "share"
+    BILLING = "billing"
 
 
 class StaffTextStyle(StrEnum):

@@ -1,7 +1,9 @@
 from collections.abc import Callable
 
-from typed_time_provider import Microseconds
+from typed_time_provider import Microseconds, WallClock
 
+from app.contracts.localization_utilities import LocalizedTextResolverContract
+from app.contracts.notifications import StaffAlertFacilitatorContract
 from app.contracts.repositories.assistant_repositories import (
     AssistantVersionRepoContract,
 )
@@ -18,6 +20,7 @@ from app.schemas.dto.setup.setup_progress import (
     ActivationMilestoneCheck,
 )
 from app.schemas.typings.businesses.prefixed_id import BusinessId
+from app.use_cases.setup.milestone_announcements import announce_milestone
 
 
 class RecordActivationMilestonesUseCase(
@@ -30,7 +33,9 @@ class RecordActivationMilestonesUseCase(
     were recorded), the first real conversation, booking and handoff (test
     chats and automatic checks do not count). Real customers only reach a
     business that went live, so nothing is probed before that; a milestone
-    already stored is never probed again.
+    already stored is never probed again. The first real conversation and
+    booking, noticed within a day, are announced to the team's devices and
+    Telegram chats (once: the alert names the milestone).
     """
 
     def __init__(
@@ -40,6 +45,9 @@ class RecordActivationMilestonesUseCase(
         activation_event_repo: ActivationEventRepoContract,
         activation_probe_repo: ActivationProbeRepoContract,
         record_activation_event: UseCaseContract[ActivationEventRecord, None],
+        staff_alerts: StaffAlertFacilitatorContract,
+        localized_text_resolver: LocalizedTextResolverContract,
+        wall_clock: WallClock[Microseconds],
     ) -> None:
         self._business_repo: BusinessRepoContract = business_repo
         self._assistant_version_repo: AssistantVersionRepoContract = (
@@ -50,6 +58,9 @@ class RecordActivationMilestonesUseCase(
         self._record_activation_event: UseCaseContract[ActivationEventRecord, None] = (
             record_activation_event
         )
+        self._staff_alerts: StaffAlertFacilitatorContract = staff_alerts
+        self._resolver: LocalizedTextResolverContract = localized_text_resolver
+        self._wall_clock: WallClock[Microseconds] = wall_clock
 
     def run(self, input_data: ActivationMilestoneCheck) -> None:
         business: BusinessDocument | None = self._business_repo.get(
@@ -89,6 +100,14 @@ class RecordActivationMilestonesUseCase(
             occurred_at: Microseconds | None = probe(business.id)
             if occurred_at is not None:
                 self._record(business.id, kind, occurred_at)
+                announce_milestone(
+                    self._staff_alerts,
+                    self._resolver,
+                    business,
+                    kind,
+                    occurred_at,
+                    self._wall_clock.now_unix(),
+                )
 
     def _find_first_publish(self, business: BusinessDocument) -> Microseconds | None:
         if business.published_assistant_version_id is None:

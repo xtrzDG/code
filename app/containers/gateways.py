@@ -11,6 +11,10 @@ from app.containers.time_provider import TimeProviderContainer
 from app.containers.utilities import UtilitiesContainer
 from app.gateways.worker.background_worker import BackgroundWorker, PeriodicJobSpec
 from app.gateways.worker.heartbeat_recorder import WorkerHeartbeatRecorder
+from app.gateways.worker.periodic.activation_follow_up import (
+    notice_milestones_job,
+    send_activation_nudges_job,
+)
 from app.gateways.worker.periodic.growth_analytics import (
     purge_web_vitals_job,
     reconcile_product_events_job,
@@ -160,6 +164,14 @@ class GatewaysContainer(containers.DeclarativeContainer):
         Factory(
             reconcile_product_events_job,
             operator=operators.analytics.reconcile_product_events_operator,
+        ),
+        # Activation: milestones announced, nudges to stuck owners.
+        Factory(
+            notice_milestones_job, operator=operators.setup.notice_milestones_operator
+        ),
+        Factory(
+            send_activation_nudges_job,
+            operator=operators.setup.send_activation_nudges_operator,
         ),
     )
     # Handlers of queued jobs by job name (the queue is filled by use cases

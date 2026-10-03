@@ -14,8 +14,8 @@ from typing import Protocol
 from typed_time_provider import Microseconds
 
 from app.contracts.repo_contract import RepoContract
-from app.schemas.constants.setup import ActivationEventKind
 from app.schemas.constants.nudges import NudgeCode
+from app.schemas.constants.setup import ActivationEventKind
 from app.schemas.domain.setup import (
     ActivationEventDocument,
     AssistantApplyDocument,
@@ -118,7 +118,9 @@ class ActivationProbeRepoContract(RepoContract, Protocol):
 
 
 class NudgeSentRepoContract(RepoContract, Protocol):
-    def find(self, business_id: BusinessId, code: NudgeCode) -> NudgeSentDocument | None:
+    def find(
+        self, business_id: BusinessId, code: NudgeCode
+    ) -> NudgeSentDocument | None:
         """The nudge of this code the business was sent, if any."""
         raise NotImplementedError
 
