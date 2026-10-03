@@ -5,6 +5,7 @@ Implementations return independent copies: mutating a returned document does
 not change stored state until it is saved.
 """
 
+from collections.abc import Sequence
 from typing import Protocol
 
 from typed_time_provider import Microseconds
@@ -37,6 +38,16 @@ class UserRepoContract(RepoContract, Protocol):
         raise NotImplementedError
 
     def find_by_email(self, email: EmailAddress) -> UserDocument | None:
+        raise NotImplementedError
+
+    def get_many(self, user_ids: Sequence[UserId]) -> list[UserDocument]:
+        """The stored users of these ids (missing ones skipped), one read."""
+        raise NotImplementedError
+
+    def list_created_between(
+        self, created_from: Microseconds, created_before: Microseconds
+    ) -> list[UserDocument]:
+        """Accounts created in [from, before), oldest first (indexed)."""
         raise NotImplementedError
 
 

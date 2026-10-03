@@ -17,7 +17,8 @@
 --   purge deletes by (doc_created_at).
 --
 -- users gain the optional `signup_attribution` (schema version 2): a
--- nested field nobody queries by, so no column.
+-- nested field nobody queries by, so no column for it; the metrics read
+-- the accounts created in a period: (doc_created_at).
 --
 -- Plain generated columns, as in 1010 and 1042 (forced row-level security
 -- uses an index only for leakproof conditions on plain columns).
@@ -49,3 +50,9 @@ create index if not exists web_vital_samples_doc_metric_created_at_idx
     include (doc_route, doc_device_class, doc_value);
 create index if not exists web_vital_samples_doc_created_at_idx
     on workshop.web_vital_samples (doc_created_at);
+
+alter table workshop.users
+    add column if not exists doc_created_at bigint
+        generated always as ((document ->> 'created_at')::bigint) stored;
+create index if not exists users_doc_created_at_idx
+    on workshop.users (doc_created_at);

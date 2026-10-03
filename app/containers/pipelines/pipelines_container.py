@@ -6,6 +6,7 @@ from app.containers.orchestrators.orchestrators_container import (
     OrchestratorsContainer,
 )
 from app.containers.pipelines.account_pipelines import AccountPipelinesContainer
+from app.containers.pipelines.analytics_pipelines import AnalyticsPipelinesContainer
 from app.containers.pipelines.assistant_pipelines import AssistantPipelinesContainer
 from app.containers.pipelines.billing_pipelines import BillingPipelinesContainer
 from app.containers.pipelines.call_pipelines import CallPipelinesContainer
@@ -117,6 +118,10 @@ class PipelinesContainer(containers.DeclarativeContainer):
     feedback: FeedbackPipelinesContainer = Container(  # type: ignore[assignment]
         FeedbackPipelinesContainer,
         feedback=orchestrators.feedback,
+    )
+    analytics: AnalyticsPipelinesContainer = Container(  # type: ignore[assignment]
+        AnalyticsPipelinesContainer,
+        analytics=orchestrators.analytics,
     )
     demo: DemoPipelinesContainer = Container(  # type: ignore[assignment]
         DemoPipelinesContainer,

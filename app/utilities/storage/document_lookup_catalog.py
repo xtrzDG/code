@@ -45,7 +45,12 @@ DOCUMENT_LOOKUP_FIELDS: Mapping[
 ] = {
     # Sign-in: a user by phone or e-mail, a session by its token hash (every
     # signed-in request), expired sessions and old login codes for the purge.
-    DocumentCollectionName("users"): (_text("phone_number"), _text("email")),
+    # The accounts created in a period (the founder's sign-up cohorts, 1074).
+    DocumentCollectionName("users"): (
+        _text("phone_number"),
+        _text("email"),
+        _integer("created_at"),
+    ),
     DocumentCollectionName("user_sessions"): (
         _text("token_hash"),
         _integer("expires_at"),

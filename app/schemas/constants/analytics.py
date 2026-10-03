@@ -131,3 +131,14 @@ class MrrMovementKind(StrEnum):
     EXPANSION = "expansion"
     CONTRACTION = "contraction"
     CHURN = "churn"
+
+
+class WebVitalRating(StrEnum):
+    """
+    Where a vital's 75th percentile stands against Google's thresholds:
+    GOOD, NEEDS_IMPROVEMENT or POOR.
+    """
+
+    GOOD = "good"
+    NEEDS_IMPROVEMENT = "needs_improvement"
+    POOR = "poor"

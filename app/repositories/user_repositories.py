@@ -1,3 +1,5 @@
+from collections.abc import Sequence
+
 from typed_time_provider import Microseconds
 
 from app.contracts.document_store import DocumentCollectionAdapterContract
@@ -58,6 +60,18 @@ class UserRepository(UserRepoContract):
     def find_by_email(self, email: EmailAddress) -> UserDocument | None:
         return self._collection.find_one_by_field(
             EMAIL_FIELD, DocumentFieldText(str(email))
+        )
+
+    def get_many(self, user_ids: Sequence[UserId]) -> list[UserDocument]:
+        return self._collection.get_many([str(user_id) for user_id in user_ids])
+
+    def list_created_between(
+        self, created_from: Microseconds, created_before: Microseconds
+    ) -> list[UserDocument]:
+        return self._collection.list_by_range(
+            time_range(
+                CREATED_AT_FIELD, starting_at=created_from, ending_before=created_before
+            )
         )
 
 

@@ -37,6 +37,12 @@ class OwnerCount(BaseConstrainedTypedInt):
     ge = 0
 
 
+class TelemetryReportCount(BaseConstrainedTypedInt):
+    """Reports of one kind a telemetry batch carried and the API kept."""
+
+    ge = 0
+
+
 class TimeToLiveSeconds(BaseConstrainedTypedInt):
     """Seconds from an owner's sign-up to their assistant first going live."""
 

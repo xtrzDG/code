@@ -1,5 +1,6 @@
 from dependency_injector.providers import Container, Factory
 
+from app.containers.use_cases.analytics_use_cases import AnalyticsUseCasesContainer
 from app.containers.use_cases.apply_use_cases import ApplyUseCasesContainer
 from app.containers.use_cases.assistant_use_cases import AssistantUseCasesContainer
 from app.containers.use_cases.autotest_use_cases import AutotestUseCasesContainer
@@ -233,6 +234,15 @@ class UseCasesContainer(CoreUseCasesContainer):
         time_provider=CoreUseCasesContainer.time_provider,
         utilities=CoreUseCasesContainer.utilities,
         account_use_cases=CoreUseCasesContainer.accounts,
+    )
+    analytics: AnalyticsUseCasesContainer = Container(  # type: ignore[assignment]
+        AnalyticsUseCasesContainer,
+        facilitators=CoreUseCasesContainer.facilitators,
+        registries=CoreUseCasesContainer.registries,
+        repositories=CoreUseCasesContainer.repositories,
+        time_provider=CoreUseCasesContainer.time_provider,
+        billing_use_cases=billing,
+        platform_use_cases=platform,
     )
     demo: DemoUseCasesContainer = Container(  # type: ignore[assignment]
         DemoUseCasesContainer,

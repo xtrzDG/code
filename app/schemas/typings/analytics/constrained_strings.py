@@ -36,6 +36,19 @@ class CabinetRoutePattern(BaseConstrainedTypedString):
     pattern = r"^/[A-Za-z0-9_\-\[\]/.]*$"
 
 
+class CohortMonth(BaseConstrainedTypedString):
+    """
+    The calendar month (UTC) of a sign-up cohort, as YYYY-MM.
+
+    Example:
+        month = CohortMonth("2026-09")
+    """
+
+    min_length = 7
+    max_length = 7
+    pattern = r"^\d{4}-(0[1-9]|1[0-2])$"
+
+
 class LandingPath(BaseConstrainedTypedString):
     """
     The page of this site a visitor first opened (path only, no query).
