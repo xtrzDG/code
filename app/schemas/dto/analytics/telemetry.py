@@ -1,6 +1,6 @@
 """What the cabinet reports: Web Vitals of its pages and the tunnel's steps."""
 
-from typing import Annotated, Literal
+from typing import Literal
 
 from base_pydantic_schemas import ImmutableDTO
 from pydantic import Field
@@ -48,9 +48,8 @@ class TunnelStepReport(ImmutableDTO):
     business_id: BusinessId | None = None
 
 
-type TelemetryReport = Annotated[
-    WebVitalReport | TunnelStepReport, Field(discriminator="kind")
-]
+# Told apart by `kind` (a plain union: the API description inlines both).
+type TelemetryReport = WebVitalReport | TunnelStepReport
 
 
 class TelemetryBatchRequest(ImmutableDTO):

@@ -43,6 +43,47 @@
         "title": "ActivationMilestoneView",
         "type": "object"
       },
+      "ActivationView": {
+        "additionalProperties": false,
+        "description": "Businesses created in the period that went live, got a channel and a\nreal conversation within 7 days of their creation. Businesses younger\nthan 7 days that are not activated yet are `pending`, not counted.",
+        "properties": {
+          "activated": {
+            "minimum": 0.0,
+            "title": "Activated",
+            "type": "integer"
+          },
+          "eligible": {
+            "minimum": 0.0,
+            "title": "Eligible",
+            "type": "integer"
+          },
+          "pending": {
+            "minimum": 0.0,
+            "title": "Pending",
+            "type": "integer"
+          },
+          "rate": {
+            "anyOf": [
+              {
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rate"
+          }
+        },
+        "required": [
+          "eligible",
+          "activated",
+          "pending"
+        ],
+        "title": "ActivationView",
+        "type": "object"
+      },
       "AdminClientPage": {
         "additionalProperties": false,
         "description": "One page of clients; `next_cursor` is None on the last page.\n\n`matching_count` counts the clients that pass the filters; `totals`,\n`countries` and `niches` describe every client (for the summary tiles\nand the filter choices).",
@@ -399,6 +440,57 @@
           "audit_log_entry_id"
         ],
         "title": "AdminJobActionResult",
+        "type": "object"
+      },
+      "AdminMetricsView": {
+        "additionalProperties": false,
+        "description": "The founder's growth metrics of a period (UTC days, both included): the\nowners' funnel and what explains it, recurring revenue in euros, gross\nmargin and the cabinet's Web Vitals. First-party data only.",
+        "properties": {
+          "choices": {
+            "$ref": "#/components/schemas/MetricsFilterChoices"
+          },
+          "generated_at": {
+            "title": "Generated At",
+            "type": "integer"
+          },
+          "growth": {
+            "$ref": "#/components/schemas/GrowthView"
+          },
+          "period_end": {
+            "maxLength": 10,
+            "minLength": 10,
+            "pattern": "^\\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\\d|3[01])$",
+            "title": "Period End",
+            "type": "string"
+          },
+          "period_start": {
+            "maxLength": 10,
+            "minLength": 10,
+            "pattern": "^\\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\\d|3[01])$",
+            "title": "Period Start",
+            "type": "string"
+          },
+          "revenue": {
+            "$ref": "#/components/schemas/RevenueView"
+          },
+          "web_vitals": {
+            "items": {
+              "$ref": "#/components/schemas/WebVitalView"
+            },
+            "title": "Web Vitals",
+            "type": "array"
+          }
+        },
+        "required": [
+          "generated_at",
+          "period_start",
+          "period_end",
+          "growth",
+          "revenue",
+          "web_vitals",
+          "choices"
+        ],
+        "title": "AdminMetricsView",
         "type": "object"
       },
       "AdminPaymentView": {
@@ -3961,6 +4053,45 @@
         "title": "ClientHealthView",
         "type": "object"
       },
+      "CohortRowView": {
+        "additionalProperties": false,
+        "description": "Owners who signed up in one month: how many, how many went live, and\nthe share with a paying business at the end of each month since\n(`paying[0]` is their sign-up month; months not over yet end today).",
+        "properties": {
+          "month": {
+            "maxLength": 7,
+            "minLength": 7,
+            "pattern": "^\\d{4}-(0[1-9]|1[0-2])$",
+            "title": "Month",
+            "type": "string"
+          },
+          "paying": {
+            "items": {
+              "maximum": 100.0,
+              "minimum": 0.0,
+              "type": "number"
+            },
+            "title": "Paying",
+            "type": "array"
+          },
+          "sign_ups": {
+            "minimum": 0.0,
+            "title": "Sign Ups",
+            "type": "integer"
+          },
+          "went_live": {
+            "minimum": 0.0,
+            "title": "Went Live",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "month",
+          "sign_ups",
+          "went_live"
+        ],
+        "title": "CohortRowView",
+        "type": "object"
+      },
       "ConfirmImportedItemsResult": {
         "additionalProperties": false,
         "description": "Items now active in the knowledge base.",
@@ -5695,6 +5826,16 @@
         "title": "DataRegion",
         "type": "string"
       },
+      "DeviceClass": {
+        "description": "The kind of screen a page was used on (by viewport width).",
+        "enum": [
+          "mobile",
+          "tablet",
+          "desktop"
+        ],
+        "title": "DeviceClass",
+        "type": "string"
+      },
       "DigestPreferencesView": {
         "additionalProperties": false,
         "description": "The owner's choices and where the summaries reach them: their sign-in\ne-mail (None: they sign in by phone) when the platform can send e-mail\n(`is_email_ready`), and their devices with notifications on in this\nbusiness.",
@@ -6345,6 +6486,66 @@
         "title": "FilledQuickReplyView",
         "type": "object"
       },
+      "FunnelStep": {
+        "description": "A step of the owners' funnel of a sign-up cohort, in order; an owner is\ncounted at a step when they reached it and every step before it.",
+        "enum": [
+          "signed_up",
+          "business_created",
+          "launch_attempted",
+          "went_live",
+          "channel_connected",
+          "first_conversation",
+          "paid"
+        ],
+        "title": "FunnelStep",
+        "type": "string"
+      },
+      "FunnelStepView": {
+        "additionalProperties": false,
+        "description": "Owners of the cohort at one step (and every step before it), their\nshare of the sign-ups and of the step before.",
+        "properties": {
+          "owners": {
+            "minimum": 0.0,
+            "title": "Owners",
+            "type": "integer"
+          },
+          "share_of_previous": {
+            "anyOf": [
+              {
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Share Of Previous"
+          },
+          "share_of_sign_ups": {
+            "anyOf": [
+              {
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Share Of Sign Ups"
+          },
+          "step": {
+            "$ref": "#/components/schemas/FunnelStep"
+          }
+        },
+        "required": [
+          "step",
+          "owners"
+        ],
+        "title": "FunnelStepView",
+        "type": "object"
+      },
       "GoLiveAutotestRunSummary": {
         "additionalProperties": false,
         "description": "The version's latest autotest run as the checklist reports it: while it\nis RUNNING, `scenario_count` is the number of planned scenarios and\n`completed_count` the ones played so far.",
@@ -6538,6 +6739,68 @@
           "dpa_document_version"
         ],
         "title": "GoLiveReadiness",
+        "type": "object"
+      },
+      "GrowthView": {
+        "additionalProperties": false,
+        "description": "The funnel of the period's sign-ups and what explains it.",
+        "properties": {
+          "activation": {
+            "$ref": "#/components/schemas/ActivationView"
+          },
+          "cohorts": {
+            "items": {
+              "$ref": "#/components/schemas/CohortRowView"
+            },
+            "title": "Cohorts",
+            "type": "array"
+          },
+          "funnel": {
+            "items": {
+              "$ref": "#/components/schemas/FunnelStepView"
+            },
+            "title": "Funnel",
+            "type": "array"
+          },
+          "median_time_to_live_seconds": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Median Time To Live Seconds"
+          },
+          "sources": {
+            "items": {
+              "$ref": "#/components/schemas/SourceRowView"
+            },
+            "title": "Sources",
+            "type": "array"
+          },
+          "trials": {
+            "$ref": "#/components/schemas/TrialConversionView"
+          },
+          "tunnel": {
+            "items": {
+              "$ref": "#/components/schemas/TunnelStepView"
+            },
+            "title": "Tunnel",
+            "type": "array"
+          }
+        },
+        "required": [
+          "funnel",
+          "activation",
+          "trials",
+          "tunnel",
+          "cohorts",
+          "sources"
+        ],
+        "title": "GrowthView",
         "type": "object"
       },
       "HandoffDocument": {
@@ -8971,6 +9234,48 @@
         "title": "MarginMoney",
         "type": "object"
       },
+      "MarginView": {
+        "additionalProperties": false,
+        "description": "Revenue and provider cost of the period over the businesses in scope\n(the admin's client cost report, in euros) and the gross margin.",
+        "properties": {
+          "accounts": {
+            "minimum": 0.0,
+            "title": "Accounts",
+            "type": "integer"
+          },
+          "accounts_without_rate": {
+            "minimum": 0.0,
+            "title": "Accounts Without Rate",
+            "type": "integer"
+          },
+          "gross_margin_percent": {
+            "anyOf": [
+              {
+                "maximum": 100.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Gross Margin Percent"
+          },
+          "provider_cost": {
+            "$ref": "#/components/schemas/Money"
+          },
+          "revenue": {
+            "$ref": "#/components/schemas/Money"
+          }
+        },
+        "required": [
+          "revenue",
+          "provider_cost",
+          "accounts",
+          "accounts_without_rate"
+        ],
+        "title": "MarginView",
+        "type": "object"
+      },
       "MenuImportResult": {
         "additionalProperties": false,
         "description": "Drafts created by one import, in menu order. `batch_id` names the\nimport: DELETE .../knowledge/import/{batch_id} discards the drafts that\nwere not confirmed.",
@@ -9267,6 +9572,46 @@
         "title": "MessageView",
         "type": "object"
       },
+      "MetricsFilterChoices": {
+        "additionalProperties": false,
+        "description": "The countries, niches and sources present, for the filter controls.",
+        "properties": {
+          "countries": {
+            "items": {
+              "maxLength": 2,
+              "minLength": 2,
+              "pattern": "^[A-Z]{2}$",
+              "type": "string"
+            },
+            "title": "Countries",
+            "type": "array"
+          },
+          "niches": {
+            "items": {
+              "$ref": "#/components/schemas/NicheKey"
+            },
+            "title": "Niches",
+            "type": "array"
+          },
+          "sources": {
+            "items": {
+              "maxLength": 120,
+              "minLength": 1,
+              "pattern": "^[a-z0-9][a-z0-9._:-]*$",
+              "type": "string"
+            },
+            "title": "Sources",
+            "type": "array"
+          }
+        },
+        "required": [
+          "countries",
+          "niches",
+          "sources"
+        ],
+        "title": "MetricsFilterChoices",
+        "type": "object"
+      },
       "MissedCallReason": {
         "description": "Why a caller did not get through, or got nothing from the call.\n\nFrom the telephony line (PBX): NO_ANSWER (it rang out), BUSY, ABANDONED\n(the caller hung up before the assistant answered) and LINE_FAILED (the\nline could not put the call through). From the voice platform:\nNOT_STARTED (the assistant could not start the call), NO_SPEECH (the\nassistant answered, the caller hung up without a word) and\nTRANSFER_UNANSWERED (the caller asked for a person and nobody picked up).",
         "enum": [
@@ -9312,6 +9657,100 @@
           "currency_code"
         ],
         "title": "Money",
+        "type": "object"
+      },
+      "MrrMovementKind": {
+        "description": "How a business's monthly recurring revenue changed: NEW (first paid\nsubscription), REACTIVATION (paying again after churning), EXPANSION\n(a dearer plan), CONTRACTION (a cheaper one) and CHURN (stopped paying).",
+        "enum": [
+          "new",
+          "reactivation",
+          "expansion",
+          "contraction",
+          "churn"
+        ],
+        "title": "MrrMovementKind",
+        "type": "string"
+      },
+      "MrrMovementView": {
+        "additionalProperties": false,
+        "description": "How much monthly recurring revenue moved one way in the period, and\nacross how many businesses (each counted once per kind).",
+        "properties": {
+          "accounts": {
+            "minimum": 0.0,
+            "title": "Accounts",
+            "type": "integer"
+          },
+          "amount": {
+            "$ref": "#/components/schemas/Money"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/MrrMovementKind"
+          }
+        },
+        "required": [
+          "kind",
+          "amount",
+          "accounts"
+        ],
+        "title": "MrrMovementView",
+        "type": "object"
+      },
+      "MrrView": {
+        "additionalProperties": false,
+        "description": "Monthly recurring revenue at the start and the end of the period and\nthe movements between (start + new + reactivation + expansion -\ncontraction - churn = end), the paying accounts at the end and the\naverage revenue per account. Subscriptions in a currency without an\nofficial rate to euros are left out and named.",
+        "properties": {
+          "arpa": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Money"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "end": {
+            "$ref": "#/components/schemas/Money"
+          },
+          "movements": {
+            "items": {
+              "$ref": "#/components/schemas/MrrMovementView"
+            },
+            "title": "Movements",
+            "type": "array"
+          },
+          "net_change": {
+            "title": "Net Change",
+            "type": "integer"
+          },
+          "paying_accounts": {
+            "minimum": 0.0,
+            "title": "Paying Accounts",
+            "type": "integer"
+          },
+          "start": {
+            "$ref": "#/components/schemas/Money"
+          },
+          "unconverted_currencies": {
+            "items": {
+              "maxLength": 3,
+              "minLength": 3,
+              "pattern": "^[A-Z]{3}$",
+              "type": "string"
+            },
+            "title": "Unconverted Currencies",
+            "type": "array"
+          }
+        },
+        "required": [
+          "start",
+          "end",
+          "net_change",
+          "movements",
+          "paying_accounts",
+          "unconverted_currencies"
+        ],
+        "title": "MrrView",
         "type": "object"
       },
       "MyNotificationSettingsView": {
@@ -11116,6 +11555,23 @@
         "title": "ResourceView",
         "type": "object"
       },
+      "RevenueView": {
+        "additionalProperties": false,
+        "properties": {
+          "margin": {
+            "$ref": "#/components/schemas/MarginView"
+          },
+          "mrr": {
+            "$ref": "#/components/schemas/MrrView"
+          }
+        },
+        "required": [
+          "mrr",
+          "margin"
+        ],
+        "title": "RevenueView",
+        "type": "object"
+      },
       "ReviewSettingsView": {
         "additionalProperties": false,
         "description": "The settings with what they rely on: whether the business's WhatsApp\nnumber is connected (the template), whether review-link visits can be\ncounted (the platform's public address is set), and the request in\neach language of the business.",
@@ -11703,6 +12159,42 @@
           "links"
         ],
         "title": "ShareLinksView",
+        "type": "object"
+      },
+      "SourceRowView": {
+        "additionalProperties": false,
+        "description": "Owners from one acquisition source: sign-ups, live and paying today.",
+        "properties": {
+          "paying": {
+            "minimum": 0.0,
+            "title": "Paying",
+            "type": "integer"
+          },
+          "sign_ups": {
+            "minimum": 0.0,
+            "title": "Sign Ups",
+            "type": "integer"
+          },
+          "source": {
+            "maxLength": 120,
+            "minLength": 1,
+            "pattern": "^[a-z0-9][a-z0-9._:-]*$",
+            "title": "Source",
+            "type": "string"
+          },
+          "went_live": {
+            "minimum": 0.0,
+            "title": "Went Live",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "source",
+          "sign_ups",
+          "went_live",
+          "paying"
+        ],
+        "title": "SourceRowView",
         "type": "object"
       },
       "StaffAlertEvent": {
@@ -12465,6 +12957,28 @@
         "title": "TelegramLinkView",
         "type": "object"
       },
+      "TelemetryBatchReceipt": {
+        "additionalProperties": false,
+        "description": "How many Web Vitals and tunnel steps of the batch were kept.",
+        "properties": {
+          "tunnel_steps": {
+            "minimum": 0.0,
+            "title": "Tunnel Steps",
+            "type": "integer"
+          },
+          "web_vitals": {
+            "minimum": 0.0,
+            "title": "Web Vitals",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "web_vitals",
+          "tunnel_steps"
+        ],
+        "title": "TelemetryBatchReceipt",
+        "type": "object"
+      },
       "TextBackChannel": {
         "description": "How the message to a caller who did not get through travels.",
         "enum": [
@@ -12796,6 +13310,100 @@
           "is_error"
         ],
         "title": "ToolCallView",
+        "type": "object"
+      },
+      "TrialConversionView": {
+        "additionalProperties": false,
+        "description": "Trials started in the period: how many ended, and how many of those\nbecame paid subscriptions.",
+        "properties": {
+          "converted": {
+            "minimum": 0.0,
+            "title": "Converted",
+            "type": "integer"
+          },
+          "ended": {
+            "minimum": 0.0,
+            "title": "Ended",
+            "type": "integer"
+          },
+          "rate": {
+            "anyOf": [
+              {
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rate"
+          },
+          "started": {
+            "minimum": 0.0,
+            "title": "Started",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "started",
+          "ended",
+          "converted"
+        ],
+        "title": "TrialConversionView",
+        "type": "object"
+      },
+      "TunnelStepKey": {
+        "description": "A screen of the cabinet's \"Create an AI assistant\" tunnel, in order\n(web/src/lib/tunnel/steps.ts): what and where (before the business\nexists), the offer, hours, the people who take handoffs, channels,\ntrying the assistant and the launch.",
+        "enum": [
+          "business",
+          "place",
+          "offer",
+          "hours",
+          "people",
+          "channels",
+          "try",
+          "launch"
+        ],
+        "title": "TunnelStepKey",
+        "type": "string"
+      },
+      "TunnelStepView": {
+        "additionalProperties": false,
+        "description": "One screen of the setup tunnel: owners who entered it, went on from it\nor skipped it, and who stopped there (it was the furthest screen they\nreached and they never went live).",
+        "properties": {
+          "completed": {
+            "minimum": 0.0,
+            "title": "Completed",
+            "type": "integer"
+          },
+          "entered": {
+            "minimum": 0.0,
+            "title": "Entered",
+            "type": "integer"
+          },
+          "skipped": {
+            "minimum": 0.0,
+            "title": "Skipped",
+            "type": "integer"
+          },
+          "step": {
+            "$ref": "#/components/schemas/TunnelStepKey"
+          },
+          "stopped_here": {
+            "minimum": 0.0,
+            "title": "Stopped Here",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "step",
+          "entered",
+          "completed",
+          "skipped",
+          "stopped_here"
+        ],
+        "title": "TunnelStepView",
         "type": "object"
       },
       "UnansweredQuestionDetails": {
@@ -13507,6 +14115,69 @@
           "count"
         ],
         "title": "VisitScoreCount",
+        "type": "object"
+      },
+      "WebVitalName": {
+        "description": "A Core Web Vital: Largest Contentful Paint and Interaction to Next\nPaint in milliseconds, Cumulative Layout Shift in ten-thousandths.",
+        "enum": [
+          "lcp",
+          "inp",
+          "cls"
+        ],
+        "title": "WebVitalName",
+        "type": "string"
+      },
+      "WebVitalRating": {
+        "description": "Where a vital's 75th percentile stands against Google's thresholds:\nGOOD, NEEDS_IMPROVEMENT or POOR.",
+        "enum": [
+          "good",
+          "needs_improvement",
+          "poor"
+        ],
+        "title": "WebVitalRating",
+        "type": "string"
+      },
+      "WebVitalView": {
+        "additionalProperties": false,
+        "description": "The 75th percentile of one Core Web Vital on one cabinet page and kind\nof device in the period, with how many page views it rests on.",
+        "properties": {
+          "device_class": {
+            "$ref": "#/components/schemas/DeviceClass"
+          },
+          "metric": {
+            "$ref": "#/components/schemas/WebVitalName"
+          },
+          "p75": {
+            "maximum": 600000.0,
+            "minimum": 0.0,
+            "title": "P75",
+            "type": "integer"
+          },
+          "rating": {
+            "$ref": "#/components/schemas/WebVitalRating"
+          },
+          "route": {
+            "maxLength": 160,
+            "minLength": 1,
+            "pattern": "^/[A-Za-z0-9_\\-\\[\\]/.]*$",
+            "title": "Route",
+            "type": "string"
+          },
+          "samples": {
+            "minimum": 0.0,
+            "title": "Samples",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "metric",
+          "route",
+          "device_class",
+          "p75",
+          "samples",
+          "rating"
+        ],
+        "title": "WebVitalView",
         "type": "object"
       },
       "WebsiteImportProblem": {
@@ -15100,6 +15771,195 @@
         ]
       }
     },
+    "/v1/admin/metrics": {
+      "get": {
+        "operationId": "get_admin_metrics_v1_admin_metrics_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "from",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "From"
+            }
+          },
+          {
+            "in": "query",
+            "name": "to",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "To"
+            }
+          },
+          {
+            "in": "query",
+            "name": "country",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Country"
+            }
+          },
+          {
+            "in": "query",
+            "name": "niche",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Niche"
+            }
+          },
+          {
+            "in": "query",
+            "name": "source",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Source"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminMetricsView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Get Admin Metrics",
+        "tags": [
+          "analytics"
+        ]
+      }
+    },
     "/v1/admin/security/encryption-keys": {
       "get": {
         "operationId": "get_encryption_keys_v1_admin_security_encryption_keys_get",
@@ -15981,7 +16841,7 @@
             "application/json": {
               "schema": {
                 "additionalProperties": false,
-                "description": "HTTP body of the code check.",
+                "description": "HTTP body of the code check; the cabinet adds where a new owner came\nfrom (its first-party attribution cookie), kept only for a new account.",
                 "properties": {
                   "challenge_id": {
                     "pattern": "^otp_challenge_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
@@ -15994,6 +16854,158 @@
                     "pattern": "^[0-9]{6}$",
                     "title": "Code",
                     "type": "string"
+                  },
+                  "signup_attribution": {
+                    "anyOf": [
+                      {
+                        "additionalProperties": false,
+                        "description": "Where a new owner came from, as the cabinet saw it on their first visit\nto the landing or a hosted chat page (the first-party `aw_attr` cookie):\nthe campaign of the link (utm_*), its `ref` code and `src` tag, the\nsite they came from (host only) and the first page they opened. Kept on\nthe user once, at sign-up; it names no other person.",
+                        "properties": {
+                          "first_seen_at": {
+                            "anyOf": [
+                              {
+                                "type": "integer"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "title": "First Seen At"
+                          },
+                          "landing_path": {
+                            "anyOf": [
+                              {
+                                "maxLength": 200,
+                                "minLength": 1,
+                                "pattern": "^/[A-Za-z0-9_\\-/.~%]*$",
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "title": "Landing Path"
+                          },
+                          "referral_code": {
+                            "anyOf": [
+                              {
+                                "maxLength": 64,
+                                "minLength": 1,
+                                "pattern": "^[A-Za-z0-9._-]+$",
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "title": "Referral Code"
+                          },
+                          "referrer_host": {
+                            "anyOf": [
+                              {
+                                "maxLength": 253,
+                                "minLength": 1,
+                                "pattern": "^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)*$",
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "title": "Referrer Host"
+                          },
+                          "source_tag": {
+                            "anyOf": [
+                              {
+                                "maxLength": 64,
+                                "minLength": 1,
+                                "pattern": "^[A-Za-z0-9._-]+$",
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "title": "Source Tag"
+                          },
+                          "utm_campaign": {
+                            "anyOf": [
+                              {
+                                "maxLength": 120,
+                                "minLength": 1,
+                                "pattern": "^[^\\x00-\\x1f\\x7f<>]+$",
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "title": "Utm Campaign"
+                          },
+                          "utm_content": {
+                            "anyOf": [
+                              {
+                                "maxLength": 120,
+                                "minLength": 1,
+                                "pattern": "^[^\\x00-\\x1f\\x7f<>]+$",
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "title": "Utm Content"
+                          },
+                          "utm_medium": {
+                            "anyOf": [
+                              {
+                                "maxLength": 120,
+                                "minLength": 1,
+                                "pattern": "^[^\\x00-\\x1f\\x7f<>]+$",
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "title": "Utm Medium"
+                          },
+                          "utm_source": {
+                            "anyOf": [
+                              {
+                                "maxLength": 120,
+                                "minLength": 1,
+                                "pattern": "^[^\\x00-\\x1f\\x7f<>]+$",
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "title": "Utm Source"
+                          },
+                          "utm_term": {
+                            "anyOf": [
+                              {
+                                "maxLength": 120,
+                                "minLength": 1,
+                                "pattern": "^[^\\x00-\\x1f\\x7f<>]+$",
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "title": "Utm Term"
+                          }
+                        },
+                        "title": "SignupAttribution",
+                        "type": "object"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
                   }
                 },
                 "required": [
@@ -40126,6 +41138,250 @@
         "summary": "Open Review",
         "tags": [
           "reviews"
+        ]
+      }
+    },
+    "/v1/telemetry/events": {
+      "post": {
+        "operationId": "record_telemetry_v1_telemetry_events_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "description": "HTTP body of POST /v1/telemetry/events: up to 50 reports at once.",
+                "properties": {
+                  "events": {
+                    "items": {
+                      "anyOf": [
+                        {
+                          "additionalProperties": false,
+                          "description": "One Core Web Vital of a page view: LCP and INP in whole milliseconds,\nCLS in ten-thousandths (0.1 is 1000); the page as its route template.",
+                          "properties": {
+                            "device_class": {
+                              "description": "The kind of screen a page was used on (by viewport width).",
+                              "enum": [
+                                "mobile",
+                                "tablet",
+                                "desktop"
+                              ],
+                              "title": "DeviceClass",
+                              "type": "string"
+                            },
+                            "kind": {
+                              "const": "web_vital",
+                              "title": "Kind",
+                              "type": "string"
+                            },
+                            "metric": {
+                              "description": "A Core Web Vital: Largest Contentful Paint and Interaction to Next\nPaint in milliseconds, Cumulative Layout Shift in ten-thousandths.",
+                              "enum": [
+                                "lcp",
+                                "inp",
+                                "cls"
+                              ],
+                              "title": "WebVitalName",
+                              "type": "string"
+                            },
+                            "route": {
+                              "maxLength": 160,
+                              "minLength": 1,
+                              "pattern": "^/[A-Za-z0-9_\\-\\[\\]/.]*$",
+                              "title": "Route",
+                              "type": "string"
+                            },
+                            "value": {
+                              "maximum": 600000,
+                              "minimum": 0,
+                              "title": "Value",
+                              "type": "integer"
+                            }
+                          },
+                          "required": [
+                            "kind",
+                            "metric",
+                            "value",
+                            "route",
+                            "device_class"
+                          ],
+                          "title": "WebVitalReport",
+                          "type": "object"
+                        },
+                        {
+                          "additionalProperties": false,
+                          "description": "The owner entered a screen of the setup tunnel, or went on from it;\nthe business once it exists (the first two screens come before it).",
+                          "properties": {
+                            "action": {
+                              "description": "What the cabinet reports about a tunnel step: entered or completed.",
+                              "enum": [
+                                "entered",
+                                "completed"
+                              ],
+                              "title": "TunnelStepAction",
+                              "type": "string"
+                            },
+                            "business_id": {
+                              "anyOf": [
+                                {
+                                  "pattern": "^business_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                                  "type": "string"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ],
+                              "title": "Business Id"
+                            },
+                            "kind": {
+                              "const": "tunnel_step",
+                              "title": "Kind",
+                              "type": "string"
+                            },
+                            "step": {
+                              "description": "A screen of the cabinet's \"Create an AI assistant\" tunnel, in order\n(web/src/lib/tunnel/steps.ts): what and where (before the business\nexists), the offer, hours, the people who take handoffs, channels,\ntrying the assistant and the launch.",
+                              "enum": [
+                                "business",
+                                "place",
+                                "offer",
+                                "hours",
+                                "people",
+                                "channels",
+                                "try",
+                                "launch"
+                              ],
+                              "title": "TunnelStepKey",
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "kind",
+                            "step",
+                            "action"
+                          ],
+                          "title": "TunnelStepReport",
+                          "type": "object"
+                        }
+                      ]
+                    },
+                    "maxItems": 50,
+                    "minItems": 1,
+                    "title": "Events",
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "events"
+                ],
+                "title": "TelemetryBatchRequest",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TelemetryBatchReceipt"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Record Telemetry",
+        "tags": [
+          "analytics"
         ]
       }
     },
