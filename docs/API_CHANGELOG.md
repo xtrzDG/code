@@ -13,7 +13,7 @@ label and a migration path).
 
 ## 2026-10-03 — handoffs the platform creates are read in each reader's language
 
-Spec: `698675efc5aa8ded`
+Spec: `eced8ca70fcbb8b2`
 
 - **Added** `summary_code`, `quoted_text` and `flagged_values` on
   `HandoffListItem` (`GET /v1/businesses/{business_id}/handoffs` and the

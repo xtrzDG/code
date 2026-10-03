@@ -49,7 +49,7 @@ def build_inbox_sources(
             if conversation.status is ConversationStatus.HANDOFF
         ],
     )
-    requests = work_repo.latest_open_requests(
+    open_requests = work_repo.latest_open_requests(
         business_id,
         [
             conversation.id
@@ -64,7 +64,7 @@ def build_inbox_sources(
             last_written=latest.get(conversation.id),
             note_count=notes.get(conversation.id, ConversationNoteCount(0)),
             handoff=handoffs.get(conversation.id),
-            request=requests.get(conversation.id),
+            request=open_requests.get(conversation.id),
         )
         for conversation in conversations
     ]
