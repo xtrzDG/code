@@ -18,7 +18,7 @@ from app.schemas.domain.conversations import ConversationDocument
 from app.schemas.dto.conversations import InboundMessage
 from app.schemas.exceptions.application_errors import ConflictError, NotFoundError
 from app.schemas.typings.assistants.prefixed_id import AssistantVersionId
-from app.use_cases.conversations.turns.turn_time import to_microseconds
+from app.use_cases.shared.turn_time import to_microseconds
 
 CONVERSATION_WINDOW: timedelta = timedelta(hours=24)
 

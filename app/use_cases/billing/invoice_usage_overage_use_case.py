@@ -32,17 +32,17 @@ from app.schemas.typings.billing.constrained_integers import OverageVoiceMinutes
 from app.schemas.typings.billing.strings import InvoiceDescription
 from app.schemas.typings.conversations.strings import MessageText
 from app.schemas.typings.platform.constrained_integers import ProcessedItemCount
-from app.use_cases.billing.billing_records import (
+from app.use_cases.billing.owner_notifications import notify_business_owners
+from app.use_cases.shared.billing_records import (
     find_current_subscription,
     list_subscription_invoices,
     sum_invoice_amounts,
 )
-from app.use_cases.billing.owner_notifications import notify_business_owners
-from app.use_cases.billing.package_usage import (
+from app.use_cases.shared.package_usage import (
     compute_overage_minutes,
     summarize_package_usage,
 )
-from app.use_cases.billing.subscription_pricing import price_overage_per_minute
+from app.use_cases.shared.subscription_pricing import price_overage_per_minute
 from app.utilities.billing.billing_periods import add_local_days, list_package_windows
 from app.utilities.money.money_math import multiply_money
 

@@ -10,8 +10,8 @@ from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.dto.billing import Money, PlanDefinition
 from app.schemas.dto.billing_ledger import DueInvoicesRequest, InvoiceDescriptionInput
 from app.schemas.typings.billing.strings import InvoiceDescription
-from app.use_cases.billing.billing_records import OPEN_INVOICE_STATUSES
-from app.use_cases.billing.subscription_pricing import price_setup_fee
+from app.use_cases.shared.billing_records import OPEN_INVOICE_STATUSES
+from app.use_cases.shared.subscription_pricing import price_setup_fee
 from app.utilities.billing.billing_periods import add_billing_period
 
 

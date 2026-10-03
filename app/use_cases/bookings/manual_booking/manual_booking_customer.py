@@ -17,7 +17,7 @@ from app.schemas.typings.localization.constrained_strings import (
     E164PhoneNumber,
     LanguageTag,
 )
-from app.use_cases.bookings.operations_support import (
+from app.use_cases.shared.operations_support import (
     CONTACT_ENTITY,
     ContactDetails,
     build_audit_entry,

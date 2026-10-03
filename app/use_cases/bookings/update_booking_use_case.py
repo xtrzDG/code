@@ -51,7 +51,7 @@ from app.use_cases.bookings.booking_support import (
     stay_night_count,
 )
 from app.use_cases.bookings.bookings_in_play import bookings_not_over_on
-from app.use_cases.bookings.operations_support import (
+from app.use_cases.shared.operations_support import (
     ContactDetails,
     build_audit_entry,
     update_contact_details,

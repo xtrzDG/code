@@ -10,7 +10,7 @@ from app.schemas.dto.operations.unanswered_questions import (
 from app.schemas.dto.paging import KeysetPosition
 from app.schemas.typings.platform.integers import ListSortValue
 from app.schemas.typings.platform.strings import ListItemKey
-from app.use_cases.handoffs.handoff_views import build_unanswered_question_details
+from app.use_cases.shared.handoff_views import build_unanswered_question_details
 from app.utilities.paging.keyset_paging import finish_page, read_slice
 
 # The occurrence count sits above every possible timestamp (64 bits), so one

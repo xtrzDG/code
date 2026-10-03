@@ -49,11 +49,11 @@ from app.schemas.typings.localization.constrained_strings import (
     LanguageTag,
 )
 from app.schemas.typings.localization.strings import FormattedPhoneNumber
-from app.use_cases.bookings.operations_support import (
+from app.use_cases.shared.business_access import require_business
+from app.use_cases.shared.operations_support import (
     display_phone,
-    require_business,
 )
-from app.use_cases.notifications.staff_alerts import StaffAlertTexts, booking_alert
+from app.use_cases.shared.staff_alerts import StaffAlertTexts, booking_alert
 from app.utilities.scheduling.availability import BLOCKING_BOOKING_STATUSES
 from app.utilities.scheduling.nights import StayTimes, read_stay_times
 from app.utilities.scheduling.zoned_time import load_time_zone, to_local_moment

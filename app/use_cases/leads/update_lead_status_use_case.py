@@ -9,8 +9,8 @@ from app.schemas.dto.bookings import LeadView
 from app.schemas.dto.inbox.assignment import OpenRequestRefresh, OpenRequestState
 from app.schemas.dto.operations.leads import UpdateLeadStatusCommand
 from app.schemas.exceptions.application_errors import NotFoundError
-from app.use_cases.inbox.assignment.request_tracking import track_request
-from app.use_cases.leads.lead_views import build_lead_view
+from app.use_cases.shared.lead_views import build_lead_view
+from app.use_cases.shared.request_tracking import track_request
 
 
 class UpdateLeadStatusUseCase(UseCaseContract[UpdateLeadStatusCommand, LeadView]):

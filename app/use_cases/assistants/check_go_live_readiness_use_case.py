@@ -36,11 +36,11 @@ from app.use_cases.assistants.go_live_autotest_checks import (
     check_autotests,
     summarize_autotest_run,
 )
-from app.use_cases.billing.billing_records import (
+from app.use_cases.shared.billing_records import (
     find_current_subscription,
     is_service_paid_for,
 )
-from app.use_cases.billing.trial_subscriptions import (
+from app.use_cases.shared.trial_subscriptions import (
     choose_go_live_trial,
     is_trial_due_at_go_live,
 )

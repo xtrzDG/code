@@ -40,8 +40,8 @@ from app.use_cases.admin.client_usage_window import (
     MICROSECONDS_PER_DAY,
     find_client_usage_window,
 )
-from app.use_cases.billing.billing_records import find_current_subscription
-from app.use_cases.billing.package_usage import summarize_package_usage
+from app.use_cases.shared.billing_records import find_current_subscription
+from app.use_cases.shared.package_usage import summarize_package_usage
 
 RECENT_ACTIVITY_DAYS: int = 7
 

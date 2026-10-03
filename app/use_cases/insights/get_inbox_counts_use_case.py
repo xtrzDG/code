@@ -7,7 +7,7 @@ from app.contracts.repositories.business_repositories import BusinessRepoContrac
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.dto.operations.inbox_counts import InboxCounts, InboxCountsQuery
-from app.use_cases.bookings.operations_support import require_business
+from app.use_cases.shared.business_access import require_business
 
 
 class GetInboxCountsUseCase(UseCaseContract[InboxCountsQuery, InboxCounts]):

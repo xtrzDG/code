@@ -10,7 +10,7 @@ from app.schemas.typings.localization.constrained_strings import (
     CurrencyCode,
     LanguageTag,
 )
-from app.use_cases.billing.subscription_pricing import (
+from app.use_cases.shared.subscription_pricing import (
     price_overage_per_minute,
     price_setup_fee,
     price_subscription,

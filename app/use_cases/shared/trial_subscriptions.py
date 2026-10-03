@@ -21,13 +21,13 @@ from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.dto.billing import Money, PlanDefinition
 from app.schemas.typings.billing.prefixed_id import SubscriptionId
 from app.schemas.typings.localization.constrained_strings import CurrencyCode
-from app.use_cases.billing.billing_records import (
+from app.use_cases.shared.billing_records import (
     find_current_subscription,
     is_trial_available,
     list_open_invoices,
     list_subscription_invoices,
 )
-from app.use_cases.billing.subscription_pricing import (
+from app.use_cases.shared.subscription_pricing import (
     price_subscription,
     select_subscription_currency,
 )

@@ -1,16 +1,14 @@
-"""Steps shared by the operations use cases (bookings, leads, handoffs):
-loading tenant documents, contact updates with audit, staff messages."""
+"""Steps shared by the operations use cases (bookings, leads, handoffs, calls):
+loading a contact, contact updates with audit, phone display."""
 
 from typing import NamedTuple
 
 from typed_time_provider import Microseconds
 
 from app.contracts.localization_utilities import PhoneNumberParserContract
-from app.contracts.repositories.business_repositories import BusinessRepoContract
 from app.contracts.repositories.compliance_repositories import AuditLogRepoContract
 from app.contracts.repositories.conversation_repositories import ContactRepoContract
 from app.schemas.constants.compliance import AuditAction
-from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.compliance import AuditLogEntryDocument
 from app.schemas.domain.contacts import ContactDocument
 from app.schemas.exceptions.application_errors import (
@@ -41,17 +39,6 @@ class ContactDetails(NamedTuple):
 
     name: ContactName | None
     phone_number: E164PhoneNumber | None
-
-
-def require_business(
-    business_repo: BusinessRepoContract,
-    business_id: BusinessId,
-) -> BusinessDocument:
-    business: BusinessDocument | None = business_repo.get(business_id)
-    if business is None:
-        raise NotFoundError(f"Business {business_id} was not found.")
-
-    return business
 
 
 def require_contact(

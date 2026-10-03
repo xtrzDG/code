@@ -7,7 +7,7 @@ from app.schemas.constants.billing import InvoiceKind, SubscriptionStatus
 from app.schemas.domain.billing import InvoiceDocument, SubscriptionDocument
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.dto.billing import PlanDefinition
-from app.use_cases.billing.billing_records import list_open_invoices
+from app.use_cases.shared.billing_records import list_open_invoices
 from app.utilities.billing.billing_periods import add_local_days
 
 

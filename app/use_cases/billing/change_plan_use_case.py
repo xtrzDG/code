@@ -20,12 +20,12 @@ from app.schemas.dto.billing_cabinet import (
     ChangePlanCommand,
 )
 from app.schemas.typings.businesses.prefixed_id import BusinessId
-from app.use_cases.billing.billing_records import (
+from app.use_cases.shared.billing_records import (
     list_open_invoices,
     list_subscription_invoices,
     require_current_subscription,
 )
-from app.use_cases.billing.subscription_pricing import price_subscription
+from app.use_cases.shared.subscription_pricing import price_subscription
 
 
 class ChangePlanUseCase(UseCaseContract[ChangePlanCommand, BillingOverview]):

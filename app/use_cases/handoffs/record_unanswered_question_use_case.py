@@ -12,8 +12,8 @@ from app.schemas.dto.handoffs import (
 )
 from app.schemas.typings.handoffs.constrained_integers import QuestionOccurrenceCount
 from app.schemas.typings.handoffs.strings import UnansweredQuestionText
-from app.use_cases.bookings.operations_support import require_business
-from app.use_cases.handoffs.handoff_views import build_unanswered_question_view
+from app.use_cases.shared.business_access import require_business
+from app.use_cases.shared.handoff_views import build_unanswered_question_view
 
 
 class RecordUnansweredQuestionUseCase(

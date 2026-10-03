@@ -45,15 +45,15 @@ from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.use_cases.conversations.turns.contact_resolution import (
     resolve_contact,
 )
-from app.use_cases.conversations.turns.conversation_resolution import (
-    resolve_conversation,
-)
 from app.use_cases.conversations.turns.inbound_message_rules import (
     is_sandbox_message,
     remove_nul_characters,
 )
 from app.use_cases.conversations.turns.turn_gate import choose_turn_gate
-from app.use_cases.conversations.turns.turn_time import to_local_datetime
+from app.use_cases.shared.conversation_resolution import (
+    resolve_conversation,
+)
+from app.use_cases.shared.turn_time import to_local_datetime
 from app.utilities.conversations.opening_hours import is_open_at
 from app.utilities.conversations.tool_selection import select_available_tools
 from app.utilities.conversations.turn_context import TurnContext, build_context_line

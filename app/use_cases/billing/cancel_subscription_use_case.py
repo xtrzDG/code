@@ -16,7 +16,7 @@ from app.schemas.dto.billing_cabinet import (
     BillingOverviewSource,
     CancelSubscriptionCommand,
 )
-from app.use_cases.billing.billing_records import (
+from app.use_cases.shared.billing_records import (
     list_open_invoices,
     list_subscription_invoices,
     require_current_subscription,

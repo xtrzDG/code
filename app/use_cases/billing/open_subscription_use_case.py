@@ -25,12 +25,12 @@ from app.schemas.dto.billing_cabinet import (
 )
 from app.schemas.typings.billing.booleans import IsSubscriptionCreated
 from app.schemas.typings.localization.constrained_strings import CurrencyCode
-from app.use_cases.billing.billing_records import (
+from app.use_cases.shared.billing_records import (
     find_current_subscription,
     list_open_invoices,
     list_subscription_invoices,
 )
-from app.use_cases.billing.subscription_pricing import (
+from app.use_cases.shared.subscription_pricing import (
     price_subscription,
     select_subscription_currency,
 )

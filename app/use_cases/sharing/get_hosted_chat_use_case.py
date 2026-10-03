@@ -17,7 +17,7 @@ from app.schemas.typings.channels.constrained_strings import (
     PublicBaseUrl,
     WidgetScriptUrl,
 )
-from app.use_cases.channels.widget_languages import build_widget_languages
+from app.use_cases.shared.widget_languages import build_widget_languages
 from app.utilities.channels.channel_endpoints import (
     WIDGET_SCRIPT_PATH,
     join_public_url,

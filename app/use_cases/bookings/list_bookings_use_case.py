@@ -24,9 +24,9 @@ from app.schemas.typings.bookings.prefixed_id import ResourceId
 from app.schemas.typings.compliance.strings import AuditEntityName
 from app.schemas.typings.contacts.prefixed_id import ContactId
 from app.schemas.typings.platform.constrained_strings import PageCursor
-from app.use_cases.bookings.operations_support import (
+from app.use_cases.shared.business_access import require_business
+from app.use_cases.shared.operations_support import (
     build_audit_entry,
-    require_business,
 )
 from app.utilities.paging.keyset_paging import (
     finish_page,

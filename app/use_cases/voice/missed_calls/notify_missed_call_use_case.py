@@ -17,7 +17,7 @@ from app.schemas.typings.handoffs.constrained_integers import (
     DeliveredNotificationCount,
 )
 from app.schemas.typings.notifications.constrained_strings import StaffAlertSubject
-from app.use_cases.bookings.operations_support import display_phone
+from app.use_cases.shared.operations_support import display_phone
 from app.use_cases.voice.summaries.call_report_alerts import (
     call_report_alert,
     call_report_texts,

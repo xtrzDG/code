@@ -2,22 +2,11 @@ from app.contracts.repositories.assistant_repositories import (
     AssistantVersionRepoContract,
 )
 from app.contracts.use_case_contract import UseCaseContract
-from app.schemas.constants.assistants import AssistantVersionStatus
 from app.schemas.domain.assistants import AssistantVersionDocument
 from app.schemas.dto.conversation_feed.owner_test_chat import OwnerTestChatVersionQuery
 from app.schemas.exceptions.application_errors import ConflictError, NotFoundError
 from app.schemas.typings.assistants.prefixed_id import AssistantVersionId
-
-# Versions the owner may talk to: everything but archived ones.
-TESTABLE_STATUSES: frozenset[AssistantVersionStatus] = frozenset(
-    {
-        AssistantVersionStatus.PUBLISHED,
-        AssistantVersionStatus.READY,
-        AssistantVersionStatus.TESTS_FAILED,
-        AssistantVersionStatus.TESTING,
-        AssistantVersionStatus.DRAFT,
-    }
-)
+from app.use_cases.shared.test_chat_versions import TESTABLE_STATUSES
 
 
 class ResolveTestChatVersionUseCase(

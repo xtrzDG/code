@@ -22,19 +22,19 @@ from app.schemas.dto.billing_ledger import BillingNotice, DueInvoicesRequest
 from app.schemas.dto.jobs import JobReport, JobTick
 from app.schemas.typings.conversations.strings import MessageText
 from app.schemas.typings.platform.constrained_integers import ProcessedItemCount
-from app.use_cases.billing.billing_records import (
-    advance_to_paid_periods,
-    find_covering_paid_invoice,
-    find_current_subscription,
-    find_next_period_start,
-    list_subscription_invoices,
-)
 from app.use_cases.billing.grace_periods import (
     start_grace_period,
     start_overage_grace,
 )
 from app.use_cases.billing.owner_notifications import notify_business_owners
 from app.use_cases.billing.service_mode_switch import switch_service_mode
+from app.use_cases.shared.billing_records import (
+    advance_to_paid_periods,
+    find_covering_paid_invoice,
+    find_current_subscription,
+    find_next_period_start,
+    list_subscription_invoices,
+)
 
 # An automatic charge is dated by day; wait this long past the period end
 # for its notification before treating the renewal as missed.

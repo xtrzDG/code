@@ -24,7 +24,7 @@ from app.schemas.exceptions.application_errors import NotFoundError
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.schemas.typings.storage.constrained_integers import DocumentQueryLimit
-from app.use_cases.channels.widget_languages import (
+from app.use_cases.shared.widget_languages import (
     build_widget_greetings,
     build_widget_languages,
 )

@@ -17,7 +17,6 @@ from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.dto.value.value_model import ValueModel, ValueModelQuery
 from app.schemas.typings.bookings.constrained_strings import LocalDate
 from app.schemas.typings.conversations.prefixed_id import ConversationId
-from app.use_cases.bookings.operations_support import require_business
 from app.use_cases.insights.value.value_counting import (
     ValueSources,
     ValueWindow,
@@ -29,6 +28,7 @@ from app.use_cases.insights.value.value_estimates import (
     estimate_business_value,
     read_weekly_hours,
 )
+from app.use_cases.shared.business_access import require_business
 from app.utilities.scheduling.opening_hours import DayRanges
 from app.utilities.scheduling.zoned_time import (
     load_time_zone,

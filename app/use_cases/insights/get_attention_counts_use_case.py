@@ -12,7 +12,7 @@ from app.schemas.dto.operations.attention_counts import (
     AttentionCounts,
     AttentionCountsQuery,
 )
-from app.use_cases.bookings.operations_support import require_business
+from app.use_cases.shared.business_access import require_business
 
 
 class GetAttentionCountsUseCase(UseCaseContract[AttentionCountsQuery, AttentionCounts]):
