@@ -13,17 +13,21 @@ from app.schemas.dto.notifications.staff_alerts import (
     StaffAlertBriefInput,
 )
 from app.schemas.dto.notifications.staff_links import StaffLinkClaims
+from app.schemas.dto.rate_limits import RateLimitCounter
 from app.schemas.exceptions.application_errors import RateLimitedError
 from app.schemas.typings.deliveries.constrained_strings import OutboundRecipientKey
 from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.schemas.typings.notifications.constrained_strings import CabinetDeepLink
-from app.schemas.typings.platform.constrained_integers import RetryAfterSeconds
+from app.schemas.typings.platform.constrained_integers import (
+    RateWindowSeconds,
+    RequestsPerWindow,
+)
 from app.utilities.notifications.cabinet_links import build_cabinet_link, link_expiry
-from app.utilities.notifications.staff_delivery_keys import rate_limit_key
+from app.utilities.notifications.staff_delivery_keys import test_rate_limit_key
 
 # Tests one recipient may get per hour (an SMS costs money each time).
-TESTS_PER_HOUR: int = 5
-TEST_WINDOW_SECONDS: int = 60 * 60
+TESTS_PER_HOUR: RequestsPerWindow = RequestsPerWindow(5)
+TEST_WINDOW_SECONDS: RateWindowSeconds = RateWindowSeconds(60 * 60)
 
 
 def check_test_budget(
@@ -34,19 +38,17 @@ def check_test_budget(
 ) -> None:
     """RateLimitedError (with Retry-After) after 5 tests within an hour."""
 
-    key: str = "test:" + rate_limit_key(business.id, recipient_key)
-    if (
-        rate_limits.try_acquire_all([(key, TESTS_PER_HOUR)], TEST_WINDOW_SECONDS, now)
-        is None
-    ):
+    counter = RateLimitCounter(
+        key=test_rate_limit_key(business.id, recipient_key), limit=TESTS_PER_HOUR
+    )
+    if rate_limits.try_acquire_all([counter], TEST_WINDOW_SECONDS, now) is None:
         return
 
-    wait: int = rate_limits.seconds_until_free(
-        key, TESTS_PER_HOUR, TEST_WINDOW_SECONDS, now
-    )
     raise RateLimitedError(
         "Too many test notifications to this recipient; try again later.",
-        retry_after_seconds=RetryAfterSeconds(max(wait, 1)),
+        retry_after_seconds=rate_limits.seconds_until_free(
+            counter, TEST_WINDOW_SECONDS, now
+        ),
     )
 
 

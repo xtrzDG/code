@@ -1,5 +1,8 @@
 """The channels testbed's inbox and outbox use cases."""
 
+from app.adapters.rate_limits.in_memory_rate_limit_bucket_adapter import (
+    InMemoryRateLimitBucketAdapter,
+)
 from app.facilitators.notifications.manager_notification_facilitator import (
     ManagerNotificationFacilitator,
 )
@@ -79,7 +82,7 @@ class ChannelsInbox(ChannelsUseCases):
         self.delivery_recorder = StaffDeliveryRecorderFacilitator(
             self.staff_delivery_state_repo, self.push_subscription_repo
         )
-        self.rate_limits = RequestRateLimitRegistry()
+        self.rate_limits = RequestRateLimitRegistry(InMemoryRateLimitBucketAdapter())
         self.web_push_client = FakeWebPushClient()
         self.push_sender = PushNotificationSenderFacilitator(
             self.push_subscription_repo, self.web_push_client

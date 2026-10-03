@@ -4,8 +4,14 @@ import json
 
 from typed_time_provider import Microseconds
 
+from app.adapters.rate_limits.in_memory_rate_limit_bucket_adapter import (
+    InMemoryRateLimitBucketAdapter,
+)
 from app.facilitators.notifications.push_notification_queue_facilitator import (
     PushNotificationQueueFacilitator,
+)
+from app.registries.limits.request_rate_limit_registry import (
+    RequestRateLimitRegistry,
 )
 from app.schemas.constants.deliveries import OutboundMessageStatus
 from app.schemas.constants.handoffs import ManagerContactChannel
@@ -198,7 +204,7 @@ def test_devices_are_skipped_while_push_is_off_and_limited_per_hour() -> None:
         testbed.outbound_message_repo,
         testbed.job_queue,
         testbed.web_push_client,
-        type(testbed.rate_limits)(),
+        RequestRateLimitRegistry(InMemoryRateLimitBucketAdapter()),
         testbed.delivery_recorder,
         testbed.wall_clock,
     )

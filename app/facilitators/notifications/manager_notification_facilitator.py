@@ -18,11 +18,13 @@ from app.schemas.constants.deliveries import OutboundMessageKind, OutboundMessag
 from app.schemas.domain.businesses import ManagerContact
 from app.schemas.domain.outbound_messages import OutboundMessageDocument
 from app.schemas.dto.deliveries import StaffNotification
+from app.schemas.dto.rate_limits import RateLimitCounter
 from app.schemas.typings.deliveries.constrained_strings import (
     OutboundIdempotencyKey,
     OutboundRecipientKey,
 )
 from app.schemas.typings.deliveries.strings import DeliveryErrorText
+from app.schemas.typings.platform.constrained_strings import RateLimitKey
 from app.utilities.deliveries.delivery_keys import (
     derive_outbound_message_id,
     staff_idempotency_key,
@@ -132,10 +134,11 @@ class ManagerNotificationFacilitator(ManagerNotificationFacilitatorContract):
         recipient_key: OutboundRecipientKey,
         now: Microseconds,
     ) -> DeliveryErrorText | None:
-        limit: int = HOURLY_LIMITS[notification.contact.channel]
-        refused_key: str | None = self._rate_limits.try_acquire_all(
-            [(rate_limit_key(notification.business_id, recipient_key), limit)],
-            RATE_WINDOW_SECONDS,
-            now,
+        counter = RateLimitCounter(
+            key=rate_limit_key(notification.business_id, recipient_key),
+            limit=HOURLY_LIMITS[notification.contact.channel],
+        )
+        refused_key: RateLimitKey | None = self._rate_limits.try_acquire_all(
+            [counter], RATE_WINDOW_SECONDS, now
         )
         return None if refused_key is None else RATE_LIMITED_TEXT

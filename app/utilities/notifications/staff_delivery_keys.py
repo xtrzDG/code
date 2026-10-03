@@ -21,6 +21,11 @@ from app.schemas.typings.notifications.prefixed_id import (
     PushSubscriptionId,
     StaffDeliveryStateId,
 )
+from app.schemas.typings.platform.constrained_integers import (
+    RateWindowSeconds,
+    RequestsPerWindow,
+)
+from app.schemas.typings.platform.constrained_strings import RateLimitKey
 from app.schemas.typings.users.prefixed_id import UserId
 
 # Fixed namespaces of derived ids (never change them: stored ids depend on
@@ -32,14 +37,14 @@ RATE_KEY_DIGEST_LENGTH: int = 32
 # Notifications one recipient may get per hour; more are not sent (a flood
 # of handoffs is someone abusing the chat, and SMS cost money). Devices
 # count as their own recipients.
-HOURLY_LIMITS: dict[ManagerContactChannel, int] = {
-    ManagerContactChannel.SMS: 10,
-    ManagerContactChannel.WHATSAPP: 20,
-    ManagerContactChannel.TELEGRAM: 30,
-    ManagerContactChannel.EMAIL: 30,
+HOURLY_LIMITS: dict[ManagerContactChannel, RequestsPerWindow] = {
+    ManagerContactChannel.SMS: RequestsPerWindow(10),
+    ManagerContactChannel.WHATSAPP: RequestsPerWindow(20),
+    ManagerContactChannel.TELEGRAM: RequestsPerWindow(30),
+    ManagerContactChannel.EMAIL: RequestsPerWindow(30),
 }
-HOURLY_DEVICE_LIMIT: int = 30
-RATE_WINDOW_SECONDS: int = 60 * 60
+HOURLY_DEVICE_LIMIT: RequestsPerWindow = RequestsPerWindow(30)
+RATE_WINDOW_SECONDS: RateWindowSeconds = RateWindowSeconds(60 * 60)
 
 
 def staff_delivery_state_id(
@@ -79,14 +84,32 @@ def push_idempotency_key(
     return OutboundIdempotencyKey(f"push:{subject}:{subscription_id}")
 
 
-def rate_limit_key(
+def _recipient_digest(
     business_id: BusinessId,
     recipient_key: OutboundRecipientKey,
 ) -> str:
+    digest: str = hashlib.sha256(f"{business_id}|{recipient_key}".encode()).hexdigest()
+    return digest[:RATE_KEY_DIGEST_LENGTH]
+
+
+def rate_limit_key(
+    business_id: BusinessId,
+    recipient_key: OutboundRecipientKey,
+) -> RateLimitKey:
     """The rate-limit counter of one recipient (a digest: no address in it)."""
 
-    digest: str = hashlib.sha256(f"{business_id}|{recipient_key}".encode()).hexdigest()
-    return f"staff_notify:{digest[:RATE_KEY_DIGEST_LENGTH]}"
+    return RateLimitKey(f"staff_notify:{_recipient_digest(business_id, recipient_key)}")
+
+
+def test_rate_limit_key(
+    business_id: BusinessId,
+    recipient_key: OutboundRecipientKey,
+) -> RateLimitKey:
+    """The rate-limit counter of the test notifications to one recipient."""
+
+    return RateLimitKey(
+        f"test:staff_notify:{_recipient_digest(business_id, recipient_key)}"
+    )
 
 
 def notification_contact_key(

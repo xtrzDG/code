@@ -23,12 +23,14 @@ from app.schemas.domain.outbound_messages import (
     PushRecipient,
 )
 from app.schemas.dto.notifications.staff_alerts import PushNotification
+from app.schemas.dto.rate_limits import RateLimitCounter
 from app.schemas.typings.conversations.strings import MessageText
 from app.schemas.typings.deliveries.constrained_strings import (
     OutboundIdempotencyKey,
     OutboundRecipientKey,
 )
 from app.schemas.typings.deliveries.strings import DeliveryErrorText
+from app.schemas.typings.platform.constrained_strings import RateLimitKey
 from app.utilities.deliveries.delivery_keys import derive_outbound_message_id
 from app.utilities.notifications.staff_delivery_keys import (
     HOURLY_DEVICE_LIMIT,
@@ -92,15 +94,12 @@ class PushNotificationQueueFacilitator(PushNotificationQueueContract):
         recipient_key: OutboundRecipientKey = push_recipient_key(
             notification.subscription_id
         )
-        refused_key: str | None = self._rate_limits.try_acquire_all(
-            [
-                (
-                    rate_limit_key(notification.business_id, recipient_key),
-                    HOURLY_DEVICE_LIMIT,
-                )
-            ],
-            RATE_WINDOW_SECONDS,
-            now,
+        counter = RateLimitCounter(
+            key=rate_limit_key(notification.business_id, recipient_key),
+            limit=HOURLY_DEVICE_LIMIT,
+        )
+        refused_key: RateLimitKey | None = self._rate_limits.try_acquire_all(
+            [counter], RATE_WINDOW_SECONDS, now
         )
         refusal: DeliveryErrorText | None = (
             None if refused_key is None else RATE_LIMITED_TEXT
