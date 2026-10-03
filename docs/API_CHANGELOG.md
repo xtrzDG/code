@@ -11,6 +11,39 @@ Kinds of change: **Added**, **Changed** (additive), **Deprecated** (with
 sunset date), **Removed** and **Breaking** (only with the `api-breaking`
 label and a migration path).
 
+## 2026-10-03 — feedback after visits, the Google review link, STOP for unrequested messages
+
+Spec: `6d36133d537ca729`
+
+- **Added** `GET` and `PUT /v1/businesses/{business_id}/review-settings`
+  (owners; `ReviewSettingsView`, body `ReviewSettingsRequest`): feedback
+  after visits on or off (off by default), `delay_minutes` after the
+  visit ends (15 to 4320, default 120), the approved WhatsApp utility
+  template for a closed 24-hour window (`^[a-z0-9_]+$`), and
+  `google_review_url` (http or https; kept as the profile's link of kind
+  `google_review`; 422 while the business has no profile). The view adds
+  `is_whatsapp_connected`, `is_link_tracked` (the platform's public
+  address is set, so link visits are counted) and `template_previews` (the
+  body to register with Meta, its parameter `{{1}}` the business name, and
+  what customers read, per language). The change is audited.
+- **Added** `GET /v1/businesses/{business_id}/review-stats` (owners;
+  `ReviewStatsView`, the last 30 days): `asked_count`, `answered_count`,
+  `average_score` (null without answers), `score_counts` (1 to 5),
+  `review_opened_count`, `skipped_count`, `failed_count`.
+- **Added** `GET /v1/businesses/{business_id}/feedback-requests` (owners;
+  `limit`, `cursor`; `FeedbackRequestPage` of `FeedbackRequestView`,
+  newest first): the visit, the customer's name, `status` (`sent`,
+  `answered`, `skipped`, `failed`), `skip_reason`, `channel`, `score`,
+  `review_clicks`, `conversation_id`. Audited as a view of personal data.
+- **Added** `GET /v1/public/reviews/{token}` (no authentication): 302 to the
+  business's Google review page, counting the customer's visit (a
+  messenger's link preview is not counted); 404 for an unknown token or a
+  removed review link; `Cache-Control: no-store`, `X-Robots-Tag: noindex`,
+  `Referrer-Policy: no-referrer`.
+- **Changed** `ContactSummaryView` gains `opted_out_channels` (where the
+  customer sent STOP). `BusinessLinkKind` gains `google_review`: the
+  profile's links include the review page set in Settings → Reviews.
+
 ## 2026-10-03 — handoffs the platform creates are read in each reader's language
 
 Spec: `eced8ca70fcbb8b2`
