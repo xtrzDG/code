@@ -196,8 +196,13 @@ web/
                                exists); /b/{id} redirects to its overview (next.config.ts)
         onboarding/            the setup flow: the six-step profile shown on its own; once the
                                assistant exists it redirects to assistant/profile (keeping ?step=)
-        overview/              next step, KPI tiles for a period (?period=), daily trend chart (plain SVG),
-                               package meters (owners and staff), breakdowns
+        overview/              layout.tsx: the Overview frame (tabs for owners); the dashboard: the owner's
+                               value hero (bookings ≈ money, after hours, staff time, average check edited
+                               in place), next step, staff "Your queue today", KPI tiles with change chips
+                               for a period (?period=), daily trend chart (plain SVG), package meters,
+                               breakdowns
+          reports/             owners: the month so far, stored monthly/weekly/daily reports (?kind=,
+                               ?report= opens one from a digest's link), the owner's summaries
         messages/              layout.tsx: the Messages frame and its tabs (badges for what waits)
           (inbox)/             all conversations: server-paged feed with filters + card (calls with a
                                recording player, rating, linked bookings/leads/handoffs, staff reply box,
@@ -293,6 +298,9 @@ web/
                                useResolvedScheme (the scheme showing now, for the WebGL scene)
       business/                BusinessContext (useBusiness, useBusinessFormat, isSetUp), status badges,
                                pageMetadata (page titles), SectionLoading (a page's loading.tsx)
+      value/                   what the assistant is worth (dashboard and Reports): valueModel (changes,
+                               staff time, whole money, report periods), DeltaChip (a change in words for
+                               screen readers), AverageCheckEditor (in place), useValueQueries
       insights/                shared by dashboard … handoffs: status badges and label maps, segmented
                                control, customer-message dialog, LoadMore, business-local dates, useToday (moves on at the business's
                                midnight), replaceUrlQuery, useAutoReload (lists whose every load
@@ -332,7 +340,7 @@ section tabs, page titles and the e2e suite read it):
 
 | Section | Pages (`/b/{id}/…`) | Who |
 | --- | --- | --- |
-| Overview | `overview?period=…` | owners, staff |
+| Overview | `overview?period=…` (dashboard), `overview/reports?kind=…&report=…` | owners; staff: the dashboard only |
 | Messages | `messages[/{conversationId}]` (all conversations), `messages/handoffs` ("Needs a person"), `messages/leads` ("Requests") | owners, staff |
 | Bookings | `bookings` | owners, staff |
 | Assistant | `assistant` ("Try it", the test chat), `assistant/knowledge[/questions\|/import\|/resources]`, `assistant/profile?step=…` ("Hours and rules"), `assistant/channels`; under Advanced `assistant/versions[/{versionId}]` | staff: "Try it" only |
@@ -385,7 +393,8 @@ section tabs, page titles and the e2e suite read it):
 
 | Page | What the owner does there |
 | --- | --- |
-| Overview | The next step for the business status, open handoffs and unanswered questions, KPI tiles, a daily trend chart with a table view, package minutes and dialogs (staff too, without prices), languages/channels/handoff reasons |
+| Overview | What the assistant is worth (owners: its bookings times the average check, after-hours conversations, staff time saved, against the period before; the average check is edited in place), the next step for the business status, open handoffs and unanswered questions (staff: their queue of the day), KPI tiles with change chips, a daily trend chart with a table view, package minutes and dialogs (staff too, without prices), languages/channels/handoff reasons |
+| Overview → Reports | The month so far, stored monthly reports and weekly/daily digests with every number against the period before, the owner's choice of summaries (monthly, weekly, daily) |
 | Messages → all conversations | Server filters and search kept in the URL, transcript with tool calls and calls (a recording is downloaded once and audited when "Play recording" is pressed, then plays and seeks from memory; an expired session goes to sign-in, a deleted recording says so), rating, linked bookings, leads and handoffs, staff reply (after the WhatsApp 24-hour window: in the owner's approved template, or a pointer to Channels; a template WhatsApp refuses says what to fix), booking confirmation prefilled into the reply box whenever it can send it, booking for the customer |
 | Messages → Needs a person | Open handoffs first by urgency, resolve, call and conversation links |
 | Messages → Requests | Server-paged status tabs with counts, inline status change, details |

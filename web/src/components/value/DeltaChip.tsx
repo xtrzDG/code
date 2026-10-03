@@ -24,6 +24,7 @@ export function DeltaChip({
   previous,
   days,
   polarity = "more-is-better",
+  formatValue,
   className,
 }: {
   current: number;
@@ -31,6 +32,8 @@ export function DeltaChip({
   /** Length of the compared periods, in days (1 reads "vs the day before"). */
   days: number;
   polarity?: Polarity;
+  /** How a difference from none reads ("+GEL 1,920" for money); plain numbers by default. */
+  formatValue?: (value: number) => string;
   className?: string;
 }) {
   const { t, tp, locale } = useI18n();
@@ -40,10 +43,10 @@ export function DeltaChip({
   }
   const visible = changeLabel(
     change,
-    (value) => formatNumber(value, locale),
+    formatValue ?? ((value) => formatNumber(value, locale)),
     (percent) => formatPercent(percent, locale),
   );
-  const amount = visible.replace(/^[▲▼=]\s*/, "");
+  const amount = visible.replace(/^[▲▼=]\s*\+?/, "");
   const against = days === 1 ? t("value.delta.againstDay") : tp("value.delta.againstDays", days);
   const sentence =
     change.direction === "same"
@@ -53,7 +56,8 @@ export function DeltaChip({
     <span
       title={sentence}
       className={cn(
-        "inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-semibold whitespace-nowrap tabular-nums",
+        // relative: the screen-reader text stays inside (a scrolling table must not widen the page).
+        "relative inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-semibold whitespace-nowrap tabular-nums",
         SENTIMENT_STYLES[sentimentOf(change, polarity)],
         className,
       )}

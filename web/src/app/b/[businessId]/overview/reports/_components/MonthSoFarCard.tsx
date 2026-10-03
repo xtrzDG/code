@@ -34,7 +34,7 @@ export function MonthSoFarCard() {
       </div>
       <section aria-labelledby="month-so-far" className="space-y-4">
         <div className="flex flex-wrap items-baseline justify-between gap-2">
-          <h2 id="month-so-far" className="flex items-center gap-2 text-sm font-semibold text-ink">
+          <h2 id="month-so-far" className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-sm font-semibold text-ink">
             <IconSparkles className="size-4 text-accent" aria-hidden />
             {t("reports.monthSoFar.title")}
             {model ? (

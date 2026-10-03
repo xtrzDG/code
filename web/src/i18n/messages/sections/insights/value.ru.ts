@@ -11,6 +11,7 @@ export const valueRu: Translation<typeof valueEn> = {
     requestsLabel: "Заявки, которые принял помощник",
     bookingsHint: "сделаны в разговорах и не отменены",
     requestsHint: "заказы и заявки, которые он записал",
+    formula: "{count} × средний чек {check}",
     noMoney: "Укажите средний чек, чтобы увидеть, сколько это стоит.",
     afterHours: {
       one: "{count} в нерабочее время",

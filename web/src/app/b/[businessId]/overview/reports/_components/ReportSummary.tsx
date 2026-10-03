@@ -43,12 +43,17 @@ export function ReportSummary({
             ≈ <AnimatedNumber value={estimate} format={(minor) => formatWholeMoney(minor, currency, locale)} />
           </span>
         ) : null}
-        <DeltaChip
-          current={hasEstimate ? estimate : count}
-          previous={hasEstimate ? (previous.estimated_revenue_minor ?? 0) : earningCount(basis, previous)}
-          days={days}
-          className="self-center"
-        />
+        {hasEstimate ? (
+          <DeltaChip
+            current={estimate}
+            previous={previous.estimated_revenue_minor ?? 0}
+            days={days}
+            formatValue={(minor) => formatWholeMoney(minor, currency, locale)}
+            className="self-center"
+          />
+        ) : (
+          <DeltaChip current={count} previous={earningCount(basis, previous)} days={days} className="self-center" />
+        )}
       </p>
       <ul className="flex flex-wrap gap-2 text-sm">
         <li className="inline-flex items-center gap-2 rounded-full border border-line bg-surface-muted/60 px-3 py-1">
@@ -65,7 +70,12 @@ export function ReportSummary({
               count: number(saved.count),
             })}
           </span>
-          <DeltaChip current={current.staff_minutes_saved} previous={previous.staff_minutes_saved} days={days} />
+          <DeltaChip
+                current={current.staff_minutes_saved}
+                previous={previous.staff_minutes_saved}
+                days={days}
+                formatValue={(minutes) => t("reports.duration.minutes", { minutes: number(minutes) })}
+              />
         </li>
         <li className="inline-flex items-center gap-2 rounded-full border border-line bg-surface-muted/60 px-3 py-1">
           <span className="text-ink">

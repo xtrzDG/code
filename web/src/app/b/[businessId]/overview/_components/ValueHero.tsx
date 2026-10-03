@@ -29,6 +29,7 @@ export function ValueHero({ model, isPlaceholder }: { model: ValueModel; isPlace
   const number = (value: number) => formatNumber(value, locale);
   const isRequests = model.value_basis === "requests";
   const estimate = current.estimated_revenue_minor;
+  const money = (minor: number) => formatWholeMoney(minor, model.currency_code, locale);
 
   return (
     <section
@@ -46,7 +47,7 @@ export function ValueHero({ model, isPlaceholder }: { model: ValueModel; isPlace
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h2 id="value-hero-title" className="flex items-center gap-2 text-sm font-semibold text-ink">
+        <h2 id="value-hero-title" className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-sm font-semibold text-ink">
           <IconSparkles className="size-4 text-accent" aria-hidden />
           {t("value.hero.title")}
           <span className="font-normal text-ink-muted">· {formatLocalDateRange(model.date_from, model.date_to, locale)}</span>
@@ -61,7 +62,10 @@ export function ValueHero({ model, isPlaceholder }: { model: ValueModel; isPlace
       </div>
 
       <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)]">
-        <TiltCard maxDegrees={6} className="rounded-2xl border border-line bg-gradient-to-br from-accent-soft via-surface to-surface p-5 shadow-[var(--shadow-lift)] sm:p-6">
+        <TiltCard
+          maxDegrees={6}
+          className="flex flex-col rounded-2xl border border-line bg-gradient-to-br from-accent-soft via-surface to-surface p-5 shadow-[var(--shadow-lift)] sm:p-6"
+        >
           <TiltLayer depth={28}>
             <p className="text-sm font-medium text-ink-muted">
               {isRequests ? t("value.hero.requestsLabel") : t("value.hero.bookingsLabel")}
@@ -72,22 +76,26 @@ export function ValueHero({ model, isPlaceholder }: { model: ValueModel; isPlace
               </span>
               {estimate !== null && estimate !== undefined ? (
                 <span className="bg-gradient-to-r from-accent to-success bg-clip-text text-3xl font-semibold tracking-tight text-transparent tabular-nums sm:text-4xl">
-                  ≈ <AnimatedNumber value={estimate} format={(minor) => formatWholeMoney(minor, model.currency_code, locale)} />
+                  ≈ <AnimatedNumber value={estimate} format={money} />
                 </span>
               ) : null}
             </p>
           </TiltLayer>
           <TiltLayer depth={14} className="mt-3 flex flex-wrap items-center gap-2">
-            <DeltaChip
-              current={estimate ?? count}
-              previous={estimate === null || estimate === undefined ? earningCount(model.value_basis, previous) : (previous.estimated_revenue_minor ?? 0)}
-              days={days}
-            />
+            {estimate === null || estimate === undefined ? (
+              <DeltaChip current={count} previous={earningCount(model.value_basis, previous)} days={days} />
+            ) : (
+              <DeltaChip current={estimate} previous={previous.estimated_revenue_minor ?? 0} days={days} formatValue={money} />
+            )}
             <span className="text-xs text-ink-subtle">{isRequests ? t("value.hero.requestsHint") : t("value.hero.bookingsHint")}</span>
           </TiltLayer>
-          {estimate === null || estimate === undefined ? (
-            <p className="mt-3 text-sm text-ink-muted">{t("value.hero.noMoney")}</p>
-          ) : null}
+          <TiltLayer depth={8} className="mt-auto pt-4">
+            <p className="text-sm text-ink-muted">
+              {estimate === null || estimate === undefined || model.average_check_minor == null
+                ? t("value.hero.noMoney")
+                : t("value.hero.formula", { count: number(count), check: money(model.average_check_minor) })}
+            </p>
+          </TiltLayer>
         </TiltCard>
 
         <ul className="grid content-start gap-2.5">
@@ -105,7 +113,12 @@ export function ValueHero({ model, isPlaceholder }: { model: ValueModel; isPlace
               count: number(saved.count),
             })}
             hint={t("value.hero.savedHint", { replies: number(current.assistant_reply_count), calls: number(current.call_count) })}
-            chip={<DeltaChip current={current.staff_minutes_saved} previous={previous.staff_minutes_saved} days={days} />}
+            chip={<DeltaChip
+                current={current.staff_minutes_saved}
+                previous={previous.staff_minutes_saved}
+                days={days}
+                formatValue={(minutes) => t("reports.duration.minutes", { minutes: number(minutes) })}
+              />}
           />
           <Fact
             icon={<IconChat className="size-4" />}

@@ -33,9 +33,35 @@ export function ReportDetails({ report }: { report: ValueReport }) {
     return formatNumber(value, locale);
   };
 
+  const rows = visibleRows(report.current, report.previous);
+  const chip = (row: (typeof rows)[number]) => (
+    <DeltaChip
+      current={report.current[row.field] ?? 0}
+      previous={report.previous[row.field] ?? 0}
+      days={days}
+      polarity={row.polarity}
+      formatValue={row.kind === "count" ? undefined : (value) => show(value, row.kind)}
+    />
+  );
+
   return (
     <div className="space-y-3">
-      <Table caption={t("reports.details.caption")}>
+      {/* A phone gets a list (a four-column table would scroll sideways). */}
+      <dl className="divide-y divide-line sm:hidden">
+        {rows.map((row) => (
+          <div key={row.field} className="flex items-start justify-between gap-3 py-2.5">
+            <dt className="min-w-0 text-sm text-ink">{t(row.label)}</dt>
+            <dd className="flex shrink-0 flex-col items-end gap-1 text-end">
+              <span className="text-sm font-medium text-ink tabular-nums">{show(report.current[row.field], row.kind)}</span>
+              <span className="text-xs text-ink-muted tabular-nums">
+                {t("reports.details.before", { value: show(report.previous[row.field], row.kind) })}
+              </span>
+              {chip(row)}
+            </dd>
+          </div>
+        ))}
+      </dl>
+      <Table caption={t("reports.details.caption")} className="hidden sm:table">
         <THead>
           <Tr>
             <Th>{t("reports.details.measure")}</Th>
@@ -45,7 +71,7 @@ export function ReportDetails({ report }: { report: ValueReport }) {
           </Tr>
         </THead>
         <TBody>
-          {visibleRows(report.current, report.previous).map((row) => (
+          {rows.map((row) => (
             <Tr key={row.field}>
               <Th scope="row" className="font-normal whitespace-normal text-ink">
                 {t(row.label)}
@@ -56,14 +82,7 @@ export function ReportDetails({ report }: { report: ValueReport }) {
               <Td align="right" className="text-ink-muted tabular-nums">
                 {show(report.previous[row.field], row.kind)}
               </Td>
-              <Td align="right">
-                <DeltaChip
-                  current={report.current[row.field] ?? 0}
-                  previous={report.previous[row.field] ?? 0}
-                  days={days}
-                  polarity={row.polarity}
-                />
-              </Td>
+              <Td align="right">{chip(row)}</Td>
             </Tr>
           ))}
         </TBody>

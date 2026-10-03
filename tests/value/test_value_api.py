@@ -1,5 +1,6 @@
 """The cabinet's value routes on the real application with the demo data."""
 
+import re
 from collections.abc import Iterator
 
 import pytest
@@ -114,3 +115,22 @@ def test_reports_are_listed_and_read_by_owners(demo: ValueDemo) -> None:
     missing = "value_report_00000000-0000-5000-8000-000000000000"
     assert demo.get(f"/value-reports/{missing}").status_code == 404
     assert demo.get("/value-reports/not-an-id").status_code == 404
+
+
+def test_a_digest_link_opens_its_report(demo: ValueDemo) -> None:
+    demo.workshop.container.gateways.background_worker().run_once()
+
+    [report] = demo.get("/value-reports").json()["items"]
+    texts = [
+        str(message.text)
+        for message in demo.report_messages()
+        if str(message.business_id) == demo.business_id
+        and message.staff_contact is not None
+        and f"value_report:{report['id']}" in str(message.idempotency_key)
+    ]
+    match = re.search(r"/n/([A-Za-z0-9_-]+)", texts[0])
+    assert match is not None
+    opened = demo.get(f"/notification-links/{match.group(1)}").json()
+
+    assert opened["target"] == "report"
+    assert opened["value_report_id"] == report["id"]

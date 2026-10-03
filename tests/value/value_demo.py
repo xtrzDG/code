@@ -7,7 +7,7 @@ from typing import Any
 
 from app.schemas.domain.outbound_messages import OutboundMessageDocument
 from tests.e2e.harness import Workshop, bearer, start_workshop
-from tests.e2e.harness_settings import E2E_ENVIRONMENT
+from tests.e2e.harness_settings import CABINET_ORIGIN, E2E_ENVIRONMENT
 
 DEMO_OWNER_EMAIL: str = "demo@example.com"
 DEMO_STAFF_PHONE: str = "+995 555 00 00 02"
@@ -55,7 +55,14 @@ class ValueDemo:
 def open_value_demo() -> Generator[ValueDemo]:
     """Monday 2026-10-05 12:00 in Tbilisi, a month of demo activity behind."""
 
-    workshop = start_workshop({**E2E_ENVIRONMENT, "SEED_DEMO_DATA": "true"})
+    workshop = start_workshop(
+        {
+            **E2E_ENVIRONMENT,
+            "SEED_DEMO_DATA": "true",
+            # Digests carry a link back to the report only with a cabinet address.
+            "CABINET_BASE_URL": CABINET_ORIGIN,
+        }
+    )
     with workshop.client:
         owner = bearer(workshop.sign_in_with_email(DEMO_OWNER_EMAIL)[0])
         staff = bearer(workshop.sign_in_with_phone(DEMO_STAFF_PHONE)[0])

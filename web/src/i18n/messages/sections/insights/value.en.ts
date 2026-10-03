@@ -13,6 +13,7 @@ export const valueEn = {
     requestsLabel: "Requests taken by the assistant",
     bookingsHint: "made in conversations and still on",
     requestsHint: "orders and requests it took down",
+    formula: "{count} × average check {check}",
     noMoney: "Set your average check to see what this is worth.",
     afterHours: { one: "{count} after hours", other: "{count} after hours" },
     afterHoursHint: "conversations while you were closed",

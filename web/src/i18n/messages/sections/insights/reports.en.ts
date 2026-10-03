@@ -39,6 +39,7 @@ export const reportsEn = {
     caption: "The report's numbers against the period before",
     measure: "What",
     change: "Change",
+    before: "before: {value}",
     noCheck: "No average check was set, so the report has no money estimate.",
     ownerCheck: "Money estimated with your average check of {money}.",
     typicalCheck: "Money estimated with the typical check of {money} for your kind of business.",

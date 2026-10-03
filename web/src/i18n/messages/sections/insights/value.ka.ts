@@ -11,6 +11,7 @@ export const valueKa: Translation<typeof valueEn> = {
     requestsLabel: "ასისტენტის მიღებული მოთხოვნები",
     bookingsHint: "საუბრებში გაკეთებული და გაუუქმებელი",
     requestsHint: "მის მიერ ჩაწერილი შეკვეთები და მოთხოვნები",
+    formula: "{count} × საშუალო ჩეკი {check}",
     noMoney: "მიუთითეთ საშუალო ჩეკი, რომ ნახოთ, რა ღირს ეს.",
     afterHours: { one: "{count} არასამუშაო საათებში", other: "{count} არასამუშაო საათებში" },
     afterHoursHint: "საუბრები, როცა დაკეტილი იყავით",

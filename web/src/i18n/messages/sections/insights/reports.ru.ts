@@ -43,6 +43,7 @@ export const reportsRu: Translation<typeof reportsEn> = {
     caption: "Показатели отчёта в сравнении с предыдущим периодом",
     measure: "Показатель",
     change: "Изменение",
+    before: "было: {value}",
     noCheck: "Средний чек не был указан, поэтому в отчёте нет оценки в деньгах.",
     ownerCheck: "Сумма посчитана по вашему среднему чеку {money}.",
     typicalCheck: "Сумма посчитана по типичному чеку {money} для вашего вида бизнеса.",

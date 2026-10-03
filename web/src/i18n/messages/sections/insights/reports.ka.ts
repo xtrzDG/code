@@ -38,6 +38,7 @@ export const reportsKa: Translation<typeof reportsEn> = {
     caption: "ანგარიშის მაჩვენებლები წინა პერიოდთან შედარებით",
     measure: "მაჩვენებელი",
     change: "ცვლილება",
+    before: "იყო: {value}",
     noCheck: "საშუალო ჩეკი მითითებული არ იყო, ამიტომ ანგარიშში ფულადი შეფასება არ არის.",
     ownerCheck: "თანხა დათვლილია თქვენი საშუალო ჩეკით: {money}.",
     typicalCheck: "თანხა დათვლილია თქვენი ტიპის ბიზნესის ტიპური ჩეკით: {money}.",
