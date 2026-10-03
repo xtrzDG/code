@@ -10,6 +10,9 @@ import { formatNumber } from "@/lib/format";
 
 import { answeredShare, scoreBars, type ReviewStatsView } from "../../_lib/reviews";
 
+/** A number the platform cannot give yet (no ratings, visits not counted). */
+const EMPTY_VALUE = "—";
+
 /**
  * The last 30 days: customers asked, answered (and their share), the
  * average rating, how many opened the review link, and how the ratings
@@ -52,9 +55,9 @@ function StatsBody({ stats, isLinkTracked }: { stats: ReviewStatsView; isLinkTra
           label={t("reviewSettings.stats.average")}
           value={
             average === null ? (
-              <span className="text-base font-medium text-ink-muted">{t("reviewSettings.stats.noAverage")}</span>
+              EMPTY_VALUE
             ) : (
-              <span className="inline-flex items-center gap-1.5">
+              <span className="inline-flex items-center gap-1.5 whitespace-nowrap">
                 <IconStar className="size-5 fill-current text-warning" aria-hidden />
                 {t("reviewSettings.stats.averageValue", {
                   score: formatNumber(average, locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 }),
@@ -62,16 +65,12 @@ function StatsBody({ stats, isLinkTracked }: { stats: ReviewStatsView; isLinkTra
               </span>
             )
           }
+          note={average === null ? t("reviewSettings.stats.noAverage") : undefined}
         />
         <Tile
           label={t("reviewSettings.stats.opened")}
-          value={
-            isLinkTracked ? (
-              number(stats.review_opened_count)
-            ) : (
-              <span className="text-base font-medium text-ink-muted">{t("reviewSettings.stats.notTracked")}</span>
-            )
-          }
+          value={isLinkTracked ? number(stats.review_opened_count) : EMPTY_VALUE}
+          note={isLinkTracked ? undefined : t("reviewSettings.stats.notTracked")}
         />
       </dl>
 
@@ -112,7 +111,7 @@ function Tile({ label, value, note }: { label: string; value: ReactNode; note?: 
   return (
     <div className="min-w-0 rounded-xl border border-line p-4">
       <dt className="text-sm text-ink-muted">{label}</dt>
-      <dd className="mt-1 text-2xl font-semibold text-ink tabular-nums [overflow-wrap:anywhere]">{value}</dd>
+      <dd className="mt-1 text-xl font-semibold text-ink tabular-nums sm:text-2xl">{value}</dd>
       {note ? <dd className="mt-0.5 text-sm text-ink-muted">{note}</dd> : null}
     </div>
   );
