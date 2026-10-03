@@ -69,7 +69,9 @@ def is_readable(attachment: MessageAttachment) -> bool:
     if attachment.kind is AttachmentKind.IMAGE:
         return attachment.storage_path is not None and attachment.media_type is not None
 
-    return attachment.kind is AttachmentKind.LOCATION and attachment.location is not None
+    return (
+        attachment.kind is AttachmentKind.LOCATION and attachment.location is not None
+    )
 
 
 def has_readable_content(text: str, attachments: Sequence[MessageAttachment]) -> bool:

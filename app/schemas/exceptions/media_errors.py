@@ -15,3 +15,10 @@ class MediaUnavailableError(ExternalServiceError):
     The platform no longer hands out the file (expired, deleted, an address
     that is not the platform's): asking again cannot help.
     """
+
+
+class TranscriptionNotConfiguredError(ExternalServiceError):
+    """
+    No speech-to-text service is configured (OPENAI_API_KEY missing, or an
+    offline model): voice notes are answered with a request to write.
+    """

@@ -19,6 +19,13 @@ class MapLinkUrl(BaseTypedString):
     """Link that opens a shared place on a map, e.g. "https://maps.google.com/?q=41.7,44.8"."""
 
 
+class MediaDownloadUrl(BaseTypedString):
+    """
+    Address a platform hands out for downloading one customer file (a
+    WhatsApp media URL, valid for minutes; a Meta CDN attachment URL).
+    """
+
+
 class MediaStoragePath(BaseTypedString):
     """Path of a stored customer file in the platform's media storage."""
 
@@ -37,6 +44,10 @@ class ProviderMediaType(BaseTypedString):
     parameters: "audio/ogg; codecs=opus"). Never trusted for storage: the
     stored type comes from the file's own bytes.
     """
+
+
+class TelegramFilePath(BaseTypedString):
+    """Path of a file on Telegram's servers, as getFile returns it."""
 
 
 class TranscribedVoiceText(BaseTypedString):

@@ -4,6 +4,7 @@ from app.contracts.channel_clients import MetaGraphApiClientContract
 from app.contracts.channels import ChannelAdapterContract
 from app.schemas.configurations.app_settings import AppSettings
 from app.schemas.constants.channels import ChannelKind
+from app.schemas.domain.message_media import InboundAttachment
 from app.schemas.dto.channels.channel_webhooks import (
     ChannelDeliveryTarget,
     ChannelInboundMessage,
@@ -23,6 +24,7 @@ from app.schemas.typings.channels.strings import (
 )
 from app.schemas.typings.conversations.strings import ChannelUserId, MessageText
 from app.schemas.typings.platform.strings import PlatformSecret
+from app.utilities.channels.attachment_reading import has_content
 from app.utilities.channels.json_values import (
     JsonObject,
     parse_json_object,
@@ -33,6 +35,7 @@ from app.utilities.channels.json_values import (
     read_text,
 )
 from app.utilities.channels.message_chunks import split_message_text
+from app.utilities.channels.meta_page_attachments import read_meta_attachments
 from app.utilities.channels.webhook_signatures import is_valid_sha256_signature
 
 
@@ -43,9 +46,10 @@ class MetaPageChannelAdapter(ChannelAdapterContract):
     token). Subclasses name the webhook object, the channel and the length
     limit.
 
-    Echoes of the business's own messages, delivery and read receipts,
-    reactions and attachments without text are skipped; a tapped button
-    (postback) counts as the customer typing its title.
+    Echoes of the business's own messages, delivery and read receipts and
+    reactions are skipped; a tapped button (postback) counts as the customer
+    typing its title. Voice clips, photos, places and other files are
+    attachments (`meta_page_attachments`).
     """
 
     webhook_object: ClassVar[str]
@@ -141,7 +145,8 @@ class MetaPageChannelAdapter(ChannelAdapterContract):
         if sender_id is None or sender_id == account_id:
             return None
 
-        text: str | None = None
+        text: str = ""
+        attachments: list[InboundAttachment] = []
         message_id: str | None = None
         message: JsonObject | None = read_object(event, "message")
         postback: JsonObject | None = read_object(event, "postback")
@@ -149,13 +154,14 @@ class MetaPageChannelAdapter(ChannelAdapterContract):
             if read_flag(message, "is_echo"):
                 return None
 
-            text = read_text(message, "text")
+            text = read_text(message, "text") or ""
+            attachments = read_meta_attachments(message)
             message_id = read_text(message, "mid")
         elif postback is not None:
-            text = read_text(postback, "title")
+            text = read_text(postback, "title") or ""
             message_id = read_text(postback, "mid")
 
-        if text is None:
+        if not has_content(text, attachments):
             return None
 
         return ChannelInboundMessage(
@@ -166,4 +172,5 @@ class MetaPageChannelAdapter(ChannelAdapterContract):
             provider_message_id=(
                 None if message_id is None else ProviderMessageId(message_id)
             ),
+            attachments=attachments,
         )

@@ -6,6 +6,7 @@ from app.contracts.channels import (
 from app.contracts.localization_utilities import PhoneNumberParserContract
 from app.schemas.configurations.app_settings import AppSettings
 from app.schemas.constants.channels import ChannelKind
+from app.schemas.domain.message_media import InboundAttachment
 from app.schemas.dto.channels.channel_webhooks import (
     ChannelDeliveryTarget,
     ChannelInboundMessage,
@@ -31,6 +32,7 @@ from app.schemas.typings.channels.strings import (
 from app.schemas.typings.contacts.strings import ContactName
 from app.schemas.typings.conversations.strings import ChannelUserId, MessageText
 from app.schemas.typings.platform.strings import PlatformSecret
+from app.utilities.channels.attachment_reading import has_content
 from app.utilities.channels.channel_phone_numbers import (
     parse_messaging_phone_number,
 )
@@ -44,6 +46,7 @@ from app.utilities.channels.json_values import (
 )
 from app.utilities.channels.message_chunks import split_message_text
 from app.utilities.channels.webhook_signatures import is_valid_sha256_signature
+from app.utilities.channels.whatsapp_attachments import read_whatsapp_attachments
 
 WEBHOOK_OBJECT: str = "whatsapp_business_account"
 MESSAGES_FIELD: str = "messages"
@@ -192,8 +195,9 @@ class WhatsAppChannelAdapter(ChannelAdapterContract, WhatsAppTemplateAdapterCont
         messages: list[ChannelInboundMessage] = []
         for message in read_objects(value, "messages"):
             sender: str | None = read_identifier(message, "from")
-            text: str | None = read_message_text(message)
-            if sender is None or text is None:
+            text: str = read_message_text(message) or ""
+            attachments: list[InboundAttachment] = read_whatsapp_attachments(message)
+            if sender is None or not has_content(text, attachments):
                 continue
 
             message_id: str | None = read_text(message, "id")
@@ -216,6 +220,7 @@ class WhatsAppChannelAdapter(ChannelAdapterContract, WhatsAppTemplateAdapterCont
                     provider_message_id=(
                         None if message_id is None else ProviderMessageId(message_id)
                     ),
+                    attachments=attachments,
                 )
             )
 
@@ -225,7 +230,8 @@ class WhatsAppChannelAdapter(ChannelAdapterContract, WhatsAppTemplateAdapterCont
 def read_message_text(message: JsonObject) -> str | None:
     """
     Text of a customer message: typed text, a tapped template button or an
-    interactive reply. Media, locations and reactions have none.
+    interactive reply. Media and places are attachments
+    (`whatsapp_attachments`); reactions have neither.
     """
 
     message_type: str | None = read_text(message, "type")

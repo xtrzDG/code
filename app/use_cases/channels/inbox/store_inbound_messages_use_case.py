@@ -90,6 +90,7 @@ def build_customer_event(
             message.text,
             message.contact_name,
             message.contact_phone_number,
+            message.attachments,
         ),
         created_at=now,
         updated_at=now,

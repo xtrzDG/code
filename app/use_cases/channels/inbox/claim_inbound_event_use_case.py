@@ -79,7 +79,11 @@ class ClaimInboundEventUseCase(
         if claimed is None:
             return None
 
-        return InboundEventClaim(event=claimed, message=build_inbound_message(claimed))
+        return InboundEventClaim(
+            event=claimed,
+            message=build_inbound_message(claimed),
+            is_final_attempt=input_data.is_final_attempt,
+        )
 
 
 def build_inbound_message(event: InboundEventDocument) -> InboundMessage | None:

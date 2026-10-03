@@ -2,6 +2,7 @@ from base_pydantic_schemas import ImmutableDTO
 from pydantic import Field
 
 from app.schemas.configurations.backup_settings import BackupSettings
+from app.schemas.configurations.media_settings import MediaSettings
 from app.schemas.constants.assistants import LlmEffort, LlmProvider
 from app.schemas.constants.environment import DeploymentEnvironment
 from app.schemas.constants.jobs import JobLane
@@ -251,3 +252,5 @@ class AppSettings(ImmutableDTO):
     # Off-site backups and the restore drill (BACKUP_*; `workshop backup`,
     # `workshop restore-check`, docs/operations/backup-restore.md).
     backup: BackupSettings = Field(default_factory=BackupSettings)
+    # Voice notes and photos of customers (LLM_TRANSCRIBE_MODEL, MEDIA_MAX_*).
+    media: MediaSettings = Field(default_factory=MediaSettings)

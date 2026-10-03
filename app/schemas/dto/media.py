@@ -9,13 +9,14 @@ from pydantic import Field
 from app.schemas.constants.channels import ChannelKind
 from app.schemas.constants.media import AttachmentKind, AttachmentProblem
 from app.schemas.domain.inbound_events import InboundEventDocument
-from app.schemas.domain.message_media import SharedLocation
+from app.schemas.domain.message_media import MessageAttachment, SharedLocation
+from app.schemas.dto.conversations import InboundMessage
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.businesses.strings import BusinessName
 from app.schemas.typings.channels.strings import ChannelSecret
 from app.schemas.typings.compliance.strings import ClientIpAddress
 from app.schemas.typings.localization.constrained_strings import LanguageTag
-from app.schemas.typings.media.booleans import IsFinalInboxAttempt, IsMediaDeleted
+from app.schemas.typings.media.booleans import IsMediaDeleted
 from app.schemas.typings.media.constrained_integers import (
     AudioDurationSeconds,
     DeletedMediaCount,
@@ -29,11 +30,14 @@ from app.schemas.typings.media.constrained_strings import (
 from app.schemas.typings.media.prefixed_id import MessageMediaId
 from app.schemas.typings.media.strings import (
     MapLinkUrl,
+    MediaDownloadUrl,
     MediaStoragePath,
     ProviderMediaId,
     ProviderMediaType,
+    TelegramFilePath,
     TranscribedVoiceText,
 )
+from app.schemas.typings.platform.booleans import IsFinalJobAttempt
 from app.schemas.typings.users.prefixed_id import UserId
 
 
@@ -74,6 +78,21 @@ class FetchedMedia(ImmutableDTO):
     declared_type: ProviderMediaType | None = None
 
 
+class WhatsAppMediaInfo(ImmutableDTO):
+    """Where the Cloud API serves one media file now, and what it declared."""
+
+    url: MediaDownloadUrl
+    mime_type: ProviderMediaType | None = None
+    file_size: MediaByteCount | None = None
+
+
+class TelegramFileInfo(ImmutableDTO):
+    """Where Telegram serves one file (getFile), and its size."""
+
+    file_path: TelegramFilePath
+    file_size: MediaByteCount | None = None
+
+
 class VoiceTranscriptionInput(ImmutableDTO):
     """
     A voice note to transcribe: the audio, the languages it is likely in
@@ -99,35 +118,37 @@ class VoiceTranscriptionResult(ImmutableDTO):
 
 class VoiceNoteTranscriptionRequest(ImmutableDTO):
     """
-    Transcribe one stored voice note of a business (or return the
-    transcript a previous attempt kept). `duration_seconds` is the length
-    the platform reported, when it did.
+    Transcribe the stored voice note of one attachment (or return the
+    transcript a previous attempt kept); on the job's last attempt a
+    failing service gives the voice note up instead of failing the job.
     """
 
     business_id: BusinessId
-    media_id: MessageMediaId
-    duration_seconds: AudioDurationSeconds | None = None
+    attachment: MessageAttachment
+    is_final_attempt: IsFinalJobAttempt = False
 
 
 class VoiceNoteTranscription(ImmutableDTO):
     """
-    A transcribed voice note: its text (None when nothing could be heard or
-    the service failed) and length.
+    The attachment with its transcript and length, or with the problem
+    that kept it unread (too long, nothing heard, the file gone).
     """
 
-    transcript: TranscribedVoiceText | None = None
-    duration_seconds: AudioDurationSeconds | None = None
+    attachment: MessageAttachment
 
 
 class InboundMediaRequest(ImmutableDTO):
     """
-    The files of one claimed inbox event to download and store; on the
-    job's last attempt a file the platform does not hand out is given up
-    (the customer is asked to write) instead of failing the job.
+    The attachments of one claimed inbox event to read: files downloaded
+    and stored, voice notes transcribed. On the job's last attempt a file
+    the platform does not hand out (or a transcription service that keeps
+    failing) is given up, and the customer is asked to write, instead of
+    failing the job.
     """
 
     event: InboundEventDocument
-    is_final_attempt: IsFinalInboxAttempt = False
+    message: InboundMessage
+    is_final_attempt: IsFinalJobAttempt = False
 
 
 class LlmImageInput(ImmutableDTO):

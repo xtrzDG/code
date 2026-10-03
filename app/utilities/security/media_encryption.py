@@ -127,13 +127,13 @@ def open_media(
 
     header: MediaCipherHeader = read_media_header(sealed)
     if header.key_id != master_key_id(master_secret):
-        raise ExternalServiceError("The file was encrypted with another ENCRYPTION_KEY.")
+        raise ExternalServiceError(
+            "The file was encrypted with another ENCRYPTION_KEY."
+        )
 
     cipher = AESGCM(derive_file_key(master_secret, location, header.salt))
     try:
-        content: bytes = cipher.decrypt(
-            header.nonce, sealed[HEADER_SIZE:], header.raw
-        )
+        content: bytes = cipher.decrypt(header.nonce, sealed[HEADER_SIZE:], header.raw)
     except InvalidTag as error:
         raise ExternalServiceError("The stored file does not open.") from error
 

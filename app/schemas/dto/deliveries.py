@@ -69,11 +69,13 @@ class InboundEventClaim(ImmutableDTO):
     """
     An inbox event this worker (or widget request) now holds until its
     lease ends, with the customer message as the engine reads it (None for
-    platform events).
+    platform events). `is_final_attempt`: the job's last try, when what
+    cannot be read is given up instead of tried again.
     """
 
     event: InboundEventDocument
     message: InboundMessage | None = None
+    is_final_attempt: IsFinalJobAttempt = False
 
 
 class InboundAnswer(ImmutableDTO):

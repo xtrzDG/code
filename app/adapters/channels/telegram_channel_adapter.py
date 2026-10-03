@@ -3,6 +3,7 @@ from app.contracts.channels import ChannelAdapterContract
 from app.contracts.localization_utilities import PhoneNumberParserContract
 from app.schemas.configurations.app_settings import AppSettings
 from app.schemas.constants.channels import ChannelKind
+from app.schemas.domain.message_media import InboundAttachment
 from app.schemas.dto.channels.channel_webhooks import (
     ChannelDeliveryTarget,
     ChannelInboundMessage,
@@ -23,6 +24,7 @@ from app.schemas.typings.contacts.strings import ContactName
 from app.schemas.typings.conversations.strings import ChannelUserId, MessageText
 from app.schemas.typings.localization.constrained_strings import E164PhoneNumber
 from app.schemas.typings.platform.strings import PlatformSecret
+from app.utilities.channels.attachment_reading import has_content
 from app.utilities.channels.channel_phone_numbers import (
     parse_messaging_phone_number,
 )
@@ -35,6 +37,7 @@ from app.utilities.channels.json_values import (
     read_text,
 )
 from app.utilities.channels.message_chunks import split_message_text
+from app.utilities.channels.telegram_attachments import read_telegram_attachments
 from app.utilities.channels.webhook_signatures import is_matching_telegram_secret
 from app.utilities.security.key_ring import key_ring
 
@@ -51,7 +54,9 @@ class TelegramChannelAdapter(ChannelAdapterContract):
     Every bot's webhook carries the secret derived from its token
     (X-Telegram-Bot-Api-Secret-Token). Only private chats with people are
     answered; a contact the customer shares about themselves gives their
-    phone number (stored as E.164).
+    phone number (stored as E.164). Voice notes, photos (with their
+    captions), places and other files are attachments
+    (`telegram_attachments`).
     """
 
     def __init__(
@@ -107,11 +112,14 @@ class TelegramChannelAdapter(ChannelAdapterContract):
             message,
             sender,
         )
-        text: str | None = read_text(message, "text")
-        if text is None and phone_number is not None:
+        attachments: list[InboundAttachment] = read_telegram_attachments(
+            message, is_own_contact=phone_number is not None
+        )
+        text: str = read_text(message, "text") or ""
+        if text == "" and phone_number is not None:
             text = str(phone_number)
 
-        if text is None:
+        if not has_content(text, attachments):
             return []
 
         message_id: str | None = read_identifier(message, "message_id")
@@ -127,6 +135,7 @@ class TelegramChannelAdapter(ChannelAdapterContract):
                     if message_id is None
                     else ProviderMessageId(f"{chat_id}:{message_id}")
                 ),
+                attachments=attachments,
             )
         ]
 

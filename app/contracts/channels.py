@@ -59,9 +59,11 @@ class ChannelAdapterContract(AdapterContract, Protocol):
         payload: ChannelWebhookPayload,
     ) -> list[ChannelInboundMessage]:
         """
-        Customer text messages of a verified delivery, in order. Echoes of
-        the business's own messages, delivery statuses, reactions and media
-        without text are skipped; malformed content yields no messages.
+        Customer messages of a verified delivery, in order: the typed text
+        and the attachments (voice notes, photos, places and every other
+        file, with captions), so no customer message goes unanswered.
+        Echoes of the business's own messages, delivery statuses and
+        reactions are skipped; malformed content yields no messages.
         """
         raise NotImplementedError
 
