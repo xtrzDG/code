@@ -28,6 +28,11 @@ from app.schemas.typings.setup.strings import (
     SetupStepDescription,
     SetupStepTitle,
 )
+from app.utilities.channels.channel_endpoints import (
+    DEMO_BUSINESS_PARAMETER,
+    WIDGET_DEMO_PATH,
+    join_public_url,
+)
 from app.utilities.setup.setup_steps import STEP_MINUTES, StepState
 from app.utilities.setup.setup_texts import (
     ACTION_LABELS,
@@ -35,7 +40,8 @@ from app.utilities.setup.setup_texts import (
     STEP_TITLES,
 )
 
-WIDGET_DEMO_PATH: str = "/widget/demo"
+# The demo page's parameter that forces the widget's interface language.
+DEMO_LANGUAGE_PARAMETER: str = "language"
 TELEGRAM_LINK_PREFIX: str = "https://t.me/"
 SECURE_SCHEME: str = "https://"
 
@@ -100,14 +106,15 @@ def phone_test_links(
         for channel in channels
         if channel.status is ChannelStatus.CONNECTED
     }
-    base: str | None = None if app_base_url is None else str(app_base_url).rstrip("/")
-    if ChannelKind.WEB_CHAT in connected and base and base.startswith(SECURE_SCHEME):
+    base: str = "" if app_base_url is None else str(app_base_url)
+    if ChannelKind.WEB_CHAT in connected and base.startswith(SECURE_SCHEME):
+        demo_page: str = join_public_url(base, WIDGET_DEMO_PATH)
         links.append(
             PhoneTestLinkView(
                 channel=ChannelKind.WEB_CHAT,
                 url=PhoneTestUrl(
-                    f"{base}{WIDGET_DEMO_PATH}?business_id={business.id}"
-                    f"&language={business.default_language}"
+                    f"{demo_page}?{DEMO_BUSINESS_PARAMETER}={business.id}"
+                    f"&{DEMO_LANGUAGE_PARAMETER}={business.default_language}"
                 ),
                 is_answering=is_live,
             )
