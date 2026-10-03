@@ -36,11 +36,16 @@ def guide_facts(
     What a business did on the way to its first customers: its own message
     from a phone, how many channels customers can write in, and whether the
     link reached anyone (the QR card printed or saved, the hosted page
-    opened, or a real customer already wrote).
+    opened, or a real customer already wrote; the owner's own test from a
+    phone does not count as one).
     """
 
+    # The owner's own test from a phone is not a customer.
+    tested_at: Microseconds | None = None if state is None else state.phone_tested_at
     has_customer: bool = any(
-        event.kind is ActivationEventKind.FIRST_CONVERSATION for event in events
+        event.kind is ActivationEventKind.FIRST_CONVERSATION
+        and event.occurred_at != tested_at
+        for event in events
     )
     return GuideFacts(
         has_phone_tested=state is not None and state.phone_tested_at is not None,

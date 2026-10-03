@@ -153,15 +153,16 @@ class GetSetupProgressUseCase(UseCaseContract[SetupQuery, SetupView]):
             )
         )
         language: LanguageTag = input_data.language or business.owner_language
+        is_live: bool = business.published_assistant_version_id is not None
+        # The owner's own test first: it is no customer to announce.
+        state: SetupStateDocument | None = self._notice_guide_progress.run(
+            GuideProgressCheck(business=business, is_live=is_live)
+        )
         self._record_activation_milestones.run(
             ActivationMilestoneCheck(business_id=business.id)
         )
         events: list[ActivationEventDocument] = (
             self._activation_event_repo.list_by_business(business.id)
-        )
-        is_live: bool = business.published_assistant_version_id is not None
-        state: SetupStateDocument | None = self._notice_guide_progress.run(
-            GuideProgressCheck(business=business, is_live=is_live)
         )
         subscription: SubscriptionDocument | None = find_current_subscription(
             self._subscription_repo, business.id
@@ -235,7 +236,9 @@ class GetSetupProgressUseCase(UseCaseContract[SetupQuery, SetupView]):
             milestones=[*milestone_views(events), *after_hours_milestone(state)],
             apply=apply,
             guide=guide_view(
-                derive_guide(steps, after_launch, facts.skipped | skipped_after),
+                derive_guide(
+                    steps, after_launch, facts.skipped | skipped_after, is_live
+                ),
                 len(after_launch),
                 state,
                 is_live,

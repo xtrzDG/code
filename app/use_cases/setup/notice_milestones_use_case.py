@@ -53,11 +53,12 @@ class NoticeMilestonesUseCase(UseCaseContract[JobTick, JobReport]):
                 continue
 
             try:
-                self._record_activation_milestones.run(
-                    ActivationMilestoneCheck(business_id=business.id)
-                )
+                # The owner's own test first: it is no customer to announce.
                 self._notice_guide_progress.run(
                     GuideProgressCheck(business=business, is_live=True)
+                )
+                self._record_activation_milestones.run(
+                    ActivationMilestoneCheck(business_id=business.id)
                 )
                 checked += 1
             except Exception:

@@ -117,6 +117,7 @@ class SetupUseCasesContainer(containers.DeclarativeContainer):
         assistant_version_repo=repositories.assistant_version_repo,
         activation_event_repo=repositories.activation_event_repo,
         activation_probe_repo=repositories.activation_probe_repo,
+        setup_state_repo=repositories.setup_state_repo,
         record_activation_event=launch_use_cases.record_activation_event_use_case,
         staff_alerts=facilitators.staff_alert_facilitator,
         localized_text_resolver=utilities.localized_text_resolver,

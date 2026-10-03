@@ -21,9 +21,10 @@ from app.schemas.typings.storage.constrained_strings import DocumentFieldPath
 
 CHANNEL_USER_ID_FIELD: DocumentFieldPath = DocumentFieldPath("channel_user_id")
 # A sender writes a handful of conversations at most before the probe sees
-# them; a window holds few conversations of a business that just went live.
+# them. A half-hour window right after a launch also holds the automatic
+# checks' sandbox conversations (a few dozen), skipped after the read.
 SENDER_PROBE_LIMIT: DocumentQueryLimit = DocumentQueryLimit(5)
-WINDOW_PROBE_LIMIT: DocumentQueryLimit = DocumentQueryLimit(20)
+WINDOW_PROBE_LIMIT: DocumentQueryLimit = DocumentQueryLimit(200)
 
 
 class SetupProbeRepository(SetupProbeRepoContract):

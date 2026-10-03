@@ -100,3 +100,23 @@ def test_plans_route_quotes_lari_for_georgia_and_estimated_dollars_for_the_usa(
 
 def test_plans_route_requires_a_country(client: TestClient) -> None:
     assert client.get("/v1/catalog/plans").status_code == 422
+
+
+def test_plans_route_prices_both_setup_options(client: TestClient) -> None:
+    georgia = read_json(
+        client.get("/v1/catalog/plans", params={"country_code": "GE", "language": "en"})
+    )
+
+    chat = next(q for q in georgia["quotes"] if q["plan_key"] == "chat")
+    options = {row["option"]: row for row in chat["setup_options"]}
+    assert options["self_serve"]["fee"]["money"]["amount_minor"] == 0
+    assert options["self_serve"]["local_fee"]["money"] == {
+        "amount_minor": 0,
+        "currency_code": "GEL",
+    }
+    assert options["done_for_you"]["fee"]["money"] == {
+        "amount_minor": 15000,
+        "currency_code": "EUR",
+    }
+    assert options["done_for_you"]["local_fee"]["money"]["amount_minor"] == 44300
+    assert chat["setup_fee"]["money"]["amount_minor"] == 15000

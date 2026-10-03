@@ -5,7 +5,7 @@ whole guide (all ten) has its own next step, share done and minutes left.
 """
 
 from collections.abc import Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 
 from app.schemas.constants.setup import (
     SetupActionTarget,
@@ -75,14 +75,22 @@ def derive_guide(
     setup_steps: Sequence[StepState],
     after_launch_steps: Sequence[StepState],
     skipped: frozenset[SetupStepCode],
+    is_live: bool = False,
 ) -> GuideState:
     """
     The whole guide's statuses: done, skipped (optional steps only), the
     first left is NEXT. Before the launch the next step is always one of
-    the setup's; the steps after it wait as TODO.
+    the setup's; the steps after it wait as TODO. Once live, trying the
+    assistant in the test chat gives way to trying it from a phone.
     """
 
-    steps: list[StepState] = [*setup_steps, *after_launch_steps]
+    steps: list[StepState] = [
+        replace(step, is_done=True)
+        if is_live and step.code is SetupStepCode.TEST
+        else step
+        for step in setup_steps
+    ]
+    steps.extend(after_launch_steps)
     return GuideState(steps=steps, statuses=assign_statuses(steps, skipped))
 
 
