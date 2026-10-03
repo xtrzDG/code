@@ -51,7 +51,6 @@ export const tunnelTeamRu: Translation<typeof tunnelTeamEn> = {
       address: "Напишите, куда отправлять сообщения.",
       email: "Это не похоже на адрес почты.",
       duplicate: "Этот человек уже в списке.",
-      stale: "Кто-то одновременно изменил контакты. Мы их обновили, попробуйте ещё раз.",
     },
   },
   channels: {

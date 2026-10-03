@@ -12,7 +12,6 @@ export const tunnelBusinessKa: Translation<typeof tunnelBusinessEn> = {
     kindTitle: "რას საქმიანობთ?",
     kindHint: "აირჩიეთ ყველაზე ახლო. ამაზეა დამოკიდებული, რას იკითხავს, რას დაჯავშნის და რა ეცოდინება ასისტენტს.",
     kindFixed: "ეს ასისტენტის შექმნისას აირჩიეთ და მისი შეცვლა აღარ შეიძლება.",
-    kindLoadFailed: "ბიზნესის სახეობების ჩატვირთვა ვერ მოხერხდა.",
     legalReview: "ამ სახის ბიზნესისთვის ასისტენტის გაშვებამდე ტარდება მოკლე იურიდიული შემოწმება.",
     detailsTitle: "რას კითხულობენ კლიენტები ყოველთვის",
     errors: {
@@ -36,7 +35,6 @@ export const tunnelBusinessKa: Translation<typeof tunnelBusinessEn> = {
     languagesHint: "ასისტენტი თითოეულ კლიენტს მის ენაზე პასუხობს, თუ ის ამ სიაშია.",
     defaultLanguage: "პირველი მისალმების ენა",
     timezone: "დროის სარტყელი",
-    loadFailed: "ქვეყნების ჩატვირთვა ვერ მოხერხდა.",
     creating: "ვქმნით თქვენს ასისტენტს…",
     errors: {
       country: "აირჩიეთ ქვეყანა.",

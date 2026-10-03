@@ -121,9 +121,9 @@ export function StepScreen({
             <span className="max-sm:sr-only">{t("tunnel.back")}</span>
           </Button>
         ) : null}
-        <div className="ms-auto flex items-center gap-2 sm:gap-3">
+        <div className="ms-auto flex min-w-0 items-center justify-end gap-1 sm:gap-3">
           {onSkip ? (
-            <Button variant="ghost" size="lg" onClick={onSkip} disabled={isBusy}>
+            <Button variant="ghost" size="lg" onClick={onSkip} disabled={isBusy} className="max-sm:px-3 max-sm:text-sm">
               {t("tunnel.skip")}
             </Button>
           ) : null}
@@ -135,7 +135,7 @@ export function StepScreen({
               isLoading={isBusy}
               loadingText={actions.busyLabel ?? t("tunnel.saving")}
               trailingIcon={<IconArrowRight className="size-4 rtl:-scale-x-100" aria-hidden />}
-              className="min-w-36 shadow-[0_16px_36px_-18px_var(--accent-solid)]"
+              className="min-w-0 shadow-[0_16px_36px_-18px_var(--accent-solid)] sm:min-w-36"
             >
               {actions.continueLabel ?? t("tunnel.continue")}
             </Button>

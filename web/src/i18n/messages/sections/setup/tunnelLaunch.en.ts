@@ -40,7 +40,6 @@ export const tunnelLaunchEn = {
     agreement: "I accept the data processing agreement",
     agreementHint: "It says how we handle your customers' messages on your behalf.",
     readAgreement: "Read it",
-    agreementTitle: "Data processing agreement",
     agreementAccepted: "Data processing agreement accepted",
     agreementRequired: "Accept the agreement to launch.",
     trial: {
@@ -75,7 +74,6 @@ export const tunnelLaunchEn = {
     shareTitle: "Share your assistant",
     shareText: "Send the link to customers, add it to your profiles, or print the code.",
     copy: "Copy link",
-    copied: "Link copied",
     openChat: "Open the chat",
     phoneTitle: "Test it from your phone",
     phoneText: "Point your phone's camera at the code and write a message, like a customer.",

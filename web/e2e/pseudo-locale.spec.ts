@@ -2,7 +2,7 @@
  * Long texts never break a layout. The pseudo-locale (accented English, 40 %
  * longer, in brackets: src/i18n/pseudo.ts) stands in for Russian and
  * Georgian, which run 20–40 % longer than English: every page of a business,
- * the setup invitation, the business list and the sign-in page, on a desktop
+ * the setup invitation and tunnel, the business list and the sign-in page, on a desktop
  * and on a phone, fit the screen and keep every button, tab and link whole.
  */
 
@@ -45,9 +45,13 @@ for (const screen of SCREENS) {
       }
     });
 
-    test("the setup invitation and the business list fit", async ({ page, context, newOwner }) => {
+    test("the setup invitation, every screen of the tunnel and the business list fit", async ({ page, context, newOwner }) => {
       await usePseudoLocale(context);
       await test.step("setup", () => expectFits(page, `/b/${newOwner.businessId}/overview`));
+      for (const step of ["business", "place", "offer", "hours", "people", "channels", "try", "launch"]) {
+        await test.step(`tunnel: ${step}`, () => expectFits(page, `/b/${newOwner.businessId}/setup?step=${step}`));
+      }
+      await test.step("create", () => expectFits(page, "/create"));
       await test.step("businesses", () => expectFits(page, "/businesses"));
     });
 

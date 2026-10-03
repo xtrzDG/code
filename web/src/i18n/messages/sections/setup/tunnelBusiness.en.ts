@@ -14,7 +14,6 @@ export const tunnelBusinessEn = {
     kindTitle: "What do you do?",
     kindHint: "Pick the closest one. It decides what your assistant asks, books and knows.",
     kindFixed: "You chose this when the assistant was created; it can't be changed.",
-    kindLoadFailed: "We couldn't load the kinds of business.",
     legalReview: "Businesses of this kind get a short legal check before the assistant goes live.",
     detailsTitle: "One more thing customers always ask",
     errors: {
@@ -38,7 +37,6 @@ export const tunnelBusinessEn = {
     languagesHint: "The assistant answers each customer in their language, among these.",
     defaultLanguage: "First greeting in",
     timezone: "Time zone",
-    loadFailed: "We couldn't load the countries.",
     creating: "Creating your assistant…",
     errors: {
       country: "Choose your country.",

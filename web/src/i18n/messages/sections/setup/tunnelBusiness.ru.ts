@@ -12,7 +12,6 @@ export const tunnelBusinessRu: Translation<typeof tunnelBusinessEn> = {
     kindTitle: "Чем вы занимаетесь?",
     kindHint: "Выберите самое близкое. От этого зависит, о чём помощник спрашивает, что бронирует и что знает.",
     kindFixed: "Вы выбрали это при создании помощника, изменить уже нельзя.",
-    kindLoadFailed: "Не удалось загрузить виды бизнеса.",
     legalReview: "Для такого бизнеса перед запуском помощника проводится короткая юридическая проверка.",
     detailsTitle: "О чём клиенты спрашивают всегда",
     errors: {
@@ -36,7 +35,6 @@ export const tunnelBusinessRu: Translation<typeof tunnelBusinessEn> = {
     languagesHint: "Помощник отвечает каждому клиенту на его языке, если он есть в этом списке.",
     defaultLanguage: "Первое приветствие на языке",
     timezone: "Часовой пояс",
-    loadFailed: "Не удалось загрузить страны.",
     creating: "Создаём вашего помощника…",
     errors: {
       country: "Выберите страну.",

@@ -19,7 +19,6 @@ export const tunnelOfferEn = {
     namePlaceholder: "What customers can order or book",
     price: "Price, {currency}",
     pricePlaceholder: "0",
-    duration: "Minutes",
     suggestion: "Example",
     suggestionsHint: "Examples are only saved once you give them a price. Remove the ones you don't offer.",
     addRow: "Add a line",
@@ -36,7 +35,6 @@ export const tunnelOfferEn = {
       one: "{count} item added from your import",
       other: "{count} items added from your import",
     },
-    importBack: "Back to the list",
     importHint: "We read it and show you what we found. Nothing is saved before you check it.",
   },
   hours: {
@@ -55,7 +53,6 @@ export const tunnelOfferEn = {
     resourceName: "Name",
     resourceCount: "How many",
     resourceCapacity: "People in each",
-    resourcesReady: "Ready to book: {list}",
     minutes: {
       one: "{count} minute",
       other: "{count} minutes",

@@ -18,7 +18,6 @@ export const tunnelOfferRu: Translation<typeof tunnelOfferEn> = {
     namePlaceholder: "Что клиенты могут заказать или забронировать",
     price: "Цена, {currency}",
     pricePlaceholder: "0",
-    duration: "Минут",
     suggestion: "Пример",
     suggestionsHint: "Примеры сохраняются, только когда вы укажете цену. Удалите то, чего у вас нет.",
     addRow: "Добавить строку",
@@ -39,7 +38,6 @@ export const tunnelOfferRu: Translation<typeof tunnelOfferEn> = {
       many: "Добавлено {count} позиций из импорта",
       other: "Добавлено {count} позиции из импорта",
     },
-    importBack: "Вернуться к списку",
     importHint: "Мы прочитаем его и покажем, что нашли. Ничего не сохранится, пока вы не проверите.",
   },
   hours: {
@@ -58,7 +56,6 @@ export const tunnelOfferRu: Translation<typeof tunnelOfferEn> = {
     resourceName: "Название",
     resourceCount: "Сколько их",
     resourceCapacity: "Человек в каждом",
-    resourcesReady: "Можно бронировать: {list}",
     minutes: {
       one: "{count} минута",
       few: "{count} минуты",

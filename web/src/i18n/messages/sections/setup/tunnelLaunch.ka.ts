@@ -39,7 +39,6 @@ export const tunnelLaunchKa: Translation<typeof tunnelLaunchEn> = {
     agreement: "ვიღებ მონაცემთა დამუშავების ხელშეკრულებას",
     agreementHint: "მასში წერია, როგორ ვამუშავებთ თქვენი კლიენტების შეტყობინებებს თქვენი სახელით.",
     readAgreement: "წაკითხვა",
-    agreementTitle: "მონაცემთა დამუშავების ხელშეკრულება",
     agreementAccepted: "მონაცემთა დამუშავების ხელშეკრულება მიღებულია",
     agreementRequired: "გასაშვებად მიიღეთ ხელშეკრულება.",
     trial: {
@@ -74,7 +73,6 @@ export const tunnelLaunchKa: Translation<typeof tunnelLaunchEn> = {
     shareTitle: "გააზიარეთ ასისტენტი",
     shareText: "გაუგზავნეთ ბმული კლიენტებს, დაამატეთ თქვენს პროფილებში ან დაბეჭდეთ კოდი.",
     copy: "ბმულის კოპირება",
-    copied: "ბმული დაკოპირდა",
     openChat: "ჩატის გახსნა",
     phoneTitle: "შეამოწმეთ ტელეფონიდან",
     phoneText: "მიმართეთ ტელეფონის კამერა კოდს და დაწერეთ შეტყობინება, როგორც კლიენტმა.",

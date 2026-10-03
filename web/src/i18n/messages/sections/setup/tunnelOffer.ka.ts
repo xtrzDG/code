@@ -18,7 +18,6 @@ export const tunnelOfferKa: Translation<typeof tunnelOfferEn> = {
     namePlaceholder: "რისი შეკვეთა ან დაჯავშნა შეუძლიათ კლიენტებს",
     price: "ფასი, {currency}",
     pricePlaceholder: "0",
-    duration: "წუთი",
     suggestion: "მაგალითი",
     suggestionsHint: "მაგალითები მხოლოდ მაშინ შეინახება, როცა ფასს მიუთითებთ. წაშალეთ ის, რაც არ გაქვთ.",
     addRow: "სტრიქონის დამატება",
@@ -35,7 +34,6 @@ export const tunnelOfferKa: Translation<typeof tunnelOfferEn> = {
       one: "იმპორტიდან დაემატა {count} პოზიცია",
       other: "იმპორტიდან დაემატა {count} პოზიცია",
     },
-    importBack: "სიაში დაბრუნება",
     importHint: "წავიკითხავთ და გაჩვენებთ, რა ვიპოვეთ. სანამ არ შეამოწმებთ, არაფერი შეინახება.",
   },
   hours: {
@@ -54,7 +52,6 @@ export const tunnelOfferKa: Translation<typeof tunnelOfferEn> = {
     resourceName: "დასახელება",
     resourceCount: "რამდენია",
     resourceCapacity: "ადამიანი თითოეულში",
-    resourcesReady: "შეიძლება დაჯავშნა: {list}",
     minutes: {
       one: "{count} წუთი",
       other: "{count} წუთი",

@@ -51,7 +51,6 @@ export const tunnelTeamKa: Translation<typeof tunnelTeamEn> = {
       address: "დაწერეთ, სად გავგზავნოთ შეტყობინებები.",
       email: "ეს ელფოსტის მისამართს არ ჰგავს.",
       duplicate: "ეს ადამიანი უკვე სიაშია.",
-      stale: "ვიღაცამ ამავე დროს შეცვალა კონტაქტები. განვაახლეთ, სცადეთ ხელახლა.",
     },
   },
   channels: {

@@ -15,8 +15,9 @@ test.describe("the public landing page", () => {
     await expect(pricing.getByText(/GEL|₾/).first()).toBeVisible();
     await expect(pricing.getByText(en.landing.pricing.inEuros.replace("{price}", "")).first()).toBeVisible();
 
+    // The main button starts "Create an AI assistant", after signing in.
     await page.getByRole("link", { name: en.landing.hero.primary }).first().click();
-    await expect(page).toHaveURL(/\/login$/);
+    await expect(page).toHaveURL(/\/login\?next=%2Fcreate$/);
   });
 
   test("keeps the theme and the language the visitor picks", async ({ page }) => {
@@ -39,9 +40,9 @@ test.describe("the public landing page", () => {
     await expect(page.locator("html")).toHaveAttribute("data-theme", "system");
   });
 
-  test("sends a signed-in user to their businesses", async ({ page, account }) => {
+  test("sends a signed-in user to their businesses, or into the tunnel without one", async ({ page, account }) => {
     expect(account.token).toBeTruthy();
     await page.goto("/");
-    await expect(page).toHaveURL(/\/businesses$/);
+    await expect(page).toHaveURL(/\/create$/);
   });
 });

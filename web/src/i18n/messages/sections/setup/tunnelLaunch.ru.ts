@@ -39,7 +39,6 @@ export const tunnelLaunchRu: Translation<typeof tunnelLaunchEn> = {
     agreement: "Я принимаю договор обработки данных",
     agreementHint: "В нём сказано, как мы обрабатываем сообщения ваших клиентов от вашего имени.",
     readAgreement: "Прочитать",
-    agreementTitle: "Договор обработки данных",
     agreementAccepted: "Договор обработки данных принят",
     agreementRequired: "Чтобы запустить, примите договор.",
     trial: {
@@ -76,7 +75,6 @@ export const tunnelLaunchRu: Translation<typeof tunnelLaunchEn> = {
     shareTitle: "Поделитесь помощником",
     shareText: "Отправьте ссылку клиентам, добавьте её в свои профили или распечатайте код.",
     copy: "Скопировать ссылку",
-    copied: "Ссылка скопирована",
     openChat: "Открыть чат",
     phoneTitle: "Проверьте с телефона",
     phoneText: "Наведите камеру телефона на код и напишите сообщение, как клиент.",

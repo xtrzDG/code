@@ -58,9 +58,12 @@ for (const theme of ["dark", "light"] as const) {
   });
 }
 
-test("the setup invitation, the businesses, sign-in and the offline page pass the audit", async ({ page, newOwner }) => {
+test("the setup invitation, the tunnel, the businesses, sign-in and the offline page pass the audit", async ({ page, newOwner }) => {
   await audit(page, `/b/${newOwner.businessId}/overview`);
-  await audit(page, `/b/${newOwner.businessId}/onboarding`);
+  for (const step of ["business", "place", "offer", "hours", "people", "channels", "try", "launch"]) {
+    await test.step(step, () => audit(page, `/b/${newOwner.businessId}/setup?step=${step}`));
+  }
+  await audit(page, "/create");
   await audit(page, "/businesses");
   await audit(page, "/offline");
   await page.context().clearCookies();

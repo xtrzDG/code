@@ -52,7 +52,6 @@ export const tunnelTeamEn = {
       address: "Write where to send messages.",
       email: "This doesn't look like an e-mail address.",
       duplicate: "This person is already on the list.",
-      stale: "Someone changed the contacts at the same time. We reloaded them; try again.",
     },
   },
   channels: {

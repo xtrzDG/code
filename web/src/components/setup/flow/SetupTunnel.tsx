@@ -146,7 +146,7 @@ export function SetupTunnel() {
     return (
       <Centered>
         <h1 className="text-2xl font-semibold text-ink">{t("tunnel.ownerOnlyTitle")}</h1>
-        <p className="mt-3 text-ink-muted">{t("tunnel.ownerOnlyText")}</p>
+        <p className="mt-3 text-ink-muted">{t("tunnel.ownerOnlyText", { business: business.name })}</p>
         <ButtonLink href={businessPath(business.id, "overview")} className="mt-6 self-start">
           {t("tunnel.openCabinet")}
         </ButtonLink>
