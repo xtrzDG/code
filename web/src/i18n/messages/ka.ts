@@ -3,6 +3,7 @@ import { insightsKa } from "./sections/insights";
 import { contentKa } from "./sections/content";
 import { workspaceKa } from "./sections/workspace";
 import { shellKa } from "./sections/shell";
+import { setupFlowKa } from "./sections/setup";
 import { onboardingKa } from "./onboarding/ka";
 import { landingKa } from "./landing/ka";
 
@@ -217,4 +218,5 @@ export const ka: Messages = {
   ...contentKa,
   ...workspaceKa,
   ...shellKa,
+  ...setupFlowKa,
 };
