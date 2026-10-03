@@ -6,6 +6,7 @@
 import { isApiError } from "@/api/errors";
 import type { Schema } from "@/api/types";
 import type { MessageKey } from "@/i18n/translate";
+import { numberFormat } from "@/lib/intl/formatters";
 
 export type ImportedMenuItem = Schema<"ImportedMenuItemView">;
 
@@ -94,7 +95,7 @@ export function formatFileSize(bytes: number, locale: string): string {
     value /= 1024;
     unit += 1;
   }
-  const number = new Intl.NumberFormat(locale, { maximumFractionDigits: unit === 0 ? 0 : 1 }).format(value);
+  const number = numberFormat(locale, { maximumFractionDigits: unit === 0 ? 0 : 1 }).format(value);
   return `${number} ${units[unit]}`;
 }
 

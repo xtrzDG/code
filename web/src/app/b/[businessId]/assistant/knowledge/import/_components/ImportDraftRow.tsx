@@ -6,6 +6,7 @@ import { Badge, Button, type BadgeTone } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import type { MessageKey } from "@/i18n/translate";
 import { cn } from "@/lib/cn";
+import { numberFormat } from "@/lib/intl/formatters";
 import { confidenceLevel, type ConfidenceLevel, type ImportedMenuItem } from "@/lib/knowledge/menuImport";
 import { kindHasPrice } from "@/lib/knowledge/kinds";
 import { pageLabel } from "@/lib/knowledge/websiteImport";
@@ -59,7 +60,7 @@ export function ImportDraftRow({
           <Badge>{t(KIND_LABELS[entry.item.kind])}</Badge>
           <Badge tone={CONFIDENCE[level].tone}>
             {t(CONFIDENCE[level].label, {
-              percent: new Intl.NumberFormat(locale, { style: "percent", maximumFractionDigits: 0 }).format(entry.confidence),
+              percent: numberFormat(locale, { style: "percent", maximumFractionDigits: 0 }).format(entry.confidence),
             })}
           </Badge>
         </div>
