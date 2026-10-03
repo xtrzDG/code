@@ -49,11 +49,14 @@ class WidgetHandoffTarget(ImmutableDTO):
 
 
 class WidgetHandoffNotice(ImmutableDTO):
-    """What the visitor is told after a new handoff, to store in the chat."""
+    """
+    What the visitor is told after a new handoff, to store in the chat
+    (`text` None: staff already had the conversation, nothing is stored).
+    """
 
     business_id: BusinessId
     conversation_id: ConversationId
-    text: MessageText
+    text: MessageText | None = None
     language: LanguageTag
 
 

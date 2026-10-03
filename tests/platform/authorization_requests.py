@@ -50,6 +50,7 @@ REQUEST_BODIES: dict[str, JsonObject] = {
     f"POST {B}/manager-contacts/telegram-link": {"name": "Nino"},
     f"POST {B}/members": {"phone_number": "+995 555 77 88 99", "role": "staff"},
     f"PATCH {B}/members/{{user_id}}": {"role": "staff"},
+    f"PUT {B}/public-slug": {"slug": "matrix-cafe"},
     f"POST {B}/resources": {"name": "Terrace", "capacity": 4},
     f"POST {B}/schedule-exceptions": {"date": "2026-12-31", "is_closed_all_day": True},
     f"POST {B}/test-chat": {"text": "Hello"},

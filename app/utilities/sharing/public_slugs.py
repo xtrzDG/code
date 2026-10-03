@@ -3,6 +3,7 @@ Public chat addresses (`/c/{slug}`): the words the platform keeps for its
 own pages, and the addresses suggested for a business from its name.
 """
 
+import re
 import unicodedata
 
 from app.schemas.typings.businesses.prefixed_id import BusinessId
@@ -26,11 +27,19 @@ MAX_BASE_LENGTH: int = 32
 # fallback built from the business id.
 NUMBERED_VARIANTS: int = 8
 FALLBACK_PREFIX: str = "chat"
-FALLBACK_ID_CHARACTERS: int = 8
+FALLBACK_ID_LENGTHS: tuple[int, ...] = (8, 16, 32)
+# Addresses made from a business id are kept for that business: nobody
+# else can take them first, so the fallback always works.
+GENERATED_SLUG_PATTERN: re.Pattern[str] = re.compile(r"^chat-[0-9a-f]{8,32}$")
 
 
 def is_reserved_slug(slug: BusinessPublicSlug) -> bool:
-    return str(slug) in RESERVED_SLUGS
+    """A word the platform keeps, or an address made from a business id."""
+
+    return (
+        str(slug) in RESERVED_SLUGS
+        or GENERATED_SLUG_PATTERN.fullmatch(str(slug)) is not None
+    )
 
 
 def spell_in_latin(name: str) -> str:
@@ -75,8 +84,8 @@ def suggest_slugs(
 ) -> list[BusinessPublicSlug]:
     """
     Addresses to try for a business, best first: its name in Latin letters,
-    then numbered variants of it, and last one made from the business id
-    (always valid, practically never taken).
+    then numbered variants of it, and last ones made from the business id
+    (always valid; reserved, so no other business can take them).
     """
 
     candidates: list[BusinessPublicSlug] = []
@@ -91,10 +100,9 @@ def suggest_slugs(
             for number in range(2, NUMBERED_VARIANTS + 2)
         )
 
-    id_characters: str = str(business_id).rsplit("_", 1)[-1].replace("-", "")
-    candidates.append(
-        BusinessPublicSlug(
-            f"{FALLBACK_PREFIX}-{id_characters[:FALLBACK_ID_CHARACTERS].lower()}"
-        )
+    id_characters: str = str(business_id).rsplit("_", 1)[-1].replace("-", "").lower()
+    candidates.extend(
+        BusinessPublicSlug(f"{FALLBACK_PREFIX}-{id_characters[:length]}")
+        for length in FALLBACK_ID_LENGTHS
     )
     return candidates

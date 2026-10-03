@@ -225,3 +225,9 @@ _.next_action  # app/schemas/dto/setup/setup_progress.py
 _.applied_sections  # app/schemas/dto/setup/starter_answers.py
 _.kept_sections  # app/schemas/dto/setup/starter_answers.py
 _.offer_examples  # app/schemas/dto/setup/starter_answers.py
+
+# Read by the website chat widget (widget.js) and the hosted chat page
+# (web/src/app/c), never by Python code.
+_.starter_questions  # app/schemas/dto/channels/widget.py
+_.contact_links  # app/schemas/dto/channels/widget.py
+_.widget_script_url  # app/schemas/dto/sharing.py
