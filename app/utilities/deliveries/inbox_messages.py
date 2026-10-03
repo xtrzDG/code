@@ -36,3 +36,18 @@ def build_inbound_customer_message(
         contact_phone_number=contact_phone_number,
         attachments=list(attachments),
     )
+
+
+def customer_written_text(customer: InboundCustomerMessage) -> MessageText:
+    """
+    What the customer wrote: the typed text and the captions of their
+    photos and files, each once, in order.
+    """
+
+    parts: list[str] = [str(customer.text).strip()]
+    parts.extend(
+        str(attachment.caption).strip()
+        for attachment in customer.attachments
+        if attachment.caption is not None
+    )
+    return MessageText("\n\n".join(dict.fromkeys(part for part in parts if part)))

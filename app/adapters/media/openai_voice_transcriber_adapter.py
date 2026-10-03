@@ -34,10 +34,11 @@ class OpenAiVoiceTranscriberAdapter(VoiceTranscriberContract):
             [str(tag) for tag in request.language_hints]
         )
         takes_hints: bool = model.startswith(MULTI_LANGUAGE_MODEL_PREFIXES)
+        extension: str = FILE_EXTENSIONS.get(str(request.audio.media_type), "ogg")
         transcription: Transcription = self._client.transcribe(
             model=model,
             audio=request.audio.content,
-            file_name=f"voice.{FILE_EXTENSIONS.get(str(request.audio.media_type), 'ogg')}",
+            file_name=f"voice.{extension}",
             language=(
                 base_languages[0]
                 if len(base_languages) == 1 and not takes_hints

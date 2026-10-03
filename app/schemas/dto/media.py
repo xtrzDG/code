@@ -8,9 +8,7 @@ from pydantic import Field
 
 from app.schemas.constants.channels import ChannelKind
 from app.schemas.constants.media import AttachmentKind, AttachmentProblem
-from app.schemas.domain.inbound_events import InboundEventDocument
 from app.schemas.domain.message_media import MessageAttachment, SharedLocation
-from app.schemas.dto.conversations import InboundMessage
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.businesses.strings import BusinessName
 from app.schemas.typings.channels.strings import ChannelSecret
@@ -135,20 +133,6 @@ class VoiceNoteTranscription(ImmutableDTO):
     """
 
     attachment: MessageAttachment
-
-
-class InboundMediaRequest(ImmutableDTO):
-    """
-    The attachments of one claimed inbox event to read: files downloaded
-    and stored, voice notes transcribed. On the job's last attempt a file
-    the platform does not hand out (or a transcription service that keeps
-    failing) is given up, and the customer is asked to write, instead of
-    failing the job.
-    """
-
-    event: InboundEventDocument
-    message: InboundMessage
-    is_final_attempt: IsFinalJobAttempt = False
 
 
 class LlmImageInput(ImmutableDTO):

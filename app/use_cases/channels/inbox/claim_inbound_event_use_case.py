@@ -23,6 +23,7 @@ from app.utilities.deliveries.inbound_claims import (
     is_inbound_event_held,
     take_inbound_event,
 )
+from app.utilities.deliveries.inbox_messages import customer_written_text
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -101,7 +102,7 @@ def build_inbound_message(event: InboundEventDocument) -> InboundMessage | None:
         business_id=event.business_id,
         channel=event.channel,
         channel_user_id=customer.channel_user_id,
-        text=customer.text,
+        text=customer_written_text(customer),
         contact_name=customer.contact_name,
         contact_phone_number=customer.contact_phone_number,
         customer_message_id=event.customer_message_id,

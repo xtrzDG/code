@@ -1,4 +1,5 @@
 import json
+from collections.abc import Sequence
 
 from openai.types.responses import (
     Response,
@@ -10,8 +11,10 @@ from openai.types.responses import (
 from app.adapters.llm.llm_call_limits import call_max_retries, call_timeout_seconds
 from app.adapters.llm.llm_payloads import (
     build_tool_results_payload,
+    build_user_media_payload,
     build_user_text_payload,
 )
+from app.adapters.llm.openai_input_items import build_openai_input_items
 from app.contracts.llm import LlmAdapterContract
 from app.contracts.llm_clients import OpenAiResponsesClientContract
 from app.schemas.constants.assistants import LlmEffort
@@ -23,6 +26,7 @@ from app.schemas.dto.conversations import (
     LlmToolDefinition,
     LlmToolResult,
 )
+from app.schemas.dto.media import LlmImageInput
 from app.schemas.exceptions.application_errors import (
     ExternalServiceError,
     LlmRefusedError,
@@ -36,19 +40,9 @@ from app.schemas.typings.conversations.strings import (
 )
 from app.utilities.conversations.llm_transcript import (
     ASSISTANT_ROLE,
-    OPENAI_FUNCTION_CALL_ITEM_TYPE,
     OPENAI_PROVIDER_MARKER,
-    TEXT_BLOCK_TYPE,
-    TOOL_RESULT_BLOCK_TYPE,
-    TOOL_USE_BLOCK_TYPE,
-    USER_ROLE,
     encode_json,
-    is_openai_assistant_turn,
     parse_model_tool_name,
-    parse_transcript_turn,
-    read_object_list,
-    read_string,
-    read_tool_result_text,
 )
 
 REASONING_EFFORTS: dict[LlmEffort, str] = {
@@ -80,6 +74,13 @@ class OpenAiLlmAdapter(LlmAdapterContract):
     def build_user_text_turn(self, text: MessageText) -> LlmProviderPayload:
         return build_user_text_payload(text)
 
+    def build_user_media_turn(
+        self,
+        text: MessageText,
+        images: Sequence[LlmImageInput],
+    ) -> LlmProviderPayload:
+        return build_user_media_payload(text, images)
+
     def build_tool_results_turn(
         self,
         results: list[LlmToolResult],
@@ -110,91 +111,6 @@ def build_openai_function_tool(tool: LlmToolDefinition) -> dict[str, object]:
         "parameters": json.loads(tool.input_schema_json),
         "strict": True,
     }
-
-
-def build_openai_input_items(
-    transcript: list[LlmProviderPayload],
-) -> list[dict[str, object]]:
-    """
-    Responses input items for a stored transcript.
-
-    Canonical user text becomes a user message with `input_text` parts; each
-    tool result becomes a `function_call_output` item. OpenAI assistant turns
-    are replayed item by item; Anthropic-format assistant turns (scripted or
-    from another provider) become an assistant message and `function_call`
-    items, without their reasoning.
-    """
-
-    items: list[dict[str, object]] = []
-    for payload in transcript:
-        turn: dict[str, object] = parse_transcript_turn(payload)
-        if turn["role"] == USER_ROLE:
-            items.extend(convert_user_turn(turn))
-        elif is_openai_assistant_turn(turn):
-            items.extend(read_object_list(turn.get("items")))
-        else:
-            items.extend(convert_foreign_assistant_turn(turn))
-
-    return items
-
-
-def convert_user_turn(turn: dict[str, object]) -> list[dict[str, object]]:
-    items: list[dict[str, object]] = []
-    pending_texts: list[str] = []
-
-    def flush_texts() -> None:
-        if pending_texts:
-            items.append(
-                {
-                    "role": USER_ROLE,
-                    "content": [
-                        {"type": "input_text", "text": text} for text in pending_texts
-                    ],
-                }
-            )
-            pending_texts.clear()
-
-    for block in read_object_list(turn.get("content")):
-        block_type: str | None = read_string(block, "type")
-        if block_type == TEXT_BLOCK_TYPE:
-            text: str | None = read_string(block, "text")
-            if text is not None:
-                pending_texts.append(text)
-        elif block_type == TOOL_RESULT_BLOCK_TYPE:
-            flush_texts()
-            items.append(
-                {
-                    "type": "function_call_output",
-                    "call_id": read_string(block, "tool_use_id") or "",
-                    "output": read_tool_result_text(block),
-                }
-            )
-
-    flush_texts()
-    return items
-
-
-def convert_foreign_assistant_turn(
-    turn: dict[str, object],
-) -> list[dict[str, object]]:
-    items: list[dict[str, object]] = []
-    for block in read_object_list(turn.get("content")):
-        block_type: str | None = read_string(block, "type")
-        if block_type == TEXT_BLOCK_TYPE:
-            text: str | None = read_string(block, "text")
-            if text:
-                items.append({"role": ASSISTANT_ROLE, "content": text})
-        elif block_type == TOOL_USE_BLOCK_TYPE:
-            items.append(
-                {
-                    "type": OPENAI_FUNCTION_CALL_ITEM_TYPE,
-                    "call_id": read_string(block, "id") or "",
-                    "name": read_string(block, "name") or "",
-                    "arguments": encode_json(block.get("input", {})),
-                }
-            )
-
-    return items
 
 
 def parse_openai_response(response: Response) -> LlmResponse:

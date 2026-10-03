@@ -1,5 +1,6 @@
 import json
 import uuid
+from collections.abc import Sequence
 from typing import cast
 
 from typed_time_provider import Microseconds, MonotonicClock, Nanoseconds, WallClock
@@ -7,6 +8,7 @@ from typed_time_provider import Microseconds, MonotonicClock, Nanoseconds, WallC
 from app.contracts.llm import LlmAdapterContract
 from app.contracts.observability import LlmTraceFacilitatorContract
 from app.schemas.dto.conversations import LlmRequest, LlmResponse, LlmToolResult
+from app.schemas.dto.media import LlmImageInput
 from app.schemas.dto.observability import LlmGenerationTrace
 from app.schemas.exceptions.base_exception import ApplicationError
 from app.schemas.typings.conversations.constrained_integers import LlmTokenCount
@@ -41,6 +43,13 @@ class TracingLlmAdapter(LlmAdapterContract):
 
     def build_user_text_turn(self, text: MessageText) -> LlmProviderPayload:
         return self._inner_adapter.build_user_text_turn(text)
+
+    def build_user_media_turn(
+        self,
+        text: MessageText,
+        images: Sequence[LlmImageInput],
+    ) -> LlmProviderPayload:
+        return self._inner_adapter.build_user_media_turn(text, images)
 
     def build_tool_results_turn(
         self,

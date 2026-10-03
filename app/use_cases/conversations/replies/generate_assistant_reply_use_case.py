@@ -44,8 +44,8 @@ from app.schemas.typings.conversations.strings import (
     MessageText,
     UnverifiedReplyValue,
 )
+from app.use_cases.conversations.replies.customer_turn import build_customer_turn
 from app.use_cases.conversations.replies.reply_evidence import (
-    collect_unanswered_messages,
     find_unverified_reply_values,
 )
 from app.use_cases.conversations.replies.turn_progress import (
@@ -54,11 +54,7 @@ from app.use_cases.conversations.replies.turn_progress import (
     record_tool_outcome,
 )
 from app.utilities.conversations.customer_text_fencing import new_fence_key
-from app.utilities.conversations.turn_context import (
-    build_rewrite_note,
-    build_text_with_unanswered_messages,
-    build_user_turn_text,
-)
+from app.utilities.conversations.turn_context import build_rewrite_note
 
 
 class GenerateAssistantReplyUseCase(UseCaseContract[PreparedTurn, GeneratedReply]):
@@ -66,9 +62,10 @@ class GenerateAssistantReplyUseCase(UseCaseContract[PreparedTurn, GeneratedReply
     Ask the pinned assistant version for a reply (concept sections 1 and 5).
 
     The customer's message is appended to the verbatim transcript as one
-    user turn: the server context line, then the text, preceded by what the
-    customer wrote while the assistant stayed silent (a handoff, the hourly
-    limit), so the model never loses those messages. Customer text is
+    user turn: the server context line, then the text (voice notes as their
+    transcripts, places as coordinates, photos shown as pictures), preceded
+    by what the customer wrote while the assistant stayed silent (a handoff,
+    the hourly limit), so the model never loses those messages. Customer text is
     fenced with a key that is new for every turn and cannot imitate the
     platform's lines (`customer_text_fencing`). The model may call
     the offered tools for up to `tool_round_limit` rounds; all results of a
@@ -125,25 +122,16 @@ class GenerateAssistantReplyUseCase(UseCaseContract[PreparedTurn, GeneratedReply
         tools: list[LlmToolDefinition] = self._tool_registry.list_definitions(
             list(input_data.tool_context.available_tools)
         )
-        fence_key: str = self._fence_key_factory()
         self._append(
             input_data,
             progress,
             LlmTurnRole.USER,
-            self._llm_adapter.build_user_text_turn(
-                MessageText(
-                    build_user_turn_text(
-                        str(input_data.context_line),
-                        build_text_with_unanswered_messages(
-                            collect_unanswered_messages(
-                                self._message_repo, input_data, stored_turns
-                            ),
-                            str(input_data.customer_text),
-                            fence_key,
-                        ),
-                        fence_key,
-                    )
-                )
+            build_customer_turn(
+                self._llm_adapter,
+                self._message_repo,
+                input_data,
+                stored_turns,
+                self._fence_key_factory(),
             ),
         )
         try:

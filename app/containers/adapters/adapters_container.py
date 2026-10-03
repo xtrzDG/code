@@ -58,6 +58,7 @@ from app.containers.adapters.document_collections_container import (
 from app.containers.adapters.launch_collections_container import (
     LaunchCollectionsContainer,
 )
+from app.containers.adapters.media_adapters_container import MediaAdaptersContainer
 from app.containers.adapters.notification_collections_container import (
     NotificationCollectionsContainer,
 )
@@ -83,10 +84,8 @@ from app.schemas.dto.conversations import LlmCallLimits
 
 class AdaptersContainer(containers.DeclarativeContainer):
     """
-    Adapters: the document collections (a child container the repositories
-    are built on) and the adapters of external services - security,
-    recordings, the voice platform, messaging channels, language models and
-    payments.
+    Adapters: the document collections and the adapters of external services
+    (security, recordings, voice, channels, customer media, models, payments).
     """
 
     clients: ClientsContainer = DependenciesContainer()  # type: ignore[assignment]
@@ -249,10 +248,15 @@ class AdaptersContainer(containers.DeclarativeContainer):
         build_llm_trace_facilitator,
         langfuse_client=clients.langfuse_ingestion_client,
     )
+    # Customer media: storage, downloads, speech-to-text, photos for models.
+    media: MediaAdaptersContainer = Container(  # type: ignore[assignment]
+        MediaAdaptersContainer, clients=clients, config=config,
+        llm_adapter=routing_llm_adapter,
+    )  # fmt: skip
     # Every model call traced (Langfuse) ...
     traced_llm_adapter: Singleton[TracingLlmAdapter] = Singleton(
         TracingLlmAdapter,
-        inner_adapter=routing_llm_adapter,
+        inner_adapter=media.media_llm_adapter,
         trace_facilitator=llm_trace_facilitator,
         wall_clock=time_provider.microsecond_wall_clock,
         monotonic_clock=time_provider.monotonic_clock,
