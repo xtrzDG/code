@@ -11,11 +11,17 @@ import { useI18n } from "@/i18n/client";
 import { countryFlag, countryName } from "@/lib/countries";
 import { businessPath, CREATE_PATH, setupPath } from "@/lib/navigation";
 
+/** An owner's business not live yet (never launched): its card leads back into the tunnel. */
+function isBeingSetUp(business: Pick<BusinessView, "status" | "viewer_role">): boolean {
+  return business.viewer_role === "owner" && (business.status === "onboarding" || business.status === "testing");
+}
+
 /**
- * The businesses the user works in, each opening its cabinet (or, before
- * its assistant exists, its setup), and "New assistant" leading into the
- * full-screen "Create an AI assistant".
+ * The businesses the user works in, each opening its cabinet (or, for an
+ * owner before its assistant is live, the tunnel where they left off), and
+ * "New assistant" leading into the full-screen "Create an AI assistant".
  */
+
 export function BusinessesScreen({ businesses }: { businesses: BusinessView[] }) {
   const { t, locale } = useI18n();
   const niches = useNiches();
@@ -48,7 +54,7 @@ export function BusinessesScreen({ businesses }: { businesses: BusinessView[] })
           {businesses.map((business) => (
             <li key={business.id}>
               <Link
-                href={business.status === "onboarding" && business.viewer_role === "owner" ? setupPath(business.id) : businessPath(business.id)}
+                href={isBeingSetUp(business) ? setupPath(business.id) : businessPath(business.id)}
                 className="group motion-lift flex h-full flex-col rounded-2xl border border-line bg-surface p-5 hover:border-line-strong hover:bg-surface-muted/40"
               >
                 <div className="flex items-start justify-between gap-3">

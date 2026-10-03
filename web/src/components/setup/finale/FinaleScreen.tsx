@@ -16,6 +16,7 @@ import { IconArrowRight, IconBook, IconExternal, IconInbox, IconPlug } from "@/c
 import { Button, buttonClasses } from "@/components/ui";
 import { CopyButton } from "@/components/workspace/CopyButton";
 import { useI18n } from "@/i18n/client";
+import { cn } from "@/lib/cn";
 import { businessPath } from "@/lib/navigation";
 
 import { QrImage } from "../QrImage";
@@ -51,63 +52,62 @@ export function FinaleScreen({ ctx }: { ctx: StepContext }) {
         <p className="mx-auto mt-4 max-w-xl text-lg text-pretty text-ink-muted">{t("tunnelLaunch.finale.text", { business: business.name })}</p>
       </div>
 
-      <div className="mt-10 grid gap-5 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
-        <div className="space-y-5 [perspective:1200px]">
+      {/* On a phone: the card, the link, the code, then what is next; side by side on a desktop. */}
+      <div className="mt-10 grid items-start gap-5 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
+        <div className="[perspective:1200px] lg:col-start-1 lg:row-start-1">
           <AssistantCard name={business.name} languages={business.languages} channels={finale.channels} />
-          <section aria-labelledby="finale-next" className={PANEL}>
-            <h2 id="finale-next" className="text-base font-semibold text-ink">
-              {t("tunnelLaunch.finale.nextTitle")}
-            </h2>
-            <ul className="mt-3 space-y-1">
-              {next.map(({ key, href, icon: Icon }) => (
-                <li key={key}>
-                  <Link href={href} className="group flex items-center gap-3 rounded-xl px-2 py-2 text-sm text-ink transition-colors hover:bg-surface-muted">
-                    <Icon className="size-4 text-accent" aria-hidden />
-                    <span className="flex-1">{t(`tunnelLaunch.finale.next.${key}`)}</span>
-                    <IconArrowRight className="size-4 text-ink-subtle transition-transform group-hover:translate-x-0.5 rtl:-scale-x-100" aria-hidden />
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </section>
         </div>
-
-        <div className="space-y-5">
-          <section aria-labelledby="finale-share" className={PANEL}>
-            <h2 id="finale-share" className="text-base font-semibold text-ink">
-              {t("tunnelLaunch.finale.shareTitle")}
-            </h2>
-            <p className="mt-1 text-sm text-ink-muted">{t("tunnelLaunch.finale.shareText")}</p>
-            {finale.shareUrl ? (
-              <>
-                <p className="mt-4 truncate rounded-xl bg-surface-muted px-3 py-2.5 font-mono text-sm text-ink" dir="ltr">
-                  {displayUrl(finale.shareUrl)}
-                </p>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  <CopyButton value={finale.shareUrl} label={t("tunnelLaunch.finale.copy")} variant="primary" />
-                  <a href={finale.shareUrl} target="_blank" rel="noopener noreferrer" className={buttonClasses({ variant: "secondary", size: "sm" })}>
-                    <IconExternal className="size-4" aria-hidden />
-                    <span>{t("tunnelLaunch.finale.openChat")}</span>
-                  </a>
-                </div>
-              </>
-            ) : finale.isShareLoading ? null : (
-              <p className="mt-4 text-sm text-ink-muted">{t("tunnelLaunch.finale.noLink")}</p>
-            )}
-          </section>
-
-          {finale.phoneUrl ? (
-            <section aria-labelledby="finale-phone" className={`${PANEL} flex items-center gap-5`}>
-              <QrImage value={finale.phoneUrl} label={t("tunnelLaunch.finale.qrAlt", { link: displayUrl(finale.phoneUrl) })} className="size-32 shrink-0" />
-              <div className="min-w-0">
-                <h2 id="finale-phone" className="text-base font-semibold text-ink">
-                  {t("tunnelLaunch.finale.phoneTitle")}
-                </h2>
-                <p className="mt-1 text-sm text-ink-muted">{t("tunnelLaunch.finale.phoneText")}</p>
+        <section aria-labelledby="finale-share" className={cn(PANEL, "lg:col-start-2 lg:row-start-1")}>
+          <h2 id="finale-share" className="text-base font-semibold text-ink">
+            {t("tunnelLaunch.finale.shareTitle")}
+          </h2>
+          <p className="mt-1 text-sm text-ink-muted">{t("tunnelLaunch.finale.shareText")}</p>
+          {finale.shareUrl ? (
+            <>
+              <p className="mt-4 truncate rounded-xl bg-surface-muted px-3 py-2.5 font-mono text-sm text-ink" dir="ltr">
+                {displayUrl(finale.shareUrl)}
+              </p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <CopyButton value={finale.shareUrl} label={t("tunnelLaunch.finale.copy")} variant="primary" />
+                <a href={finale.shareUrl} target="_blank" rel="noopener noreferrer" className={buttonClasses({ variant: "secondary", size: "sm" })}>
+                  <IconExternal className="size-4" aria-hidden />
+                  <span>{t("tunnelLaunch.finale.openChat")}</span>
+                </a>
               </div>
-            </section>
-          ) : null}
-        </div>
+            </>
+          ) : finale.isShareLoading ? null : (
+            <p className="mt-4 text-sm text-ink-muted">{t("tunnelLaunch.finale.noLink")}</p>
+          )}
+        </section>
+
+        {finale.phoneUrl ? (
+          <section aria-labelledby="finale-phone" className={cn(PANEL, "flex items-center gap-5 lg:col-start-2 lg:row-start-2")}>
+            <QrImage value={finale.phoneUrl} label={t("tunnelLaunch.finale.qrAlt", { link: displayUrl(finale.phoneUrl) })} className="size-32 shrink-0" />
+            <div className="min-w-0">
+              <h2 id="finale-phone" className="text-base font-semibold text-ink">
+                {t("tunnelLaunch.finale.phoneTitle")}
+              </h2>
+              <p className="mt-1 text-sm text-ink-muted">{t("tunnelLaunch.finale.phoneText")}</p>
+            </div>
+          </section>
+        ) : null}
+
+        <section aria-labelledby="finale-next" className={cn(PANEL, "lg:col-start-1 lg:row-start-2")}>
+          <h2 id="finale-next" className="text-base font-semibold text-ink">
+            {t("tunnelLaunch.finale.nextTitle")}
+          </h2>
+          <ul className="mt-3 space-y-1">
+            {next.map(({ key, href, icon: Icon }) => (
+              <li key={key}>
+                <Link href={href} className="group flex items-center gap-3 rounded-xl px-2 py-2 text-sm text-ink transition-colors hover:bg-surface-muted">
+                  <Icon className="size-4 text-accent" aria-hidden />
+                  <span className="flex-1">{t(`tunnelLaunch.finale.next.${key}`)}</span>
+                  <IconArrowRight className="size-4 text-ink-subtle transition-transform group-hover:translate-x-0.5 rtl:-scale-x-100" aria-hidden />
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
       </div>
 
       <div className="mt-10 flex justify-center pb-[max(1.5rem,env(safe-area-inset-bottom))]">
