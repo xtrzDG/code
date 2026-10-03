@@ -228,17 +228,19 @@ class GetSetupProgressUseCase(UseCaseContract[SetupQuery, SetupView]):
         is_live: bool,
         language: LanguageTag,
     ) -> SetupActionView:
-        if next_step is not None:
-            return action_view(
-                next_step.target, language, self._resolver, next_step.profile_step
-            )
-
+        # Once live, changes customers do not get yet come before the
+        # optional steps still open.
         if is_live and apply.has_unapplied_changes and not apply.is_in_progress:
             return action_view(
                 SetupActionTarget.APPLY_CHANGES,
                 language,
                 self._resolver,
                 label=APPLY_CHANGES_AGAIN_LABEL,
+            )
+
+        if next_step is not None:
+            return action_view(
+                next_step.target, language, self._resolver, next_step.profile_step
             )
 
         return action_view(SetupActionTarget.OVERVIEW, language, self._resolver)
