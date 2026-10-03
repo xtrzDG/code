@@ -42,7 +42,7 @@ export const inboxCardEn = {
   },
   technical: {
     title: "Technical details",
-    hint: "What the assistant used to answer: models, tokens, cost and the exact requests to your data.",
+    hint: "What is behind the answers: the update of the assistant that gave them and its exact requests to your data.",
     model: "Model",
     models: "Models",
     tokens: "Tokens",
