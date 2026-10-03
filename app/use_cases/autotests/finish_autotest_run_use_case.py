@@ -34,11 +34,12 @@ class FinishAutotestRunUseCase(UseCaseContract[AutotestRunCompletion, AutotestRu
     average judge score is at least 4, otherwise TESTS_FAILED.
 
     Only a run that covered every version language and every applicable
-    scenario kind can make a version READY; a narrowed run that passes
+    scenario kind, or the quick check "Apply changes" chose for the changes
+    it carries, can make a version READY; a narrowed run that passes
     proves nothing new and leaves the version as it was before the run (a
     failed version stays failed), while a narrowed run that fails still
-    fails the version. A full run's average becomes the version's test
-    score. The version points to the run.
+    fails the version. The average of a full run or of the quick check
+    becomes the version's test score. The version points to the run.
     """
 
     def __init__(
@@ -97,8 +98,9 @@ class FinishAutotestRunUseCase(UseCaseContract[AutotestRunCompletion, AutotestRu
             is_passed=summary.is_passed,
             is_full_coverage=plan.is_full_coverage,
             previous_status=plan.previous_version_status,
+            is_smoke_check=plan.smoke_check is not None,
         )
-        if plan.is_full_coverage:
+        if plan.is_full_coverage or plan.smoke_check is not None:
             version.test_score = summary.average_score
 
         version.autotest_run_id = run.id

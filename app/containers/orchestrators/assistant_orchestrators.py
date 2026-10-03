@@ -102,6 +102,7 @@ class AssistantOrchestratorsContainer(containers.DeclarativeContainer):
         start_apply_changes=apply_use_cases.start_apply_changes_use_case,
         assemble_assistant_version=assistant_use_cases.assemble_assistant_version_use_case,
         check_applied_version=apply_use_cases.check_applied_version_use_case,
+        select_smoke_checks=pending_change_use_cases.select_smoke_checks_use_case,
         start_autotest_run=autotest_use_cases.start_autotest_run_use_case,
         enqueue_autotest_run=autotest_use_cases.enqueue_autotest_run_use_case,
         publish_applied_version=apply_use_cases.publish_applied_version_use_case,

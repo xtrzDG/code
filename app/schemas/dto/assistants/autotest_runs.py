@@ -18,6 +18,7 @@ from app.schemas.domain.assistants import (
     JudgeCriterionScore,
 )
 from app.schemas.domain.businesses import BusinessDocument
+from app.schemas.dto.assistants.smoke_checks import SmokeCheckSelection
 from app.schemas.typings.assistants.booleans import (
     IsAutotestRunPassed,
     IsFullAutotestCoverage,
@@ -67,9 +68,11 @@ class AutotestRunPlan(ImmutableDTO):
     A started autotest run: the version under test and its scenarios.
 
     `is_full_coverage` tells whether the scenarios cover every version
-    language and applicable kind; `previous_version_status` is the status
-    the version had before the run. An empty `scenarios` list means there
-    is nothing left to run (the run already finished).
+    language and applicable kind; `smoke_check` is set for the quick check
+    of an apply, whose pass makes the version ready as a full run's does;
+    `previous_version_status` is the status the version had before the
+    run. An empty `scenarios` list means there is nothing left to run (the
+    run already finished).
     """
 
     run_id: AutotestRunId
@@ -77,18 +80,23 @@ class AutotestRunPlan(ImmutableDTO):
     version: AssistantVersionDocument
     scenarios: list[AutotestScenario]
     is_full_coverage: IsFullAutotestCoverage
+    smoke_check: SmokeCheckSelection | None = None
     previous_version_status: AssistantVersionStatus
     customer_phone_number: E164PhoneNumber | None = None
     started_at: Microseconds
 
 
 class AutotestPlanningRequest(ImmutableDTO):
-    """Scenarios to plan for a version; missing lists mean "all of them"."""
+    """
+    Scenarios to plan for a version; missing lists mean "all of them", and
+    a `smoke_check` plans exactly its scenarios instead.
+    """
 
     business: BusinessDocument
     version: AssistantVersionDocument
     languages: list[LanguageTag] | None = None
     kinds: list[AutotestScenarioKind] | None = None
+    smoke_check: SmokeCheckSelection | None = None
 
 
 class AutotestScenarioPlanning(ImmutableDTO):
@@ -99,9 +107,13 @@ class AutotestScenarioPlanning(ImmutableDTO):
 
 
 class AutotestJobPayload(ImmutableDTO):
-    """Payload of the queued job that plays a started autotest run."""
+    """
+    Payload of the queued job that plays a started autotest run; the quick
+    check of an apply carries its scenarios, so the worker plays the same.
+    """
 
     run_id: AutotestRunId
+    smoke_check: SmokeCheckSelection | None = None
 
 
 class AutotestRunProgress(ImmutableDTO):

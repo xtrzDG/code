@@ -88,6 +88,7 @@ class ResumeAutotestRunUseCase(UseCaseContract[QueuedJobInput, AutotestRunPlan])
                     version=version,
                     languages=run.languages,
                     kinds=run.kinds,
+                    smoke_check=payload.smoke_check,
                 )
             ).scenarios
 
@@ -97,6 +98,7 @@ class ResumeAutotestRunUseCase(UseCaseContract[QueuedJobInput, AutotestRunPlan])
             version=version,
             scenarios=scenarios,
             is_full_coverage=run.is_full_coverage,
+            smoke_check=payload.smoke_check,
             previous_version_status=(
                 run.previous_version_status or AssistantVersionStatus.DRAFT
             ),

@@ -12,11 +12,16 @@ from app.schemas.dto.assistants.assistant_drafts import (
     AssistantDraft,
     AssistantDraftRequest,
 )
+from app.schemas.dto.assistants.smoke_checks import SmokeCheckSelection
+from app.schemas.dto.setup.apply_changes import AppliedVersion
 from app.schemas.dto.setup.pending_changes import (
     PendingChange,
     PendingChangesQuery,
     PendingChangesRequest,
     PendingChangesView,
+)
+from app.use_cases.assistants.apply.select_smoke_checks_use_case import (
+    SelectSmokeChecksUseCase,
 )
 from app.use_cases.assistants.pending_changes.build_assistant_draft_use_case import (
     BuildAssistantDraftUseCase,
@@ -32,8 +37,8 @@ from app.use_cases.assistants.pending_changes.get_pending_changes_use_case impor
 class PendingChangeUseCasesContainer(containers.DeclarativeContainer):
     """
     The assistant as it would be built now, and how it differs from a
-    version: what assembling stores, what "Apply changes" compares, and
-    the changes not live yet the cabinet lists.
+    version: what assembling stores, what "Apply changes" compares and
+    checks quickly, and the changes not live yet the cabinet lists.
     """
 
     registries: RegistriesContainer = DependenciesContainer()  # type: ignore[assignment]
@@ -76,4 +81,14 @@ class PendingChangeUseCasesContainer(containers.DeclarativeContainer):
         assistant_version_repo=repositories.assistant_version_repo,
         business_profile_repo=repositories.business_profile_repo,
         collect_pending_changes=collect_pending_changes_use_case,
+    )
+    select_smoke_checks_use_case: Factory[
+        UseCaseContract[AppliedVersion, SmokeCheckSelection | None]
+    ] = Factory(
+        SelectSmokeChecksUseCase,
+        business_repo=repositories.business_repo,
+        assistant_version_repo=repositories.assistant_version_repo,
+        knowledge_item_repo=repositories.knowledge_item_repo,
+        niche_template_registry=registries.niche_template_registry,
+        wall_clock=time_provider.microsecond_wall_clock,
     )

@@ -116,6 +116,7 @@ def orchestrator(
             testbed.check_readiness_use_case,
             testbed.wall_clock,
         ),
+        select_smoke_checks=testbed.select_smoke_checks_use_case,
         start_autotest_run=start_autotest_run or testbed.start_autotest_run_use_case,
         enqueue_autotest_run=testbed.enqueue_autotest_run_use_case,
         publish_applied_version=testbed.publish_applied_use_case,

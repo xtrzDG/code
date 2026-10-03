@@ -25,6 +25,9 @@ from app.use_cases.assistants.apply.get_apply_changes_use_case import (
 from app.use_cases.assistants.apply.publish_applied_version_use_case import (
     PublishAppliedVersionUseCase,
 )
+from app.use_cases.assistants.apply.select_smoke_checks_use_case import (
+    SelectSmokeChecksUseCase,
+)
 from app.use_cases.assistants.apply.start_apply_changes_use_case import (
     StartApplyChangesUseCase,
 )
@@ -153,6 +156,13 @@ class AssemblyPublishWiring(AssemblyAutotestWiring):
         self.get_apply_use_case = GetApplyChangesUseCase(
             self.authorize, self.describe_apply_use_case
         )
+        self.select_smoke_checks_use_case = SelectSmokeChecksUseCase(
+            self.business_repo,
+            self.version_repo,
+            self.knowledge_repo,
+            self.niche_registry,
+            self.wall_clock,
+        )
         self.apply_changes_orchestrator = ApplyChangesOrchestrator(
             start_apply_changes=StartApplyChangesUseCase(
                 self.authorize,
@@ -171,6 +181,7 @@ class AssemblyPublishWiring(AssemblyAutotestWiring):
                 self.check_readiness_use_case,
                 self.wall_clock,
             ),
+            select_smoke_checks=self.select_smoke_checks_use_case,
             start_autotest_run=self.start_autotest_run_use_case,
             enqueue_autotest_run=self.enqueue_autotest_run_use_case,
             publish_applied_version=self.publish_applied_use_case,

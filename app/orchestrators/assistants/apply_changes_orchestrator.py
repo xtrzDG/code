@@ -11,6 +11,7 @@ from app.schemas.dto.assistants.assistant_views import (
     AutotestRunView,
 )
 from app.schemas.dto.assistants.autotest_runs import AutotestRunPlan
+from app.schemas.dto.assistants.smoke_checks import SmokeCheckSelection
 from app.schemas.dto.setup.apply_changes import (
     AppliedVersion,
     ApplyBuildFailure,
@@ -32,8 +33,11 @@ class ApplyChangesOrchestrator(
     "Apply changes" in one call: register the apply (idempotent), build a
     version from the current profile and knowledge, stop at once on a
     missing launch condition, and hand the automatic checks to the
-    background worker, which publishes the version when they pass. A
-    version already checked and still up to date is published right away.
+    background worker, which publishes the version when they pass. After
+    the first go-live the checks are the quick check of what changed (the
+    scenarios the changes touch and three core ones); the first go-live
+    plays every scenario. A version already checked and still up to date
+    is published right away.
     Whatever happens comes back as the apply's progress in plain words
     (202): a profile the assistant cannot be built from, or checks that
     cannot start, end the apply as NEEDS_ATTENTION instead of an error.
@@ -47,6 +51,9 @@ class ApplyChangesOrchestrator(
             AssistantVersionDetails,
         ],
         check_applied_version: UseCaseContract[AppliedVersion, IsApplyInProgress],
+        select_smoke_checks: UseCaseContract[
+            AppliedVersion, SmokeCheckSelection | None
+        ],
         start_autotest_run: UseCaseContract[RunAutotestsCommand, AutotestRunPlan],
         enqueue_autotest_run: UseCaseContract[AutotestRunPlan, AutotestRunView],
         publish_applied_version: UseCaseContract[AppliedVersion, None],
@@ -63,6 +70,9 @@ class ApplyChangesOrchestrator(
         self._check_applied_version: UseCaseContract[
             AppliedVersion, IsApplyInProgress
         ] = check_applied_version
+        self._select_smoke_checks: UseCaseContract[
+            AppliedVersion, SmokeCheckSelection | None
+        ] = select_smoke_checks
         self._start_autotest_run: UseCaseContract[
             RunAutotestsCommand, AutotestRunPlan
         ] = start_autotest_run
@@ -127,6 +137,7 @@ class ApplyChangesOrchestrator(
                     user_id=command.user_id,
                     business_id=command.business_id,
                     version_id=version.id,
+                    smoke_check=self._select_smoke_checks.run(applied),
                 )
             )
             self._enqueue_autotest_run.run(plan)
