@@ -7,7 +7,7 @@ from app.contracts.llm import LlmAdapterContract
 from app.contracts.repositories.conversation_repositories import MessageRepoContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.configurations.app_settings import AppSettings
-from app.schemas.constants.assistants import AutotestOutcome
+from app.schemas.constants.assistants import AutotestCheckCode, AutotestOutcome
 from app.schemas.constants.channels import ChannelKind
 from app.schemas.constants.conversations import MessageAuthor
 from app.schemas.domain.assistants import (
@@ -15,7 +15,11 @@ from app.schemas.domain.assistants import (
     AutotestTranscriptLine,
 )
 from app.schemas.dto.assistants.assembly_sources import LlmTokenPrice
-from app.schemas.dto.assistants.autotest_runs import AutotestScenarioRun, JudgeVerdict
+from app.schemas.dto.assistants.autotest_runs import (
+    AutotestCheckFailure,
+    AutotestScenarioRun,
+    JudgeVerdict,
+)
 from app.schemas.dto.conversations import (
     AssistantReply,
     InboundMessage,
@@ -23,7 +27,7 @@ from app.schemas.dto.conversations import (
     LlmResponse,
 )
 from app.schemas.exceptions.base_exception import ApplicationError
-from app.schemas.typings.assistants.strings import AutotestCheckNote, SystemPromptText
+from app.schemas.typings.assistants.strings import SystemPromptText
 from app.schemas.typings.billing.constrained_integers import CostMicroUsd
 from app.schemas.typings.conversations.strings import (
     ChannelUserId,
@@ -36,6 +40,7 @@ from app.use_cases.autotests.autotest_scenario_results import (
 )
 from app.utilities.assembly.autotest_evaluation import (
     check_conversation,
+    check_failure,
     decide_outcome,
 )
 from app.utilities.assembly.autotest_prompts import (
@@ -108,9 +113,10 @@ class RunAutotestScenarioUseCase(
                 input_data,
                 AutotestOutcome.ERRORED,
                 transcript=transcript,
-                check_notes=[
-                    AutotestCheckNote(
-                        f"The test conversation could not run: {conversation_error}"
+                check_failures=[
+                    check_failure(
+                        AutotestCheckCode.CONVERSATION_FAILED,
+                        f"The test conversation could not run: {conversation_error}",
                     )
                 ],
                 cost=CostMicroUsd(cost),
@@ -121,11 +127,16 @@ class RunAutotestScenarioUseCase(
                 input_data,
                 AutotestOutcome.ERRORED,
                 transcript=transcript,
-                check_notes=[AutotestCheckNote("The AI customer wrote no message.")],
+                check_failures=[
+                    check_failure(
+                        AutotestCheckCode.NO_CUSTOMER_MESSAGE,
+                        "The AI customer wrote no message.",
+                    )
+                ],
                 cost=CostMicroUsd(cost),
             )
 
-        check_notes: list[AutotestCheckNote] = check_conversation(
+        check_failures: list[AutotestCheckFailure] = check_conversation(
             input_data.scenario,
             replies,
         )
@@ -138,9 +149,12 @@ class RunAutotestScenarioUseCase(
                 input_data,
                 AutotestOutcome.ERRORED,
                 transcript=transcript,
-                check_notes=[
-                    *check_notes,
-                    AutotestCheckNote(f"The judge could not be asked: {error}"),
+                check_failures=[
+                    *check_failures,
+                    check_failure(
+                        AutotestCheckCode.JUDGE_UNAVAILABLE,
+                        f"The judge could not be asked: {error}",
+                    ),
                 ],
                 cost=CostMicroUsd(cost),
             )
@@ -154,18 +168,23 @@ class RunAutotestScenarioUseCase(
                 input_data,
                 AutotestOutcome.ERRORED,
                 transcript=transcript,
-                check_notes=[
-                    *check_notes,
-                    AutotestCheckNote("The judge's answer could not be read."),
+                check_failures=[
+                    *check_failures,
+                    check_failure(
+                        AutotestCheckCode.JUDGE_UNREADABLE,
+                        "The judge's answer could not be read.",
+                    ),
                 ],
                 cost=CostMicroUsd(cost),
             )
 
         return build_scenario_result(
             input_data,
-            decide_outcome(verdict.scores, check_notes),
+            decide_outcome(
+                verdict.scores, [failure.note for failure in check_failures]
+            ),
             transcript=transcript,
-            check_notes=check_notes,
+            check_failures=check_failures,
             cost=CostMicroUsd(cost),
             verdict=verdict,
         )

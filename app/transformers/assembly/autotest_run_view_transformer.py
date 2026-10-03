@@ -61,6 +61,7 @@ class AutotestRunViewTransformer(
             ],
             judge_notes=list(result.judge_notes),
             check_notes=list(result.check_notes),
+            check_codes=list(result.check_codes),
             transcript=[
                 AutotestTranscriptLineView(author=line.author, text=line.text)
                 for line in result.transcript

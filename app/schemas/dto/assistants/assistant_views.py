@@ -1,11 +1,13 @@
 """Views of assistant versions and autotest runs returned to the cabinet."""
 
 from base_pydantic_schemas import ImmutableDTO
+from pydantic import Field
 from typed_time_provider import Microseconds
 
 from app.schemas.constants.assistants import (
     AssistantToolName,
     AssistantVersionStatus,
+    AutotestCheckCode,
     AutotestOutcome,
     AutotestRunStatus,
     AutotestScenarioKind,
@@ -111,6 +113,9 @@ class AutotestScenarioResultView(ImmutableDTO):
     scores: list[JudgeCriterionScoreView]
     judge_notes: list[JudgeNote]
     check_notes: list[AutotestCheckNote]
+    check_codes: list[AutotestCheckCode] = Field(
+        default_factory=list[AutotestCheckCode]
+    )
     transcript: list[AutotestTranscriptLineView]
     cost_micro_usd: CostMicroUsd
 

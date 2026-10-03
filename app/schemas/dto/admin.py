@@ -4,7 +4,12 @@ from base_pydantic_schemas import ImmutableDTO
 from pydantic import Field
 from typed_time_provider import Microseconds
 
-from app.schemas.constants.assistants import AutotestOutcome, AutotestScenarioKind
+from app.schemas.constants.assistants import (
+    AutotestCheckCode,
+    AutotestOutcome,
+    AutotestScenarioKind,
+    JudgeCriterion,
+)
 from app.schemas.constants.billing import (
     BillingPeriod,
     InvoiceKind,
@@ -25,9 +30,11 @@ from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.dto.billing import Money
 from app.schemas.dto.billing_ledger import ClientCostReport
 from app.schemas.dto.paging import PageRequest
+from app.schemas.typings.assistants.booleans import IsAutotestRunPassed
 from app.schemas.typings.assistants.constrained_floats import AverageJudgeScore
 from app.schemas.typings.assistants.constrained_integers import (
     AssistantVersionNumber,
+    AutotestScenarioCount,
 )
 from app.schemas.typings.assistants.constrained_strings import AutotestScenarioKey
 from app.schemas.typings.assistants.strings import JudgeNote
@@ -100,6 +107,21 @@ class ClientSummarySource(ImmutableDTO):
     business: BusinessDocument
 
 
+class ClientAutotestVerdict(ImmutableDTO):
+    """
+    The autotest verdict of the client's active version (the published one,
+    else the latest tested), exactly as the version stores it, so the admin
+    and the version page never disagree. Counts are None for a version
+    tested before verdicts were stored: its status says passed or not.
+    """
+
+    version_number: AssistantVersionNumber
+    is_passed: IsAutotestRunPassed
+    passed_count: AutotestScenarioCount | None = None
+    scenario_count: AutotestScenarioCount | None = None
+    average_score: AverageJudgeScore | None = None
+
+
 class AdminClientSummary(ImmutableDTO):
     """
     One client in the admin list: subscription, assistant quality, staff
@@ -123,6 +145,7 @@ class AdminClientSummary(ImmutableDTO):
     published_at: Microseconds | None = None
     last_test_score: AverageJudgeScore | None = None
     failed_tests: AutotestFailureCount
+    autotest_verdict: ClientAutotestVerdict | None = None
     handoffs_last_7_days: HandoffCount
     tool_errors_last_7_days: ToolErrorCount
     open_unanswered_questions: OpenQuestionCount
@@ -166,13 +189,22 @@ class AdminClientPage(ImmutableDTO):
 
 
 class FailedAutotestView(ImmutableDTO):
-    """A scenario that did not pass in the latest autotest run."""
+    """
+    A scenario that did not pass in the run of the active version's verdict.
+    Why, as codes every language renders: the harness checks that failed
+    (`check_codes`) and the judge's criteria scored below 3
+    (`low_criteria`). `judge_notes` is the judge's own text (English).
+    """
 
     scenario_key: AutotestScenarioKey
     kind: AutotestScenarioKind
     language: LanguageTag
     outcome: AutotestOutcome
     judge_notes: list[JudgeNote] = Field(default_factory=list[JudgeNote])
+    check_codes: list[AutotestCheckCode] = Field(
+        default_factory=list[AutotestCheckCode]
+    )
+    low_criteria: list[JudgeCriterion] = Field(default_factory=list[JudgeCriterion])
 
 
 class AdminInvoiceView(ImmutableDTO):

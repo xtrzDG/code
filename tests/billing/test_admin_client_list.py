@@ -66,9 +66,13 @@ def test_client_list_shows_health_with_critical_clients_first() -> None:
         ClientHealthIssue.TOOL_ERRORS,
     ]
     assert georgian.subscription_status is SubscriptionStatus.TRIALING
-    assert int(georgian.published_version_number or 0) == 1
+    assert int(georgian.published_version_number or 0) == 2
     assert georgian.last_test_score == pytest.approx(3.8)
     assert int(georgian.failed_tests) == 2
+    verdict = georgian.autotest_verdict
+    assert verdict is not None
+    assert (int(verdict.version_number), verdict.is_passed) == (2, False)
+    assert (int(verdict.passed_count or 0), int(verdict.scenario_count or 0)) == (1, 3)
     assert int(georgian.handoffs_last_7_days) == 2
     assert int(georgian.open_unanswered_questions) == 1
     assert int(georgian.tool_errors_last_7_days) == 2

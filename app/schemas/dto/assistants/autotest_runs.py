@@ -9,6 +9,7 @@ from typed_time_provider import Microseconds
 
 from app.schemas.constants.assistants import (
     AssistantVersionStatus,
+    AutotestCheckCode,
     AutotestScenarioKind,
 )
 from app.schemas.domain.assistants import (
@@ -29,7 +30,11 @@ from app.schemas.typings.assistants.constrained_floats import (
 from app.schemas.typings.assistants.constrained_integers import AutotestScenarioCount
 from app.schemas.typings.assistants.constrained_strings import AutotestScenarioKey
 from app.schemas.typings.assistants.prefixed_id import AutotestRunId
-from app.schemas.typings.assistants.strings import AutotestScenarioGoal, JudgeNote
+from app.schemas.typings.assistants.strings import (
+    AutotestCheckNote,
+    AutotestScenarioGoal,
+    JudgeNote,
+)
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.localization.constrained_strings import (
     E164PhoneNumber,
@@ -134,6 +139,13 @@ class AutotestRunCompletion(ImmutableDTO):
 
     plan: AutotestRunPlan
     results: list[AutotestScenarioResult]
+
+
+class AutotestCheckFailure(ImmutableDTO):
+    """One failed check of a scenario: its code and the note in English."""
+
+    code: AutotestCheckCode
+    note: AutotestCheckNote
 
 
 class AutotestRunSummary(ImmutableDTO):

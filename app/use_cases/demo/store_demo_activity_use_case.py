@@ -47,6 +47,7 @@ from app.schemas.dto.demo_data import (
 from app.schemas.exceptions.application_errors import NotFoundError
 from app.schemas.typings.assistants.prefixed_id import AssistantVersionId
 from app.schemas.typings.businesses.prefixed_id import BusinessId
+from app.utilities.assembly.autotest_evaluation import build_verdict
 
 # The owner accepted the DPA this long before the first version went live.
 DPA_LEAD_MICROSECONDS: int = 2 * 60 * 60 * 1_000_000
@@ -158,6 +159,9 @@ class StoreDemoActivityUseCase(UseCaseContract[DemoActivityStorage, BusinessId])
                 published_id = version.id
                 version.autotest_run_id = autotest_run.id
                 version.test_score = autotest_run.average_score
+                version.autotest_verdict = build_verdict(
+                    autotest_run, autotest_run.updated_at
+                )
 
             self._version_repo.save(version)
 

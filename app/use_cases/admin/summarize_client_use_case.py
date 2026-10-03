@@ -5,7 +5,6 @@ from typed_time_provider import Microseconds, WallClock
 from app.contracts.registries import PlanRegistryContract
 from app.contracts.repositories.assistant_repositories import (
     AssistantVersionRepoContract,
-    AutotestRunRepoContract,
 )
 from app.contracts.repositories.billing_repositories import (
     SubscriptionRepoContract,
@@ -17,12 +16,15 @@ from app.contracts.repositories.booking_repositories import (
 )
 from app.contracts.repositories.conversation_repositories import MessageRepoContract
 from app.contracts.use_case_contract import UseCaseContract
-from app.schemas.constants.assistants import AutotestOutcome
 from app.schemas.constants.client_health import ClientHealthIssue, ClientHealthStatus
-from app.schemas.domain.assistants import AssistantVersionDocument, AutotestRunDocument
+from app.schemas.domain.assistants import AssistantVersionDocument
 from app.schemas.domain.billing import SubscriptionDocument
 from app.schemas.domain.businesses import BusinessDocument
-from app.schemas.dto.admin import AdminClientSummary, ClientSummarySource
+from app.schemas.dto.admin import (
+    AdminClientSummary,
+    ClientAutotestVerdict,
+    ClientSummarySource,
+)
 from app.schemas.dto.billing import PlanDefinition
 from app.schemas.dto.billing_ledger import (
     ClientCostQuery,
@@ -30,10 +32,14 @@ from app.schemas.dto.billing_ledger import (
     PackageUsageTotals,
 )
 from app.schemas.typings.client_health.constrained_integers import (
-    AutotestFailureCount,
     HandoffCount,
     OpenQuestionCount,
     ToolErrorCount,
+)
+from app.use_cases.admin.active_version import (
+    count_failed_scenarios,
+    find_active_version,
+    read_client_verdict,
 )
 from app.use_cases.admin.client_health_rules import find_health_issues, judge_health
 from app.use_cases.admin.client_usage_window import (
@@ -51,7 +57,8 @@ class SummarizeClientUseCase(UseCaseContract[ClientSummarySource, AdminClientSum
     One client as the platform admin sees it (concept section 8, /admin).
 
     Subscription and service mode; the published assistant version; the
-    latest autotest score and its failed scenarios; handoffs and tool errors
+    autotest verdict of the active version (the published one, else the
+    latest tested) exactly as the version stores it; handoffs and tool errors
     of the last 7 days; open unanswered questions; package use, provider
     cost and margin in the current billing window (the last 30 days without
     a subscription); and the health verdict. Leads-only service and a
@@ -65,7 +72,6 @@ class SummarizeClientUseCase(UseCaseContract[ClientSummarySource, AdminClientSum
         self,
         subscription_repo: SubscriptionRepoContract,
         assistant_version_repo: AssistantVersionRepoContract,
-        autotest_run_repo: AutotestRunRepoContract,
         handoff_repo: HandoffRepoContract,
         unanswered_question_repo: UnansweredQuestionRepoContract,
         message_repo: MessageRepoContract,
@@ -78,7 +84,6 @@ class SummarizeClientUseCase(UseCaseContract[ClientSummarySource, AdminClientSum
         self._assistant_version_repo: AssistantVersionRepoContract = (
             assistant_version_repo
         )
-        self._autotest_run_repo: AutotestRunRepoContract = autotest_run_repo
         self._handoff_repo: HandoffRepoContract = handoff_repo
         self._unanswered_question_repo: UnansweredQuestionRepoContract = (
             unanswered_question_repo
@@ -119,12 +124,16 @@ class SummarizeClientUseCase(UseCaseContract[ClientSummarySource, AdminClientSum
                 period_end=window_end,
             )
         )
-        published_version: AssistantVersionDocument | None = self._find_published(
-            business
+        active_version: AssistantVersionDocument | None = find_active_version(
+            self._assistant_version_repo, business
         )
-        tested_version: AssistantVersionDocument | None = self._find_last_tested(
-            business
+        published_version: AssistantVersionDocument | None = (
+            active_version
+            if active_version is not None
+            and active_version.id == business.published_assistant_version_id
+            else None
         )
+        verdict: ClientAutotestVerdict | None = read_client_verdict(active_version)
         recent_since: Microseconds = Microseconds(
             int(now) - RECENT_ACTIVITY_DAYS * MICROSECONDS_PER_DAY
         )
@@ -152,10 +161,9 @@ class SummarizeClientUseCase(UseCaseContract[ClientSummarySource, AdminClientSum
             published_at=(
                 None if published_version is None else published_version.published_at
             ),
-            last_test_score=None
-            if tested_version is None
-            else tested_version.test_score,
-            failed_tests=self._count_failed_tests(business, tested_version),
+            last_test_score=None if verdict is None else verdict.average_score,
+            failed_tests=count_failed_scenarios(verdict),
+            autotest_verdict=verdict,
             handoffs_last_7_days=self._count_recent_handoffs(business, recent_since),
             tool_errors_last_7_days=self._count_recent_tool_errors(
                 business,
@@ -175,55 +183,6 @@ class SummarizeClientUseCase(UseCaseContract[ClientSummarySource, AdminClientSum
                 "health_issues": issues,
                 "health_status": judge_health(issues),
             }
-        )
-
-    def _find_published(
-        self,
-        business: BusinessDocument,
-    ) -> AssistantVersionDocument | None:
-        if business.published_assistant_version_id is None:
-            return None
-
-        return self._assistant_version_repo.get(
-            business.id,
-            business.published_assistant_version_id,
-        )
-
-    def _find_last_tested(
-        self,
-        business: BusinessDocument,
-    ) -> AssistantVersionDocument | None:
-        tested_versions: list[AssistantVersionDocument] = [
-            version
-            for version in self._assistant_version_repo.list_by_business(business.id)
-            if version.autotest_run_id is not None or version.test_score is not None
-        ]
-        if tested_versions == []:
-            return None
-
-        return max(tested_versions, key=lambda version: version.version_number)
-
-    def _count_failed_tests(
-        self,
-        business: BusinessDocument,
-        tested_version: AssistantVersionDocument | None,
-    ) -> AutotestFailureCount:
-        if tested_version is None or tested_version.autotest_run_id is None:
-            return AutotestFailureCount(0)
-
-        run: AutotestRunDocument | None = self._autotest_run_repo.get(
-            business.id,
-            tested_version.autotest_run_id,
-        )
-        if run is None:
-            return AutotestFailureCount(0)
-
-        return AutotestFailureCount(
-            sum(
-                1
-                for result in run.results
-                if result.outcome is not AutotestOutcome.PASSED
-            )
         )
 
     def _count_recent_handoffs(

@@ -1,7 +1,7 @@
 {
   "collection": "autotest_runs",
   "document_type": "AutotestRunDocument",
-  "schema_version": 1,
+  "schema_version": 2,
   "shape": {
     "additionalProperties": false,
     "properties": {
@@ -125,6 +125,22 @@
         "items": {
           "additionalProperties": false,
           "properties": {
+            "check_codes": {
+              "items": {
+                "enum": [
+                  "no_booking_created",
+                  "not_handed_off",
+                  "unexpected_records",
+                  "wrong_reply_language",
+                  "conversation_failed",
+                  "no_customer_message",
+                  "judge_unavailable",
+                  "judge_unreadable"
+                ],
+                "type": "string"
+              },
+              "type": "array"
+            },
             "check_notes": {
               "items": {
                 "type": "string"
@@ -242,7 +258,7 @@
         "type": "array"
       },
       "schema_version": {
-        "default": "1",
+        "default": "2",
         "type": "string"
       },
       "status": {

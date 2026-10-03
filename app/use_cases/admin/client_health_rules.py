@@ -38,7 +38,9 @@ def find_health_issues(
     if subscription is not None and summary.published_version_number is None:
         issues.append(ClientHealthIssue.NOT_PUBLISHED)
 
-    if int(summary.failed_tests) > 0:
+    # The active version's own verdict: a run that passed with a scenario
+    # or two failed is a passed run, as on the version page.
+    if summary.autotest_verdict is not None and not summary.autotest_verdict.is_passed:
         issues.append(ClientHealthIssue.AUTOTESTS_FAILED)
 
     if int(summary.tool_errors_last_7_days) > 0:

@@ -1,7 +1,7 @@
 {
   "collection": "assistant_versions",
   "document_type": "AssistantVersionDocument",
-  "schema_version": 2,
+  "schema_version": 3,
   "shape": {
     "additionalProperties": false,
     "properties": {
@@ -10,6 +10,62 @@
           {
             "pattern": "^autotest_run_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
             "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "autotest_verdict": {
+        "anyOf": [
+          {
+            "additionalProperties": false,
+            "properties": {
+              "average_score": {
+                "anyOf": [
+                  {
+                    "maximum": 5.0,
+                    "minimum": 1.0,
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null
+              },
+              "finished_at": {
+                "type": "integer"
+              },
+              "is_full_coverage": {
+                "default": false,
+                "type": "boolean"
+              },
+              "is_passed": {
+                "type": "boolean"
+              },
+              "passed_count": {
+                "minimum": 0,
+                "type": "integer"
+              },
+              "run_id": {
+                "pattern": "^autotest_run_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                "type": "string"
+              },
+              "scenario_count": {
+                "minimum": 0,
+                "type": "integer"
+              }
+            },
+            "required": [
+              "run_id",
+              "is_passed",
+              "scenario_count",
+              "passed_count",
+              "finished_at"
+            ],
+            "type": "object"
           },
           {
             "type": "null"
@@ -128,7 +184,7 @@
         "default": null
       },
       "schema_version": {
-        "default": "2",
+        "default": "3",
         "type": "string"
       },
       "status": {
