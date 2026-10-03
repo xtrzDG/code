@@ -1,6 +1,5 @@
 import pytest
 
-from app.registries.billing.exchange_rate_registry import ExchangeRateRegistry
 from app.registries.billing.plan_registry import PlanRegistry
 from app.schemas.constants.billing import BillingPeriod, PlanKey
 from app.schemas.dto.billing import Money
@@ -18,6 +17,7 @@ from app.use_cases.shared.subscription_pricing import (
     select_subscription_currency,
 )
 from tests.billing.billing_registries import PriceBookPlanRegistry
+from tests.billing.exchange_rate_fixtures import rate_registry
 
 
 def money(amount_minor: int, currency_code: str) -> Money:
@@ -128,7 +128,7 @@ def test_setup_fee_comes_from_the_price_book() -> None:
 
 def test_overage_price_is_estimated_only_with_an_official_rate() -> None:
     plan = PlanRegistry().get(PlanKey.VOICE_AND_CHAT)
-    rates = ExchangeRateRegistry()
+    rates = rate_registry()
 
     assert price_overage_per_minute(plan, CurrencyCode("GEL"), rates) == (
         money(44, "GEL"),

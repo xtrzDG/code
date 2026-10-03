@@ -11,6 +11,9 @@ from app.containers.utilities import UtilitiesContainer
 from app.gateways.worker.background_worker import BackgroundWorker, PeriodicJobSpec
 from app.gateways.worker.heartbeat_recorder import WorkerHeartbeatRecorder
 from app.gateways.worker.periodic.purge_stale_rows import purge_stale_rows_job
+from app.gateways.worker.periodic.refresh_exchange_rates import (
+    refresh_exchange_rates_job,
+)
 from app.gateways.worker.periodic.request_visit_feedback import (
     request_visit_feedback_job,
 )
@@ -138,6 +141,11 @@ class GatewaysContainer(containers.DeclarativeContainer):
         Factory(
             request_visit_feedback_job,
             operator=operators.feedback.request_visit_feedback_operator,
+        ),
+        # The NBG's and ECB's rates of the day, as dated rows.
+        Factory(
+            refresh_exchange_rates_job,
+            operator=operators.billing.refresh_exchange_rates_operator,
         ),
     )
     # Handlers of queued jobs by job name (the queue is filled by use cases

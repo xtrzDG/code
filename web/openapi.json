@@ -3861,7 +3861,7 @@
       },
       "ClientCostReport": {
         "additionalProperties": false,
-        "description": "What one client cost the platform and brought in for a period.\n\nProvider costs are in micro US dollars (provider price lists); revenue is\nthe paid invoices of the period in the subscription currency, prorated\nby service time. The cost is converted with an official rate when the\ncatalog has one; without it the money cost and the margin stay empty.",
+        "description": "What one client cost the platform and brought in for a period.\n\nProvider costs are in micro US dollars (provider price lists); revenue is\nthe paid invoices of the period in the subscription currency, prorated\nby service time. The cost is converted with the newest dated rate\n(`exchange_rate`, with its date, source and whether it is derived or\nstale); without one the money cost and the margin stay empty.",
         "properties": {
           "business_id": {
             "title": "Business Id",
@@ -6047,7 +6047,7 @@
       },
       "ExchangeRateQuote": {
         "additionalProperties": false,
-        "description": "An official rate: `rate` units of the quote currency for one base unit.\n\nExample: EUR -> GEL 2.9552, National Bank of Georgia, 2026-09-30.",
+        "description": "A rate the platform converts with: `rate_value` units of the quote\ncurrency for one base unit, exactly (`rate` is the same number as a\nJSON number, kept for older clients). Shown with its date and source\n(`source` in English, `sources` as codes a client names in its language);\n`is_derived` marks an inverse or a cross rate through the euro that no\nbank published itself, `is_stale` a rate older than a few days (the\nfeed has not been refreshed: the date says how old it is).\n\nExample: EUR -> GEL 2.9552, National Bank of Georgia, 2026-09-30.",
         "properties": {
           "base_currency_code": {
             "maxLength": 3,
@@ -6055,6 +6055,16 @@
             "pattern": "^[A-Z]{3}$",
             "title": "Base Currency Code",
             "type": "string"
+          },
+          "is_derived": {
+            "default": false,
+            "title": "Is Derived",
+            "type": "boolean"
+          },
+          "is_stale": {
+            "default": false,
+            "title": "Is Stale",
+            "type": "boolean"
           },
           "quote_currency_code": {
             "maxLength": 3,
@@ -6064,7 +6074,9 @@
             "type": "string"
           },
           "rate": {
+            "description": "The rate as a JSON number (use `rate_value` to compute).",
             "exclusiveMinimum": 0.0,
+            "readOnly": true,
             "title": "Rate",
             "type": "number"
           },
@@ -6075,20 +6087,45 @@
             "title": "Rate Date",
             "type": "string"
           },
+          "rate_value": {
+            "maxLength": 25,
+            "minLength": 1,
+            "pattern": "^(?=[0-9.]*[1-9])(0|[1-9][0-9]{0,11})(\\.[0-9]{1,12})?$",
+            "title": "Rate Value",
+            "type": "string"
+          },
           "source": {
             "title": "Source",
             "type": "string"
+          },
+          "sources": {
+            "items": {
+              "$ref": "#/components/schemas/ExchangeRateSource"
+            },
+            "title": "Sources",
+            "type": "array"
           }
         },
         "required": [
           "base_currency_code",
           "quote_currency_code",
-          "rate",
+          "rate_value",
           "rate_date",
-          "source"
+          "source",
+          "rate"
         ],
         "title": "ExchangeRateQuote",
         "type": "object"
+      },
+      "ExchangeRateSource": {
+        "description": "Who set an exchange rate. NBG: the National Bank of Georgia's official\nrates against the lari (about 40 currencies, daily). ECB: the European\nCentral Bank's euro reference rates (about 30 currencies, each TARGET\nday). PLANNING: the rate of the platform's own cost model, the last\nfallback when no published rate is stored yet.",
+        "enum": [
+          "nbg",
+          "ecb",
+          "planning"
+        ],
+        "title": "ExchangeRateSource",
+        "type": "string"
       },
       "FailedAutotestView": {
         "additionalProperties": false,

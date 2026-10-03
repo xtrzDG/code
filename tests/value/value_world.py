@@ -5,8 +5,8 @@ from datetime import datetime
 from app.adapters.storage.in_memory_document_collection import (
     InMemoryDocumentCollectionAdapter,
 )
+from app.contracts.catalog_registries import ExchangeRateRegistryContract
 from app.facilitators.value.owner_digest_facilitator import OwnerDigestFacilitator
-from app.registries.billing.exchange_rate_registry import ExchangeRateRegistry
 from app.registries.niches.niche_template_registry import NicheTemplateRegistry
 from app.registries.niches.niche_value_registry import NicheValueRegistry
 from app.repositories.conversation_repositories import MessageRepository
@@ -44,6 +44,7 @@ from app.utilities.config_helpers.app_settings.app_settings_assembler import (
     assemble_app_settings,
 )
 from app.utilities.notifications.staff_link_signer import StaffLinkSigner
+from tests.billing.exchange_rate_fixtures import rate_registry
 from tests.notifications.staff_alert_fakes import (
     TEST_ENCRYPTION_KEY,
     preferences_repo,
@@ -82,6 +83,7 @@ class ValueWorld(OperationsWorld):
         )
         self.push_subscription_repo = push_subscription_repo()
         self.notification_preferences_repo = preferences_repo()
+        self.exchange_rate_registry: ExchangeRateRegistryContract = rate_registry()
         self.settings: AppSettings = assemble_app_settings(
             {"CABINET_BASE_URL": CABINET_URL}
         )
@@ -90,7 +92,7 @@ class ValueWorld(OperationsWorld):
         return EstimateCatalogs(
             niche_value_registry=NicheValueRegistry(),
             niche_template_registry=NicheTemplateRegistry(),
-            exchange_rate_registry=ExchangeRateRegistry(),
+            exchange_rate_registry=self.exchange_rate_registry,
             value_settings_repo=self.value_settings_repo,
         )
 

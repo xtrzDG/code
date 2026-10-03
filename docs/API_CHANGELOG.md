@@ -13,7 +13,7 @@ label and a migration path).
 
 ## 2026-10-03 — one source of truth: counts, autotest verdicts, exchange rates, channel addresses
 
-Spec: `00e15901a1e32d39`
+Spec: `35be369c1300ba27`
 
 - **Removed** (`api-breaking`) `GET /v1/businesses/{business_id}/inbox-counts`.
   No client read it since the badges moved to `…/attention-counts`; it
@@ -54,6 +54,18 @@ Spec: `00e15901a1e32d39`
   connected WhatsApp or Instagram whose public address the platform never
   learned is `missing_public_address`; the share links keep skipping it
   with the `reconnect_channel` gap.
+- **Added** `rate_value` (the exact rate as a decimal string, e.g.
+  `"2.9552"`), `sources` (`ExchangeRateSource` codes: `nbg`, `ecb`,
+  `planning`), `is_derived` and `is_stale` to `ExchangeRateQuote` (plan
+  quotes, a client's cost report). Rates are now dated rows refreshed
+  daily from the National Bank of Georgia and the European Central Bank;
+  a pair no bank publishes is the inverse of its opposite or a cross rate
+  through the euro (`is_derived`), and a rate older than four days is
+  `is_stale` (its `rate_date` says how old). `rate` stays, as the same
+  number in JSON (compute with `rate_value`). Prices outside the euro and
+  the lari (e.g. USD for the United States) are now estimated with such a
+  rate (`is_estimated`), and a client's dollar provider costs convert into
+  every subscription currency, so the admin margin is known.
 
 ## 2026-10-03 — encryption key rotation for platform admins
 

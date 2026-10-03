@@ -11,7 +11,6 @@ from app.adapters.storage.in_memory_document_collection import (
 from app.clients.flitt.flitt_client import FlittClient
 from app.contracts.catalog_registries import ExchangeRateRegistryContract
 from app.contracts.registries import PlanRegistryContract
-from app.registries.billing.exchange_rate_registry import ExchangeRateRegistry
 from app.registries.billing.plan_registry import PlanRegistry
 from app.repositories.assistant_repositories import (
     AssistantVersionRepository,
@@ -62,6 +61,7 @@ from tests.billing.billing_settings import (
     FLITT_SECRET_KEY,
     build_settings,
 )
+from tests.billing.exchange_rate_fixtures import rate_registry
 from tests.billing.flitt_sandbox import FlittSandbox
 
 
@@ -79,7 +79,7 @@ class BillingInfrastructure:
         self.settings: AppSettings = build_settings()
         self.plan_registry: PlanRegistryContract = plan_registry or PlanRegistry()
         self.exchange_rate_registry: ExchangeRateRegistryContract = (
-            exchange_rate_registry or ExchangeRateRegistry()
+            exchange_rate_registry or rate_registry()
         )
         resolver = LocalizedTextResolver()
         self.user_repo = UserRepository(

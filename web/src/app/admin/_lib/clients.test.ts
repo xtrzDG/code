@@ -6,6 +6,8 @@ import {
   clientUsagePercent,
   clientsQuery,
   hasFilters,
+  formatRateDate,
+  formatRateValue,
   isCriticalIssue,
   type AdminClientSummary,
 } from "./clients";
@@ -98,5 +100,14 @@ describe("summaries", () => {
 
   it("links to the client page", () => {
     expect(adminClientPath("business_1")).toBe("/admin/clients/business_1");
+  });
+});
+
+describe("exchange rates", () => {
+  it("rounds an exact rate for reading and names its day in the reader's language", () => {
+    expect(formatRateValue("2.604159323229", "en")).toBe("2.60416");
+    expect(formatRateValue("0.006884", "en")).toBe("0.006884");
+    expect(formatRateValue("429.445090063916", "ru")).toBe("429,445");
+    expect(formatRateDate("2026-10-02", "en")).toBe("Oct 2, 2026");
   });
 });

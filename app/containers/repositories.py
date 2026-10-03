@@ -10,6 +10,7 @@ from app.containers.call_repositories import CallRepositoriesContainer
 from app.containers.feedback_repositories import FeedbackRepositoriesContainer
 from app.containers.inbox_repositories import InboxRepositoriesContainer
 from app.containers.launch_repositories import LaunchRepositoriesContainer
+from app.containers.rate_repositories import RateRepositoriesContainer
 from app.containers.security_repositories import SecurityRepositoriesContainer
 from app.containers.value_repositories import ValueRepositoriesContainer
 from app.repositories.activation_probe_repository import ActivationProbeRepository
@@ -93,6 +94,7 @@ class RepositoriesContainer(
     SecurityRepositoriesContainer,
     ValueRepositoriesContainer,
     FeedbackRepositoriesContainer,
+    RateRepositoriesContainer,
 ):
     """
     The repositories (singletons); those of what follows a call, of the team

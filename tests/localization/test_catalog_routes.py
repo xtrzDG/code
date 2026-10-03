@@ -75,7 +75,7 @@ def test_languages_route_lists_right_to_left_languages(client: TestClient) -> No
     assert by_tag["he"]["display_name"] == "עברית"
 
 
-def test_plans_route_quotes_lari_for_georgia_and_no_dollars_for_the_usa(
+def test_plans_route_quotes_lari_for_georgia_and_estimated_dollars_for_the_usa(
     client: TestClient,
 ) -> None:
     georgia = read_json(
@@ -91,9 +91,11 @@ def test_plans_route_quotes_lari_for_georgia_and_no_dollars_for_the_usa(
     }
     assert voice["local_monthly_price"]["is_estimated"] is False
     assert georgia["exchange_rate"]["rate"] == 2.9552
+    assert georgia["exchange_rate"]["rate_value"] == "2.9552"
     assert usa["local_currency_code"] == "USD"
-    assert all(quote["local_monthly_price"] is None for quote in usa["quotes"])
-    assert usa["exchange_rate"] is None
+    assert all(quote["local_monthly_price"]["is_estimated"] for quote in usa["quotes"])
+    assert usa["exchange_rate"]["rate_date"] == "2026-10-01"
+    assert usa["exchange_rate"]["source"] == "Platform planning rate"
 
 
 def test_plans_route_requires_a_country(client: TestClient) -> None:

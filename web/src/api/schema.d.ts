@@ -3880,8 +3880,9 @@ export interface components {
          *
          *     Provider costs are in micro US dollars (provider price lists); revenue is
          *     the paid invoices of the period in the subscription currency, prorated
-         *     by service time. The cost is converted with an official rate when the
-         *     catalog has one; without it the money cost and the margin stay empty.
+         *     by service time. The cost is converted with the newest dated rate
+         *     (`exchange_rate`, with its date, source and whether it is derived or
+         *     stale); without one the money cost and the margin stay empty.
          */
         ClientCostReport: {
             /** Business Id */
@@ -4761,22 +4762,55 @@ export interface components {
         };
         /**
          * ExchangeRateQuote
-         * @description An official rate: `rate` units of the quote currency for one base unit.
+         * @description A rate the platform converts with: `rate_value` units of the quote
+         *     currency for one base unit, exactly (`rate` is the same number as a
+         *     JSON number, kept for older clients). Shown with its date and source
+         *     (`source` in English, `sources` as codes a client names in its language);
+         *     `is_derived` marks an inverse or a cross rate through the euro that no
+         *     bank published itself, `is_stale` a rate older than a few days (the
+         *     feed has not been refreshed: the date says how old it is).
          *
          *     Example: EUR -> GEL 2.9552, National Bank of Georgia, 2026-09-30.
          */
         ExchangeRateQuote: {
             /** Base Currency Code */
             base_currency_code: string;
+            /**
+             * Is Derived
+             * @default false
+             */
+            is_derived: boolean;
+            /**
+             * Is Stale
+             * @default false
+             */
+            is_stale: boolean;
             /** Quote Currency Code */
             quote_currency_code: string;
-            /** Rate */
-            rate: number;
+            /**
+             * Rate
+             * @description The rate as a JSON number (use `rate_value` to compute).
+             */
+            readonly rate: number;
             /** Rate Date */
             rate_date: string;
+            /** Rate Value */
+            rate_value: string;
             /** Source */
             source: string;
+            /** Sources */
+            sources?: components["schemas"]["ExchangeRateSource"][];
         };
+        /**
+         * ExchangeRateSource
+         * @description Who set an exchange rate. NBG: the National Bank of Georgia's official
+         *     rates against the lari (about 40 currencies, daily). ECB: the European
+         *     Central Bank's euro reference rates (about 30 currencies, each TARGET
+         *     day). PLANNING: the rate of the platform's own cost model, the last
+         *     fallback when no published rate is stored yet.
+         * @enum {string}
+         */
+        ExchangeRateSource: "nbg" | "ecb" | "planning";
         /**
          * FailedAutotestView
          * @description A scenario that did not pass in the run of the active version's verdict.

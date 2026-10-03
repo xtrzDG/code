@@ -5,6 +5,8 @@ Example:
 """
 
 IsAutoDebitActive = bool
+IsDerivedExchangeRate = bool
+IsExchangeRateStale = bool
 IsInitialPaymentSettled = bool
 IsPriceEstimated = bool
 IsRefundDue = bool

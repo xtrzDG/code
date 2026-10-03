@@ -80,7 +80,15 @@ def test_client_list_shows_health_with_critical_clients_first() -> None:
     assert int(georgian.included_voice_minutes) == 400
     assert int(georgian.used_dialogs) == 25
     assert georgian.cost.revenue.currency_code == "GEL"
-    assert georgian.cost.margin is None
+    # Dollar provider costs reach lari through the euro (dated catalog rates).
+    assert georgian.cost.margin is not None
+    rate = georgian.cost.exchange_rate
+    assert rate is not None
+    assert (str(rate.base_currency_code), str(rate.quote_currency_code)) == (
+        "USD",
+        "GEL",
+    )
+    assert rate.is_derived is True
 
 
 def list_names(world: AdminWorld, **query: object) -> list[str]:

@@ -57,3 +57,6 @@ class BillingOperatorsContainer(containers.DeclarativeContainer):
     invoice_usage_overage_operator = platform_pipeline_operator(
         billing_pipelines.invoice_usage_overage_pipeline, storage_scope
     )
+    refresh_exchange_rates_operator = platform_pipeline_operator(
+        billing_pipelines.refresh_exchange_rates_pipeline, storage_scope
+    )

@@ -20,6 +20,9 @@ from app.containers.gateways import (
 from app.contracts.jobs import QueuedJobOperator
 from app.gateways.worker.background_worker import PeriodicJobSpec
 from app.gateways.worker.periodic.purge_stale_rows import PURGE_STALE_ROWS_JOB
+from app.gateways.worker.periodic.refresh_exchange_rates import (
+    REFRESH_EXCHANGE_RATES_JOB,
+)
 from app.gateways.worker.periodic.request_visit_feedback import (
     REQUEST_VISIT_FEEDBACK_JOB,
 )
@@ -76,6 +79,7 @@ def test_worker_ticks_once_with_every_job_registered() -> None:
         (SWEEP_RATE_LIMIT_BUCKETS_JOB, 600),
         (SEND_VALUE_REPORTS_JOB, 3_600),
         (REQUEST_VISIT_FEEDBACK_JOB, 600),
+        (REFRESH_EXCHANGE_RATES_JOB, 21_600),
     ]
     assert [job.name for job in jobs if job.is_process_local] == [FLUSH_LLM_TRACES_JOB]
     # The worker plays queued autotest runs (concept: assembly autotests run
@@ -94,7 +98,7 @@ def test_worker_ticks_once_with_every_job_registered() -> None:
         IMPORT_WEBSITE_JOB,
         ROTATE_ENCRYPTED_SECRETS_JOB,
     ]
-    assert (first.periodic_runs, first.queued_runs, first.failures) == (12, 0, 0)
+    assert (first.periodic_runs, first.queued_runs, first.failures) == (13, 0, 0)
     assert right_after.periodic_runs == 0
     assert a_minute_later.periodic_runs == 1  # the trace flush
     # Trials, overage, grace periods, reminders, the trace flush, the sweep

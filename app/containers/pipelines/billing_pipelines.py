@@ -51,3 +51,6 @@ class BillingPipelinesContainer(containers.DeclarativeContainer):
     invoice_usage_overage_pipeline = orchestrator_pipeline(
         billing_orchestrators.invoice_usage_overage_orchestrator
     )
+    refresh_exchange_rates_pipeline = orchestrator_pipeline(
+        billing_orchestrators.refresh_exchange_rates_orchestrator
+    )

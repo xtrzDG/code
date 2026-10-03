@@ -24,6 +24,7 @@ from app.schemas.typings.platform.strings import PlatformSecret
 from app.utilities.config_helpers.app_settings.app_settings_assembler import (
     assemble_app_settings,
 )
+from tests.billing.rate_feed_fakes import fixture_rate_clients
 from tests.e2e.edge_fakes import (
     CapturingOtpDelivery,
     MovableClock,
@@ -107,6 +108,10 @@ def build_workshop_container(
             transport=build_transport(elevenlabs, answer_elevenlabs),
         ),
     )
+    # The central banks' rate feeds read fixture files (dated 2026-10-02/03).
+    nbg_rates_client, ecb_rates_client = fixture_rate_clients()
+    replace_provider(container.clients.nbg_rates_client, nbg_rates_client)
+    replace_provider(container.clients.ecb_rates_client, ecb_rates_client)
     replace_provider(
         container.clients.google_calendar_client,
         GoogleCalendarClient(

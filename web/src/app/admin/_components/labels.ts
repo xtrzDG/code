@@ -104,3 +104,9 @@ export const INVOICE_KIND_LABELS: Record<Schema<"InvoiceKind">, MessageKey> = {
   setup_fee: "billing.invoices.kinds.setup_fee",
   usage_overage: "billing.invoices.kinds.usage_overage",
 };
+
+export const RATE_SOURCE_LABELS: Record<Schema<"ExchangeRateSource">, MessageKey> = {
+  nbg: "admin.detail.rateSources.nbg",
+  ecb: "admin.detail.rateSources.ecb",
+  planning: "admin.detail.rateSources.planning",
+};

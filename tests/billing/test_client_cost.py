@@ -20,7 +20,7 @@ from app.utilities.billing.client_cost_math import (
     compute_margin_percent,
     compute_period_share,
 )
-from tests.billing.billing_registries import StaticExchangeRateRegistry
+from tests.billing.billing_registries import static_rate_registry
 from tests.billing.billing_settings import GEORGIA, ITALY
 from tests.billing.billing_testbed import BillingTestbed
 from tests.billing.cost_world import PERIOD_DAYS, CostWorld
@@ -29,7 +29,7 @@ from tests.billing.cost_world import PERIOD_DAYS, CostWorld
 def test_cost_counts_language_model_spend_once_and_compares_with_revenue() -> None:
     world = CostWorld(
         BillingTestbed(
-            exchange_rate_registry=StaticExchangeRateRegistry([("EUR", "USD", 1.1)])
+            exchange_rate_registry=static_rate_registry([("EUR", "USD", "1.1")])
         ),
         ITALY,
     )
@@ -56,7 +56,9 @@ def test_cost_counts_language_model_spend_once_and_compares_with_revenue() -> No
     assert int(report.margin.amount_minor) == 13929
     assert report.margin_percent == pytest.approx(79.59)
     assert report.exchange_rate is not None
-    assert report.exchange_rate.base_currency_code == "EUR"
+    assert report.exchange_rate.base_currency_code == "USD"
+    assert report.exchange_rate.quote_currency_code == "EUR"
+    assert report.exchange_rate.is_derived is True
     assert report.planned_monthly_provider_cost is not None
     assert int(report.planned_monthly_provider_cost.amount_minor) == 5490
 
@@ -64,7 +66,7 @@ def test_cost_counts_language_model_spend_once_and_compares_with_revenue() -> No
 def test_cost_in_lari_with_a_direct_dollar_rate() -> None:
     world = CostWorld(
         BillingTestbed(
-            exchange_rate_registry=StaticExchangeRateRegistry([("USD", "GEL", 2.7)])
+            exchange_rate_registry=static_rate_registry([("USD", "GEL", "2.7")])
         ),
         GEORGIA,
     )
@@ -80,8 +82,13 @@ def test_cost_in_lari_with_a_direct_dollar_rate() -> None:
     assert int(report.margin.amount_minor) == 41094
 
 
-def test_without_an_official_dollar_rate_the_margin_stays_unknown() -> None:
-    world = CostWorld(BillingTestbed(), GEORGIA)
+def test_without_any_dollar_rate_the_margin_stays_unknown() -> None:
+    world = CostWorld(
+        BillingTestbed(
+            exchange_rate_registry=static_rate_registry([("EUR", "GEL", "2.95")])
+        ),
+        GEORGIA,
+    )
     world.record_typical_month()
 
     report = world.report()
@@ -96,7 +103,7 @@ def test_without_an_official_dollar_rate_the_margin_stays_unknown() -> None:
 def test_revenue_is_prorated_and_a_setup_fee_counts_when_invoiced() -> None:
     world = CostWorld(
         BillingTestbed(
-            exchange_rate_registry=StaticExchangeRateRegistry([("EUR", "USD", 1.1)])
+            exchange_rate_registry=static_rate_registry([("EUR", "USD", "1.1")])
         ),
         ITALY,
     )
@@ -121,7 +128,7 @@ def test_revenue_is_prorated_and_a_setup_fee_counts_when_invoiced() -> None:
 def test_a_loss_has_a_negative_margin() -> None:
     world = CostWorld(
         BillingTestbed(
-            exchange_rate_registry=StaticExchangeRateRegistry([("EUR", "USD", 1.0)])
+            exchange_rate_registry=static_rate_registry([("EUR", "USD", "1.0")])
         ),
         ITALY,
     )

@@ -25,6 +25,9 @@ from app.containers.adapters.launch_collections_container import (
 from app.containers.adapters.notification_collections_container import (
     NotificationCollectionsContainer,
 )
+from app.containers.adapters.rate_collections_container import (
+    RateCollectionsContainer,
+)
 from app.containers.adapters.security_collections_container import (
     SecurityCollectionsContainer,
 )
@@ -38,6 +41,7 @@ from app.schemas.domain.businesses import BusinessDocument, BusinessMember
 from app.schemas.domain.compliance import AuditLogEntryDocument
 from app.schemas.domain.contacts import ContactDocument
 from app.schemas.domain.conversations import LlmTurnDocument
+from app.schemas.domain.exchange_rates import ExchangeRateDocument
 from app.schemas.domain.inbound_events import InboundEventDocument
 from app.schemas.domain.jobs import (
     PeriodicJobRunDocument,
@@ -91,12 +95,14 @@ PLATFORM_DOCUMENT_TYPES: frozenset[type[PersistentDocument]] = frozenset(
         InboundEventDocument,
         # A re-encryption run covers every business at once.
         KeyRotationDocument,
+        # Published exchange rates are the same for every business.
+        ExchangeRateDocument,
     }
 )
 
 
-# The containers of document collections (the notifications' and the
-# guided launch's own siblings).
+# The containers of document collections (the notifications', the guided
+# launch's, the exchange rates' and other own siblings).
 COLLECTION_CONTAINERS = (
     DocumentCollectionsContainer,
     NotificationCollectionsContainer,
@@ -106,6 +112,7 @@ COLLECTION_CONTAINERS = (
     SecurityCollectionsContainer,
     ValueCollectionsContainer,
     FeedbackCollectionsContainer,
+    RateCollectionsContainer,
 )
 
 

@@ -77,3 +77,17 @@ class BillingNoticeKind(StrEnum):
     SUBSCRIPTION_ENDED = "subscription_ended"
     PACKAGE_USAGE_WARNING = "package_usage_warning"
     OVERAGE_INVOICED = "overage_invoiced"
+
+
+class ExchangeRateSource(StrEnum):
+    """
+    Who set an exchange rate. NBG: the National Bank of Georgia's official
+    rates against the lari (about 40 currencies, daily). ECB: the European
+    Central Bank's euro reference rates (about 30 currencies, each TARGET
+    day). PLANNING: the rate of the platform's own cost model, the last
+    fallback when no published rate is stored yet.
+    """
+
+    NBG = "nbg"
+    ECB = "ecb"
+    PLANNING = "planning"

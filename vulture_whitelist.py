@@ -201,6 +201,12 @@ _.new_lead_count  # app/schemas/dto/inbox/inbox_attention.py (deprecated name)
 _.open_handoff_count  # app/schemas/dto/inbox/inbox_attention.py (deprecated name)
 _.unconfirmed_bookings  # app/schemas/dto/inbox/inbox_attention.py
 _.unconfirmed_booking_count  # app/schemas/dto/inbox/inbox_attention.py (deprecated)
+# A channel's link state, read by the cabinet's Channels card.
+_.link_state  # app/schemas/dto/channels/channel_settings.py
+# Dated exchange rates: the stored day number is a lookup column (the newest
+# rate of a pair, migration 1071); staleness is shown by the cabinet.
+_.rate_day  # app/schemas/domain/exchange_rates.py
+_.is_stale  # app/schemas/dto/catalog/plan_quotes.py
 _.status_counts  # app/schemas/dto/operations/leads.py
 _.knowledge_item_id  # app/schemas/dto/operations/unanswered_questions.py
 _.requires_reassembly  # app/schemas/dto/operations/unanswered_questions.py

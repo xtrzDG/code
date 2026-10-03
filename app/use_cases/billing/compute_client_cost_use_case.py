@@ -65,9 +65,10 @@ class ComputeClientCostUseCase(UseCaseContract[ClientCostQuery, ClientCostReport
     the two records, so that neither a missing message nor a missing event
     hides spend. Revenue: paid invoices prorated by the share of their
     service period inside the window (a setup fee counts when invoiced), in
-    the subscription currency. The USD cost is converted with an official
-    rate (direct, or the inverse of the published pair); without one, the
-    money cost and the margin stay empty rather than invented.
+    the subscription currency. The USD cost is converted with the newest
+    dated rate (published, inverse or a cross rate through the euro, shown
+    with its date and source); without one, the money cost and the margin
+    stay empty rather than invented.
     """
 
     def __init__(

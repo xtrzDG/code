@@ -16,6 +16,19 @@ class AutoDebitStartDate(BaseConstrainedTypedString):
     pattern = r"^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$"
 
 
+class CurrencyPairCode(BaseConstrainedTypedString):
+    """
+    A currency pair as rates are filed: base, a slash, quote (ISO 4217).
+
+    Example:
+        usd_to_gel = CurrencyPairCode("USD/GEL")
+    """
+
+    min_length = 7
+    max_length = 7
+    pattern = r"^[A-Z]{3}/[A-Z]{3}$"
+
+
 class ExchangeRateDate(BaseConstrainedTypedString):
     """
     Calendar day an official exchange rate was set for, ISO 8601 "YYYY-MM-DD".
@@ -27,6 +40,21 @@ class ExchangeRateDate(BaseConstrainedTypedString):
     min_length = 10
     max_length = 10
     pattern = r"^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$"
+
+
+class ExchangeRateValue(BaseConstrainedTypedString):
+    """
+    Units of the quote currency for one unit of the base currency, as an
+    exact decimal string (> 0, at most 12 digits after the point), so rates
+    are multiplied as `Decimal`, never as binary floats.
+
+    Example:
+        eur_to_gel = ExchangeRateValue("2.9552")
+    """
+
+    min_length = 1
+    max_length = 25
+    pattern = r"^(?=[0-9.]*[1-9])(0|[1-9][0-9]{0,11})(\.[0-9]{1,12})?$"
 
 
 class PaymentCheckoutUrl(BaseConstrainedTypedString):

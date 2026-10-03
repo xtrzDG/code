@@ -7,12 +7,12 @@ from app.schemas.exceptions.application_errors import (
     UnsupportedLanguageError,
     ValidationFailedError,
 )
-from app.schemas.typings.billing.constrained_floats import ExchangeRate
 from app.schemas.typings.billing.constrained_integers import (
     CurrencyMinorUnitDigits,
     DiscountPercent,
     MoneyAmountMinor,
 )
+from app.schemas.typings.billing.constrained_strings import ExchangeRateValue
 from app.schemas.typings.localization.constrained_strings import (
     CurrencyCode,
     LanguageTag,
@@ -108,7 +108,7 @@ def test_negative_and_non_finite_amounts_are_rejected(major_units: Decimal) -> N
 
 
 def test_conversion_uses_the_published_rate_exactly() -> None:
-    rate = ExchangeRate(2.9552)
+    rate = ExchangeRateValue("2.9552")
 
     assert convert_money(money(15, "EUR"), rate, CurrencyCode("GEL")) == money(
         44, "GEL"
@@ -121,11 +121,19 @@ def test_conversion_uses_the_published_rate_exactly() -> None:
     )
     # 0.1 + 0.2 style binary errors must not leak in: 1.15 EUR x 0.1 = 0.115.
     assert convert_money(
-        money(115, "EUR"), ExchangeRate(0.1), CurrencyCode("USD")
+        money(115, "EUR"), ExchangeRateValue("0.1"), CurrencyCode("USD")
     ) == money(12, "USD")
     assert convert_money(
-        money(10000, "EUR"), ExchangeRate(161.5), CurrencyCode("JPY")
+        money(10000, "EUR"), ExchangeRateValue("161.5"), CurrencyCode("JPY")
     ) == money(16150, "JPY")
+
+
+def test_conversion_rounds_half_to_even() -> None:
+    half = ExchangeRateValue("0.5")
+
+    # 2.5 and 3.5 minor units: ties go to the even neighbour, no drift up.
+    assert convert_money(money(5, "EUR"), half, CurrencyCode("USD")) == money(2, "USD")
+    assert convert_money(money(7, "EUR"), half, CurrencyCode("USD")) == money(4, "USD")
 
 
 def test_multiply_and_annual_discount() -> None:

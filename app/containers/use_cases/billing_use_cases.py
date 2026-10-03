@@ -2,6 +2,7 @@ from dependency_injector import containers
 from dependency_injector.providers import DependenciesContainer, Factory
 
 from app.containers.adapters.adapters_container import AdaptersContainer
+from app.containers.clients import ClientsContainer
 from app.containers.config import ConfigContainer
 from app.containers.facilitators import FacilitatorsContainer
 from app.containers.registries import RegistriesContainer
@@ -62,6 +63,9 @@ from app.use_cases.billing.open_subscription_use_case import (
 from app.use_cases.billing.payment_webhook.process_payment_webhook_use_case import (
     ProcessPaymentWebhookUseCase,
 )
+from app.use_cases.billing.refresh_exchange_rates_use_case import (
+    RefreshExchangeRatesUseCase,
+)
 from app.use_cases.billing.start_checkout_use_case import StartCheckoutUseCase
 from app.use_cases.billing.start_trial_use_case import StartTrialUseCase
 
@@ -72,6 +76,7 @@ class BillingUseCasesContainer(containers.DeclarativeContainer):
     periodic billing jobs and the cost of a client.
     """
 
+    clients: ClientsContainer = DependenciesContainer()  # type: ignore[assignment]
     adapters: AdaptersContainer = DependenciesContainer()  # type: ignore[assignment]
     config: ConfigContainer = DependenciesContainer()  # type: ignore[assignment]
     facilitators: FacilitatorsContainer = DependenciesContainer()  # type: ignore[assignment]
@@ -245,6 +250,16 @@ class BillingUseCasesContainer(containers.DeclarativeContainer):
             ),
             manager_notifier=facilitators.manager_notification_facilitator,
             billing_notice_transformer=transformers.billing_notice_transformer,
+            wall_clock=time_provider.microsecond_wall_clock,
+        )
+    )
+    # The day's NBG and ECB rates stored as dated rows (periodic job).
+    refresh_exchange_rates_use_case: Factory[UseCaseContract[JobTick, JobReport]] = (
+        Factory(
+            RefreshExchangeRatesUseCase,
+            lari_feed=clients.nbg_rates_client,
+            euro_feed=clients.ecb_rates_client,
+            exchange_rate_repo=repositories.exchange_rate_repo,
             wall_clock=time_provider.microsecond_wall_clock,
         )
     )

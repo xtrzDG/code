@@ -10,6 +10,7 @@ import type { AdminClientSummary } from "../../_lib/clients";
 import { useClientFormat } from "../../_lib/useClientFormat";
 import { Margin } from "../ClientBits";
 import { USAGE_KIND_LABELS } from "../labels";
+import { RateNote } from "./RateNote";
 
 /** This period's costs (LLM and providers), revenue and margin, with the cost of each usage kind. */
 export function CostCard({ summary, timeZone }: { summary: AdminClientSummary; timeZone: string }) {
@@ -48,19 +49,7 @@ export function CostCard({ summary, timeZone }: { summary: AdminClientSummary; t
             { label: t("admin.detail.margin"), value: <Margin cost={summary.cost} /> },
           ]}
         />
-        <p className="text-xs text-ink-subtle">
-          {summary.cost.exchange_rate
-            ? t("admin.detail.rate", {
-                rate: `1 ${summary.cost.exchange_rate.base_currency_code} = ${formatNumber(summary.cost.exchange_rate.rate, locale, {
-                  maximumFractionDigits: 4,
-                })} ${summary.cost.exchange_rate.quote_currency_code}`,
-                source: summary.cost.exchange_rate.source,
-                date: summary.cost.exchange_rate.rate_date,
-              })
-            : !summary.cost.margin
-              ? t("admin.detail.noRate")
-              : null}
-        </p>
+        <RateNote rate={summary.cost.exchange_rate} hasMargin={Boolean(summary.cost.margin)} />
         <section aria-labelledby="admin-usage-lines" className="space-y-2">
           <h3 id="admin-usage-lines" className="text-sm font-semibold text-ink">
             {t("admin.detail.linesTitle")}

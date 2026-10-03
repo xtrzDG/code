@@ -6,6 +6,7 @@
 import type { Schema } from "@/api/types";
 import type { BadgeTone } from "@/components/ui";
 import { usagePercent } from "@/components/workspace/helpers";
+import { formatDate, formatNumber } from "@/lib/format";
 
 export type AdminClientSummary = Schema<"AdminClientSummary">;
 export type ClientHealthStatus = Schema<"ClientHealthStatus">;
@@ -86,4 +87,14 @@ export type ClientSort = (typeof CLIENT_SORTS)[number];
 /** "/admin/clients/{id}" */
 export function adminClientPath(businessId: string): string {
   return `/admin/clients/${encodeURIComponent(businessId)}`;
+}
+
+/** An exact decimal rate ("2.604159323229") rounded for reading: six significant digits. */
+export function formatRateValue(rateValue: string, locale: string): string {
+  return formatNumber(Number(rateValue), locale, { maximumSignificantDigits: 6 });
+}
+
+/** A rate's calendar day ("2026-10-02") in the reader's language, whatever their time zone. */
+export function formatRateDate(rateDate: string, locale: string): string {
+  return formatDate(new Date(`${rateDate}T12:00:00Z`), { locale, timeZone: "UTC" });
 }

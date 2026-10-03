@@ -1,7 +1,7 @@
 """Money arithmetic of a client's cost report: usage, shares, rates, margins."""
 
 from collections import defaultdict
-from decimal import ROUND_HALF_UP, Decimal
+from decimal import ROUND_HALF_EVEN, ROUND_HALF_UP, Decimal
 
 from app.contracts.catalog_registries import ExchangeRateRegistryContract
 from app.schemas.constants.billing import UsageKind
@@ -14,6 +14,7 @@ from app.schemas.typings.billing.constrained_integers import (
     UsageQuantityTotal,
 )
 from app.schemas.typings.localization.constrained_strings import CurrencyCode
+from app.utilities.exchange_rates.rate_math import read_rate
 from app.utilities.money.money_math import get_currency_minor_unit_digits
 
 PROVIDER_COST_CURRENCY: CurrencyCode = CurrencyCode("USD")
@@ -71,35 +72,30 @@ def convert_amount(
     exchange_rate_registry: ExchangeRateRegistryContract,
 ) -> tuple[Decimal, ExchangeRateQuote | None] | None:
     """
-    Convert major units with an official rate: the direct pair, else the
-    published opposite pair read the other way. None without a rate.
+    Convert major units with the registry's rate (published, inverse or a
+    cross rate through the euro), exactly. None without a rate.
     """
 
     if source_currency == target_currency:
         return amount, None
 
-    direct_rate: ExchangeRateQuote | None = exchange_rate_registry.find_rate(
+    rate: ExchangeRateQuote | None = exchange_rate_registry.find_rate(
         source_currency,
         target_currency,
     )
-    if direct_rate is not None:
-        return amount * Decimal(repr(float(direct_rate.rate))), direct_rate
+    if rate is None:
+        return None
 
-    opposite_rate: ExchangeRateQuote | None = exchange_rate_registry.find_rate(
-        target_currency,
-        source_currency,
-    )
-    if opposite_rate is not None:
-        return amount / Decimal(repr(float(opposite_rate.rate))), opposite_rate
-
-    return None
+    return amount * read_rate(rate.rate_value), rate
 
 
 def to_minor_units(amount: Decimal, currency_code: CurrencyCode) -> int:
-    """Major units -> whole minor units, rounded half up."""
+    """Major units -> whole minor units, rounded half to even."""
 
     digits: int = int(get_currency_minor_unit_digits(currency_code))
-    return int(amount.scaleb(digits).quantize(WHOLE_MINOR_UNIT, rounding=ROUND_HALF_UP))
+    return int(
+        amount.scaleb(digits).quantize(WHOLE_MINOR_UNIT, rounding=ROUND_HALF_EVEN)
+    )
 
 
 def compute_margin_percent(
