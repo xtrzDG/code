@@ -17,6 +17,12 @@ export const SUBSCRIPTION_STATUS_LABELS: Record<SubscriptionStatus, MessageKey> 
   cancelled: "billing.status.cancelled",
 };
 
+/** What an owner without a subscription is told: the trial starts at go-live, can start now, or is used. */
+export function noSubscriptionText(overview: BillingOverview): MessageKey {
+  if (overview.does_trial_start_at_go_live) return "billing.noSubscriptionTrialAtGoLive";
+  return overview.is_trial_available ? "billing.noSubscriptionDescription" : "billing.noSubscriptionNoTrial";
+}
+
 /** The current subscription: plan, price, dates, automatic payment and the owner's actions. */
 export function SubscriptionCard({
   overview,
@@ -46,7 +52,7 @@ export function SubscriptionCard({
           className="py-6"
           icon={<IconCard className="size-6" />}
           title={t("billing.noSubscriptionTitle")}
-          description={overview.is_trial_available ? t("billing.noSubscriptionDescription") : t("billing.noSubscriptionNoTrial")}
+          description={t(noSubscriptionText(overview))}
           action={
             <a href="#billing-plans" className={buttonClasses({ variant: "secondary", size: "sm" })}>
               {t("billing.plans.title")}

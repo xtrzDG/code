@@ -10,6 +10,7 @@ export const billingEn = {
   noSubscriptionTitle: "No subscription yet",
   noSubscriptionDescription: "Start a free trial of any plan below, or subscribe and pay right away. Nothing is charged during the trial.",
   noSubscriptionNoTrial: "Choose a plan below and pay to start the assistant.",
+  noSubscriptionTrialAtGoLive: "Your free trial starts by itself when the assistant goes live, so every trial day is spent with real customers. Nothing is charged during the trial. To start it now, choose a plan below.",
   status: {
     trialing: "Free trial",
     active: "Active",

@@ -5,6 +5,9 @@ import type { GoLiveCheck, GoLiveReadiness } from "@/lib/assistant/goLive";
 
 import { GapList } from "./goLiveFixes";
 
+/** The detail of a passed billing check: the free trial starts at the first go-live. */
+const TRIAL_AT_GO_LIVE = "trial_at_go_live";
+
 /** What one check says, in the UI language, from its code and details. */
 export function CheckDetail({ check, readiness }: { check: GoLiveCheck; readiness: GoLiveReadiness }) {
   const { t } = useI18n();
@@ -12,6 +15,7 @@ export function CheckDetail({ check, readiness }: { check: GoLiveCheck; readines
   switch (check.code) {
     case "subscription_or_trial":
       if (check.is_ok) {
+        if (details[0] === TRIAL_AT_GO_LIVE) return <>{t("assistant.checklist.billingTrialAtGoLive")}</>;
         return <>{readiness.subscription_status === "trialing" ? t("assistant.checklist.billingTrial") : t("assistant.checklist.billingActive")}</>;
       }
       return <>{details[0] === "none" ? t("assistant.checklist.billingStartTrial") : t("assistant.checklist.billingMissing")}</>;

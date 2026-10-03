@@ -91,6 +91,31 @@ repositories ─ adapters (app/adapters/) ─ clients (app/clients/)  внешн
 | audit_logs, dpa_acceptances | `AuditLogEntryDocument`, `DpaAcceptanceDocument` |
 | входящие и исходящие доставки | `InboundEventDocument` (уровень платформы), `OutboundMessageDocument` |
 | профиль анкеты (§3) | `BusinessProfileDocument` |
+| пошаговый запуск | `SetupStateDocument` (пропущенные шаги), `ActivationEventDocument` (вехи), `AssistantApplyDocument` («Применить изменения») |
+
+## Пошаговый запуск
+
+Путь владельца от «Создать AI-помощника» до живого помощника
+(`app/use_cases/setup/`, `app/use_cases/assistants/apply/`):
+
+- шаги запуска не хранятся, а вычисляются из данных бизнеса
+  (`app/utilities/setup/setup_steps.py`): пробелы анкеты, контакт сотрудника,
+  каналы, проба помощника, опубликованная версия; хранятся только
+  пропущенные необязательные шаги;
+- готовые ответы ниш (`app/registries/niches/starters/`) — подсказки, не
+  факты: в анкету попадают только по согласию владельца и только в пустые
+  разделы, цен в них нет;
+- «Применить изменения» — оркестратор `ApplyChangesOrchestrator`: регистрация
+  (атомарно, одна на бизнес), сборка, проверка условий запуска, постановка
+  автотестов в очередь; публикует версию воркер, когда прогон закончился
+  (`RunQueuedAutotestsOrchestrator` → `PublishAppliedVersionUseCase`) — через
+  ту же активацию, что и ручная публикация;
+- первый выход в эфир открывает пробный период (`StartTrialAtGoLiveUseCase`)
+  и пишет веху `went_live`; первые настоящие разговор, бронь и передача
+  человеку находятся по самым ранним записям бизнеса при чтении шагов, поэтому
+  модули разговоров и броней о вехах не знают;
+- тестовый чат владельца перед ответом собирает черновик, если в версиях ещё
+  нет его последних правок (`PrepareTestChatVersionUseCase`).
 
 ## Адаптивность под любую страну
 

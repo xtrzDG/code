@@ -1,5 +1,7 @@
 """Accepting the niche's starter answers: empty sections only, never prices."""
 
+from typing import Any
+
 from tests.e2e.harness import Workshop
 from tests.setup.launch_steps import (
     NewAssistant,
@@ -23,8 +25,8 @@ ALL_SECTIONS: list[str] = [
 def apply_starters(
     workshop: Workshop,
     assistant: NewAssistant,
-    body: dict[str, object] | None = None,
-) -> dict[str, object]:
+    body: dict[str, Any] | None = None,
+) -> dict[str, Any]:
     applied = workshop.client.post(
         f"{assistant.base}/setup/starter-answers/apply",
         json=body,
@@ -50,7 +52,6 @@ def test_accepting_fills_the_empty_profile_in_one_call(workshop: Workshop) -> No
     assert applied["applied_sections"] == ALL_SECTIONS
     assert applied["kept_sections"] == []
     profile = applied["profile"]
-    assert isinstance(profile, dict)
     assert [day["weekday"] for day in profile["hours"]] == [1, 2, 3, 4, 5, 6, 7]
     assert profile["booking_rules"]["max_party_size"] == 8
     assert profile["booking_rules"]["deposit_minor"] is None
@@ -60,10 +61,8 @@ def test_accepting_fills_the_empty_profile_in_one_call(workshop: Workshop) -> No
     # Written in the owner's language (Georgian).
     assert profile["answers_language"] == "ka"
     resource = applied["resource"]
-    assert isinstance(resource, dict)
     assert resource["kind"] == "table"
     saved = applied["saved_knowledge_items"]
-    assert isinstance(saved, list)
     assert saved != []
     assert {item["kind"] for item in saved} == {"faq"}
     assert all(item["price_minor"] is None for item in saved)
@@ -124,7 +123,6 @@ def test_a_section_the_owner_filled_is_kept(workshop: Workshop) -> None:
     assert applied["applied_sections"] == ["hours"]
     assert applied["kept_sections"] == ["tone"]
     profile = applied["profile"]
-    assert isinstance(profile, dict)
     assert profile["tone"] == "Коротко и по делу"
     assert profile["handoff_rules"] == []
     assert applied["saved_knowledge_items"] == []
@@ -143,7 +141,6 @@ def test_the_owner_may_take_some_questions_in_another_language(
 
     assert applied["applied_sections"] == ["faq"]
     saved = applied["saved_knowledge_items"]
-    assert isinstance(saved, list)
     assert [item["title"] for item in saved] == ["Как забронировать стол?"]
 
 

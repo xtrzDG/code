@@ -106,6 +106,7 @@ export const assistantChecksEn = {
     billingActive: "The subscription is paid.",
     billingStartTrial: "Start the free trial or choose a plan.",
     billingMissing: "Pay for the subscription to go live.",
+    billingTrialAtGoLive: "The free trial starts by itself when the assistant goes live.",
     fixBilling: "Open billing",
     voice: "Phone calls",
     voiceOk: "The phone assistant is set up when this version goes live.",
@@ -119,7 +120,7 @@ export const assistantChecksEn = {
     },
   },
   refusal: {
-    subscription_or_trial: "Start the free trial or pay for the subscription.",
+    subscription_or_trial: "Choose a plan and pay for it to go live.",
     dpa: "Accept the data processing agreement.",
     profile_gaps: "Complete the profile. Missing:",
     staff_contact: "Add a staff contact who gets handoffs, bookings and requests.",

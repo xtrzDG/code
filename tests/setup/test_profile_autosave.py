@@ -160,3 +160,41 @@ def test_only_owners_autosave(workshop: Workshop) -> None:
     )
 
     assert refused.status_code == 403
+
+
+def test_every_section_can_be_autosaved(workshop: Workshop) -> None:
+    assistant = create_assistant(workshop)
+
+    saved = patch_profile(
+        workshop,
+        assistant,
+        {
+            "answers_language": "ru",
+            "address": {"text": "Тбилиси, проспект Руставели 1"},
+            "booking_rules": {
+                "max_party_size": 6,
+                "min_notice_minutes": 30,
+                "cancellation_policy": "Бесплатная отмена за час.",
+            },
+            "handoff_rules": ["Банкет больше 20 человек"],
+            "forbidden": ["Скидки без согласования"],
+            "links": [{"kind": "menu", "url": "https://salobie.example/menu"}],
+            "is_recording_notice_enabled": False,
+        },
+    )
+
+    assert saved["answers_language"] == "ru"
+    assert saved["address"]["text"] == "Тбилиси, проспект Руставели 1"
+    assert saved["booking_rules"]["max_party_size"] == 6
+    assert saved["booking_rules"]["min_notice_minutes"] == 30
+    assert saved["handoff_rules"] == ["Банкет больше 20 человек"]
+    assert saved["forbidden"] == ["Скидки без согласования"]
+    assert saved["links"] == [{"kind": "menu", "url": "https://salobie.example/menu"}]
+    assert saved["is_recording_notice_enabled"] is False
+    cleared = patch_profile(
+        workshop, assistant, {"address": None, "booking_rules": None, "links": []}
+    )
+    assert cleared["address"] is None
+    assert cleared["booking_rules"] is None
+    assert cleared["links"] == []
+    assert cleared["forbidden"] == ["Скидки без согласования"]
