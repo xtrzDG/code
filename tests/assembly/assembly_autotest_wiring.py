@@ -52,7 +52,6 @@ from app.use_cases.assistants.pending_changes.build_assistant_draft_use_case imp
 from app.use_cases.assistants.pending_changes.collect_pending_changes_use_case import (
     CollectPendingChangesUseCase,
 )
-from app.utilities.localization.localized_text_resolver import LocalizedTextResolver
 from app.use_cases.authorize_business_access_use_case import (
     AuthorizeBusinessAccessUseCase,
 )
@@ -81,6 +80,7 @@ from app.use_cases.autotests.run_autotest_scenario_use_case import (
 )
 from app.use_cases.autotests.start_autotest_run_use_case import StartAutotestRunUseCase
 from app.utilities.assembly.llm_costs import DEFAULT_LLM_TOKEN_PRICES
+from app.utilities.localization.localized_text_resolver import LocalizedTextResolver
 from tests.assembly.assembly_scripted_models import AssemblyScriptedModels
 from tests.assembly.deferred_use_case import DeferredUseCase
 from tests.live_events.recording_event_publisher import RecordingEventPublisher

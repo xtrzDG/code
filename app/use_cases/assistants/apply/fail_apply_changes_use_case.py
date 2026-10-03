@@ -1,5 +1,6 @@
 from typed_time_provider import Microseconds, WallClock
 
+from app.contracts.live_events import EventPublisherFacilitatorContract
 from app.contracts.repositories.setup_repositories import AssistantApplyRepoContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.setup import ApplyChangesStage
@@ -17,14 +18,17 @@ class FailApplyChangesUseCase(UseCaseContract[ApplyBuildFailure, None]):
     def __init__(
         self,
         assistant_apply_repo: AssistantApplyRepoContract,
+        live_events: EventPublisherFacilitatorContract,
         wall_clock: WallClock[Microseconds],
     ) -> None:
         self._assistant_apply_repo: AssistantApplyRepoContract = assistant_apply_repo
+        self._live_events: EventPublisherFacilitatorContract = live_events
         self._wall_clock: WallClock[Microseconds] = wall_clock
 
     def run(self, input_data: ApplyBuildFailure) -> None:
         move_apply(
             self._assistant_apply_repo,
+            self._live_events,
             input_data.business_id,
             input_data.assistant_version_id,
             ApplyChangesStage.NEEDS_ATTENTION,

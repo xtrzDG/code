@@ -1,6 +1,7 @@
 from dependency_injector import containers
 from dependency_injector.providers import DependenciesContainer, Factory
 
+from app.containers.facilitators import FacilitatorsContainer
 from app.containers.repositories import RepositoriesContainer
 from app.containers.time_provider import TimeProviderContainer
 from app.containers.use_cases.account_use_cases import AccountUseCasesContainer
@@ -47,6 +48,7 @@ class ApplyUseCasesContainer(containers.DeclarativeContainer):
     the progress the cabinet follows.
     """
 
+    facilitators: FacilitatorsContainer = DependenciesContainer()  # type: ignore[assignment]
     repositories: RepositoriesContainer = DependenciesContainer()  # type: ignore[assignment]
     time_provider: TimeProviderContainer = DependenciesContainer()  # type: ignore[assignment]
     utilities: UtilitiesContainer = DependenciesContainer()  # type: ignore[assignment]
@@ -64,6 +66,7 @@ class ApplyUseCasesContainer(containers.DeclarativeContainer):
         business_profile_repo=repositories.business_profile_repo,
         collect_pending_changes=pending_change_use_cases.collect_pending_changes_use_case,
         audit_log_repo=repositories.audit_log_repo,
+        live_events=facilitators.event_publisher,
         wall_clock=time_provider.microsecond_wall_clock,
     )
     check_applied_version_use_case: Factory[
@@ -74,12 +77,14 @@ class ApplyUseCasesContainer(containers.DeclarativeContainer):
         assistant_version_repo=repositories.assistant_version_repo,
         business_repo=repositories.business_repo,
         check_go_live_readiness=assistant_use_cases.check_go_live_readiness_use_case,
+        live_events=facilitators.event_publisher,
         wall_clock=time_provider.microsecond_wall_clock,
     )
     fail_apply_changes_use_case: Factory[UseCaseContract[ApplyBuildFailure, None]] = (
         Factory(
             FailApplyChangesUseCase,
             assistant_apply_repo=repositories.assistant_apply_repo,
+            live_events=facilitators.event_publisher,
             wall_clock=time_provider.microsecond_wall_clock,
         )
     )
@@ -92,6 +97,7 @@ class ApplyUseCasesContainer(containers.DeclarativeContainer):
             business_repo=repositories.business_repo,
             activate_assistant_version=assistant_use_cases.activate_assistant_version_use_case,
             audit_log_repo=repositories.audit_log_repo,
+            live_events=facilitators.event_publisher,
             wall_clock=time_provider.microsecond_wall_clock,
         )
     )

@@ -1,5 +1,6 @@
 from typed_time_provider import Microseconds, WallClock
 
+from app.contracts.live_events import EventPublisherFacilitatorContract
 from app.contracts.repositories.assistant_repositories import (
     AssistantVersionRepoContract,
 )
@@ -24,7 +25,10 @@ from app.schemas.typings.compliance.strings import (
     AuditEntityName,
     AuditEntityReference,
 )
-from app.use_cases.assistants.apply.apply_records import is_apply_running
+from app.use_cases.assistants.apply.apply_records import (
+    announce_apply,
+    is_apply_running,
+)
 from app.utilities.setup.setup_keys import derive_assistant_apply_id
 
 APPLY_AUDIT_ENTITY: AuditEntityName = AuditEntityName("assistant_apply")
@@ -55,6 +59,7 @@ class StartApplyChangesUseCase(UseCaseContract[ApplyChangesCommand, ApplyStart])
             PendingChangesRequest, list[PendingChange]
         ],
         audit_log_repo: AuditLogRepoContract,
+        live_events: EventPublisherFacilitatorContract,
         wall_clock: WallClock[Microseconds],
     ) -> None:
         self._authorize_business_access: UseCaseContract[
@@ -70,6 +75,7 @@ class StartApplyChangesUseCase(UseCaseContract[ApplyChangesCommand, ApplyStart])
             PendingChangesRequest, list[PendingChange]
         ] = collect_pending_changes
         self._audit_log_repo: AuditLogRepoContract = audit_log_repo
+        self._live_events: EventPublisherFacilitatorContract = live_events
         self._wall_clock: WallClock[Microseconds] = wall_clock
 
     def run(self, input_data: ApplyChangesCommand) -> ApplyStart:
@@ -145,6 +151,7 @@ class StartApplyChangesUseCase(UseCaseContract[ApplyChangesCommand, ApplyStart])
                 updated_at=now,
             )
         )
+        announce_apply(self._live_events, started)
         return ApplyStart(
             business=business,
             apply=started,

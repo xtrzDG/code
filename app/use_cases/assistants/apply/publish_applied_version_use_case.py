@@ -2,6 +2,7 @@ import logging
 
 from typed_time_provider import Microseconds, WallClock
 
+from app.contracts.live_events import EventPublisherFacilitatorContract
 from app.contracts.repositories.assistant_repositories import (
     AssistantVersionRepoContract,
     AutotestRunRepoContract,
@@ -63,6 +64,7 @@ class PublishAppliedVersionUseCase(UseCaseContract[AppliedVersion, None]):
             AssistantVersionDocument,
         ],
         audit_log_repo: AuditLogRepoContract,
+        live_events: EventPublisherFacilitatorContract,
         wall_clock: WallClock[Microseconds],
     ) -> None:
         self._assistant_apply_repo: AssistantApplyRepoContract = assistant_apply_repo
@@ -76,6 +78,7 @@ class PublishAppliedVersionUseCase(UseCaseContract[AppliedVersion, None]):
             AssistantVersionDocument,
         ] = activate_assistant_version
         self._audit_log_repo: AuditLogRepoContract = audit_log_repo
+        self._live_events: EventPublisherFacilitatorContract = live_events
         self._wall_clock: WallClock[Microseconds] = wall_clock
 
     def run(self, input_data: AppliedVersion) -> None:
@@ -184,6 +187,7 @@ class PublishAppliedVersionUseCase(UseCaseContract[AppliedVersion, None]):
     ) -> None:
         move_apply(
             self._assistant_apply_repo,
+            self._live_events,
             version.business_id,
             version.id,
             stage,

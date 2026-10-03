@@ -123,6 +123,7 @@ class UseCasesContainer(CoreUseCasesContainer):
     )
     apply: ApplyUseCasesContainer = Container(  # type: ignore[assignment]
         ApplyUseCasesContainer,
+        facilitators=CoreUseCasesContainer.facilitators,
         repositories=CoreUseCasesContainer.repositories,
         time_provider=CoreUseCasesContainer.time_provider,
         utilities=CoreUseCasesContainer.utilities,

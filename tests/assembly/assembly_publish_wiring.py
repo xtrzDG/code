@@ -52,6 +52,7 @@ from app.use_cases.setup.record_activation_event_use_case import (
 from app.use_cases.voice.remove_voice_agent_use_case import RemoveVoiceAgentUseCase
 from app.utilities.localization.localized_text_resolver import LocalizedTextResolver
 from tests.assembly.assembly_autotest_wiring import AssemblyAutotestWiring
+from tests.live_events.recording_event_publisher import RecordingEventPublisher
 
 
 class AssemblyPublishWiring(AssemblyAutotestWiring):
@@ -135,6 +136,7 @@ class AssemblyPublishWiring(AssemblyAutotestWiring):
         self._build_apply_use_cases()
 
     def _build_apply_use_cases(self) -> None:
+        self.apply_events = RecordingEventPublisher()
         self.publish_applied_use_case = PublishAppliedVersionUseCase(
             self.apply_repo,
             self.version_repo,
@@ -142,6 +144,7 @@ class AssemblyPublishWiring(AssemblyAutotestWiring):
             self.business_repo,
             self.activate_use_case,
             self.audit_repo,
+            self.apply_events,
             self.wall_clock,
         )
         self.publish_applied_later.target = self.publish_applied_use_case
@@ -171,6 +174,7 @@ class AssemblyPublishWiring(AssemblyAutotestWiring):
                 self.profile_repo,
                 self.collect_pending_changes_use_case,
                 self.audit_repo,
+                self.apply_events,
                 self.wall_clock,
             ),
             assemble_assistant_version=self.assemble_use_case,
@@ -179,6 +183,7 @@ class AssemblyPublishWiring(AssemblyAutotestWiring):
                 self.version_repo,
                 self.business_repo,
                 self.check_readiness_use_case,
+                self.apply_events,
                 self.wall_clock,
             ),
             select_smoke_checks=self.select_smoke_checks_use_case,
@@ -186,7 +191,7 @@ class AssemblyPublishWiring(AssemblyAutotestWiring):
             enqueue_autotest_run=self.enqueue_autotest_run_use_case,
             publish_applied_version=self.publish_applied_use_case,
             fail_apply_changes=FailApplyChangesUseCase(
-                self.apply_repo, self.wall_clock
+                self.apply_repo, self.apply_events, self.wall_clock
             ),
             get_apply_changes=self.get_apply_use_case,
         )
