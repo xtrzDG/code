@@ -79,7 +79,7 @@ export function burst(
       rotation: random() * Math.PI,
       spin: (random() - 0.5) * 12,
       size: 5 + random() * 7,
-      color: palette[index % Math.max(palette.length, 1)] ?? "#5b5bd6",
+      color: palette[index % Math.max(palette.length, 1)] ?? "#ad5732",
       life: 1.8 + random() * 1.4,
     });
   }

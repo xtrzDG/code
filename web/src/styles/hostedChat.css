@@ -10,11 +10,11 @@
 
 .hc-page {
   color-scheme: light dark;
-  --hc-accent: #5b5bd6;
-  --hc-canvas: light-dark(#f3f3f6, #09090c);
-  --hc-surface: light-dark(#ffffff, #111827);
-  --hc-ink: light-dark(#17171b, #f3f4f6);
-  --hc-muted: light-dark(#5b5b66, #a1a1aa);
+  --hc-accent: #ad5732;
+  --hc-canvas: light-dark(#f3f2ee, #121110);
+  --hc-surface: light-dark(#ffffff, #1b1a18);
+  --hc-ink: light-dark(#1d1c1a, #ecebe6);
+  --hc-muted: light-dark(#57544e, #aca79e);
   --hc-line: light-dark(rgb(0 0 0 / 0.08), rgb(255 255 255 / 0.09));
 
   position: relative;

@@ -37,40 +37,44 @@
 :root {
   color-scheme: dark;
 
-  /* Neutral greys: the page, cards, quiet fills. */
-  --canvas: light-dark(#f7f7f8, #0a0a0c);
-  --surface: light-dark(#ffffff, #111114);
-  --surface-muted: light-dark(#f1f1f3, #18181c);
-  --ink: light-dark(#17171b, #ededf0);
-  --ink-muted: light-dark(#55555f, #a3a3ad);
-  --ink-subtle: light-dark(#6b6b75, #8a8a95);
+  /* Warm neutrals (graphite and paper): the page, cards, quiet fills. */
+  --canvas: light-dark(#f6f5f2, #141311);
+  --surface: light-dark(#ffffff, #1b1a18);
+  --surface-muted: light-dark(#f0eee9, #24221f);
+  --ink: light-dark(#1d1c1a, #ecebe6);
+  --ink-muted: light-dark(#57544e, #aca79e);
+  --ink-subtle: light-dark(#67635c, #959087);
   /* Hairlines between blocks, and the borders of form controls. */
-  --line: light-dark(#e5e5e9, #25252b);
-  --line-strong: light-dark(#8e8e99, #65656f);
+  --line: light-dark(#e4e1da, #2d2b28);
+  --line-strong: light-dark(#8e897f, #6f6a62);
 
-  /* The one accent colour (iris). */
-  --accent: light-dark(#4b4bc8, #a8a8ff);
-  --accent-solid: #5b5bd6;
-  --accent-solid-hover: light-dark(#4b4bc8, #6767de);
+  /* The one accent colour (soft clay); every text use is AA on every surface. */
+  --accent: light-dark(#a5512e, #e19a75);
+  --accent-solid: #ad5732;
+  --accent-solid-hover: light-dark(#974a29, #b35a35);
   --on-accent: #ffffff;
-  --accent-soft: light-dark(#eeeefc, rgb(110 110 230 / 0.16));
-  --accent-ink: light-dark(#3b3ba6, #c6c6ff);
-  --focus: light-dark(#5b5bd6, #8c8cf5);
+  --accent-soft: light-dark(#f6e9e2, rgb(225 154 117 / 0.14));
+  --accent-ink: light-dark(#8a4224, #f0b899);
+  --focus: light-dark(#ad5732, #e19a75);
+  /* Quiet companions of the accent for gradients and decoration only. */
+  --tone-sand: light-dark(#c48d4e, #d9a86c);
+  --tone-rose: light-dark(#a8685a, #b8796a);
 
-  --success: light-dark(#16794c, #4cc38a);
-  --success-soft: light-dark(#e8f6ee, rgb(76 195 138 / 0.12));
-  --warning: light-dark(#975a00, #f1b84b);
-  --warning-soft: light-dark(#fdf3df, rgb(241 184 75 / 0.12));
-  --danger: light-dark(#c42b2b, #ff8a8a);
-  --danger-solid: light-dark(#d32f2f, #d93636);
-  --danger-soft: light-dark(#fdecec, rgb(255 110 110 / 0.12));
-  --info: light-dark(#0b67b8, #6cb6ff);
-  --info-soft: light-dark(#e7f2fd, rgb(108 182 255 / 0.12));
+  /* Muted states: sage, ochre, brick, slate. */
+  --success: light-dark(#4a6739, #a9bf94);
+  --success-soft: light-dark(#edf1e7, rgb(169 191 148 / 0.12));
+  --warning: light-dark(#86570f, #e3b469);
+  --warning-soft: light-dark(#f8eedb, rgb(227 180 105 / 0.12));
+  --danger: light-dark(#b0362b, #f0918a);
+  --danger-solid: light-dark(#b3382c, #c0453a);
+  --danger-soft: light-dark(#f9e9e6, rgb(240 145 138 / 0.12));
+  --info: light-dark(#3d5c79, #98b0c8);
+  --info-soft: light-dark(#e8edf2, rgb(152 176 200 / 0.12));
 
-  /* Categorical chart series (blue, orange, green), ≥ 3:1 on surfaces. */
-  --chart-1: light-dark(#2f6fdb, #6c9cff);
-  --chart-2: light-dark(#c8541b, #f08a4b);
-  --chart-3: light-dark(#13805a, #3fbf8f);
+  /* Categorical chart series (clay, slate, ochre), ≥ 3:1 on surfaces. */
+  --chart-1: light-dark(#ad5732, #e19a75);
+  --chart-2: light-dark(#4e6c88, #98b0c8);
+  --chart-3: light-dark(#8f7438, #d4b878);
 
 }
 
@@ -110,6 +114,8 @@
   --color-chart-1: var(--chart-1);
   --color-chart-2: var(--chart-2);
   --color-chart-3: var(--chart-3);
+  --color-tone-sand: var(--tone-sand);
+  --color-tone-rose: var(--tone-rose);
 
   /* System fonts cover Georgian (Mkhedruli), Cyrillic and Latin; nothing is downloaded. */
   --font-sans:

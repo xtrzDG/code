@@ -38,7 +38,7 @@ export function TunnelRail({ place, states, canOpen, onOpen }: TunnelRailProps) 
           <span aria-hidden className="absolute inset-x-1 top-1/2 h-px -translate-y-1/2 bg-line" />
           <span
             aria-hidden
-            className="tunnel-rail-fill absolute inset-x-1 top-1/2 h-0.5 -translate-y-1/2 rounded-full bg-gradient-to-r from-accent-solid via-[#3cc6f5] to-accent-solid"
+            className="tunnel-rail-fill absolute inset-x-1 top-1/2 h-0.5 -translate-y-1/2 rounded-full bg-gradient-to-r from-accent-solid via-tone-sand to-accent-solid"
             style={{ transform: `translateY(-50%) scaleX(${fill})` } as CSSProperties}
           />
           {TUNNEL_STEPS.map((step, index) => {

@@ -12,7 +12,7 @@ import { useEffect, useRef } from "react";
 import { advance, alive, burst, type Particle } from "@/lib/tunnel/depth";
 
 /** The brand's accents (decoration only: the same in both themes). */
-const PALETTE = ["#7c6cf2", "#3cc6f5", "#d55cf0", "#4cc38a", "#f1b84b"] as const;
+const PALETTE = ["#ad5732", "#d9a86c", "#b8796a", "#98b0c8", "#e8d6bf"] as const;
 const MAX_STEP_SECONDS = 0.05;
 
 function draw(context: CanvasRenderingContext2D, particles: readonly Particle[]) {

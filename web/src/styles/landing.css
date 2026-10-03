@@ -83,14 +83,14 @@
 .landing-aurora > span:nth-child(2) {
   left: 60%;
   top: 25%;
-  background: radial-gradient(circle, color-mix(in oklab, #3cc6f5 28%, transparent), transparent 62%);
+  background: radial-gradient(circle, color-mix(in oklab, var(--tone-sand) 26%, transparent), transparent 62%);
   animation-duration: 31s;
   animation-direction: alternate-reverse;
 }
 .landing-aurora > span:nth-child(3) {
   left: 5%;
   top: 10%;
-  background: radial-gradient(circle, color-mix(in oklab, #d55cf0 20%, transparent), transparent 60%);
+  background: radial-gradient(circle, color-mix(in oklab, var(--tone-rose) 18%, transparent), transparent 60%);
   animation-duration: 37s;
 }
 :root[data-theme="light"] .landing-aurora > span {
@@ -136,7 +136,7 @@
 
 /* Gradient text for one phrase of a heading. */
 .landing-gradient-text {
-  background: linear-gradient(100deg, var(--ink) 20%, color-mix(in oklab, var(--accent) 85%, #3cc6f5) 60%, var(--accent) 90%);
+  background: linear-gradient(100deg, var(--ink) 20%, color-mix(in oklab, var(--accent) 80%, var(--tone-sand)) 60%, var(--accent) 90%);
   background-clip: text;
   color: transparent;
 }
@@ -165,7 +165,7 @@
   z-index: -1;
   border-radius: inherit;
   padding: 1px;
-  background: conic-gradient(from var(--beam-angle), transparent 70%, var(--accent-solid) 85%, #3cc6f5 92%, transparent);
+  background: conic-gradient(from var(--beam-angle), transparent 70%, var(--accent-solid) 85%, var(--tone-sand) 92%, transparent);
   mask:
     linear-gradient(#000 0 0) content-box exclude,
     linear-gradient(#000 0 0);
@@ -238,7 +238,7 @@
   content: "";
   position: absolute;
   inset: -30%;
-  background: conic-gradient(from 200deg, #5b5bd6, #3cc6f5, #8f8ff7, #d55cf0, #5b5bd6);
+  background: conic-gradient(from 200deg, var(--accent-solid), var(--tone-sand), var(--accent), var(--tone-rose), var(--accent-solid));
   filter: blur(14px);
   animation: var(--animate-spin-slow);
 }
@@ -250,7 +250,7 @@
   background:
     radial-gradient(circle at 34% 28%, rgb(255 255 255 / 0.85), rgb(255 255 255 / 0) 22%),
     radial-gradient(circle at 50% 50%, transparent 58%, rgb(255 255 255 / 0.45) 100%),
-    radial-gradient(circle at 70% 80%, rgb(8 8 30 / 0.35), transparent 55%);
+    radial-gradient(circle at 70% 80%, rgb(24 14 8 / 0.35), transparent 55%);
 }
 .hero-still-bubble {
   position: absolute;

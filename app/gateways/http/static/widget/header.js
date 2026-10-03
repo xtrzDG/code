@@ -5,7 +5,7 @@
  *   <script src="https://<api>/widget.js" data-tenant="<business id>" async></script>
  *
  * Optional attributes of the script tag (they win over the cabinet's choices):
- *   data-color="#4f46e5"   accent colour (hex; default: the cabinet's colour)
+ *   data-color="#ad5732"   accent colour (hex; default: the cabinet's colour)
  *   data-position="left"   launcher in the bottom-left corner (default: the
  *                          cabinet's corner, else right)
  *   data-language="ka"     interface language (default: the visitor's browser
@@ -57,7 +57,7 @@
   var SESSION_KEY_PATTERN = /^[A-Za-z0-9_-]{16,128}$/;
   var SESSION_KEY_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_-";
   var COLOR_PATTERN = /^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/;
-  var DEFAULT_ACCENT = "#4f46e5";
+  var DEFAULT_ACCENT = "#ad5732";
   var STORAGE_PREFIX = "aw-chat:";
   var RTL_LANGUAGES = ["ar", "he", "fa", "ur", "yi", "ps", "sd", "ug", "ckb", "dv"];
   var URL_PATTERN = /\bhttps?:\/\/[^\s<>"']+/g;

@@ -7,10 +7,10 @@ import type { ChannelView } from "./channels";
 export type WidgetPosition = Schema<"WidgetPosition">;
 
 /** The widget's own accent colour (widget.js DEFAULT_ACCENT). */
-export const WIDGET_DEFAULT_COLOR = "#4f46e5";
+export const WIDGET_DEFAULT_COLOR = "#ad5732";
 
 /** Brand colours offered as one-click choices (each readable with white or dark text). */
-export const WIDGET_COLOR_PRESETS = ["#4f46e5", "#0f766e", "#15803d", "#b91c1c", "#c2410c", "#be185d", "#1d4ed8", "#111827"] as const;
+export const WIDGET_COLOR_PRESETS = ["#ad5732", "#8f7438", "#4e6c88", "#3d5c79", "#8c4a52", "#6b5b4b", "#b0362b", "#1d1c1a"] as const;
 
 export const WIDGET_POSITIONS: readonly WidgetPosition[] = ["right", "left"];
 

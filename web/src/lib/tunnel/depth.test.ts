@@ -35,7 +35,7 @@ describe("confetti", () => {
   });
 
   it("falls a default colour back on an empty palette", () => {
-    expect(burst(1, { x: 0, y: 0 }, [], seededRandom(1))[0]?.color).toBe("#5b5bd6");
+    expect(burst(1, { x: 0, y: 0 }, [], seededRandom(1))[0]?.color).toBe("#ad5732");
   });
 
   it("is pulled down and loses life as time passes", () => {

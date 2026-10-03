@@ -23,7 +23,7 @@ import { chromium } from "@playwright/test";
 
 const WEB_DIRECTORY = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const MARK = readFileSync(path.join(WEB_DIRECTORY, "src/app/icon.svg"), "utf8");
-const ACCENT = /fill="(#[0-9a-fA-F]{6})"/.exec(MARK)?.[1] ?? "#4f46e5";
+const ACCENT = /fill="(#[0-9a-fA-F]{6})"/.exec(MARK)?.[1] ?? "#ad5732";
 // The sparkles alone (the mark without its rounded square), for the maskable icons.
 const SPARKLES = MARK.replace(/<rect[^>]*\/>/, "").replace(/viewBox="0 0 32 32"/, 'viewBox="4 5 24 24"');
 

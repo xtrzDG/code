@@ -21,7 +21,7 @@ export interface TableCard {
   hint: string;
 }
 
-const DEFAULT_ACCENT = "#5b5bd6";
+const DEFAULT_ACCENT = "#ad5732";
 const ACCENT_PATTERN = /^#[0-9a-fA-F]{6}$/;
 
 const CARD_STYLE = `

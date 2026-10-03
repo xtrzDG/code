@@ -2,7 +2,7 @@
  * Colours of the hero scene in each scheme. The canvas is transparent and
  * sits on the page's own background, so only the objects change: dark
  * bubbles with light lines on the dark theme, white ones on the light theme.
- * The orb keeps the accent (iris) with a cyan and a violet current in both.
+ * The orb keeps the accent (clay) with a sand and a rose current in both.
  */
 
 export type SceneScheme = "dark" | "light";
@@ -28,37 +28,37 @@ export interface ScenePalette {
 
 export const SCENE_PALETTES: Record<SceneScheme, ScenePalette> = {
   dark: {
-    bubbleTop: "#20202a",
-    bubbleBottom: "#15151b",
+    bubbleTop: "#26241f",
+    bubbleBottom: "#1a1916",
     bubbleBorder: "rgba(255, 255, 255, 0.12)",
-    line: "rgba(237, 237, 240, 0.86)",
-    lineMuted: "rgba(237, 237, 240, 0.34)",
-    ring: "#8c8cf5",
-    ringOpacity: 0.26,
-    dust: "#c6c6ff",
+    line: "rgba(236, 235, 230, 0.86)",
+    lineMuted: "rgba(236, 235, 230, 0.34)",
+    ring: "#e19a75",
+    ringOpacity: 0.24,
+    dust: "#f0c9a8",
     dustOpacity: 0.75,
-    glow: "#5b5bd6",
-    glowOpacity: 0.85,
+    glow: "#ad5732",
+    glowOpacity: 0.8,
     glowAdditive: true,
     shellOpacity: 0.1,
-    orbColors: ["#5b5bd6", "#3cc6f5", "#d55cf0"],
-    pulse: "#c6c6ff",
+    orbColors: ["#ad5732", "#d9a86c", "#b8796a"],
+    pulse: "#f0c9a8",
   },
   light: {
     bubbleTop: "#ffffff",
-    bubbleBottom: "#f3f3f7",
-    bubbleBorder: "rgba(23, 23, 27, 0.10)",
-    line: "rgba(23, 23, 27, 0.72)",
-    lineMuted: "rgba(23, 23, 27, 0.24)",
-    ring: "#5b5bd6",
-    ringOpacity: 0.3,
-    dust: "#6b6be0",
+    bubbleBottom: "#f4f2ed",
+    bubbleBorder: "rgba(29, 28, 26, 0.10)",
+    line: "rgba(29, 28, 26, 0.72)",
+    lineMuted: "rgba(29, 28, 26, 0.24)",
+    ring: "#ad5732",
+    ringOpacity: 0.28,
+    dust: "#c48d4e",
     dustOpacity: 0.5,
-    glow: "#8c8cf5",
-    glowOpacity: 0.5,
+    glow: "#e19a75",
+    glowOpacity: 0.45,
     glowAdditive: false,
     shellOpacity: 0.16,
-    orbColors: ["#5b5bd6", "#2fb3e8", "#c34fe0"],
-    pulse: "#5b5bd6",
+    orbColors: ["#ad5732", "#c48d4e", "#a8685a"],
+    pulse: "#ad5732",
   },
 };

@@ -82,8 +82,8 @@ describe("the table card", () => {
   });
 
   it("falls back to the cabinet's accent for a colour that is not #rrggbb", () => {
-    expect(buildTableCardHtml({ ...card, accent: "red;}" })).toContain("--accent: #5b5bd6");
-    expect(buildTableCardHtml({ ...card, accent: null })).toContain("--accent: #5b5bd6");
+    expect(buildTableCardHtml({ ...card, accent: "red;}" })).toContain("--accent: #ad5732");
+    expect(buildTableCardHtml({ ...card, accent: null })).toContain("--accent: #ad5732");
   });
 
   it("prints the frame's document, and says when it cannot", () => {
