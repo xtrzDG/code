@@ -93,8 +93,7 @@ NO_CHECK_HINT: LocalizedText = localized(
 TYPICAL_CHECK_HINT: LocalizedText = localized(
     en="The amount uses a typical check of {check}; set your own in the cabinet.",
     ru="Сумма посчитана по типичному чеку {check}; укажите свой в кабинете.",
-    ka="თანხა ტიპური ჩეკით ({check}) არის გამოთვლილი; მიუთითეთ თქვენი "
-    "კაბინეტში.",
+    ka="თანხა ტიპური ჩეკით ({check}) არის გამოთვლილი; მიუთითეთ თქვენი კაბინეტში.",
 )
 LINK_LINE: LocalizedText = localized(
     en="Open the report: {link}",

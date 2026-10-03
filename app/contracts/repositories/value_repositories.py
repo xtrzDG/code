@@ -95,7 +95,7 @@ class ValueCountRepoContract(RepoContract, Protocol):
         end: Microseconds,
         conversation_ids: Sequence[ConversationId] | None = None,
     ) -> PeriodItemCount:
-        """Messages the assistant wrote from `start` to `end` (of these conversations)."""
+        """Messages the assistant wrote from `start` to `end` (in these chats)."""
         raise NotImplementedError
 
     def count_bookings_starting(
