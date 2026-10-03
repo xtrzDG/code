@@ -2,9 +2,9 @@
 
 import base64
 import binascii
-from html.parser import HTMLParser
 
 from app.schemas.exceptions.application_errors import ValidationFailedError
+from app.utilities.knowledge.website.html_to_text import html_to_text
 
 IMAGE_MEDIA_TYPES: frozenset[str] = frozenset(
     {"image/jpeg", "image/png", "image/webp", "image/gif"}
@@ -44,7 +44,7 @@ def build_media_content(media_type: str, data: bytes) -> list[dict[str, object]]
     if media_type in TEXT_MEDIA_TYPES:
         text: str = data.decode("utf-8", errors="replace")
         if media_type == HTML_MEDIA_TYPE:
-            text = extract_visible_text(text)
+            text = html_to_text(text, "", MAX_MENU_TEXT_CHARACTERS).text
 
         return [{"type": "input_text", "text": text[:MAX_MENU_TEXT_CHARACTERS]}]
 
@@ -58,36 +58,3 @@ def decode_base64(data_base64: str) -> bytes:
         return base64.b64decode(data_base64, validate=True)
     except (binascii.Error, ValueError) as error:
         raise ValidationFailedError("The menu file is not valid base64.") from error
-
-
-class _VisibleTextParser(HTMLParser):
-    """Collects the text of an HTML page without scripts and styles."""
-
-    IGNORED_TAGS: frozenset[str] = frozenset(
-        {"script", "style", "noscript", "template"}
-    )
-
-    def __init__(self) -> None:
-        super().__init__(convert_charrefs=True)
-        self.parts: list[str] = []
-        self._ignored_depth: int = 0
-
-    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
-        del attrs
-        if tag in self.IGNORED_TAGS:
-            self._ignored_depth += 1
-
-    def handle_endtag(self, tag: str) -> None:
-        if tag in self.IGNORED_TAGS and self._ignored_depth > 0:
-            self._ignored_depth -= 1
-
-    def handle_data(self, data: str) -> None:
-        if self._ignored_depth == 0 and data.strip() != "":
-            self.parts.append(data.strip())
-
-
-def extract_visible_text(html: str) -> str:
-    parser = _VisibleTextParser()
-    parser.feed(html)
-    parser.close()
-    return "\n".join(parser.parts)

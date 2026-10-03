@@ -102,6 +102,10 @@ class UseCasesContainer(containers.DeclarativeContainer):
     menu_import: MenuImportUseCasesContainer = Container(  # type: ignore[assignment]
         MenuImportUseCasesContainer,
         adapters=adapters,
+        clients=clients,
+        config=config,
+        facilitators=facilitators,
+        registries=registries,
         repositories=repositories,
         time_provider=time_provider,
         account_use_cases=accounts,

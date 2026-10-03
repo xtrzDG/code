@@ -121,6 +121,35 @@ Spec: `7ad2f92ba01caf7a`
   the profile's links). Profile reads may now return it; it is stored in a
   field of its own so earlier releases can still read the profile.
 
+## 2026-10-03 — knowledge import from the business's website
+
+Spec: `a32037da1580ea8b`
+
+- **Added** `POST /v1/businesses/{business_id}/knowledge/import-website`
+  (owners and staff, 202) `{url}`: queues the reading of the business's
+  website (`WebsiteImportView`: `id`, `status` queued). The address must be
+  a public http(s) address on port 80 or 443: otherwise 422 with
+  `reasons[].code` `website_link_invalid` and a detail (`not_http`,
+  `credentials_in_url`, `port_not_allowed`, `not_public`). One import at
+  a time (409 `website_import_running`), 10 per hour per business (429
+  with Retry-After).
+- **Added** `GET /v1/businesses/{business_id}/knowledge/import-website/current`
+  (owners and staff): `{current}`, the business's latest import with
+  `pages_planned`, `pages_read`, `pages_skipped`, `items_found`, `problem`
+  (`website_link_invalid`, `website_link_unreachable`,
+  `website_link_unreadable`, `website_reader_unavailable`,
+  `website_import_interrupted`) with `problem_detail`, and, once `done`,
+  `result`: its drafts in the shape of a menu import (`MenuImportResult`;
+  confirm and discard them with the menu import endpoints).
+- **Added** live event `knowledge_import.progress` (ids: the import id) on
+  every step of an import.
+- **Changed** (additive) `ImportedMenuItemView.source_page_url`: the page
+  of the website a draft was read from.
+- **Changed** menu links (`POST …/knowledge/import` with `url`) are read
+  through the same SSRF guard: `menu_link_invalid` may now also carry the
+  details `credentials_in_url` and `port_not_allowed`, and
+  `menu_link_unreadable` the detail `content_encoding:<encoding>`.
+
 ## 2026-10-03 — guided launch: one-call creation, setup progress, starter answers, "Apply changes", trial at go-live
 
 Spec: `a4c5c025e7a96d6c`

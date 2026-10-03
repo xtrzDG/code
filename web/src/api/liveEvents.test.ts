@@ -50,6 +50,7 @@ describe("live events", () => {
     expect(invalidationsFor(event("booking.created"), BUSINESS)).toContainEqual(queryKeys.bookings.all(BUSINESS));
     expect(invalidationsFor(event("channel.error"), BUSINESS)).toEqual([counts, queryKeys.channels.all(BUSINESS)]);
     expect(invalidationsFor(event("autotest.progress"), BUSINESS)).toEqual([queryKeys.assistant.all(BUSINESS)]);
+    expect(invalidationsFor(event("knowledge_import.progress"), BUSINESS)).toEqual([queryKeys.knowledge.all(BUSINESS)]);
   });
 
   it("reload only the conversation a message belongs to, never the counts", () => {

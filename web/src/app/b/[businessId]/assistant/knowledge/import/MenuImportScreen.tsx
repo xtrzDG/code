@@ -1,10 +1,17 @@
 "use client";
 
+import { useSearchParams } from "next/navigation";
+
+import { api } from "@/api/client";
+import { queryKeys } from "@/api/queryKeys";
+import { useQuery } from "@/api/useQuery";
 import { useBusiness } from "@/components/business/BusinessContext";
-import { ConfirmDialog } from "@/components/ui";
-import { IconCheck } from "@/components/icons";
-import { Button, ButtonLink, Card, EmptyState } from "@/components/ui";
+import { Tabs } from "@/components/content/Tabs";
+import { IconCheck, IconGlobe, IconUpload } from "@/components/icons";
+import { WebsiteImportPanel } from "@/components/knowledge/websiteImport/WebsiteImportPanel";
+import { Button, ButtonLink, Card, ConfirmDialog, EmptyState } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
+import { profileWebsite } from "@/lib/knowledge/websiteImport";
 import { businessPath } from "@/lib/navigation";
 
 import { useKnowledgeKinds } from "../_components/hooks";
@@ -15,12 +22,28 @@ import { MenuSourceForm } from "./_components/MenuSourceForm";
 import { useImportReview } from "./_lib/useImportReview";
 import { useMenuSource } from "./_lib/useMenuSource";
 
+type ImportSource = "menu" | "website";
+
+/** Shows the chosen source in the address (`?source=website`) without a navigation. */
+function showSourceInUrl(source: ImportSource): void {
+  const query = new URLSearchParams(window.location.search);
+  if (source === "website") {
+    query.set("source", source);
+  } else {
+    query.delete("source");
+  }
+  const search = query.toString();
+  window.history.replaceState(null, "", `${window.location.pathname}${search ? `?${search}` : ""}`);
+}
+
 /**
- * Knowledge -> Import a menu: a photo, PDF, text file or link is read into
- * draft items (switched off); the owner checks them, fixes what is wrong and
- * adds the chosen ones. The rest of the import is discarded in one request
- * (DELETE …/knowledge/import/{batch_id}). A link the API cannot read is
- * explained by its reason code (not public, unreachable, unreadable).
+ * Knowledge -> Import, from two sources: a menu (a photo, PDF, text file or
+ * link, read at once) or the business's website (up to 15 pages, read by a
+ * queued job whose progress shows live). Either way the result is draft
+ * items (switched off); the owner checks them in the same review, fixes what
+ * is wrong and adds the chosen ones. The rest of the import is discarded in
+ * one request (DELETE …/knowledge/import/{batch_id}). A link the API cannot
+ * read is explained by its reason code (not public, unreachable, unreadable).
  */
 export function MenuImportScreen() {
   const { t, tp } = useI18n();
@@ -29,6 +52,12 @@ export function MenuImportScreen() {
   const imported = useImportReview();
   const source = useMenuSource(imported.open);
   const { review, done, editor } = imported;
+  const tab: ImportSource = useSearchParams().get("source") === "website" ? "website" : "menu";
+  const profile = useQuery(
+    queryKeys.profile.stored(business.id),
+    () => api.GET("/v1/businesses/{business_id}/profile", { params: { path: { business_id: business.id } } }),
+    { enabled: tab === "website" },
+  );
 
   const startOver = () => {
     imported.reset();
@@ -92,5 +121,37 @@ export function MenuImportScreen() {
     );
   }
 
-  return <MenuSourceForm source={source} />;
+  return (
+    <Tabs
+      label={t("knowledge.website.tabsLabel")}
+      tabs={[
+        {
+          key: "menu",
+          label: (
+            <>
+              <IconUpload className="size-4" aria-hidden />
+              {t("knowledge.website.tabMenu")}
+            </>
+          ),
+        },
+        {
+          key: "website",
+          label: (
+            <>
+              <IconGlobe className="size-4" aria-hidden />
+              {t("knowledge.website.tabWebsite")}
+            </>
+          ),
+        },
+      ]}
+      selected={tab}
+      onSelect={showSourceInUrl}
+    >
+      {tab === "website" ? (
+        <WebsiteImportPanel businessId={business.id} onReview={imported.open} suggestedUrl={profileWebsite(profile.data)} />
+      ) : (
+        <MenuSourceForm source={source} />
+      )}
+    </Tabs>
+  );
 }

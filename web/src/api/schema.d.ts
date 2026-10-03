@@ -1156,6 +1156,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/businesses/{business_id}/knowledge/import-website": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Start Website Import */
+        post: operations["start_website_import_v1_businesses__business_id__knowledge_import_website_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/businesses/{business_id}/knowledge/import-website/current": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Website Import */
+        get: operations["get_website_import_v1_businesses__business_id__knowledge_import_website_current_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/businesses/{business_id}/knowledge/import/confirm": {
         parameters: {
             query?: never;
@@ -4198,6 +4232,13 @@ export interface components {
             user: components["schemas"]["UserView"];
         };
         /**
+         * CurrentWebsiteImport
+         * @description The business's latest website import, or null when it never had one.
+         */
+        CurrentWebsiteImport: {
+            current?: components["schemas"]["WebsiteImportView"] | null;
+        };
+        /**
          * DashboardDay
          * @description What started on one local day of the dashboard period.
          */
@@ -4708,6 +4749,8 @@ export interface components {
             printed_currency_code?: string | null;
             /** Printed Price */
             printed_price?: string | null;
+            /** Source Page Url */
+            source_page_url?: string | null;
         };
         /**
          * InboxAssigneeList
@@ -6879,6 +6922,67 @@ export interface components {
             login_method: components["schemas"]["LoginMethod"];
             /** Phone Number */
             phone_number?: string | null;
+        };
+        /**
+         * WebsiteImportProblem
+         * @description Why a website import failed (`problem` of the import, with a
+         *     machine-readable `problem_detail` such as "not_public" or
+         *     "http_status:404"):
+         *
+         *     - website_link_invalid: not a public http(s) address on port 80/443;
+         *     - website_link_unreachable: the first page could not be fetched
+         *       (unknown host, timeout, no connection, HTTP error, redirects);
+         *     - website_link_unreadable: the first page is not a web page or text,
+         *       or is too large;
+         *     - website_reader_unavailable: no page could be read because the
+         *       reading model failed;
+         *     - website_import_interrupted: the import stopped and was not finished
+         *       (the worker failed repeatedly).
+         * @enum {string}
+         */
+        WebsiteImportProblem: "website_link_invalid" | "website_link_unreachable" | "website_link_unreadable" | "website_reader_unavailable" | "website_import_interrupted";
+        /**
+         * WebsiteImportStatus
+         * @description Where a website import stands: waiting for a worker, reading pages,
+         *     done (its drafts wait for the owner's review), or failed.
+         * @enum {string}
+         */
+        WebsiteImportStatus: "queued" | "reading" | "done" | "failed";
+        /**
+         * WebsiteImportView
+         * @description One website import and how far it got. `pages_planned` is 0 until the
+         *     first page was read (then it is the number of pages the import will
+         *     read, at most 15); `items_found` counts the drafts so far. When the
+         *     import is done, `result` holds its drafts still waiting for review (the
+         *     same shape as a menu import: confirm them with
+         *     POST .../knowledge/import/confirm, discard the rest with
+         *     DELETE .../knowledge/import/{batch_id}). A failed import names its
+         *     `problem` and a machine-readable `problem_detail`.
+         */
+        WebsiteImportView: {
+            /** Business Id */
+            business_id: string;
+            /** Finished At */
+            finished_at?: number | null;
+            /** Id */
+            id: string;
+            /** Items Found */
+            items_found: number;
+            /** Pages Planned */
+            pages_planned: number;
+            /** Pages Read */
+            pages_read: number;
+            /** Pages Skipped */
+            pages_skipped: number;
+            problem?: components["schemas"]["WebsiteImportProblem"] | null;
+            /** Problem Detail */
+            problem_detail?: string | null;
+            result?: components["schemas"]["MenuImportResult"] | null;
+            /** Started At */
+            started_at: number;
+            status: components["schemas"]["WebsiteImportStatus"];
+            /** Url */
+            url: string;
         };
         /**
          * Weekday
@@ -14543,7 +14647,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorBody"];
                 };
             };
-            /** @description The source cannot be read. For a link, reasons[].code is menu_link_invalid (not a public http(s) address), menu_link_unreachable (unknown host, timeout, no connection, HTTP error, redirect trouble) or menu_link_unreadable (too large, not a photo, PDF, text or web page), with details such as http_status:404 or media_type:application/zip. */
+            /** @description The source cannot be read. For a link, reasons[].code is menu_link_invalid (not a public http(s) address on port 80 or 443), menu_link_unreachable (unknown host, timeout, no connection, HTTP error, redirect trouble) or menu_link_unreadable (too large, not a photo, PDF, text or web page), with details such as http_status:404 or media_type:application/zip. */
             422: {
                 headers: {
                     [name: string]: unknown;
@@ -14562,6 +14666,187 @@ export interface operations {
                 };
             };
             /** @description The menu model is unavailable (external_service_error). */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    start_website_import_v1_businesses__business_id__knowledge_import_website_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Url */
+                    url: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WebsiteImportView"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The business's last website import is still reading its site (reasons[].code website_import_running). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The address cannot be read: reasons[].code website_link_invalid with details not_http, credentials_in_url, port_not_allowed or not_public (only public http(s) addresses on ports 80 and 443). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The business started 10 website imports in the last hour (Retry-After says when the next one is allowed). */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    get_website_import_v1_businesses__business_id__knowledge_import_website_current_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CurrentWebsiteImport"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
             502: {
                 headers: {
                     [name: string]: unknown;

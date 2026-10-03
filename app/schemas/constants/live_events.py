@@ -20,6 +20,7 @@ class LiveEventKind(StrEnum):
     CONVERSATION_NOTE = "conversation.note"
     HANDOFF_CREATED = "handoff.created"
     HANDOFF_RESOLVED = "handoff.resolved"
+    KNOWLEDGE_IMPORT_PROGRESS = "knowledge_import.progress"
     LEAD_CHANGED = "lead.changed"
     LEAD_CREATED = "lead.created"
 

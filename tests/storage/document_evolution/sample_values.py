@@ -21,6 +21,7 @@ CONSTRAINED_TEXT_SAMPLES: dict[str, str] = {
     "InstagramUsername": "cafe.batumi",
     "E164PhoneNumber": "+995599123456",
     "EmailAddress": "owner@example.com",
+    "ErrorReasonDetail": "http_status:404",
     "FactKey": "opening_hours",
     "JobLeaseToken": "0123456789abcdef0123456789abcdef",
     "JobName": "send_booking_reminders",

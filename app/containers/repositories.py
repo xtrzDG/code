@@ -3,14 +3,12 @@ from dependency_injector.providers import DependenciesContainer, Singleton
 from app.containers.adapters.document_collections_container import (
     DocumentCollectionsContainer,
 )
-from app.containers.adapters.launch_collections_container import (
-    LaunchCollectionsContainer,
-)
 from app.containers.adapters.notification_collections_container import (
     NotificationCollectionsContainer,
 )
 from app.containers.call_repositories import CallRepositoriesContainer
 from app.containers.inbox_repositories import InboxRepositoriesContainer
+from app.containers.launch_repositories import LaunchRepositoriesContainer
 from app.repositories.activation_probe_repository import ActivationProbeRepository
 from app.repositories.assistant_repositories import (
     AssistantVersionRepository,
@@ -76,12 +74,6 @@ from app.repositories.payment_repositories import (
     PackageUsageWarningRepository,
     PaymentOrderRepository,
 )
-from app.repositories.setup_repositories import (
-    ActivationEventRepository,
-    AssistantApplyRepository,
-    SetupStateRepository,
-)
-from app.repositories.sharing_repositories import PublicSlugClaimRepository
 from app.repositories.user_repositories import (
     OtpChallengeRepository,
     UserRepository,
@@ -90,12 +82,16 @@ from app.repositories.user_repositories import (
 from app.repositories.worker_heartbeat_repository import WorkerHeartbeatRepository
 
 
-class RepositoriesContainer(CallRepositoriesContainer, InboxRepositoriesContainer):
-    """The repositories (singletons); the call and inbox ones come from the bases."""
+class RepositoriesContainer(
+    CallRepositoriesContainer, InboxRepositoriesContainer, LaunchRepositoriesContainer
+):
+    """
+    The repositories (singletons); those of what follows a call, of the team
+    inbox and over the launch collections come from the three bases.
+    """
 
     collections: DocumentCollectionsContainer = DependenciesContainer()  # type: ignore[assignment]
     notification_collections: NotificationCollectionsContainer = DependenciesContainer()  # type: ignore[assignment]
-    launch_collections: LaunchCollectionsContainer = DependenciesContainer()  # type: ignore[assignment]
 
     user_repo: Singleton[UserRepository] = Singleton(
         UserRepository,
@@ -277,24 +273,6 @@ class RepositoriesContainer(CallRepositoriesContainer, InboxRepositoriesContaine
     staff_delivery_state_repo: Singleton[StaffDeliveryStateRepository] = Singleton(
         StaffDeliveryStateRepository,
         collection=notification_collections.staff_delivery_state_collection,
-    )
-    # The guided launch: milestones, setup state, the current apply (1044).
-    activation_event_repo: Singleton[ActivationEventRepository] = Singleton(
-        ActivationEventRepository,
-        collection=launch_collections.activation_event_collection,
-    )
-    setup_state_repo: Singleton[SetupStateRepository] = Singleton(
-        SetupStateRepository,
-        collection=launch_collections.setup_state_collection,
-    )
-    assistant_apply_repo: Singleton[AssistantApplyRepository] = Singleton(
-        AssistantApplyRepository,
-        collection=launch_collections.assistant_apply_collection,
-    )
-    # Sharing the assistant: the hosted chat addresses (1052).
-    public_slug_claim_repo: Singleton[PublicSlugClaimRepository] = Singleton(
-        PublicSlugClaimRepository,
-        collection=launch_collections.public_slug_claim_collection,
     )
     activation_probe_repo: Singleton[ActivationProbeRepository] = Singleton(
         ActivationProbeRepository,

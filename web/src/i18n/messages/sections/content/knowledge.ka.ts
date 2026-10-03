@@ -11,7 +11,7 @@ export const knowledgeKa: Translation<typeof knowledgeEn> = {
     label: "ცოდნის ბაზის განყოფილებები",
     items: "ჩანაწერები",
     questions: "უპასუხო კითხვები",
-    import: "მენიუს იმპორტი",
+    import: "იმპორტი",
     resources: "რესურსები და საათები",
   },
   kindGroups: {

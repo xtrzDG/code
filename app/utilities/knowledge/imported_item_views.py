@@ -1,4 +1,4 @@
-"""Views of imported knowledge items, shared by the menu import use cases."""
+"""Views of imported knowledge items, shared by the menu and website imports."""
 
 from decimal import Decimal
 
@@ -15,6 +15,7 @@ from app.schemas.typings.localization.constrained_strings import (
 from app.schemas.typings.localization.strings import FormattedMoneyText
 from app.schemas.typings.menu_import.constrained_floats import ExtractionConfidence
 from app.schemas.typings.menu_import.constrained_strings import ExtractedPriceAmount
+from app.schemas.typings.web_fetching.constrained_strings import WebResourceUrl
 from app.utilities.money.money_formatting import format_money
 
 CONFIDENCE_ATTRIBUTE: KnowledgeAttributeKey = KnowledgeAttributeKey("import_confidence")
@@ -22,6 +23,8 @@ PRINTED_PRICE_ATTRIBUTE: KnowledgeAttributeKey = KnowledgeAttributeKey("printed_
 PRINTED_CURRENCY_ATTRIBUTE: KnowledgeAttributeKey = KnowledgeAttributeKey(
     "printed_currency"
 )
+# The page of the business's website a draft was read from.
+SOURCE_PAGE_ATTRIBUTE: KnowledgeAttributeKey = KnowledgeAttributeKey("source_page")
 
 
 def build_knowledge_item_view(
@@ -64,6 +67,7 @@ def build_imported_item_view(
     }
     printed_price: str | None = attributes.get(str(PRINTED_PRICE_ATTRIBUTE))
     printed_currency: str | None = attributes.get(str(PRINTED_CURRENCY_ATTRIBUTE))
+    source_page: str | None = attributes.get(str(SOURCE_PAGE_ATTRIBUTE))
     return ImportedMenuItemView(
         item=build_knowledge_item_view(item, display_language),
         confidence=ExtractionConfidence(
@@ -76,4 +80,5 @@ def build_imported_item_view(
         printed_currency_code=(
             None if printed_currency is None else CurrencyCode(printed_currency)
         ),
+        source_page_url=None if source_page is None else WebResourceUrl(source_page),
     )

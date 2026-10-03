@@ -26,18 +26,21 @@ import { knowledgeRu } from "./content/knowledge.ru";
 import { knowledgeResourcesEn } from "./content/knowledgeResources.en";
 import { knowledgeResourcesKa } from "./content/knowledgeResources.ka";
 import { knowledgeResourcesRu } from "./content/knowledgeResources.ru";
+import { knowledgeWebsiteEn } from "./content/knowledgeWebsite.en";
+import { knowledgeWebsiteKa } from "./content/knowledgeWebsite.ka";
+import { knowledgeWebsiteRu } from "./content/knowledgeWebsite.ru";
 
 export const contentEn = {
-  knowledge: { ...knowledgeEn, ...knowledgeResourcesEn },
+  knowledge: { ...knowledgeEn, ...knowledgeResourcesEn, ...knowledgeWebsiteEn },
   assistant: { ...assistantEn, ...assistantChecksEn, ...assistantChatEn },
 } as const;
 
 export const contentRu: Translation<typeof contentEn> = {
-  knowledge: { ...knowledgeRu, ...knowledgeResourcesRu },
+  knowledge: { ...knowledgeRu, ...knowledgeResourcesRu, ...knowledgeWebsiteRu },
   assistant: { ...assistantRu, ...assistantChecksRu, ...assistantChatRu },
 };
 
 export const contentKa: Translation<typeof contentEn> = {
-  knowledge: { ...knowledgeKa, ...knowledgeResourcesKa },
+  knowledge: { ...knowledgeKa, ...knowledgeResourcesKa, ...knowledgeWebsiteKa },
   assistant: { ...assistantKa, ...assistantChecksKa, ...assistantChatKa },
 };

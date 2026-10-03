@@ -285,6 +285,7 @@ class AdaptersContainer(containers.DeclarativeContainer):
     menu_extraction_adapter: Singleton[MenuExtractionAdapter] = Singleton(
         MenuExtractionAdapter,
         client=clients.openai_responses_client,
+        page_fetcher=clients.safe_http_fetcher,
         model_id=Callable(
             select_menu_extraction_model_id,
             settings=config.app_settings,

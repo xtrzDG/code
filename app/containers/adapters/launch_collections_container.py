@@ -12,15 +12,18 @@ from app.schemas.domain.setup import (
     AssistantApplyDocument,
     SetupStateDocument,
 )
+from app.schemas.domain.website_imports import WebsiteImportDocument
 
 
 class LaunchCollectionsContainer(containers.DeclarativeContainer):
     """
     The document collections of the guided launch (migration 1044): each
     business's milestones, the setup steps it skipped and its current
-    "Apply changes"; and of sharing the live assistant (1052): the public
-    chat addresses businesses took. A sibling of DocumentCollectionsContainer with the
-    same storage factory (Postgres with DATABASE_URL, else in memory).
+    "Apply changes"; of sharing the live assistant (1052): the public chat
+    addresses businesses took; and its current knowledge import from its
+    website (migration 1054), which the wizard offers too. A sibling of
+    DocumentCollectionsContainer with the same storage factory (Postgres
+    with DATABASE_URL, else in memory).
     """
 
     clients: ClientsContainer = DependenciesContainer()  # type: ignore[assignment]
@@ -50,6 +53,14 @@ class LaunchCollectionsContainer(containers.DeclarativeContainer):
     public_slug_claim_collection = document_collection(
         PublicSlugClaimDocument,
         "public_slug_claims",
+        config,
+        clients,
+        utilities,
+        time_provider,
+    )
+    website_import_collection = document_collection(
+        WebsiteImportDocument,
+        "website_imports",
         config,
         clients,
         utilities,

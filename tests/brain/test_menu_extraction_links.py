@@ -1,32 +1,34 @@
-"""Menu links: private addresses are refused; unreadable links name their problem."""
+"""Menu links: read through the safe fetcher; unreadable links name their problem."""
 
-from typing import Any
-
-import httpx
+import httpcore
 import pytest
 
 from app.adapters.llm.menu_extraction.menu_extraction_adapter import (
     MenuExtractionAdapter,
 )
+from app.clients.http.safe_http_fetcher import SafeHttpFetcher
 from app.schemas.exceptions.application_errors import ValidationFailedError
 from app.schemas.typings.assistants.constrained_strings import LlmModelId
-from app.schemas.typings.businesses.constrained_strings import WebLink
-from app.schemas.typings.menu_import.constrained_strings import MenuSourceMediaType
 from tests.brain.menu_extraction_helpers import (
     build_adapter,
-    extraction_request,
-    fail_with,
     link_reasons,
     link_request,
-    respond,
 )
 from tests.brain.provider_http_fakes import ScriptedHttp, build_openai_client
+from tests.web_fetching.fetch_fakes import (
+    PUBLIC_ADDRESS,
+    FakeNetwork,
+    http_response,
+    redirect,
+)
+
+CAFE: dict[str, list[str]] = {"cafe.example": [PUBLIC_ADDRESS]}
 
 
 @pytest.mark.parametrize(
     ("url", "addresses"),
     [
-        ("http://localhost:8000/menu", None),
+        ("http://localhost:80/menu", None),
         ("https://printer.local/menu", None),
         ("https://intranet.example/menu", ["10.0.0.7"]),
         ("https://metadata.example/latest", ["169.254.169.254"]),
@@ -38,100 +40,74 @@ def test_links_to_private_addresses_are_refused(
     url: str,
     addresses: list[str] | None,
 ) -> None:
-    def never(request: httpx.Request) -> httpx.Response:
-        raise AssertionError("A private address must not be fetched.")
-
-    adapter = build_adapter(ScriptedHttp([]), never, addresses)
+    host: str = url.split("/")[2]
+    network = FakeNetwork({} if addresses is None else {host: addresses})
+    adapter = build_adapter(ScriptedHttp([]), network)
 
     with pytest.raises(ValidationFailedError, match="public address") as refused:
-        adapter.extract(
-            extraction_request(
-                media_type=MenuSourceMediaType("text/html"),
-                data_base64=None,
-                url=WebLink(url),
-            )
-        )
+        adapter.extract(link_request(url))
 
     assert link_reasons(refused.value) == [("menu_link_invalid", ["not_public"])]
+    assert network.connections == []
 
 
 def test_redirects_to_private_addresses_are_refused_too() -> None:
-    def serve(request: httpx.Request) -> httpx.Response:
-        return httpx.Response(302, headers={"location": "http://localhost/admin"})
-
-    adapter = build_adapter(ScriptedHttp([]), serve)
+    network = FakeNetwork(CAFE, [redirect("http://localhost/admin")])
+    adapter = build_adapter(ScriptedHttp([]), network)
 
     with pytest.raises(ValidationFailedError, match="public address"):
-        adapter.extract(
-            extraction_request(
-                media_type=MenuSourceMediaType("text/html"),
-                data_base64=None,
-                url=WebLink("https://cafe.example/menu"),
-            )
-        )
+        adapter.extract(link_request())
+
+    assert network.connections == [(PUBLIC_ADDRESS, 443)]
 
 
 @pytest.mark.parametrize(
-    ("page_handler", "addresses", "url", "expected"),
+    ("answers", "url", "expected"),
     [
         (
-            respond(404),
-            None,
+            [http_response(404)],
             "https://cafe.example/menu",
             ("menu_link_unreachable", ["http_status:404"]),
         ),
         (
-            fail_with(httpx.ConnectTimeout("slow")),
-            None,
-            "https://cafe.example/menu",
-            ("menu_link_unreachable", ["timeout"]),
-        ),
-        (
-            fail_with(httpx.ConnectError("refused")),
-            None,
-            "https://cafe.example/menu",
-            ("menu_link_unreachable", ["connection_failed"]),
-        ),
-        (
-            fail_with(httpx.RemoteProtocolError("garbled")),
-            None,
+            [[b"garbled\r\n\r\n"]],
             "https://cafe.example/menu",
             ("menu_link_unreachable", ["request_failed"]),
         ),
         (
-            respond(302),
-            None,
+            [http_response(302)],
             "https://cafe.example/menu",
             ("menu_link_unreachable", ["redirect_without_location"]),
         ),
         (
-            respond(302, {"location": "/again"}),
-            None,
+            [redirect("/again") for _ in range(4)],
             "https://cafe.example/menu",
             ("menu_link_unreachable", ["too_many_redirects"]),
         ),
         (
-            respond(200, {"content-type": "application/zip"}, b"PK"),
-            None,
+            [http_response(200, {"Content-Type": "application/zip"}, b"PK")],
             "https://cafe.example/menu.zip",
             ("menu_link_unreadable", ["media_type:application/zip"]),
         ),
         (
-            respond(302, {"location": "ftp://cafe.example/menu"}),
-            None,
+            [redirect("ftp://cafe.example/menu")],
             "https://cafe.example/menu",
             ("menu_link_invalid", ["not_http"]),
+        ),
+        (
+            [],
+            "https://cafe.example:8443/menu",
+            ("menu_link_invalid", ["port_not_allowed"]),
         ),
     ],
 )
 def test_links_that_cannot_be_read_name_a_distinct_problem(
-    page_handler: Any,
-    addresses: list[str] | None,
+    answers: list[list[bytes]],
     url: str,
     expected: tuple[str, list[str]],
 ) -> None:
     http = ScriptedHttp([])
-    adapter = build_adapter(http, page_handler, addresses)
+    adapter = build_adapter(http, FakeNetwork(CAFE, answers))
 
     with pytest.raises(ValidationFailedError) as refused:
         adapter.extract(link_request(url))
@@ -140,28 +116,42 @@ def test_links_that_cannot_be_read_name_a_distinct_problem(
     assert http.requests == []
 
 
-def test_unknown_hosts_and_huge_pages_name_their_problem(
-    monkeypatch: pytest.MonkeyPatch,
+@pytest.mark.parametrize(
+    ("failure", "detail"),
+    [
+        (httpcore.ConnectTimeout("slow"), "timeout"),
+        (httpcore.ConnectError("refused"), "connection_failed"),
+    ],
+)
+def test_connection_failures_name_their_problem(
+    failure: Exception, detail: str
 ) -> None:
-    def unknown(host: str) -> list[str]:
-        raise OSError(f"no such host {host}")
+    def fail(address: str, port: int, timeout: float | None) -> httpcore.NetworkStream:
+        raise failure
 
     adapter = MenuExtractionAdapter(
         client=build_openai_client(ScriptedHttp([])),
         model_id=LlmModelId("gpt-5-mini"),
-        page_transport=httpx.MockTransport(respond(200)),
-        host_resolver=unknown,
+        page_fetcher=SafeHttpFetcher(
+            resolver=lambda host: [PUBLIC_ADDRESS], connector=fail
+        ),
     )
-    with pytest.raises(ValidationFailedError) as unknown_host:
+
+    with pytest.raises(ValidationFailedError) as refused:
         adapter.extract(link_request())
 
-    monkeypatch.setattr(
-        "app.adapters.llm.menu_extraction.menu_page_download.MAX_PAGE_BYTES", 8
-    )
+    assert link_reasons(refused.value) == [("menu_link_unreachable", [detail])]
+
+
+def test_unknown_hosts_and_huge_menus_name_their_problem() -> None:
+    unknown = build_adapter(ScriptedHttp([]), FakeNetwork({}))
     huge = build_adapter(
         ScriptedHttp([]),
-        respond(200, {"content-type": "text/html"}, b"<p>long menu</p>"),
+        FakeNetwork(CAFE, [http_response(200, {"Content-Length": "20000000"})]),
     )
+
+    with pytest.raises(ValidationFailedError) as unknown_host:
+        unknown.extract(link_request())
     with pytest.raises(ValidationFailedError) as too_large:
         huge.extract(link_request())
 

@@ -20,6 +20,8 @@ dependencies = [
     "babel>=2.18.0",
     "anthropic>=1.11.0",
     "httpx>=0.28.1",
+    # The safe web fetcher connects through httpcore to vetted addresses.
+    "httpcore>=1.0.9",
     "openai>=3.22.1",
     "cryptography>=50.0.2",
     "psycopg[binary]>=3.3.6",

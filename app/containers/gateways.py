@@ -17,6 +17,9 @@ from app.gateways.worker.periodic.sweep_rate_limit_buckets import (
 from app.schemas.typings.platform.constrained_integers import JobIntervalSeconds
 from app.schemas.typings.platform.constrained_strings import JobName
 from app.use_cases.autotests.enqueue_autotest_run_use_case import RUN_AUTOTESTS_JOB
+from app.use_cases.knowledge.website_import.start_website_import_use_case import (
+    IMPORT_WEBSITE_JOB,
+)
 from app.use_cases.voice.recordings.recording_archive_paths import (
     ARCHIVE_CALL_RECORDING_JOB,
 )
@@ -142,6 +145,8 @@ class GatewaysContainer(containers.DeclarativeContainer):
             DELIVER_OUTBOUND_JOB: operators.channels.deliver_outbound_operator,
             # A caller who did not get through: their WhatsApp or SMS.
             SEND_TEXT_BACK_JOB: operators.calls.send_text_back_operator,
+            # A business's website read into knowledge drafts.
+            IMPORT_WEBSITE_JOB: operators.knowledge.run_website_import_operator,
         }
     )
     # The pulse of this worker process (GET /readyz reports its age).

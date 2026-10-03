@@ -247,3 +247,10 @@ _.missing_variables  # app/schemas/dto/inbox/quick_replies.py
 _.starter_questions  # app/schemas/dto/channels/widget.py
 _.contact_links  # app/schemas/dto/channels/widget.py
 _.widget_script_url  # app/schemas/dto/sharing.py
+
+_.source_page_url  # app/schemas/dto/menu_import.py
+
+# Hooks a library calls: httpcore asks a network backend for Unix sockets,
+# HTMLParser calls handle_startendtag for "<br/>"-style tags.
+_.connect_unix_socket  # app/clients/http/vetting_network_backend.py
+_.handle_startendtag  # app/utilities/knowledge/website/html_to_text.py

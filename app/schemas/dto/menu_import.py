@@ -28,6 +28,7 @@ from app.schemas.typings.menu_import.constrained_strings import (
 )
 from app.schemas.typings.menu_import.prefixed_id import MenuImportBatchId
 from app.schemas.typings.users.prefixed_id import UserId
+from app.schemas.typings.web_fetching.constrained_strings import WebResourceUrl
 
 
 class MenuImportRequest(ImmutableDTO):
@@ -98,6 +99,8 @@ class ImportedMenuItemView(ImmutableDTO):
     is_currency_mismatch: IsCurrencyMismatch
     printed_price: ExtractedPriceAmount | None = None
     printed_currency_code: CurrencyCode | None = None
+    # The page of the business's website a website import read it from.
+    source_page_url: WebResourceUrl | None = None
 
 
 class MenuImportResult(ImmutableDTO):

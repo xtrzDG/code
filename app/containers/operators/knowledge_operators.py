@@ -90,3 +90,14 @@ class KnowledgeOperatorsContainer(containers.DeclarativeContainer):
     discard_import_batch_operator = pipeline_operator(
         knowledge_pipelines.discard_import_batch_pipeline, storage_scope
     )
+
+    # --- Website import (the last one is the worker's job).
+    start_website_import_operator = pipeline_operator(
+        knowledge_pipelines.start_website_import_pipeline, storage_scope
+    )
+    get_website_import_operator = pipeline_operator(
+        knowledge_pipelines.get_website_import_pipeline, storage_scope
+    )
+    run_website_import_operator = pipeline_operator(
+        knowledge_pipelines.run_website_import_pipeline, storage_scope
+    )
