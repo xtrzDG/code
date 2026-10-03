@@ -7,7 +7,8 @@
  * section's pages under it in the sidebar; on phones Overview, Messages,
  * Bookings and Assistant in the tab bar and the rest under "More". Before
  * that: one big "Create an AI assistant" entry, and every page shows the
- * invitation to create it except the setup flow itself.
+ * invitation to create it. The setup flow itself (/b/{id}/setup) is full
+ * screen, without the frame.
  */
 
 import { usePathname } from "next/navigation";
@@ -111,10 +112,9 @@ function CabinetFrame({ children, prefetch, initialCollapsed }: { children: Reac
   );
 }
 
-function SetupFrame({ children, initialCollapsed }: { children: ReactNode; initialCollapsed: boolean }) {
+function SetupFrame({ initialCollapsed }: { initialCollapsed: boolean }) {
   const { t } = useI18n();
   const { business, me, isOwner, isPlatformAdmin } = useBusiness();
-  const isSetupFlow = businessLocation(usePathname())?.isSetup ?? false;
   const canSetUp = isOwner || isPlatformAdmin;
 
   return (
@@ -125,7 +125,7 @@ function SetupFrame({ children, initialCollapsed }: { children: ReactNode; initi
       context={business.name}
       title={t("setup.navEntry")}
       showTabBar={false}
-      sidebarReplacement={(collapsed) => <SetupEntry isActive={isSetupFlow} canSetUp={canSetUp} collapsed={collapsed} />}
+      sidebarReplacement={(collapsed) => <SetupEntry canSetUp={canSetUp} collapsed={collapsed} />}
       switcher={(onNavigate, compact) => (
         <BusinessSwitcher
           memberships={me.memberships ?? []}
@@ -136,7 +136,7 @@ function SetupFrame({ children, initialCollapsed }: { children: ReactNode; initi
         />
       )}
     >
-      {isSetupFlow && canSetUp ? children : <SetupHero canSetUp={canSetUp} />}
+      <SetupHero canSetUp={canSetUp} />
     </ShellFrame>
   );
 }
@@ -156,14 +156,18 @@ export function BusinessShell({
   initialCollapsed?: boolean;
 }) {
   const { isSetUp } = useBusiness();
+  // "Create an AI assistant" is full screen, before and after the launch.
+  const isTunnel = businessLocation(usePathname())?.isSetup ?? false;
   return (
     <LiveEventsProvider enabled={isSetUp}>
-      {isSetUp ? (
+      {isTunnel ? (
+        children
+      ) : isSetUp ? (
         <CabinetFrame prefetch={prefetch} initialCollapsed={initialCollapsed}>
           {children}
         </CabinetFrame>
       ) : (
-        <SetupFrame initialCollapsed={initialCollapsed}>{children}</SetupFrame>
+        <SetupFrame initialCollapsed={initialCollapsed} />
       )}
     </LiveEventsProvider>
   );

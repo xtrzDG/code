@@ -16,17 +16,20 @@ import { queryKeys } from "@/api/queryKeys";
 import { useQuery } from "@/api/useQuery";
 import { useI18n } from "@/i18n/client";
 
-export function useSetupData(businessId: string) {
+export function useSetupData(businessId: string, enabled = true) {
   const { locale } = useI18n();
   const setup = useQuery(
     queryKeys.setup.progress(businessId, locale),
     () => api.GET("/v1/businesses/{business_id}/setup", { params: { path: { business_id: businessId }, query: { language: locale } } }),
-    { requireFresh: true },
+    { requireFresh: true, enabled },
   );
-  const starters = useQuery(queryKeys.setup.starters(businessId, locale), () =>
-    api.GET("/v1/businesses/{business_id}/setup/starter-answers", {
-      params: { path: { business_id: businessId }, query: { language: locale } },
-    }),
+  const starters = useQuery(
+    queryKeys.setup.starters(businessId, locale),
+    () =>
+      api.GET("/v1/businesses/{business_id}/setup/starter-answers", {
+        params: { path: { business_id: businessId }, query: { language: locale } },
+      }),
+    { enabled },
   );
   const wizard = useQuery(
     queryKeys.profile.wizard(businessId, locale),
@@ -34,7 +37,7 @@ export function useSetupData(businessId: string) {
       api.GET("/v1/businesses/{business_id}/profile/wizard", {
         params: { path: { business_id: businessId }, query: { language: locale } },
       }),
-    { requireFresh: true },
+    { requireFresh: true, enabled },
   );
 
   /** After a step saved something: the rail and the next screens read it again. */
