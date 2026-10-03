@@ -19,8 +19,8 @@ from app.schemas.domain.outbound_messages import (
     OutboundTemplate,
 )
 from app.schemas.exceptions.application_errors import (
-    ProviderRejectedMessageError,
     ValidationFailedError,
+    WhatsAppTemplateRejectedError,
 )
 from app.schemas.typings.billing.constrained_integers import UsageQuantity
 from app.schemas.typings.channels.constrained_strings import (
@@ -81,7 +81,7 @@ def route_customer_template(
                 template.language_code,
                 parameters,
             )
-        except ProviderRejectedMessageError:
+        except WhatsAppTemplateRejectedError:
             if template.language_code == FALLBACK_TEMPLATE_LANGUAGE:
                 raise
 

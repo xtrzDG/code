@@ -160,8 +160,11 @@ class ChannelsInfrastructure:
         self.job_queue = JobQueueFacilitator(
             self.jobs.job_repo, self.wall_clock, self.jobs.job_wakeup
         )
+        self.feedback_request_collection = InMemoryDocumentCollectionAdapter(
+            FeedbackRequestDocument
+        )
         self.feedback_request_repo = FeedbackRequestRepository(
-            InMemoryDocumentCollectionAdapter(FeedbackRequestDocument)
+            self.feedback_request_collection
         )
         self.link_repo = ManagerTelegramLinkRepository(
             InMemoryDocumentCollectionAdapter(ManagerTelegramLinkDocument)
