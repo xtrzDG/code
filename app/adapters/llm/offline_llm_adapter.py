@@ -24,20 +24,10 @@ from app.schemas.typings.conversations.strings import (
     LlmToolCallId,
     MessageText,
 )
-from app.utilities.llm_rehearsal.assistant_phrases import (
-    ASSISTANT_PHRASES,
-    FALLBACK_LANGUAGE,
-    RehearsalReply,
-)
 from app.utilities.llm_rehearsal.rehearsal_turns import play_rehearsal_turn
 
 # Without SCRIPTED_LLM_LATENCY_MS the scripted model answers at once.
 NO_LATENCY: ScriptedLlmLatencyMilliseconds = ScriptedLlmLatencyMilliseconds(0)
-# What the staging assistant answers to an English message it has no
-# script for (in other languages, the same sentence translated).
-OFFLINE_REPLY: MessageText = MessageText(
-    ASSISTANT_PHRASES[FALLBACK_LANGUAGE][RehearsalReply.ANSWER]
-)
 TOOL_CALL_ID_PREFIX: str = "toolu_rehearsal_"
 
 

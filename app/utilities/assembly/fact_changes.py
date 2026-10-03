@@ -25,7 +25,6 @@ from app.schemas.typings.setup.strings import PendingChangeSubject
 
 LABEL_SEPARATOR: str = ": "
 HOURS_KEY_PREFIX: str = "hours_"
-SPECIAL_DAY_KEY_PREFIX: str = "special_day_"
 LINK_KEY_PREFIX: str = "link_"
 RESOURCE_KEY_PATTERN: re.Pattern[str] = re.compile(r"^resource_\d+$")
 SPECIAL_DAY_KEY_PATTERN: re.Pattern[str] = re.compile(r"^special_day_\d+$")

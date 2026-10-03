@@ -20,6 +20,11 @@ from app.schemas.typings.localization.constrained_strings import (
 from app.utilities.assembly.fact_formatting import format_international_phone_number
 
 DONE_MARKER: str = "[DONE]"
+# How the AI customer's instruction begins (the scripted model knows the
+# role it plays by it).
+CUSTOMER_PERSONA_OPENING: str = (
+    "You play a customer in an automated test of the AI assistant"
+)
 CUSTOMER_HINT_FACT_PREFIXES: tuple[str, ...] = ("hours_", "special_day_", "time_zone")
 TRANSCRIPT_AUTHOR_LABELS: dict[MessageAuthor, str] = {
     MessageAuthor.CUSTOMER: "Customer",
@@ -84,8 +89,7 @@ def build_customer_persona_prompt(
         if str(fact.key).startswith(CUSTOMER_HINT_FACT_PREFIXES)
     ]
     lines: list[str] = [
-        "You play a customer in an automated test of the AI assistant of the "
-        f'business "{business_name}".',
+        f'{CUSTOMER_PERSONA_OPENING} of the business "{business_name}".',
         "Write only your own messages as the customer: one short message at a "
         "time, the way people write in a messenger, and only in "
         f"{scenario.language_name} (language tag {scenario.language}).",

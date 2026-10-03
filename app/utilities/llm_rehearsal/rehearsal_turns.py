@@ -7,9 +7,9 @@ assistant in every other chat.
 - The judge (the judge's instruction) scores every criterion 5: nothing is
   judged, so only the checks of what the assistant did (a booking made, a
   conversation passed to a person, the reply's script) can fail.
-- The AI customer (no tools) says one sentence for its goal in the
+- The AI customer (its instruction) says one sentence for its goal in the
   scenario language, with its phone number when it books, then [DONE].
-- The assistant (tools offered) answers in the customer's language: it
+- The assistant (anything else) answers in the customer's language: it
   books the first free time of the next days when asked to book, passes
   the conversation to a colleague when asked for a person or in an
   emergency, and otherwise says that it is a test assistant.
@@ -24,7 +24,11 @@ from app.schemas.constants.handoffs import HandoffReason, HandoffUrgency
 from app.schemas.dto.conversations import LlmRequest
 from app.schemas.dto.llm_scripts import ScriptedLlmTurn, ScriptedToolCall
 from app.schemas.typings.conversations.strings import LlmToolInputJson, MessageText
-from app.utilities.assembly.autotest_prompts import DONE_MARKER, JUDGE_SYSTEM_PROMPT
+from app.utilities.assembly.autotest_prompts import (
+    CUSTOMER_PERSONA_OPENING,
+    DONE_MARKER,
+    JUDGE_SYSTEM_PROMPT,
+)
 from app.utilities.llm_rehearsal.assistant_phrases import (
     ASSISTANT_PHRASES,
     CUSTOMER_NAMES,
@@ -70,7 +74,7 @@ def play_rehearsal_turn(request: LlmRequest) -> ScriptedLlmTurn:
             )
         )
 
-    if not request.tools:
+    if str(request.system_prompt).startswith(CUSTOMER_PERSONA_OPENING):
         return play_customer(request)
 
     return play_assistant(request)
