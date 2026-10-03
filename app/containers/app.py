@@ -169,6 +169,7 @@ class AppContainer(containers.DeclarativeContainer):
     )
     gateways: GatewaysContainer = Container(  # type: ignore[assignment]
         GatewaysContainer,
+        adapters=adapters,
         config=config,
         facilitators=facilitators,
         operators=operators,

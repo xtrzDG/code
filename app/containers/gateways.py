@@ -1,6 +1,7 @@
 from dependency_injector import containers
 from dependency_injector.providers import DependenciesContainer, Dict, Factory, List
 
+from app.containers.adapters.adapters_container import AdaptersContainer
 from app.containers.config import ConfigContainer
 from app.containers.container_edges import composed_container_edge
 from app.containers.facilitators import FacilitatorsContainer
@@ -59,6 +60,7 @@ class GatewaysContainer(containers.DeclarativeContainer):
     (time-triggered transport) is wired here.
     """
 
+    adapters: AdaptersContainer = DependenciesContainer()  # type: ignore[assignment]
     config: ConfigContainer = DependenciesContainer()  # type: ignore[assignment]
     facilitators: FacilitatorsContainer = DependenciesContainer()  # type: ignore[assignment]
     operators: OperatorsContainer = composed_container_edge(OperatorsContainer)  # type: ignore[assignment]
@@ -187,8 +189,9 @@ class GatewaysContainer(containers.DeclarativeContainer):
         error_reporter=facilitators.error_reporter,
         poll_seconds=config.app_settings.provided.worker_poll_seconds,
         storage_scope=utilities.storage_scope,
-        job_wakeup=utilities.job_wakeup,
+        job_wakeup=adapters.job_wakeup,
         lane_concurrency=config.app_settings.provided.worker_lane_concurrency,
         job_monitor=facilitators.job_monitor,
         heartbeat_recorder=worker_heartbeat_recorder,
+        inbound_poll_seconds=config.app_settings.provided.worker_inbound_poll_seconds,
     )

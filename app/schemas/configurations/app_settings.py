@@ -57,9 +57,13 @@ from app.schemas.typings.platform.booleans import (
 )
 from app.schemas.typings.platform.constrained_floats import TraceSampleRate
 from app.schemas.typings.platform.constrained_integers import (
+    DatabaseIdleSeconds,
+    DatabasePoolMinSize,
     DatabasePoolSize,
+    TestChatConcurrencyLimit,
     ThreadPoolSize,
     WorkerLaneConcurrency,
+    WorkerLanePollSeconds,
     WorkerPollSeconds,
 )
 from app.schemas.typings.platform.constrained_strings import (
@@ -208,10 +212,20 @@ class AppSettings(ImmutableDTO):
     is_llm_content_traced: IsLlmContentTraced
     cors_allowed_origins: list[PublicBaseUrl]
     # Request handlers running at once in threads (THREADPOOL_SIZE) and the
-    # Postgres connections of one process (DB_POOL_SIZE, as many by default).
+    # Postgres connections of one process (DB_POOL_SIZE, half as many by
+    # default: a thread waiting for the model holds no connection).
     threadpool_size: ThreadPoolSize = ThreadPoolSize(64)
-    db_pool_size: DatabasePoolSize = DatabasePoolSize(64)
+    db_pool_size: DatabasePoolSize = DatabasePoolSize(32)
+    # Idle connections close after DB_POOL_MAX_IDLE_SECONDS down to
+    # DB_POOL_MIN_SIZE (docs/operations/capacity.md, the connection budget).
+    db_pool_min_size: DatabasePoolMinSize = DatabasePoolMinSize(2)
+    db_pool_max_idle_seconds: DatabaseIdleSeconds = DatabaseIdleSeconds(300)
+    # Owner test-chat turns one API process answers at once.
+    test_chat_max_concurrency: TestChatConcurrencyLimit = TestChatConcurrencyLimit(4)
     worker_poll_seconds: WorkerPollSeconds
+    # The worker's safety-net poll of customer messages, which NOTIFY
+    # normally hands over at once (WORKER_INBOUND_POLL_SECONDS).
+    worker_inbound_poll_seconds: WorkerLanePollSeconds = WorkerLanePollSeconds(2)
     # Threads per lane of each worker process (WORKER_LANE_CONCURRENCY).
     worker_lane_concurrency: dict[JobLane, WorkerLaneConcurrency]
     # The API runs the background worker in a thread of its own process

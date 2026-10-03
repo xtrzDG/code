@@ -40,7 +40,6 @@ DEFAULT_RECORDINGS_DIRECTORY: str = "var/recordings"
 # EMBEDDED_WORKER: "auto" decides by the environment (see read_embedded_worker).
 EMBEDDED_WORKER_AUTO: str = "auto"
 # Request handlers that may run at once in threads (AnyIO's default is 40).
-# Each may hold a database connection, so the pool has as many by default.
 DEFAULT_THREADPOOL_SIZE: int = 64
 
 
@@ -75,7 +74,11 @@ def read_runtime_settings(
         ),
         db_pool_size=parse_setting(
             "DB_POOL_SIZE",
-            read_integer(environment_variables, "DB_POOL_SIZE", threadpool_size),
+            read_integer(
+                environment_variables,
+                "DB_POOL_SIZE",
+                default_db_pool_size(threadpool_size),
+            ),
             DatabasePoolSize,
         ),
         worker_poll_seconds=WorkerPollSeconds(
@@ -100,6 +103,17 @@ def read_runtime_settings(
             )
         ),
     )
+
+
+def default_db_pool_size(threadpool_size: int) -> int:
+    """
+    DB_POOL_SIZE when unset: half the request threads (at least one). A
+    thread holds a connection only for its statements, never while it waits
+    for the model or another service, so the threads beyond the pool wait a
+    moment for a connection instead of the database running out of them.
+    """
+
+    return max(1, (threadpool_size + 1) // 2)
 
 
 def read_embedded_worker(

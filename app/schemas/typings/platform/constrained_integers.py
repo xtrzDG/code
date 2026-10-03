@@ -9,6 +9,27 @@ class DatabaseConnectionCount(BaseConstrainedTypedInt):
     ge = 0
 
 
+class DatabaseIdleSeconds(BaseConstrainedTypedInt):
+    """
+    How long a pooled Postgres connection may sit unused before the pool
+    closes it (DB_POOL_MAX_IDLE_SECONDS), so a burst's connections go back
+    to the server.
+    """
+
+    ge = 10
+    le = 86_400
+
+
+class DatabasePoolMinSize(BaseConstrainedTypedInt):
+    """
+    Idle Postgres connections one process keeps open however quiet it is
+    (DB_POOL_MIN_SIZE), so the first requests after a pause need no connect.
+    """
+
+    ge = 0
+    le = 512
+
+
 class DatabasePoolSize(BaseConstrainedTypedInt):
     """
     How many Postgres connections one process may hold at once (DB_POOL_SIZE);
@@ -131,6 +152,17 @@ class RetryAfterSeconds(BaseConstrainedTypedInt):
     le = 24 * 60 * 60
 
 
+class TestChatConcurrencyLimit(BaseConstrainedTypedInt):
+    """
+    Owner test-chat turns one API process answers at once
+    (TEST_CHAT_MAX_CONCURRENCY): each holds a request thread for its model
+    calls, so a few of them never take the threads the cabinet needs.
+    """
+
+    ge = 1
+    le = 64
+
+
 class ThreadPoolSize(BaseConstrainedTypedInt):
     """
     How many request handlers of the API run at the same time in worker
@@ -146,6 +178,16 @@ class WorkerLaneConcurrency(BaseConstrainedTypedInt):
 
     ge = 1
     le = 64
+
+
+class WorkerLanePollSeconds(BaseConstrainedTypedInt):
+    """
+    How long an idle lane thread of the worker waits for a wake-up before
+    it looks at the queue again (the safety net of a lost wake-up).
+    """
+
+    ge = 1
+    le = 3600
 
 
 class WorkerPollSeconds(BaseConstrainedTypedInt):

@@ -14,6 +14,9 @@ from app.schemas.typings.platform.strings import DatabaseUrl
 from app.utilities.config_helpers.app_settings.backup_settings_section import (
     read_backup_settings,
 )
+from app.utilities.config_helpers.app_settings.capacity_settings_section import (
+    read_capacity_settings,
+)
 from app.utilities.config_helpers.app_settings.compliance_settings_section import (
     read_compliance_settings,
 )
@@ -111,6 +114,7 @@ def assemble_app_settings(environment_variables: Mapping[str, str]) -> AppSettin
             environment=environment,
             has_database=database_url is not None,
         ),
+        **read_capacity_settings(environment_variables),
         **read_recording_storage_settings(
             environment_variables,
             has_encryption_key=key_ring["encryption_key"] is not None,

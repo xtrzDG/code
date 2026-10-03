@@ -23,7 +23,7 @@ from app.facilitators.observability.null_job_monitor_facilitator import (
 from app.gateways.worker.heartbeat_recorder import WorkerHeartbeatRecorder
 from app.gateways.worker.held_leases import HeldLeases
 from app.gateways.worker.job_failure_reporter import JobFailureReporter
-from app.gateways.worker.lane_threads import LaneThreads
+from app.gateways.worker.lane_threads import LaneThreads, build_lane_poll_seconds
 from app.gateways.worker.lease_heartbeat import LeaseHeartbeat
 from app.gateways.worker.periodic_job_runner import PeriodicJobRunner
 from app.gateways.worker.periodic_job_spec import PeriodicJobSpec
@@ -34,6 +34,7 @@ from app.schemas.typings.platform.constrained_integers import (
     JobLeaseSeconds,
     ProcessedItemCount,
     WorkerLaneConcurrency,
+    WorkerLanePollSeconds,
     WorkerPollSeconds,
 )
 from app.schemas.typings.platform.constrained_strings import JobName
@@ -105,8 +106,10 @@ class BackgroundWorker:
         lease_seconds: JobLeaseSeconds = DEFAULT_LEASE_SECONDS,
         job_monitor: JobMonitorFacilitatorContract | None = None,
         heartbeat_recorder: WorkerHeartbeatRecorder | None = None,
+        inbound_poll_seconds: WorkerLanePollSeconds | None = None,
     ) -> None:
         self._poll_seconds: WorkerPollSeconds = poll_seconds
+        self._job_wakeup: JobWakeupContract = job_wakeup
         self._heartbeat_recorder: WorkerHeartbeatRecorder | None = heartbeat_recorder
         self._lane_concurrency: dict[JobLane, WorkerLaneConcurrency] = dict(
             lane_concurrency
@@ -145,7 +148,9 @@ class BackgroundWorker:
             runner=self._queued_runner,
             lane_concurrency=self._lane_concurrency,
             job_wakeup=job_wakeup,
-            poll_seconds=poll_seconds,
+            lane_poll_seconds=build_lane_poll_seconds(
+                poll_seconds, inbound_poll_seconds
+            ),
             failure_reporter=self._failure_reporter,
         )
 
@@ -197,12 +202,18 @@ class BackgroundWorker:
 
     def run_forever(self, stop_event: threading.Event) -> None:
         """
-        Start the lane threads and the heartbeat, then tick periodic jobs in
+        Listen for the wake-ups of every process (jobs queued by the API),
+        start the lane threads and the heartbeat, then tick periodic jobs in
         the calling thread until `stop_event` is set. A tick that fails as a
         whole is reported and followed by a pause that doubles with every
         further failure (at most MAX_TICK_BACKOFF_SECONDS). On stop, running
         jobs get STOP_GRACE_SECONDS to finish.
         """
+
+        with self._job_wakeup.listen():
+            self._run_threads(stop_event)
+
+    def _run_threads(self, stop_event: threading.Event) -> None:
 
         # The lane threads and the heartbeat stop with their own event, set
         # once the periodic loop is over (also when it fails).

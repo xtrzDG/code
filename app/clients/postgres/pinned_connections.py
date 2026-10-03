@@ -23,14 +23,6 @@ from psycopg.rows import TupleRow
 type PostgresConnection = psycopg.Connection[TupleRow]
 
 
-@dataclass
-class IdleConnection:
-    """A pooled connection and when it was returned (monotonic seconds)."""
-
-    connection: PostgresConnection
-    idle_since: float
-
-
 @dataclass(frozen=True)
 class ConnectionPin:
     """A connection pinned by one thread (a copied context in another
@@ -92,3 +84,23 @@ def is_idle(connection: PostgresConnection) -> bool:
     """True when the connection is outside any transaction."""
 
     return connection.info.transaction_status is pq.TransactionStatus.IDLE
+
+
+def reset_for_reuse(connection: PostgresConnection) -> bool:
+    """
+    Bring a returned connection back outside any transaction; False when it
+    cannot go back to the pool (closed, broken, or the rollback failed).
+    """
+
+    if connection.closed or connection.broken:
+        return False
+
+    if is_idle(connection):
+        return True
+
+    try:
+        connection.rollback()
+    except psycopg.Error:
+        return False
+
+    return is_idle(connection)

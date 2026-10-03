@@ -1,7 +1,9 @@
 """
 Log line formats: JSON for production log search, readable text for a
 terminal. Both carry the log context (request, business, conversation,
-channel, job) and hide secrets that libraries put into URLs.
+channel, job), the measured fields of the line itself (`log_fields`, e.g.
+how long a job waited before a worker took it) and hide secrets that
+libraries put into URLs.
 """
 
 import json
@@ -14,6 +16,8 @@ from app.utilities.observability.log_context import current_log_context
 
 # Set on every record by LogContextFilter: the context fields of the line.
 CONTEXT_FIELDS_ATTRIBUTE: str = "log_context_fields"
+# Set by the caller (`extra=log_fields(...)`): the line's own measured values.
+LINE_FIELDS_ATTRIBUTE: str = "log_fields"
 # Telegram bot tokens travel in the URL path (/bot<id>:<secret>/method), and
 # HTTP client libraries log request URLs.
 SECRET_PATTERNS: tuple[tuple[re.Pattern[str], str], ...] = (
@@ -57,6 +61,7 @@ class JsonLogFormatter(logging.Formatter):
             "message": redact_secrets(record.getMessage()),
         }
         entry.update(read_context_fields(record))
+        entry.update(read_line_fields(record))
         if record.exc_info:
             entry["exception"] = redact_secrets(self.formatException(record.exc_info))
         if record.stack_info:
@@ -73,7 +78,10 @@ class TextLogFormatter(logging.Formatter):
 
     def format(self, record: logging.LogRecord) -> str:
         line: str = redact_secrets(super().format(record))
-        fields: dict[str, str] = read_context_fields(record)
+        fields: dict[str, object] = {
+            **read_context_fields(record),
+            **read_line_fields(record),
+        }
         if not fields:
             return line
 
@@ -93,6 +101,30 @@ def read_context_fields(record: logging.LogRecord) -> dict[str, str]:
         return {str(name): str(value) for name, value in items}
 
     return current_log_context().as_fields()
+
+
+def log_fields(**fields: int | str) -> dict[str, object]:
+    """
+    The `extra` of a log call whose line carries measured values as fields
+    of their own (JSON keys, `name=value` in text), e.g.
+    `LOGGER.info("Job picked up", extra=log_fields(pickup_delay_ms=120))`.
+    Ids and numbers only, never texts or contact data.
+    """
+
+    return {LINE_FIELDS_ATTRIBUTE: dict(fields)}
+
+
+def read_line_fields(record: logging.LogRecord) -> dict[str, object]:
+    """The fields the caller attached with `log_fields` (none by default)."""
+
+    fields: object = getattr(record, LINE_FIELDS_ATTRIBUTE, None)
+    if not isinstance(fields, dict):
+        return {}
+
+    items: list[tuple[object, object]] = list(
+        cast(dict[object, object], fields).items()
+    )
+    return {str(name): value for name, value in items}
 
 
 def redact_secrets(text: str) -> str:

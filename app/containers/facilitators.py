@@ -129,7 +129,8 @@ class FacilitatorsContainer(containers.DeclarativeContainer):
     job_queue_facilitator: Singleton[JobQueueFacilitator] = Singleton(
         JobQueueFacilitator,
         job_repo=repositories.queued_job_repo,
-        job_wakeup=utilities.job_wakeup,
+        job_wakeup=adapters.job_wakeup,
+        unit_of_work=adapters.storage_unit_of_work,
         wall_clock=time_provider.microsecond_wall_clock,
     )
     # Staff notifications are queued in the outbox; the worker sends them
