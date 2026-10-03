@@ -123,6 +123,10 @@ export const conversationsKa: Translation<typeof conversationsEn> = {
   noPhone: "ტელეფონი არ არის",
   transcript: "ტრანსკრიფცია",
   emptyTranscript: "ამ საუბარში შეტყობინებები არ არის.",
+  earlierMessages: "ადრინდელი შეტყობინებების ჩვენება",
+  earlierLoading: "ადრინდელი შეტყობინებები იტვირთება…",
+  searchOlder: "ძველ საუბრებში ძებნა",
+  searchOlderDescription: "ბოლო საუბრებში დამთხვევა არ მოიძებნა.",
   handoffNotice: "საუბარს ადამიანი უძღვება: ასისტენტი დუმს, სანამ გადაცემა არ დაიხურება.",
   toHandoffs: "გადაცემების გახსნა",
   author: {

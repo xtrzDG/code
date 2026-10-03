@@ -14,6 +14,15 @@ class PeriodItemCount(BaseConstrainedTypedInt):
     ge = 0
 
 
+class TimelineSegment(BaseConstrainedTypedInt):
+    """
+    Which stretch of a dashboard timeline an item falls into: a local day,
+    or an opening or closing stretch of one (0 for the first).
+    """
+
+    ge = 0
+
+
 class UsedVoiceMinutes(BaseConstrainedTypedInt):
     """Package voice minutes used in a period, rounded up to whole minutes."""
 

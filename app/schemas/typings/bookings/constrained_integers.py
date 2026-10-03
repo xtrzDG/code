@@ -23,6 +23,15 @@ class BookingReminderLeadSeconds(BaseConstrainedTypedInt):
     le = 604800
 
 
+class BookingSearchBoundSeconds(BaseConstrainedTypedInt):
+    """
+    UTC UNIX timestamp (seconds) that bounds the bookings a query reads
+    (the start of a local day, or now for the ones not over yet).
+    """
+
+    ge = 0
+
+
 class BookingStartsAtUnixSeconds(BaseConstrainedTypedInt):
     """UTC UNIX timestamp (seconds) when a booking starts."""
 

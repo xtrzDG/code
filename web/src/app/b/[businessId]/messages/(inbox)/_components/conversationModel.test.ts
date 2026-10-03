@@ -26,8 +26,8 @@ import {
   templateLanguageName,
   templateReplyLength,
   templateReplyText,
-  usageTotals,
 } from "./conversationModel";
+import { usageTotals } from "./conversationUsage";
 
 const NOON_OCT_1_TBILISI = Date.UTC(2026, 9, 1, 8) * 1000;
 

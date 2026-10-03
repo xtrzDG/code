@@ -1,4 +1,4 @@
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 
 from app.contracts.repositories.booking_repositories import (
     BookingRepoContract,
@@ -6,7 +6,11 @@ from app.contracts.repositories.booking_repositories import (
     LeadRepoContract,
     UnansweredQuestionRepoContract,
 )
-from app.repositories.business_scoped_repository import BusinessScopedRepository
+from app.repositories.listing.booking_listing import BookingListing, LeadListing
+from app.repositories.listing.handoff_listing import (
+    HandoffListing,
+    UnansweredQuestionListing,
+)
 from app.schemas.domain.bookings import BookingDocument, LeadDocument
 from app.schemas.domain.handoffs import HandoffDocument, UnansweredQuestionDocument
 from app.schemas.typings.bookings.prefixed_id import BookingId, LeadId
@@ -14,12 +18,12 @@ from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.handoffs.prefixed_id import HandoffId, UnansweredQuestionId
 
 
-class BookingRepository(
-    BusinessScopedRepository[BookingDocument],
-    BookingRepoContract,
-):
+class BookingRepository(BookingListing, BookingRepoContract):
     def save(self, booking: BookingDocument) -> None:
         self._store(str(booking.id), booking)
+
+    def save_many(self, bookings: Sequence[BookingDocument]) -> None:
+        self._store_many([(str(booking.id), booking) for booking in bookings])
 
     def get(
         self,
@@ -34,7 +38,7 @@ class BookingRepository(
         )
 
 
-class LeadRepository(BusinessScopedRepository[LeadDocument], LeadRepoContract):
+class LeadRepository(LeadListing, LeadRepoContract):
     def save(self, lead: LeadDocument) -> None:
         self._store(str(lead.id), lead)
 
@@ -49,10 +53,7 @@ class LeadRepository(BusinessScopedRepository[LeadDocument], LeadRepoContract):
         )
 
 
-class HandoffRepository(
-    BusinessScopedRepository[HandoffDocument],
-    HandoffRepoContract,
-):
+class HandoffRepository(HandoffListing, HandoffRepoContract):
     def save(self, handoff: HandoffDocument) -> None:
         self._store(str(handoff.id), handoff)
 
@@ -80,8 +81,7 @@ class HandoffRepository(
 
 
 class UnansweredQuestionRepository(
-    BusinessScopedRepository[UnansweredQuestionDocument],
-    UnansweredQuestionRepoContract,
+    UnansweredQuestionListing, UnansweredQuestionRepoContract
 ):
     def save(self, question: UnansweredQuestionDocument) -> None:
         self._store(str(question.id), question)

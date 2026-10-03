@@ -6,11 +6,18 @@ not change stored state until it is saved. Every business-owned document is
 looked up through its business id, so one tenant never sees another's data.
 """
 
+from collections.abc import Sequence
 from typing import Protocol
 
 from typed_time_provider import Microseconds
 
 from app.contracts.repo_contract import RepoContract
+from app.contracts.repositories.conversation_listing_contracts import (
+    CallListingContract,
+    ContactListingContract,
+    ConversationListingContract,
+    MessageListingContract,
+)
 from app.schemas.constants.channels import ChannelKind, MessageDirection
 from app.schemas.constants.conversations import ConversationStatus, MessageAuthor
 from app.schemas.domain.contacts import ContactDocument
@@ -34,8 +41,12 @@ from app.schemas.typings.conversations.strings import ChannelUserId, ProviderCal
 from app.schemas.typings.localization.constrained_strings import E164PhoneNumber
 
 
-class ContactRepoContract(RepoContract, Protocol):
+class ContactRepoContract(ContactListingContract, RepoContract, Protocol):
     def save(self, contact: ContactDocument) -> None:
+        raise NotImplementedError
+
+    def save_many(self, contacts: Sequence[ContactDocument]) -> None:
+        """Store many in one transaction: bulk loads (`workshop seed-load`)."""
         raise NotImplementedError
 
     def get(
@@ -75,8 +86,12 @@ class ContactRepoContract(RepoContract, Protocol):
         raise NotImplementedError
 
 
-class ConversationRepoContract(RepoContract, Protocol):
+class ConversationRepoContract(ConversationListingContract, RepoContract, Protocol):
     def save(self, conversation: ConversationDocument) -> None:
+        raise NotImplementedError
+
+    def save_many(self, conversations: Sequence[ConversationDocument]) -> None:
+        """Store many in one transaction: bulk loads (`workshop seed-load`)."""
         raise NotImplementedError
 
     def get(
@@ -120,8 +135,12 @@ class ConversationRepoContract(RepoContract, Protocol):
         raise NotImplementedError
 
 
-class MessageRepoContract(RepoContract, Protocol):
+class MessageRepoContract(MessageListingContract, RepoContract, Protocol):
     def save(self, message: MessageDocument) -> None:
+        raise NotImplementedError
+
+    def save_many(self, messages: Sequence[MessageDocument]) -> None:
+        """Store many in one transaction: bulk loads (`workshop seed-load`)."""
         raise NotImplementedError
 
     def get(
@@ -187,7 +206,7 @@ class LlmTurnRepoContract(RepoContract, Protocol):
         raise NotImplementedError
 
 
-class CallRepoContract(RepoContract, Protocol):
+class CallRepoContract(CallListingContract, RepoContract, Protocol):
     def save(self, call: CallDocument) -> None:
         raise NotImplementedError
 

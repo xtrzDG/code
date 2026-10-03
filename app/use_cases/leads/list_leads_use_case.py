@@ -20,7 +20,7 @@ from app.use_cases.bookings.operations_support import (
     require_business,
 )
 from app.use_cases.leads.lead_views import build_lead_list_item
-from app.utilities.paging.cursor_paging import take_page
+from app.utilities.paging.keyset_paging import finish_page, read_slice
 
 LEAD_ENTITY: AuditEntityName = AuditEntityName("lead")
 
@@ -29,8 +29,9 @@ class ListLeadsUseCase(UseCaseContract[ListLeadsQuery, LeadPage]):
     """
     One page of the leads for the cabinet (concept /leads), newest first,
     with the contact's name and phone, and how many leads each status has
-    (the status filter aside) for the tabs. Every call is audited as a view
-    of personal data.
+    (the status filter aside) for the tabs. The page is a keyset page read
+    by the database and the counts are counted there, so neither grows with
+    the years of leads. Every call is audited as a view of personal data.
     """
 
     def __init__(
@@ -51,10 +52,6 @@ class ListLeadsUseCase(UseCaseContract[ListLeadsQuery, LeadPage]):
         business: BusinessDocument = require_business(
             self._business_repo, input_data.business_id
         )
-        contacts: dict[ContactId, ContactDocument] = {
-            contact.id: contact
-            for contact in self._contact_repo.list_by_business(business.id)
-        }
         self._audit_log_repo.append(
             build_audit_entry(
                 business.id,
@@ -65,22 +62,24 @@ class ListLeadsUseCase(UseCaseContract[ListLeadsQuery, LeadPage]):
                 self._wall_clock.now_unix(),
             )
         )
-        visible: list[LeadDocument] = [
-            lead
-            for lead in self._lead_repo.list_by_business(business.id)
-            if input_data.include_sandbox or not lead.is_sandbox
-        ]
         leads: list[LeadDocument]
         next_cursor: PageCursor | None
-        leads, next_cursor = take_page(
-            [
-                lead
-                for lead in visible
-                if input_data.status is None or lead.status is input_data.status
-            ],
+        leads, next_cursor = finish_page(
+            self._lead_repo.page_by_business(
+                business.id,
+                read_slice(input_data.page),
+                input_data.status,
+                input_data.include_sandbox,
+            ),
             input_data.page,
             sort_key=lambda lead: int(lead.created_at),
             item_id=lambda lead: str(lead.id),
+        )
+        contacts: dict[ContactId, ContactDocument] = self._contact_repo.get_many(
+            business.id, [lead.contact_id for lead in leads]
+        )
+        counts: dict[LeadStatus, ListItemCount] = self._lead_repo.count_by_status(
+            business.id, input_data.include_sandbox
         )
         return LeadPage(
             items=[
@@ -90,10 +89,7 @@ class ListLeadsUseCase(UseCaseContract[ListLeadsQuery, LeadPage]):
             next_cursor=next_cursor,
             status_counts=[
                 LeadStatusCount(
-                    status=status,
-                    count=ListItemCount(
-                        sum(1 for lead in visible if lead.status is status)
-                    ),
+                    status=status, count=counts.get(status, ListItemCount(0))
                 )
                 for status in LeadStatus
             ],

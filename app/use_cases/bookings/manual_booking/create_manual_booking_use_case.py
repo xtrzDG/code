@@ -49,6 +49,7 @@ from app.use_cases.bookings.booking_support import (
     SchedulingInputs,
     load_scheduling_inputs,
 )
+from app.use_cases.bookings.bookings_in_play import bookings_not_over_on
 from app.use_cases.bookings.manual_booking.manual_booking_customer import (
     customer_language,
     find_booking_conversation,
@@ -178,8 +179,11 @@ class CreateManualBookingUseCase(UseCaseContract[ManualBookingCommand, BookingRe
                     zone=inputs.zone,
                     business_hours=inputs.business_hours,
                     exceptions=inputs.exceptions,
-                    bookings=self._booking_repo.list_by_business(
-                        input_data.business_id
+                    bookings=bookings_not_over_on(
+                        self._booking_repo,
+                        input_data.business_id,
+                        local_date,
+                        inputs.zone,
                     ),
                     rules=inputs.rules,
                     stay_times=inputs.stay_times,

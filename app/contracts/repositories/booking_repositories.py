@@ -6,10 +6,16 @@ not change stored state until it is saved. Every business-owned document is
 looked up through its business id, so one tenant never sees another's data.
 """
 
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from typing import Protocol
 
 from app.contracts.repo_contract import RepoContract
+from app.contracts.repositories.booking_listing_contracts import (
+    BookingListingContract,
+    HandoffListingContract,
+    LeadListingContract,
+    UnansweredQuestionListingContract,
+)
 from app.schemas.domain.bookings import BookingDocument, LeadDocument
 from app.schemas.domain.handoffs import HandoffDocument, UnansweredQuestionDocument
 from app.schemas.typings.bookings.prefixed_id import BookingId, LeadId
@@ -17,8 +23,12 @@ from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.handoffs.prefixed_id import HandoffId, UnansweredQuestionId
 
 
-class BookingRepoContract(RepoContract, Protocol):
+class BookingRepoContract(BookingListingContract, RepoContract, Protocol):
     def save(self, booking: BookingDocument) -> None:
+        raise NotImplementedError
+
+    def save_many(self, bookings: Sequence[BookingDocument]) -> None:
+        """Store many in one transaction: bulk loads (`workshop seed-load`)."""
         raise NotImplementedError
 
     def get(
@@ -33,7 +43,7 @@ class BookingRepoContract(RepoContract, Protocol):
         raise NotImplementedError
 
 
-class LeadRepoContract(RepoContract, Protocol):
+class LeadRepoContract(LeadListingContract, RepoContract, Protocol):
     def save(self, lead: LeadDocument) -> None:
         raise NotImplementedError
 
@@ -45,7 +55,7 @@ class LeadRepoContract(RepoContract, Protocol):
         raise NotImplementedError
 
 
-class HandoffRepoContract(RepoContract, Protocol):
+class HandoffRepoContract(HandoffListingContract, RepoContract, Protocol):
     def save(self, handoff: HandoffDocument) -> None:
         raise NotImplementedError
 
@@ -74,7 +84,9 @@ class HandoffRepoContract(RepoContract, Protocol):
         raise NotImplementedError
 
 
-class UnansweredQuestionRepoContract(RepoContract, Protocol):
+class UnansweredQuestionRepoContract(
+    UnansweredQuestionListingContract, RepoContract, Protocol
+):
     def save(self, question: UnansweredQuestionDocument) -> None:
         raise NotImplementedError
 

@@ -188,7 +188,9 @@ PLATFORM_ADMIN_PHONE_NUMBERS=+995555000001
 2. Окружение staging (`render.staging.yaml`, создаётся так же: New → Blueprint,
    путь к Blueprint — `render.staging.yaml`) разворачивает `main`. Там своя база
    и `LLM_PROVIDER=scripted`: помощник отвечает одной фиксированной фразой,
-   без модели и без оплаты за сообщения.
+   без модели и без оплаты за сообщения (`SCRIPTED_LLM_LATENCY_MS` задаёт ему
+   задержку настоящего провайдера только для нагрузочных тестов, см.
+   `docs/operations/capacity.md`; на staging оставьте 0).
 3. После деплоя GitHub Actions запускает `scripts/smoke.sh`: здоровье API,
    скрипт виджета, варианты входа, кабинет и тестовый чат через виджет.
 4. Если на staging всё зелёное, тот же коммит переносится в `release`, и его

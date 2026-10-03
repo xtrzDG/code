@@ -33,9 +33,10 @@ uv, Python 3.14, ruff, mypy и pyright в строгом режиме, pytest, d
 | Фоновый воркер | `python -m app.worker_main` | периодические задачи и очередь задач по полосам (ответы на сообщения из входящих, доставка исходящих, автотесты версий помощника и др.); воркеров может быть сколько угодно; в разработке без Postgres — поток внутри API (`EMBEDDED_WORKER`) |
 | Миграции | `python -m app.gateways.cli.migrate` | схема Postgres (ЕС) с изоляцией по бизнесу (RLS) |
 | Миграция документов | `python -m app.gateways.cli.migrate_documents` | переписывает сохранённые документы старых версий схемы в текущую (после деплоя, см. [`docs/operations/deploys.md`](docs/operations/deploys.md)) |
+| Нагрузочные данные | `python -m app.gateways.cli.seed_load` | заполняет базу для нагрузочных тестов (500 бизнесов, 2 млн сообщений, 200 тыс. броней) и пишет манифест для k6; не в production, см. [`docs/operations/capacity.md`](docs/operations/capacity.md) |
 
 Все они собираются в один образ (`Dockerfile`, роли `api`, `worker`, `migrate`,
-`migrate-documents`);
+`migrate-documents`, `seed-load`);
 кабинет владельца на Next.js — отдельный образ `web/Dockerfile`.
 
 API и воркер собираются из одного контейнера `app/containers/app.py::AppContainer`
@@ -394,6 +395,7 @@ UI-тестов); `color`, `position` и `language` в ней показываю
 | `OPENAI_API_KEY`, `OPENAI_PROJECT_ID`, `OPENAI_BASE_URL` | ответы модели — ошибка 502 при первом вызове; ключ читает SDK OpenAI; адрес по умолчанию — `https://eu.api.openai.com/v1` (проект с хранением в ЕС) |
 | `ANTHROPIC_API_KEY` | нужен только при `LLM_PROVIDER=anthropic` (ключ читает SDK Anthropic) |
 | `AUTOTEST_TURN_LIMIT` | 4 сообщения клиента в одном сценарии автотеста |
+| `SCRIPTED_LLM_LATENCY_MS` | 0: сколько миллисекунд модель `scripted` ждёт перед каждым ответом, как настоящий провайдер; задают нагрузочные тесты (`perf/k6`, `docs/operations/capacity.md`) |
 | `OTP_LIFETIME_SECONDS`, `OTP_MAX_FAILED_ATTEMPTS` | код входа действует 600 секунд; после 5 неверных попыток нужен новый код |
 | `OTP_SENDS_PER_DESTINATION_PER_HOUR`, `OTP_SENDS_PER_IP_PER_HOUR`, `OTP_SENDS_PER_HOUR` | 5 кодов на номер или почту, 10 с одного адреса и 300 на новые номера и почты всего за час (см. «Защита входа») |
 | `OTP_SENDS_PER_COUNTRY_PER_HOUR`, `OTP_SENDS_TO_VERIFIED_USERS_PER_HOUR` | 100 кодов в час на новые номера одной страны; 300 в час подтверждённым пользователям — отдельный бюджет, который поток на новые номера не съедает |
@@ -462,7 +464,7 @@ UI-тестов); `color`, `position` и `language` в ней показываю
 | Ресурсы и расписание | `GET·POST …/resources`, `PATCH …/resources/{id}`, `GET·POST …/schedule-exceptions`, `DELETE …/schedule-exceptions/{id}` |
 | Брони, заявки, передачи | `GET …/availability` (`full_day=true` — весь день для сотрудников), `GET·POST …/bookings`, `PATCH …/bookings/{id}` (статус, гости, место, примечание, имя), `POST …/bookings/{id}/cancel`, `POST …/bookings/{id}/reschedule`, `GET …/leads`, `PATCH …/leads/{id}`, `GET …/handoffs`, `POST …/handoffs/{id}/resolve`, `GET …/unanswered-questions`, `POST …/unanswered-questions/{id}/answer`, `GET …/dashboard`, `GET …/inbox-counts` (открытые передачи и новые заявки, без записи в журнал) |
 | Google Calendar | `GET·DELETE …/integrations/google-calendar`, `GET …/integrations/google-calendar/connect-url`, `GET /v1/integrations/google-calendar/callback` (ничего не обменивает, только передаёт `code`, `state`, `error` странице кабинета `CABINET_BASE_URL/integrations/google-calendar/callback`), `POST /v1/integrations/google-calendar/complete` (Bearer; завершает подключение только для того пользователя, который его начал; кабинет затем открывает `/b/{id}/channels?calendar=connected` или `?calendar=error&reason=…`) |
-| Разговоры | `GET …/conversations` (страницы, фильтры `channel`, `status`, `from`/`to`, `search`), `GET …/conversations/{id}` (расшифровка, звонки, брони, заявки, передачи), `PUT …/conversations/{id}/rating`, `POST …/conversations/{id}/messages` (ответ сотрудника клиенту; шаблон WhatsApp, который Meta не принял, — 409 `template_rejected`), `GET …/calls/{call_id}/recording` (запись звонка; отдаёт части по `Range`, прослушивание пишется в журнал аудита), `POST …/test-chat` |
+| Разговоры | `GET …/conversations` (страницы, фильтры `channel`, `status`, `from`/`to`, `search`), `GET …/conversations/{id}` (последние 100 сообщений расшифровки, расход модели, звонки, брони, заявки, передачи), `GET …/conversations/{id}/messages` (более ранние сообщения страницами, `limit`, `cursor`), `PUT …/conversations/{id}/rating`, `POST …/conversations/{id}/messages` (ответ сотрудника клиенту; шаблон WhatsApp, который Meta не принял, — 409 `template_rejected`), `GET …/calls/{call_id}/recording` (запись звонка; отдаёт части по `Range`, прослушивание пишется в журнал аудита), `POST …/test-chat` |
 | Сборка помощника | `POST·GET …/assistant-versions`, `GET …/assistant-versions/{id}[/autotest-run]`, `GET …/assistant-versions/{id}/go-live-readiness`, `POST …/assistant-versions/{id}/autotests`, `POST …/assistant-versions/{id}/publish`, `POST …/assistant-versions/{id}/rollback` |
 | Каналы (кабинет) | `GET …/channels`, `PUT·DELETE …/channels/{channel}`, `GET …/channels/web/snippet`, `PUT …/channels/whatsapp/staff-template` (шаблон WhatsApp для ответа сотрудника вне 24-часового окна), `POST …/manager-contacts/telegram-link` |
 | Вебхуки и виджет | `POST /v1/channels/telegram/{channel_id}/webhook`, `GET·POST /v1/channels/meta/webhook`, `POST /v1/channels/telegram-platform/webhook`, `GET /v1/widget/{id}/config`, `GET·POST /v1/widget/{id}/messages`, `POST /v1/widget/errors` (сигнал ошибки виджета: вид, этап, тип ошибки и место в widget.js, без текстов; лимиты на сеть, бизнес и платформу), `GET /widget.js`, `GET /widget/demo` |
@@ -531,6 +533,13 @@ uv run pytest
 (зависимости и git-хук `.pre-commit-config.yaml`), `just dev` (API с демо-данными
 и кабинет), `just check` (всё, что CI проверяет в коде бэкенда и кабинета),
 `just gen`, `just e2e`, `just security`, `just db-reset`.
+
+Бюджеты задержек (p95 входа, ленты разговоров, карточки, свободного времени,
+дашборда и опроса виджета) на большой базе проверяет отдельный набор
+`uv run pytest -m perf tests/perf` (`PERF_SCALE=small|medium|full`; по
+умолчанию он исключён из `pytest`); раз в неделю его и сценарии k6 запускает
+`.github/workflows/perf.yml` — подробности в
+[docs/operations/capacity.md](docs/operations/capacity.md).
 
 Ворота качества в CI: покрытие строк и ветвей `app/` не ниже 95 %
 (`pytest -n auto --cov=app --cov-branch`), пороги покрытия `src/lib` и `_lib`

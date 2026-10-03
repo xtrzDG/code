@@ -50,6 +50,23 @@ export function ConversationList({
     );
   }
 
+  if (items.length === 0 && !isStale && query.hasMore) {
+    // A search looks at the latest conversations first; older ones on request.
+    return (
+      <Card>
+        <EmptyState
+          title={t("insights.noMatchesTitle")}
+          description={t("conversations.searchOlderDescription")}
+          action={
+            <Button variant="secondary" onClick={query.loadMore} isLoading={query.isLoadingMore}>
+              {t("conversations.searchOlder")}
+            </Button>
+          }
+        />
+      </Card>
+    );
+  }
+
   if (items.length === 0 && !isStale) {
     return (
       <Card>

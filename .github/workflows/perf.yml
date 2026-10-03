@@ -1,0 +1,145 @@
+name: Perf
+
+# Weekly (Monday morning) and on demand: the latency budgets of
+# tests/perf over a seeded database (500 businesses, 2M messages, 200k
+# bookings at the full scale), compared with perf/baseline.json, and the
+# k6 load scenarios against docker compose. docs/operations/capacity.md
+# explains the numbers and how to refresh the baseline.
+on:
+  schedule:
+    - cron: "17 4 * * 1"
+  workflow_dispatch:
+    inputs:
+      scale:
+        description: "Dataset of the latency budgets (PERF_SCALE)"
+        type: choice
+        options: [full, medium, small]
+        default: full
+      update_baseline:
+        description: "Store this run's p95s as the baseline (artifact; commit it in a PR)"
+        type: boolean
+        default: false
+      load_test:
+        description: "Also run the k6 scenarios against docker compose"
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: perf
+  cancel-in-progress: false
+
+# Every `uses:` is pinned to a commit SHA (the comment names the release).
+jobs:
+  budgets:
+    name: Latency budgets and the baseline (tests/perf)
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    env:
+      POSTGRES_BIN_DIRECTORY: /usr/lib/postgresql/16/bin
+      UV_FROZEN: "1"
+      PERF_SCALE: ${{ inputs.scale || 'full' }}
+      PERF_REPORT: perf/results/latest.json
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install uv and Python 3.14
+        uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+        with:
+          python-version: "3.14"
+          enable-cache: true
+          cache-dependency-glob: uv.lock
+
+      - name: Install PostgreSQL 16 binaries
+        run: |
+          if [ ! -x "$POSTGRES_BIN_DIRECTORY/initdb" ]; then
+            sudo apt-get update
+            sudo apt-get install --yes --no-install-recommends postgresql-16
+          fi
+          "$POSTGRES_BIN_DIRECTORY/postgres" --version
+
+      - name: Install dependencies
+        run: uv sync --frozen
+
+      # Seeds through the repositories, then 200 timed requests per kind;
+      # a p95 over its budget fails here.
+      - name: Latency budgets
+        run: uv run pytest -m perf tests/perf -ra
+
+      - name: Compare with the baseline (more than 20% slower fails)
+        if: ${{ !inputs.update_baseline }}
+        shell: bash
+        run: >-
+          uv run python -m scripts.perf_compare "$PERF_REPORT" perf/baseline.json
+          | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: Store the measured p95s as the new baseline
+        if: ${{ inputs.update_baseline }}
+        run: uv run python -m scripts.perf_compare "$PERF_REPORT" perf/baseline.json --update
+
+      - name: Keep the report
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: perf-report
+          path: |
+            perf/results/latest.json
+            perf/baseline.json
+          retention-days: 90
+
+  load:
+    name: Load scenarios (k6 against docker compose)
+    if: ${{ github.event_name == 'schedule' || inputs.load_test }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      SCRIPTED_LLM_LATENCY_MS: "800"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Start Postgres, migrations, the API and the worker
+        run: >-
+          docker compose -f docker-compose.yml -f perf/docker-compose.perf.yml
+          up --detach --build --wait api worker
+
+      # A shared runner holds a tenth of the weekly dataset next to the
+      # services; the latency budgets above cover the full scale.
+      - name: Seed the load dataset
+        shell: bash
+        run: >-
+          docker compose -f docker-compose.yml -f perf/docker-compose.perf.yml
+          run --rm -T api seed-load --businesses 50 --messages 200000
+          --bookings 20000 --visitors 1000 --manifest - > perf/manifest.json
+
+      - name: Cabinet browsing
+        run: >-
+          docker compose -f docker-compose.yml -f perf/docker-compose.perf.yml
+          --profile load run --rm k6 run /perf/k6/cabinet_browsing.js
+
+      - name: Widget polling, 1000 visitors
+        run: >-
+          docker compose -f docker-compose.yml -f perf/docker-compose.perf.yml
+          --profile load run --rm k6 run /perf/k6/widget_polling.js
+
+      - name: Webhook burst, 200 messages a second
+        run: >-
+          docker compose -f docker-compose.yml -f perf/docker-compose.perf.yml
+          --profile load run --rm k6 run /perf/k6/webhook_burst.js
+
+      - name: Service logs
+        if: ${{ always() }}
+        run: >-
+          docker compose -f docker-compose.yml -f perf/docker-compose.perf.yml
+          logs --no-color --tail 300 api worker
+
+      - name: Stop
+        if: ${{ always() }}
+        run: >-
+          docker compose -f docker-compose.yml -f perf/docker-compose.perf.yml
+          down --volumes

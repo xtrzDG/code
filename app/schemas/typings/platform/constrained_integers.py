@@ -69,6 +69,16 @@ class JobRetentionDays(BaseConstrainedTypedInt):
     le = 366
 
 
+class KeysetReadLimit(BaseConstrainedTypedInt):
+    """
+    How many items a repository reads for one keyset page: the page size
+    and one more, which tells whether another page follows.
+    """
+
+    ge = 1
+    le = 1_000
+
+
 class ListItemCount(BaseConstrainedTypedInt):
     """How many items of a cabinet list match a filter (all pages together)."""
 

@@ -56,7 +56,9 @@ class SummarizeClientUseCase(UseCaseContract[ClientSummarySource, AdminClientSum
     cost and margin in the current billing window (the last 30 days without
     a subscription); and the health verdict. Leads-only service and a
     negative margin are critical; other issues ask for attention. Sandbox
-    (test chat) handoffs and questions are not counted.
+    (test chat) handoffs and questions are not counted. Every count is a
+    database count or an indexed read of the few matching documents, so a
+    summary costs the same whatever the client's history.
     """
 
     def __init__(
@@ -230,11 +232,7 @@ class SummarizeClientUseCase(UseCaseContract[ClientSummarySource, AdminClientSum
         recent_since: Microseconds,
     ) -> HandoffCount:
         return HandoffCount(
-            sum(
-                1
-                for handoff in self._handoff_repo.list_by_business(business.id)
-                if not handoff.is_sandbox and handoff.created_at >= recent_since
-            )
+            int(self._handoff_repo.count_made_since(business.id, recent_since))
         )
 
     def _count_recent_tool_errors(
@@ -245,8 +243,9 @@ class SummarizeClientUseCase(UseCaseContract[ClientSummarySource, AdminClientSum
         return ToolErrorCount(
             sum(
                 1
-                for message in self._message_repo.list_by_business(business.id)
-                if message.created_at >= recent_since
+                for message in self._message_repo.list_with_tool_errors(
+                    business.id, recent_since
+                )
                 for tool_call in message.tool_calls
                 if tool_call.is_error
             )
@@ -254,11 +253,5 @@ class SummarizeClientUseCase(UseCaseContract[ClientSummarySource, AdminClientSum
 
     def _count_open_questions(self, business: BusinessDocument) -> OpenQuestionCount:
         return OpenQuestionCount(
-            sum(
-                1
-                for question in self._unanswered_question_repo.list_by_business(
-                    business.id
-                )
-                if not question.is_resolved and not question.is_sandbox
-            )
+            int(self._unanswered_question_repo.count_open(business.id))
         )

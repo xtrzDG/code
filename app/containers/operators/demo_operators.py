@@ -7,7 +7,10 @@ from app.containers.utilities import UtilitiesContainer
 
 
 class DemoOperatorsContainer(containers.DeclarativeContainer):
-    """Operator of the development demo data (SEED_DEMO_DATA, API startup)."""
+    """
+    Operators of the development demo data (SEED_DEMO_DATA, API startup) and
+    of load-test datasets (`workshop seed-load`); both platform-wide.
+    """
 
     demo_pipelines: DemoPipelinesContainer = DependenciesContainer()  # type: ignore[assignment]
     utilities: UtilitiesContainer = DependenciesContainer()  # type: ignore[assignment]
@@ -17,4 +20,7 @@ class DemoOperatorsContainer(containers.DeclarativeContainer):
 
     seed_demo_data_operator = platform_pipeline_operator(
         demo_pipelines.seed_demo_data_pipeline, storage_scope
+    )
+    seed_load_operator = platform_pipeline_operator(
+        demo_pipelines.seed_load_pipeline, storage_scope
     )

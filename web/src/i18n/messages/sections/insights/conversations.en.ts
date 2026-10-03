@@ -123,6 +123,10 @@ export const conversationsEn = {
   noPhone: "No phone number",
   transcript: "Transcript",
   emptyTranscript: "There are no messages in this conversation.",
+  earlierMessages: "Show earlier messages",
+  earlierLoading: "Loading earlier messages…",
+  searchOlder: "Search older conversations",
+  searchOlderDescription: "Nothing matched among the latest conversations.",
   handoffNotice: "A person is handling this conversation: the assistant stays silent until the handoff is resolved.",
   toHandoffs: "Open handoffs",
   author: {

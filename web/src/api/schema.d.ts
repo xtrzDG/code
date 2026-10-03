@@ -731,7 +731,8 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /** List Conversation Messages */
+        get: operations["list_conversation_messages_v1_businesses__business_id__conversations__conversation_id__messages_get"];
         put?: never;
         /** Send Staff Message */
         post: operations["send_staff_message_v1_businesses__business_id__conversations__conversation_id__messages_post"];
@@ -3083,9 +3084,12 @@ export interface components {
         };
         /**
          * ConversationDetailView
-         * @description Conversation card: summary, the full transcript with tool calls, for
-         *     phone conversations the calls with their transcripts and recordings,
-         *     the bookings, leads and handoffs made in it, and whether staff can reply.
+         * @description Conversation card: summary, the newest part of the transcript with tool
+         *     calls (oldest first; `earlier_messages_cursor` pages back through
+         *     `GET .../messages` when there is more), the model usage of the whole
+         *     conversation, for phone conversations the calls with their transcripts
+         *     and recordings, the bookings, leads and handoffs made in it, and
+         *     whether staff can reply.
          */
         ConversationDetailView: {
             /** Bookings */
@@ -3093,6 +3097,8 @@ export interface components {
             /** Calls */
             calls?: components["schemas"]["CallView"][];
             conversation: components["schemas"]["ConversationSummaryView"];
+            /** Earlier Messages Cursor */
+            earlier_messages_cursor?: string | null;
             /** Handoffs */
             handoffs?: components["schemas"]["HandoffListItem"][];
             /** Leads */
@@ -3100,6 +3106,7 @@ export interface components {
             /** Messages */
             messages?: components["schemas"]["MessageView"][];
             reply?: components["schemas"]["StaffReplyView"] | null;
+            usage?: components["schemas"]["ConversationUsageView"];
         };
         /**
          * ConversationDocument
@@ -3223,6 +3230,28 @@ export interface components {
             message_count: number;
             rating?: components["schemas"]["ConversationRating"] | null;
             status: components["schemas"]["ConversationStatus"];
+        };
+        /**
+         * ConversationUsageView
+         * @description Language-model usage of a whole conversation (every message, also the
+         *     ones a page of the transcript does not show).
+         */
+        ConversationUsageView: {
+            /**
+             * Cost Micro Usd
+             * @default 0
+             */
+            cost_micro_usd: number;
+            /**
+             * Input Tokens
+             * @default 0
+             */
+            input_tokens: number;
+            /**
+             * Output Tokens
+             * @default 0
+             */
+            output_tokens: number;
         };
         /**
          * CountryList
@@ -4361,6 +4390,17 @@ export interface components {
              * @description Last update wall-clock UNIX timestamp in microseconds.
              */
             updated_at?: number;
+        };
+        /**
+         * MessagePage
+         * @description Earlier messages of a conversation, oldest first; `next_cursor` asks for
+         *     the ones before them (None when the transcript starts here).
+         */
+        MessagePage: {
+            /** Items */
+            items?: components["schemas"]["MessageView"][];
+            /** Next Cursor */
+            next_cursor?: string | null;
         };
         /**
          * MessageView
@@ -9856,6 +9896,97 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ConversationDetailView"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    list_conversation_messages_v1_businesses__business_id__conversations__conversation_id__messages_get: {
+        parameters: {
+            query?: {
+                limit?: string | null;
+                cursor?: string | null;
+            };
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+                conversation_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MessagePage"];
                 };
             };
             /** @description Sign-in required: the bearer token is missing, invalid or expired. */

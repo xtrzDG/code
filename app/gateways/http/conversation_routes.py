@@ -37,9 +37,11 @@ from app.schemas.dto.conversation_feed.conversation_actions import (
 from app.schemas.dto.conversation_feed.conversation_views import (
     ConversationDetailView,
     ConversationListQuery,
+    ConversationMessagesQuery,
     ConversationPage,
     ConversationQuery,
     ConversationSummaryView,
+    MessagePage,
 )
 from app.schemas.dto.conversation_feed.owner_test_chat import (
     OwnerTestChatCommand,
@@ -75,6 +77,9 @@ def build_conversation_router(
         StaffMessageResult,
     ],
     get_call_recording_operator: OperatorContract[CallRecordingQuery, RecordingAudio],
+    list_conversation_messages_operator: OperatorContract[
+        ConversationMessagesQuery, MessagePage
+    ],
 ) -> APIRouter:
     """
     Routes (all require a bearer token; owners and staff):
@@ -86,6 +91,9 @@ def build_conversation_router(
                                                     card with messages, calls,
                                                     bookings, leads, handoffs
                                                     (audited)
+        GET  .../conversations/{conversation_id}/messages?limit=&cursor=
+                                                    earlier messages of the
+                                                    card, oldest first (audited)
         PUT  .../conversations/{conversation_id}/rating
                                                     {rating: good|bad|null}
         POST .../conversations/{conversation_id}/messages
@@ -147,6 +155,27 @@ def build_conversation_router(
                     ConversationId,
                     "Conversation",
                 ),
+                client_ip_address=read_client_ip_address(request),
+            )
+        )
+
+    @router.get("/v1/businesses/{business_id}/conversations/{conversation_id}/messages")
+    def list_conversation_messages(
+        request: Request,
+        business_id: str,
+        conversation_id: str,
+        user_id: Annotated[UserId, Depends(current_user)],
+        limit: str | None = None,
+        cursor: str | None = None,
+    ) -> MessagePage:
+        return list_conversation_messages_operator.operate(
+            ConversationMessagesQuery(
+                user_id=user_id,
+                business_id=parse_path_identifier(business_id, BusinessId, "Business"),
+                conversation_id=parse_path_identifier(
+                    conversation_id, ConversationId, "Conversation"
+                ),
+                page=parse_page_request(limit, cursor),
                 client_ip_address=read_client_ip_address(request),
             )
         )

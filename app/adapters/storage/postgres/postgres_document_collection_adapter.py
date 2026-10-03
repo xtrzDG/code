@@ -8,8 +8,8 @@ from app.adapters.storage.postgres.document_lookup_sql import (
     compose_delete_batch,
     compose_select,
 )
-from app.adapters.storage.postgres.postgres_document_table import (
-    PostgresDocumentTable,
+from app.adapters.storage.postgres.postgres_document_listing import (
+    PostgresDocumentListing,
 )
 from app.contracts.document_store import DocumentCollectionAdapterContract
 from app.schemas.dto.storage_queries import (
@@ -32,7 +32,7 @@ DELETE_BATCH_SIZE: DocumentQueryLimit = DocumentQueryLimit(1000)
 
 
 class PostgresDocumentCollectionAdapter[StoredDocument: PersistentDocument](
-    PostgresDocumentTable[StoredDocument],
+    PostgresDocumentListing[StoredDocument],
     DocumentCollectionAdapterContract[StoredDocument],
 ):
     """
@@ -68,7 +68,8 @@ class PostgresDocumentCollectionAdapter[StoredDocument: PersistentDocument](
     and callers always get fresh instances. `list_all()` returns
     documents in first-write order, like the in-memory adapter. Queries by
     lookup field are parameterized SQL on plain indexed columns
-    (`document_lookup_sql`).
+    (`document_lookup_sql`); keyset pages and aggregations come from
+    `PostgresDocumentListing` (`document_listing_sql`).
     """
 
     def upsert(self, document_key: str, document: StoredDocument) -> None:

@@ -7,12 +7,16 @@ from app.schemas.dto.operations.unanswered_questions import (
     ListUnansweredQuestionsQuery,
     UnansweredQuestionPage,
 )
+from app.schemas.dto.paging import KeysetPosition
+from app.schemas.typings.platform.integers import ListSortValue
+from app.schemas.typings.platform.strings import ListItemKey
 from app.use_cases.handoffs.handoff_views import build_unanswered_question_details
-from app.utilities.paging.cursor_paging import take_page
+from app.utilities.paging.keyset_paging import finish_page, read_slice
 
 # The occurrence count sits above every possible timestamp (64 bits), so one
 # integer key orders by count first and by the last time asked second.
 OCCURRENCE_RANK_SHIFT: int = 64
+LAST_SEEN_MASK: int = (1 << OCCURRENCE_RANK_SHIFT) - 1
 
 
 class ListUnansweredQuestionsUseCase(
@@ -21,7 +25,8 @@ class ListUnansweredQuestionsUseCase(
     """
     Questions without an answer for the cabinet, one page at a time: open
     ones by default, most asked first, then the most recently asked (ties
-    by id). The resolved and sandbox filters apply before paging.
+    in write order). The resolved and sandbox filters apply before paging;
+    pages are keyset pages read by the database.
     """
 
     def __init__(
@@ -35,16 +40,13 @@ class ListUnansweredQuestionsUseCase(
         self,
         input_data: ListUnansweredQuestionsQuery,
     ) -> UnansweredQuestionPage:
-        questions: list[UnansweredQuestionDocument] = [
-            question
-            for question in self._unanswered_question_repo.list_by_business(
-                input_data.business_id
-            )
-            if (input_data.include_resolved or not question.is_resolved)
-            and (input_data.include_sandbox or not question.is_sandbox)
-        ]
-        page_items, next_cursor = take_page(
-            questions,
+        page_items, next_cursor = finish_page(
+            self._unanswered_question_repo.page_by_rank(
+                input_data.business_id,
+                read_slice(input_data.page, rank_position),
+                input_data.include_resolved,
+                input_data.include_sandbox,
+            ),
             input_data.page,
             sort_key=rank_question,
             item_id=lambda question: str(question.id),
@@ -62,4 +64,16 @@ def rank_question(question: UnansweredQuestionDocument) -> int:
 
     return (int(question.occurrence_count) << OCCURRENCE_RANK_SHIFT) + int(
         question.last_seen_at
+    )
+
+
+def rank_position(rank: int, item_id: str) -> KeysetPosition:
+    """The (occurrence count, last asked) position a cursor's key stands for."""
+
+    return KeysetPosition(
+        sort_values=(
+            ListSortValue(rank >> OCCURRENCE_RANK_SHIFT),
+            ListSortValue(rank & LAST_SEEN_MASK),
+        ),
+        item_key=ListItemKey(item_id),
     )

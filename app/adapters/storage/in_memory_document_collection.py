@@ -3,11 +3,18 @@ from collections.abc import Callable, Mapping, Sequence
 
 from base_pydantic_schemas import PersistentDocument
 
+from app.adapters.storage.in_memory_document_listing import (
+    aggregate,
+    select_latest,
+    select_page,
+)
 from app.adapters.storage.in_memory_document_lookup import select_entries
 from app.adapters.storage.persisted_document_codec import PersistedDocumentCodec
 from app.contracts.document_store import DocumentCollectionAdapterContract
 from app.contracts.storage import StorageScopeContract
 from app.schemas.constants.storage import LookupFieldKind
+from app.schemas.dto.storage_aggregates import DocumentAggregation, DocumentGroupCount
+from app.schemas.dto.storage_pages import DocumentLatestQuery, DocumentPageQuery
 from app.schemas.dto.storage_queries import (
     DocumentFieldMatch,
     DocumentFieldOrder,
@@ -29,6 +36,11 @@ from app.utilities.storage.document_lookup_fields import (
     declared_lookup_fields,
     require_valid_lookup,
 )
+from app.utilities.storage.document_query_rules import (
+    require_valid_aggregation,
+    require_valid_latest,
+    require_valid_page,
+)
 from app.utilities.storage.storage_scoping import require_tenant_scope
 
 
@@ -38,14 +50,13 @@ class InMemoryDocumentCollectionAdapter[StoredDocument: PersistentDocument](
     """
     Thread-safe in-process collection that behaves like a document database.
 
-    Documents are stored as JSON and validated on every read, so callers get
-    independent instances and persistence-incompatible fields fail early.
-    Writing and reading go through the same `PersistedDocumentCodec` as
-    Postgres (current schema version stamped, tolerant upcasting reads).
-    Data lives until the process restarts. Queries by field accept the same
-    lookup fields as the Postgres collection (by default those the catalog
-    declares for the document type), so a query without an index fails in
-    in-memory tests too; they scan, which is fine for tests and demos.
+    Documents are stored as JSON (until the process restarts) through the
+    `PersistedDocumentCodec` Postgres uses, and validated on every read, so
+    callers get independent instances. Queries accept the lookup fields of
+    the Postgres collection (by default the catalog's), so a query without
+    an index fails in in-memory tests too; they scan, which suits tests
+    and demos. Pages, latest documents and aggregations follow
+    `in_memory_document_listing`.
 
     A tenant collection given the process's `tenant_scope` refuses code
     that entered no storage scope, like the Postgres collection
@@ -80,6 +91,10 @@ class InMemoryDocumentCollectionAdapter[StoredDocument: PersistentDocument](
         with self._lock:
             self._serialized_documents[document_key] = serialized_document
 
+    def upsert_many(self, entries: Sequence[tuple[str, StoredDocument]]) -> None:
+        for document_key, document in entries:
+            self.upsert(document_key, document)
+
     def insert_if_absent(
         self,
         document_key: str,
@@ -110,6 +125,17 @@ class InMemoryDocumentCollectionAdapter[StoredDocument: PersistentDocument](
         self._require_scope()
         with self._lock:
             serialized_documents: list[str] = list(self._serialized_documents.values())
+
+        return self._validate_all(serialized_documents)
+
+    def get_many(self, document_keys: Sequence[str]) -> list[StoredDocument]:
+        self._require_scope()
+        with self._lock:
+            serialized_documents: list[str] = [
+                serialized
+                for key in dict.fromkeys(document_keys)
+                if (serialized := self._serialized_documents.get(key)) is not None
+            ]
 
         return self._validate_all(serialized_documents)
 
@@ -161,6 +187,22 @@ class InMemoryDocumentCollectionAdapter[StoredDocument: PersistentDocument](
                 limit=limit,
             )
         )
+
+    def page_by(self, query: DocumentPageQuery) -> list[StoredDocument]:
+        require_valid_page(self._lookup_fields, query, self._label())
+        return self._validate_all(
+            select_page(self._entries(), query, self._lookup_fields)
+        )
+
+    def latest_by(self, query: DocumentLatestQuery) -> list[StoredDocument]:
+        require_valid_latest(self._lookup_fields, query, self._label())
+        return self._validate_all(
+            select_latest(self._entries(), query, self._lookup_fields)
+        )
+
+    def count_by(self, aggregation: DocumentAggregation) -> list[DocumentGroupCount]:
+        require_valid_aggregation(self._lookup_fields, aggregation, self._label())
+        return aggregate(self._entries(), aggregation, self._lookup_fields)
 
     def delete_by_range(
         self,
@@ -231,22 +273,22 @@ class InMemoryDocumentCollectionAdapter[StoredDocument: PersistentDocument](
 
     def _select_serialized(self, lookup: DocumentLookup) -> list[str]:
         require_valid_lookup(self._lookup_fields, lookup, self._label())
-        self._require_scope()
-        with self._lock:
-            entries: list[tuple[str, str]] = list(self._serialized_documents.items())
-
         return [
             serialized_document
             for _, serialized_document in select_entries(
-                entries, lookup, self._lookup_fields
+                self._entries(), lookup, self._lookup_fields
             )
         ]
 
+    def _entries(self) -> list[tuple[str, str]]:
+        """(key, serialized document) in first-write order, after the scope check."""
+
+        self._require_scope()
+        with self._lock:
+            return list(self._serialized_documents.items())
+
     def _validate_all(self, serialized_documents: list[str]) -> list[StoredDocument]:
-        return [
-            self._codec.decode(serialized_document)
-            for serialized_document in serialized_documents
-        ]
+        return [self._codec.decode(serialized) for serialized in serialized_documents]
 
     def _require_scope(self) -> None:
         if self._tenant_scope is not None:

@@ -1,3 +1,5 @@
+from collections.abc import Sequence
+
 from typed_time_provider import Microseconds
 
 from app.contracts.document_store import DocumentCollectionAdapterContract
@@ -8,7 +10,6 @@ from app.contracts.repositories.conversation_repositories import (
     LlmTurnRepoContract,
     MessageRepoContract,
 )
-from app.repositories.business_scoped_repository import BusinessScopedRepository
 from app.repositories.conversation_lookup_fields import (
     AUTHOR_FIELD,
     CHANNEL_USER_ID_FIELD,
@@ -30,6 +31,9 @@ from app.repositories.document_queries import (
     field_equals,
     time_range,
 )
+from app.repositories.listing.contact_listing import CallListing, ContactListing
+from app.repositories.listing.conversation_listing import ConversationListing
+from app.repositories.listing.message_listing import MessageListing
 from app.schemas.constants.channels import ChannelKind, MessageDirection
 from app.schemas.constants.conversations import ConversationStatus, MessageAuthor
 from app.schemas.domain.contacts import ContactDocument
@@ -55,12 +59,12 @@ from app.schemas.typings.conversations.strings import ChannelUserId, ProviderCal
 from app.schemas.typings.localization.constrained_strings import E164PhoneNumber
 
 
-class ContactRepository(
-    BusinessScopedRepository[ContactDocument],
-    ContactRepoContract,
-):
+class ContactRepository(ContactListing, ContactRepoContract):
     def save(self, contact: ContactDocument) -> None:
         self._store(str(contact.id), contact)
+
+    def save_many(self, contacts: Sequence[ContactDocument]) -> None:
+        self._store_many([(str(contact.id), contact) for contact in contacts])
 
     def get(
         self,
@@ -113,12 +117,14 @@ class ContactRepository(
         self._remove(business_id, str(contact_id))
 
 
-class ConversationRepository(
-    BusinessScopedRepository[ConversationDocument],
-    ConversationRepoContract,
-):
+class ConversationRepository(ConversationListing, ConversationRepoContract):
     def save(self, conversation: ConversationDocument) -> None:
         self._store(str(conversation.id), conversation)
+
+    def save_many(self, conversations: Sequence[ConversationDocument]) -> None:
+        self._store_many(
+            [(str(conversation.id), conversation) for conversation in conversations]
+        )
 
     def get(
         self,
@@ -175,12 +181,12 @@ class ConversationRepository(
         ]
 
 
-class MessageRepository(
-    BusinessScopedRepository[MessageDocument],
-    MessageRepoContract,
-):
+class MessageRepository(MessageListing, MessageRepoContract):
     def save(self, message: MessageDocument) -> None:
         self._store(str(message.id), message)
+
+    def save_many(self, messages: Sequence[MessageDocument]) -> None:
+        self._store_many([(str(message.id), message) for message in messages])
 
     def get(
         self,
@@ -265,7 +271,7 @@ class LlmTurnRepository(LlmTurnRepoContract):
             self._collection.delete(str(turn.id))
 
 
-class CallRepository(BusinessScopedRepository[CallDocument], CallRepoContract):
+class CallRepository(CallListing, CallRepoContract):
     def save(self, call: CallDocument) -> None:
         self._store(str(call.id), call)
 

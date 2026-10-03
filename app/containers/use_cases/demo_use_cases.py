@@ -13,7 +13,19 @@ from app.schemas.dto.demo_data import (
     DemoSeedPlan,
     SeedDemoDataCommand,
 )
+from app.schemas.dto.load_data import (
+    LoadBusinessSeed,
+    LoadSeedPlan,
+    LoadVolumeStorage,
+    SeedLoadCommand,
+)
 from app.schemas.typings.businesses.prefixed_id import BusinessId
+from app.use_cases.demo.load.prepare_load_businesses_use_case import (
+    PrepareLoadBusinessesUseCase,
+)
+from app.use_cases.demo.load.store_load_volume_use_case import (
+    StoreLoadVolumeUseCase,
+)
 from app.use_cases.demo.prepare_demo_accounts_use_case import (
     PrepareDemoAccountsUseCase,
 )
@@ -26,7 +38,8 @@ from app.use_cases.demo.store_demo_foundation_use_case import (
 class DemoUseCasesContainer(containers.DeclarativeContainer):
     """
     Development demo data (SEED_DEMO_DATA): the demo accounts, the stored
-    businesses with their knowledge and channels, and a month of activity.
+    businesses with their knowledge and channels, and a month of activity;
+    and load-test datasets (`workshop seed-load`) built from them.
     """
 
     adapters: AdaptersContainer = DependenciesContainer()  # type: ignore[assignment]
@@ -78,5 +91,27 @@ class DemoUseCasesContainer(containers.DeclarativeContainer):
         package_usage_warning_repo=repositories.package_usage_warning_repo,
         dpa_acceptance_repo=repositories.dpa_acceptance_repo,
         audit_log_repo=repositories.audit_log_repo,
+        app_settings=config.app_settings,
+    )
+    # `workshop seed-load`: owners and plans, then each business's bulk history.
+    prepare_load_businesses_use_case: Factory[
+        UseCaseContract[SeedLoadCommand, LoadSeedPlan]
+    ] = Factory(
+        PrepareLoadBusinessesUseCase,
+        demo_dataset_registry=registries.demo_dataset_registry,
+        user_repo=repositories.user_repo,
+        user_session_repo=repositories.user_session_repo,
+        wall_clock=time_provider.microsecond_wall_clock,
+    )
+    store_load_volume_use_case: Factory[
+        UseCaseContract[LoadVolumeStorage, LoadBusinessSeed]
+    ] = Factory(
+        StoreLoadVolumeUseCase,
+        load_dataset_registry=registries.load_dataset_registry,
+        business_repo=repositories.business_repo,
+        contact_repo=repositories.contact_repo,
+        conversation_repo=repositories.conversation_repo,
+        message_repo=repositories.message_repo,
+        booking_repo=repositories.booking_repo,
         app_settings=config.app_settings,
     )

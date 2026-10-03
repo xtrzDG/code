@@ -5,9 +5,6 @@ from app.schemas.dto.conversation_feed.conversation_views import (
     ConversationSummaryView,
     ConversationViewSource,
 )
-from app.schemas.typings.conversations.constrained_integers import (
-    ConversationMessageCount,
-)
 from app.utilities.conversations.message_previews import build_message_preview
 
 
@@ -24,12 +21,9 @@ class ConversationSummaryTransformer(
 
     def transform(self, input_data: ConversationViewSource) -> ConversationSummaryView:
         conversation: ConversationDocument = input_data.conversation
-        written: list[MessageDocument] = [
-            message
-            for message in input_data.messages
-            if message.author is not MessageAuthor.SYSTEM
-        ]
-        last_message: MessageDocument | None = written[-1] if written else None
+        last_message: MessageDocument | None = input_data.last_written
+        if last_message is not None and last_message.author is MessageAuthor.SYSTEM:
+            last_message = None
         return ConversationSummaryView(
             id=conversation.id,
             business_id=conversation.business_id,
@@ -46,14 +40,8 @@ class ConversationSummaryTransformer(
             status=conversation.status,
             is_after_hours=conversation.is_after_hours,
             is_sandbox=conversation.is_sandbox,
-            message_count=ConversationMessageCount(len(input_data.messages)),
-            customer_message_count=ConversationMessageCount(
-                sum(
-                    1
-                    for message in input_data.messages
-                    if message.author is MessageAuthor.CUSTOMER
-                )
-            ),
+            message_count=input_data.tally.message_count,
+            customer_message_count=input_data.tally.customer_message_count,
             last_message_text=(
                 None
                 if last_message is None

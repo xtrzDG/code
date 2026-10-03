@@ -6,11 +6,13 @@ import { formatLocalDate } from "@/components/insights/dates";
 import { MESSAGE_AUTHORS, TOOL_LABELS } from "@/components/insights/labels";
 import { formatMicroUsd } from "@/components/insights/numbers";
 import type { MessageView, ToolCallView } from "@/components/insights/types";
-import { Badge } from "@/components/ui";
+import { describeError } from "@/api/errors";
+import { Badge, Button } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { cn } from "@/lib/cn";
 
 import { groupMessagesByDay, messageSide, prettyJson } from "./conversationModel";
+import type { EarlierMessages } from "./useEarlierMessages";
 
 const BUBBLE: Record<MessageView["author"], string> = {
   customer: "rounded-bl-md bg-surface-muted text-ink",
@@ -19,17 +21,39 @@ const BUBBLE: Record<MessageView["author"], string> = {
   system: "bg-transparent text-ink-muted italic",
 };
 
-/** The messages of a conversation as chat bubbles, split by day, with the assistant's actions. */
-export function Transcript({ messages }: { messages: readonly MessageView[] }) {
+/**
+ * The messages of a conversation as chat bubbles, split by day, with the
+ * assistant's actions; a long one starts with its newest messages and a
+ * button above them loads the earlier ones.
+ */
+export function Transcript({ messages, earlier }: { messages: readonly MessageView[]; earlier?: EarlierMessages }) {
   const { t, locale } = useI18n();
   const { business } = useBusiness();
 
-  if (messages.length === 0) {
+  if (messages.length === 0 && !earlier?.hasMore) {
     return <p className="py-8 text-center text-sm text-ink-muted">{t("conversations.emptyTranscript")}</p>;
   }
 
   return (
     <div className="space-y-6">
+      {earlier?.hasMore ? (
+        <div className="flex flex-col items-center gap-2">
+          {earlier.error ? (
+            <p className="text-xs text-danger" role="alert">
+              {describeError(earlier.error, t).title}
+            </p>
+          ) : null}
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={earlier.load}
+            isLoading={earlier.isLoading}
+            loadingText={t("conversations.earlierLoading")}
+          >
+            {earlier.error ? t("common.retry") : t("conversations.earlierMessages")}
+          </Button>
+        </div>
+      ) : null}
       {groupMessagesByDay(messages, business.timezone).map((day) => (
         <section key={day.date} aria-label={formatLocalDate(day.date, locale, { dateStyle: "full" })}>
           <p className="mb-4 flex items-center gap-3 text-xs font-medium text-ink-subtle" aria-hidden>

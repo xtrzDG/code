@@ -41,6 +41,7 @@ PLATFORM_WIDE_OPERATORS: dict[str, str] = {
     "conversations.process_post_call_operator": "after-call job: agent first",
     "conversations.start_voice_call_operator": "voice webhook: agent first",
     "demo.seed_demo_data_operator": "development demo data",
+    "demo.seed_load_operator": "load-test dataset across businesses (CLI)",
     "operations.complete_google_calendar_connection_operator": "consent state",
     "operations.send_booking_reminders_operator": "periodic job over every business",
     "platform.list_clients_operator": "platform admin's client list",

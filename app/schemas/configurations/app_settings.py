@@ -12,6 +12,7 @@ from app.schemas.typings.assistants.constrained_integers import (
     LlmCallTimeoutSeconds,
     LlmMaxOutputTokens,
     LlmToolRoundLimit,
+    ScriptedLlmLatencyMilliseconds,
 )
 from app.schemas.typings.assistants.constrained_strings import LlmModelId
 from app.schemas.typings.businesses.constrained_integers import (
@@ -104,6 +105,10 @@ class AppSettings(ImmutableDTO):
     openai_base_url: PublicBaseUrl
     openai_project_id: PlatformIdentifier | None = None
     autotest_turn_limit: AutotestTurnLimit
+    # The scripted model's wait before each answer (load tests).
+    scripted_llm_latency_ms: ScriptedLlmLatencyMilliseconds = (
+        ScriptedLlmLatencyMilliseconds(0)
+    )
     otp_lifetime_seconds: OtpLifetimeSeconds
     otp_max_failed_attempts: OtpAttemptCount
     otp_sends_per_destination_per_hour: OtpSendLimit = OtpSendLimit(5)

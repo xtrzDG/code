@@ -3,6 +3,15 @@
 from base_typed_int import BaseConstrainedTypedInt
 
 
+class DocumentBucketIndex(BaseConstrainedTypedInt):
+    """
+    Which bucket of an aggregation an integer field fell into: the position
+    of the largest bucket start not after the value (0 for the first).
+    """
+
+    ge = 0
+
+
 class DocumentCount(BaseConstrainedTypedInt):
     """How many stored documents a query counted or deleted."""
 

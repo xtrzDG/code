@@ -138,6 +138,9 @@ class ConversationOrchestratorsContainer(containers.DeclarativeContainer):
     get_conversation_orchestrator = use_case_orchestrator(
         conversation_feed_use_cases.get_conversation_use_case
     )
+    list_conversation_messages_orchestrator = use_case_orchestrator(
+        conversation_feed_use_cases.list_conversation_messages_use_case
+    )
     rate_conversation_orchestrator = use_case_orchestrator(
         conversation_feed_use_cases.rate_conversation_use_case
     )
