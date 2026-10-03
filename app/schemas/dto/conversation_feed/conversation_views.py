@@ -26,6 +26,7 @@ from app.schemas.dto.conversation_feed.message_tallies import (
     ConversationUsageView,
 )
 from app.schemas.dto.inbox.assignment import ConversationAssignmentView
+from app.schemas.dto.media import MessageAttachmentView
 from app.schemas.dto.operations.handoffs import HandoffListItem
 from app.schemas.dto.operations.leads import LeadListItem
 from app.schemas.dto.paging import PageRequest
@@ -167,7 +168,8 @@ class ToolCallView(ImmutableDTO):
 class MessageView(ImmutableDTO):
     """
     A message with the model usage behind it; `sent_by` is the owner or
-    staff member who wrote a staff message from the cabinet.
+    staff member who wrote a staff message from the cabinet; `attachments`
+    are a customer's voice notes, photos and places.
     """
 
     id: MessageId
@@ -182,6 +184,9 @@ class MessageView(ImmutableDTO):
     output_tokens: LlmTokenCount
     cost_micro_usd: CostMicroUsd
     created_at: Microseconds
+    attachments: list[MessageAttachmentView] = Field(
+        default_factory=list[MessageAttachmentView]
+    )
 
 
 class CallSummaryView(ImmutableDTO):

@@ -4,6 +4,7 @@ from pydantic import Field
 from app.schemas.constants.assistants import AssistantToolName, LlmEffort
 from app.schemas.constants.channels import ChannelKind
 from app.schemas.constants.conversations import LlmStopReason, ReplyGuardVerdict
+from app.schemas.domain.message_media import MessageAttachment
 from app.schemas.dto.conversation_feed.conversation_views import ToolCallView
 from app.schemas.typings.assistants.constrained_integers import (
     AssistantVersionNumber,
@@ -54,7 +55,9 @@ class InboundMessage(ImmutableDTO):
     business comes from the server-side channel lookup, never from the model.
     `customer_message_id` and `reply_message_id` (from the inbox) are the
     ids the customer's message and the reply are stored under, so a turn
-    that runs again after a crash stores each of them once.
+    that runs again after a crash stores each of them once. `attachments`
+    are the voice notes (transcribed), photos (stored) and places the
+    worker read from the message, and what it could not read.
     """
 
     business_id: BusinessId
@@ -67,6 +70,9 @@ class InboundMessage(ImmutableDTO):
     reply_message_id: MessageId | None = None
     is_sandbox: IsSandboxConversation = False
     assistant_version_id: AssistantVersionId | None = None
+    attachments: list[MessageAttachment] = Field(
+        default_factory=list[MessageAttachment]
+    )
 
 
 class AssistantReply(ImmutableDTO):

@@ -1,9 +1,10 @@
-from base_pydantic_schemas import BaseDocument, PersistentDocument
+from base_pydantic_schemas import BaseDocument, PersistentDocument, SchemaVersion
 from pydantic import Field
 from typed_time_provider import Microseconds
 
 from app.schemas.constants.channels import ChannelKind
 from app.schemas.constants.deliveries import InboundEventKind, InboundEventStatus
+from app.schemas.domain.message_media import InboundAttachment
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.channels.prefixed_id import ChannelId
 from app.schemas.typings.channels.strings import ProviderMessageId
@@ -19,12 +20,19 @@ from app.schemas.typings.localization.constrained_strings import E164PhoneNumber
 
 
 class InboundCustomerMessage(PersistentDocument):
-    """A customer's message as the channel adapter read it from the webhook."""
+    """
+    A customer's message as the channel adapter read it from the webhook:
+    the typed text and the attachments (voice notes, photos, places, ...),
+    whose files the worker fetches.
+    """
 
     channel_user_id: ChannelUserId
     text: MessageText
     contact_name: ContactName | None = None
     contact_phone_number: E164PhoneNumber | None = None
+    attachments: list[InboundAttachment] = Field(
+        default_factory=list[InboundAttachment]
+    )
 
 
 class InboundEventDocument(BaseDocument):
@@ -43,8 +51,12 @@ class InboundEventDocument(BaseDocument):
     `business_id` is None for platform events (the staff bot, finished-call
     reports before their business is found). `payload` keeps the verified
     body of those events until the worker reads it.
+
+    Version 2: the attachments of the customer message (optional, so
+    version 1 rows read as they are).
     """
 
+    schema_version: SchemaVersion = SchemaVersion("2")
     id: InboundEventId
     business_id: BusinessId | None = None
     kind: InboundEventKind

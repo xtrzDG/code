@@ -50,6 +50,7 @@ class UsageKind(StrEnum):
     WHATSAPP_REPLY = "whatsapp_reply"
     WHATSAPP_TEMPLATE = "whatsapp_template"
     TRANSFER_SECONDS = "transfer_seconds"
+    TRANSCRIPTION_SECONDS = "transcription_seconds"
 
 
 class InvoiceKind(StrEnum):

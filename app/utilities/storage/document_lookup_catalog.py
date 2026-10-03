@@ -2,8 +2,8 @@
 The declared lookup fields of the document collections, by collection.
 
 Each TEXT, FILTER_TEXT and INTEGER field is a generated column
-`doc_<field>` (migrations 1010, 1040, 1042, 1043, 1051, 1052, 1061, 1062
-and 1074), each ELEMENT_TEXT field a trigger over
+`doc_<field>` (migrations 1010, 1040, 1042, 1043, 1051, 1052, 1061, 1062,
+1074 and 1081), each ELEMENT_TEXT field a trigger over
 `workshop.document_lookup_keys`; `document_lookup_fields` explains the kinds
 and checks queries against this catalog.
 """
@@ -109,6 +109,8 @@ DOCUMENT_LOOKUP_FIELDS: Mapping[
         _text("provider_call_id"),
         _text("conversation_id"),
     ),
+    # Customer files past their retention, oldest first (1081).
+    DocumentCollectionName("message_media"): (_integer("created_at"),),
     # Bookings by start (list pages, availability: the ones not over yet),
     # by creation (dashboard), by status (badges, migration 1040), and those
     # of one conversation.

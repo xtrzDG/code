@@ -11,6 +11,7 @@ from app.containers.call_repositories import CallRepositoriesContainer
 from app.containers.feedback_repositories import FeedbackRepositoriesContainer
 from app.containers.inbox_repositories import InboxRepositoriesContainer
 from app.containers.launch_repositories import LaunchRepositoriesContainer
+from app.containers.media_repositories import MediaRepositoriesContainer
 from app.containers.rate_repositories import RateRepositoriesContainer
 from app.containers.security_repositories import SecurityRepositoriesContainer
 from app.containers.value_repositories import ValueRepositoriesContainer
@@ -97,11 +98,9 @@ class RepositoriesContainer(
     FeedbackRepositoriesContainer,
     RateRepositoriesContainer,
     AnalyticsRepositoriesContainer,
+    MediaRepositoriesContainer,
 ):
-    """
-    The repositories (singletons); those of calls, the team inbox, launch,
-    key management, value reports, feedback and analytics: the bases.
-    """
+    """The repositories (singletons); those of each later module: the bases."""
 
     collections: DocumentCollectionsContainer = DependenciesContainer()  # type: ignore[assignment]
     notification_collections: NotificationCollectionsContainer = DependenciesContainer()  # type: ignore[assignment]

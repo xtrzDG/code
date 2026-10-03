@@ -1,7 +1,7 @@
 {
   "collection": "usage_events",
   "document_type": "UsageEventDocument",
-  "schema_version": 1,
+  "schema_version": 2,
   "shape": {
     "additionalProperties": false,
     "properties": {
@@ -41,7 +41,8 @@
           "dialog",
           "whatsapp_reply",
           "whatsapp_template",
-          "transfer_seconds"
+          "transfer_seconds",
+          "transcription_seconds"
         ],
         "type": "string"
       },
@@ -53,7 +54,7 @@
         "type": "integer"
       },
       "schema_version": {
-        "default": "1",
+        "default": "2",
         "type": "string"
       },
       "updated_at": {

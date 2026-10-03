@@ -7,6 +7,7 @@ from base_pydantic_schemas import ImmutableDTO
 from pydantic import Field
 
 from app.schemas.constants.channels import ChannelKind
+from app.schemas.domain.message_media import InboundAttachment
 from app.schemas.typings.channels.constrained_integers import (
     DeliveredMessageCount,
     WebhookMessageCount,
@@ -65,7 +66,10 @@ class ChannelInboundMessage(ImmutableDTO):
 
     `account_id` is the business account inside the channel (WhatsApp phone
     number id, Facebook page id, Instagram account id); it is None when the
-    webhook address already names the channel (Telegram).
+    webhook address already names the channel (Telegram). `text` is what
+    the customer typed (empty for a photo or a voice note without words);
+    `attachments` are the voice notes, photos, places and other files, with
+    their captions.
     """
 
     channel: ChannelKind
@@ -75,6 +79,9 @@ class ChannelInboundMessage(ImmutableDTO):
     contact_name: ContactName | None = None
     contact_phone_number: E164PhoneNumber | None = None
     provider_message_id: ProviderMessageId | None = None
+    attachments: list[InboundAttachment] = Field(
+        default_factory=list[InboundAttachment]
+    )
 
 
 class ChannelDeliveryTarget(ImmutableDTO):
