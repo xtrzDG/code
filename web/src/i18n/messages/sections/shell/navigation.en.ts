@@ -23,6 +23,8 @@ export const navigationEn = {
     assistantVersions: "Every update of the assistant with its checks, publishing and a way back.",
   },
   pages: {
+    overviewDashboard: "Dashboard",
+    overviewReports: "Reports",
     messagesAll: "All conversations",
     messagesHandoffs: "Needs a person",
     messagesLeads: "Requests",

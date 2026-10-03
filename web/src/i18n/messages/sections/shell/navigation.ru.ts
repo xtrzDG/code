@@ -22,6 +22,8 @@ export const navigationRu: Translation<typeof navigationEn> = {
     assistantVersions: "Каждое обновление помощника с проверками, публикацией и возвратом.",
   },
   pages: {
+    overviewDashboard: "Сводка",
+    overviewReports: "Отчёты",
     messagesAll: "Все разговоры",
     messagesHandoffs: "Нужен человек",
     messagesLeads: "Заявки",

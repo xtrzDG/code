@@ -10,7 +10,6 @@ import { useBusiness, useBusinessFormat } from "@/components/business/BusinessCo
 import { useAttentionCounts } from "@/components/shell/LiveEvents";
 import { BusinessStatusBadge } from "@/components/business/BusinessStatusBadge";
 import { IconBook, IconHandoff } from "@/components/icons";
-import { AnimatedNumber } from "@/components/motion";
 import { formatLocalDateRange } from "@/components/insights/dates";
 import { useToday } from "@/components/insights/useToday";
 import { BOOKING_STATUS, CHANNEL_LABELS, HANDOFF_REASONS } from "@/components/insights/labels";
@@ -18,12 +17,13 @@ import { formatPercent } from "@/components/insights/numbers";
 import { SegmentedControl } from "@/components/insights/SegmentedControl";
 import { replaceUrlQuery } from "@/components/insights/urlQuery";
 import { Button, Card, EmptyState, ErrorState, LoadingRegion, PageHeader } from "@/components/ui";
+import { useValueOfDates } from "@/components/value/useValueQueries";
 import { useI18n } from "@/i18n/client";
 import { languageName } from "@/lib/format";
 import { businessPath } from "@/lib/navigation";
 
 import { DashboardPeriodSkeleton } from "./_components/DashboardSkeleton";
-import { AttentionTile, BarList, NextStepCard, StatTile } from "./_components/DashboardWidgets";
+import { AttentionTile, BarList, NextStepCard } from "./_components/DashboardWidgets";
 import {
   canTakeStep,
   DASHBOARD_PERIODS,
@@ -34,7 +34,10 @@ import {
   type DashboardPeriod,
 } from "./_components/dashboardModel";
 import { PackageCard } from "./_components/PackageCard";
+import { PeriodTiles } from "./_components/PeriodTiles";
+import { TodayQueue } from "./_components/TodayQueue";
 import { TrendChart } from "./_components/TrendChart";
+import { ValueHero } from "./_components/ValueHero";
 
 /**
  * The dashboard (concept /dashboard): what to do next, what waits for a
@@ -53,6 +56,8 @@ export function DashboardScreen({ initialPeriod }: { initialPeriod: DashboardPer
   const statsQuery = sectionQueries.dashboardStats(businessId, range.from, range.to);
   // Another period keeps the shown tiles (dimmed) until its numbers arrive.
   const stats = useQuery(statsQuery.key, statsQuery.fetch, { keepPreviousData: true });
+  // The same dates in the value model: changes against the period before, and the owner's hero.
+  const value = useValueOfDates(businessId, range.from, range.to);
   // The badges' counts: no list of handoffs is loaded (that would be an audited view).
   const inbox = useAttentionCounts();
   const gaps = useQuery(
@@ -76,12 +81,13 @@ export function DashboardScreen({ initialPeriod }: { initialPeriod: DashboardPer
   const hasActivity =
     data !== undefined &&
     data.conversation_count + data.booking_count + data.lead_count + data.handoff_count > 0;
+  // Value first once customers are served (tests in the sandbox count for nothing).
+  const showsValue = isOwner && (business.status === "live" || business.status === "paused");
 
   return (
     <>
       <PageHeader
-        title={t("navigation.sections.overview")}
-        description={t("navigation.descriptions.overview")}
+        title={t("navigation.pages.overviewDashboard")}
         actions={
           <SegmentedControl
             label={t("dashboard.periodLabel")}
@@ -93,6 +99,8 @@ export function DashboardScreen({ initialPeriod }: { initialPeriod: DashboardPer
       />
 
       <div className="space-y-6">
+        {showsValue && value.data ? <ValueHero model={value.data} isPlaceholder={value.isPlaceholder} /> : null}
+
         <NextStepCard
           step={step}
           status={<BusinessStatusBadge status={business.status} />}
@@ -104,31 +112,35 @@ export function DashboardScreen({ initialPeriod }: { initialPeriod: DashboardPer
           }
         />
 
-        <section aria-labelledby="dashboard-attention" className="space-y-3">
-          <h2 id="dashboard-attention" className="text-sm font-semibold tracking-wide text-ink-muted uppercase">
-            {t("dashboard.attention.title")}
-          </h2>
-          <div className="grid gap-3 sm:grid-cols-2">
-            <AttentionTile
-              href={businessPath(businessId, "messages/handoffs")}
-              label={t("dashboard.attention.openHandoffs")}
-              hint={t("dashboard.attention.openHandoffsHint")}
-              count={openHandoffCount}
-              formatCount={format.number}
-              actionLabel={t("dashboard.attention.open")}
-              icon={<IconHandoff className="size-5" />}
-            />
-            <AttentionTile
-              href={businessPath(businessId, "assistant/knowledge")}
-              label={t("dashboard.attention.questions")}
-              hint={t("dashboard.attention.questionsHint")}
-              count={data?.open_unanswered_question_count}
-              formatCount={format.number}
-              actionLabel={t("dashboard.attention.open")}
-              icon={<IconBook className="size-5" />}
-            />
-          </div>
-        </section>
+        {isOwner ? (
+          <section aria-labelledby="dashboard-attention" className="space-y-3">
+            <h2 id="dashboard-attention" className="text-sm font-semibold tracking-wide text-ink-muted uppercase">
+              {t("dashboard.attention.title")}
+            </h2>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <AttentionTile
+                href={businessPath(businessId, "messages/handoffs")}
+                label={t("dashboard.attention.openHandoffs")}
+                hint={t("dashboard.attention.openHandoffsHint")}
+                count={openHandoffCount}
+                formatCount={format.number}
+                actionLabel={t("dashboard.attention.open")}
+                icon={<IconHandoff className="size-5" />}
+              />
+              <AttentionTile
+                href={businessPath(businessId, "assistant/knowledge")}
+                label={t("dashboard.attention.questions")}
+                hint={t("dashboard.attention.questionsHint")}
+                count={data?.open_unanswered_question_count}
+                formatCount={format.number}
+                actionLabel={t("dashboard.attention.open")}
+                icon={<IconBook className="size-5" />}
+              />
+            </div>
+          </section>
+        ) : (
+          <TodayQueue />
+        )}
 
         {stats.error && !data ? (
           <Card>
@@ -154,25 +166,7 @@ export function DashboardScreen({ initialPeriod }: { initialPeriod: DashboardPer
               ) : null}
             </div>
 
-            <dl className="grid grid-cols-2 gap-3 sm:grid-cols-3" aria-busy={stats.isPlaceholder || undefined}>
-              <StatTile
-                label={t("dashboard.kpi.conversations")}
-                value={<AnimatedNumber value={data.conversation_count} format={format.number} />}
-                hint={t("dashboard.kpi.conversationsHint")}
-              />
-              <StatTile label={t("dashboard.kpi.messages")} value={<AnimatedNumber value={data.customer_message_count} format={format.number} />} />
-              <StatTile label={t("dashboard.kpi.bookings")} value={<AnimatedNumber value={data.booking_count} format={format.number} />} />
-              <StatTile
-                label={t("dashboard.kpi.afterHours")}
-                value={<AnimatedNumber value={data.after_hours_share_percent} format={(percent) => formatPercent(percent, locale)} />}
-                hint={t("dashboard.kpi.afterHoursHint", {
-                  count: format.number(data.after_hours_conversation_count),
-                  total: format.number(data.conversation_count),
-                })}
-              />
-              <StatTile label={t("dashboard.kpi.leads")} value={<AnimatedNumber value={data.lead_count} format={format.number} />} />
-              <StatTile label={t("dashboard.kpi.handoffs")} value={<AnimatedNumber value={data.handoff_count} format={format.number} />} />
-            </dl>
+            <PeriodTiles data={data} value={value.data} isBusy={stats.isPlaceholder} />
 
             {hasActivity && (data.daily ?? []).length > 1 ? <TrendChart days={data.daily ?? []} /> : null}
 

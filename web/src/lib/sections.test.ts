@@ -34,6 +34,8 @@ describe("the five sections", () => {
     expect(visibleSections("staff")).toEqual(["overview", "messages", "bookings", "assistant", "settings"]);
     expect(visiblePages("settings", "staff").map((entry) => entry.page)).toEqual(["settings/notifications"]);
     expect(visiblePages("assistant", "staff").map((entry) => entry.page)).toEqual(["assistant"]);
+    expect(visiblePages("overview", "staff").map((entry) => entry.page)).toEqual(["overview"]);
+    expect(canOpenPage("overview/reports", "staff")).toBe(false);
     expect(visiblePages("messages", "staff")).toHaveLength(3);
     expect(canOpenPage("settings/billing", "staff")).toBe(false);
     expect(canOpenPage("settings/calls", "staff")).toBe(false);
@@ -49,7 +51,8 @@ describe("the five sections", () => {
   it("name pages and their titles", () => {
     expect(pageLabel("bookings")).toBe("navigation.sections.bookings");
     expect(pageLabel("messages/handoffs")).toBe("navigation.pages.messagesHandoffs");
-    expect(pageTitleKeys("overview")).toEqual(["navigation.sections.overview"]);
+    expect(pageTitleKeys("overview")).toEqual(["navigation.pages.overviewDashboard", "navigation.sections.overview"]);
+    expect(pageTitleKeys("overview/reports")).toEqual(["navigation.pages.overviewReports", "navigation.sections.overview"]);
     expect(pageTitleKeys("settings/team")).toEqual(["navigation.pages.settingsTeam", "navigation.sections.settings"]);
     expect(pageTitleKeys("assistant")).toEqual(["navigation.pages.assistantTest", "navigation.sections.assistant"]);
     expect(PAGE_DESCRIPTIONS["messages/leads"]).toBe("pages.leads.description");

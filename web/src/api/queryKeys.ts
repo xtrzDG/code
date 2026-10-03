@@ -27,6 +27,22 @@ export const queryKeys = {
   dashboard: {
     all: (businessId: Id) => ["dashboard", businessId] as const,
     stats: (businessId: Id, from: string, to: string) => ["dashboard", businessId, "stats", from, to] as const,
+    /** What the assistant is worth in local dates `from` to `to`, against the days before. */
+    value: (businessId: Id, from: string, to: string) => ["dashboard", businessId, "value", from, to] as const,
+    /** The same for a named period ("this_month"). */
+    valuePeriod: (businessId: Id, period: string) => ["dashboard", businessId, "value", period] as const,
+    /** Today's bookings (counts only) and the inbox views of the signed-in member. */
+    todayQueue: (businessId: Id, today: string) => ["dashboard", businessId, "todayQueue", today] as const,
+    inboxViews: (businessId: Id) => ["dashboard", businessId, "inboxViews"] as const,
+  },
+
+  reports: {
+    all: (businessId: Id) => ["reports", businessId] as const,
+    /** Stored reports of one kind, newest first. */
+    list: (businessId: Id, kind: string) => ["reports", businessId, "list", kind] as const,
+    detail: (businessId: Id, reportId: Id) => ["reports", businessId, "detail", reportId] as const,
+    /** The signed-in owner's summaries. */
+    digests: (businessId: Id) => ["reports", businessId, "digests"] as const,
   },
 
   conversations: {
