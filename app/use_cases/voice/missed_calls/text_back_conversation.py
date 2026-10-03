@@ -36,6 +36,28 @@ def whatsapp_user_id(caller: E164PhoneNumber) -> ChannelUserId:
     return ChannelUserId(str(caller).removeprefix("+"))
 
 
+def find_caller_contact(
+    contact_repo: ContactRepoContract,
+    business: BusinessDocument,
+    caller: E164PhoneNumber,
+) -> ContactDocument | None:
+    """
+    The customer behind a calling number: the contact whose phone a call
+    or a booking proved, else the one who writes from it on WhatsApp, else
+    the one who called from it before.
+    """
+
+    return (
+        contact_repo.find_by_verified_phone_number(business.id, caller)
+        or contact_repo.find_by_channel_identity(
+            business.id, ChannelKind.WHATSAPP, whatsapp_user_id(caller)
+        )
+        or contact_repo.find_by_channel_identity(
+            business.id, ChannelKind.PHONE, ChannelUserId(str(caller))
+        )
+    )
+
+
 def open_text_back_conversation(
     contact_repo: ContactRepoContract,
     conversation_repo: ConversationRepoContract,
@@ -98,10 +120,8 @@ def resolve_caller(
     user_id: ChannelUserId,
     now: Microseconds,
 ) -> ContactDocument:
-    contact: ContactDocument | None = contact_repo.find_by_verified_phone_number(
-        business.id, caller
-    ) or contact_repo.find_by_channel_identity(
-        business.id, ChannelKind.WHATSAPP, user_id
+    contact: ContactDocument | None = find_caller_contact(
+        contact_repo, business, caller
     )
     identity = ChannelIdentity(channel=ChannelKind.WHATSAPP, channel_user_id=user_id)
     if contact is None:

@@ -89,15 +89,17 @@ class ChannelsCallFollowUps(ChannelsInbox):
 
     def __init__(self, settings: AppSettings | None = None) -> None:
         super().__init__(settings)
-        self.missed_call_repo = MissedCallRepository(
-            InMemoryDocumentCollectionAdapter(MissedCallDocument)
+        self.missed_call_collection = InMemoryDocumentCollectionAdapter(
+            MissedCallDocument
         )
+        self.missed_call_repo = MissedCallRepository(self.missed_call_collection)
         self.call_settings_repo = CallSettingsRepository(
             InMemoryDocumentCollectionAdapter(CallSettingsDocument)
         )
         # The summaries the scripted model writes, in order; none left: the
         # provider fails.
         self.summary_answers: list[str] = []
+        self.summary_requests: list[LlmRequest] = []
         self.summary_llm = ScriptedLlmAdapter(self._answer_summary)
         self.sms_client = RecordingSmsClient()
         self.country_registry = CountryRegistry(
@@ -193,7 +195,7 @@ class ChannelsCallFollowUps(ChannelsInbox):
         )
 
     def _answer_summary(self, request: LlmRequest) -> ScriptedLlmTurn:
-        del request
+        self.summary_requests.append(request)
         if not self.summary_answers:
             raise ExternalServiceError("The summary model is unavailable.")
 

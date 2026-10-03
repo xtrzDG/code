@@ -41,6 +41,9 @@ from app.use_cases.voice.missed_calls.missed_call_business import (
     find_missed_call_business,
     read_caller_number,
 )
+from app.use_cases.voice.missed_calls.text_back_conversation import (
+    find_caller_contact,
+)
 from app.use_cases.voice.missed_calls.text_back_rules import (
     DAY_WINDOW,
     choose_text_back_channel,
@@ -218,8 +221,8 @@ class RegisterMissedCallUseCase(
         if channel is None:
             return TextBackSkipReason.NO_CHANNEL
 
-        contact: ContactDocument | None = (
-            self._contact_repo.find_by_verified_phone_number(business.id, caller)
+        contact: ContactDocument | None = find_caller_contact(
+            self._contact_repo, business, caller
         )
         if is_opted_out(contact):
             return TextBackSkipReason.OPTED_OUT
