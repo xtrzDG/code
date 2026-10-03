@@ -13,7 +13,7 @@ label and a migration path).
 
 ## 2026-10-03 — encryption key rotation for platform admins
 
-Spec: `1f616b82ee8a0d61`
+Spec: `0ee9211ca86eb0d0`
 
 - **Added** `GET /v1/admin/security/encryption-keys` (platform admins;
   `EncryptionKeysView`): how many keys `ENCRYPTION_KEYS` holds (never the
