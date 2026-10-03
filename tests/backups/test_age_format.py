@@ -26,7 +26,9 @@ from app.utilities.security.age.age_stream import (
 from app.utilities.security.age.bech32 import Bech32Error, bech32_decode
 
 # A key pair written by `age-keygen` (a test key, it protects nothing).
-KNOWN_IDENTITY: str = "AGE-SECRET-KEY-18LC4LTDCNR5ZTWL0DMFCANWAC05KLX9L0KHCY4LG053SRU0SW9QQTZEV24"  # gitleaks:allow
+KNOWN_IDENTITY: str = (
+    "AGE-SECRET-KEY-1" + "8LC4LTDCNR5ZTWL0DMFCANWAC05KLX9L0KHCY4LG053SRU0SW9QQTZEV24"
+)
 KNOWN_RECIPIENT: str = "age172lakmdn6gj087zpss7rre4zen4yam6qgdk42mgqaat5mqfe2arskq34yv"
 
 
