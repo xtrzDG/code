@@ -22,7 +22,7 @@ import { useAutoReload } from "@/components/insights/useAutoReload";
 import { useToast } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import type { AttentionCounts } from "@/lib/inboxBadges";
-import { businessLocation, businessPath } from "@/lib/navigation";
+import { businessLocation, inboxPath, isConversationPath } from "@/lib/navigation";
 import { canOpenPage } from "@/lib/sections";
 
 import { playChime, useChimePreference, useChimeUnlock } from "./chime";
@@ -81,8 +81,8 @@ export function LiveEventsProvider({ enabled, children }: { enabled: boolean; ch
     if (isChimeOn) {
       playChime();
     }
-    if (businessLocation(pathname)?.page === "messages/handoffs") {
-      // The list in front of the person shows it already.
+    if (businessLocation(pathname)?.page === "inbox" && !isConversationPath(pathname)) {
+      // The inbox in front of the person counts it already.
       return;
     }
     toast.show({
@@ -91,7 +91,7 @@ export function LiveEventsProvider({ enabled, children }: { enabled: boolean; ch
       durationMs: 10_000,
       action: {
         label: t("live.needsPersonOpen"),
-        onAction: () => router.push(businessPath(business.id, "messages/handoffs")),
+        onAction: () => router.push(inboxPath(business.id, "needs_person")),
       },
     });
   };

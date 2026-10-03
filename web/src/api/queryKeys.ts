@@ -34,6 +34,15 @@ export const queryKeys = {
     list: (businessId: Id, filters: string, today: string) =>
       ["conversations", businessId, "list", filters, today] as const,
     detail: (businessId: Id, conversationId: Id) => ["conversations", businessId, "detail", conversationId] as const,
+    /** Every view of the team inbox (each load is audited, like the feed). */
+    inboxAll: (businessId: Id) => ["conversations", businessId, "inbox"] as const,
+    inbox: (businessId: Id, view: string, channel: Optional<string>) =>
+      ["conversations", businessId, "inbox", view, opt(channel)] as const,
+    /** The team's internal notes on a conversation (audited reads). */
+    notes: (businessId: Id, conversationId: Id) => ["conversations", businessId, "notes", conversationId] as const,
+    /** Quick replies filled in for one conversation (audited reads). */
+    quickReplies: (businessId: Id, conversationId: Id) =>
+      ["conversations", businessId, "quickReplies", conversationId] as const,
   },
 
   bookings: {
@@ -69,8 +78,18 @@ export const queryKeys = {
 
   inbox: {
     all: (businessId: Id) => ["inbox", businessId] as const,
-    /** Open handoffs and new requests: the badges on Messages (counts only, not audited). */
+    /** Open handoffs and new requests: the badges on the Inbox (counts only, not audited). */
     counts: (businessId: Id) => ["inbox", businessId, "counts"] as const,
+    /** How many conversations each view of the inbox holds for me (counts only, not audited). */
+    views: (businessId: Id) => ["inbox", businessId, "views"] as const,
+    /** The members to assign conversations to, with their workload (no contact details). */
+    assignees: (businessId: Id) => ["inbox", businessId, "assignees"] as const,
+  },
+
+  quickReplies: {
+    all: (businessId: Id) => ["quickReplies", businessId] as const,
+    /** The business's quick replies as stored (Settings → Quick replies). */
+    list: (businessId: Id) => ["quickReplies", businessId, "list"] as const,
   },
 
   knowledge: {

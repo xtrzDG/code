@@ -12,6 +12,7 @@ export { ErrorState } from "./ErrorState";
 export { Field, Fieldset, type FieldControlProps } from "./Field";
 export { Modal } from "./Modal";
 export { PageHeader, SubPages, usePageLevel } from "./PageHeader";
+export { Sheet } from "./Sheet";
 export { InlineError } from "./InlineError";
 export {
   LoadingRegion,

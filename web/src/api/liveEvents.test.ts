@@ -57,9 +57,33 @@ describe("live events", () => {
     const keys = invalidationsFor(event("conversation.message", ["conversation_9"]), BUSINESS);
 
     expect(keys).toContainEqual(["conversations", BUSINESS, "list"]);
+    expect(keys).toContainEqual(queryKeys.conversations.inboxAll(BUSINESS));
     expect(keys).toContainEqual(queryKeys.conversations.detail(BUSINESS, "conversation_9"));
     expect(keys).not.toContainEqual(queryKeys.inbox.all(BUSINESS));
     expect(keys).not.toContainEqual(queryKeys.conversations.all(BUSINESS));
+  });
+
+  it("reload the views, rows and card of an assigned conversation, not the assignee", () => {
+    const keys = invalidationsFor(event("conversation.assigned", ["conversation_9", "user_4"]), BUSINESS);
+
+    expect(keys).toEqual([
+      queryKeys.inbox.all(BUSINESS),
+      queryKeys.conversations.inboxAll(BUSINESS),
+      queryKeys.conversations.detail(BUSINESS, "conversation_9"),
+    ]);
+  });
+
+  it("reload the notes of a conversation and the note counts, never the card", () => {
+    const keys = invalidationsFor(event("conversation.note", ["conversation_9", "conversation_note_2"]), BUSINESS);
+
+    expect(keys).toEqual([
+      queryKeys.conversations.inboxAll(BUSINESS),
+      queryKeys.conversations.notes(BUSINESS, "conversation_9"),
+    ]);
+  });
+
+  it("reload the requests view when a request opens or closes", () => {
+    expect(invalidationsFor(event("lead.created"), BUSINESS)).toContainEqual(queryKeys.conversations.all(BUSINESS));
   });
 
   it("reload everything of the business on a resync", () => {

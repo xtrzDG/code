@@ -8,8 +8,8 @@ import { Alert, Button, Spinner } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { loginPath } from "@/lib/navigation";
 
-import { callRecordingUrl } from "./conversationModel";
-import { loadRecording } from "./recordingLoader";
+import { callRecordingUrl } from "../../_lib/conversationModel";
+import { loadRecording } from "../../_lib/recordingLoader";
 
 type PlayerProblem = "missing" | "failed" | null;
 

@@ -7,9 +7,9 @@ import { Alert, Badge, Card } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 
 import { CallRecordingPlayer } from "./CallRecordingPlayer";
-import { callGuardBadge, callGuardFindings } from "./callGuard";
-import { pickCallSummary } from "./callSummary";
-import { CALL_OUTCOMES, formatCallDuration } from "./conversationModel";
+import { callGuardBadge, callGuardFindings } from "../../_lib/callGuard";
+import { pickCallSummary } from "../../_lib/callSummary";
+import { CALL_OUTCOMES, formatCallDuration } from "../../_lib/conversationModel";
 
 /**
  * The phone calls of the conversation: when, how long, what came out of

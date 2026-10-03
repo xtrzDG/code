@@ -2,10 +2,12 @@
 
 /**
  * The frame of /b/[businessId]/*. Once the assistant exists: five sections
- * (Overview, Messages, Bookings, Assistant, Settings), the ones the
+ * (Overview, Inbox, Bookings, Assistant, Settings), the ones the
  * viewer's role opens, with badges where something waits; the open
- * section's pages under it in the sidebar; on phones Overview, Messages,
- * Bookings and Assistant in the tab bar and the rest under "More". Before
+ * section's pages under it in the sidebar; on phones Overview, Inbox,
+ * Bookings and Assistant in the tab bar and the rest under "More". The
+ * inbox (a list beside a conversation) uses the full width; an open
+ * conversation takes the whole phone screen, its own bar on top. Before
  * that: one big "Create an AI assistant" entry, and every page shows the
  * invitation to create it except the setup flow itself.
  */
@@ -20,7 +22,7 @@ import { SECTION_LABELS, canOpenPage, pageLabel, sectionOf, visiblePages, visibl
 
 import { BusinessSwitcher } from "../BusinessSwitcher";
 import { useBusiness } from "../business/BusinessContext";
-import { IconCalendar, IconChat, IconGauge, IconSettings, IconShield, IconSparkles, type IconProps } from "../icons";
+import { IconCalendar, IconGauge, IconInbox, IconSettings, IconShield, IconSparkles, type IconProps } from "../icons";
 import { LiveEventsProvider, useAttentionCounts } from "./LiveEvents";
 import { OwnersOnlyPage } from "./OwnersOnlyPage";
 import { SetupEntry } from "./setup/SetupEntry";
@@ -31,7 +33,7 @@ import { useMemberRole } from "./useMemberRole";
 
 const SECTION_ICONS: Record<BusinessSection, ComponentType<IconProps>> = {
   overview: IconGauge,
-  messages: IconChat,
+  inbox: IconInbox,
   bookings: IconCalendar,
   assistant: IconSparkles,
   settings: IconSettings,
@@ -96,6 +98,8 @@ function CabinetFrame({ children, prefetch, initialCollapsed }: { children: Reac
       context={business.name}
       title={page ? t(pageLabel(page)) : undefined}
       showTabBar={!isConversationPath(pathname)}
+      showPhoneTopBar={!isConversationPath(pathname)}
+      isWide={page === "inbox"}
       switcher={(onNavigate, compact) => (
         <BusinessSwitcher
           memberships={me.memberships ?? []}

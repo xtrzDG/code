@@ -14,9 +14,10 @@ import { useI18n } from "@/i18n/client";
 import { businessPath } from "@/lib/navigation";
 
 /**
- * What came out of the conversation: the bookings, leads and handoffs made
- * in it (by the assistant's tools or by staff from this card), and a button
- * to book for this customer.
+ * What came out of the conversation: the bookings, requests and handoffs
+ * made in it (by the assistant's tools or by staff from this card), and a
+ * button to book for this customer. Open requests and the handoff waiting
+ * for a person are acted on above the transcript; this is the record.
  */
 export function LinkedItems({
   detail,
@@ -51,7 +52,7 @@ export function LinkedItems({
       ) : (
         <div className="space-y-4">
           {handoffs.length > 0 ? (
-            <LinkedGroup title={t("conversations.linked.handoffs")} href={businessPath(businessId, "messages/handoffs")}>
+            <LinkedGroup title={t("conversations.linked.handoffs")}>
               {handoffs.map((handoff) => (
                 <li key={handoff.id} className="flex flex-wrap items-center gap-2">
                   <span className="text-ink">{t(HANDOFF_REASONS[handoff.reason])}</span>
@@ -62,7 +63,7 @@ export function LinkedItems({
             </LinkedGroup>
           ) : null}
           {leads.length > 0 ? (
-            <LinkedGroup title={t("conversations.linked.leads")} href={businessPath(businessId, "messages/leads")}>
+            <LinkedGroup title={t("conversations.linked.leads")}>
               {leads.map((lead) => (
                 <li key={lead.id} className="flex flex-wrap items-center gap-2">
                   <span className="text-ink">{t(LEAD_TYPES[lead.lead_type])}</span>
@@ -97,16 +98,19 @@ export function LinkedItems({
   );
 }
 
-function LinkedGroup({ title, href, children }: { title: string; href: string; children: ReactNode }) {
+/** A group of what the conversation produced; `href` leads to its own page (bookings). */
+function LinkedGroup({ title, href, children }: { title: string; href?: string; children: ReactNode }) {
   const { t } = useI18n();
   return (
     <section>
       <div className="mb-1.5 flex items-center justify-between gap-3">
         <h3 className="text-sm font-medium text-ink-muted">{title}</h3>
-        <Link href={href} className="text-sm font-medium text-accent hover:underline">
-          {t("conversations.linked.open")}
-          <span className="sr-only"> {title}</span>
-        </Link>
+        {href ? (
+          <Link href={href} className="text-sm font-medium text-accent hover:underline">
+            {t("conversations.linked.open")}
+            <span className="sr-only"> {title}</span>
+          </Link>
+        ) : null}
       </div>
       <ul className="space-y-1.5 text-sm">{children}</ul>
     </section>

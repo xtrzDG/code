@@ -1,18 +1,27 @@
 "use client";
 
+/**
+ * The messages with the customer as chat bubbles, split by day; a long
+ * conversation starts with its newest messages and a button above them
+ * loads the earlier ones. What the assistant did is said in plain words
+ * under its message ("Checked free time"); the requests behind it, the
+ * model and the cost are in "Technical details". Internal notes of the
+ * team are never here: this is what the customer and the assistant said.
+ */
+
+import { describeError } from "@/api/errors";
 import { useBusiness, useBusinessFormat } from "@/components/business/BusinessContext";
-import { IconChevronRight } from "@/components/icons";
+import { IconCheck, IconAlert } from "@/components/icons";
 import { formatLocalDate } from "@/components/insights/dates";
 import { MESSAGE_AUTHORS, TOOL_LABELS } from "@/components/insights/labels";
-import { formatMicroUsd } from "@/components/insights/numbers";
-import type { MessageView, ToolCallView } from "@/components/insights/types";
-import { describeError } from "@/api/errors";
-import { Badge, Button } from "@/components/ui";
+import type { MessageView } from "@/components/insights/types";
+import { Button } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { cn } from "@/lib/cn";
 
-import { groupMessagesByDay, messageSide, prettyJson } from "./conversationModel";
-import type { EarlierMessages } from "./useEarlierMessages";
+import { groupMessagesByDay, messageSide } from "../../_lib/conversationModel";
+import type { EarlierMessages } from "../../_lib/useEarlierMessages";
+import { hasTechnicalDetails, MessageTechnicalDetails } from "./TechnicalDetails";
 
 const BUBBLE: Record<MessageView["author"], string> = {
   customer: "rounded-bl-md bg-surface-muted text-ink",
@@ -21,12 +30,15 @@ const BUBBLE: Record<MessageView["author"], string> = {
   system: "bg-transparent text-ink-muted italic",
 };
 
-/**
- * The messages of a conversation as chat bubbles, split by day, with the
- * assistant's actions; a long one starts with its newest messages and a
- * button above them loads the earlier ones.
- */
-export function Transcript({ messages, earlier }: { messages: readonly MessageView[]; earlier?: EarlierMessages }) {
+export function Transcript({
+  messages,
+  earlier,
+  label,
+}: {
+  messages: readonly MessageView[];
+  earlier?: EarlierMessages;
+  label: string;
+}) {
   const { t, locale } = useI18n();
   const { business } = useBusiness();
 
@@ -35,7 +47,7 @@ export function Transcript({ messages, earlier }: { messages: readonly MessageVi
   }
 
   return (
-    <div className="space-y-6">
+    <section aria-label={label} className="space-y-6" data-transcript>
       {earlier?.hasMore ? (
         <div className="flex flex-col items-center gap-2">
           {earlier.error ? (
@@ -56,10 +68,11 @@ export function Transcript({ messages, earlier }: { messages: readonly MessageVi
       ) : null}
       {groupMessagesByDay(messages, business.timezone).map((day) => (
         <section key={day.date} aria-label={formatLocalDate(day.date, locale, { dateStyle: "full" })}>
-          <p className="mb-4 flex items-center gap-3 text-xs font-medium text-ink-subtle" aria-hidden>
-            <span className="h-px flex-1 bg-line" />
+          <p
+            className="sticky top-16 z-[1] mx-auto mb-4 w-fit rounded-full border border-line bg-surface/90 px-3 py-1 text-xs font-medium text-ink-subtle backdrop-blur lg:top-2"
+            aria-hidden
+          >
             {formatLocalDate(day.date, locale, { dateStyle: "full" })}
-            <span className="h-px flex-1 bg-line" />
           </p>
           <ol className="space-y-4">
             {day.messages.map((message) => (
@@ -68,12 +81,18 @@ export function Transcript({ messages, earlier }: { messages: readonly MessageVi
           </ol>
         </section>
       ))}
-    </div>
+    </section>
   );
 }
 
+function memberName(
+  member: { display_name?: string | null; email?: string | null; phone_number?: string | null } | undefined,
+): string | null {
+  return member ? (member.display_name ?? member.email ?? member.phone_number ?? null) : null;
+}
+
 function MessageBubble({ message }: { message: MessageView }) {
-  const { t, locale } = useI18n();
+  const { t } = useI18n();
   const format = useBusinessFormat();
   const { business, me, isPlatformAdmin } = useBusiness();
   const side = messageSide(message.author);
@@ -81,13 +100,12 @@ function MessageBubble({ message }: { message: MessageView }) {
   // call ("Voice agent called check_availability."): the actions below say
   // it in the interface language, so the note itself is not shown.
   const isVoiceAction = message.author === "system" && (message.tool_calls?.length ?? 0) > 0;
-  // Model, tokens and AI cost are platform matters: owners and staff do not see them.
-  const tokens = isPlatformAdmin ? message.input_tokens + message.output_tokens : 0;
   const sender = message.sent_by
     ? message.sent_by === me.user.id
       ? t("conversations.author.you")
       : memberName(business.members.find((member) => member.user_id === message.sent_by))
     : null;
+  const calls = message.tool_calls ?? [];
 
   return (
     <li className={cn("flex", side === "end" ? "justify-end" : side === "center" ? "justify-center" : "justify-start")}>
@@ -95,7 +113,6 @@ function MessageBubble({ message }: { message: MessageView }) {
         className={cn(
           "min-w-0",
           side === "center" ? "max-w-full text-center" : "max-w-[88%] sm:max-w-[75%]",
-          // The voice agent's actions in one even column under each other.
           isVoiceAction && "w-full sm:w-[75%]",
         )}
       >
@@ -115,78 +132,30 @@ function MessageBubble({ message }: { message: MessageView }) {
         {isVoiceAction ? null : (
           <div
             dir="auto"
-            className={cn("rounded-2xl px-4 py-2.5 text-sm break-words whitespace-pre-wrap", BUBBLE[message.author])}
+            className={cn("rounded-2xl px-4 py-2.5 text-[0.9375rem] leading-6 break-words whitespace-pre-wrap", BUBBLE[message.author])}
           >
             {message.text}
           </div>
         )}
-        {message.tool_calls && message.tool_calls.length > 0 ? <ToolCalls calls={message.tool_calls} /> : null}
-        {tokens > 0 ? (
-          <p className={cn("mt-1 text-xs text-ink-subtle", side === "end" && "text-right")}>
-            {[
-              message.model_id,
-              t("conversations.messageTokens", { count: format.number(tokens) }),
-              formatMicroUsd(message.cost_micro_usd, locale),
-            ]
-              .filter(Boolean)
-              .join(" · ")}
-          </p>
+        {calls.length > 0 ? (
+          <ul className={cn("mt-1.5 flex flex-wrap gap-1.5", side === "end" && "justify-end")} aria-label={t("inboxCard.actions.label")}>
+            {calls.map((call, index) => (
+              <li
+                key={index}
+                className={cn(
+                  "inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs",
+                  call.is_error ? "bg-danger-soft text-danger" : "bg-surface-muted text-ink-muted",
+                )}
+              >
+                {call.is_error ? <IconAlert className="size-3.5" aria-hidden /> : <IconCheck className="size-3.5" aria-hidden />}
+                {t(TOOL_LABELS[call.tool_name])}
+                {call.is_error ? <span className="sr-only">: {t("conversations.toolError")}</span> : null}
+              </li>
+            ))}
+          </ul>
         ) : null}
+        {hasTechnicalDetails(message, isPlatformAdmin) ? <MessageTechnicalDetails message={message} className="mt-1.5" /> : null}
       </div>
     </li>
   );
-}
-
-function ToolCalls({ calls }: { calls: readonly ToolCallView[] }) {
-  const { t, tp } = useI18n();
-  const failed = calls.some((call) => call.is_error);
-  return (
-    <details className="group mt-1.5 rounded-xl border border-line bg-surface text-start text-sm">
-      <summary className="flex cursor-pointer list-none items-center gap-2 rounded-xl px-3 py-2 text-ink-muted hover:text-ink [&::-webkit-details-marker]:hidden">
-        <IconChevronRight className="size-4 shrink-0 transition-transform group-open:rotate-90" aria-hidden />
-        <span className="font-medium whitespace-nowrap">{tp("conversations.actions", calls.length)}</span>
-        <span className="min-w-0 truncate text-xs text-ink-subtle">
-          {calls.map((call) => t(TOOL_LABELS[call.tool_name])).join(", ")}
-        </span>
-        {failed ? (
-          <Badge tone="danger" className="ml-auto">
-            {t("conversations.toolError")}
-          </Badge>
-        ) : null}
-      </summary>
-      <ol className="space-y-3 border-t border-line px-3 py-3">
-        {calls.map((call, index) => (
-          <li key={index} className="space-y-1.5">
-            <p className="flex flex-wrap items-center gap-2 font-medium text-ink">
-              {t(TOOL_LABELS[call.tool_name])}
-              <code className="text-xs font-normal text-ink-subtle">{call.tool_name}</code>
-              {call.is_error ? <Badge tone="danger">{t("conversations.toolError")}</Badge> : null}
-            </p>
-            <JsonBlock label={t("conversations.toolInput")} json={call.input_json} />
-            <JsonBlock label={t("conversations.toolResult")} json={call.result_json} />
-          </li>
-        ))}
-      </ol>
-    </details>
-  );
-}
-
-function JsonBlock({ label, json }: { label: string; json: string }) {
-  return (
-    <div>
-      <p className="text-xs text-ink-subtle">{label}</p>
-      <pre
-        dir="ltr"
-        className="mt-0.5 max-h-60 overflow-auto rounded-lg bg-surface-muted px-3 py-2 text-xs leading-relaxed whitespace-pre-wrap text-ink [overflow-wrap:anywhere]"
-      >
-        {prettyJson(json)}
-      </pre>
-    </div>
-  );
-}
-
-function memberName(
-  member: { display_name?: string | null; email?: string | null; phone_number?: string | null } | undefined,
-): string | null {
-  return member ? (member.display_name ?? member.email ?? member.phone_number ?? null) : null;
 }

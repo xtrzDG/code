@@ -13,6 +13,8 @@ export const LIVE_EVENT_NAMES = [
   "handoff.created",
   "handoff.resolved",
   "conversation.message",
+  "conversation.assigned",
+  "conversation.note",
   "lead.created",
   "lead.changed",
   "booking.created",
@@ -91,6 +93,14 @@ export function everythingOf(businessId: string): QueryKey[] {
   ];
 }
 
+const CONVERSATION_PREFIX = "conversation_";
+const NOTE_PREFIX = "conversation_note_";
+
+/** The conversations an event names (an assignment names the assignee too, a note itself). */
+function conversationsIn(event: LiveEvent): string[] {
+  return event.ids.filter((id) => id.startsWith(CONVERSATION_PREFIX) && !id.startsWith(NOTE_PREFIX));
+}
+
 /** The cached queries a change makes out of date (the counts always among them). */
 export function invalidationsFor(event: LiveEvent, businessId: string): QueryKey[] {
   const counts = queryKeys.inbox.all(businessId);
@@ -103,11 +113,26 @@ export function invalidationsFor(event: LiveEvent, businessId: string): QueryKey
       return [
         dashboard,
         ["conversations", businessId, "list"],
-        ...event.ids.map((conversationId) => queryKeys.conversations.detail(businessId, conversationId)),
+        queryKeys.conversations.inboxAll(businessId),
+        ...conversationsIn(event).map((conversationId) => queryKeys.conversations.detail(businessId, conversationId)),
+      ];
+    case "conversation.assigned":
+      // The views (Mine, Unassigned), the rows and the cards that show who handles it.
+      return [
+        counts,
+        queryKeys.conversations.inboxAll(businessId),
+        ...conversationsIn(event).map((conversationId) => queryKeys.conversations.detail(businessId, conversationId)),
+      ];
+    case "conversation.note":
+      // The notes of the conversation and the note counts on the rows.
+      return [
+        queryKeys.conversations.inboxAll(businessId),
+        ...conversationsIn(event).map((conversationId) => queryKeys.conversations.notes(businessId, conversationId)),
       ];
     case "lead.created":
     case "lead.changed":
-      return [counts, dashboard, queryKeys.leads.all(businessId)];
+      // A request opens or closes: the Requests view and the cards it is on.
+      return [counts, dashboard, queryKeys.leads.all(businessId), queryKeys.conversations.all(businessId)];
     case "booking.created":
     case "booking.changed":
       return [counts, dashboard, queryKeys.bookings.all(businessId)];

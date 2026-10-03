@@ -1,6 +1,6 @@
-import { ConversationsShell } from "./_components/ConversationsShell";
+import { InboxShell } from "./_components/list/InboxShell";
 
-/** The feed stays mounted while conversations open next to it (see ConversationsShell). */
-export default function ConversationsLayout({ children }: LayoutProps<"/b/[businessId]/messages">) {
-  return <ConversationsShell>{children}</ConversationsShell>;
+/** The list stays mounted while conversations open next to it (see InboxShell). */
+export default function InboxLayout({ children }: LayoutProps<"/b/[businessId]/inbox">) {
+  return <InboxShell>{children}</InboxShell>;
 }

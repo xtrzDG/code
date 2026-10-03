@@ -12,7 +12,7 @@ import { CHANNEL_LABELS } from "@/components/insights/labels";
 import type { BookingView } from "@/components/insights/types";
 import { useI18n } from "@/i18n/client";
 import { languageName } from "@/lib/format";
-import { businessPath } from "@/lib/navigation";
+import { conversationPath } from "@/lib/navigation";
 
 import { groupBookingsByDate, nightsOf, reminderState } from "../_lib/bookingList";
 
@@ -186,7 +186,7 @@ export function BookingDetails({ booking, isStay }: { booking: BookingView; isSt
       </dl>
       {booking.conversation_id ? (
         <Link
-          href={`${businessPath(business.id, "messages")}/${encodeURIComponent(booking.conversation_id)}`}
+          href={conversationPath(business.id, booking.conversation_id)}
           className="inline-flex text-sm font-medium text-accent hover:underline"
         >
           {t("insights.openConversation")}
