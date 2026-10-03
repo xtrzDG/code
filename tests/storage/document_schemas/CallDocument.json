@@ -1,7 +1,7 @@
 {
   "collection": "calls",
   "document_type": "CallDocument",
-  "schema_version": 2,
+  "schema_version": 3,
   "shape": {
     "additionalProperties": false,
     "properties": {
@@ -102,11 +102,46 @@
         "default": null
       },
       "schema_version": {
-        "default": "2",
+        "default": "3",
         "type": "string"
       },
       "started_at": {
         "type": "integer"
+      },
+      "summaries": {
+        "items": {
+          "additionalProperties": false,
+          "properties": {
+            "language": {
+              "maxLength": 16,
+              "minLength": 2,
+              "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$",
+              "type": "string"
+            },
+            "text": {
+              "maxLength": 600,
+              "minLength": 1,
+              "type": "string"
+            }
+          },
+          "required": [
+            "language",
+            "text"
+          ],
+          "type": "object"
+        },
+        "type": "array"
+      },
+      "summarized_at": {
+        "anyOf": [
+          {
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
       },
       "to_phone_number": {
         "anyOf": [

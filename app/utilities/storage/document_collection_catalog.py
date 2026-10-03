@@ -18,6 +18,7 @@ from app.schemas.domain.billing import (
 )
 from app.schemas.domain.bookings import BookingDocument, LeadDocument
 from app.schemas.domain.businesses import BusinessDocument
+from app.schemas.domain.call_settings import CallSettingsDocument
 from app.schemas.domain.calendar import (
     CalendarAuthorizationStateDocument,
     CalendarConnectionDocument,
@@ -42,6 +43,7 @@ from app.schemas.domain.jobs import (
 )
 from app.schemas.domain.knowledge import KnowledgeItemDocument
 from app.schemas.domain.manager_links import ManagerTelegramLinkDocument
+from app.schemas.domain.missed_calls import MissedCallDocument
 from app.schemas.domain.notification_preferences import (
     UserNotificationPreferencesDocument,
 )
@@ -205,6 +207,14 @@ DOCUMENT_COLLECTIONS: tuple[DocumentCollectionDefinition, ...] = (
     ),
     DocumentCollectionDefinition(
         DocumentCollectionName("assistant_applies"), AssistantApplyDocument
+    ),
+    # After the calls: callers who did not get through and the text-backs
+    # they got, and each business's call settings (1051).
+    DocumentCollectionDefinition(
+        DocumentCollectionName("missed_calls"), MissedCallDocument
+    ),
+    DocumentCollectionDefinition(
+        DocumentCollectionName("call_settings"), CallSettingsDocument
     ),
 )
 

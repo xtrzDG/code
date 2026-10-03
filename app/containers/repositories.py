@@ -1,4 +1,3 @@
-from dependency_injector import containers
 from dependency_injector.providers import DependenciesContainer, Singleton
 
 from app.containers.adapters.document_collections_container import (
@@ -10,6 +9,7 @@ from app.containers.adapters.launch_collections_container import (
 from app.containers.adapters.notification_collections_container import (
     NotificationCollectionsContainer,
 )
+from app.containers.call_repositories import CallRepositoriesContainer
 from app.repositories.activation_probe_repository import ActivationProbeRepository
 from app.repositories.assistant_repositories import (
     AssistantVersionRepository,
@@ -87,7 +87,12 @@ from app.repositories.user_repositories import (
 from app.repositories.worker_heartbeat_repository import WorkerHeartbeatRepository
 
 
-class RepositoriesContainer(containers.DeclarativeContainer):
+class RepositoriesContainer(CallRepositoriesContainer):
+    """
+    The repositories over the document collections (singletons). The
+    repositories of what follows a call come from `CallRepositoriesContainer`.
+    """
+
     collections: DocumentCollectionsContainer = DependenciesContainer()  # type: ignore[assignment]
     notification_collections: NotificationCollectionsContainer = DependenciesContainer()  # type: ignore[assignment]
     launch_collections: LaunchCollectionsContainer = DependenciesContainer()  # type: ignore[assignment]

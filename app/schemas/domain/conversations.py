@@ -16,6 +16,7 @@ from app.schemas.typings.assistants.constrained_strings import LlmModelId
 from app.schemas.typings.assistants.prefixed_id import AssistantVersionId
 from app.schemas.typings.billing.constrained_integers import CostMicroUsd
 from app.schemas.typings.businesses.prefixed_id import BusinessId
+from app.schemas.typings.calls.constrained_strings import CallSummaryText
 from app.schemas.typings.contacts.prefixed_id import ContactId
 from app.schemas.typings.conversations.booleans import (
     IsAfterHours,
@@ -121,12 +122,19 @@ class LlmTurnDocument(BaseDocument):
     payload: LlmProviderPayload
 
 
+class CallSummary(PersistentDocument):
+    """The summary of a call for staff in one language."""
+
+    language: LanguageTag
+    text: CallSummaryText
+
+
 class CallDocument(BaseDocument):
     """Phone call handled by the voice agent (concept table `calls`)."""
 
     # 2: `guard_verdict` and `unverified_values` (both optional, so version 1
-    # needs no upcaster).
-    schema_version: SchemaVersion = SchemaVersion("2")
+    # needs no upcaster). 3: `summaries` and `summarized_at` (optional too).
+    schema_version: SchemaVersion = SchemaVersion("3")
     id: CallId = Field(default_factory=CallId)
     business_id: BusinessId
     conversation_id: ConversationId | None = None
@@ -145,3 +153,7 @@ class CallDocument(BaseDocument):
     unverified_values: list[UnverifiedReplyValue] = Field(
         default_factory=list[UnverifiedReplyValue]
     )
+    # What the caller wanted and how it ended, for staff, in the languages
+    # of the business's owner and staff; empty until the call is summarized.
+    summaries: list[CallSummary] = Field(default_factory=list[CallSummary])
+    summarized_at: Microseconds | None = None

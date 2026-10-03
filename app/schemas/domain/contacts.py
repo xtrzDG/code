@@ -1,4 +1,4 @@
-from base_pydantic_schemas import BaseDocument, PersistentDocument
+from base_pydantic_schemas import BaseDocument, PersistentDocument, SchemaVersion
 from pydantic import Field
 from typed_time_provider import Microseconds
 
@@ -34,8 +34,13 @@ class ContactDocument(BaseDocument):
     `erased_at` marks a customer erased at their request: the document then
     keeps no personal data (no name, phones, language or channel
     identities), only its id, so records that point to it read as erased.
+
+    `opted_out_channels`: channels the customer asked to get no messages in
+    that they did not ask for (reminders, text-backs after a missed call);
+    PHONE covers SMS to their number. Version 2 adds it (optional).
     """
 
+    schema_version: SchemaVersion = SchemaVersion("2")
     id: ContactId = Field(default_factory=ContactId)
     business_id: BusinessId
     name: ContactName | None = None
@@ -46,3 +51,4 @@ class ContactDocument(BaseDocument):
         default_factory=list[ChannelIdentity]
     )
     erased_at: Microseconds | None = None
+    opted_out_channels: list[ChannelKind] = Field(default_factory=list[ChannelKind])
