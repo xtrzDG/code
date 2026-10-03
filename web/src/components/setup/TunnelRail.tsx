@@ -3,8 +3,9 @@
 /**
  * Where the owner is in the tunnel: eight stations on a line that fills as
  * they go deeper. A station they may jump to (one already reached, or done)
- * is a button; the current one is marked `aria-current="step"`. On phones
- * the line stays and only the current step's name shows beside "3 / 8".
+ * is a button; the current one is marked `aria-current="step"`, with the
+ * step's name right under its dot (aligned to the rail's end for the first
+ * and the last). On phones the line stays and "3 / 8" stands beside it.
  */
 
 import type { CSSProperties } from "react";
@@ -26,10 +27,10 @@ export function TunnelRail({ place, states, canOpen, onOpen }: TunnelRailProps) 
   const { t } = useI18n();
   const current = placeIndex(place);
   const fill = Math.min(current, TUNNEL_STEPS.length - 1) / (TUNNEL_STEPS.length - 1);
-  const currentStep = TUNNEL_STEPS[current];
+  const last = TUNNEL_STEPS.length - 1;
 
   return (
-    <nav aria-label={t("tunnel.railLabel")} className="min-w-0 flex-1">
+    <nav aria-label={t("tunnel.railLabel")} className="min-w-0 flex-1 sm:pb-4">
       <div className="flex items-center gap-3">
         <span className="shrink-0 text-xs font-medium text-ink-muted tabular-nums sm:hidden">
           {Math.min(current + 1, TUNNEL_STEPS.length)} / {TUNNEL_STEPS.length}
@@ -59,7 +60,7 @@ export function TunnelRail({ place, states, canOpen, onOpen }: TunnelRailProps) 
               </span>
             );
             return (
-              <li key={step} className="relative z-10 flex">
+              <li key={step} className="relative z-10 flex" data-rail-step={isCurrent ? "current" : undefined}>
                 {canOpen(step) && !isCurrent ? (
                   <button
                     type="button"
@@ -81,16 +82,28 @@ export function TunnelRail({ place, states, canOpen, onOpen }: TunnelRailProps) 
                     {dot}
                   </span>
                 )}
+                {isCurrent ? <StepLabel text={t(`tunnel.steps.${step}`)} edge={index === 0 ? "start" : index === last ? "end" : null} /> : null}
               </li>
             );
           })}
         </ol>
       </div>
-      {currentStep ? (
-        <p className="mt-0.5 hidden text-center text-xs font-medium text-ink-muted sm:block" aria-hidden>
-          {t(`tunnel.steps.${currentStep}`)}
-        </p>
-      ) : null}
     </nav>
+  );
+}
+
+/** The current step's name under its dot (the dot's button already names it for screen readers). */
+function StepLabel({ text, edge }: { text: string; edge: "start" | "end" | null }) {
+  return (
+    <span
+      aria-hidden
+      data-rail-label
+      className={cn(
+        "pointer-events-none absolute top-full mt-0.5 hidden text-xs font-medium whitespace-nowrap text-ink-muted sm:block",
+        edge === "start" ? "start-0" : edge === "end" ? "end-0" : "start-1/2 -translate-x-1/2 rtl:translate-x-1/2",
+      )}
+    >
+      {text}
+    </span>
   );
 }

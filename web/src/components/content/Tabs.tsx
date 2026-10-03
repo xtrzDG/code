@@ -1,7 +1,8 @@
 "use client";
 
-import { useId, useRef, type KeyboardEvent, type ReactNode } from "react";
+import { useEffect, useId, useRef, type KeyboardEvent, type ReactNode } from "react";
 
+import { ScrollRow } from "@/components/ui/ScrollRow";
 import { cn } from "@/lib/cn";
 
 export interface TabItem<Key extends string> {
@@ -11,7 +12,9 @@ export interface TabItem<Key extends string> {
 
 /**
  * In-page tabs (WAI-ARIA tablist): arrow keys, Home and End move between
- * tabs; only the selected panel is rendered.
+ * tabs; only the selected panel is rendered. A row too wide for the screen
+ * scrolls sideways with its hidden side faded out, and keeps the chosen tab
+ * in view.
  */
 export function Tabs<Key extends string>({
   label,
@@ -31,6 +34,15 @@ export function Tabs<Key extends string>({
 }) {
   const id = useId();
   const buttons = useRef<Map<Key, HTMLButtonElement>>(new Map());
+
+  // A newly chosen tab comes into view (not on the first render: the page must not jump).
+  const shown = useRef(selected);
+  useEffect(() => {
+    if (shown.current !== selected) {
+      shown.current = selected;
+      buttons.current.get(selected)?.scrollIntoView?.({ block: "nearest", inline: "nearest" });
+    }
+  }, [selected]);
 
   const move = (event: KeyboardEvent<HTMLButtonElement>, index: number) => {
     const last = tabs.length - 1;
@@ -61,7 +73,7 @@ export function Tabs<Key extends string>({
 
   return (
     <div className={className}>
-      <div className="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
+      <ScrollRow className="-mx-4 px-4 sm:mx-0 sm:px-0">
         <div role="tablist" aria-label={label} className="flex min-w-max gap-1 rounded-xl bg-surface-muted p-1">
           {tabs.map((tab, index) => {
             const isSelected = tab.key === selected;
@@ -94,7 +106,7 @@ export function Tabs<Key extends string>({
             );
           })}
         </div>
-      </div>
+      </ScrollRow>
       <div role="tabpanel" id={`${id}-panel`} aria-labelledby={`${id}-tab-${selected}`} className="mt-4">
         {children}
       </div>

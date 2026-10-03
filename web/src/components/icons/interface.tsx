@@ -182,3 +182,20 @@ export const IconStar = (props: IconProps) => (
     <path d="M12 3.5l2.6 5.3 5.9.9-4.25 4.1 1 5.8L12 16.85 6.75 19.6l1-5.8L3.5 9.7l5.9-.9z" />
   </Icon>
 );
+
+/** A price tag (what the business offers, with prices). */
+export const IconTag = (props: IconProps) => (
+  <Icon {...props}>
+    <path d="M3.5 12.2V4.5a1 1 0 0 1 1-1h7.7a1 1 0 0 1 .7.3l7.6 7.6a1 1 0 0 1 0 1.4l-7.7 7.7a1 1 0 0 1-1.4 0l-7.6-7.6a1 1 0 0 1-.3-.7z" />
+    <circle cx="8" cy="8" r="1.4" />
+  </Icon>
+);
+
+/** Three dots in a row: more actions behind a menu. */
+export const IconMore = (props: IconProps) => (
+  <Icon {...props}>
+    <circle cx="5.5" cy="12" r="1.2" fill="currentColor" />
+    <circle cx="12" cy="12" r="1.2" fill="currentColor" />
+    <circle cx="18.5" cy="12" r="1.2" fill="currentColor" />
+  </Icon>
+);

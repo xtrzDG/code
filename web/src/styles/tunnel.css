@@ -126,6 +126,44 @@
     border-color: color-mix(in oklab, #d55cf0 55%, transparent);
   }
 
+  /*
+   * The floor's lines run under the cards on a phone, where the content
+   * fills the screen: they show from md up only.
+   */
+  @media (max-width: 767px) {
+    .tunnel-depth .landing-floor {
+      display: none;
+    }
+  }
+
+  /*
+   * A calm pool of the page colour right behind a screen's content: the
+   * rings and the floor stay at the edges and never cross a heading or a
+   * card. It moves with the screen (it is part of it) and fades out at its
+   * edges, so the tunnel still shows around the content. A faint accent
+   * tint keeps the glow's warmth behind the question.
+   */
+  .tunnel-veil {
+    position: absolute;
+    inset: -2.5rem -2rem;
+    z-index: -1;
+    pointer-events: none;
+    border-radius: 3rem;
+    background: radial-gradient(
+      70% 55% at 50% 30%,
+      color-mix(in oklab, var(--accent-solid) 8%, var(--canvas)),
+      var(--canvas)
+    );
+    opacity: 0.94;
+    mask-image:
+      linear-gradient(to bottom, transparent, black 2.5rem, black calc(100% - 2.5rem), transparent),
+      linear-gradient(to right, transparent, black 2rem, black calc(100% - 2rem), transparent);
+    mask-composite: intersect;
+  }
+  :root[data-theme="light"] .tunnel-veil {
+    opacity: 0.9;
+  }
+
   /* The progress rail: a line that fills as the owner goes deeper. */
   .tunnel-rail-fill {
     transform-origin: left center;

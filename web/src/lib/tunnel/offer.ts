@@ -11,6 +11,8 @@ import type { KnowledgeItemDetails, KnowledgeItemKind, RequestBody, Schema } fro
 import { majorToMinor, parseDecimalInput } from "@/lib/format";
 import { isOfferRowChanged, newOfferRow, offerRowFromItem, validateOfferRow, type OfferRow } from "@/lib/wizard/offers";
 
+import { exampleRowKey } from "./offerMemory";
+
 /** Kinds that are not on the offer table (they have their own places). */
 const NOT_OFFERS: ReadonlySet<KnowledgeItemKind> = new Set(["faq", "policy"]);
 
@@ -23,21 +25,32 @@ export function isOfferItem(item: Pick<KnowledgeItemDetails, "kind" | "is_active
   return !NOT_OFFERS.has(item.kind) && item.is_active;
 }
 
+/** Oldest first, as the owner typed them (the API lists the newest first). */
+function inTypedOrder(left: KnowledgeItemDetails, right: KnowledgeItemDetails): number {
+  return left.created_at - right.created_at || left.id.localeCompare(right.id);
+}
+
 /**
- * The table's first rows: the business's offer items, then the niche's
- * examples whose name is not there yet.
+ * The table's first rows: the business's offer items in the order they
+ * were added, then the niche's examples the owner has not dealt with yet:
+ * not replaced or removed (`done`, see offerMemory) and with no saved line
+ * of the same name.
  */
 export function initialOfferRows(
   items: readonly KnowledgeItemDetails[],
   examples: readonly Schema<"StarterOfferView">[],
   currency: string,
+  done: ReadonlySet<string> = new Set(),
 ): TunnelOfferRow[] {
-  const saved = items.filter(isOfferItem).map((item) => ({ ...offerRowFromItem(item, currency), isSuggestion: false }));
+  const saved = items
+    .filter(isOfferItem)
+    .sort(inTypedOrder)
+    .map((item) => ({ ...offerRowFromItem(item, currency), isSuggestion: false }));
   const names = new Set(saved.map((row) => row.title.trim().toLocaleLowerCase()));
   const suggestions = examples
-    .filter((example) => !names.has(example.title.trim().toLocaleLowerCase()))
+    .filter((example) => !done.has(example.key) && !names.has(example.title.trim().toLocaleLowerCase()))
     .map((example) => ({
-      ...newOfferRow(example.kind, `starter-${example.key}`),
+      ...newOfferRow(example.kind, exampleRowKey(example.key)),
       title: example.title,
       duration: example.duration_minutes ? String(example.duration_minutes) : "",
       isSuggestion: true,

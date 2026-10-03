@@ -47,6 +47,29 @@ describe("offer rows", () => {
     expect(initialOfferRows([], EXAMPLES, "EUR")[0]?.duration).toBe("60");
   });
 
+  it("keep the saved lines in the order they were added, though the API lists the newest first", () => {
+    const rows = initialOfferRows(
+      [
+        item({ id: "knowledge_3", title: "Coloring", created_at: 30 }),
+        item({ id: "knowledge_2", title: "Blow-dry", created_at: 20 }),
+        item({ id: "knowledge_1", title: "Men's haircut", created_at: 10 }),
+      ],
+      [],
+      "EUR",
+    );
+    expect(rows.map((row) => row.title)).toEqual(["Men's haircut", "Blow-dry", "Coloring"]);
+  });
+
+  it("do not bring back an example the owner replaced or removed", () => {
+    // "Manicure" was typed over as "Gel nails" and saved: its name is gone, its key is remembered.
+    const rows = initialOfferRows([item({ title: "Gel nails" })], EXAMPLES, "EUR", new Set(["manicure"]));
+    expect(rows.map((row) => [row.title, row.isSuggestion])).toEqual([
+      ["Gel nails", false],
+      ["Women's haircut", true],
+    ]);
+    expect(rows[1]?.key).toBe("starter-haircut");
+  });
+
   it("leave switched-off items and questions off the table", () => {
     expect(isOfferItem({ kind: "service", is_active: true })).toBe(true);
     expect(isOfferItem({ kind: "service", is_active: false })).toBe(false);

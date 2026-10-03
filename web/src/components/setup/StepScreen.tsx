@@ -17,6 +17,8 @@ import { useI18n } from "@/i18n/client";
 import { cn } from "@/lib/cn";
 import { stepNumber, TUNNEL_STEPS, type TunnelStep } from "@/lib/tunnel/steps";
 
+import { TunnelVeil } from "./TunnelVeil";
+
 export interface StepActions {
   onContinue?: () => void;
   onBack?: () => void;
@@ -100,7 +102,8 @@ export function StepScreen({
   };
 
   return (
-    <div ref={screen} onKeyDown={onKeyDown} className={cn("mx-auto w-full", wide ? "max-w-3xl" : "max-w-2xl")}>
+    <div ref={screen} onKeyDown={onKeyDown} className={cn("relative isolate mx-auto w-full", wide ? "max-w-3xl" : "max-w-2xl")}>
+      <TunnelVeil />
       <p className="text-sm font-medium tracking-wide text-accent">
         {t("tunnel.stepOf", { number: stepNumber(step), total: TUNNEL_STEPS.length })}
       </p>

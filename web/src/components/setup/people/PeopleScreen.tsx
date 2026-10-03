@@ -8,7 +8,7 @@
  * a person (the niche's usual reasons, changed later in the cabinet).
  */
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 import { describeError } from "@/api/errors";
 import type { Schema } from "@/api/types";
@@ -70,6 +70,7 @@ export function PeopleScreen({ ctx }: { ctx: StepContext }) {
   const { me, business } = useBusiness();
   const people = usePeople(ctx.businessId);
   const [isOtherOpen, setOtherOpen] = useState(false);
+  const otherButton = useRef<HTMLButtonElement>(null);
   const [showError, setShowError] = useState(false);
   const myName = ownerName(me.user, t("tunnelTeam.people.ownerName"));
   const mine = ownerChoices(me.user).filter((choice) => !isAlreadyContact(people.contacts, choice));
@@ -81,6 +82,16 @@ export function PeopleScreen({ ctx }: { ctx: StepContext }) {
     const saved = await people.add(contact);
     if (saved) {
       setShowError(false);
+    }
+    return saved;
+  };
+
+  /** "Someone else" added: the form closes, the person shows in the list, the focus goes back to the choice. */
+  const addOther = async (contact: Parameters<typeof people.add>[0]) => {
+    const saved = await add(contact);
+    if (saved) {
+      setOtherOpen(false);
+      otherButton.current?.focus();
     }
     return saved;
   };
@@ -143,6 +154,7 @@ export function PeopleScreen({ ctx }: { ctx: StepContext }) {
               </button>
             )}
             <button
+              ref={otherButton}
               type="button"
               aria-expanded={isOtherOpen}
               className={cn(CHOICE, isOtherOpen && "border-accent")}
@@ -166,7 +178,7 @@ export function PeopleScreen({ ctx }: { ctx: StepContext }) {
           ) : null}
           {isOtherOpen ? (
             <div className="rounded-2xl border border-line bg-surface/85 p-4 backdrop-blur-sm sm:p-5">
-              <PersonForm contacts={people.contacts} language={business.owner_language} isSaving={people.isSaving} onAdd={add} />
+              <PersonForm contacts={people.contacts} language={business.owner_language} isSaving={people.isSaving} onAdd={addOther} />
             </div>
           ) : null}
           {showError && !hasContacts ? (
