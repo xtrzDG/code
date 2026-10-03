@@ -18,6 +18,13 @@
     return null;
   }
 
+  // Page mode fills the element data-container names, else the window.
+  function findContainer() {
+    var containerId = isPageMode ? script.getAttribute("data-container") : null;
+    var container = containerId ? document.getElementById(containerId) : null;
+    return container || document.body;
+  }
+
   function resolveApiBase(scriptTag) {
     var configured = scriptTag.getAttribute("data-api-base");
     var base = configured;
@@ -129,6 +136,20 @@
 
   function closeIcon() {
     return svgIcon(["M6 6l12 12", "M18 6L6 18"]);
+  }
+
+  function newChatIcon() {
+    return svgIcon(["M12 20h9", "M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"]);
+  }
+
+  function personIcon() {
+    return svgIcon(["M20 21a8 8 0 0 0-16 0", "M12 13a5 5 0 1 0 0-10 5 5 0 0 0 0 10z"]);
+  }
+
+  function phoneIcon() {
+    return svgIcon([
+      "M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z"
+    ]);
   }
 
   function sendIcon() {

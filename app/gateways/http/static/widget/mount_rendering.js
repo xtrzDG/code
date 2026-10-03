@@ -86,6 +86,7 @@
       if (typingRow) {
         log.appendChild(typingRow);
       }
+      renderActions();
       if (wasAtEnd || state.isSending) {
         scrollToEnd();
       }

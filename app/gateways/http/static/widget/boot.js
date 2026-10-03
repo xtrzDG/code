@@ -23,6 +23,9 @@
   var configUrl = apiBase + CONFIG_PATH.replace("{business_id}", encodeURIComponent(businessId));
   var messagesUrl =
     apiBase + MESSAGES_PATH.replace("{business_id}", encodeURIComponent(businessId));
+  var handoffUrl =
+    apiBase + HANDOFF_PATH.replace("{business_id}", encodeURIComponent(businessId));
+  var isPageMode = script.getAttribute("data-mode") === PAGE_MODE;
   var storagePrefix = STORAGE_PREFIX + businessId + ":";
 
   start();

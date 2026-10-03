@@ -216,6 +216,8 @@ def render_embed_code(business_id: BusinessId) -> str:
         "language</li>\n"
         '      <li><code>data-open="true"</code> &mdash; open the chat on the '
         "first page of a visit</li>\n"
+        '      <li><code>data-mode="page"</code> &mdash; the chat fills the page '
+        "(the hosted chat page uses it)</li>\n"
         "    </ul>\n"
         "  </section>\n"
     )

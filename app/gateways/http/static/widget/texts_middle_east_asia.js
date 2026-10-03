@@ -15,7 +15,18 @@
       language: "שפה",
       preview: "תצוגה מקדימה: הצ'אט כבוי. הפעילו אותו בלוח הניהול (ערוצים).",
       newReply: "תשובה חדשה",
-      staff: "הצוות שלנו"
+      staff: "הצוות שלנו",
+      person: "לדבר עם נציג",
+      personFailed: "לא הצלחנו להשיג את הצוות שלנו. נסו שוב.",
+      newChat: "שיחה חדשה",
+      newChatConfirm: "להתחיל שיחה חדשה? הצ׳אט הזה יימחק מהמכשיר הזה.",
+      newChatYes: "להתחיל מחדש",
+      cancel: "ביטול",
+      suggestions: "שאלות מוצעות",
+      footer: "עוזר AI · עלול לטעות",
+      privacy: "פרטיות",
+      call: "התקשרות",
+      otherWays: "דרכים נוספות ליצור קשר"
     },
     ar: {
       open: "فتح المحادثة",
@@ -34,7 +45,18 @@
       language: "اللغة",
       preview: "معاينة: هذه المحادثة متوقفة. فعّلها في لوحة التحكم (القنوات).",
       newReply: "رد جديد",
-      staff: "فريقنا"
+      staff: "فريقنا",
+      person: "التحدث إلى شخص",
+      personFailed: "تعذّر الوصول إلى فريقنا. يُرجى المحاولة مرة أخرى.",
+      newChat: "محادثة جديدة",
+      newChatConfirm: "هل تريد بدء محادثة جديدة؟ ستُحذف هذه المحادثة من هذا الجهاز.",
+      newChatYes: "البدء من جديد",
+      cancel: "إلغاء",
+      suggestions: "أسئلة مقترحة",
+      footer: "مساعد ذكاء اصطناعي · قد يخطئ",
+      privacy: "الخصوصية",
+      call: "اتصال",
+      otherWays: "طرق أخرى للتواصل معنا"
     },
     fa: {
       open: "باز کردن گفتگو",
@@ -53,7 +75,18 @@
       language: "زبان",
       preview: "پیش‌نمایش: گفتگو خاموش است. آن را در کابینت (کانال‌ها) روشن کنید.",
       newReply: "پاسخ جدید",
-      staff: "تیم ما"
+      staff: "تیم ما",
+      person: "صحبت با یک شخص",
+      personFailed: "ارتباط با تیم ما برقرار نشد. لطفاً دوباره تلاش کنید.",
+      newChat: "گفتگوی جدید",
+      newChatConfirm: "گفتگوی جدیدی شروع شود؟ این گفتگو از این دستگاه پاک می‌شود.",
+      newChatYes: "شروع دوباره",
+      cancel: "لغو",
+      suggestions: "پرسش‌های پیشنهادی",
+      footer: "دستیار هوش مصنوعی · ممکن است اشتباه کند",
+      privacy: "حریم خصوصی",
+      call: "تماس",
+      otherWays: "راه‌های دیگر ارتباط با ما"
     },
     ur: {
       open: "چیٹ کھولیں",
@@ -72,7 +105,18 @@
       language: "زبان",
       preview: "پیش نظارہ: چیٹ بند ہے۔ اسے کیبنٹ (چینلز) میں آن کریں۔",
       newReply: "نیا جواب",
-      staff: "ہماری ٹیم"
+      staff: "ہماری ٹیم",
+      person: "کسی انسان سے بات کریں",
+      personFailed: "ہماری ٹیم سے رابطہ نہیں ہو سکا۔ براہ کرم دوبارہ کوشش کریں۔",
+      newChat: "نئی گفتگو",
+      newChatConfirm: "نئی گفتگو شروع کریں؟ یہ چیٹ اس آلے سے حذف ہو جائے گی۔",
+      newChatYes: "دوبارہ شروع کریں",
+      cancel: "منسوخ کریں",
+      suggestions: "تجویز کردہ سوالات",
+      footer: "AI معاون · غلطی کر سکتا ہے",
+      privacy: "رازداری",
+      call: "کال کریں",
+      otherWays: "ہم سے رابطے کے دیگر طریقے"
     },
     hi: {
       open: "चैट खोलें",
@@ -91,7 +135,18 @@
       language: "भाषा",
       preview: "पूर्वावलोकन: यह चैट बंद है। इसे कैबिनेट (चैनल) में चालू करें।",
       newReply: "नया जवाब",
-      staff: "हमारी टीम"
+      staff: "हमारी टीम",
+      person: "किसी व्यक्ति से बात करें",
+      personFailed: "हमारी टीम से संपर्क नहीं हो सका। कृपया फिर से कोशिश करें।",
+      newChat: "नई बातचीत",
+      newChatConfirm: "नई बातचीत शुरू करें? यह चैट इस डिवाइस से हटा दी जाएगी।",
+      newChatYes: "फिर से शुरू करें",
+      cancel: "रद्द करें",
+      suggestions: "सुझाए गए सवाल",
+      footer: "AI सहायक · गलती कर सकता है",
+      privacy: "गोपनीयता",
+      call: "कॉल करें",
+      otherWays: "हमसे संपर्क के अन्य तरीके"
     },
     zh: {
       open: "打开聊天",
@@ -110,7 +165,18 @@
       language: "语言",
       preview: "预览：此聊天已关闭。请在管理后台（渠道）中开启。",
       newReply: "新回复",
-      staff: "我们的团队"
+      staff: "我们的团队",
+      person: "联系人工客服",
+      personFailed: "无法联系到我们的团队，请重试。",
+      newChat: "新对话",
+      newChatConfirm: "要开始新的对话吗？此设备上的当前聊天记录将被清除。",
+      newChatYes: "重新开始",
+      cancel: "取消",
+      suggestions: "推荐问题",
+      footer: "AI 助手 · 可能会出错",
+      privacy: "隐私",
+      call: "拨打电话",
+      otherWays: "其他联系方式"
     },
     ja: {
       open: "チャットを開く",
@@ -129,7 +195,18 @@
       language: "言語",
       preview: "プレビュー：このチャットはオフです。管理画面（チャネル）でオンにしてください。",
       newReply: "新しい返信",
-      staff: "スタッフ"
+      staff: "スタッフ",
+      person: "担当者と話す",
+      personFailed: "担当者に連絡できませんでした。もう一度お試しください。",
+      newChat: "新しい会話",
+      newChatConfirm: "新しい会話を始めますか？この端末からこのチャットが消去されます。",
+      newChatYes: "最初から始める",
+      cancel: "キャンセル",
+      suggestions: "よくある質問",
+      footer: "AIアシスタント・間違えることがあります",
+      privacy: "プライバシー",
+      call: "電話する",
+      otherWays: "その他の連絡方法"
     },
     ko: {
       open: "채팅 열기",
@@ -148,7 +225,18 @@
       language: "언어",
       preview: "미리보기: 채팅이 꺼져 있습니다. 관리 화면(채널)에서 켜 주세요.",
       newReply: "새 답변",
-      staff: "담당 팀"
+      staff: "담당 팀",
+      person: "상담원과 대화하기",
+      personFailed: "팀에 연결하지 못했습니다. 다시 시도해 주세요.",
+      newChat: "새 대화",
+      newChatConfirm: "새 대화를 시작할까요? 이 기기에서 현재 채팅이 삭제됩니다.",
+      newChatYes: "새로 시작",
+      cancel: "취소",
+      suggestions: "추천 질문",
+      footer: "AI 어시스턴트 · 실수할 수 있습니다",
+      privacy: "개인정보 보호",
+      call: "전화하기",
+      otherWays: "다른 연락 방법"
     },
     vi: {
       open: "Mở trò chuyện",
@@ -167,7 +255,18 @@
       language: "Ngôn ngữ",
       preview: "Xem trước: trò chuyện đang tắt. Hãy bật trong bảng quản lý (Kênh).",
       newReply: "Phản hồi mới",
-      staff: "Đội ngũ của chúng tôi"
+      staff: "Đội ngũ của chúng tôi",
+      person: "Trò chuyện với nhân viên",
+      personFailed: "Không thể liên hệ với đội ngũ của chúng tôi. Vui lòng thử lại.",
+      newChat: "Cuộc trò chuyện mới",
+      newChatConfirm: "Bắt đầu cuộc trò chuyện mới? Cuộc trò chuyện này sẽ bị xóa khỏi thiết bị này.",
+      newChatYes: "Bắt đầu lại",
+      cancel: "Hủy",
+      suggestions: "Câu hỏi gợi ý",
+      footer: "Trợ lý AI · có thể mắc lỗi",
+      privacy: "Quyền riêng tư",
+      call: "Gọi điện",
+      otherWays: "Các cách liên hệ khác"
     }
   };
 

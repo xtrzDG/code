@@ -13,8 +13,10 @@ WIDGET_SCRIPT_PARTS_DIRECTORY_NAME: str = "widget"
 WIDGET_SCRIPT_PART_FILE_NAMES: tuple[str, ...] = (
     # Licence comment, the closure, constants shared with the API.
     "header.js",
-    # Interface texts (one `TEXTS` object): English and Latin-script Europe,
-    "texts_latin_europe.js",
+    # Interface texts (one `TEXTS` object): English and Western Europe,
+    "texts_latin_west.js",
+    # Poland, the Baltics and the Nordics,
+    "texts_latin_north_baltic.js",
     # Cyrillic, Caucasian and Turkic languages,
     "texts_cyrillic_caucasus_turkic.js",
     # the Middle East and Asia.
@@ -29,6 +31,8 @@ WIDGET_SCRIPT_PART_FILE_NAMES: tuple[str, ...] = (
     "mount_interaction.js",
     # polling for answers not shown yet and sharing state between tabs,
     "mount_polling.js",
+    # starter questions, "Talk to a person", "New conversation", the footer,
+    "mount_actions.js",
     # failures, rate limits, rendering the log and saving the history.
     "mount_rendering.js",
     # Choosing the interface language, accent colour and corner; texts.
