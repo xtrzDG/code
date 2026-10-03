@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+
 import { Button, Field, Input, Select } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { countryFlag, countryName } from "@/lib/countries";
@@ -35,12 +37,15 @@ export function MetricsFilters({
   const { t, locale } = useI18n();
   const sourceName = useSourceName();
   const today = isoDay(new Date());
-  const preset = presetOf(filters, today);
+  // "Chosen days" stays chosen even while its days equal a preset's.
+  const [isCustom, setCustom] = useState(false);
+  const preset: PeriodPreset = isCustom ? "custom" : presetOf(filters, today);
   const { choices } = view;
 
   const choosePreset = (next: PeriodPreset) => {
+    setCustom(next === "custom");
     if (next === "custom") {
-      setFilters({ ...filters, from: view.period_start, to: view.period_end });
+      setFilters({ ...filters, from: filters.from || view.period_start, to: filters.to || view.period_end });
     } else {
       setFilters({ ...filters, ...presetRange(next, today) });
     }
@@ -129,7 +134,14 @@ export function MetricsFilters({
       ) : null}
       {hasMetricsFilters(filters) ? (
         <div className="flex items-end sm:col-span-2 lg:col-span-4">
-          <Button variant="ghost" size="sm" onClick={() => setFilters(EMPTY_METRICS_FILTERS)}>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              setCustom(false);
+              setFilters(EMPTY_METRICS_FILTERS);
+            }}
+          >
             {t("adminMetrics.filters.clear")}
           </Button>
         </div>
