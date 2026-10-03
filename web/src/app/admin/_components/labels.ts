@@ -110,3 +110,22 @@ export const RATE_SOURCE_LABELS: Record<Schema<"ExchangeRateSource">, MessageKey
   ecb: "admin.detail.rateSources.ecb",
   planning: "admin.detail.rateSources.planning",
 };
+
+export const CHECK_CODE_LABELS: Record<Schema<"AutotestCheckCode">, MessageKey> = {
+  no_booking_created: "admin.detail.checkCodes.no_booking_created",
+  not_handed_off: "admin.detail.checkCodes.not_handed_off",
+  unexpected_records: "admin.detail.checkCodes.unexpected_records",
+  wrong_reply_language: "admin.detail.checkCodes.wrong_reply_language",
+  conversation_failed: "admin.detail.checkCodes.conversation_failed",
+  no_customer_message: "admin.detail.checkCodes.no_customer_message",
+  judge_unavailable: "admin.detail.checkCodes.judge_unavailable",
+  judge_unreadable: "admin.detail.checkCodes.judge_unreadable",
+};
+
+export const CRITERION_LABELS: Record<Schema<"JudgeCriterion">, MessageKey> = {
+  facts_and_prices: "assistant.autotests.criteria.facts_and_prices",
+  booking_data: "assistant.autotests.criteria.booking_data",
+  ai_disclosure: "assistant.autotests.criteria.ai_disclosure",
+  handoff: "assistant.autotests.criteria.handoff",
+  language: "assistant.autotests.criteria.language",
+};

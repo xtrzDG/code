@@ -4,10 +4,55 @@ import type { Schema } from "@/api/types";
 import { Badge, Card } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 
-import { OUTCOME_LABELS, SCENARIO_LABELS } from "../labels";
+import { CHECK_CODE_LABELS, CRITERION_LABELS, OUTCOME_LABELS, SCENARIO_LABELS } from "../labels";
 
-/** The autotests the client's assistant failed, with the judge's notes. */
-export function FailedAutotestsCard({ tests }: { tests: Schema<"FailedAutotestView">[] }) {
+type FailedAutotest = Schema<"FailedAutotestView">;
+
+/**
+ * Why one scenario failed, in the reader's language: the harness checks
+ * that failed and the judge's low criteria. The judge's own notes are
+ * English text, so outside English they wait behind a disclosure.
+ */
+function FailureReasons({ test }: { test: FailedAutotest }) {
+  const { t, locale } = useI18n();
+  const codes = test.check_codes ?? [];
+  const criteria = test.low_criteria ?? [];
+  const notes = test.judge_notes ?? [];
+  const noteList = (
+    <ul lang="en" className="list-disc space-y-0.5 pl-5 text-sm text-ink-muted">
+      {notes.map((note, index) => (
+        <li key={index} dir="auto">
+          {note}
+        </li>
+      ))}
+    </ul>
+  );
+  return (
+    <>
+      {codes.length > 0 || criteria.length > 0 ? (
+        <ul className="list-disc space-y-0.5 pl-5 text-sm text-ink">
+          {codes.map((code) => (
+            <li key={code}>{t(CHECK_CODE_LABELS[code])}</li>
+          ))}
+          {criteria.length > 0 ? (
+            <li>{t("admin.detail.lowCriteria", { criteria: criteria.map((criterion) => t(CRITERION_LABELS[criterion])).join(", ") })}</li>
+          ) : null}
+        </ul>
+      ) : null}
+      {notes.length === 0 ? null : locale === "en" ? (
+        noteList
+      ) : (
+        <details className="text-sm">
+          <summary className="cursor-pointer text-ink-subtle">{t("admin.detail.judgeNotes")}</summary>
+          <div className="mt-1">{noteList}</div>
+        </details>
+      )}
+    </>
+  );
+}
+
+/** The autotests the client's active version failed in its verdict run, and why. */
+export function FailedAutotestsCard({ tests }: { tests: FailedAutotest[] }) {
   const { t } = useI18n();
   return (
     <Card title={t("admin.detail.autotestsTitle")} padded={tests.length === 0}>
@@ -23,15 +68,7 @@ export function FailedAutotestsCard({ tests }: { tests: Schema<"FailedAutotestVi
                 <Badge>{test.language}</Badge>
                 <code className="text-xs text-ink-subtle">{test.scenario_key}</code>
               </div>
-              {(test.judge_notes ?? []).length > 0 ? (
-                <ul className="list-disc space-y-0.5 pl-5 text-sm text-ink-muted">
-                  {(test.judge_notes ?? []).map((note, index) => (
-                    <li key={index} dir="auto">
-                      {note}
-                    </li>
-                  ))}
-                </ul>
-              ) : null}
+              <FailureReasons test={test} />
             </li>
           ))}
         </ul>
