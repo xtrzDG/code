@@ -16,8 +16,8 @@ class InboxOperatorsContainer(containers.DeclarativeContainer):
     list_inbox_operator = pipeline_operator(
         inbox_pipelines.list_inbox_pipeline, storage_scope
     )
-    count_inbox_views_operator = pipeline_operator(
-        inbox_pipelines.count_inbox_views_pipeline, storage_scope
+    count_inbox_attention_operator = pipeline_operator(
+        inbox_pipelines.count_inbox_attention_pipeline, storage_scope
     )
     list_inbox_assignees_operator = pipeline_operator(
         inbox_pipelines.list_inbox_assignees_pipeline, storage_scope

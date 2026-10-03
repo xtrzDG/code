@@ -11,8 +11,8 @@ class InboxOrchestratorsContainer(containers.DeclarativeContainer):
     inbox_use_cases: InboxUseCasesContainer = DependenciesContainer()  # type: ignore[assignment]
 
     list_inbox_orchestrator = use_case_orchestrator(inbox_use_cases.list_inbox_use_case)
-    count_inbox_views_orchestrator = use_case_orchestrator(
-        inbox_use_cases.count_inbox_views_use_case
+    count_inbox_attention_orchestrator = use_case_orchestrator(
+        inbox_use_cases.count_inbox_attention_use_case
     )
     list_inbox_assignees_orchestrator = use_case_orchestrator(
         inbox_use_cases.list_inbox_assignees_use_case

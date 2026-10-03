@@ -21,7 +21,7 @@ import { useBusiness } from "@/components/business/BusinessContext";
 import { useAutoReload } from "@/components/insights/useAutoReload";
 import { useToast } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
-import type { AttentionCounts } from "@/lib/inboxBadges";
+import { attentionCountsFrom, waitingTotal, type AttentionCounts } from "@/lib/inboxBadges";
 import { businessLocation, inboxPath, isConversationPath } from "@/lib/navigation";
 import { canOpenPage } from "@/lib/sections";
 
@@ -51,18 +51,7 @@ function useLoadedAttentionCounts(businessId: string, enabled: boolean, isLive: 
   const poll = enabled && !isLive;
   useAutoReload(poll ? counts.reload : skipReload, { intervalMs: poll ? FALLBACK_POLL_MS : null });
   const data = counts.data;
-  return useMemo<AttentionCounts | null>(
-    () =>
-      data
-        ? {
-            openHandoffs: data.open_handoff_count,
-            newLeads: data.new_lead_count,
-            unconfirmedBookings: data.unconfirmed_booking_count,
-            channelErrors: data.channel_error_count,
-          }
-        : null,
-    [data],
-  );
+  return useMemo<AttentionCounts | null>(() => (data ? attentionCountsFrom(data) : null), [data]);
 }
 
 export function LiveEventsProvider({ enabled, children }: { enabled: boolean; children: ReactNode }) {
@@ -98,12 +87,7 @@ export function LiveEventsProvider({ enabled, children }: { enabled: boolean; ch
   const { status, reconnect } = useLiveStream(business.id, enabled, onEvent);
   const counts = useLoadedAttentionCounts(business.id, enabled, status === "live");
   const role = useMemberRole();
-  const waiting = counts
-    ? counts.openHandoffs +
-      counts.newLeads +
-      counts.unconfirmedBookings +
-      (canOpenPage("assistant/channels", role) ? counts.channelErrors : 0)
-    : 0;
+  const waiting = waitingTotal(counts, canOpenPage("assistant/channels", role));
   useDocumentTitleCount(enabled ? waiting : 0);
   const value = useMemo<LiveCabinet>(() => ({ counts, status, reconnect }), [counts, status, reconnect]);
   return <LiveContext.Provider value={value}>{children}</LiveContext.Provider>;

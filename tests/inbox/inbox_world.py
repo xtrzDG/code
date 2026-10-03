@@ -40,13 +40,13 @@ from app.use_cases.inbox.settings.get_inbox_settings_use_case import (
 from app.use_cases.inbox.settings.update_inbox_settings_use_case import (
     UpdateInboxSettingsUseCase,
 )
-from app.use_cases.inbox.views.count_inbox_views_use_case import (
-    CountInboxViewsUseCase,
-)
 from app.use_cases.inbox.views.list_inbox_assignees_use_case import (
     ListInboxAssigneesUseCase,
 )
 from app.use_cases.inbox.views.list_inbox_use_case import ListInboxUseCase
+from app.use_cases.insights.count_inbox_attention_use_case import (
+    CountInboxAttentionUseCase,
+)
 from tests.inbox.inbox_store import InboxStore
 
 
@@ -74,10 +74,12 @@ class InboxWorld(InboxStore):
             wall_clock=self.wall_clock,
         )
 
-    def count_views(self) -> CountInboxViewsUseCase:
-        return CountInboxViewsUseCase(
+    def count_attention(self) -> CountInboxAttentionUseCase:
+        return CountInboxAttentionUseCase(
             authorize_business_access=self.authorize(),
             conversation_repo=self.conversation_repo,
+            attention_count_repo=self.attention_count_repo,
+            wall_clock=self.wall_clock,
         )
 
     def list_assignees(self) -> ListInboxAssigneesUseCase:

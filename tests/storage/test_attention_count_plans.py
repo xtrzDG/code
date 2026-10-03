@@ -18,9 +18,8 @@ from app.clients.postgres.postgres_connection_pool_client import (
     PostgresConnectionPoolClient,
 )
 from app.repositories.attention_count_repository import AttentionCountRepository
-from app.schemas.domain.bookings import BookingDocument, LeadDocument
+from app.schemas.domain.bookings import BookingDocument
 from app.schemas.domain.channels import ChannelDocument
-from app.schemas.domain.handoffs import HandoffDocument
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.platform.strings import DatabaseUrl
 from app.schemas.typings.storage.constrained_strings import DocumentCollectionName
@@ -41,10 +40,6 @@ ROWS_PER_TABLE: int = 6_000
 BUSINESSES: list[BusinessId] = [BusinessId() for _ in range(30)]
 NOW: Microseconds = Microseconds(1_790_812_800_000_000)
 STATUSES: dict[str, LiteralString] = {
-    "handoffs": "(array['pending', 'notified', 'notification_failed', 'resolved',"
-    " 'resolved', 'resolved', 'resolved', 'resolved'])[1 + (n / 30) %% 8]",
-    "leads": "(array['new', 'in_progress', 'won', 'lost', 'won', 'lost'])"
-    "[1 + (n / 30) %% 6]",
     "bookings": "(array['pending', 'confirmed', 'confirmed', 'completed',"
     " 'cancelled', 'no_show'])[1 + (n / 30) %% 6]",
     "channels": "(array['connected', 'connected', 'disabled', 'error'])"
@@ -52,19 +47,8 @@ STATUSES: dict[str, LiteralString] = {
 }
 type CountQuery = Callable[[AttentionCountRepository, BusinessId], object]
 # Each count, its table and the indexes that lead with the business and the
-# status (open handoffs may also use the work-queue index of migration 1042,
-# which starts with the same two columns).
+# status. The inbox views are counted by conversation (tests/inbox).
 COUNT_QUERIES: dict[str, tuple[CountQuery, str, frozenset[str]]] = {
-    "open handoffs": (
-        lambda repo, business: repo.count_open_handoffs(business),
-        "handoffs",
-        frozenset({"handoffs_doc_status_idx", "handoffs_doc_queue_idx"}),
-    ),
-    "new leads": (
-        lambda repo, business: repo.count_new_leads(business),
-        "leads",
-        frozenset({"leads_doc_status_idx"}),
-    ),
     "unconfirmed bookings": (
         lambda repo, business: repo.count_unconfirmed_bookings(business, NOW),
         "bookings",
@@ -121,9 +105,7 @@ def seeded_database_url(
 def attention_repository(
     pool: PostgresConnectionPoolClient, scope: StorageScopeContext
 ) -> AttentionCountRepository:
-    def collection[
-        Document: HandoffDocument | LeadDocument | BookingDocument | ChannelDocument
-    ](
+    def collection[Document: BookingDocument | ChannelDocument](
         document_type: type[Document], name: str
     ) -> PostgresDocumentCollectionAdapter[Document]:
         return PostgresDocumentCollectionAdapter[Document](
@@ -136,8 +118,6 @@ def attention_repository(
         )
 
     return AttentionCountRepository(
-        collection(HandoffDocument, "handoffs"),
-        collection(LeadDocument, "leads"),
         collection(BookingDocument, "bookings"),
         collection(ChannelDocument, "channels"),
     )

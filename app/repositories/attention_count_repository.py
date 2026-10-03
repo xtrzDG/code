@@ -1,4 +1,8 @@
-"""Indexed counts of the waiting items of a business (navigation badges)."""
+"""
+Indexed counts of the waiting work of a business beyond the inbox views
+(navigation badges): bookings to confirm and channels in error. What waits
+in the inbox is counted by conversation (`ConversationTeamRepoContract`).
+"""
 
 from collections.abc import Sequence
 
@@ -10,12 +14,10 @@ from app.contracts.repositories.attention_repositories import (
     AttentionCountRepoContract,
 )
 from app.repositories.document_queries import field_equals, of_business
-from app.schemas.constants.bookings import BookingStatus, LeadStatus
+from app.schemas.constants.bookings import BookingStatus
 from app.schemas.constants.channels import ChannelStatus
-from app.schemas.constants.handoffs import HandoffStatus
-from app.schemas.domain.bookings import BookingDocument, LeadDocument
+from app.schemas.domain.bookings import BookingDocument
 from app.schemas.domain.channels import ChannelDocument
-from app.schemas.domain.handoffs import HandoffDocument
 from app.schemas.dto.storage_queries import DocumentFieldMatch, DocumentFieldRange
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.platform.constrained_integers import ListItemCount
@@ -30,48 +32,26 @@ STARTS_AT_FIELD: DocumentFieldPath = DocumentFieldPath("starts_at")
 NOT_SANDBOX: DocumentFieldMatch = DocumentFieldMatch(
     field=IS_SANDBOX_FIELD, value=DocumentFieldText("false")
 )
-OPEN_HANDOFF_STATUSES: tuple[HandoffStatus, ...] = tuple(
-    status for status in HandoffStatus if status is not HandoffStatus.RESOLVED
-)
 MICROSECONDS_PER_SECOND: int = 1_000_000
 
 
 class AttentionCountRepository(AttentionCountRepoContract):
     """
     Each count matches the business and a status (one index of the
-    business and status, see migration 1040), narrowed to real activity by
-    `is_sandbox`; unconfirmed bookings also by their start time.
+    business and status, see migration 1040); unconfirmed bookings are
+    narrowed to real activity by `is_sandbox` and by their start time.
     """
 
     def __init__(
         self,
-        handoff_collection: DocumentCollectionAdapterContract[HandoffDocument],
-        lead_collection: DocumentCollectionAdapterContract[LeadDocument],
         booking_collection: DocumentCollectionAdapterContract[BookingDocument],
         channel_collection: DocumentCollectionAdapterContract[ChannelDocument],
     ) -> None:
-        self._handoffs: DocumentCollectionAdapterContract[HandoffDocument] = (
-            handoff_collection
-        )
-        self._leads: DocumentCollectionAdapterContract[LeadDocument] = lead_collection
         self._bookings: DocumentCollectionAdapterContract[BookingDocument] = (
             booking_collection
         )
         self._channels: DocumentCollectionAdapterContract[ChannelDocument] = (
             channel_collection
-        )
-
-    def count_open_handoffs(self, business_id: BusinessId) -> ListItemCount:
-        return ListItemCount(
-            sum(
-                count_with_status(self._handoffs, business_id, status, NOT_SANDBOX)
-                for status in OPEN_HANDOFF_STATUSES
-            )
-        )
-
-    def count_new_leads(self, business_id: BusinessId) -> ListItemCount:
-        return ListItemCount(
-            count_with_status(self._leads, business_id, LeadStatus.NEW, NOT_SANDBOX)
         )
 
     def count_unconfirmed_bookings(

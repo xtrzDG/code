@@ -408,10 +408,11 @@ export interface paths {
         };
         /**
          * Get Attention Counts Route
-         * @description What waits for a person (sandbox excluded): open handoffs, new
-         *     requests, upcoming bookings to confirm and channels in error; the
-         *     badges of the cabinet's navigation. Indexed counts only, no personal
-         *     data, so it records no view.
+         * @description What waits for a person (sandbox excluded): conversations that need
+         *     a person or have an open request, unassigned and mine, upcoming
+         *     bookings to confirm and channels in error; the badges of the
+         *     cabinet's navigation, the same numbers as …/inbox/counts. Indexed
+         *     counts only, no personal data, so it records no view.
          */
         get: operations["get_attention_counts_route_v1_businesses__business_id__attention_counts_get"];
         put?: never;
@@ -1073,28 +1074,6 @@ export interface paths {
         };
         /** List Inbox */
         get: operations["list_inbox_v1_businesses__business_id__inbox_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/businesses/{business_id}/inbox-counts": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Inbox Counts Route
-         * @description Open handoffs and new requests (sandbox excluded): the badges on
-         *     Messages. Counts only, so the cabinet polls it without recording a
-         *     view of personal data.
-         */
-        get: operations["get_inbox_counts_route_v1_businesses__business_id__inbox_counts_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2515,6 +2494,7 @@ export interface components {
          *     load, package use in the current period, cost and margin, and health.
          */
         AdminClientSummary: {
+            autotest_verdict?: components["schemas"]["ClientAutotestVerdict"] | null;
             billing_period?: components["schemas"]["BillingPeriod"] | null;
             /** Business Id */
             business_id: string;
@@ -2853,24 +2833,6 @@ export interface components {
             voice_agent_id?: string | null;
         };
         /**
-         * AttentionCounts
-         * @description Handoffs nobody has resolved yet, requests still new, bookings still
-         *     waiting for confirmation and channels the platform refused. Sandbox
-         *     activity (the owner's test chat, autotests) is not counted.
-         */
-        AttentionCounts: {
-            /** Business Id */
-            business_id: string;
-            /** Channel Error Count */
-            channel_error_count: number;
-            /** New Lead Count */
-            new_lead_count: number;
-            /** Open Handoff Count */
-            open_handoff_count: number;
-            /** Unconfirmed Booking Count */
-            unconfirmed_booking_count: number;
-        };
-        /**
          * AuditAction
          * @description Operation on personal data recorded in the audit log (concept section
          *     10), or a launch decision that must stay traceable (publishing a version
@@ -2914,6 +2876,15 @@ export interface components {
             /** Next Cursor */
             next_cursor?: string | null;
         };
+        /**
+         * AutotestCheckCode
+         * @description Why the test harness failed a scenario, as a code each language renders:
+         *     a deterministic check of what the assistant did (no booking, no handoff,
+         *     records nobody asked for, a reply in another script), or why the
+         *     scenario could not be evaluated at all.
+         * @enum {string}
+         */
+        AutotestCheckCode: "no_booking_created" | "not_handed_off" | "unexpected_records" | "wrong_reply_language" | "conversation_failed" | "no_customer_message" | "judge_unavailable" | "judge_unreadable";
         /**
          * AutotestOutcome
          * @description Result of one autotest scenario.
@@ -2980,6 +2951,8 @@ export interface components {
          * @description Result of one autotest scenario.
          */
         AutotestScenarioResultView: {
+            /** Check Codes */
+            check_codes?: components["schemas"]["AutotestCheckCode"][];
             /** Check Notes */
             check_notes: string[];
             /** Cost Micro Usd */
@@ -3846,6 +3819,25 @@ export interface components {
             invoice_ids: string[];
             /** Payment Order Id */
             payment_order_id: string;
+        };
+        /**
+         * ClientAutotestVerdict
+         * @description The autotest verdict of the client's active version (the published one,
+         *     else the latest tested), exactly as the version stores it, so the admin
+         *     and the version page never disagree. Counts are None for a version
+         *     tested before verdicts were stored: its status says passed or not.
+         */
+        ClientAutotestVerdict: {
+            /** Average Score */
+            average_score?: number | null;
+            /** Is Passed */
+            is_passed: boolean;
+            /** Passed Count */
+            passed_count?: number | null;
+            /** Scenario Count */
+            scenario_count?: number | null;
+            /** Version Number */
+            version_number: number;
         };
         /**
          * ClientCabinetAccess
@@ -4773,14 +4765,21 @@ export interface components {
         };
         /**
          * FailedAutotestView
-         * @description A scenario that did not pass in the latest autotest run.
+         * @description A scenario that did not pass in the run of the active version's verdict.
+         *     Why, as codes every language renders: the harness checks that failed
+         *     (`check_codes`) and the judge's criteria scored below 3
+         *     (`low_criteria`). `judge_notes` is the judge's own text (English).
          */
         FailedAutotestView: {
+            /** Check Codes */
+            check_codes?: components["schemas"]["AutotestCheckCode"][];
             /** Judge Notes */
             judge_notes?: string[];
             kind: components["schemas"]["AutotestScenarioKind"];
             /** Language */
             language: string;
+            /** Low Criteria */
+            low_criteria?: components["schemas"]["JudgeCriterion"][];
             outcome: components["schemas"]["AutotestOutcome"];
             /** Scenario Key */
             scenario_key: string;
@@ -5221,17 +5220,51 @@ export interface components {
             user_id: string;
         };
         /**
-         * InboxCounts
-         * @description Handoffs nobody has resolved yet and requests still new. Sandbox activity
-         *     (the owner's test chat, autotests) is not counted.
+         * InboxAttentionCounts
+         * @description Conversations waiting for the team (sandbox left out), by inbox view:
+         *     those that need a person, those with an open request, those nobody is
+         *     assigned to, and those assigned to the viewer; plus pending bookings
+         *     that have not started yet and channels the platform refused. The inbox
+         *     badge is `needs_person + requests`, the sum of its two tabs.
+         *
+         *     The `*_count` fields are the names `/attention-counts` used before
+         *     2026-10; they carry the same numbers and go away in /v2.
          */
-        InboxCounts: {
+        InboxAttentionCounts: {
             /** Business Id */
             business_id: string;
-            /** New Lead Count */
+            /**
+             * Channel Error Count
+             * @deprecated
+             */
+            channel_error_count: number;
+            /** Channel Errors */
+            channel_errors: number;
+            /** Mine */
+            mine: number;
+            /** Needs Person */
+            needs_person: number;
+            /**
+             * New Lead Count
+             * @deprecated
+             */
             new_lead_count: number;
-            /** Open Handoff Count */
+            /**
+             * Open Handoff Count
+             * @deprecated
+             */
             open_handoff_count: number;
+            /** Requests */
+            requests: number;
+            /** Unassigned */
+            unassigned: number;
+            /**
+             * Unconfirmed Booking Count
+             * @deprecated
+             */
+            unconfirmed_booking_count: number;
+            /** Unconfirmed Bookings */
+            unconfirmed_bookings: number;
         };
         /**
          * InboxHandoffSummary
@@ -10535,7 +10568,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["AttentionCounts"];
+                    "application/json": components["schemas"]["InboxAttentionCounts"];
                 };
             };
             /** @description Sign-in required: the bearer token is missing, invalid or expired. */
@@ -14942,93 +14975,6 @@ export interface operations {
             };
         };
     };
-    get_inbox_counts_route_v1_businesses__business_id__inbox_counts_get: {
-        parameters: {
-            query?: never;
-            header?: {
-                authorization?: string | null;
-            };
-            path: {
-                business_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["InboxCounts"];
-                };
-            };
-            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorBody"];
-                };
-            };
-            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorBody"];
-                };
-            };
-            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorBody"];
-                };
-            };
-            /** @description Conflicts with the current state (stale revision, slot taken). */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorBody"];
-                };
-            };
-            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorBody"];
-                };
-            };
-            /** @description Too many requests; Retry-After, when present, says when to retry. */
-            429: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorBody"];
-                };
-            };
-            /** @description A provider (model, messaging, payments, telephony) failed. */
-            502: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorBody"];
-                };
-            };
-        };
-    };
     list_inbox_assignees_v1_businesses__business_id__inbox_assignees_get: {
         parameters: {
             query?: never;
@@ -15135,7 +15081,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["InboxViewCounts"];
+                    "application/json": components["schemas"]["InboxAttentionCounts"];
                 };
             };
             /** @description Sign-in required: the bearer token is missing, invalid or expired. */

@@ -11,6 +11,43 @@ Kinds of change: **Added**, **Changed** (additive), **Deprecated** (with
 sunset date), **Removed** and **Breaking** (only with the `api-breaking`
 label and a migration path).
 
+## 2026-10-03 — one source of truth: counts, autotest verdicts, exchange rates, channel addresses
+
+Spec: `23b62cd8f8db4420`
+
+- **Removed** (`api-breaking`) `GET /v1/businesses/{business_id}/inbox-counts`.
+  No client read it since the badges moved to `…/attention-counts`; it
+  counted handoffs and leads, while the inbox tabs count conversations.
+  Migration: read `needs_person` and `requests` of
+  `GET /v1/businesses/{business_id}/attention-counts` (or
+  `…/inbox/counts`).
+- **Changed** `GET /v1/businesses/{business_id}/attention-counts` and
+  `GET /v1/businesses/{business_id}/inbox/counts` answer the same
+  `InboxAttentionCounts`, counted once (`CountInboxAttentionUseCase`):
+  conversations waiting for the team by inbox view — `needs_person`,
+  `requests`, `unassigned`, `mine` (the viewer's) — plus
+  `unconfirmed_bookings` and `channel_errors`. The inbox badge is
+  `needs_person + requests`, the sum of its two tabs. `…/inbox/counts`
+  gains `business_id`, `unconfirmed_bookings` and `channel_errors`.
+- **Deprecated** (sunset 2027-04-01, removed in `/v2`) the old names of
+  `…/attention-counts`: `open_handoff_count`, `new_lead_count`,
+  `unconfirmed_booking_count`, `channel_error_count`. They stay in the
+  answer with the numbers of `needs_person`, `requests`,
+  `unconfirmed_bookings` and `channel_errors` (open handoffs and new
+  leads are now counted by their conversation, as the tabs count them).
+- **Added** `autotest_verdict` (`ClientAutotestVerdict`: version number,
+  `is_passed`, `passed_count`, `scenario_count`, `average_score`) to
+  `AdminClientSummary`: the verdict the active version (published, else
+  the latest tested) stores, the same one its version page shows.
+  `AUTOTESTS_FAILED` now follows it: a run that passed with a scenario
+  failed is no longer an issue. `failed_tests` is that run's failed
+  scenarios.
+- **Added** `check_codes` (`AutotestCheckCode`) and `low_criteria`
+  (`JudgeCriterion`) to `FailedAutotestView`, and `check_codes` to
+  `AutotestScenarioResultView`: why a scenario failed, as codes the
+  cabinet renders in every language (`judge_notes` and `check_notes`
+  stay English text).
+
 ## 2026-10-03 — encryption key rotation for platform admins
 
 Spec: `0ee9211ca86eb0d0`

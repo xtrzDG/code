@@ -56,7 +56,6 @@ from app.schemas.dto.operations.handoffs import (
     ListHandoffsQuery,
     ResolveHandoffCommand,
 )
-from app.schemas.dto.operations.inbox_counts import InboxCounts, InboxCountsQuery
 from app.schemas.dto.operations.leads import (
     LeadPage,
     ListLeadsQuery,
@@ -94,7 +93,6 @@ def build_operations_router(
         AnswerUnansweredQuestionCommand, AnsweredQuestionResult
     ],
     get_dashboard_stats: OperatorContract[DashboardStatsQuery, DashboardStats],
-    get_inbox_counts: OperatorContract[InboxCountsQuery, InboxCounts],
     start_calendar_connection: OperatorContract[
         StartCalendarConnectionCommand, CalendarConnectUrlView
     ],
@@ -148,7 +146,6 @@ def build_operations_router(
             current_user=current_user,
             authorize=authorize,
             get_dashboard_stats=get_dashboard_stats,
-            get_inbox_counts=get_inbox_counts,
         )
     )
     router.include_router(

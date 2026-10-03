@@ -15,6 +15,9 @@ from app.transformers.notifications.new_lead_notification_transformer import (
 from app.transformers.notifications.staff_alert_brief_transformer import (
     StaffAlertBriefTransformer,
 )
+from app.use_cases.authorize_business_access_use_case import (
+    AuthorizeBusinessAccessUseCase,
+)
 from app.use_cases.handoffs.answer_unanswered_question_use_case import (
     AnswerUnansweredQuestionUseCase,
 )
@@ -33,11 +36,10 @@ from app.use_cases.inbox.assignment.auto_assign_conversation_use_case import (
 from app.use_cases.inbox.assignment.refresh_open_request_use_case import (
     RefreshOpenRequestUseCase,
 )
-from app.use_cases.insights.get_attention_counts_use_case import (
-    GetAttentionCountsUseCase,
+from app.use_cases.insights.count_inbox_attention_use_case import (
+    CountInboxAttentionUseCase,
 )
 from app.use_cases.insights.get_dashboard_stats_use_case import GetDashboardStatsUseCase
-from app.use_cases.insights.get_inbox_counts_use_case import GetInboxCountsUseCase
 from app.use_cases.leads.create_lead_use_case import CreateLeadUseCase
 from app.use_cases.leads.list_leads_use_case import ListLeadsUseCase
 from app.use_cases.leads.update_lead_status_use_case import UpdateLeadStatusUseCase
@@ -158,15 +160,15 @@ class OperationsWorld(OperationsBookingFactories):
             wall_clock=self.clock.wall_clock,
         )
 
-    def inbox_counts(self) -> GetInboxCountsUseCase:
-        return GetInboxCountsUseCase(
-            business_repo=self.business_repo,
-            attention_count_repo=self.attention_count_repo,
-        )
-
-    def get_attention_counts(self) -> GetAttentionCountsUseCase:
-        return GetAttentionCountsUseCase(
-            business_repo=self.business_repo,
+    def count_attention(self) -> CountInboxAttentionUseCase:
+        return CountInboxAttentionUseCase(
+            authorize_business_access=AuthorizeBusinessAccessUseCase(
+                business_repo=self.business_repo,
+                user_repo=self.user_repo,
+                audit_log_repo=self.audit_repo,
+                wall_clock=self.clock.wall_clock,
+            ),
+            conversation_repo=self.conversation_repo,
             attention_count_repo=self.attention_count_repo,
             wall_clock=self.clock.wall_clock,
         )

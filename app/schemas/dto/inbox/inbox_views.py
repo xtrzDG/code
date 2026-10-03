@@ -73,13 +73,6 @@ class InboxQuery(ImmutableDTO):
     client_ip_address: ClientIpAddress | None = None
 
 
-class InboxViewCountsQuery(ImmutableDTO):
-    """The counts of the inbox views as one member sees them."""
-
-    user_id: UserId
-    business_id: BusinessId
-
-
 class InboxViewCounts(ImmutableDTO):
     """
     How many conversations each view holds (sandbox left out): those that

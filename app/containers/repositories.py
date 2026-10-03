@@ -179,8 +179,6 @@ class RepositoriesContainer(
     # Indexed counts of what waits for a person (navigation badges).
     attention_count_repo: Singleton[AttentionCountRepository] = Singleton(
         AttentionCountRepository,
-        handoff_collection=collections.handoff_collection,
-        lead_collection=collections.lead_collection,
         booking_collection=collections.booking_collection,
         channel_collection=collections.channel_collection,
     )

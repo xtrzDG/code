@@ -76,7 +76,7 @@ export function DashboardScreen({ initialPeriod }: { initialPeriod: DashboardPer
 
   const step = nextStep(business);
   const missingCount = (gaps.data?.gaps ?? []).filter((gap) => gap.is_blocking).length ?? 0;
-  const openHandoffCount = inbox?.openHandoffs;
+  const openHandoffCount = inbox?.needsPerson;
   const data = stats.data;
   const hasActivity =
     data !== undefined &&

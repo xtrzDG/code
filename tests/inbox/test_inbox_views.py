@@ -6,12 +6,8 @@ from app.schemas.constants.channels import ChannelKind
 from app.schemas.constants.compliance import AuditAction
 from app.schemas.constants.inbox import InboxView
 from app.schemas.domain.conversations import ConversationDocument
-from app.schemas.dto.inbox.inbox_views import (
-    InboxPage,
-    InboxQuery,
-    InboxViewCounts,
-    InboxViewCountsQuery,
-)
+from app.schemas.dto.inbox.inbox_attention import InboxAttentionQuery
+from app.schemas.dto.inbox.inbox_views import InboxPage, InboxQuery, InboxViewCounts
 from app.schemas.dto.paging import PageRequest
 from app.schemas.typings.platform.constrained_integers import ListItemCount, PageSize
 from app.schemas.typings.users.prefixed_id import UserId
@@ -100,15 +96,16 @@ def test_the_counts_of_each_view(scene: InboxScene) -> None:
     )
 
     assert page(scene, InboxView.ALL).counts == expected
-    assert (
-        world.count_views().run(
-            InboxViewCountsQuery(user_id=world.staff.id, business_id=world.business.id)
+    for viewer, mine in ((world.staff.id, 1), (world.owner.id, 0)):
+        counts = world.count_attention().run(
+            InboxAttentionQuery(user_id=viewer, business_id=world.business.id)
         )
-        == expected
-    )
-    assert world.count_views().run(
-        InboxViewCountsQuery(user_id=world.owner.id, business_id=world.business.id)
-    ) == expected.model_copy(update={"mine": ListItemCount(0)})
+        assert InboxViewCounts(
+            needs_person=counts.needs_person,
+            requests=counts.requests,
+            mine=counts.mine,
+            unassigned=counts.unassigned,
+        ) == expected.model_copy(update={"mine": ListItemCount(mine)})
 
 
 def test_the_counts_follow_a_resolution(scene: InboxScene) -> None:

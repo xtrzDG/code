@@ -23,6 +23,10 @@ from app.schemas.dto.inbox.conversation_notes import (
     DeleteConversationNoteCommand,
     DeletedConversationNote,
 )
+from app.schemas.dto.inbox.inbox_attention import (
+    InboxAttentionCounts,
+    InboxAttentionQuery,
+)
 from app.schemas.dto.inbox.inbox_settings import (
     InboxSettingsQuery,
     InboxSettingsView,
@@ -33,8 +37,6 @@ from app.schemas.dto.inbox.inbox_views import (
     InboxAssigneesQuery,
     InboxPage,
     InboxQuery,
-    InboxViewCounts,
-    InboxViewCountsQuery,
 )
 from app.schemas.dto.inbox.quick_replies import (
     ConversationQuickRepliesQuery,
@@ -81,13 +83,13 @@ from app.use_cases.inbox.settings.get_inbox_settings_use_case import (
 from app.use_cases.inbox.settings.update_inbox_settings_use_case import (
     UpdateInboxSettingsUseCase,
 )
-from app.use_cases.inbox.views.count_inbox_views_use_case import (
-    CountInboxViewsUseCase,
-)
 from app.use_cases.inbox.views.list_inbox_assignees_use_case import (
     ListInboxAssigneesUseCase,
 )
 from app.use_cases.inbox.views.list_inbox_use_case import ListInboxUseCase
+from app.use_cases.insights.count_inbox_attention_use_case import (
+    CountInboxAttentionUseCase,
+)
 
 
 class InboxUseCasesContainer(containers.DeclarativeContainer):
@@ -115,12 +117,16 @@ class InboxUseCasesContainer(containers.DeclarativeContainer):
         audit_log_repo=repositories.audit_log_repo,
         wall_clock=time_provider.microsecond_wall_clock,
     )
-    count_inbox_views_use_case: Factory[
-        UseCaseContract[InboxViewCountsQuery, InboxViewCounts]
+    # The one count of what waits for the team: the inbox tabs and every
+    # badge of the navigation (GET …/inbox/counts and …/attention-counts).
+    count_inbox_attention_use_case: Factory[
+        UseCaseContract[InboxAttentionQuery, InboxAttentionCounts]
     ] = Factory(
-        CountInboxViewsUseCase,
+        CountInboxAttentionUseCase,
         authorize_business_access=account_use_cases.authorize_business_access_use_case,
         conversation_repo=repositories.conversation_repo,
+        attention_count_repo=repositories.attention_count_repo,
+        wall_clock=time_provider.microsecond_wall_clock,
     )
     list_inbox_assignees_use_case: Factory[
         UseCaseContract[InboxAssigneesQuery, InboxAssigneeList]

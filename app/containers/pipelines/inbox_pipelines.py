@@ -13,8 +13,8 @@ class InboxPipelinesContainer(containers.DeclarativeContainer):
     inbox: InboxOrchestratorsContainer = DependenciesContainer()  # type: ignore[assignment]
 
     list_inbox_pipeline = orchestrator_pipeline(inbox.list_inbox_orchestrator)
-    count_inbox_views_pipeline = orchestrator_pipeline(
-        inbox.count_inbox_views_orchestrator
+    count_inbox_attention_pipeline = orchestrator_pipeline(
+        inbox.count_inbox_attention_orchestrator
     )
     list_inbox_assignees_pipeline = orchestrator_pipeline(
         inbox.list_inbox_assignees_orchestrator
