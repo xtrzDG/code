@@ -430,7 +430,7 @@ section tabs, page titles and the e2e suite read it):
 
 | Page | What the owner does there |
 | --- | --- |
-| Overview | What the assistant is worth (owners: its bookings times the average check, after-hours conversations, staff time saved, against the period before; the average check is edited in place), the next step for the business status, open handoffs and unanswered questions (staff: their queue of the day), KPI tiles with change chips, a daily trend chart with a table view, package minutes and dialogs (staff too, without prices), languages/channels/handoff reasons |
+| Overview | What the assistant is worth (owners: its bookings times the average check, after-hours conversations, staff time saved, against the period before; the average check is edited in place), the setup guide (owners: the setup steps into the tunnel before the launch, then a test from the phone with a QR code, a second channel and the link for customers; skippable optional steps; a short "All set" card to put away; the status card stays only for an unpaid plan or a pause, and for staff), open handoffs and unanswered questions (staff: their queue of the day), KPI tiles with change chips, a daily trend chart with a table view, package minutes and dialogs (staff too, without prices), languages/channels/handoff reasons |
 | Overview → Reports | The month so far, stored monthly reports and weekly/daily digests with every number against the period before, the owner's choice of summaries (monthly, weekly, daily) |
 | Inbox | The team's one list: views Needs a person, Requests, Mine, Unassigned and All with live counts; a search and the history filters (period, status, test conversations) look through All; who handles each conversation, its notes, what waits. See [Inbox](#inbox) |
 | Inbox → a conversation | Made for a phone: the transcript under a folded header (customer, channel, who handles it; the rest in Details), what waits above it (the handoff's reason and urgency, open requests with their status), a sticky reply box with Resolve, Call and Book and quick replies after "/"; the assign menu; notes and details in a side panel (a column of their own from 1536 px, a sheet below). Calls with their summary and recording (downloaded once and audited when "Play recording" is pressed), rating, linked bookings, staff reply (after the WhatsApp 24-hour window: in the owner's approved template, or a pointer to Channels), booking for the customer with the confirmation prefilled. Model, tokens, cost and tool calls stay behind "Technical details" (open by default for platform admins) |
@@ -544,6 +544,26 @@ goes (the top bar says "Saving…" / "Saved"); `?step=` keeps the screen in
 the address, and `/b/{id}/setup` without it opens the first step not done
 (`resumePlace` in `lib/tunnel/steps.ts`). The tunnel is owners' only; the
 business frame draws it without the sidebar.
+
+### Setup guide and milestones
+
+The Overview's **setup guide** (`overview/_components/setupGuide/`, rules in
+`lib/setupGuide/guide.ts`) reads `GET …/setup` (`guide`): before the launch
+the setup's steps, each opening the tunnel at its screen ("Continue setup"
+resumes where the owner left off), and the three steps after it waiting;
+once live, "Try it from your phone" (the chat page's QR code; the card
+listens for the owner's message, `POST …/setup/phone-check`, and polls
+until it arrives), "Add a second channel" and "Show customers where to
+write" (a printed table card or a downloaded QR code marks it,
+`useShareMark`). A finished guide shows "All set" once, then the owner puts
+it away. Until then a **progress ring** sits at the top of the sidebar and in
+the phone's top bar (`components/setupGuide/SetupRing.tsx`), linking back to
+`#setup-guide`. **Milestones** (first conversation, first booking, first
+booking after hours) show a toast with a small burst once
+(`MilestoneCelebrations`, acknowledged with `POST …/celebrate`; old ones and
+the owner's own phone test are acknowledged quietly). The subscribe dialog
+offers both setup options (`SetupOptionPicker`), and Settings → Notifications
+has the owner's switch for the setup reminders (`SetupRemindersCard`).
 
 ### Installable app
 

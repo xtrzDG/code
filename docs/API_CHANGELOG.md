@@ -11,6 +11,47 @@ Kinds of change: **Added**, **Changed** (additive), **Deprecated** (with
 sunset date), **Removed** and **Breaking** (only with the `api-breaking`
 label and a migration path).
 
+## 2026-10-03 — the setup guide, self-serve setup and setup reminders
+
+Spec: `4f97fcafe0dae3be`
+
+- **Added** `SetupView.guide` (`SetupGuideView`) on
+  `GET /v1/businesses/{business_id}/setup`: the steps after the launch
+  (`steps_after_launch`: `phone_test`, `second_channel`, `share`), the
+  guide's `next_step` and `next_action`, `percent`, `minutes_left`,
+  `is_complete`, `is_dismissed`, and the phone check
+  (`is_phone_check_listening`, `phone_check_until`, `phone_tested_at`).
+  `SetupStepCode` gains `phone_test`, `second_channel` and `share`;
+  `SetupActionTarget` gains `phone_test` and `share`; both are read by
+  the cabinet of this release, and a client that does not know a step
+  can show its `title`, `description` and `action.label`.
+- **Added** `POST /v1/businesses/{business_id}/setup/phone-check`
+  (listen half an hour for the owner's own message from a phone),
+  `POST …/setup/share-marks/{mark}` (`printed_qr`, `downloaded_qr`;
+  `204`), `PUT`/`DELETE …/setup/guide-dismissal` (owners; `409` while the
+  guide is unfinished; `DELETE` answers `204`) and
+  `GET`/`PUT …/setup/reminders` (`SetupRemindersView`; `PUT` owners,
+  body `{"is_on": false}` turns the activation reminders off).
+- **Added** `ActivationEventKind.first_after_hours_booking`, celebrated
+  once through `POST …/setup/milestones/{kind}/celebrate` like the other
+  milestones.
+- **Added** `StaffLinkTarget` values `overview`, `setup`, `channels`,
+  `share` and `billing` (signed links of milestone notices and setup
+  reminders, resolved by `GET /v1/businesses/{business_id}/notification-links/{token}`).
+- **Added** setup options: `PlanQuote.setup_options`
+  (`SetupOptionQuote`: `self_serve` free, `done_for_you` the plan's
+  setup fee), `SubscriptionView.setup_option` and
+  `onboarding_requested_at`, `AdminClientSummary.setup_option` and
+  `onboarding_request` (`OnboardingRequestView`), and
+  `setup_option` in the body of
+  `POST /v1/businesses/{business_id}/billing/subscribe` (default
+  `self_serve`).
+- **Changed** the one-time setup fee is invoiced only for a
+  `done_for_you` subscription (an onboarding request reaches the
+  platform team); `self_serve` and subscriptions from before the choice
+  (`setup_option: null`) pay none. `PlanQuote.setup_fee` stays the
+  `done_for_you` fee.
+
 ## 2026-10-03 — widget messages are answered by the worker
 
 Spec: `66ff36e8e31c29a8`
