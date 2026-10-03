@@ -114,6 +114,21 @@ class BookingListing(BusinessScopedRepository[BookingDocument]):
         )
         return sorted(bookings, key=lambda booking: int(booking.starts_at))
 
+    def list_ending_between(
+        self,
+        business_id: BusinessId,
+        ended_after: BookingSearchBoundSeconds,
+        ended_by: BookingSearchBoundSeconds,
+    ) -> list[BookingDocument]:
+        return self._list_in_range(
+            business_id,
+            DocumentFieldRange(
+                field=ENDS_AT_FIELD,
+                lower=DocumentFieldInteger(int(ended_after) + 1),
+                upper=DocumentFieldInteger(int(ended_by) + 1),
+            ),
+        )
+
     def list_by_conversation(
         self,
         business_id: BusinessId,

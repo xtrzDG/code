@@ -42,6 +42,18 @@ class BookingListingContract(Protocol):
         """Bookings not over at `moment`, by start time (availability)."""
         raise NotImplementedError
 
+    def list_ending_between(
+        self,
+        business_id: BusinessId,
+        ended_after: BookingSearchBoundSeconds,
+        ended_by: BookingSearchBoundSeconds,
+    ) -> list[BookingDocument]:
+        """
+        Bookings that ended after `ended_after` and by `ended_by`, by end
+        time (the visits to ask about).
+        """
+        raise NotImplementedError
+
     def list_by_conversation(
         self, business_id: BusinessId, conversation_id: ConversationId
     ) -> list[BookingDocument]:

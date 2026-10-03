@@ -97,9 +97,14 @@ class BusinessProfileDocument(BaseDocument):
     assistant see it as the link of kind `BusinessLinkKind.PRIVACY`; it is
     kept apart from `links` so a release that does not know that kind
     still reads every profile (docs/operations/deploys.md, enum values).
+
+    Version 3: `google_review_url`, the business's Google review page
+    (optional), seen as the link of kind `BusinessLinkKind.GOOGLE_REVIEW`
+    and kept apart from `links` for the same reason; the review requests
+    after visits send it (Settings → Reviews).
     """
 
-    schema_version: SchemaVersion = SchemaVersion("2")
+    schema_version: SchemaVersion = SchemaVersion("3")
     business_id: BusinessId
     niche_key: NicheKey
     answers_language: LanguageTag
@@ -112,5 +117,6 @@ class BusinessProfileDocument(BaseDocument):
     tone: ToneText | None = None
     links: list[BusinessLink] = Field(default_factory=list[BusinessLink])
     privacy_notice_url: WebLink | None = None
+    google_review_url: WebLink | None = None
     niche_answers: list[ProfileAnswer] = Field(default_factory=list[ProfileAnswer])
     is_recording_notice_enabled: IsRecordingNoticeEnabled = True

@@ -177,4 +177,18 @@ DOCUMENT_LOOKUP_FIELDS: Mapping[
     DocumentCollectionName("missed_calls"): (_integer("created_at"),),
     # The FAQ of a business: the website chat's starter questions (1052).
     DocumentCollectionName("knowledge_items"): (_text("kind"),),
+    # Feedback after visits (1062): the businesses that ask (the periodic
+    # job, across businesses); a customer's request waiting for a rating;
+    # a review link by its public token (across businesses); the requests
+    # of a business newest first, and their counts, rating and link-visit
+    # sums by status for the statistics.
+    DocumentCollectionName("review_settings"): (_text("is_feedback_enabled"),),
+    DocumentCollectionName("feedback_requests"): (
+        _text("contact_id"),
+        _text("status"),
+        _text("review_token"),
+        _integer("created_at"),
+        _integer("score"),
+        _integer("review_clicks"),
+    ),
 }
