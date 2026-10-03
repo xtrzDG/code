@@ -177,11 +177,13 @@ describe("replies sent as a WhatsApp template", () => {
 });
 
 describe("template languages", () => {
-  it("are named in the interface language with their code", () => {
-    expect(templateLanguageName("en_US", "en")).toBe("American English (en_US)");
-    expect(templateLanguageName("ka", "en")).toBe("Georgian (ka)");
-    expect(templateLanguageName("ru", "ru")).toBe("русский (ru)");
-    expect(templateLanguageName("zz_ZZ", "en")).toContain("zz_ZZ");
+  it("are named in the interface language, without their code", () => {
+    // Names only, no codes ("Русский", not "русский (ru)"), Georgian too.
+    expect(templateLanguageName("en_US", "en")).toBe("American English");
+    expect(templateLanguageName("ka", "en")).toBe("Georgian");
+    expect(templateLanguageName("ru", "ru")).toBe("Русский");
+    expect(templateLanguageName("ru", "ka")).toBe("რუსული");
+    expect(templateLanguageName("zz_ZZ", "en")).not.toBe("");
   });
 });
 

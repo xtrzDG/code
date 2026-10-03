@@ -23,7 +23,7 @@ export const tunnelBusinessRu: Translation<typeof tunnelBusinessEn> = {
     title: "Где вы находитесь?",
     text: "От страны зависят валюта, часовой пояс и языки ваших клиентов. Мы заполнили всё, что смогли.",
     country: "Страна",
-    countryHint: "Цены в валюте {currency}",
+    countryHint: "Валюта цен: {currency}",
     countryFixed: "Страну нельзя изменить после создания помощника.",
     city: "Город",
     cityPlaceholder: "Например, Тбилиси",

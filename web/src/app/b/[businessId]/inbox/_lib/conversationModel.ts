@@ -15,6 +15,7 @@ import type {
   StaffReplyView,
 } from "@/components/insights/types";
 import type { MessageKey } from "@/i18n/translate";
+import { languageName } from "@/lib/format";
 
 export const CONVERSATION_PERIODS = ["all", "today", "7d", "30d"] as const;
 export type ConversationPeriod = (typeof CONVERSATION_PERIODS)[number];
@@ -229,16 +230,15 @@ export function isSendableTemplateReply(text: string, maxLength: number): boolea
 }
 
 /**
- * A WhatsApp template language ("pt_BR") by name in the interface language
- * ("Brazilian Portuguese (pt_BR)"); the code alone when Intl does not know it.
+ * A WhatsApp template's language as people name it ("Русский", "American
+ * English", "ქართული"), without the code: the CLDR names of the cabinet
+ * (every browser, Georgian too), then Intl; the code itself only for a
+ * language nobody can name.
  */
 export function templateLanguageName(code: string, locale: string): string {
-  try {
-    const name = new Intl.DisplayNames([locale], { type: "language" }).of(code.replace("_", "-"));
-    return name && name !== code && name !== code.replace("_", "-") ? `${name} (${code})` : code;
-  } catch {
-    return code;
-  }
+  const tag = code.replace("_", "-");
+  const name = languageName(tag, locale);
+  return name === tag ? code : name;
 }
 
 /** The owner's WhatsApp template that carries staff text once the 24-hour window has closed, or null. */

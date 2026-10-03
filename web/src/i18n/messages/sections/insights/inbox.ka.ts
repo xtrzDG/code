@@ -4,7 +4,7 @@ import type { Translation } from "../../../translate";
 import type { inboxEn } from "./inbox.en";
 
 export const inboxKa: Translation<typeof inboxEn> = {
-  title: "შემოსულები",
+  title: "შემოსული",
   viewsLabel: "რომელი საუბრები გამოჩნდეს",
   views: {
     needs_person: "ადამიანის დახმარება",
@@ -40,7 +40,7 @@ export const inboxKa: Translation<typeof inboxEn> = {
     },
   },
   showAll: "ყველა საუბრის ნახვა",
-  loading: "შემოსულები იტვირთება…",
+  loading: "შემოსული იტვირთება…",
   listLabel: "საუბრები",
   searchLabel: "ძიება ყველა საუბარში",
   searchPlaceholder: "ძიება: სახელი, ტელეფონი ან ტექსტი",
