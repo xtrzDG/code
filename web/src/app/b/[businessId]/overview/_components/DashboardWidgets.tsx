@@ -18,18 +18,24 @@ const STEP_STYLES: Record<NextStep["tone"], { box: string; icon: string; Icon: t
   danger: { box: "border-danger/25 bg-danger-soft", icon: "text-danger", Icon: IconAlert },
 };
 
-/** The business status with the one thing the owner should do next. */
+/**
+ * The business status with the one thing the owner should do next; before
+ * the launch, "Continue setup" back into the tunnel leads (setupHref).
+ */
 export function NextStepCard({
   step,
   status,
   href,
   note,
+  setupHref = null,
 }: {
   step: NextStep;
   status: ReactNode;
   /** Null hides the button (the viewer cannot act there). */
   href: string | null;
   note?: string | null;
+  /** The tunnel of a business not live yet (owners only). */
+  setupHref?: string | null;
 }) {
   const { t } = useI18n();
   const styles = STEP_STYLES[step.tone];
@@ -49,10 +55,15 @@ export function NextStepCard({
         <p className="text-sm text-ink-muted">{t(step.description)}</p>
         {note ? <p className="text-sm font-medium text-ink">{note}</p> : null}
       </div>
-      {href ? (
-        <ButtonLink href={href} variant="secondary" className="self-start sm:self-center">
-          {t(step.action)}
-        </ButtonLink>
+      {href || setupHref ? (
+        <div className="flex flex-wrap gap-2 self-start sm:shrink-0 sm:self-center">
+          {setupHref ? <ButtonLink href={setupHref}>{t("dashboard.continueSetup")}</ButtonLink> : null}
+          {href ? (
+            <ButtonLink href={href} variant={setupHref ? "ghost" : "secondary"}>
+              {t(step.action)}
+            </ButtonLink>
+          ) : null}
+        </div>
       ) : null}
     </section>
   );

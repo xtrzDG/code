@@ -82,7 +82,8 @@ export const tunnelLaunchEn = {
     open: "Open my assistant",
     nextTitle: "Next, when you're ready",
     next: {
-      channels: "Connect WhatsApp and Instagram",
+      offer: "Add what you offer, with prices",
+      channels: "Connect {channels}",
       knowledge: "Teach it more answers",
       messages: "Watch conversations come in",
     },

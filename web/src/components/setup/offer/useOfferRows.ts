@@ -4,8 +4,10 @@
  * The offer table of the tunnel and how it saves itself: a line is saved
  * when the owner leaves it (a new item, or a change to one), removed lines
  * are deleted, and Continue saves what is left. The niche's examples stay
- * suggestions until the owner gives them a price or edits them. Saves of
- * one line queue behind each other, so a line is never created twice.
+ * suggestions until the owner gives them a price or edits them; one the
+ * owner saved as their own line or removed is remembered (offerMemory), so
+ * a revisit does not offer it again. Saves of one line queue behind each
+ * other, so a line is never created twice.
  */
 
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -17,6 +19,7 @@ import { useQuery } from "@/api/useQuery";
 import type { KnowledgeItemDetails, KnowledgeItemKind, Schema } from "@/api/types";
 import { useI18n } from "@/i18n/client";
 import { blankOfferRow, editOfferRow, initialOfferRows, offerSave, savedOfferRow, type TunnelOfferRow } from "@/lib/tunnel/offer";
+import { browserStorage, exampleKeyOf, readDoneExamples, rememberDoneExample } from "@/lib/tunnel/offerMemory";
 
 import { useSaveTracker } from "../SaveTracker";
 
@@ -45,13 +48,24 @@ export function useOfferRows(businessId: string, examples: readonly Schema<"Star
 
   const items = knowledge.data?.items;
   if (rows === null && items && knowledge.updatedAt > loadedAfter) {
-    setRows(initialOfferRows(items, examples, currency));
+    setRows(initialOfferRows(items, examples, currency, readDoneExamples(browserStorage(), businessId)));
   }
   const shown = rows ?? [];
 
   useEffect(() => {
     latest.current = shown;
   });
+
+  /** An example the owner replaced with their own line or removed: not offered again. */
+  const markDone = useCallback(
+    (key: string) => {
+      const example = exampleKeyOf(key);
+      if (example) {
+        rememberDoneExample(browserStorage(), businessId, example);
+      }
+    },
+    [businessId],
+  );
 
   const update = (key: string, patch: Partial<Pick<TunnelOfferRow, "title" | "price" | "duration">>) =>
     setRows((current) => (current ?? []).map((row) => (row.key === key ? editOfferRow(row, patch) : row)));
@@ -87,6 +101,7 @@ export function useOfferRows(businessId: string, examples: readonly Schema<"Star
         request.then(
           (item) => {
             ids.current.set(key, item.id);
+            markDone(key);
             setRows((current) => (current ?? []).map((line) => (line.key === key ? savedOfferRow(line, item, currency) : line)));
             return true;
           },
@@ -96,7 +111,7 @@ export function useOfferRows(businessId: string, examples: readonly Schema<"Star
       setStatus((current) => ({ ...current, [key]: ok ? "saved" : "failed" }));
       return ok;
     },
-    [businessId, currency, track],
+    [businessId, currency, markDone, track],
   );
 
   /** Save one line (after any save of it still running); false when it is not valid yet or failed. */
@@ -113,6 +128,7 @@ export function useOfferRows(businessId: string, examples: readonly Schema<"Star
     await queue.current.get(key);
     const id = ids.current.get(key) ?? latest.current.find((item) => item.key === key)?.id ?? null;
     setRows((current) => (current ?? []).filter((item) => item.key !== key));
+    markDone(key);
     if (id) {
       await track(
         unwrap(api.DELETE("/v1/businesses/{business_id}/knowledge/{item_id}", { params: { path: { business_id: businessId, item_id: id } } })).then(

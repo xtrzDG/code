@@ -35,6 +35,8 @@ export const valueKa: Translation<typeof valueEn> = {
     hint: "რამდენს მოაქვს საშუალოდ ერთ ჯავშანს. მისით ჯავშნები ფულად გადაიანგარიშება; მოგვიანებით მას თქვენი მომსახურების რეალური ფასები ჩაანაცვლებს.",
   },
   delta: {
+    firstPeriod: "პირველი პერიოდი",
+    firstPeriodHint: "წინა პერიოდში აქტივობა არ ყოფილა: შესადარებელი ჯერ არაფერია",
     up: "ზრდა {change} — {against}",
     down: "კლება {change} — {against}",
     same: "უცვლელი — {against}",

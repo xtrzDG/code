@@ -64,11 +64,12 @@ export const bookingsKa: Translation<typeof bookingsEn> = {
     source: "წყარო",
   },
   actions: {
+    more: "სხვა",
     edit: "შეცვლა",
     label: "მოქმედებები",
     confirm: "დადასტურება",
     complete: "შედგა",
-    noShow: "არ მოვიდა",
+    noShow: "სტუმარი არ მოვიდა",
     reschedule: "გადატანა",
     cancel: "ჯავშნის გაუქმება",
   },

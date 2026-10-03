@@ -582,6 +582,25 @@ business frame draws it without the sidebar.
   sidebar, the user menu popover and the "More" sheet (VoiceOver on macOS
   and iOS Safari) after changing the frame.
 
+### Polish sweep (wave 7): before and after
+
+What the screenshot tour of wave 6 showed, and what the cabinet does now.
+Each line has a test (`e2e/` or a unit test) that fails if it comes back.
+
+| Screen | Before | After |
+| --- | --- | --- |
+| Tunnel | The backdrop's rings and floor lines ran through the finale's title and the cards; on a phone the floor lines crossed every card | A veil of the page colour sits behind each screen's content (`TunnelVeil`); the floor shows from md up (`setup-tunnel.spec`, elementFromPoint) |
+| Tunnel rail | The step's name was centred under the rail, not under its dot; "Saved" appearing pushed the rail | The name sits under the active dot (aligned to the end for the first and last); the save status has a slot as wide as its longest text |
+| Offer step | A revisit listed saved lines newest first and brought back examples the owner had replaced or removed | Saved lines keep the order they were added; replaced and removed examples are remembered per business (`lib/tunnel/offerMemory.ts`) |
+| Finale | "Connect WhatsApp and Instagram" even when they were connected | Next steps come from the setup and the channels: a skipped offer step, only the messengers still missing (`lib/tunnel/finale.ts`) |
+| Tunnel, phone | The offer-source tabs were cut off; "Someone else" stayed open after adding a person | The tabs scroll with a fade; the form closes and the person shows in the list |
+| Overview | A business not live yet saw "No active plan" and no way back into setup; chips showed the whole total as growth ("+1 920 GEL") against an empty period; a lone "·" started the phone's date line | "Continue setup", "Your free trial starts at launch"; "first period" chips; the dates take their own line |
+| Conversation | The sticky date chip covered messages; Hebrew and Arabic names jumped to the far end of the bar; admins saw raw tool JSON open on phones; the views wrapped onto two rows | The chip stays in the flow; the name sits in a `<bdi>` at the start; technical details start closed below lg and remember each person's choice; the views are one scrolling segmented row |
+| Booking dialog | Five buttons that wrapped ("Состоялась" alone on a row); "Не пришёл" and "Состоялась" before the booking started | One main action and "More"; completed and no-show wait for the start time; "Гость не пришёл" |
+| Channels | The embed code broke inside `</script>`; the share address was cut to "loc…" | One sideways-scrolling code block with its Copy button; the address keeps the page's name (a middle ellipsis) |
+| Settings | The SMS fallback stayed editable with text-backs off; "Send a test" worked for channels the server cannot send by | Both are disabled with the reason read out |
+| Copy | "ассистент" on Share, "Сообщения → Нужен человек", "код … через почту", "Цены в валюте грузинский лари", "русский (ru)", two Georgian words for Inbox, "six steps" on the landing page, raw E.164 numbers split over two lines, "Asia/Tbilisi (UTC+04:00)" in the zone list and the bookings and notifications notes | "помощник", "Входящие → Нужен человек", "по почте / по SMS / в WhatsApp", "Валюта цен: грузинский лари (GEL)", "Русский", "შემოსული", eight steps, "+995 555 00 00 01" on one line, "Тбилиси (UTC+4)" |
+
 ## Conventions
 
 ### Adding a business page
@@ -664,7 +683,16 @@ business frame draws it without the sidebar.
   after the label); sizes `sm` 32 px, `md` 36 px (like inputs), `lg` 44 px.
 - Customer texts (names, messages, questions) get `dir="auto"`; so do
   `Input` (text and search) and `Textarea`, so a name typed in Arabic reads
-  right to left in any interface language.
+  right to left in any interface language. A name in a heading or a row
+  next to an avatar goes in a `<bdi>` inside a `text-start` element: it keeps
+  its own direction but stays beside the avatar.
+- `ScrollRow` holds a row that may not fit (tabs, the inbox views): it never
+  wraps, scrolls sideways and fades out the side with more to see.
+- `OverflowMenu` ("More") keeps one main action in sight and puts the rest in
+  a menu (arrow keys, Escape gives the focus back); the booking dialog uses it.
+- A control that cannot be used yet says why: a disabled switch points at
+  its hint (`Switch describedBy`), a button that stays focusable uses
+  `aria-disabled` with `aria-describedby` on the reason.
 
 ### Calling the API
 
@@ -829,6 +857,20 @@ as `reasonMessages` to `useMutation`); never match the English message.
 Words follow the glossary (`docs/glossary.md`): "Needs a person", updates
 and checks, Platform; staff never see an English system text in a Russian or
 Georgian cabinet, and no sentence ends on a formatted date (a unit test).
+`src/i18n/glossary.test.ts` checks the dictionaries themselves: every text
+in its own script (no Cyrillic in English or Georgian, no Georgian in English
+or Russian, no Russian or Georgian text made mostly of Latin words beyond
+brand names), "помощник" and never "ассистент" in the Russian cabinet (the
+product's name aside), and version and autotest words only on the
+Assistant's advanced pages and the platform's. It replaces the screenshot
+tour's text lint.
+
+Phone numbers are shown with `formatPhone` (`src/lib/phone.ts`,
+libphonenumber-js with its small "min" metadata): "+995 555 00 00 01", always
+inside `dir="ltr"`. Time zones read "Тбилиси (UTC+4)" (`src/lib/timeZones.ts`):
+the city from `src/lib/zoneCities.generated.ts` (the backend's CLDR exemplar
+cities, written by `npm run gen:names`; browsers have no Georgian ones), the
+offset in force at the moment.
 
 **Pseudo-locale.** Russian and Georgian run 20–40 % longer than English. Start
 the cabinet with `PSEUDO_LOCALE=true` and set the cookie in the browser

@@ -44,15 +44,18 @@ test("the owner checks staff contacts and sees how notifications reach them", as
   await expect(levan).not.toContainText("777000111");
   await expect(levan.getByText(en.notifications.contacts.providerMissing)).toBeVisible();
 
-  // E-mail without SMTP outside production is written to the log: delivered.
-  await anna.getByRole("button", { name: fill(en.notifications.contacts.testLabel, { name: "Anna" }) }).click();
-  await expect(page.getByText(fill(en.notifications.contacts.testSimulated, { name: "Anna" }))).toBeVisible();
-  await expect(anna.getByText(en.notifications.contacts.status.delivered, { exact: true })).toBeVisible();
-
-  // Telegram without the platform bot cannot deliver, and says why.
-  await levan.getByRole("button", { name: fill(en.notifications.contacts.testLabel, { name: "Levan" }) }).click();
-  await expect(levan.getByText(en.notifications.contacts.status.dead, { exact: true })).toBeVisible();
-  await expect(levan.getByText("TELEGRAM_PLATFORM_BOT_TOKEN is not configured.")).toBeVisible();
+  // A channel the server has no provider for (this suite has no SMTP and no
+  // platform bot): no test to send, and the reason is read with the button.
+  for (const [row, name, channel] of [
+    [anna, "Anna", en.settings.contacts.channels.email],
+    [levan, "Levan", en.settings.contacts.channels.telegram],
+  ] as const) {
+    const sendTest = row.getByRole("button", { name: fill(en.notifications.contacts.testLabel, { name }) });
+    await expect(sendTest).toBeDisabled();
+    const reason = fill(en.notifications.contacts.testUnavailable, { channel });
+    await expect(sendTest).toHaveAccessibleDescription(reason);
+    await expect(row.getByText(reason)).toBeVisible();
+  }
 
   // The contact's quiet hours are switched off in its dialog.
   await anna.getByRole("button", { name: fill(en.settings.contacts.editLabel, { name: "Anna" }) }).click();

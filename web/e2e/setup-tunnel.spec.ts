@@ -17,6 +17,7 @@ import { expect, test } from "./support/fixtures";
 import { en } from "./support/messages";
 import {
   answerBusiness,
+  expectBackdropBehind,
   answerChannels,
   answerHours,
   answerOffer,
@@ -53,6 +54,7 @@ async function walkToLaunch(page: Page, email: string, onEachStep: () => Promise
 
 async function expectFinale(page: Page, businessId: string): Promise<void> {
   await expect(page.getByText("Salon Aurora").first()).toBeVisible();
+  await expectBackdropBehind(page, page.getByRole("heading", { level: 1, name: en.tunnelLaunch.finale.title }));
   // The business's own chat page, its link to copy and its QR code.
   await expect(page.getByText(/\/c\/salon-aurora/)).toBeVisible();
   await expect(page.getByRole("img", { name: /salon-aurora/ })).toBeVisible();
@@ -117,3 +119,57 @@ test.describe("on a phone", () => {
     await expectFinale(page, businessId);
   });
 });
+
+test.describe("the rail and the offer step", () => {
+  test.use({ viewport: { width: 1440, height: 900 } });
+
+  test("the step's name sits under its own dot, and 'Saved' does not move the rail", async ({ page, newOwner }) => {
+    await page.goto(`/b/${newOwner.businessId}/setup?step=offer`);
+    await expectStep(page, en.tunnelOffer.offer.title);
+    const rail = page.getByRole("navigation", { name: en.tunnel.railLabel });
+    const dot = (await rail.locator('[aria-current="step"]').boundingBox())!;
+    const label = (await rail.locator("[data-rail-label]").boundingBox())!;
+    expect(label.x).toBeLessThanOrEqual(dot.x + dot.width / 2);
+    expect(label.x + label.width).toBeGreaterThanOrEqual(dot.x + dot.width / 2);
+    expect(label.y).toBeGreaterThanOrEqual(dot.y + dot.height - 1);
+
+    const before = (await rail.boundingBox())!;
+    await priceOf(page, 1).fill("35");
+    // Leaving the line saves it.
+    await page.getByRole("heading", { level: 1, name: en.tunnelOffer.offer.title }).click();
+    await expect(page.locator("[data-save-slot]").getByText(en.tunnel.saved, { exact: true })).toBeVisible();
+    const after = (await rail.boundingBox())!;
+    expect([after.x, after.width]).toEqual([before.x, before.width]);
+  });
+
+  test("a revisit keeps the saved order and does not bring back replaced or removed examples", async ({ page, newOwner }) => {
+    await page.goto(`/b/${newOwner.businessId}/setup?step=offer`);
+    await expectStep(page, en.tunnelOffer.offer.title);
+    const names = page.getByRole("textbox", { name: new RegExp(`^${en.tunnelOffer.offer.name} \\d+$`) });
+    await expect(names.nth(2)).toBeVisible();
+    const [first, replaced, removed] = [await names.nth(0).inputValue(), await names.nth(1).inputValue(), await names.nth(2).inputValue()];
+
+    await priceOf(page, 1).fill("35");
+    await names.nth(1).fill("Balayage");
+    await priceOf(page, 2).fill("90");
+    await page.getByRole("button", { name: en.tunnelOffer.offer.removeRow.replace("{name}", removed) }).click();
+    await page.getByRole("button", { name: en.tunnelOffer.offer.addRow }).click();
+    const last = await names.count();
+    await names.nth(last - 1).fill("Beard trim");
+    await priceOf(page, last).fill("15");
+    await page.getByRole("button", { name: en.tunnel.continue, exact: true }).click();
+    await expectStep(page, en.tunnelOffer.hours.title);
+
+    await page.goto(`/b/${newOwner.businessId}/setup?step=offer`);
+    await expectStep(page, en.tunnelOffer.offer.title);
+    await expect(names.nth(2)).toHaveValue("Beard trim");
+    const shown = await names.evaluateAll((inputs) => inputs.map((input) => (input as HTMLInputElement).value));
+    expect(shown.slice(0, 3)).toEqual([first, "Balayage", "Beard trim"]);
+    expect(shown).not.toContain(replaced);
+    expect(shown).not.toContain(removed);
+  });
+});
+
+function priceOf(page: Page, row: number) {
+  return page.getByRole("textbox", { name: `${en.tunnelOffer.offer.price.replace("{currency}", "EUR")} ${row}` });
+}

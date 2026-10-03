@@ -4,7 +4,7 @@ import type { Translation } from "../../../translate";
 import type { inboxCardEn } from "./inboxCard.en";
 
 export const inboxCardKa: Translation<typeof inboxCardEn> = {
-  back: "შემოსულებში დაბრუნება",
+  back: "შემოსულში დაბრუნება",
   openDetails: "დეტალები",
   openDetailsOf: "საუბრის დეტალები: {name}",
   openNotes: "შენიშვნები",

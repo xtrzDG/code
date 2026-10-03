@@ -98,3 +98,21 @@ test("a new chat page address is taken at once, and the old one leads to it", as
   await expect(page).toHaveURL(new RegExp(`/c/${address}\\?src=flyer$`));
   await expect(page.getByRole("heading", { level: 1, name: business.name })).toBeVisible();
 });
+
+test.describe("on a phone", () => {
+  test.use({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
+
+  test("the chat page's address keeps its own name in sight", async ({ page, request, account, consoleErrors }) => {
+    consoleErrors.allow(SNIPPET_UNAVAILABLE);
+    const business = await openChatBusiness(request, account.token);
+    await page.goto(`/b/${business.id}/assistant/channels`);
+    const address = page.getByRole("region", { name: en.share.title }).getByTestId("share-chat-page-url");
+    await expect(address).toHaveText(`${new URL(WEB_URL).host}/c/${business.slug}`);
+    // The host may give way; the page's name is shown whole.
+    const slug = address.locator("[data-share-slug]");
+    await expect(slug).toHaveText(`/${business.slug}`);
+    expect(await slug.evaluate((element) => element.scrollWidth <= element.clientWidth)).toBe(true);
+    await address.scrollIntoViewIfNeeded();
+    await expect(slug).toBeInViewport({ ratio: 1 });
+  });
+});

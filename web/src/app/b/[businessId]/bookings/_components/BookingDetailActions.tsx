@@ -1,60 +1,80 @@
 "use client";
 
-import type { BookingView } from "@/components/insights/types";
-import { Button } from "@/components/ui";
-import { useI18n } from "@/i18n/client";
+import { useEffect, useState } from "react";
 
-import { bookingActions } from "../_lib/bookingList";
+import type { BookingView } from "@/components/insights/types";
+import { Button, OverflowMenu, type MenuAction } from "@/components/ui";
+import { useI18n } from "@/i18n/client";
+import type { MessageKey } from "@/i18n/translate";
+
+import { bookingActionLayout, bookingActions, hasStarted, localNowIn, type BookingActionKey } from "../_lib/bookingList";
 import type { BookingsPage } from "../_lib/useBookingsPage";
 
-/** The buttons under a booking's details: what its status allows, edit and close. */
+const LABELS: Record<BookingActionKey | "edit", MessageKey> = {
+  confirm: "bookings.actions.confirm",
+  complete: "bookings.actions.complete",
+  noShow: "bookings.actions.noShow",
+  reschedule: "bookings.actions.reschedule",
+  cancel: "bookings.actions.cancel",
+  edit: "bookings.actions.edit",
+};
+
+/** The business's local time now, moved on every minute (an open dialog crosses a booking's start). */
+function useLocalNow(timeZone: string): string {
+  const [now, setNow] = useState(() => localNowIn(timeZone));
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(localNowIn(timeZone)), 60_000);
+    return () => window.clearInterval(timer);
+  }, [timeZone]);
+  return now;
+}
+
+/**
+ * The buttons under a booking's details: one main action (confirm a
+ * request; once the booking has started, mark it completed; otherwise
+ * edit) and the rest under "More", cancelling last. "Completed" and
+ * "No-show" wait for the start time.
+ */
 export function BookingDetailActions({ booking, page }: { booking: BookingView; page: BookingsPage }) {
   const { t } = useI18n();
   const { setDialog, close, openCancel } = page;
-  const actions = bookingActions(booking.status);
-  const editButton = (
-    <Button variant="secondary" size="sm" onClick={() => setDialog({ kind: "edit", booking })}>
-      {t("bookings.actions.edit")}
-    </Button>
-  );
-  if (!Object.values(actions).some(Boolean)) {
-    return (
-      <div className="flex w-full flex-wrap justify-end gap-2">
-        {editButton}
-        <Button variant="secondary" size="sm" onClick={close}>
-          {t("common.close")}
-        </Button>
-      </div>
-    );
-  }
+  const localNow = useLocalNow(booking.timezone);
+  const actions = bookingActions(booking.status, hasStarted(booking, localNow));
+  const { primary, more } = bookingActionLayout(actions);
+
+  const run: Record<BookingActionKey | "edit", () => void> = {
+    confirm: () => void page.runStatus(booking, "confirmed"),
+    complete: () => void page.runStatus(booking, "completed"),
+    noShow: () => setDialog({ kind: "noShow", booking }),
+    reschedule: () => setDialog({ kind: "reschedule", booking }),
+    cancel: () => openCancel(booking),
+    edit: () => setDialog({ kind: "edit", booking }),
+  };
+  const menu: MenuAction[] = more.map((key) => ({
+    key,
+    label: t(LABELS[key]),
+    onSelect: run[key],
+    tone: key === "cancel" ? "danger" : undefined,
+  }));
+  const isFinished = !Object.values(actions).some(Boolean);
+
   return (
-    <div className="flex w-full flex-wrap justify-end gap-2" role="group" aria-label={t("bookings.actions.label")}>
-      {actions.cancel ? (
-        <Button variant="ghost" size="sm" className="text-danger! sm:mr-auto" onClick={() => openCancel(booking)}>
-          {t("bookings.actions.cancel")}
+    <div className="flex w-full flex-wrap items-center justify-end gap-2" role="group" aria-label={t("bookings.actions.label")}>
+      <OverflowMenu label={t("bookings.actions.more")} actions={menu} />
+      {isFinished ? (
+        <>
+          <Button variant="secondary" size="sm" className="whitespace-nowrap" onClick={run.edit}>
+            {t(LABELS.edit)}
+          </Button>
+          <Button variant="secondary" size="sm" className="whitespace-nowrap" onClick={close}>
+            {t("common.close")}
+          </Button>
+        </>
+      ) : (
+        <Button size="sm" className="whitespace-nowrap" variant={primary === "edit" ? "secondary" : "primary"} onClick={run[primary]}>
+          {t(LABELS[primary])}
         </Button>
-      ) : null}
-      {editButton}
-      {actions.noShow ? (
-        <Button variant="secondary" size="sm" onClick={() => setDialog({ kind: "noShow", booking })}>
-          {t("bookings.actions.noShow")}
-        </Button>
-      ) : null}
-      {actions.reschedule ? (
-        <Button variant="secondary" size="sm" onClick={() => setDialog({ kind: "reschedule", booking })}>
-          {t("bookings.actions.reschedule")}
-        </Button>
-      ) : null}
-      {actions.complete ? (
-        <Button variant="secondary" size="sm" onClick={() => void page.runStatus(booking, "completed")}>
-          {t("bookings.actions.complete")}
-        </Button>
-      ) : null}
-      {actions.confirm ? (
-        <Button size="sm" onClick={() => void page.runStatus(booking, "confirmed")}>
-          {t("bookings.actions.confirm")}
-        </Button>
-      ) : null}
+      )}
     </div>
   );
 }

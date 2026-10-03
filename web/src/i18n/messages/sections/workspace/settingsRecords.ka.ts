@@ -84,7 +84,7 @@ export const settingsRecordsKa: Translation<typeof settingsRecordsEn> = {
       business_cabinet: "ბიზნესის კაბინეტი",
       business: "ბიზნესი",
       queued_job: "ფონური დავალება",
-      inbox: "შემოსულები",
+      inbox: "შემოსული",
       conversation_assignment: "პასუხისმგებლის დანიშვნა",
       conversation_note: "გუნდის შენიშვნა",
       quick_reply: "სწრაფი პასუხი",

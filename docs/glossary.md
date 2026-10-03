@@ -14,7 +14,8 @@ the reviewers work from.
 
 | Concept (code name) | English | Russian | Georgian | Never write |
 |---|---|---|---|---|
-| The team's one list of conversations (`inbox`) | Inbox | Входящие | შემოსულები (in the navigation „შემოსული“, which fits the phone tab bar) | Messages, Сообщения, Мессенджер |
+| The AI front-line assistant | assistant | помощник | ასისტენტი | ассистент (only the product's own name „Мастерская ассистентов“ keeps it) |
+| The team's one list of conversations (`inbox`) | Inbox | Входящие | შემოსული (everywhere: the navigation, the page and sentences, „შემოსულში“) | Messages, Сообщения, Мессенджер, შემოსულები |
 | The inbox views (`needs_person`, `requests`, `mine`, `unassigned`, `all`) | Needs a person, Requests, Mine, Unassigned, All | Нужен человек, Заявки, Мои, Без ответственного, Все | ადამიანის დახმარება, მოთხოვნები, ჩემი, დაუნიშნავი, ყველა | Queue, Очередь, Тикеты |
 | Who handles a conversation (`assignee`, `assign`) | Handled by {name}; Assign; Take it; Unassign | Отвечает: {name}; Назначить; Взять себе; Снять назначение | პასუხისმგებელი: {name}; დანიშვნა; ჩემზე აღება; დანიშვნის მოხსნა | assignee, исполнитель, тикет |
 | An internal note on a conversation (`conversation note`) | note; "Only your team sees this" | заметка; «Это видит только ваша команда» | შენიშვნა; „ამას მხოლოდ თქვენი გუნდი ხედავს“ | comment (it is not sent), комментарий |

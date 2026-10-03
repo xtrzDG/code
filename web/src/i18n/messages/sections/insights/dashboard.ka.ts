@@ -75,7 +75,10 @@ export const dashboardKa: Translation<typeof dashboardEn> = {
     leads: "მოთხოვნები",
     handoffs: "ადამიანის დახმარება",
   },
+  continueSetup: "დაყენების გაგრძელება",
   usage: {
+    trialAtLaunchTitle: "საცდელი პერიოდი გაშვებისას დაიწყება",
+    trialAtLaunchDescription: "გაშვებამდე ტარიფი არ გჭირდებათ: უფასო საცდელი პერიოდი თავისით დაიწყება, როცა ასისტენტი ეთერში გავა.",
     noPlanStaff: "ბიზნესს ჯერ აქტიური ტარიფი არ აქვს. მას მფლობელი ირჩევს გადახდების განყოფილებაში.",
     overStaff: "ხმოვანი პაკეტი ამოიწურა: პაკეტს ზემოთ უკვე {minutes} წთ-ია.",
     warningStaff: "პაკეტის 80%-ზე მეტი გამოყენებულია.",

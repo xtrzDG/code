@@ -18,20 +18,31 @@ import { cn } from "@/lib/cn";
 
 export type SaveState = "idle" | "saving" | "saved" | "failed";
 
+const SAVE_STATES = ["saving", "saved", "failed"] as const;
+
+/**
+ * Whether the answers are saved, in a slot as wide as its longest text in
+ * this language (all three are laid over each other; only the current one
+ * shows), so the rail never moves when "Saved" comes or goes.
+ */
 function SaveStatus({ state }: { state: SaveState }) {
   const { t } = useI18n();
-  if (state === "idle") {
-    return null;
-  }
+  const texts = { saving: t("tunnel.saving"), saved: t("tunnel.saved"), failed: t("tunnel.saveFailed") };
   return (
-    <span
-      className={cn(
-        "hidden items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium md:inline-flex",
-        state === "failed" ? "bg-warning-soft text-warning" : "bg-surface-muted/70 text-ink-muted",
-      )}
-    >
-      {state === "saving" ? <Spinner size="sm" /> : state === "saved" ? <IconCheck className="size-3.5 text-success" aria-hidden /> : null}
-      {state === "saving" ? t("tunnel.saving") : state === "saved" ? t("tunnel.saved") : t("tunnel.saveFailed")}
+    <span className="hidden md:grid" data-save-slot>
+      {SAVE_STATES.map((shown) => (
+        <span
+          key={shown}
+          className={cn(
+            "col-start-1 row-start-1 inline-flex items-center gap-1.5 justify-self-end rounded-full px-2.5 py-1 text-xs font-medium whitespace-nowrap",
+            shown === "failed" ? "bg-warning-soft text-warning" : "bg-surface-muted/70 text-ink-muted",
+            shown !== state && "invisible",
+          )}
+        >
+          {shown === "saving" ? state === "saving" ? <Spinner size="sm" /> : <span className="size-4" /> : shown === "saved" ? <IconCheck className="size-3.5 text-success" aria-hidden /> : null}
+          {texts[shown]}
+        </span>
+      ))}
     </span>
   );
 }

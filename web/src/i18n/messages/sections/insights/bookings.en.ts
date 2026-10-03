@@ -64,6 +64,7 @@ export const bookingsEn = {
     source: "Source",
   },
   actions: {
+    more: "More",
     edit: "Edit",
     label: "Actions",
     confirm: "Confirm",

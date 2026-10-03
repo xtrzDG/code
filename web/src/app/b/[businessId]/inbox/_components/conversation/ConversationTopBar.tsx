@@ -17,6 +17,7 @@ import type { ConversationSummaryView } from "@/components/insights/types";
 import { useI18n } from "@/i18n/client";
 import { cn } from "@/lib/cn";
 import { languageName } from "@/lib/format";
+import { formatPhone } from "@/lib/phone";
 
 import { initialsOf } from "../../_lib/conversationModel";
 
@@ -43,7 +44,8 @@ export function ConversationTopBar({
   showPanelButtons: boolean;
 }) {
   const { t, tp, locale } = useI18n();
-  const name = conversation.contact_name ?? conversation.contact_phone_number ?? t("insights.unknownCustomer");
+  const phone = conversation.contact_phone_number ? formatPhone(conversation.contact_phone_number) : null;
+  const name = conversation.contact_name ?? phone ?? t("insights.unknownCustomer");
   const subline = [
     t(CHANNEL_LABELS[conversation.channel]),
     conversation.language ? languageName(conversation.language, locale) : null,
@@ -69,8 +71,9 @@ export function ConversationTopBar({
         {initialsOf(conversation.contact_name)}
       </span>
       <div className="min-w-0 flex-1 leading-tight">
-        <h2 id="conversation-title" className="truncate text-base font-semibold text-ink" dir="auto">
-          {name}
+        {/* The name keeps its own direction (<bdi>) but sits at the start, next to the avatar, in any script. */}
+        <h2 id="conversation-title" className="truncate text-start text-base font-semibold text-ink">
+          <bdi dir={conversation.contact_name ? "auto" : "ltr"}>{name}</bdi>
         </h2>
         <p className="truncate text-xs text-ink-subtle">{subline}</p>
       </div>

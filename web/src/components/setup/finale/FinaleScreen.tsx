@@ -12,14 +12,18 @@ import { useEffect, useRef } from "react";
 
 import { displayUrl } from "@/app/b/[businessId]/assistant/channels/_lib/share";
 import { useBusiness } from "@/components/business/BusinessContext";
-import { IconArrowRight, IconBook, IconExternal, IconInbox, IconPlug } from "@/components/icons";
+import { IconArrowRight, IconBook, IconExternal, IconInbox, IconPlug, IconTag } from "@/components/icons";
+import { CHANNEL_LABELS } from "@/components/insights/labels";
 import { Button, buttonClasses } from "@/components/ui";
 import { CopyButton } from "@/components/workspace/CopyButton";
 import { useI18n } from "@/i18n/client";
 import { cn } from "@/lib/cn";
+import { listFormat } from "@/lib/intl/formatters";
 import { businessPath, inboxPath } from "@/lib/navigation";
+import { finaleNextSteps, type FinaleNextKey } from "@/lib/tunnel/finale";
 
 import { QrImage } from "../QrImage";
+import { TunnelVeil } from "../TunnelVeil";
 import type { StepContext } from "../flow/stepContext";
 import { AssistantCard } from "./AssistantCard";
 import { Confetti } from "./Confetti";
@@ -27,23 +31,34 @@ import { useFinale } from "./useFinale";
 
 const PANEL = "rounded-3xl border border-line bg-surface/85 p-5 backdrop-blur-md sm:p-6";
 
+const NEXT_ICONS: Record<FinaleNextKey, typeof IconBook> = {
+  offer: IconTag,
+  channels: IconPlug,
+  knowledge: IconBook,
+  messages: IconInbox,
+};
+
 export function FinaleScreen({ ctx }: { ctx: StepContext }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const { business } = useBusiness();
   const finale = useFinale(ctx);
   const heading = useRef<HTMLHeadingElement>(null);
-  const next = [
-    { key: "channels", href: businessPath(ctx.businessId, "assistant/channels"), icon: IconPlug },
-    { key: "knowledge", href: businessPath(ctx.businessId, "assistant/knowledge"), icon: IconBook },
-    { key: "messages", href: inboxPath(ctx.businessId, "all"), icon: IconInbox },
-  ] as const;
+  const next = finaleNextSteps(ctx.setup, finale.channels).map((step) => ({
+    key: step.key,
+    href: step.page === "inbox" ? inboxPath(ctx.businessId, "all") : businessPath(ctx.businessId, step.page),
+    icon: NEXT_ICONS[step.key],
+    text: t(`tunnelLaunch.finale.next.${step.key}`, {
+      channels: listFormat(locale, { type: "conjunction" }).format((step.channels ?? []).map((channel) => t(CHANNEL_LABELS[channel]))),
+    }),
+  }));
 
   useEffect(() => {
     heading.current?.focus({ preventScroll: true });
   }, []);
 
   return (
-    <div className="mx-auto w-full max-w-5xl">
+    <div className="relative isolate mx-auto w-full max-w-5xl">
+      <TunnelVeil />
       <Confetti />
       <div className="text-center">
         <h1 ref={heading} tabIndex={-1} className="text-4xl leading-tight font-semibold tracking-tight text-balance text-ink outline-none! sm:text-5xl">
@@ -97,11 +112,11 @@ export function FinaleScreen({ ctx }: { ctx: StepContext }) {
             {t("tunnelLaunch.finale.nextTitle")}
           </h2>
           <ul className="mt-3 space-y-1">
-            {next.map(({ key, href, icon: Icon }) => (
+            {next.map(({ key, href, icon: Icon, text }) => (
               <li key={key}>
                 <Link href={href} className="group flex items-center gap-3 rounded-xl px-2 py-2 text-sm text-ink transition-colors hover:bg-surface-muted">
-                  <Icon className="size-4 text-accent" aria-hidden />
-                  <span className="flex-1">{t(`tunnelLaunch.finale.next.${key}`)}</span>
+                  <Icon className="size-4 shrink-0 text-accent" aria-hidden />
+                  <span className="flex-1">{text}</span>
                   <IconArrowRight className="size-4 text-ink-subtle transition-transform group-hover:translate-x-0.5 rtl:-scale-x-100" aria-hidden />
                 </Link>
               </li>

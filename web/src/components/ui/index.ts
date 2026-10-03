@@ -11,7 +11,9 @@ export { EmptyState } from "./EmptyState";
 export { ErrorState } from "./ErrorState";
 export { Field, Fieldset, type FieldControlProps } from "./Field";
 export { Modal } from "./Modal";
+export { OverflowMenu, type MenuAction } from "./OverflowMenu";
 export { PageHeader, SubPages, usePageLevel } from "./PageHeader";
+export { ScrollRow } from "./ScrollRow";
 export { Sheet } from "./Sheet";
 export { InlineError } from "./InlineError";
 export {

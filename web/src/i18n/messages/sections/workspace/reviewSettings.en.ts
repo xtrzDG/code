@@ -45,7 +45,7 @@ export const reviewSettingsEn = {
     whatsappMissing: "WhatsApp is not connected.",
     connectWhatsapp: "Connect WhatsApp",
     rules:
-      "Each visit is asked about once, and each customer at most once a day. Customers who replied STOP get no requests. A rating of 3 or less also goes to Messages → Needs a person, so someone gets in touch.",
+      "Each visit is asked about once, and each customer at most once a day. Customers who replied STOP get no requests. A rating of 3 or less also goes to Inbox → Needs a person, so someone gets in touch.",
   },
   link: {
     title: "Google review link",

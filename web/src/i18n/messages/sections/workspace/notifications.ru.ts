@@ -78,6 +78,7 @@ export const notificationsRu: Translation<typeof notificationsEn> = {
     testPending: "Проверку для {name} отправим ещё раз: {error}",
     providerMissing: "Не настроено на сервере",
     providerMissingHint: "Этим способом ничего не отправляется, пока не настроен провайдер платформы ({channel}).",
+    testUnavailable: "Проверку не отправить: {channel} не настроен на сервере платформы.",
     status: {
       delivered: "Доставлено",
       pending: "Ожидает",

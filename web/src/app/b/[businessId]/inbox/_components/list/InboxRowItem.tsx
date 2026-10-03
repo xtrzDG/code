@@ -19,6 +19,7 @@ import { Badge } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { cn } from "@/lib/cn";
 import { conversationPath } from "@/lib/navigation";
+import { formatPhone } from "@/lib/phone";
 
 import { initialsOf } from "../../_lib/conversationModel";
 import type { InboxRow } from "../../_lib/inboxModel";
@@ -95,7 +96,7 @@ export function InboxRowItem({
               {row.contactName ? (
                 <CustomerName name={row.contactName} />
               ) : row.contactPhone ? (
-                <span dir="ltr">{row.contactPhone}</span>
+                <span dir="ltr" className="whitespace-nowrap">{formatPhone(row.contactPhone)}</span>
               ) : (
                 <CustomerName name={null} />
               )}

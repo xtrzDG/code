@@ -15,7 +15,7 @@ import { ringsAt } from "@/lib/tunnel/depth";
 
 export function TunnelBackdrop({ depth, burst = false }: { depth: number; burst?: boolean }) {
   return (
-    <div aria-hidden className="tunnel-depth">
+    <div aria-hidden data-tunnel-backdrop className="tunnel-depth">
       <div className="landing-aurora">
         <span />
         <span />

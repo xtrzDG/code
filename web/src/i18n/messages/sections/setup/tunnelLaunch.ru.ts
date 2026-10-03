@@ -83,7 +83,8 @@ export const tunnelLaunchRu: Translation<typeof tunnelLaunchEn> = {
     open: "Открыть моего помощника",
     nextTitle: "Дальше, когда будете готовы",
     next: {
-      channels: "Подключить WhatsApp и Instagram",
+      offer: "Добавить цены на то, что вы предлагаете",
+      channels: "Подключить {channels}",
       knowledge: "Научить его новым ответам",
       messages: "Следить за разговорами",
     },

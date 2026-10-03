@@ -77,7 +77,10 @@ export const dashboardRu: Translation<typeof dashboardEn> = {
     leads: "Заявки",
     handoffs: "Нужен человек",
   },
+  continueSetup: "Продолжить настройку",
   usage: {
+    trialAtLaunchTitle: "Пробный период начнётся при запуске",
+    trialAtLaunchDescription: "До запуска тариф не нужен: бесплатный пробный период начнётся сам, когда помощник выйдет в эфир.",
     noPlanStaff: "У бизнеса пока нет активного тарифа. Его выбирает владелец в разделе «Оплата».",
     overStaff: "Голосовой пакет исчерпан: сверх него уже {minutes} мин.",
     warningStaff: "Использовано больше 80% пакета.",

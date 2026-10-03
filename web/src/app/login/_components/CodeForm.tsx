@@ -30,10 +30,7 @@ export function CodeForm({ flow, challenge }: { flow: LoginFlow; challenge: OtpC
       <div className="space-y-1.5">
         <h1 className="text-xl font-semibold tracking-tight text-ink">{t("auth.codeTitle")}</h1>
         <p className="text-sm text-ink-muted">
-          {t("auth.codeSentTo", {
-            destination: challenge.masked_destination,
-            channel: t(DELIVERY_CHANNEL_LABELS[challenge.delivery_channel]),
-          })}
+          {t(`auth.codeSentTo.${challenge.delivery_channel}`, { destination: challenge.masked_destination })}
         </p>
       </div>
       <Field

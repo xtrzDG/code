@@ -84,7 +84,12 @@ export const ka: Messages = {
     sendCode: "კოდის მიღება",
     sendingCode: "იგზავნება…",
     codeTitle: "შეიყვანეთ კოდი",
-    codeSentTo: "6-ნიშნა კოდი გამოგიგზავნეთ {channel}: {destination}.",
+    codeSentTo: {
+      email: "6-ნიშნა კოდი ელფოსტით გამოგიგზავნეთ: {destination}.",
+      sms: "6-ნიშნა კოდი SMS-ით გამოგიგზავნეთ: {destination}.",
+      whatsapp: "6-ნიშნა კოდი WhatsApp-ით გამოგიგზავნეთ: {destination}.",
+      telegram: "6-ნიშნა კოდი Telegram-ით გამოგიგზავნეთ: {destination}.",
+    },
     code: "კოდი",
     codeHint: "კოდი მოქმედებს {minutes} წუთის განმავლობაში.",
     verify: "შესვლა",

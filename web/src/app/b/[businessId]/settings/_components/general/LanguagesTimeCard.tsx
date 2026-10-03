@@ -4,6 +4,7 @@ import { Card, Checkbox, Field, Fieldset, Select } from "@/components/ui";
 import { useBusiness } from "@/components/business/BusinessContext";
 import { useI18n } from "@/i18n/client";
 import { capitalizeFirst } from "@/lib/format";
+import { timeZoneLabel } from "@/lib/timeZones";
 
 import { toggleLanguage } from "../../_lib/general";
 import type { GeneralChoices } from "../../_lib/useGeneralChoices";
@@ -25,19 +26,19 @@ export function LanguagesTimeCard({ settings, options }: { settings: GeneralSett
                 <optgroup label={t("settings.general.countryTimezones")}>
                   {countryZones.map((zone) => (
                     <option key={zone.name} value={zone.name}>
-                      {zone.display_name}
+                      {timeZoneLabel(zone.name, locale)}
                     </option>
                   ))}
                 </optgroup>
               ) : null}
               {!countryZones.some((zone) => zone.name === form.timezone) && !otherZones.includes(form.timezone) ? (
-                <option value={form.timezone}>{form.timezone}</option>
+                <option value={form.timezone}>{timeZoneLabel(form.timezone, locale)}</option>
               ) : null}
               {otherZones.length > 0 ? (
                 <optgroup label={t("settings.general.allTimezones")}>
                   {otherZones.map((zone) => (
                     <option key={zone} value={zone}>
-                      {zone}
+                      {timeZoneLabel(zone, locale)}
                     </option>
                   ))}
                 </optgroup>

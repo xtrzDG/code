@@ -25,6 +25,7 @@ export const callSettingsEn = {
     templateInvalid: "Use lowercase Latin letters, digits and underscores only.",
     sms: "Send an SMS when WhatsApp is not possible",
     smsHint: "From the platform's SMS sender, when the number has no WhatsApp or the template is refused.",
+    smsNeedsTextBack: "Turn on messages to callers who did not get through first.",
     rules: "Each caller is texted at most once a day. Customers who opted out of messages, or who are already writing to you, are not texted.",
     save: "Save",
     saved: "Call settings saved",

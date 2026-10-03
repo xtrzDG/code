@@ -69,7 +69,7 @@ export const ru: Messages = {
     platformAdmin: "Администратор платформы",
   },
   auth: {
-    aboutLink: "Что умеет ассистент →",
+    aboutLink: "Что умеет помощник →",
     title: "Вход",
     subtitle: "Введите номер телефона или почту — пришлём код. Впервые здесь? Аккаунт создастся сам.",
     methodLabel: "Войти через",
@@ -84,7 +84,12 @@ export const ru: Messages = {
     sendCode: "Получить код",
     sendingCode: "Отправляем…",
     codeTitle: "Введите код",
-    codeSentTo: "Мы отправили 6-значный код на {destination} через {channel}.",
+    codeSentTo: {
+      email: "Мы отправили 6-значный код на {destination} по почте.",
+      sms: "Мы отправили 6-значный код на {destination} по SMS.",
+      whatsapp: "Мы отправили 6-значный код на {destination} в WhatsApp.",
+      telegram: "Мы отправили 6-значный код на {destination} в Telegram.",
+    },
     code: "Код",
     codeHint: "Код действует {minutes} мин.",
     verify: "Войти",

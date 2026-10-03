@@ -2,7 +2,7 @@
 
 import { AnimatedNumber } from "@/components/motion";
 import { DeltaChip } from "@/components/value/DeltaChip";
-import { earningCount, formatWholeMoney, savedTime, type ValueTotals } from "@/components/value/valueModel";
+import { earningCount, formatWholeMoney, hadNoActivity, savedTime, type ValueTotals } from "@/components/value/valueModel";
 import { useI18n } from "@/i18n/client";
 import { formatNumber } from "@/lib/format";
 
@@ -31,6 +31,7 @@ export function ReportSummary({
   const estimate = current.estimated_revenue_minor;
   const saved = savedTime(current.staff_minutes_saved);
   const hasEstimate = estimate !== null && estimate !== undefined;
+  const first = hadNoActivity(previous);
 
   return (
     <div className="space-y-3">
@@ -44,7 +45,7 @@ export function ReportSummary({
           </span>
         ) : null}
         {hasEstimate ? (
-          <DeltaChip
+          <DeltaChip isFirstPeriod={first}
             current={estimate}
             previous={previous.estimated_revenue_minor ?? 0}
             days={days}
@@ -52,7 +53,7 @@ export function ReportSummary({
             className="self-center"
           />
         ) : (
-          <DeltaChip current={count} previous={earningCount(basis, previous)} days={days} className="self-center" />
+          <DeltaChip isFirstPeriod={first} current={count} previous={earningCount(basis, previous)} days={days} className="self-center" />
         )}
       </p>
       <ul className="flex flex-wrap gap-2 text-sm">
@@ -62,7 +63,7 @@ export function ReportSummary({
               count: number(current.after_hours_conversation_count),
             })}
           </span>
-          <DeltaChip current={current.after_hours_conversation_count} previous={previous.after_hours_conversation_count} days={days} />
+          <DeltaChip isFirstPeriod={first} current={current.after_hours_conversation_count} previous={previous.after_hours_conversation_count} days={days} />
         </li>
         <li className="inline-flex items-center gap-2 rounded-full border border-line bg-surface-muted/60 px-3 py-1">
           <span className="text-ink">
@@ -70,7 +71,7 @@ export function ReportSummary({
               count: number(saved.count),
             })}
           </span>
-          <DeltaChip
+          <DeltaChip isFirstPeriod={first}
                 current={current.staff_minutes_saved}
                 previous={previous.staff_minutes_saved}
                 days={days}
@@ -81,7 +82,7 @@ export function ReportSummary({
           <span className="text-ink">
             {tp("value.hero.conversations", current.conversation_count, { count: number(current.conversation_count) })}
           </span>
-          <DeltaChip current={current.conversation_count} previous={previous.conversation_count} days={days} />
+          <DeltaChip isFirstPeriod={first} current={current.conversation_count} previous={previous.conversation_count} days={days} />
         </li>
       </ul>
       {hasEstimate ? null : <p className="text-sm text-ink-muted">{t("value.hero.noMoney")}</p>}

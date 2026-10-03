@@ -11,6 +11,7 @@ import { useBusiness } from "@/components/business/BusinessContext";
 import { useIsClient } from "@/components/workspace/useIsClient";
 import { useI18n } from "@/i18n/client";
 import { capitalizeFirst, languageName } from "@/lib/format";
+import { sortZones } from "@/lib/timeZones";
 
 import { languageChoices, type BusinessView, type GeneralForm } from "./general";
 
@@ -61,7 +62,8 @@ export function useGeneralChoices(baseline: BusinessView, form: GeneralForm) {
   const ownerLanguages = languageChoices(["ka", "ru", "en"], [baseline.owner_language], form.languages);
 
   const countryZones = countryProfile?.timezones ?? [];
-  const browserZones = useMemo(() => (isClient ? allTimeZones() : []), [isClient]);
+  // From west to east, so a zone is found near its neighbours (labels name cities, not regions).
+  const browserZones = useMemo(() => (isClient ? sortZones(allTimeZones(), locale) : []), [isClient, locale]);
   const otherZones = browserZones.filter((zone) => !countryZones.some((option) => option.name === zone));
 
   return { labelOf, choices, addable, ownerLanguages, countryZones, otherZones };

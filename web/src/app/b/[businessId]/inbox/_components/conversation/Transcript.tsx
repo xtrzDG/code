@@ -68,8 +68,10 @@ export function Transcript({
       ) : null}
       {groupMessagesByDay(messages, business.timezone).map((day) => (
         <section key={day.date} aria-label={formatLocalDate(day.date, locale, { dateStyle: "full" })}>
+          {/* In the flow, between the days: a sticky chip would cover the messages it scrolls over. */}
           <p
-            className="sticky top-16 z-[1] mx-auto mb-4 w-fit rounded-full border border-line bg-surface/90 px-3 py-1 text-xs font-medium text-ink-subtle backdrop-blur lg:top-2"
+            className="mx-auto mb-4 w-fit rounded-full border border-line bg-surface px-3 py-1 text-xs font-medium text-ink-subtle"
+            data-day-chip=""
             aria-hidden
           >
             {formatLocalDate(day.date, locale, { dateStyle: "full" })}

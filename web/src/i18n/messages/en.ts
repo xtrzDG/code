@@ -90,7 +90,13 @@ export const en = {
     sendCode: "Get a code",
     sendingCode: "Sending…",
     codeTitle: "Enter the code",
-    codeSentTo: "We sent a 6-digit code to {destination} by {channel}.",
+    /** Where the code went, by channel ("по почте", "в WhatsApp"). */
+    codeSentTo: {
+      email: "We sent a 6-digit code to {destination} by e-mail.",
+      sms: "We sent a 6-digit code to {destination} by SMS.",
+      whatsapp: "We sent a 6-digit code to {destination} on WhatsApp.",
+      telegram: "We sent a 6-digit code to {destination} on Telegram.",
+    },
     code: "Code",
     codeHint: "The code is valid for {minutes} min.",
     verify: "Sign in",

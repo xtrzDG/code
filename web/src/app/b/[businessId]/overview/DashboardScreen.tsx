@@ -20,13 +20,14 @@ import { Button, Card, EmptyState, ErrorState, LoadingRegion, PageHeader } from 
 import { useValueOfDates } from "@/components/value/useValueQueries";
 import { useI18n } from "@/i18n/client";
 import { languageName } from "@/lib/format";
-import { businessPath, inboxPath } from "@/lib/navigation";
+import { businessPath, inboxPath, setupPath } from "@/lib/navigation";
 
 import { DashboardPeriodSkeleton } from "./_components/DashboardSkeleton";
 import { AttentionTile, BarList, NextStepCard } from "./_components/DashboardWidgets";
 import {
   canTakeStep,
   DASHBOARD_PERIODS,
+  isLaunched,
   DEFAULT_DASHBOARD_PERIOD,
   nextStep,
   periodRange,
@@ -105,6 +106,7 @@ export function DashboardScreen({ initialPeriod }: { initialPeriod: DashboardPer
           step={step}
           status={<BusinessStatusBadge status={business.status} />}
           href={canTakeStep(step, isOwner) ? businessPath(businessId, step.page) : null}
+          setupHref={isOwner && !isLaunched(business.status) ? setupPath(businessId) : null}
           note={
             business.status === "onboarding" && missingCount > 0
               ? tp("dashboard.status.onboarding.missing", missingCount)

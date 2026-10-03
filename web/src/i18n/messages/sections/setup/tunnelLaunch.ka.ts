@@ -81,7 +81,8 @@ export const tunnelLaunchKa: Translation<typeof tunnelLaunchEn> = {
     open: "ჩემი ასისტენტის გახსნა",
     nextTitle: "შემდეგ, როცა მზად იქნებით",
     next: {
-      channels: "WhatsApp-ისა და Instagram-ის დაკავშირება",
+      offer: "შეთავაზებებისა და ფასების დამატება",
+      channels: "არხების დაკავშირება: {channels}",
       knowledge: "ახალი პასუხების სწავლება",
       messages: "საუბრების თვალყურის დევნება",
     },
