@@ -63,21 +63,6 @@ export function parseConversationFilters(params: URLSearchParams): ConversationF
   };
 }
 
-/** The URL query of filters ("" for the defaults), stable in key order. */
-export function conversationFiltersQuery(filters: ConversationFilters): string {
-  const params = new URLSearchParams();
-  if (filters.channel) params.set("channel", filters.channel);
-  if (filters.status) params.set("status", filters.status);
-  if (filters.period !== "all") params.set("period", filters.period);
-  if (filters.search.trim()) params.set("q", filters.search.trim());
-  if (filters.includeTest) params.set("test", "1");
-  return params.toString();
-}
-
-export function hasActiveFilters(filters: ConversationFilters): boolean {
-  return conversationFiltersQuery(filters) !== "";
-}
-
 /** The first local date of a period ending today, or null for all time. */
 export function periodStart(period: ConversationPeriod, today: LocalDateText): LocalDateText | null {
   switch (period) {

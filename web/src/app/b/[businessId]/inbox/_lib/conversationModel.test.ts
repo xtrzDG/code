@@ -9,7 +9,6 @@ import {
   callRecordingUrl,
   canReplyFromCard,
   conversationApiQuery,
-  conversationFiltersQuery,
   DEFAULT_CONVERSATION_FILTERS,
   formatCallDuration,
   groupMessagesByDay,
@@ -49,12 +48,15 @@ function message(overrides: Partial<MessageView>): MessageView {
 }
 
 describe("conversation filters in the URL", () => {
-  it("round-trip without the defaults", () => {
-    const filters = { ...DEFAULT_CONVERSATION_FILTERS, channel: "telegram" as const, period: "7d" as const, search: " Nino " };
-    const query = conversationFiltersQuery(filters);
-    expect(query).toBe("channel=telegram&period=7d&q=Nino");
-    expect(parseConversationFilters(new URLSearchParams(query))).toEqual({ ...filters, search: "Nino" });
-    expect(conversationFiltersQuery(DEFAULT_CONVERSATION_FILTERS)).toBe("");
+  it("read every filter, the search trimmed to its limit", () => {
+    expect(parseConversationFilters(new URLSearchParams("channel=telegram&period=7d&q=Nino&status=open&test=1"))).toEqual({
+      channel: "telegram",
+      period: "7d",
+      search: "Nino",
+      status: "open",
+      includeTest: true,
+    });
+    expect(parseConversationFilters(new URLSearchParams(`q=${"x".repeat(300)}`)).search).toHaveLength(200);
   });
 
   it("ignore unknown values", () => {

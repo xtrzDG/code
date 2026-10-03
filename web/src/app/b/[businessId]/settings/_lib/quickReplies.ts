@@ -5,12 +5,10 @@
 
 import {
   isValidShortcut,
-  placeholdersIn,
   QUICK_REPLY_TEXT_MAX_LENGTH,
   QUICK_REPLY_TITLE_MAX_LENGTH,
   SHORTCUT_MAX_LENGTH,
   type QuickReplyBody,
-  type QuickReplyVariable,
   type QuickReplyView,
 } from "@/lib/quickReplies";
 
@@ -80,9 +78,4 @@ export function bodyOf(draft: QuickReplyDraft, languages: readonly string[]): Qu
       .filter((language) => (draft.texts[language] ?? "").trim())
       .map((language) => ({ language, text: (draft.texts[language] ?? "").trim() })),
   };
-}
-
-/** The variables a reply fills in, over all its texts. */
-export function variablesOfDraft(draft: QuickReplyDraft): QuickReplyVariable[] {
-  return placeholdersIn(Object.values(draft.texts).join("\n"));
 }
