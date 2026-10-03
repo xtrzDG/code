@@ -34,6 +34,8 @@ export type BusinessPage = (typeof BUSINESS_PAGES)[number];
 export const HOME_PATH = "/businesses";
 export const LOGIN_PATH = "/login";
 export const ADMIN_PATH = "/admin";
+/** The platform admin's key ring and re-encryption of stored tokens. */
+export const ADMIN_SECURITY_PATH = "/admin/security";
 /** Shown by the service worker (public/sw.js) when a page cannot be loaded. */
 export const OFFLINE_PATH = "/offline";
 

@@ -163,3 +163,11 @@ export const IconBell = (props: IconProps) => (
     <path d="M6 16.5V11a6 6 0 0112 0v5.5l1.5 2h-15zM10 20.5a2 2 0 004 0" />
   </Icon>
 );
+
+/** Encryption keys (the platform admin's key ring). */
+export const IconKey = (props: IconProps) => (
+  <Icon {...props}>
+    <circle cx="8" cy="15" r="4" />
+    <path d="M10.8 12.2L20 3M16.5 6.5l2.5 2.5M14 9l2 2" />
+  </Icon>
+);

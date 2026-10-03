@@ -14,6 +14,9 @@ import type { Translation } from "../../translate";
 import { adminEn } from "./workspace/admin.en";
 import { adminKa } from "./workspace/admin.ka";
 import { adminRu } from "./workspace/admin.ru";
+import { adminSecurityEn } from "./workspace/adminSecurity.en";
+import { adminSecurityKa } from "./workspace/adminSecurity.ka";
+import { adminSecurityRu } from "./workspace/adminSecurity.ru";
 import { billingEn } from "./workspace/billing.en";
 import { billingKa } from "./workspace/billing.ka";
 import { billingRu } from "./workspace/billing.ru";
@@ -54,6 +57,7 @@ export const workspaceEn = {
   notifications: notificationsEn,
   callSettings: callSettingsEn,
   admin: adminEn,
+  adminSecurity: adminSecurityEn,
   share: shareEn,
   privacyNotice: privacyNoticeEn,
 } as const;
@@ -67,6 +71,7 @@ export const workspaceRu: Translation<typeof workspaceEn> = {
   notifications: notificationsRu,
   callSettings: callSettingsRu,
   admin: adminRu,
+  adminSecurity: adminSecurityRu,
   share: shareRu,
   privacyNotice: privacyNoticeRu,
 };
@@ -80,6 +85,7 @@ export const workspaceKa: Translation<typeof workspaceEn> = {
   notifications: notificationsKa,
   callSettings: callSettingsKa,
   admin: adminKa,
+  adminSecurity: adminSecurityKa,
   share: shareKa,
   privacyNotice: privacyNoticeKa,
 };
