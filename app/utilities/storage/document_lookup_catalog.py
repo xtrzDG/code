@@ -68,11 +68,15 @@ DOCUMENT_LOOKUP_FIELDS: Mapping[
         _element("channel_identities[].channel_user_id"),
     ),
     # The feed newest first (keyset pages), its filters, and the dashboard's
-    # counts by channel, language and local day.
+    # counts by channel, language and local day; the team inbox's views by
+    # status, open request, waiting for the team and assignee (1053).
     DocumentCollectionName("conversations"): (
         _text("contact_id"),
         _text("channel_user_id"),
-        _filter("status"),
+        _text("status"),
+        _text("has_open_request"),
+        _text("awaits_team"),
+        _text("assignee_user_id"),
         _filter("channel"),
         _filter("language"),
         _filter("is_after_hours"),
@@ -127,6 +131,11 @@ DOCUMENT_LOOKUP_FIELDS: Mapping[
         _filter("is_sandbox"),
         _integer("created_at"),
         _integer("resolved_at"),
+    ),
+    # The notes of one conversation, newest first (1053).
+    DocumentCollectionName("conversation_notes"): (
+        _text("conversation_id"),
+        _integer("created_at"),
     ),
     DocumentCollectionName("unanswered_questions"): (
         _text("is_resolved"),

@@ -12,6 +12,9 @@ from app.adapters.storage.postgres.document_collection_factory import (
 from app.containers.adapters.document_collections_container import (
     DocumentCollectionsContainer,
 )
+from app.containers.adapters.inbox_collections_container import (
+    InboxCollectionsContainer,
+)
 from app.containers.adapters.launch_collections_container import (
     LaunchCollectionsContainer,
 )
@@ -85,6 +88,7 @@ COLLECTION_CONTAINERS = (
     DocumentCollectionsContainer,
     NotificationCollectionsContainer,
     LaunchCollectionsContainer,
+    InboxCollectionsContainer,
 )
 
 
