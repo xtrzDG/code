@@ -11,12 +11,15 @@ export function Switch({
   onChange,
   label,
   disabled = false,
+  describedBy,
   className,
 }: {
   checked: boolean;
   onChange: (checked: boolean) => void;
   label: string;
   disabled?: boolean;
+  /** The id of a hint read after the label (why it is off, what it does). */
+  describedBy?: string;
   className?: string;
 }) {
   return (
@@ -25,6 +28,7 @@ export function Switch({
       role="switch"
       aria-checked={checked}
       aria-label={label}
+      aria-describedby={describedBy}
       title={label}
       disabled={disabled}
       onClick={() => onChange(!checked)}

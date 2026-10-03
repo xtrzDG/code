@@ -78,6 +78,7 @@ export const notificationsKa: Translation<typeof notificationsEn> = {
     testPending: "სატესტოს {name}-სთვის ხელახლა ვცდით: {error}",
     providerMissing: "სერვერზე არ არის მორგებული",
     providerMissingHint: "ამ გზით არაფერი იგზავნება, სანამ პლატფორმის პროვაიდერი ({channel}) არ მოირგება.",
+    testUnavailable: "სატესტოს გაგზავნა შეუძლებელია: {channel} პლატფორმის სერვერზე არ არის მორგებული.",
     status: {
       delivered: "მიწოდებულია",
       pending: "ელოდება",

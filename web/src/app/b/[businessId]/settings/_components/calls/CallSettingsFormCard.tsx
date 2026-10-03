@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState, type ReactNode } from "react";
+import { useId, useState, type ReactNode } from "react";
 
 import { Switch } from "@/components/content/Switch";
 import { useBusiness } from "@/components/business/BusinessContext";
@@ -115,11 +115,12 @@ export function CallSettingsFormCard({ stored, state }: { stored: CallSettingsVi
               />
             )}
           </Field>
+          {/* The SMS only follows a text-back message: with messages off it is not a choice. */}
           <SwitchRow
             label={t("callSettings.textBack.sms")}
-            hint={t("callSettings.textBack.smsHint")}
-            checked={form.isSmsFallbackEnabled}
-            disabled={save.isPending}
+            hint={form.isTextBackEnabled ? t("callSettings.textBack.smsHint") : t("callSettings.textBack.smsNeedsTextBack")}
+            checked={form.isTextBackEnabled && form.isSmsFallbackEnabled}
+            disabled={save.isPending || !form.isTextBackEnabled}
             onChange={(isSmsFallbackEnabled) => update({ isSmsFallbackEnabled })}
           />
           <p className="text-sm text-ink-muted">{t("callSettings.textBack.rules")}</p>
@@ -154,13 +155,18 @@ function SwitchRow({
   disabled: boolean;
   onChange: (checked: boolean) => void;
 }) {
+  const hintId = useId();
   return (
     <div className="flex items-start justify-between gap-4">
       <div className="min-w-0">
         <p className="text-sm font-medium text-ink">{label}</p>
-        {hint ? <p className="mt-0.5 text-sm text-ink-muted">{hint}</p> : null}
+        {hint ? (
+          <p id={hintId} className="mt-0.5 text-sm text-ink-muted">
+            {hint}
+          </p>
+        ) : null}
       </div>
-      <Switch checked={checked} onChange={onChange} label={label} disabled={disabled} />
+      <Switch checked={checked} onChange={onChange} label={label} disabled={disabled} describedBy={hint ? hintId : undefined} />
     </div>
   );
 }

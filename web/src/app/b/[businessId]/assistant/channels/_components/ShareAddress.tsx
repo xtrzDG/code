@@ -12,6 +12,7 @@ import { Alert, Button, Field, Input, buttonClasses, useToast } from "@/componen
 import { CopyButton } from "@/components/workspace/CopyButton";
 import { useI18n } from "@/i18n/client";
 import type { MessageKey } from "@/i18n/translate";
+import { splitForMiddleEllipsis } from "@/lib/middleEllipsis";
 
 import { displayUrl, isValidSlug, normalizeSlugInput, SLUG_MAX_LENGTH, type ShareLinks } from "../_lib/share";
 
@@ -92,12 +93,17 @@ export function ShareAddress({ view, isWebChatOn, canManage }: { view: ShareLink
         <Alert tone="info">{t("share.notConfigured")}</Alert>
       ) : (
         <div className="flex flex-wrap items-center gap-2">
+          {/* A middle ellipsis: the host gives way first, the page's own name stays readable. */}
           <code
             dir="ltr"
             data-testid="share-chat-page-url"
-            className="min-w-0 flex-1 truncate rounded-lg border border-line bg-surface-muted px-3 py-2 font-mono text-sm text-ink"
+            title={displayUrl(url)}
+            className="flex min-w-0 flex-[1_1_12rem] rounded-lg border border-line bg-surface-muted px-3 py-2 font-mono text-sm text-ink"
           >
-            {displayUrl(url)}
+            <span className="min-w-[4ch] shrink-[1000] truncate">{splitForMiddleEllipsis(displayUrl(url)).head}</span>
+            <span className="min-w-0 truncate" data-share-slug="">
+              {splitForMiddleEllipsis(displayUrl(url)).tail}
+            </span>
           </code>
           <CopyButton value={url} />
           <a

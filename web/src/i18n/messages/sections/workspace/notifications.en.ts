@@ -77,6 +77,7 @@ export const notificationsEn = {
     testPending: "The test to {name} will be tried again: {error}",
     providerMissing: "Not set up on the server",
     providerMissingHint: "Nothing is sent this way until the platform's {channel} provider is configured.",
+    testUnavailable: "A test cannot be sent: {channel} is not set up on the platform's server.",
     status: {
       delivered: "Delivered",
       pending: "Waiting",
