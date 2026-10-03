@@ -9,7 +9,9 @@
  *    Next.js puts on its own scripts (server/contentSecurityPolicy.ts);
  *  - a session under the cookie's old name moves to `__Host-aw_session`;
  *  - the public hosted chat page (/c/{address}) gets its business and a
- *    stricter policy (server/hostedChatProxy.ts); no /c/ page is indexed.
+ *    stricter policy (server/hostedChatProxy.ts); no /c/ page is indexed;
+ *  - a visitor's first landing or hosted chat page keeps where they came
+ *    from in the `aw_attr` cookie (server/attributionCookie.ts).
  */
 
 import { NextResponse, type NextRequest } from "next/server";
@@ -24,6 +26,7 @@ import {
   localeCookieOptions,
   sanitizeRequestId,
 } from "@/server/backend";
+import { rememberFirstVisit } from "@/server/attributionCookie";
 import { NONCE_HEADER, buildContentSecurityPolicy, createNonce } from "@/server/contentSecurityPolicy";
 import { HOSTED_CHAT_HEADER, hostedChatAddress, isHostedChatPath } from "@/server/hostedChat";
 import { NOINDEX, ROBOTS_HEADER, routeHostedChat } from "@/server/hostedChatProxy";
@@ -52,6 +55,7 @@ async function accountLocale(token: string): Promise<string | null> {
 export async function proxy(request: NextRequest): Promise<NextResponse> {
   const response = await route(request);
   migrateLegacySessionCookie(request, response);
+  rememberFirstVisit(request, response);
   return response;
 }
 
