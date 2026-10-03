@@ -10,9 +10,7 @@ def test_connecting_the_web_chat_reports_the_channel_and_its_owner() -> None:
 
     assert setup.put("web", {}).status_code == 200
 
-    [connected] = setup.testbed.product_events.named(
-        ProductEventName.CHANNEL_CONNECTED
-    )
+    [connected] = setup.testbed.product_events.named(ProductEventName.CHANNEL_CONNECTED)
     assert connected.properties.channel is ChannelKind.WEB_CHAT
     assert connected.business_id == setup.business.id
     assert str(connected.user_id) == str(setup.owner_id)
