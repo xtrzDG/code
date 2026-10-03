@@ -475,6 +475,7 @@ UI-тестов); `color`, `position` и `language` в ней показываю
 | Живой кабинет | `GET …/events` (Server-Sent Events: что изменилось в бизнесе — передачи, сообщения, заявки, брони, каналы, автотесты — только виды и id, без текста клиентов; `Last-Event-ID` досылает пропущенное, не больше 5 потоков на человека в одном процессе), `GET …/attention-counts` (открытые передачи, новые заявки, неподтверждённые брони, каналы с ошибкой — индексные счётчики для значков меню, без записи в журнал) |
 | Google Calendar | `GET·DELETE …/integrations/google-calendar`, `GET …/integrations/google-calendar/connect-url`, `GET /v1/integrations/google-calendar/callback` (ничего не обменивает, только передаёт `code`, `state`, `error` странице кабинета `CABINET_BASE_URL/integrations/google-calendar/callback`), `POST /v1/integrations/google-calendar/complete` (Bearer; завершает подключение только для того пользователя, который его начал; кабинет затем открывает `/b/{id}/channels?calendar=connected` или `?calendar=error&reason=…`) |
 | Разговоры | `GET …/conversations` (страницы, фильтры `channel`, `status`, `from`/`to`, `search`), `GET …/conversations/{id}` (последние 100 сообщений расшифровки, расход модели, звонки, брони, заявки, передачи), `GET …/conversations/{id}/messages` (более ранние сообщения страницами, `limit`, `cursor`), `PUT …/conversations/{id}/rating`, `POST …/conversations/{id}/messages` (ответ сотрудника клиенту; шаблон WhatsApp, который Meta не принял, — 409 `template_rejected`), `GET …/calls/{call_id}/recording` (запись звонка; отдаёт части по `Range`, прослушивание пишется в журнал аудита), `POST …/test-chat` |
+| Общие входящие команды | `GET …/inbox` (страница вида `view` — `needs_person`, `requests`, `mine`, `unassigned` или `all` — последнее сообщение первым, `channel`, `limit`, `cursor`, со счётчиками видов; просмотр пишется в журнал аудита), `GET …/inbox/counts`, `GET …/inbox/assignees` (участники и сколько ждущих разговоров у каждого), `POST …/conversations/{id}/assign` (`{"assignee_user_id", "expected_revision"}`: сравнить и записать, устаревшая ревизия — 409 `assignment_changed`), `GET·PUT …/inbox/settings` (владелец: автоназначение новых передач и заявок), `GET·POST …/conversations/{id}/notes`, `DELETE …/conversations/{id}/notes/{note_id}` (внутренние заметки команды), `GET·POST …/quick-replies`, `PUT·DELETE …/quick-replies/{id}` (владелец: быстрые ответы с вариантами по языкам), `GET …/conversations/{id}/quick-replies` (быстрые ответы на языке разговора с подставленными `{name}`, `{booking_time}`, `{business_name}`) |
 | Сборка помощника | `POST·GET …/assistant-versions`, `GET …/assistant-versions/{id}[/autotest-run]`, `GET …/assistant-versions/{id}/go-live-readiness`, `POST …/assistant-versions/{id}/autotests`, `POST …/assistant-versions/{id}/publish`, `POST …/assistant-versions/{id}/rollback` |
 | Каналы (кабинет) | `GET …/channels`, `PUT·DELETE …/channels/{channel}`, `GET …/channels/web/snippet`, `PUT …/channels/whatsapp/staff-template` (шаблон WhatsApp для ответа сотрудника вне 24-часового окна), `POST …/manager-contacts/telegram-link` |
 | Уведомления сотрудников | `GET …/notification-contacts` (контакты из настроек с ключом, готовностью канала и состоянием последней доставки; Telegram — с @username), `POST …/notification-contacts/{key}/test` (владелец: проверка контакта, не больше 5 в час), `GET·PUT …/notification-preferences` (мои события и тихие часы, ключ VAPID и мои устройства), `POST …/push-subscriptions` (включить уведомления на этом устройстве), `DELETE …/push-subscriptions/{id}`, `POST …/push-subscriptions/{id}/test`, `GET …/notification-links/{token}` (куда ведёт подписанная ссылка из уведомления; просроченная — `is_expired`) |
@@ -558,6 +559,35 @@ HTTPS и чат на сайте включён) и бот Telegram бизнес�
 `voice_not_ready`, `publish_failed`) с текстом на языке владельца и местом,
 где это исправить. Начало применения и публикация пишутся в журнал аудита.
 Версии, автотесты и ручная публикация остаются в разделе «Дополнительно».
+
+### Общие входящие команды
+
+Владелец и сотрудники видят разговоры в пяти видах: «нужен человек»
+(разговор передан человеку), «заявки» (есть новая заявка или заявка в
+работе), «мои» и «без ответственного» (среди ждущих команду — нужен человек
+или открыта заявка) и «все». Виды — страницы по индексам миграции 1053,
+счётчики — один сгруппированный подсчёт ждущих разговоров. Строка видна
+любому сотруднику: имя и телефон клиента, канал, начало последнего
+сообщения, ответственный, открытая передача и заявка без свободного текста,
+число заметок — без расхода модели, вызовов инструментов и текстов заметок.
+
+Назначение — сравнить и записать по `assignment_revision`: из двух
+одновременных нажатий выигрывает одно, второе получает 409
+`assignment_changed` (обновить разговор и повторить). Сотрудник назначает
+свободный или свой разговор — себе, коллеге или никому; разговор коллеги
+переназначает только владелец (иначе 403 `assigned_to_colleague`), а
+назначить можно только участника бизнеса (422 `not_a_member`).
+Сохранение хода разговора никогда не отменяет назначение. Включённое
+автоназначение (`PUT …/inbox/settings`) отдаёт новую передачу или заявку
+выбранным участникам (или всем сотрудникам, или владельцам) — тому, у кого
+меньше ждущих разговоров, при равенстве по кругу; ошибка автоназначения
+никогда не мешает самой передаче. Изменения идут в живые события
+(`conversation.assigned`, `conversation.note`) и в журнал аудита.
+
+Заметки команды хранятся отдельно от сообщений: они не попадают ни в запрос
+к модели, ни клиенту, ни в уведомления сотрудникам; создание и удаление
+пишутся в журнал. Удалить заметку может её автор или владелец. Заметки
+входят в выгрузку данных клиента и удаляются вместе с его данными.
 
 ## Договор об обработке данных (DPA)
 

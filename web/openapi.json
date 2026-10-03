@@ -4126,7 +4126,7 @@
       },
       "ContactRecords": {
         "additionalProperties": false,
-        "description": "Every stored record that describes one visitor of one business.\n\nCalls belong to the visitor through one of their conversations or their\nphone number. Raw language-model turns repeat the messages and are not\nlisted.",
+        "description": "Every stored record that describes one visitor of one business.\n\nCalls belong to the visitor through one of their conversations or their\nphone number; `notes` are the team's internal notes on their\nconversations. Raw language-model turns repeat the messages and are not\nlisted.",
         "properties": {
           "bookings": {
             "items": {
@@ -4171,6 +4171,13 @@
               "$ref": "#/components/schemas/MessageDocument"
             },
             "title": "Messages",
+            "type": "array"
+          },
+          "notes": {
+            "items": {
+              "$ref": "#/components/schemas/ConversationNoteDocument"
+            },
+            "title": "Notes",
             "type": "array"
           }
         },
@@ -4285,6 +4292,65 @@
         "title": "ContactSummaryView",
         "type": "object"
       },
+      "ConversationAssignmentView": {
+        "additionalProperties": false,
+        "description": "The assignment of a conversation after a change.",
+        "properties": {
+          "assigned_at": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assigned At"
+          },
+          "assigned_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assigned By"
+          },
+          "assignee_user_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assignee User Id"
+          },
+          "assignment_revision": {
+            "minimum": 0.0,
+            "title": "Assignment Revision",
+            "type": "integer"
+          },
+          "conversation_id": {
+            "title": "Conversation Id",
+            "type": "string"
+          },
+          "is_assigned_automatically": {
+            "default": false,
+            "title": "Is Assigned Automatically",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "conversation_id",
+          "assignment_revision"
+        ],
+        "title": "ConversationAssignmentView",
+        "type": "object"
+      },
       "ConversationDetailView": {
         "additionalProperties": false,
         "description": "Conversation card: summary, the newest part of the transcript with tool\ncalls (oldest first; `earlier_messages_cursor` pages back through\n`GET .../messages` when there is more), the model usage of the whole\nconversation, for phone conversations the calls with their transcripts\nand recordings, the bookings, leads and handoffs made in it, and\nwhether staff can reply.",
@@ -4363,11 +4429,55 @@
       },
       "ConversationDocument": {
         "additionalProperties": false,
-        "description": "Customer conversation in one channel (concept table `conversations`).\n\nPinned to one assistant version so its instruction and tools never change\nmid-conversation. `rating` is the owner's or staff's good / bad verdict.",
+        "description": "Customer conversation in one channel (concept table `conversations`).\n\nPinned to one assistant version so its instruction and tools never change\nmid-conversation. `rating` is the owner's or staff's good / bad verdict.\n\nThe team inbox fields belong to their own operations, and a plain save\nof the conversation keeps their stored values\n(`ConversationRepoContract.save`): the assignment (`assignee_user_id`,\nwho assigned it, when, and `assignment_revision`, the compare-and-set\nversion) changes only through `ConversationTeamRepoContract.assign`,\n`has_open_request` (a request of the conversation is new or in\nprogress) only through `set_open_request`. `awaits_team` is derived on\nevery write: the conversation needs a person (HANDOFF) or has an open\nrequest. `assigned_by` is None for an automatic assignment.\n\nVersion 2: the team inbox fields (all optional, so version 1 rows read\nas they are).",
         "properties": {
+          "assigned_at": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assigned At"
+          },
+          "assigned_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assigned By"
+          },
+          "assignee_user_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assignee User Id"
+          },
+          "assignment_revision": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Assignment Revision",
+            "type": "integer"
+          },
           "assistant_version_id": {
             "title": "Assistant Version Id",
             "type": "string"
+          },
+          "awaits_team": {
+            "default": false,
+            "title": "Awaits Team",
+            "type": "boolean"
           },
           "business_id": {
             "title": "Business Id",
@@ -4388,6 +4498,11 @@
             "description": "Creation wall-clock UNIX timestamp in microseconds.",
             "title": "Created At",
             "type": "integer"
+          },
+          "has_open_request": {
+            "default": false,
+            "title": "Has Open Request",
+            "type": "boolean"
           },
           "id": {
             "title": "Id",
@@ -4454,8 +4569,7 @@
             ]
           },
           "schema_version": {
-            "default": "1",
-            "description": "Persistence schema version. This is not the package version or application release version.",
+            "default": "2",
             "title": "Schema Version",
             "type": "string"
           },
@@ -4478,6 +4592,142 @@
           "last_message_at"
         ],
         "title": "ConversationDocument",
+        "type": "object"
+      },
+      "ConversationNoteDocument": {
+        "additionalProperties": false,
+        "description": "An internal note of the team on one conversation (\"called back, prefers\nSaturday\"). Only owners and staff of the business read it: it is kept\napart from the messages, so it never reaches the customer, the language\nmodel or the customer's widget. Reading, writing and deleting notes are\naudited; erasing the customer's data deletes the notes of their\nconversations.",
+        "properties": {
+          "author_user_id": {
+            "title": "Author User Id",
+            "type": "string"
+          },
+          "business_id": {
+            "title": "Business Id",
+            "type": "string"
+          },
+          "conversation_id": {
+            "title": "Conversation Id",
+            "type": "string"
+          },
+          "created_at": {
+            "description": "Creation wall-clock UNIX timestamp in microseconds.",
+            "title": "Created At",
+            "type": "integer"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "schema_version": {
+            "default": "1",
+            "description": "Persistence schema version. This is not the package version or application release version.",
+            "title": "Schema Version",
+            "type": "string"
+          },
+          "text": {
+            "maxLength": 4000,
+            "minLength": 1,
+            "pattern": "\\S",
+            "title": "Text",
+            "type": "string"
+          },
+          "updated_at": {
+            "description": "Last update wall-clock UNIX timestamp in microseconds.",
+            "title": "Updated At",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "business_id",
+          "conversation_id",
+          "author_user_id",
+          "text"
+        ],
+        "title": "ConversationNoteDocument",
+        "type": "object"
+      },
+      "ConversationNotePage": {
+        "additionalProperties": false,
+        "description": "One page of notes, newest first; `next_cursor` asks for older ones.",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ConversationNoteView"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "minLength": 1,
+                "pattern": "^[A-Za-z0-9_-]+$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          }
+        },
+        "title": "ConversationNotePage",
+        "type": "object"
+      },
+      "ConversationNoteView": {
+        "additionalProperties": false,
+        "description": "A note with its author's name; `can_delete` tells the viewer whether\nthey may delete it (their own note, or any note for an owner).",
+        "properties": {
+          "author_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Author Name"
+          },
+          "author_user_id": {
+            "title": "Author User Id",
+            "type": "string"
+          },
+          "can_delete": {
+            "default": false,
+            "title": "Can Delete",
+            "type": "boolean"
+          },
+          "conversation_id": {
+            "title": "Conversation Id",
+            "type": "string"
+          },
+          "created_at": {
+            "title": "Created At",
+            "type": "integer"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "text": {
+            "maxLength": 4000,
+            "minLength": 1,
+            "pattern": "\\S",
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "conversation_id",
+          "author_user_id",
+          "text",
+          "created_at"
+        ],
+        "title": "ConversationNoteView",
         "type": "object"
       },
       "ConversationPage": {
@@ -5545,6 +5795,79 @@
         "title": "FailedAutotestView",
         "type": "object"
       },
+      "FilledQuickReplyList": {
+        "additionalProperties": false,
+        "description": "The saved replies of a business ready for one conversation.",
+        "properties": {
+          "conversation_id": {
+            "title": "Conversation Id",
+            "type": "string"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/FilledQuickReplyView"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "conversation_id"
+        ],
+        "title": "FilledQuickReplyList",
+        "type": "object"
+      },
+      "FilledQuickReplyView": {
+        "additionalProperties": false,
+        "description": "A saved reply for one conversation: the variant of the conversation's\nlanguage (else its base language, the business's default language, then\nthe first variant) with its variables filled in. `missing_variables`\nstayed in braces because the conversation has no value for them (no\nname yet, no upcoming booking): staff complete them before sending.",
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "language": {
+            "maxLength": 16,
+            "minLength": 2,
+            "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$",
+            "title": "Language",
+            "type": "string"
+          },
+          "missing_variables": {
+            "items": {
+              "$ref": "#/components/schemas/QuickReplyVariable"
+            },
+            "title": "Missing Variables",
+            "type": "array"
+          },
+          "shortcut": {
+            "maxLength": 32,
+            "minLength": 1,
+            "pattern": "^[\\w-]+$",
+            "title": "Shortcut",
+            "type": "string"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          },
+          "title": {
+            "maxLength": 80,
+            "minLength": 1,
+            "pattern": "\\S",
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "shortcut",
+          "title",
+          "language",
+          "text"
+        ],
+        "title": "FilledQuickReplyView",
+        "type": "object"
+      },
       "GoLiveAutotestRunSummary": {
         "additionalProperties": false,
         "description": "The version's latest autotest run as the checklist reports it: while it\nis RUNNING, `scenario_count` is the number of planned scenarios and\n`completed_count` the ones played so far.",
@@ -6086,6 +6409,57 @@
         "title": "ImportedMenuItemView",
         "type": "object"
       },
+      "InboxAssigneeList": {
+        "additionalProperties": false,
+        "description": "The members of the business, owners first, then by name.",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/InboxAssigneeView"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "title": "InboxAssigneeList",
+        "type": "object"
+      },
+      "InboxAssigneeView": {
+        "additionalProperties": false,
+        "description": "A member of the business to assign conversations to, with how many\nconversations waiting for the team they have now (no phone or e-mail).",
+        "properties": {
+          "awaiting_count": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Awaiting Count",
+            "type": "integer"
+          },
+          "display_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Display Name"
+          },
+          "role": {
+            "$ref": "#/components/schemas/BusinessMemberRole"
+          },
+          "user_id": {
+            "title": "User Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "user_id",
+          "role"
+        ],
+        "title": "InboxAssigneeView",
+        "type": "object"
+      },
       "InboxCounts": {
         "additionalProperties": false,
         "description": "Handoffs nobody has resolved yet and requests still new. Sandbox activity\n(the owner's test chat, autotests) is not counted.",
@@ -6111,6 +6485,384 @@
           "new_lead_count"
         ],
         "title": "InboxCounts",
+        "type": "object"
+      },
+      "InboxHandoffSummary": {
+        "additionalProperties": false,
+        "description": "The open handoff of a conversation, as the inbox row shows it.",
+        "properties": {
+          "created_at": {
+            "title": "Created At",
+            "type": "integer"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "reason": {
+            "$ref": "#/components/schemas/HandoffReason"
+          },
+          "status": {
+            "$ref": "#/components/schemas/HandoffStatus"
+          },
+          "urgency": {
+            "$ref": "#/components/schemas/HandoffUrgency"
+          }
+        },
+        "required": [
+          "id",
+          "reason",
+          "urgency",
+          "status",
+          "created_at"
+        ],
+        "title": "InboxHandoffSummary",
+        "type": "object"
+      },
+      "InboxItemView": {
+        "additionalProperties": false,
+        "description": "A conversation row of the team inbox, safe for every staff member:\nwho the customer is, where and how the conversation stands, who is\nassigned, the beginning of the last message and what waits (the open\nhandoff, the newest open request). No model, cost or tool details,\nno free-text request details and no note texts (only their count).\n`assignment_revision` is what an assignment must name.",
+        "properties": {
+          "assigned_at": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assigned At"
+          },
+          "assignee_user_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assignee User Id"
+          },
+          "assignment_revision": {
+            "minimum": 0.0,
+            "title": "Assignment Revision",
+            "type": "integer"
+          },
+          "awaits_team": {
+            "title": "Awaits Team",
+            "type": "boolean"
+          },
+          "channel": {
+            "$ref": "#/components/schemas/ChannelKind"
+          },
+          "contact_id": {
+            "title": "Contact Id",
+            "type": "string"
+          },
+          "contact_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Contact Name"
+          },
+          "contact_phone_number": {
+            "anyOf": [
+              {
+                "maxLength": 16,
+                "minLength": 8,
+                "pattern": "^\\+[1-9][0-9]{6,14}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Contact Phone Number"
+          },
+          "created_at": {
+            "title": "Created At",
+            "type": "integer"
+          },
+          "handoff": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/InboxHandoffSummary"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "has_open_request": {
+            "title": "Has Open Request",
+            "type": "boolean"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "is_after_hours": {
+            "title": "Is After Hours",
+            "type": "boolean"
+          },
+          "is_assigned_automatically": {
+            "default": false,
+            "title": "Is Assigned Automatically",
+            "type": "boolean"
+          },
+          "language": {
+            "anyOf": [
+              {
+                "maxLength": 16,
+                "minLength": 2,
+                "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Language"
+          },
+          "last_message_at": {
+            "title": "Last Message At",
+            "type": "integer"
+          },
+          "last_message_author": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MessageAuthor"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "last_message_text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Message Text"
+          },
+          "needs_person": {
+            "title": "Needs Person",
+            "type": "boolean"
+          },
+          "note_count": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Note Count",
+            "type": "integer"
+          },
+          "request": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/InboxRequestSummary"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "status": {
+            "$ref": "#/components/schemas/ConversationStatus"
+          }
+        },
+        "required": [
+          "id",
+          "contact_id",
+          "channel",
+          "status",
+          "is_after_hours",
+          "needs_person",
+          "has_open_request",
+          "awaits_team",
+          "assignment_revision",
+          "last_message_at",
+          "created_at"
+        ],
+        "title": "InboxItemView",
+        "type": "object"
+      },
+      "InboxPage": {
+        "additionalProperties": false,
+        "description": "One page of a view; `next_cursor` is None on the last page.",
+        "properties": {
+          "counts": {
+            "$ref": "#/components/schemas/InboxViewCounts"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/InboxItemView"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "minLength": 1,
+                "pattern": "^[A-Za-z0-9_-]+$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          },
+          "view": {
+            "$ref": "#/components/schemas/InboxView"
+          }
+        },
+        "required": [
+          "view"
+        ],
+        "title": "InboxPage",
+        "type": "object"
+      },
+      "InboxRequestSummary": {
+        "additionalProperties": false,
+        "description": "The newest open request of a conversation (no free-text details).",
+        "properties": {
+          "created_at": {
+            "title": "Created At",
+            "type": "integer"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "lead_type": {
+            "$ref": "#/components/schemas/LeadType"
+          },
+          "party_size": {
+            "anyOf": [
+              {
+                "maximum": 10000.0,
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Party Size"
+          },
+          "requested_date": {
+            "anyOf": [
+              {
+                "maxLength": 10,
+                "minLength": 10,
+                "pattern": "^(19|20|21)[0-9]{2}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Requested Date"
+          },
+          "status": {
+            "$ref": "#/components/schemas/LeadStatus"
+          }
+        },
+        "required": [
+          "id",
+          "lead_type",
+          "status",
+          "created_at"
+        ],
+        "title": "InboxRequestSummary",
+        "type": "object"
+      },
+      "InboxSettingsView": {
+        "additionalProperties": false,
+        "description": "The inbox settings as stored (defaults when never changed).",
+        "properties": {
+          "auto_assign_new_handoffs": {
+            "default": false,
+            "title": "Auto Assign New Handoffs",
+            "type": "boolean"
+          },
+          "auto_assign_new_requests": {
+            "default": false,
+            "title": "Auto Assign New Requests",
+            "type": "boolean"
+          },
+          "auto_assign_user_ids": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Auto Assign User Ids",
+            "type": "array"
+          },
+          "business_id": {
+            "title": "Business Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "business_id"
+        ],
+        "title": "InboxSettingsView",
+        "type": "object"
+      },
+      "InboxView": {
+        "description": "One way to look at a business's conversations in the team inbox.\n\nNEEDS_PERSON: the assistant handed the conversation to staff (an open\nhandoff). REQUESTS: a request (lead) of the conversation is new or in\nprogress. MINE: waiting for the team and assigned to the viewer.\nUNASSIGNED: waiting for the team and assigned to nobody. ALL: every\nconversation. A conversation waits for the team while it needs a\nperson or has an open request.",
+        "enum": [
+          "needs_person",
+          "requests",
+          "mine",
+          "unassigned",
+          "all"
+        ],
+        "title": "InboxView",
+        "type": "string"
+      },
+      "InboxViewCounts": {
+        "additionalProperties": false,
+        "description": "How many conversations each view holds (sandbox left out): those that\nneed a person, have an open request, wait for the team and are assigned\nto the viewer, and wait for the team with nobody assigned. \"All\" has no\ncount: it is the whole history.",
+        "properties": {
+          "mine": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Mine",
+            "type": "integer"
+          },
+          "needs_person": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Needs Person",
+            "type": "integer"
+          },
+          "requests": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Requests",
+            "type": "integer"
+          },
+          "unassigned": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Unassigned",
+            "type": "integer"
+          }
+        },
+        "title": "InboxViewCounts",
         "type": "object"
       },
       "InvoiceKind": {
@@ -9206,6 +9958,113 @@
           "updated_at"
         ],
         "title": "QueuedJobView",
+        "type": "object"
+      },
+      "QuickReplyList": {
+        "additionalProperties": false,
+        "description": "The saved replies of a business in the owner's order.",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/QuickReplyView"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "title": "QuickReplyList",
+        "type": "object"
+      },
+      "QuickReplyVariable": {
+        "description": "A value a saved reply can carry, written in braces in its text:\n{name} the customer's name, {booking_time} the start of the\nconversation's next booking in the business time zone, {business_name}.",
+        "enum": [
+          "name",
+          "booking_time",
+          "business_name"
+        ],
+        "title": "QuickReplyVariable",
+        "type": "string"
+      },
+      "QuickReplyVariantView": {
+        "additionalProperties": false,
+        "description": "A saved reply in one language.",
+        "properties": {
+          "language": {
+            "maxLength": 16,
+            "minLength": 2,
+            "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$",
+            "title": "Language",
+            "type": "string"
+          },
+          "text": {
+            "maxLength": 2000,
+            "minLength": 1,
+            "pattern": "\\S",
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "language",
+          "text"
+        ],
+        "title": "QuickReplyVariantView",
+        "type": "object"
+      },
+      "QuickReplyView": {
+        "additionalProperties": false,
+        "description": "A saved reply with the variables its texts use.",
+        "properties": {
+          "created_by": {
+            "title": "Created By",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "shortcut": {
+            "maxLength": 32,
+            "minLength": 1,
+            "pattern": "^[\\w-]+$",
+            "title": "Shortcut",
+            "type": "string"
+          },
+          "title": {
+            "maxLength": 80,
+            "minLength": 1,
+            "pattern": "\\S",
+            "title": "Title",
+            "type": "string"
+          },
+          "updated_at": {
+            "title": "Updated At",
+            "type": "integer"
+          },
+          "variables": {
+            "items": {
+              "$ref": "#/components/schemas/QuickReplyVariable"
+            },
+            "title": "Variables",
+            "type": "array"
+          },
+          "variants": {
+            "items": {
+              "$ref": "#/components/schemas/QuickReplyVariantView"
+            },
+            "title": "Variants",
+            "type": "array"
+          }
+        },
+        "required": [
+          "id",
+          "shortcut",
+          "title",
+          "variants",
+          "created_by",
+          "updated_at"
+        ],
+        "title": "QuickReplyView",
         "type": "object"
       },
       "QuietHours": {
@@ -19798,6 +20657,168 @@
         ]
       }
     },
+    "/v1/businesses/{business_id}/conversations/{conversation_id}/assign": {
+      "post": {
+        "operationId": "assign_conversation_v1_businesses__business_id__conversations__conversation_id__assign_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "conversation_id",
+            "required": true,
+            "schema": {
+              "title": "Conversation Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "description": "Body of POST .../conversations/{conversation_id}/assign: the member to\nassign (null: nobody) and the `assignment_revision` the caller saw. A\nrevision that is no longer current is refused with 409\n(`assignment_changed`): someone else changed the assignment meanwhile.",
+                "properties": {
+                  "assignee_user_id": {
+                    "anyOf": [
+                      {
+                        "pattern": "^user_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Assignee User Id"
+                  },
+                  "expected_revision": {
+                    "minimum": 0,
+                    "title": "Expected Revision",
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "expected_revision"
+                ],
+                "title": "AssignConversationRequest",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConversationAssignmentView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Assign Conversation",
+        "tags": [
+          "inbox"
+        ]
+      }
+    },
     "/v1/businesses/{business_id}/conversations/{conversation_id}/messages": {
       "get": {
         "operationId": "list_conversation_messages_v1_businesses__business_id__conversations__conversation_id__messages_get",
@@ -20109,6 +21130,571 @@
         "summary": "Send Staff Message",
         "tags": [
           "conversations"
+        ]
+      }
+    },
+    "/v1/businesses/{business_id}/conversations/{conversation_id}/notes": {
+      "get": {
+        "operationId": "list_conversation_notes_v1_businesses__business_id__conversations__conversation_id__notes_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "conversation_id",
+            "required": true,
+            "schema": {
+              "title": "Conversation Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Limit"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConversationNotePage"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "List Conversation Notes",
+        "tags": [
+          "inbox"
+        ]
+      },
+      "post": {
+        "operationId": "create_conversation_note_v1_businesses__business_id__conversations__conversation_id__notes_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "conversation_id",
+            "required": true,
+            "schema": {
+              "title": "Conversation Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "description": "Body of POST .../conversations/{conversation_id}/notes.",
+                "properties": {
+                  "text": {
+                    "maxLength": 4000,
+                    "minLength": 1,
+                    "pattern": "\\S",
+                    "title": "Text",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "text"
+                ],
+                "title": "ConversationNoteRequest",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConversationNoteView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Create Conversation Note",
+        "tags": [
+          "inbox"
+        ]
+      }
+    },
+    "/v1/businesses/{business_id}/conversations/{conversation_id}/notes/{note_id}": {
+      "delete": {
+        "operationId": "delete_conversation_note_v1_businesses__business_id__conversations__conversation_id__notes__note_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "conversation_id",
+            "required": true,
+            "schema": {
+              "title": "Conversation Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "note_id",
+            "required": true,
+            "schema": {
+              "title": "Note Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Delete Conversation Note",
+        "tags": [
+          "inbox"
+        ]
+      }
+    },
+    "/v1/businesses/{business_id}/conversations/{conversation_id}/quick-replies": {
+      "get": {
+        "operationId": "fill_quick_replies_v1_businesses__business_id__conversations__conversation_id__quick_replies_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "conversation_id",
+            "required": true,
+            "schema": {
+              "title": "Conversation Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FilledQuickReplyList"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Fill Quick Replies",
+        "tags": [
+          "inbox"
         ]
       }
     },
@@ -21117,6 +22703,188 @@
         ]
       }
     },
+    "/v1/businesses/{business_id}/inbox": {
+      "get": {
+        "operationId": "list_inbox_v1_businesses__business_id__inbox_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "view",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "View"
+            }
+          },
+          {
+            "in": "query",
+            "name": "channel",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Channel"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Limit"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InboxPage"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "List Inbox",
+        "tags": [
+          "inbox"
+        ]
+      }
+    },
     "/v1/businesses/{business_id}/inbox-counts": {
       "get": {
         "description": "Open handoffs and new requests (sandbox excluded): the badges on\nMessages. Counts only, so the cabinet polls it without recording a\nview of personal data.",
@@ -21233,6 +23001,510 @@
         "summary": "Get Inbox Counts Route",
         "tags": [
           "operations"
+        ]
+      }
+    },
+    "/v1/businesses/{business_id}/inbox/assignees": {
+      "get": {
+        "operationId": "list_inbox_assignees_v1_businesses__business_id__inbox_assignees_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InboxAssigneeList"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "List Inbox Assignees",
+        "tags": [
+          "inbox"
+        ]
+      }
+    },
+    "/v1/businesses/{business_id}/inbox/counts": {
+      "get": {
+        "operationId": "count_inbox_views_v1_businesses__business_id__inbox_counts_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InboxViewCounts"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Count Inbox Views",
+        "tags": [
+          "inbox"
+        ]
+      }
+    },
+    "/v1/businesses/{business_id}/inbox/settings": {
+      "get": {
+        "operationId": "get_inbox_settings_v1_businesses__business_id__inbox_settings_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InboxSettingsView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Get Inbox Settings",
+        "tags": [
+          "inbox"
+        ]
+      },
+      "put": {
+        "operationId": "update_inbox_settings_v1_businesses__business_id__inbox_settings_put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "description": "Body of PUT .../inbox/settings: assign new handoffs and new requests\nautomatically, to the members in `auto_assign_user_ids` (empty: every\nstaff member, or the owners when there is no staff).",
+                "properties": {
+                  "auto_assign_new_handoffs": {
+                    "default": false,
+                    "title": "Auto Assign New Handoffs",
+                    "type": "boolean"
+                  },
+                  "auto_assign_new_requests": {
+                    "default": false,
+                    "title": "Auto Assign New Requests",
+                    "type": "boolean"
+                  },
+                  "auto_assign_user_ids": {
+                    "items": {
+                      "pattern": "^user_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                      "type": "string"
+                    },
+                    "maxItems": 100,
+                    "title": "Auto Assign User Ids",
+                    "type": "array"
+                  }
+                },
+                "title": "InboxSettingsRequest",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InboxSettingsView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Update Inbox Settings",
+        "tags": [
+          "inbox"
         ]
       }
     },
@@ -27576,6 +29848,617 @@
         "summary": "Check Push Device",
         "tags": [
           "notifications"
+        ]
+      }
+    },
+    "/v1/businesses/{business_id}/quick-replies": {
+      "get": {
+        "operationId": "list_quick_replies_v1_businesses__business_id__quick_replies_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QuickReplyList"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "List Quick Replies",
+        "tags": [
+          "inbox"
+        ]
+      },
+      "post": {
+        "operationId": "create_quick_reply_v1_businesses__business_id__quick_replies_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "description": "Body of POST and PUT .../quick-replies: the shortcut typed after \"/\",\nthe name in the picker and the text in each language (one variant per\nlanguage). Texts may carry {name}, {booking_time} and {business_name}.",
+                "properties": {
+                  "shortcut": {
+                    "maxLength": 32,
+                    "minLength": 1,
+                    "pattern": "^[\\w-]+$",
+                    "title": "Shortcut",
+                    "type": "string"
+                  },
+                  "title": {
+                    "maxLength": 80,
+                    "minLength": 1,
+                    "pattern": "\\S",
+                    "title": "Title",
+                    "type": "string"
+                  },
+                  "variants": {
+                    "items": {
+                      "additionalProperties": false,
+                      "description": "The text of a saved reply in one language.",
+                      "properties": {
+                        "language": {
+                          "maxLength": 16,
+                          "minLength": 2,
+                          "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$",
+                          "title": "Language",
+                          "type": "string"
+                        },
+                        "text": {
+                          "maxLength": 2000,
+                          "minLength": 1,
+                          "pattern": "\\S",
+                          "title": "Text",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "language",
+                        "text"
+                      ],
+                      "title": "QuickReplyVariantInput",
+                      "type": "object"
+                    },
+                    "maxItems": 12,
+                    "minItems": 1,
+                    "title": "Variants",
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "shortcut",
+                  "title",
+                  "variants"
+                ],
+                "title": "QuickReplyRequest",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QuickReplyView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Create Quick Reply",
+        "tags": [
+          "inbox"
+        ]
+      }
+    },
+    "/v1/businesses/{business_id}/quick-replies/{quick_reply_id}": {
+      "delete": {
+        "operationId": "delete_quick_reply_v1_businesses__business_id__quick_replies__quick_reply_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "quick_reply_id",
+            "required": true,
+            "schema": {
+              "title": "Quick Reply Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Delete Quick Reply",
+        "tags": [
+          "inbox"
+        ]
+      },
+      "put": {
+        "operationId": "update_quick_reply_v1_businesses__business_id__quick_replies__quick_reply_id__put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "quick_reply_id",
+            "required": true,
+            "schema": {
+              "title": "Quick Reply Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "description": "Body of POST and PUT .../quick-replies: the shortcut typed after \"/\",\nthe name in the picker and the text in each language (one variant per\nlanguage). Texts may carry {name}, {booking_time} and {business_name}.",
+                "properties": {
+                  "shortcut": {
+                    "maxLength": 32,
+                    "minLength": 1,
+                    "pattern": "^[\\w-]+$",
+                    "title": "Shortcut",
+                    "type": "string"
+                  },
+                  "title": {
+                    "maxLength": 80,
+                    "minLength": 1,
+                    "pattern": "\\S",
+                    "title": "Title",
+                    "type": "string"
+                  },
+                  "variants": {
+                    "items": {
+                      "additionalProperties": false,
+                      "description": "The text of a saved reply in one language.",
+                      "properties": {
+                        "language": {
+                          "maxLength": 16,
+                          "minLength": 2,
+                          "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$",
+                          "title": "Language",
+                          "type": "string"
+                        },
+                        "text": {
+                          "maxLength": 2000,
+                          "minLength": 1,
+                          "pattern": "\\S",
+                          "title": "Text",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "language",
+                        "text"
+                      ],
+                      "title": "QuickReplyVariantInput",
+                      "type": "object"
+                    },
+                    "maxItems": 12,
+                    "minItems": 1,
+                    "title": "Variants",
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "shortcut",
+                  "title",
+                  "variants"
+                ],
+                "title": "QuickReplyRequest",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QuickReplyView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Update Quick Reply",
+        "tags": [
+          "inbox"
         ]
       }
     },
