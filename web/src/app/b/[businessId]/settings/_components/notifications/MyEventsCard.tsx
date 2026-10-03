@@ -5,6 +5,7 @@ import { useState } from "react";
 import { useBusiness } from "@/components/business/BusinessContext";
 import { Button, Card, InlineError, SkeletonText, useToast } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
+import { timeZoneLabel } from "@/lib/timeZones";
 
 import {
   isSamePreferences,
@@ -21,14 +22,14 @@ type MyNotifications = ReturnType<typeof useMyNotifications>;
 
 /** "What reaches me": my events and quiet hours for my devices in this business. */
 export function MyEventsCard({ mine }: { mine: MyNotifications }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const { business } = useBusiness();
   const stored = mine.settings.data;
   return (
     <Card
       aria-label={t("notifications.mine.title")}
       title={t("notifications.mine.title")}
-      description={t("notifications.mine.description", { timeZone: business.timezone })}
+      description={t("notifications.mine.description", { timeZone: timeZoneLabel(business.timezone, locale) })}
     >
       {stored ? <MyEventsForm key={stored.business_id} stored={stored} mine={mine} /> : <SkeletonText lines={4} />}
     </Card>

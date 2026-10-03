@@ -96,7 +96,7 @@ export function InboxRowItem({
               {row.contactName ? (
                 <CustomerName name={row.contactName} />
               ) : row.contactPhone ? (
-                <span dir="ltr">{formatPhone(row.contactPhone)}</span>
+                <span dir="ltr" className="whitespace-nowrap">{formatPhone(row.contactPhone)}</span>
               ) : (
                 <CustomerName name={null} />
               )}

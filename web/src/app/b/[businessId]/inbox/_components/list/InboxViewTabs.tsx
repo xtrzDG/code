@@ -47,7 +47,7 @@ export function InboxViewTabs({
     <fieldset className="-mx-4 min-w-0 sm:mx-0">
       <legend className="sr-only">{t("inbox.viewsLabel")}</legend>
       <LayoutGroup id={name}>
-        <ScrollRow className="snap-x px-4 sm:px-0">
+        <ScrollRow className="px-4 sm:px-0">
           <div className="flex w-max gap-0.5 rounded-xl bg-surface-muted p-1" data-inbox-views="">
             {INBOX_VIEWS.map((view) => {
               const checked = view === value;
@@ -57,7 +57,7 @@ export function InboxViewTabs({
                   key={view}
                   ref={checked ? chosenRef : undefined}
                   className={cn(
-                    "relative flex min-h-9 shrink-0 cursor-pointer snap-start items-center gap-1.5 rounded-lg px-3 text-sm font-medium whitespace-nowrap transition-colors select-none",
+                    "relative flex min-h-9 shrink-0 cursor-pointer items-center gap-1.5 rounded-lg px-3 text-sm font-medium whitespace-nowrap transition-colors select-none",
                     "has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-1 has-[:focus-visible]:outline-focus",
                     checked ? "text-ink" : "text-ink-muted hover:text-ink",
                   )}

@@ -47,7 +47,7 @@ function ContactList({ contacts, onRemove }: { contacts: readonly Schema<"Manage
                 {contact.name}
               </span>
               <span className="block truncate text-xs text-ink-muted">
-                {t(`tunnelTeam.people.by.${contact.channel}`)} · <span dir="ltr">{contact.telegram_username ? `@${contact.telegram_username}` : formatContactAddress(contact.channel, contact.address)}</span>
+                {t(`tunnelTeam.people.by.${contact.channel}`)} · <span dir="ltr" className="whitespace-nowrap">{contact.telegram_username ? `@${contact.telegram_username}` : formatContactAddress(contact.channel, contact.address)}</span>
               </span>
             </span>
             <Button

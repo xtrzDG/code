@@ -51,7 +51,7 @@ function CallItem({ call }: { call: CallView }) {
         {call.from_phone_number ? (
           <span className="text-ink-muted">
             {t("conversations.calls.from")}{" "}
-            <span dir="ltr" className="tabular-nums">
+            <span dir="ltr" className="whitespace-nowrap tabular-nums">
               {formatPhone(call.from_phone_number)}
             </span>
           </span>

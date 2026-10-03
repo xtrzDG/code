@@ -124,7 +124,7 @@ function BookingRow({ booking, isStay, onOpen }: { booking: BookingView; isStay:
             {booking.contact_phone_number ? (
               <>
                 {" · "}
-                <span dir="ltr" className="tabular-nums">
+                <span dir="ltr" className="whitespace-nowrap tabular-nums">
                   {formatPhone(booking.contact_phone_number)}
                 </span>
               </>

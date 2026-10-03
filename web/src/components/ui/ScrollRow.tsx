@@ -5,7 +5,9 @@
  * phone or a narrow column): the side with more to see fades out, so the
  * cut reads as "there is more" and never as a clipped label. The scrollbar
  * is hidden; touch, trackpad, Shift+wheel and the keyboard (focus moves
- * into view) scroll it.
+ * into view) scroll it. Scroll padding the width of the fade keeps an item
+ * scrolled into view clear of it; no scroll snapping, which would scroll
+ * the row's own leading padding away and cut the first label.
  */
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
@@ -59,7 +61,7 @@ export function ScrollRow({ children, className }: { children: ReactNode; classN
       data-fade-left={edges.left || undefined}
       data-fade-right={edges.right || undefined}
       style={mask ? { maskImage: mask, WebkitMaskImage: mask } : undefined}
-      className={cn("overflow-x-auto overscroll-x-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden", className)}
+      className={cn("scroll-px-8 overflow-x-auto overscroll-x-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden", className)}
     >
       {children}
     </div>

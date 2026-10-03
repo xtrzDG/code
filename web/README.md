@@ -599,7 +599,7 @@ Each line has a test (`e2e/` or a unit test) that fails if it comes back.
 | Booking dialog | Five buttons that wrapped ("Состоялась" alone on a row); "Не пришёл" and "Состоялась" before the booking started | One main action and "More"; completed and no-show wait for the start time; "Гость не пришёл" |
 | Channels | The embed code broke inside `</script>`; the share address was cut to "loc…" | One sideways-scrolling code block with its Copy button; the address keeps the page's name (a middle ellipsis) |
 | Settings | The SMS fallback stayed editable with text-backs off; "Send a test" worked for channels the server cannot send by | Both are disabled with the reason read out |
-| Copy | "ассистент" on Share, "Сообщения → Нужен человек", "код … через почту", "Цены в валюте грузинский лари", "русский (ru)", two Georgian words for Inbox, "six steps" on the landing page, raw E.164 numbers, "Asia/Tbilisi (UTC+04:00)" | "помощник", "Входящие → Нужен человек", "по почте / по SMS / в WhatsApp", "Валюта цен: грузинский лари (GEL)", "Русский", "შემოსული", eight steps, "+995 555 00 00 01", "Тбилиси (UTC+4)" |
+| Copy | "ассистент" on Share, "Сообщения → Нужен человек", "код … через почту", "Цены в валюте грузинский лари", "русский (ru)", two Georgian words for Inbox, "six steps" on the landing page, raw E.164 numbers split over two lines, "Asia/Tbilisi (UTC+04:00)" in the zone list and the bookings and notifications notes | "помощник", "Входящие → Нужен человек", "по почте / по SMS / в WhatsApp", "Валюта цен: грузинский лари (GEL)", "Русский", "შემოსული", eight steps, "+995 555 00 00 01" on one line, "Тбилиси (UTC+4)" |
 
 ## Conventions
 
