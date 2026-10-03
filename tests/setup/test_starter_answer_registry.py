@@ -93,7 +93,9 @@ def test_offer_examples_never_carry_a_price() -> None:
         ("IN", {Weekday.SUNDAY}),
     ],
 )
-def test_the_weekend_comes_from_the_country(country: str, weekend: set[Weekday]) -> None:
+def test_the_weekend_comes_from_the_country(
+    country: str, weekend: set[Weekday]
+) -> None:
     assert find_weekend(CountryCode(country)) == frozenset(weekend)
 
 
@@ -104,7 +106,9 @@ def test_hours_rest_on_the_weekend_of_the_business_country() -> None:
     in_georgia = registry.get(NicheKey.CLINIC, CountryCode("GE")).hours
 
     # A clinic works 9:00-19:00 on working days and 10:00-15:00 on the weekend.
-    short_days_in_israel = [int(day.weekday) for day in in_israel if day.opens_at == 600]
+    short_days_in_israel = [
+        int(day.weekday) for day in in_israel if day.opens_at == 600
+    ]
     short_days_in_georgia = [
         int(day.weekday) for day in in_georgia if day.opens_at == 600
     ]

@@ -60,7 +60,8 @@ class PatchProfileUseCase(UseCaseContract[PatchProfileCommand, BusinessProfileVi
     saved at once never undo each other); with `expected_updated_at` an
     edit made from an older profile is refused (409 stale_revision).
     Niche answers change one question at a time, contacts one phone at a
-    time; a change of contact phones is written to the audit log.
+    time; a change of contact phones is written to the audit log. A patch
+    that changes nothing stores nothing (the revision stays).
     """
 
     def __init__(
@@ -123,13 +124,14 @@ class PatchProfileUseCase(UseCaseContract[PatchProfileCommand, BusinessProfileVi
         self._business_profile_repo.insert_if_absent(new_profile(business, now))
         previous_contacts: list[BusinessContacts] = []
 
-        def change(stored: BusinessProfileDocument) -> BusinessProfileDocument:
+        def change(stored: BusinessProfileDocument) -> BusinessProfileDocument | None:
             if (
                 patch.expected_updated_at is not None
                 and stored.updated_at != patch.expected_updated_at
             ):
                 raise build_stale_profile_error(stored.updated_at)
 
+            before: dict[str, object] = stored.model_dump()
             previous_contacts[:] = [stored.contacts.model_copy()]
             stored.niche_key = business.niche_key
             if patch.answers_language is not None:
@@ -159,12 +161,17 @@ class PatchProfileUseCase(UseCaseContract[PatchProfileCommand, BusinessProfileVi
             if patch.is_recording_notice_enabled is not None:
                 stored.is_recording_notice_enabled = patch.is_recording_notice_enabled
 
+            if stored.model_dump() == before:
+                # Nothing changed: no new revision, so the assistant is not
+                # reported as having changes to apply.
+                return None
+
             stored.updated_at = next_revision_time(now, stored.updated_at)
             return stored
 
         saved: BusinessProfileDocument | None = self._business_profile_repo.modify(
             business.id, change
-        )
+        ) or self._business_profile_repo.get_by_business(business.id)
         if saved is not None and previous_contacts != [saved.contacts]:
             self._audit_log_repo.append(
                 build_contacts_audit_entry(business.id, input_data.actor_id, now)

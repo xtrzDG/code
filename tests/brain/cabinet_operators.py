@@ -73,7 +73,7 @@ from app.use_cases.setup.record_activation_event_use_case import (
     RecordActivationEventUseCase,
 )
 from tests.brain.brain_world import BrainWorld
-from tests.brain.cabinet_fakes import CabinetStorage
+from tests.brain.cabinet_fakes import CabinetStorage, KeepTestChatVersions
 
 
 @dataclass(frozen=True)
@@ -185,6 +185,8 @@ def build_cabinet_operators(
         ),
         owner_test_chat=PipelineOperator(
             OwnerTestChatPipeline(
+                # The brain's tests talk to versions they build themselves.
+                prepare_test_chat_version=UseCaseOrchestrator(KeepTestChatVersions()),
                 prepare_test_message=OwnerTestChatOrchestrator(
                     authorize_business_access=world.authorize,
                     resolve_test_chat_version=ResolveTestChatVersionUseCase(

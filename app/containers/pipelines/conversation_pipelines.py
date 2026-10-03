@@ -44,6 +44,7 @@ class ConversationPipelinesContainer(containers.DeclarativeContainer):
         PipelineContract[OwnerTestChatCommand, AssistantReply]
     ] = Factory(
         OwnerTestChatPipeline,
+        prepare_test_chat_version=setup_orchestrators.prepare_test_chat_version_orchestrator,
         prepare_test_message=conversation_orchestrators.owner_test_chat_orchestrator,
         turn_orchestrator=conversation_orchestrators.conversation_turn_orchestrator,
         record_activation_event=setup_orchestrators.record_activation_event_orchestrator,

@@ -196,6 +196,7 @@ class UseCasesContainer(containers.DeclarativeContainer):
         time_provider=time_provider,
         utilities=utilities,
         account_use_cases=accounts,
+        assistant_use_cases=assistants,
         apply_use_cases=apply,
         launch_use_cases=launch,
     )

@@ -33,7 +33,11 @@ class SetupOrchestratorsContainer(containers.DeclarativeContainer):
     patch_profile_orchestrator = use_case_orchestrator(
         setup_use_cases.patch_profile_use_case
     )
-    # The first test chat is a milestone (recorded by the test chat pipeline).
+    # The test chat pipeline: a preview version with the owner's latest
+    # edits first, the first test chat is a milestone.
+    prepare_test_chat_version_orchestrator = use_case_orchestrator(
+        setup_use_cases.prepare_test_chat_version_use_case
+    )
     record_activation_event_orchestrator = use_case_orchestrator(
         launch_use_cases.record_activation_event_use_case
     )
