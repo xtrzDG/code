@@ -66,6 +66,10 @@ Spec: `35be369c1300ba27`
   the lari (e.g. USD for the United States) are now estimated with such a
   rate (`is_estimated`), and a client's dollar provider costs convert into
   every subscription currency, so the admin margin is known.
+- **Changed** `negative_margin` (`ClientHealthIssue`) is raised only for a
+  client that pays (not during a free trial or without a subscription):
+  a trial costs the platform by design, and with every margin now known it
+  would otherwise make every trialing client critical.
 
 ## 2026-10-03 — encryption key rotation for platform admins
 
