@@ -27,6 +27,8 @@ export interface GuideRow {
   href: string | null;
   /** An optional step not done yet may be skipped (and a skipped one brought back). */
   canSkip: boolean;
+  /** A step after the launch, before it: shown for what comes, without a button. */
+  isWaiting: boolean;
 }
 
 /** The steps after the launch, in order. */
@@ -35,23 +37,30 @@ export const AFTER_LAUNCH: readonly StepCode[] = ["phone_test", "second_channel"
 function rowOf(step: SetupStepView, businessId: string, isLive: boolean): GuideRow {
   const isDone = step.status === "done";
   const canSkip = !step.is_required && !isDone;
+  const isAfterLaunch = AFTER_LAUNCH.includes(step.code);
+  if (isAfterLaunch && !isLive) {
+    // Nothing to test or share yet: customers get answers once it is live.
+    return { step, kind: "page", href: null, canSkip: false, isWaiting: !isDone };
+  }
   if (step.code === "phone_test") {
-    return { step, kind: "phone", href: null, canSkip };
+    return { step, kind: "phone", href: null, canSkip, isWaiting: false };
   }
   if (step.code === "share") {
-    return { step, kind: "page", href: isDone ? null : `${businessPath(businessId, "assistant/channels")}#share`, canSkip };
+    const href = isDone ? null : `${businessPath(businessId, "assistant/channels")}#share`;
+    return { step, kind: "page", href, canSkip, isWaiting: false };
   }
-  if (step.code === "second_channel" || isLive) {
-    return { step, kind: "page", href: isDone ? null : fixPath(businessId, step.action, null), canSkip };
+  if (isAfterLaunch || isLive) {
+    return { step, kind: "page", href: isDone ? null : fixPath(businessId, step.action, null), canSkip, isWaiting: false };
   }
   const place = fixPlace(step.action);
   const href = setupPath(businessId, place.kind === "step" ? place.step : undefined);
-  return { step, kind: "tunnel", href: isDone ? null : href, canSkip };
+  return { step, kind: "tunnel", href: isDone ? null : href, canSkip, isWaiting: false };
 }
 
 /**
  * The rows of the card. Before the launch: the seven setup steps (each
- * opens the tunnel at its screen), then the three after it, waiting. Once
+ * opens the tunnel at its screen), then the three after it, waiting
+ * (no button and no "Skip" until the assistant answers customers). Once
  * live: the three after the launch, and a setup step only when the guide
  * needs it again (a required answer that went missing).
  */

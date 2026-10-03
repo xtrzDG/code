@@ -55,6 +55,11 @@ describe("the setup guide", () => {
     const staff = rows.find((row) => row.step.code === "staff_contact");
     expect(staff).toMatchObject({ kind: "tunnel", href: "/b/business_1/setup?step=people", canSkip: false });
     expect(rows.find((row) => row.step.code === "hours_and_bookings")?.href).toBeNull();
+    // The steps after the launch wait for it: no button, no "Skip".
+    for (const row of rows.slice(SETUP_CODES.length)) {
+      expect(row).toMatchObject({ href: null, canSkip: false, isWaiting: true });
+    }
+    expect(staff?.isWaiting).toBe(false);
   });
 
   it("once live shows the steps to the first customers, each with its place", () => {

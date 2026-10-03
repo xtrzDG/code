@@ -63,7 +63,7 @@ export function SetupGuideRow({
         <StateMark status={step.status} />
         <div className="min-w-0 flex-1 space-y-1">
           <div className="flex flex-wrap items-center gap-2">
-            <h3 className={cn("text-sm font-semibold", isDone || step.status === "skipped" ? "text-ink-muted" : "text-ink")}>
+            <h3 className={cn("text-sm font-semibold", isDone || step.status === "skipped" || row.isWaiting ? "text-ink-muted" : "text-ink")}>
               {step.title}
             </h3>
             {isNext ? <Badge tone="accent">{t("setupGuide.status.next")}</Badge> : null}
