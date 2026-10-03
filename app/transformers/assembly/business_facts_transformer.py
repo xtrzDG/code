@@ -26,6 +26,7 @@ from app.utilities.assembly.fact_formatting import (
     read_english_text,
 )
 from app.utilities.assembly.fact_table import append_fact
+from app.utilities.knowledge.profile_links import read_profile_links
 
 MAX_SCHEDULE_EXCEPTIONS: int = 30
 KNOWLEDGE_KIND_ORDER: list[KnowledgeItemKind] = list(KnowledgeItemKind)
@@ -258,7 +259,7 @@ class BusinessFactsTransformer(
         used_keys: set[str],
     ) -> None:
         for link in sorted(
-            profile.links,
+            read_profile_links(profile),
             key=lambda link: (LINK_KIND_ORDER.index(link.kind), str(link.url)),
         ):
             append_fact(

@@ -23,6 +23,7 @@ from app.schemas.typings.localization.constrained_strings import (
     LanguageTag,
     TimezoneName,
 )
+from app.schemas.typings.sharing.constrained_strings import BusinessPublicSlug
 from app.schemas.typings.users.prefixed_id import UserId
 
 
@@ -62,9 +63,12 @@ class BusinessDocument(BaseDocument):
 
     Version 2: manager contacts may carry notification preferences and a
     Telegram username (both optional, so version 1 rows read as they are).
+    Version 3: `public_slug`, the address of the hosted chat page
+    (`/c/{slug}`; None until the owner first shares the assistant, so older
+    rows read as they are). Its uniqueness is kept by the slug claims.
     """
 
-    schema_version: SchemaVersion = SchemaVersion("2")
+    schema_version: SchemaVersion = SchemaVersion("3")
     id: BusinessId = Field(default_factory=BusinessId)
     name: BusinessName
     niche_key: NicheKey
@@ -83,4 +87,5 @@ class BusinessDocument(BaseDocument):
     manager_contacts: list[ManagerContact] = Field(default_factory=list[ManagerContact])
     recording_retention_days: RecordingRetentionDays = RecordingRetentionDays(90)
     published_assistant_version_id: AssistantVersionId | None = None
+    public_slug: BusinessPublicSlug | None = None
     revision: BusinessRevision = BusinessRevision(0)

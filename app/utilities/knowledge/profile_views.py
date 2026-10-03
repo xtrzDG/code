@@ -13,6 +13,7 @@ from app.schemas.typings.compliance.strings import (
     AuditEntityReference,
 )
 from app.schemas.typings.users.prefixed_id import UserId
+from app.utilities.knowledge.profile_links import read_profile_links
 
 CONTACTS_AUDIT_ENTITY: AuditEntityName = AuditEntityName("business_profile.contacts")
 
@@ -62,7 +63,7 @@ def to_profile_view(
         handoff_rules=list(profile.handoff_rules),
         forbidden=list(profile.forbidden),
         tone=profile.tone,
-        links=list(profile.links),
+        links=read_profile_links(profile),
         niche_answers=list(profile.niche_answers),
         is_recording_notice_enabled=profile.is_recording_notice_enabled,
         is_saved=True,

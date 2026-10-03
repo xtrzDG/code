@@ -10,6 +10,7 @@ SAMPLE_MICROSECONDS: int = 1_790_000_000_000_000
 
 CONSTRAINED_TEXT_SAMPLES: dict[str, str] = {
     "AutotestScenarioKey": "booking-happy-path",
+    "BusinessPublicSlug": "cafe-batumi",
     "CabinetDeepLink": (
         "https://app.example.com/n/AQ3xL8nYtQ2bS0pK9mVwZcRj5uHfE1gDaB7iO4lN6eT"
     ),
@@ -17,6 +18,7 @@ CONSTRAINED_TEXT_SAMPLES: dict[str, str] = {
     "CurrencyCode": "GEL",
     "DpaDocumentVersion": "2026-07",
     "GoLiveCheckDetail": "no_opening_hours",
+    "InstagramUsername": "cafe.batumi",
     "E164PhoneNumber": "+995599123456",
     "EmailAddress": "owner@example.com",
     "FactKey": "opening_hours",
@@ -31,6 +33,7 @@ CONSTRAINED_TEXT_SAMPLES: dict[str, str] = {
     "LocalDate": "2026-09-21",
     "LocalTimeOfDay": "22:00",
     "ManagerTelegramUsername": "nino_k",
+    "MetaPageUsername": "cafebatumi",
     "PaymentCheckoutUrl": "https://pay.example.com/checkout/42",
     "PushAuthSecret": "BTBZMqHH6r4Tts7J_aSIgg",
     "PushEndpointUrl": "https://push.example.com/send/c1d2e3",
@@ -43,6 +46,7 @@ CONSTRAINED_TEXT_SAMPLES: dict[str, str] = {
     "TimezoneName": "Asia/Tbilisi",
     "WebLink": "https://example.com/menu",
     "WhatsAppTemplateLanguageCode": "en_US",
+    "WhatsAppNumberDigits": "995599123456",
     "WhatsAppTemplateName": "booking_reminder",
     "WidgetAccentColor": "#7c5cff",
     "WorkerHostName": "srv-workshop-worker-1",

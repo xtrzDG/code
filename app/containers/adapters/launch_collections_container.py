@@ -6,6 +6,7 @@ from app.containers.clients import ClientsContainer
 from app.containers.config import ConfigContainer
 from app.containers.time_provider import TimeProviderContainer
 from app.containers.utilities import UtilitiesContainer
+from app.schemas.domain.public_slugs import PublicSlugClaimDocument
 from app.schemas.domain.setup import (
     ActivationEventDocument,
     AssistantApplyDocument,
@@ -17,7 +18,8 @@ class LaunchCollectionsContainer(containers.DeclarativeContainer):
     """
     The document collections of the guided launch (migration 1044): each
     business's milestones, the setup steps it skipped and its current
-    "Apply changes". A sibling of DocumentCollectionsContainer with the
+    "Apply changes"; and of sharing the live assistant (1052): the public
+    chat addresses businesses took. A sibling of DocumentCollectionsContainer with the
     same storage factory (Postgres with DATABASE_URL, else in memory).
     """
 
@@ -40,6 +42,14 @@ class LaunchCollectionsContainer(containers.DeclarativeContainer):
     assistant_apply_collection = document_collection(
         AssistantApplyDocument,
         "assistant_applies",
+        config,
+        clients,
+        utilities,
+        time_provider,
+    )
+    public_slug_claim_collection = document_collection(
+        PublicSlugClaimDocument,
+        "public_slug_claims",
         config,
         clients,
         utilities,

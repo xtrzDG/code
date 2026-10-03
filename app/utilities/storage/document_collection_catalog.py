@@ -49,6 +49,7 @@ from app.schemas.domain.outbound_messages import OutboundMessageDocument
 from app.schemas.domain.package_usage import PackageUsageWarningDocument
 from app.schemas.domain.payments import PaymentOrderDocument
 from app.schemas.domain.profiles import BusinessProfileDocument
+from app.schemas.domain.public_slugs import PublicSlugClaimDocument
 from app.schemas.domain.push_subscriptions import PushSubscriptionDocument
 from app.schemas.domain.resources import ResourceDocument, ScheduleExceptionDocument
 from app.schemas.domain.setup import (
@@ -205,6 +206,11 @@ DOCUMENT_COLLECTIONS: tuple[DocumentCollectionDefinition, ...] = (
     ),
     DocumentCollectionDefinition(
         DocumentCollectionName("assistant_applies"), AssistantApplyDocument
+    ),
+    # Sharing the assistant: the hosted chat addresses (/c/{slug}) each
+    # business took (1052).
+    DocumentCollectionDefinition(
+        DocumentCollectionName("public_slug_claims"), PublicSlugClaimDocument
     ),
 )
 

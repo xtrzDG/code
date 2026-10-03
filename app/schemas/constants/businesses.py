@@ -35,7 +35,11 @@ class Weekday(IntEnum):
 
 
 class BusinessLinkKind(StrEnum):
-    """Links from the profile the assistant may send (send_link tool)."""
+    """
+    Links from the profile the assistant may send (send_link tool). PRIVACY
+    is the business's own privacy notice; the website chat links to it (or,
+    without one, to the platform's default notice for the business).
+    """
 
     MENU = "menu"
     MAP = "map"
@@ -43,6 +47,7 @@ class BusinessLinkKind(StrEnum):
     BOOKING_PAGE = "booking_page"
     DELIVERY = "delivery"
     WEBSITE = "website"
+    PRIVACY = "privacy"
 
 
 class BusinessSettingsRefusalCode(StrEnum):

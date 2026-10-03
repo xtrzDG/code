@@ -29,6 +29,7 @@ from app.schemas.typings.profiles.strings import (
     ToneText,
 )
 from app.utilities.knowledge.opening_hours import validate_opening_intervals
+from app.utilities.knowledge.profile_links import store_profile_links
 from app.utilities.knowledge.profile_sections import (
     build_booking_rules,
     check_address,
@@ -153,7 +154,7 @@ class PatchProfileUseCase(UseCaseContract[PatchProfileCommand, BusinessProfileVi
             if "tone" in provided:
                 stored.tone = tone
             if "links" in provided:
-                stored.links = links
+                store_profile_links(stored, links)
             if answer_changes:
                 stored.niche_answers = apply_answer_changes(
                     template, stored.niche_answers, answer_changes

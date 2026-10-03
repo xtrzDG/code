@@ -1,4 +1,4 @@
-from base_pydantic_schemas import BaseDocument, PersistentDocument
+from base_pydantic_schemas import BaseDocument, PersistentDocument, SchemaVersion
 from pydantic import Field
 
 from app.schemas.constants.bookings import ResourceKind
@@ -91,8 +91,15 @@ class BusinessProfileDocument(BaseDocument):
 
     Offerings and FAQ live in the knowledge base (`KnowledgeItemDocument`),
     bookable things in `ResourceDocument`; everything else is here.
+
+    Version 2: `privacy_notice_url`, the business's own privacy notice
+    (optional, so version 1 rows read as they are). The cabinet and the
+    assistant see it as the link of kind `BusinessLinkKind.PRIVACY`; it is
+    kept apart from `links` so a release that does not know that kind
+    still reads every profile (docs/operations/deploys.md, enum values).
     """
 
+    schema_version: SchemaVersion = SchemaVersion("2")
     business_id: BusinessId
     niche_key: NicheKey
     answers_language: LanguageTag
@@ -104,5 +111,6 @@ class BusinessProfileDocument(BaseDocument):
     forbidden: list[ForbiddenRuleText] = Field(default_factory=list[ForbiddenRuleText])
     tone: ToneText | None = None
     links: list[BusinessLink] = Field(default_factory=list[BusinessLink])
+    privacy_notice_url: WebLink | None = None
     niche_answers: list[ProfileAnswer] = Field(default_factory=list[ProfileAnswer])
     is_recording_notice_enabled: IsRecordingNoticeEnabled = True
