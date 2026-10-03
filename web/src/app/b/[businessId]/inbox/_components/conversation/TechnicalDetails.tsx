@@ -5,10 +5,12 @@
  * cost for platform admins; the exact requests the assistant made to the
  * business's data, with their answers, for everyone who opens it) and the
  * conversation's totals. Closed for owners and staff, who read the plain
- * actions above it; open by default for platform admins.
+ * actions above it; open by default for platform admins on a wide screen
+ * (closed below lg); a person's own open or close is remembered
+ * (_lib/technicalDetails).
  */
 
-import type { ReactNode } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 
 import { useBusiness, useBusinessFormat } from "@/components/business/BusinessContext";
 import { IconChevronRight } from "@/components/icons";
@@ -20,16 +22,41 @@ import { useI18n } from "@/i18n/client";
 import { cn } from "@/lib/cn";
 
 import { prettyJson } from "../../_lib/conversationModel";
+import {
+  localChoiceStorage,
+  readDetailsChoice,
+  startsOpen,
+  TECHNICAL_DETAILS_WIDE_QUERY,
+  writeDetailsChoice,
+} from "../../_lib/technicalDetails";
+import { useMediaQuery } from "../../_lib/useMediaQuery";
 import type { UsageTotals } from "../../_lib/conversationUsage";
 
 function Disclosure({ label, children, className }: { label: string; children: ReactNode; className?: string }) {
-  const { isPlatformAdmin } = useBusiness();
+  const { isPlatformAdmin, me } = useBusiness();
+  const isWide = useMediaQuery(TECHNICAL_DETAILS_WIDE_QUERY);
+  const details = useRef<HTMLDetailsElement>(null);
+  const userId = me.user.id;
+
+  useEffect(() => {
+    if (details.current) {
+      details.current.open = startsOpen(readDetailsChoice(localChoiceStorage(), userId), isPlatformAdmin, isWide);
+    }
+  }, [userId, isPlatformAdmin, isWide]);
+
+  // Only a person's own click is remembered (opening by default is not a choice).
+  const remember = () => {
+    writeDetailsChoice(localChoiceStorage(), userId, details.current?.open ? "closed" : "open");
+  };
+
   return (
     <details
-      open={isPlatformAdmin}
+      ref={details}
       className={cn("group w-fit max-w-full rounded-xl border border-line bg-surface text-start text-sm open:w-full", className)}
     >
-      <summary className="flex cursor-pointer list-none items-center gap-2 rounded-xl px-3 py-2 text-xs font-medium text-ink-subtle hover:text-ink [&::-webkit-details-marker]:hidden">
+      <summary
+        onClick={remember}
+        className="flex cursor-pointer list-none items-center gap-2 rounded-xl px-3 py-2 text-xs font-medium text-ink-subtle hover:text-ink [&::-webkit-details-marker]:hidden">
         <IconChevronRight className="size-3.5 shrink-0 transition-transform group-open:rotate-90 rtl:-scale-x-100" aria-hidden />
         {label}
       </summary>

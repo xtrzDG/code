@@ -36,20 +36,61 @@ export interface BookingActions {
   cancel: boolean;
 }
 
+export type BookingActionKey = keyof BookingActions;
+
 /**
  * What staff may do with a booking (backend UpdateBookingUseCase:
  * completed, no-show and cancelled from pending or confirmed; confirm from
- * pending). Finished bookings are read-only.
+ * pending). "Completed" and "no-show" wait for the start time: before it
+ * nobody can have come or stayed away. Finished bookings are read-only.
  */
-export function bookingActions(status: BookingStatus): BookingActions {
+export function bookingActions(status: BookingStatus, hasStarted = true): BookingActions {
   const active = status === "pending" || status === "confirmed";
   return {
     confirm: status === "pending",
-    complete: active,
-    noShow: active,
+    complete: active && hasStarted,
+    noShow: active && hasStarted,
     reschedule: active,
     cancel: active,
   };
+}
+
+export interface BookingActionLayout {
+  /** The one main button: confirm a request, else mark it completed once it started, else edit. */
+  primary: BookingActionKey | "edit";
+  /** The rest, under "More", the destructive cancel last. */
+  more: (BookingActionKey | "edit")[];
+}
+
+const MORE_ORDER: readonly (BookingActionKey | "edit")[] = ["complete", "noShow", "reschedule", "edit", "cancel"];
+
+export function bookingActionLayout(actions: BookingActions): BookingActionLayout {
+  const primary = actions.confirm ? "confirm" : actions.complete ? "complete" : "edit";
+  const more = MORE_ORDER.filter((key) => key !== primary && (key === "edit" || actions[key]));
+  return { primary, more };
+}
+
+/** "YYYY-MM-DDTHH:MM" now in a time zone, to compare with a booking's local start. */
+export function localNowIn(timeZone: string, now: Date = new Date()): string {
+  const parts = Object.fromEntries(
+    new Intl.DateTimeFormat("en-CA", {
+      timeZone,
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      hourCycle: "h23",
+    })
+      .formatToParts(now)
+      .map((part) => [part.type, part.value]),
+  );
+  return `${parts.year}-${parts.month}-${parts.day}T${parts.hour}:${parts.minute}`;
+}
+
+/** Whether a booking's start (its date, and time when it has one) has come, in the business's local time. */
+export function hasStarted(booking: Pick<BookingView, "date" | "time">, localNow: string): boolean {
+  return `${booking.date}T${booking.time?.slice(0, 5) ?? "00:00"}` <= localNow;
 }
 
 /** Nights of a stay (0 for a time slot ending the same day). */

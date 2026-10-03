@@ -64,11 +64,12 @@ export const bookingsRu: Translation<typeof bookingsEn> = {
     source: "Источник",
   },
   actions: {
+    more: "Ещё",
     edit: "Изменить",
     label: "Действия",
     confirm: "Подтвердить",
     complete: "Состоялась",
-    noShow: "Не пришёл",
+    noShow: "Гость не пришёл",
     reschedule: "Перенести",
     cancel: "Отменить бронь",
   },
