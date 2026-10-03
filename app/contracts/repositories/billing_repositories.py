@@ -13,6 +13,7 @@ from typed_time_provider import Microseconds
 from app.contracts.repo_contract import RepoContract
 from app.schemas.domain.billing import (
     InvoiceDocument,
+    OnboardingRequestDocument,
     SubscriptionDocument,
     UsageEventDocument,
 )
@@ -64,4 +65,19 @@ class UsageEventRepoContract(RepoContract, Protocol):
         occurred_to: Microseconds,
     ) -> list[UsageEventDocument]:
         """Events with occurred_from <= occurred_at < occurred_to."""
+        raise NotImplementedError
+
+
+class OnboardingRequestRepoContract(RepoContract, Protocol):
+    def get_by_business(
+        self, business_id: BusinessId
+    ) -> OnboardingRequestDocument | None:
+        """The done-for-you setup request of a business, if it made one."""
+        raise NotImplementedError
+
+    def open_once(self, request: OnboardingRequestDocument) -> bool:
+        """
+        Store the request unless the business already has one (atomic, also
+        across processes); True when it was stored now.
+        """
         raise NotImplementedError

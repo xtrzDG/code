@@ -3,6 +3,32 @@
 from base_typed_int import BaseConstrainedTypedInt
 
 
+class NudgeDayOffset(BaseConstrainedTypedInt):
+    """
+    Whole days after a nudge's anchor (the business's creation or its going
+    live) on which the nudge is due.
+
+    Example:
+        offset = NudgeDayOffset(3)
+    """
+
+    ge = 1
+    le = 30
+
+
+class NudgeRecipientCount(BaseConstrainedTypedInt):
+    """
+    How many addresses and devices a nudge was queued for (e-mails, Telegram
+    chats, devices).
+
+    Example:
+        recipients = NudgeRecipientCount(2)
+    """
+
+    ge = 0
+    le = 1_000
+
+
 class PendingChangeCount(BaseConstrainedTypedInt):
     """
     How many changes the owner made that customers do not get yet.

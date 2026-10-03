@@ -6,8 +6,6 @@ checks that `migrations/` creates a table for every entry here and that
 every collection of `DocumentCollectionsContainer` has an entry.
 """
 
-from dataclasses import dataclass
-
 from base_pydantic_schemas import PersistentDocument
 
 from app.schemas.domain.assistants import AssistantVersionDocument, AutotestRunDocument
@@ -81,14 +79,10 @@ from app.schemas.domain.web_vitals import WebVitalSampleDocument
 from app.schemas.domain.website_imports import WebsiteImportDocument
 from app.schemas.exceptions.application_errors import NotFoundError
 from app.schemas.typings.storage.constrained_strings import DocumentCollectionName
-
-
-@dataclass(frozen=True)
-class DocumentCollectionDefinition:
-    """A stored document type and the name of its collection."""
-
-    name: DocumentCollectionName
-    document_type: type[PersistentDocument]
+from app.utilities.storage.activation_collections import ACTIVATION_COLLECTIONS
+from app.utilities.storage.document_collection_definition import (
+    DocumentCollectionDefinition,
+)
 
 
 DOCUMENT_COLLECTIONS: tuple[DocumentCollectionDefinition, ...] = (
@@ -282,6 +276,8 @@ DOCUMENT_COLLECTIONS: tuple[DocumentCollectionDefinition, ...] = (
     DocumentCollectionDefinition(
         DocumentCollectionName("web_vital_samples"), WebVitalSampleDocument
     ),
+    # Activation follow-up: nudges sent, done-for-you setup requests (1080).
+    *ACTIVATION_COLLECTIONS,
 )
 
 

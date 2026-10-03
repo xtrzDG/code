@@ -29,6 +29,18 @@ class AssistantApplyId(BasePrefixedTypedId):
     uuid_version: ClassVar[Literal[1, 3, 4, 5, 6, 7, 8] | None] = 5
 
 
+class NudgeSentId(BasePrefixedTypedId):
+    """
+    Identifier of one activation nudge sent to a business.
+
+    Derived (UUID v5) from the business and the nudge code, so a nudge is
+    stored, and sent, once however often the job runs.
+    """
+
+    prefix = "nudge_sent"
+    uuid_version: ClassVar[Literal[1, 3, 4, 5, 6, 7, 8] | None] = 5
+
+
 class SetupStateId(BasePrefixedTypedId):
     """
     Identifier of the setup state of a business (the steps it skipped).

@@ -1,0 +1,21 @@
+{
+  "after_hours_booking_at": 1790000000000000,
+  "after_hours_booking_celebrated_at": 1790000000000000,
+  "business_id": "business_188fb79f-63a0-4507-8583-dd0bc771bd7c",
+  "created_at": 1790000000000000,
+  "guide_dismissed_at": 1790000000000000,
+  "hosted_page_visited_at": 1790000000000000,
+  "id": "setup_state_dff356ba-a230-51dc-a9f2-32a5dc8f493f",
+  "phone_check_started_at": 1790000000000000,
+  "phone_tested_at": 1790000000000000,
+  "reminders_off_at": 1790000000000000,
+  "schema_version": "2",
+  "shared_at": 1790000000000000,
+  "skipped_after_launch": [
+    "business"
+  ],
+  "skipped_steps": [
+    "business"
+  ],
+  "updated_at": 1790000000000000
+}

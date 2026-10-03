@@ -1,5 +1,7 @@
 """Keep abc order."""
 
+from typing import ClassVar, Literal
+
 from base_typed_id import BasePrefixedTypedId
 
 
@@ -7,6 +9,18 @@ class InvoiceId(BasePrefixedTypedId):
     """Random identifier of an invoice."""
 
     prefix = "invoice"
+
+
+class OnboardingRequestId(BasePrefixedTypedId):
+    """
+    Identifier of a business's request for a done-for-you setup.
+
+    Derived (UUID v5) from the business: a business has one request, which
+    a repeated choice of the option finds instead of opening another.
+    """
+
+    prefix = "onboarding_request"
+    uuid_version: ClassVar[Literal[1, 3, 4, 5, 6, 7, 8] | None] = 5
 
 
 class PackageUsageWarningId(BasePrefixedTypedId):

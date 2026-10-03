@@ -15,12 +15,15 @@ from typed_time_provider import Microseconds
 
 from app.contracts.repo_contract import RepoContract
 from app.schemas.constants.setup import ActivationEventKind
+from app.schemas.constants.nudges import NudgeCode
 from app.schemas.domain.setup import (
     ActivationEventDocument,
     AssistantApplyDocument,
+    NudgeSentDocument,
     SetupStateDocument,
 )
 from app.schemas.typings.businesses.prefixed_id import BusinessId
+from app.schemas.typings.conversations.strings import ChannelUserId
 
 
 class ActivationEventRepoContract(RepoContract, Protocol):
@@ -111,4 +114,48 @@ class ActivationProbeRepoContract(RepoContract, Protocol):
     def find_first_real_handoff_at(
         self, business_id: BusinessId
     ) -> Microseconds | None:
+        raise NotImplementedError
+
+
+class NudgeSentRepoContract(RepoContract, Protocol):
+    def find(self, business_id: BusinessId, code: NudgeCode) -> NudgeSentDocument | None:
+        """The nudge of this code the business was sent, if any."""
+        raise NotImplementedError
+
+    def record_once(self, nudge: NudgeSentDocument) -> bool:
+        """
+        Store a sent nudge unless the business already has one of that code
+        (atomic, also across processes); True when it was stored now.
+        """
+        raise NotImplementedError
+
+
+class SetupProbeRepoContract(RepoContract, Protocol):
+    """
+    What the guide after the launch notices in a business's own records,
+    reading a bounded number of documents through indexes: a message from
+    the owner's own phone, and the first booking made while closed.
+    """
+
+    def find_first_conversation_from(
+        self,
+        business_id: BusinessId,
+        channel_user_ids: frozenset[ChannelUserId],
+    ) -> Microseconds | None:
+        """When the first real conversation with one of these senders began."""
+        raise NotImplementedError
+
+    def find_first_conversation_between(
+        self,
+        business_id: BusinessId,
+        since: Microseconds,
+        until: Microseconds,
+    ) -> Microseconds | None:
+        """When the first real conversation within the window began."""
+        raise NotImplementedError
+
+    def find_first_after_hours_booking_at(
+        self, business_id: BusinessId
+    ) -> Microseconds | None:
+        """When the first real booking from a conversation after hours was made."""
         raise NotImplementedError

@@ -1,7 +1,7 @@
 {
   "collection": "activation_events",
   "document_type": "ActivationEventDocument",
-  "schema_version": 1,
+  "schema_version": 2,
   "shape": {
     "additionalProperties": false,
     "properties": {
@@ -33,7 +33,8 @@
           "went_live",
           "first_conversation",
           "first_booking",
-          "first_handoff"
+          "first_handoff",
+          "first_after_hours_booking"
         ],
         "type": "string"
       },
@@ -41,7 +42,7 @@
         "type": "integer"
       },
       "schema_version": {
-        "default": "1",
+        "default": "2",
         "type": "string"
       },
       "updated_at": {

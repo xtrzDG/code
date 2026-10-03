@@ -1,9 +1,17 @@
 from dependency_injector import containers
 from dependency_injector.providers import DependenciesContainer, Singleton
 
+from app.containers.adapters.document_collections_container import (
+    DocumentCollectionsContainer,
+)
 from app.containers.adapters.launch_collections_container import (
     LaunchCollectionsContainer,
 )
+from app.repositories.activation_repositories import (
+    NudgeSentRepository,
+    OnboardingRequestRepository,
+)
+from app.repositories.setup_probe_repository import SetupProbeRepository
 from app.repositories.setup_repositories import (
     ActivationEventRepository,
     AssistantApplyRepository,
@@ -17,11 +25,14 @@ class LaunchRepositoriesContainer(containers.DeclarativeContainer):
     """
     The repositories over `LaunchCollectionsContainer`: the guided launch
     (1044), the hosted chat addresses (1052) and the current website import
-    (1054). `RepositoriesContainer` extends it, so they are read as
+    (1054) and the activation follow-up (1080). `RepositoriesContainer`
+    extends it, so they are read as
     `repositories.setup_state_repo` like every other repository.
     """
 
     launch_collections: LaunchCollectionsContainer = DependenciesContainer()  # type: ignore[assignment]
+    # The conversations and bookings the guide's probes read.
+    probe_collections: DocumentCollectionsContainer = DependenciesContainer()  # type: ignore[assignment]
 
     # The guided launch: milestones, setup state, the current apply (1044).
     activation_event_repo: Singleton[ActivationEventRepository] = Singleton(
@@ -45,4 +56,18 @@ class LaunchRepositoriesContainer(containers.DeclarativeContainer):
     website_import_repo: Singleton[WebsiteImportRepository] = Singleton(
         WebsiteImportRepository,
         collection=launch_collections.website_import_collection,
+    )
+    # The activation follow-up: nudges sent, done-for-you requests (1080).
+    nudge_sent_repo: Singleton[NudgeSentRepository] = Singleton(
+        NudgeSentRepository,
+        collection=launch_collections.nudge_sent_collection,
+    )
+    onboarding_request_repo: Singleton[OnboardingRequestRepository] = Singleton(
+        OnboardingRequestRepository,
+        collection=launch_collections.onboarding_request_collection,
+    )
+    setup_probe_repo: Singleton[SetupProbeRepository] = Singleton(
+        SetupProbeRepository,
+        conversation_collection=probe_collections.conversation_collection,
+        booking_collection=probe_collections.booking_collection,
     )
