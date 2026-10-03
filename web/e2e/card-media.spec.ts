@@ -10,6 +10,8 @@
 import AxeBuilder from "@axe-core/playwright";
 import type { Page, Route } from "@playwright/test";
 
+import type { Schema } from "../src/api/types";
+
 import { expect, test } from "./support/fixtures";
 import { CONVERSATION_ID, HOUR_US, conversationCard, openCard, serveCard, silentWav, type ConversationDetail } from "./support/conversation-card";
 import { en } from "./support/messages";
@@ -27,7 +29,7 @@ const ONE_PIXEL_PNG = Buffer.from(
   "base64",
 );
 
-type Message = ConversationDetail["messages"][number];
+type Message = Schema<"MessageView">;
 
 function customerMessage(index: number, text: string, attachments: Message["attachments"]): Message {
   return {
