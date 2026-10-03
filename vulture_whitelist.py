@@ -276,3 +276,33 @@ _.typical_check_minor  # app/schemas/dto/value/value_model.py, value_views.py
 _.is_email_ready  # app/schemas/dto/value/value_views.py
 _.device_count  # app/schemas/dto/value/value_views.py
 _.upcoming_booking_count  # app/schemas/dto/value/value_views.py
+
+# Growth analytics (GET /v1/admin/metrics, POST /v1/telemetry/events): the
+# values the cabinet sends (tunnel screens, device classes), the facts kept
+# on product events and sign-up attribution for the founder's own queries,
+# and the response fields the admin Metrics page reads.
+_.PLACE  # app/schemas/constants/analytics.py (TunnelStepKey)
+_.PEOPLE  # app/schemas/constants/analytics.py (TunnelStepKey)
+_.TABLET  # app/schemas/constants/analytics.py (DeviceClass)
+_.DESKTOP  # app/schemas/constants/analytics.py (DeviceClass)
+_.attention_codes  # app/schemas/domain/product_events.py
+_.utm_medium  # app/schemas/domain/signup_attribution.py
+_.utm_campaign  # app/schemas/domain/signup_attribution.py
+_.utm_term  # app/schemas/domain/signup_attribution.py
+_.utm_content  # app/schemas/domain/signup_attribution.py
+_.growth  # app/schemas/dto/analytics/admin_metrics_view.py
+_.web_vitals  # app/schemas/dto/analytics/admin_metrics_view.py, telemetry.py
+_.share_of_sign_ups  # app/schemas/dto/analytics/growth_views.py
+_.share_of_previous  # app/schemas/dto/analytics/growth_views.py
+_.stopped_here  # app/schemas/dto/analytics/growth_views.py
+_.funnel  # app/schemas/dto/analytics/growth_views.py
+_.median_time_to_live_seconds  # app/schemas/dto/analytics/growth_views.py
+_.trials  # app/schemas/dto/analytics/growth_views.py
+_.net_change  # app/schemas/dto/analytics/revenue_views.py
+_.paying_accounts  # app/schemas/dto/analytics/revenue_views.py
+_.arpa  # app/schemas/dto/analytics/revenue_views.py
+_.unconverted_currencies  # app/schemas/dto/analytics/revenue_views.py
+_.gross_margin_percent  # app/schemas/dto/analytics/revenue_views.py
+_.accounts_without_rate  # app/schemas/dto/analytics/revenue_views.py
+_.mrr  # app/schemas/dto/analytics/revenue_views.py
+_.tunnel_steps  # app/schemas/dto/analytics/telemetry.py

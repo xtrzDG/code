@@ -29,6 +29,7 @@ INTEGER_NAMES: frozenset[str] = frozenset(
         "QuestionOccurrenceCount",
         "ReviewLinkClickCount",
         "VisitScore",
+        "WebVitalValue",
     }
 )
 

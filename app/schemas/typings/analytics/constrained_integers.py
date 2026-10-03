@@ -9,16 +9,6 @@ class AccountCount(BaseConstrainedTypedInt):
     ge = 0
 
 
-class CohortMonthOffset(BaseConstrainedTypedInt):
-    """
-    Whole calendar months between a sign-up cohort's month and a later
-    month (0 for the month of the sign-ups themselves).
-    """
-
-    ge = 0
-    le = 120
-
-
 class MonthlyRecurringAmountMinor(BaseConstrainedTypedInt):
     """
     What a subscription brings in a month, in minor units of its currency:

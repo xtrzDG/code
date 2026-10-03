@@ -10,6 +10,10 @@ from app.containers.time_provider import TimeProviderContainer
 from app.containers.utilities import UtilitiesContainer
 from app.gateways.worker.background_worker import BackgroundWorker, PeriodicJobSpec
 from app.gateways.worker.heartbeat_recorder import WorkerHeartbeatRecorder
+from app.gateways.worker.periodic.growth_analytics import (
+    purge_web_vitals_job,
+    reconcile_product_events_job,
+)
 from app.gateways.worker.periodic.purge_stale_rows import purge_stale_rows_job
 from app.gateways.worker.periodic.request_visit_feedback import (
     request_visit_feedback_job,
@@ -138,6 +142,14 @@ class GatewaysContainer(containers.DeclarativeContainer):
         Factory(
             request_visit_feedback_job,
             operator=operators.feedback.request_visit_feedback_operator,
+        ),
+        # Growth analytics: Web Vitals kept 90 days; missing steps derived.
+        Factory(
+            purge_web_vitals_job, operator=operators.analytics.purge_web_vitals_operator
+        ),
+        Factory(
+            reconcile_product_events_job,
+            operator=operators.analytics.reconcile_product_events_operator,
         ),
     )
     # Handlers of queued jobs by job name (the queue is filled by use cases
