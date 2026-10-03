@@ -88,6 +88,9 @@ class SafeHttpFetcher(SafeHttpFetcherContract):
             "The address redirects too many times.",
         )
 
+    def vet(self, url: WebResourceUrl) -> None:
+        vet_url(str(url))
+
     def _fetch_once(
         self,
         pool: httpcore.ConnectionPool,

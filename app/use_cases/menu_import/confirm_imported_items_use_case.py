@@ -14,7 +14,7 @@ from app.schemas.exceptions.application_errors import (
     NotFoundError,
     ValidationFailedError,
 )
-from app.use_cases.menu_import.imported_item_views import build_knowledge_item_view
+from app.utilities.knowledge.imported_item_views import build_knowledge_item_view
 
 
 class ConfirmImportedItemsUseCase(

@@ -2,6 +2,7 @@
 
 import json
 import re
+from collections.abc import Collection
 from typing import cast
 
 from pydantic import ValidationError
@@ -64,14 +65,19 @@ def parse_menu_extraction(output_text: str) -> MenuExtraction:
     )
 
 
-def read_menu_item(raw_item: dict[str, object]) -> ExtractedMenuItem | None:
+def read_menu_item(
+    raw_item: dict[str, object],
+    allowed_kinds: Collection[str] = MENU_ITEM_KINDS,
+) -> ExtractedMenuItem | None:
+    """One line, or None when its title is empty or its kind not allowed."""
+
     title: object = raw_item.get("title")
     kind: object = raw_item.get("kind")
     if (
         not isinstance(title, str)
         or title.strip() == ""
         or not isinstance(kind, str)
-        or kind not in MENU_ITEM_KINDS
+        or kind not in allowed_kinds
     ):
         return None
 

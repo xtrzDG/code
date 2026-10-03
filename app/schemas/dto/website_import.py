@@ -27,6 +27,7 @@ from app.schemas.typings.menu_import.constrained_integers import MenuLineCount
 from app.schemas.typings.platform.constrained_strings import ErrorReasonDetail
 from app.schemas.typings.users.prefixed_id import UserId
 from app.schemas.typings.web_fetching.constrained_strings import WebResourceUrl
+from app.schemas.typings.website_import.booleans import IsReaderAnswerReadable
 from app.schemas.typings.website_import.constrained_integers import (
     WebsiteImportItemCount,
     WebsitePageCount,
@@ -126,9 +127,12 @@ class WebsitePageExtractionRequest(ImmutableDTO):
 class WebsitePageExtraction(ImmutableDTO):
     """
     What the reader model found on one page, the lines it returned in an
-    unusable shape, and what the call cost in tokens of `model_id`.
+    unusable shape, and what the call cost in tokens of `model_id`. An
+    answer that is not the requested JSON at all is unreadable: no items,
+    but its tokens were spent all the same.
     """
 
+    is_answer_readable: IsReaderAnswerReadable = True
     items: list[ExtractedMenuItem] = Field(default_factory=list[ExtractedMenuItem])
     skipped_line_count: MenuLineCount = MenuLineCount(0)
     model_id: LlmModelId

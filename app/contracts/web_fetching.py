@@ -4,6 +4,7 @@ from typing import Protocol
 
 from app.contracts.client_contract import ClientContract
 from app.schemas.dto.web_fetching import FetchedWebResource, WebFetchRequest
+from app.schemas.typings.web_fetching.constrained_strings import WebResourceUrl
 
 
 class SafeHttpFetcherContract(ClientContract, Protocol):
@@ -22,5 +23,17 @@ class SafeHttpFetcherContract(ClientContract, Protocol):
         Raises:
             WebFetchError: refused, not fetched, or unusable; its `problem`
                 says which.
+        """
+        raise NotImplementedError
+
+    def vet(self, url: WebResourceUrl) -> None:
+        """
+        The checks an address passes before any lookup: http(s), no
+        credentials, port 80 or 443, no intranet host name or private IP
+        literal. A host name is checked only when it is fetched.
+
+        Raises:
+            WebFetchError: NOT_HTTP, CREDENTIALS_IN_URL, PORT_NOT_ALLOWED or
+                NOT_PUBLIC.
         """
         raise NotImplementedError

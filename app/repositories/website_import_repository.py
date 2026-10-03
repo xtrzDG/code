@@ -53,8 +53,10 @@ class WebsiteImportRepository(
             return None
 
         # Blocked by a running import (or the record belongs elsewhere).
-        return blocking[0] if blocking else self.get_by_business(
-            website_import.business_id
+        return (
+            blocking[0]
+            if blocking
+            else self.get_by_business(website_import.business_id)
         )
 
     def change(
