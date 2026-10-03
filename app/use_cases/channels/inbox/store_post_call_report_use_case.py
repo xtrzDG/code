@@ -14,7 +14,7 @@ from app.schemas.dto.voice_webhooks import PostCallWebhookOutcome
 from app.schemas.exceptions.application_errors import ValidationFailedError
 from app.schemas.typings.channels.strings import ProviderMessageId
 from app.schemas.typings.deliveries.strings import InboundPayloadText
-from app.use_cases.channels.inbox.inbox_queue import store_and_queue
+from app.use_cases.shared.inbox_queue import store_and_queue
 from app.utilities.deliveries.delivery_jobs import PROCESS_POST_CALL_JOB
 from app.utilities.deliveries.delivery_keys import derive_inbound_event_id
 

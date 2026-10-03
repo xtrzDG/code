@@ -19,7 +19,7 @@ from app.schemas.exceptions.application_errors import (
 from app.schemas.typings.channels.strings import ProviderMessageId
 from app.schemas.typings.deliveries.strings import InboundPayloadText
 from app.schemas.typings.platform.strings import PlatformSecret
-from app.use_cases.channels.inbox.inbox_queue import store_and_queue
+from app.use_cases.shared.inbox_queue import store_and_queue
 from app.utilities.channels.platform_bot_updates import (
     StaffBotMessage,
     read_staff_bot_message,

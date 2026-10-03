@@ -26,7 +26,7 @@ from app.schemas.dto.analytics.product_event_drafts import ProductEventDraft
 from app.schemas.dto.jobs import JobReport, JobTick
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.platform.constrained_integers import ProcessedItemCount
-from app.use_cases.billing.billing_records import find_current_subscription
+from app.use_cases.shared.billing_records import find_current_subscription
 from app.utilities.analytics.mrr_math import BILLING_EVENTS
 from app.utilities.analytics.owner_journeys import first_owner
 from app.utilities.analytics.reconciliation_drafts import (

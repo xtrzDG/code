@@ -234,16 +234,14 @@ DOCUMENT_COLLECTIONS: tuple[DocumentCollectionDefinition, ...] = (
     DocumentCollectionDefinition(
         DocumentCollectionName("assistant_applies"), AssistantApplyDocument
     ),
-    # After the calls: callers who did not get through and the text-backs
-    # they got, and each business's call settings (1051).
+    # Missed calls with their text-backs, and call settings (1051).
     DocumentCollectionDefinition(
         DocumentCollectionName("missed_calls"), MissedCallDocument
     ),
     DocumentCollectionDefinition(
         DocumentCollectionName("call_settings"), CallSettingsDocument
     ),
-    # Sharing the assistant: the hosted chat addresses (/c/{slug}) each
-    # business took (1052).
+    # The hosted chat addresses (/c/{slug}) each business took (1052).
     DocumentCollectionDefinition(
         DocumentCollectionName("public_slug_claims"), PublicSlugClaimDocument
     ),
@@ -251,9 +249,8 @@ DOCUMENT_COLLECTIONS: tuple[DocumentCollectionDefinition, ...] = (
     DocumentCollectionDefinition(
         DocumentCollectionName("website_imports"), WebsiteImportDocument
     ),
-    # What the assistant is worth to a business: the average check, each
-    # owner's digest choices and the stored digests and monthly reports
-    # (1061).
+    # What the assistant is worth: the average check, each owner's digest
+    # choices, the stored digests and monthly reports (1061).
     DocumentCollectionDefinition(
         DocumentCollectionName("value_settings"), ValueSettingsDocument
     ),
@@ -263,8 +260,7 @@ DOCUMENT_COLLECTIONS: tuple[DocumentCollectionDefinition, ...] = (
     DocumentCollectionDefinition(
         DocumentCollectionName("value_reports"), ValueReportDocument
     ),
-    # Feedback after visits: each business's review settings and the
-    # request for feedback after each visit (1062).
+    # Feedback after visits: review settings, the request per visit (1062).
     DocumentCollectionDefinition(
         DocumentCollectionName("review_settings"), ReviewSettingsDocument
     ),

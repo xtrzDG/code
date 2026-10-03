@@ -13,7 +13,6 @@ from app.adapters.storage.in_memory_document_collection import (
     InMemoryDocumentCollectionAdapter,
 )
 from app.contracts.use_case_contract import UseCaseContract
-from app.registries.billing.exchange_rate_registry import ExchangeRateRegistry
 from app.repositories.business_repositories import BusinessRepository
 from app.repositories.user_repositories import UserRepository
 from app.schemas.constants.billing import PlanKey
@@ -28,14 +27,10 @@ from app.schemas.dto.analytics.admin_metrics_query import AdminMetricsQuery
 from app.schemas.dto.analytics.admin_metrics_view import AdminMetricsView
 from app.schemas.dto.billing import Money
 from app.schemas.dto.billing_ledger import ClientCostQuery, ClientCostReport
-from app.schemas.dto.catalog.plan_quotes import ExchangeRateQuote
-from app.schemas.typings.billing.constrained_floats import ExchangeRate
 from app.schemas.typings.billing.constrained_integers import (
     CostMicroUsd,
     MoneyAmountMinor,
 )
-from app.schemas.typings.billing.constrained_strings import ExchangeRateDate
-from app.schemas.typings.billing.strings import ExchangeRateSourceName
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.businesses.strings import BusinessName
 from app.schemas.typings.localization.constrained_strings import (
@@ -56,22 +51,13 @@ from tests.analytics.analytics_fakes import (
     web_vital_sample_repo,
 )
 from tests.analytics.metric_events import at_day
+from tests.billing.exchange_rate_fixtures import StoredRate, rate_registry
 
-
-def rate(base: str, quote: str, value: float) -> ExchangeRateQuote:
-    return ExchangeRateQuote(
-        base_currency_code=CurrencyCode(base),
-        quote_currency_code=CurrencyCode(quote),
-        rate=ExchangeRate(value),
-        rate_date=ExchangeRateDate("2026-09-30"),
-        source=ExchangeRateSourceName("Test bank"),
-    )
-
-
-# Two lari and 1.25 US dollars a euro, so the numbers stay round.
-TEST_RATES: tuple[ExchangeRateQuote, ...] = (
-    rate("EUR", "GEL", 2.0),
-    rate("EUR", "USD", 1.25),
+# Two lari and 1.25 US dollars a euro, so the numbers stay round (no
+# fallback catalog: only these rates and their inverses exist).
+TEST_RATES: tuple[StoredRate, ...] = (
+    ("EUR", "GEL", "2"),
+    ("EUR", "USD", "1.25"),
 )
 
 
@@ -124,7 +110,7 @@ class MetricsWorld:
             product_event_repo=self.events,
             web_vital_sample_repo=self.vitals,
             compute_client_cost=self.costs,
-            exchange_rate_registry=ExchangeRateRegistry(TEST_RATES),
+            exchange_rate_registry=rate_registry(TEST_RATES, fallback=()),
             wall_clock=self.clock.wall_clock(),
         )
 

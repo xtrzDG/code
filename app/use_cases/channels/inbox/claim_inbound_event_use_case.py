@@ -15,7 +15,7 @@ from app.schemas.dto.deliveries import InboundEventClaim
 from app.schemas.dto.jobs import QueuedJobInput
 from app.schemas.typings.deliveries.prefixed_id import InboundEventId
 from app.schemas.typings.platform.constrained_strings import JobSerialKey
-from app.use_cases.channels.inbox.inbox_queue import queue_inbound_job
+from app.use_cases.shared.inbox_queue import queue_inbound_job
 from app.utilities.deliveries.delivery_jobs import decode_inbound_event_payload
 from app.utilities.deliveries.delivery_keys import inbound_serial_key
 from app.utilities.deliveries.inbound_claims import (

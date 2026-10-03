@@ -13,7 +13,7 @@ label and a migration path).
 
 ## 2026-10-03 — widget messages are answered by the worker
 
-Spec: `74e937607f65fc64`
+Spec: `66ff36e8e31c29a8`
 
 - **Breaking** `POST /v1/widget/{business_id}/messages` answers `202`
   with `WidgetMessageAcceptedView` (`event_id`: the message in the

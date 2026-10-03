@@ -11,7 +11,7 @@ from app.schemas.domain.inbound_events import InboundEventDocument
 from app.schemas.dto.channels.widget_turns import WidgetMessageAcceptedView
 from app.schemas.dto.conversations import InboundMessage
 from app.schemas.typings.channels.strings import ProviderMessageId
-from app.use_cases.channels.inbox.inbox_queue import queue_inbound_job
+from app.use_cases.shared.inbox_queue import queue_inbound_job
 from app.utilities.deliveries.delivery_jobs import PROCESS_INBOUND_MESSAGE_JOB
 from app.utilities.deliveries.delivery_keys import (
     derive_inbound_event_id,
