@@ -1,8 +1,10 @@
-# Reviewed gitleaks findings (2026-10-02): made-up keys of test settings and
-# the sample job lease token of the stored-document golden fixtures, never
-# real credentials. One fingerprint per finding
-# (<commit>:<file>:<rule>:<line>); add a line only after checking the value
-# is not a real secret, and rotate any real secret that was committed.
+# Reviewed gitleaks findings (2026-10-02/03): made-up keys of test settings,
+# the sample job lease token of the stored-document golden fixtures, the
+# public RFC 8291 Web Push test vector, environment variable names in
+# render.yaml and a test visitor session key; never real credentials. One
+# fingerprint per finding (<commit>:<file>:<rule>:<line>); add a line only
+# after checking the value is not a real secret, and rotate any real secret
+# that was committed.
 706e5c4f627d5140380703ed96ae07be200e581d:tests/e2e/harness_settings.py:generic-api-key:23
 e3306166685a1b324c58b50865ce769c9013a338:tests/billing/test_return_urls.py:generic-api-key:18
 e3306166685a1b324c58b50865ce769c9013a338:tests/billing/test_return_urls.py:generic-api-key:58
@@ -10,3 +12,9 @@ e3306166685a1b324c58b50865ce769c9013a338:tests/billing/test_return_urls.py:gener
 2ddaa1f3f893116419b6542c0f3047da23f15df5:tests/storage/golden/periodic_job_runs/v1.json:generic-api-key:8
 2ddaa1f3f893116419b6542c0f3047da23f15df5:tests/storage/golden/queued_jobs/v1.json:generic-api-key:8
 2ddaa1f3f893116419b6542c0f3047da23f15df5:tests/storage/document_evolution/sample_values.py:generic-api-key:19
+0df11942d959a3b1fb04f2172077fbeefcba1a5e:tests/storage/golden/push_subscriptions/v1.json:generic-api-key:8
+0df11942d959a3b1fb04f2172077fbeefcba1a5e:tests/storage/document_evolution/sample_values.py:generic-api-key:34
+23578b5c9811905bbcbc6520c09bf2c001467ae3:render.yaml:generic-api-key:187
+23578b5c9811905bbcbc6520c09bf2c001467ae3:render.yaml:generic-api-key:431
+23578b5c9811905bbcbc6520c09bf2c001467ae3:render.yaml:generic-api-key:435
+c1b77653af7791923b42874f8ef115d4558583cd:tests/storage/test_two_processes.py:generic-api-key:163
