@@ -127,13 +127,14 @@ everything new; the others only open and verify what they sealed.
    sealed and signed with the new key; old secrets still open, Telegram
    webhooks registered with the old key's secret are still accepted, and
    the platform bot's webhook is registered again at the API's start.
-3. As a platform admin: `POST /v1/admin/security/encryption-keys/rotate`
+3. As a platform admin: cabinet → Encryption keys (`/admin/security`) →
+   Re-encrypt stored tokens, or `POST /v1/admin/security/encryption-keys/rotate`
    (202, audited; 409 while a run is going). The worker's
    `rotate_encrypted_secrets` job walks every business: each secret is
    sealed again with the current key and written back only if it did not
    change meanwhile; every active Telegram bot's webhook is registered again
    with the current key's secret.
-4. `GET /v1/admin/security/encryption-keys` shows the run: `secrets_rotated`
+4. The page (or `GET /v1/admin/security/encryption-keys`) shows the run: `secrets_rotated`
    and `secrets_current`, `secrets_unreadable` (no key of the ring opens
    them: the owner must reconnect that channel), `webhooks_failed` (run it
    again later). The old key may go only when a run ends `done` with both

@@ -265,8 +265,8 @@ Render делает свои снимки базы и восстановлени
 восстановление» на текущем коде, по понедельникам — свежая копия production во
 временную базу; проверяются строки, миграции и изоляция бизнесов, отметки идут
 в Sentry Crons. Смена ключа шифрования: новый ключ первым в `ENCRYPTION_KEYS`,
-затем админ платформы запускает перешифровку (`POST
-/v1/admin/security/encryption-keys/rotate`). RPO, RTO, хранение ключей и пошаговое
+затем админ платформы запускает перешифровку (кабинет → «Ключи шифрования» или
+`POST /v1/admin/security/encryption-keys/rotate`). RPO, RTO, хранение ключей и пошаговое
 восстановление — в [`docs/operations/backup-restore.md`](docs/operations/backup-restore.md).
 
 ### Фоновые задачи
@@ -545,7 +545,7 @@ e2e). В кабинете «Каналы → Поделиться»: ссылк�
 | Телефония | `GET /v1/telephony/zadarma/notifications?zd_echo=…` (проверка адреса Zadarma), `POST /v1/telephony/zadarma/notifications` (уведомления АТС с заголовком `Signature`; NOTIFY_END непринятого звонка — пропущенный звонок и сообщение звонящему) |
 | Оплата | `GET …/billing`, `POST …/billing/trial`, `POST …/billing/plan`, `POST …/billing/cancel`, `POST …/billing/checkout`, `POST …/billing/subscribe` (тариф и период с оплатой сразу: после пробного периода, после отмены или без него), `POST /v1/payments/flitt/webhook` |
 | Админка платформы | `GET /v1/admin/clients` (страницы, фильтры `status`, `health`, `country`, `niche`, `search`, сортировка `sort`), `GET /v1/admin/clients/{business_id}`, `POST /v1/admin/clients/{business_id}/open` |
-| Ключи шифрования (платформенный админ) | `GET /v1/admin/security/encryption-keys` (сколько ключей в кольце — без самих ключей — и итог последней перешифровки), `POST /v1/admin/security/encryption-keys/rotate` (202: в очередь задача `rotate_encrypted_secrets`, пишется в журнал аудита; 409, пока идёт предыдущая) |
+| Ключи шифрования (платформенный админ) | `GET /v1/admin/security/encryption-keys` (сколько ключей в кольце — без самих ключей — и итог последней перешифровки), `POST /v1/admin/security/encryption-keys/rotate` (202: в очередь задача `rotate_encrypted_secrets`, пишется в журнал аудита; 409, пока идёт предыдущая); в кабинете — «Ключи шифрования» (`/admin/security`) |
 | Очередь фоновых задач (платформенный админ) | `GET /v1/admin/jobs` (страницы, фильтры `status` — `pending`, `running`, `done`, `dead`, `discarded` — и `name`; без содержимого задач), `POST /v1/admin/jobs/{job_id}/retry` (снова в очередь «мёртвую» или отброшенную задачу), `POST /v1/admin/jobs/{job_id}/discard` (отбросить «мёртвую» или ожидающую); перезапуск и отказ пишутся в журнал аудита |
 
 `…` — это `/v1/businesses/{business_id}`.
