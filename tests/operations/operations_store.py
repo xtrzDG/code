@@ -34,6 +34,8 @@ from app.repositories.conversation_repositories import (
     ConversationRepository,
     MessageRepository,
 )
+from app.repositories.inbox_repositories import InboxSettingsRepository
+from app.repositories.inbox_work_repository import InboxWorkRepository
 from app.repositories.knowledge_repositories import (
     KnowledgeItemRepository,
     ResourceRepository,
@@ -48,6 +50,7 @@ from app.schemas.domain.compliance import AuditLogEntryDocument
 from app.schemas.domain.contacts import ContactDocument
 from app.schemas.domain.conversations import ConversationDocument, MessageDocument
 from app.schemas.domain.handoffs import HandoffDocument, UnansweredQuestionDocument
+from app.schemas.domain.inbox_settings import InboxSettingsDocument
 from app.schemas.domain.knowledge import KnowledgeItemDocument
 from app.schemas.domain.profiles import BusinessProfileDocument
 from app.schemas.domain.resources import ResourceDocument, ScheduleExceptionDocument
@@ -106,6 +109,13 @@ class OperationsStore:
             HandoffDocument
         )
         self.handoff_repo = HandoffRepository(handoff_collection)
+        # The team inbox: open work of conversations, auto-assignment.
+        self.inbox_work_repo = InboxWorkRepository(handoff_collection, lead_collection)
+        self.inbox_settings_repo = InboxSettingsRepository(
+            InMemoryDocumentCollectionAdapter[InboxSettingsDocument](
+                InboxSettingsDocument
+            )
+        )
         self.channel_collection = InMemoryDocumentCollectionAdapter[ChannelDocument](
             ChannelDocument
         )

@@ -89,6 +89,12 @@ class ContactRepoContract(ContactListingContract, RepoContract, Protocol):
 
 class ConversationRepoContract(ConversationListingContract, RepoContract, Protocol):
     def save(self, conversation: ConversationDocument) -> None:
+        """
+        Store the conversation, keeping its team inbox fields (assignment,
+        open request) as stored: only `ConversationTeamRepoContract`
+        changes those, so a save from a turn that read the conversation
+        earlier never undoes an assignment. `awaits_team` is derived.
+        """
         raise NotImplementedError
 
     def save_many(self, conversations: Sequence[ConversationDocument]) -> None:

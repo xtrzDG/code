@@ -27,6 +27,7 @@ from app.containers.use_cases.conversation_use_cases import (
 from app.containers.use_cases.delivery_use_cases import DeliveryUseCasesContainer
 from app.containers.use_cases.demo_use_cases import DemoUseCasesContainer
 from app.containers.use_cases.follow_up_use_cases import FollowUpUseCasesContainer
+from app.containers.use_cases.inbox_use_cases import InboxUseCasesContainer
 from app.containers.use_cases.knowledge_use_cases import KnowledgeUseCasesContainer
 from app.containers.use_cases.launch_use_cases import LaunchUseCasesContainer
 from app.containers.use_cases.menu_import_use_cases import MenuImportUseCasesContainer
@@ -121,6 +122,14 @@ class UseCasesContainer(containers.DeclarativeContainer):
         transformers=transformers,
         utilities=utilities,
     )
+    inbox: InboxUseCasesContainer = Container(  # type: ignore[assignment]
+        InboxUseCasesContainer,
+        facilitators=facilitators,
+        repositories=repositories,
+        time_provider=time_provider,
+        transformers=transformers,
+        account_use_cases=accounts,
+    )
     follow_ups: FollowUpUseCasesContainer = Container(  # type: ignore[assignment]
         FollowUpUseCasesContainer,
         facilitators=facilitators,
@@ -129,6 +138,7 @@ class UseCasesContainer(containers.DeclarativeContainer):
         time_provider=time_provider,
         transformers=transformers,
         utilities=utilities,
+        inbox_use_cases=inbox,
     )
     conversations: ConversationUseCasesContainer = Container(  # type: ignore[assignment]
         ConversationUseCasesContainer,

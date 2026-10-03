@@ -8,7 +8,10 @@ from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.compliance.strings import ClientIpAddress
 from app.schemas.typings.conversations.booleans import IsSandboxConversation
 from app.schemas.typings.conversations.prefixed_id import ConversationId
-from app.schemas.typings.inbox.booleans import IsAssignedAutomatically
+from app.schemas.typings.inbox.booleans import (
+    HasOpenRequest,
+    IsAssignedAutomatically,
+)
 from app.schemas.typings.inbox.constrained_integers import AssignmentRevision
 from app.schemas.typings.users.prefixed_id import UserId
 
@@ -73,6 +76,12 @@ class AutoAssignCommand(ImmutableDTO):
     is_sandbox: IsSandboxConversation = False
 
 
+class AutoAssignResult(ImmutableDTO):
+    """The automatic assignment made, None when nobody was assigned."""
+
+    assignment: ConversationAssignmentView | None = None
+
+
 class OpenRequestRefresh(ImmutableDTO):
     """
     A request of a conversation was made or changed: recount whether the
@@ -81,3 +90,10 @@ class OpenRequestRefresh(ImmutableDTO):
 
     business_id: BusinessId
     conversation_id: ConversationId
+
+
+class OpenRequestState(ImmutableDTO):
+    """Whether a conversation has an open request after a recount."""
+
+    conversation_id: ConversationId
+    has_open_request: HasOpenRequest

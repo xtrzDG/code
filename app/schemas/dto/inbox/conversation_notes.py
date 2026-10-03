@@ -74,3 +74,10 @@ class ConversationNotePage(ImmutableDTO):
         default_factory=list[ConversationNoteView]
     )
     next_cursor: PageCursor | None = None
+
+
+class DeletedConversationNote(ImmutableDTO):
+    """The note that was deleted (the route answers 204)."""
+
+    id: ConversationNoteId
+    conversation_id: ConversationId

@@ -14,6 +14,9 @@ from app.contracts.repositories.conversation_repositories import (
     LlmTurnRepoContract,
     MessageRepoContract,
 )
+from app.contracts.repositories.inbox_repositories import (
+    ConversationNoteRepoContract,
+)
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.compliance import AuditAction
 from app.schemas.constants.conversations import ConversationStatus
@@ -52,11 +55,12 @@ class DeleteContactDataUseCase(
     Owner erases one visitor's personal data (right to erasure).
 
     Recordings are deleted from storage first, so a storage failure leaves
-    the database untouched and the erasure can be retried. Then the messages
-    and model transcripts of their conversations and call transcripts are
-    deleted, and the contact keeps only its id and the erasure time (no
-    name, phones, language or channel identities), so the cabinet shows it
-    as erased and a new message from the same person starts a new contact.
+    the database untouched and the erasure can be retried. Then the messages,
+    model transcripts and the team's internal notes of their conversations
+    and call transcripts are deleted, and the contact keeps only its id and
+    the erasure time (no name, phones, language or channel identities), so
+    the cabinet shows it as erased and a new message from the same person
+    starts a new contact.
     Business records stay but lose the personal parts: conversations lose
     the channel identity, bookings their notes, leads their details and
     budget, handoffs their summary. The erasure is audited with the contact
@@ -81,6 +85,7 @@ class DeleteContactDataUseCase(
         recording_storage: RecordingStorageAdapterContract,
         audit_log_repo: AuditLogRepoContract,
         wall_clock: WallClock[Microseconds],
+        note_repo: ConversationNoteRepoContract,
     ) -> None:
         self._authorize_business_access: UseCaseContract[
             BusinessAccessRequest,
@@ -98,6 +103,7 @@ class DeleteContactDataUseCase(
         self._booking_repo: BookingRepoContract = booking_repo
         self._lead_repo: LeadRepoContract = lead_repo
         self._handoff_repo: HandoffRepoContract = handoff_repo
+        self._note_repo: ConversationNoteRepoContract = note_repo
         self._recording_storage: RecordingStorageAdapterContract = recording_storage
         self._audit_log_repo: AuditLogRepoContract = audit_log_repo
         self._wall_clock: WallClock[Microseconds] = wall_clock
@@ -193,6 +199,8 @@ class DeleteContactDataUseCase(
                 self._llm_turn_repo.list_by_conversation(conversation.id)
             )
             self._llm_turn_repo.delete_by_conversation(conversation.id)
+            # The team's notes on the conversation are about this person.
+            self._note_repo.delete_by_conversation(business.id, conversation.id)
             conversation.channel_user_id = ChannelUserId(
                 f"{ERASED_CHANNEL_USER_ID_PREFIX}{conversation.id}"
             )

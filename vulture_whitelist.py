@@ -225,3 +225,11 @@ _.next_action  # app/schemas/dto/setup/setup_progress.py
 _.applied_sections  # app/schemas/dto/setup/starter_answers.py
 _.kept_sections  # app/schemas/dto/setup/starter_answers.py
 _.offer_examples  # app/schemas/dto/setup/starter_answers.py
+
+# The team inbox's views: fields the cabinet reads (R6 inbox UI).
+_.is_assigned_automatically  # app/schemas/dto/inbox/assignment.py, inbox_views.py
+_.assignment  # app/schemas/dto/inbox/assignment.py
+_.author_name  # app/schemas/dto/inbox/conversation_notes.py
+_.awaiting_count  # app/schemas/dto/inbox/inbox_views.py
+_.variables  # app/schemas/dto/inbox/quick_replies.py
+_.missing_variables  # app/schemas/dto/inbox/quick_replies.py

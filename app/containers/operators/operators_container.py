@@ -11,6 +11,7 @@ from app.containers.operators.conversation_operators import (
     ConversationOperatorsContainer,
 )
 from app.containers.operators.demo_operators import DemoOperatorsContainer
+from app.containers.operators.inbox_operators import InboxOperatorsContainer
 from app.containers.operators.knowledge_operators import KnowledgeOperatorsContainer
 from app.containers.operators.notification_operators import (
     NotificationOperatorsContainer,
@@ -42,6 +43,11 @@ class OperatorsContainer(containers.DeclarativeContainer):
     compliance: ComplianceOperatorsContainer = Container(  # type: ignore[assignment]
         ComplianceOperatorsContainer,
         compliance_pipelines=pipelines.compliance,
+        utilities=utilities,
+    )
+    inbox: InboxOperatorsContainer = Container(  # type: ignore[assignment]
+        InboxOperatorsContainer,
+        inbox_pipelines=pipelines.inbox,
         utilities=utilities,
     )
     knowledge: KnowledgeOperatorsContainer = Container(  # type: ignore[assignment]

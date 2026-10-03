@@ -4,6 +4,9 @@ from dependency_injector import containers
 from dependency_injector.providers import Container
 
 from app.containers.adapters.adapters_container import AdaptersContainer
+from app.containers.adapters.inbox_collections_container import (
+    InboxCollectionsContainer,
+)
 from app.containers.clients import ClientsContainer
 from app.containers.config import ConfigContainer
 from app.containers.facilitators import FacilitatorsContainer
@@ -59,8 +62,17 @@ class AppContainer(containers.DeclarativeContainer):
         time_provider=time_provider,
         utilities=utilities,
     )
+    # The team inbox's collections (1053), a sibling of the adapters' own.
+    inbox_collections: InboxCollectionsContainer = Container(  # type: ignore[assignment]
+        InboxCollectionsContainer,
+        clients=clients,
+        config=config,
+        time_provider=time_provider,
+        utilities=utilities,
+    )
     repositories: RepositoriesContainer = Container(  # type: ignore[assignment]
         RepositoriesContainer,
+        inbox_collections=inbox_collections,
         collections=adapters.collections,
         notification_collections=adapters.notification_collections,
         launch_collections=adapters.launch_collections,

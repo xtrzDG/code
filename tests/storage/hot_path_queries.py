@@ -36,6 +36,8 @@ class HotQuery:
     table: str
     index: str
     is_in_business_scope: bool = True
+    # Other indexes the planner may rightly prefer for this query.
+    alternative_indexes: tuple[str, ...] = ()
 
 
 HOT_QUERIES: tuple[HotQuery, ...] = (
@@ -106,6 +108,9 @@ HOT_QUERIES: tuple[HotQuery, ...] = (
         ),
         "conversations",
         "conversations_doc_contact_idx",
+        # Few conversations wait for a person: the inbox's status index
+        # (1053) can be the cheaper start.
+        alternative_indexes=("conversations_doc_status_last_message_at_idx",),
     ),
     HotQuery(
         "recent conversations of a contact",

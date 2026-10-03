@@ -73,14 +73,14 @@ class InboxQuery(ImmutableDTO):
     client_ip_address: ClientIpAddress | None = None
 
 
-class InboxCountsQuery(ImmutableDTO):
+class InboxViewCountsQuery(ImmutableDTO):
     """The counts of the inbox views as one member sees them."""
 
     user_id: UserId
     business_id: BusinessId
 
 
-class InboxCounts(ImmutableDTO):
+class InboxViewCounts(ImmutableDTO):
     """
     How many conversations each view holds (sandbox left out): those that
     need a person, have an open request, wait for the team and are assigned
@@ -165,7 +165,7 @@ class InboxPage(ImmutableDTO):
 
     view: InboxView
     items: list[InboxItemView] = Field(default_factory=list[InboxItemView])
-    counts: InboxCounts = Field(default_factory=InboxCounts)
+    counts: InboxViewCounts = Field(default_factory=InboxViewCounts)
     next_cursor: PageCursor | None = None
 
 

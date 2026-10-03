@@ -9,6 +9,9 @@ from app.contracts.repositories.conversation_repositories import (
     LlmTurnRepoContract,
     MessageRepoContract,
 )
+from app.contracts.repositories.inbox_repositories import (
+    ConversationTeamRepoContract,
+)
 from app.repositories.conversation_lookup_fields import (
     AUTHOR_FIELD,
     CHANNEL_USER_ID_FIELD,
@@ -23,6 +26,7 @@ from app.repositories.conversation_lookup_fields import (
     STATUS_FIELD,
     VERIFIED_PHONE_NUMBER_FIELD,
 )
+from app.repositories.conversation_team_writes import ConversationTeamWrites
 from app.repositories.document_queries import (
     ascending,
     descending,
@@ -31,6 +35,7 @@ from app.repositories.document_queries import (
 )
 from app.repositories.listing.contact_listing import ContactListing
 from app.repositories.listing.conversation_listing import ConversationListing
+from app.repositories.listing.inbox_listing import InboxListing
 from app.repositories.listing.message_listing import MessageListing
 from app.schemas.constants.channels import ChannelKind, MessageDirection
 from app.schemas.constants.conversations import ConversationStatus, MessageAuthor
@@ -113,14 +118,18 @@ class ContactRepository(ContactListing, ContactRepoContract):
         self._remove(business_id, str(contact_id))
 
 
-class ConversationRepository(ConversationListing, ConversationRepoContract):
+class ConversationRepository(
+    ConversationTeamWrites,
+    InboxListing,
+    ConversationListing,
+    ConversationRepoContract,
+    ConversationTeamRepoContract,
+):
     def save(self, conversation: ConversationDocument) -> None:
-        self._store(str(conversation.id), conversation)
+        self._save_keeping_team_fields(conversation)
 
     def save_many(self, conversations: Sequence[ConversationDocument]) -> None:
-        self._store_many(
-            [(str(conversation.id), conversation) for conversation in conversations]
-        )
+        self._save_many_as_given(conversations)
 
     def get(
         self,

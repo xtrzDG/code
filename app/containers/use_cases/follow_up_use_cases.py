@@ -6,6 +6,7 @@ from app.containers.registries import RegistriesContainer
 from app.containers.repositories import RepositoriesContainer
 from app.containers.time_provider import TimeProviderContainer
 from app.containers.transformers import TransformersContainer
+from app.containers.use_cases.inbox_use_cases import InboxUseCasesContainer
 from app.containers.utilities import UtilitiesContainer
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.dto.bookings import (
@@ -53,6 +54,9 @@ from app.use_cases.handoffs.record_unanswered_question_use_case import (
     RecordUnansweredQuestionUseCase,
 )
 from app.use_cases.handoffs.resolve_handoff_use_case import ResolveHandoffUseCase
+from app.use_cases.inbox.assignment.auto_assigning_handoff_use_case import (
+    AutoAssigningHandoffUseCase,
+)
 from app.use_cases.insights.get_attention_counts_use_case import (
     GetAttentionCountsUseCase,
 )
@@ -75,6 +79,7 @@ class FollowUpUseCasesContainer(containers.DeclarativeContainer):
     time_provider: TimeProviderContainer = DependenciesContainer()  # type: ignore[assignment]
     transformers: TransformersContainer = DependenciesContainer()  # type: ignore[assignment]
     utilities: UtilitiesContainer = DependenciesContainer()  # type: ignore[assignment]
+    inbox_use_cases: InboxUseCasesContainer = DependenciesContainer()  # type: ignore[assignment]
 
     create_lead_use_case: Factory[UseCaseContract[CreateLeadCommand, LeadView]] = (
         Factory(
@@ -89,6 +94,8 @@ class FollowUpUseCasesContainer(containers.DeclarativeContainer):
             staff_brief_transformer=transformers.staff_alert_brief_transformer,
             staff_alerts=facilitators.staff_alert_facilitator,
             wall_clock=time_provider.microsecond_wall_clock,
+            refresh_open_request=inbox_use_cases.refresh_open_request_use_case,
+            auto_assign=inbox_use_cases.auto_assign_conversation_use_case,
         )
     )
     list_leads_use_case: Factory[UseCaseContract[ListLeadsQuery, LeadPage]] = Factory(
@@ -106,8 +113,9 @@ class FollowUpUseCasesContainer(containers.DeclarativeContainer):
         lead_repo=repositories.lead_repo,
         live_events=facilitators.event_publisher,
         wall_clock=time_provider.microsecond_wall_clock,
+        refresh_open_request=inbox_use_cases.refresh_open_request_use_case,
     )
-    handoff_to_human_use_case: Factory[
+    handoff_to_human_unassigned_use_case: Factory[
         UseCaseContract[HandoffCommand, HandoffResult]
     ] = Factory(
         HandoffToHumanUseCase,
@@ -199,4 +207,13 @@ class FollowUpUseCasesContainer(containers.DeclarativeContainer):
         business_repo=repositories.business_repo,
         attention_count_repo=repositories.attention_count_repo,
         wall_clock=time_provider.microsecond_wall_clock,
+    )
+    # Every handoff (model tool, reply guard, calls) goes through the team
+    # inbox's automatic assignment.
+    handoff_to_human_use_case: Factory[
+        UseCaseContract[HandoffCommand, HandoffResult]
+    ] = Factory(
+        AutoAssigningHandoffUseCase,
+        handoff_to_human=handoff_to_human_unassigned_use_case,
+        auto_assign=inbox_use_cases.auto_assign_conversation_use_case,
     )
