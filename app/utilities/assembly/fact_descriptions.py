@@ -46,6 +46,7 @@ LINK_LABELS: dict[BusinessLinkKind, str] = {
     BusinessLinkKind.BOOKING_PAGE: "Online booking page",
     BusinessLinkKind.DELIVERY: "Delivery link",
     BusinessLinkKind.WEBSITE: "Website",
+    BusinessLinkKind.PRIVACY: "Privacy notice",
 }
 
 

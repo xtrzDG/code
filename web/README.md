@@ -162,7 +162,8 @@ web/
                                (the installed app's PNG icons, `npm run gen:icons`)
   scripts/                     measure-first-load.mjs, render-app-icons.mjs
   src/
-    proxy.ts                   runs before pages: sign-in redirects, current path header, language cookie
+    proxy.ts                   runs before pages: sign-in redirects, current path header, language cookie;
+                               the hosted chat page's lookup and policy (server/hostedChatProxy.ts)
     app/                       routes (App Router)
       layout.tsx               <html lang data-theme> from the cookies, I18nProvider, ThemeProvider,
                                MotionProvider, ToastProvider; the browser's theme-color
@@ -171,6 +172,8 @@ web/
       manifest.ts              /manifest.webmanifest: the installed app (name in the interface language,
                                colours of the theme, icons); apple-icon.png for iOS home screens
       offline/                 the page the service worker shows without a connection
+      c/[slug]/                the public hosted chat page and its default privacy notice (/privacy),
+                               for customers: their language, system colours, src/styles/hostedChat.css
       */template.tsx           business, admin, login, businesses: each page rises in (PageTransition)
       page.tsx                 "/": the public landing page (signed-in users go to /businesses)
       _landing/                its sections: Hero (+ HeroBackdrop, HeroVisual: the 3D scene or HeroFallback,
@@ -253,7 +256,8 @@ web/
       relay.ts                 streaming relay used by the route handlers
       eventStream.ts           the live event stream through the BFF (no time limit, no buffering)
       sessionCookie.ts         the __Host- session cookie (read, set, clear, migrate)
-      contentSecurityPolicy.ts the per-page nonce and Content Security Policy
+      contentSecurityPolicy.ts the per-page nonce and Content Security Policy (and the hosted chat's stricter one)
+      hostedChat.ts            the hosted chat page's lookup (GET /v1/public/chat/{address}) and its hand-over header
       bodyLimits.ts            request body limits of the BFF (413)
     i18n/                      config.ts (locales, negotiation), translate.ts, server.ts, client.tsx
       messages/en.ts ru.ts ka.ts   shared texts (common, auth, nav, theme, errors …); English is the reference
@@ -386,6 +390,8 @@ section tabs, page titles and the e2e suite read it):
 | Assistant → Knowledge | Server-paged items and search, unanswered questions to FAQ, menu import with review and batch discard, resources and special days |
 | Assistant → Hours and rules | The six profile steps (niche and languages, contacts and hours, offer, booking rules, FAQ and handoff, channels), each saved on its own; the "what to add" summary opens the full list in a side panel |
 | Assistant → Channels | Connect messengers and see why one stopped, WhatsApp's template for staff replies after 24 hours (name and language), website chat snippet, colour and corner, call forwarding codes, Google Calendar state and last sync, staff Telegram link |
+| Assistant → Channels → Share | The hosted chat page's link (copy, open, a new address for owners: old addresses keep working) and a link per switched-on channel, tagged with where it goes (`?src=`); a QR code made in the browser (`uqr`) as PNG or SVG, and a printable A6 table card in a business language (an iframe preview printed as is) |
+| Hosted chat page (`/c/{address}`) | Public, for customers: the widget in page mode, full screen on phones, in the visitor's language (Accept-Language among the business's), the business's colour; older addresses and the business id move to the current one; `noindex`, a policy that allows only the API; texts in all widget languages (`lib/hostedChat/`); `/c/{address}/privacy` is the platform's default privacy notice (ka, ru, en) |
 | Assistant → Advanced | Versions, go-live checklist with fix links, autotests with live progress, publish and rollback with reasons |
 | Settings → Plan and billing | Trial (it starts by itself at the first go-live; the card says so until then, and the owner may start it earlier), subscribe with payment (after the trial, an overdue payment or a cancellation), plan change, usage meters, invoices, payment |
 | Settings → Notifications | For everyone: **On this device** (Web Push: the browser asks for permission, subscribes with the server's VAPID key and the subscription goes to the API; "Send a test" answers whether it arrived; "Turn off"; my other devices), **What reaches me** (events and quiet hours of my devices, in the business time zone). For the staff contacts: how notifications reach each one (channel without a provider on the server, the latest one delivered, waiting or failed with the reason), the linked Telegram chat's @username, and for owners "Send a test" (at most 5 per contact and hour) and each contact's events and quiet hours in its dialog |

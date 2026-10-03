@@ -149,6 +149,7 @@ export const onboardingKa: Translation<typeof onboardingEn> = {
         booking_page: "ჯავშნის გვერდი",
         delivery: "მიტანა",
         website: "ვებსაიტი",
+        privacy: "კონფიდენციალურობის პოლიტიკა",
       },
       recordingNotice: "ზარის ჩაწერის შესახებ გაფრთხილება",
       recordingNoticeHint: "ასისტენტი ამას ყოველი ზარის დასაწყისში ამბობს. ბევრ ქვეყანაში ამას კანონი მოითხოვს.",

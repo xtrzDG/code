@@ -241,3 +241,9 @@ _.author_name  # app/schemas/dto/inbox/conversation_notes.py
 _.awaiting_count  # app/schemas/dto/inbox/inbox_views.py
 _.variables  # app/schemas/dto/inbox/quick_replies.py
 _.missing_variables  # app/schemas/dto/inbox/quick_replies.py
+
+# Read by the website chat widget (widget.js) and the hosted chat page
+# (web/src/app/c), never by Python code.
+_.starter_questions  # app/schemas/dto/channels/widget.py
+_.contact_links  # app/schemas/dto/channels/widget.py
+_.widget_script_url  # app/schemas/dto/sharing.py

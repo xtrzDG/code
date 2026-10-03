@@ -81,6 +81,7 @@ from app.repositories.setup_repositories import (
     AssistantApplyRepository,
     SetupStateRepository,
 )
+from app.repositories.sharing_repositories import PublicSlugClaimRepository
 from app.repositories.user_repositories import (
     OtpChallengeRepository,
     UserRepository,
@@ -289,6 +290,11 @@ class RepositoriesContainer(CallRepositoriesContainer, InboxRepositoriesContaine
     assistant_apply_repo: Singleton[AssistantApplyRepository] = Singleton(
         AssistantApplyRepository,
         collection=launch_collections.assistant_apply_collection,
+    )
+    # Sharing the assistant: the hosted chat addresses (1052).
+    public_slug_claim_repo: Singleton[PublicSlugClaimRepository] = Singleton(
+        PublicSlugClaimRepository,
+        collection=launch_collections.public_slug_claim_collection,
     )
     activation_probe_repo: Singleton[ActivationProbeRepository] = Singleton(
         ActivationProbeRepository,

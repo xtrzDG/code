@@ -68,6 +68,17 @@ WIDGET_MESSAGE_LIMITS: WidgetRateLimits = WidgetRateLimits(
     refusal="Too many messages; wait a moment before sending another.",
 )
 
+# "Talk to a person" notifies staff: a visitor asks once or twice, and a
+# script must not page the team every second.
+WIDGET_HANDOFF_LIMITS: WidgetRateLimits = WidgetRateLimits(
+    key_prefix="widget-handoff",
+    per_visitor_per_minute=3,
+    per_address_per_minute=10,
+    per_business_per_minute=30,
+    per_platform_per_minute=600,
+    refusal="Too many requests for a person; wait a moment and try again.",
+)
+
 
 def describe_client_network(client_ip_address: ClientIpAddress) -> str:
     """

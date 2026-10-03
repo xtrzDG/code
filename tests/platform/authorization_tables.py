@@ -49,6 +49,7 @@ OWNER_ONLY_OPERATIONS: frozenset[str] = frozenset(
         f"DELETE {B}/quick-replies/{{quick_reply_id}}",
         f"PATCH {B}/profile",
         f"PUT {B}/profile/steps/{{step}}",
+        f"PUT {B}/public-slug",
         f"POST {B}/setup/starter-answers/apply",
         f"PUT {B}/setup/skipped-steps/{{setup_step}}",
         f"DELETE {B}/setup/skipped-steps/{{setup_step}}",

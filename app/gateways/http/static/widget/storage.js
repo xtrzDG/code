@@ -11,6 +11,21 @@
     return key;
   }
 
+  // A new visitor key (a new conversation): the others are forgotten.
+  function replaceSessionKey() {
+    var key = "v1_" + randomString(32);
+    storageSet(localStorageOrNull(), storagePrefix + "session", key);
+    return key;
+  }
+
+  function clearConversationState() {
+    var storage = localStorageOrNull();
+    storageSet(storage, storagePrefix + "cursor", "");
+    storageSet(storage, storagePrefix + "handoff", "0");
+    storageSet(storage, storagePrefix + "handoff-at", "0");
+    storageSet(storage, storagePrefix + "activity-at", "0");
+  }
+
   function loadHistory() {
     var raw = storageGet(localStorageOrNull(), storagePrefix + "history");
     if (!raw) {

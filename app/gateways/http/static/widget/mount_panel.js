@@ -31,7 +31,12 @@
       isPolling: false,
       pollStopped: false,
       // Sending waits until then after a 429 (Date.now() milliseconds).
-      sendHeldUntil: 0
+      sendHeldUntil: 0,
+      // "Talk to a person" is on its way; its last refusal, if any.
+      isRequestingPerson: false,
+      personError: "",
+      // "New conversation" waits for the visitor to confirm.
+      isConfirmingRestart: false
     };
     state.handoffNoticeShown = state.history.some(function (item) {
       return item.role === "notice";
@@ -43,7 +48,10 @@
       wrapper.style.setProperty("--aw-accent", accent);
       wrapper.style.setProperty("--aw-on-accent", readableTextColor(accent));
     }
-    if (choosePosition(script.getAttribute("data-position"), config.position) === "left") {
+    if (isPageMode) {
+      wrapper.className += " aw-page";
+      host.style.cssText = "display:block;height:100%;";
+    } else if (choosePosition(script.getAttribute("data-position"), config.position) === "left") {
       wrapper.className += " aw-left";
     }
 
@@ -57,13 +65,16 @@
 
     var panel = el("div", "aw-panel");
     panel.id = panelId;
-    panel.hidden = true;
-    panel.setAttribute("role", "dialog");
-    panel.setAttribute("aria-modal", "false");
+    panel.hidden = !isPageMode;
+    // On a page of its own the chat is the page's main region, not a dialog.
+    panel.setAttribute("role", isPageMode ? "region" : "dialog");
+    if (!isPageMode) {
+      panel.setAttribute("aria-modal", "false");
+    }
 
     var header = el("div", "aw-header");
     var heading = el("div", "aw-heading");
-    var title = el("h2", "aw-title");
+    var title = el(isPageMode ? "h1" : "h2", "aw-title");
     title.textContent = config.business_name || "";
     title.setAttribute("dir", "auto");
     var subtitle = el("p", "aw-subtitle");
@@ -91,13 +102,21 @@
       header.appendChild(languageSelect);
     }
 
+    var restartButton = el("button", "aw-icon-button");
+    restartButton.type = "button";
+    restartButton.appendChild(newChatIcon());
+    restartButton.addEventListener("click", guarded("restart", askRestart));
+    header.appendChild(restartButton);
+
     var closeButton = el("button", "aw-icon-button");
     closeButton.type = "button";
     closeButton.appendChild(closeIcon());
     closeButton.addEventListener("click", function () {
       setOpen(false);
     });
-    header.appendChild(closeButton);
+    if (!isPageMode) {
+      header.appendChild(closeButton);
+    }
     panel.appendChild(header);
 
     var banner = null;
@@ -105,6 +124,12 @@
       banner = el("p", "aw-banner");
       banner.setAttribute("role", "note");
       panel.appendChild(banner);
+    }
+
+    // The business's other channels, on the hosted chat page.
+    var contacts = isPageMode ? buildContacts() : null;
+    if (contacts) {
+      panel.appendChild(contacts.row);
     }
 
     // The conversation is re-rendered as a whole, so it is not a live region:
@@ -117,6 +142,14 @@
     var status = el("p", "aw-sr");
     status.setAttribute("role", "status");
     status.setAttribute("aria-live", "polite");
+
+    // "New conversation?", the starter questions and "Talk to a person".
+    var confirm = buildConfirm();
+    panel.appendChild(confirm.row);
+    var starters = buildStarters();
+    panel.appendChild(starters.row);
+    var actions = buildActions();
+    panel.appendChild(actions.row);
 
     var composer = el("form", "aw-composer");
     composer.setAttribute("novalidate", "");
@@ -138,11 +171,17 @@
     composer.appendChild(sendButton);
     panel.appendChild(composer);
 
+    // "AI assistant · can make mistakes · Privacy".
+    var footer = buildFooter();
+    panel.appendChild(footer.row);
+
     wrapper.appendChild(panel);
-    wrapper.appendChild(launcher);
+    if (!isPageMode) {
+      wrapper.appendChild(launcher);
+    }
     wrapper.appendChild(status);
     root.appendChild(wrapper);
-    document.body.appendChild(host);
+    findContainer().appendChild(host);
 
     var typingRow = null;
 
@@ -153,7 +192,10 @@
       })
     );
     wrapper.addEventListener("keydown", function (event) {
-      if (event.key === "Escape" && state.isOpen) {
+      if (event.key === "Escape" && state.isConfirmingRestart) {
+        event.stopPropagation();
+        setConfirmingRestart(false);
+      } else if (event.key === "Escape" && state.isOpen && !isPageMode) {
         event.stopPropagation();
         setOpen(false);
       }
@@ -183,13 +225,20 @@
     exposeApi();
     // data-open only sets the first view of the tab session: once the visitor
     // has opened or closed the chat, their choice is kept on every page (a
-    // full-screen panel on a phone must not come back on each page).
+    // full-screen panel on a phone must not come back on each page). A
+    // chat page is always open.
     var savedOpen = storageGet(sessionStorageOrNull(), storagePrefix + "open");
-    if (savedOpen === "1" || (savedOpen === null && script.getAttribute("data-open") === "true")) {
+    if (
+      isPageMode ||
+      savedOpen === "1" ||
+      (savedOpen === null && script.getAttribute("data-open") === "true")
+    ) {
       setOpen(true, true);
     }
     window.addEventListener("storage", function (event) {
-      if (event.key === storagePrefix + "history" || event.key === storagePrefix + "cursor") {
+      if (event.key === storagePrefix + "session") {
+        adoptStoredSession();
+      } else if (event.key === storagePrefix + "history" || event.key === storagePrefix + "cursor") {
         adoptStoredState();
       }
     });
@@ -201,4 +250,3 @@
       }
     });
     schedulePoll(0);
-

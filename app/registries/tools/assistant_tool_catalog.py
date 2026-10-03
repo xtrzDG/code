@@ -210,7 +210,8 @@ TOOL_SPECIFICATIONS: dict[AssistantToolName, tuple[str, JsonSchema]] = {
     ),
     AssistantToolName.SEND_LINK: (
         "Get a link from the business profile (menu, map, payment, booking "
-        "page, delivery, website). Send only links returned by this tool.",
+        "page, delivery, website, privacy notice). Send only links returned "
+        "by this tool.",
         object_schema(
             {
                 "kind": enum_property(

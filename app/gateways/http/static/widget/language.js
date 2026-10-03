@@ -99,6 +99,29 @@
     return base;
   }
 
+  // The business's starter questions in the interface language (exact tag,
+  // else the base language), at most three.
+  function starterQuestions(config, tag) {
+    var all = Array.isArray(config.starter_questions) ? config.starter_questions : [];
+    var exact = [];
+    var base = [];
+    all.forEach(function (starter) {
+      if (!starter || typeof starter.text !== "string" || !starter.text) {
+        return;
+      }
+      if (String(starter.language).toLowerCase() === String(tag).toLowerCase()) {
+        exact.push(starter.text);
+      } else if (isSameLanguage(starter.language, tag)) {
+        base.push(starter.text);
+      }
+    });
+    return (exact.length ? exact : base).slice(0, MAX_STARTERS);
+  }
+
+  function isSameLanguage(left, right) {
+    return Boolean(left) && Boolean(right) && baseLanguage(left) === baseLanguage(right);
+  }
+
   // The script tag's data-color wins over the colour chosen in the cabinet.
   function chooseAccent(attribute, configured) {
     var candidates = [String(attribute || "").trim(), String(configured || "").trim()];

@@ -119,4 +119,11 @@ class WidgetGreetingText(BaseTypedString):
     """First message the website chat widget shows a visitor, in one language."""
 
 
+class WidgetStarterQuestionText(BaseTypedString):
+    """
+    A question a visitor can send with one tap before typing anything (one
+    of the business's most important FAQ questions).
+    """
+
+
 # Keep abc order for all non example types, if possible.

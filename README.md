@@ -368,6 +368,30 @@ IPv6; ключ посетителя выбирает сам вызывающий
 виджет как на сайте, даже пока чат выключен (предпросмотр для владельца и
 UI-тестов); `color`, `position` и `language` в ней показывают ещё не сохранённый
 выбор.
+До первого сообщения виджет предлагает до трёх вопросов из частых вопросов
+бизнеса на языке посетителя (`starter_questions` в конфигурации), кнопку
+«Позвать человека» (`POST /v1/widget/{id}/handoff`: разговор передаётся
+сотрудникам, посетитель видит, что ему ответят), «Новый разговор» в шапке (после
+подтверждения — новый ключ посетителя; старый разговор остаётся у сотрудников) и
+строку «AI-ассистент · может ошибаться · Конфиденциальность»: ссылка ведёт на
+политику бизнеса (ссылка «Политика конфиденциальности» в анкете), иначе на
+политику платформы по умолчанию `/c/{адрес}/privacy` (en, ru, ka). Все новые
+тексты — на всех языках виджета.
+
+**Страница чата** `<CABINET_BASE_URL>/c/{адрес}` — чат бизнеса на отдельной
+странице для ссылок и QR-кодов (сайт не нужен): виджет в режиме страницы
+(`data-mode="page"`, `data-container`), на весь экран телефона, в цветах бизнеса,
+на языке посетителя (Accept-Language среди языков бизнеса), со ссылками на другие
+каналы. Адрес — slug из названия (`cafe-batumi`), его можно сменить в кабинете;
+старый адрес и id бизнеса ведут на текущий (308, метка `?src=` сохраняется).
+Страница не индексируется (`X-Robots-Tag` и meta robots), её политика CSP
+разрешает только сам кабинет и API (`connect-src`), без фреймов и форм; ключ
+посетителя не попадает в адрес. Скрипт и API — по `APP_BASE_URL`, без него — по
+`BACKEND_URL` кабинета (годится только когда браузер его видит: локально и в
+e2e). В кабинете «Каналы → Поделиться»: ссылки с кнопкой «Копировать», метка
+места (`?src=`), QR-код (делается в браузере), PNG и SVG, печать карточки A6 на
+столик на языке клиентов.
+
 Исходник скрипта — небольшие части в `app/gateways/http/static/widget/`
 (тексты по группам языков, стили, окно чата, опрос, сеть, хранилище); API
 склеивает их при старте в порядке из `app/gateways/http/widget_script_assembly.py`
@@ -480,8 +504,9 @@ UI-тестов); `color`, `position` и `language` в ней показываю
 | Общие входящие команды | `GET …/inbox` (страница вида `view` — `needs_person`, `requests`, `mine`, `unassigned` или `all` — последнее сообщение первым, `channel`, `limit`, `cursor`, со счётчиками видов; просмотр пишется в журнал аудита), `GET …/inbox/counts`, `GET …/inbox/assignees` (участники и сколько ждущих разговоров у каждого), `POST …/conversations/{id}/assign` (`{"assignee_user_id", "expected_revision"}`: сравнить и записать, устаревшая ревизия — 409 `assignment_changed`), `GET·PUT …/inbox/settings` (владелец: автоназначение новых передач и заявок), `GET·POST …/conversations/{id}/notes`, `DELETE …/conversations/{id}/notes/{note_id}` (внутренние заметки команды), `GET·POST …/quick-replies`, `PUT·DELETE …/quick-replies/{id}` (владелец: быстрые ответы с вариантами по языкам), `GET …/conversations/{id}/quick-replies` (быстрые ответы на языке разговора с подставленными `{name}`, `{booking_time}`, `{business_name}`) |
 | Сборка помощника | `POST·GET …/assistant-versions`, `GET …/assistant-versions/{id}[/autotest-run]`, `GET …/assistant-versions/{id}/go-live-readiness`, `POST …/assistant-versions/{id}/autotests`, `POST …/assistant-versions/{id}/publish`, `POST …/assistant-versions/{id}/rollback` |
 | Каналы (кабинет) | `GET …/channels`, `PUT·DELETE …/channels/{channel}`, `GET …/channels/web/snippet`, `PUT …/channels/whatsapp/staff-template` (шаблон WhatsApp для ответа сотрудника вне 24-часового окна), `POST …/manager-contacts/telegram-link` |
+| Поделиться | `GET …/share-links?src=<метка>` (страница чата `/c/{адрес}` и ссылка каждого включённого канала — wa.me, t.me, m.me, ig.me, tel: — с меткой места: `?src=` у страницы чата, `?ref=` у m.me и ig.me; первый вызов даёт бизнесу адрес из названия), `PUT …/public-slug` (владелец: новый адрес страницы чата; занятый — 409 `slug_taken`, служебный — 422 `slug_reserved`; старые адреса продолжают вести к бизнесу) |
 | Уведомления сотрудников | `GET …/notification-contacts` (контакты из настроек с ключом, готовностью канала и состоянием последней доставки; Telegram — с @username), `POST …/notification-contacts/{key}/test` (владелец: проверка контакта, не больше 5 в час), `GET·PUT …/notification-preferences` (мои события и тихие часы, ключ VAPID и мои устройства), `POST …/push-subscriptions` (включить уведомления на этом устройстве), `DELETE …/push-subscriptions/{id}`, `POST …/push-subscriptions/{id}/test`, `GET …/notification-links/{token}` (куда ведёт подписанная ссылка из уведомления; просроченная — `is_expired`) |
-| Вебхуки и виджет | `POST /v1/channels/telegram/{channel_id}/webhook`, `GET·POST /v1/channels/meta/webhook`, `POST /v1/channels/telegram-platform/webhook`, `GET /v1/widget/{id}/config`, `GET·POST /v1/widget/{id}/messages`, `POST /v1/widget/errors` (сигнал ошибки виджета: вид, этап, тип ошибки и место в widget.js, без текстов; лимиты на сеть, бизнес и платформу), `GET /widget.js`, `GET /widget/demo` |
+| Вебхуки и виджет | `POST /v1/channels/telegram/{channel_id}/webhook`, `GET·POST /v1/channels/meta/webhook`, `POST /v1/channels/telegram-platform/webhook`, `GET /v1/widget/{id}/config`, `GET·POST /v1/widget/{id}/messages`, `POST /v1/widget/{id}/handoff` («Позвать человека»: передача сотрудникам с причиной `customer_request`; свои лимиты на посетителя, сеть, бизнес и платформу), `GET /v1/public/chat/{адрес}` (что нужно странице чата до загрузки виджета: по адресу или id бизнеса, `noindex`), `POST /v1/widget/errors` (сигнал ошибки виджета: вид, этап, тип ошибки и место в widget.js, без текстов; лимиты на сеть, бизнес и платформу), `GET /widget.js`, `GET /widget/demo` |
 | Голос | `POST /v1/voice/tools/{tool}`, `POST /v1/voice/webhooks/conversation-initiation`, `POST /v1/voice/webhooks/post-call` (и `call_initiation_failure` — звонок, который голосовая платформа не смогла начать) |
 | Звонки (настройки) | `GET·PUT …/call-settings` (владелец: итог звонка сотрудникам, сообщение тем, кто не дозвонился, имя шаблона WhatsApp, SMS вместо WhatsApp; в ответе — готов ли WhatsApp и SMS и текст шаблона на языках бизнеса), `GET …/text-backs` (владелец: пропущенные звонки страницами, новые сверху, с тем, что отправлено, или почему нет; просмотр пишется в журнал аудита) |
 | Телефония | `GET /v1/telephony/zadarma/notifications?zd_echo=…` (проверка адреса Zadarma), `POST /v1/telephony/zadarma/notifications` (уведомления АТС с заголовком `Signature`; NOTIFY_END непринятого звонка — пропущенный звонок и сообщение звонящему) |

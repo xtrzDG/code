@@ -1,7 +1,7 @@
 {
   "collection": "channels",
   "document_type": "ChannelDocument",
-  "schema_version": 1,
+  "schema_version": 2,
   "shape": {
     "additionalProperties": false,
     "properties": {
@@ -76,8 +76,64 @@
         ],
         "default": null
       },
+      "public_profile": {
+        "anyOf": [
+          {
+            "additionalProperties": false,
+            "properties": {
+              "instagram_username": {
+                "anyOf": [
+                  {
+                    "maxLength": 30,
+                    "minLength": 1,
+                    "pattern": "^[A-Za-z0-9._]{1,30}$",
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null
+              },
+              "page_username": {
+                "anyOf": [
+                  {
+                    "maxLength": 50,
+                    "minLength": 3,
+                    "pattern": "^[A-Za-z0-9.]{3,50}$",
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null
+              },
+              "whatsapp_number": {
+                "anyOf": [
+                  {
+                    "maxLength": 15,
+                    "minLength": 7,
+                    "pattern": "^[1-9][0-9]{6,14}$",
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null
+              }
+            },
+            "type": "object"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
       "schema_version": {
-        "default": "1",
+        "default": "2",
         "type": "string"
       },
       "status": {

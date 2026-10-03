@@ -1,7 +1,7 @@
 {
   "collection": "business_profiles",
   "document_type": "BusinessProfileDocument",
-  "schema_version": 1,
+  "schema_version": 2,
   "shape": {
     "additionalProperties": false,
     "properties": {
@@ -233,7 +233,8 @@
                 "payment",
                 "booking_page",
                 "delivery",
-                "website"
+                "website",
+                "privacy"
               ],
               "type": "string"
             },
@@ -295,8 +296,22 @@
         ],
         "type": "string"
       },
+      "privacy_notice_url": {
+        "anyOf": [
+          {
+            "maxLength": 2048,
+            "minLength": 10,
+            "pattern": "^https?://[^\\s/]+(/[^\\s]*)?$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
       "schema_version": {
-        "default": "1",
+        "default": "2",
         "type": "string"
       },
       "tone": {

@@ -19,6 +19,10 @@ from app.schemas.typings.channels.strings import (
     WhatsAppDisplayPhoneNumber,
 )
 from app.schemas.typings.conversations.strings import ChannelUserId
+from app.schemas.typings.sharing.constrained_strings import (
+    InstagramUsername,
+    MetaPageUsername,
+)
 from app.utilities.channels.json_values import (
     JsonObject,
     parse_json_object,
@@ -34,6 +38,9 @@ META_GRAPH_BASE_URL: str = "https://graph.facebook.com"
 DEFAULT_GRAPH_API_VERSION: str = "v23.0"
 REQUEST_TIMEOUT_SECONDS: float = 10.0
 PAGE_WEBHOOK_FIELDS: str = "messages,messaging_postbacks"
+# The page and its Instagram account with the public usernames chat links
+# (m.me, ig.me) open.
+PAGE_PROFILE_FIELDS: str = "id,name,username,instagram_business_account{id,username}"
 
 
 class MetaGraphClient(MetaGraphApiClientContract):
@@ -99,7 +106,7 @@ class MetaGraphClient(MetaGraphApiClientContract):
             "GET",
             f"/{page_id}",
             access_token,
-            params={"fields": "id,name,instagram_business_account"},
+            params={"fields": PAGE_PROFILE_FIELDS},
             is_lookup=True,
         )
         page_name: str | None = read_text(body, "name")
@@ -110,10 +117,16 @@ class MetaGraphClient(MetaGraphApiClientContract):
         return MetaPageProfile(
             page_id=read_object_id(body, "id") or page_id,
             name=None if page_name is None else MetaPageName(page_name),
+            username=read_page_username(body),
             instagram_account_id=(
                 None
                 if instagram_account is None
                 else read_object_id(instagram_account, "id")
+            ),
+            instagram_username=(
+                None
+                if instagram_account is None
+                else read_instagram_username(instagram_account)
             ),
         )
 
@@ -251,6 +264,22 @@ def read_object_id(source: JsonObject, key: str) -> MetaObjectId | None:
 
     try:
         return MetaObjectId(raw_id)
+    except ValueError:
+        return None
+
+
+def read_page_username(source: JsonObject) -> MetaPageUsername | None:
+    raw_username: str | None = read_text(source, "username")
+    try:
+        return None if raw_username is None else MetaPageUsername(raw_username)
+    except ValueError:
+        return None
+
+
+def read_instagram_username(source: JsonObject) -> InstagramUsername | None:
+    raw_username: str | None = read_text(source, "username")
+    try:
+        return None if raw_username is None else InstagramUsername(raw_username)
     except ValueError:
         return None
 

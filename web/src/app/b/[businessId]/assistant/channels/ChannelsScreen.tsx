@@ -22,6 +22,7 @@ import { ChannelsSkeleton } from "./_components/ChannelsSkeleton";
 import { CHANNEL_NAMES } from "./_components/channelMeta";
 import { ConnectChannelModal } from "./_components/ConnectChannelModal";
 import { GoogleCalendarCard } from "./_components/GoogleCalendarCard";
+import { ShareSection } from "./_components/ShareSection";
 import { StaffReplyTemplateForm } from "./_components/StaffReplyTemplateForm";
 import { StaffTelegramCard } from "./_components/StaffTelegramCard";
 import { WebChatSection } from "./_components/WebChatSection";
@@ -236,6 +237,7 @@ export function ChannelsScreen({ calendarReturn: initialCalendarReturn }: { cale
             />
           ) : null}
           {isPhoneOn ? <CallForwardingCard /> : null}
+          <ShareSection isWebChatOn={isWebChatOn} accent={webChat?.widget_color ?? null} />
 
           <section aria-labelledby="channels-tools" className="space-y-4">
             <h2 id="channels-tools" className="text-lg font-semibold text-ink">

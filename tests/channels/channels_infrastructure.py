@@ -45,6 +45,7 @@ from app.repositories.delivery_repositories import (
     InboundEventRepository,
 )
 from app.repositories.knowledge_repositories import (
+    KnowledgeItemRepository,
     ResourceRepository,
     ScheduleExceptionRepository,
 )
@@ -64,12 +65,14 @@ from app.schemas.domain.conversations import (
 )
 from app.schemas.domain.handoffs import HandoffDocument
 from app.schemas.domain.inbound_events import InboundEventDocument
+from app.schemas.domain.knowledge import KnowledgeItemDocument
 from app.schemas.domain.manager_links import ManagerTelegramLinkDocument
 from app.schemas.domain.outbound_messages import OutboundMessageDocument
 from app.schemas.domain.profiles import BusinessProfileDocument
 from app.schemas.domain.resources import ResourceDocument, ScheduleExceptionDocument
 from app.schemas.domain.users import UserDocument
 from app.schemas.typings.platform.strings import PlatformSecret
+from app.utilities.conversations.language_detector import LanguageDetector
 from app.utilities.localization.localized_text_resolver import LocalizedTextResolver
 from app.utilities.localization.phone_number_parser import PhoneNumberParser
 from tests.channels.channels_fakes import (
@@ -138,6 +141,9 @@ class ChannelsInfrastructure:
         self.assistant_version_repo = AssistantVersionRepository(
             InMemoryDocumentCollectionAdapter(AssistantVersionDocument)
         )
+        self.knowledge_item_repo = KnowledgeItemRepository(
+            InMemoryDocumentCollectionAdapter(KnowledgeItemDocument)
+        )
         self.inbound_event_collection = InMemoryDocumentCollectionAdapter(
             InboundEventDocument
         )
@@ -162,6 +168,7 @@ class ChannelsInfrastructure:
         )
         self.phone_number_parser = PhoneNumberParser()
         self.language_registry = LanguageRegistry()
+        self.language_detector = LanguageDetector()
         self.text_resolver = LocalizedTextResolver()
         self.pipeline = ScriptedCustomerPipeline(
             self.conversation_repo, self.message_repo, self.clock

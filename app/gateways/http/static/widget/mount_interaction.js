@@ -18,10 +18,15 @@
       inputLabel.textContent = text("placeholder");
       sendButton.setAttribute("aria-label", text("send"));
       sendButton.title = text("send");
+      applyChromeLanguage();
       renderLog();
     }
 
     function setOpen(isOpen, keepFocus) {
+      if (isPageMode && !isOpen) {
+        // A chat page has nothing to close to.
+        return;
+      }
       state.isOpen = isOpen;
       panel.hidden = !isOpen;
       launcher.setAttribute("aria-expanded", isOpen ? "true" : "false");

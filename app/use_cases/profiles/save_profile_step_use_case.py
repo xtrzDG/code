@@ -35,6 +35,7 @@ from app.utilities.knowledge.knowledge_items import (
 )
 from app.utilities.knowledge.niche_answers import merge_niche_answers
 from app.utilities.knowledge.opening_hours import validate_opening_intervals
+from app.utilities.knowledge.profile_links import store_profile_links
 from app.utilities.knowledge.profile_sections import (
     build_booking_rules,
     check_address,
@@ -142,7 +143,7 @@ class SaveProfileStepUseCase(
                 profile.tone = check_tone(step_input.tone)
             case ChannelsStepInput():
                 step = ProfileWizardStep.CHANNELS
-                profile.links = validate_links(step_input.links)
+                store_profile_links(profile, validate_links(step_input.links))
                 profile.is_recording_notice_enabled = (
                     step_input.is_recording_notice_enabled
                 )

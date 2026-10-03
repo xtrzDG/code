@@ -15,6 +15,11 @@
  *                          is kept on the next pages)
  *   data-preview="true"    show the widget even while the chat is switched off
  *   data-api-base="https://<api>"   API origin (default: the script's origin)
+ *   data-mode="page"       the chat fills a page instead of a corner (the
+ *                          hosted chat page /c/{slug}): no launcher, always
+ *                          open, the business's other channels on top
+ *   data-container="<id>"  page mode: the element the chat fills (default:
+ *                          the whole window)
  *
  * No dependencies and no cookies. The visitor is identified by a random
  * session key kept in localStorage; the widget renders inside a shadow root,
@@ -29,6 +34,10 @@
  * When the API says "too many messages" (429), sending and Retry wait for
  * its Retry-After, and polls slow down to it.
  * Tabs of one site share one history: each tab adopts what the others saved.
+ * Before the first message the business's top questions are one tap away;
+ * "Talk to a person" passes the conversation to staff (POST .../handoff),
+ * "New conversation" starts over under a new visitor key, and the footer
+ * says it is an AI assistant that can make mistakes, with the privacy notice.
  * window.AssistantWorkshopChat.open() / .close() / .toggle() control it.
  */
 (function () {
@@ -38,6 +47,7 @@
   var BUSINESS_ATTRIBUTE = "data-tenant";
   var CONFIG_PATH = "/v1/widget/{business_id}/config";
   var MESSAGES_PATH = "/v1/widget/{business_id}/messages";
+  var HANDOFF_PATH = "/v1/widget/{business_id}/handoff";
   var ERRORS_PATH = "/v1/widget/errors";
   var SCRIPT_FILE_NAME = "/widget.js";
 
@@ -55,6 +65,16 @@
   var RTL_CHARACTER_PATTERN = /[\u0590-\u08FF\uFB1D-\uFDFF\uFE70-\uFEFC]/;
   var SESSION_KEY_HEADER = "X-Widget-Session-Key";
   var POSITIONS = ["left", "right"];
+  var PAGE_MODE = "page";
+  var WEB_LINK_PATTERN = /^https?:\/\/[^\s]+$/;
+  var CONTACT_LINK_PATTERN = /^(?:https:\/\/[^\s]+|tel:\+[0-9]{7,15})$/;
+  var CONTACT_NAMES = {
+    whatsapp: "WhatsApp",
+    telegram: "Telegram",
+    messenger: "Messenger",
+    instagram: "Instagram"
+  };
+  var MAX_STARTERS = 3;
   // Polling for staff replies: fast after activity, slower while idle.
   var POLL_FIRST_DELAY_MS = 4000;
   var POLL_BACKOFF_FACTOR = 1.6;

@@ -19,6 +19,7 @@ from app.schemas.dto.profiles.business_profile import (
 from app.schemas.exceptions.application_errors import NotFoundError
 from app.utilities.knowledge.niche_answers import merge_niche_answers
 from app.utilities.knowledge.opening_hours import validate_opening_intervals
+from app.utilities.knowledge.profile_links import store_profile_links
 from app.utilities.knowledge.profile_sections import (
     build_booking_rules,
     check_address,
@@ -101,7 +102,7 @@ class SaveProfileUseCase(UseCaseContract[SaveProfileCommand, BusinessProfileView
         )
         profile.forbidden = check_rules(profile_input.forbidden, subject="forbidden")
         profile.tone = check_tone(profile_input.tone)
-        profile.links = validate_links(profile_input.links)
+        store_profile_links(profile, validate_links(profile_input.links))
         profile.niche_answers = merge_niche_answers(
             template=template,
             current_answers=[],

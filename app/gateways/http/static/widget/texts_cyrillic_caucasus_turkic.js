@@ -15,7 +15,18 @@
       language: "Язык",
       preview: "Предпросмотр: чат выключен. Включите его в кабинете (Каналы).",
       newReply: "Новый ответ",
-      staff: "Наша команда"
+      staff: "Наша команда",
+      person: "Связаться с человеком",
+      personFailed: "Не удалось связаться с нашей командой. Попробуйте ещё раз.",
+      newChat: "Новый разговор",
+      newChatConfirm: "Начать новый разговор? Этот чат исчезнет с этого устройства.",
+      newChatYes: "Начать заново",
+      cancel: "Отмена",
+      suggestions: "Частые вопросы",
+      footer: "AI-ассистент · может ошибаться",
+      privacy: "Конфиденциальность",
+      call: "Позвонить",
+      otherWays: "Другие способы связи"
     },
     uk: {
       open: "Відкрити чат",
@@ -34,7 +45,18 @@
       language: "Мова",
       preview: "Попередній перегляд: чат вимкнено. Увімкніть його в кабінеті (Канали).",
       newReply: "Нова відповідь",
-      staff: "Наша команда"
+      staff: "Наша команда",
+      person: "Зв’язатися з людиною",
+      personFailed: "Не вдалося зв’язатися з нашою командою. Спробуйте ще раз.",
+      newChat: "Нова розмова",
+      newChatConfirm: "Почати нову розмову? Цей чат зникне з цього пристрою.",
+      newChatYes: "Почати знову",
+      cancel: "Скасувати",
+      suggestions: "Часті запитання",
+      footer: "AI-асистент · може помилятися",
+      privacy: "Конфіденційність",
+      call: "Зателефонувати",
+      otherWays: "Інші способи зв’язку"
     },
     kk: {
       open: "Чатты ашу",
@@ -53,7 +75,18 @@
       language: "Тіл",
       preview: "Алдын ала қарау: чат өшірулі. Оны кабинетте қосыңыз (Арналар).",
       newReply: "Жаңа жауап",
-      staff: "Біздің команда"
+      staff: "Біздің команда",
+      person: "Адаммен сөйлесу",
+      personFailed: "Біздің командамен байланысу мүмкін болмады. Қайталап көріңіз.",
+      newChat: "Жаңа әңгіме",
+      newChatConfirm: "Жаңа әңгіме бастау керек пе? Бұл чат осы құрылғыдан өшіріледі.",
+      newChatYes: "Қайта бастау",
+      cancel: "Бас тарту",
+      suggestions: "Жиі қойылатын сұрақтар",
+      footer: "AI көмекшісі · қателесуі мүмкін",
+      privacy: "Құпиялық",
+      call: "Қоңырау шалу",
+      otherWays: "Байланысудың басқа жолдары"
     },
     ka: {
       open: "ჩატის გახსნა",
@@ -72,7 +105,18 @@
       language: "ენა",
       preview: "წინასწარი ხედი: ჩატი გამორთულია. ჩართეთ კაბინეტში (არხები).",
       newReply: "ახალი პასუხი",
-      staff: "ჩვენი გუნდი"
+      staff: "ჩვენი გუნდი",
+      person: "ადამიანთან დაკავშირება",
+      personFailed: "ჩვენს გუნდთან დაკავშირება ვერ მოხერხდა. სცადეთ ხელახლა.",
+      newChat: "ახალი საუბარი",
+      newChatConfirm: "დავიწყოთ ახალი საუბარი? ეს ჩატი ამ მოწყობილობიდან წაიშლება.",
+      newChatYes: "თავიდან დაწყება",
+      cancel: "გაუქმება",
+      suggestions: "ხშირი კითხვები",
+      footer: "AI-ასისტენტი · შეიძლება შეცდეს",
+      privacy: "კონფიდენციალურობა",
+      call: "დარეკვა",
+      otherWays: "დაკავშირების სხვა გზები"
     },
     hy: {
       open: "Բացել զրույցը",
@@ -91,7 +135,18 @@
       language: "Լեզու",
       preview: "Նախադիտում. զրույցն անջատված է։ Միացրեք այն կաբինետում (Ալիքներ)։",
       newReply: "Նոր պատասխան",
-      staff: "Մեր թիմը"
+      staff: "Մեր թիմը",
+      person: "Կապվել մարդու հետ",
+      personFailed: "Չհաջողվեց կապվել մեր թիմի հետ։ Փորձեք կրկին։",
+      newChat: "Նոր զրույց",
+      newChatConfirm: "Սկսե՞լ նոր զրույց։ Այս զրույցը կջնջվի այս սարքից։",
+      newChatYes: "Սկսել նորից",
+      cancel: "Չեղարկել",
+      suggestions: "Առաջարկվող հարցեր",
+      footer: "AI օգնական · կարող է սխալվել",
+      privacy: "Գաղտնիություն",
+      call: "Զանգել",
+      otherWays: "Կապի այլ եղանակներ"
     },
     az: {
       open: "Söhbəti aç",
@@ -110,7 +165,18 @@
       language: "Dil",
       preview: "Önizləmə: söhbət söndürülüb. Onu kabinetdə (Kanallar) aktiv edin.",
       newReply: "Yeni cavab",
-      staff: "Komandamız"
+      staff: "Komandamız",
+      person: "İnsanla danışmaq",
+      personFailed: "Komandamızla əlaqə saxlamaq mümkün olmadı. Yenidən cəhd edin.",
+      newChat: "Yeni söhbət",
+      newChatConfirm: "Yeni söhbətə başlansın? Bu çat bu cihazdan silinəcək.",
+      newChatYes: "Yenidən başla",
+      cancel: "Ləğv et",
+      suggestions: "Təklif olunan suallar",
+      footer: "AI köməkçi · səhv edə bilər",
+      privacy: "Məxfilik",
+      call: "Zəng et",
+      otherWays: "Bizimlə əlaqənin digər yolları"
     },
     tr: {
       open: "Sohbeti aç",
@@ -129,7 +195,18 @@
       language: "Dil",
       preview: "Önizleme: bu sohbet kapalı. Panelden (Kanallar) açın.",
       newReply: "Yeni yanıt",
-      staff: "Ekibimiz"
+      staff: "Ekibimiz",
+      person: "Bir kişiyle konuş",
+      personFailed: "Ekibimize ulaşılamadı. Lütfen tekrar deneyin.",
+      newChat: "Yeni sohbet",
+      newChatConfirm: "Yeni bir sohbet başlatılsın mı? Bu sohbet bu cihazdan silinecek.",
+      newChatYes: "Baştan başla",
+      cancel: "İptal",
+      suggestions: "Önerilen sorular",
+      footer: "Yapay zekâ asistanı · hata yapabilir",
+      privacy: "Gizlilik",
+      call: "Ara",
+      otherWays: "Bize ulaşmanın diğer yolları"
     },
     uz: {
       open: "Chatni ochish",
@@ -148,5 +225,16 @@
       language: "Til",
       preview: "Oldindan ko‘rish: chat o‘chirilgan. Uni kabinetda (Kanallar) yoqing.",
       newReply: "Yangi javob",
-      staff: "Jamoamiz"
+      staff: "Jamoamiz",
+      person: "Inson bilan gaplashish",
+      personFailed: "Jamoamiz bilan bog‘lanib bo‘lmadi. Qaytadan urinib ko‘ring.",
+      newChat: "Yangi suhbat",
+      newChatConfirm: "Yangi suhbat boshlansinmi? Bu chat ushbu qurilmadan o‘chiriladi.",
+      newChatYes: "Qaytadan boshlash",
+      cancel: "Bekor qilish",
+      suggestions: "Tavsiya etilgan savollar",
+      footer: "AI yordamchi · xato qilishi mumkin",
+      privacy: "Maxfiylik",
+      call: "Qo‘ng‘iroq qilish",
+      otherWays: "Biz bilan bog‘lanishning boshqa yo‘llari"
     },
