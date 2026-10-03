@@ -21,7 +21,9 @@ API, translations). In short:
   composed in `sections/*.ts`); no hard-coded strings in components.
 - Dates, times and money: Intl helpers in `src/lib/format.ts` /
   `useBusinessFormat()`, in the business time zone and currency. API
-  timestamps are microseconds, prices are minor units.
+  timestamps are microseconds, prices are minor units. Any other format in a
+  UI language goes through `src/lib/intl/formatters.ts` (Chrome has no
+  Georgian Intl), never `new Intl.*(locale)`.
 - Use the UI kit in `@/components/ui` and the semantic color tokens of
   `src/app/globals.css`.
 - After a backend API change: `npm run gen:api` and commit `openapi.json`

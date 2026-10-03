@@ -54,14 +54,24 @@ A formatted date never ends a sentence: the Russian format ends with
 "г." ("16 окт. 2026 г."), and a full stop after it reads "г..". Put the date
 before the verb ("Оплатите до {date}, чтобы…"), after a colon as a label
 ("Последний запуск: {date}"), or in parentheses. `src/i18n/i18n.test.ts`
-fails on a `{date}.`, `{when}.` or `{until}.` in any dictionary.
+fails on a `{date}.`, `{when}.`, `{until}.` (or another date
+placeholder) before a full stop in any dictionary.
 
 ## Length
 
 Russian and Georgian texts run 20–40 % longer than English. Every layout is
-checked with the pseudo-locale (`NEXT_PUBLIC_PSEUDO_LOCALE=true`, English
-padded by 40 % with accented letters; `web/e2e/pseudo-locale.spec.ts`) at
-1440 and 390 px: no horizontal overflow, no clipped button or tab.
+checked with the pseudo-locale (the cabinet started with
+`PSEUDO_LOCALE=true` and the `aw_locale=en-XA` cookie: English padded by
+40 % with accented letters; `web/e2e/pseudo-locale.spec.ts`) at 1440 and
+390 px: no horizontal overflow, no clipped button or tab.
+
+## Dates and numbers in Georgian
+
+Chrome has no Georgian Intl and would write "8 hours ago" and "Oct 16, 2026"
+in a Georgian cabinet. The cabinet writes Georgian dates, numbers, lists and
+relative times from CLDR tables of its own (`web/src/lib/intl/`), the same
+on the server and in every browser: "16 ოქტ. 2026, 12:00", "8 საათის წინ",
+"18,50 ₾", "ა, ბ და გ".
 
 ## Review
 

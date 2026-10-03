@@ -8,6 +8,7 @@
  */
 
 import { toDate, type Timestamp } from "@/lib/format";
+import { dateTimeFormat, relativeTimeFormat } from "@/lib/intl/formatters";
 
 /** "YYYY-MM-DD" in the business time zone (the API's LocalDate). */
 export type LocalDateText = string;
@@ -72,7 +73,7 @@ export function formatLocalDate(
   if (!isLocalDate(date)) {
     return date;
   }
-  return new Intl.DateTimeFormat(locale, { ...options, timeZone: "UTC" }).format(localDateToUtc(date));
+  return dateTimeFormat(locale, { ...options, timeZone: "UTC" }).format(localDateToUtc(date));
 }
 
 /** "20:00" in the locale's clock ("8:00 PM" in English, "20:00" in Russian). */
@@ -82,7 +83,7 @@ export function formatLocalTime(time: string, locale: string): string {
     return time;
   }
   const date = new Date(Date.UTC(2024, 0, 1, Number(match[1]), Number(match[2])));
-  return new Intl.DateTimeFormat(locale, { hour: "numeric", minute: "2-digit", timeZone: "UTC" }).format(date);
+  return dateTimeFormat(locale, { hour: "numeric", minute: "2-digit", timeZone: "UTC" }).format(date);
 }
 
 /** A range of local dates as one short text: "Sep 2 – Oct 1, 2026". */
@@ -90,7 +91,7 @@ export function formatLocalDateRange(from: LocalDateText, to: LocalDateText, loc
   if (!isLocalDate(from) || !isLocalDate(to)) {
     return `${from} – ${to}`;
   }
-  const format = new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeZone: "UTC" });
+  const format = dateTimeFormat(locale, { dateStyle: "medium", timeZone: "UTC" });
   return format.formatRange(localDateToUtc(from), localDateToUtc(to));
 }
 
@@ -114,7 +115,7 @@ export function formatRelative(
   if (Math.abs(seconds) > (options.maxDays ?? 7) * 86_400) {
     return null;
   }
-  const format = new Intl.RelativeTimeFormat(locale, { numeric: "auto" });
+  const format = relativeTimeFormat(locale, { numeric: "auto" });
   if (Math.abs(seconds) < 60) {
     return format.format(0, "second");
   }

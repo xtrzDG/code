@@ -4,6 +4,7 @@
  */
 
 import type { Schema } from "@/api/types";
+import { numberFormat } from "@/lib/intl/formatters";
 
 import type { AssistantToolName, AssistantVersionStatus, StatusTone } from "./versions";
 
@@ -39,7 +40,7 @@ export const PASSING_SCORE = 4;
 
 /** "4.25" -> "4.3" in the UI language (scores are 1..5). */
 export function formatScore(score: number, locale: string): string {
-  return new Intl.NumberFormat(locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(score);
+  return numberFormat(locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(score);
 }
 
 /**

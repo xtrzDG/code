@@ -1,5 +1,6 @@
 /**
- * Locale-aware formatting with Intl. Dates and times are shown in the
+ * Locale-aware formatting with Intl (`lib/intl/formatters`, which writes
+ * Georgian itself: Chrome has none). Dates and times are shown in the
  * business time zone, money in the business currency (see
  * components/business/BusinessContext `useBusinessFormat()` for bound helpers).
  *
@@ -9,6 +10,7 @@
 
 import { CURRENCY_MINOR_DIGITS } from "./currencyDigits.generated";
 import { LANGUAGE_NAMES } from "./displayNames.generated";
+import { dateTimeFormat, numberFormat } from "./intl/formatters";
 
 export type Timestamp = Date | number;
 
@@ -21,7 +23,7 @@ export function formatDateTime(
   value: Timestamp,
   options: { locale: string; timeZone?: string; dateStyle?: "full" | "long" | "medium" | "short"; timeStyle?: "short" | "medium" },
 ): string {
-  return new Intl.DateTimeFormat(options.locale, {
+  return dateTimeFormat(options.locale, {
     dateStyle: options.dateStyle ?? "medium",
     timeStyle: options.timeStyle ?? "short",
     timeZone: options.timeZone,
@@ -32,20 +34,20 @@ export function formatDate(
   value: Timestamp,
   options: { locale: string; timeZone?: string; dateStyle?: "full" | "long" | "medium" | "short" },
 ): string {
-  return new Intl.DateTimeFormat(options.locale, {
+  return dateTimeFormat(options.locale, {
     dateStyle: options.dateStyle ?? "medium",
     timeZone: options.timeZone,
   }).format(toDate(value));
 }
 
 export function formatTime(value: Timestamp, options: { locale: string; timeZone?: string }): string {
-  return new Intl.DateTimeFormat(options.locale, { timeStyle: "short", timeZone: options.timeZone }).format(
+  return dateTimeFormat(options.locale, { timeStyle: "short", timeZone: options.timeZone }).format(
     toDate(value),
   );
 }
 
 export function formatNumber(value: number, locale: string, options?: Intl.NumberFormatOptions): string {
-  return new Intl.NumberFormat(locale, options).format(value);
+  return numberFormat(locale, options).format(value);
 }
 
 /**
@@ -78,7 +80,7 @@ export function majorToMinor(major: number, currency: string): number {
 /** A price in minor units as text: formatMoney(1850, "GEL", "ka") -> "18,50 ₾". */
 export function formatMoney(minor: number, currency: string, locale: string): string {
   const digits = currencyFractionDigits(currency);
-  return new Intl.NumberFormat(locale, {
+  return numberFormat(locale, {
     style: "currency",
     currency,
     minimumFractionDigits: digits,
@@ -191,7 +193,7 @@ export function parseTimeOfDay(text: string): number | null {
 export function weekdayName(weekday: number, locale: string, width: "long" | "short" = "long"): string {
   // 2024-01-01 was a Monday.
   const date = new Date(Date.UTC(2024, 0, weekday));
-  return new Intl.DateTimeFormat(locale, { weekday: width, timeZone: "UTC" }).format(date);
+  return dateTimeFormat(locale, { weekday: width, timeZone: "UTC" }).format(date);
 }
 
 /** "русский" -> "Русский" (names used as labels start with a capital). */

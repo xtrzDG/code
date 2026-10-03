@@ -7,6 +7,7 @@ import { CHANNEL_NAMES } from "@/components/workspace/channelNames";
 import { useI18n } from "@/i18n/client";
 import type { ApiError } from "@/api/errors";
 import { cn } from "@/lib/cn";
+import { listFormat } from "@/lib/intl/formatters";
 
 import {
   hasEstimatedPrices,
@@ -177,7 +178,7 @@ export function PlansSection({
                   </ul>
                   <p className="mt-3 text-xs text-ink-subtle">
                     <span className="font-medium">{t("billing.plans.channelsLabel")}: </span>
-                    {new Intl.ListFormat(locale, { type: "conjunction" }).format(
+                    {listFormat(locale, { type: "conjunction" }).format(
                       quote.channels.map((channel) => t(CHANNEL_NAMES[channel])),
                     )}
                   </p>

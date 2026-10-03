@@ -303,7 +303,8 @@ web/
     lib/                       pure helpers with unit tests (*.test.ts): navigation (pages, paths,
                                where a path is, safeNextPath), sections (the five sections, their pages,
                                roles, titles), legacyRoutes (old addresses), inboxBadges, shellPreferences
-                               (sidebar cookie), installPrompt, serviceWorker.test.ts (public/sw.js), format (Intl, money units), countries (phone/country),
+                               (sidebar cookie), installPrompt, serviceWorker.test.ts (public/sw.js), format (Intl, money units),
+                               intl/ (Intl factories; Georgian dates, numbers, lists from CLDR tables), countries (phone/country),
                                hours (opening hours), wizard/ (niche answers, offers, FAQ), knowledge/
                                (kinds, item form, menu import), resources, assistant/ (versions,
                                autotests, go-live, test chat), validation (zod), classMerge (className
@@ -671,8 +672,14 @@ as `reasonMessages` to `useMutation`); never match the English message.
   `pages.*`.
 - Pass `language: locale` to API calls that return display texts (catalog,
   wizard, gaps); the BFF also sends `Accept-Language` with the interface language.
-- Dates, times, numbers and money: Intl only (`src/lib/format.ts`,
-  `useBusinessFormat()`), in the business time zone and currency.
+- Dates, times, numbers and money: `src/lib/format.ts` and
+  `useBusinessFormat()`, in the business time zone and currency; other
+  formats in a UI language (lists, relative times, plural forms) through the
+  factories of `src/lib/intl/formatters.ts`, never `new Intl.*(locale)`
+  (`intlUsage.test.ts`). Chrome's Intl has no Georgian (it writes "ka" as
+  American English, "8 hours ago") while the server's Node writes Georgian,
+  so Georgian is formatted from our own CLDR tables (`src/lib/intl/georgian*.ts`)
+  on both sides; their tests compare every pattern with Node's ICU.
 
 Words follow the glossary (`docs/glossary.md`): "Needs a person", updates
 and checks, Platform; staff never see an English system text in a Russian or

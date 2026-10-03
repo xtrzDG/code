@@ -3,6 +3,7 @@ import { StaggerItem, TiltCard } from "@/components/motion";
 import { ButtonLink } from "@/components/ui";
 import { CHANNEL_NAMES } from "@/components/workspace/channelNames";
 import type { Translator } from "@/i18n/translate";
+import { listFormat, numberFormat } from "@/lib/intl/formatters";
 import { landingPrices, moneyText, type PlanQuote } from "@/lib/landing";
 import { LOGIN_PATH } from "@/lib/navigation";
 
@@ -14,7 +15,7 @@ import { LOGIN_PATH } from "@/lib/navigation";
 export function PlanCard({ quote, translator }: { quote: PlanQuote; translator: Translator }) {
   const { t, tp, locale } = translator;
   const prices = landingPrices(quote);
-  const number = new Intl.NumberFormat(locale);
+  const number = numberFormat(locale);
   const features = [
     quote.is_voice_included && quote.included_voice_minutes > 0
       ? t("billing.plans.voiceMinutes", { count: number.format(quote.included_voice_minutes) })
@@ -24,7 +25,7 @@ export function PlanCard({ quote, translator }: { quote: PlanQuote; translator: 
     t("billing.plans.setupFee", { price: moneyText(prices.setupFee) }),
     quote.trial_days > 0 ? tp("billing.plans.trial", quote.trial_days) : null,
   ].filter((feature): feature is string => feature !== null);
-  const channels = new Intl.ListFormat(locale, { type: "conjunction" }).format(
+  const channels = listFormat(locale, { type: "conjunction" }).format(
     quote.channels.map((channel) => t(CHANNEL_NAMES[channel])),
   );
 

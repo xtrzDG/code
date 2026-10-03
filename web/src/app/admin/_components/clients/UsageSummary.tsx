@@ -30,7 +30,7 @@ export function UsageSummary({ client }: { client: AdminClientSummary }) {
       </p>
       {level === "warning" || level === "exceeded" ? (
         <Badge tone={level === "exceeded" ? "danger" : "warning"}>
-          {new Intl.NumberFormat(locale, { style: "percent" }).format((percent ?? 0) / 100)}
+          {formatNumber((percent ?? 0) / 100, locale, { style: "percent" })}
         </Badge>
       ) : null}
     </div>
