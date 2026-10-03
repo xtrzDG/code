@@ -35,6 +35,7 @@ class RouteWorld:
             headers=bearer(self.owner),
         )
         assert response.status_code == 201
+        self.testbed.set_up_for_you(self.business.id)
 
     def checkout(self) -> PaymentOrderDocument:
         response = self.client.post(

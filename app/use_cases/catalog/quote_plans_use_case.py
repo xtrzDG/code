@@ -4,6 +4,7 @@ from app.contracts.catalog_registries import ExchangeRateRegistryContract
 from app.contracts.localization_utilities import LocalizedTextResolverContract
 from app.contracts.registries import CountryRegistryContract, PlanRegistryContract
 from app.contracts.use_case_contract import UseCaseContract
+from app.schemas.constants.billing import SetupOption
 from app.schemas.dto.billing import Money, PlanDefinition
 from app.schemas.dto.catalog.plan_quotes import (
     ExchangeRateQuote,
@@ -11,6 +12,7 @@ from app.schemas.dto.catalog.plan_quotes import (
     PlanQuoteList,
     PlanQuoteRequest,
     QuotedMoney,
+    SetupOptionQuote,
 )
 from app.schemas.dto.localization import CountryProfile
 from app.schemas.typings.billing.booleans import IsPriceEstimated
@@ -162,8 +164,41 @@ class QuotePlansUseCase(UseCaseContract[PlanQuoteRequest, PlanQuoteList]):
             ),
             local_setup_fee=local_setup_fee,
             local_overage_price_per_minute=local_overage_price,
+            setup_options=self._quote_setup_options(
+                plan, local_currency_code, local_setup_fee, display_language
+            ),
         )
         return quote, exchange_rate if is_rate_used else None
+
+    def _quote_setup_options(
+        self,
+        plan: PlanDefinition,
+        local_currency_code: CurrencyCode,
+        local_setup_fee: QuotedMoney | None,
+        display_language: LanguageTag,
+    ) -> list[SetupOptionQuote]:
+        """Both ways of being set up; the free one is free in any currency."""
+
+        quotes: list[SetupOptionQuote] = []
+        for setup_fee in plan.setup_fees:
+            local_fee: Money | None = self._plan_registry.find_setup_fee(
+                plan.key, setup_fee.option, local_currency_code
+            )
+            quotes.append(
+                SetupOptionQuote(
+                    option=setup_fee.option,
+                    fee=quote_money(setup_fee.fee, False, display_language),
+                    local_fee=(
+                        local_setup_fee
+                        if setup_fee.option is SetupOption.DONE_FOR_YOU
+                        else None
+                        if local_fee is None
+                        else quote_money(local_fee, False, display_language)
+                    ),
+                )
+            )
+
+        return quotes
 
 
 def price_locally(

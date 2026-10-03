@@ -180,6 +180,7 @@ def discover_path_values(
         "step": "faq_and_handoff",
         "setup_step": "offer",
         "kind": "went_live",
+        "mark": "printed_qr",
         "user_id": next(
             str(member["user_id"])
             for member in business_b["members"]

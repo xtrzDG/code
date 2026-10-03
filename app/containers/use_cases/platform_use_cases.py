@@ -88,6 +88,7 @@ class PlatformUseCasesContainer(containers.DeclarativeContainer):
         unanswered_question_repo=repositories.unanswered_question_repo,
         message_repo=repositories.message_repo,
         usage_event_repo=repositories.usage_event_repo,
+        onboarding_request_repo=repositories.onboarding_request_repo,
         plan_registry=registries.plan_registry,
         compute_client_cost=billing_use_cases.compute_client_cost_use_case,
         wall_clock=time_provider.microsecond_wall_clock,

@@ -29,6 +29,7 @@ def start_trial(
             request=StartTrialRequest(),
         )
     )
+    testbed.set_up_for_you(business.id)
     return owner, business
 
 

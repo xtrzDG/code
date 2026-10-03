@@ -7,6 +7,7 @@ from app.contracts.repositories.assistant_repositories import (
     AssistantVersionRepoContract,
 )
 from app.contracts.repositories.billing_repositories import (
+    OnboardingRequestRepoContract,
     SubscriptionRepoContract,
     UsageEventRepoContract,
 )
@@ -24,6 +25,7 @@ from app.schemas.dto.admin import (
     AdminClientSummary,
     ClientAutotestVerdict,
     ClientSummarySource,
+    OnboardingRequestView,
 )
 from app.schemas.dto.billing import PlanDefinition
 from app.schemas.dto.billing_ledger import (
@@ -76,6 +78,7 @@ class SummarizeClientUseCase(UseCaseContract[ClientSummarySource, AdminClientSum
         unanswered_question_repo: UnansweredQuestionRepoContract,
         message_repo: MessageRepoContract,
         usage_event_repo: UsageEventRepoContract,
+        onboarding_request_repo: OnboardingRequestRepoContract,
         plan_registry: PlanRegistryContract,
         compute_client_cost: UseCaseContract[ClientCostQuery, ClientCostReport],
         wall_clock: WallClock[Microseconds],
@@ -90,6 +93,9 @@ class SummarizeClientUseCase(UseCaseContract[ClientSummarySource, AdminClientSum
         )
         self._message_repo: MessageRepoContract = message_repo
         self._usage_event_repo: UsageEventRepoContract = usage_event_repo
+        self._onboarding_request_repo: OnboardingRequestRepoContract = (
+            onboarding_request_repo
+        )
         self._plan_registry: PlanRegistryContract = plan_registry
         self._compute_client_cost: UseCaseContract[
             ClientCostQuery,
@@ -155,6 +161,8 @@ class SummarizeClientUseCase(UseCaseContract[ClientSummarySource, AdminClientSum
             has_auto_debit=(
                 subscription is not None and subscription.provider_reference is not None
             ),
+            setup_option=None if subscription is None else subscription.setup_option,
+            onboarding_request=self._onboarding_request(business),
             published_version_number=(
                 None if published_version is None else published_version.version_number
             ),
@@ -213,4 +221,17 @@ class SummarizeClientUseCase(UseCaseContract[ClientSummarySource, AdminClientSum
     def _count_open_questions(self, business: BusinessDocument) -> OpenQuestionCount:
         return OpenQuestionCount(
             int(self._unanswered_question_repo.count_open(business.id))
+        )
+
+    def _onboarding_request(
+        self, business: BusinessDocument
+    ) -> OnboardingRequestView | None:
+        request = self._onboarding_request_repo.get_by_business(business.id)
+        if request is None:
+            return None
+
+        return OnboardingRequestView(
+            status=request.status,
+            plan_key=request.plan_key,
+            requested_at=request.requested_at,
         )

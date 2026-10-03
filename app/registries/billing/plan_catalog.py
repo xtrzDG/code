@@ -5,11 +5,15 @@ Prices are set in EUR. The price book adds explicit prices in local
 currencies: in Georgia the concept lists 293 / 517 / 1 031 GEL a month and
 443 GEL setup. The overage price has no price-book entry: the concept gives
 it as "≈ 0.44 GEL", a conversion of 0.15 EUR.
+
+The setup fee is per setup option: the owner who sets the assistant up in
+the cabinet's guided setup (SELF_SERVE) pays nothing; DONE_FOR_YOU, where
+the platform team sets it up, costs the concept's 150 EUR / 443 GEL.
 """
 
-from app.schemas.constants.billing import PlanKey
+from app.schemas.constants.billing import PlanKey, SetupOption
 from app.schemas.constants.channels import ChannelKind
-from app.schemas.dto.billing import Money, PlanDefinition
+from app.schemas.dto.billing import Money, PlanDefinition, SetupOptionFee
 from app.schemas.typings.billing.constrained_integers import (
     DiscountPercent,
     GracePeriodDays,
@@ -27,6 +31,13 @@ SETUP_FEE: Money = Money(
     amount_minor=MoneyAmountMinor(15000),
     currency_code=PLAN_BASE_CURRENCY,
 )
+SETUP_FEES: list[SetupOptionFee] = [
+    SetupOptionFee(
+        option=SetupOption.SELF_SERVE,
+        fee=Money(amount_minor=MoneyAmountMinor(0), currency_code=PLAN_BASE_CURRENCY),
+    ),
+    SetupOptionFee(option=SetupOption.DONE_FOR_YOU, fee=SETUP_FEE),
+]
 OVERAGE_PRICE_PER_MINUTE: Money = Money(
     amount_minor=MoneyAmountMinor(15),
     currency_code=PLAN_BASE_CURRENCY,
@@ -86,6 +97,7 @@ PLAN_DEFINITIONS: tuple[PlanDefinition, ...] = (
         grace_period_days=GRACE_PERIOD_DAYS,
         channels=list(MESSAGING_CHANNELS),
         is_voice_included=False,
+        setup_fees=SETUP_FEES,
     ),
     PlanDefinition(
         key=PlanKey.VOICE_AND_CHAT,
@@ -113,6 +125,7 @@ PLAN_DEFINITIONS: tuple[PlanDefinition, ...] = (
         grace_period_days=GRACE_PERIOD_DAYS,
         channels=list(VOICE_AND_MESSAGING_CHANNELS),
         is_voice_included=True,
+        setup_fees=SETUP_FEES,
     ),
     PlanDefinition(
         key=PlanKey.PLUS,
@@ -135,6 +148,7 @@ PLAN_DEFINITIONS: tuple[PlanDefinition, ...] = (
         grace_period_days=GRACE_PERIOD_DAYS,
         channels=list(VOICE_AND_MESSAGING_CHANNELS),
         is_voice_included=True,
+        setup_fees=SETUP_FEES,
     ),
 )
 
@@ -144,6 +158,7 @@ LOCAL_MONTHLY_PRICE_BOOK: dict[PlanKey, tuple[Money, ...]] = {
     PlanKey.VOICE_AND_CHAT: (build_gel_price(51700),),
     PlanKey.PLUS: (build_gel_price(103100),),
 }
+# The DONE_FOR_YOU setup fee; SELF_SERVE is free in every currency.
 LOCAL_SETUP_FEE_BOOK: dict[PlanKey, tuple[Money, ...]] = {
     PlanKey.CHAT: (build_gel_price(44300),),
     PlanKey.VOICE_AND_CHAT: (build_gel_price(44300),),

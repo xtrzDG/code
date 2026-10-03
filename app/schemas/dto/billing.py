@@ -1,6 +1,6 @@
 from base_pydantic_schemas import ImmutableDTO
 
-from app.schemas.constants.billing import PlanKey
+from app.schemas.constants.billing import PlanKey, SetupOption
 from app.schemas.constants.channels import ChannelKind
 from app.schemas.dto.localization import LocalizedText
 from app.schemas.typings.billing.constrained_integers import (
@@ -22,11 +22,20 @@ class Money(ImmutableDTO):
     currency_code: CurrencyCode
 
 
+class SetupOptionFee(ImmutableDTO):
+    """What one way of being set up costs, once, in the plan currency."""
+
+    option: SetupOption
+    fee: Money
+
+
 class PlanDefinition(ImmutableDTO):
     """
     Subscription plan with a package (concept "Цены и тарифы").
 
     Prices are defined in EUR; local-currency prices come from the price book.
+    `setup_fees` prices each setup option (SELF_SERVE is free); `setup_fee`
+    is the DONE_FOR_YOU fee, the one the price book has local prices of.
     """
 
     key: PlanKey
@@ -42,3 +51,4 @@ class PlanDefinition(ImmutableDTO):
     grace_period_days: GracePeriodDays
     channels: list[ChannelKind]
     is_voice_included: IsVoiceEnabled
+    setup_fees: list[SetupOptionFee]

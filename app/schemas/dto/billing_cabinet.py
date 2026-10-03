@@ -9,6 +9,7 @@ from app.schemas.constants.billing import (
     InvoiceKind,
     InvoiceStatus,
     PlanKey,
+    SetupOption,
     SubscriptionStatus,
 )
 from app.schemas.constants.businesses import ServiceMode
@@ -118,14 +119,18 @@ class StartCheckoutCommand(ImmutableDTO):
 class SubscribeRequest(ImmutableDTO):
     """
     Body of a subscription paid now: the plan and billing period to pay
-    for, and the cabinet page to return to (as in the checkout request).
+    for, how the business is set up (SELF_SERVE, free; DONE_FOR_YOU, the
+    platform team sets it up for the plan's setup fee), and the cabinet
+    page to return to (as in the checkout request).
 
     Example: {"plan_key": "chat", "billing_period": "annual",
+    "setup_option": "self_serve",
     "return_url": "https://app.example.com/b/bus_1/billing"}.
     """
 
     plan_key: PlanKey
     billing_period: BillingPeriod = BillingPeriod.MONTHLY
+    setup_option: SetupOption = SetupOption.SELF_SERVE
     return_url: PaymentReturnUrl | None = None
 
 
@@ -136,6 +141,15 @@ class SubscribeCommand(ImmutableDTO):
     business_id: BusinessId
     request: SubscribeRequest
     display_language: LanguageTag | None = None
+
+
+class SetupOptionChoice(ImmutableDTO):
+    """An owner's setup option for the subscription about to be paid."""
+
+    user_id: UserId
+    business: BusinessDocument
+    subscription_id: SubscriptionId
+    option: SetupOption
 
 
 class SubscriptionOpening(ImmutableDTO):
@@ -164,7 +178,12 @@ class BillingOverviewSource(ImmutableDTO):
 
 
 class SubscriptionView(ImmutableDTO):
-    """The subscription as the billing page shows it."""
+    """
+    The subscription as the billing page shows it; `setup_option` is how
+    the business is set up (None: chosen before the choice existed, free),
+    `onboarding_requested_at` when the owner asked the platform team to set
+    it up.
+    """
 
     id: SubscriptionId
     plan_key: PlanKey
@@ -177,6 +196,8 @@ class SubscriptionView(ImmutableDTO):
     period_end: Microseconds
     grace_until: Microseconds | None = None
     has_auto_debit: IsAutoDebitActive
+    setup_option: SetupOption | None = None
+    onboarding_requested_at: Microseconds | None = None
 
 
 class PackageUsageView(ImmutableDTO):

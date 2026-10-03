@@ -12,6 +12,7 @@ from app.clients.flitt.flitt_client import FlittClient
 from app.contracts.catalog_registries import ExchangeRateRegistryContract
 from app.contracts.registries import PlanRegistryContract
 from app.registries.billing.plan_registry import PlanRegistry
+from app.repositories.activation_repositories import OnboardingRequestRepository
 from app.repositories.assistant_repositories import (
     AssistantVersionRepository,
     AutotestRunRepository,
@@ -37,6 +38,7 @@ from app.schemas.configurations.app_settings import AppSettings
 from app.schemas.domain.assistants import AssistantVersionDocument, AutotestRunDocument
 from app.schemas.domain.billing import (
     InvoiceDocument,
+    OnboardingRequestDocument,
     SubscriptionDocument,
     UsageEventDocument,
 )
@@ -95,6 +97,11 @@ class BillingInfrastructure:
         )
         self.invoice_repo = InvoiceRepository(
             InMemoryDocumentCollectionAdapter[InvoiceDocument](InvoiceDocument)
+        )
+        self.onboarding_request_repo = OnboardingRequestRepository(
+            InMemoryDocumentCollectionAdapter[OnboardingRequestDocument](
+                OnboardingRequestDocument
+            )
         )
         self.usage_event_repo = UsageEventRepository(
             InMemoryDocumentCollectionAdapter[UsageEventDocument](UsageEventDocument)

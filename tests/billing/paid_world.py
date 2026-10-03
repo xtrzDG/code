@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass
 
-from app.schemas.constants.billing import BillingPeriod
+from app.schemas.constants.billing import BillingPeriod, SetupOption
 from app.schemas.constants.payments import PaymentWebhookOutcome
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.payments import PaymentOrderDocument
@@ -29,7 +29,13 @@ class PaidWorld:
 def build_trial(
     country: CountryPreset = GEORGIA,
     billing_period: BillingPeriod = BillingPeriod.MONTHLY,
+    setup_option: SetupOption = SetupOption.DONE_FOR_YOU,
 ) -> PaidWorld:
+    """
+    A business in its trial; set up by the platform team (the setup fee
+    path) unless `setup_option` says the owner set it up alone.
+    """
+
     testbed = BillingTestbed()
     owner = (
         testbed.add_user(phone_number="+995599123456", locale="ka")
@@ -44,6 +50,9 @@ def build_trial(
             request=StartTrialRequest(billing_period=billing_period),
         )
     )
+    subscription = testbed.subscription(business.id)
+    subscription.setup_option = setup_option
+    testbed.subscription_repo.save(subscription)
     return PaidWorld(testbed=testbed, owner=owner, business=business)
 
 

@@ -7,12 +7,17 @@ from app.contracts.localization_utilities import LocalizedTextResolverContract
 from app.contracts.registries import PlanRegistryContract
 from app.contracts.repositories.billing_repositories import (
     InvoiceRepoContract,
+    OnboardingRequestRepoContract,
     SubscriptionRepoContract,
     UsageEventRepoContract,
 )
 from app.contracts.use_case_contract import UseCaseContract
-from app.schemas.constants.billing import SubscriptionStatus
-from app.schemas.domain.billing import InvoiceDocument, SubscriptionDocument
+from app.schemas.constants.billing import SetupOption, SubscriptionStatus
+from app.schemas.domain.billing import (
+    InvoiceDocument,
+    OnboardingRequestDocument,
+    SubscriptionDocument,
+)
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.dto.billing import Money, PlanDefinition
 from app.schemas.dto.billing_cabinet import (
@@ -74,6 +79,7 @@ class AssembleBillingOverviewUseCase(
         subscription_repo: SubscriptionRepoContract,
         invoice_repo: InvoiceRepoContract,
         usage_event_repo: UsageEventRepoContract,
+        onboarding_request_repo: OnboardingRequestRepoContract,
         plan_registry: PlanRegistryContract,
         exchange_rate_registry: ExchangeRateRegistryContract,
         localized_text_resolver: LocalizedTextResolverContract,
@@ -82,6 +88,9 @@ class AssembleBillingOverviewUseCase(
         self._subscription_repo: SubscriptionRepoContract = subscription_repo
         self._invoice_repo: InvoiceRepoContract = invoice_repo
         self._usage_event_repo: UsageEventRepoContract = usage_event_repo
+        self._onboarding_request_repo: OnboardingRequestRepoContract = (
+            onboarding_request_repo
+        )
         self._plan_registry: PlanRegistryContract = plan_registry
         self._exchange_rate_registry: ExchangeRateRegistryContract = (
             exchange_rate_registry
@@ -168,7 +177,20 @@ class AssembleBillingOverviewUseCase(
             period_end=subscription.period_end,
             grace_until=subscription.grace_until,
             has_auto_debit=subscription.provider_reference is not None,
+            setup_option=subscription.setup_option,
+            onboarding_requested_at=self._onboarding_requested_at(subscription),
         )
+
+    def _onboarding_requested_at(
+        self, subscription: SubscriptionDocument
+    ) -> Microseconds | None:
+        if subscription.setup_option is not SetupOption.DONE_FOR_YOU:
+            return None
+
+        request: OnboardingRequestDocument | None = (
+            self._onboarding_request_repo.get_by_business(subscription.business_id)
+        )
+        return None if request is None else request.requested_at
 
     def _view_usage(
         self,
