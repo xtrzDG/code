@@ -34,10 +34,12 @@ def world(
 def test_a_backup_restores_completely_and_isolates_businesses(
     world: BackupDrillWorld,
 ) -> None:
+    snapshot = world.expected_snapshot()
+
     backed_up = world.backup()
 
     assert backed_up.exit_code == 0, backed_up.errors
-    assert "Snapshot: 53 tables, 31 rows, 17 migrations, 52 tables" in backed_up.output
+    assert snapshot.line() in backed_up.output
     archives = [key for key in world.storage.object_keys() if key.endswith(".age")]
     assert len(archives) == 1
     manifest = json.loads(
@@ -49,7 +51,8 @@ def test_a_backup_restores_completely_and_isolates_businesses(
     drilled = world.restore_check()
 
     assert drilled.exit_code == 0, drilled.output + drilled.errors
-    assert "row-level security probed on 52 tables" in drilled.output
+    probed = f"row-level security probed on {snapshot.secured_tables} tables"
+    assert probed in drilled.output
     assert "OK: the backup restores completely" in drilled.output
     assert world.drill_databases() == []
 

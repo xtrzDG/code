@@ -10,7 +10,7 @@ last lines of stderr: Postgres messages name objects, never row contents.
 
 import os
 import shutil
-import subprocess  # nosec B404 - runs the Postgres client programs, no shell
+import subprocess  # nosec B404
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -91,7 +91,8 @@ def run_program(
     """Run the program to completion; BackupToolError when it fails."""
 
     try:
-        completed = subprocess.run(  # nosec B603 - fixed program, list arguments
+        # A located program with list arguments: no shell, no interpolation.
+        completed = subprocess.run(  # nosec B603
             [program, *arguments],
             capture_output=True,
             text=True,

@@ -17,6 +17,7 @@ from app.schemas.dto.backups import (
     RecordedMigration,
     RestoredDatabase,
 )
+from app.schemas.exceptions.backup_errors import BackupToolError
 from app.schemas.typings.backups.booleans import IsScratchDatabaseKept
 from app.schemas.typings.backups.constrained_integers import (
     BackupArchiveSize,
@@ -97,8 +98,13 @@ class InMemoryBackupBucket(BackupBucketClientContract):
     def __init__(self) -> None:
         self.objects: dict[str, bytes] = {}
         self.deleted: list[str] = []
+        self.refused_uploads: int = 0
 
     def upload_file(self, key: BackupObjectKey, source: LocalFilePath) -> None:
+        if self.refused_uploads:
+            self.refused_uploads -= 1
+            raise BackupToolError(f"The backup bucket refused an upload of {key}.")
+
         self.objects[str(key)] = Path(str(source)).read_bytes()
 
     def download_file(self, key: BackupObjectKey, target: LocalFilePath) -> bool:

@@ -20,7 +20,10 @@ from app.schemas.exceptions.application_errors import (
     NotFoundError,
     ValidationFailedError,
 )
-from app.schemas.exceptions.backup_errors import BackupArchiveCorruptError
+from app.schemas.exceptions.backup_errors import (
+    BackupArchiveCorruptError,
+    BackupToolError,
+)
 from app.schemas.typings.backups.constrained_integers import (
     BackupCopyCount,
     BackupFreshnessHours,
@@ -127,6 +130,27 @@ def test_a_backup_uploads_an_encrypted_archive_and_its_manifest(work: Path) -> N
         "manifest.json",
         "migrations",
     ]
+
+
+def test_a_database_without_migrations_is_not_backed_up(work: Path) -> None:
+    bucket = InMemoryBackupBucket()
+
+    with pytest.raises(BackupToolError, match="no application schema"):
+        take_backup(bucket, work, "2026-10-03T01:07:00", build_facts(migrations=()))
+
+    assert bucket.objects == {}
+    assert sorted(path.name for path in work.iterdir()) == ["migrations"]
+
+
+def test_a_refused_upload_leaves_no_files_behind(work: Path) -> None:
+    bucket = InMemoryBackupBucket()
+    bucket.refused_uploads = 1
+
+    with pytest.raises(BackupToolError, match="refused an upload"):
+        take_backup(bucket, work, "2026-10-03T01:07:00")
+
+    assert bucket.objects == {}
+    assert sorted(path.name for path in work.iterdir()) == ["migrations"]
 
 
 def test_retention_deletes_old_archives_with_their_manifests(work: Path) -> None:

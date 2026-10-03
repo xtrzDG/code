@@ -14,6 +14,7 @@ from psycopg import sql
 
 from app.gateways.cli import backup, restore_check
 from app.gateways.cli.backup_wiring import build_bucket
+from app.gateways.cli.migrate import DEFAULT_MIGRATIONS_DIRECTORY
 from app.schemas.typings.backups.constrained_strings import BackupObjectKey
 from app.schemas.typings.platform.strings import LocalFilePath
 from app.utilities.security.age.age_keys import generate_identity, recipient_of
@@ -38,6 +39,21 @@ class CommandRun:
     exit_code: int
     output: str
     errors: str
+
+
+@dataclass(frozen=True)
+class Snapshot:
+    tables: int
+    rows: int
+    migrations: int
+    secured_tables: int
+
+    def line(self) -> str:
+        return (
+            f"Snapshot: {self.tables} tables, {self.rows} rows, "
+            f"{self.migrations} migrations, {self.secured_tables} tables under "
+            "row-level security."
+        )
 
 
 @dataclass
@@ -99,6 +115,20 @@ class BackupDrillWorld:
             build_bucket(self.storage.connection()).upload_file(
                 BackupObjectKey(key), LocalFilePath(str(path))
             )
+
+    def expected_snapshot(self) -> Snapshot:
+        """What `workshop backup` should report, counted independently."""
+
+        migrations = len(list(DEFAULT_MIGRATIONS_DIRECTORY.glob("*.sql")))
+        seeded = sum(sum(tables.values()) for tables in ROWS.values())
+        with self.server.admin_connection(self.database_name) as connection:
+            row = connection.execute(
+                "select count(*), count(*) filter (where c.relrowsecurity)"
+                " from pg_class c join pg_namespace n on n.oid = c.relnamespace"
+                " where n.nspname = 'workshop' and c.relkind in ('r', 'p')"
+            ).fetchone()
+        assert row is not None
+        return Snapshot(int(row[0]), seeded + migrations, migrations, int(row[1]))
 
     def drill_databases(self) -> list[str]:
         with self.server.admin_connection() as connection:

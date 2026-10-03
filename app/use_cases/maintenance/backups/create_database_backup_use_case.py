@@ -87,12 +87,13 @@ class CreateDatabaseBackupUseCase(
                     "Nothing was uploaded."
                 )
             self._backup_cipher.encrypt_file(dump_file, archive_file)
-        finally:
             remove_file(dump_file)
-
-        checksum, size = file_digest(archive_file)
-        self._backup_bucket.upload_file(key, archive_file)
-        remove_file(archive_file)
+            checksum, size = file_digest(archive_file)
+            self._backup_bucket.upload_file(key, archive_file)
+        finally:
+            # Plaintext first; no half-written file outlives a failure.
+            remove_file(dump_file)
+            remove_file(archive_file)
         manifest = BackupManifest(
             archive_key=key,
             created_at=started_at,
