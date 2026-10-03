@@ -216,9 +216,14 @@ function ReplyForm({
                 ? t("conversations.reply.widgetHint")
                 : t("conversations.reply.channelHint", { channel })}
         </p>
-        <p className={cn("tabular-nums", tooLong && "text-danger")}>
-          {draft ? t("conversations.reply.length", { count: length, max: staffReply.maxLength }) : t("inboxCard.quickReplies.hint")}
-        </p>
+        {draft ? (
+          <p className={cn("tabular-nums", tooLong && "text-danger")}>
+            {t("conversations.reply.length", { count: length, max: staffReply.maxLength })}
+          </p>
+        ) : (
+          // The "/" button says it on phones, where every line counts.
+          <p className="hidden sm:block">{t("inboxCard.quickReplies.hint")}</p>
+        )}
       </div>
     </div>
   );

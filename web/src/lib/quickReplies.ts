@@ -5,9 +5,13 @@
  * conversation, where the API has already filled what it knows.
  */
 
-import type { Schema } from "@/api/types";
+import type { RequestBody, Schema } from "@/api/types";
 
 export type QuickReplyVariable = Schema<"QuickReplyVariable">;
+/** A quick reply as stored: a text per language. */
+export type QuickReplyView = Schema<"QuickReplyView">;
+/** The body that creates or replaces one. */
+export type QuickReplyBody = RequestBody<"/v1/businesses/{business_id}/quick-replies", "post">;
 
 /** Every variable the API fills, in the order the editor offers them. */
 export const QUICK_REPLY_VARIABLES = ["name", "booking_time", "business_name"] as const satisfies readonly QuickReplyVariable[];

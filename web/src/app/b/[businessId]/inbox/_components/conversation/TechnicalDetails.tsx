@@ -25,7 +25,10 @@ import type { UsageTotals } from "../../_lib/conversationUsage";
 function Disclosure({ label, children, className }: { label: string; children: ReactNode; className?: string }) {
   const { isPlatformAdmin } = useBusiness();
   return (
-    <details open={isPlatformAdmin} className={cn("group rounded-xl border border-line bg-surface text-start text-sm", className)}>
+    <details
+      open={isPlatformAdmin}
+      className={cn("group w-fit max-w-full rounded-xl border border-line bg-surface text-start text-sm open:w-full", className)}
+    >
       <summary className="flex cursor-pointer list-none items-center gap-2 rounded-xl px-3 py-2 text-xs font-medium text-ink-subtle hover:text-ink [&::-webkit-details-marker]:hidden">
         <IconChevronRight className="size-3.5 shrink-0 transition-transform group-open:rotate-90 rtl:-scale-x-100" aria-hidden />
         {label}

@@ -44,7 +44,7 @@ export function InboxViewTabs({
     <fieldset className="-mx-4 min-w-0 sm:mx-0">
       <legend className="sr-only">{t("inbox.viewsLabel")}</legend>
       <LayoutGroup id={name}>
-        <div className="flex snap-x gap-1 overflow-x-auto px-4 pb-1 [scrollbar-width:none] sm:px-0">
+        <div className="flex snap-x gap-1 overflow-x-auto px-4 pb-1 [scrollbar-width:none] sm:px-0 lg:flex-wrap lg:overflow-visible">
           {INBOX_VIEWS.map((view) => {
             const checked = view === value;
             const count = viewCount(view, counts);

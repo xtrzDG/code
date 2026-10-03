@@ -92,7 +92,7 @@ export function AssignMenu({
         aria-expanded={isOpen}
         aria-controls={isOpen ? `${id}-menu` : undefined}
         aria-label={`${label}. ${t("inbox.assign.menuLabel")}`}
-        className="motion-press flex h-10 max-w-44 cursor-pointer items-center gap-1.5 rounded-full border border-line bg-surface ps-1.5 pe-2.5 text-sm text-ink hover:border-line-strong sm:max-w-56"
+        className="motion-press flex h-10 cursor-pointer items-center gap-1.5 rounded-full border border-line bg-surface px-1.5 text-sm text-ink hover:border-line-strong sm:max-w-56 sm:pe-2.5"
       >
         {isPending ? (
           <Spinner size="sm" />
@@ -103,10 +103,11 @@ export function AssignMenu({
             <IconUsers className="size-4" aria-hidden />
           </span>
         )}
-        <span className="min-w-0 truncate" aria-hidden>
+        {/* On phones the avatar alone: the customer's name needs the room. */}
+        <span className="hidden min-w-0 truncate sm:inline" aria-hidden>
           {assignee ? nameOf(assignee) : t("inbox.assign.open")}
         </span>
-        <IconChevronDown className="size-4 shrink-0 text-ink-subtle" aria-hidden />
+        <IconChevronDown className="hidden size-4 shrink-0 text-ink-subtle sm:block" aria-hidden />
       </button>
 
       {isOpen ? (
