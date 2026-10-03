@@ -24,16 +24,14 @@ from app.utilities.channels.platform_bot_updates import (
     StaffBotMessage,
     read_staff_bot_message,
 )
-from app.utilities.channels.webhook_signatures import (
-    derive_telegram_webhook_secret,
-    is_matching_secret,
-)
+from app.utilities.channels.webhook_signatures import is_matching_telegram_secret
 from app.utilities.deliveries.delivery_jobs import PROCESS_PLATFORM_BOT_UPDATE_JOB
 from app.utilities.deliveries.delivery_keys import (
     bounded_provider_message_id,
     derive_inbound_event_id,
     inbound_serial_key,
 )
+from app.utilities.security.key_ring import key_ring
 
 
 class AcceptPlatformBotUpdateUseCase(
@@ -100,14 +98,12 @@ class AcceptPlatformBotUpdateUseCase(
         bot_token: PlatformSecret | None = (
             self._app_settings.telegram_platform_bot_token
         )
-        encryption_key: PlatformSecret | None = self._app_settings.encryption_key
-        if bot_token is None or encryption_key is None:
+        keys: list[PlatformSecret] = key_ring(self._app_settings)
+        if bot_token is None or not keys:
             raise NotFoundError("The platform bot is not configured.")
 
-        expected_secret = derive_telegram_webhook_secret(encryption_key, bot_token)
-        if not is_matching_secret(
-            str(expected_secret),
-            input_data.payload.signature_header,
+        if not is_matching_telegram_secret(
+            keys, bot_token, input_data.payload.signature_header
         ):
             raise AuthenticationRequiredError(
                 "The Telegram webhook secret token is missing or wrong."

@@ -30,4 +30,5 @@ def build_own_recording_storage(
     return EncryptedObjectRecordingStorageAdapter(
         client=object_storage_client,
         master_secret=settings.encryption_key,
+        previous_master_secrets=settings.previous_encryption_keys,
     )

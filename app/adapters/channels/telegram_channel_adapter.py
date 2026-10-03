@@ -14,7 +14,6 @@ from app.schemas.exceptions.application_errors import (
     ExternalServiceError,
 )
 from app.schemas.typings.channels.constrained_integers import DeliveredMessageCount
-from app.schemas.typings.channels.constrained_strings import TelegramWebhookSecret
 from app.schemas.typings.channels.strings import (
     ChannelSecret,
     OutboundMessagePart,
@@ -23,6 +22,7 @@ from app.schemas.typings.channels.strings import (
 from app.schemas.typings.contacts.strings import ContactName
 from app.schemas.typings.conversations.strings import ChannelUserId, MessageText
 from app.schemas.typings.localization.constrained_strings import E164PhoneNumber
+from app.schemas.typings.platform.strings import PlatformSecret
 from app.utilities.channels.channel_phone_numbers import (
     parse_messaging_phone_number,
 )
@@ -35,10 +35,8 @@ from app.utilities.channels.json_values import (
     read_text,
 )
 from app.utilities.channels.message_chunks import split_message_text
-from app.utilities.channels.webhook_signatures import (
-    derive_telegram_webhook_secret,
-    is_matching_secret,
-)
+from app.utilities.channels.webhook_signatures import is_matching_telegram_secret
+from app.utilities.security.key_ring import key_ring
 
 # Telegram counts the 4096-character limit of sendMessage in UTF-16 units.
 TELEGRAM_MESSAGE_LIMIT: int = 4096
@@ -71,17 +69,15 @@ class TelegramChannelAdapter(ChannelAdapterContract):
         payload: ChannelWebhookPayload,
         channel_secret: ChannelSecret | None,
     ) -> None:
-        encryption_key = self._app_settings.encryption_key
-        if channel_secret is None or encryption_key is None:
+        keys: list[PlatformSecret] = key_ring(self._app_settings)
+        if channel_secret is None or not keys:
             raise AuthenticationRequiredError(
                 "This Telegram webhook cannot be verified."
             )
 
-        expected_secret: TelegramWebhookSecret = derive_telegram_webhook_secret(
-            encryption_key,
-            channel_secret,
-        )
-        if not is_matching_secret(str(expected_secret), payload.signature_header):
+        if not is_matching_telegram_secret(
+            keys, channel_secret, payload.signature_header
+        ):
             raise AuthenticationRequiredError(
                 "The Telegram webhook secret token is missing or wrong."
             )

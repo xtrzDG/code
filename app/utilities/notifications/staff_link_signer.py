@@ -7,7 +7,8 @@ base64url without padding (about 67 characters). It grants nothing by
 itself: the cabinet still signs the user in and checks their access to the
 business; the signature only proves the platform made the link and when it
 stops working. The key derives from ENCRYPTION_KEY with its own label, so
-it is never the key that encrypts channel secrets.
+it is never the key that encrypts channel secrets. After a key rotation a
+link signed with a previous key of the ring still opens until it expires.
 """
 
 import base64
@@ -17,6 +18,7 @@ import hmac
 import logging
 import secrets
 import struct
+from collections.abc import Sequence
 from uuid import UUID
 
 from typed_time_provider import Microseconds
@@ -76,8 +78,16 @@ def uuid_bytes(prefixed_id: str, prefix: str) -> bytes:
 class StaffLinkSigner(StaffLinkSignerContract):
     """HMAC-signed link tokens (see the module docstring)."""
 
-    def __init__(self, encryption_key: PlatformSecret | None) -> None:
+    def __init__(
+        self,
+        encryption_key: PlatformSecret | None,
+        previous_keys: Sequence[PlatformSecret] = (),
+    ) -> None:
         self._key: bytes = derive_link_key(encryption_key)
+        self._verification_keys: list[bytes] = [
+            self._key,
+            *(derive_link_key(previous_key) for previous_key in previous_keys),
+        ]
 
     def sign(self, claims: StaffLinkClaims) -> StaffLinkToken:
         payload: bytes = struct.pack(
@@ -102,7 +112,10 @@ class StaffLinkSigner(StaffLinkSignerContract):
             return None
 
         payload, signature = raw[:PAYLOAD_LENGTH], raw[PAYLOAD_LENGTH:]
-        if not hmac.compare_digest(signature, self._signature(payload)):
+        if not any(
+            hmac.compare_digest(signature, sign_payload(key, payload))
+            for key in self._verification_keys
+        ):
             return None
 
         version, business, code, target_id, expires = struct.unpack(
@@ -120,7 +133,11 @@ class StaffLinkSigner(StaffLinkSignerContract):
         )
 
     def _signature(self, payload: bytes) -> bytes:
-        return hmac.new(self._key, payload, hashlib.sha256).digest()[:SIGNATURE_LENGTH]
+        return sign_payload(self._key, payload)
+
+
+def sign_payload(key: bytes, payload: bytes) -> bytes:
+    return hmac.new(key, payload, hashlib.sha256).digest()[:SIGNATURE_LENGTH]
 
 
 def target_id_bytes(claims: StaffLinkClaims) -> bytes:
