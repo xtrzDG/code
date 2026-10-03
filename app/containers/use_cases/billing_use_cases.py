@@ -127,6 +127,7 @@ class BillingUseCasesContainer(containers.DeclarativeContainer):
         plan_registry=registries.plan_registry,
         assemble_billing_overview=assemble_billing_overview_use_case,
         wall_clock=time_provider.microsecond_wall_clock,
+        product_events=facilitators.product_events,
     )
     change_plan_use_case: Factory[
         UseCaseContract[ChangePlanCommand, BillingOverview]
@@ -141,6 +142,7 @@ class BillingUseCasesContainer(containers.DeclarativeContainer):
         assemble_billing_overview=assemble_billing_overview_use_case,
         wall_clock=time_provider.microsecond_wall_clock,
         remove_voice_agent=voice_use_cases.remove_voice_agent_use_case,
+        product_events=facilitators.product_events,
     )
     cancel_subscription_use_case: Factory[
         UseCaseContract[CancelSubscriptionCommand, BillingOverview]
@@ -152,6 +154,7 @@ class BillingUseCasesContainer(containers.DeclarativeContainer):
         payment_gateway=adapters.payment_gateway,
         assemble_billing_overview=assemble_billing_overview_use_case,
         wall_clock=time_provider.microsecond_wall_clock,
+        product_events=facilitators.product_events,
     )
     start_checkout_use_case: Factory[
         UseCaseContract[StartCheckoutCommand, CheckoutSessionView]
@@ -193,6 +196,7 @@ class BillingUseCasesContainer(containers.DeclarativeContainer):
         manager_notifier=facilitators.manager_notification_facilitator,
         billing_notice_transformer=transformers.billing_notice_transformer,
         wall_clock=time_provider.microsecond_wall_clock,
+        product_events=facilitators.product_events,
     )
     end_trials_use_case: Factory[UseCaseContract[JobTick, JobReport]] = Factory(
         EndTrialsUseCase,
@@ -205,6 +209,7 @@ class BillingUseCasesContainer(containers.DeclarativeContainer):
         manager_notifier=facilitators.manager_notification_facilitator,
         billing_notice_transformer=transformers.billing_notice_transformer,
         wall_clock=time_provider.microsecond_wall_clock,
+        product_events=facilitators.product_events,
     )
     enforce_grace_periods_use_case: Factory[UseCaseContract[JobTick, JobReport]] = (
         Factory(

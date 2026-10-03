@@ -4,6 +4,7 @@ from typed_time_provider import Microseconds
 
 from app.schemas.constants.localization import OtpDeliveryChannel
 from app.schemas.constants.users import LoginMethod
+from app.schemas.domain.signup_attribution import SignupAttribution
 from app.schemas.typings.compliance.strings import ClientIpAddress
 from app.schemas.typings.localization.constrained_strings import (
     CountryCode,
@@ -36,8 +37,12 @@ class UserDocument(BaseDocument):
 
     Signs in with a phone number of any country or with e-mail. Roles inside a
     business live on the business (members); `is_platform_admin` is global.
+    `signup_attribution` is where they came from, set once when the account
+    is created (the founder's acquisition reports).
     """
 
+    # 2: `signup_attribution` (optional, so version 1 needs no upcaster).
+    schema_version: SchemaVersion = SchemaVersion("2")
     id: UserId = Field(default_factory=UserId)
     login_method: LoginMethod
     phone_number: E164PhoneNumber | None = None
@@ -47,6 +52,7 @@ class UserDocument(BaseDocument):
     display_name: UserDisplayName | None = None
     is_verified: IsUserVerified = False
     is_platform_admin: IsPlatformAdmin = False
+    signup_attribution: SignupAttribution | None = None
 
 
 class OtpChallengeDocument(BaseDocument):

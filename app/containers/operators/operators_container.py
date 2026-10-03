@@ -3,6 +3,7 @@ from dependency_injector.providers import Container, DependenciesContainer
 
 from app.containers.container_edges import composed_container_edge
 from app.containers.operators.account_operators import AccountOperatorsContainer
+from app.containers.operators.analytics_operators import AnalyticsOperatorsContainer
 from app.containers.operators.assistant_operators import AssistantOperatorsContainer
 from app.containers.operators.billing_operators import BillingOperatorsContainer
 from app.containers.operators.call_operators import CallOperatorsContainer
@@ -118,6 +119,11 @@ class OperatorsContainer(containers.DeclarativeContainer):
     feedback: FeedbackOperatorsContainer = Container(  # type: ignore[assignment]
         FeedbackOperatorsContainer,
         feedback_pipelines=pipelines.feedback,
+        utilities=utilities,
+    )
+    analytics: AnalyticsOperatorsContainer = Container(  # type: ignore[assignment]
+        AnalyticsOperatorsContainer,
+        analytics_pipelines=pipelines.analytics,
         utilities=utilities,
     )
     demo: DemoOperatorsContainer = Container(  # type: ignore[assignment]

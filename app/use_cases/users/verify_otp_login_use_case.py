@@ -2,6 +2,7 @@ import logging
 
 from typed_time_provider import Microseconds, Seconds, WallClock
 
+from app.contracts.analytics import RecordProductEventFacilitatorContract
 from app.contracts.registries import RequestRateLimitRegistryContract
 from app.contracts.repositories.compliance_repositories import AuditLogRepoContract
 from app.contracts.repositories.user_repositories import (
@@ -15,6 +16,7 @@ from app.schemas.configurations.app_settings import AppSettings
 from app.schemas.constants.compliance import AuditAction
 from app.schemas.constants.users import LoginMethod
 from app.schemas.domain.compliance import AuditLogEntryDocument
+from app.schemas.domain.signup_attribution import SignupAttribution
 from app.schemas.domain.users import (
     OtpChallengeDocument,
     UserDocument,
@@ -34,6 +36,7 @@ from app.schemas.typings.users.strings import AccessToken
 from app.use_cases.users.otp_login.login_check_limits import (
     refuse_too_frequent_code_checks,
 )
+from app.utilities.analytics.product_event_drafts import sign_in_events
 from app.utilities.security.access_tokens import (
     generate_access_token,
     hash_access_token,
@@ -60,7 +63,9 @@ class VerifyOtpLoginUseCase(UseCaseContract[VerifyOtpLoginCommand, LoginSessionV
     created on first login with the language chosen when the code was
     requested. The platform admin flag follows the admin phone and e-mail
     lists in the settings. The bearer token is returned once; only its
-    SHA-256 hash is stored. Every login is audited.
+    SHA-256 hash is stored. Every login is audited. A new account keeps
+    where its owner came from (the cabinet's attribution, never changed
+    later); sign-ups and sign-ins are product events.
     """
 
     def __init__(
@@ -73,6 +78,7 @@ class VerifyOtpLoginUseCase(UseCaseContract[VerifyOtpLoginCommand, LoginSessionV
         app_settings: AppSettings,
         wall_clock: WallClock[Microseconds],
         rate_limit_registry: RequestRateLimitRegistryContract,
+        product_events: RecordProductEventFacilitatorContract,
     ) -> None:
         self._otp_challenge_repo: OtpChallengeRepoContract = otp_challenge_repo
         self._user_repo: UserRepoContract = user_repo
@@ -86,6 +92,7 @@ class VerifyOtpLoginUseCase(UseCaseContract[VerifyOtpLoginCommand, LoginSessionV
         self._rate_limit_registry: RequestRateLimitRegistryContract = (
             rate_limit_registry
         )
+        self._product_events: RecordProductEventFacilitatorContract = product_events
 
     def run(self, input_data: VerifyOtpLoginCommand) -> LoginSessionView:
         now: Microseconds = self._wall_clock.now_unix()
@@ -97,7 +104,9 @@ class VerifyOtpLoginUseCase(UseCaseContract[VerifyOtpLoginCommand, LoginSessionV
             now,
         )
         challenge: OtpChallengeDocument = self._consume_challenge(input_data, now)
-        user, is_new_user = self._find_or_create_user(challenge, now)
+        user, is_new_user = self._find_or_create_user(
+            challenge, input_data.signup_attribution, now
+        )
         access_token: AccessToken = generate_access_token()
         session = UserSessionDocument(
             user_id=user.id,
@@ -120,6 +129,7 @@ class VerifyOtpLoginUseCase(UseCaseContract[VerifyOtpLoginCommand, LoginSessionV
                 updated_at=now,
             )
         )
+        self._product_events.record(*sign_in_events(user, is_new_user))
         return LoginSessionView(
             access_token=access_token,
             expires_at=session.expires_at,
@@ -193,6 +203,7 @@ class VerifyOtpLoginUseCase(UseCaseContract[VerifyOtpLoginCommand, LoginSessionV
     def _find_or_create_user(
         self,
         challenge: OtpChallengeDocument,
+        signup_attribution: SignupAttribution | None,
         now: Microseconds,
     ) -> tuple[UserDocument, bool]:
         user: UserDocument | None = self._find_user(challenge)
@@ -204,6 +215,7 @@ class VerifyOtpLoginUseCase(UseCaseContract[VerifyOtpLoginCommand, LoginSessionV
                 email=challenge.email,
                 country_code=challenge.country_code,
                 locale=challenge.locale,
+                signup_attribution=signup_attribution,
                 created_at=now,
             )
 

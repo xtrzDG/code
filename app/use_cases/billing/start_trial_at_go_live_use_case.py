@@ -1,11 +1,13 @@
 from typed_time_provider import Microseconds, WallClock
 
+from app.contracts.analytics import RecordProductEventFacilitatorContract
 from app.contracts.registries import PlanRegistryContract
 from app.contracts.repositories.billing_repositories import (
     InvoiceRepoContract,
     SubscriptionRepoContract,
 )
 from app.contracts.use_case_contract import UseCaseContract
+from app.schemas.constants.analytics import ProductEventName
 from app.schemas.domain.billing import SubscriptionDocument
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.dto.billing import PlanDefinition
@@ -16,6 +18,7 @@ from app.use_cases.shared.trial_subscriptions import (
     is_trial_due_at_go_live,
     open_trial_subscription,
 )
+from app.utilities.analytics.billing_event_drafts import billing_event
 
 
 class StartTrialAtGoLiveUseCase(UseCaseContract[GoLiveTrialRequest, GoLiveTrial]):
@@ -39,11 +42,13 @@ class StartTrialAtGoLiveUseCase(UseCaseContract[GoLiveTrialRequest, GoLiveTrial]
         invoice_repo: InvoiceRepoContract,
         plan_registry: PlanRegistryContract,
         wall_clock: WallClock[Microseconds],
+        product_events: RecordProductEventFacilitatorContract,
     ) -> None:
         self._subscription_repo: SubscriptionRepoContract = subscription_repo
         self._invoice_repo: InvoiceRepoContract = invoice_repo
         self._plan_registry: PlanRegistryContract = plan_registry
         self._wall_clock: WallClock[Microseconds] = wall_clock
+        self._product_events: RecordProductEventFacilitatorContract = product_events
 
     def run(self, input_data: GoLiveTrialRequest) -> GoLiveTrial:
         business: BusinessDocument = input_data.business
@@ -65,6 +70,9 @@ class StartTrialAtGoLiveUseCase(UseCaseContract[GoLiveTrialRequest, GoLiveTrial]
             plan_key,
             billing_period,
             self._wall_clock.now_unix(),
+        )
+        self._product_events.record(
+            billing_event(ProductEventName.TRIAL_STARTED, subscription)
         )
         return GoLiveTrial(
             is_started=True,

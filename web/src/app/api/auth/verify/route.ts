@@ -5,7 +5,9 @@
  * bearer token goes into the httpOnly session cookie (`__Host-aw_session`
  * over HTTPS; never into the response body), the
  * interface language becomes the account's language, and the answer is
- * {"user", "is_new_user", "expires_at"}.
+ * {"user", "is_new_user", "expires_at"}. Where the visitor first came from
+ * (the `aw_attr` cookie) goes along as `signup_attribution` and the cookie
+ * is dropped once signed in.
  */
 
 import { NextResponse, type NextRequest } from "next/server";
@@ -19,6 +21,7 @@ import {
   localeCookieOptions,
   pickResponseHeaders,
 } from "@/server/backend";
+import { forgetAttribution, readAttributionCookie, withSignupAttribution } from "@/server/attributionCookie";
 import { BodyTooLargeError, DEFAULT_BODY_LIMIT_BYTES, readLimitedText } from "@/server/bodyLimits";
 import { prepareBackendCall } from "@/server/relay";
 import { setSessionCookie } from "@/server/sessionCookie";
@@ -44,7 +47,11 @@ export async function POST(request: NextRequest): Promise<Response> {
 
   let upstream: Response;
   try {
-    upstream = await callBackend("/v1/auth/otp/verify", { method: "POST", headers, body });
+    upstream = await callBackend("/v1/auth/otp/verify", {
+      method: "POST",
+      headers,
+      body: withSignupAttribution(body, readAttributionCookie(request)),
+    });
   } catch {
     return jsonError(502, "backend_unavailable", "The API is not reachable.", requestId);
   }
@@ -62,6 +69,7 @@ export async function POST(request: NextRequest): Promise<Response> {
     { headers: pickResponseHeaders(upstream.headers, requestId) },
   );
   setSessionCookie(response, session.access_token, dateFromMicroseconds(session.expires_at));
+  forgetAttribution(response);
   const accountLocale = matchLocale(session.user.locale);
   if (accountLocale) {
     response.cookies.set(LOCALE_COOKIE, accountLocale, localeCookieOptions());

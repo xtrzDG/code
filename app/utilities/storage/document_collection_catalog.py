@@ -55,6 +55,7 @@ from app.schemas.domain.notification_preferences import (
 from app.schemas.domain.outbound_messages import OutboundMessageDocument
 from app.schemas.domain.package_usage import PackageUsageWarningDocument
 from app.schemas.domain.payments import PaymentOrderDocument
+from app.schemas.domain.product_events import ProductEventDocument
 from app.schemas.domain.profiles import BusinessProfileDocument
 from app.schemas.domain.public_slugs import PublicSlugClaimDocument
 from app.schemas.domain.push_subscriptions import PushSubscriptionDocument
@@ -76,6 +77,7 @@ from app.schemas.domain.value_settings import (
     DigestPreferencesDocument,
     ValueSettingsDocument,
 )
+from app.schemas.domain.web_vitals import WebVitalSampleDocument
 from app.schemas.domain.website_imports import WebsiteImportDocument
 from app.schemas.exceptions.application_errors import NotFoundError
 from app.schemas.typings.storage.constrained_strings import DocumentCollectionName
@@ -276,6 +278,13 @@ DOCUMENT_COLLECTIONS: tuple[DocumentCollectionDefinition, ...] = (
     # Dated exchange rates of the NBG and ECB feeds (1071).
     DocumentCollectionDefinition(
         DocumentCollectionName("exchange_rates"), ExchangeRateDocument
+    ),
+    # Growth analytics: owners' steps to paying, Web Vitals (1074).
+    DocumentCollectionDefinition(
+        DocumentCollectionName("product_events"), ProductEventDocument
+    ),
+    DocumentCollectionDefinition(
+        DocumentCollectionName("web_vital_samples"), WebVitalSampleDocument
     ),
 )
 

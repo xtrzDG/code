@@ -1,6 +1,7 @@
 from dependency_injector import containers
 from dependency_injector.providers import DependenciesContainer, Factory
 
+from app.containers.facilitators import FacilitatorsContainer
 from app.containers.registries import RegistriesContainer
 from app.containers.repositories import RepositoriesContainer
 from app.containers.time_provider import TimeProviderContainer
@@ -22,6 +23,7 @@ class LaunchUseCasesContainer(containers.DeclarativeContainer):
     starts then and the milestones of the guided setup.
     """
 
+    facilitators: FacilitatorsContainer = DependenciesContainer()  # type: ignore[assignment]
     registries: RegistriesContainer = DependenciesContainer()  # type: ignore[assignment]
     repositories: RepositoriesContainer = DependenciesContainer()  # type: ignore[assignment]
     time_provider: TimeProviderContainer = DependenciesContainer()  # type: ignore[assignment]
@@ -34,6 +36,7 @@ class LaunchUseCasesContainer(containers.DeclarativeContainer):
         invoice_repo=repositories.invoice_repo,
         plan_registry=registries.plan_registry,
         wall_clock=time_provider.microsecond_wall_clock,
+        product_events=facilitators.product_events,
     )
     record_activation_event_use_case: Factory[
         UseCaseContract[ActivationEventRecord, None]
@@ -41,4 +44,5 @@ class LaunchUseCasesContainer(containers.DeclarativeContainer):
         RecordActivationEventUseCase,
         activation_event_repo=repositories.activation_event_repo,
         wall_clock=time_provider.microsecond_wall_clock,
+        product_events=facilitators.product_events,
     )

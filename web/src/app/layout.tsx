@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 
 import { MotionProvider } from "@/components/motion/MotionProvider";
+import { WebVitalsReporter } from "@/components/telemetry/WebVitalsReporter";
 import { ThemeProvider } from "@/components/theme/ThemeProvider";
 import { ToastProvider } from "@/components/ui/Toast";
 import { I18nProvider } from "@/i18n/client";
@@ -34,6 +35,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
     // data-theme is rendered on the server, so the first paint already has the right colours.
     <html lang={locale} data-theme={theme} className="h-full">
       <body className="min-h-full bg-canvas text-ink antialiased">
+        <WebVitalsReporter />
         <I18nProvider locale={locale} messages={messages}>
           <ThemeProvider initialTheme={theme}>
             <MotionProvider>

@@ -7,6 +7,9 @@ from app.containers.container_edges import composed_container_edge
 from app.containers.orchestrators.account_orchestrators import (
     AccountOrchestratorsContainer,
 )
+from app.containers.orchestrators.analytics_orchestrators import (
+    AnalyticsOrchestratorsContainer,
+)
 from app.containers.orchestrators.assistant_orchestrators import (
     AssistantOrchestratorsContainer,
 )
@@ -170,6 +173,10 @@ class OrchestratorsContainer(containers.DeclarativeContainer):
     feedback: FeedbackOrchestratorsContainer = Container(  # type: ignore[assignment]
         FeedbackOrchestratorsContainer,
         feedback_use_cases=use_cases.feedback,
+    )
+    analytics: AnalyticsOrchestratorsContainer = Container(  # type: ignore[assignment]
+        AnalyticsOrchestratorsContainer,
+        analytics_use_cases=use_cases.analytics,
     )
     demo: DemoOrchestratorsContainer = Container(  # type: ignore[assignment]
         DemoOrchestratorsContainer,

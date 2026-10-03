@@ -2,6 +2,7 @@ import logging
 
 from typed_time_provider import Microseconds, WallClock
 
+from app.contracts.analytics import RecordProductEventFacilitatorContract
 from app.contracts.live_events import EventPublisherFacilitatorContract
 from app.contracts.repositories.assistant_repositories import (
     AssistantVersionRepoContract,
@@ -27,6 +28,7 @@ from app.schemas.typings.compliance.strings import (
     AuditEntityReference,
 )
 from app.use_cases.assistants.apply.apply_records import move_apply
+from app.utilities.analytics.product_event_drafts import launch_result_events
 from app.utilities.setup.apply_attention import (
     attention_from_refusal,
     failed_scenario_kinds,
@@ -66,6 +68,7 @@ class PublishAppliedVersionUseCase(UseCaseContract[AppliedVersion, None]):
         audit_log_repo: AuditLogRepoContract,
         live_events: EventPublisherFacilitatorContract,
         wall_clock: WallClock[Microseconds],
+        product_events: RecordProductEventFacilitatorContract,
     ) -> None:
         self._assistant_apply_repo: AssistantApplyRepoContract = assistant_apply_repo
         self._assistant_version_repo: AssistantVersionRepoContract = (
@@ -80,6 +83,7 @@ class PublishAppliedVersionUseCase(UseCaseContract[AppliedVersion, None]):
         self._audit_log_repo: AuditLogRepoContract = audit_log_repo
         self._live_events: EventPublisherFacilitatorContract = live_events
         self._wall_clock: WallClock[Microseconds] = wall_clock
+        self._product_events: RecordProductEventFacilitatorContract = product_events
 
     def run(self, input_data: AppliedVersion) -> None:
         apply: AssistantApplyDocument | None = (
@@ -193,4 +197,7 @@ class PublishAppliedVersionUseCase(UseCaseContract[AppliedVersion, None]):
             stage,
             self._wall_clock.now_unix(),
             attention or [],
+        )
+        self._product_events.record(
+            *launch_result_events(version.business_id, stage, attention or [])
         )

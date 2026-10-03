@@ -2,6 +2,7 @@ from dependency_injector import containers
 from dependency_injector.providers import DependenciesContainer, Factory
 
 from app.containers.config import ConfigContainer
+from app.containers.facilitators import FacilitatorsContainer
 from app.containers.registries import RegistriesContainer
 from app.containers.repositories import RepositoriesContainer
 from app.containers.time_provider import TimeProviderContainer
@@ -56,6 +57,7 @@ class SetupUseCasesContainer(containers.DeclarativeContainer):
     """
 
     config: ConfigContainer = DependenciesContainer()  # type: ignore[assignment]
+    facilitators: FacilitatorsContainer = DependenciesContainer()  # type: ignore[assignment]
     registries: RegistriesContainer = DependenciesContainer()  # type: ignore[assignment]
     repositories: RepositoriesContainer = DependenciesContainer()  # type: ignore[assignment]
     time_provider: TimeProviderContainer = DependenciesContainer()  # type: ignore[assignment]
@@ -141,6 +143,7 @@ class SetupUseCasesContainer(containers.DeclarativeContainer):
         setup_state_repo=repositories.setup_state_repo,
         get_setup_progress=get_setup_progress_use_case,
         wall_clock=time_provider.microsecond_wall_clock,
+        product_events=facilitators.product_events,
     )
     celebrate_milestone_use_case: Factory[
         UseCaseContract[CelebrateMilestoneCommand, ActivationMilestoneView]

@@ -450,6 +450,7 @@ section tabs, page titles and the e2e suite read it):
 | Settings → Calls | Owners: **Call summaries** after every call (on by default; who gets them is the staff contacts in Notifications), **Text back missed callers** (off by default: the approved WhatsApp utility template's name, checked like Meta does, and the SMS fallback, with what a caller who did not get through would get now: the template, an SMS or nothing yet and why), **Template text** (the body to register with Meta in each language of the business, with Copy, and what callers read) and **Latest text-backs** (the last 20 callers who did not get through: number, when, why, Sent/Sending/Not delivered/Not sent with the reason, the channel and a link to the WhatsApp conversation their reply continues in). A conversation's calls show each summary in the reader's language |
 | Settings → the rest | Business settings and pause, team with owner/staff roles, manager contacts, reading and accepting the data processing agreement, the customer list with export and erasure, the audit log with server filters. Business and Notifications save with the business `revision` they showed (`expected_revision`); when someone saved since (another owner, the Telegram bot adding a manager), the API answers 409 `stale_revision` and the page reloads and says so instead of overwriting. Business starts from the business as stored when it opens, and after a stale refusal keeps what was typed: fields nobody else changed are saved again at once, fields changed on both sides show the stored value |
 | Admin (`/admin`, `/admin/clients/{id}`) | Platform admins: all clients (server filters, sorts and paging, totals), health, opening a client's cabinet |
+| Admin → Metrics (`/admin/metrics`) | Platform admins (under More on phones): the founder's growth numbers from `GET /v1/admin/metrics` with the filters in the address (`?from=&to=&country=&niche=&source=`, period presets or chosen days): key numbers, the funnel as bars on one scale with both shares as text, the setup tunnel per screen, the MRR bridge (start, signed movements with their accounts, end; currencies without an official rate named), gross margin, a cohort grid that prints every share over a light accent, sources and Web Vitals (p75 with Google's rating) |
 | Admin → Encryption keys (`/admin/security`) | Platform admins: how many keys `ENCRYPTION_KEYS` holds (never the keys), the latest re-encryption run (status, tokens checked, already current, sealed again, unreadable, Telegram webhooks registered again or not) with what it means, and **Re-encrypt stored tokens** after a confirmation (one run at a time; the page follows it until the worker is done). The runbook: `docs/operations/backup-restore.md` |
 
 ### Inbox
@@ -1069,6 +1070,24 @@ engines (the cabinet's pages are `noindex`) and texts in
   full-width digits, direction marks of copied numbers) are read as ASCII
   digits (`toAsciiDigits`). Helpers with tests are in
   `src/app/login/_lib/loginOptions.ts` and `src/lib/countries.ts`.
+
+## Telemetry and attribution
+
+- `lib/track.ts` queues reports for `POST /v1/telemetry/events` and sends
+  them together (after 5 seconds, at 50, or with `keepalive` when the page
+  is hidden or left); after a 429 nothing is sent until its Retry-After.
+- `components/telemetry/WebVitalsReporter.tsx` (in the root layout) reports
+  LCP, INP and CLS of signed-in pages only, as route templates
+  (`/b/[businessId]/inbox`; `lib/vitals.ts`) with the device class by
+  viewport width. The tunnel reports the screens entered and, going deeper,
+  completed (`components/setup/useTunnelTelemetry.ts`).
+- First touch: the proxy sets the httpOnly `aw_attr` cookie (90 days, never
+  replaced) on a visitor's first landing or hosted chat page without a
+  session: utm_*, `ref`, `src`, the referring host and the path
+  (`lib/attribution.ts`, `server/attributionCookie.ts`). `/api/auth/verify`
+  sends it as `signup_attribution` (whatever the browser put there is
+  dropped), and removes the cookie after a sign-in. Values the API would
+  refuse are left out, so a strange link never breaks a sign-in.
 
 ## Security notes
 

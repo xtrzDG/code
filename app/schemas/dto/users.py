@@ -5,6 +5,7 @@ from typed_time_provider import Microseconds
 from app.schemas.constants.businesses import BusinessStatus
 from app.schemas.constants.localization import OtpDeliveryChannel
 from app.schemas.constants.users import BusinessMemberRole, LoginMethod
+from app.schemas.domain.signup_attribution import SignupAttribution
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.businesses.strings import BusinessName
 from app.schemas.typings.compliance.strings import ClientIpAddress
@@ -86,10 +87,14 @@ class OtpChallengeView(ImmutableDTO):
 
 
 class VerifyOtpLoginRequest(ImmutableDTO):
-    """HTTP body of the code check."""
+    """
+    HTTP body of the code check; the cabinet adds where a new owner came
+    from (its first-party attribution cookie), kept only for a new account.
+    """
 
     challenge_id: OtpChallengeId
     code: OtpCode
+    signup_attribution: SignupAttribution | None = None
 
 
 class VerifyOtpLoginCommand(ImmutableDTO):
@@ -98,6 +103,7 @@ class VerifyOtpLoginCommand(ImmutableDTO):
     challenge_id: OtpChallengeId
     code: OtpCode
     client_ip_address: ClientIpAddress | None = None
+    signup_attribution: SignupAttribution | None = None
 
 
 class UserView(ImmutableDTO):

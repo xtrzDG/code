@@ -12,6 +12,8 @@ import { useCallback, useState } from "react";
 
 import { direction as directionOf, isTunnelPlace, type TunnelPlace } from "@/lib/tunnel/steps";
 
+import { useTunnelTelemetry } from "./useTunnelTelemetry";
+
 export function useTunnelPlace(fallback: TunnelPlace, allowed: (place: TunnelPlace) => boolean = () => true) {
   const router = useRouter();
   const pathname = usePathname();
@@ -23,6 +25,7 @@ export function useTunnelPlace(fallback: TunnelPlace, allowed: (place: TunnelPla
   if (track.place !== place) {
     setTrack({ place, direction: directionOf(track.place, place) });
   }
+  useTunnelTelemetry(place, pathname);
 
   const go = useCallback(
     (next: TunnelPlace, options: { replace?: boolean; path?: string } = {}) => {

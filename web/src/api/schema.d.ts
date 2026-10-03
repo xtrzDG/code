@@ -106,6 +106,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/admin/metrics": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Admin Metrics */
+        get: operations["get_admin_metrics_v1_admin_metrics_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/admin/security/encryption-keys": {
         parameters: {
             query?: never;
@@ -2321,6 +2338,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/telemetry/events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Record Telemetry */
+        post: operations["record_telemetry_v1_telemetry_events_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/telephony/zadarma/notifications": {
         parameters: {
             query?: never;
@@ -2483,6 +2517,22 @@ export interface components {
             occurred_at: number;
         };
         /**
+         * ActivationView
+         * @description Businesses created in the period that went live, got a channel and a
+         *     real conversation within 7 days of their creation. Businesses younger
+         *     than 7 days that are not activated yet are `pending`, not counted.
+         */
+        ActivationView: {
+            /** Activated */
+            activated: number;
+            /** Eligible */
+            eligible: number;
+            /** Pending */
+            pending: number;
+            /** Rate */
+            rate?: number | null;
+        };
+        /**
          * AdminClientPage
          * @description One page of clients; `next_cursor` is None on the last page.
          *
@@ -2601,6 +2651,25 @@ export interface components {
             /** Audit Log Entry Id */
             audit_log_entry_id: string;
             job: components["schemas"]["QueuedJobView"];
+        };
+        /**
+         * AdminMetricsView
+         * @description The founder's growth metrics of a period (UTC days, both included): the
+         *     owners' funnel and what explains it, recurring revenue in euros, gross
+         *     margin and the cabinet's Web Vitals. First-party data only.
+         */
+        AdminMetricsView: {
+            choices: components["schemas"]["MetricsFilterChoices"];
+            /** Generated At */
+            generated_at: number;
+            growth: components["schemas"]["GrowthView"];
+            /** Period End */
+            period_end: string;
+            /** Period Start */
+            period_start: string;
+            revenue: components["schemas"]["RevenueView"];
+            /** Web Vitals */
+            web_vitals: components["schemas"]["WebVitalView"][];
         };
         /**
          * AdminPaymentView
@@ -3953,6 +4022,22 @@ export interface components {
             timezone: string;
         };
         /**
+         * CohortRowView
+         * @description Owners who signed up in one month: how many, how many went live, and
+         *     the share with a paying business at the end of each month since
+         *     (`paying[0]` is their sign-up month; months not over yet end today).
+         */
+        CohortRowView: {
+            /** Month */
+            month: string;
+            /** Paying */
+            paying?: number[];
+            /** Sign Ups */
+            sign_ups: number;
+            /** Went Live */
+            went_live: number;
+        };
+        /**
          * ConfirmImportedItemsResult
          * @description Items now active in the knowledge base.
          */
@@ -4664,6 +4749,12 @@ export interface components {
          */
         DataRegion: "eu" | "us";
         /**
+         * DeviceClass
+         * @description The kind of screen a page was used on (by viewport width).
+         * @enum {string}
+         */
+        DeviceClass: "mobile" | "tablet" | "desktop";
+        /**
          * DigestPreferencesView
          * @description The owner's choices and where the summaries reach them: their sign-in
          *     e-mail (None: they sign in by phone) when the platform can send e-mail
@@ -4958,6 +5049,27 @@ export interface components {
             title: string;
         };
         /**
+         * FunnelStep
+         * @description A step of the owners' funnel of a sign-up cohort, in order; an owner is
+         *     counted at a step when they reached it and every step before it.
+         * @enum {string}
+         */
+        FunnelStep: "signed_up" | "business_created" | "launch_attempted" | "went_live" | "channel_connected" | "first_conversation" | "paid";
+        /**
+         * FunnelStepView
+         * @description Owners of the cohort at one step (and every step before it), their
+         *     share of the sign-ups and of the step before.
+         */
+        FunnelStepView: {
+            /** Owners */
+            owners: number;
+            /** Share Of Previous */
+            share_of_previous?: number | null;
+            /** Share Of Sign Ups */
+            share_of_sign_ups?: number | null;
+            step: components["schemas"]["FunnelStep"];
+        };
+        /**
          * GoLiveAutotestRunSummary
          * @description The version's latest autotest run as the checklist reports it: while it
          *     is RUNNING, `scenario_count` is the number of planned scenarios and
@@ -5045,6 +5157,24 @@ export interface components {
             /** Version Number */
             version_number: number;
             version_status: components["schemas"]["AssistantVersionStatus"];
+        };
+        /**
+         * GrowthView
+         * @description The funnel of the period's sign-ups and what explains it.
+         */
+        GrowthView: {
+            activation: components["schemas"]["ActivationView"];
+            /** Cohorts */
+            cohorts: components["schemas"]["CohortRowView"][];
+            /** Funnel */
+            funnel: components["schemas"]["FunnelStepView"][];
+            /** Median Time To Live Seconds */
+            median_time_to_live_seconds?: number | null;
+            /** Sources */
+            sources: components["schemas"]["SourceRowView"][];
+            trials: components["schemas"]["TrialConversionView"];
+            /** Tunnel */
+            tunnel: components["schemas"]["TunnelStepView"][];
         };
         /**
          * HandoffDocument
@@ -6030,6 +6160,21 @@ export interface components {
             currency_code: string;
         };
         /**
+         * MarginView
+         * @description Revenue and provider cost of the period over the businesses in scope
+         *     (the admin's client cost report, in euros) and the gross margin.
+         */
+        MarginView: {
+            /** Accounts */
+            accounts: number;
+            /** Accounts Without Rate */
+            accounts_without_rate: number;
+            /** Gross Margin Percent */
+            gross_margin_percent?: number | null;
+            provider_cost: components["schemas"]["Money"];
+            revenue: components["schemas"]["Money"];
+        };
+        /**
          * MenuImportResult
          * @description Drafts created by one import, in menu order. `batch_id` names the
          *     import: DELETE .../knowledge/import/{batch_id} discards the drafts that
@@ -6159,6 +6304,18 @@ export interface components {
             tool_calls?: components["schemas"]["ToolCallView"][];
         };
         /**
+         * MetricsFilterChoices
+         * @description The countries, niches and sources present, for the filter controls.
+         */
+        MetricsFilterChoices: {
+            /** Countries */
+            countries: string[];
+            /** Niches */
+            niches: components["schemas"]["NicheKey"][];
+            /** Sources */
+            sources: string[];
+        };
+        /**
          * MissedCallReason
          * @description Why a caller did not get through, or got nothing from the call.
          *
@@ -6186,6 +6343,46 @@ export interface components {
             amount_minor: number;
             /** Currency Code */
             currency_code: string;
+        };
+        /**
+         * MrrMovementKind
+         * @description How a business's monthly recurring revenue changed: NEW (first paid
+         *     subscription), REACTIVATION (paying again after churning), EXPANSION
+         *     (a dearer plan), CONTRACTION (a cheaper one) and CHURN (stopped paying).
+         * @enum {string}
+         */
+        MrrMovementKind: "new" | "reactivation" | "expansion" | "contraction" | "churn";
+        /**
+         * MrrMovementView
+         * @description How much monthly recurring revenue moved one way in the period, and
+         *     across how many businesses (each counted once per kind).
+         */
+        MrrMovementView: {
+            /** Accounts */
+            accounts: number;
+            amount: components["schemas"]["Money"];
+            kind: components["schemas"]["MrrMovementKind"];
+        };
+        /**
+         * MrrView
+         * @description Monthly recurring revenue at the start and the end of the period and
+         *     the movements between (start + new + reactivation + expansion -
+         *     contraction - churn = end), the paying accounts at the end and the
+         *     average revenue per account. Subscriptions in a currency without an
+         *     official rate to euros are left out and named.
+         */
+        MrrView: {
+            arpa?: components["schemas"]["Money"] | null;
+            end: components["schemas"]["Money"];
+            /** Movements */
+            movements: components["schemas"]["MrrMovementView"][];
+            /** Net Change */
+            net_change: number;
+            /** Paying Accounts */
+            paying_accounts: number;
+            start: components["schemas"]["Money"];
+            /** Unconverted Currencies */
+            unconverted_currencies: string[];
         };
         /**
          * MyNotificationSettingsView
@@ -6951,6 +7148,11 @@ export interface components {
             /** Updated At */
             updated_at: number;
         };
+        /** RevenueView */
+        RevenueView: {
+            margin: components["schemas"]["MarginView"];
+            mrr: components["schemas"]["MrrView"];
+        };
         /**
          * ReviewSettingsView
          * @description The settings with what they rely on: whether the business's WhatsApp
@@ -7182,6 +7384,20 @@ export interface components {
             slug: string;
             /** Source */
             source?: string | null;
+        };
+        /**
+         * SourceRowView
+         * @description Owners from one acquisition source: sign-ups, live and paying today.
+         */
+        SourceRowView: {
+            /** Paying */
+            paying: number;
+            /** Sign Ups */
+            sign_ups: number;
+            /** Source */
+            source: string;
+            /** Went Live */
+            went_live: number;
         };
         /**
          * StaffAlertEvent
@@ -7484,6 +7700,16 @@ export interface components {
             expires_at: number;
         };
         /**
+         * TelemetryBatchReceipt
+         * @description How many Web Vitals and tunnel steps of the batch were kept.
+         */
+        TelemetryBatchReceipt: {
+            /** Tunnel Steps */
+            tunnel_steps: number;
+            /** Web Vitals */
+            web_vitals: number;
+        };
+        /**
          * TextBackChannel
          * @description How the message to a caller who did not get through travels.
          * @enum {string}
@@ -7620,6 +7846,47 @@ export interface components {
             /** Result Json */
             result_json: string;
             tool_name: components["schemas"]["AssistantToolName"];
+        };
+        /**
+         * TrialConversionView
+         * @description Trials started in the period: how many ended, and how many of those
+         *     became paid subscriptions.
+         */
+        TrialConversionView: {
+            /** Converted */
+            converted: number;
+            /** Ended */
+            ended: number;
+            /** Rate */
+            rate?: number | null;
+            /** Started */
+            started: number;
+        };
+        /**
+         * TunnelStepKey
+         * @description A screen of the cabinet's "Create an AI assistant" tunnel, in order
+         *     (web/src/lib/tunnel/steps.ts): what and where (before the business
+         *     exists), the offer, hours, the people who take handoffs, channels,
+         *     trying the assistant and the launch.
+         * @enum {string}
+         */
+        TunnelStepKey: "business" | "place" | "offer" | "hours" | "people" | "channels" | "try" | "launch";
+        /**
+         * TunnelStepView
+         * @description One screen of the setup tunnel: owners who entered it, went on from it
+         *     or skipped it, and who stopped there (it was the furthest screen they
+         *     reached and they never went live).
+         */
+        TunnelStepView: {
+            /** Completed */
+            completed: number;
+            /** Entered */
+            entered: number;
+            /** Skipped */
+            skipped: number;
+            step: components["schemas"]["TunnelStepKey"];
+            /** Stopped Here */
+            stopped_here: number;
         };
         /**
          * UnansweredQuestionDetails
@@ -7888,6 +8155,36 @@ export interface components {
             count: number;
             /** Score */
             score: number;
+        };
+        /**
+         * WebVitalName
+         * @description A Core Web Vital: Largest Contentful Paint and Interaction to Next
+         *     Paint in milliseconds, Cumulative Layout Shift in ten-thousandths.
+         * @enum {string}
+         */
+        WebVitalName: "lcp" | "inp" | "cls";
+        /**
+         * WebVitalRating
+         * @description Where a vital's 75th percentile stands against Google's thresholds:
+         *     GOOD, NEEDS_IMPROVEMENT or POOR.
+         * @enum {string}
+         */
+        WebVitalRating: "good" | "needs_improvement" | "poor";
+        /**
+         * WebVitalView
+         * @description The 75th percentile of one Core Web Vital on one cabinet page and kind
+         *     of device in the period, with how many page views it rests on.
+         */
+        WebVitalView: {
+            device_class: components["schemas"]["DeviceClass"];
+            metric: components["schemas"]["WebVitalName"];
+            /** P75 */
+            p75: number;
+            rating: components["schemas"]["WebVitalRating"];
+            /** Route */
+            route: string;
+            /** Samples */
+            samples: number;
         };
         /**
          * WebsiteImportProblem
@@ -8711,6 +9008,97 @@ export interface operations {
             };
         };
     };
+    get_admin_metrics_v1_admin_metrics_get: {
+        parameters: {
+            query?: {
+                from?: string | null;
+                to?: string | null;
+                country?: string | null;
+                niche?: string | null;
+                source?: string | null;
+            };
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminMetricsView"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
     get_encryption_keys_v1_admin_security_encryption_keys_get: {
         parameters: {
             query?: never;
@@ -9273,6 +9661,28 @@ export interface operations {
                     challenge_id: string;
                     /** Code */
                     code: string;
+                    signup_attribution?: {
+                        /** First Seen At */
+                        first_seen_at?: number | null;
+                        /** Landing Path */
+                        landing_path?: string | null;
+                        /** Referral Code */
+                        referral_code?: string | null;
+                        /** Referrer Host */
+                        referrer_host?: string | null;
+                        /** Source Tag */
+                        source_tag?: string | null;
+                        /** Utm Campaign */
+                        utm_campaign?: string | null;
+                        /** Utm Content */
+                        utm_content?: string | null;
+                        /** Utm Medium */
+                        utm_medium?: string | null;
+                        /** Utm Source */
+                        utm_source?: string | null;
+                        /** Utm Term */
+                        utm_term?: string | null;
+                    } | null;
                 };
             };
         };
@@ -23591,6 +24001,144 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    record_telemetry_v1_telemetry_events_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Events */
+                    events: ({
+                        /**
+                         * DeviceClass
+                         * @description The kind of screen a page was used on (by viewport width).
+                         * @enum {string}
+                         */
+                        device_class: "mobile" | "tablet" | "desktop";
+                        /**
+                         * Kind
+                         * @constant
+                         */
+                        kind: "web_vital";
+                        /**
+                         * WebVitalName
+                         * @description A Core Web Vital: Largest Contentful Paint and Interaction to Next
+                         *     Paint in milliseconds, Cumulative Layout Shift in ten-thousandths.
+                         * @enum {string}
+                         */
+                        metric: "lcp" | "inp" | "cls";
+                        /** Route */
+                        route: string;
+                        /** Value */
+                        value: number;
+                    } | {
+                        /**
+                         * TunnelStepAction
+                         * @description What the cabinet reports about a tunnel step: entered or completed.
+                         * @enum {string}
+                         */
+                        action: "entered" | "completed";
+                        /** Business Id */
+                        business_id?: string | null;
+                        /**
+                         * Kind
+                         * @constant
+                         */
+                        kind: "tunnel_step";
+                        /**
+                         * TunnelStepKey
+                         * @description A screen of the cabinet's "Create an AI assistant" tunnel, in order
+                         *     (web/src/lib/tunnel/steps.ts): what and where (before the business
+                         *     exists), the offer, hours, the people who take handoffs, channels,
+                         *     trying the assistant and the launch.
+                         * @enum {string}
+                         */
+                        step: "business" | "place" | "offer" | "hours" | "people" | "channels" | "try" | "launch";
+                    })[];
+                };
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TelemetryBatchReceipt"];
+                };
             };
             /** @description Sign-in required: the bearer token is missing, invalid or expired. */
             401: {

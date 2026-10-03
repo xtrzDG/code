@@ -10,6 +10,7 @@ SAMPLE_MICROSECONDS: int = 1_790_000_000_000_000
 
 CONSTRAINED_TEXT_SAMPLES: dict[str, str] = {
     "AutotestScenarioKey": "booking-happy-path",
+    "CabinetRoutePattern": "/b/[businessId]/inbox",
     "BusinessPublicSlug": "cafe-batumi",
     "CabinetDeepLink": (
         "https://app.example.com/n/AQ3xL8nYtQ2bS0pK9mVwZcRj5uHfE1gDaB7iO4lN6eT"
@@ -32,6 +33,7 @@ CONSTRAINED_TEXT_SAMPLES: dict[str, str] = {
     "JobSerialKey": "business:business_42",
     "KnowledgeAttributeKey": "spice_level",
     "KnowledgeTag": "signature",
+    "LandingPath": "/c/cafe-batumi",
     "LanguageTag": "ka",
     "LlmModelId": "gpt-5-mini",
     "LocalDate": "2026-09-21",
@@ -47,9 +49,17 @@ CONSTRAINED_TEXT_SAMPLES: dict[str, str] = {
     ),
     "QuestionKey": "parking",
     "QuickReplyShortcut": "hours",
+    "ReferralCode": "partner-42",
+    "ReferrerHost": "www.google.com",
     "ReleaseVersion": "4718714c0f2e9a1b",
     "ReviewLinkToken": "q3Jd8sLq0Pz-Xb7W2nVc1A",
+    "SignupSourceTag": "qr",
     "TimezoneName": "Asia/Tbilisi",
+    "UtmCampaign": "autumn-launch",
+    "UtmContent": "hero-button",
+    "UtmMedium": "social",
+    "UtmSource": "instagram",
+    "UtmTerm": "ai receptionist",
     "ValueReportPeriodKey": "2026-W38",
     "WebLink": "https://example.com/menu",
     "WhatsAppTemplateLanguageCode": "en_US",

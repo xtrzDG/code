@@ -50,6 +50,9 @@ from app.facilitators.observability.job_monitor_factory import (
 from app.facilitators.observability.sentry_error_reporting_facilitator import (
     SentryErrorReportingFacilitator,
 )
+from app.facilitators.product_events.record_product_event_facilitator import (
+    RecordProductEventFacilitator,
+)
 from app.facilitators.users.login_code_cap_alert_facilitator import (
     LoginCodeCapAlertFacilitator,
 )
@@ -117,6 +120,12 @@ class FacilitatorsContainer(containers.DeclarativeContainer):
     event_publisher: Singleton[EventPublisherFacilitator] = Singleton(
         EventPublisherFacilitator,
         bus=adapters.live_event_bus,
+        wall_clock=time_provider.microsecond_wall_clock,
+    )
+    # The founder's product analytics: use cases report each step.
+    product_events: Singleton[RecordProductEventFacilitator] = Singleton(
+        RecordProductEventFacilitator,
+        product_event_repo=repositories.product_event_repo,
         wall_clock=time_provider.microsecond_wall_clock,
     )
     live_stream_limits: Singleton[LiveStreamLimits] = Singleton(LiveStreamLimits)

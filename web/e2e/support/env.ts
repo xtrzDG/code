@@ -32,3 +32,5 @@ export const E2E_VAPID_PRIVATE_KEY = "TvFxPI0UYWj6Tk2K1oObluuz01W1zeWieAwrRpfzfh
 
 /** The API signs this address in as a platform admin (encryption-keys.spec.ts). */
 export const PLATFORM_ADMIN_EMAIL = "platform-admin@e2e.workshop.example";
+/** A second platform admin (admin-metrics.spec.ts): an address gets a code at most every 30 seconds. */
+export const METRICS_ADMIN_EMAIL = "metrics-admin@e2e.workshop.example";

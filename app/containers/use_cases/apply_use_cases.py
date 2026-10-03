@@ -79,6 +79,7 @@ class ApplyUseCasesContainer(containers.DeclarativeContainer):
         check_go_live_readiness=assistant_use_cases.check_go_live_readiness_use_case,
         live_events=facilitators.event_publisher,
         wall_clock=time_provider.microsecond_wall_clock,
+        product_events=facilitators.product_events,
     )
     fail_apply_changes_use_case: Factory[UseCaseContract[ApplyBuildFailure, None]] = (
         Factory(
@@ -86,6 +87,7 @@ class ApplyUseCasesContainer(containers.DeclarativeContainer):
             assistant_apply_repo=repositories.assistant_apply_repo,
             live_events=facilitators.event_publisher,
             wall_clock=time_provider.microsecond_wall_clock,
+            product_events=facilitators.product_events,
         )
     )
     publish_applied_version_use_case: Factory[UseCaseContract[AppliedVersion, None]] = (
@@ -99,6 +101,7 @@ class ApplyUseCasesContainer(containers.DeclarativeContainer):
             audit_log_repo=repositories.audit_log_repo,
             live_events=facilitators.event_publisher,
             wall_clock=time_provider.microsecond_wall_clock,
+            product_events=facilitators.product_events,
         )
     )
     describe_apply_changes_use_case: Factory[

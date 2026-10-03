@@ -1,5 +1,6 @@
 from typed_time_provider import Microseconds, WallClock
 
+from app.contracts.analytics import RecordProductEventFacilitatorContract
 from app.contracts.registries import (
     CountryRegistryContract,
     LanguageRegistryContract,
@@ -34,6 +35,7 @@ from app.schemas.typings.localization.constrained_strings import (
     LanguageTag,
     TimezoneName,
 )
+from app.utilities.analytics.product_event_drafts import business_created_event
 from app.utilities.businesses.business_settings_validation import (
     MAX_BUSINESS_LANGUAGES,
     require_existing_timezone,
@@ -69,6 +71,7 @@ class CreateBusinessUseCase(UseCaseContract[CreateBusinessCommand, BusinessView]
         ],
         app_settings: AppSettings,
         wall_clock: WallClock[Microseconds],
+        product_events: RecordProductEventFacilitatorContract,
     ) -> None:
         self._business_repo: BusinessRepoContract = business_repo
         self._user_repo: UserRepoContract = user_repo
@@ -83,6 +86,7 @@ class CreateBusinessUseCase(UseCaseContract[CreateBusinessCommand, BusinessView]
         ] = business_view_transformer
         self._app_settings: AppSettings = app_settings
         self._wall_clock: WallClock[Microseconds] = wall_clock
+        self._product_events: RecordProductEventFacilitatorContract = product_events
 
     def run(self, input_data: CreateBusinessCommand) -> BusinessView:
         details: CreateBusinessRequest = input_data.details
@@ -128,6 +132,7 @@ class CreateBusinessUseCase(UseCaseContract[CreateBusinessCommand, BusinessView]
             updated_at=now,
         )
         self._business_repo.save(business)
+        self._product_events.record(business_created_event(business, owner.id))
         return self._business_view_transformer.transform(
             BusinessViewSource(
                 business=business,

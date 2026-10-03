@@ -28,6 +28,7 @@ from app.use_cases.assistants.apply.fail_apply_changes_use_case import (
 from app.use_cases.assistants.apply.start_apply_changes_use_case import (
     StartApplyChangesUseCase,
 )
+from tests.analytics.recording_product_events import RecordingProductEvents
 from tests.assembly.international_business_seeds import seed_italian_restaurant
 from tests.assembly.testbed import AssemblyTestbed
 from tests.setup.apply_testbed import apply, assert_needs_attention, settle
@@ -117,13 +118,17 @@ def orchestrator(
             testbed.check_readiness_use_case,
             testbed.apply_events,
             testbed.wall_clock,
+            product_events=RecordingProductEvents(),
         ),
         select_smoke_checks=testbed.select_smoke_checks_use_case,
         start_autotest_run=start_autotest_run or testbed.start_autotest_run_use_case,
         enqueue_autotest_run=testbed.enqueue_autotest_run_use_case,
         publish_applied_version=testbed.publish_applied_use_case,
         fail_apply_changes=FailApplyChangesUseCase(
-            testbed.apply_repo, testbed.apply_events, testbed.wall_clock
+            testbed.apply_repo,
+            testbed.apply_events,
+            testbed.wall_clock,
+            product_events=RecordingProductEvents(),
         ),
         get_apply_changes=testbed.get_apply_use_case,
     )

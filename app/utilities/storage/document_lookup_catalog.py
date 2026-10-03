@@ -2,10 +2,10 @@
 The declared lookup fields of the document collections, by collection.
 
 Each TEXT, FILTER_TEXT and INTEGER field is a generated column
-`doc_<field>` (migrations 1010, 1040, 1042, 1043, 1051, 1052 and 1061), each
-ELEMENT_TEXT field a trigger over `workshop.document_lookup_keys`;
-`document_lookup_fields` explains the kinds and checks queries against
-this catalog.
+`doc_<field>` (migrations 1010, 1040, 1042, 1043, 1051, 1052, 1061, 1062
+and 1074), each ELEMENT_TEXT field a trigger over
+`workshop.document_lookup_keys`; `document_lookup_fields` explains the kinds
+and checks queries against this catalog.
 """
 
 from collections.abc import Mapping
@@ -45,7 +45,12 @@ DOCUMENT_LOOKUP_FIELDS: Mapping[
 ] = {
     # Sign-in: a user by phone or e-mail, a session by its token hash (every
     # signed-in request), expired sessions and old login codes for the purge.
-    DocumentCollectionName("users"): (_text("phone_number"), _text("email")),
+    # The accounts created in a period (the founder's sign-up cohorts, 1074).
+    DocumentCollectionName("users"): (
+        _text("phone_number"),
+        _text("email"),
+        _integer("created_at"),
+    ),
     DocumentCollectionName("user_sessions"): (
         _text("token_hash"),
         _integer("expires_at"),
@@ -195,5 +200,19 @@ DOCUMENT_LOOKUP_FIELDS: Mapping[
         _integer("created_at"),
         _integer("score"),
         _integer("review_clicks"),
+    ),
+    # Growth analytics (1074): owners' steps by name within a time range;
+    # Web Vitals counted per vital within a time range, grouped by route
+    # and device and bucketed by value, and purged by age.
+    DocumentCollectionName("product_events"): (
+        _text("name"),
+        _integer("occurred_at"),
+    ),
+    DocumentCollectionName("web_vital_samples"): (
+        _text("metric"),
+        _filter("route"),
+        _filter("device_class"),
+        _integer("value"),
+        _integer("created_at"),
     ),
 }

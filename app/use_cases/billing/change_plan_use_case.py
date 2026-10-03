@@ -1,5 +1,6 @@
 from typed_time_provider import Microseconds, WallClock
 
+from app.contracts.analytics import RecordProductEventFacilitatorContract
 from app.contracts.billing import PaymentGatewayAdapterContract
 from app.contracts.registries import PlanRegistryContract
 from app.contracts.repositories.billing_repositories import (
@@ -8,7 +9,13 @@ from app.contracts.repositories.billing_repositories import (
 )
 from app.contracts.repositories.business_repositories import BusinessRepoContract
 from app.contracts.use_case_contract import UseCaseContract
-from app.schemas.constants.billing import BillingPeriod, InvoiceKind, InvoiceStatus
+from app.schemas.constants.analytics import ProductEventName
+from app.schemas.constants.billing import (
+    BillingPeriod,
+    InvoiceKind,
+    InvoiceStatus,
+    PlanKey,
+)
 from app.schemas.constants.users import BusinessMemberRole
 from app.schemas.domain.billing import InvoiceDocument, SubscriptionDocument
 from app.schemas.domain.businesses import BusinessDocument
@@ -26,6 +33,7 @@ from app.use_cases.shared.billing_records import (
     require_current_subscription,
 )
 from app.use_cases.shared.subscription_pricing import price_subscription
+from app.utilities.analytics.billing_event_drafts import billing_event
 
 
 class ChangePlanUseCase(UseCaseContract[ChangePlanCommand, BillingOverview]):
@@ -59,6 +67,7 @@ class ChangePlanUseCase(UseCaseContract[ChangePlanCommand, BillingOverview]):
         ],
         wall_clock: WallClock[Microseconds],
         remove_voice_agent: UseCaseContract[BusinessId, None],
+        product_events: RecordProductEventFacilitatorContract,
     ) -> None:
         self._authorize_business_access: UseCaseContract[
             BusinessAccessRequest,
@@ -75,6 +84,7 @@ class ChangePlanUseCase(UseCaseContract[ChangePlanCommand, BillingOverview]):
         ] = assemble_billing_overview
         self._wall_clock: WallClock[Microseconds] = wall_clock
         self._remove_voice_agent: UseCaseContract[BusinessId, None] = remove_voice_agent
+        self._product_events: RecordProductEventFacilitatorContract = product_events
 
     def run(self, input_data: ChangePlanCommand) -> BillingOverview:
         business: BusinessDocument = self._authorize_business_access.run(
@@ -115,11 +125,20 @@ class ChangePlanUseCase(UseCaseContract[ChangePlanCommand, BillingOverview]):
             is_charge_changed,
             now,
         )
+        previous_plan_key: PlanKey = subscription.plan_key
         subscription.plan_key = input_data.request.plan_key
         subscription.billing_period = input_data.request.billing_period
         subscription.price_minor = new_price.amount_minor
         subscription.updated_at = now
         self._subscription_repo.save(subscription)
+        self._product_events.record(
+            billing_event(
+                ProductEventName.PLAN_CHANGED,
+                subscription,
+                input_data.user_id,
+                previous_plan_key,
+            )
+        )
 
         def change_plan(current: BusinessDocument) -> None:
             # Changed on the business as stored now, so an edit saved

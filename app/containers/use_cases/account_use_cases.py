@@ -127,6 +127,7 @@ class AccountUseCasesContainer(containers.DeclarativeContainer):
         app_settings=config.app_settings,
         wall_clock=time_provider.microsecond_wall_clock,
         rate_limit_registry=registries.request_rate_limit_registry,
+        product_events=facilitators.product_events,
     )
     authenticate_user_use_case: Factory[UseCaseContract[AccessToken, UserId]] = Factory(
         AuthenticateUserUseCase,
@@ -169,6 +170,7 @@ class AccountUseCasesContainer(containers.DeclarativeContainer):
         business_view_transformer=transformers.business_view_transformer,
         app_settings=config.app_settings,
         wall_clock=time_provider.microsecond_wall_clock,
+        product_events=facilitators.product_events,
     )
     list_my_businesses_use_case: Factory[
         UseCaseContract[UserId, list[BusinessView]]

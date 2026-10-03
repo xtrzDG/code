@@ -6,6 +6,7 @@ from app.containers.app import AppContainer
 from app.containers.operators.operators_container import OperatorsContainer
 from app.gateways.http.admin_jobs_routes import build_admin_jobs_router
 from app.gateways.http.admin_routes import build_admin_router
+from app.gateways.http.analytics_router_assembly import build_analytics_routers
 from app.gateways.http.assistant_routes import build_assistant_router
 from app.gateways.http.billing_routes import build_billing_router
 from app.gateways.http.business_routes import build_business_router
@@ -293,4 +294,5 @@ def build_application_routers(app_container: AppContainer) -> list[APIRouter]:
         *build_security_routers(operators, current_user),
         *build_value_routers(operators, current_user),
         *build_feedback_routers(operators, current_user),
+        *build_analytics_routers(operators, current_user),
     ]

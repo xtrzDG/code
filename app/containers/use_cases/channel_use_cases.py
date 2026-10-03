@@ -4,6 +4,7 @@ from dependency_injector.providers import DependenciesContainer, Factory, Single
 from app.containers.adapters.adapters_container import AdaptersContainer
 from app.containers.clients import ClientsContainer
 from app.containers.config import ConfigContainer
+from app.containers.facilitators import FacilitatorsContainer
 from app.containers.registries import RegistriesContainer
 from app.containers.repositories import RepositoriesContainer
 from app.containers.time_provider import TimeProviderContainer
@@ -84,6 +85,7 @@ class ChannelUseCasesContainer(containers.DeclarativeContainer):
     adapters: AdaptersContainer = DependenciesContainer()  # type: ignore[assignment]
     clients: ClientsContainer = DependenciesContainer()  # type: ignore[assignment]
     config: ConfigContainer = DependenciesContainer()  # type: ignore[assignment]
+    facilitators: FacilitatorsContainer = DependenciesContainer()  # type: ignore[assignment]
     registries: RegistriesContainer = DependenciesContainer()  # type: ignore[assignment]
     repositories: RepositoriesContainer = DependenciesContainer()  # type: ignore[assignment]
     time_provider: TimeProviderContainer = DependenciesContainer()  # type: ignore[assignment]
@@ -128,6 +130,7 @@ class ChannelUseCasesContainer(containers.DeclarativeContainer):
         app_settings=config.app_settings,
         wall_clock=time_provider.microsecond_wall_clock,
         storage_scope=utilities.storage_scope,
+        product_events=facilitators.product_events,
     )
     set_whatsapp_staff_template_use_case: Factory[
         UseCaseContract[SetWhatsAppStaffTemplateCommand, ChannelView]

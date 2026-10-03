@@ -1,5 +1,6 @@
 from typed_time_provider import Microseconds, WallClock
 
+from app.contracts.analytics import RecordProductEventFacilitatorContract
 from app.contracts.live_events import EventPublisherFacilitatorContract
 from app.contracts.repositories.assistant_repositories import (
     AssistantVersionRepoContract,
@@ -17,6 +18,7 @@ from app.schemas.dto.setup.apply_changes import AppliedVersion
 from app.schemas.exceptions.application_errors import NotFoundError
 from app.schemas.typings.setup.booleans import IsApplyInProgress
 from app.use_cases.assistants.apply.apply_records import move_apply
+from app.utilities.analytics.product_event_drafts import launch_blocked_events
 from app.utilities.setup.apply_attention import attention_from_checks
 
 # The automatic checks are what comes next; every other gate is known now.
@@ -43,6 +45,7 @@ class CheckAppliedVersionUseCase(UseCaseContract[AppliedVersion, IsApplyInProgre
         ],
         live_events: EventPublisherFacilitatorContract,
         wall_clock: WallClock[Microseconds],
+        product_events: RecordProductEventFacilitatorContract,
     ) -> None:
         self._assistant_apply_repo: AssistantApplyRepoContract = assistant_apply_repo
         self._assistant_version_repo: AssistantVersionRepoContract = (
@@ -54,6 +57,7 @@ class CheckAppliedVersionUseCase(UseCaseContract[AppliedVersion, IsApplyInProgre
         ] = check_go_live_readiness
         self._live_events: EventPublisherFacilitatorContract = live_events
         self._wall_clock: WallClock[Microseconds] = wall_clock
+        self._product_events: RecordProductEventFacilitatorContract = product_events
 
     def run(self, input_data: AppliedVersion) -> IsApplyInProgress:
         business: BusinessDocument | None = self._business_repo.get(
@@ -84,4 +88,5 @@ class CheckAppliedVersionUseCase(UseCaseContract[AppliedVersion, IsApplyInProgre
             self._wall_clock.now_unix(),
             attention,
         )
+        self._product_events.record(*launch_blocked_events(business.id, attention))
         return attention == []

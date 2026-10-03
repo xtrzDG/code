@@ -108,6 +108,7 @@ def build_users_router(
                 challenge_id=body.challenge_id,
                 code=body.code,
                 client_ip_address=read_client_ip_address(request),
+                signup_attribution=body.signup_attribution,
             )
         )
 
