@@ -195,7 +195,7 @@ logs for `pickup_delay_ms`). The SLI is the p95 of `pickup_delay_ms` of
   `WORKER_POLL_SECONDS` (15). The first polls are staggered (thread i of
   n waits i/n of the period), so the threads of a lane never query
   together. After a reconnect every lane polls at once.
-- **Reading it.** Around 2,000 ms on most pickups: wake-ups are not
+- **Reading it.** Pickups spread evenly up to 2,000 ms: wake-ups are not
   arriving (the LISTEN connection is down, or `DATABASE_URL` goes through
   a transaction pooler without `LIVE_EVENTS_DATABASE_URL`), and only
   polling finds the jobs. Growing far beyond that: every `inbound` thread
@@ -211,7 +211,8 @@ not a fault: the report stays `ready` (`200`) with the database and pool
 checks `degraded` and the pool's `exhausted_seconds`, and the migrations'
 last reading is reused instead of waiting for a connection. Only a pool
 exhausted for more than 30 s in a row fails it (`503`, and an error in the
-log): then requests are stuck, not busy. `GET /healthz` (liveness) never touches the database.
+log): then requests are stuck, not busy. `GET /healthz` (liveness) never
+touches the database.
 
 ## Connection budget
 
