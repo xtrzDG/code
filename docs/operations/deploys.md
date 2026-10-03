@@ -32,11 +32,13 @@ pull request ──► CI (ci.yml: backend, cabinet, images, security, e2e)
   they always deploy the same commit. Never deploy one of them from another
   commit by hand: the worker runs the same document and job code as the API.
 - `scripts/smoke.sh <api-url> [cabinet-url]` checks `/healthz`,
-  `/readyz` (database, migrations of the release, a free connection),
+  `/readyz` (the database answers, the release's migrations are applied),
   `/widget.js`, `/v1/auth/login-options`, the cabinet's `/login` and,
   with `SMOKE_WIDGET_BUSINESS_ID`, a test chat through the website widget
-  (`/v1/widget/{business_id}/config` and `/v1/widget/{business_id}/messages`).
-  CI runs the same script against the freshly built image.
+  (`/v1/widget/{business_id}/config`, a message accepted with `202` and
+  the worker's answer polled from `/v1/widget/{business_id}/messages`, so
+  the check also proves the worker runs). CI runs the same script against
+  the freshly built image.
 
 ### One-time setup
 
@@ -49,7 +51,8 @@ pull request ──► CI (ci.yml: backend, cabinet, images, security, e2e)
    addresses and sign-in channel (an e-mail mailbox is enough), never
    production's secrets.
 3. In staging's cabinet create a smoke business with the website widget
-   turned on and a published assistant; note its id.
+   turned on and a live assistant (the widget refuses messages for a
+   business that is not live, `409`); note its id.
 4. GitHub → Settings → Environments: `staging` and `production`, with the
    variables `API_URL` and `CABINET_URL` (public addresses). For staging
    also `SMOKE_WIDGET_BUSINESS_ID` (step 3) and
@@ -75,8 +78,25 @@ previous release on data the newer one wrote. Migrations
 (`preDeployCommand: workshop migrate`) run before the new code starts, while
 the old code still serves. So every release must work with:
 
-- the database schema of the next release (migrations are additive), and
-- documents written by the previous and by the next release.
+- the database schema of the next release (migrations are additive),
+- documents written by the previous and by the next release, and
+- jobs queued by the other release: any worker may claim them. A new job
+  name or payload field follows the same expand rule as documents (the
+  workers learn it one release before the API queues it).
+
+The overlap also doubles the processes: every pool and LISTEN connection
+of the API and the worker is open twice for a while. The connection
+budget (`docs/operations/capacity.md`, checked by
+`tests/platform/test_connection_budget.py`) counts that; a third API
+instance or a larger `DB_POOL_SIZE` goes through it.
+
+Website widget messages are queued for the worker (`202`) since the
+release that moved them out of the request. Across that release either
+order works: an old API instance still answers in the request, a new one
+answers `202`, workers of both releases answer queued widget messages, and
+a widget script from before that release (cached in a visitor's browser)
+takes the `202` as an answer without text and shows the answer at its
+next poll, only without the typing dots meanwhile.
 
 The storage layer makes the second part mechanical
 (`app/adapters/storage/persisted_document_codec.py`): documents are

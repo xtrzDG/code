@@ -11,6 +11,34 @@ Kinds of change: **Added**, **Changed** (additive), **Deprecated** (with
 sunset date), **Removed** and **Breaking** (only with the `api-breaking`
 label and a migration path).
 
+## 2026-10-03 — widget messages are answered by the worker
+
+Spec: `74e937607f65fc64`
+
+- **Breaking** `POST /v1/widget/{business_id}/messages` answers `202`
+  with `WidgetMessageAcceptedView` (`event_id`: the message in the
+  inbox) instead of `200` with the answer (`WidgetReplyView`, removed).
+  The message is stored and queued in one transaction and a worker
+  answers it like every channel's message, so a slow model never holds a
+  request thread. Migration path: poll `GET .../messages?after=<cursor>`
+  (as the widget already did for staff messages) until the assistant's
+  answer, or a staff message, arrives; `/widget.js` of this release shows
+  the typing dots meanwhile. A widget script cached from before takes the
+  `202` as an answer without text and shows the answer at its next poll.
+  Errors are unchanged (`404` unknown business or widget off, `409` the
+  assistant is not live, `422`, `429`), and `409` now comes before the
+  message is stored.
+- **Changed** the owners' test chat
+  (`POST /v1/businesses/{business_id}/test-chat`) answers `429` with
+  `Retry-After: 5` when `TEST_CHAT_MAX_CONCURRENCY` test chats are
+  being answered by the API instance and none frees up within 10 s
+  (before, every test chat simply took a request thread for its whole
+  answer).
+- **Changed** `GET /readyz` (not in the description): a pool without a
+  free connection reports the pool and database checks as `degraded`
+  (with `exhausted_seconds`) and stays `200` for 30 s; only an unreachable
+  database, a missing migration or a pool exhausted for longer is `503`.
+
 ## 2026-10-03 — encryption key rotation for platform admins
 
 Spec: `0ee9211ca86eb0d0`

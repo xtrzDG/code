@@ -13912,6 +13912,21 @@
         "title": "WidgetLanguageView",
         "type": "object"
       },
+      "WidgetMessageAcceptedView": {
+        "additionalProperties": false,
+        "description": "The visitor's message is in the inbox and a worker is answering it (202\nAccepted): the widget shows that the assistant is typing and polls\nGET .../messages until the answer, or a staff message, arrives.\n`event_id` names the message in the inbox (support and logs).",
+        "properties": {
+          "event_id": {
+            "title": "Event Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "event_id"
+        ],
+        "title": "WidgetMessageAcceptedView",
+        "type": "object"
+      },
       "WidgetMessageView": {
         "additionalProperties": false,
         "description": "An assistant or staff message as the widget shows it.",
@@ -14006,72 +14021,6 @@
         ],
         "title": "WidgetPosition",
         "type": "string"
-      },
-      "WidgetReplyView": {
-        "additionalProperties": false,
-        "description": "The assistant's answer in the widget.\n\n`text` is None while staff handle the conversation; `direction` tells the\nwidget how to lay the answer out (right-to-left for Hebrew, Arabic, ...).\n`message_id` is the stored answer (None without one); `cursor` is the\nvisitor's message, so polling GET .../messages?after=<cursor> returns\nthe answer again (skip it by id) and every staff message written since.",
-        "properties": {
-          "conversation_id": {
-            "title": "Conversation Id",
-            "type": "string"
-          },
-          "cursor": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Cursor"
-          },
-          "direction": {
-            "$ref": "#/components/schemas/TextDirection"
-          },
-          "is_handed_off": {
-            "title": "Is Handed Off",
-            "type": "boolean"
-          },
-          "language": {
-            "maxLength": 16,
-            "minLength": 2,
-            "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$",
-            "title": "Language",
-            "type": "string"
-          },
-          "message_id": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Message Id"
-          },
-          "text": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Text"
-          }
-        },
-        "required": [
-          "conversation_id",
-          "text",
-          "language",
-          "direction",
-          "is_handed_off"
-        ],
-        "title": "WidgetReplyView",
-        "type": "object"
       },
       "WidgetSnippetView": {
         "additionalProperties": false,
@@ -41361,11 +41310,11 @@
           "required": true
         },
         "responses": {
-          "200": {
+          "202": {
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/WidgetReplyView"
+                  "$ref": "#/components/schemas/WidgetMessageAcceptedView"
                 }
               }
             },

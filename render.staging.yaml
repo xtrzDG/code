@@ -59,8 +59,9 @@ services:
     dockerContext: .
     dockerCommand: workshop api
     preDeployCommand: workshop migrate
-    # Readiness: the database answers, every migration of this build is
-    # applied and a connection is free (GET /healthz is liveness only).
+    # Readiness: the database answers and every migration of this build is
+    # applied; a busy pool is "degraded" (200) and fails only after 30 s
+    # (GET /healthz is liveness only).
     healthCheckPath: /readyz
     # SIGTERM first: uvicorn finishes open requests (25 s), then exits.
     maxShutdownDelaySeconds: 30
