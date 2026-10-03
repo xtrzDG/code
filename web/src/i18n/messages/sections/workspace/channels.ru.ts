@@ -203,7 +203,7 @@ export const channelsRu: Translation<typeof channelsEn> = {
     lastSync: "Последняя бронь в календаре",
     neverSynced: "Брони ещё не передавались",
     syncErrorTitle: "Последняя бронь не попала в календарь",
-    syncErrorDescription: "{date}. Ответ Google: {reason}",
+    syncErrorDescription: "Ответ Google ({date}): {reason}",
     syncErrorHint: "Брони в кабинете работают как обычно. Если ошибка повторяется, подключите календарь заново.",
     reconnect: "Подключить заново",
     returnConnected: "Google Calendar подключён. Новые и изменённые брони будут появляться в нём.",
@@ -219,7 +219,7 @@ export const channelsRu: Translation<typeof channelsEn> = {
   },
   telegramLink: {
     title: "Уведомления сотрудникам в Telegram",
-    description: "Менеджеры получают передачи, брони и заявки в Telegram. Создайте личную ссылку и отправьте её сотруднику.",
+    description: "Менеджеры получают в Telegram разговоры, где нужен человек, брони и заявки. Создайте личную ссылку и отправьте её сотруднику.",
     name: "Имя сотрудника",
     namePlaceholder: "Например: Нино",
     language: "Язык уведомлений",

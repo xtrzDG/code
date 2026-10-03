@@ -12,8 +12,8 @@ import { CHANNEL_LABELS } from "./contactTexts";
 import { DeliveryLine } from "./DeliveryLine";
 
 /**
- * One staff contact: name (a linked Telegram chat by its @username),
- * address, channel, language and choices; how notifications reach it; and
+ * One staff contact: name, address (a Telegram chat by its @username,
+ * never its chat id), channel, language and choices; how notifications reach it; and
  * for owners "Send a test", edit and remove.
  */
 export function ContactRow({
@@ -41,15 +41,19 @@ export function ContactRow({
           <p className="text-sm font-medium text-ink" dir="auto">
             {contact.name}
           </p>
-          {username ? (
-            <p className="mt-0.5 flex items-center gap-1.5 text-sm text-ink-muted">
+          {contact.channel === "telegram" ? (
+            // A Telegram chat is shown by its @username, never by its chat id.
+            <p className="mt-0.5 flex min-w-0 items-center gap-1.5 text-sm text-ink-muted">
               <IconTelegram className="size-3.5 shrink-0" aria-hidden />
-              <span dir="ltr">{t("notifications.contacts.telegramLinked", { username })}</span>
+              <span className="truncate" dir={username ? "ltr" : "auto"}>
+                {username ? t("notifications.contacts.telegramLinked", { username }) : t("notifications.contacts.telegramChat")}
+              </span>
             </p>
-          ) : null}
-          <p className="mt-0.5 truncate text-sm text-ink-subtle" dir="ltr">
-            {contact.address}
-          </p>
+          ) : (
+            <p className="mt-0.5 truncate text-sm text-ink-subtle" dir="ltr">
+              {contact.address}
+            </p>
+          )}
         </div>
         <div className="flex flex-wrap gap-2">
           <Badge tone="accent">{t(CHANNEL_LABELS[contact.channel])}</Badge>

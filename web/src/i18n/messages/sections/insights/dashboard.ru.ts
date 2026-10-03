@@ -6,14 +6,14 @@ import type { dashboardEn } from "./dashboard.en";
 export const dashboardRu: Translation<typeof dashboardEn> = {
   trend: {
     title: "По дням",
-    description: "Обращения, брони и передачи человеку, начатые в каждый день",
+    description: "Обращения, брони и разговоры, где был нужен человек, по дням начала",
     legend: "Линии",
     requests: "Обращения",
     bookings: "Брони",
-    handoffs: "Передачи",
+    handoffs: "Нужен человек",
     chartLabel: "Динамика по дням с {from} по {to}",
     keyboardHint: "Стрелками влево и вправо можно пройти по дням.",
-    readout: "{date}: обращений — {requests}, броней — {bookings}, передач — {handoffs}",
+    readout: "{date}: обращений — {requests}, броней — {bookings}, нужен человек — {handoffs}",
     showTable: "Показать таблицей",
     date: "День",
   },
@@ -61,7 +61,7 @@ export const dashboardRu: Translation<typeof dashboardEn> = {
   },
   attention: {
     title: "Ждут вас",
-    openHandoffs: "Открытые передачи",
+    openHandoffs: "Ждут человека",
     openHandoffsHint: "Клиенты ждут ответа человека",
     questions: "Вопросы без ответа",
     questionsHint: "Добавьте ответы, чтобы помощник знал их в следующий раз",
@@ -75,7 +75,7 @@ export const dashboardRu: Translation<typeof dashboardEn> = {
     afterHours: "Вне рабочего времени",
     afterHoursHint: "{count} из {total} обращений",
     leads: "Заявки",
-    handoffs: "Передачи",
+    handoffs: "Нужен человек",
   },
   usage: {
     noPlanStaff: "У бизнеса пока нет активного тарифа. Его выбирает владелец в разделе «Оплата».",
@@ -106,5 +106,5 @@ export const dashboardRu: Translation<typeof dashboardEn> = {
     value: "{count} · {percent}",
   },
   emptyTitle: "За этот период обращений нет",
-  emptyDescription: "Когда клиенты напишут или позвонят, здесь появятся обращения, брони и передачи.",
+  emptyDescription: "Когда клиенты напишут или позвонят, здесь появятся обращения, брони и разговоры, где нужен человек.",
 };

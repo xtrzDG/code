@@ -88,6 +88,17 @@ describe("dictionaries", () => {
     }
   });
 
+  it("never end a sentence on a formatted date (a Russian one ends with “г.”)", () => {
+    const endsOnDate = /\{(date|when|until|time|start|end|from|to|day)\}\./;
+    for (const locale of ["en", "ru", "ka"] as const) {
+      const offending = leafKeys(DICTIONARIES[locale]).filter((key) => {
+        const text = lookupMessage(DICTIONARIES[locale], key);
+        return typeof text === "string" && endsOnDate.test(text);
+      });
+      expect(offending, locale).toEqual([]);
+    }
+  });
+
   it("keep the placeholders of the English texts", () => {
     const placeholders = (text: string) => [...text.matchAll(/\{(\w+)\}/g)].map((match) => match[1]).sort();
     for (const locale of ["ka", "ru"] as const) {

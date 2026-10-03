@@ -5,8 +5,8 @@
 
 export const assistantChatEn = {
   chat: {
-    version: "Version",
-    versionOption: "Version {number} · {status}",
+    version: "Update",
+    versionOption: "Update {number} · {status}",
     unknownVersion: "Automatic",
     newConversation: "New conversation",
     sandboxNote: "Write as a customer would. Test conversations do not reach customers, staff or billing.",
@@ -42,7 +42,7 @@ export const assistantChatEn = {
     toolInput: "Input",
     toolResult: "Result",
     noVersionsTitle: "Nothing to test yet",
-    noVersionsDescription: "Build the first version of the assistant from your profile, then talk to it here.",
+    noVersionsDescription: "Apply your changes to prepare the assistant's first update, then talk to it here.",
     errors: {
       service: "The language model is not available right now. Try again in a minute.",
     },

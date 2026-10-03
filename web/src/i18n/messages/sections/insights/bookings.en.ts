@@ -74,13 +74,13 @@ export const bookingsEn = {
   },
   confirmCancel: {
     title: "Cancel this booking?",
-    description: "{name}, {when}. The time becomes free for other customers.",
+    description: "{name}, {when}: the time becomes free for other customers.",
     confirm: "Cancel the booking",
     keep: "Keep it",
   },
   confirmNoShow: {
     title: "Mark as a no-show?",
-    description: "{name}, {when}. The status cannot be changed back.",
+    description: "{name}, {when}: the status cannot be changed back.",
     confirm: "Mark as no-show",
   },
   updated: "Booking updated",
@@ -129,7 +129,7 @@ export const bookingsEn = {
   },
   reschedule: {
     title: "Move the booking",
-    description: "{name}, now {when}.",
+    description: "{name}, now: {when}",
     newDate: "New date",
     newTime: "New time",
     submit: "Move",

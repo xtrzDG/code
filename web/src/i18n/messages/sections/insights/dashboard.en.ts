@@ -6,14 +6,14 @@
 export const dashboardEn = {
   trend: {
     title: "By day",
-    description: "Requests, bookings and handoffs that started each day",
+    description: "Requests, bookings and conversations that needed a person, by the day they started",
     legend: "Lines",
     requests: "Requests",
     bookings: "Bookings",
-    handoffs: "Handoffs",
+    handoffs: "Needed a person",
     chartLabel: "Daily trend from {from} to {to}",
     keyboardHint: "Use the left and right arrow keys to read each day.",
-    readout: "{date}: {requests} requests, {bookings} bookings, {handoffs} handoffs",
+    readout: "{date}: {requests} requests, {bookings} bookings, {handoffs} needed a person",
     showTable: "Show as a table",
     date: "Day",
   },
@@ -56,7 +56,7 @@ export const dashboardEn = {
   },
   attention: {
     title: "Waiting for you",
-    openHandoffs: "Open handoffs",
+    openHandoffs: "Waiting for a person",
     openHandoffsHint: "Customers waiting for a person",
     questions: "Questions without an answer",
     questionsHint: "Add answers so the assistant knows them next time",
@@ -70,7 +70,7 @@ export const dashboardEn = {
     afterHours: "After hours",
     afterHoursHint: "{count} of {total} requests",
     leads: "Leads",
-    handoffs: "Handoffs",
+    handoffs: "Needed a person",
   },
   usage: {
     noPlanStaff: "The business has no active plan yet. The owner chooses it in billing.",
@@ -101,5 +101,5 @@ export const dashboardEn = {
     value: "{count} · {percent}",
   },
   emptyTitle: "No requests in this period",
-  emptyDescription: "When customers write or call, requests, bookings and handoffs appear here.",
+  emptyDescription: "When customers write or call, requests, bookings and conversations that need a person appear here.",
 } as const;

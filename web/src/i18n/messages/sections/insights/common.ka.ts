@@ -11,7 +11,7 @@ export const insightsCommonKa: Translation<typeof insightsCommonEn> = {
   showMore: "მეტის ჩვენება",
   shownOf: "ნაჩვენებია {shown} / {total}",
   includeTest: "სატესტოების ჩვენება",
-  includeTestHint: "სატესტო ჩატიდან და ავტოტესტებიდან",
+  includeTestHint: "სატესტო ჩატიდან და შემოწმებებიდან",
   testBadge: "ტესტი",
   afterHours: "სამუშაო საათების გარეთ",
   unknownCustomer: "კლიენტი სახელის გარეშე",

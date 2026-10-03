@@ -68,8 +68,8 @@ export const conversationsRu: Translation<typeof conversationsEn> = {
     unavailable: "Отсюда сообщения не отправляются.",
     channelHint: "Уйдёт клиенту в {channel} от аккаунта бизнеса. Помощник на него не отвечает.",
     widgetHint: "Посетитель увидит его в чате на сайте, когда чат открыт. Помощник на него не отвечает.",
-    windowOpenUntil: "{channel} принимает сообщения от бизнеса до {date}.",
-    windowClosedAt: "Окно закрылось {date}.",
+    windowOpenUntil: "До {date} {channel} принимает сообщения от бизнеса.",
+    windowClosedAt: "С {date} окно закрыто.",
     length: "{count} / {max}",
     confirmationPrefilled: "Подтверждение уже в поле ответа: проверьте и отправьте.",
     template: {
@@ -136,8 +136,8 @@ export const conversationsRu: Translation<typeof conversationsEn> = {
   earlierLoading: "Загружаем более ранние сообщения…",
   searchOlder: "Искать в более старых разговорах",
   searchOlderDescription: "Среди последних разговоров совпадений нет.",
-  handoffNotice: "Разговор ведёт человек: помощник молчит, пока передачу не закроют.",
-  toHandoffs: "Открыть передачи",
+  handoffNotice: "Разговор ведёт человек: помощник молчит, пока разговор не отметят решённым.",
+  toHandoffs: "Открыть «Нужен человек»",
   author: {
     you: "вы",
     customer: "Клиент",
@@ -175,9 +175,9 @@ export const conversationsRu: Translation<typeof conversationsEn> = {
   },
   linked: {
     book: "Забронировать",
-    empty: "По этому разговору пока нет броней, заявок и передач.",
+    empty: "По этому разговору пока нет броней и заявок, и человек не понадобился.",
     title: "Связанное",
-    handoffs: "Передачи",
+    handoffs: "Нужен человек",
     leads: "Заявки",
     bookings: "Брони из этого разговора",
     open: "Открыть",

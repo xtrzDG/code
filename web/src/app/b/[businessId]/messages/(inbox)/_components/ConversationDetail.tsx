@@ -21,6 +21,7 @@ import type {
 } from "@/components/insights/types";
 import { Alert, Card, ErrorState, useToast } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
+import { cn } from "@/lib/cn";
 import { languageName } from "@/lib/format";
 import { businessPath } from "@/lib/navigation";
 
@@ -213,6 +214,8 @@ function ConversationHeader({
 }) {
   const { t, tp, locale } = useI18n();
   const format = useBusinessFormat();
+  // Tokens and AI cost are platform matters: only platform admins see them.
+  const { isPlatformAdmin } = useBusiness();
   const tokens = totals.inputTokens + totals.outputTokens;
 
   return (
@@ -244,7 +247,12 @@ function ConversationHeader({
           </p>
         </div>
       </div>
-      <dl className="mt-4 grid grid-cols-2 gap-x-4 gap-y-3 border-t border-line pt-4 text-sm sm:grid-cols-4">
+      <dl
+        className={cn(
+          "mt-4 grid grid-cols-2 gap-x-4 gap-y-3 border-t border-line pt-4 text-sm",
+          isPlatformAdmin && "sm:grid-cols-4",
+        )}
+      >
         <div>
           <dt className="text-ink-muted">{t("conversations.started")}</dt>
           <dd className="text-ink">{format.dateTime(conversation.created_at)}</dd>
@@ -253,21 +261,25 @@ function ConversationHeader({
           <dt className="text-ink-muted">{t("conversations.lastMessage")}</dt>
           <dd className="text-ink">{format.dateTime(conversation.last_message_at)}</dd>
         </div>
-        <div>
-          <dt className="text-ink-muted">{t("conversations.usage.tokens")}</dt>
-          <dd className="text-ink tabular-nums">
-            {tokens > 0
-              ? t("conversations.usage.tokensValue", {
-                  input: format.number(totals.inputTokens),
-                  output: format.number(totals.outputTokens),
-                })
-              : "–"}
-          </dd>
-        </div>
-        <div>
-          <dt className="text-ink-muted">{t("conversations.usage.cost")}</dt>
-          <dd className="text-ink tabular-nums">{formatMicroUsd(totals.costMicroUsd, locale)}</dd>
-        </div>
+        {isPlatformAdmin ? (
+          <>
+            <div>
+              <dt className="text-ink-muted">{t("conversations.usage.tokens")}</dt>
+              <dd className="text-ink tabular-nums">
+                {tokens > 0
+                  ? t("conversations.usage.tokensValue", {
+                      input: format.number(totals.inputTokens),
+                      output: format.number(totals.outputTokens),
+                    })
+                  : "–"}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-ink-muted">{t("conversations.usage.cost")}</dt>
+              <dd className="text-ink tabular-nums">{formatMicroUsd(totals.costMicroUsd, locale)}</dd>
+            </div>
+          </>
+        ) : null}
       </dl>
       <div className="mt-4 border-t border-line pt-4">{rating}</div>
       <p className="sr-only">{tp("conversations.messages", messageCount)}</p>

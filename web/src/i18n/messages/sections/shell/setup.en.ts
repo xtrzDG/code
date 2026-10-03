@@ -10,7 +10,7 @@ export const setupEn = {
   eyebrow: "{business}",
   title: "Let's create your AI assistant",
   description:
-    "Tell us about your business in a few simple steps. We will build an assistant that answers your customers day and night, takes bookings and calls you when a person is needed.",
+    "Tell us about your business in a few simple steps. We will prepare an assistant that answers your customers day and night, takes bookings and calls you when a person is needed.",
   start: "Create an AI assistant",
   continue: "Continue creating",
   progress: "{done} of {total} steps done",

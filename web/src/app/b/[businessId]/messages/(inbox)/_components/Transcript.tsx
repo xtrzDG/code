@@ -75,13 +75,14 @@ export function Transcript({ messages, earlier }: { messages: readonly MessageVi
 function MessageBubble({ message }: { message: MessageView }) {
   const { t, locale } = useI18n();
   const format = useBusinessFormat();
-  const { business, me } = useBusiness();
+  const { business, me, isPlatformAdmin } = useBusiness();
   const side = messageSide(message.author);
   // A system note with tool calls is an action of the voice agent during a
   // call ("Voice agent called check_availability."): the actions below say
   // it in the interface language, so the note itself is not shown.
   const isVoiceAction = message.author === "system" && (message.tool_calls?.length ?? 0) > 0;
-  const tokens = message.input_tokens + message.output_tokens;
+  // Model, tokens and AI cost are platform matters: owners and staff do not see them.
+  const tokens = isPlatformAdmin ? message.input_tokens + message.output_tokens : 0;
   const sender = message.sent_by
     ? message.sent_by === me.user.id
       ? t("conversations.author.you")

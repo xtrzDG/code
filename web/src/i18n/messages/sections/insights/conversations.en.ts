@@ -64,8 +64,8 @@ export const conversationsEn = {
     unavailable: "Messages cannot be sent from here.",
     channelHint: "Goes to the customer in {channel} from your business account. The assistant does not answer it.",
     widgetHint: "The visitor sees it in the website chat while it is open on the site. The assistant does not answer it.",
-    windowOpenUntil: "{channel} accepts messages from the business until {date}.",
-    windowClosedAt: "The window closed {date}.",
+    windowOpenUntil: "Until {date}, {channel} accepts messages from the business.",
+    windowClosedAt: "Since {date}, the window has been closed.",
     length: "{count} / {max}",
     confirmationPrefilled: "The confirmation is in the reply box: check it and send.",
     template: {
@@ -127,8 +127,8 @@ export const conversationsEn = {
   earlierLoading: "Loading earlier messages…",
   searchOlder: "Search older conversations",
   searchOlderDescription: "Nothing matched among the latest conversations.",
-  handoffNotice: "A person is handling this conversation: the assistant stays silent until the handoff is resolved.",
-  toHandoffs: "Open handoffs",
+  handoffNotice: "A person is handling this conversation: the assistant stays silent until it is marked as resolved.",
+  toHandoffs: "Open “Needs a person”",
   author: {
     you: "you",
     customer: "Customer",
@@ -161,9 +161,9 @@ export const conversationsEn = {
   },
   linked: {
     book: "Book",
-    empty: "No bookings, leads or handoffs from this conversation yet.",
+    empty: "No bookings or requests from this conversation yet, and no person was needed.",
     title: "Linked",
-    handoffs: "Handoffs",
+    handoffs: "Needs a person",
     leads: "Leads",
     bookings: "Bookings from this conversation",
     open: "Open",

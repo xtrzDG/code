@@ -74,13 +74,13 @@ export const bookingsRu: Translation<typeof bookingsEn> = {
   },
   confirmCancel: {
     title: "Отменить эту бронь?",
-    description: "{name}, {when}. Время освободится для других клиентов.",
+    description: "{name}, {when}: время освободится для других клиентов.",
     confirm: "Отменить бронь",
     keep: "Оставить",
   },
   confirmNoShow: {
     title: "Отметить, что гость не пришёл?",
-    description: "{name}, {when}. Вернуть прежний статус будет нельзя.",
+    description: "{name}, {when}: вернуть прежний статус будет нельзя.",
     confirm: "Гость не пришёл",
   },
   updated: "Бронь обновлена",
@@ -131,7 +131,7 @@ export const bookingsRu: Translation<typeof bookingsEn> = {
   },
   reschedule: {
     title: "Перенести бронь",
-    description: "{name}, сейчас: {when}.",
+    description: "{name}, сейчас: {when}",
     newDate: "Новая дата",
     newTime: "Новое время",
     submit: "Перенести",

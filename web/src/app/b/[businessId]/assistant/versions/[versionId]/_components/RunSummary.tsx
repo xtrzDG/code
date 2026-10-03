@@ -57,9 +57,10 @@ export function RunSummary({ run, isRunning }: { run: AutotestRunView; isRunning
         <p className="text-sm text-ink-subtle">{t("assistant.autotests.runningHint")}</p>
       </div>
     ) : (
-      <p className="text-sm text-ink-muted">
-        {t("assistant.autotests.ranAt", { date: format.dateTime(run.updated_at) })} {t("assistant.autotests.rule")}
-      </p>
+      <div className="space-y-1 text-sm text-ink-muted">
+        <p>{t("assistant.autotests.ranAt", { date: format.dateTime(run.updated_at) })}</p>
+        <p>{t("assistant.autotests.rule")}</p>
+      </div>
     )}
     </>
   );

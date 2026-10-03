@@ -5,7 +5,7 @@ import type { onboardingEn } from "./en";
 export const onboardingRu: Translation<typeof onboardingEn> = {
   onboarding: {
     title: "Анкета бизнеса",
-    subtitle: "Ответьте на вопросы — помощник соберётся из этих ответов. Это займёт около 20 минут.",
+    subtitle: "Ответьте на вопросы — помощник подготовится по этим ответам. Это займёт около 20 минут.",
     stepOf: "Шаг {number} из {total}",
     stepsLabel: "Шаги анкеты",
     complete: "Готово",
@@ -28,7 +28,7 @@ export const onboardingRu: Translation<typeof onboardingEn> = {
       times: { one: "{count} раз", few: "{count} раза", many: "{count} раз", other: "{count} раза" },
       goToStep: "Открыть шаг",
       readyTitle: "Анкета готова",
-      readyDescription: "Всё обязательное заполнено. Можно собрать помощника и проверить его.",
+      readyDescription: "Всё обязательное заполнено. Можно подготовить помощника и проверить его.",
       notReady: {
         one: "Не хватает {count} обязательного пункта",
         few: "Не хватает {count} обязательных пунктов",
@@ -44,7 +44,7 @@ export const onboardingRu: Translation<typeof onboardingEn> = {
       },
       showList: "Показать список",
       drawerDescription:
-        "Без ответов на обязательные пункты помощника не собрать; желательные делают его ответы точнее. Выберите пункт, чтобы открыть его шаг.",
+        "Без ответов на обязательные пункты помощника не подготовить; желательные делают его ответы точнее. Выберите пункт, чтобы открыть его шаг.",
       checking: "Проверяем анкету…",
       loadFailed: "Не удалось проверить, чего не хватает.",
     },
@@ -62,7 +62,7 @@ export const onboardingRu: Translation<typeof onboardingEn> = {
       mapsUrlHint: "Ссылка на ваше место в Google Maps или другой карте — помощник отправит её клиентам.",
       publicPhone: "Телефон для клиентов",
       publicPhoneHint: "Номер, на который звонят клиенты. Любая страна и формат.",
-      handoffPhone: "Телефон для передачи человеку",
+      handoffPhone: "Телефон, когда нужен человек",
       handoffPhoneHint: "Сюда уходят звонки, когда клиент просит человека.",
       hours: "Часы работы",
       hoursHint: "Время по поясу {timezone}. Работаете после полуночи? Укажите закрытие раньше открытия, например 18:00–02:00.",

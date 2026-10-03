@@ -6,14 +6,14 @@ import type { dashboardEn } from "./dashboard.en";
 export const dashboardKa: Translation<typeof dashboardEn> = {
   trend: {
     title: "დღეების მიხედვით",
-    description: "მიმართვები, ჯავშნები და ადამიანზე გადაცემები, რომლებიც ყოველ დღეს დაიწყო",
+    description: "მიმართვები, ჯავშნები და საუბრები, სადაც ადამიანი დასჭირდა, დაწყების დღეების მიხედვით",
     legend: "ხაზები",
     requests: "მიმართვები",
     bookings: "ჯავშნები",
-    handoffs: "გადაცემები",
+    handoffs: "ადამიანის დახმარება",
     chartLabel: "დინამიკა დღეების მიხედვით: {from} – {to}",
     keyboardHint: "დღეებს შორის გადასაადგილებლად გამოიყენეთ მარცხენა და მარჯვენა ისრები.",
-    readout: "{date}: მიმართვები — {requests}, ჯავშნები — {bookings}, გადაცემები — {handoffs}",
+    readout: "{date}: მიმართვები — {requests}, ჯავშნები — {bookings}, ადამიანის დახმარება — {handoffs}",
     showTable: "ცხრილად ჩვენება",
     date: "დღე",
   },
@@ -59,7 +59,7 @@ export const dashboardKa: Translation<typeof dashboardEn> = {
   },
   attention: {
     title: "გელოდებათ",
-    openHandoffs: "ღია გადაცემები",
+    openHandoffs: "ადამიანს ელოდება",
     openHandoffsHint: "კლიენტები ადამიანის პასუხს ელოდებიან",
     questions: "უპასუხო კითხვები",
     questionsHint: "დაამატეთ პასუხები, რომ ასისტენტმა შემდეგ ჯერზე იცოდეს",
@@ -73,7 +73,7 @@ export const dashboardKa: Translation<typeof dashboardEn> = {
     afterHours: "არასამუშაო საათებში",
     afterHoursHint: "{count} / {total} მიმართვიდან",
     leads: "მოთხოვნები",
-    handoffs: "გადაცემები",
+    handoffs: "ადამიანის დახმარება",
   },
   usage: {
     noPlanStaff: "ბიზნესს ჯერ აქტიური ტარიფი არ აქვს. მას მფლობელი ირჩევს გადახდების განყოფილებაში.",
@@ -104,5 +104,5 @@ export const dashboardKa: Translation<typeof dashboardEn> = {
     value: "{count} · {percent}",
   },
   emptyTitle: "ამ პერიოდში მიმართვები არ ყოფილა",
-  emptyDescription: "როცა კლიენტები მოგწერენ ან დაგირეკავენ, აქ გამოჩნდება მიმართვები, ჯავშნები და გადაცემები.",
+  emptyDescription: "როცა კლიენტები მოგწერენ ან დაგირეკავენ, აქ გამოჩნდება მიმართვები, ჯავშნები და საუბრები, სადაც ადამიანია საჭირო.",
 };

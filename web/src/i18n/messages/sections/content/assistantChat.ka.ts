@@ -5,8 +5,8 @@ import type { assistantChatEn } from "./assistantChat.en";
 
 export const assistantChatKa: Translation<typeof assistantChatEn> = {
   chat: {
-    version: "ვერსია",
-    versionOption: "ვერსია {number} · {status}",
+    version: "განახლება",
+    versionOption: "განახლება {number} · {status}",
     unknownVersion: "ავტომატურად",
     newConversation: "ახალი საუბარი",
     sandboxNote: "წერეთ ისე, როგორც კლიენტი დაწერდა. სატესტო საუბრები კლიენტებს, თანამშრომლებს და გადახდებს არ ეხება.",
@@ -42,7 +42,7 @@ export const assistantChatKa: Translation<typeof assistantChatEn> = {
     toolInput: "შემავალი მონაცემები",
     toolResult: "შედეგი",
     noVersionsTitle: "შესამოწმებელი ჯერ არაფერია",
-    noVersionsDescription: "ააწყვეთ ასისტენტის პირველი ვერსია პროფილიდან და აქ ესაუბრეთ.",
+    noVersionsDescription: "გამოიყენეთ ცვლილებები ასისტენტის პირველი განახლების მოსამზადებლად და აქ ესაუბრეთ.",
     errors: {
       service: "ენობრივი მოდელი ახლა მიუწვდომელია. სცადეთ ერთ წუთში.",
     },

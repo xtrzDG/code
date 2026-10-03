@@ -64,8 +64,8 @@ export const conversationsKa: Translation<typeof conversationsEn> = {
     unavailable: "აქედან შეტყობინებები არ იგზავნება.",
     channelHint: "კლიენტს მიუვა არხით „{channel}“ ბიზნესის ანგარიშიდან. ასისტენტი მას არ პასუხობს.",
     widgetHint: "ვიზიტორი მას საიტის ჩატში ნახავს, როცა ჩატი გახსნილია. ასისტენტი მას არ პასუხობს.",
-    windowOpenUntil: "„{channel}“ ბიზნესისგან შეტყობინებებს იღებს {date}-მდე.",
-    windowClosedAt: "ფანჯარა დაიხურა {date}.",
+    windowOpenUntil: "{date}-მდე „{channel}“ ბიზნესისგან შეტყობინებებს იღებს.",
+    windowClosedAt: "{date}-დან ფანჯარა დახურულია.",
     length: "{count} / {max}",
     confirmationPrefilled: "დადასტურება უკვე პასუხის ველშია: შეამოწმეთ და გაგზავნეთ.",
     template: {
@@ -127,8 +127,8 @@ export const conversationsKa: Translation<typeof conversationsEn> = {
   earlierLoading: "ადრინდელი შეტყობინებები იტვირთება…",
   searchOlder: "ძველ საუბრებში ძებნა",
   searchOlderDescription: "ბოლო საუბრებში დამთხვევა არ მოიძებნა.",
-  handoffNotice: "საუბარს ადამიანი უძღვება: ასისტენტი დუმს, სანამ გადაცემა არ დაიხურება.",
-  toHandoffs: "გადაცემების გახსნა",
+  handoffNotice: "საუბარს ადამიანი უძღვება: ასისტენტი დუმს, სანამ საუბარი მოგვარებულად არ მოინიშნება.",
+  toHandoffs: "ადამიანის დახმარების გახსნა",
   author: {
     you: "თქვენ",
     customer: "კლიენტი",
@@ -161,9 +161,9 @@ export const conversationsKa: Translation<typeof conversationsEn> = {
   },
   linked: {
     book: "დაჯავშნა",
-    empty: "ამ საუბრიდან ჯერ არც ჯავშანია, არც მოთხოვნა და არც გადაცემა.",
+    empty: "ამ საუბრიდან ჯერ არც ჯავშანია, არც მოთხოვნა, და ადამიანი არ დასჭირვებია.",
     title: "დაკავშირებული",
-    handoffs: "გადაცემები",
+    handoffs: "ადამიანის დახმარება",
     leads: "მოთხოვნები",
     bookings: "ამ საუბრის ჯავშნები",
     open: "გახსნა",

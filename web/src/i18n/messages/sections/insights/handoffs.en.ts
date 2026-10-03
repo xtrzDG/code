@@ -1,13 +1,14 @@
 /**
- * `handoffs.*` texts of handoffs to a person, in English: the reference that
- * ru and ka are typed against.
+ * `handoffs.*` texts of "Needs a person" (conversations the assistant passed
+ * to a person), in English: the reference that ru and ka are typed against.
+ * Wording follows docs/glossary.md.
  */
 
 export const handoffsEn = {
-  loading: "Loading handoffs…",
-  tabsLabel: "Handoff status",
+  loading: "Loading…",
+  tabsLabel: "Show",
   tabs: {
-    open: "Open",
+    open: "Waiting",
     resolved: "Resolved",
     all: "All",
   },
@@ -25,8 +26,8 @@ export const handoffsEn = {
     unknown_answer: "Assistant did not know the answer",
     emergency: "Emergency",
     sensitive_topic: "Sensitive topic",
-    profile_rule: "Your handoff rule",
-    unverified_numbers: "Unverified prices or numbers",
+    profile_rule: "One of your rules",
+    unverified_numbers: "Unconfirmed prices or figures",
   },
   status: {
     pending: "Notifying staff",
@@ -38,12 +39,35 @@ export const handoffsEn = {
   resolvedAt: "Resolved {date}",
   resolve: "Resolve",
   confirmResolve: {
-    title: "Mark the handoff as resolved?",
+    title: "Mark as resolved?",
     description: "{name}: the assistant starts answering this customer again.",
     confirm: "Resolve",
   },
-  resolved: "Handoff resolved",
-  emptyOpenTitle: "No open handoffs",
+  resolved: "Marked as resolved",
+  emptyOpenTitle: "Nobody is waiting for a person",
   emptyOpenDescription: "When the assistant passes a conversation to a person, it waits here with a short summary.",
-  emptyTitle: "No handoffs yet",
+  emptyTitle: "Nothing here yet",
+  summaryCodes: {
+    model_declined: "The assistant would not answer this message.",
+    model_unavailable: "The assistant was briefly unavailable and could not answer.",
+    answer_unfinished: "The assistant could not finish its answer.",
+    unverified_values: "The assistant held back an answer with figures that are not in your business details.",
+    call_booking_unverified_values:
+      "On the call the assistant named figures that are not in your business details. Check the booking from this call against the transcript.",
+    call_request_unverified_values:
+      "On the call the assistant named figures that are not in your business details. Check the request from this call against the transcript.",
+    reply_undelivered: "The assistant's reply did not reach the customer. Contact them another way.",
+    data_erased: "Details erased at the customer's request.",
+  },
+  summaryCodesWithValues: {
+    unverified_values: "The assistant held back an answer with figures that are not in your business details ({values}).",
+    call_booking_unverified_values:
+      "On the call the assistant named figures that are not in your business details ({values}). Check the booking from this call against the transcript.",
+    call_request_unverified_values:
+      "On the call the assistant named figures that are not in your business details ({values}). Check the request from this call against the transcript.",
+  },
+  quote: {
+    customer: "The customer's message",
+    reply: "The reply that did not arrive",
+  },
 } as const;

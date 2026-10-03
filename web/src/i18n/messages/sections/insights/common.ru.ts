@@ -11,7 +11,7 @@ export const insightsCommonRu: Translation<typeof insightsCommonEn> = {
   showMore: "Показать ещё",
   shownOf: "Показано {shown} из {total}",
   includeTest: "Показывать тестовые",
-  includeTestHint: "Из тестового чата и автотестов",
+  includeTestHint: "Из тестового чата и проверок",
   testBadge: "Тест",
   afterHours: "Вне рабочего времени",
   unknownCustomer: "Клиент без имени",

@@ -1,5 +1,7 @@
 """Summaries of platform-made handoffs in the reader's language."""
 
+from pathlib import Path
+
 import pytest
 
 from app.schemas.constants.handoffs import HandoffSummaryCode
@@ -17,6 +19,9 @@ from app.transformers.notifications.handoff_summary_transformer import (
 from app.utilities.localization.localized_text_resolver import LocalizedTextResolver
 
 STAFF_LANGUAGES: tuple[str, ...] = ("en", "ru", "ka")
+CABINET_DICTIONARIES: Path = (
+    Path(__file__).resolve().parents[2] / "web/src/i18n/messages/sections/insights"
+)
 
 
 def render(
@@ -90,3 +95,14 @@ def test_other_languages_read_english() -> None:
     hebrew = render(HandoffSummaryCode.UNVERIFIED_VALUES, "he", "שלום", ("50 ₪",))
     assert hebrew.startswith("The assistant held back")
     assert "(50 ₪)" in hebrew
+
+
+@pytest.mark.parametrize("language", STAFF_LANGUAGES)
+def test_the_cabinet_shows_the_same_words_as_the_notifications(language: str) -> None:
+    dictionary: str = (
+        CABINET_DICTIONARIES / f"handoffs.{language}.ts"
+    ).read_text(encoding="utf-8")
+    for code, text in SUMMARY_TEXTS.items():
+        assert f'"{text.values[LanguageTag(language)]}"' in dictionary, code
+    for code, text in SUMMARY_TEXTS_WITH_VALUES.items():
+        assert f'"{text.values[LanguageTag(language)]}"' in dictionary, code
