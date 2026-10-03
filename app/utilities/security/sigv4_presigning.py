@@ -11,6 +11,7 @@ sealed with AES-GCM before they leave the API anyway.
 
 import hashlib
 import hmac
+from collections.abc import Mapping
 from datetime import UTC, datetime
 from urllib.parse import quote, urlsplit
 
@@ -30,17 +31,21 @@ def presign_url(
     object_key: str,
     signed_at: datetime,
     expires_seconds: int,
+    parameters: Mapping[str, str] | None = None,
 ) -> str:
-    """The presigned URL of one request on one object (path-style)."""
+    """
+    The presigned URL of one request on one object (path-style), or on the
+    bucket itself when `object_key` is empty (a listing). `parameters` are
+    the request's own query parameters (`uploadId`, `list-type`, ...); they
+    are signed with the rest.
+    """
 
     endpoint = urlsplit(str(connection.endpoint_url).rstrip("/"))
-    canonical_path: str = (
-        endpoint.path
-        + "/"
-        + encode_segment(str(connection.bucket))
-        + "/"
-        + "/".join(encode_segment(segment) for segment in object_key.split("/"))
-    )
+    canonical_path: str = endpoint.path + "/" + encode_segment(str(connection.bucket))
+    if object_key != "":
+        canonical_path += "/" + "/".join(
+            encode_segment(segment) for segment in object_key.split("/")
+        )
     query: str = presigned_query(
         method=method,
         host=endpoint.netloc,
@@ -48,6 +53,7 @@ def presign_url(
         connection=connection,
         signed_at=signed_at,
         expires_seconds=expires_seconds,
+        parameters=parameters,
     )
     return f"{endpoint.scheme}://{endpoint.netloc}{canonical_path}?{query}"
 
@@ -59,6 +65,7 @@ def presigned_query(
     connection: ObjectStorageConnection,
     signed_at: datetime,
     expires_seconds: int,
+    parameters: Mapping[str, str] | None = None,
 ) -> str:
     """The query string of a presigned request, its signature last."""
 
@@ -72,6 +79,7 @@ def presigned_query(
         "X-Amz-Date": amz_date,
         "X-Amz-Expires": str(expires_seconds),
         "X-Amz-SignedHeaders": "host",
+        **({} if parameters is None else parameters),
     }
     canonical_query: str = "&".join(
         f"{encode_segment(key)}={encode_segment(value)}"

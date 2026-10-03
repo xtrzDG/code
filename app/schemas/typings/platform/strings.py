@@ -46,6 +46,10 @@ class LocalDirectoryPath(BaseTypedString):
     """Directory on the server's file system (absolute or relative to the cwd)."""
 
 
+class LocalFilePath(BaseTypedString):
+    """File on the server's file system (absolute or relative to the cwd)."""
+
+
 class PlatformSecret(BaseTypedString):
     """Platform-level credential (API key, webhook secret). Never logged."""
 

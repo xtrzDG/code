@@ -1,6 +1,7 @@
 from base_pydantic_schemas import ImmutableDTO
 from pydantic import Field
 
+from app.schemas.configurations.backup_settings import BackupSettings
 from app.schemas.constants.assistants import LlmEffort, LlmProvider
 from app.schemas.constants.environment import DeploymentEnvironment
 from app.schemas.constants.jobs import JobLane
@@ -227,3 +228,6 @@ class AppSettings(ImmutableDTO):
     # (RECORDINGS_S3_*), encrypted per business, in production.
     recording_storage_kind: RecordingStorageKind = RecordingStorageKind.LOCAL
     recordings_object_storage: ObjectStorageConnection | None = None
+    # Off-site backups and the restore drill (BACKUP_*; `workshop backup`,
+    # `workshop restore-check`, docs/operations/backup-restore.md).
+    backup: BackupSettings = Field(default_factory=BackupSettings)

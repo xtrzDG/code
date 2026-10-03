@@ -21,8 +21,10 @@ SECONDS_PER_HOUR: int = 60 * SECONDS_PER_MINUTE
 SECONDS_PER_DAY: int = 24 * SECONDS_PER_HOUR
 # A run may start this many minutes late before Sentry calls it missed:
 # workers tick every WORKER_POLL_SECONDS and a failed run is retried after
-# five minutes.
+# five minutes. Jobs of a day or longer get an hour per day of their
+# interval (cron platforms start them late now and then).
 CHECKIN_MARGIN_MINUTES: int = 15
+MARGIN_MINUTES_PER_DAY: int = 60
 # A run still going after this long is reported as timed out.
 MAX_RUNTIME_MINUTES: int = 60
 OUTCOME_STATUSES: dict[PeriodicJobOutcome, str] = {
@@ -94,7 +96,9 @@ def build_monitor_config(interval_seconds: JobIntervalSeconds) -> MonitorConfig:
 
     return {
         "schedule": {"type": "interval", "value": value, "unit": unit},
-        "checkin_margin": CHECKIN_MARGIN_MINUTES,
+        "checkin_margin": max(
+            CHECKIN_MARGIN_MINUTES, seconds * MARGIN_MINUTES_PER_DAY // SECONDS_PER_DAY
+        ),
         "max_runtime": MAX_RUNTIME_MINUTES,
         "timezone": "UTC",
     }

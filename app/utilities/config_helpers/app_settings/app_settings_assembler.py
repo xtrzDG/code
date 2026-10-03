@@ -11,6 +11,9 @@ from collections.abc import Mapping
 from app.schemas.configurations.app_settings import AppSettings
 from app.schemas.constants.environment import DeploymentEnvironment
 from app.schemas.typings.platform.strings import DatabaseUrl, PlatformSecret
+from app.utilities.config_helpers.app_settings.backup_settings_section import (
+    read_backup_settings,
+)
 from app.utilities.config_helpers.app_settings.compliance_settings_section import (
     read_compliance_settings,
 )
@@ -110,4 +113,5 @@ def assemble_app_settings(environment_variables: Mapping[str, str]) -> AppSettin
         **read_recording_storage_settings(
             environment_variables, has_encryption_key=encryption_key is not None
         ),
+        **read_backup_settings(environment_variables),
     )
