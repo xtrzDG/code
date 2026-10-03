@@ -93,6 +93,9 @@ test("a queued import shows its progress and opens its drafts in the review", as
   await serveImport(page, () => current, started);
   await page.goto(`/b/${owner.businessId}/assistant/knowledge/import?source=website`);
   await expect(page.getByRole("heading", { name: website.title })).toBeVisible();
+  // The card's heading shows while the current import still loads: only the
+  // form says that load answered "none", so the queued import starts after it.
+  await expect(page.getByLabel(website.address)).toBeVisible();
 
   current = importOf(owner.businessId, { status: "queued" });
   await page.getByLabel(website.address).fill("cafe.example");
