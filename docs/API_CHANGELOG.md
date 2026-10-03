@@ -11,6 +11,34 @@ Kinds of change: **Added**, **Changed** (additive), **Deprecated** (with
 sunset date), **Removed** and **Breaking** (only with the `api-breaking`
 label and a migration path).
 
+## 2026-10-03 — growth analytics: the founder's metrics and cabinet telemetry
+
+Spec: `9863d1587ceea5c9`
+
+- **Added** `GET /v1/admin/metrics` (platform admins; `AdminMetricsView`;
+  `from` and `to` as UTC days, default the last 90 days, at most 731;
+  `country`, `niche`, `source`): the funnel of the period's sign-ups
+  (owners, not invited staff or admins) with shares of the sign-ups and of
+  the step before, median time to go live, activation within 7 days,
+  trial to paid, the setup tunnel per screen, monthly cohorts with the
+  paying share per month since sign-up, acquisition sources, MRR at the
+  start and end of the period with new, reactivation, expansion,
+  contraction and churn movements in euros (official rates; currencies
+  without one are named), ARPA, gross margin from the client cost
+  reports, the cabinet's Web Vitals (p75 per route template and device
+  class with Google's rating) and the filter choices. 422 for a day the
+  calendar does not have or a period over two years.
+- **Added** `POST /v1/telemetry/events` (signed in; 202
+  `TelemetryBatchReceipt`): up to 50 reports, each a Web Vital (`lcp`,
+  `inp` in ms, `cls` in ten-thousandths; route template; device class) or
+  a tunnel step (entered or completed; a business only of the person's
+  own team is kept). 429 past 30 batches a minute per person; samples are
+  purged after 90 days.
+- **Changed** `POST /v1/auth/otp/verify` takes an optional
+  `signup_attribution` (utm_*, `referral_code`, `source_tag`,
+  `referrer_host`, `landing_path`, `first_seen_at`), kept on the account
+  only when the sign-in creates it; unknown fields are a 422.
+
 ## 2026-10-03 — encryption key rotation for platform admins
 
 Spec: `0ee9211ca86eb0d0`
