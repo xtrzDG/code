@@ -25,6 +25,9 @@ from app.containers.adapters.notification_collections_container import (
 from app.containers.adapters.security_collections_container import (
     SecurityCollectionsContainer,
 )
+from app.containers.adapters.value_collections_container import (
+    ValueCollectionsContainer,
+)
 from app.schemas.constants.compliance import AuditAction
 from app.schemas.constants.storage import CollectionIsolation
 from app.schemas.domain.assistants import AssistantVersionDocument
@@ -98,6 +101,7 @@ COLLECTION_CONTAINERS = (
     CallAdaptersContainer,
     InboxCollectionsContainer,
     SecurityCollectionsContainer,
+    ValueCollectionsContainer,
 )
 
 

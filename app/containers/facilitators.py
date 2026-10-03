@@ -56,6 +56,7 @@ from app.facilitators.users.login_code_cap_alert_facilitator import (
 from app.facilitators.users.turnstile_bot_check_facilitator import (
     TurnstileBotCheckFacilitator,
 )
+from app.facilitators.value.owner_digest_facilitator import OwnerDigestFacilitator
 from app.schemas.dto.live_events import LiveStreamLimits
 from app.utilities.notifications.staff_link_signer import StaffLinkSigner
 
@@ -190,6 +191,21 @@ class FacilitatorsContainer(containers.DeclarativeContainer):
         notification_preferences_repo=repositories.notification_preferences_repo,
         link_signer=staff_link_signer,
         text_transformer=transformers.staff_notification_text_transformer,
+        app_settings=config.app_settings,
+        wall_clock=time_provider.microsecond_wall_clock,
+    )
+    # The owners' digests and monthly reports: e-mail and devices, once per
+    # report and recipient, through the same outbox.
+    owner_digest_facilitator: Singleton[OwnerDigestFacilitator] = Singleton(
+        OwnerDigestFacilitator,
+        user_repo=repositories.user_repo,
+        digest_preferences_repo=repositories.digest_preferences_repo,
+        push_subscription_repo=repositories.push_subscription_repo,
+        notification_preferences_repo=repositories.notification_preferences_repo,
+        manager_notifier=manager_notification_facilitator,
+        push_queue=push_notification_queue,
+        link_signer=staff_link_signer,
+        text_transformer=transformers.value_digest_text_transformer,
         app_settings=config.app_settings,
         wall_clock=time_provider.microsecond_wall_clock,
     )

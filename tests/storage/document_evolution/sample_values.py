@@ -46,6 +46,7 @@ CONSTRAINED_TEXT_SAMPLES: dict[str, str] = {
     "QuickReplyShortcut": "hours",
     "ReleaseVersion": "4718714c0f2e9a1b",
     "TimezoneName": "Asia/Tbilisi",
+    "ValueReportPeriodKey": "2026-W38",
     "WebLink": "https://example.com/menu",
     "WhatsAppTemplateLanguageCode": "en_US",
     "WhatsAppNumberDigits": "995599123456",

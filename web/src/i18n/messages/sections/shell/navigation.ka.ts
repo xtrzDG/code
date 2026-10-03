@@ -22,6 +22,8 @@ export const navigationKa: Translation<typeof navigationEn> = {
     assistantVersions: "ასისტენტის ყველა განახლება შემოწმებებით, გამოქვეყნებითა და დაბრუნების შესაძლებლობით.",
   },
   pages: {
+    overviewDashboard: "დაფა",
+    overviewReports: "ანგარიშები",
     messagesAll: "ყველა საუბარი",
     messagesHandoffs: "ადამიანის დახმარება",
     messagesLeads: "მოთხოვნები",

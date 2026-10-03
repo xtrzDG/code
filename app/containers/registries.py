@@ -29,6 +29,7 @@ from app.registries.locks.login_code_send_lock_registry import (
     LoginCodeSendLockRegistry,
 )
 from app.registries.niches.niche_template_registry import NicheTemplateRegistry
+from app.registries.niches.niche_value_registry import NicheValueRegistry
 from app.registries.niches.starter_answer_registry import StarterAnswerRegistry
 from app.registries.tools.assistant_tool_registry import AssistantToolRegistry
 
@@ -55,6 +56,9 @@ class RegistriesContainer(containers.DeclarativeContainer):
     starter_answer_registry: Singleton[StarterAnswerRegistry] = Singleton(
         StarterAnswerRegistry
     )
+    # What a booking of each niche typically brings and the staff time a
+    # reply or a call takes (the value estimates).
+    niche_value_registry: Singleton[NicheValueRegistry] = Singleton(NicheValueRegistry)
     plan_registry: Singleton[PlanRegistry] = Singleton(PlanRegistry)
     exchange_rate_registry: Singleton[ExchangeRateRegistry] = Singleton(
         ExchangeRateRegistry

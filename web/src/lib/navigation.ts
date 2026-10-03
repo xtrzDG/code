@@ -11,6 +11,7 @@ import type { BusinessSection } from "./sections";
 /** Every page of a business, as its path under /b/{businessId}/. */
 export const BUSINESS_PAGES = [
   "overview",
+  "overview/reports",
   "messages",
   "messages/handoffs",
   "messages/leads",

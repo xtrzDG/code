@@ -67,5 +67,9 @@ export function linkTargetPath(view: StaffLinkView): string {
     }
     case "notifications":
       return businessPath(business, "settings/notifications");
+    case "report":
+      return view.value_report_id
+        ? `${businessPath(business, "overview/reports")}?report=${encodeURIComponent(view.value_report_id)}`
+        : businessPath(business, "overview/reports");
   }
 }

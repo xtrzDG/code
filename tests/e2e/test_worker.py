@@ -20,6 +20,7 @@ from app.containers.gateways import (
 from app.contracts.jobs import QueuedJobOperator
 from app.gateways.worker.background_worker import PeriodicJobSpec
 from app.gateways.worker.periodic.purge_stale_rows import PURGE_STALE_ROWS_JOB
+from app.gateways.worker.periodic.send_value_reports import SEND_VALUE_REPORTS_JOB
 from app.gateways.worker.periodic.sweep_rate_limit_buckets import (
     SWEEP_RATE_LIMIT_BUCKETS_JOB,
 )
@@ -70,6 +71,7 @@ def test_worker_ticks_once_with_every_job_registered() -> None:
         (FLUSH_LLM_TRACES_JOB, 60),
         (PURGE_STALE_ROWS_JOB, 86_400),
         (SWEEP_RATE_LIMIT_BUCKETS_JOB, 600),
+        (SEND_VALUE_REPORTS_JOB, 3_600),
     ]
     assert [job.name for job in jobs if job.is_process_local] == [FLUSH_LLM_TRACES_JOB]
     # The worker plays queued autotest runs (concept: assembly autotests run
@@ -88,12 +90,12 @@ def test_worker_ticks_once_with_every_job_registered() -> None:
         IMPORT_WEBSITE_JOB,
         ROTATE_ENCRYPTED_SECRETS_JOB,
     ]
-    assert (first.periodic_runs, first.queued_runs, first.failures) == (10, 0, 0)
+    assert (first.periodic_runs, first.queued_runs, first.failures) == (11, 0, 0)
     assert right_after.periodic_runs == 0
     assert a_minute_later.periodic_runs == 1  # the trace flush
-    # Trials, overage, grace periods, reminders, the trace flush and the
-    # sweep of rate-limit counters.
-    assert (an_hour_later.periodic_runs, an_hour_later.failures) == (6, 0)
+    # Trials, overage, grace periods, reminders, the trace flush, the sweep
+    # of rate-limit counters and the owners' value reports.
+    assert (an_hour_later.periodic_runs, an_hour_later.failures) == (7, 0)
     # A new worker process (a deploy) only flushes its own trace buffer.
     assert (after_a_restart.periodic_runs, after_a_restart.failures) == (1, 0)
 

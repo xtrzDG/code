@@ -22,6 +22,7 @@ from app.containers.operators.platform_operators import PlatformOperatorsContain
 from app.containers.operators.security_operators import SecurityOperatorsContainer
 from app.containers.operators.setup_operators import SetupOperatorsContainer
 from app.containers.operators.sharing_operators import SharingOperatorsContainer
+from app.containers.operators.value_operators import ValueOperatorsContainer
 from app.containers.pipelines.pipelines_container import PipelinesContainer
 from app.containers.utilities import UtilitiesContainer
 
@@ -116,5 +117,10 @@ class OperatorsContainer(containers.DeclarativeContainer):
     demo: DemoOperatorsContainer = Container(  # type: ignore[assignment]
         DemoOperatorsContainer,
         demo_pipelines=pipelines.demo,
+        utilities=utilities,
+    )
+    value: ValueOperatorsContainer = Container(  # type: ignore[assignment]
+        ValueOperatorsContainer,
+        value_pipelines=pipelines.value,
         utilities=utilities,
     )

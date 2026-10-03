@@ -90,6 +90,9 @@ from app.transformers.notifications.staff_alert_brief_transformer import (
 from app.transformers.notifications.staff_notification_text_transformer import (
     StaffNotificationTextTransformer,
 )
+from app.transformers.notifications.value_digest_text_transformer import (
+    ValueDigestTextTransformer,
+)
 from app.transformers.users.user_view_transformer import UserViewTransformer
 
 
@@ -242,4 +245,8 @@ class TransformersContainer(containers.DeclarativeContainer):
     )
     call_report_brief_transformer: Singleton[CallReportBriefTransformer] = Singleton(
         CallReportBriefTransformer, text_resolver=utilities.localized_text_resolver
+    )
+    # The owners' digests and monthly reports (e-mail and device texts).
+    value_digest_text_transformer: Singleton[ValueDigestTextTransformer] = Singleton(
+        ValueDigestTextTransformer, text_resolver=utilities.localized_text_resolver
     )

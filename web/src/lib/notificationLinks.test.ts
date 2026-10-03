@@ -48,5 +48,9 @@ describe("notification links", () => {
     );
     expect(linkTargetPath(view({ target: "booking" }))).toBe(`${business}/bookings`);
     expect(linkTargetPath(view({}))).toBe(`${business}/settings/notifications`);
+    expect(linkTargetPath(view({ target: "report", value_report_id: "value_report_1" }))).toBe(
+      `${business}/overview/reports?report=value_report_1`,
+    );
+    expect(linkTargetPath(view({ target: "report" }))).toBe(`${business}/overview/reports`);
   });
 });

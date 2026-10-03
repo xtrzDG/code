@@ -69,6 +69,11 @@ from app.schemas.domain.users import (
     UserDocument,
     UserSessionDocument,
 )
+from app.schemas.domain.value_reports import ValueReportDocument
+from app.schemas.domain.value_settings import (
+    DigestPreferencesDocument,
+    ValueSettingsDocument,
+)
 from app.schemas.domain.website_imports import WebsiteImportDocument
 from app.schemas.exceptions.application_errors import NotFoundError
 from app.schemas.typings.storage.constrained_strings import DocumentCollectionName
@@ -241,6 +246,18 @@ DOCUMENT_COLLECTIONS: tuple[DocumentCollectionDefinition, ...] = (
     # The current knowledge import from each business's website (1054).
     DocumentCollectionDefinition(
         DocumentCollectionName("website_imports"), WebsiteImportDocument
+    ),
+    # What the assistant is worth to a business: the average check, each
+    # owner's digest choices and the stored digests and monthly reports
+    # (1061).
+    DocumentCollectionDefinition(
+        DocumentCollectionName("value_settings"), ValueSettingsDocument
+    ),
+    DocumentCollectionDefinition(
+        DocumentCollectionName("digest_preferences"), DigestPreferencesDocument
+    ),
+    DocumentCollectionDefinition(
+        DocumentCollectionName("value_reports"), ValueReportDocument
     ),
     # Key management: the latest re-encryption of the stored secrets (1063).
     DocumentCollectionDefinition(

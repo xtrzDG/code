@@ -4,7 +4,7 @@
  * may open them. The sidebar, the phone tab bar, the section tabs and the
  * page titles are all built from these tables.
  *
- * Staff see Overview, Messages, Bookings, the assistant's test chat and
+ * Staff see Overview (without the reports), Messages, Bookings, the assistant's test chat and
  * Settings → Notifications (their own devices); owners see everything. Versions and autotests sit in the "advanced"
  * group of the Assistant.
  */
@@ -50,7 +50,10 @@ export const SECTION_DESCRIPTIONS: Record<BusinessSection, MessageKey> = {
 
 /** The pages of each section in order; the first one is the section's own address. */
 export const SECTION_PAGES: Record<BusinessSection, readonly PageEntry[]> = {
-  overview: [{ page: "overview", label: "navigation.sections.overview", roles: EVERYONE }],
+  overview: [
+    { page: "overview", label: "navigation.pages.overviewDashboard", roles: EVERYONE },
+    { page: "overview/reports", label: "navigation.pages.overviewReports", roles: OWNERS },
+  ],
   messages: [
     { page: "messages", label: "navigation.pages.messagesAll", roles: EVERYONE },
     { page: "messages/handoffs", label: "navigation.pages.messagesHandoffs", roles: EVERYONE },
@@ -78,7 +81,7 @@ export const SECTION_PAGES: Record<BusinessSection, readonly PageEntry[]> = {
 
 /** What a page is for, under its title (pages without one show none). */
 export const PAGE_DESCRIPTIONS: Partial<Record<BusinessPage, MessageKey>> = {
-  overview: "navigation.descriptions.overview",
+  "overview/reports": "reports.description",
   messages: "pages.conversations.description",
   "messages/handoffs": "pages.handoffs.description",
   "messages/leads": "pages.leads.description",

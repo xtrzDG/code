@@ -14,12 +14,18 @@ class StaffAlertEvent(StrEnum):
 
 
 class StaffLinkTarget(StrEnum):
-    """The cabinet page a notification link opens (after sign-in)."""
+    """
+    The cabinet page a notification link opens (after sign-in). REPORT is a
+    stored digest or monthly report on the Reports page (owners), where its
+    reader also turns the summaries off. Link targets live only in signed
+    links, never in stored documents.
+    """
 
     CONVERSATION = "conversation"
     LEAD = "lead"
     BOOKING = "booking"
     NOTIFICATIONS = "notifications"
+    REPORT = "report"
 
 
 class StaffTextStyle(StrEnum):

@@ -25,6 +25,7 @@ from app.containers.pipelines.platform_pipelines import PlatformPipelinesContain
 from app.containers.pipelines.security_pipelines import SecurityPipelinesContainer
 from app.containers.pipelines.setup_pipelines import SetupPipelinesContainer
 from app.containers.pipelines.sharing_pipelines import SharingPipelinesContainer
+from app.containers.pipelines.value_pipelines import ValuePipelinesContainer
 from app.containers.registries import RegistriesContainer
 from app.containers.use_cases.use_cases_container import UseCasesContainer
 
@@ -115,4 +116,8 @@ class PipelinesContainer(containers.DeclarativeContainer):
     demo: DemoPipelinesContainer = Container(  # type: ignore[assignment]
         DemoPipelinesContainer,
         demo_orchestrators=orchestrators.demo,
+    )
+    value: ValuePipelinesContainer = Container(  # type: ignore[assignment]
+        ValuePipelinesContainer,
+        value=orchestrators.value,
     )

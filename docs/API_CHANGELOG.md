@@ -26,6 +26,43 @@ Spec: `1f616b82ee8a0d61`
   job that seals every stored channel and calendar secret again with the
   newest key; audited; 409 while a run is queued or running.
 
+## 2026-10-03 — value of the assistant: value model, average check, digests, reports
+
+Spec: `26b326955b930a9a`
+
+- **Added** `GET /v1/businesses/{business_id}/value` (owners and staff;
+  `period` = `today`, `7d`, `30d`, `90d`, `this_month`, `last_week` or
+  `last_month`, or local dates `from` and `to`; default the last 30 days;
+  `ValueModel`): what the assistant did in the period and in the period
+  before it (`current`, `previous`: conversations and those after hours,
+  customer messages, assistant replies, calls, bookings and the
+  assistant's bookings that are still on, requests, conversations that
+  needed a person, staff minutes saved, `estimated_revenue_minor`), with
+  `value_basis` (`bookings` or `requests`), the average check used and
+  its `average_check_source` (`owner`, `niche_default`, `none`), the
+  niche's `typical_check_minor` and the staff time rates. Staff get every
+  amount as null and the source `none`.
+- **Added** `GET` and `PUT /v1/businesses/{business_id}/value/settings`
+  (owners; `ValueSettingsView`, body `ValueSettingsRequest`): the average
+  check per booking (or order) in minor units of the business currency;
+  null clears it. Audited.
+- **Added** `GET` and `PUT /v1/businesses/{business_id}/digest-preferences`
+  (owners, their own; `DigestPreferencesView`, body
+  `DigestPreferencesRequest`): daily digest (off by default), weekly digest
+  and monthly report (on by default), with the e-mail and the number of
+  devices they reach. Audited.
+- **Added** `GET /v1/businesses/{business_id}/value-reports` (owners;
+  `kind` = `monthly` (default), `weekly` or `daily`; `limit`, `cursor`;
+  `ValueReportPage`, newest period first) and
+  `GET /v1/businesses/{business_id}/value-reports/{report_id}`
+  (`ValueReportView`): the stored digests and monthly reports with their
+  `delivery` (`sent`, `no_recipients`, `quiet`).
+- **Added** `GET /v1/businesses/{business_id}/today-queue` (owners and
+  staff; `TodayQueue`): today's bookings that are on, still to start and
+  waiting for confirmation.
+- **Changed** `StaffLinkTarget` gains `report` and `StaffLinkView` gains
+  `value_report_id`: a digest's link opens its report.
+
 ## 2026-10-03 — handoffs the platform creates are read in each reader's language
 
 Spec: `eced8ca70fcbb8b2`

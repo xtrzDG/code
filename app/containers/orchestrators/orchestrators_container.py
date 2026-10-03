@@ -50,6 +50,9 @@ from app.containers.orchestrators.setup_orchestrators import (
 from app.containers.orchestrators.sharing_orchestrators import (
     SharingOrchestratorsContainer,
 )
+from app.containers.orchestrators.value_orchestrators import (
+    ValueOrchestratorsContainer,
+)
 from app.containers.repositories import RepositoriesContainer
 from app.containers.use_cases.use_cases_container import UseCasesContainer
 from app.containers.utilities import UtilitiesContainer
@@ -163,4 +166,8 @@ class OrchestratorsContainer(containers.DeclarativeContainer):
         DemoOrchestratorsContainer,
         demo_use_cases=use_cases.demo,
         assistant_use_cases=use_cases.assistants,
+    )
+    value: ValueOrchestratorsContainer = Container(  # type: ignore[assignment]
+        ValueOrchestratorsContainer,
+        value_use_cases=use_cases.value,
     )

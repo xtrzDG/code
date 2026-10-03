@@ -11,13 +11,14 @@ from app.schemas.typings.conversations.prefixed_id import ConversationId
 from app.schemas.typings.notifications.booleans import IsStaffLinkExpired
 from app.schemas.typings.notifications.constrained_strings import StaffLinkToken
 from app.schemas.typings.users.prefixed_id import UserId
+from app.schemas.typings.value.prefixed_id import ValueReportId
 
 
 class StaffLinkClaims(ImmutableDTO):
     """
     What a notification link opens: a page of one business (a conversation,
-    a request, a booking, the notification settings) until `expires_at`.
-    The id that matches `target` is set; the others are None.
+    a request, a booking, the notification settings, a value report) until
+    `expires_at`. The id that matches `target` is set; the others are None.
     """
 
     business_id: BusinessId
@@ -25,6 +26,7 @@ class StaffLinkClaims(ImmutableDTO):
     conversation_id: ConversationId | None = None
     lead_id: LeadId | None = None
     booking_id: BookingId | None = None
+    value_report_id: ValueReportId | None = None
     expires_at: Microseconds
 
 
@@ -49,5 +51,6 @@ class StaffLinkView(ImmutableDTO):
     lead_id: LeadId | None = None
     booking_id: BookingId | None = None
     booking_date: LocalDate | None = None
+    value_report_id: ValueReportId | None = None
     expires_at: Microseconds
     is_expired: IsStaffLinkExpired = False
