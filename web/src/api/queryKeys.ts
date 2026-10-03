@@ -112,6 +112,9 @@ export const queryKeys = {
     snippet: (businessId: Id) => ["channels", businessId, "snippet"] as const,
     callForwarding: (businessId: Id, locale: Locale) => ["channels", businessId, "callForwarding", locale] as const,
     calendar: (businessId: Id) => ["channels", businessId, "calendar"] as const,
+    /** Share links of every tag (`share(id, "")` is the untagged set). */
+    shareAll: (businessId: Id) => ["channels", businessId, "share"] as const,
+    share: (businessId: Id, source: string) => ["channels", businessId, "share", source] as const,
   },
 
   billing: {

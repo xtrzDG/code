@@ -7,7 +7,9 @@
  *  - a signed-in user without a language cookie gets the account language;
  *  - every page gets a Content Security Policy with a fresh nonce, which
  *    Next.js puts on its own scripts (server/contentSecurityPolicy.ts);
- *  - a session under the cookie's old name moves to `__Host-aw_session`.
+ *  - a session under the cookie's old name moves to `__Host-aw_session`;
+ *  - the public hosted chat page (/c/{address}) gets its business and a
+ *    stricter policy (server/hostedChatProxy.ts); no /c/ page is indexed.
  */
 
 import { NextResponse, type NextRequest } from "next/server";
@@ -23,6 +25,8 @@ import {
   sanitizeRequestId,
 } from "@/server/backend";
 import { NONCE_HEADER, buildContentSecurityPolicy, createNonce } from "@/server/contentSecurityPolicy";
+import { HOSTED_CHAT_HEADER, hostedChatAddress, isHostedChatPath } from "@/server/hostedChat";
+import { NOINDEX, ROBOTS_HEADER, routeHostedChat } from "@/server/hostedChatProxy";
 import { migrateLegacySessionCookie, readSessionToken } from "@/server/sessionCookie";
 
 const CSP_HEADER = "content-security-policy";
@@ -63,6 +67,11 @@ async function route(request: NextRequest): Promise<NextResponse> {
     return NextResponse.redirect(new URL(`${pathname}${search}`, request.url), 303);
   }
 
+  const hostedChat = hostedChatAddress(pathname);
+  if (hostedChat !== null) {
+    return routeHostedChat(request, hostedChat);
+  }
+
   if (!token && isProtectedPath(pathname)) {
     return NextResponse.redirect(new URL(loginPath({ next: `${pathname}${search}` }), request.url));
   }
@@ -81,6 +90,8 @@ async function route(request: NextRequest): Promise<NextResponse> {
   });
   requestHeaders.set(CSP_HEADER, policy);
   requestHeaders.set(NONCE_HEADER, nonce);
+  // Only the proxy says which business a hosted chat page shows.
+  requestHeaders.delete(HOSTED_CHAT_HEADER);
 
   let newLocale: string | null = null;
   if (token && !request.cookies.has(LOCALE_COOKIE)) {
@@ -94,6 +105,9 @@ async function route(request: NextRequest): Promise<NextResponse> {
 
   const response = NextResponse.next({ request: { headers: requestHeaders } });
   response.headers.set(CSP_HEADER, policy);
+  if (isHostedChatPath(pathname)) {
+    response.headers.set(ROBOTS_HEADER, NOINDEX);
+  }
   if (newLocale) {
     response.cookies.set(LOCALE_COOKIE, newLocale, localeCookieOptions());
   }

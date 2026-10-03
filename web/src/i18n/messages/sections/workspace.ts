@@ -29,12 +29,18 @@ import { loginOptionsRu } from "./workspace/loginOptions.ru";
 import { notificationsEn } from "./workspace/notifications.en";
 import { notificationsKa } from "./workspace/notifications.ka";
 import { notificationsRu } from "./workspace/notifications.ru";
+import { privacyNoticeEn } from "./workspace/privacyNotice.en";
+import { privacyNoticeKa } from "./workspace/privacyNotice.ka";
+import { privacyNoticeRu } from "./workspace/privacyNotice.ru";
 import { settingsEn } from "./workspace/settings.en";
 import { settingsKa } from "./workspace/settings.ka";
 import { settingsRu } from "./workspace/settings.ru";
 import { settingsRecordsEn } from "./workspace/settingsRecords.en";
 import { settingsRecordsKa } from "./workspace/settingsRecords.ka";
 import { settingsRecordsRu } from "./workspace/settingsRecords.ru";
+import { shareEn } from "./workspace/share.en";
+import { shareKa } from "./workspace/share.ka";
+import { shareRu } from "./workspace/share.ru";
 
 export const workspaceEn = {
   workspace: workspaceCommonEn,
@@ -44,6 +50,8 @@ export const workspaceEn = {
   settings: { ...settingsEn, ...settingsRecordsEn },
   notifications: notificationsEn,
   admin: adminEn,
+  share: shareEn,
+  privacyNotice: privacyNoticeEn,
 } as const;
 
 export const workspaceRu: Translation<typeof workspaceEn> = {
@@ -54,6 +62,8 @@ export const workspaceRu: Translation<typeof workspaceEn> = {
   settings: { ...settingsRu, ...settingsRecordsRu },
   notifications: notificationsRu,
   admin: adminRu,
+  share: shareRu,
+  privacyNotice: privacyNoticeRu,
 };
 
 export const workspaceKa: Translation<typeof workspaceEn> = {
@@ -64,4 +74,6 @@ export const workspaceKa: Translation<typeof workspaceEn> = {
   settings: { ...settingsKa, ...settingsRecordsKa },
   notifications: notificationsKa,
   admin: adminKa,
+  share: shareKa,
+  privacyNotice: privacyNoticeKa,
 };

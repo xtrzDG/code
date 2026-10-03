@@ -1,0 +1,232 @@
+/*
+ * The hosted chat page (/c/{address}) and its privacy notice: pages for a
+ * business's customers, not the cabinet. They follow the visitor's system
+ * colours (like the chat widget), not the cabinet's theme cookie, and the
+ * business's accent colour (--hc-accent, set on .hc-page).
+ *
+ * Phones: the chat fills the screen. Wider screens: the chat is a card in
+ * the middle, on a backdrop tinted with the accent colour.
+ */
+
+.hc-page {
+  color-scheme: light dark;
+  --hc-accent: #5b5bd6;
+  --hc-canvas: light-dark(#f3f3f6, #09090c);
+  --hc-surface: light-dark(#ffffff, #111827);
+  --hc-ink: light-dark(#17171b, #f3f4f6);
+  --hc-muted: light-dark(#5b5b66, #a1a1aa);
+  --hc-line: light-dark(rgb(0 0 0 / 0.08), rgb(255 255 255 / 0.09));
+
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  min-height: 100dvh;
+  justify-content: center;
+  align-items: stretch;
+  overflow: hidden;
+  background: var(--hc-canvas);
+  color: var(--hc-ink);
+  font-family:
+    system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", "Noto Sans Georgian", "Noto Sans Armenian",
+    "Noto Sans Hebrew", "Noto Sans Arabic", sans-serif;
+}
+
+/* Two soft glows of the accent colour behind the card (wide screens only). */
+.hc-page::before,
+.hc-page::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  width: 60vmax;
+  height: 60vmax;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--hc-accent) 32%, transparent), transparent);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.hc-page::before {
+  top: -30vmax;
+  inset-inline-start: -20vmax;
+}
+
+.hc-page::after {
+  bottom: -35vmax;
+  inset-inline-end: -25vmax;
+}
+
+.hc-frame {
+  position: relative;
+  width: 100%;
+  height: 100dvh;
+  background: var(--hc-surface);
+}
+
+/* The widget fills this element; it covers the placeholder once it is up. */
+.hc-widget {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: inherit;
+}
+
+.hc-placeholder,
+.hc-notice {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 32px 24px;
+  text-align: center;
+}
+
+.hc-placeholder p,
+.hc-notice p {
+  margin: 0;
+  max-width: 34ch;
+  color: var(--hc-muted);
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.hc-notice h1 {
+  margin: 0;
+  max-width: 24ch;
+  font-size: 22px;
+  font-weight: 650;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.hc-notice .hc-notice-lead {
+  color: var(--hc-ink);
+  font-weight: 500;
+}
+
+.hc-mark {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 18px;
+  background: var(--hc-accent);
+  color: #fff;
+  box-shadow: 0 14px 30px -14px var(--hc-accent);
+}
+
+.hc-mark svg {
+  width: 28px;
+  height: 28px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.hc-spinner {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 3px solid color-mix(in srgb, var(--hc-accent) 22%, transparent);
+  border-top-color: var(--hc-accent);
+  animation: hc-spin 0.9s linear infinite;
+}
+
+@keyframes hc-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hc-spinner {
+    animation-duration: 2.4s;
+  }
+}
+
+@media (min-width: 640px) {
+  .hc-page {
+    align-items: center;
+    padding: 24px;
+  }
+
+  .hc-page::before,
+  .hc-page::after {
+    opacity: 1;
+  }
+
+  .hc-frame {
+    max-width: 520px;
+    height: min(860px, calc(100dvh - 48px));
+    border-radius: 24px;
+    overflow: hidden;
+    box-shadow:
+      0 0 0 1px var(--hc-line),
+      0 40px 90px -40px rgb(0 0 0 / 0.45);
+  }
+}
+
+/* The privacy notice: a readable column on the same backdrop. */
+.hc-document {
+  position: relative;
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 40px 20px 64px;
+  background: var(--hc-surface);
+  line-height: 1.6;
+  font-size: 15.5px;
+}
+
+.hc-document h1 {
+  margin: 0 0 6px;
+  font-size: 26px;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.hc-document h2 {
+  margin: 28px 0 6px;
+  font-size: 17px;
+}
+
+.hc-document p,
+.hc-document li {
+  margin: 0 0 10px;
+  color: var(--hc-ink);
+}
+
+.hc-document ul {
+  margin: 0 0 10px;
+  padding-inline-start: 22px;
+}
+
+.hc-document .hc-document-lead {
+  color: var(--hc-muted);
+}
+
+.hc-document a {
+  color: inherit;
+  text-decoration-color: var(--hc-accent);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
+}
+
+@media (min-width: 640px) {
+  .hc-page:has(.hc-document) {
+    align-items: flex-start;
+    overflow: visible;
+  }
+
+  .hc-document {
+    margin: 24px auto;
+    padding: 48px 56px 56px;
+    border-radius: 24px;
+    box-shadow: 0 0 0 1px var(--hc-line);
+  }
+}

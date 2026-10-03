@@ -55,3 +55,39 @@ export function buildContentSecurityPolicy(options: {
   ];
   return directives.join("; ");
 }
+
+/**
+ * The hosted chat page (/c/{address}): stricter than the cabinet's. It
+ * runs Next.js and the chat widget (a nonce'd script from the API) and
+ * talks only to its own origin and the API (`apiOrigin`, the widget's
+ * requests). No Turnstile, no frames, no form posts, never framed.
+ */
+export function buildHostedChatPolicy(options: {
+  nonce: string;
+  apiOrigin: string | null;
+  isDevelopment: boolean;
+  isHttps: boolean;
+}): string {
+  const directives = [
+    "default-src 'self'",
+    [
+      "script-src 'self'",
+      `'nonce-${options.nonce}'`,
+      "'strict-dynamic'",
+      ...(options.isDevelopment ? ["'unsafe-eval'"] : []),
+    ].join(" "),
+    "style-src 'self' 'unsafe-inline'",
+    "img-src 'self' data: blob:",
+    "font-src 'self' data:",
+    ["connect-src 'self'", ...(options.apiOrigin ? [options.apiOrigin] : [])].join(" "),
+    "frame-src 'none'",
+    "worker-src 'self'",
+    "manifest-src 'self'",
+    "object-src 'none'",
+    "base-uri 'none'",
+    "form-action 'none'",
+    "frame-ancestors 'none'",
+    ...(options.isHttps ? ["upgrade-insecure-requests"] : []),
+  ];
+  return directives.join("; ");
+}
