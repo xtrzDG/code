@@ -37,6 +37,7 @@ from app.repositories.calendar_repositories import (
     CalendarConnectionRepository,
     CalendarEventLinkRepository,
 )
+from app.repositories.call_repository import CallRepository
 from app.repositories.channel_repositories import (
     ChannelMessageReceiptRepository,
     ManagerTelegramLinkRepository,
@@ -46,7 +47,6 @@ from app.repositories.compliance_repositories import (
     DpaAcceptanceRepository,
 )
 from app.repositories.conversation_repositories import (
-    CallRepository,
     ContactRepository,
     ConversationRepository,
     LlmTurnRepository,

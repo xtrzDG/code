@@ -1,6 +1,48 @@
 {
   "components": {
     "schemas": {
+      "ActivationEventKind": {
+        "description": "A milestone on the way from sign-up to the first customers, recorded\nonce per business: the owner tried the test chat, the assistant went\nlive (first publish), the first real conversation, booking and handoff.",
+        "enum": [
+          "test_chat_tried",
+          "went_live",
+          "first_conversation",
+          "first_booking",
+          "first_handoff"
+        ],
+        "title": "ActivationEventKind",
+        "type": "string"
+      },
+      "ActivationMilestoneView": {
+        "additionalProperties": false,
+        "description": "A milestone reached; `celebrated_at` is set once the cabinet showed it.",
+        "properties": {
+          "celebrated_at": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Celebrated At"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/ActivationEventKind"
+          },
+          "occurred_at": {
+            "title": "Occurred At",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "kind",
+          "occurred_at"
+        ],
+        "title": "ActivationMilestoneView",
+        "type": "object"
+      },
       "AdminClientPage": {
         "additionalProperties": false,
         "description": "One page of clients; `next_cursor` is None on the last page.\n\n`matching_count` counts the clients that pass the filters; `totals`,\n`countries` and `niches` describe every client (for the summary tiles\nand the filter choices).",
@@ -442,6 +484,200 @@
         ],
         "title": "ApiErrorCode",
         "type": "string"
+      },
+      "ApplyAttentionCode": {
+        "description": "Why applied changes did not go live, in words an owner can act on:\nsomething required is missing in the profile, nobody receives\nhandoffs, the data processing agreement is not accepted, the plan needs\npayment, the version could not be built, the automatic checks found\nproblems or stopped, voice could not be set up, or the version could\nnot be published.",
+        "enum": [
+          "profile_incomplete",
+          "staff_contact_missing",
+          "agreement_not_accepted",
+          "payment_needed",
+          "build_failed",
+          "checks_failed",
+          "checks_stopped",
+          "voice_not_ready",
+          "publish_failed"
+        ],
+        "title": "ApplyAttentionCode",
+        "type": "string"
+      },
+      "ApplyAttentionView": {
+        "additionalProperties": false,
+        "description": "One reason the changes are not live, in plain words, with where to fix it.",
+        "properties": {
+          "action": {
+            "$ref": "#/components/schemas/SetupActionView"
+          },
+          "code": {
+            "$ref": "#/components/schemas/ApplyAttentionCode"
+          },
+          "details": {
+            "items": {
+              "maxLength": 120,
+              "minLength": 1,
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:/+\\-]*$",
+              "type": "string"
+            },
+            "title": "Details",
+            "type": "array"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "message",
+          "action"
+        ],
+        "title": "ApplyAttentionView",
+        "type": "object"
+      },
+      "ApplyChangesStage": {
+        "description": "Progress of \"Apply changes\": BUILDING the new version from the profile\nand knowledge, CHECKING it with the automatic checks, PUBLISHING it,\nLIVE once customers get it, or NEEDS_ATTENTION with the reasons.",
+        "enum": [
+          "building",
+          "checking",
+          "publishing",
+          "live",
+          "needs_attention"
+        ],
+        "title": "ApplyChangesStage",
+        "type": "string"
+      },
+      "ApplyChangesView": {
+        "additionalProperties": false,
+        "description": "Progress of \"Apply changes\". `stage` is None before the first apply.\nWhile CHECKING, `checks_done` of `checks_total` automatic checks have\nrun. NEEDS_ATTENTION lists the reasons. `has_unapplied_changes` is True\nwhen the profile or knowledge changed after the live version was built\n(or nothing is live yet).",
+        "properties": {
+          "assistant_version_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assistant Version Id"
+          },
+          "attention": {
+            "items": {
+              "$ref": "#/components/schemas/ApplyAttentionView"
+            },
+            "title": "Attention",
+            "type": "array"
+          },
+          "business_id": {
+            "title": "Business Id",
+            "type": "string"
+          },
+          "checks_done": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Checks Done"
+          },
+          "checks_total": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Checks Total"
+          },
+          "finished_at": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Finished At"
+          },
+          "has_unapplied_changes": {
+            "title": "Has Unapplied Changes",
+            "type": "boolean"
+          },
+          "is_in_progress": {
+            "title": "Is In Progress",
+            "type": "boolean"
+          },
+          "stage": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ApplyChangesStage"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "started_at": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Started At"
+          },
+          "version_number": {
+            "anyOf": [
+              {
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Version Number"
+          }
+        },
+        "required": [
+          "business_id",
+          "is_in_progress",
+          "has_unapplied_changes"
+        ],
+        "title": "ApplyChangesView",
+        "type": "object"
+      },
+      "AssistantCreatedView": {
+        "additionalProperties": false,
+        "description": "The new business (with its country's defaults: time zone, languages,\ncurrency), the guided setup ahead and the niche's starter answers to\naccept or edit.",
+        "properties": {
+          "business": {
+            "$ref": "#/components/schemas/BusinessView"
+          },
+          "setup": {
+            "$ref": "#/components/schemas/SetupView"
+          },
+          "starter_answers": {
+            "$ref": "#/components/schemas/StarterAnswersView"
+          }
+        },
+        "required": [
+          "business",
+          "setup",
+          "starter_answers"
+        ],
+        "title": "AssistantCreatedView",
+        "type": "object"
       },
       "AssistantReply": {
         "additionalProperties": false,
@@ -1362,7 +1598,7 @@
       },
       "BillingOverview": {
         "additionalProperties": false,
-        "description": "The billing page: plan, status, period, package usage and invoices.",
+        "description": "The billing page: plan, status, period, package usage and invoices.\n\n`does_trial_start_at_go_live` is True while the business is not live\nyet and its free trial will start by itself when it goes live.",
         "properties": {
           "business_id": {
             "title": "Business Id",
@@ -1381,6 +1617,11 @@
             "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$",
             "title": "Display Language",
             "type": "string"
+          },
+          "does_trial_start_at_go_live": {
+            "default": false,
+            "title": "Does Trial Start At Go Live",
+            "type": "boolean"
           },
           "invoices": {
             "items": {
@@ -1678,6 +1919,90 @@
           "max_party_size"
         ],
         "title": "BookingRules",
+        "type": "object"
+      },
+      "BookingRulesInput": {
+        "additionalProperties": false,
+        "description": "Booking rules (concept profile `booking`).\n\n`resource_kind` defaults to the niche. `slot_minutes` defaults to one day\nfor night bookings and to an hour otherwise. The deposit is in minor\nunits of the business currency; zero means no deposit.",
+        "properties": {
+          "cancellation_policy": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cancellation Policy"
+          },
+          "deposit_currency_code": {
+            "anyOf": [
+              {
+                "maxLength": 3,
+                "minLength": 3,
+                "pattern": "^[A-Z]{3}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Deposit Currency Code"
+          },
+          "deposit_minor": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Deposit Minor"
+          },
+          "max_party_size": {
+            "maximum": 10000.0,
+            "minimum": 1.0,
+            "title": "Max Party Size",
+            "type": "integer"
+          },
+          "min_notice_minutes": {
+            "default": 0,
+            "maximum": 525600.0,
+            "minimum": 0.0,
+            "title": "Min Notice Minutes",
+            "type": "integer"
+          },
+          "resource_kind": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ResourceKind"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "slot_minutes": {
+            "anyOf": [
+              {
+                "maximum": 43200.0,
+                "minimum": 5.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Slot Minutes"
+          }
+        },
+        "required": [
+          "max_party_size"
+        ],
+        "title": "BookingRulesInput",
         "type": "object"
       },
       "BookingStatus": {
@@ -8101,6 +8426,33 @@
         "title": "PhoneNumberKind",
         "type": "string"
       },
+      "PhoneTestLinkView": {
+        "additionalProperties": false,
+        "description": "A link the owner opens on their phone (or as a QR code) to write to\ntheir own assistant: the hosted website chat page or the Telegram bot.\n`is_answering` is False until the assistant is live there.",
+        "properties": {
+          "channel": {
+            "$ref": "#/components/schemas/ChannelKind"
+          },
+          "is_answering": {
+            "title": "Is Answering",
+            "type": "boolean"
+          },
+          "url": {
+            "maxLength": 2048,
+            "minLength": 10,
+            "pattern": "^https://[^\\s/]+(/[^\\s]*)?$",
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "channel",
+          "url",
+          "is_answering"
+        ],
+        "title": "PhoneTestLinkView",
+        "type": "object"
+      },
       "PlanKey": {
         "description": "Subscription plan of one assistant (\"employee\").",
         "enum": [
@@ -9126,6 +9478,241 @@
         "title": "ServiceMode",
         "type": "string"
       },
+      "SetupActionTarget": {
+        "description": "The cabinet place where the owner acts; the cabinet maps it to a page:\nPROFILE (with a wizard step), STAFF_CONTACTS, CHANNELS,\nTEST_CHAT, AGREEMENT (the data processing agreement), BILLING,\nCHECKS (the automatic checks, under Advanced), APPLY_CHANGES, or\nOVERVIEW once everything is done.",
+        "enum": [
+          "profile",
+          "staff_contacts",
+          "channels",
+          "test_chat",
+          "agreement",
+          "billing",
+          "checks",
+          "apply_changes",
+          "overview"
+        ],
+        "title": "SetupActionTarget",
+        "type": "string"
+      },
+      "SetupActionView": {
+        "additionalProperties": false,
+        "description": "Where the owner goes to act: a cabinet place (and the wizard step for\nPROFILE) with a button label in the owner's language.",
+        "properties": {
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "profile_step": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ProfileWizardStep"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "target": {
+            "$ref": "#/components/schemas/SetupActionTarget"
+          }
+        },
+        "required": [
+          "target",
+          "label"
+        ],
+        "title": "SetupActionView",
+        "type": "object"
+      },
+      "SetupStepCode": {
+        "description": "One step of the guided setup, in the order the owner walks them: about\nthe business, what it offers, hours and bookings, who receives handoffs,\nwhere customers write, trying the assistant, and going live.",
+        "enum": [
+          "business",
+          "offer",
+          "hours_and_bookings",
+          "staff_contact",
+          "channels",
+          "test",
+          "launch"
+        ],
+        "title": "SetupStepCode",
+        "type": "string"
+      },
+      "SetupStepStatus": {
+        "description": "Where a setup step stands: DONE, SKIPPED (an optional step the owner\npassed), NEXT (the first step still to do) or TODO (after the next one).",
+        "enum": [
+          "done",
+          "skipped",
+          "next",
+          "todo"
+        ],
+        "title": "SetupStepStatus",
+        "type": "string"
+      },
+      "SetupStepView": {
+        "additionalProperties": false,
+        "description": "One step of the guided setup. `missing` names what the profile still\nlacks for it (profile gap kinds); `minutes` is how long it usually\ntakes. Optional steps (`is_required` False) may be skipped.",
+        "properties": {
+          "action": {
+            "$ref": "#/components/schemas/SetupActionView"
+          },
+          "code": {
+            "$ref": "#/components/schemas/SetupStepCode"
+          },
+          "description": {
+            "title": "Description",
+            "type": "string"
+          },
+          "is_required": {
+            "title": "Is Required",
+            "type": "boolean"
+          },
+          "minutes": {
+            "maximum": 120.0,
+            "minimum": 0.0,
+            "title": "Minutes",
+            "type": "integer"
+          },
+          "missing": {
+            "items": {
+              "$ref": "#/components/schemas/ProfileGapKind"
+            },
+            "title": "Missing",
+            "type": "array"
+          },
+          "status": {
+            "$ref": "#/components/schemas/SetupStepStatus"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "status",
+          "is_required",
+          "title",
+          "description",
+          "minutes",
+          "action"
+        ],
+        "title": "SetupStepView",
+        "type": "object"
+      },
+      "SetupView": {
+        "additionalProperties": false,
+        "description": "The guided setup in order: business, offer, hours and bookings, staff\ncontact, channels, test, launch; each done, skipped, next or to do.\n`percent` counts done steps among those not skipped; `minutes_left`\nadds up the steps still ahead. `can_go_live` is True once every\nrequired step before the launch is done; `is_complete` once the\nassistant is live and every required step is done.",
+        "properties": {
+          "apply": {
+            "$ref": "#/components/schemas/ApplyChangesView"
+          },
+          "business_id": {
+            "title": "Business Id",
+            "type": "string"
+          },
+          "can_go_live": {
+            "title": "Can Go Live",
+            "type": "boolean"
+          },
+          "is_complete": {
+            "title": "Is Complete",
+            "type": "boolean"
+          },
+          "is_live": {
+            "title": "Is Live",
+            "type": "boolean"
+          },
+          "language": {
+            "maxLength": 16,
+            "minLength": 2,
+            "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$",
+            "title": "Language",
+            "type": "string"
+          },
+          "milestones": {
+            "items": {
+              "$ref": "#/components/schemas/ActivationMilestoneView"
+            },
+            "title": "Milestones",
+            "type": "array"
+          },
+          "minutes_left": {
+            "maximum": 600.0,
+            "minimum": 0.0,
+            "title": "Minutes Left",
+            "type": "integer"
+          },
+          "next_action": {
+            "$ref": "#/components/schemas/SetupActionView"
+          },
+          "next_step": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SetupStepCode"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "percent": {
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Percent",
+            "type": "integer"
+          },
+          "phone_test_links": {
+            "items": {
+              "$ref": "#/components/schemas/PhoneTestLinkView"
+            },
+            "title": "Phone Test Links",
+            "type": "array"
+          },
+          "steps": {
+            "items": {
+              "$ref": "#/components/schemas/SetupStepView"
+            },
+            "title": "Steps",
+            "type": "array"
+          },
+          "trial_ends_at": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Trial Ends At"
+          },
+          "went_live_at": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Went Live At"
+          }
+        },
+        "required": [
+          "business_id",
+          "language",
+          "steps",
+          "next_action",
+          "percent",
+          "minutes_left",
+          "can_go_live",
+          "is_live",
+          "is_complete",
+          "apply"
+        ],
+        "title": "SetupView",
+        "type": "object"
+      },
       "StaffAlertEvent": {
         "description": "What staff can be told about: a conversation passed to a person, a new\nrequest, a booking (new, moved or cancelled). Each staff contact and\neach cabinet user chooses which of them reach them.",
         "enum": [
@@ -9415,6 +10002,322 @@
           "is_available"
         ],
         "title": "StaffReplyView",
+        "type": "object"
+      },
+      "StarterAnswersApplied": {
+        "additionalProperties": false,
+        "description": "What applying changed: the sections filled, the ones left as the owner\nhad them, the profile, the frequent questions saved and the resource\ncreated.",
+        "properties": {
+          "applied_sections": {
+            "items": {
+              "$ref": "#/components/schemas/StarterSection"
+            },
+            "title": "Applied Sections",
+            "type": "array"
+          },
+          "kept_sections": {
+            "items": {
+              "$ref": "#/components/schemas/StarterSection"
+            },
+            "title": "Kept Sections",
+            "type": "array"
+          },
+          "profile": {
+            "$ref": "#/components/schemas/BusinessProfileView"
+          },
+          "resource": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ResourceView"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "saved_knowledge_items": {
+            "items": {
+              "$ref": "#/components/schemas/KnowledgeItemDetails"
+            },
+            "title": "Saved Knowledge Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "profile"
+        ],
+        "title": "StarterAnswersApplied",
+        "type": "object"
+      },
+      "StarterAnswersView": {
+        "additionalProperties": false,
+        "description": "Suggestions for a new business, clearly not its facts yet: typical\nhours over the country's working week, booking rules and a first\nresource (niches that take bookings), handoff and forbidden rules, a\ntone, frequent questions and offer examples. `sections` tells which\nprofile sections are still empty (SUGGESTED) and which the owner has\nalready filled (ALREADY_SET, applying leaves them).",
+        "properties": {
+          "booking_rules": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BookingRulesInput"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "business_id": {
+            "title": "Business Id",
+            "type": "string"
+          },
+          "faq": {
+            "items": {
+              "$ref": "#/components/schemas/StarterFaqView"
+            },
+            "title": "Faq",
+            "type": "array"
+          },
+          "forbidden_rules": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Forbidden Rules",
+            "type": "array"
+          },
+          "handoff_rules": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Handoff Rules",
+            "type": "array"
+          },
+          "hours": {
+            "items": {
+              "$ref": "#/components/schemas/OpeningInterval"
+            },
+            "title": "Hours",
+            "type": "array"
+          },
+          "language": {
+            "maxLength": 16,
+            "minLength": 2,
+            "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$",
+            "title": "Language",
+            "type": "string"
+          },
+          "niche_key": {
+            "$ref": "#/components/schemas/NicheKey"
+          },
+          "offer_examples": {
+            "items": {
+              "$ref": "#/components/schemas/StarterOfferView"
+            },
+            "title": "Offer Examples",
+            "type": "array"
+          },
+          "resource": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/StarterResourceView"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "sections": {
+            "items": {
+              "$ref": "#/components/schemas/StarterSectionView"
+            },
+            "title": "Sections",
+            "type": "array"
+          },
+          "tone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tone"
+          }
+        },
+        "required": [
+          "business_id",
+          "niche_key",
+          "language",
+          "sections"
+        ],
+        "title": "StarterAnswersView",
+        "type": "object"
+      },
+      "StarterFaqView": {
+        "additionalProperties": false,
+        "description": "A frequent question of the niche. `is_ready` is True when it comes with\nan answer that holds for any business of the niche; otherwise the owner\nwrites the answer (applying the suggestions skips it).",
+        "properties": {
+          "answer": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Answer"
+          },
+          "is_ready": {
+            "title": "Is Ready",
+            "type": "boolean"
+          },
+          "key": {
+            "maxLength": 64,
+            "minLength": 2,
+            "pattern": "^[a-z][a-z0-9_]*$",
+            "title": "Key",
+            "type": "string"
+          },
+          "question": {
+            "title": "Question",
+            "type": "string"
+          }
+        },
+        "required": [
+          "key",
+          "question",
+          "is_ready"
+        ],
+        "title": "StarterFaqView",
+        "type": "object"
+      },
+      "StarterOfferView": {
+        "additionalProperties": false,
+        "description": "An example of what such a business sells, to prefill the offer table.\nIt never carries a price: the owner adds the price, and until then the\nprofile keeps asking for prices.",
+        "properties": {
+          "duration_minutes": {
+            "anyOf": [
+              {
+                "maximum": 43200.0,
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Duration Minutes"
+          },
+          "key": {
+            "maxLength": 64,
+            "minLength": 2,
+            "pattern": "^[a-z][a-z0-9_]*$",
+            "title": "Key",
+            "type": "string"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/KnowledgeItemKind"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "key",
+          "kind",
+          "title"
+        ],
+        "title": "StarterOfferView",
+        "type": "object"
+      },
+      "StarterResourceView": {
+        "additionalProperties": false,
+        "description": "The first bookable thing the niche suggests, in the owner's language.",
+        "properties": {
+          "booking_unit": {
+            "$ref": "#/components/schemas/BookingUnit"
+          },
+          "capacity": {
+            "maximum": 10000.0,
+            "minimum": 1.0,
+            "title": "Capacity",
+            "type": "integer"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/ResourceKind"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "slot_minutes": {
+            "anyOf": [
+              {
+                "maximum": 43200.0,
+                "minimum": 5.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Slot Minutes"
+          },
+          "unit_count": {
+            "maximum": 1000.0,
+            "minimum": 1.0,
+            "title": "Unit Count",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "kind",
+          "booking_unit",
+          "name",
+          "capacity",
+          "unit_count"
+        ],
+        "title": "StarterResourceView",
+        "type": "object"
+      },
+      "StarterSection": {
+        "description": "A part of the profile the niche's starter answers can fill: opening\nhours, booking rules, the first bookable resource, handoff and\nforbidden rules, the tone and frequent questions with ready answers.\nPrices are never suggested; they come from the owner.",
+        "enum": [
+          "hours",
+          "booking_rules",
+          "resource",
+          "handoff_rules",
+          "forbidden_rules",
+          "tone",
+          "faq"
+        ],
+        "title": "StarterSection",
+        "type": "string"
+      },
+      "StarterSectionState": {
+        "description": "SUGGESTED: the section is empty and applying the starter answers fills\nit. ALREADY_SET: the owner has filled it; applying leaves it as it is.",
+        "enum": [
+          "suggested",
+          "already_set"
+        ],
+        "title": "StarterSectionState",
+        "type": "string"
+      },
+      "StarterSectionView": {
+        "additionalProperties": false,
+        "description": "Whether applying would fill a profile section or leave the owner's data.",
+        "properties": {
+          "section": {
+            "$ref": "#/components/schemas/StarterSection"
+          },
+          "state": {
+            "$ref": "#/components/schemas/StarterSectionState"
+          }
+        },
+        "required": [
+          "section",
+          "state"
+        ],
+        "title": "StarterSectionView",
         "type": "object"
       },
       "SubscriptionStatus": {
@@ -11237,6 +12140,262 @@
         "summary": "Retry Queued Job",
         "tags": [
           "admin"
+        ]
+      }
+    },
+    "/v1/assistants": {
+      "post": {
+        "operationId": "create_assistant_v1_assistants_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "description": "HTTP body of business creation.\n\nEverything except name and niche is optional and filled from the\ncountry profile: country (the creator's phone country), time zone,\ncustomer languages, currency and data region. The default language\nmust be one of the languages (the first one when missing); the owner\nlanguage falls back to the creator's interface language; the plan to\nthe niche's first recommended plan.",
+                "properties": {
+                  "city": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "City"
+                  },
+                  "country_code": {
+                    "anyOf": [
+                      {
+                        "maxLength": 2,
+                        "minLength": 2,
+                        "pattern": "^[A-Z]{2}$",
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Country Code"
+                  },
+                  "default_language": {
+                    "anyOf": [
+                      {
+                        "maxLength": 16,
+                        "minLength": 2,
+                        "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$",
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Default Language"
+                  },
+                  "languages": {
+                    "anyOf": [
+                      {
+                        "items": {
+                          "maxLength": 16,
+                          "minLength": 2,
+                          "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$",
+                          "type": "string"
+                        },
+                        "type": "array"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Languages"
+                  },
+                  "name": {
+                    "title": "Name",
+                    "type": "string"
+                  },
+                  "niche_key": {
+                    "description": "Business niche with its own assistant template.",
+                    "enum": [
+                      "restaurant",
+                      "hotel",
+                      "entertainment",
+                      "beauty_salon",
+                      "clinic",
+                      "fitness",
+                      "short_term_rental",
+                      "car_service",
+                      "car_rental_and_tours",
+                      "event_venue",
+                      "real_estate",
+                      "education",
+                      "online_shop",
+                      "veterinary",
+                      "home_services",
+                      "b2b_supply"
+                    ],
+                    "title": "NicheKey",
+                    "type": "string"
+                  },
+                  "owner_language": {
+                    "anyOf": [
+                      {
+                        "maxLength": 16,
+                        "minLength": 2,
+                        "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$",
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Owner Language"
+                  },
+                  "plan_key": {
+                    "anyOf": [
+                      {
+                        "description": "Subscription plan of one assistant (\"employee\").",
+                        "enum": [
+                          "chat",
+                          "voice_and_chat",
+                          "plus"
+                        ],
+                        "title": "PlanKey",
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "timezone": {
+                    "anyOf": [
+                      {
+                        "maxLength": 64,
+                        "minLength": 2,
+                        "pattern": "^[A-Za-z][A-Za-z0-9_+\\-]*(/[A-Za-z0-9_+\\-]+){0,2}$",
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Timezone"
+                  }
+                },
+                "required": [
+                  "name",
+                  "niche_key"
+                ],
+                "title": "CreateBusinessRequest",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssistantCreatedView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Create Assistant",
+        "tags": [
+          "setup"
         ]
       }
     },
@@ -13777,6 +14936,256 @@
           }
         },
         "summary": "Rollback Assistant Version",
+        "tags": [
+          "assistant"
+        ]
+      }
+    },
+    "/v1/businesses/{business_id}/assistant/apply": {
+      "get": {
+        "operationId": "get_apply_changes_v1_businesses__business_id__assistant_apply_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "language",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Language"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApplyChangesView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Get Apply Changes",
+        "tags": [
+          "assistant"
+        ]
+      },
+      "post": {
+        "operationId": "apply_changes_v1_businesses__business_id__assistant_apply_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApplyChangesView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Apply Changes",
         "tags": [
           "assistant"
         ]
@@ -23557,6 +24966,530 @@
           "profile"
         ]
       },
+      "patch": {
+        "operationId": "patch_profile_v1_businesses__business_id__profile_patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "description": "Partial change of the business profile (PATCH, for autosave).\n\nOnly the fields present in the body change; an explicit null clears\nan optional section (address, booking rules, tone). `answers` changes\nonly the questions it names (an empty answer clears that question);\n`contacts` only the phones it names. With `expected_updated_at` (the\n`updated_at` the cabinet last saw) a change made from an older profile\nis refused with 409 stale_revision instead of overwriting newer edits.\n\nExample: {\"hours\": [{\"weekday\": 1, \"opens_at\": 540, \"closes_at\": 1080}]}.",
+                "properties": {
+                  "address": {
+                    "anyOf": [
+                      {
+                        "additionalProperties": false,
+                        "description": "Address text and an optional maps link (concept profile `address`).",
+                        "properties": {
+                          "maps_url": {
+                            "anyOf": [
+                              {
+                                "maxLength": 2048,
+                                "minLength": 10,
+                                "pattern": "^https?://[^\\s/]+(/[^\\s]*)?$",
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "title": "Maps Url"
+                          },
+                          "text": {
+                            "title": "Text",
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "text"
+                        ],
+                        "title": "BusinessAddress",
+                        "type": "object"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "answers": {
+                    "anyOf": [
+                      {
+                        "items": {
+                          "additionalProperties": false,
+                          "description": "Answer to one niche question.\n\nText, number, URL and phone questions use `answer`; choice questions use\n`choice_keys` (YES_NO accepts \"yes\"/\"no\" in either field). An empty\nanswer clears the question.",
+                          "properties": {
+                            "answer": {
+                              "anyOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ],
+                              "title": "Answer"
+                            },
+                            "choice_keys": {
+                              "items": {
+                                "maxLength": 64,
+                                "minLength": 1,
+                                "pattern": "^[a-z0-9][a-z0-9_]*$",
+                                "type": "string"
+                              },
+                              "title": "Choice Keys",
+                              "type": "array"
+                            },
+                            "question_key": {
+                              "maxLength": 64,
+                              "minLength": 2,
+                              "pattern": "^[a-z][a-z0-9_]*$",
+                              "title": "Question Key",
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "question_key"
+                          ],
+                          "title": "ProfileAnswerInput",
+                          "type": "object"
+                        },
+                        "type": "array"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Answers"
+                  },
+                  "answers_language": {
+                    "anyOf": [
+                      {
+                        "maxLength": 16,
+                        "minLength": 2,
+                        "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$",
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Answers Language"
+                  },
+                  "booking_rules": {
+                    "anyOf": [
+                      {
+                        "additionalProperties": false,
+                        "description": "Booking rules (concept profile `booking`).\n\n`resource_kind` defaults to the niche. `slot_minutes` defaults to one day\nfor night bookings and to an hour otherwise. The deposit is in minor\nunits of the business currency; zero means no deposit.",
+                        "properties": {
+                          "cancellation_policy": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "title": "Cancellation Policy"
+                          },
+                          "deposit_currency_code": {
+                            "anyOf": [
+                              {
+                                "maxLength": 3,
+                                "minLength": 3,
+                                "pattern": "^[A-Z]{3}$",
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "title": "Deposit Currency Code"
+                          },
+                          "deposit_minor": {
+                            "anyOf": [
+                              {
+                                "minimum": 0,
+                                "type": "integer"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "title": "Deposit Minor"
+                          },
+                          "max_party_size": {
+                            "maximum": 10000,
+                            "minimum": 1,
+                            "title": "Max Party Size",
+                            "type": "integer"
+                          },
+                          "min_notice_minutes": {
+                            "default": 0,
+                            "maximum": 525600,
+                            "minimum": 0,
+                            "title": "Min Notice Minutes",
+                            "type": "integer"
+                          },
+                          "resource_kind": {
+                            "anyOf": [
+                              {
+                                "description": "What is booked, as in the concept's resources table.",
+                                "enum": [
+                                  "table",
+                                  "room",
+                                  "staff",
+                                  "arena",
+                                  "bay",
+                                  "vehicle",
+                                  "slot"
+                                ],
+                                "title": "ResourceKind",
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "slot_minutes": {
+                            "anyOf": [
+                              {
+                                "maximum": 43200,
+                                "minimum": 5,
+                                "type": "integer"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "title": "Slot Minutes"
+                          }
+                        },
+                        "required": [
+                          "max_party_size"
+                        ],
+                        "title": "BookingRulesInput",
+                        "type": "object"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "contacts": {
+                    "anyOf": [
+                      {
+                        "additionalProperties": false,
+                        "description": "Phones typed in any national or international format.",
+                        "properties": {
+                          "handoff_phone_number": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "title": "Handoff Phone Number"
+                          },
+                          "public_phone_number": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "title": "Public Phone Number"
+                          }
+                        },
+                        "title": "ContactsInput",
+                        "type": "object"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "expected_updated_at": {
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Expected Updated At"
+                  },
+                  "forbidden": {
+                    "anyOf": [
+                      {
+                        "items": {
+                          "type": "string"
+                        },
+                        "type": "array"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Forbidden"
+                  },
+                  "handoff_rules": {
+                    "anyOf": [
+                      {
+                        "items": {
+                          "type": "string"
+                        },
+                        "type": "array"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Handoff Rules"
+                  },
+                  "hours": {
+                    "anyOf": [
+                      {
+                        "items": {
+                          "additionalProperties": false,
+                          "description": "One opening interval in the business time zone (closing may be 24:00).",
+                          "properties": {
+                            "closes_at": {
+                              "maximum": 1440,
+                              "minimum": 1,
+                              "title": "Closes At",
+                              "type": "integer"
+                            },
+                            "opens_at": {
+                              "maximum": 1439,
+                              "minimum": 0,
+                              "title": "Opens At",
+                              "type": "integer"
+                            },
+                            "weekday": {
+                              "description": "ISO weekday number (Monday is 1).",
+                              "enum": [
+                                1,
+                                2,
+                                3,
+                                4,
+                                5,
+                                6,
+                                7
+                              ],
+                              "title": "Weekday",
+                              "type": "integer"
+                            }
+                          },
+                          "required": [
+                            "weekday",
+                            "opens_at",
+                            "closes_at"
+                          ],
+                          "title": "OpeningInterval",
+                          "type": "object"
+                        },
+                        "type": "array"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Hours"
+                  },
+                  "is_recording_notice_enabled": {
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Is Recording Notice Enabled"
+                  },
+                  "links": {
+                    "anyOf": [
+                      {
+                        "items": {
+                          "additionalProperties": false,
+                          "description": "A link the assistant may send (menu, map, payment, booking page).",
+                          "properties": {
+                            "kind": {
+                              "description": "Links from the profile the assistant may send (send_link tool).",
+                              "enum": [
+                                "menu",
+                                "map",
+                                "payment",
+                                "booking_page",
+                                "delivery",
+                                "website"
+                              ],
+                              "title": "BusinessLinkKind",
+                              "type": "string"
+                            },
+                            "url": {
+                              "maxLength": 2048,
+                              "minLength": 10,
+                              "pattern": "^https?://[^\\s/]+(/[^\\s]*)?$",
+                              "title": "Url",
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "kind",
+                            "url"
+                          ],
+                          "title": "BusinessLink",
+                          "type": "object"
+                        },
+                        "type": "array"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Links"
+                  },
+                  "tone": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Tone"
+                  }
+                },
+                "title": "ProfilePatch",
+                "type": "object"
+              }
+            }
+          },
+          "required": false
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BusinessProfileView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Patch Profile",
+        "tags": [
+          "setup"
+        ]
+      },
       "put": {
         "operationId": "save_profile_v1_businesses__business_id__profile_put",
         "parameters": [
@@ -26799,6 +28732,835 @@
         "summary": "Delete Schedule Exception",
         "tags": [
           "resources"
+        ]
+      }
+    },
+    "/v1/businesses/{business_id}/setup": {
+      "get": {
+        "operationId": "get_setup_v1_businesses__business_id__setup_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "language",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Language"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SetupView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Get Setup",
+        "tags": [
+          "setup"
+        ]
+      }
+    },
+    "/v1/businesses/{business_id}/setup/milestones/{kind}/celebrate": {
+      "post": {
+        "operationId": "celebrate_milestone_v1_businesses__business_id__setup_milestones__kind__celebrate_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "kind",
+            "required": true,
+            "schema": {
+              "title": "Kind",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActivationMilestoneView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Celebrate Milestone",
+        "tags": [
+          "setup"
+        ]
+      }
+    },
+    "/v1/businesses/{business_id}/setup/skipped-steps/{setup_step}": {
+      "delete": {
+        "operationId": "unskip_setup_step_v1_businesses__business_id__setup_skipped_steps__setup_step__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "setup_step",
+            "required": true,
+            "schema": {
+              "title": "Setup Step",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Unskip Setup Step",
+        "tags": [
+          "setup"
+        ]
+      },
+      "put": {
+        "operationId": "skip_setup_step_v1_businesses__business_id__setup_skipped_steps__setup_step__put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "setup_step",
+            "required": true,
+            "schema": {
+              "title": "Setup Step",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SetupView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Skip Setup Step",
+        "tags": [
+          "setup"
+        ]
+      }
+    },
+    "/v1/businesses/{business_id}/setup/starter-answers": {
+      "get": {
+        "operationId": "get_starter_answers_v1_businesses__business_id__setup_starter_answers_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "language",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Language"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StarterAnswersView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Get Starter Answers",
+        "tags": [
+          "setup"
+        ]
+      }
+    },
+    "/v1/businesses/{business_id}/setup/starter-answers/apply": {
+      "post": {
+        "operationId": "apply_starter_answers_v1_businesses__business_id__setup_starter_answers_apply_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "description": "Accept starter answers in one call.\n\n`sections` defaults to every section; `faq_keys` (default: every\nquestion with a ready answer) narrows the questions taken. Sections the\nowner has already filled are never overwritten. `language` is the\nlanguage the texts are written in (the owner's by default).\n\nExample: {\"sections\": [\"hours\", \"booking_rules\", \"faq\"]}.",
+                "properties": {
+                  "faq_keys": {
+                    "anyOf": [
+                      {
+                        "items": {
+                          "maxLength": 64,
+                          "minLength": 2,
+                          "pattern": "^[a-z][a-z0-9_]*$",
+                          "type": "string"
+                        },
+                        "type": "array"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Faq Keys"
+                  },
+                  "language": {
+                    "anyOf": [
+                      {
+                        "maxLength": 16,
+                        "minLength": 2,
+                        "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$",
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Language"
+                  },
+                  "sections": {
+                    "anyOf": [
+                      {
+                        "items": {
+                          "description": "A part of the profile the niche's starter answers can fill: opening\nhours, booking rules, the first bookable resource, handoff and\nforbidden rules, the tone and frequent questions with ready answers.\nPrices are never suggested; they come from the owner.",
+                          "enum": [
+                            "hours",
+                            "booking_rules",
+                            "resource",
+                            "handoff_rules",
+                            "forbidden_rules",
+                            "tone",
+                            "faq"
+                          ],
+                          "title": "StarterSection",
+                          "type": "string"
+                        },
+                        "type": "array"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Sections"
+                  }
+                },
+                "title": "ApplyStarterAnswersRequest",
+                "type": "object"
+              }
+            }
+          },
+          "required": false
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StarterAnswersApplied"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Apply Starter Answers",
+        "tags": [
+          "setup"
         ]
       }
     },

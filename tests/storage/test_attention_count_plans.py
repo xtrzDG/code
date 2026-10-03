@@ -51,22 +51,29 @@ STATUSES: dict[str, LiteralString] = {
     "[1 + (n / 30) %% 4]",
 }
 type CountQuery = Callable[[AttentionCountRepository, BusinessId], object]
-COUNT_QUERIES: dict[str, tuple[CountQuery, str]] = {
+# Each count, its table and the indexes that lead with the business and the
+# status (open handoffs may also use the work-queue index of migration 1042,
+# which starts with the same two columns).
+COUNT_QUERIES: dict[str, tuple[CountQuery, str, frozenset[str]]] = {
     "open handoffs": (
         lambda repo, business: repo.count_open_handoffs(business),
-        "handoffs_doc_status_idx",
+        "handoffs",
+        frozenset({"handoffs_doc_status_idx", "handoffs_doc_queue_idx"}),
     ),
     "new leads": (
         lambda repo, business: repo.count_new_leads(business),
-        "leads_doc_status_idx",
+        "leads",
+        frozenset({"leads_doc_status_idx"}),
     ),
     "unconfirmed bookings": (
         lambda repo, business: repo.count_unconfirmed_bookings(business, NOW),
-        "bookings_doc_status_starts_at_idx",
+        "bookings",
+        frozenset({"bookings_doc_status_starts_at_idx"}),
     ),
     "failing channels": (
         lambda repo, business: repo.count_failing_channels(business),
-        "channels_doc_status_idx",
+        "channels",
+        frozenset({"channels_doc_status_idx"}),
     ),
 }
 
@@ -140,8 +147,7 @@ def attention_repository(
 def test_an_attention_count_uses_its_index(
     seeded_database_url: DatabaseUrl, name: str
 ) -> None:
-    run, index = COUNT_QUERIES[name]
-    table: str = index.split("_doc_")[0]
+    run, table, indexes = COUNT_QUERIES[name]
     recording = RecordingConnectionPool(seeded_database_url)
     explaining = PostgresConnectionPoolClient(seeded_database_url, max_size=1)
     scope = StorageScopeContext()
@@ -167,6 +173,6 @@ def test_an_attention_count_uses_its_index(
             if node["Node Type"] == "Seq Scan" and node.get("Relation Name") == table
         ], f"{name}: sequential scan of {table}: {plan}"
         assert any(
-            node["Node Type"] in INDEX_NODE_TYPES and node.get("Index Name") == index
+            node["Node Type"] in INDEX_NODE_TYPES and node.get("Index Name") in indexes
             for node in nodes
-        ), f"{name}: {index} is not used: {plan}"
+        ), f"{name}: none of {sorted(indexes)} is used: {plan}"

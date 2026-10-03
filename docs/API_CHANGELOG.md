@@ -13,7 +13,7 @@ label and a migration path).
 
 ## 2026-10-03 — guided launch: one-call creation, setup progress, starter answers, "Apply changes", trial at go-live
 
-Spec: `c99621774a0ef930`
+Spec: `a4c5c025e7a96d6c`
 
 - **Added** `POST /v1/assistants` ("Create an AI assistant", 201): the
   business with its country's defaults, its guided setup and its niche's

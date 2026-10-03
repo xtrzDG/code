@@ -20,7 +20,7 @@ from app.adapters.storage.in_memory_document_collection import (
 from app.clients.object_storage.s3_object_storage_client import S3ObjectStorageClient
 from app.containers.app import AppContainer
 from app.contracts.jobs import JobQueueFacilitatorContract, QueuedJobOperator
-from app.repositories.conversation_repositories import CallRepository
+from app.repositories.call_repository import CallRepository
 from app.schemas.constants.channel_events import PostCallEventStatus
 from app.schemas.constants.jobs import JobLane
 from app.schemas.domain.conversations import CallDocument

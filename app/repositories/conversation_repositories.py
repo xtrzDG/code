@@ -4,7 +4,6 @@ from typed_time_provider import Microseconds
 
 from app.contracts.document_store import DocumentCollectionAdapterContract
 from app.contracts.repositories.conversation_repositories import (
-    CallRepoContract,
     ContactRepoContract,
     ConversationRepoContract,
     LlmTurnRepoContract,
@@ -20,7 +19,6 @@ from app.repositories.conversation_lookup_fields import (
     DIRECTION_FIELD,
     LAST_MESSAGE_AT_FIELD,
     PHONE_NUMBER_FIELD,
-    PROVIDER_CALL_ID_FIELD,
     SEQUENCE_NUMBER_FIELD,
     STATUS_FIELD,
     VERIFIED_PHONE_NUMBER_FIELD,
@@ -31,19 +29,17 @@ from app.repositories.document_queries import (
     field_equals,
     time_range,
 )
-from app.repositories.listing.contact_listing import CallListing, ContactListing
+from app.repositories.listing.contact_listing import ContactListing
 from app.repositories.listing.conversation_listing import ConversationListing
 from app.repositories.listing.message_listing import MessageListing
 from app.schemas.constants.channels import ChannelKind, MessageDirection
 from app.schemas.constants.conversations import ConversationStatus, MessageAuthor
 from app.schemas.domain.contacts import ContactDocument
 from app.schemas.domain.conversations import (
-    CallDocument,
     ConversationDocument,
     LlmTurnDocument,
     MessageDocument,
 )
-from app.schemas.dto.call_recordings import CallRecordingMove
 from app.schemas.dto.storage_queries import DocumentFieldMatch, DocumentFieldRange
 from app.schemas.exceptions.application_errors import ConflictError
 from app.schemas.typings.businesses.prefixed_id import BusinessId
@@ -52,13 +48,11 @@ from app.schemas.typings.conversations.constrained_integers import (
     ConversationMessageCount,
 )
 from app.schemas.typings.conversations.prefixed_id import (
-    CallId,
     ConversationId,
     MessageId,
 )
-from app.schemas.typings.conversations.strings import ChannelUserId, ProviderCallId
+from app.schemas.typings.conversations.strings import ChannelUserId
 from app.schemas.typings.localization.constrained_strings import E164PhoneNumber
-from app.utilities.recordings.recording_moves import recording_moved
 
 
 class ContactRepository(ContactListing, ContactRepoContract):
@@ -271,33 +265,3 @@ class LlmTurnRepository(LlmTurnRepoContract):
     def delete_by_conversation(self, conversation_id: ConversationId) -> None:
         for turn in self.list_by_conversation(conversation_id):
             self._collection.delete(str(turn.id))
-
-
-class CallRepository(CallListing, CallRepoContract):
-    def save(self, call: CallDocument) -> None:
-        self._store(str(call.id), call)
-
-    def get(self, business_id: BusinessId, call_id: CallId) -> CallDocument | None:
-        return self._load(business_id, str(call_id))
-
-    def find_by_provider_call_id(
-        self,
-        business_id: BusinessId,
-        provider_call_id: ProviderCallId,
-    ) -> CallDocument | None:
-        return self._find_in_business(
-            business_id, [field_equals(PROVIDER_CALL_ID_FIELD, provider_call_id)]
-        )
-
-    def list_by_business(self, business_id: BusinessId) -> list[CallDocument]:
-        return sorted(
-            self._list_in_business(business_id),
-            key=lambda call: call.started_at,
-            reverse=True,
-        )
-
-    def move_recording(
-        self, business_id: BusinessId, call_id: CallId, moved: CallRecordingMove
-    ) -> bool:
-        change = recording_moved(moved)
-        return self._modify_in_business(business_id, str(call_id), change) is not None

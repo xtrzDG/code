@@ -59,15 +59,13 @@ from app.use_cases.bookings.booking_support import (
     stay_night_count,
 )
 from app.use_cases.bookings.bookings_in_play import bookings_not_over_on
+from app.use_cases.bookings.reschedule_candidates import reschedule_candidates
 from app.utilities.scheduling.availability import BLOCKING_BOOKING_STATUSES
 from app.utilities.scheduling.booking_placement import place_booking
 from app.utilities.scheduling.booking_views import build_booking_view
 from app.utilities.scheduling.placement import Placement
 from app.utilities.scheduling.placement_request import PlacementRequest
-from app.utilities.scheduling.resource_selection import (
-    min_notice_seconds,
-    seating_resources,
-)
+from app.utilities.scheduling.resource_selection import min_notice_seconds
 from app.utilities.scheduling.zoned_time import (
     SECONDS_PER_MINUTE,
     microseconds_to_seconds,
@@ -188,7 +186,7 @@ class RescheduleBookingUseCase(
                 raise ValidationFailedError("A new time is required to move a booking.")
 
             placement: Placement = place_booking(
-                self._candidates(inputs, booking, current),
+                reschedule_candidates(inputs.resources, booking, current),
                 PlacementRequest(
                     local_date=new_date,
                     minute_of_day=(
@@ -276,27 +274,3 @@ class RescheduleBookingUseCase(
                 )
             ),
         )
-
-    def _candidates(
-        self,
-        inputs: SchedulingInputs,
-        booking: BookingDocument,
-        current: ResourceDocument,
-    ) -> list[ResourceDocument]:
-        """The booked resource first (if active), then same-kind alternatives."""
-
-        alternatives: list[ResourceDocument] = seating_resources(
-            [
-                resource
-                for resource in inputs.resources
-                if resource.is_active
-                and resource.id != current.id
-                and resource.kind is current.kind
-                and resource.booking_unit is current.booking_unit
-            ],
-            booking.party_size,
-        )
-        if not current.is_active:
-            return alternatives
-
-        return [current, *alternatives]

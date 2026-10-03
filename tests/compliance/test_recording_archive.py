@@ -23,8 +23,8 @@ from app.adapters.voice.elevenlabs_recording_storage_adapter import (
     ElevenLabsRecordingStorageAdapter,
 )
 from app.clients.elevenlabs.elevenlabs_client import ElevenLabsClient
+from app.repositories.call_repository import CallRepository
 from app.repositories.compliance_repositories import AuditLogRepository
-from app.repositories.conversation_repositories import CallRepository
 from app.schemas.constants.compliance import AuditAction
 from app.schemas.domain.compliance import AuditLogEntryDocument
 from app.schemas.domain.conversations import CallDocument

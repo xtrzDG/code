@@ -12,12 +12,12 @@ from app.repositories.booking_repositories import (
     LeadRepository,
 )
 from app.repositories.business_repositories import BusinessRepository
+from app.repositories.call_repository import CallRepository
 from app.repositories.compliance_repositories import (
     AuditLogRepository,
     DpaAcceptanceRepository,
 )
 from app.repositories.conversation_repositories import (
-    CallRepository,
     ContactRepository,
     ConversationRepository,
     LlmTurnRepository,

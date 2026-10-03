@@ -36,9 +36,9 @@ from app.repositories.business_repositories import (
     BusinessRepository,
     ChannelRepository,
 )
+from app.repositories.call_repository import CallRepository
 from app.repositories.compliance_repositories import AuditLogRepository
 from app.repositories.conversation_repositories import (
-    CallRepository,
     ContactRepository,
     ConversationRepository,
     LlmTurnRepository,
