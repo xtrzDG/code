@@ -6,7 +6,7 @@ event the 202 names, as the widget would show it.
 
 from collections.abc import Mapping
 
-import httpx
+import httpx2
 
 from app.schemas.constants.conversations import ConversationStatus
 from app.schemas.domain.conversations import ConversationDocument, MessageDocument
@@ -24,7 +24,7 @@ def post_widget_message(
     text: str,
     contact_name: str | None = None,
     headers: Mapping[str, str] | None = None,
-) -> httpx.Response:
+) -> httpx2.Response:
     """The widget's POST: accepted at once (202) or refused."""
 
     body: JsonObject = {"session_key": session_key, "text": text}
@@ -38,7 +38,7 @@ def post_widget_message(
     )
 
 
-def answer_of(workshop: Workshop, accepted: httpx.Response) -> JsonObject:
+def answer_of(workshop: Workshop, accepted: httpx2.Response) -> JsonObject:
     """
     Let the worker answer an accepted message (and send what it queues),
     then read the answer: `text` is None while staff own the conversation.

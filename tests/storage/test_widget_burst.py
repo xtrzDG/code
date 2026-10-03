@@ -124,7 +124,7 @@ def test_a_burst_of_slow_turns_leaves_the_api_ready_and_fast(
 ) -> None:
     started = time.monotonic()
     with ThreadPoolExecutor(max_workers=BURST) as pool:
-        accepted = list(pool.map(lambda index: send(burst_world, index), range(BURST)))
+        accepted = list(pool.map(send, [burst_world] * BURST, range(BURST)))
     accept_seconds = time.monotonic() - started
 
     # Every message is accepted at once; none waits for its 20 s turn.

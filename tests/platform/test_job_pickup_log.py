@@ -21,6 +21,7 @@ from app.utilities.observability.log_formatting import (
     LogContextFilter,
     TextLogFormatter,
     log_fields,
+    read_line_fields,
 )
 from tests.platform.worker_fakes import (
     ControlledClock,
@@ -94,7 +95,7 @@ def test_the_pickup_line_names_the_job_and_its_wait(
         "Picked up job process_inbound_message on the inbound lane "
         "340 ms after it was due"
     )
-    assert record.log_fields == {
+    assert read_line_fields(record) == {
         "pickup_delay_ms": 340,
         "lane": "inbound",
         "attempt": 1,
@@ -117,6 +118,8 @@ def test_a_claim_by_the_worker_logs_the_pickup(
         kit.worker.run_queued_jobs()
 
     pickups = [
-        record.log_fields for record in caplog.records if hasattr(record, "log_fields")
+        read_line_fields(record)
+        for record in caplog.records
+        if "pickup_delay_ms" in read_line_fields(record)
     ]
     assert pickups == [{"pickup_delay_ms": 0, "lane": "inbound", "attempt": 1}]
