@@ -1,0 +1,225 @@
+# Render Blueprint of the staging environment (Frankfurt, EU), the gate in
+# front of production (render.yaml): the same image, commands and settings,
+# with its own database, its own env group and the scripted language model.
+#
+#   workshop-staging-db       managed Postgres 16, only for staging
+#   workshop-staging-api      the API; migrations run before every deploy
+#   workshop-staging-worker   the background worker (same image)
+#   workshop-staging-cabinet  the owner cabinet
+#
+# Every service follows `main` and deploys a commit only after all its
+# GitHub checks passed (`autoDeployTrigger: checksPass`). When the API is
+# live, .github/workflows/deploy-smoke.yml runs scripts/smoke.sh against it
+# and, if that passes, fast-forwards the `release` branch production deploys
+# (docs/operations/deploys.md).
+#
+# LLM_PROVIDER=scripted: every assistant answer is one fixed sentence
+# (app/adapters/llm/offline_llm_adapter.py), so staging costs nothing per
+# message, never sends a conversation to a model provider and gives the
+# smoke test's chat a known answer. Autotest checks fail there by design.
+#
+# Create it with Render -> New -> Blueprint -> this repository, Blueprint
+# path `render.staging.yaml`. Secrets are `sync: false`: fill in what
+# staging uses (its own addresses, one sign-in channel, ideally e-mail), and
+# never production's keys or ENCRYPTION_KEY.
+
+databases:
+  - name: workshop-staging-db
+    region: frankfurt
+    plan: basic-256mb
+    postgresMajorVersion: "16"
+    databaseName: workshop
+    user: workshop
+    ipAllowList: []
+
+envVarGroups:
+  - name: workshop-staging
+    envVars:
+      # Staging runs exactly the production code paths and guards.
+      - key: APP_ENV
+        value: production
+      - key: ENCRYPTION_KEY
+        generateValue: true
+      - key: FORWARDED_ALLOW_IPS
+        value: "10.0.0.0/8"
+      - key: DEFAULT_DATA_REGION
+        value: eu
+      - key: LLM_PROVIDER
+        value: scripted
+
+services:
+  - type: web
+    name: workshop-staging-api
+    runtime: docker
+    region: frankfurt
+    plan: starter
+    branch: main
+    autoDeployTrigger: checksPass
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    dockerCommand: workshop api
+    preDeployCommand: workshop migrate
+    # Readiness: the database answers and every migration of this build is
+    # applied; a busy pool is "degraded" (200) and fails only after 30 s
+    # (GET /healthz is liveness only).
+    healthCheckPath: /readyz
+    # SIGTERM first: uvicorn finishes open requests (25 s), then exits.
+    maxShutdownDelaySeconds: 30
+    buildFilter:
+      ignoredPaths:
+        - web/**
+        - docs/**
+        - "**/*.md"
+    envVars:
+      - fromGroup: workshop-staging
+      - key: PORT
+        value: "8000"
+      # The connection budget of production (render.yaml) with one instance;
+      # the defaults (64 threads, 32 connections) would not fit basic-256mb.
+      - key: THREADPOOL_SIZE
+        value: "40"
+      - key: DB_POOL_SIZE
+        value: "12"
+      - key: LLM_MAX_CONCURRENCY
+        value: "8"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: workshop-staging-db
+          property: connectionString
+      # public https address of this API, e.g. https://workshop-staging-api.onrender.com
+      - key: APP_BASE_URL
+        sync: false
+      # public https address of the staging cabinet
+      - key: CABINET_BASE_URL
+        sync: false
+      - key: CORS_ALLOWED_ORIGINS
+        sync: false
+      - key: PLATFORM_ADMIN_EMAILS
+        sync: false
+      # login codes by e-mail (a test mailbox is enough)
+      - key: SMTP_HOST
+        sync: false
+      - key: SMTP_PORT
+        sync: false
+      - key: SMTP_SECURITY
+        sync: false
+      - key: SMTP_USERNAME
+        sync: false
+      - key: SMTP_PASSWORD
+        sync: false
+      - key: SMTP_FROM
+        sync: false
+      - key: SENTRY_DSN
+        sync: false
+
+  - type: worker
+    name: workshop-staging-worker
+    runtime: docker
+    region: frankfurt
+    plan: starter
+    branch: main
+    autoDeployTrigger: checksPass
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    dockerCommand: workshop worker
+    # Running jobs get 25 s after SIGTERM; a cut-off job runs again on
+    # another worker once its lease ends.
+    maxShutdownDelaySeconds: 60
+    buildFilter:
+      ignoredPaths:
+        - web/**
+        - docs/**
+        - "**/*.md"
+    envVars:
+      - fromGroup: workshop-staging
+      - key: DATABASE_URL
+        fromDatabase:
+          name: workshop-staging-db
+          property: connectionString
+      - key: THREADPOOL_SIZE
+        value: "20"
+      - key: DB_POOL_SIZE
+        value: "16"
+      - key: LLM_MAX_CONCURRENCY
+        value: "12"
+      - key: APP_BASE_URL
+        fromService:
+          type: web
+          name: workshop-staging-api
+          envVarKey: APP_BASE_URL
+      - key: CABINET_BASE_URL
+        fromService:
+          type: web
+          name: workshop-staging-api
+          envVarKey: CABINET_BASE_URL
+      - key: CORS_ALLOWED_ORIGINS
+        fromService:
+          type: web
+          name: workshop-staging-api
+          envVarKey: CORS_ALLOWED_ORIGINS
+      - key: PLATFORM_ADMIN_EMAILS
+        fromService:
+          type: web
+          name: workshop-staging-api
+          envVarKey: PLATFORM_ADMIN_EMAILS
+      - key: SMTP_HOST
+        fromService:
+          type: web
+          name: workshop-staging-api
+          envVarKey: SMTP_HOST
+      - key: SMTP_PORT
+        fromService:
+          type: web
+          name: workshop-staging-api
+          envVarKey: SMTP_PORT
+      - key: SMTP_SECURITY
+        fromService:
+          type: web
+          name: workshop-staging-api
+          envVarKey: SMTP_SECURITY
+      - key: SMTP_USERNAME
+        fromService:
+          type: web
+          name: workshop-staging-api
+          envVarKey: SMTP_USERNAME
+      - key: SMTP_PASSWORD
+        fromService:
+          type: web
+          name: workshop-staging-api
+          envVarKey: SMTP_PASSWORD
+      - key: SMTP_FROM
+        fromService:
+          type: web
+          name: workshop-staging-api
+          envVarKey: SMTP_FROM
+      - key: SENTRY_DSN
+        fromService:
+          type: web
+          name: workshop-staging-api
+          envVarKey: SENTRY_DSN
+
+  - type: web
+    name: workshop-staging-cabinet
+    runtime: docker
+    region: frankfurt
+    plan: starter
+    branch: main
+    autoDeployTrigger: checksPass
+    dockerfilePath: ./web/Dockerfile
+    dockerContext: ./web
+    healthCheckPath: /login
+    buildFilter:
+      paths:
+        - web/**
+    envVars:
+      # The staging API's internal address, e.g. http://workshop-staging-api:8000
+      # (never the public one: every sign-in would share Render's egress IP).
+      - key: BACKEND_URL
+        sync: false
+      - key: COOKIE_SECURE
+        value: "true"
+      - key: TRUSTED_PROXY_HOPS
+        value: "1"
+      # errors of the cabinet (server and browser); empty: none are sent
+      - key: SENTRY_DSN
+        sync: false

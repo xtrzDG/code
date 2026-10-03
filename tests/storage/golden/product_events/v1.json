@@ -1,0 +1,26 @@
+{
+  "business_id": "business_9006e0e2-0be4-4ae8-b305-bb29a0cecee0",
+  "created_at": 1790000000000000,
+  "id": "product_event_66bc312c-ba5b-45ce-97e1-5a580c280509",
+  "name": "signed_up",
+  "occurred_at": 1790000000000000,
+  "properties": {
+    "attention_codes": [
+      "profile_incomplete"
+    ],
+    "billing_period": "monthly",
+    "channel": "phone",
+    "currency_code": "GEL",
+    "dpa_version": "2026-07",
+    "login_method": "phone",
+    "monthly_amount": 1,
+    "plan_key": "chat",
+    "previous_plan_key": "chat",
+    "trial_ends_at": 1790000000000000,
+    "tunnel_step": "business"
+  },
+  "schema_version": "1",
+  "source": "server",
+  "updated_at": 1790000000000000,
+  "user_id": "user_c72ae38e-1708-4c55-bd09-775367ea7867"
+}

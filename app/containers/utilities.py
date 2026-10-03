@@ -1,5 +1,23 @@
 from dependency_injector import containers
+from dependency_injector.providers import Singleton
+
+from app.contracts.health import ReadinessMemoryContract
+from app.contracts.storage import StorageScopeContract
+from app.utilities.conversations.language_detector import LanguageDetector
+from app.utilities.localization.localized_text_resolver import LocalizedTextResolver
+from app.utilities.localization.phone_number_parser import PhoneNumberParser
+from app.utilities.observability.readiness_memory import ReadinessMemory
+from app.utilities.storage.storage_scope_context import StorageScopeContext
 
 
 class UtilitiesContainer(containers.DeclarativeContainer):
-    pass
+    phone_number_parser: Singleton[PhoneNumberParser] = Singleton(PhoneNumberParser)
+    localized_text_resolver: Singleton[LocalizedTextResolver] = Singleton(
+        LocalizedTextResolver
+    )
+    language_detector: Singleton[LanguageDetector] = Singleton(LanguageDetector)
+    # One scope shared by every Postgres collection of the process, and by
+    # the operators, orchestrators and the worker that enter it.
+    storage_scope: Singleton[StorageScopeContract] = Singleton(StorageScopeContext)
+    # What GET /readyz remembers between probes of this process.
+    readiness_memory: Singleton[ReadinessMemoryContract] = Singleton(ReadinessMemory)

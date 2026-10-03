@@ -1,0 +1,89 @@
+# Architecture contracts, checked in CI with `uv run lint-imports`.
+# Roles and their direction: docs/architecture.md, docs/conventions.md and
+# docs/adr/0002-role-chain-and-layers.md. Fix a broken contract by moving
+# the code to the role it belongs to; do not add ignore_imports.
+
+[importlinter]
+root_package = app
+include_external_packages = False
+
+[importlinter:contract:roles]
+name = Roles depend only downwards (gateways > ... > clients > utilities > contracts > schemas)
+type = layers
+layers =
+    app.gateways
+    app.operators
+    app.pipelines
+    app.orchestrators
+    app.use_cases
+    app.repositories | app.registries | app.facilitators | app.transformers
+    app.adapters
+    app.clients
+    app.utilities
+    app.contracts
+    app.schemas
+
+[importlinter:contract:composition-root]
+name = Only gateways and the entry points reach the composition root
+type = forbidden
+source_modules =
+    app.operators
+    app.pipelines
+    app.orchestrators
+    app.use_cases
+    app.repositories
+    app.registries
+    app.facilitators
+    app.transformers
+    app.adapters
+    app.clients
+    app.utilities
+    app.contracts
+    app.schemas
+forbidden_modules =
+    app.containers
+    app.main
+    app.worker_main
+
+[importlinter:contract:use-case-packages]
+name = Use-case packages are independent; what several of them need lives in app.use_cases.shared
+# A use case of one package never imports another package (directly or
+# through a chain). Steps, views and records more than one package needs
+# (loading the business, contact updates with audit, subscription records,
+# staff alert texts, list-item views, ...) are the explicit shared modules
+# of app.use_cases.shared, which import no use-case package themselves.
+type = independence
+modules =
+    app.use_cases.admin
+    app.use_cases.assistants
+    app.use_cases.autotests
+    app.use_cases.billing
+    app.use_cases.bookings
+    app.use_cases.businesses
+    app.use_cases.calendar
+    app.use_cases.catalog
+    app.use_cases.channels
+    app.use_cases.compliance
+    app.use_cases.contacts
+    app.use_cases.conversations
+    app.use_cases.demo
+    app.use_cases.feedback
+    app.use_cases.handoffs
+    app.use_cases.inbox
+    app.use_cases.insights
+    app.use_cases.jobs
+    app.use_cases.knowledge
+    app.use_cases.leads
+    app.use_cases.localization
+    app.use_cases.maintenance
+    app.use_cases.menu_import
+    app.use_cases.notifications
+    app.use_cases.observability
+    app.use_cases.profiles
+    app.use_cases.resources
+    app.use_cases.setup
+    app.use_cases.sharing
+    app.use_cases.telemetry
+    app.use_cases.users
+    app.use_cases.voice
+    app.use_cases.widget

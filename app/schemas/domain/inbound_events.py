@@ -1,0 +1,64 @@
+from base_pydantic_schemas import BaseDocument, PersistentDocument
+from pydantic import Field
+from typed_time_provider import Microseconds
+
+from app.schemas.constants.channels import ChannelKind
+from app.schemas.constants.deliveries import InboundEventKind, InboundEventStatus
+from app.schemas.typings.businesses.prefixed_id import BusinessId
+from app.schemas.typings.channels.prefixed_id import ChannelId
+from app.schemas.typings.channels.strings import ProviderMessageId
+from app.schemas.typings.contacts.strings import ContactName
+from app.schemas.typings.conversations.prefixed_id import ConversationId, MessageId
+from app.schemas.typings.conversations.strings import ChannelUserId, MessageText
+from app.schemas.typings.deliveries.constrained_integers import (
+    InboundProcessingAttemptCount,
+)
+from app.schemas.typings.deliveries.prefixed_id import InboundEventId, OutboundMessageId
+from app.schemas.typings.deliveries.strings import InboundErrorText, InboundPayloadText
+from app.schemas.typings.localization.constrained_strings import E164PhoneNumber
+
+
+class InboundCustomerMessage(PersistentDocument):
+    """A customer's message as the channel adapter read it from the webhook."""
+
+    channel_user_id: ChannelUserId
+    text: MessageText
+    contact_name: ContactName | None = None
+    contact_phone_number: E164PhoneNumber | None = None
+
+
+class InboundEventDocument(BaseDocument):
+    """
+    One message a platform delivered, kept until it is processed (the inbox
+    of reliability: a webhook is acknowledged as soon as its event is
+    stored, and the worker does the slow work).
+
+    The id is derived from the business, the channel and the platform's own
+    message id, so a redelivered webhook finds its event instead of making a
+    second one. The ids of the customer's message and of the assistant's
+    reply are chosen here, once: a turn that runs again after a crash stores
+    the same two transcript messages, and a reply that was already stored is
+    sent instead of generated again.
+
+    `business_id` is None for platform events (the staff bot, finished-call
+    reports before their business is found). `payload` keeps the verified
+    body of those events until the worker reads it.
+    """
+
+    id: InboundEventId
+    business_id: BusinessId | None = None
+    kind: InboundEventKind
+    channel: ChannelKind
+    channel_id: ChannelId | None = None
+    provider_message_id: ProviderMessageId
+    customer_message: InboundCustomerMessage | None = None
+    payload: InboundPayloadText | None = Field(default=None, repr=False)
+    customer_message_id: MessageId = Field(default_factory=MessageId)
+    reply_message_id: MessageId = Field(default_factory=MessageId)
+    status: InboundEventStatus = InboundEventStatus.RECEIVED
+    attempts: InboundProcessingAttemptCount = InboundProcessingAttemptCount(0)
+    lease_until: Microseconds | None = None
+    last_error: InboundErrorText | None = None
+    conversation_id: ConversationId | None = None
+    outbound_message_id: OutboundMessageId | None = None
+    processed_at: Microseconds | None = None

@@ -75,6 +75,7 @@ dmypy.json
 .pyright/
 .pytest_cache/
 .ruff_cache/
+.import_linter_cache/
 
 # Python tools and frameworks
 instance/
@@ -135,3 +136,9 @@ mongo.agent.env
 .DS_Store
 Thumbs.db
 Desktop.ini
+
+# Claude Code local state and agent worktrees
+.claude/
+
+# Local call recordings (RECORDINGS_DIRECTORY default)
+var/

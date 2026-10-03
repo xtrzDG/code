@@ -1,53 +1,61 @@
 from typed_time_provider import Microseconds
 
-from app.schemas.constants.accounts import LoginMethod
-from app.schemas.constants.billing import PlanKey
-from app.schemas.constants.localization import DataRegion
-from app.schemas.constants.niches import NicheKey
+from app.schemas.constants.knowledge import KnowledgeItemKind
+from app.schemas.constants.users import LoginMethod
 from app.schemas.domain.businesses import BusinessDocument
-from app.schemas.domain.owners import OwnerDocument
-from app.schemas.typings.accounts.prefixed_id import OwnerId
-from app.schemas.typings.businesses.strings import BusinessName
+from app.schemas.domain.knowledge import KnowledgeItemDocument
+from app.schemas.domain.users import UserDocument
+from app.schemas.typings.billing.constrained_integers import MoneyAmountMinor
+from app.schemas.typings.knowledge.constrained_strings import KnowledgeTag
+from app.schemas.typings.knowledge.strings import KnowledgeTitle
 from app.schemas.typings.localization.constrained_strings import (
     CountryCode,
     CurrencyCode,
     E164PhoneNumber,
     LanguageTag,
-    TimezoneName,
 )
+from app.schemas.typings.users.prefixed_id import UserId
+from tests.foundation.builders import build_business
 
 
 def test_business_document_survives_json_round_trip() -> None:
-    business = BusinessDocument(
-        owner_id=OwnerId(),
-        name=BusinessName("VR Club Tbilisi"),
-        niche_key=NicheKey.ENTERTAINMENT,
-        country_code=CountryCode("GE"),
-        timezone=TimezoneName("Asia/Tbilisi"),
-        currency_code=CurrencyCode("GEL"),
-        owner_language=LanguageTag("ru"),
-        customer_languages=[LanguageTag("ka"), LanguageTag("ru"), LanguageTag("en")],
-        plan_key=PlanKey.VOICE_AND_CHAT,
-        data_region=DataRegion.EU,
-    )
+    business = build_business(UserId())
 
     restored = BusinessDocument.model_validate_json(business.model_dump_json())
 
     assert restored == business
     assert type(restored.id) is type(business.id)
-    assert type(restored.customer_languages[0]) is LanguageTag
+    assert type(restored.languages[0]) is LanguageTag
     assert isinstance(restored.created_at, Microseconds)
 
 
-def test_owner_from_any_country_is_stored_in_e164() -> None:
-    owner = OwnerDocument(
+def test_user_from_any_country_is_stored_in_e164() -> None:
+    user = UserDocument(
         login_method=LoginMethod.PHONE,
         phone_number=E164PhoneNumber("+5511912345678"),
         country_code=CountryCode("BR"),
-        preferred_language=LanguageTag("pt-BR"),
+        locale=LanguageTag("pt-BR"),
     )
 
-    restored = OwnerDocument.model_validate_json(owner.model_dump_json())
+    restored = UserDocument.model_validate_json(user.model_dump_json())
 
     assert restored.phone_number == "+5511912345678"
-    assert restored.preferred_language == "pt-BR"
+    assert restored.locale == "pt-BR"
+
+
+def test_knowledge_prices_are_integers_in_the_business_currency() -> None:
+    business = build_business(UserId())
+    item = KnowledgeItemDocument(
+        business_id=business.id,
+        kind=KnowledgeItemKind.MENU_ITEM,
+        title=KnowledgeTitle("Khachapuri Adjaruli"),
+        price_minor=MoneyAmountMinor(1800),
+        currency_code=CurrencyCode("GEL"),
+        tags=[KnowledgeTag("vegetarian")],
+    )
+
+    restored = KnowledgeItemDocument.model_validate_json(item.model_dump_json())
+
+    assert restored.price_minor == 1800
+    assert type(restored.price_minor) is MoneyAmountMinor
+    assert restored.tags == ["vegetarian"]

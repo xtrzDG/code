@@ -1,0 +1,283 @@
+{
+  "collection": "autotest_runs",
+  "document_type": "AutotestRunDocument",
+  "schema_version": 2,
+  "shape": {
+    "additionalProperties": false,
+    "properties": {
+      "assistant_version_id": {
+        "pattern": "^assistant_version_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "average_score": {
+        "anyOf": [
+          {
+            "maximum": 5.0,
+            "minimum": 1.0,
+            "type": "number"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "business_id": {
+        "pattern": "^business_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "created_at": {
+        "type": "integer"
+      },
+      "id": {
+        "pattern": "^autotest_run_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "is_full_coverage": {
+        "default": false,
+        "type": "boolean"
+      },
+      "is_passed": {
+        "default": false,
+        "type": "boolean"
+      },
+      "kinds": {
+        "anyOf": [
+          {
+            "items": {
+              "enum": [
+                "booking",
+                "booking_out_of_hours",
+                "cancellation",
+                "price_question",
+                "unknown_question",
+                "discount_request",
+                "rude_customer",
+                "human_request",
+                "prompt_injection",
+                "emergency"
+              ],
+              "type": "string"
+            },
+            "type": "array"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "languages": {
+        "anyOf": [
+          {
+            "items": {
+              "maxLength": 16,
+              "minLength": 2,
+              "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$",
+              "type": "string"
+            },
+            "type": "array"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "pass_rate": {
+        "default": 0.0,
+        "maximum": 1.0,
+        "minimum": 0.0,
+        "type": "number"
+      },
+      "planned_scenario_count": {
+        "anyOf": [
+          {
+            "minimum": 0,
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "previous_version_status": {
+        "anyOf": [
+          {
+            "enum": [
+              "draft",
+              "testing",
+              "ready",
+              "tests_failed",
+              "published",
+              "archived"
+            ],
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "results": {
+        "items": {
+          "additionalProperties": false,
+          "properties": {
+            "check_codes": {
+              "items": {
+                "enum": [
+                  "no_booking_created",
+                  "not_handed_off",
+                  "unexpected_records",
+                  "wrong_reply_language",
+                  "conversation_failed",
+                  "no_customer_message",
+                  "judge_unavailable",
+                  "judge_unreadable"
+                ],
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "check_notes": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "cost_micro_usd": {
+              "default": 0,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "judge_notes": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "kind": {
+              "enum": [
+                "booking",
+                "booking_out_of_hours",
+                "cancellation",
+                "price_question",
+                "unknown_question",
+                "discount_request",
+                "rude_customer",
+                "human_request",
+                "prompt_injection",
+                "emergency"
+              ],
+              "type": "string"
+            },
+            "language": {
+              "maxLength": 16,
+              "minLength": 2,
+              "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$",
+              "type": "string"
+            },
+            "outcome": {
+              "enum": [
+                "passed",
+                "failed",
+                "errored"
+              ],
+              "type": "string"
+            },
+            "scenario_key": {
+              "maxLength": 96,
+              "minLength": 3,
+              "pattern": "^[a-z][a-z0-9_\\-]*$",
+              "type": "string"
+            },
+            "scores": {
+              "items": {
+                "additionalProperties": false,
+                "properties": {
+                  "criterion": {
+                    "enum": [
+                      "facts_and_prices",
+                      "booking_data",
+                      "ai_disclosure",
+                      "handoff",
+                      "language"
+                    ],
+                    "type": "string"
+                  },
+                  "score": {
+                    "maximum": 5,
+                    "minimum": 1,
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "criterion",
+                  "score"
+                ],
+                "type": "object"
+              },
+              "type": "array"
+            },
+            "transcript": {
+              "items": {
+                "additionalProperties": false,
+                "properties": {
+                  "author": {
+                    "enum": [
+                      "customer",
+                      "assistant",
+                      "staff",
+                      "system"
+                    ],
+                    "type": "string"
+                  },
+                  "text": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "author",
+                  "text"
+                ],
+                "type": "object"
+              },
+              "type": "array"
+            }
+          },
+          "required": [
+            "scenario_key",
+            "kind",
+            "language",
+            "outcome"
+          ],
+          "type": "object"
+        },
+        "type": "array"
+      },
+      "schema_version": {
+        "default": "2",
+        "type": "string"
+      },
+      "status": {
+        "default": "finished",
+        "enum": [
+          "running",
+          "finished",
+          "errored"
+        ],
+        "type": "string"
+      },
+      "updated_at": {
+        "type": "integer"
+      }
+    },
+    "required": [
+      "business_id",
+      "assistant_version_id"
+    ],
+    "type": "object"
+  }
+}

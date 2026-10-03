@@ -1,0 +1,141 @@
+{
+  "collection": "contacts",
+  "document_type": "ContactDocument",
+  "schema_version": 2,
+  "shape": {
+    "additionalProperties": false,
+    "properties": {
+      "business_id": {
+        "pattern": "^business_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "channel_identities": {
+        "items": {
+          "additionalProperties": false,
+          "properties": {
+            "channel": {
+              "enum": [
+                "phone",
+                "whatsapp",
+                "instagram",
+                "messenger",
+                "telegram",
+                "web_chat",
+                "viber",
+                "owner_test"
+              ],
+              "type": "string"
+            },
+            "channel_user_id": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "channel",
+            "channel_user_id"
+          ],
+          "type": "object"
+        },
+        "type": "array"
+      },
+      "created_at": {
+        "type": "integer"
+      },
+      "erased_at": {
+        "anyOf": [
+          {
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "id": {
+        "pattern": "^contact_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "language": {
+        "anyOf": [
+          {
+            "maxLength": 16,
+            "minLength": 2,
+            "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "name": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "opted_out_channels": {
+        "items": {
+          "enum": [
+            "phone",
+            "whatsapp",
+            "instagram",
+            "messenger",
+            "telegram",
+            "web_chat",
+            "viber",
+            "owner_test"
+          ],
+          "type": "string"
+        },
+        "type": "array"
+      },
+      "phone_number": {
+        "anyOf": [
+          {
+            "maxLength": 16,
+            "minLength": 8,
+            "pattern": "^\\+[1-9][0-9]{6,14}$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "schema_version": {
+        "default": "2",
+        "type": "string"
+      },
+      "updated_at": {
+        "type": "integer"
+      },
+      "verified_phone_number": {
+        "anyOf": [
+          {
+            "maxLength": 16,
+            "minLength": 8,
+            "pattern": "^\\+[1-9][0-9]{6,14}$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      }
+    },
+    "required": [
+      "business_id"
+    ],
+    "type": "object"
+  }
+}

@@ -1,0 +1,269 @@
+{
+  "collection": "product_events",
+  "document_type": "ProductEventDocument",
+  "schema_version": 1,
+  "shape": {
+    "additionalProperties": false,
+    "properties": {
+      "business_id": {
+        "anyOf": [
+          {
+            "pattern": "^business_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "created_at": {
+        "type": "integer"
+      },
+      "id": {
+        "pattern": "^product_event_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "name": {
+        "enum": [
+          "signed_up",
+          "signed_in",
+          "business_created",
+          "tunnel_step_entered",
+          "tunnel_step_completed",
+          "tunnel_step_skipped",
+          "launch_succeeded",
+          "launch_blocked",
+          "dpa_accepted",
+          "channel_connected",
+          "test_chat_tried",
+          "went_live",
+          "first_real_conversation",
+          "first_booking",
+          "first_handoff",
+          "trial_started",
+          "subscribed",
+          "plan_changed",
+          "cancelled",
+          "payment_failed"
+        ],
+        "type": "string"
+      },
+      "occurred_at": {
+        "type": "integer"
+      },
+      "properties": {
+        "additionalProperties": false,
+        "properties": {
+          "attention_codes": {
+            "items": {
+              "enum": [
+                "profile_incomplete",
+                "staff_contact_missing",
+                "agreement_not_accepted",
+                "payment_needed",
+                "build_failed",
+                "checks_failed",
+                "checks_stopped",
+                "voice_not_ready",
+                "publish_failed"
+              ],
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "billing_period": {
+            "anyOf": [
+              {
+                "enum": [
+                  "monthly",
+                  "annual"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "channel": {
+            "anyOf": [
+              {
+                "enum": [
+                  "phone",
+                  "whatsapp",
+                  "instagram",
+                  "messenger",
+                  "telegram",
+                  "web_chat",
+                  "viber",
+                  "owner_test"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "currency_code": {
+            "anyOf": [
+              {
+                "maxLength": 3,
+                "minLength": 3,
+                "pattern": "^[A-Z]{3}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "dpa_version": {
+            "anyOf": [
+              {
+                "maxLength": 32,
+                "minLength": 1,
+                "pattern": "^[0-9A-Za-z][0-9A-Za-z.\\-_]*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "login_method": {
+            "anyOf": [
+              {
+                "enum": [
+                  "phone",
+                  "email"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "monthly_amount": {
+            "anyOf": [
+              {
+                "minimum": 0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "plan_key": {
+            "anyOf": [
+              {
+                "enum": [
+                  "chat",
+                  "voice_and_chat",
+                  "plus"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "previous_plan_key": {
+            "anyOf": [
+              {
+                "enum": [
+                  "chat",
+                  "voice_and_chat",
+                  "plus"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "trial_ends_at": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "tunnel_step": {
+            "anyOf": [
+              {
+                "enum": [
+                  "business",
+                  "place",
+                  "offer",
+                  "hours",
+                  "people",
+                  "channels",
+                  "try",
+                  "launch"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          }
+        },
+        "type": "object"
+      },
+      "schema_version": {
+        "default": "1",
+        "type": "string"
+      },
+      "source": {
+        "enum": [
+          "server",
+          "cabinet",
+          "reconciliation"
+        ],
+        "type": "string"
+      },
+      "updated_at": {
+        "type": "integer"
+      },
+      "user_id": {
+        "anyOf": [
+          {
+            "pattern": "^user_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      }
+    },
+    "required": [
+      "id",
+      "name",
+      "occurred_at",
+      "source"
+    ],
+    "type": "object"
+  }
+}

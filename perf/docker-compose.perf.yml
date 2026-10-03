@@ -1,0 +1,57 @@
+# Load tests against docker compose (docs/operations/capacity.md):
+#
+#   docker compose -f docker-compose.yml -f perf/docker-compose.perf.yml \
+#     up -d --build postgres migrate api worker
+#   docker compose -f docker-compose.yml -f perf/docker-compose.perf.yml \
+#     run --rm -T api seed-load --manifest - > perf/manifest.json
+#   docker compose -f docker-compose.yml -f perf/docker-compose.perf.yml \
+#     run --rm k6 run /perf/k6/cabinet_browsing.js
+#
+# The assistant answers with the scripted model after
+# SCRIPTED_LLM_LATENCY_MS (default 800: a real provider's typical answer),
+# so threads and the worker stay busy as in production without a provider
+# bill. Provider hosts resolve to nowhere: replies to the made-up Telegram
+# bots fail at once and are retried by the outbox, nothing leaves the
+# machine. Never use these settings for a deployment: the API trusts
+# X-Forwarded-For from anyone here, so k6 can play many client networks.
+x-load-environment: &load-environment
+  APP_ENV: development
+  LLM_PROVIDER: scripted
+  SCRIPTED_LLM_LATENCY_MS: ${SCRIPTED_LLM_LATENCY_MS:-800}
+  SEED_DEMO_DATA: "false"
+
+x-offline-providers: &offline-providers
+  - "api.telegram.org:127.0.0.1"
+  - "graph.facebook.com:127.0.0.1"
+  - "api.openai.com:127.0.0.1"
+  - "eu.api.openai.com:127.0.0.1"
+  - "api.anthropic.com:127.0.0.1"
+  - "api.elevenlabs.io:127.0.0.1"
+
+services:
+  api:
+    environment:
+      <<: *load-environment
+      FORWARDED_ALLOW_IPS: "*"
+      # Two API processes (uvicorn workers): one process acknowledges about
+      # 120 webhooks a second on a 4-vCPU runner, the burst sends 200.
+      WEB_CONCURRENCY: "2"
+    extra_hosts: *offline-providers
+
+  worker:
+    environment: *load-environment
+    extra_hosts: *offline-providers
+
+  k6:
+    image: grafana/k6:1.3.0
+    profiles: ["load"]
+    entrypoint: ["k6"]
+    environment:
+      API_URL: http://api:8000
+      MANIFEST: /perf/manifest.json
+      SCRIPTED_LLM_LATENCY_MS: ${SCRIPTED_LLM_LATENCY_MS:-800}
+    volumes:
+      - ./perf:/perf:ro
+    depends_on:
+      api:
+        condition: service_healthy

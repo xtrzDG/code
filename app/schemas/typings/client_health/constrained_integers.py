@@ -1,0 +1,36 @@
+"""Keep abc order."""
+
+from base_typed_int import BaseConstrainedTypedInt
+
+
+class AutotestFailureCount(BaseConstrainedTypedInt):
+    """Scenarios that failed or errored in the latest autotest run of a client."""
+
+    ge = 0
+
+
+class ClientCount(BaseConstrainedTypedInt):
+    """Number of client businesses in a platform admin listing."""
+
+    ge = 0
+
+
+class HandoffCount(BaseConstrainedTypedInt):
+    """Conversations passed to staff in a time window (sandbox excluded)."""
+
+    ge = 0
+
+
+class OpenQuestionCount(BaseConstrainedTypedInt):
+    """Unanswered customer questions not yet resolved by the owner."""
+
+    ge = 0
+
+
+class ToolErrorCount(BaseConstrainedTypedInt):
+    """Assistant tool calls that ended with an error in a time window."""
+
+    ge = 0
+
+
+# Keep abc order for all non example types, if possible.

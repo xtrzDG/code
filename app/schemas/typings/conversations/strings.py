@@ -3,6 +3,10 @@
 from base_typed_string import BaseTypedString
 
 
+class CallTranscriptText(BaseTypedString):
+    """Full transcript of a phone call as delivered by the voice platform."""
+
+
 class ChannelUserId(BaseTypedString):
     """
     Identifier of the customer inside a channel.
@@ -12,15 +16,11 @@ class ChannelUserId(BaseTypedString):
     """
 
 
-class CustomerName(BaseTypedString):
-    """Name the customer gave or the channel reported."""
-
-
 class LlmProviderPayload(BaseTypedString):
     """
-    Raw JSON of one language-model turn exactly as the provider expects it back.
+    Raw JSON of one language-model turn exactly as it is replayed.
 
-    Stored verbatim so the transcript stays append-only (thinking blocks and
+    Stored verbatim so the transcript stays append-only (reasoning items and
     prompt caching depend on byte-identical history).
     """
 
@@ -37,8 +37,31 @@ class LlmToolResultJson(BaseTypedString):
     """JSON object returned to the language model as a tool result."""
 
 
+class MessagePreview(BaseTypedString):
+    """
+    The beginning of a message for a list row, cut at a word boundary with
+    an ellipsis when the message is longer.
+    """
+
+
 class MessageText(BaseTypedString):
-    """Text of one customer-visible message."""
+    """Text of one message."""
+
+
+class ProviderCallId(BaseTypedString):
+    """Call identifier at the voice platform or telephony provider."""
+
+
+class RecordingStoragePath(BaseTypedString):
+    """Path of a call recording in EU object storage."""
+
+
+class UnverifiedReplyValue(BaseTypedString):
+    """
+    Money amount, time, date, phone or number in an assistant reply, as
+    written, that neither the facts, the tool results nor the customer's
+    messages support (invented-numbers guard).
+    """
 
 
 # Keep abc order for all non example types, if possible.

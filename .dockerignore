@@ -1,0 +1,30 @@
+# Build context of the backend image: only pyproject.toml, uv.lock, app/,
+# migrations/, docs/legal/ and docker/ are used.
+.git
+.github
+.claude
+.venv
+.venv-*
+**/__pycache__
+**/*.py[cod]
+.mypy_cache
+.pytest_cache
+.ruff_cache
+.pyright
+.coverage
+htmlcov
+.env
+.env.*
+!.env.example
+var
+tests
+docs
+# The DPA texts (served by the API) are the only documents in the image.
+!docs/legal
+web
+node_modules
+*.md
+docker-compose.yml
+render.yaml
+Dockerfile
+.dockerignore

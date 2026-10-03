@@ -1,0 +1,11 @@
+{
+  "attempted_at": 1790000000000000,
+  "business_id": "business_49430afc-085b-43d1-b90b-a3d3bdedd2c5",
+  "created_at": 1790000000000000,
+  "delivered_at": 1790000000000000,
+  "id": "staff_delivery_384cfffa-a393-54e4-8897-767f4b752d2a",
+  "last_error": "Sample DeliveryErrorText",
+  "schema_version": "1",
+  "status": "pending",
+  "updated_at": 1790000000000000
+}

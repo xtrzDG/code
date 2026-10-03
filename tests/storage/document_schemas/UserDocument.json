@@ -1,0 +1,254 @@
+{
+  "collection": "users",
+  "document_type": "UserDocument",
+  "schema_version": 2,
+  "shape": {
+    "additionalProperties": false,
+    "properties": {
+      "country_code": {
+        "anyOf": [
+          {
+            "maxLength": 2,
+            "minLength": 2,
+            "pattern": "^[A-Z]{2}$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "created_at": {
+        "type": "integer"
+      },
+      "display_name": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "email": {
+        "anyOf": [
+          {
+            "maxLength": 254,
+            "minLength": 6,
+            "pattern": "^[a-z0-9._%+\\-]+@[a-z0-9\\-]+(\\.[a-z0-9\\-]+)*\\.([a-z]{2,}|xn--[a-z0-9\\-]+)$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "id": {
+        "pattern": "^user_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "is_platform_admin": {
+        "default": false,
+        "type": "boolean"
+      },
+      "is_verified": {
+        "default": false,
+        "type": "boolean"
+      },
+      "locale": {
+        "maxLength": 16,
+        "minLength": 2,
+        "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$",
+        "type": "string"
+      },
+      "login_method": {
+        "enum": [
+          "phone",
+          "email"
+        ],
+        "type": "string"
+      },
+      "phone_number": {
+        "anyOf": [
+          {
+            "maxLength": 16,
+            "minLength": 8,
+            "pattern": "^\\+[1-9][0-9]{6,14}$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "schema_version": {
+        "default": "2",
+        "type": "string"
+      },
+      "signup_attribution": {
+        "anyOf": [
+          {
+            "additionalProperties": false,
+            "properties": {
+              "first_seen_at": {
+                "anyOf": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null
+              },
+              "landing_path": {
+                "anyOf": [
+                  {
+                    "maxLength": 200,
+                    "minLength": 1,
+                    "pattern": "^/[A-Za-z0-9_\\-/.~%]*$",
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null
+              },
+              "referral_code": {
+                "anyOf": [
+                  {
+                    "maxLength": 64,
+                    "minLength": 1,
+                    "pattern": "^[A-Za-z0-9._-]+$",
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null
+              },
+              "referrer_host": {
+                "anyOf": [
+                  {
+                    "maxLength": 253,
+                    "minLength": 1,
+                    "pattern": "^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)*$",
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null
+              },
+              "source_tag": {
+                "anyOf": [
+                  {
+                    "maxLength": 64,
+                    "minLength": 1,
+                    "pattern": "^[A-Za-z0-9._-]+$",
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null
+              },
+              "utm_campaign": {
+                "anyOf": [
+                  {
+                    "maxLength": 120,
+                    "minLength": 1,
+                    "pattern": "^[^\\x00-\\x1f\\x7f<>]+$",
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null
+              },
+              "utm_content": {
+                "anyOf": [
+                  {
+                    "maxLength": 120,
+                    "minLength": 1,
+                    "pattern": "^[^\\x00-\\x1f\\x7f<>]+$",
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null
+              },
+              "utm_medium": {
+                "anyOf": [
+                  {
+                    "maxLength": 120,
+                    "minLength": 1,
+                    "pattern": "^[^\\x00-\\x1f\\x7f<>]+$",
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null
+              },
+              "utm_source": {
+                "anyOf": [
+                  {
+                    "maxLength": 120,
+                    "minLength": 1,
+                    "pattern": "^[^\\x00-\\x1f\\x7f<>]+$",
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null
+              },
+              "utm_term": {
+                "anyOf": [
+                  {
+                    "maxLength": 120,
+                    "minLength": 1,
+                    "pattern": "^[^\\x00-\\x1f\\x7f<>]+$",
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null
+              }
+            },
+            "type": "object"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "updated_at": {
+        "type": "integer"
+      }
+    },
+    "required": [
+      "login_method",
+      "locale"
+    ],
+    "type": "object"
+  }
+}

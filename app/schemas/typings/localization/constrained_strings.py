@@ -6,6 +6,33 @@ Constrained localization primitives shared by every country and language.
 from base_typed_string import BaseConstrainedTypedString
 
 
+class CallForwardingDialCode(BaseConstrainedTypedString):
+    """
+    GSM supplementary-service code a person dials to set or cancel forwarding.
+
+    Example:
+        no_answer = CallForwardingDialCode("**61*+995322123456#")
+        cancel_all = CallForwardingDialCode("##002#")
+    """
+
+    min_length = 4
+    max_length = 32
+    pattern = r"^[*#]{1,2}[0-9]{2,3}(\*\+?[0-9]{4,15})?(\*\*[0-9]{1,2})?#$"
+
+
+class CallForwardingDialCodeTemplate(BaseConstrainedTypedString):
+    """
+    Dial code with an optional "{number}" placeholder for the target number.
+
+    Example:
+        no_answer = CallForwardingDialCodeTemplate("**61*{number}#")
+    """
+
+    min_length = 4
+    max_length = 32
+    pattern = r"^[*#]{1,2}[0-9]{2,3}(\*\{number\})?(\*\*[0-9]{1,2})?#$"
+
+
 class CountryCode(BaseConstrainedTypedString):
     """
     ISO 3166-1 alpha-2 country code in upper case.
@@ -71,6 +98,21 @@ class LanguageTag(BaseConstrainedTypedString):
     min_length = 2
     max_length = 16
     pattern = r"^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$"
+
+
+class PhoneNumberPrefix(BaseConstrainedTypedString):
+    """
+    The start of E.164 phone numbers ("+" and 1 to 15 digits): a calling
+    code or a number range of one, such as a premium-rate range that login
+    codes are never sent to.
+
+    Example:
+        premium_range = PhoneNumberPrefix("+4490")
+    """
+
+    min_length = 2
+    max_length = 16
+    pattern = r"^\+[1-9][0-9]{0,14}$"
 
 
 class ScriptCode(BaseConstrainedTypedString):

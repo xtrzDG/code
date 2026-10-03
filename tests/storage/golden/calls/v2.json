@@ -1,0 +1,21 @@
+{
+  "business_id": "business_7de2accb-e528-4261-919d-589800d1edfb",
+  "conversation_id": "conversation_2107adab-215a-4b6d-ab7b-a87931011a16",
+  "cost_micro_usd": 1,
+  "created_at": 1790000000000000,
+  "duration_seconds": 1,
+  "from_phone_number": "+995599123456",
+  "guard_verdict": "clean",
+  "id": "call_084f488c-a788-472b-a20e-f2ebfccdb0af",
+  "outcome": "booking",
+  "provider_call_id": "Sample ProviderCallId",
+  "recording_path": "recordings/2026/09/call-42.mp3",
+  "schema_version": "2",
+  "started_at": 1790000000000000,
+  "to_phone_number": "+995599123456",
+  "transcript": "Sample CallTranscriptText",
+  "unverified_values": [
+    "Sample UnverifiedReplyValue"
+  ],
+  "updated_at": 1790000000000000
+}

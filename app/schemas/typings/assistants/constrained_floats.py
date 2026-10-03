@@ -10,4 +10,11 @@ class AutotestPassRate(BaseConstrainedTypedFloat):
     le = 1.0
 
 
+class AverageJudgeScore(BaseConstrainedTypedFloat):
+    """Mean judge score over scenarios and criteria (launch threshold 4.0)."""
+
+    ge = 1.0
+    le = 5.0
+
+
 # Keep abc order for all non example types, if possible.

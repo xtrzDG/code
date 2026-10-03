@@ -1,0 +1,153 @@
+{
+  "collection": "messages",
+  "document_type": "MessageDocument",
+  "schema_version": 1,
+  "shape": {
+    "additionalProperties": false,
+    "properties": {
+      "author": {
+        "enum": [
+          "customer",
+          "assistant",
+          "staff",
+          "system"
+        ],
+        "type": "string"
+      },
+      "business_id": {
+        "pattern": "^business_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "conversation_id": {
+        "pattern": "^conversation_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "cost_micro_usd": {
+        "default": 0,
+        "minimum": 0,
+        "type": "integer"
+      },
+      "created_at": {
+        "type": "integer"
+      },
+      "direction": {
+        "enum": [
+          "inbound",
+          "outbound"
+        ],
+        "type": "string"
+      },
+      "id": {
+        "pattern": "^message_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "input_tokens": {
+        "default": 0,
+        "minimum": 0,
+        "type": "integer"
+      },
+      "language": {
+        "anyOf": [
+          {
+            "maxLength": 16,
+            "minLength": 2,
+            "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "model_id": {
+        "anyOf": [
+          {
+            "maxLength": 128,
+            "minLength": 3,
+            "pattern": "^[a-z0-9][a-z0-9.\\-:@_]*$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "output_tokens": {
+        "default": 0,
+        "minimum": 0,
+        "type": "integer"
+      },
+      "schema_version": {
+        "default": "1",
+        "type": "string"
+      },
+      "sent_by": {
+        "anyOf": [
+          {
+            "pattern": "^user_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "text": {
+        "type": "string"
+      },
+      "tool_calls": {
+        "items": {
+          "additionalProperties": false,
+          "properties": {
+            "input_json": {
+              "type": "string"
+            },
+            "is_error": {
+              "default": false,
+              "type": "boolean"
+            },
+            "result_json": {
+              "type": "string"
+            },
+            "tool_name": {
+              "enum": [
+                "search_knowledge",
+                "get_price",
+                "check_availability",
+                "create_booking",
+                "cancel_booking",
+                "reschedule_booking",
+                "create_lead",
+                "handoff_to_human",
+                "send_link",
+                "record_unanswered_question"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "tool_name",
+            "input_json",
+            "result_json"
+          ],
+          "type": "object"
+        },
+        "type": "array"
+      },
+      "updated_at": {
+        "type": "integer"
+      }
+    },
+    "required": [
+      "conversation_id",
+      "business_id",
+      "direction",
+      "author",
+      "text"
+    ],
+    "type": "object"
+  }
+}

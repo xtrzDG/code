@@ -1,0 +1,208 @@
+import { insightsEn } from "./sections/insights";
+import { contentEn } from "./sections/content";
+import { workspaceEn } from "./sections/workspace";
+import { shellEn } from "./sections/shell";
+import { setupFlowEn } from "./sections/setup";
+import { assistantFlowEn } from "./sections/assistant";
+import { onboardingEn } from "./onboarding/en";
+import { landingEn } from "./landing/en";
+
+/**
+ * English texts: the reference dictionary. Every key added here must be
+ * added to ru.ts and ka.ts too (the type checker enforces it).
+ *
+ * Placeholders look like {name}. Plural texts are objects with the
+ * Intl.PluralRules categories of the language (`one`, `few`, `many`,
+ * `other`); `other` is required.
+ */
+export const en = {
+  common: {
+    appName: "Assistant Workshop",
+    tagline: "Your AI front-line assistant",
+    save: "Save",
+    saving: "Saving…",
+    saved: "Saved",
+    cancel: "Cancel",
+    close: "Close",
+    continue: "Continue",
+    back: "Back",
+    next: "Next",
+    retry: "Try again",
+    loading: "Loading…",
+    edit: "Edit",
+    delete: "Delete",
+    add: "Add",
+    remove: "Remove",
+    create: "Create",
+    open: "Open",
+    done: "Done",
+    yes: "Yes",
+    no: "No",
+    optional: "optional",
+    required: "required",
+    select: "Select…",
+    search: "Search",
+    notSet: "Not set",
+    comingSoon: "This section is being built and will appear here soon.",
+    details: "Details",
+    requestId: "Request ID: {id}",
+    typeToConfirm: "Type {text} to confirm",
+    undo: "Undo",
+  },
+  language: {
+    label: "Interface language",
+    changed: "Language changed",
+  },
+  theme: {
+    label: "Theme",
+    dark: "Dark",
+    light: "Light",
+    system: "System",
+  },
+  nav: {
+    mainNavigation: "Main navigation",
+    skipToContent: "Skip to content",
+    allBusinesses: "All businesses",
+    bookings: "Bookings",
+    knowledge: "Knowledge",
+    channels: "Channels",
+    admin: "Platform",
+  },
+  shell: {
+    switchBusiness: "Switch business",
+    signedInAs: "Signed in as {name}",
+    signOut: "Sign out",
+    signingOut: "Signing out…",
+    platformAdmin: "Platform admin",
+  },
+  auth: {
+    aboutLink: "What the assistant does →",
+    title: "Sign in",
+    subtitle: "Enter your phone number or e-mail and we will send you a code. New here? The account is created automatically.",
+    methodLabel: "Sign in with",
+    methodPhone: "Phone",
+    methodEmail: "E-mail",
+    country: "Country",
+    phone: "Phone number",
+    phonePlaceholder: "Number without the country code",
+    phoneHint: "Any format works: with or without +{code}.",
+    email: "E-mail",
+    emailPlaceholder: "you@example.com",
+    sendCode: "Get a code",
+    sendingCode: "Sending…",
+    codeTitle: "Enter the code",
+    /** Where the code went, by channel ("по почте", "в WhatsApp"). */
+    codeSentTo: {
+      email: "We sent a 6-digit code to {destination} by e-mail.",
+      sms: "We sent a 6-digit code to {destination} by SMS.",
+      whatsapp: "We sent a 6-digit code to {destination} on WhatsApp.",
+      telegram: "We sent a 6-digit code to {destination} on Telegram.",
+    },
+    code: "Code",
+    codeHint: "The code is valid for {minutes} min.",
+    verify: "Sign in",
+    verifying: "Checking…",
+    resendIn: "You can ask for a new code in {seconds} s",
+    resend: "Send a new code",
+    codeResent: "A new code is on its way",
+    sendByChannelInstead: "No code? Send by {channel} instead",
+    changeDestination: "Use another number or e-mail",
+    welcome: "Welcome!",
+    sessionExpired: "Your session has ended. Please sign in again.",
+    countryUnavailable: "not available yet",
+    botCheck: {
+      title: "One more step",
+      hint: "Confirm that you are not a robot, and we will send the code right away.",
+      failed: "The check did not pass. Try it once more.",
+      unavailable: "The check could not load. Check the connection or turn off content blockers, then reload the page.",
+    },
+    deliveryChannels: {
+      sms: "SMS",
+      whatsapp: "WhatsApp",
+      telegram: "Telegram",
+      email: "e-mail",
+    },
+    errors: {
+      phoneRequired: "Enter your phone number",
+      phoneInvalid: "This does not look like a phone number",
+      emailInvalid: "Enter a valid e-mail address",
+      codeInvalid: "Enter the 6 digits from the message",
+      wrongCode: "The code is wrong or has expired. Check it or ask for a new one.",
+      tooManyAttempts: "Too many attempts. Wait a little and ask for a new code.",
+      resendTooSoon: "A code was just sent. Wait 30 seconds before asking for another one.",
+      countryRestricted: "Sign-up is not available in this country yet. You can sign in with e-mail instead.",
+      cannotReceive: "This number cannot receive codes. Use a mobile number or sign in with e-mail.",
+    },
+  },
+  businesses: {
+    title: "Your businesses",
+    subtitle: "Each business has its own assistant, profile and channels.",
+    emptyTitle: "No businesses yet",
+    emptyDescription: "Create your first business: choose a niche and a country, and we will set up the rest.",
+    name: "Business name",
+    role: {
+      owner: "Owner",
+      staff: "Staff",
+    },
+    status: {
+      onboarding: "Filling in the profile",
+      testing: "Testing",
+      live: "Live",
+      paused: "Paused",
+    },
+  },
+  pages: {
+    conversations: { description: "Every conversation with its transcript, call recording and tool calls." },
+    bookings: { description: "Bookings with their statuses; add one by hand." },
+    leads: { description: "Banquets, groups and other requests for the manager." },
+    handoffs: { description: "Conversations where the assistant called for a person, with a short summary." },
+    knowledge: { description: "Menu, services, prices and answers; questions customers asked without an answer." },
+    channels: { description: "Messengers, phone forwarding and the website chat." },
+    billing: { description: "Plan, package usage, invoices and payment." },
+    admin: { title: "Platform", description: "All clients, their health, usage and margin." },
+  },
+  ...onboardingEn,
+  ...landingEn,
+  errors: {
+    title: "Something went wrong",
+    description: "Try again. If it keeps happening, send us the request ID.",
+    notFoundTitle: "Page not found",
+    notFoundDescription: "The page does not exist or you do not have access to it.",
+    backHome: "To my businesses",
+    codes: {
+      not_found: "Not found, or you do not have access.",
+      validation_failed: "Check the entered data.",
+      conflict: "This conflicts with the current state. Refresh and try again.",
+      authentication_required: "Please sign in again.",
+      access_denied: "You do not have permission for this action.",
+      rate_limited: "Too many attempts. Wait a little and try again.",
+      payload_too_large: "This is too large to send. Choose a smaller file or shorten the text.",
+      external_service_error: "An external service is not responding. Try again in a minute.",
+      internal_error: "Server error. We already know about it.",
+      backend_unavailable: "The server is not reachable. Check the connection and try again.",
+      network_error: "No connection. Check the internet and try again.",
+      forbidden_origin: "The request was blocked for security reasons. Reload the page.",
+      unknown_error: "Something went wrong. Try again.",
+    },
+  },
+  validation: {
+    required: "Fill in this field",
+    url: "Enter a full link starting with https://",
+    number: "Enter a number",
+    positive: "Enter a number greater than zero",
+    wholeNumber: "Enter a whole number",
+    time: "Enter the time as HH:MM",
+    tooLong: "The text is too long",
+    hoursOverlap: "The intervals of this day overlap",
+  },
+  ...insightsEn,
+  ...contentEn,
+  ...workspaceEn,
+  ...shellEn,
+  ...setupFlowEn,
+  ...assistantFlowEn,
+} as const satisfies NestedMessages;
+
+interface NestedMessages {
+  readonly [key: string]: string | NestedMessages;
+}
