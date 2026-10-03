@@ -17,6 +17,7 @@ from app.schemas.constants.billing import (
     SubscriptionStatus,
 )
 from app.schemas.constants.channels import ChannelStatus
+from app.schemas.constants.setup import ActivationEventKind
 from app.schemas.domain.billing import InvoiceDocument, SubscriptionDocument
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.channels import ChannelDocument
@@ -68,8 +69,13 @@ def business_drafts(
     milestones: Sequence[ActivationEventDocument],
     channels: Sequence[ChannelDocument],
     subscription: SubscriptionDocument | None,
+    first_published_at: Microseconds | None = None,
 ) -> list[ProductEventDraft]:
-    """The once-only steps a business's records prove happened."""
+    """
+    The once-only steps a business's records prove happened; a business
+    whose assistant was published went live at its first publish, also
+    without a recorded milestone (data from before milestones).
+    """
 
     drafts: list[ProductEventDraft] = []
     if owner_id is not None:
@@ -79,6 +85,12 @@ def business_drafts(
         milestone_event(business.id, milestone.kind, milestone.occurred_at)
         for milestone in milestones
     )
+    if first_published_at is not None:
+        drafts.append(
+            milestone_event(
+                business.id, ActivationEventKind.WENT_LIVE, first_published_at
+            )
+        )
     for channel in channels:
         if channel.status is ChannelStatus.CONNECTED:
             drafts.extend(

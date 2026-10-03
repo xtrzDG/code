@@ -6,6 +6,9 @@ from app.contracts.analytics import RecordProductEventFacilitatorContract
 from app.contracts.repositories.analytics_repositories import (
     ProductEventRepoContract,
 )
+from app.contracts.repositories.assistant_repositories import (
+    AssistantVersionRepoContract,
+)
 from app.contracts.repositories.billing_repositories import (
     InvoiceRepoContract,
     SubscriptionRepoContract,
@@ -40,8 +43,9 @@ SIGN_UP_LOOKBACK_SECONDS: int = 400 * 24 * 60 * 60
 class ReconcileProductEventsUseCase(UseCaseContract[JobTick, JobReport]):
     """
     Daily job: make the product events complete from the stored records.
-    Sign-ups of the last 400 days, every business's creation, milestones,
-    connected channels and trial are recorded with the ids live recording
+    Sign-ups of the last 400 days, every business's creation, milestones
+    (going live also from its first published version), connected channels
+    and trial are recorded with the ids live recording
     gives them (a step recorded already changes nothing); where the
     replayed billing steps disagree with the stored subscription (a lost
     write, data from before analytics, a grace that ran out), one
@@ -55,6 +59,7 @@ class ReconcileProductEventsUseCase(UseCaseContract[JobTick, JobReport]):
         business_repo: BusinessRepoContract,
         activation_event_repo: ActivationEventRepoContract,
         channel_repo: ChannelRepoContract,
+        assistant_version_repo: AssistantVersionRepoContract,
         subscription_repo: SubscriptionRepoContract,
         invoice_repo: InvoiceRepoContract,
         product_event_repo: ProductEventRepoContract,
@@ -65,6 +70,9 @@ class ReconcileProductEventsUseCase(UseCaseContract[JobTick, JobReport]):
         self._business_repo: BusinessRepoContract = business_repo
         self._activation_event_repo: ActivationEventRepoContract = activation_event_repo
         self._channel_repo: ChannelRepoContract = channel_repo
+        self._assistant_version_repo: AssistantVersionRepoContract = (
+            assistant_version_repo
+        )
         self._subscription_repo: SubscriptionRepoContract = subscription_repo
         self._invoice_repo: InvoiceRepoContract = invoice_repo
         self._product_event_repo: ProductEventRepoContract = product_event_repo
@@ -101,6 +109,7 @@ class ReconcileProductEventsUseCase(UseCaseContract[JobTick, JobReport]):
                     self._activation_event_repo.list_by_business(business.id),
                     self._channel_repo.list_by_business(business.id),
                     subscription,
+                    self._first_published_at(business.id),
                 )
             )
             if subscription is None:
@@ -117,3 +126,13 @@ class ReconcileProductEventsUseCase(UseCaseContract[JobTick, JobReport]):
 
         self._product_events.record(*drafts)
         return JobReport(processed_count=ProcessedItemCount(len(drafts)))
+
+    def _first_published_at(self, business_id: BusinessId) -> Microseconds | None:
+        """When the business's assistant was first published (went live)."""
+
+        published: list[Microseconds] = [
+            version.published_at
+            for version in self._assistant_version_repo.list_by_business(business_id)
+            if version.published_at is not None
+        ]
+        return min(published, key=int, default=None)

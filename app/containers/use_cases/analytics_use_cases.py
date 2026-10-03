@@ -75,6 +75,7 @@ class AnalyticsUseCasesContainer(containers.DeclarativeContainer):
             business_repo=repositories.business_repo,
             activation_event_repo=repositories.activation_event_repo,
             channel_repo=repositories.channel_repo,
+            assistant_version_repo=repositories.assistant_version_repo,
             subscription_repo=repositories.subscription_repo,
             invoice_repo=repositories.invoice_repo,
             product_event_repo=repositories.product_event_repo,

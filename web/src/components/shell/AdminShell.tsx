@@ -31,7 +31,8 @@ export function AdminShell({ me, initialCollapsed = false, children }: { me: Cur
           label: t("adminMetrics.nav"),
           icon: IconGauge,
           isActive: isMetricsPage,
-          inTabBar: true,
+          // Phones: under "More", so the tab bar keeps room for its labels.
+          inTabBar: false,
         },
         {
           key: "security",

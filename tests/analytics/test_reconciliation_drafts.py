@@ -17,9 +17,11 @@ from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.localization.constrained_strings import CurrencyCode
 from app.utilities.analytics.reconciliation_drafts import (
     billing_corrections,
+    business_drafts,
     is_paying,
 )
 from tests.analytics.metric_events import at_day, billing
+from tests.analytics.metrics_world import MetricsWorld
 
 N = ProductEventName
 BUSINESS: BusinessId = BusinessId()
@@ -127,3 +129,17 @@ def test_who_pays() -> None:
     assert not is_paying(in_grace, [], now)
     assert not is_paying(subscription(SubscriptionStatus.TRIALING), [], now)
     assert not is_paying(subscription(SubscriptionStatus.CANCELLED), [], now)
+
+
+def test_a_published_assistant_went_live_at_its_first_publish() -> None:
+    world = MetricsWorld()
+    owner = world.add_user(1)
+    business = world.add_business(owner, 1)
+
+    drafts = business_drafts(business, owner.id, [], [], None, at_day(3))
+
+    assert [(draft.name, draft.occurred_at) for draft in drafts] == [
+        (N.BUSINESS_CREATED, at_day(1)),
+        (N.WENT_LIVE, at_day(3)),
+    ]
+    assert {draft.source for draft in drafts} == {ProductEventSource.RECONCILIATION}

@@ -55,12 +55,13 @@ export function MetricsScreen() {
               <FunnelCard steps={view.growth.funnel} format={format} />
               <TunnelCard steps={view.growth.tunnel} format={format} />
             </div>
-            <div className="grid gap-6 xl:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
+            <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
               <MrrCard mrr={view.revenue.mrr} format={format} />
               <MarginCard margin={view.revenue.margin} format={format} />
             </div>
             <CohortGrid rows={view.growth.cohorts} format={format} />
-            <div className="grid gap-6 xl:grid-cols-2">
+            {/* Web Vitals need the width of six columns: side by side only on wide screens. */}
+            <div className="grid items-start gap-6 2xl:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
               <SourcesCard rows={view.growth.sources} format={format} />
               <WebVitalsCard rows={view.web_vitals} format={format} />
             </div>
