@@ -112,6 +112,7 @@ test.describe("on a phone", () => {
     const slug = address.locator("[data-share-slug]");
     await expect(slug).toHaveText(`/${business.slug}`);
     expect(await slug.evaluate((element) => element.scrollWidth <= element.clientWidth)).toBe(true);
-    await expect(slug).toBeInViewport();
+    await address.scrollIntoViewIfNeeded();
+    await expect(slug).toBeInViewport({ ratio: 1 });
   });
 });
