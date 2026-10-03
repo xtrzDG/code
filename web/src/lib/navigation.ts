@@ -38,6 +38,8 @@ export type BusinessPage = (typeof BUSINESS_PAGES)[number];
 
 export const HOME_PATH = "/businesses";
 export const LOGIN_PATH = "/login";
+/** "Create an AI assistant" for a business that does not exist yet (the tunnel's first two steps). */
+export const CREATE_PATH = "/create";
 export const ADMIN_PATH = "/admin";
 /** The platform admin's key ring and re-encryption of stored tokens. */
 export const ADMIN_SECURITY_PATH = "/admin/security";
@@ -48,7 +50,7 @@ export const OFFLINE_PATH = "/offline";
 export const NOTIFICATION_LINK_PREFIX = "/n/";
 
 /** Pages that need a session (the proxy sends visitors to /login). */
-const PROTECTED_PREFIXES = [HOME_PATH, "/b/", ADMIN_PATH, "/integrations/", NOTIFICATION_LINK_PREFIX] as const;
+const PROTECTED_PREFIXES = [HOME_PATH, CREATE_PATH, "/b/", ADMIN_PATH, "/integrations/", NOTIFICATION_LINK_PREFIX] as const;
 
 export function isProtectedPath(pathname: string): boolean {
   return PROTECTED_PREFIXES.some(
@@ -84,9 +86,13 @@ export function conversationPath(businessId: string, conversationId: string): st
   return `${businessPath(businessId, "inbox")}/${encodeURIComponent(conversationId)}`;
 }
 
-/** The setup flow ("Create an AI assistant"), the only page before the assistant exists. */
-export function setupPath(businessId: string): string {
-  return `/b/${encodeURIComponent(businessId)}/onboarding`;
+/**
+ * The setup flow of a business ("Create an AI assistant", full screen),
+ * where an owner continues; `step` opens one of its steps (`?step=hours`).
+ */
+export function setupPath(businessId: string, step?: string): string {
+  const path = `/b/${encodeURIComponent(businessId)}/setup`;
+  return step ? `${path}?step=${encodeURIComponent(step)}` : path;
 }
 
 export function isBusinessPage(value: string | undefined): value is BusinessPage {
@@ -102,7 +108,7 @@ export interface BusinessLocation {
   businessId: string;
   /** The page the path is in ("/b/x/inbox/conv_1" is in "inbox"); null outside them. */
   page: BusinessPage | null;
-  /** True for the setup flow (/b/{id}/onboarding). */
+  /** True for the setup flow (/b/{id}/setup; the old /b/{id}/onboarding redirects there). */
   isSetup: boolean;
 }
 
@@ -124,7 +130,7 @@ export function businessLocation(pathname: string): BusinessLocation | null {
       const parts = candidate.split("/");
       return parts.every((part, index) => segments[index] === part);
     }) ?? null;
-  return { businessId, page, isSetup: segments[0] === "onboarding" };
+  return { businessId, page, isSetup: segments[0] === "setup" || segments[0] === "onboarding" };
 }
 
 /** The section of a business page path: "/b/biz_1/bookings/x" -> "bookings". */

@@ -175,6 +175,8 @@ describe("navigation", () => {
     expect(isProtectedPath("/b/x/dashboard")).toBe(true);
     expect(isProtectedPath("/integrations/google-calendar/callback")).toBe(true);
     expect(isProtectedPath("/admin")).toBe(true);
+    expect(isProtectedPath("/create")).toBe(true);
+    expect(isProtectedPath("/created")).toBe(false);
     expect(isProtectedPath("/login")).toBe(false);
     expect(isProtectedPath("/businessesX")).toBe(false);
     expect(sectionFromPathname("/b/business_1/bookings/booking_2")).toBe("bookings");

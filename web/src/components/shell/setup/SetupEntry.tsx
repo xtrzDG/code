@@ -15,7 +15,7 @@ import { useI18n } from "@/i18n/client";
 import { cn } from "@/lib/cn";
 import { setupPath } from "@/lib/navigation";
 
-export function SetupEntry({ isActive, collapsed = false, canSetUp }: { isActive: boolean; collapsed?: boolean; canSetUp: boolean }) {
+export function SetupEntry({ collapsed = false, canSetUp }: { collapsed?: boolean; canSetUp: boolean }) {
   const { t } = useI18n();
   const { business } = useBusiness();
 
@@ -29,7 +29,6 @@ export function SetupEntry({ isActive, collapsed = false, canSetUp }: { isActive
     <nav aria-label={t("nav.mainNavigation")}>
       <Link
         href={setupPath(business.id)}
-        aria-current={isActive ? "page" : undefined}
         title={collapsed ? t("setup.navEntry") : undefined}
         className={cn(
           "setup-glow motion-lift group flex rounded-2xl text-ink shadow-[0_18px_40px_-24px_var(--accent-solid)]",

@@ -18,24 +18,29 @@ import { FadeIn, MagneticButton, TiltCard } from "@/components/motion";
 import { ButtonLink } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { setupPath } from "@/lib/navigation";
+import { stepStates, TUNNEL_STEPS } from "@/lib/tunnel/steps";
 
 import { SetupStages } from "./SetupStages";
 
-function useSetupProgress(businessId: string): { done: number; total: number } | null {
+/** How far the owner got in the tunnel (its eight steps), once the guided setup answered. */
+function useSetupProgress(businessId: string, canSetUp: boolean): { done: number; total: number } | null {
   const { locale } = useI18n();
-  const wizard = useQuery(queryKeys.profile.wizard(businessId, locale), () =>
-    api.GET("/v1/businesses/{business_id}/profile/wizard", {
-      params: { path: { business_id: businessId }, query: { language: locale } },
-    }),
+  const setup = useQuery(
+    queryKeys.setup.progress(businessId, locale),
+    () => api.GET("/v1/businesses/{business_id}/setup", { params: { path: { business_id: businessId }, query: { language: locale } } }),
+    { enabled: canSetUp },
   );
-  const steps = wizard.data?.steps ?? [];
-  return steps.length > 0 ? { done: steps.filter((step) => step.is_complete).length, total: steps.length } : null;
+  if (!setup.data) {
+    return null;
+  }
+  const states = Object.values(stepStates(setup.data));
+  return { done: states.filter((state) => state === "done").length, total: TUNNEL_STEPS.length };
 }
 
 export function SetupHero({ canSetUp }: { canSetUp: boolean }) {
   const { t } = useI18n();
   const { business } = useBusiness();
-  const progress = useSetupProgress(business.id);
+  const progress = useSetupProgress(business.id, canSetUp);
   const hasStarted = progress !== null && progress.done > 0;
 
   return (

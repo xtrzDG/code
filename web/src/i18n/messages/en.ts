@@ -2,6 +2,7 @@ import { insightsEn } from "./sections/insights";
 import { contentEn } from "./sections/content";
 import { workspaceEn } from "./sections/workspace";
 import { shellEn } from "./sections/shell";
+import { setupFlowEn } from "./sections/setup";
 import { onboardingEn } from "./onboarding/en";
 import { landingEn } from "./landing/en";
 
@@ -131,32 +132,7 @@ export const en = {
     subtitle: "Each business has its own assistant, profile and channels.",
     emptyTitle: "No businesses yet",
     emptyDescription: "Create your first business: choose a niche and a country, and we will set up the rest.",
-    create: "New business",
-    createTitle: "New business",
-    createDescription: "Name, niche and country are enough to start. You can change everything later in settings.",
     name: "Business name",
-    namePlaceholder: "For example: Café on Rustaveli",
-    niche: "Niche",
-    nicheLegalReview: "Needs a legal check before launch",
-    country: "Country",
-    city: "City",
-    cityPlaceholder: "For example: Tbilisi",
-    countryDefaults: "Country defaults",
-    countryDefaultsHint: "Picked from the country. You can change the languages now and the rest later in settings.",
-    currency: "Currency",
-    timezone: "Time zone",
-    timezoneHint: "Opening hours, bookings and reminders use this time zone. You can change it later in settings.",
-    languages: "Languages the assistant speaks",
-    languagesHint: "Customers are answered in their language if it is on this list.",
-    languagesOnRequest: "More languages",
-    defaultLanguage: "Main language",
-    defaultLanguageHint: "Used for greetings when the customer's language is unknown.",
-    submit: "Create business",
-    submitting: "Creating…",
-    createdTitle: "Business created",
-    createdDescription: "We applied the settings of {country}:",
-    continueToProfile: "Fill in the profile",
-    open: "Open",
     role: {
       owner: "Owner",
       staff: "Staff",
@@ -166,13 +142,6 @@ export const en = {
       testing: "Testing",
       live: "Live",
       paused: "Paused",
-    },
-    errors: {
-      nameRequired: "Enter the business name",
-      nicheRequired: "Choose a niche",
-      countryRequired: "Choose a country",
-      languagesRequired: "Choose at least one language",
-      countryRestricted: "Businesses from this country cannot be created yet.",
     },
   },
   pages: {
@@ -223,6 +192,7 @@ export const en = {
   ...contentEn,
   ...workspaceEn,
   ...shellEn,
+  ...setupFlowEn,
 } as const satisfies NestedMessages;
 
 interface NestedMessages {

@@ -2,7 +2,7 @@ import { IconArrowRight } from "@/components/icons";
 import { MagneticButton, Reveal } from "@/components/motion";
 import { ButtonLink } from "@/components/ui";
 import type { Translator } from "@/i18n/translate";
-import { LOGIN_PATH } from "@/lib/navigation";
+import { CREATE_PATH } from "@/lib/navigation";
 
 /** The closing call to action: a card with a light running round its edge, coming out of the depth. */
 export function FinalCta({ t }: { t: Translator["t"] }) {
@@ -21,7 +21,7 @@ export function FinalCta({ t }: { t: Translator["t"] }) {
               </h2>
               <p className="text-pretty text-ink-muted">{t("landing.cta.text")}</p>
               <MagneticButton>
-                <ButtonLink href={LOGIN_PATH} size="lg" trailingIcon={<IconArrowRight className="size-4" aria-hidden />}>
+                <ButtonLink href={CREATE_PATH} size="lg" trailingIcon={<IconArrowRight className="size-4" aria-hidden />}>
                   {t("landing.cta.button")}
                 </ButtonLink>
               </MagneticButton>

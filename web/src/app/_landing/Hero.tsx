@@ -2,7 +2,7 @@ import { IconArrowRight } from "@/components/icons";
 import { MagneticButton } from "@/components/motion";
 import { ButtonLink } from "@/components/ui";
 import type { Translator } from "@/i18n/translate";
-import { LOGIN_PATH } from "@/lib/navigation";
+import { CREATE_PATH } from "@/lib/navigation";
 
 import { HeroBackdrop } from "./HeroBackdrop";
 import { HeroVisual } from "./HeroVisual";
@@ -37,7 +37,7 @@ export function Hero({ t, trialDays }: { t: Translator["t"]; trialDays: number |
           <div className="flex animate-rise flex-col gap-3 [animation-delay:240ms] sm:flex-row">
             <MagneticButton className="sm:w-auto">
               <ButtonLink
-                href={LOGIN_PATH}
+                href={CREATE_PATH}
                 size="lg"
                 fullWidth
                 trailingIcon={<IconArrowRight className="size-4" aria-hidden />}

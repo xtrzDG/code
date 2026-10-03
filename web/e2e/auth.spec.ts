@@ -34,10 +34,9 @@ test.describe("sign-in", () => {
     const code = await waitForLoginCode({ since });
     await page.getByLabel(en.auth.code, { exact: true }).fill(code);
 
-    await expect(page).toHaveURL(/\/businesses$/);
-    await expect(page.getByRole("heading", { level: 1, name: en.businesses.title })).toBeVisible();
-    // A new account starts with the form for its first business.
-    await expect(page.getByRole("dialog", { name: en.businesses.createTitle })).toBeVisible();
+    // A new account starts in "Create an AI assistant".
+    await expect(page).toHaveURL(/\/create$/);
+    await expect(page.getByRole("heading", { level: 1, name: en.tunnelBusiness.business.title })).toBeVisible();
   });
 
   test("by e-mail", async ({ page }) => {
@@ -52,8 +51,8 @@ test.describe("sign-in", () => {
     const code = await waitForLoginCode({ since });
     await page.getByLabel(en.auth.code, { exact: true }).fill(code);
 
-    await expect(page).toHaveURL(/\/businesses$/);
-    await expect(page.getByRole("heading", { level: 1, name: en.businesses.title })).toBeVisible();
+    await expect(page).toHaveURL(/\/create$/);
+    await expect(page.getByRole("heading", { level: 1, name: en.tunnelBusiness.business.title })).toBeVisible();
   });
 
   test("refuses a wrong code and accepts the right one", async ({ page, consoleErrors }) => {
@@ -71,6 +70,6 @@ test.describe("sign-in", () => {
     await page.getByLabel(en.auth.code, { exact: true }).fill(wrong);
     await expect(page.getByText(en.auth.errors.wrongCode)).toBeVisible();
     await page.getByLabel(en.auth.code, { exact: true }).fill(code);
-    await expect(page).toHaveURL(/\/businesses$/);
+    await expect(page).toHaveURL(/\/create$/);
   });
 });

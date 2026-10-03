@@ -1,8 +1,8 @@
 /**
  * Before the assistant exists the cabinet has one thing to do: "Create an
  * AI assistant". Every section shows the invitation, the sidebar holds only
- * the entry into the setup flow, and once the assistant is created the five
- * sections open.
+ * the entry into the setup tunnel (/b/{id}/setup, full screen), and once the
+ * assistant is created the five sections open.
  */
 
 import { createAssistant } from "./support/api";
@@ -19,11 +19,15 @@ test("a new business shows only Create an AI assistant until the assistant exist
   await page.goto(`/b/${newOwner.businessId}/settings/team`);
   await expect(page.getByRole("heading", { level: 1, name: en.setup.title })).toBeVisible();
 
-  // One button leads into the setup flow, the profile's six steps.
+  // One button leads into the full-screen tunnel, where the owner left off
+  // (the salon's services are not chosen yet, so its first screen).
   await page.getByRole("link", { name: new RegExp(`${en.setup.start}|${en.setup.continue}`) }).first().click();
-  await expect(page).toHaveURL(new RegExp(`/b/${newOwner.businessId}/onboarding`));
-  await expect(page.getByRole("heading", { level: 1, name: en.onboarding.title })).toBeVisible();
-  await expect(navigation.getByRole("link", { name: en.setup.navEntry })).toHaveAttribute("aria-current", "page");
+  await expect(page).toHaveURL(new RegExp(`/b/${newOwner.businessId}/setup$`));
+  await expect(page.getByRole("heading", { level: 1, name: en.tunnelBusiness.business.title })).toBeVisible();
+  await expect(page.getByRole("navigation", { name: en.tunnel.railLabel })).toBeVisible();
+  // The old address of the setup flow leads into the tunnel too.
+  await page.goto(`/b/${newOwner.businessId}/onboarding`);
+  await expect(page).toHaveURL(new RegExp(`/b/${newOwner.businessId}/setup$`));
 
   // The assistant is created: the sections open and the setup flow becomes Hours and rules.
   await createAssistant(request, newOwner.token, newOwner.businessId);

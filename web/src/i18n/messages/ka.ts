@@ -3,6 +3,7 @@ import { insightsKa } from "./sections/insights";
 import { contentKa } from "./sections/content";
 import { workspaceKa } from "./sections/workspace";
 import { shellKa } from "./sections/shell";
+import { setupFlowKa } from "./sections/setup";
 import { onboardingKa } from "./onboarding/ka";
 import { landingKa } from "./landing/ka";
 
@@ -125,32 +126,7 @@ export const ka: Messages = {
     subtitle: "ყველა ბიზნესს აქვს საკუთარი ასისტენტი, ანკეტა და არხები.",
     emptyTitle: "ბიზნესი ჯერ არ გაქვთ",
     emptyDescription: "შექმენით პირველი ბიზნესი: აირჩიეთ ნიშა და ქვეყანა, დანარჩენს ჩვენ მოვაწყობთ.",
-    create: "ახალი ბიზნესი",
-    createTitle: "ახალი ბიზნესი",
-    createDescription: "დასაწყისისთვის საკმარისია სახელი, ნიშა და ქვეყანა. ყველაფრის შეცვლა მოგვიანებით პარამეტრებშიც შეიძლება.",
     name: "ბიზნესის სახელი",
-    namePlaceholder: "მაგალითად: კაფე რუსთაველზე",
-    niche: "ნიშა",
-    nicheLegalReview: "გაშვებამდე საჭიროა იურისტის შემოწმება",
-    country: "ქვეყანა",
-    city: "ქალაქი",
-    cityPlaceholder: "მაგალითად: თბილისი",
-    countryDefaults: "ქვეყნის პარამეტრები",
-    countryDefaultsHint: "შეირჩა ქვეყნის მიხედვით. ენების შეცვლა ახლავე შეგიძლიათ, დანარჩენის — მოგვიანებით პარამეტრებში.",
-    currency: "ვალუტა",
-    timezone: "სასაათო სარტყელი",
-    timezoneHint: "ამ სარტყელში ითვლება სამუშაო საათები, ჯავშნები და შეხსენებები. მოგვიანებით პარამეტრებში შეცვლა შეგიძლიათ.",
-    languages: "ენები, რომლებზეც ასისტენტი საუბრობს",
-    languagesHint: "კლიენტს მის ენაზე უპასუხებს, თუ ეს ენა სიაშია.",
-    languagesOnRequest: "სხვა ენები",
-    defaultLanguage: "მთავარი ენა",
-    defaultLanguageHint: "ამ ენაზე ესალმება კლიენტს, სანამ მისი ენა უცნობია.",
-    submit: "ბიზნესის შექმნა",
-    submitting: "იქმნება…",
-    createdTitle: "ბიზნესი შეიქმნა",
-    createdDescription: "გამოვიყენეთ ქვეყნის პარამეტრები ({country}):",
-    continueToProfile: "ანკეტის შევსება",
-    open: "გახსნა",
     role: {
       owner: "მფლობელი",
       staff: "თანამშრომელი",
@@ -160,13 +136,6 @@ export const ka: Messages = {
       testing: "ტესტირება",
       live: "მუშაობს",
       paused: "შეჩერებულია",
-    },
-    errors: {
-      nameRequired: "შეიყვანეთ ბიზნესის სახელი",
-      nicheRequired: "აირჩიეთ ნიშა",
-      countryRequired: "აირჩიეთ ქვეყანა",
-      languagesRequired: "აირჩიეთ ერთი ენა მაინც",
-      countryRestricted: "ამ ქვეყნიდან ბიზნესის შექმნა ჯერ შეუძლებელია.",
     },
   },
   pages: {
@@ -217,4 +186,5 @@ export const ka: Messages = {
   ...contentKa,
   ...workspaceKa,
   ...shellKa,
+  ...setupFlowKa,
 };

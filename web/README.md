@@ -2,10 +2,10 @@
 
 The owner cabinet of the AI front-line assistant and its public landing page:
 the product, prices by country and FAQ at `/`, sign-in by phone (any country)
-or e-mail, businesses, "Create an AI assistant" (the setup flow: the six-step
-profile ending in the first version), then five calm sections (Overview,
-Inbox, Bookings, Assistant, Settings; see [Navigation](#navigation)) and
-the platform admin. It installs as an app (manifest, icons, service worker,
+or e-mail, businesses, "Create an AI assistant" (a full-screen tunnel of eight
+questions ending in a live assistant; see [Create an AI assistant](#create-an-ai-assistant)),
+then five calm sections (Overview, Inbox, Bookings, Assistant, Settings; see
+[Navigation](#navigation)) and the platform admin. It installs as an app (manifest, icons, service worker,
 offline page).
 Next.js (App Router) + TypeScript (strict) + Tailwind CSS v4.
 Interface languages: Georgian (`ka`), Russian (`ru`), English (`en`).
@@ -113,7 +113,8 @@ npm run e2e -- onboarding         # one file
   `e2e/support/conversation-card.ts`); the widget tests run the API's
   `/widget.js` on a fake host site (`e2e/support/widget-site.ts`).
 - Fixtures: `newOwner` has a business whose assistant does not exist yet (the
-  cabinet shows "Create an AI assistant"); `owner` is the same with its first
+  cabinet shows "Create an AI assistant"; its setup is the tunnel at
+  `/b/{id}/setup`); `owner` is the same with its first
   version built through the API (`createAssistant`), so the five sections are
   open.
 - The cabinet's service worker is blocked (`serviceWorkers: "block"`): it
@@ -122,8 +123,12 @@ npm run e2e -- onboarding         # one file
   kept after a reload, signed-in users sent to their businesses, the still
   hero with reduced motion and the 3D one without, every section revealed),
   sign-in with a German number and with e-mail (and a wrong code),
-  a business in Turkey with Turkish, English and Arabic, a failed save shown
-  above the open dialog, the six wizard steps, every section and page from
+  the whole "Create an AI assistant" tunnel on a desktop and on a phone, from
+  sign-in to a live assistant and the cabinet (`e2e/setup-tunnel.spec.ts`, the
+  launch's progress played by the test since the suite's API has no language
+  model), a reload and a later visit continuing where the owner left off,
+  a business in Turkey with Turkish, English and Arabic, a failed creation
+  keeping every answer, the six profile steps under Hours and rules, every section and page from
   the sidebar (`e2e/navigation.spec.ts`: the open section's pages under it,
   Advanced, folding the sidebar, the user menu) and on a phone from the tab
   bar and "More" (no sideways scrolling at 390 px, 44 px targets), the setup
@@ -182,7 +187,8 @@ web/
       c/[slug]/                the public hosted chat page and its default privacy notice (/privacy),
                                for customers: their language, system colours, src/styles/hostedChat.css
       */template.tsx           business, admin, login, businesses: each page rises in (PageTransition)
-      page.tsx                 "/": the public landing page (signed-in users go to /businesses)
+      page.tsx                 "/": the public landing page (signed-in users go to /businesses);
+                               its main buttons lead to /create (signing in first)
       _landing/                its sections: Hero (+ HeroBackdrop, HeroVisual: the 3D scene or HeroFallback,
                                its still picture), Facts, Demo (a WhatsApp conversation), Steps, Features,
                                Channels, Niches, World, Pricing (+ PlanCard, CountryPicker), Faq, FinalCta,
@@ -195,14 +201,17 @@ web/
                                or e-mail, 6-digit code: LoginScreen (layout), _components/ (DestinationForm,
                                PhoneFields, CodeForm), _lib/ (useLoginFlow, useDestination, loginTexts,
                                loginOptions)
-      businesses/              list and creation of businesses (a new account gets the form at once):
-                               CreateBusinessForm, _components/ (CountryDefaults, CreatedSummary),
-                               _lib/ (useCreateBusiness, languageOptions)
+      businesses/              the list of businesses and "New assistant" (an account without one goes
+                               straight to /create); a business still being set up opens its tunnel
+      create/                  "Create an AI assistant" for a new business: the tunnel's first two
+                               screens (components/setup/create/), then /b/{id}/setup
       b/[businessId]/          one business: layout.tsx loads it + the user and renders the frame
                                (the five sections, or "Create an AI assistant" before the assistant
                                exists); /b/{id} redirects to its overview (next.config.ts)
-        onboarding/            the setup flow: the six-step profile shown on its own; once the
-                               assistant exists it redirects to assistant/profile (keeping ?step=)
+        setup/                 "Create an AI assistant" for an existing business: the full-screen tunnel
+                               (components/setup/flow/SetupTunnel), ?step= opens a screen
+        onboarding/            the old setup address: into the tunnel before the assistant exists,
+                               to assistant/profile (keeping ?step=) after
         overview/              layout.tsx: the Overview frame (tabs for owners); the dashboard: the owner's
                                value hero (bookings ≈ money, after hours, staff time, average check edited
                                in place), next step, staff "Your queue today", KPI tiles with change chips
@@ -298,11 +307,18 @@ web/
       shell/                   the frame (see Navigation): ShellFrame, Sidebar (+ SidebarNav, UserMenu,
                                AccountPanel), PhoneTopBar, PhoneTabBar, MoreSheet, SectionFrame (a
                                section's title and tabs), BusinessShell (sections, roles, badges, the
-                               setup gate), setup/ (SetupEntry, SetupHero, SetupStages), OwnersOnlyPage,
+                               setup gate; the tunnel is drawn without it), setup/ (SetupEntry, SetupHero,
+                               SetupStages), OwnersOnlyPage,
                                LiveEvents (the live stream, attention counts, tab title count, toast
                                and chime), LiveStatus ("Live · Updated just now"), ChimeSetting,
                                ServiceWorker (registration), useInstallPrompt,
                                AdminShell, TopBar (pages outside a business), Brand, SignOutButton
+      setup/                   "Create an AI assistant" (see the section of that name): the frame
+                               (TunnelFrame, TunnelBackdrop, TunnelRail, TunnelHeader, TunnelStage,
+                               StepScreen, SaveTracker, useAutosave, useTunnelPlace, QrImage), create/
+                               (/create), flow/ (/b/{id}/setup: SetupTunnel, the step context, saving),
+                               steps/ and fields/ (the first two screens), offer/, hours/, people/,
+                               channels/, try/, launch/, finale/
       theme/                   ThemeProvider (useTheme), ThemeSwitcher (dark / light / system),
                                useResolvedScheme (the scheme showing now, for the WebGL scene)
       business/                BusinessContext (useBusiness, useBusinessFormat, isSetUp), status badges,
@@ -335,10 +351,14 @@ web/
                                autotests, go-live, test chat), validation (zod), classMerge (className
                                overrides), cn, theme (cookie, theme colours), landing (country guess,
                                plan prices), motion (motion tokens), motionMath (springs, tilt, count-up),
-                               heroScene (3D hero: device check, orbits, camera), channelMarks
+                               heroScene (3D hero: device check, orbits, camera), channelMarks, tunnel/
+                               (the tunnel's steps and resume place, launch stages, the /create
+                               draft, offer rows, booking choices, contacts, test questions, depth
+                               and confetti math)
     styles/                    motion.css (motion tokens, keyframes, press/lift/shimmer/dialog motion),
                                landing.css (backdrop, hero entrance, the still hero picture), shell.css
-                               (the phone sheet, the user menu, the setup entry's running light)
+                               (the phone sheet, the user menu, the setup entry's running light),
+                               tunnel.css (the tunnel's rings, glow, burst and rail)
 ```
 
 ## Navigation
@@ -386,9 +406,10 @@ section tabs, page titles and the e2e suite read it):
   invitation (`SetupHero`: the assistant's orb among its channels in a
   tilting card, a floor of light running towards the viewer, the three
   stages, progress once a step is done, one button), and the setup flow is
-  `/b/{id}/onboarding` (the six profile steps, ending in "Create my
-  assistant", which builds the first version and opens the cabinet). Staff
-  read that the owner is setting it up.
+  the full-screen tunnel at `/b/{id}/setup` (see
+  [Create an AI assistant](#create-an-ai-assistant)). Staff read that the
+  owner is setting it up. "New assistant" in the business switcher and on
+  the businesses page opens `/create`.
 - **Old addresses** (`src/lib/legacyRoutes.ts`, 307 redirects in
   `next.config.ts`, the query kept): `dashboard` → `overview`,
   `conversations[/…]` and `messages[/…]` → `inbox[/…]`, `handoffs` and
@@ -396,8 +417,8 @@ section tabs, page titles and the e2e suite read it):
   `messages/leads` → `inbox?view=requests`, `knowledge[/…]` → `assistant/knowledge[/…]`,
   `channels` → `assistant/channels`, `billing` → `settings/billing`, `/b/{id}`
   → `overview`; `settings#team` (a hash never reaches the server) is moved by
-  the settings page, and `onboarding?step=…` by the setup page once the
-  assistant exists.
+  the settings page, and `onboarding?step=…` by the old setup page: into the
+  tunnel before the assistant exists, to Hours and rules after.
 
 ### What each page does
 
@@ -468,6 +489,54 @@ redirect):
   platform admins); under each message the requests to the business's data
   read as plain chips with what the assistant did (`TOOL_LABELS`).
 
+### Create an AI assistant
+
+One full-screen tunnel from a new business to a live assistant: one
+question per screen in big type, a progress rail of eight steps (any step
+can be opened from it), Enter to go on (except in a multi-line field, a
+button, or a box that keeps Enter for itself: the offer table, the test
+chat), Back and "Skip for now" (remembered by the API for the offer, the
+channels and the test). Screens move with depth (`TunnelStage`: the next one
+comes out of the distance, small and blurred; going back, the other way)
+over a tunnel of rings in pure CSS 3D (`TunnelBackdrop`,
+`src/styles/tunnel.css`: no WebGL, nothing per frame); with reduced motion
+they only cross-fade and the rings stand still.
+
+1. **Your business** (`/create`): the name, the kind of business as cards,
+   the kind's required questions.
+2. **Where you are** (`/create?step=place`): the country (from the sign-in
+   phone, else the browser), city, address (required for kinds that take
+   bookings), languages and time zone prefilled from the country. Continue
+   creates the business and its assistant (`POST /v1/assistants`); the
+   first two answers live in this browser until then (`lib/tunnel/draft.ts`),
+   so a reload keeps them.
+3. **What you offer** (`/b/{id}/setup?step=offer`): a name-and-price table
+   prefilled with the kind's examples (saved only once priced), or an
+   import from the website or a menu photo.
+4. **Hours and bookings**: the kind's usual week and booking rules, a first
+   bookable place, the kind's hour questions; Continue also accepts the
+   kind's starter answers (who to call when, what never to promise, tone,
+   ready answers) where the owner wrote nothing.
+5. **Who helps**: the owner in one tap (sign-in phone by WhatsApp or SMS,
+   e-mail, or Telegram through a one-time link with a QR code), or someone
+   else.
+6. **Where customers write**: the website chat and the business's own chat
+   page (on by default), a Telegram bot in three steps, WhatsApp, Instagram
+   and Messenger after launch.
+7. **Try it**: a test chat with questions to tap.
+8. **Launch**: what is ready (each step with "Fix"), the data processing
+   agreement, the free trial, then "Apply changes" played out on screen
+   (getting ready → trying test conversations → switching on, read every
+   1.5 s); anything that stops it is listed with where to fix it.
+
+The **finale**: confetti (none with reduced motion), the assistant's card,
+its chat page link to copy and open, a QR code to try it from a phone, next
+steps and "Open my assistant" into the cabinet. Answers save as the owner
+goes (the top bar says "Saving…" / "Saved"); `?step=` keeps the screen in
+the address, and `/b/{id}/setup` without it opens the first step not done
+(`resumePlace` in `lib/tunnel/steps.ts`). The tunnel is owners' only; the
+business frame draws it without the sidebar.
+
 ### Installable app
 
 - `app/manifest.ts` (`/manifest.webmanifest`): the app opens on the
@@ -501,8 +570,8 @@ redirect):
 ### Accessibility
 
 - `e2e/a11y.spec.ts` runs axe-core (WCAG 2.1 A and AA rules) on every page of
-  a business in the dark and the light theme, on the setup invitation, the
-  setup flow, the businesses, sign-in and the offline page, and on a phone
+  a business in the dark and the light theme, on the setup invitation, every
+  screen of the tunnel, `/create`, the businesses, sign-in and the offline page, and on a phone
   with the "More" sheet open; any serious or critical violation fails it.
 - Landmarks: one `<h1>` per page (the section's, inside a section frame),
   the main navigation, the tab bar and the section tabs are named `<nav>`s,

@@ -1,68 +1,78 @@
+/**
+ * Creating a business: the first two screens of "Create an AI assistant"
+ * (/create), where the country brings its languages, currency and time
+ * zone, and the business list that leads back into the tunnel.
+ */
+
+import type { Page } from "@playwright/test";
+
+import { API_URL } from "./support/env";
 import { expect, test } from "./support/fixtures";
 import { en } from "./support/messages";
 
-test("creates a business in another country with its languages", async ({ page, account }) => {
-  expect(account.token).toBeTruthy();
-  await page.goto("/businesses");
-  await expect(page.getByText(en.businesses.emptyTitle)).toBeVisible();
-  // A new account gets the form at once; closed, it opens from the empty state.
-  const dialog = page.getByRole("dialog", { name: en.businesses.createTitle });
-  await expect(dialog).toBeVisible();
-  await dialog.getByRole("button", { name: en.common.close }).click();
-  await expect(dialog).toBeHidden();
-  await page.getByRole("button", { name: en.businesses.create }).click();
-  await expect(dialog).toBeVisible();
-  await dialog.getByLabel(en.businesses.name).fill("Kuaför Güneş");
-  await dialog.getByLabel(en.businesses.niche).selectOption("beauty_salon");
-  await dialog.getByLabel(en.businesses.country).selectOption("TR");
+async function describeSalon(page: Page, name: string): Promise<void> {
+  await page.goto("/create");
+  await page.getByLabel(en.tunnelBusiness.business.name).fill(name);
+  await page.locator("label").filter({ hasText: /^Beauty salons/ }).click();
+  await page.getByRole("checkbox", { name: "Hair" }).check();
+  await page.getByRole("button", { name: en.tunnel.continue, exact: true }).click();
+  await expect(page.getByRole("heading", { level: 1, name: en.tunnelBusiness.place.title })).toBeVisible();
+}
 
-  // Turkey's defaults: Turkish and English, lira, Istanbul time.
-  const languages = dialog.getByRole("group", { name: en.businesses.languages });
+test("creates a business in another country with its languages", async ({ page, account, request }) => {
+  await describeSalon(page, "Kuaför Güneş");
+  await page.getByLabel(en.tunnelBusiness.place.country).selectOption("TR");
+
+  // Turkey's defaults: Turkish and English, lira, Istanbul time (one zone, so no choice shown).
+  const languages = page.getByRole("group", { name: en.tunnelBusiness.place.languages });
   await expect(languages.getByRole("checkbox", { name: /Türkçe/ })).toBeChecked();
   await expect(languages.getByRole("checkbox", { name: /English/ })).toBeChecked();
-  await expect(dialog.getByText("Europe/Istanbul", { exact: false })).toBeVisible();
+  await expect(page.getByText(/\(TRY\)/)).toBeVisible();
+  await expect(page.getByLabel(en.tunnelBusiness.place.timezone)).toHaveCount(0);
   // Arabic is offered on request (and is written right to left).
-  await languages.getByRole("checkbox", { name: /Arabic|العربية/ }).check();
-  await dialog.getByLabel(en.businesses.defaultLanguage).selectOption("tr");
-  await dialog.getByLabel(en.businesses.city).fill("İzmir");
-  await dialog.getByRole("button", { name: en.businesses.submit }).click();
+  // Each language is a chip: its label is what a person taps.
+  await languages.locator("label").filter({ hasText: /Arabic|العربية/ }).click();
+  await expect(languages.getByRole("checkbox", { name: /Arabic|العربية/ })).toBeChecked();
+  await page.getByLabel(en.tunnelBusiness.place.defaultLanguage).selectOption("tr");
+  await page.getByLabel(en.tunnelBusiness.place.city).fill("İzmir");
+  await page.getByLabel(en.tunnelBusiness.place.address).fill("Kıbrıs Şehitleri Cd. 1, İzmir");
+  await page.getByRole("button", { name: en.tunnel.continue, exact: true }).click();
 
-  await expect(dialog.getByText(en.businesses.createdTitle)).toBeVisible();
-  await dialog.getByRole("link", { name: en.businesses.continueToProfile }).click();
+  // Created: the tunnel goes on with what the salon offers.
+  await expect(page).toHaveURL(/\/b\/[^/]+\/setup\?step=offer$/, { timeout: 20_000 });
+  const businessId = /\/b\/([^/]+)\/setup/.exec(new URL(page.url()).pathname)?.[1] ?? "";
+  const stored = await request.get(`${API_URL}/v1/businesses/${businessId}`, { headers: { authorization: `Bearer ${account.token}` } });
+  const business = (await stored.json()) as { country_code: string; city: string; languages: string[]; default_language: string; currency_code: string; timezone: string };
+  expect(business).toMatchObject({ country_code: "TR", city: "İzmir", default_language: "tr", currency_code: "TRY", timezone: "Europe/Istanbul" });
+  expect(business.languages).toEqual(expect.arrayContaining(["tr", "en", "ar"]));
 
-  await expect(page).toHaveURL(/\/b\/[^/]+\/onboarding$/);
-  await expect(page.getByRole("heading", { level: 1, name: en.onboarding.title })).toBeVisible();
-  // The first step lists the customer languages, the default one starred.
-  await expect(page.locator('[lang="tr"]').filter({ hasText: "★" })).toBeVisible();
-  await expect(page.locator('[lang="ar"]')).toBeVisible();
-
-  // The business is in the switcher's list too.
+  // The business is on the list, and its card leads back into the tunnel.
   await page.goto("/businesses");
-  await expect(page.getByRole("heading", { name: "Kuaför Güneş" })).toBeVisible();
+  await page.getByRole("link", { name: /Kuaför Güneş/ }).click();
+  await expect(page).toHaveURL(new RegExp(`/b/${businessId}/setup`));
 });
 
-test("a business in a country with several time zones starts in the one chosen", async ({ page, account }) => {
-  expect(account.token).toBeTruthy();
-  await page.goto("/businesses");
-  const dialog = page.getByRole("dialog", { name: en.businesses.createTitle });
-  await dialog.getByLabel(en.businesses.name).fill("Bar Teide");
-  await dialog.getByLabel(en.businesses.niche).selectOption("restaurant");
-  await dialog.getByLabel(en.businesses.country).selectOption("ES");
+test("a business in a country with several time zones starts in the one chosen", async ({ page, account, request }) => {
+  await describeSalon(page, "Peluquería Teide");
+  await page.getByLabel(en.tunnelBusiness.place.country).selectOption("ES");
 
   // The browser runs in Berlin, which is not a Spanish zone: Madrid first.
-  const zone = dialog.getByLabel(en.businesses.timezone);
+  const zone = page.getByLabel(en.tunnelBusiness.place.timezone);
   await expect(zone).toHaveValue("Europe/Madrid");
   await zone.selectOption("Atlantic/Canary");
-  await dialog.getByRole("button", { name: en.businesses.submit }).click();
+  await page.getByLabel(en.tunnelBusiness.place.address).fill("Calle La Marina 1, Santa Cruz");
+  await page.getByRole("button", { name: en.tunnel.continue, exact: true }).click();
 
-  await expect(dialog.getByText(en.businesses.createdTitle)).toBeVisible();
-  await expect(dialog.getByText(/Canary/)).toBeVisible();
+  await expect(page).toHaveURL(/\/b\/[^/]+\/setup\?step=offer$/, { timeout: 20_000 });
+  const businessId = /\/b\/([^/]+)\/setup/.exec(new URL(page.url()).pathname)?.[1] ?? "";
+  const stored = await request.get(`${API_URL}/v1/businesses/${businessId}`, { headers: { authorization: `Bearer ${account.token}` } });
+  expect(((await stored.json()) as { timezone: string }).timezone).toBe("Atlantic/Canary");
 });
 
-test("shows a failed save above the open form and keeps the form", async ({ page, account, consoleErrors }) => {
+test("a failed creation says why and keeps every answer", async ({ page, account, consoleErrors }) => {
   expect(account.token).toBeTruthy();
   consoleErrors.allow(/Failed to load resource: the server responded with a status of 503/);
-  await page.route("**/api/backend/v1/businesses", (route) =>
+  await page.route("**/api/backend/v1/assistants", (route) =>
     route.request().method() === "POST"
       ? route.fulfill({
           status: 503,
@@ -71,18 +81,17 @@ test("shows a failed save above the open form and keeps the form", async ({ page
         })
       : route.fallback(),
   );
-  await page.goto("/businesses");
-  const dialog = page.getByRole("dialog", { name: en.businesses.createTitle });
-  await dialog.getByLabel(en.businesses.name).fill("Panadería Sol");
-  await dialog.getByLabel(en.businesses.niche).selectOption("restaurant");
-  await dialog.getByLabel(en.businesses.country).selectOption("ES");
-  await dialog.getByRole("button", { name: en.businesses.submit }).click();
+  await describeSalon(page, "Panadería Sol");
+  await page.getByLabel(en.tunnelBusiness.place.country).selectOption("ES");
+  await page.getByLabel(en.tunnelBusiness.place.address).fill("Calle Mayor 5, Madrid");
+  await page.getByRole("button", { name: en.tunnel.continue, exact: true }).click();
 
-  // The toast is drawn inside the modal dialog (the page behind it is inert)
-  // and can be dismissed; the form keeps what was typed.
-  const toast = dialog.getByRole("alert").filter({ hasText: en.errors.codes.backend_unavailable });
+  const toast = page.getByRole("alert").filter({ hasText: en.errors.codes.backend_unavailable });
   await expect(toast).toBeVisible();
-  await toast.getByRole("button", { name: en.common.close }).click();
-  await expect(toast).toBeHidden();
-  await expect(dialog.getByLabel(en.businesses.name)).toHaveValue("Panadería Sol");
+  await expect(page).toHaveURL(/\/create\?step=place$/);
+  await expect(page.getByLabel(en.tunnelBusiness.place.address)).toHaveValue("Calle Mayor 5, Madrid");
+  // The first screen kept its answers too (they live in this browser until the business exists).
+  await page.reload();
+  await page.getByRole("button", { name: en.tunnel.back }).click();
+  await expect(page.getByLabel(en.tunnelBusiness.business.name)).toHaveValue("Panadería Sol");
 });

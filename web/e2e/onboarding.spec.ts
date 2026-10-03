@@ -14,9 +14,9 @@ async function saveAndContinue(page: Page, nextStep: string): Promise<void> {
   await expect(page).toHaveURL(new RegExp(`[?&]step=${nextStep}(&|$)`));
 }
 
-test("walks the six profile steps of a hair salon in Berlin", async ({ page, newOwner }) => {
-  await page.goto(`/b/${newOwner.businessId}/onboarding`);
-  await expect(page.getByRole("heading", { level: 1, name: en.onboarding.title })).toBeVisible();
+test("walks the six profile steps of a hair salon in Berlin under Hours and rules", async ({ page, owner }) => {
+  await page.goto(`/b/${owner.businessId}/assistant/profile`);
+  await expect(page.getByRole("heading", { name: en.onboarding.title })).toBeVisible();
   const stepButtons = page.getByRole("navigation", { name: en.onboarding.stepsLabel }).getByRole("button");
   await expect(stepButtons).toHaveCount(6);
   const summary = page.getByRole("region", { name: en.onboarding.gaps.title });

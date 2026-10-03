@@ -5,7 +5,7 @@ import { CHANNEL_NAMES } from "@/components/workspace/channelNames";
 import type { Translator } from "@/i18n/translate";
 import { listFormat, numberFormat } from "@/lib/intl/formatters";
 import { landingPrices, moneyText, type PlanQuote } from "@/lib/landing";
-import { LOGIN_PATH } from "@/lib/navigation";
+import { CREATE_PATH } from "@/lib/navigation";
 
 /**
  * One plan: monthly price in the country's currency (and in euros), what is
@@ -58,7 +58,7 @@ export function PlanCard({ quote, translator }: { quote: PlanQuote; translator: 
         </ul>
         <p className="mt-4 text-xs text-ink-subtle">{t("landing.pricing.channels", { list: channels })}</p>
         <div className="mt-auto pt-6">
-          <ButtonLink href={LOGIN_PATH} variant="secondary" fullWidth>
+          <ButtonLink href={CREATE_PATH} variant="secondary" fullWidth>
             {t("landing.pricing.choose", { plan: quote.name })}
           </ButtonLink>
         </div>
