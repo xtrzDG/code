@@ -70,6 +70,8 @@ from app.schemas.typings.profiles.strings import (
 SALON_NAME: str = "Studio Lindenblatt"
 SALON_TIMEZONE: str = "Europe/Berlin"
 SALON_SITE: str = "https://studio-lindenblatt.example"
+# The salon's own number, also its WhatsApp Business number.
+SALON_PUBLIC_NUMBER: str = "+493044012345"
 LENA: str = "Lena – Haare & Farbe"
 MEHMET: str = "Mehmet – Barber"
 SOFIA: str = "Sofia – Nägel & Wimpern"
@@ -130,7 +132,7 @@ def build_salon_foundation(request: DemoFoundationRequest) -> DemoBusinessFounda
             ),
             hours=hours,
             contacts=BusinessContacts(
-                public_phone_number=E164PhoneNumber("+493044012345"),
+                public_phone_number=E164PhoneNumber(SALON_PUBLIC_NUMBER),
                 handoff_phone_number=E164PhoneNumber("+4917612345678"),
             ),
             booking_rules=BookingRules(
@@ -260,10 +262,18 @@ def build_salon_foundation(request: DemoFoundationRequest) -> DemoBusinessFounda
         ],
         channels=[
             connected_channel(
-                business, ChannelKind.INSTAGRAM, opened, "17841400000000001"
+                business,
+                ChannelKind.INSTAGRAM,
+                opened,
+                "17841400000000001",
+                instagram_username="studio.lindenblatt",
             ),
             connected_channel(
-                business, ChannelKind.WHATSAPP, opened, "209876543210988"
+                business,
+                ChannelKind.WHATSAPP,
+                opened,
+                "209876543210988",
+                whatsapp_number=SALON_PUBLIC_NUMBER.removeprefix("+"),
             ),
             connected_channel(
                 business, ChannelKind.WEB_CHAT, opened, accent_color="#8E5A9B"

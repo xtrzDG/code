@@ -111,7 +111,10 @@ def test_the_demo_owner_gets_a_busy_restaurant_and_a_berlin_salon() -> None:
     assert dashboard["lead_count"] >= 3
     assert dashboard["handoff_count"] >= 3
     assert dashboard["open_unanswered_question_count"] >= 3
-    assert 75 <= dashboard["package"]["voice_usage_percent"] < 100
+    # The package counts what the seeded calls and chats metered
+    # (tests/demo/test_demo_invariants.py checks the exact numbers).
+    assert dashboard["package"]["used_voice_minutes"] > 0
+    assert dashboard["package"]["used_dialogs"] > 0
     assert sorted(v["status"] for v in versions) == ["archived", "draft", "published"]
     assert readiness["is_ready"] is True
     assert (run["status"], run["is_passed"], run["is_full_coverage"]) == (

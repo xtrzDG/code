@@ -1,48 +1,45 @@
 """
 Billing of the demo businesses: a running trial or a paid monthly
-subscription, and metered usage spread over the days of the current
-package window (the dashboard and billing pages read it).
+subscription, and the usage their seeded conversations and calls metered
+in the current package window (the dashboard and billing pages read it).
 """
+
+from collections.abc import Sequence
 
 from typed_time_provider import Microseconds
 
 from app.contracts.registries import PlanRegistryContract
-from app.registries.demo.demo_clock import MICROSECONDS_PER_SECOND, DemoClock
 from app.schemas.constants.billing import (
     BillingPeriod,
     InvoiceKind,
     InvoiceStatus,
-    PackageMetric,
     SubscriptionStatus,
     UsageKind,
 )
+from app.schemas.constants.channels import ChannelKind
+from app.schemas.constants.conversations import MessageAuthor
 from app.schemas.domain.billing import (
     InvoiceDocument,
     SubscriptionDocument,
     UsageEventDocument,
 )
 from app.schemas.domain.businesses import BusinessDocument
-from app.schemas.domain.package_usage import PackageUsageWarningDocument
+from app.schemas.domain.conversations import (
+    CallDocument,
+    ConversationDocument,
+    MessageDocument,
+)
 from app.schemas.dto.billing import Money, PlanDefinition
 from app.schemas.typings.billing.constrained_integers import (
     CostMicroUsd,
-    PackageUsagePercent,
     UsageQuantity,
 )
 from app.schemas.typings.billing.strings import (
     InvoiceDescription,
     PaymentProviderReference,
 )
+from app.schemas.typings.conversations.prefixed_id import ConversationId
 from app.utilities.billing.billing_periods import add_calendar_months, add_local_days
-
-SECONDS_PER_MINUTE: int = 60
-SECONDS_PER_DAY: int = 24 * 60 * 60
-# Provider costs behind the usage (concept section 9): about a third of a
-# US cent of model time per dialog, ElevenLabs Agents about 8 cents a minute.
-DIALOG_COST_MICRO_USD: int = 3200
-VOICE_COST_MICRO_USD_PER_SECOND: int = 1333
-# Busier and quieter days, so the daily numbers do not look generated.
-DAY_WEIGHTS: tuple[int, ...] = (9, 11, 8, 12, 14, 10, 7, 13, 9, 12, 10, 15, 8, 11)
 
 
 def price_of(plan_registry: PlanRegistryContract, business: BusinessDocument) -> Money:
@@ -125,77 +122,55 @@ def paid_subscription(
     return subscription, invoice
 
 
-def daily_usage(
+def metered_usage(
     business: BusinessDocument,
-    clock: DemoClock,
+    conversations: Sequence[ConversationDocument],
+    messages: Sequence[MessageDocument],
+    calls: Sequence[CallDocument],
     since: Microseconds,
-    dialogs: int,
-    voice_minutes: int,
 ) -> list[UsageEventDocument]:
     """
-    `dialogs` dialogs and `voice_minutes` call minutes between `since` and
-    now, one event of each kind per day at noon, weighted by DAY_WEIGHTS.
+    What the seeded conversations and calls metered since `since`, as the
+    engine meters them: one dialog per customer conversation the assistant
+    answered (a call counts in minutes instead, a sandbox not at all), and
+    each call's seconds with its provider cost. So the package usage the
+    cabinet and the admin show is the usage of the conversations they list.
     """
 
-    day_count: int = max(1, (int(clock.now) - int(since)) // (SECONDS_PER_DAY * 10**6))
-    weights: list[int] = [
-        DAY_WEIGHTS[day % len(DAY_WEIGHTS)] for day in range(day_count)
+    answered: set[ConversationId] = {
+        message.conversation_id
+        for message in messages
+        if message.author is MessageAuthor.ASSISTANT
+    }
+    events: list[UsageEventDocument] = [
+        UsageEventDocument(
+            business_id=business.id,
+            conversation_id=conversation.id,
+            kind=UsageKind.DIALOG,
+            quantity=UsageQuantity(1),
+            cost_micro_usd=CostMicroUsd(0),
+            occurred_at=conversation.created_at,
+            created_at=conversation.created_at,
+            updated_at=conversation.created_at,
+        )
+        for conversation in conversations
+        if conversation.id in answered
+        and conversation.channel is not ChannelKind.PHONE
+        and not conversation.is_sandbox
+        and int(conversation.created_at) >= int(since)
     ]
-    events: list[UsageEventDocument] = []
-    for kind, total, cost_per_unit in (
-        (UsageKind.DIALOG, dialogs, DIALOG_COST_MICRO_USD),
-        (
-            UsageKind.VOICE_SECONDS,
-            voice_minutes * SECONDS_PER_MINUTE,
-            VOICE_COST_MICRO_USD_PER_SECOND,
-        ),
-    ):
-        if total == 0:
-            continue
-
-        shares: list[int] = split_total(total, weights)
-        for day, quantity in enumerate(shares):
-            moment = Microseconds(
-                int(since) + (day * SECONDS_PER_DAY + 3600) * MICROSECONDS_PER_SECOND
-            )
-            events.append(
-                UsageEventDocument(
-                    business_id=business.id,
-                    kind=kind,
-                    quantity=UsageQuantity(quantity),
-                    cost_micro_usd=CostMicroUsd(quantity * cost_per_unit),
-                    occurred_at=moment,
-                    created_at=moment,
-                    updated_at=moment,
-                )
-            )
-
-    return events
-
-
-def usage_warning(
-    subscription: SubscriptionDocument,
-    metric: PackageMetric,
-    percent: int,
-    sent_at: Microseconds,
-) -> PackageUsageWarningDocument:
-    """The owners were already warned about this metric in this window."""
-
-    return PackageUsageWarningDocument(
-        business_id=subscription.business_id,
-        subscription_id=subscription.id,
-        metric=metric,
-        period_start=subscription.period_start,
-        usage_percent=PackageUsagePercent(percent),
-        created_at=sent_at,
-        updated_at=sent_at,
+    events.extend(
+        UsageEventDocument(
+            business_id=business.id,
+            conversation_id=call.conversation_id,
+            kind=UsageKind.VOICE_SECONDS,
+            quantity=UsageQuantity(int(call.duration_seconds)),
+            cost_micro_usd=call.cost_micro_usd,
+            occurred_at=call.started_at,
+            created_at=call.updated_at,
+            updated_at=call.updated_at,
+        )
+        for call in calls
+        if int(call.started_at) >= int(since) and int(call.duration_seconds) > 0
     )
-
-
-def split_total(total: int, weights: list[int]) -> list[int]:
-    """`total` split by `weights`; the rounding remainder goes to the last day."""
-
-    weight_sum: int = sum(weights)
-    shares: list[int] = [total * weight // weight_sum for weight in weights]
-    shares[-1] += total - sum(shares)
-    return shares
+    return sorted(events, key=lambda event: int(event.occurred_at))

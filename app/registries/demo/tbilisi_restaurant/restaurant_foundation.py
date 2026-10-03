@@ -78,6 +78,9 @@ RESTAURANT_NAME: str = "Mtsvane Ezo"
 RESTAURANT_TIMEZONE: str = "Asia/Tbilisi"
 # The assistant's phone line (calls forwarded on no answer).
 RESTAURANT_ASSISTANT_LINE: str = "+995322190020"
+# The restaurant's own number: guests call it (unanswered calls go to the
+# assistant line) and write to it on WhatsApp Business.
+RESTAURANT_PUBLIC_NUMBER: str = "+995322190019"
 SITE: str = "https://mtsvane-ezo.example"
 WINDOW_TABLE: str = "Стол у окна (2 гостя)"
 HALL_TABLE: str = "Стол в зале (4 гостя)"
@@ -152,6 +155,8 @@ def build_restaurant_foundation(
             opened,
             "109876543210987",
             staff_template=("staff_reply", "ru"),
+            # WhatsApp Business on the restaurant's own number.
+            whatsapp_number=RESTAURANT_PUBLIC_NUMBER.removeprefix("+"),
         ),
         connected_channel(
             business, ChannelKind.WEB_CHAT, opened, accent_color="#2F7D4F"
@@ -234,7 +239,7 @@ def build_restaurant_profile(
         ),
         hours=hours,
         contacts=BusinessContacts(
-            public_phone_number=E164PhoneNumber("+995322190019"),
+            public_phone_number=E164PhoneNumber(RESTAURANT_PUBLIC_NUMBER),
             handoff_phone_number=E164PhoneNumber("+995599102030"),
         ),
         booking_rules=BookingRules(

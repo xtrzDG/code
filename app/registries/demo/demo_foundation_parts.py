@@ -11,6 +11,7 @@ from app.schemas.constants.knowledge import KnowledgeItemKind, KnowledgeItemSour
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.channels import (
     ChannelDocument,
+    ChannelPublicProfile,
     WebChatAppearance,
     WhatsAppStaffTemplate,
 )
@@ -45,6 +46,10 @@ from app.schemas.typings.knowledge.strings import (
     KnowledgeTitle,
 )
 from app.schemas.typings.localization.constrained_strings import LanguageTag
+from app.schemas.typings.sharing.constrained_strings import (
+    InstagramUsername,
+    WhatsAppNumberDigits,
+)
 
 MINUTES_PER_HOUR: int = 60
 
@@ -78,8 +83,15 @@ def connected_channel(
     external_id: str | None = None,
     accent_color: str | None = None,
     staff_template: tuple[str, str] | None = None,
+    whatsapp_number: str | None = None,
+    instagram_username: str | None = None,
 ) -> ChannelDocument:
-    """`staff_template`: the WhatsApp template name and its language."""
+    """
+    `staff_template`: the WhatsApp template name and its language;
+    `whatsapp_number` (digits) and `instagram_username`: the address
+    customers open a chat with, which a real connection learns from Meta,
+    so the share links can offer the channel.
+    """
     return ChannelDocument(
         business_id=business.id,
         kind=kind,
@@ -96,6 +108,22 @@ def connected_channel(
             else WhatsAppStaffTemplate(
                 name=WhatsAppTemplateName(staff_template[0]),
                 language_code=WhatsAppTemplateLanguageCode(staff_template[1]),
+            )
+        ),
+        public_profile=(
+            None
+            if whatsapp_number is None and instagram_username is None
+            else ChannelPublicProfile(
+                whatsapp_number=(
+                    None
+                    if whatsapp_number is None
+                    else WhatsAppNumberDigits(whatsapp_number)
+                ),
+                instagram_username=(
+                    None
+                    if instagram_username is None
+                    else InstagramUsername(instagram_username)
+                ),
             )
         ),
         created_at=since,
