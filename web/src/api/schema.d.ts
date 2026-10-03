@@ -3725,6 +3725,17 @@ export interface components {
          */
         ChannelKind: "phone" | "whatsapp" | "instagram" | "messenger" | "telegram" | "web_chat" | "viber" | "owner_test";
         /**
+         * ChannelLinkState
+         * @description Whether customers can be sent a link to a connected channel: LINKED when
+         *     its public address (Telegram bot, WhatsApp number, Instagram or page
+         *     username, phone number) is known; MISSING_PUBLIC_ADDRESS when the
+         *     channel answers but the platform never told its public address (it was
+         *     connected before addresses were learned): the share links skip it and
+         *     reconnecting it once fixes that.
+         * @enum {string}
+         */
+        ChannelLinkState: "linked" | "missing_public_address";
+        /**
          * ChannelStatus
          * @description Connection state of a channel.
          * @enum {string}
@@ -3741,7 +3752,9 @@ export interface components {
          *     website chat also reports its saved colour and launcher corner (None:
          *     the widget's defaults). WhatsApp reports the template staff replies use
          *     once the 24-hour window has closed (None: no template, such replies are
-         *     refused).
+         *     refused). `link_state` says whether a connected messenger or phone can
+         *     be shared as a link (the same rule the share links follow); None for a
+         *     channel that is not connected or has no link (the website chat).
          */
         ChannelView: {
             /** Account Id */
@@ -3757,6 +3770,7 @@ export interface components {
             last_error?: string | null;
             /** Last Error At */
             last_error_at?: number | null;
+            link_state?: components["schemas"]["ChannelLinkState"] | null;
             staff_reply_template?: components["schemas"]["WhatsAppStaffTemplateView"] | null;
             status: components["schemas"]["ChannelStatus"];
             /** Updated At */

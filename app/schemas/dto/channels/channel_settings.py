@@ -4,7 +4,12 @@ from base_pydantic_schemas import ImmutableDTO
 from pydantic import Field
 from typed_time_provider import Microseconds
 
-from app.schemas.constants.channels import ChannelKind, ChannelStatus, WidgetPosition
+from app.schemas.constants.channels import (
+    ChannelKind,
+    ChannelLinkState,
+    ChannelStatus,
+    WidgetPosition,
+)
 from app.schemas.dto.staff_reply_templates import WhatsAppStaffTemplateView
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.channels.booleans import HasChannelCredential
@@ -88,7 +93,9 @@ class ChannelView(ImmutableDTO):
     website chat also reports its saved colour and launcher corner (None:
     the widget's defaults). WhatsApp reports the template staff replies use
     once the 24-hour window has closed (None: no template, such replies are
-    refused).
+    refused). `link_state` says whether a connected messenger or phone can
+    be shared as a link (the same rule the share links follow); None for a
+    channel that is not connected or has no link (the website chat).
     """
 
     id: ChannelId
@@ -103,3 +110,4 @@ class ChannelView(ImmutableDTO):
     widget_color: WidgetAccentColor | None = None
     widget_position: WidgetPosition | None = None
     staff_reply_template: WhatsAppStaffTemplateView | None = None
+    link_state: ChannelLinkState | None = None

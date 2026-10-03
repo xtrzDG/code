@@ -13,6 +13,7 @@ import {
   CHANNEL_STATE_TONES,
   channelState,
   isChannelOn,
+  isLinkMissing,
   type ChannelView,
   type ConnectableChannel,
 } from "../_lib/channels";
@@ -113,6 +114,11 @@ export function ChannelCard({
             </p>
           ) : null}
           <p className="mt-1 text-xs">{t("channels.errorHeals")}</p>
+        </Alert>
+      ) : null}
+      {isLinkMissing(channel) ? (
+        <Alert tone="warning" title={t("channels.noLinkTitle")} className="mt-4">
+          <p>{t("channels.noLinkDescription", { channel: name })}</p>
         </Alert>
       ) : null}
       {state === "pending" ? (

@@ -13,7 +13,7 @@ label and a migration path).
 
 ## 2026-10-03 — one source of truth: counts, autotest verdicts, exchange rates, channel addresses
 
-Spec: `23b62cd8f8db4420`
+Spec: `00e15901a1e32d39`
 
 - **Removed** (`api-breaking`) `GET /v1/businesses/{business_id}/inbox-counts`.
   No client read it since the badges moved to `…/attention-counts`; it
@@ -47,6 +47,13 @@ Spec: `23b62cd8f8db4420`
   `AutotestScenarioResultView`: why a scenario failed, as codes the
   cabinet renders in every language (`judge_notes` and `check_notes`
   stay English text).
+- **Added** `link_state` (`ChannelLinkState`: `linked`,
+  `missing_public_address`; null for a channel that is not connected or
+  has no link of its own) to `ChannelView`: whether customers can be sent
+  a link to the channel, by the same rule the share links follow. A
+  connected WhatsApp or Instagram whose public address the platform never
+  learned is `missing_public_address`; the share links keep skipping it
+  with the `reconnect_channel` gap.
 
 ## 2026-10-03 — encryption key rotation for platform admins
 

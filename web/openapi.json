@@ -3530,6 +3530,15 @@
         "title": "ChannelKind",
         "type": "string"
       },
+      "ChannelLinkState": {
+        "description": "Whether customers can be sent a link to a connected channel: LINKED when\nits public address (Telegram bot, WhatsApp number, Instagram or page\nusername, phone number) is known; MISSING_PUBLIC_ADDRESS when the\nchannel answers but the platform never told its public address (it was\nconnected before addresses were learned): the share links skip it and\nreconnecting it once fixes that.",
+        "enum": [
+          "linked",
+          "missing_public_address"
+        ],
+        "title": "ChannelLinkState",
+        "type": "string"
+      },
       "ChannelStatus": {
         "description": "Connection state of a channel.",
         "enum": [
@@ -3543,7 +3552,7 @@
       },
       "ChannelView": {
         "additionalProperties": false,
-        "description": "A channel as the cabinet shows it; credentials are never returned.\n\n`account_id` is the public account inside the channel: bot username,\nWhatsApp phone number id, page id, Instagram account id, or the E.164\nnumber of the assistant line. With status ERROR, `last_error` is the\nplatform's short reason (no secrets) and `last_error_at` its time. The\nwebsite chat also reports its saved colour and launcher corner (None:\nthe widget's defaults). WhatsApp reports the template staff replies use\nonce the 24-hour window has closed (None: no template, such replies are\nrefused).",
+        "description": "A channel as the cabinet shows it; credentials are never returned.\n\n`account_id` is the public account inside the channel: bot username,\nWhatsApp phone number id, page id, Instagram account id, or the E.164\nnumber of the assistant line. With status ERROR, `last_error` is the\nplatform's short reason (no secrets) and `last_error_at` its time. The\nwebsite chat also reports its saved colour and launcher corner (None:\nthe widget's defaults). WhatsApp reports the template staff replies use\nonce the 24-hour window has closed (None: no template, such replies are\nrefused). `link_state` says whether a connected messenger or phone can\nbe shared as a link (the same rule the share links follow); None for a\nchannel that is not connected or has no link (the website chat).",
         "properties": {
           "account_id": {
             "anyOf": [
@@ -3595,6 +3604,16 @@
               }
             ],
             "title": "Last Error At"
+          },
+          "link_state": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ChannelLinkState"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "staff_reply_template": {
             "anyOf": [

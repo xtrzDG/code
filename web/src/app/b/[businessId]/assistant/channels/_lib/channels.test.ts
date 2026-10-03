@@ -9,6 +9,7 @@ import {
   formatLinkCode,
   isChannelInPlan,
   isChannelOn,
+  isLinkMissing,
   markChannelDisabled,
   notificationLanguages,
   sortForwardingCodes,
@@ -263,5 +264,24 @@ describe("WhatsApp template for staff replies", () => {
       ok: false,
       errors: { name: "name", language: "language" },
     });
+  });
+});
+
+describe("a channel without its public address", () => {
+  const whatsapp = {
+    id: "channel_1",
+    business_id: "business_1",
+    channel: "whatsapp",
+    status: "connected",
+    has_credential: true,
+    updated_at: 1,
+  } satisfies ChannelView;
+
+  it("is flagged only while it is connected and its link is missing", () => {
+    expect(isLinkMissing({ ...whatsapp, link_state: "missing_public_address" })).toBe(true);
+    expect(isLinkMissing({ ...whatsapp, link_state: "linked" })).toBe(false);
+    expect(isLinkMissing({ ...whatsapp, status: "error", link_state: null })).toBe(false);
+    expect(isLinkMissing({ ...whatsapp, status: "disabled", link_state: null })).toBe(false);
+    expect(isLinkMissing(undefined)).toBe(false);
   });
 });

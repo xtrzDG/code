@@ -51,6 +51,15 @@ export function isChannelOn(channel: ChannelView | undefined): boolean {
 }
 
 /**
+ * A connected channel customers cannot be sent a link to: the platform never
+ * told its public address, so Share and the chat page skip it (the API's
+ * `link_state`, the same rule its share links follow). An error says more.
+ */
+export function isLinkMissing(channel: ChannelView | undefined): boolean {
+  return channel?.status === "connected" && channel.link_state === "missing_public_address";
+}
+
+/**
  * The list right after a disconnect (the API answers 204): the channel is
  * off and its credential gone, as the server keeps it; a reload confirms.
  */
