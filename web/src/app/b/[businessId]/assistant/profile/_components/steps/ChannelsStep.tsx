@@ -22,6 +22,7 @@ const LINK_KINDS: Record<BusinessLinkKind, MessageKey> = {
   booking_page: "onboarding.channels.linkKinds.booking_page",
   delivery: "onboarding.channels.linkKinds.delivery",
   website: "onboarding.channels.linkKinds.website",
+  privacy: "onboarding.channels.linkKinds.privacy",
 };
 const ALL_LINK_KINDS = Object.keys(LINK_KINDS) as BusinessLinkKind[];
 

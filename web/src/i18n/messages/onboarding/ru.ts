@@ -159,6 +159,7 @@ export const onboardingRu: Translation<typeof onboardingEn> = {
         booking_page: "Страница брони",
         delivery: "Доставка",
         website: "Сайт",
+        privacy: "Политика конфиденциальности",
       },
       recordingNotice: "Предупреждать о записи звонка",
       recordingNoticeHint: "Помощник говорит об этом в начале каждого звонка. Во многих странах этого требует закон.",

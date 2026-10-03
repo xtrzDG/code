@@ -150,6 +150,7 @@ export const onboardingEn = {
         booking_page: "Booking page",
         delivery: "Delivery",
         website: "Website",
+        privacy: "Privacy notice",
       },
       recordingNotice: "Say that calls are recorded",
       recordingNoticeHint: "The assistant says it at the start of every call. Required by law in many countries.",
