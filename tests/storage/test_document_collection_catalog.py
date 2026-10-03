@@ -66,8 +66,10 @@ from app.schemas.typings.compliance.strings import AuditEntityName
 from app.schemas.typings.users.prefixed_id import UserId
 from app.utilities.storage.document_collection_catalog import (
     DOCUMENT_COLLECTIONS,
-    DocumentCollectionDefinition,
     collection_name_for,
+)
+from app.utilities.storage.document_collection_definition import (
+    DocumentCollectionDefinition,
 )
 from app.utilities.storage.document_tenancy import (
     infer_collection_isolation,

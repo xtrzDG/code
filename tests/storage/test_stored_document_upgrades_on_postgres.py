@@ -23,7 +23,7 @@ from app.schemas.typings.storage.constrained_integers import (
 )
 from app.schemas.typings.storage.constrained_strings import DocumentCollectionName
 from app.schemas.typings.storage.strings import StoredDocumentKey
-from app.utilities.storage.document_collection_catalog import (
+from app.utilities.storage.document_collection_definition import (
     DocumentCollectionDefinition,
 )
 from tests.storage.evolution_documents import (

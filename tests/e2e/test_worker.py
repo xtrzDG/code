@@ -19,6 +19,10 @@ from app.containers.gateways import (
 )
 from app.contracts.jobs import QueuedJobOperator
 from app.gateways.worker.background_worker import PeriodicJobSpec
+from app.gateways.worker.periodic.activation_follow_up import (
+    NOTICE_MILESTONES_JOB,
+    SEND_ACTIVATION_NUDGES_JOB,
+)
 from app.gateways.worker.periodic.growth_analytics import (
     PURGE_WEB_VITALS_JOB,
     RECONCILE_PRODUCT_EVENTS_JOB,
@@ -29,10 +33,6 @@ from app.gateways.worker.periodic.refresh_exchange_rates import (
 )
 from app.gateways.worker.periodic.request_visit_feedback import (
     REQUEST_VISIT_FEEDBACK_JOB,
-)
-from app.gateways.worker.periodic.activation_follow_up import (
-    NOTICE_MILESTONES_JOB,
-    SEND_ACTIVATION_NUDGES_JOB,
 )
 from app.gateways.worker.periodic.send_value_reports import SEND_VALUE_REPORTS_JOB
 from app.gateways.worker.periodic.sweep_rate_limit_buckets import (

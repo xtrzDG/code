@@ -14,8 +14,8 @@ from app.schemas.dto.setup.apply_changes import SetupActionView
 from app.schemas.dto.setup.setup_progress import (
     ActivationMilestoneView,
     PhoneTestLinkView,
-    SetupStepView,
 )
+from app.schemas.dto.setup.setup_steps_view import SetupStepView
 from app.schemas.typings.channels.constrained_strings import (
     PublicBaseUrl,
     TelegramBotUsername,

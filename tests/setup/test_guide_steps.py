@@ -1,5 +1,7 @@
 """The guide after the launch as pure rules: its steps, next step and completion."""
 
+from dataclasses import replace
+
 from app.schemas.constants.setup import (
     SetupActionTarget,
     SetupStepCode,
@@ -136,7 +138,7 @@ def test_steps_after_the_launch_are_optional_and_point_where_they_are_done() -> 
 
 
 def test_once_live_the_test_chat_gives_way_to_the_phone() -> None:
-    untried = SetupFacts(**{**LIVE.__dict__, "has_tried_assistant": False})
+    untried = replace(LIVE, has_tried_assistant=False)
     guide = derive_guide(
         derive_steps(untried),
         derive_after_launch_steps(NOTHING_AFTER),
@@ -144,8 +146,9 @@ def test_once_live_the_test_chat_gives_way_to_the_phone() -> None:
         is_live=True,
     )
 
-    assert guide_next_step(guide) is not None
-    assert guide_next_step(guide).code is SetupStepCode.PHONE_TEST  # type: ignore[union-attr]
+    next_step = guide_next_step(guide)
+    assert next_step is not None
+    assert next_step.code is SetupStepCode.PHONE_TEST
 
 
 def test_the_share_done_counts_every_step_of_the_guide() -> None:

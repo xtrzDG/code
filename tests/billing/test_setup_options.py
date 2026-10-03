@@ -1,4 +1,4 @@
-"""Self-serve owners pay no setup fee; done-for-you brings it and an onboarding request."""
+"""Self-serve owners pay no setup fee; done-for-you brings it and a request."""
 
 from app.schemas.constants.billing import (
     InvoiceKind,
