@@ -95,7 +95,7 @@ class TranscribeVoiceNoteUseCase(
             return VoiceNoteTranscription(attachment=attachment)
 
         if media.transcript is not None:
-            return given(attachment, transcript=media.transcript)
+            return heard(attachment, media.transcript, media.duration_seconds)
 
         if (
             media.duration_seconds is not None
@@ -146,9 +146,8 @@ class TranscribeVoiceNoteUseCase(
             or estimate_duration_seconds(media.byte_count)
         )
         now: Microseconds = self._wall_clock.now_unix()
-        transcript: TranscribedVoiceText | None = (
-            TranscribedVoiceText(text) if text else None
-        )
+        # Kept even when empty: a turn that runs again neither asks nor pays twice.
+        transcript = TranscribedVoiceText(text)
         media.transcript = transcript
         media.duration_seconds = seconds
         media.updated_at = now
@@ -166,14 +165,24 @@ class TranscribeVoiceNoteUseCase(
                 updated_at=now,
             )
         )
-        if transcript is None:
-            return given(
-                attachment,
-                problem=AttachmentProblem.NOT_UNDERSTOOD,
-                duration_seconds=seconds,
-            )
+        return heard(attachment, transcript, seconds)
 
-        return given(attachment, transcript=transcript, duration_seconds=seconds)
+
+def heard(
+    attachment: MessageAttachment,
+    transcript: TranscribedVoiceText,
+    duration_seconds: AudioDurationSeconds | None,
+) -> VoiceNoteTranscription:
+    """The words of a voice note; none heard is NOT_UNDERSTOOD."""
+
+    if not str(transcript).strip():
+        return given(
+            attachment,
+            problem=AttachmentProblem.NOT_UNDERSTOOD,
+            duration_seconds=duration_seconds,
+        )
+
+    return given(attachment, transcript=transcript, duration_seconds=duration_seconds)
 
 
 def given(

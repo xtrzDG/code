@@ -160,7 +160,12 @@ class TestMetaPages:
             [AttachmentKind.OTHER, AttachmentKind.OTHER],
             [AttachmentKind.OTHER],
         ]
-        voice, photo, sticker, place = messages[0], messages[1], messages[2], messages[3]
+        voice, photo, sticker, place = (
+            messages[0],
+            messages[1],
+            messages[2],
+            messages[3],
+        )
         assert str(voice.attachments[0].provider_media_id).startswith(
             "https://cdn.fbsbx.com/"
         )

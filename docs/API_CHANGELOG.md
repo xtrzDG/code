@@ -11,6 +11,31 @@ Kinds of change: **Added**, **Changed** (additive), **Deprecated** (with
 sunset date), **Removed** and **Breaking** (only with the `api-breaking`
 label and a migration path).
 
+## 2026-10-03 — voice messages, photos and places of customers
+
+Spec: `76e1e3904dd01540`
+
+- **Added** `GET /v1/businesses/{business_id}/media/{media_id}`: a voice
+  message or photo a customer sent, for owners and staff of the business
+  (`404` for another business's file, or one the retention purge or an
+  erasure removed). The type is read from the file itself; the answer is
+  `Cache-Control: private, no-store`, `X-Content-Type-Options: nosniff`,
+  `Content-Disposition: inline` and a sandboxing CSP. Each opening is in
+  the audit log (`view`, entity `message_media`).
+- **Changed** (additive) `MessageView.attachments`: the voice messages
+  (`media_id`, `duration_seconds`, `transcript`), photos (`media_id`,
+  `media_type`), places (`location`, `map_url`) and other files of a
+  customer message, with `problem` when the assistant could not read one
+  (`unsupported_kind`, `too_large`, `too_long`, `unavailable`,
+  `unrecognized_format`, `not_understood`) and `is_media_deleted` after
+  the retention purge.
+- **Changed** (additive) `ConversationSummaryView` and `InboxItemView`:
+  `last_message_attachment`, the kind of what the last message carried
+  besides text (`audio`, `image`, `location`, `contact`, `sticker`,
+  `other`); `last_message_text` includes a voice message's transcript.
+- **Changed** (additive) `UsageKind`: `transcription_seconds` (voice
+  messages transcribed) in admin usage views.
+
 ## 2026-10-03 — widget messages are answered by the worker
 
 Spec: `66ff36e8e31c29a8`
