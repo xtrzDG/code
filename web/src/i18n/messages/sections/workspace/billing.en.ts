@@ -58,7 +58,7 @@ export const billingEn = {
     unpaidTitle: { one: "{count} invoice waits for payment", other: "{count} invoices wait for payment" },
     unpaid: "Pay them to keep the assistant working without interruption.",
     trialTitle: { one: "Free trial: {count} day left", other: "Free trial: {count} days left" },
-    trial: "The trial ends on {date}. Pay to keep the assistant working after it.",
+    trial: "Pay before {date} to keep the assistant working after the trial.",
     usageTitle: "{percent} of the package used",
     usageExceededTitle: "The package is used up",
     usageVoice: "Voice minutes are running out. Each minute above the package costs {price}.",

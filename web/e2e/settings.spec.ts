@@ -161,11 +161,11 @@ test("a notification contact saved after the list changed elsewhere is refused a
 
   // The dialog keeps what was typed; the list behind it shows the new contact.
   await expect(dialog.getByText(en.settings.contacts.stale)).toBeVisible();
-  await expect(page.getByText("777000111")).toBeVisible();
+  await expect(page.getByRole("listitem").filter({ hasText: "Levan" })).toBeVisible();
   await expect(dialog.getByRole("textbox", { name: en.settings.contacts.name })).toHaveValue("Anna");
 
   await dialog.getByRole("button", { name: en.common.save }).click();
   await expect(dialog).toBeHidden();
   await expect(page.getByText("anna@example.com")).toBeVisible();
-  await expect(page.getByText("777000111")).toBeVisible();
+  await expect(page.getByRole("listitem").filter({ hasText: "Levan" })).toBeVisible();
 });

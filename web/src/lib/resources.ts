@@ -10,6 +10,7 @@ import type { OpeningInterval, RequestBody, ResourceKind, Schema, Weekday } from
 import type { MessageKey } from "@/i18n/translate";
 
 import { formatMinutesOfDay, parseTimeOfDay } from "./format";
+import { dateTimeFormat } from "./intl/formatters";
 
 export type ResourceView = Schema<"ResourceView">;
 export type BookingUnit = Schema<"BookingUnit">;
@@ -206,7 +207,7 @@ export function weekdayOfDate(localDate: string): Weekday {
 
 /** A local date as text in the UI language: "Thu, 31 Dec 2026". */
 export function formatLocalDate(localDate: string, locale: string): string {
-  return new Intl.DateTimeFormat(locale, {
+  return dateTimeFormat(locale, {
     weekday: "short",
     day: "numeric",
     month: "short",

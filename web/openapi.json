@@ -5742,7 +5742,7 @@
       },
       "HandoffDocument": {
         "additionalProperties": false,
-        "description": "Conversation passed to staff (concept table `handoffs`).",
+        "description": "Conversation passed to staff (concept table `handoffs`).\n\n`summary` is what staff read: the model's own summary (written in the\nstaff language), or, for a handoff the platform created, the\n`summary_code` rendered in the business's staff language. The code,\n`quoted_text` and `flagged_values` let the cabinet and notifications\nrender it again in each reader's language.\n\nVersion 2: `summary_code`, `quoted_text` and `flagged_values` (all\noptional, so version 1 rows read as they are).",
         "properties": {
           "business_id": {
             "title": "Business Id",
@@ -5761,6 +5761,13 @@
             "title": "Created At",
             "type": "integer"
           },
+          "flagged_values": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Flagged Values",
+            "type": "array"
+          },
           "id": {
             "title": "Id",
             "type": "string"
@@ -5769,6 +5776,17 @@
             "default": false,
             "title": "Is Sandbox",
             "type": "boolean"
+          },
+          "quoted_text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quoted Text"
           },
           "reason": {
             "$ref": "#/components/schemas/HandoffReason"
@@ -5785,8 +5803,7 @@
             "title": "Resolved At"
           },
           "schema_version": {
-            "default": "1",
-            "description": "Persistence schema version. This is not the package version or application release version.",
+            "default": "2",
             "title": "Schema Version",
             "type": "string"
           },
@@ -5797,6 +5814,16 @@
           "summary": {
             "title": "Summary",
             "type": "string"
+          },
+          "summary_code": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/HandoffSummaryCode"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "updated_at": {
             "description": "Last update wall-clock UNIX timestamp in microseconds.",
@@ -5820,7 +5847,7 @@
       },
       "HandoffListItem": {
         "additionalProperties": false,
-        "description": "Handoff with the contact to call back.",
+        "description": "Handoff with the contact to call back.\n\nWhen `summary_code` is set the platform created the handoff: the\ncabinet shows the code from its own dictionary in the reader's\nlanguage, with `quoted_text` and `flagged_values`; `summary` is the\nsame in the business's staff language. Otherwise `summary` is the\nmodel's own.",
         "properties": {
           "business_id": {
             "title": "Business Id",
@@ -5863,6 +5890,13 @@
             "title": "Created At",
             "type": "integer"
           },
+          "flagged_values": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Flagged Values",
+            "type": "array"
+          },
           "id": {
             "title": "Id",
             "type": "string"
@@ -5871,6 +5905,17 @@
             "default": false,
             "title": "Is Sandbox",
             "type": "boolean"
+          },
+          "quoted_text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quoted Text"
           },
           "reason": {
             "$ref": "#/components/schemas/HandoffReason"
@@ -5892,6 +5937,16 @@
           "summary": {
             "title": "Summary",
             "type": "string"
+          },
+          "summary_code": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/HandoffSummaryCode"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "urgency": {
             "$ref": "#/components/schemas/HandoffUrgency"
@@ -5999,6 +6054,21 @@
           "resolved"
         ],
         "title": "HandoffStatus",
+        "type": "string"
+      },
+      "HandoffSummaryCode": {
+        "description": "What happened, for a handoff the platform itself created (the model\nwrites its own summary for the ones it creates). Staff read it in\ntheir own language: the cabinet and every notification render the\ncode, with the quoted text and the flagged values, from their own\ndictionaries.",
+        "enum": [
+          "model_declined",
+          "model_unavailable",
+          "answer_unfinished",
+          "unverified_values",
+          "call_booking_unverified_values",
+          "call_request_unverified_values",
+          "reply_undelivered",
+          "data_erased"
+        ],
+        "title": "HandoffSummaryCode",
         "type": "string"
       },
       "HandoffUrgency": {

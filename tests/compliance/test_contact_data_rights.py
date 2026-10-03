@@ -5,6 +5,7 @@ import pytest
 from app.schemas.constants.bookings import BookingStatus
 from app.schemas.constants.compliance import AuditAction
 from app.schemas.constants.conversations import ConversationStatus
+from app.schemas.constants.handoffs import HandoffSummaryCode
 from app.schemas.domain.contacts import ContactDocument
 from app.schemas.dto.compliance import ContactDataCommand
 from app.schemas.exceptions.application_errors import (
@@ -150,6 +151,10 @@ def test_erasure_deletes_personal_data_and_anonymizes_business_records() -> None
     assert lead.budget is None
     assert lead.party_size == 40
     assert "Giorgi" not in handoff.summary
+    # The cabinet says "erased at the customer's request" in its language.
+    assert handoff.summary_code is HandoffSummaryCode.DATA_ERASED
+    assert handoff.quoted_text is None
+    assert handoff.flagged_values == []
 
     assert result.deleted_messages == 3
     assert result.deleted_llm_turns == 3

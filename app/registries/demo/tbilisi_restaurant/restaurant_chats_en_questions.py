@@ -8,9 +8,17 @@ from app.schemas.constants.bookings import LeadType
 from app.schemas.constants.businesses import BusinessLinkKind
 from app.schemas.constants.channels import ChannelKind
 from app.schemas.constants.conversations import ConversationRating
+from app.schemas.constants.handoffs import (
+    HandoffReason,
+    HandoffSummaryCode,
+    HandoffUrgency,
+)
 from app.schemas.domain.contacts import ContactDocument
+from app.schemas.dto.handoffs import CodedHandoffSummary
 from app.schemas.typings.bookings.prefixed_id import LeadId
+from app.schemas.typings.conversations.strings import UnverifiedReplyValue
 from app.schemas.typings.handoffs.prefixed_id import UnansweredQuestionId
+from app.schemas.typings.handoffs.strings import HandoffQuotedText
 
 HELLO: str = "Hello! I'm the AI assistant of Mtsvane Ezo."
 TELEGRAM = ChannelKind.TELEGRAM
@@ -95,6 +103,35 @@ def record_english_question_chats(
     )
     desk.question(
         question, "en", clock.past(-2, "18:20"), occurrences=3, question_id=question_id
+    )
+
+    # Lukas asks about corkage: the guard held back an invented fee, so the
+    # platform handed the conversation over (a coded summary staff read in
+    # their own language).
+    question = "Can we bring our own bottle of wine? Is there a corkage fee?"
+    chat = talk.chat(
+        guests["lukas"],
+        WEB,
+        clock.past(-1, "19:40"),
+        [
+            customer(question),
+            assistant(
+                "Thank you! I am passing your question to a colleague, who will "
+                "get back to you soon."
+            ),
+        ],
+    )
+    desk.handoff(
+        chat,
+        HandoffReason.UNVERIFIED_NUMBERS,
+        "Помощник не отправил ответ: в нём были цифры, которых нет в данных "
+        f"бизнеса (20 GEL). Сообщение клиента: «{question}»",
+        coded=CodedHandoffSummary(
+            code=HandoffSummaryCode.UNVERIFIED_VALUES,
+            quoted_text=HandoffQuotedText(question),
+            flagged_values=[UnverifiedReplyValue("20 GEL")],
+        ),
+        urgency=HandoffUrgency.NORMAL,
     )
 
     # Hannah asks for the menu.

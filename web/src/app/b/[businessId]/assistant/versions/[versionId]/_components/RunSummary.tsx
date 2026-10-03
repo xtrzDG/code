@@ -5,13 +5,14 @@ import { Spinner, type BadgeTone } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { formatScore, scoreTone, summarizeRun, type AutotestRunView } from "@/lib/assistant/autotests";
 import { cn } from "@/lib/cn";
+import { numberFormat } from "@/lib/intl/formatters";
 
 /** A run at a glance: passed scenarios, the average score and the result; progress while it runs. */
 export function RunSummary({ run, isRunning }: { run: AutotestRunView; isRunning: boolean }) {
   const { t, locale } = useI18n();
   const format = useBusinessFormat();
   const summary = summarizeRun(run);
-  const percent = new Intl.NumberFormat(locale, { style: "percent", maximumFractionDigits: 0 });
+  const percent = numberFormat(locale, { style: "percent", maximumFractionDigits: 0 });
   return (
     <>
     <div className="grid gap-3 sm:grid-cols-3">
@@ -57,9 +58,10 @@ export function RunSummary({ run, isRunning }: { run: AutotestRunView; isRunning
         <p className="text-sm text-ink-subtle">{t("assistant.autotests.runningHint")}</p>
       </div>
     ) : (
-      <p className="text-sm text-ink-muted">
-        {t("assistant.autotests.ranAt", { date: format.dateTime(run.updated_at) })} {t("assistant.autotests.rule")}
-      </p>
+      <div className="space-y-1 text-sm text-ink-muted">
+        <p>{t("assistant.autotests.ranAt", { date: format.dateTime(run.updated_at) })}</p>
+        <p>{t("assistant.autotests.rule")}</p>
+      </div>
     )}
     </>
   );

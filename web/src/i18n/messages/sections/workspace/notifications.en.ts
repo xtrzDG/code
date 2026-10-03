@@ -86,6 +86,7 @@ export const notificationsEn = {
     attemptedAt: "Tried {time}",
     never: "Nothing sent yet",
     telegramLinked: "Linked as @{username}",
+    telegramChat: "Telegram chat",
   },
   link: {
     expiredTitle: "This link has expired",

@@ -6,6 +6,9 @@ from app.transformers.notifications.handoff_customer_message_transformer import 
 from app.transformers.notifications.handoff_notification_transformer import (
     HandoffNotificationTransformer,
 )
+from app.transformers.notifications.handoff_summary_transformer import (
+    HandoffSummaryTransformer,
+)
 from app.transformers.notifications.new_lead_notification_transformer import (
     NewLeadNotificationTransformer,
 )
@@ -89,6 +92,7 @@ class OperationsWorld(OperationsBookingFactories):
             staff_brief_transformer=StaffAlertBriefTransformer(self.resolver),
             staff_alerts=self.staff_alerts,
             wall_clock=self.clock.wall_clock,
+            summary_transformer=HandoffSummaryTransformer(self.resolver),
         )
 
     def resolve_handoff(self) -> ResolveHandoffUseCase:

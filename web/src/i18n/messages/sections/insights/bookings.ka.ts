@@ -74,13 +74,13 @@ export const bookingsKa: Translation<typeof bookingsEn> = {
   },
   confirmCancel: {
     title: "გავაუქმოთ ეს ჯავშანი?",
-    description: "{name}, {when}. დრო სხვა კლიენტებისთვის გათავისუფლდება.",
+    description: "{name}, {when}: დრო სხვა კლიენტებისთვის გათავისუფლდება.",
     confirm: "ჯავშნის გაუქმება",
     keep: "დატოვება",
   },
   confirmNoShow: {
     title: "მოვნიშნოთ, რომ სტუმარი არ მოვიდა?",
-    description: "{name}, {when}. წინა სტატუსს ვეღარ დააბრუნებთ.",
+    description: "{name}, {when}: წინა სტატუსს ვეღარ დააბრუნებთ.",
     confirm: "სტუმარი არ მოვიდა",
   },
   updated: "ჯავშანი განახლდა",
@@ -129,7 +129,7 @@ export const bookingsKa: Translation<typeof bookingsEn> = {
   },
   reschedule: {
     title: "ჯავშნის გადატანა",
-    description: "{name}, ახლა: {when}.",
+    description: "{name}, ახლა: {when}",
     newDate: "ახალი თარიღი",
     newTime: "ახალი დრო",
     submit: "გადატანა",

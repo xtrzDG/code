@@ -3,6 +3,7 @@
 import { useBusinessFormat } from "@/components/business/BusinessContext";
 import { Alert, Button } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
+import { formatNumber } from "@/lib/format";
 
 import { quotedMoneyText, type BillingNotice, type BillingOverview } from "../_lib/billing";
 
@@ -26,7 +27,7 @@ export function BillingNotices({
     return null;
   }
   const percent = (value: number) =>
-    new Intl.NumberFormat(locale, { style: "percent", maximumFractionDigits: 0 }).format(value / 100);
+    formatNumber(value / 100, locale, { style: "percent", maximumFractionDigits: 0 });
   const overagePrice = overview.usage ? quotedMoneyText(overview.usage.overage_price_per_minute, format.money) : "";
   const payAction = canPay ? (
     <div className="mt-3">

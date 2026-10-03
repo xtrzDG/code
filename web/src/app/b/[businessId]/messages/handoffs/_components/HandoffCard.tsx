@@ -13,6 +13,8 @@ import { useI18n } from "@/i18n/client";
 import { cn } from "@/lib/cn";
 import { businessPath } from "@/lib/navigation";
 
+import { handoffSummary } from "./handoffSummary";
+
 const URGENCY_EDGE: Record<HandoffListItem["urgency"], string> = {
   critical: "border-l-danger-solid",
   high: "border-l-warning",
@@ -27,6 +29,7 @@ export function HandoffCard({ handoff, onResolve }: { handoff: HandoffListItem; 
   const format = useBusinessFormat();
   const open = isOpenHandoff(handoff);
   const headingId = `handoff-${handoff.id}`;
+  const summary = handoffSummary(handoff, t);
 
   // The list item around it comes from the list (AnimatedPresenceList).
   return (
@@ -51,9 +54,17 @@ export function HandoffCard({ handoff, onResolve }: { handoff: HandoffListItem; 
         </span>
       </div>
 
-      <p dir="auto" className="mt-2 text-sm whitespace-pre-wrap text-ink">
-        {handoff.summary}
+      <p dir="auto" className="mt-2 text-sm break-words whitespace-pre-wrap text-ink">
+        {summary.text}
       </p>
+      {summary.quote ? (
+        <figure className="mt-2 rounded-xl border-l-2 border-line-strong bg-surface-muted/60 px-3 py-2">
+          <figcaption className="text-xs text-ink-muted">{summary.quote.label}</figcaption>
+          <blockquote dir="auto" className="mt-0.5 text-sm break-words whitespace-pre-wrap text-ink">
+            {summary.quote.text}
+          </blockquote>
+        </figure>
+      ) : null}
 
       {handoff.status === "notification_failed" ? (
         <p className="mt-2 text-sm text-danger">{t("handoffs.notificationFailedHint")}</p>

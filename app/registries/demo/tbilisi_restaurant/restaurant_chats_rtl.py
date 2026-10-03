@@ -108,7 +108,7 @@ def record_rtl_chats(
     visit = clock.at(-11, "14:00")
     booking_id, handoff_id = BookingId(), HandoffId()
     confirmation = "تم الحجز: غدًا، الساعة 14:00، طاولة لأربعة أشخاص باسم أحمد."
-    summary = "الضيف يسأل عن الطعام الحلال؛ حجز غداء لأربعة أشخاص"
+    summary = "Гость спрашивает про халяльную еду; забронировал обед на четверых"
     chat = talk.chat(
         guests["ahmad"],
         WHATSAPP,

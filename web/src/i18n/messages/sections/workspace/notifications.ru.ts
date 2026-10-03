@@ -9,7 +9,7 @@ import type { notificationsEn } from "./notifications.en";
 export const notificationsRu: Translation<typeof notificationsEn> = {
   device: {
     title: "На этом устройстве",
-    description: "Передачи, заявки и брони приходят уведомлениями на этот телефон или компьютер, даже когда кабинет закрыт.",
+    description: "Разговоры, где нужен человек, заявки и брони приходят уведомлениями на этот телефон или компьютер, даже когда кабинет закрыт.",
     on: "Включены",
     off: "Выключены",
     enable: "Включить уведомления на этом устройстве",
@@ -49,7 +49,7 @@ export const notificationsRu: Translation<typeof notificationsEn> = {
       booking: "Бронях: новых, перенесённых и отменённых",
     },
     quietHours: "Тихие часы",
-    quietHoursHint: "Уведомления ждут конца тихих часов. Срочные передачи приходят всё равно.",
+    quietHoursHint: "Уведомления ждут конца тихих часов. Срочные случаи, где нужен человек, приходят всё равно.",
     quietHoursToggle: "Задерживать уведомления в эти часы",
     quietFrom: "С",
     quietUntil: "До",
@@ -64,7 +64,7 @@ export const notificationsRu: Translation<typeof notificationsEn> = {
       quiet: "тишина {from}–{until}",
     },
     short: {
-      handoff: "передачи",
+      handoff: "нужен человек",
       lead: "заявки",
       booking: "брони",
     },
@@ -87,6 +87,7 @@ export const notificationsRu: Translation<typeof notificationsEn> = {
     attemptedAt: "Попытка {time}",
     never: "Ещё ничего не отправлялось",
     telegramLinked: "Привязан как @{username}",
+    telegramChat: "Чат в Telegram",
   },
   link: {
     expiredTitle: "Срок действия ссылки истёк",

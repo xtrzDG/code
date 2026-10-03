@@ -8,7 +8,12 @@ from base_pydantic_schemas import ImmutableDTO
 from pydantic import Field
 from typed_time_provider import Microseconds
 
-from app.schemas.constants.handoffs import HandoffReason, HandoffStatus, HandoffUrgency
+from app.schemas.constants.handoffs import (
+    HandoffReason,
+    HandoffStatus,
+    HandoffSummaryCode,
+    HandoffUrgency,
+)
 from app.schemas.dto.paging import PageRequest
 from app.schemas.typings.bookings.booleans import IsSandboxIncluded
 from app.schemas.typings.businesses.prefixed_id import BusinessId
@@ -16,9 +21,10 @@ from app.schemas.typings.contacts.prefixed_id import ContactId
 from app.schemas.typings.contacts.strings import ContactName
 from app.schemas.typings.conversations.booleans import IsSandboxConversation
 from app.schemas.typings.conversations.prefixed_id import ConversationId
+from app.schemas.typings.conversations.strings import UnverifiedReplyValue
 from app.schemas.typings.handoffs.booleans import IsHandoffOpen
 from app.schemas.typings.handoffs.prefixed_id import HandoffId
-from app.schemas.typings.handoffs.strings import HandoffSummary
+from app.schemas.typings.handoffs.strings import HandoffQuotedText, HandoffSummary
 from app.schemas.typings.localization.constrained_strings import E164PhoneNumber
 from app.schemas.typings.platform.constrained_integers import ListItemCount
 from app.schemas.typings.platform.constrained_strings import PageCursor
@@ -44,7 +50,15 @@ class ListHandoffsQuery(ImmutableDTO):
 
 
 class HandoffListItem(ImmutableDTO):
-    """Handoff with the contact to call back."""
+    """
+    Handoff with the contact to call back.
+
+    When `summary_code` is set the platform created the handoff: the
+    cabinet shows the code from its own dictionary in the reader's
+    language, with `quoted_text` and `flagged_values`; `summary` is the
+    same in the business's staff language. Otherwise `summary` is the
+    model's own.
+    """
 
     id: HandoffId
     business_id: BusinessId
@@ -54,6 +68,11 @@ class HandoffListItem(ImmutableDTO):
     contact_phone_number: E164PhoneNumber | None = None
     reason: HandoffReason
     summary: HandoffSummary
+    summary_code: HandoffSummaryCode | None = None
+    quoted_text: HandoffQuotedText | None = None
+    flagged_values: list[UnverifiedReplyValue] = Field(
+        default_factory=list[UnverifiedReplyValue]
+    )
     urgency: HandoffUrgency
     status: HandoffStatus
     is_sandbox: IsSandboxConversation = False

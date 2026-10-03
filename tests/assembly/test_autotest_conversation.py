@@ -47,6 +47,11 @@ def test_ai_customer_and_judge_use_the_judge_model_without_tools() -> None:
     judge_input = read_last_user_text(judge_requests[0])
     assert judge_input.startswith("Scenario: human_request__ru (human_request)\n")
     assert "- handed off to a human: yes" in judge_input
+    # The owner reads the notes, so they come in the staff language.
+    assert (
+        f"Write the notes in the language with the tag {business.owner_language}:"
+        in judge_input
+    )
     assert "- Business name: Café Rustaveli" in judge_input
     assert f"Customer: {CUSTOMER_TEXTS['ru']}" in judge_input
     assert "Assistant: Здравствуйте! Я AI-ассистент." in judge_input

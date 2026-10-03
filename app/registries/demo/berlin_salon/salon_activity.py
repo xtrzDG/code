@@ -65,7 +65,9 @@ def build_salon_activity(
         story, "Marco Rossi", "en", WHATSAPP, "393471234567", "+393471234567"
     )
     handoff_id = HandoffId()
-    summary = "Colour came out too orange after toning; wants it fixed this week"
+    summary = (
+        "Farbe nach dem Tönen zu orange; möchte sie diese Woche korrigieren lassen"
+    )
     chat = talk.chat(
         marco,
         WHATSAPP,

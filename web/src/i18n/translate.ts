@@ -6,6 +6,8 @@
  * itself, so a missing translation never breaks a page.
  */
 
+import { numberFormat, pluralRules } from "@/lib/intl/formatters";
+
 import type { Locale } from "./config";
 import type { en } from "./messages/en";
 
@@ -130,8 +132,8 @@ export function createTranslator(
   messages: MessageTree,
   fallbackMessages?: MessageTree,
 ): Translator {
-  const pluralRules = new Intl.PluralRules(locale);
-  const numberFormat = new Intl.NumberFormat(locale);
+  const plurals = pluralRules(locale);
+  const numbers = numberFormat(locale);
 
   const resolveText = (key: string): string | undefined => {
     const primary = lookupMessage(messages, key);
@@ -143,7 +145,7 @@ export function createTranslator(
   };
 
   const resolvePlural = (key: string, count: number): string | undefined => {
-    const category = pluralRules.select(count);
+    const category = plurals.select(count);
     for (const tree of [messages, fallbackMessages]) {
       const forms = lookupMessage(tree, key);
       if (forms && typeof forms === "object") {
@@ -161,7 +163,7 @@ export function createTranslator(
     t: (key, values) => interpolate(resolveText(key) ?? key, values),
     tp: (key, count, values) =>
       interpolate(resolvePlural(key, count) ?? key, {
-        count: numberFormat.format(count),
+        count: numbers.format(count),
         ...values,
       }),
     has: (key) => resolveText(key) !== undefined,

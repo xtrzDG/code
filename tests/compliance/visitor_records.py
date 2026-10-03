@@ -7,7 +7,7 @@ from typed_time_provider import Microseconds
 from app.schemas.constants.bookings import BookingStatus, LeadType
 from app.schemas.constants.channels import ChannelKind, MessageDirection
 from app.schemas.constants.conversations import LlmTurnRole, MessageAuthor
-from app.schemas.constants.handoffs import HandoffReason
+from app.schemas.constants.handoffs import HandoffReason, HandoffSummaryCode
 from app.schemas.domain.bookings import BookingDocument, LeadDocument
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.contacts import ChannelIdentity, ContactDocument
@@ -41,8 +41,9 @@ from app.schemas.typings.conversations.strings import (
     MessageText,
     ProviderCallId,
     RecordingStoragePath,
+    UnverifiedReplyValue,
 )
-from app.schemas.typings.handoffs.strings import HandoffSummary
+from app.schemas.typings.handoffs.strings import HandoffQuotedText, HandoffSummary
 from app.schemas.typings.localization.constrained_strings import (
     E164PhoneNumber,
     LanguageTag,
@@ -180,6 +181,9 @@ def seed_visitor(
         contact_id=contact.id,
         reason=HandoffReason.COMPLAINT,
         summary=HandoffSummary(f"{name} complains about the bill"),
+        summary_code=HandoffSummaryCode.MODEL_UNAVAILABLE,
+        quoted_text=HandoffQuotedText(f"I am {name}, the bill is wrong"),
+        flagged_values=[UnverifiedReplyValue("120 ₾")],
     )
     testbed.booking_repo.save(booking)
     testbed.lead_repo.save(lead)

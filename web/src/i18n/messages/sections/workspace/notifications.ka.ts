@@ -64,7 +64,7 @@ export const notificationsKa: Translation<typeof notificationsEn> = {
       quiet: "სიჩუმე {from}–{until}",
     },
     short: {
-      handoff: "გადამისამართებები",
+      handoff: "ადამიანის დახმარება",
       lead: "მოთხოვნები",
       booking: "ჯავშნები",
     },
@@ -87,6 +87,7 @@ export const notificationsKa: Translation<typeof notificationsEn> = {
     attemptedAt: "ცდა {time}",
     never: "ჯერ არაფერი გაგზავნილა",
     telegramLinked: "მიბმულია როგორც @{username}",
+    telegramChat: "Telegram-ის ჩატი",
   },
   link: {
     expiredTitle: "ბმულს ვადა გაუვიდა",

@@ -45,6 +45,7 @@ development the 6-digit code appears in the API log
 | `SENTRY_DSN` | none | Sentry project of the cabinet's errors (server and browser). Empty: nothing is sent. Browser errors go through the cabinet's own `/api/monitoring` (no CSP or ad-blocker trouble; the browser never sees the DSN), at most 120 envelopes a minute per server. Events carry no request, cookies, user or breadcrumbs, and e-mails and phone numbers in error texts are masked (`src/lib/monitoring`). The browser SDK is downloaded only after the first error. |
 | `SENTRY_TRACES_SAMPLE_RATE` | `0.05` | Share of server requests traced in Sentry (0 to 1). |
 | `APP_RELEASE`, `RENDER_GIT_COMMIT` | none | The deployed build in error reports; Render sets `RENDER_GIT_COMMIT` itself, `APP_RELEASE` names it on other platforms. |
+| `PSEUDO_LOCALE` | off | `true` serves the pseudo-locale `en-XA` (English accented, 40 % longer, in brackets) to a browser whose `aw_locale` cookie is `en-XA`; for development and the overflow test, never in production. See [Translations](#translations). |
 
 Behind a reverse proxy, run the API with
 `--proxy-headers --forwarded-allow-ips=<address range of this web server>` (never
@@ -58,6 +59,7 @@ Behind a reverse proxy, run the API with
 | `npm run dev` / `build` / `start` | Next.js development server, production build, production server |
 | `npm run lint` | ESLint (`eslint-config-next` + strict project rules), zero warnings allowed; every file in `src/` and `e2e/` has at most 300 lines (`max-lines`; the generated `schema.d.ts` and `*.generated.ts` are exempt) |
 | `npm run typecheck` | `next typegen` (route types) + `tsc --noEmit` |
+| `npm run check:intl` | Fails when this Node lacks full ICU or cannot format Georgian, Russian and English (dates, plurals, relative time, lists); CI runs it before the build, and the cabinet's image before `next build` |
 | `npm test` | Vitest unit tests (`src/**/*.test.ts`) |
 | `npm run e2e` | Playwright end-to-end tests against the real API (see [End-to-end tests](#end-to-end-tests)) |
 | `npm run gen:icons` | Draw the installed app's PNG icons (`public/icons/`, `src/app/apple-icon.png`) from `src/app/icon.svg` in Chromium; run after changing the mark and commit the files |
@@ -135,7 +137,10 @@ npm run e2e -- onboarding         # one file
   (`e2e/instant.spec.ts`, leads served by `e2e/support/leads.ts`), a
   customer who needs a person appearing in an open tab without a reload, with
   its badge, the tab title count and a toast elsewhere (`e2e/live.spec.ts`:
-  the demo restaurant's real widget API and event stream).
+  the demo restaurant's real widget API and event stream), every page in
+  the pseudo-locale at 1440 and 390 px without sideways scrolling or a cut
+  control (`e2e/pseudo-locale.spec.ts`; the suite starts the cabinet with
+  `PSEUDO_LOCALE=true`).
 
 | Variable | Default | Meaning |
 | --- | --- | --- |
@@ -298,7 +303,8 @@ web/
     lib/                       pure helpers with unit tests (*.test.ts): navigation (pages, paths,
                                where a path is, safeNextPath), sections (the five sections, their pages,
                                roles, titles), legacyRoutes (old addresses), inboxBadges, shellPreferences
-                               (sidebar cookie), installPrompt, serviceWorker.test.ts (public/sw.js), format (Intl, money units), countries (phone/country),
+                               (sidebar cookie), installPrompt, serviceWorker.test.ts (public/sw.js), format (Intl, money units),
+                               intl/ (Intl factories; Georgian dates, numbers, lists from CLDR tables), countries (phone/country),
                                hours (opening hours), wizard/ (niche answers, offers, FAQ), knowledge/
                                (kinds, item form, menu import), resources, assistant/ (versions,
                                autotests, go-live, test chat), validation (zod), classMerge (className
@@ -666,8 +672,27 @@ as `reasonMessages` to `useMutation`); never match the English message.
   `pages.*`.
 - Pass `language: locale` to API calls that return display texts (catalog,
   wizard, gaps); the BFF also sends `Accept-Language` with the interface language.
-- Dates, times, numbers and money: Intl only (`src/lib/format.ts`,
-  `useBusinessFormat()`), in the business time zone and currency.
+- Dates, times, numbers and money: `src/lib/format.ts` and
+  `useBusinessFormat()`, in the business time zone and currency; other
+  formats in a UI language (lists, relative times, plural forms) through the
+  factories of `src/lib/intl/formatters.ts`, never `new Intl.*(locale)`
+  (`intlUsage.test.ts`). Chrome's Intl has no Georgian (it writes "ka" as
+  American English, "8 hours ago") while the server's Node writes Georgian,
+  so Georgian is formatted from our own CLDR tables (`src/lib/intl/georgian*.ts`)
+  on both sides; their tests compare every pattern with Node's ICU.
+
+Words follow the glossary (`docs/glossary.md`): "Needs a person", updates
+and checks, Platform; staff never see an English system text in a Russian or
+Georgian cabinet, and no sentence ends on a formatted date (a unit test).
+
+**Pseudo-locale.** Russian and Georgian run 20–40 % longer than English. Start
+the cabinet with `PSEUDO_LOCALE=true` and set the cookie in the browser
+(`document.cookie = "aw_locale=en-XA; path=/"`): every text becomes
+`[Šáṽé ẋẋ]`, accented, 40 % longer and in brackets, so a cut text (no closing
+bracket), a hard-coded string (no accents) and an overflowing layout stand
+out. `e2e/pseudo-locale.spec.ts` opens every page this way at 1440 and 390 px
+and fails on a page that scrolls sideways or a button, tab or link whose
+text does not fit. Dates and numbers stay English.
 
 The interface language is chosen by the `aw_locale` cookie (set at sign-in from
 the account language, by the language switcher, or by the proxy from

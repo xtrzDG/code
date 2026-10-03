@@ -55,7 +55,7 @@ export function PageHeader({
             {description ? <p className="max-w-3xl text-sm text-ink-muted">{description}</p> : null}
           </div>
         ) : null}
-        {actions ? <div className="ms-auto flex flex-wrap items-center gap-2">{actions}</div> : null}
+        {actions ? <div className="ms-auto flex max-w-full min-w-0 flex-wrap items-center gap-2">{actions}</div> : null}
       </header>
     );
   }
@@ -67,7 +67,7 @@ export function PageHeader({
         <h1 className="text-xl font-semibold tracking-tight text-ink sm:text-2xl">{title}</h1>
         {description ? <p className="max-w-3xl text-sm text-ink-muted">{description}</p> : null}
       </div>
-      {actions ? <div className="flex flex-wrap items-center gap-2">{actions}</div> : null}
+      {actions ? <div className="flex max-w-full min-w-0 flex-wrap items-center gap-2">{actions}</div> : null}
     </header>
   );
 }

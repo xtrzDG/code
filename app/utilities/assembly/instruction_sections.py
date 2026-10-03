@@ -169,19 +169,23 @@ def build_booking_section(
 def build_handoff_section(
     business_rules: Sequence[str],
     niche_rules: Sequence[str],
+    staff_language_name: str,
 ) -> list[str]:
     """
     When to pass the conversation to a human, and how urgently. The
     business's and the niche's own cases are listed without an urgency of
     their own: one of them may be an emergency or a complaint, and the
     general cases above decide (normal otherwise), so no line contradicts
-    another.
+    another. The summary is for staff, so it is written in their language
+    whatever language the customer uses.
     """
 
     lines: list[str] = [
         "# Handing off to a human",
         "Call handoff_to_human with the reason, a short summary and the urgency, "
-        "then tell the customer what the tool returns. Hand off when:",
+        "then tell the customer what the tool returns. Write the summary in "
+        f"{staff_language_name}, the language of the business's staff, even "
+        "when the customer uses another language. Hand off when:",
         "- the customer asks for a person: hand off right away (urgency normal)",
         "- the customer complains or is unhappy (urgency high)",
         "- a VIP guest or a request only a manager can decide (urgency high)",

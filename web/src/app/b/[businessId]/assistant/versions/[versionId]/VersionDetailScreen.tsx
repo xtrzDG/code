@@ -25,7 +25,10 @@ import { VersionDetailSkeleton } from "../../_components/AssistantSkeletons";
 
 type DetailTab = "autotests" | "facts" | "instruction" | "tools";
 
-/** One assistant version: status, go-live checks, autotests, facts, instruction and tools. */
+/**
+ * One assistant update: status, go-live checks, checks, facts and tools;
+ * platform admins also see the model's instruction.
+ */
 export function VersionDetailScreen({ versionId }: { versionId: string }) {
   const { t } = useI18n();
   const router = useRouter();
@@ -98,7 +101,8 @@ export function VersionDetailScreen({ versionId }: { versionId: string }) {
           tabs={[
             { key: "autotests", label: t("assistant.detail.tabs.autotests") },
             { key: "facts", label: t("assistant.detail.tabs.facts") },
-            { key: "instruction", label: t("assistant.detail.tabs.instruction") },
+            // The model's instruction is a platform matter (docs/glossary.md).
+            ...(isPlatformAdmin ? [{ key: "instruction" as const, label: t("assistant.detail.tabs.instruction") }] : []),
             { key: "tools", label: t("assistant.detail.tabs.tools") },
           ]}
         >
@@ -115,7 +119,7 @@ export function VersionDetailScreen({ versionId }: { versionId: string }) {
           ) : null}
 
           {tab === "facts" ? <FactsPanel details={details} /> : null}
-          {tab === "instruction" ? <InstructionPanel details={details} /> : null}
+          {tab === "instruction" && isPlatformAdmin ? <InstructionPanel details={details} /> : null}
           {tab === "tools" ? <ToolsPanel details={details} /> : null}
         </Tabs>
       </Card>

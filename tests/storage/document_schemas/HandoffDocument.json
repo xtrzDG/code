@@ -1,7 +1,7 @@
 {
   "collection": "handoffs",
   "document_type": "HandoffDocument",
-  "schema_version": 1,
+  "schema_version": 2,
   "shape": {
     "additionalProperties": false,
     "properties": {
@@ -20,6 +20,12 @@
       "created_at": {
         "type": "integer"
       },
+      "flagged_values": {
+        "items": {
+          "type": "string"
+        },
+        "type": "array"
+      },
       "id": {
         "pattern": "^handoff_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
         "type": "string"
@@ -27,6 +33,17 @@
       "is_sandbox": {
         "default": false,
         "type": "boolean"
+      },
+      "quoted_text": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
       },
       "reason": {
         "enum": [
@@ -54,7 +71,7 @@
         "default": null
       },
       "schema_version": {
-        "default": "1",
+        "default": "2",
         "type": "string"
       },
       "status": {
@@ -69,6 +86,27 @@
       },
       "summary": {
         "type": "string"
+      },
+      "summary_code": {
+        "anyOf": [
+          {
+            "enum": [
+              "model_declined",
+              "model_unavailable",
+              "answer_unfinished",
+              "unverified_values",
+              "call_booking_unverified_values",
+              "call_request_unverified_values",
+              "reply_undelivered",
+              "data_erased"
+            ],
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
       },
       "updated_at": {
         "type": "integer"

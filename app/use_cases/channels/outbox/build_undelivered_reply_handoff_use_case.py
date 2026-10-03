@@ -5,12 +5,16 @@ from app.contracts.repositories.conversation_repositories import (
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.conversations import ConversationStatus
 from app.schemas.constants.deliveries import OutboundMessageKind, OutboundMessageStatus
-from app.schemas.constants.handoffs import HandoffReason, HandoffUrgency
+from app.schemas.constants.handoffs import (
+    HandoffReason,
+    HandoffSummaryCode,
+    HandoffUrgency,
+)
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.conversations import ConversationDocument
 from app.schemas.domain.outbound_messages import OutboundMessageDocument
-from app.schemas.dto.handoffs import HandoffCommand
-from app.schemas.typings.handoffs.strings import HandoffSummary
+from app.schemas.dto.handoffs import CodedHandoffSummary, HandoffCommand
+from app.schemas.typings.handoffs.strings import HandoffQuotedText
 
 MAX_QUOTED_REPLY_LENGTH: int = 300
 
@@ -21,8 +25,10 @@ class BuildUndeliveredReplyHandoffUseCase(
     """
     A reply the customer will never get (the platform refused it, or every
     retry failed) becomes a handoff: a colleague takes the conversation
-    over and staff are told why, with the reply that did not arrive. None
-    when it is not such a reply, or staff already own the conversation.
+    over and staff are told, in their own language, with the reply that
+    did not arrive (the platform's error stays on the outbound message).
+    None when it is not such a reply, or staff already own the
+    conversation.
     """
 
     def __init__(
@@ -67,10 +73,8 @@ class BuildUndeliveredReplyHandoffUseCase(
         )
 
 
-def build_undelivered_summary(message: OutboundMessageDocument) -> HandoffSummary:
-    reason: str = str(message.last_error or "the platform refused it").rstrip(".")
-    reply: str = str(message.text)[:MAX_QUOTED_REPLY_LENGTH]
-    return HandoffSummary(
-        f"The assistant's reply could not be delivered ({reason}); contact the "
-        f"customer another way. Reply: «{reply}»"
+def build_undelivered_summary(message: OutboundMessageDocument) -> CodedHandoffSummary:
+    return CodedHandoffSummary(
+        code=HandoffSummaryCode.REPLY_UNDELIVERED,
+        quoted_text=HandoffQuotedText(str(message.text)[:MAX_QUOTED_REPLY_LENGTH]),
     )

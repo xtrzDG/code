@@ -1,6 +1,3 @@
-from datetime import datetime
-from zoneinfo import ZoneInfo
-
 from typed_time_provider import Microseconds, WallClock
 
 from app.contracts.live_events import EventPublisherFacilitatorContract
@@ -27,8 +24,12 @@ from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.contacts import ContactDocument
 from app.schemas.domain.conversations import ConversationDocument
 from app.schemas.domain.handoffs import HandoffDocument
-from app.schemas.domain.profiles import BusinessProfileDocument, OpeningInterval
-from app.schemas.dto.handoffs import HandoffCommand, HandoffResult
+from app.schemas.dto.handoffs import (
+    CodedHandoffSummary,
+    HandoffCommand,
+    HandoffResult,
+    HandoffSummaryInput,
+)
 from app.schemas.dto.notifications.staff_alerts import (
     HandoffBrief,
     StaffAlertBrief,
@@ -43,25 +44,15 @@ from app.schemas.typings.conversations.strings import MessageText
 from app.schemas.typings.handoffs.constrained_integers import (
     DeliveredNotificationCount,
 )
+from app.schemas.typings.handoffs.strings import HandoffSummary
 from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.schemas.typings.localization.strings import FormattedPhoneNumber
 from app.use_cases.bookings.operations_support import (
     display_phone,
     require_business,
 )
+from app.use_cases.handoffs.handoff_reopening import build_customer_message_input
 from app.use_cases.notifications.staff_alerts import StaffAlertTexts, handoff_alert
-from app.utilities.scheduling.opening_hours import (
-    business_day_ranges,
-    find_next_opening,
-    is_open_at,
-)
-from app.utilities.scheduling.zoned_time import (
-    load_time_zone,
-    microseconds_to_seconds,
-    minute_of_day,
-    to_local_date,
-    to_time_of_day,
-)
 
 
 class HandoffToHumanUseCase(UseCaseContract[HandoffCommand, HandoffResult]):
@@ -105,6 +96,7 @@ class HandoffToHumanUseCase(UseCaseContract[HandoffCommand, HandoffResult]):
         ],
         staff_alerts: StaffAlertFacilitatorContract,
         wall_clock: WallClock[Microseconds],
+        summary_transformer: TransformerContract[HandoffSummaryInput, HandoffSummary],
     ) -> None:
         self._business_repo: BusinessRepoContract = business_repo
         self._business_profile_repo: BusinessProfileRepoContract = business_profile_repo
@@ -127,6 +119,9 @@ class HandoffToHumanUseCase(UseCaseContract[HandoffCommand, HandoffResult]):
         self._staff_alerts: StaffAlertFacilitatorContract = staff_alerts
         self._wall_clock: WallClock[Microseconds] = wall_clock
         self._live_events: EventPublisherFacilitatorContract = live_events
+        self._summary_transformer: TransformerContract[
+            HandoffSummaryInput, HandoffSummary
+        ] = summary_transformer
 
     def run(self, input_data: HandoffCommand) -> HandoffResult:
         business: BusinessDocument = require_business(
@@ -141,12 +136,20 @@ class HandoffToHumanUseCase(UseCaseContract[HandoffCommand, HandoffResult]):
             )
 
         now: Microseconds = self._wall_clock.now_unix()
+        coded: CodedHandoffSummary | None = (
+            input_data.summary
+            if isinstance(input_data.summary, CodedHandoffSummary)
+            else None
+        )
         handoff = HandoffDocument(
             business_id=business.id,
             conversation_id=conversation.id,
             contact_id=input_data.contact_id,
             reason=input_data.reason,
-            summary=input_data.summary,
+            summary=self._summary(input_data, business.owner_language),
+            summary_code=None if coded is None else coded.code,
+            quoted_text=None if coded is None else coded.quoted_text,
+            flagged_values=[] if coded is None else list(coded.flagged_values),
             urgency=input_data.urgency,
             status=HandoffStatus.PENDING,
             is_sandbox=input_data.is_sandbox,
@@ -183,7 +186,13 @@ class HandoffToHumanUseCase(UseCaseContract[HandoffCommand, HandoffResult]):
             urgency=handoff.urgency,
             status=handoff.status,
             customer_message=self._customer_message_transformer.transform(
-                self._customer_message_input(business, input_data.language, now)
+                build_customer_message_input(
+                    business,
+                    input_data.language,
+                    now,
+                    self._business_profile_repo.get_by_business(business.id),
+                    self._schedule_exception_repo,
+                )
             ),
         )
 
@@ -207,7 +216,7 @@ class HandoffToHumanUseCase(UseCaseContract[HandoffCommand, HandoffResult]):
                     business_name=business.name,
                     reason=command.reason,
                     urgency=command.urgency,
-                    summary=command.summary,
+                    summary=self._summary(command, language),
                     contact_name=None if contact is None else contact.name,
                     contact_phone_display=phone,
                     channel=command.source_channel,
@@ -234,35 +243,14 @@ class HandoffToHumanUseCase(UseCaseContract[HandoffCommand, HandoffResult]):
             StaffAlertTexts(detailed=render, brief=render_brief),
         )
 
-    def _customer_message_input(
-        self,
-        business: BusinessDocument,
-        language: LanguageTag,
-        now: Microseconds,
-    ) -> HandoffCustomerMessageInput:
-        profile: BusinessProfileDocument | None = (
-            self._business_profile_repo.get_by_business(business.id)
-        )
-        hours: list[OpeningInterval] = [] if profile is None else list(profile.hours)
-        if not hours:
-            return HandoffCustomerMessageInput(language=language)
+    def _summary(
+        self, command: HandoffCommand, language: LanguageTag
+    ) -> HandoffSummary:
+        """The model's own summary, or the platform's rendered in `language`."""
 
-        zone: ZoneInfo = load_time_zone(business.timezone)
-        ranges_starting_on = business_day_ranges(
-            hours, self._schedule_exception_repo.list_by_business(business.id)
-        )
-        now_seconds: int = microseconds_to_seconds(int(now))
-        if is_open_at(now_seconds, zone, ranges_starting_on):
-            return HandoffCustomerMessageInput(language=language)
+        if isinstance(command.summary, CodedHandoffSummary):
+            return self._summary_transformer.transform(
+                HandoffSummaryInput(summary=command.summary, language=language)
+            )
 
-        reopening: datetime | None = find_next_opening(
-            now_seconds, zone, ranges_starting_on
-        )
-        if reopening is None:
-            return HandoffCustomerMessageInput(language=language)
-
-        return HandoffCustomerMessageInput(
-            language=language,
-            reopens_on=to_local_date(reopening.date()),
-            reopens_at=to_time_of_day(minute_of_day(reopening)),
-        )
+        return command.summary

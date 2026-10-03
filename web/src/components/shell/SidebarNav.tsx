@@ -38,7 +38,7 @@ function SubPages({ pages, onNavigate }: { pages: readonly ShellSubLink[]; onNav
         onFocus={page.isActive ? undefined : page.onPrefetch}
         aria-current={page.isActive ? "page" : undefined}
         className={cn(
-          "relative flex h-8 items-center gap-2 rounded-md ps-3 pe-2 text-[0.8125rem] transition-colors pointer-coarse:h-11",
+          "relative flex min-h-8 items-center gap-2 rounded-md py-1 ps-3 pe-2 text-[0.8125rem] leading-snug transition-colors pointer-coarse:min-h-11",
           page.isActive ? "font-medium text-ink" : "text-ink-muted hover:text-ink",
         )}
       >
@@ -50,7 +50,8 @@ function SubPages({ pages, onNavigate }: { pages: readonly ShellSubLink[]; onNav
             className="absolute inset-y-1.5 -start-px w-0.5 rounded-full bg-accent-solid"
           />
         ) : null}
-        <span className="truncate">{page.label}</span>
+        {/* A long name (Georgian, Russian) wraps instead of being cut. */}
+        <span className="min-w-0 [overflow-wrap:anywhere]">{page.label}</span>
         <NavBadge count={page.badge ?? 0} className="ms-auto" />
       </Link>
     </li>
@@ -119,7 +120,7 @@ export function SidebarNav({
           aria-current={item.isActive ? "page" : undefined}
           title={collapsed ? item.label : undefined}
           className={cn(
-            "group relative flex h-10 items-center gap-3 rounded-lg text-sm transition-colors pointer-coarse:h-11",
+            "group relative flex min-h-10 items-center gap-3 rounded-lg py-1.5 text-sm leading-snug transition-colors pointer-coarse:min-h-11",
             collapsed ? "justify-center px-0" : "px-2.5",
             item.isActive ? "font-medium text-ink" : "text-ink-muted hover:bg-surface-muted/60 hover:text-ink",
           )}
@@ -145,7 +146,7 @@ export function SidebarNav({
               <span aria-hidden className="absolute -end-1.5 -top-1 size-2.5 rounded-full bg-danger-solid ring-2 ring-canvas" />
             ) : null}
           </span>
-          <span className={cn("relative truncate", collapsed && "sr-only")}>{item.label}</span>
+          <span className={cn("relative min-w-0 [overflow-wrap:anywhere]", collapsed && "sr-only")}>{item.label}</span>
           {collapsed ? (
             badge > 0 ? <span className="sr-only">{`, ${tp("navigation.waiting", badge)}`}</span> : null
           ) : (

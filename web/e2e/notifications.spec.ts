@@ -37,8 +37,11 @@ test("the owner checks staff contacts and sees how notifications reach them", as
   await page.goto(`/b/${owner.businessId}/settings/notifications`);
 
   const anna = page.getByRole("listitem").filter({ hasText: "anna@salon.example" });
-  const levan = page.getByRole("listitem").filter({ hasText: "777000111" });
+  const levan = page.getByRole("listitem").filter({ hasText: "Levan" });
   await expect(anna.getByText("Only: handoffs · quiet 22:00–08:00")).toBeVisible();
+  // A Telegram chat is named, never shown by its numeric id.
+  await expect(levan.getByText(en.notifications.contacts.telegramChat)).toBeVisible();
+  await expect(levan).not.toContainText("777000111");
   await expect(levan.getByText(en.notifications.contacts.providerMissing)).toBeVisible();
 
   // E-mail without SMTP outside production is written to the log: delivered.

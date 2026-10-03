@@ -2,6 +2,8 @@
  * Pure helpers shared by the channels, billing, settings and admin pages.
  */
 
+import { numberFormat } from "@/lib/intl/formatters";
+
 /** A URL hash without the leading "#", percent-decoded; "" when its escapes are malformed (e.g. "#%"). */
 export function decodeHash(hash: string): string {
   const raw = hash.replace(/^#/, "");
@@ -50,7 +52,7 @@ export function usageBarWidth(percent: number | null | undefined): number {
 /** Provider costs come in micro US dollars: 1_234_567 -> "$1.2346". */
 export function formatMicroUsd(microUsd: number, locale: string): string {
   const dollars = microUsd / 1_000_000;
-  return new Intl.NumberFormat(locale, {
+  return numberFormat(locale, {
     style: "currency",
     currency: "USD",
     minimumFractionDigits: 2,

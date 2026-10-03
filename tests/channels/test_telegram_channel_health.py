@@ -3,6 +3,8 @@
 import pytest
 
 from app.schemas.constants.channels import ChannelKind, ChannelStatus
+from app.schemas.constants.handoffs import HandoffSummaryCode
+from app.schemas.dto.handoffs import CodedHandoffSummary
 from app.schemas.exceptions.application_errors import (
     ChannelCredentialRejectedError,
     ExternalServiceError,
@@ -84,7 +86,8 @@ class TestTelegramChannelHealth:
             "Telegram sendMessage refused the request (403): Forbidden: blocked"
         )
         [handoff] = testbed.handoffs_to_human.commands
-        assert "could not be delivered" in str(handoff.summary)
+        assert isinstance(handoff.summary, CodedHandoffSummary)
+        assert handoff.summary.code is HandoffSummaryCode.REPLY_UNDELIVERED
 
     def test_proactive_messages_also_track_the_channel(self) -> None:
         testbed = ChannelsTestbed()

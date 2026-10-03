@@ -32,14 +32,16 @@ export function Card({
 }) {
   const hasHeader = title !== undefined || description !== undefined || actions !== undefined;
   return (
-    <section className={cn("rounded-2xl border border-line bg-surface", interactive && "motion-lift", className)} {...props}>
+    // min-w-0: in a grid or a row a card shrinks with the screen instead of
+    // widening it to its longest text (Georgian and Russian run long).
+    <section className={cn("min-w-0 rounded-2xl border border-line bg-surface", interactive && "motion-lift", className)} {...props}>
       {hasHeader ? (
         <header className="flex flex-wrap items-start justify-between gap-3 border-b border-line px-5 py-4">
           <div className="min-w-0 space-y-1">
             {title !== undefined ? <h2 className="text-[0.9375rem] font-semibold tracking-tight text-ink">{title}</h2> : null}
             {description !== undefined ? <p className="text-sm text-ink-muted">{description}</p> : null}
           </div>
-          {actions !== undefined ? <div className="flex shrink-0 items-center gap-2">{actions}</div> : null}
+          {actions !== undefined ? <div className="flex max-w-full min-w-0 flex-wrap items-center gap-2">{actions}</div> : null}
         </header>
       ) : null}
       <div className={cn(padded && "p-5")}>{children}</div>

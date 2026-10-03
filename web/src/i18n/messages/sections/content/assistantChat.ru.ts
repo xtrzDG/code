@@ -5,8 +5,8 @@ import type { assistantChatEn } from "./assistantChat.en";
 
 export const assistantChatRu: Translation<typeof assistantChatEn> = {
   chat: {
-    version: "Версия",
-    versionOption: "Версия {number} · {status}",
+    version: "Обновление",
+    versionOption: "Обновление {number} · {status}",
     unknownVersion: "Автоматически",
     newConversation: "Новый разговор",
     sandboxNote: "Пишите так, как написал бы клиент. Тестовые разговоры не попадают к клиентам, сотрудникам и в оплату.",
@@ -59,7 +59,7 @@ export const assistantChatRu: Translation<typeof assistantChatEn> = {
     toolInput: "Входные данные",
     toolResult: "Результат",
     noVersionsTitle: "Пока нечего проверять",
-    noVersionsDescription: "Соберите первую версию помощника из профиля и поговорите с ней здесь.",
+    noVersionsDescription: "Примените изменения, чтобы подготовить первое обновление помощника, и поговорите с ним здесь.",
     errors: {
       service: "Языковая модель сейчас недоступна. Попробуйте через минуту.",
     },

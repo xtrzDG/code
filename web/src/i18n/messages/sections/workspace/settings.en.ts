@@ -104,7 +104,7 @@ export const settingsEn = {
     title: "Who gets notifications",
     description: "Handoffs, new bookings and requests are sent to these people right away.",
     empty: "Nobody gets notifications yet",
-    emptyDescription: "Add at least one contact so that handoffs to a person do not get lost.",
+    emptyDescription: "Add at least one contact so that customers who need a person are not left without an answer.",
     add: "Add contact",
     edit: "Edit",
     editLabel: "Edit {name}",

@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui";
 import { formatMicroUsd } from "@/components/workspace/helpers";
 import { useI18n } from "@/i18n/client";
 import { cn } from "@/lib/cn";
-import { formatMoney } from "@/lib/format";
+import { formatMoney, formatNumber } from "@/lib/format";
 
 import { HEALTH_TONES, isCriticalIssue, type AdminClientSummary, type ClientHealthIssue, type ClientHealthStatus } from "../_lib/clients";
 import { HEALTH_LABELS, ISSUE_LABELS } from "./labels";
@@ -59,7 +59,7 @@ export function Margin({ cost, className }: { cost: AdminClientSummary["cost"]; 
       {formatMoney(cost.margin.amount_minor, cost.margin.currency_code, locale)}
       {cost.margin_percent !== null && cost.margin_percent !== undefined ? (
         <span className="ml-1 text-xs opacity-80">
-          ({new Intl.NumberFormat(locale, { style: "percent", maximumFractionDigits: 1 }).format(cost.margin_percent / 100)})
+          ({formatNumber(cost.margin_percent / 100, locale, { style: "percent", maximumFractionDigits: 1 })})
         </span>
       ) : null}
     </span>

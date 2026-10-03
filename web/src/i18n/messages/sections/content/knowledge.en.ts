@@ -22,10 +22,10 @@ export const knowledgeEn = {
     policy: "Rules",
   },
   reassembly: {
-    title: "Customers will see the changes after the next version",
-    owner: "The assistant answers from a fixed version. Build a new version and publish it when you are done editing.",
-    staff: "The assistant answers from a fixed version. Ask the owner to build and publish a new one.",
-    action: "Build a version",
+    title: "Customers will see the changes after the next update",
+    owner: "The assistant answers from its live update. When you finish editing, prepare an update and publish it.",
+    staff: "The assistant answers from its live update. Ask the owner to prepare and publish a new one.",
+    action: "Prepare an update",
   },
   paging: {
     more: "Show more",
@@ -121,7 +121,7 @@ export const knowledgeEn = {
     faqTitleHint: "You can rephrase the customer's wording.",
     saveAnswer: "Save the answer",
     saved: "Answer saved",
-    savedHint: "Build a new assistant version so customers get it.",
+    savedHint: "Prepare an assistant update so customers get it.",
   },
   import: {
     title: "Import a menu or price list",

@@ -146,7 +146,7 @@ def record_georgian_question_chats(
     # Giorgi forgot his scarf: handed to the hall manager, resolved.
     start = clock.past(-7, "13:00")
     handoff_id = HandoffId()
-    summary = "სტუმარს გუშინ ლურჯი შარფი დარჩა, ეძებს"
+    summary = "Гость вчера забыл у нас синий шарф и ищет его"
     chat = talk.chat(
         guests["giorgi"],
         WHATSAPP,

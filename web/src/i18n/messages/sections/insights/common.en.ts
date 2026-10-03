@@ -9,7 +9,7 @@ export const insightsCommonEn = {
   showMore: "Show more",
   shownOf: "Showing {shown} of {total}",
   includeTest: "Include test activity",
-  includeTestHint: "From the test chat and autotests",
+  includeTestHint: "From the test chat and checks",
   testBadge: "Test",
   afterHours: "After hours",
   unknownCustomer: "Customer without a name",

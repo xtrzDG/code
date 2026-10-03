@@ -21,7 +21,10 @@ import { NavBadge } from "./NavBadge";
 import type { ShellNavItem } from "./types";
 
 const PLACE =
-  "relative flex min-h-14 flex-1 flex-col items-center justify-center gap-1 rounded-xl px-1 text-[0.6875rem] leading-tight font-medium transition-colors";
+  "relative flex min-h-14 min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-xl px-1 text-[0.6875rem] leading-tight font-medium transition-colors";
+
+/** A long name (Georgian, Russian) wraps to a second line instead of being cut. */
+const LABEL = "max-w-full text-center [overflow-wrap:anywhere] hyphens-auto";
 
 function Marker() {
   return (
@@ -66,21 +69,21 @@ export function PhoneTabBar({
       >
         <ul className="mx-auto flex max-w-xl items-stretch gap-1 px-2 py-1">
           {items.map((item) => (
-            <li key={item.key} className="flex flex-1">
+            <li key={item.key} className="flex min-w-0 flex-1">
               <Link
                 href={item.href}
                 aria-current={item.isActive ? "page" : undefined}
                 className={cn(PLACE, item.isActive ? "text-accent-ink" : "text-ink-muted active:text-ink")}
               >
                 {item.isActive ? <Marker /> : null}
-                <span className="relative flex flex-col items-center gap-1">
+                <span className="relative flex max-w-full flex-col items-center gap-1">
                   <PlaceIcon icon={item.icon} isActive={item.isActive} badge={item.badge ?? 0} />
-                  <span className="max-w-[4.5rem] truncate">{item.label}</span>
+                  <span className={LABEL}>{item.label}</span>
                 </span>
               </Link>
             </li>
           ))}
-          <li className="flex flex-1">
+          <li className="flex min-w-0 flex-1">
             <button
               type="button"
               onClick={onOpenMore}
@@ -89,9 +92,9 @@ export function PhoneTabBar({
               className={cn(PLACE, "cursor-pointer", isMoreActive ? "text-accent-ink" : "text-ink-muted active:text-ink")}
             >
               {isMoreActive ? <Marker /> : null}
-              <span className="relative flex flex-col items-center gap-1">
+              <span className="relative flex max-w-full flex-col items-center gap-1">
                 <PlaceIcon icon={IconMenu} isActive={isMoreActive} badge={0} />
-                <span>{t("navigation.more")}</span>
+                <span className={LABEL}>{t("navigation.more")}</span>
               </span>
             </button>
           </li>

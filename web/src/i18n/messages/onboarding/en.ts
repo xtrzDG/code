@@ -6,7 +6,7 @@
 export const onboardingEn = {
   onboarding: {
     title: "Business profile",
-    subtitle: "Answer the questions: the assistant is assembled from these answers. It takes about 20 minutes.",
+    subtitle: "Answer the questions: the assistant is prepared from these answers. It takes about 20 minutes.",
     stepOf: "Step {number} of {total}",
     stepsLabel: "Profile steps",
     complete: "Done",
@@ -29,13 +29,13 @@ export const onboardingEn = {
       times: { one: "{count} time", other: "{count} times" },
       goToStep: "Open the step",
       readyTitle: "The profile is ready",
-      readyDescription: "Everything required is filled in. You can assemble and test the assistant.",
+      readyDescription: "Everything required is filled in. You can prepare and check the assistant.",
       notReady: { one: "{count} required item is missing", other: "{count} required items are missing" },
       toAssistant: "Go to the assistant",
       adviceCount: { one: "{count} recommendation", other: "{count} recommendations" },
       showList: "Show the list",
       drawerDescription:
-        "Required items must be answered before the assistant can be assembled; recommended ones make its answers better. Choose an item to open its step.",
+        "Required items must be answered before the assistant can be prepared; recommended ones make its answers better. Choose an item to open its step.",
       checking: "Checking the profile…",
       loadFailed: "Could not check what is missing.",
     },

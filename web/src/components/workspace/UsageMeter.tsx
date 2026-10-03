@@ -4,6 +4,7 @@ import { useId, type ReactNode } from "react";
 
 import { useI18n } from "@/i18n/client";
 import { cn } from "@/lib/cn";
+import { formatNumber } from "@/lib/format";
 
 import { usageBarWidth, usageLevel, type UsageLevel } from "./helpers";
 
@@ -40,7 +41,7 @@ export function UsageMeter({
   const percentText =
     percent === null || percent === undefined
       ? t("workspace.usage.notIncluded")
-      : new Intl.NumberFormat(locale, { style: "percent", maximumFractionDigits: 0 }).format(percent / 100);
+      : formatNumber(percent / 100, locale, { style: "percent", maximumFractionDigits: 0 });
 
   return (
     <div className={cn("space-y-2", className)}>

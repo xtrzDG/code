@@ -201,7 +201,7 @@ export const channelsEn = {
     lastSync: "Last booking synced",
     neverSynced: "No bookings synced yet",
     syncErrorTitle: "The last booking did not reach the calendar",
-    syncErrorDescription: "{date}. Google said: {reason}",
+    syncErrorDescription: "Google said on {date}: {reason}",
     syncErrorHint: "Bookings still work in the cabinet. If this repeats, connect the calendar again.",
     reconnect: "Connect again",
     returnConnected: "Google Calendar is connected. New and changed bookings will appear in it.",

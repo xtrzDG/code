@@ -3,6 +3,14 @@
 from base_typed_string import BaseTypedString
 
 
+class HandoffQuotedText(BaseTypedString):
+    """
+    Words quoted in a handoff the platform created, as they were written:
+    the customer's message the assistant could not answer, or the reply
+    that never reached the customer. Personal data.
+    """
+
+
 class HandoffSummary(BaseTypedString):
     """Short retelling of a conversation for the staff member."""
 

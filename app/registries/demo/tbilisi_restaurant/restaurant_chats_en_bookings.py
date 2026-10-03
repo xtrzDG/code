@@ -34,7 +34,10 @@ def record_english_booking_chats(
     day, time = day_word(clock, slot, "en", said_at=start), clock.clock_of(slot)
     booking_id, handoff_id = BookingId(), HandoffId()
     confirmation = f"Booked: {day}, {time}, window table for 2, under Sarah."
-    summary = "Severe walnut allergy; guest booked a window table, chef to confirm"
+    summary = (
+        "Сильная аллергия на грецкие орехи; гость забронировал столик у окна, "
+        "нужно подтверждение шефа"
+    )
     chat = talk.chat(
         guests["sarah"],
         WHATSAPP,

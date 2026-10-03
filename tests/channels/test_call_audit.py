@@ -9,13 +9,19 @@ from app.schemas.constants.conversations import (
     ConversationStatus,
     MessageAuthor,
 )
-from app.schemas.constants.handoffs import HandoffReason, HandoffUrgency
+from app.schemas.constants.handoffs import (
+    HandoffReason,
+    HandoffSummaryCode,
+    HandoffUrgency,
+)
 from app.schemas.domain.assistants import BusinessFact
 from app.schemas.domain.conversations import MessageDocument, ToolCallRecord
+from app.schemas.dto.handoffs import CodedHandoffSummary
 from app.schemas.typings.conversations.strings import (
     LlmToolInputJson,
     LlmToolResultJson,
     MessageText,
+    UnverifiedReplyValue,
 )
 from app.schemas.typings.profiles.constrained_strings import FactKey
 from app.schemas.typings.profiles.strings import FactLabel, FactValue
@@ -138,9 +144,9 @@ def test_an_invented_price_in_a_booking_call_goes_to_staff() -> None:
     assert command.urgency is HandoffUrgency.LOW
     assert command.conversation_id == setup.conversation.id
     assert command.contact_id == setup.contact.id
-    assert str(command.summary) == (
-        "The phone assistant mentioned values missing from the business data: "
-        "30 lari. Check the booking made in this call against the call transcript."
+    assert command.summary == CodedHandoffSummary(
+        code=HandoffSummaryCode.CALL_BOOKING_UNVERIFIED_VALUES,
+        flagged_values=[UnverifiedReplyValue("30 lari")],
     )
     conversation = setup.testbed.conversation_repo.get(
         setup.business.id, setup.conversation.id

@@ -20,6 +20,7 @@ from app.schemas.domain.conversations import ConversationDocument
 from app.schemas.domain.handoffs import HandoffDocument
 from app.schemas.dto.bookings import CreateLeadCommand, LeadView
 from app.schemas.dto.handoffs import (
+    CodedHandoffSummary,
     HandoffCommand,
     HandoffResult,
     RecordUnansweredQuestionCommand,
@@ -30,6 +31,7 @@ from app.schemas.typings.bookings.prefixed_id import LeadId
 from app.schemas.typings.contacts.prefixed_id import ContactId
 from app.schemas.typings.conversations.strings import MessageText
 from app.schemas.typings.handoffs.prefixed_id import UnansweredQuestionId
+from app.schemas.typings.handoffs.strings import HandoffSummary
 
 
 class FakeCreateLead(UseCaseContract[CreateLeadCommand, LeadView]):
@@ -74,12 +76,24 @@ class FakeHandoff(UseCaseContract[HandoffCommand, HandoffResult]):
             raise NotFoundError("Conversation was not found.")
 
         now: Microseconds = self._wall_clock.now_unix()
+        coded: CodedHandoffSummary | None = None
+        summary: HandoffSummary
+        if isinstance(input_data.summary, CodedHandoffSummary):
+            coded = input_data.summary
+            # The real use case renders it in the staff language.
+            summary = HandoffSummary(f"[{coded.code.value}]")
+        else:
+            summary = input_data.summary
+
         handoff = HandoffDocument(
             business_id=input_data.business_id,
             conversation_id=input_data.conversation_id,
             contact_id=input_data.contact_id,
             reason=input_data.reason,
-            summary=input_data.summary,
+            summary=summary,
+            summary_code=None if coded is None else coded.code,
+            quoted_text=None if coded is None else coded.quoted_text,
+            flagged_values=[] if coded is None else list(coded.flagged_values),
             urgency=input_data.urgency,
             is_sandbox=input_data.is_sandbox,
             created_at=now,

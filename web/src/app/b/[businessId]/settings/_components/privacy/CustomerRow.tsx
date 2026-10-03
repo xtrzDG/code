@@ -5,6 +5,7 @@ import { Badge, Button } from "@/components/ui";
 import { CHANNEL_NAMES } from "@/components/workspace/channelNames";
 import { IconDownload } from "@/components/icons";
 import { useI18n } from "@/i18n/client";
+import { listFormat } from "@/lib/intl/formatters";
 
 import type { ContactSummary } from "../../_lib/customers";
 
@@ -45,7 +46,7 @@ export function CustomerRow({
         <p className="mt-0.5 text-xs text-ink-muted">
           {[
             contact.name && contact.phone_number ? contact.phone_number : null,
-            channels.length > 0 ? new Intl.ListFormat(locale, { type: "unit" }).format(channels) : null,
+            channels.length > 0 ? listFormat(locale, { type: "unit" }).format(channels) : null,
             contact.conversation_count > 0 ? tp("settings.requests.conversations", contact.conversation_count) : null,
             contact.booking_count > 0 ? tp("settings.customers.bookings", contact.booking_count) : null,
             contact.lead_count > 0 ? tp("settings.customers.leads", contact.lead_count) : null,
