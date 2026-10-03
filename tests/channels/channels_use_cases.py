@@ -61,6 +61,7 @@ class ChannelsUseCases(ChannelsInfrastructure):
             self.instagram_adapter,
             self.whatsapp_adapter,
             self.usage_event_repo,
+            self.live_events,
             self.wall_clock,
         )
         self.receive_telegram_webhook = ReceiveTelegramWebhookUseCase(

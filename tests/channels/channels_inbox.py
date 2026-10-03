@@ -110,6 +110,7 @@ class ChannelsInbox(ChannelsUseCases):
             self.job_queue,
             self.channel_repo,
             self.handoff_repo,
+            self.live_events,
             jitter=lambda: NO_JITTER,
         )
         self.build_undelivered_reply_handoff = BuildUndeliveredReplyHandoffUseCase(

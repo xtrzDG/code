@@ -5,6 +5,7 @@ from collections.abc import Callable
 from typed_time_provider import Microseconds
 
 from app.contracts.jobs import JobQueueFacilitatorContract
+from app.contracts.live_events import EventPublisherFacilitatorContract
 from app.contracts.repositories.booking_repositories import HandoffRepoContract
 from app.contracts.repositories.business_repositories import ChannelRepoContract
 from app.contracts.repositories.delivery_repositories import (
@@ -52,6 +53,7 @@ class RecordOutboundAttemptUseCase(
         job_queue: JobQueueFacilitatorContract,
         channel_repo: ChannelRepoContract,
         handoff_repo: HandoffRepoContract,
+        live_events: EventPublisherFacilitatorContract,
         # Spreads retry times only; nothing secret depends on it.
         jitter: Callable[[], float] = random.random,  # nosec B311
     ) -> None:
@@ -59,6 +61,7 @@ class RecordOutboundAttemptUseCase(
         self._job_queue: JobQueueFacilitatorContract = job_queue
         self._channel_repo: ChannelRepoContract = channel_repo
         self._handoff_repo: HandoffRepoContract = handoff_repo
+        self._live_events: EventPublisherFacilitatorContract = live_events
         self._jitter: Callable[[], float] = jitter
 
     def run(self, input_data: OutboundAttempt) -> OutboundMessageDocument | None:
@@ -119,6 +122,8 @@ class RecordOutboundAttemptUseCase(
                 stored.last_error,
             )
 
-        update_channel_health(self._channel_repo, stored, input_data, now)
+        update_channel_health(
+            self._channel_repo, self._live_events, stored, input_data, now
+        )
         update_handoff_notification(self._handoff_repo, stored, now)
         return stored

@@ -1,5 +1,6 @@
 from typed_time_provider import Microseconds, WallClock
 
+from app.contracts.live_events import EventPublisherFacilitatorContract
 from app.contracts.localization_utilities import LocalizedTextResolverContract
 from app.contracts.repositories.billing_repositories import UsageEventRepoContract
 from app.contracts.repositories.conversation_repositories import (
@@ -10,6 +11,7 @@ from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.billing import UsageKind
 from app.schemas.constants.channels import ChannelKind, MessageDirection
 from app.schemas.constants.conversations import ConversationStatus, MessageAuthor
+from app.schemas.constants.live_events import LiveEventKind
 from app.schemas.domain.billing import UsageEventDocument
 from app.schemas.domain.conversations import ConversationDocument, MessageDocument
 from app.schemas.dto.conversation_engine import PreparedTurn, ReplyRecord
@@ -53,6 +55,7 @@ class RecordAssistantReplyUseCase(UseCaseContract[ReplyRecord, AssistantReply]):
         conversation_repo: ConversationRepoContract,
         usage_event_repo: UsageEventRepoContract,
         localized_text_resolver: LocalizedTextResolverContract,
+        live_events: EventPublisherFacilitatorContract,
         wall_clock: WallClock[Microseconds],
     ) -> None:
         self._message_repo: MessageRepoContract = message_repo
@@ -62,6 +65,7 @@ class RecordAssistantReplyUseCase(UseCaseContract[ReplyRecord, AssistantReply]):
             localized_text_resolver
         )
         self._wall_clock: WallClock[Microseconds] = wall_clock
+        self._live_events: EventPublisherFacilitatorContract = live_events
 
     def run(self, input_data: ReplyRecord) -> AssistantReply:
         turn: PreparedTurn = input_data.turn
@@ -117,6 +121,12 @@ class RecordAssistantReplyUseCase(UseCaseContract[ReplyRecord, AssistantReply]):
         conversation.last_message_at = now
         conversation.updated_at = now
         self._conversation_repo.save(conversation)
+        self._live_events.publish(
+            conversation.business_id,
+            LiveEventKind.CONVERSATION_MESSAGE,
+            (conversation.id,),
+            is_sandbox=conversation.is_sandbox,
+        )
         return AssistantReply(
             conversation_id=conversation.id,
             text=text,

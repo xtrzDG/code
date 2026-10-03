@@ -84,6 +84,7 @@ class BookingUseCasesContainer(containers.DeclarativeContainer):
         staff_notification_transformer=transformers.new_booking_notification_transformer,
         manager_broadcaster=facilitators.manager_broadcast_facilitator,
         calendar_sync=facilitators.calendar_sync_facilitator,
+        live_events=facilitators.event_publisher,
         wall_clock=time_provider.microsecond_wall_clock,
     )
     cancel_booking_use_case: Factory[
@@ -102,6 +103,7 @@ class BookingUseCasesContainer(containers.DeclarativeContainer):
         staff_notification_transformer=transformers.booking_cancelled_notification_transformer,
         manager_broadcaster=facilitators.manager_broadcast_facilitator,
         calendar_sync=facilitators.calendar_sync_facilitator,
+        live_events=facilitators.event_publisher,
         wall_clock=time_provider.microsecond_wall_clock,
     )
     reschedule_booking_use_case: Factory[
@@ -120,6 +122,7 @@ class BookingUseCasesContainer(containers.DeclarativeContainer):
         staff_notification_transformer=transformers.booking_moved_notification_transformer,
         manager_broadcaster=facilitators.manager_broadcast_facilitator,
         calendar_sync=facilitators.calendar_sync_facilitator,
+        live_events=facilitators.event_publisher,
         wall_clock=time_provider.microsecond_wall_clock,
     )
     list_bookings_use_case: Factory[UseCaseContract[ListBookingsQuery, BookingPage]] = (
@@ -149,6 +152,7 @@ class BookingUseCasesContainer(containers.DeclarativeContainer):
         phone_number_parser=utilities.phone_number_parser,
         confirmation_transformer=transformers.booking_confirmation_transformer,
         calendar_sync=facilitators.calendar_sync_facilitator,
+        live_events=facilitators.event_publisher,
         wall_clock=time_provider.microsecond_wall_clock,
     )
     update_booking_use_case: Factory[
@@ -164,6 +168,7 @@ class BookingUseCasesContainer(containers.DeclarativeContainer):
         audit_log_repo=repositories.audit_log_repo,
         lock_registry=registries.business_lock_registry,
         calendar_sync=facilitators.calendar_sync_facilitator,
+        live_events=facilitators.event_publisher,
         wall_clock=time_provider.microsecond_wall_clock,
     )
     send_booking_reminders_use_case: Factory[UseCaseContract[JobTick, JobReport]] = (

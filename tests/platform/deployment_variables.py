@@ -62,6 +62,9 @@ RENDER_OPTIONAL_VARIABLES: frozenset[str] = frozenset(
         # names the build on other platforms.
         "RENDER_GIT_COMMIT",
         "APP_RELEASE",
+        # Render's database is a direct connection, so LISTEN works on
+        # DATABASE_URL; only a transaction pooler needs a second address.
+        "LIVE_EVENTS_DATABASE_URL",
     }
 )
 

@@ -128,6 +128,7 @@ class UseCasesContainer(containers.DeclarativeContainer):
         ConversationUseCasesContainer,
         adapters=adapters,
         config=config,
+        facilitators=facilitators,
         registries=registries,
         repositories=repositories,
         time_provider=time_provider,

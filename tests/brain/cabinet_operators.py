@@ -71,6 +71,7 @@ from app.use_cases.menu_import.discard_import_batch_use_case import (
 from app.use_cases.menu_import.import_menu_use_case import ImportMenuUseCase
 from tests.brain.brain_world import BrainWorld
 from tests.brain.cabinet_fakes import CabinetStorage
+from tests.live_events.recording_event_publisher import RecordingEventPublisher
 
 
 @dataclass(frozen=True)
@@ -149,6 +150,7 @@ def build_cabinet_operators(
                         audit_log_repo=world.audit_log_repo,
                         channel_message_sender=storage.channel_sender,
                         message_transformer=MessageViewTransformer(),
+                        live_events=RecordingEventPublisher(),
                         wall_clock=world.clock.wall_clock(),
                     )
                 )

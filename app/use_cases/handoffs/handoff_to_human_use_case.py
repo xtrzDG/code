@@ -3,6 +3,7 @@ from zoneinfo import ZoneInfo
 
 from typed_time_provider import Microseconds, WallClock
 
+from app.contracts.live_events import EventPublisherFacilitatorContract
 from app.contracts.localization_utilities import PhoneNumberParserContract
 from app.contracts.operations import ManagerBroadcastFacilitatorContract
 from app.contracts.repositories.booking_repositories import HandoffRepoContract
@@ -21,6 +22,7 @@ from app.contracts.transformer_contract import TransformerContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.conversations import ConversationStatus
 from app.schemas.constants.handoffs import HandoffStatus
+from app.schemas.constants.live_events import LiveEventKind
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.contacts import ContactDocument
 from app.schemas.domain.conversations import ConversationDocument
@@ -92,6 +94,7 @@ class HandoffToHumanUseCase(UseCaseContract[HandoffCommand, HandoffResult]):
             HandoffCustomerMessageInput, MessageText
         ],
         manager_broadcaster: ManagerBroadcastFacilitatorContract,
+        live_events: EventPublisherFacilitatorContract,
         wall_clock: WallClock[Microseconds],
     ) -> None:
         self._business_repo: BusinessRepoContract = business_repo
@@ -113,6 +116,7 @@ class HandoffToHumanUseCase(UseCaseContract[HandoffCommand, HandoffResult]):
             manager_broadcaster
         )
         self._wall_clock: WallClock[Microseconds] = wall_clock
+        self._live_events: EventPublisherFacilitatorContract = live_events
 
     def run(self, input_data: HandoffCommand) -> HandoffResult:
         business: BusinessDocument = require_business(
@@ -155,6 +159,12 @@ class HandoffToHumanUseCase(UseCaseContract[HandoffCommand, HandoffResult]):
                 handoff.updated_at = now
                 self._handoff_repo.save(handoff)
 
+        self._live_events.publish(
+            business.id,
+            LiveEventKind.HANDOFF_CREATED,
+            (handoff.id, conversation.id),
+            is_sandbox=handoff.is_sandbox,
+        )
         return HandoffResult(
             id=handoff.id,
             business_id=business.id,

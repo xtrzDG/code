@@ -1,10 +1,10 @@
 "use client";
 
-import { IconRefresh, IconSearch, IconShield } from "@/components/icons";
+import { IconSearch, IconShield } from "@/components/icons";
 import { RefreshFailed } from "@/components/insights/common";
 import { Button, Card, EmptyState, ErrorState, InlineError, LoadingRegion, PageHeader, SkeletonRows } from "@/components/ui";
+import { LiveStatus } from "@/components/shell/LiveStatus";
 import { useI18n } from "@/i18n/client";
-import { formatDateTime } from "@/lib/format";
 
 import { EMPTY_FILTERS, hasFilters } from "../_lib/clients";
 import { useAdminClients } from "../_lib/useAdminClients";
@@ -19,7 +19,7 @@ import { SummaryTiles } from "./clients/SummaryTiles";
  * sorting and paging run on the server; the tiles count every client.
  */
 export function AdminClientsScreen() {
-  const { t, tp, locale } = useI18n();
+  const { t, tp } = useI18n();
   const { filters, setFilters, sort, setSort, list, nicheName } = useAdminClients();
   const data = list.page;
   const clients = list.items ?? [];
@@ -30,24 +30,7 @@ export function AdminClientsScreen() {
       <PageHeader
         title={t("pages.admin.title")}
         description={t("pages.admin.description")}
-        actions={
-          <>
-            {data ? (
-              <span className="text-xs text-ink-subtle">
-                {t("admin.generatedAt", { time: formatDateTime(data.generated_at, { locale, timeStyle: "short" }) })}
-              </span>
-            ) : null}
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={list.reload}
-              disabled={list.isFetching}
-              leadingIcon={<IconRefresh className="size-4" aria-hidden />}
-            >
-              {t("workspace.refresh")}
-            </Button>
-          </>
-        }
+        actions={<LiveStatus updatedAt={list.updatedAt} isFetching={list.isFetching && data !== undefined} />}
       />
 
       {list.error && !data ? (

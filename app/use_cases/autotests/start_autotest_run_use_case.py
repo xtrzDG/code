@@ -1,11 +1,13 @@
 from typed_time_provider import Microseconds, WallClock
 
+from app.contracts.live_events import EventPublisherFacilitatorContract
 from app.contracts.repositories.assistant_repositories import (
     AssistantVersionRepoContract,
     AutotestRunRepoContract,
 )
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.assistants import AssistantVersionStatus, AutotestRunStatus
+from app.schemas.constants.live_events import LiveEventKind
 from app.schemas.constants.users import BusinessMemberRole
 from app.schemas.domain.assistants import AssistantVersionDocument, AutotestRunDocument
 from app.schemas.domain.businesses import BusinessDocument
@@ -55,6 +57,7 @@ class StartAutotestRunUseCase(UseCaseContract[RunAutotestsCommand, AutotestRunPl
             AutotestPlanningRequest,
             AutotestScenarioPlanning,
         ],
+        live_events: EventPublisherFacilitatorContract,
         wall_clock: WallClock[Microseconds],
     ) -> None:
         self._authorize_business_access: UseCaseContract[
@@ -70,6 +73,7 @@ class StartAutotestRunUseCase(UseCaseContract[RunAutotestsCommand, AutotestRunPl
             AutotestScenarioPlanning,
         ] = plan_autotest_scenarios
         self._wall_clock: WallClock[Microseconds] = wall_clock
+        self._live_events: EventPublisherFacilitatorContract = live_events
 
     def run(self, input_data: RunAutotestsCommand) -> AutotestRunPlan:
         business: BusinessDocument = self._authorize_business_access.run(
@@ -131,6 +135,11 @@ class StartAutotestRunUseCase(UseCaseContract[RunAutotestsCommand, AutotestRunPl
         version.autotest_run_id = run.id
         version.updated_at = now
         self._assistant_version_repo.save(version)
+        self._live_events.publish(
+            run.business_id,
+            LiveEventKind.AUTOTEST_PROGRESS,
+            (run.id, run.assistant_version_id),
+        )
         return AutotestRunPlan(
             run_id=run.id,
             business=business,

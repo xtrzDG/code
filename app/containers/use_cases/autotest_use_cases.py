@@ -77,6 +77,7 @@ class AutotestUseCasesContainer(containers.DeclarativeContainer):
         assistant_version_repo=repositories.assistant_version_repo,
         autotest_run_repo=repositories.autotest_run_repo,
         plan_autotest_scenarios=plan_autotest_scenarios_use_case,
+        live_events=facilitators.event_publisher,
         wall_clock=time_provider.microsecond_wall_clock,
     )
     enqueue_autotest_run_use_case: Factory[
@@ -102,6 +103,7 @@ class AutotestUseCasesContainer(containers.DeclarativeContainer):
         AbandonAutotestRunUseCase,
         assistant_version_repo=repositories.assistant_version_repo,
         autotest_run_repo=repositories.autotest_run_repo,
+        live_events=facilitators.event_publisher,
         wall_clock=time_provider.microsecond_wall_clock,
     )
     record_autotest_progress_use_case: Factory[
@@ -109,6 +111,7 @@ class AutotestUseCasesContainer(containers.DeclarativeContainer):
     ] = Factory(
         RecordAutotestProgressUseCase,
         autotest_run_repo=repositories.autotest_run_repo,
+        live_events=facilitators.event_publisher,
         wall_clock=time_provider.microsecond_wall_clock,
     )
     finish_autotest_run_use_case: Factory[
@@ -118,6 +121,7 @@ class AutotestUseCasesContainer(containers.DeclarativeContainer):
         assistant_version_repo=repositories.assistant_version_repo,
         autotest_run_repo=repositories.autotest_run_repo,
         autotest_run_view_transformer=transformers.autotest_run_view_transformer,
+        live_events=facilitators.event_publisher,
         wall_clock=time_provider.microsecond_wall_clock,
     )
     get_autotest_run_use_case: Factory[

@@ -8,6 +8,7 @@ from app.repositories.assistant_repositories import (
     AssistantVersionRepository,
     AutotestRunRepository,
 )
+from app.repositories.attention_count_repository import AttentionCountRepository
 from app.repositories.billing_repositories import (
     InvoiceRepository,
     SubscriptionRepository,
@@ -139,6 +140,14 @@ class RepositoriesContainer(containers.DeclarativeContainer):
     handoff_repo: Singleton[HandoffRepository] = Singleton(
         HandoffRepository,
         collection=collections.handoff_collection,
+    )
+    # Indexed counts of what waits for a person (navigation badges).
+    attention_count_repo: Singleton[AttentionCountRepository] = Singleton(
+        AttentionCountRepository,
+        handoff_collection=collections.handoff_collection,
+        lead_collection=collections.lead_collection,
+        booking_collection=collections.booking_collection,
+        channel_collection=collections.channel_collection,
     )
     unanswered_question_repo: Singleton[UnansweredQuestionRepository] = Singleton(
         UnansweredQuestionRepository,

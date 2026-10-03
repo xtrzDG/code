@@ -1,5 +1,6 @@
 from typed_time_provider import Microseconds, WallClock
 
+from app.contracts.live_events import EventPublisherFacilitatorContract
 from app.contracts.localization_utilities import PhoneNumberParserContract
 from app.contracts.operations import ManagerBroadcastFacilitatorContract
 from app.contracts.repositories.booking_repositories import LeadRepoContract
@@ -9,6 +10,7 @@ from app.contracts.repositories.conversation_repositories import ContactRepoCont
 from app.contracts.transformer_contract import TransformerContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.bookings import LeadStatus
+from app.schemas.constants.live_events import LiveEventKind
 from app.schemas.domain.bookings import LeadDocument
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.contacts import ContactDocument
@@ -47,6 +49,7 @@ class CreateLeadUseCase(UseCaseContract[CreateLeadCommand, LeadView]):
             LeadStaffNotificationInput, MessageText
         ],
         manager_broadcaster: ManagerBroadcastFacilitatorContract,
+        live_events: EventPublisherFacilitatorContract,
         wall_clock: WallClock[Microseconds],
     ) -> None:
         self._business_repo: BusinessRepoContract = business_repo
@@ -61,6 +64,7 @@ class CreateLeadUseCase(UseCaseContract[CreateLeadCommand, LeadView]):
             manager_broadcaster
         )
         self._wall_clock: WallClock[Microseconds] = wall_clock
+        self._live_events: EventPublisherFacilitatorContract = live_events
 
     def run(self, input_data: CreateLeadCommand) -> LeadView:
         business: BusinessDocument = require_business(
@@ -86,6 +90,12 @@ class CreateLeadUseCase(UseCaseContract[CreateLeadCommand, LeadView]):
             updated_at=now,
         )
         self._lead_repo.save(lead)
+        self._live_events.publish(
+            lead.business_id,
+            LiveEventKind.LEAD_CREATED,
+            (lead.id,),
+            is_sandbox=lead.is_sandbox,
+        )
         contact = update_contact_details(
             self._contact_repo,
             self._audit_log_repo,

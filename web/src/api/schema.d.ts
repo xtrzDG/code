@@ -330,6 +330,29 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/businesses/{business_id}/attention-counts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Attention Counts Route
+         * @description What waits for a person (sandbox excluded): open handoffs, new
+         *     requests, upcoming bookings to confirm and channels in error; the
+         *     badges of the cabinet's navigation. Indexed counts only, no personal
+         *     data, so it records no view.
+         */
+        get: operations["get_attention_counts_route_v1_businesses__business_id__attention_counts_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/businesses/{business_id}/audit-log": {
         parameters: {
             query?: never;
@@ -788,6 +811,28 @@ export interface paths {
         put?: never;
         /** Accept Dpa */
         post: operations["accept_dpa_v1_businesses__business_id__dpa_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/businesses/{business_id}/events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Stream Live Events
+         * @description What changes in the business, as it happens (see the 200 answer).
+         *     Events name what changed by id; the cabinet reloads it through the
+         *     normal routes, which check access and audit views.
+         */
+        get: operations["stream_live_events_v1_businesses__business_id__events_get"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -1926,6 +1971,24 @@ export interface components {
             version_number: number;
             /** Voice Agent Id */
             voice_agent_id?: string | null;
+        };
+        /**
+         * AttentionCounts
+         * @description Handoffs nobody has resolved yet, requests still new, bookings still
+         *     waiting for confirmation and channels the platform refused. Sandbox
+         *     activity (the owner's test chat, autotests) is not counted.
+         */
+        AttentionCounts: {
+            /** Business Id */
+            business_id: string;
+            /** Channel Error Count */
+            channel_error_count: number;
+            /** New Lead Count */
+            new_lead_count: number;
+            /** Open Handoff Count */
+            open_handoff_count: number;
+            /** Unconfirmed Booking Count */
+            unconfirmed_booking_count: number;
         };
         /**
          * AuditAction
@@ -7472,6 +7535,93 @@ export interface operations {
             };
         };
     };
+    get_attention_counts_route_v1_businesses__business_id__attention_counts_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AttentionCounts"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
     list_audit_log_v1_businesses__business_id__audit_log_get: {
         parameters: {
             query?: {
@@ -10445,6 +10595,94 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DpaStatusView"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    stream_live_events_v1_businesses__business_id__events_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "Last-Event-ID"?: string | null;
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Server-Sent Events: `stream.ready`, then each change of the business (`id`, `event`, `data` with the kind, the ids and the time; never customer text), `stream.resync` when the cabinet should reload what it shows, and a heartbeat comment every 20 s. The stream ends after 15 minutes; reconnect with the last `id` as Last-Event-ID to get what was missed. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/event-stream": string;
                 };
             };
             /** @description Sign-in required: the bearer token is missing, invalid or expired. */

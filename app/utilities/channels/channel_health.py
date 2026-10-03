@@ -5,13 +5,17 @@ delivery puts it back to CONNECTED.
 
 A channel in ERROR still receives and answers messages (the refusal may be
 temporary, and a working delivery is what clears it); the cabinet shows the
-reason so the owner can reconnect.
+reason so the owner can reconnect. Every change is announced on the
+cabinet's live stream (`channel.error` when a channel fails,
+`channel.changed` otherwise).
 """
 
 from typed_time_provider import Microseconds
 
+from app.contracts.live_events import EventPublisherFacilitatorContract
 from app.contracts.repositories.business_repositories import ChannelRepoContract
 from app.schemas.constants.channels import ChannelStatus
+from app.schemas.constants.live_events import LiveEventKind
 from app.schemas.domain.channels import ChannelDocument
 from app.schemas.typings.channels.constrained_strings import ChannelErrorSummary
 
@@ -63,6 +67,7 @@ def reload_same_connection(
 
 def mark_channel_failing(
     channel_repo: ChannelRepoContract,
+    live_events: EventPublisherFacilitatorContract,
     channel: ChannelDocument,
     reason: str,
     now: Microseconds,
@@ -77,10 +82,12 @@ def mark_channel_failing(
     channel.last_error_at = now
     channel.updated_at = now
     channel_repo.save(channel)
+    live_events.publish(channel.business_id, LiveEventKind.CHANNEL_ERROR, (channel.id,))
 
 
 def note_channel_refusal(
     channel_repo: ChannelRepoContract,
+    live_events: EventPublisherFacilitatorContract,
     channel: ChannelDocument,
     reason: str,
     now: Microseconds,
@@ -97,10 +104,14 @@ def note_channel_refusal(
     channel.last_error_at = now
     channel.updated_at = now
     channel_repo.save(channel)
+    live_events.publish(
+        channel.business_id, LiveEventKind.CHANNEL_CHANGED, (channel.id,)
+    )
 
 
 def mark_channel_working(
     channel_repo: ChannelRepoContract,
+    live_events: EventPublisherFacilitatorContract,
     channel: ChannelDocument,
     now: Microseconds,
 ) -> None:
@@ -115,6 +126,9 @@ def mark_channel_working(
             channel.last_error_at = None
             channel.updated_at = now
             channel_repo.save(channel)
+            live_events.publish(
+                channel.business_id, LiveEventKind.CHANNEL_CHANGED, (channel.id,)
+            )
 
         return
 
@@ -123,3 +137,6 @@ def mark_channel_working(
     channel.last_error_at = None
     channel.updated_at = now
     channel_repo.save(channel)
+    live_events.publish(
+        channel.business_id, LiveEventKind.CHANNEL_CHANGED, (channel.id,)
+    )

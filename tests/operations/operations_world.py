@@ -21,6 +21,9 @@ from app.use_cases.handoffs.record_unanswered_question_use_case import (
     RecordUnansweredQuestionUseCase,
 )
 from app.use_cases.handoffs.resolve_handoff_use_case import ResolveHandoffUseCase
+from app.use_cases.insights.get_attention_counts_use_case import (
+    GetAttentionCountsUseCase,
+)
 from app.use_cases.insights.get_dashboard_stats_use_case import GetDashboardStatsUseCase
 from app.use_cases.insights.get_inbox_counts_use_case import GetInboxCountsUseCase
 from app.use_cases.leads.create_lead_use_case import CreateLeadUseCase
@@ -43,6 +46,7 @@ class OperationsWorld(OperationsBookingFactories):
                 self.resolver
             ),
             manager_broadcaster=self.broadcaster,
+            live_events=self.live_events,
             wall_clock=self.clock.wall_clock,
         )
 
@@ -58,6 +62,7 @@ class OperationsWorld(OperationsBookingFactories):
     def update_lead_status(self) -> UpdateLeadStatusUseCase:
         return UpdateLeadStatusUseCase(
             lead_repo=self.lead_repo,
+            live_events=self.live_events,
             wall_clock=self.clock.wall_clock,
         )
 
@@ -77,6 +82,7 @@ class OperationsWorld(OperationsBookingFactories):
                 self.resolver
             ),
             manager_broadcaster=self.broadcaster,
+            live_events=self.live_events,
             wall_clock=self.clock.wall_clock,
         )
 
@@ -85,6 +91,7 @@ class OperationsWorld(OperationsBookingFactories):
             handoff_repo=self.handoff_repo,
             conversation_repo=self.conversation_repo,
             contact_repo=self.contact_repo,
+            live_events=self.live_events,
             wall_clock=self.clock.wall_clock,
         )
 
@@ -119,8 +126,14 @@ class OperationsWorld(OperationsBookingFactories):
     def inbox_counts(self) -> GetInboxCountsUseCase:
         return GetInboxCountsUseCase(
             business_repo=self.business_repo,
-            handoff_repo=self.handoff_repo,
-            lead_repo=self.lead_repo,
+            attention_count_repo=self.attention_count_repo,
+        )
+
+    def get_attention_counts(self) -> GetAttentionCountsUseCase:
+        return GetAttentionCountsUseCase(
+            business_repo=self.business_repo,
+            attention_count_repo=self.attention_count_repo,
+            wall_clock=self.clock.wall_clock,
         )
 
     def dashboard(self) -> GetDashboardStatsUseCase:

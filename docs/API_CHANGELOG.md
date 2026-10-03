@@ -11,6 +11,34 @@ Kinds of change: **Added**, **Changed** (additive), **Deprecated** (with
 sunset date), **Removed** and **Breaking** (only with the `api-breaking`
 label and a migration path).
 
+## 2026-10-02 — live cabinet: event stream and attention counts
+
+Spec: `761afe1ef683fde3`
+
+- **Added** `GET /v1/businesses/{business_id}/events` (owners and staff):
+  Server-Sent Events of what changes in the business. Each event has an
+  `id`, a name (`handoff.created`, `handoff.resolved`,
+  `conversation.message`, `lead.created`, `lead.changed`,
+  `booking.created`, `booking.changed`, `channel.error`,
+  `channel.changed`, `autotest.progress`) and `data` with the kind, the
+  ids of what changed and the time, never customer text; the client
+  reloads what an event names through the usual routes. The stream opens
+  with `stream.ready`, sends `stream.resync` when the client should reload
+  everything it shows, a heartbeat comment every 20 s, and ends after
+  15 minutes; reconnecting with `Last-Event-ID` replays what was missed.
+  At most 5 streams per person and API instance (`429` with
+  `too_many_live_streams`). Sandbox activity (test chat, autotests) is not
+  announced, except autotest progress.
+- **Added** `GET /v1/businesses/{business_id}/attention-counts` (owners
+  and staff): `open_handoff_count`, `new_lead_count`,
+  `unconfirmed_booking_count` (pending bookings that have not started)
+  and `channel_error_count`, sandbox left out; indexed counts, no audit
+  entry. The cabinet's navigation badges read it.
+- **Added** schema `AttentionCounts`.
+- **Changed** `GET /v1/businesses/{business_id}/inbox-counts` answers the
+  same two counts, now from the same indexed counts; the cabinet reads
+  `attention-counts` instead.
+
 ## 2026-10-02 — long transcripts page back, lists read one page
 
 Spec: `1572f963cdc6844d`

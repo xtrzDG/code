@@ -1,11 +1,13 @@
 from typed_time_provider import Microseconds, WallClock
 
+from app.contracts.live_events import EventPublisherFacilitatorContract
 from app.contracts.repositories.assistant_repositories import (
     AssistantVersionRepoContract,
     AutotestRunRepoContract,
 )
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.assistants import AssistantVersionStatus, AutotestRunStatus
+from app.schemas.constants.live_events import LiveEventKind
 from app.schemas.domain.assistants import AssistantVersionDocument, AutotestRunDocument
 from app.schemas.dto.assistants.autotest_runs import AutotestRunFailure
 
@@ -21,6 +23,7 @@ class AbandonAutotestRunUseCase(UseCaseContract[AutotestRunFailure, None]):
         self,
         assistant_version_repo: AssistantVersionRepoContract,
         autotest_run_repo: AutotestRunRepoContract,
+        live_events: EventPublisherFacilitatorContract,
         wall_clock: WallClock[Microseconds],
     ) -> None:
         self._assistant_version_repo: AssistantVersionRepoContract = (
@@ -28,6 +31,7 @@ class AbandonAutotestRunUseCase(UseCaseContract[AutotestRunFailure, None]):
         )
         self._autotest_run_repo: AutotestRunRepoContract = autotest_run_repo
         self._wall_clock: WallClock[Microseconds] = wall_clock
+        self._live_events: EventPublisherFacilitatorContract = live_events
 
     def run(self, input_data: AutotestRunFailure) -> None:
         run: AutotestRunDocument | None = self._autotest_run_repo.get(
@@ -41,8 +45,16 @@ class AbandonAutotestRunUseCase(UseCaseContract[AutotestRunFailure, None]):
         run.status = AutotestRunStatus.ERRORED
         run.updated_at = now
         self._autotest_run_repo.save(run)
+        self._restore_version(run, now)
+        self._live_events.publish(
+            run.business_id,
+            LiveEventKind.AUTOTEST_PROGRESS,
+            (run.id, run.assistant_version_id),
+        )
+
+    def _restore_version(self, run: AutotestRunDocument, now: Microseconds) -> None:
         version: AssistantVersionDocument | None = self._assistant_version_repo.get(
-            input_data.business_id,
+            run.business_id,
             run.assistant_version_id,
         )
         if (

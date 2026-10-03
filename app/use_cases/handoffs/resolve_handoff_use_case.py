@@ -1,5 +1,6 @@
 from typed_time_provider import Microseconds, WallClock
 
+from app.contracts.live_events import EventPublisherFacilitatorContract
 from app.contracts.repositories.booking_repositories import HandoffRepoContract
 from app.contracts.repositories.conversation_repositories import (
     ContactRepoContract,
@@ -8,6 +9,7 @@ from app.contracts.repositories.conversation_repositories import (
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.conversations import ConversationStatus
 from app.schemas.constants.handoffs import HandoffStatus
+from app.schemas.constants.live_events import LiveEventKind
 from app.schemas.domain.conversations import ConversationDocument
 from app.schemas.domain.handoffs import HandoffDocument
 from app.schemas.dto.operations.handoffs import HandoffListItem, ResolveHandoffCommand
@@ -27,12 +29,14 @@ class ResolveHandoffUseCase(UseCaseContract[ResolveHandoffCommand, HandoffListIt
         handoff_repo: HandoffRepoContract,
         conversation_repo: ConversationRepoContract,
         contact_repo: ContactRepoContract,
+        live_events: EventPublisherFacilitatorContract,
         wall_clock: WallClock[Microseconds],
     ) -> None:
         self._handoff_repo: HandoffRepoContract = handoff_repo
         self._conversation_repo: ConversationRepoContract = conversation_repo
         self._contact_repo: ContactRepoContract = contact_repo
         self._wall_clock: WallClock[Microseconds] = wall_clock
+        self._live_events: EventPublisherFacilitatorContract = live_events
 
     def run(self, input_data: ResolveHandoffCommand) -> HandoffListItem:
         handoff: HandoffDocument | None = self._handoff_repo.get(
@@ -48,6 +52,12 @@ class ResolveHandoffUseCase(UseCaseContract[ResolveHandoffCommand, HandoffListIt
             handoff.updated_at = now
             self._handoff_repo.save(handoff)
             self._reopen_conversation(handoff, now)
+            self._live_events.publish(
+                handoff.business_id,
+                LiveEventKind.HANDOFF_RESOLVED,
+                (handoff.id, handoff.conversation_id),
+                is_sandbox=handoff.is_sandbox,
+            )
 
         return build_handoff_list_item(
             handoff,

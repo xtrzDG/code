@@ -14,6 +14,7 @@ from app.gateways.http.channel_routes import build_channel_router
 from app.gateways.http.channel_settings_routes import build_channel_settings_router
 from app.gateways.http.compliance_routes import build_compliance_router
 from app.gateways.http.conversation_routes import build_conversation_router
+from app.gateways.http.events_routes import build_events_router
 from app.gateways.http.health_routes import build_readiness_router
 from app.gateways.http.knowledge_routes import build_knowledge_router
 from app.gateways.http.menu_import_routes import build_menu_import_router
@@ -167,6 +168,13 @@ def build_application_routers(app_container: AppContainer) -> list[APIRouter]:
                 operations.get_google_calendar_connection_operator()
             ),
             cabinet_base_url=app_container.config.app_settings().cabinet_base_url,
+        ),
+        build_events_router(
+            current_user=current_user,
+            authorize_business_access=business_access_operator,
+            get_attention_counts=operations.get_attention_counts_operator(),
+            stream_facilitator=app_container.facilitators.live_stream_facilitator(),
+            limits=app_container.facilitators.live_stream_limits(),
         ),
         build_conversation_router(
             list_conversations_operator=conversations.list_conversations_operator(),

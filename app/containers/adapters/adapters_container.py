@@ -10,6 +10,7 @@ from app.adapters.channels.instagram_channel_adapter import InstagramChannelAdap
 from app.adapters.channels.messenger_channel_adapter import MessengerChannelAdapter
 from app.adapters.channels.telegram_channel_adapter import TelegramChannelAdapter
 from app.adapters.channels.whatsapp_channel_adapter import WhatsAppChannelAdapter
+from app.adapters.events.live_event_bus_factory import build_live_event_bus_adapter
 from app.adapters.health.database_probe_factory import build_database_probe_adapter
 from app.adapters.llm.anthropic_llm_adapter import AnthropicLlmAdapter
 from app.adapters.llm.call_limited_llm_adapter import (
@@ -59,6 +60,7 @@ from app.containers.factories import (
 from app.containers.time_provider import TimeProviderContainer
 from app.containers.utilities import UtilitiesContainer
 from app.contracts.health import DatabaseProbeAdapterContract
+from app.contracts.live_events import LiveEventBusAdapterContract
 from app.contracts.llm import LlmAdapterContract
 from app.contracts.observability import LlmTraceFacilitatorContract
 from app.schemas.dto.conversations import LlmCallLimits
@@ -95,6 +97,15 @@ class AdaptersContainer(containers.DeclarativeContainer):
     migration_source: Singleton[SqlFileMigrationSourceAdapter] = Singleton(
         SqlFileMigrationSourceAdapter,
         migrations_directory=BUILD_MIGRATIONS_DIRECTORY,
+    )
+
+    # --- The cabinet's live updates between processes: Postgres
+    # NOTIFY/LISTEN with DATABASE_URL, else in this process.
+    live_event_bus: Singleton[LiveEventBusAdapterContract] = Singleton(
+        build_live_event_bus_adapter,
+        connection_pool=clients.postgres_pool,
+        database_url=config.app_settings.provided.database_url,
+        listen_database_url=config.app_settings.provided.live_events_database_url,
     )
 
     # --- Security and recordings.

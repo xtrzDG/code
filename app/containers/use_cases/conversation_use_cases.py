@@ -3,6 +3,7 @@ from dependency_injector.providers import DependenciesContainer, Factory
 
 from app.containers.adapters.adapters_container import AdaptersContainer
 from app.containers.config import ConfigContainer
+from app.containers.facilitators import FacilitatorsContainer
 from app.containers.registries import RegistriesContainer
 from app.containers.repositories import RepositoriesContainer
 from app.containers.time_provider import TimeProviderContainer
@@ -61,6 +62,7 @@ class ConversationUseCasesContainer(containers.DeclarativeContainer):
 
     adapters: AdaptersContainer = DependenciesContainer()  # type: ignore[assignment]
     config: ConfigContainer = DependenciesContainer()  # type: ignore[assignment]
+    facilitators: FacilitatorsContainer = DependenciesContainer()  # type: ignore[assignment]
     registries: RegistriesContainer = DependenciesContainer()  # type: ignore[assignment]
     repositories: RepositoriesContainer = DependenciesContainer()  # type: ignore[assignment]
     time_provider: TimeProviderContainer = DependenciesContainer()  # type: ignore[assignment]
@@ -98,6 +100,7 @@ class ConversationUseCasesContainer(containers.DeclarativeContainer):
         conversation_repo=repositories.conversation_repo,
         message_repo=repositories.message_repo,
         language_detector=utilities.language_detector,
+        live_events=facilitators.event_publisher,
         wall_clock=time_provider.microsecond_wall_clock,
         contact_message_limit=config.app_settings.provided.contact_message_limit_per_hour,
     )
@@ -123,6 +126,7 @@ class ConversationUseCasesContainer(containers.DeclarativeContainer):
         conversation_repo=repositories.conversation_repo,
         usage_event_repo=repositories.usage_event_repo,
         localized_text_resolver=utilities.localized_text_resolver,
+        live_events=facilitators.event_publisher,
         wall_clock=time_provider.microsecond_wall_clock,
     )
     open_voice_conversation_use_case: Factory[

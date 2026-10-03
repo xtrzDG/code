@@ -17,6 +17,7 @@ from app.clients.postgres.postgres_connection_pool_client import (
     PostgresConnectionPoolClient,
 )
 from app.containers.app import AppContainer
+from app.contracts.live_events import LiveEventBusAdapterContract
 from app.contracts.observability import LlmTraceFacilitatorContract
 from app.gateways.http.access_log_redaction import install_access_log_redaction
 from app.gateways.http.application import build_http_application
@@ -27,6 +28,7 @@ from app.gateways.http.background_threads import (
     start_trace_flushing,
     stop_embedded_worker,
 )
+from app.gateways.http.live_events.exit_signals import end_streams_on_exit_signals
 from app.gateways.http.router_assembly import build_application_routers
 from app.schemas.configurations.app_settings import AppSettings
 from app.schemas.constants.environment import DeploymentEnvironment
@@ -86,9 +88,10 @@ def build_lifespan(app_container: AppContainer) -> Lifespan[FastAPI]:
     channels, with SEED_DEMO_DATA fill the instance with the demo businesses
     (once), point the platform Telegram bot at this API when it is
     configured, start flushing model-call traces and, with EMBEDDED_WORKER,
-    start the background worker in a thread. Shutdown: stop the worker
-    (running jobs may finish), flush the remaining traces and close the
-    Postgres pool.
+    start the background worker in a thread; open live streams end as
+    soon as the process is asked to stop. Shutdown: stop the worker
+    (running jobs may finish), flush the remaining traces, close the live
+    event bus and the Postgres pool.
     """
 
     @asynccontextmanager
@@ -103,6 +106,10 @@ def build_lifespan(app_container: AppContainer) -> Lifespan[FastAPI]:
         trace_facilitator: LlmTraceFacilitatorContract = (
             app_container.adapters.llm_trace_facilitator()
         )
+        live_event_bus: LiveEventBusAdapterContract = (
+            app_container.adapters.live_event_bus()
+        )
+        end_streams_on_exit_signals(live_event_bus.close)
         stop_event = threading.Event()
         flush_thread = start_trace_flushing(trace_facilitator, stop_event)
         worker_thread: threading.Thread | None = None
@@ -115,6 +122,7 @@ def build_lifespan(app_container: AppContainer) -> Lifespan[FastAPI]:
                 stop_embedded_worker(worker_thread)
             flush_thread.join(timeout=TRACE_FLUSH_INTERVAL_SECONDS)
             trace_facilitator.flush()
+            live_event_bus.close()
             close_postgres_pool(app_container)
 
     return lifespan

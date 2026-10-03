@@ -22,7 +22,7 @@ import { pageBadge } from "@/lib/inboxBadges";
 import { businessLocation, businessPath, isConversationPath } from "@/lib/navigation";
 import { SECTION_DESCRIPTIONS, SECTION_LABELS, visiblePages, type BusinessSection } from "@/lib/sections";
 
-import { useInboxCounts } from "./InboxCounts";
+import { useAttentionCounts } from "./LiveEvents";
 import { NavBadge } from "./NavBadge";
 import { useMemberRole } from "./useMemberRole";
 
@@ -41,7 +41,7 @@ export function SectionFrame({
   const { t } = useI18n();
   const { business } = useBusiness();
   const role = useMemberRole();
-  const counts = useInboxCounts();
+  const counts = useAttentionCounts();
   const pathname = usePathname();
   const location = businessLocation(pathname);
   const label = t(SECTION_LABELS[section]);

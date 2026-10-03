@@ -7,9 +7,10 @@ import { usePlans } from "@/api/catalog";
 import { sectionQueries } from "@/api/sectionQueries";
 import { useQuery } from "@/api/useQuery";
 import { useBusiness } from "@/components/business/BusinessContext";
+import { useAutoReload } from "@/components/insights/useAutoReload";
+import { LiveStatus } from "@/components/shell/LiveStatus";
 import { Alert, Button, Card, ErrorState, LoadingRegion, PageHeader } from "@/components/ui";
 import { OwnerOnlyState } from "@/components/workspace/OwnerOnly";
-import { IconRefresh } from "@/components/icons";
 import { useI18n } from "@/i18n/client";
 import { businessPath } from "@/lib/navigation";
 
@@ -28,6 +29,11 @@ import {
 } from "./_lib/billing";
 import { useBillingActions } from "./_lib/useBillingActions";
 
+/** How often the page asks for the payment's confirmation after checkout. */
+const CHECKOUT_RETURN_POLL_MS = 5_000;
+
+function skipReload(): void {}
+
 /** /billing: subscription, package usage, plans, invoices, payment (owner only). */
 export function BillingScreen({ isCheckoutReturn }: { isCheckoutReturn: boolean }) {
   const { t, locale } = useI18n();
@@ -42,6 +48,12 @@ export function BillingScreen({ isCheckoutReturn }: { isCheckoutReturn: boolean 
   const overview = useQuery(overviewQuery.key, overviewQuery.fetch);
   const plans = usePlans(business.country_code);
 
+  // Back from the payment page: the payment provider confirms in the
+  // background, so the page asks again every few seconds until it shows.
+  useAutoReload(showReturnNotice ? overview.reload : skipReload, {
+    intervalMs: showReturnNotice ? CHECKOUT_RETURN_POLL_MS : null,
+  });
+
   const actions = useBillingActions(overview);
   const { isPaying, onPay, openCancel, openChoice } = actions;
 
@@ -54,21 +66,7 @@ export function BillingScreen({ isCheckoutReturn }: { isCheckoutReturn: boolean 
       <PageHeader
         title={t("navigation.pages.settingsBilling")}
         description={t("pages.billing.description")}
-        actions={
-          data ? (
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={() => {
-                overview.reload();
-                plans.reload();
-              }}
-              leadingIcon={<IconRefresh className="size-4" aria-hidden />}
-            >
-              {t("workspace.refresh")}
-            </Button>
-          ) : undefined
-        }
+        actions={data ? <LiveStatus updatedAt={overview.updatedAt} isFetching={overview.isFetching} /> : undefined}
       />
 
       {isOwnerOnly ? (
@@ -94,11 +92,10 @@ export function BillingScreen({ isCheckoutReturn }: { isCheckoutReturn: boolean 
                   variant="secondary"
                   onClick={() => {
                     setShowReturnNotice(false);
-                    overview.reload();
                     router.replace(businessPath(business.id, "settings/billing"));
                   }}
                 >
-                  {t("workspace.refresh")}
+                  {t("common.close")}
                 </Button>
               </div>
             </Alert>

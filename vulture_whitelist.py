@@ -24,6 +24,8 @@ _.collection_name_for  # app/utilities/storage/document_collection_catalog.py
 _.run_once  # app/gateways/worker/background_worker.py
 _.run_queued_jobs  # app/gateways/worker/background_worker.py
 _.worker_id  # app/gateways/worker/heartbeat_recorder.py
+_.wait_until_listening  # app/adapters/events/postgres_live_event_listener.py
+_.open_stream_count  # app/facilitators/events/live_event_stream_facilitator.py
 # The current schema version of every collection, read by the document
 # evolution policy (tests/architecture_policy/test_document_evolution.py).
 _.CURRENT_SCHEMA_VERSION  # app/adapters/storage/document_upgrades.py
@@ -208,3 +210,5 @@ _.international_phone_number  # app/schemas/dto/users.py
 _.latest_message_id  # app/schemas/dto/load_data.py
 _.telegram_channel_id  # app/schemas/dto/load_data.py
 _.telegram_webhook_secret  # app/schemas/dto/load_data.py
+_.channel_error_count  # app/schemas/dto/operations/attention_counts.py
+_.unconfirmed_booking_count  # app/schemas/dto/operations/attention_counts.py

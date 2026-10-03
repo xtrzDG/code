@@ -11,7 +11,6 @@ export const adminKa: Translation<typeof adminEn> = {
     healthy: "წესრიგშია",
     losingMoney: "ზარალში",
   },
-  generatedAt: "განახლდა {time}",
   filtersLabel: "ფილტრები",
   search: "ძებნა",
   searchPlaceholder: "ბიზნესის სახელი ან ID",

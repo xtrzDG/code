@@ -4,6 +4,7 @@ from datetime import datetime
 
 from typed_time_provider import Microseconds, WallClock
 
+from app.contracts.live_events import EventPublisherFacilitatorContract
 from app.contracts.operations import (
     BookingCalendarSyncFacilitatorContract,
     BusinessLockRegistryContract,
@@ -22,6 +23,7 @@ from app.contracts.repositories.knowledge_repositories import (
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.bookings import BookingUnit
 from app.schemas.constants.compliance import AuditAction
+from app.schemas.constants.live_events import LiveEventKind
 from app.schemas.domain.bookings import BookingDocument
 from app.schemas.domain.contacts import ContactDocument
 from app.schemas.domain.resources import ResourceDocument
@@ -99,6 +101,7 @@ class UpdateBookingUseCase(UseCaseContract[UpdateBookingCommand, BookingView]):
         audit_log_repo: AuditLogRepoContract,
         lock_registry: BusinessLockRegistryContract,
         calendar_sync: BookingCalendarSyncFacilitatorContract,
+        live_events: EventPublisherFacilitatorContract,
         wall_clock: WallClock[Microseconds],
     ) -> None:
         self._business_repo: BusinessRepoContract = business_repo
@@ -113,6 +116,7 @@ class UpdateBookingUseCase(UseCaseContract[UpdateBookingCommand, BookingView]):
         self._lock_registry: BusinessLockRegistryContract = lock_registry
         self._calendar_sync: BookingCalendarSyncFacilitatorContract = calendar_sync
         self._wall_clock: WallClock[Microseconds] = wall_clock
+        self._live_events: EventPublisherFacilitatorContract = live_events
 
     def run(self, input_data: UpdateBookingCommand) -> BookingView:
         if (
@@ -165,6 +169,14 @@ class UpdateBookingUseCase(UseCaseContract[UpdateBookingCommand, BookingView]):
                     input_data.actor_id,
                     now,
                 )
+
+        if is_changed:
+            self._live_events.publish(
+                booking.business_id,
+                LiveEventKind.BOOKING_CHANGED,
+                (booking.id,),
+                is_sandbox=booking.is_sandbox,
+            )
 
         if is_changed and not booking.is_sandbox:
             self._calendar_sync.sync(booking)

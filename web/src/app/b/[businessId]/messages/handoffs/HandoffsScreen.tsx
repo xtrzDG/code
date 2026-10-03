@@ -7,7 +7,7 @@ import { queryKeys } from "@/api/queryKeys";
 import { useCursorPage } from "@/api/useCursorPage";
 import { useBusiness } from "@/components/business/BusinessContext";
 import { IconCheck, IconHandoff } from "@/components/icons";
-import { IncludeTestToggle, LoadMore, RefreshButton, RefreshFailed } from "@/components/insights/common";
+import { IncludeTestToggle, LoadMore, RefreshFailed } from "@/components/insights/common";
 import { SegmentedControl } from "@/components/insights/SegmentedControl";
 import type { HandoffListItem, HandoffPage } from "@/components/insights/types";
 import { useAutoReload } from "@/components/insights/useAutoReload";
@@ -22,6 +22,7 @@ import {
   SkeletonCardList,
 } from "@/components/ui";
 import { AnimatedPresenceList } from "@/components/motion";
+import { LiveStatus } from "@/components/shell/LiveStatus";
 import { useI18n } from "@/i18n/client";
 
 import { HandoffCard } from "./_components/HandoffCard";
@@ -55,7 +56,7 @@ export function HandoffsScreen({ initialFilters }: { initialFilters: HandoffFilt
     }),
   );
   // Every load of the list is audited (a view of personal data): no polling,
-  // a reload when the user comes back to the tab and the Refresh button.
+  // live updates, and a reload when the user comes back to the tab.
   useAutoReload(handoffs.reload, { intervalMs: null });
   const resolve = useResolveHandoff(listKey, filters.tab, setResolving);
 
@@ -72,7 +73,7 @@ export function HandoffsScreen({ initialFilters }: { initialFilters: HandoffFilt
       <PageHeader
         title={t("navigation.pages.messagesHandoffs")}
         description={t("pages.handoffs.description")}
-        actions={<RefreshButton onClick={handoffs.reload} isRefreshing={handoffs.isFetching && handoffs.items !== undefined} />}
+        actions={<LiveStatus updatedAt={handoffs.updatedAt} isFetching={handoffs.isFetching && handoffs.items !== undefined} />}
       />
 
       <div className="space-y-5">

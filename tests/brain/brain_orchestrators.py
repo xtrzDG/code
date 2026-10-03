@@ -39,12 +39,14 @@ from app.utilities.localization.localized_text_resolver import LocalizedTextReso
 from app.utilities.storage.storage_scope_context import StorageScopeContext
 from tests.brain.brain_repositories import BrainRepositories
 from tests.brain.brain_tools import BrainTools
+from tests.live_events.recording_event_publisher import RecordingEventPublisher
 
 
 @dataclass(frozen=True)
 class BrainOrchestrators:
     orchestrator: ConversationTurnOrchestrator
     voice_orchestrator: VoiceToolCallOrchestrator
+    live_events: RecordingEventPublisher
 
 
 def build_brain_orchestrators(
@@ -58,6 +60,7 @@ def build_brain_orchestrators(
     tool_round_limit: LlmToolRoundLimit,
 ) -> BrainOrchestrators:
     storage_scope = StorageScopeContext()
+    live_events = RecordingEventPublisher()
     orchestrator = ConversationTurnOrchestrator(
         prepare_turn=PrepareConversationTurnUseCase(
             business_repo=repos.business_repo,
@@ -68,6 +71,7 @@ def build_brain_orchestrators(
             conversation_repo=repos.conversation_repo,
             message_repo=repos.message_repo,
             language_detector=LanguageDetector(),
+            live_events=live_events,
             wall_clock=wall_clock,
             contact_message_limit=contact_message_limit,
         ),
@@ -88,6 +92,7 @@ def build_brain_orchestrators(
             conversation_repo=repos.conversation_repo,
             usage_event_repo=repos.usage_event_repo,
             localized_text_resolver=texts,
+            live_events=live_events,
             wall_clock=wall_clock,
         ),
         localized_text_resolver=texts,
@@ -111,5 +116,7 @@ def build_brain_orchestrators(
         storage_scope=storage_scope,
     )
     return BrainOrchestrators(
-        orchestrator=orchestrator, voice_orchestrator=voice_orchestrator
+        orchestrator=orchestrator,
+        voice_orchestrator=voice_orchestrator,
+        live_events=live_events,
     )

@@ -4,6 +4,7 @@
  *   - a check that the page logged no console errors and threw nothing
  *     (every test, automatically; `consoleErrors.allow(/…/)` accepts an
  *     error the test provokes on purpose);
+ *   - requests counted on every page, for `waitForNetworkQuiet` (support/network.ts);
  *   - `account`: a new account created through the API, with the browser
  *     context signed in as it (interface in English);
  *   - `newOwner`: the same plus one business (a hair salon in Berlin) whose
@@ -16,6 +17,7 @@ import { test as base, expect, type BrowserContext } from "@playwright/test";
 
 import { createAssistant, createBusiness, signInByEmail, uniqueEmail, type NewBusiness } from "./api";
 import { WEB_URL } from "./env";
+import { trackRequests } from "./network";
 
 export interface Account {
   email: string;
@@ -50,7 +52,13 @@ export interface ConsoleErrors {
   allow: (pattern: RegExp) => void;
 }
 
-export const test = base.extend<{ consoleErrors: ConsoleErrors; account: Account; newOwner: Owner; owner: Owner }>({
+export const test = base.extend<{
+  consoleErrors: ConsoleErrors;
+  requestTracking: void;
+  account: Account;
+  newOwner: Owner;
+  owner: Owner;
+}>({
   consoleErrors: [
     async ({ page }, use) => {
       const errors: string[] = [];
@@ -64,6 +72,14 @@ export const test = base.extend<{ consoleErrors: ConsoleErrors; account: Account
       await use({ allow: (pattern) => allowed.push(pattern) });
       const unexpected = errors.filter((error) => !allowed.some((pattern) => pattern.test(error)));
       expect(unexpected, "the page logged errors").toEqual([]);
+    },
+    { auto: true },
+  ],
+
+  requestTracking: [
+    async ({ page }, use) => {
+      trackRequests(page);
+      await use();
     },
     { auto: true },
   ],

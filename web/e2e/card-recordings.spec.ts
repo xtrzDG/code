@@ -8,6 +8,7 @@
 import type { Route } from "@playwright/test";
 
 import { expect, test } from "./support/fixtures";
+import { waitForNetworkQuiet } from "./support/network";
 import { en } from "./support/messages";
 import { CONVERSATION_ID, cardWithCalls, datedLabel, playerLabel, serveCard, silentWav } from "./support/conversation-card";
 
@@ -27,7 +28,7 @@ test("a call recording loads only when played, seeks, and a missing one says so"
   await page.goto(`/b/${owner.businessId}/messages/${CONVERSATION_ID}`);
   const playButtons = page.getByRole("button", { name: datedLabel(en.conversations.calls.playLabel) });
   await expect(playButtons).toHaveCount(2);
-  await page.waitForLoadState("networkidle");
+  await waitForNetworkQuiet(page);
   // Opening the card fetches no audio (and so writes no audit entry).
   expect(played).toEqual([]);
   await expect(page.getByLabel(playerLabel())).toHaveCount(0);

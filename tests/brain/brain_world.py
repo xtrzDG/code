@@ -87,6 +87,7 @@ from tests.brain.fake_contact_tools import (
 )
 from tests.brain.fake_knowledge_tools import FakeGetPrice, FakeSearchKnowledge
 from tests.brain.manual_clock import ManualClock
+from tests.live_events.recording_event_publisher import RecordingEventPublisher
 
 CUSTOMER_PHONE: E164PhoneNumber = E164PhoneNumber("+995555123456")
 
@@ -127,6 +128,7 @@ class BrainWorld:
     pipeline: CustomerMessagePipeline
     voice_orchestrator: VoiceToolCallOrchestrator
     greeting: BuildCallGreetingUseCase
+    live_events: RecordingEventPublisher
     texts: LocalizedTextResolver = field(default_factory=LocalizedTextResolver)
 
     def send(
@@ -269,4 +271,5 @@ def build_world(
             localized_text_resolver=texts,
         ),
         texts=texts,
+        live_events=orchestrators.live_events,
     )

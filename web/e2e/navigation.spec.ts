@@ -9,6 +9,7 @@ import type { Page } from "@playwright/test";
 import { SECTION_PAGES, visibleSections, type BusinessSection } from "../src/lib/sections";
 
 import { expect, test } from "./support/fixtures";
+import { waitForNetworkQuiet } from "./support/network";
 import { en } from "./support/messages";
 
 type MessagePath = string;
@@ -21,7 +22,7 @@ function text(key: MessagePath): string {
 async function expectPageOpened(page: Page, businessId: string, path: string): Promise<void> {
   await expect(page).toHaveURL(new RegExp(`/b/${businessId}/${path}(\\?|$)`));
   await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
-  await page.waitForLoadState("networkidle");
+  await waitForNetworkQuiet(page);
   // No page failed to load its data.
   await expect(page.getByRole("button", { name: en.common.retry })).toHaveCount(0);
 }

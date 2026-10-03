@@ -92,6 +92,10 @@ class AppSettings(ImmutableDTO):
     # Calendar) send owners back there.
     cabinet_base_url: CabinetBaseUrl | None = None
     database_url: DatabaseUrl | None = None
+    # The cabinet's live updates LISTEN on this direct (session) connection
+    # when DATABASE_URL goes through a transaction pooler; DATABASE_URL
+    # otherwise (LIVE_EVENTS_DATABASE_URL).
+    live_events_database_url: DatabaseUrl | None = None
     encryption_key: PlatformSecret | None = None
     llm_provider: LlmProvider
     llm_model_id: LlmModelId

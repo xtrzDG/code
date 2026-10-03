@@ -17,6 +17,12 @@ from app.facilitators.calendar.google_calendar_sync_facilitator import (
 from app.facilitators.channels.channel_message_sender_facilitator import (
     ChannelMessageSenderFacilitator,
 )
+from app.facilitators.events.event_publisher_facilitator import (
+    EventPublisherFacilitator,
+)
+from app.facilitators.events.live_event_stream_facilitator import (
+    LiveEventStreamFacilitator,
+)
 from app.facilitators.jobs.job_queue_facilitator import JobQueueFacilitator
 from app.facilitators.notifications.manager_notification_facilitator import (
     ManagerNotificationFacilitator,
@@ -39,6 +45,7 @@ from app.facilitators.users.login_code_cap_alert_facilitator import (
 from app.facilitators.users.turnstile_bot_check_facilitator import (
     TurnstileBotCheckFacilitator,
 )
+from app.schemas.dto.live_events import LiveStreamLimits
 
 
 class FacilitatorsContainer(containers.DeclarativeContainer):
@@ -91,6 +98,19 @@ class FacilitatorsContainer(containers.DeclarativeContainer):
         platform_admin_emails=config.app_settings.provided.platform_admin_emails,
         wall_clock=time_provider.microsecond_wall_clock,
     )
+    # The cabinet's live updates: use cases publish what changed (ids only);
+    # the SSE route opens streams, at most a few per person and process.
+    event_publisher: Singleton[EventPublisherFacilitator] = Singleton(
+        EventPublisherFacilitator,
+        bus=adapters.live_event_bus,
+        wall_clock=time_provider.microsecond_wall_clock,
+    )
+    live_stream_limits: Singleton[LiveStreamLimits] = Singleton(LiveStreamLimits)
+    live_stream_facilitator: Singleton[LiveEventStreamFacilitator] = Singleton(
+        LiveEventStreamFacilitator,
+        bus=adapters.live_event_bus,
+        limits=live_stream_limits,
+    )
     # The durable job queue of the background workers.
     job_queue_facilitator: Singleton[JobQueueFacilitator] = Singleton(
         JobQueueFacilitator,
@@ -132,6 +152,7 @@ class FacilitatorsContainer(containers.DeclarativeContainer):
         instagram_adapter=adapters.instagram_channel_adapter,
         whatsapp_templates=adapters.whatsapp_channel_adapter,
         usage_event_repo=repositories.usage_event_repo,
+        live_events=event_publisher,
         wall_clock=time_provider.microsecond_wall_clock,
     )
     calendar_sync_facilitator: Singleton[GoogleCalendarSyncFacilitator] = Singleton(
