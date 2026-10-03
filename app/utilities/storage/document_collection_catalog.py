@@ -18,12 +18,12 @@ from app.schemas.domain.billing import (
 )
 from app.schemas.domain.bookings import BookingDocument, LeadDocument
 from app.schemas.domain.businesses import BusinessDocument
-from app.schemas.domain.call_settings import CallSettingsDocument
 from app.schemas.domain.calendar import (
     CalendarAuthorizationStateDocument,
     CalendarConnectionDocument,
     CalendarEventLinkDocument,
 )
+from app.schemas.domain.call_settings import CallSettingsDocument
 from app.schemas.domain.channel_receipts import ChannelMessageReceiptDocument
 from app.schemas.domain.channels import ChannelDocument
 from app.schemas.domain.compliance import AuditLogEntryDocument, DpaAcceptanceDocument

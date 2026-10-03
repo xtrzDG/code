@@ -1,6 +1,7 @@
 from dependency_injector import containers
-from dependency_injector.providers import DependenciesContainer
+from dependency_injector.providers import DependenciesContainer, Singleton
 
+from app.adapters.voice.zadarma_pbx_webhook_adapter import ZadarmaPbxWebhookAdapter
 from app.containers.adapters.document_collection_provider import document_collection
 from app.containers.clients import ClientsContainer
 from app.containers.config import ConfigContainer
@@ -10,13 +11,14 @@ from app.schemas.domain.call_settings import CallSettingsDocument
 from app.schemas.domain.missed_calls import MissedCallDocument
 
 
-class CallCollectionsContainer(containers.DeclarativeContainer):
+class CallAdaptersContainer(containers.DeclarativeContainer):
     """
-    The document collections of what follows a phone call (migration
-    1051): callers who did not get through with their text-backs, and each
-    business's call settings. A sibling of DocumentCollectionsContainer
-    with the same storage factory (Postgres with DATABASE_URL, else in
-    memory).
+    The adapters of what follows a phone call: its document collections
+    (migration 1051: callers who did not get through with their
+    text-backs, each business's call settings; a sibling of
+    DocumentCollectionsContainer with the same storage factory, Postgres
+    with DATABASE_URL, else in memory) and the call notifications of the
+    telephony line (Zadarma PBX).
     """
 
     clients: ClientsContainer = DependenciesContainer()  # type: ignore[assignment]
@@ -39,4 +41,7 @@ class CallCollectionsContainer(containers.DeclarativeContainer):
         clients,
         utilities,
         time_provider,
+    )
+    pbx_webhook_adapter: Singleton[ZadarmaPbxWebhookAdapter] = Singleton(
+        ZadarmaPbxWebhookAdapter, app_settings=config.app_settings
     )

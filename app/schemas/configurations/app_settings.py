@@ -107,6 +107,8 @@ class AppSettings(ImmutableDTO):
     llm_provider: LlmProvider
     llm_model_id: LlmModelId
     llm_judge_model_id: LlmModelId
+    # Call summaries for staff (LLM_SUMMARY_MODEL_ID); None: the chat model.
+    llm_summary_model_id: LlmModelId | None = None
     llm_chat_effort: LlmEffort
     llm_judge_effort: LlmEffort
     llm_max_output_tokens: LlmMaxOutputTokens

@@ -8,7 +8,11 @@ from base_pydantic_schemas import ImmutableDTO
 from typed_time_provider import Microseconds
 
 from app.schemas.constants.bookings import LeadType
-from app.schemas.constants.handoffs import HandoffReason, HandoffUrgency
+from app.schemas.constants.handoffs import (
+    HandoffReason,
+    HandoffUrgency,
+    ManagerContactChannel,
+)
 from app.schemas.constants.notifications import (
     StaffAlertEvent,
     StaffBookingChange,
@@ -28,6 +32,7 @@ from app.schemas.typings.notifications.booleans import IsUrgentStaffAlert
 from app.schemas.typings.notifications.constrained_strings import (
     CabinetDeepLink,
     PushNotificationTag,
+    StaffAlertSubject,
 )
 from app.schemas.typings.notifications.prefixed_id import PushSubscriptionId
 from app.schemas.typings.notifications.strings import (
@@ -52,7 +57,10 @@ class StaffAlert(ImmutableDTO):
     One event to tell staff about, and the page its link opens: a
     conversation, a request or a booking. `is_urgent` alerts (urgent
     handoffs) come through quiet hours; `tag` lets a device replace an
-    older notification about the same thing.
+    older notification about the same thing. An alert with a `subject`
+    reaches each recipient once however often it is raised (a handoff is
+    always once per handoff); `contact_channels` limits the staff contacts
+    it goes to (None: every channel).
     """
 
     business_id: BusinessId
@@ -64,6 +72,8 @@ class StaffAlert(ImmutableDTO):
     handoff_id: HandoffId | None = None
     is_urgent: IsUrgentStaffAlert = False
     tag: PushNotificationTag
+    subject: StaffAlertSubject | None = None
+    contact_channels: list[ManagerContactChannel] | None = None
 
 
 class HandoffBrief(ImmutableDTO):
@@ -125,5 +135,6 @@ class PushNotification(ImmutableDTO):
     link: CabinetDeepLink | None = None
     tag: PushNotificationTag | None = None
     handoff_id: HandoffId | None = None
+    subject: StaffAlertSubject | None = None
     is_urgent: IsUrgentStaffAlert = False
     deliver_after: Microseconds | None = None

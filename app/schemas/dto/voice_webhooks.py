@@ -3,6 +3,7 @@ from pydantic import Field
 from typed_time_provider import Microseconds
 
 from app.schemas.constants.assistants import AssistantToolName
+from app.schemas.constants.calls import CallTransferOutcome
 from app.schemas.constants.channel_events import PostCallEventStatus
 from app.schemas.constants.conversations import CallOutcome, MessageAuthor
 from app.schemas.typings.assistants.strings import VoiceAgentId
@@ -149,8 +150,10 @@ class FinishedCallReport(ImmutableDTO):
     cost_micro_usd: CostMicroUsd = CostMicroUsd(0)
     language: LanguageTag | None = None
     has_recording: HasCallRecording = False
-    # When the agent put the caller through to staff (seconds into the call).
+    # When the agent put the caller through to staff (seconds into the call)
+    # and whether a person picked up.
     transfer_offset_seconds: CallOffsetSeconds | None = None
+    transfer_outcome: CallTransferOutcome = CallTransferOutcome.NOT_TRANSFERRED
 
 
 class RecordedCall(ImmutableDTO):

@@ -64,6 +64,9 @@ class StaffAlertFacilitator(StaffAlertFacilitatorContract):
       on in. A device of someone no longer in the team is removed.
     - Quiet hours (in the business time zone) hold a notification until
       they end; urgent handoffs come through.
+    - An alert that names a subject (a call's summary) reaches each
+      recipient once, however often it is raised; one that names contact
+      channels skips the staff contacts of other channels.
 
     One failing recipient never stops the others. Never raises.
     """
@@ -129,7 +132,10 @@ class StaffAlertFacilitator(StaffAlertFacilitatorContract):
         now: Microseconds,
     ) -> int:
         preferences = contact.preferences or DEFAULT_PREFERENCES
-        if alert.event not in preferences.events:
+        if alert.event not in preferences.events or (
+            alert.contact_channels is not None
+            and contact.channel not in alert.contact_channels
+        ):
             return 0
 
         is_detailed: bool = contact.channel in DETAILED_CHANNELS
@@ -148,6 +154,7 @@ class StaffAlertFacilitator(StaffAlertFacilitatorContract):
                 contact=contact,
                 text=text,
                 handoff_id=alert.handoff_id,
+                subject=alert.subject,
                 deliver_after=self._held_until(alert, preferences, zone, now),
             )
         )
@@ -201,6 +208,7 @@ class StaffAlertFacilitator(StaffAlertFacilitatorContract):
                 link=link,
                 tag=alert.tag,
                 handoff_id=alert.handoff_id,
+                subject=alert.subject,
                 is_urgent=alert.is_urgent,
                 deliver_after=self._held_until(alert, preferences, zone, now),
             )

@@ -7,6 +7,7 @@ from typed_time_provider import Microseconds
 from app.contracts.adapter_contract import AdapterContract
 from app.contracts.repo_contract import RepoContract
 from app.schemas.domain.manager_links import ManagerTelegramLinkDocument
+from app.schemas.dto.calls.missed_calls import MissedCallReport
 from app.schemas.dto.channels.channel_webhooks import (
     ChannelDeliveryTarget,
     ChannelInboundMessage,
@@ -129,6 +130,14 @@ class VoiceWebhookAdapterContract(AdapterContract, Protocol):
         The finished call of a verified post-call webhook; None for other
         events (audio, failed call initiation). Raises ValidationFailedError
         for a malformed call report.
+        """
+        raise NotImplementedError
+
+    def parse_call_start_failure(self, body: bytes) -> MissedCallReport | None:
+        """
+        The caller of a verified post-call webhook about a call the platform
+        could not start; None for other events. Raises ValidationFailedError
+        for a malformed failure report.
         """
         raise NotImplementedError
 

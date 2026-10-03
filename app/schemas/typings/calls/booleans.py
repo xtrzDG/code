@@ -6,7 +6,7 @@ Example:
 
 IsCallSummaryEnabled = bool
 IsCallSummaryGenerated = bool
+IsNewMissedCall = bool
 IsSmsFallbackEnabled = bool
 IsTextBackEnabled = bool
-IsTextBackQueued = bool
 # Keep abc order for all non example types, if possible.

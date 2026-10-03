@@ -90,7 +90,7 @@ class ManagerNotificationFacilitator(ManagerNotificationFacilitatorContract):
         now: Microseconds = self._wall_clock.now_unix()
         contact: ManagerContact = notification.contact
         idempotency_key: OutboundIdempotencyKey = staff_idempotency_key(
-            contact, notification.handoff_id
+            contact, notification.handoff_id, notification.subject
         )
         message_id = derive_outbound_message_id(
             notification.business_id, idempotency_key

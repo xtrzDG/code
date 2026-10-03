@@ -15,6 +15,7 @@ from app.containers.use_cases.assistant_use_cases import AssistantUseCasesContai
 from app.containers.use_cases.autotest_use_cases import AutotestUseCasesContainer
 from app.containers.use_cases.billing_use_cases import BillingUseCasesContainer
 from app.containers.use_cases.booking_use_cases import BookingUseCasesContainer
+from app.containers.use_cases.call_use_cases import CallUseCasesContainer
 from app.containers.use_cases.catalog_use_cases import CatalogUseCasesContainer
 from app.containers.use_cases.channel_use_cases import ChannelUseCasesContainer
 from app.containers.use_cases.compliance_use_cases import ComplianceUseCasesContainer
@@ -163,6 +164,19 @@ class UseCasesContainer(containers.DeclarativeContainer):
         utilities=utilities,
         conversation_use_cases=conversations,
         follow_up_use_cases=follow_ups,
+    )
+    calls: CallUseCasesContainer = Container(  # type: ignore[assignment]
+        CallUseCasesContainer,
+        adapters=adapters,
+        clients=clients,
+        config=config,
+        facilitators=facilitators,
+        registries=registries,
+        repositories=repositories,
+        time_provider=time_provider,
+        transformers=transformers,
+        utilities=utilities,
+        account_use_cases=accounts,
     )
     launch: LaunchUseCasesContainer = Container(  # type: ignore[assignment]
         LaunchUseCasesContainer,

@@ -1,5 +1,7 @@
 """The calls of a business: one document per phone call (voice channel)."""
 
+from collections.abc import Callable
+
 from app.contracts.repositories.conversation_repositories import CallRepoContract
 from app.repositories.conversation_lookup_fields import PROVIDER_CALL_ID_FIELD
 from app.repositories.document_queries import field_equals
@@ -34,6 +36,14 @@ class CallRepository(CallListing, CallRepoContract):
             key=lambda call: call.started_at,
             reverse=True,
         )
+
+    def update(
+        self,
+        business_id: BusinessId,
+        call_id: CallId,
+        change: Callable[[CallDocument], CallDocument | None],
+    ) -> CallDocument | None:
+        return self._modify_in_business(business_id, str(call_id), change)
 
     def move_recording(
         self, business_id: BusinessId, call_id: CallId, moved: CallRecordingMove

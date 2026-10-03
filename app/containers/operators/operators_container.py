@@ -5,6 +5,7 @@ from app.containers.container_edges import composed_container_edge
 from app.containers.operators.account_operators import AccountOperatorsContainer
 from app.containers.operators.assistant_operators import AssistantOperatorsContainer
 from app.containers.operators.billing_operators import BillingOperatorsContainer
+from app.containers.operators.call_operators import CallOperatorsContainer
 from app.containers.operators.channel_operators import ChannelOperatorsContainer
 from app.containers.operators.compliance_operators import ComplianceOperatorsContainer
 from app.containers.operators.conversation_operators import (
@@ -77,6 +78,11 @@ class OperatorsContainer(containers.DeclarativeContainer):
     billing: BillingOperatorsContainer = Container(  # type: ignore[assignment]
         BillingOperatorsContainer,
         billing_pipelines=pipelines.billing,
+        utilities=utilities,
+    )
+    calls: CallOperatorsContainer = Container(  # type: ignore[assignment]
+        CallOperatorsContainer,
+        call_pipelines=pipelines.calls,
         utilities=utilities,
     )
     notifications: NotificationOperatorsContainer = Container(  # type: ignore[assignment]

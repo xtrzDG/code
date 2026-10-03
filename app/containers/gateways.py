@@ -20,6 +20,7 @@ from app.use_cases.autotests.enqueue_autotest_run_use_case import RUN_AUTOTESTS_
 from app.use_cases.voice.recordings.recording_archive_paths import (
     ARCHIVE_CALL_RECORDING_JOB,
 )
+from app.utilities.calls.text_back_jobs import SEND_TEXT_BACK_JOB
 from app.utilities.deliveries.delivery_jobs import (
     DELIVER_OUTBOUND_JOB,
     PROCESS_INBOUND_MESSAGE_JOB,
@@ -139,6 +140,8 @@ class GatewaysContainer(containers.DeclarativeContainer):
             ),
             # The outbox: replies and staff notifications sent with retries.
             DELIVER_OUTBOUND_JOB: operators.channels.deliver_outbound_operator,
+            # A caller who did not get through: their WhatsApp or SMS.
+            SEND_TEXT_BACK_JOB: operators.calls.send_text_back_operator,
         }
     )
     # The pulse of this worker process (GET /readyz reports its age).

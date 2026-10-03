@@ -9,6 +9,7 @@ from app.gateways.http.admin_routes import build_admin_router
 from app.gateways.http.assistant_routes import build_assistant_router
 from app.gateways.http.billing_routes import build_billing_router
 from app.gateways.http.business_routes import build_business_router
+from app.gateways.http.call_router_assembly import build_call_routers
 from app.gateways.http.catalog_routes import build_catalog_router
 from app.gateways.http.channel_routes import build_channel_router
 from app.gateways.http.channel_settings_routes import build_channel_settings_router
@@ -276,4 +277,5 @@ def build_application_routers(app_container: AppContainer) -> list[APIRouter]:
         build_readiness_router(platform.check_readiness_operator()),
         build_widget_error_router(platform.report_widget_error_operator()),
         *build_launch_routers(operators, current_user),
+        *build_call_routers(operators, current_user),
     ]

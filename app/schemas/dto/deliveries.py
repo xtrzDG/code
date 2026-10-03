@@ -28,6 +28,7 @@ from app.schemas.typings.conversations.strings import MessageText
 from app.schemas.typings.deliveries.prefixed_id import InboundEventId, OutboundMessageId
 from app.schemas.typings.deliveries.strings import DeliveryErrorText, InboundErrorText
 from app.schemas.typings.handoffs.prefixed_id import HandoffId
+from app.schemas.typings.notifications.constrained_strings import StaffAlertSubject
 from app.schemas.typings.platform.booleans import IsFinalJobAttempt
 from app.schemas.typings.platform.constrained_integers import RetryAfterSeconds
 
@@ -120,6 +121,8 @@ class StaffNotification(ImmutableDTO):
     contact: ManagerContact
     text: MessageText
     handoff_id: HandoffId | None = None
+    # Another subject the notification is queued once per contact for.
+    subject: StaffAlertSubject | None = None
     deliver_after: Microseconds | None = None
 
 
