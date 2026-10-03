@@ -51,6 +51,11 @@ from app.schemas.domain.payments import PaymentOrderDocument
 from app.schemas.domain.profiles import BusinessProfileDocument
 from app.schemas.domain.push_subscriptions import PushSubscriptionDocument
 from app.schemas.domain.resources import ResourceDocument, ScheduleExceptionDocument
+from app.schemas.domain.setup import (
+    ActivationEventDocument,
+    AssistantApplyDocument,
+    SetupStateDocument,
+)
 from app.schemas.domain.staff_deliveries import StaffDeliveryStateDocument
 from app.schemas.domain.users import (
     OtpChallengeDocument,
@@ -189,6 +194,17 @@ DOCUMENT_COLLECTIONS: tuple[DocumentCollectionDefinition, ...] = (
     ),
     DocumentCollectionDefinition(
         DocumentCollectionName("staff_delivery_states"), StaffDeliveryStateDocument
+    ),
+    # The guided launch: milestones, skipped setup steps and the current
+    # "Apply changes" of each business (1044).
+    DocumentCollectionDefinition(
+        DocumentCollectionName("activation_events"), ActivationEventDocument
+    ),
+    DocumentCollectionDefinition(
+        DocumentCollectionName("setup_states"), SetupStateDocument
+    ),
+    DocumentCollectionDefinition(
+        DocumentCollectionName("assistant_applies"), AssistantApplyDocument
     ),
 )
 

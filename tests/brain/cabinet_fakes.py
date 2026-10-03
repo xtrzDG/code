@@ -8,6 +8,7 @@ from app.adapters.storage.in_memory_document_collection import (
 from app.contracts.facilitators import ChannelMessageSenderFacilitatorContract
 from app.contracts.operator_contract import OperatorContract
 from app.contracts.recording_storage import RecordingStorageAdapterContract
+from app.contracts.use_case_contract import UseCaseContract
 from app.repositories.booking_repositories import BookingRepository, LeadRepository
 from app.repositories.knowledge_repositories import ResourceRepository
 from app.schemas.constants.channels import ChannelKind
@@ -19,6 +20,7 @@ from app.schemas.dto.call_recordings import (
     RecordingLocation,
     RecordingPart,
 )
+from app.schemas.dto.conversation_feed.owner_test_chat import OwnerTestChatCommand
 from app.schemas.dto.menu_import import MenuExtraction, MenuExtractionRequest
 from app.schemas.exceptions.application_errors import (
     AuthenticationRequiredError,
@@ -177,3 +179,10 @@ class UnusedMenuExtractor:
 
     def extract(self, request: MenuExtractionRequest) -> MenuExtraction:
         raise AssertionError("Menu extraction is not part of these tests.")
+
+
+class KeepTestChatVersions(UseCaseContract[OwnerTestChatCommand, None]):
+    """The test chat's preview step that never builds a version."""
+
+    def run(self, input_data: OwnerTestChatCommand) -> None:
+        del input_data

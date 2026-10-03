@@ -43,6 +43,10 @@ from app.use_cases.billing.subscription_pricing import (
     quote_money,
     select_subscription_currency,
 )
+from app.use_cases.billing.trial_subscriptions import (
+    choose_go_live_trial,
+    is_trial_due_at_go_live,
+)
 from app.utilities.billing.billing_periods import find_usage_window
 from app.utilities.localization.babel_locales import require_babel_locale
 from app.utilities.money.money_math import multiply_money
@@ -116,6 +120,15 @@ class AssembleBillingOverviewUseCase(
             currency_code=currency_code,
             service_mode=business.service_mode,
             is_trial_available=is_trial_available(subscriptions),
+            does_trial_start_at_go_live=(
+                business.published_assistant_version_id is None
+                and is_trial_due_at_go_live(
+                    subscriptions,
+                    self._plan_registry.get(
+                        choose_go_live_trial(business, subscription)[0]
+                    ),
+                )
+            ),
             subscription=(
                 None
                 if subscription is None

@@ -11,6 +11,44 @@ Kinds of change: **Added**, **Changed** (additive), **Deprecated** (with
 sunset date), **Removed** and **Breaking** (only with the `api-breaking`
 label and a migration path).
 
+## 2026-10-03 — guided launch: one-call creation, setup progress, starter answers, "Apply changes", trial at go-live
+
+Spec: `c99621774a0ef930`
+
+- **Added** `POST /v1/assistants` ("Create an AI assistant", 201): the
+  business with its country's defaults, its guided setup and its niche's
+  starter answers (`AssistantCreatedView`); the body is
+  `CreateBusinessRequest`.
+- **Added** `GET /v1/businesses/{business_id}/setup` (owners and staff,
+  `?language=`): the seven setup steps in order with `done`, `skipped`,
+  `next` or `todo`, `percent`, `minutes_left`, `next_action`,
+  `can_go_live`, `is_live`, `is_complete`, `went_live_at`,
+  `trial_ends_at`, `phone_test_links`, `milestones` and the `apply`
+  progress (`SetupView`).
+- **Added** `PUT` and `DELETE /v1/businesses/{business_id}/setup/skipped-steps/{setup_step}`
+  (owners; `offer`, `channels` and `test` only, other steps 422; DELETE
+  answers 204) and `POST …/setup/milestones/{kind}/celebrate` (owners and
+  staff; a milestone not reached yet is 404).
+- **Added** `GET …/setup/starter-answers` and
+  `POST …/setup/starter-answers/apply` (owners): the niche's suggestions
+  over the country's working week; applying fills only empty sections and
+  never suggests prices.
+- **Added** `PATCH /v1/businesses/{business_id}/profile` (owners): autosave
+  of the fields sent; `expected_updated_at` from an older profile is 409
+  `stale_revision`; a patch that changes nothing keeps `updated_at`.
+- **Added** `POST` (owners, 202) and `GET` (owners and staff)
+  `/v1/businesses/{business_id}/assistant/apply` ("Apply changes"):
+  stages `building`, `checking`, `publishing`, `live`,
+  `needs_attention` with plain-language reasons and where to fix them
+  (`ApplyChangesView`).
+- **Changed** `BillingOverview` has `does_trial_start_at_go_live`. The
+  free trial starts at the first go-live instead of being started by
+  hand: the `subscription_or_trial` go-live check passes with the detail
+  `trial_at_go_live`, and a publish refusal of that check now means
+  payment is needed.
+- **Changed** `POST …/test-chat` builds a draft preview for an owner whose
+  latest edits are in no version yet (before the first version too).
+
 ## 2026-10-02 — staff notifications: checks, preferences, devices, links
 
 Spec: `1e527cb396131ef6`

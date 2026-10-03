@@ -94,3 +94,19 @@ class BusinessProfileRepoContract(RepoContract, Protocol):
         business_id: BusinessId,
     ) -> BusinessProfileDocument | None:
         raise NotImplementedError
+
+    def insert_if_absent(self, profile: BusinessProfileDocument) -> bool:
+        """Store a first profile unless the business has one (atomic)."""
+        raise NotImplementedError
+
+    def modify(
+        self,
+        business_id: BusinessId,
+        change: Callable[[BusinessProfileDocument], BusinessProfileDocument | None],
+    ) -> BusinessProfileDocument | None:
+        """
+        Store what `change` makes of the profile as stored now, in one step
+        (no other save comes in between); None, and nothing written, when
+        there is no profile or `change` returns None.
+        """
+        raise NotImplementedError

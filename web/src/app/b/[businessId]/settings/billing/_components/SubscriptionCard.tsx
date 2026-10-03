@@ -7,7 +7,13 @@ import { IconCard } from "@/components/icons";
 import { useI18n } from "@/i18n/client";
 import type { MessageKey } from "@/i18n/translate";
 
-import { SUBSCRIPTION_STATUS_TONES, quotedMoneyText, type BillingOverview, type SubscriptionStatus } from "../_lib/billing";
+import {
+  SUBSCRIPTION_STATUS_TONES,
+  noSubscriptionText,
+  quotedMoneyText,
+  type BillingOverview,
+  type SubscriptionStatus,
+} from "../_lib/billing";
 
 export const SUBSCRIPTION_STATUS_LABELS: Record<SubscriptionStatus, MessageKey> = {
   incomplete: "billing.subscribe.statusIncomplete",
@@ -46,7 +52,7 @@ export function SubscriptionCard({
           className="py-6"
           icon={<IconCard className="size-6" />}
           title={t("billing.noSubscriptionTitle")}
-          description={overview.is_trial_available ? t("billing.noSubscriptionDescription") : t("billing.noSubscriptionNoTrial")}
+          description={t(noSubscriptionText(overview))}
           action={
             <a href="#billing-plans" className={buttonClasses({ variant: "secondary", size: "sm" })}>
               {t("billing.plans.title")}

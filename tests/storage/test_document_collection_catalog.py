@@ -12,6 +12,9 @@ from app.adapters.storage.postgres.document_collection_factory import (
 from app.containers.adapters.document_collections_container import (
     DocumentCollectionsContainer,
 )
+from app.containers.adapters.launch_collections_container import (
+    LaunchCollectionsContainer,
+)
 from app.containers.adapters.notification_collections_container import (
     NotificationCollectionsContainer,
 )
@@ -76,8 +79,13 @@ PLATFORM_DOCUMENT_TYPES: frozenset[type[PersistentDocument]] = frozenset(
 )
 
 
-# The containers of document collections (the notifications' own sibling).
-COLLECTION_CONTAINERS = (DocumentCollectionsContainer, NotificationCollectionsContainer)
+# The containers of document collections (the notifications' and the
+# guided launch's own siblings).
+COLLECTION_CONTAINERS = (
+    DocumentCollectionsContainer,
+    NotificationCollectionsContainer,
+    LaunchCollectionsContainer,
+)
 
 
 def collection_providers() -> list[providers.Provider[object]]:

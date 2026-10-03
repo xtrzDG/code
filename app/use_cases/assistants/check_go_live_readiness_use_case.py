@@ -2,7 +2,10 @@
 
 from typed_time_provider import Microseconds, WallClock
 
-from app.contracts.registries import NicheTemplateRegistryContract
+from app.contracts.registries import (
+    NicheTemplateRegistryContract,
+    PlanRegistryContract,
+)
 from app.contracts.repositories.assistant_repositories import AutotestRunRepoContract
 from app.contracts.repositories.billing_repositories import SubscriptionRepoContract
 from app.contracts.repositories.business_repositories import BusinessProfileRepoContract
@@ -37,9 +40,15 @@ from app.use_cases.billing.billing_records import (
     find_current_subscription,
     is_service_paid_for,
 )
+from app.use_cases.billing.trial_subscriptions import (
+    choose_go_live_trial,
+    is_trial_due_at_go_live,
+)
 from app.utilities.knowledge.profile_gaps import find_profile_gaps
 
 NO_SUBSCRIPTION_DETAIL: str = "none"
+# The detail of a gate passed because the free trial starts at go-live.
+TRIAL_AT_GO_LIVE_DETAIL: str = "trial_at_go_live"
 APP_BASE_URL_SETTING: str = "APP_BASE_URL"
 
 
@@ -67,6 +76,7 @@ class CheckGoLiveReadinessUseCase(
         resource_repo: ResourceRepoContract,
         autotest_run_repo: AutotestRunRepoContract,
         niche_template_registry: NicheTemplateRegistryContract,
+        plan_registry: PlanRegistryContract,
         voice_agent_provisioner: VoiceAgentProvisionerAdapterContract,
         app_settings: AppSettings,
         wall_clock: WallClock[Microseconds],
@@ -80,6 +90,7 @@ class CheckGoLiveReadinessUseCase(
         self._niche_template_registry: NicheTemplateRegistryContract = (
             niche_template_registry
         )
+        self._plan_registry: PlanRegistryContract = plan_registry
         self._voice_agent_provisioner: VoiceAgentProvisionerAdapterContract = (
             voice_agent_provisioner
         )
@@ -98,7 +109,7 @@ class CheckGoLiveReadinessUseCase(
             else None
         )
         checks: list[GoLiveCheck] = [
-            self._check_subscription(subscription),
+            self._check_subscription(business, subscription),
             self._check_dpa(business),
             *self._check_profile(business),
             check_autotests(version, run),
@@ -119,25 +130,34 @@ class CheckGoLiveReadinessUseCase(
         )
 
     def _check_subscription(
-        self, subscription: SubscriptionDocument | None
+        self,
+        business: BusinessDocument,
+        subscription: SubscriptionDocument | None,
     ) -> GoLiveCheck:
         is_paid: bool = is_service_paid_for(subscription, self._wall_clock.now_unix())
-        message: str = "Start the trial or pay for the subscription."
+        plan_key, _ = choose_go_live_trial(business, subscription)
+        is_trial_due: bool = not is_paid and is_trial_due_at_go_live(
+            self._subscription_repo.list_by_business(business.id),
+            self._plan_registry.get(plan_key),
+        )
+        message: str = "Pay for the subscription to go live."
+        detail: str = (
+            NO_SUBSCRIPTION_DETAIL
+            if subscription is None
+            else subscription.status.value
+        )
         if is_paid:
             message = "The trial or a paid subscription covers the assistant."
+        elif is_trial_due:
+            message = "The free trial starts when the assistant goes live."
+            detail = TRIAL_AT_GO_LIVE_DETAIL
 
         return GoLiveCheck(
             code=GoLiveCheckCode.SUBSCRIPTION_OR_TRIAL,
-            is_ok=is_paid,
+            is_ok=is_paid or is_trial_due,
             is_blocking=True,
             message=GoLiveCheckMessage(message),
-            details=[
-                GoLiveCheckDetail(
-                    NO_SUBSCRIPTION_DETAIL
-                    if subscription is None
-                    else subscription.status.value
-                )
-            ],
+            details=[GoLiveCheckDetail(detail)],
         )
 
     def _check_dpa(self, business: BusinessDocument) -> GoLiveCheck:

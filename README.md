@@ -467,7 +467,8 @@ UI-тестов); `color`, `position` и `language` в ней показываю
 | Каталог | `GET /v1/catalog/countries[/{code}]`, `GET /v1/catalog/languages`, `GET /v1/catalog/plans`, `GET /v1/catalog/niches[/{niche}]`, `POST /v1/phone-numbers/parse` |
 | Бизнесы и команда | `POST·GET /v1/businesses`, `GET·PATCH /v1/businesses/{id}` (в ответе `revision`, растёт с каждым сохранением; PATCH с `expected_revision` от устаревшей версии — 409 `stale_revision`, ничего не меняется), `POST …/members` (роль `owner` или `staff`), `PATCH·DELETE …/members/{user_id}` (последнего владельца нельзя ни удалить, ни сделать сотрудником), `GET …/call-forwarding-instructions` |
 | Данные и договор | `GET·POST …/dpa`, `GET /v1/legal/dpa/{version}?language=` (текст DPA, без токена), `GET …/audit-log` (страницы, фильтры `action`, `entity`, `actor_id`, `since`, `until`), `GET …/contacts` (страницы, `search`), `GET·DELETE …/contacts/{contact_id}`, `GET …/contacts/{contact_id}/export` |
-| Анкета | `GET …/profile/wizard`, `GET·PUT …/profile`, `PUT …/profile/steps/{step}`, `GET …/profile/gaps` |
+| Анкета | `GET …/profile/wizard`, `GET·PUT·PATCH …/profile` (PATCH — автосохранение: меняются только присланные поля; с `expected_updated_at` от устаревшей анкеты — 409 `stale_revision`), `PUT …/profile/steps/{step}`, `GET …/profile/gaps` |
+| Пошаговый запуск | `POST /v1/assistants` («Создать AI-помощника»: бизнес с умолчаниями страны, его шаги запуска и готовые ответы ниши; 201), `GET …/setup` (семь шагов по порядку — бизнес, предложение, часы и запись, кто получает заявки, каналы, проба, запуск — со статусами `done`, `skipped`, `next`, `todo`, процент, минуты до конца, следующее действие, ссылки «проверить с телефона», вехи и ход «Применить изменения»; `?language=`), `PUT·DELETE …/setup/skipped-steps/{setup_step}` (пропустить необязательный шаг `offer`, `channels`, `test` или вернуть его), `POST …/setup/milestones/{kind}/celebrate` (кабинет показал поздравление — один раз), `GET …/setup/starter-answers` (подсказки ниши для страны бизнеса: часы, правила брони, первый ресурс, передача человеку, запреты, тон, частые вопросы, примеры предложения без цен), `POST …/setup/starter-answers/apply` (принять одним вызовом: заполняются только пустые разделы, цены никогда не подставляются), `POST·GET …/assistant/apply` («Применить изменения»: версия из текущей анкеты, проверки в фоне и публикация, когда они прошли; 202; стадии `building`, `checking`, `publishing`, `live`, `needs_attention` с причинами простыми словами и местом, где их исправить) |
 | Знания | `GET·POST …/knowledge`, `GET·PATCH·DELETE …/knowledge/{item_id}`, `POST …/knowledge/search`, `POST …/knowledge/import[/confirm]`, `DELETE …/knowledge/import/{batch_id}` |
 | Ресурсы и расписание | `GET·POST …/resources`, `PATCH …/resources/{id}`, `GET·POST …/schedule-exceptions`, `DELETE …/schedule-exceptions/{id}` |
 | Брони, заявки, передачи | `GET …/availability` (`full_day=true` — весь день для сотрудников), `GET·POST …/bookings`, `PATCH …/bookings/{id}` (статус, гости, место, примечание, имя), `POST …/bookings/{id}/cancel`, `POST …/bookings/{id}/reschedule`, `GET …/leads`, `PATCH …/leads/{id}`, `GET …/handoffs`, `POST …/handoffs/{id}/resolve`, `GET …/unanswered-questions`, `POST …/unanswered-questions/{id}/answer`, `GET …/dashboard`, `GET …/inbox-counts` (открытые передачи и новые заявки, без записи в журнал) |
@@ -492,11 +493,15 @@ UI-тестов); `color`, `position` и `language` в ней показываю
 `running`, `scenario_count` — число запланированных сценариев, а `results` —
 уже сыгранные (воркер сохраняет их после каждого сценария). Статус `ready`
 даёт только прогон по всем языкам и сценариям версии. Выйти в эфир можно с
-пробным периодом или оплаченной подпиской, принятым DPA, контактом менеджера и
-без блокирующих пробелов анкеты.
+идущим пробным периодом или оплаченной подпиской, принятым DPA, контактом
+менеджера и без блокирующих пробелов анкеты. Бесплатный пробный период
+начинается при первом выходе в эфир, а не при создании бизнеса: если его ещё
+не было, первая публикация открывает его на тарифе бизнеса (помесячно) и
+пишет веху `went_live`; начатый раньше пробный период не перезапускается.
 
 Чек-лист запуска — `GET …/assistant-versions/{id}/go-live-readiness`: пункты
-`subscription_or_trial`, `dpa`, `profile_gaps` (виды пробелов), `staff_contact`,
+`subscription_or_trial` (`trial_at_go_live` — пробный период начнётся при
+запуске), `dpa`, `profile_gaps` (виды пробелов), `staff_contact`,
 `autotests` (статус версии и прогона) и для версий с голосом
 `voice_configuration`, у каждого `is_ok`, `is_blocking` и `details`. Те же коды
 приходят в отказах публикации и отката: тело ошибки может содержать
@@ -509,10 +514,50 @@ UI-тестов); `color`, `position` и `language` в ней показываю
 Ответ `POST …/test-chat` содержит версию, которая ответила
 (`assistant_version_id`, `assistant_version_number`), и вызовы инструментов хода
 (`tool_calls`); без `assistant_version_id` отвечает самая новая не архивная
-версия. Списки `GET …/knowledge` и `GET …/unanswered-questions` постраничные:
+версия. Если в ней ещё нет последних правок владельца (или версий ещё нет
+вовсе), для владельца сначала собирается черновик из текущей анкеты — так
+«Попробуйте помощника» работает до запуска и всегда с последними изменениями;
+черновик ничего не публикует и не проверяется. Списки `GET …/knowledge` и `GET …/unanswered-questions` постраничные:
 `?limit=&cursor=`, ответ `{"items", "next_cursor"}`, фильтры применяются до
 разбиения на страницы. Импорт меню возвращает `batch_id`; `DELETE
 …/knowledge/import/{batch_id}` удаляет неподтверждённые черновики этого импорта.
+
+### Пошаговый запуск и «Применить изменения»
+
+Кнопка «Создать AI-помощника» — это `POST /v1/assistants`: бизнес с
+умолчаниями страны создателя (часовой пояс, языки, валюта), его шаги запуска
+и готовые ответы ниши. Готовые ответы (`app/registries/niches/starters/`) есть
+для всех 16 ниш на английском, русском и грузинском; часы раскладываются по
+рабочей неделе страны (выходные из CLDR: в Израиле — пятница и суббота).
+Это подсказки, а не факты бизнеса: в анкету они попадают только после
+`POST …/setup/starter-answers/apply`, заполняют лишь пустые разделы, и цен в
+них нет — пробел «нет цен» остаётся, пока их не впишет владелец.
+
+`GET …/setup` вычисляет шаги из данных бизнеса (пробелы анкеты, контакт
+сотрудника, подключённые каналы, проба помощника, опубликованная версия),
+поэтому ничего не нужно «отмечать вручную»; хранятся только пропущенные
+необязательные шаги и вехи (`went_live`, `test_chat_tried`,
+`first_conversation`, `first_booking`, `first_handoff` — у каждой время, когда
+она случилась, и `celebrated_at`). Первые настоящие разговор, бронь и передача
+человеку находятся по самым ранним записям бизнеса (песочница тестового чата и
+автотестов не считается). В ответе — ссылки «проверить с телефона»:
+страница чата на сайте (`/widget/demo?business_id=…`, если API доступен по
+HTTPS и чат на сайте включён) и бот Telegram бизнеса; `is_answering` — отвечают
+ли они уже (после запуска).
+
+`POST …/assistant/apply` собирает версию из текущей анкеты и знаний, сразу
+проверяет условия запуска, кроме автотестов (контакт сотрудника, договор,
+оплата, анкета), и отдаёт автотесты фоновому воркеру; когда они прошли, воркер
+публикует версию. Повторное нажатие, пока идёт применение, или когда в эфире
+уже всё актуально, ничего не запускает. Проверенная и не устаревшая версия
+публикуется сразу, без новых автотестов. Стадии видны в
+`GET …/assistant/apply` (`checks_done` из `checks_total`, пока идут проверки);
+`needs_attention` перечисляет причины (`profile_incomplete`,
+`staff_contact_missing`, `agreement_not_accepted`, `payment_needed`,
+`build_failed`, `checks_failed` с видами сценариев, `checks_stopped`,
+`voice_not_ready`, `publish_failed`) с текстом на языке владельца и местом,
+где это исправить. Начало применения и публикация пишутся в журнал аудита.
+Версии, автотесты и ручная публикация остаются в разделе «Дополнительно».
 
 ## Договор об обработке данных (DPA)
 

@@ -17,6 +17,7 @@ OWNER_ONLY_OPERATIONS: frozenset[str] = frozenset(
         f"POST {B}/assistant-versions/{{version_id}}/autotests",
         f"POST {B}/assistant-versions/{{version_id}}/publish",
         f"POST {B}/assistant-versions/{{version_id}}/rollback",
+        f"POST {B}/assistant/apply",
         f"GET {B}/audit-log",
         f"GET {B}/billing",
         f"POST {B}/billing/cancel",
@@ -40,7 +41,11 @@ OWNER_ONLY_OPERATIONS: frozenset[str] = frozenset(
         f"PATCH {B}/members/{{user_id}}",
         f"DELETE {B}/members/{{user_id}}",
         f"PUT {B}/profile",
+        f"PATCH {B}/profile",
         f"PUT {B}/profile/steps/{{step}}",
+        f"POST {B}/setup/starter-answers/apply",
+        f"PUT {B}/setup/skipped-steps/{{setup_step}}",
+        f"DELETE {B}/setup/skipped-steps/{{setup_step}}",
         f"POST {B}/unanswered-questions/{{question_id}}/answer",
     }
 )

@@ -111,6 +111,7 @@ export const assistantChecksRu: Translation<typeof assistantChecksEn> = {
     billingActive: "Подписка оплачена.",
     billingStartTrial: "Начните бесплатный пробный период или выберите тариф.",
     billingMissing: "Оплатите подписку, чтобы запустить помощника.",
+    billingTrialAtGoLive: "Бесплатный пробный период начнётся сам, когда помощник выйдет в эфир.",
     fixBilling: "Открыть оплату",
     voice: "Телефонные звонки",
     voiceOk: "Голосовой помощник будет настроен при запуске этой версии.",
@@ -124,7 +125,7 @@ export const assistantChecksRu: Translation<typeof assistantChecksEn> = {
     },
   },
   refusal: {
-    subscription_or_trial: "Начните бесплатный пробный период или оплатите подписку.",
+    subscription_or_trial: "Выберите тариф и оплатите его, чтобы запустить помощника.",
     dpa: "Примите соглашение об обработке данных.",
     profile_gaps: "Заполните профиль. Не хватает:",
     staff_contact: "Добавьте контакт сотрудника, который получает передачи разговоров, брони и заявки.",

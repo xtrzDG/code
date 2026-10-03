@@ -76,7 +76,7 @@ def test_rollback_is_refused_once_the_service_is_no_longer_paid() -> None:
     subscription.period_end = testbed.wall_clock.now_unix()
     testbed.subscription_repo.save(subscription)
 
-    with pytest.raises(ConflictError, match="Start the trial or pay"):
+    with pytest.raises(ConflictError, match="Pay for the subscription"):
         rollback(testbed, business, first.id)
 
     assert testbed.business(business.id).published_assistant_version_id == second.id

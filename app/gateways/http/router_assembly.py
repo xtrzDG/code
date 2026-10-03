@@ -17,6 +17,7 @@ from app.gateways.http.conversation_routes import build_conversation_router
 from app.gateways.http.events_routes import build_events_router
 from app.gateways.http.health_routes import build_readiness_router
 from app.gateways.http.knowledge_routes import build_knowledge_router
+from app.gateways.http.launch_router_assembly import build_launch_routers
 from app.gateways.http.menu_import_routes import build_menu_import_router
 from app.gateways.http.notification_routes import build_notification_router
 from app.gateways.http.operations_routes import build_operations_router
@@ -274,4 +275,5 @@ def build_application_routers(app_container: AppContainer) -> list[APIRouter]:
         build_widget_script_router(),
         build_readiness_router(platform.check_readiness_operator()),
         build_widget_error_router(platform.report_widget_error_operator()),
+        *build_launch_routers(operators, current_user),
     ]

@@ -7,13 +7,12 @@ from app.contracts.repositories.billing_repositories import (
 )
 from app.contracts.repositories.business_repositories import BusinessRepoContract
 from app.contracts.use_case_contract import UseCaseContract
-from app.schemas.constants.billing import InvoiceStatus, PlanKey, SubscriptionStatus
+from app.schemas.constants.billing import PlanKey
 from app.schemas.constants.businesses import ServiceMode
 from app.schemas.constants.users import BusinessMemberRole
-from app.schemas.domain.billing import InvoiceDocument, SubscriptionDocument
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.dto.access import BusinessAccessRequest
-from app.schemas.dto.billing import Money, PlanDefinition
+from app.schemas.dto.billing import PlanDefinition
 from app.schemas.dto.billing_cabinet import (
     BillingOverview,
     BillingOverviewSource,
@@ -23,19 +22,8 @@ from app.schemas.exceptions.application_errors import (
     ConflictError,
     ValidationFailedError,
 )
-from app.schemas.typings.billing.prefixed_id import SubscriptionId
-from app.schemas.typings.localization.constrained_strings import CurrencyCode
-from app.use_cases.billing.billing_records import (
-    find_current_subscription,
-    is_trial_available,
-    list_open_invoices,
-    list_subscription_invoices,
-)
-from app.use_cases.billing.subscription_pricing import (
-    price_subscription,
-    select_subscription_currency,
-)
-from app.utilities.billing.billing_periods import add_local_days
+from app.use_cases.billing.billing_records import is_trial_available
+from app.use_cases.billing.trial_subscriptions import open_trial_subscription
 
 
 class StartTrialUseCase(UseCaseContract[StartTrialCommand, BillingOverview]):
@@ -99,45 +87,16 @@ class StartTrialUseCase(UseCaseContract[StartTrialCommand, BillingOverview]):
         if int(plan.trial_days) == 0:
             raise ValidationFailedError(f"Plan {plan_key.value} has no free trial.")
 
-        currency_code: CurrencyCode = select_subscription_currency(
+        now: Microseconds = self._wall_clock.now_unix()
+        open_trial_subscription(
+            self._subscription_repo,
+            self._invoice_repo,
             self._plan_registry,
-            plan_key,
-            business.currency_code,
-        )
-        price: Money = price_subscription(
-            self._plan_registry,
+            business,
             plan_key,
             input_data.request.billing_period,
-            currency_code,
-        )
-        now: Microseconds = self._wall_clock.now_unix()
-        trial_ends_at: Microseconds = add_local_days(
             now,
-            int(plan.trial_days),
-            business.timezone,
         )
-        unpaid: SubscriptionDocument | None = find_current_subscription(
-            self._subscription_repo,
-            business.id,
-        )
-        if unpaid is not None:
-            self._void_unpaid_invoices(unpaid, now)
-
-        subscription = SubscriptionDocument(
-            id=SubscriptionId() if unpaid is None else unpaid.id,
-            business_id=business.id,
-            plan_key=plan_key,
-            billing_period=input_data.request.billing_period,
-            price_minor=price.amount_minor,
-            currency_code=price.currency_code,
-            status=SubscriptionStatus.TRIALING,
-            trial_ends_at=trial_ends_at,
-            period_start=now,
-            period_end=trial_ends_at,
-            created_at=now if unpaid is None else unpaid.created_at,
-            updated_at=now,
-        )
-        self._subscription_repo.save(subscription)
 
         def start_trial(current: BusinessDocument) -> None:
             # Changed on the business as stored now, so an edit saved
@@ -153,16 +112,3 @@ class StartTrialUseCase(UseCaseContract[StartTrialCommand, BillingOverview]):
                 display_language=input_data.display_language,
             )
         )
-
-    def _void_unpaid_invoices(
-        self,
-        subscription: SubscriptionDocument,
-        now: Microseconds,
-    ) -> None:
-        open_invoices: list[InvoiceDocument] = list_open_invoices(
-            list_subscription_invoices(self._invoice_repo, subscription)
-        )
-        for invoice in open_invoices:
-            invoice.status = InvoiceStatus.VOID
-            invoice.updated_at = now
-            self._invoice_repo.save(invoice)

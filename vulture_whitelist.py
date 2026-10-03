@@ -214,3 +214,14 @@ _.channel_error_count  # app/schemas/dto/operations/attention_counts.py
 _.unconfirmed_booking_count  # app/schemas/dto/operations/attention_counts.py
 _.provider_ready  # app/schemas/dto/notifications/notification_settings.py
 _.booking_date  # app/schemas/dto/notifications/staff_links.py
+_.does_trial_start_at_go_live  # app/schemas/dto/billing_cabinet.py
+_.checks_done  # app/schemas/dto/setup/apply_changes.py
+_.checks_total  # app/schemas/dto/setup/apply_changes.py
+_.starter_answers  # app/schemas/dto/setup/assistant_creation.py
+_.is_answering  # app/schemas/dto/setup/setup_progress.py
+_.milestones  # app/schemas/dto/setup/setup_progress.py
+_.minutes_left  # app/schemas/dto/setup/setup_progress.py
+_.next_action  # app/schemas/dto/setup/setup_progress.py
+_.applied_sections  # app/schemas/dto/setup/starter_answers.py
+_.kept_sections  # app/schemas/dto/setup/starter_answers.py
+_.offer_examples  # app/schemas/dto/setup/starter_answers.py

@@ -18,6 +18,7 @@ from app.schemas.typings.billing.booleans import (
     IsAutoDebitActive,
     IsSubscriptionCreated,
     IsTrialAvailable,
+    IsTrialStartingAtGoLive,
 )
 from app.schemas.typings.billing.constrained_integers import (
     IncludedDialogs,
@@ -214,13 +215,19 @@ class InvoiceView(ImmutableDTO):
 
 
 class BillingOverview(ImmutableDTO):
-    """The billing page: plan, status, period, package usage and invoices."""
+    """
+    The billing page: plan, status, period, package usage and invoices.
+
+    `does_trial_start_at_go_live` is True while the business is not live
+    yet and its free trial will start by itself when it goes live.
+    """
 
     business_id: BusinessId
     display_language: LanguageTag
     currency_code: CurrencyCode
     service_mode: ServiceMode
     is_trial_available: IsTrialAvailable
+    does_trial_start_at_go_live: IsTrialStartingAtGoLive = False
     subscription: SubscriptionView | None = None
     usage: PackageUsageView | None = None
     invoices: list[InvoiceView] = Field(default_factory=list[InvoiceView])

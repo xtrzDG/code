@@ -11,4 +11,6 @@ IsRefundDue = bool
 IsSetupFeeIncluded = bool
 IsSubscriptionCreated = bool
 IsTrialAvailable = bool
+IsTrialStartedAtGoLive = bool
+IsTrialStartingAtGoLive = bool
 # Keep abc order for all non example types, if possible.

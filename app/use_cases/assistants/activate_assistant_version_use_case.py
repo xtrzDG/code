@@ -14,16 +14,19 @@ from app.contracts.use_case_contract import UseCaseContract
 from app.contracts.voice_platform import VoiceAgentProvisionerAdapterContract
 from app.schemas.configurations.app_settings import AppSettings
 from app.schemas.constants.assistants import AssistantVersionStatus, GoLiveCheckCode
-from app.schemas.constants.businesses import BusinessStatus
+from app.schemas.constants.businesses import BusinessStatus, ServiceMode
+from app.schemas.constants.setup import ActivationEventKind
 from app.schemas.domain.assistants import AssistantVersionDocument
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.dto.assistants.assembly_sources import AssistantVersionActivation
+from app.schemas.dto.billing_go_live import GoLiveTrial, GoLiveTrialRequest
 from app.schemas.dto.conversations import CallGreeting, CallGreetingRequest
 from app.schemas.dto.go_live import (
     GoLiveCheck,
     GoLiveReadiness,
     GoLiveReadinessRequest,
 )
+from app.schemas.dto.setup.setup_progress import ActivationEventRecord
 from app.schemas.dto.voice import VoiceAgentSpec, VoiceGreeting
 from app.schemas.exceptions.application_errors import (
     ConflictError,
@@ -77,7 +80,9 @@ class ActivateAssistantVersionUseCase(
     is archived and this one is published. Activating a version without voice
     removes the agent of earlier versions. In development and test, a voice
     version goes live without an agent while ElevenLabs is not configured
-    (a warning is logged).
+    (a warning is logged). The first go-live starts the free trial when it
+    is still due (the business takes its plan with full service in the same
+    write) and is recorded as the WENT_LIVE milestone.
     """
 
     def __init__(
@@ -92,6 +97,8 @@ class ActivateAssistantVersionUseCase(
         voice_agent_provisioner: VoiceAgentProvisionerAdapterContract,
         build_call_greeting: UseCaseContract[CallGreetingRequest, CallGreeting],
         assistant_tool_catalog: AssistantToolCatalogContract,
+        start_trial_at_go_live: UseCaseContract[GoLiveTrialRequest, GoLiveTrial],
+        record_activation_event: UseCaseContract[ActivationEventRecord, None],
         app_settings: AppSettings,
         wall_clock: WallClock[Microseconds],
     ) -> None:
@@ -113,6 +120,12 @@ class ActivateAssistantVersionUseCase(
         ] = build_call_greeting
         self._assistant_tool_catalog: AssistantToolCatalogContract = (
             assistant_tool_catalog
+        )
+        self._start_trial_at_go_live: UseCaseContract[
+            GoLiveTrialRequest, GoLiveTrial
+        ] = start_trial_at_go_live
+        self._record_activation_event: UseCaseContract[ActivationEventRecord, None] = (
+            record_activation_event
         )
         self._app_settings: AppSettings = app_settings
         self._wall_clock: WallClock[Microseconds] = wall_clock
@@ -150,10 +163,13 @@ class ActivateAssistantVersionUseCase(
             # not keep answering calls with the old instruction.
             self._remove_voice_agent.run(business.id)
 
+        trial: GoLiveTrial = self._start_trial_at_go_live.run(
+            GoLiveTrialRequest(business=business)
+        )
         now: Microseconds = self._wall_clock.now_unix()
         # The business first: when that write is refused, the versions stay
         # as they were and the business keeps pointing at its live one.
-        self._store_business(input_data, now)
+        self._store_business(input_data, trial, now)
         for other_version in versions:
             if (
                 other_version.id != version.id
@@ -168,11 +184,19 @@ class ActivateAssistantVersionUseCase(
         version.voice_agent_id = voice_agent_id
         version.updated_at = now
         self._assistant_version_repo.save(version)
+        self._record_activation_event.run(
+            ActivationEventRecord(
+                business_id=business.id,
+                kind=ActivationEventKind.WENT_LIVE,
+                occurred_at=now,
+            )
+        )
         return version
 
     def _store_business(
         self,
         activation: AssistantVersionActivation,
+        trial: GoLiveTrial,
         now: Microseconds,
     ) -> None:
         """
@@ -190,6 +214,11 @@ class ActivateAssistantVersionUseCase(
         def go_live(target: BusinessDocument) -> None:
             target.published_assistant_version_id = version_id
             target.status = BusinessStatus.LIVE
+            if trial.is_started and trial.plan_key is not None:
+                # The trial started now: its plan, served in full.
+                target.plan_key = trial.plan_key
+                target.service_mode = ServiceMode.FULL
+
             target.updated_at = now
 
         if activation.carries_business_changes:

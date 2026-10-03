@@ -83,6 +83,17 @@ export function canCancel(overview: BillingOverview): boolean {
  * no subscription, one waiting for its first payment, an overdue one or a
  * cancelled one. A trial or an active subscription switches plans instead.
  */
+/**
+ * What an owner without a subscription is told: the free trial starts by
+ * itself at the first go-live, can be started now, or was already used.
+ */
+export function noSubscriptionText(
+  overview: Pick<BillingOverview, "does_trial_start_at_go_live" | "is_trial_available">,
+): "billing.noSubscriptionTrialAtGoLive" | "billing.noSubscriptionDescription" | "billing.noSubscriptionNoTrial" {
+  if (overview.does_trial_start_at_go_live) return "billing.noSubscriptionTrialAtGoLive";
+  return overview.is_trial_available ? "billing.noSubscriptionDescription" : "billing.noSubscriptionNoTrial";
+}
+
 export function needsSubscription(overview: BillingOverview): boolean {
   const status = overview.subscription?.status;
   return status === undefined || status === "incomplete" || status === "past_due" || status === "cancelled";

@@ -17,6 +17,7 @@ from app.containers.operators.notification_operators import (
 )
 from app.containers.operators.operations_operators import OperationsOperatorsContainer
 from app.containers.operators.platform_operators import PlatformOperatorsContainer
+from app.containers.operators.setup_operators import SetupOperatorsContainer
 from app.containers.pipelines.pipelines_container import PipelinesContainer
 from app.containers.utilities import UtilitiesContainer
 
@@ -61,6 +62,11 @@ class OperatorsContainer(containers.DeclarativeContainer):
     assistants: AssistantOperatorsContainer = Container(  # type: ignore[assignment]
         AssistantOperatorsContainer,
         assistant_pipelines=pipelines.assistants,
+        utilities=utilities,
+    )
+    setup: SetupOperatorsContainer = Container(  # type: ignore[assignment]
+        SetupOperatorsContainer,
+        setup_pipelines=pipelines.setup,
         utilities=utilities,
     )
     channels: ChannelOperatorsContainer = Container(  # type: ignore[assignment]

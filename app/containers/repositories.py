@@ -4,9 +4,13 @@ from dependency_injector.providers import DependenciesContainer, Singleton
 from app.containers.adapters.document_collections_container import (
     DocumentCollectionsContainer,
 )
+from app.containers.adapters.launch_collections_container import (
+    LaunchCollectionsContainer,
+)
 from app.containers.adapters.notification_collections_container import (
     NotificationCollectionsContainer,
 )
+from app.repositories.activation_probe_repository import ActivationProbeRepository
 from app.repositories.assistant_repositories import (
     AssistantVersionRepository,
     AutotestRunRepository,
@@ -70,6 +74,11 @@ from app.repositories.payment_repositories import (
     PackageUsageWarningRepository,
     PaymentOrderRepository,
 )
+from app.repositories.setup_repositories import (
+    ActivationEventRepository,
+    AssistantApplyRepository,
+    SetupStateRepository,
+)
 from app.repositories.user_repositories import (
     OtpChallengeRepository,
     UserRepository,
@@ -81,6 +90,7 @@ from app.repositories.worker_heartbeat_repository import WorkerHeartbeatReposito
 class RepositoriesContainer(containers.DeclarativeContainer):
     collections: DocumentCollectionsContainer = DependenciesContainer()  # type: ignore[assignment]
     notification_collections: NotificationCollectionsContainer = DependenciesContainer()  # type: ignore[assignment]
+    launch_collections: LaunchCollectionsContainer = DependenciesContainer()  # type: ignore[assignment]
 
     user_repo: Singleton[UserRepository] = Singleton(
         UserRepository,
@@ -257,4 +267,23 @@ class RepositoriesContainer(containers.DeclarativeContainer):
     staff_delivery_state_repo: Singleton[StaffDeliveryStateRepository] = Singleton(
         StaffDeliveryStateRepository,
         collection=notification_collections.staff_delivery_state_collection,
+    )
+    # The guided launch: milestones, setup state, the current apply (1044).
+    activation_event_repo: Singleton[ActivationEventRepository] = Singleton(
+        ActivationEventRepository,
+        collection=launch_collections.activation_event_collection,
+    )
+    setup_state_repo: Singleton[SetupStateRepository] = Singleton(
+        SetupStateRepository,
+        collection=launch_collections.setup_state_collection,
+    )
+    assistant_apply_repo: Singleton[AssistantApplyRepository] = Singleton(
+        AssistantApplyRepository,
+        collection=launch_collections.assistant_apply_collection,
+    )
+    activation_probe_repo: Singleton[ActivationProbeRepository] = Singleton(
+        ActivationProbeRepository,
+        conversation_collection=collections.conversation_collection,
+        booking_collection=collections.booking_collection,
+        handoff_collection=collections.handoff_collection,
     )

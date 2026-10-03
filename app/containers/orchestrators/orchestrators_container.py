@@ -35,6 +35,9 @@ from app.containers.orchestrators.operations_orchestrators import (
 from app.containers.orchestrators.platform_orchestrators import (
     PlatformOrchestratorsContainer,
 )
+from app.containers.orchestrators.setup_orchestrators import (
+    SetupOrchestratorsContainer,
+)
 from app.containers.repositories import RepositoriesContainer
 from app.containers.use_cases.use_cases_container import UseCasesContainer
 from app.containers.utilities import UtilitiesContainer
@@ -97,7 +100,13 @@ class OrchestratorsContainer(containers.DeclarativeContainer):
         repositories=repositories,
         assistant_use_cases=use_cases.assistants,
         autotest_use_cases=use_cases.autotests,
+        apply_use_cases=use_cases.apply,
         conversation_orchestrators=conversations,
+    )
+    setup: SetupOrchestratorsContainer = Container(  # type: ignore[assignment]
+        SetupOrchestratorsContainer,
+        setup_use_cases=use_cases.setup,
+        launch_use_cases=use_cases.launch,
     )
     channels: ChannelOrchestratorsContainer = Container(  # type: ignore[assignment]
         ChannelOrchestratorsContainer,

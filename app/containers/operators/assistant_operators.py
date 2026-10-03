@@ -27,6 +27,12 @@ class AssistantOperatorsContainer(containers.DeclarativeContainer):
     run_queued_autotests_operator = pipeline_operator(
         assistant_pipelines.run_queued_autotests_pipeline, storage_scope
     )
+    apply_changes_operator = pipeline_operator(
+        assistant_pipelines.apply_changes_pipeline, storage_scope
+    )
+    get_apply_changes_operator = pipeline_operator(
+        assistant_pipelines.get_apply_changes_pipeline, storage_scope
+    )
 
     # --- Assistant versions and autotests.
     list_assistant_versions_operator = pipeline_operator(

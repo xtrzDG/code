@@ -27,6 +27,7 @@ def take_storage_snapshot(
         {
             **container.adapters.collections.providers,
             **container.adapters.notification_collections.providers,
+            **container.adapters.launch_collections.providers,
         },
     )
     with storage_scope.platform_wide():

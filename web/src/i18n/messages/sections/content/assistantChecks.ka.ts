@@ -109,6 +109,7 @@ export const assistantChecksKa: Translation<typeof assistantChecksEn> = {
     billingActive: "გამოწერა გადახდილია.",
     billingStartTrial: "დაიწყეთ უფასო საცდელი პერიოდი ან აირჩიეთ ტარიფი.",
     billingMissing: "გადაიხადეთ გამოწერა ასისტენტის გასაშვებად.",
+    billingTrialAtGoLive: "უფასო საცდელი პერიოდი თავისით დაიწყება, როცა ასისტენტი ეთერში გავა.",
     fixBilling: "გადახდის გახსნა",
     voice: "სატელეფონო ზარები",
     voiceOk: "ხმოვანი ასისტენტი ამ ვერსიის გაშვებისას მოეწყობა.",
@@ -122,7 +123,7 @@ export const assistantChecksKa: Translation<typeof assistantChecksEn> = {
     },
   },
   refusal: {
-    subscription_or_trial: "დაიწყეთ უფასო საცდელი პერიოდი ან გადაიხადეთ გამოწერა.",
+    subscription_or_trial: "აირჩიეთ ტარიფი და გადაიხადეთ ასისტენტის გასაშვებად.",
     dpa: "მიიღეთ მონაცემთა დამუშავების შეთანხმება.",
     profile_gaps: "შეავსეთ პროფილი. აკლია:",
     staff_contact: "დაამატეთ თანამშრომლის კონტაქტი, რომელიც მიიღებს საუბრების გადაცემებს, ჯავშნებსა და მოთხოვნებს.",

@@ -4,6 +4,9 @@ from dependency_injector.providers import DependenciesContainer, Factory, Single
 from app.containers.orchestrators.conversation_orchestrators import (
     ConversationOrchestratorsContainer,
 )
+from app.containers.orchestrators.setup_orchestrators import (
+    SetupOrchestratorsContainer,
+)
 from app.containers.provider_chains import orchestrator_pipeline
 from app.containers.registries import RegistriesContainer
 from app.contracts.conversation_flow import CustomerMessagePipelineContract
@@ -29,6 +32,7 @@ class ConversationPipelinesContainer(containers.DeclarativeContainer):
         DependenciesContainer()  # type: ignore[assignment]
     )
     registries: RegistriesContainer = DependenciesContainer()  # type: ignore[assignment]
+    setup_orchestrators: SetupOrchestratorsContainer = DependenciesContainer()  # type: ignore[assignment]
 
     # --- Customer messages of every channel, one turn per customer at a time
     # across every API instance and worker (the customer's lock).
@@ -43,8 +47,10 @@ class ConversationPipelinesContainer(containers.DeclarativeContainer):
         PipelineContract[OwnerTestChatCommand, AssistantReply]
     ] = Factory(
         OwnerTestChatPipeline,
+        prepare_test_chat_version=setup_orchestrators.prepare_test_chat_version_orchestrator,
         prepare_test_message=conversation_orchestrators.owner_test_chat_orchestrator,
         turn_orchestrator=conversation_orchestrators.conversation_turn_orchestrator,
+        record_activation_event=setup_orchestrators.record_activation_event_orchestrator,
     )
 
     # --- Voice webhooks.

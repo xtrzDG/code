@@ -1,7 +1,7 @@
 "use client";
 
 import { useI18n } from "@/i18n/client";
-import type { GoLiveCheck, GoLiveReadiness } from "@/lib/assistant/goLive";
+import { billingCheckText, type GoLiveCheck, type GoLiveReadiness } from "@/lib/assistant/goLive";
 
 import { GapList } from "./goLiveFixes";
 
@@ -11,10 +11,7 @@ export function CheckDetail({ check, readiness }: { check: GoLiveCheck; readines
   const details = check.details ?? [];
   switch (check.code) {
     case "subscription_or_trial":
-      if (check.is_ok) {
-        return <>{readiness.subscription_status === "trialing" ? t("assistant.checklist.billingTrial") : t("assistant.checklist.billingActive")}</>;
-      }
-      return <>{details[0] === "none" ? t("assistant.checklist.billingStartTrial") : t("assistant.checklist.billingMissing")}</>;
+      return <>{t(billingCheckText(check, readiness.subscription_status))}</>;
     case "dpa":
       return (
         <>{check.is_ok ? t("assistant.checklist.dpaOk") : t("assistant.checklist.dpaMissing", { version: readiness.dpa_document_version })}</>

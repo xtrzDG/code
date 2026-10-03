@@ -176,6 +176,8 @@ def discover_path_values(
         "business_id": world.business_b,
         "channel": "telegram",
         "step": "faq_and_handoff",
+        "setup_step": "offer",
+        "kind": "went_live",
         "user_id": next(
             str(member["user_id"])
             for member in business_b["members"]
