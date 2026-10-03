@@ -1,5 +1,5 @@
 /**
- * Texts of the cabinet sections: Channels, billing, settings and the platform admin.
+ * Texts of the cabinet sections: Channels, billing, settings (Calls among them) and the platform admin.
  *
  * Top-level keys are namespaces (one per section, e.g. `bookings`). They are
  * spread into en.ts, ru.ts and ka.ts, so they must not clash with the
@@ -17,6 +17,9 @@ import { adminRu } from "./workspace/admin.ru";
 import { billingEn } from "./workspace/billing.en";
 import { billingKa } from "./workspace/billing.ka";
 import { billingRu } from "./workspace/billing.ru";
+import { callSettingsEn } from "./workspace/callSettings.en";
+import { callSettingsKa } from "./workspace/callSettings.ka";
+import { callSettingsRu } from "./workspace/callSettings.ru";
 import { channelsEn } from "./workspace/channels.en";
 import { channelsKa } from "./workspace/channels.ka";
 import { channelsRu } from "./workspace/channels.ru";
@@ -43,6 +46,7 @@ export const workspaceEn = {
   billing: billingEn,
   settings: { ...settingsEn, ...settingsRecordsEn },
   notifications: notificationsEn,
+  callSettings: callSettingsEn,
   admin: adminEn,
 } as const;
 
@@ -53,6 +57,7 @@ export const workspaceRu: Translation<typeof workspaceEn> = {
   billing: billingRu,
   settings: { ...settingsRu, ...settingsRecordsRu },
   notifications: notificationsRu,
+  callSettings: callSettingsRu,
   admin: adminRu,
 };
 
@@ -63,5 +68,6 @@ export const workspaceKa: Translation<typeof workspaceEn> = {
   billing: billingKa,
   settings: { ...settingsKa, ...settingsRecordsKa },
   notifications: notificationsKa,
+  callSettings: callSettingsKa,
   admin: adminKa,
 };

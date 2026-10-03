@@ -15,6 +15,7 @@ from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.contacts import ChannelIdentity, ContactDocument
 from app.schemas.domain.conversations import (
     CallDocument,
+    CallSummary,
     ConversationDocument,
     MessageDocument,
 )
@@ -24,6 +25,7 @@ from app.schemas.dto.demo_data import DemoMessageLine
 from app.schemas.typings.assistants.constrained_strings import LlmModelId
 from app.schemas.typings.assistants.prefixed_id import AssistantVersionId
 from app.schemas.typings.billing.constrained_integers import CostMicroUsd
+from app.schemas.typings.calls.constrained_strings import CallSummaryText
 from app.schemas.typings.contacts.strings import ContactName
 from app.schemas.typings.conversations.constrained_integers import (
     CallDurationSeconds,
@@ -178,10 +180,12 @@ class DemoConversationRecorder:
         outcome: CallOutcome,
         cost_micro_usd: int,
         guard_verdict: CallGuardVerdict | None = None,
+        summaries: Sequence[tuple[str, str]] = (),
     ) -> CallDocument:
         """
         A finished call of a phone conversation; lines "[mm:ss] who: text";
-        `guard_verdict` is what the after-call check found in it.
+        `guard_verdict` is what the after-call check found in it, and
+        `summaries` (language, text) what staff were sent after it.
         """
 
         lines: list[str] = [
@@ -200,6 +204,11 @@ class DemoConversationRecorder:
             cost_micro_usd=CostMicroUsd(cost_micro_usd),
             outcome=outcome,
             guard_verdict=guard_verdict,
+            summaries=[
+                CallSummary(language=LanguageTag(language), text=CallSummaryText(text))
+                for language, text in summaries
+            ],
+            summarized_at=conversation.last_message_at if summaries else None,
             created_at=conversation.created_at,
             updated_at=conversation.last_message_at,
         )

@@ -170,6 +170,23 @@ def record_phone_booking(story: DemoActivityBuilder, caller: ContactDocument) ->
         cost_micro_usd=109_300,
         # Every value said is backed: the parking price is from the FAQ.
         guard_verdict=CallGuardVerdict.CLEAN,
+        summaries=[
+            (
+                "ka",
+                f"დავით მაისურაძემ {day} 18:30-ზე ოთხკაციანი მაგიდა დაჯავშნა "
+                "დარბაზში და პარკინგით დაინტერესდა.",
+            ),
+            (
+                "ru",
+                "Давид Майсурадзе забронировал столик на четверых в зале на "
+                "18:30 и спросил о парковке.",
+            ),
+            (
+                "en",
+                "Davit Maisuradze booked a hall table for four at 18:30 and "
+                "asked about parking.",
+            ),
+        ],
     )
 
 

@@ -23,6 +23,7 @@ export const BUSINESS_PAGES = [
   "settings",
   "settings/team",
   "settings/notifications",
+  "settings/calls",
   "settings/billing",
   "settings/privacy",
   "settings/audit",

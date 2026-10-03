@@ -8,14 +8,16 @@ import { useI18n } from "@/i18n/client";
 
 import { CallRecordingPlayer } from "./CallRecordingPlayer";
 import { callGuardBadge, callGuardFindings } from "./callGuard";
+import { pickCallSummary } from "./callSummary";
 import { CALL_OUTCOMES, formatCallDuration } from "./conversationModel";
 
 /**
  * The phone calls of the conversation: when, how long, what came out of
- * them, what the after-call check of the assistant's spoken values found,
- * the call transcript and a player for the recording (kept by the voice
- * platform, loaded only on play; recordings are deleted after the
- * retention period).
+ * them, the summary written after the call (in the reader's language when
+ * there is one), what the after-call check of the assistant's spoken
+ * values found, the call transcript and a player for the recording (kept
+ * by the voice platform, loaded only on play; recordings are deleted
+ * after the retention period).
  */
 export function CallsCard({ calls }: { calls: readonly CallView[] }) {
   const { t, tp } = useI18n();
@@ -32,9 +34,10 @@ export function CallsCard({ calls }: { calls: readonly CallView[] }) {
 }
 
 function CallItem({ call }: { call: CallView }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const format = useBusinessFormat();
   const guardBadge = callGuardBadge(call);
+  const summary = pickCallSummary(call, locale);
   return (
     <li className="rounded-xl border border-line p-4">
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
@@ -53,6 +56,14 @@ function CallItem({ call }: { call: CallView }) {
           </span>
         ) : null}
       </div>
+      {summary ? (
+        <div className="mt-3 text-sm">
+          <p className="text-ink-muted">{t("conversations.calls.summary")}</p>
+          <p lang={summary.language} dir="auto" className="mt-1 text-ink">
+            {summary.text}
+          </p>
+        </div>
+      ) : null}
       <CallGuardFindingsNotice call={call} />
       <dl className="mt-3 space-y-2 text-sm">
         <div>

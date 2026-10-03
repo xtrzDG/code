@@ -11,6 +11,35 @@ Kinds of change: **Added**, **Changed** (additive), **Deprecated** (with
 sunset date), **Removed** and **Breaking** (only with the `api-breaking`
 label and a migration path).
 
+## 2026-10-03 — calls follow-up: call summaries, missed-call text-backs, Settings → Calls
+
+Spec: `049687053489b322`
+
+- **Added** `GET` and `PUT /v1/businesses/{business_id}/call-settings`
+  (owners; `CallSettingsView`, body `CallSettingsRequest`): summaries after
+  every call on or off (on by default), text-backs on or off (off by
+  default), the WhatsApp utility template name (`^[a-z0-9_]+$`, else 422),
+  the SMS fallback; the view adds `is_whatsapp_connected`,
+  `is_sms_available` and `template_previews` (the body to register with
+  Meta, its parameter `{{1}}` the business name, and what callers read,
+  per language of the business). The change is audited.
+- **Added** `GET /v1/businesses/{business_id}/text-backs` (owners;
+  `limit`, `cursor`; `TextBackPage` of `TextBackView`, newest first): each
+  caller who did not get through with `reason`, `source`, the number,
+  `language`, `status` (`queued`, `sent`, `failed`, `skipped`),
+  `skip_reason`, `channel`, `conversation_id`, `sent_at`, `last_error`.
+  Audited as a view of personal data.
+- **Added** `GET /v1/telephony/zadarma/notifications?zd_echo=` (Zadarma's
+  address check, answers the token as plain text) and
+  `POST /v1/telephony/zadarma/notifications` (form body, `Signature`
+  header; `PbxCallWebhookOutcome` with `status` `recorded`, `duplicate` or
+  `ignored`, `missed_call_id`, `text_back_status`; a wrong or missing
+  signature is 401).
+- **Changed** `CallView` (conversation card) gains `summaries`
+  (`language`, `text`); the post-call webhook also accepts
+  `call_initiation_failure` events (a call the voice platform could not
+  start becomes a missed call; `status` `recorded` or `duplicate`).
+
 ## 2026-10-03 — guided launch: one-call creation, setup progress, starter answers, "Apply changes", trial at go-live
 
 Spec: `a4c5c025e7a96d6c`

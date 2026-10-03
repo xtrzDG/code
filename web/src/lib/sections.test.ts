@@ -36,6 +36,7 @@ describe("the five sections", () => {
     expect(visiblePages("assistant", "staff").map((entry) => entry.page)).toEqual(["assistant"]);
     expect(visiblePages("messages", "staff")).toHaveLength(3);
     expect(canOpenPage("settings/billing", "staff")).toBe(false);
+    expect(canOpenPage("settings/calls", "staff")).toBe(false);
     expect(canOpenPage("assistant/knowledge", "staff")).toBe(false);
     expect(canOpenPage("messages/leads", "staff")).toBe(true);
   });
