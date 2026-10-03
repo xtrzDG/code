@@ -70,6 +70,7 @@ export const SECTION_PAGES: Record<BusinessSection, readonly PageEntry[]> = {
     // Everyone turns notifications on for their own devices; owners also manage the staff contacts.
     { page: "settings/notifications", label: "navigation.pages.settingsNotifications", roles: EVERYONE },
     { page: "settings/calls", label: "navigation.pages.settingsCalls", roles: OWNERS },
+    { page: "settings/reviews", label: "navigation.pages.settingsReviews", roles: OWNERS },
     { page: "settings/billing", label: "navigation.pages.settingsBilling", roles: OWNERS },
     { page: "settings/privacy", label: "navigation.pages.settingsPrivacy", roles: OWNERS },
     { page: "settings/audit", label: "navigation.pages.settingsAudit", roles: OWNERS },
@@ -89,6 +90,7 @@ export const PAGE_DESCRIPTIONS: Partial<Record<BusinessPage, MessageKey>> = {
   "assistant/channels": "pages.channels.description",
   "assistant/versions": "navigation.descriptions.assistantVersions",
   "settings/calls": "callSettings.description",
+  "settings/reviews": "reviewSettings.description",
   "settings/billing": "pages.billing.description",
 };
 

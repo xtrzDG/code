@@ -87,6 +87,9 @@ export const settingsRecordsEn = {
       conversation_note: "Team note",
       quick_reply: "Quick reply",
       inbox_settings: "Auto-assignment",
+      message_opt_out: "Customer opt-out of messages",
+      review_settings: "Review settings",
+      feedback_request: "Feedback requests",
     },
   },
   roles: {
@@ -110,6 +113,7 @@ export const settingsRecordsEn = {
     erasedName: "Erased customer",
     erasedOn: "Data erased {date}",
     verifiedPhone: "Verified phone",
+    optedOut: "Replied STOP",
     bookings: { one: "{count} booking", other: "{count} bookings" },
     leads: { one: "{count} request", other: "{count} requests" },
     lastActivity: "Last activity {date}",

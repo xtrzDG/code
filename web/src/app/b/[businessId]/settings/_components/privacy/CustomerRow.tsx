@@ -42,6 +42,9 @@ export function CustomerRow({
           )}
           {isErased ? <Badge tone="neutral">{t("settings.customers.erased")}</Badge> : null}
           {!isErased && contact.is_phone_verified ? <Badge tone="success">{t("settings.customers.verifiedPhone")}</Badge> : null}
+          {!isErased && (contact.opted_out_channels ?? []).length > 0 ? (
+            <Badge tone="warning">{t("settings.customers.optedOut")}</Badge>
+          ) : null}
         </p>
         <p className="mt-0.5 text-xs text-ink-muted">
           {[

@@ -151,6 +151,7 @@ export const onboardingEn = {
         delivery: "Delivery",
         website: "Website",
         privacy: "Privacy notice",
+        google_review: "Google reviews",
       },
       recordingNotice: "Say that calls are recorded",
       recordingNoticeHint: "The assistant says it at the start of every call. Required by law in many countries.",

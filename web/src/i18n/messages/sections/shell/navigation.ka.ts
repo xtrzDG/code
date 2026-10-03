@@ -34,6 +34,7 @@ export const navigationKa: Translation<typeof navigationEn> = {
     settingsTeam: "გუნდი",
     settingsNotifications: "შეტყობინებები",
     settingsCalls: "ზარები",
+    settingsReviews: "შეფასებები",
     settingsBilling: "ტარიფი და გადახდა",
     settingsPrivacy: "კონფიდენციალურობა",
     settingsAudit: "მოქმედებების ჟურნალი",

@@ -160,6 +160,7 @@ export const onboardingRu: Translation<typeof onboardingEn> = {
         delivery: "Доставка",
         website: "Сайт",
         privacy: "Политика конфиденциальности",
+        google_review: "Отзывы в Google",
       },
       recordingNotice: "Предупреждать о записи звонка",
       recordingNoticeHint: "Помощник говорит об этом в начале каждого звонка. Во многих странах этого требует закон.",

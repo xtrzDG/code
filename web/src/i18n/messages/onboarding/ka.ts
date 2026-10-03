@@ -150,6 +150,7 @@ export const onboardingKa: Translation<typeof onboardingEn> = {
         delivery: "მიტანა",
         website: "ვებსაიტი",
         privacy: "კონფიდენციალურობის პოლიტიკა",
+        google_review: "Google-ის შეფასებები",
       },
       recordingNotice: "ზარის ჩაწერის შესახებ გაფრთხილება",
       recordingNoticeHint: "ასისტენტი ამას ყოველი ზარის დასაწყისში ამბობს. ბევრ ქვეყანაში ამას კანონი მოითხოვს.",

@@ -35,6 +35,7 @@ export const navigationEn = {
     settingsTeam: "Team",
     settingsNotifications: "Notifications",
     settingsCalls: "Calls",
+    settingsReviews: "Reviews",
     settingsBilling: "Plan and billing",
     settingsPrivacy: "Privacy",
     settingsAudit: "Audit log",

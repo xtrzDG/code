@@ -94,6 +94,9 @@ export const settingsRecordsRu: Translation<typeof settingsRecordsEn> = {
       conversation_note: "Заметка команды",
       quick_reply: "Быстрый ответ",
       inbox_settings: "Автоматическое назначение",
+      message_opt_out: "Отказ клиента от рассылок",
+      review_settings: "Настройки отзывов",
+      feedback_request: "Запросы отзывов",
     },
   },
   roles: {
@@ -117,6 +120,7 @@ export const settingsRecordsRu: Translation<typeof settingsRecordsEn> = {
     erasedName: "Клиент удалён",
     erasedOn: "Данные удалены {date}",
     verifiedPhone: "Телефон подтверждён",
+    optedOut: "Ответил СТОП",
     bookings: {
       one: "{count} бронь",
       few: "{count} брони",

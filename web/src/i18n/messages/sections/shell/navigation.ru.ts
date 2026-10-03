@@ -34,6 +34,7 @@ export const navigationRu: Translation<typeof navigationEn> = {
     settingsTeam: "Команда",
     settingsNotifications: "Уведомления",
     settingsCalls: "Звонки",
+    settingsReviews: "Отзывы",
     settingsBilling: "Тариф и оплата",
     settingsPrivacy: "Приватность",
     settingsAudit: "Журнал действий",

@@ -1,5 +1,5 @@
 /**
- * Texts of the cabinet sections: Channels, billing, settings (Calls among them) and the platform admin.
+ * Texts of the cabinet sections: Channels, billing, settings (Calls and Reviews among them) and the platform admin.
  *
  * Top-level keys are namespaces (one per section, e.g. `bookings`). They are
  * spread into en.ts, ru.ts and ka.ts, so they must not clash with the
@@ -35,6 +35,9 @@ import { notificationsRu } from "./workspace/notifications.ru";
 import { privacyNoticeEn } from "./workspace/privacyNotice.en";
 import { privacyNoticeKa } from "./workspace/privacyNotice.ka";
 import { privacyNoticeRu } from "./workspace/privacyNotice.ru";
+import { reviewSettingsEn } from "./workspace/reviewSettings.en";
+import { reviewSettingsKa } from "./workspace/reviewSettings.ka";
+import { reviewSettingsRu } from "./workspace/reviewSettings.ru";
 import { settingsEn } from "./workspace/settings.en";
 import { settingsKa } from "./workspace/settings.ka";
 import { settingsRu } from "./workspace/settings.ru";
@@ -53,6 +56,7 @@ export const workspaceEn = {
   settings: { ...settingsEn, ...settingsRecordsEn },
   notifications: notificationsEn,
   callSettings: callSettingsEn,
+  reviewSettings: reviewSettingsEn,
   admin: adminEn,
   share: shareEn,
   privacyNotice: privacyNoticeEn,
@@ -66,6 +70,7 @@ export const workspaceRu: Translation<typeof workspaceEn> = {
   settings: { ...settingsRu, ...settingsRecordsRu },
   notifications: notificationsRu,
   callSettings: callSettingsRu,
+  reviewSettings: reviewSettingsRu,
   admin: adminRu,
   share: shareRu,
   privacyNotice: privacyNoticeRu,
@@ -79,6 +84,7 @@ export const workspaceKa: Translation<typeof workspaceEn> = {
   settings: { ...settingsKa, ...settingsRecordsKa },
   notifications: notificationsKa,
   callSettings: callSettingsKa,
+  reviewSettings: reviewSettingsKa,
   admin: adminKa,
   share: shareKa,
   privacyNotice: privacyNoticeKa,

@@ -138,6 +138,16 @@ export const queryKeys = {
     textBacks: (businessId: Id) => ["calls", businessId, "textBacks"] as const,
   },
 
+  reviews: {
+    all: (businessId: Id) => ["reviews", businessId] as const,
+    /** Settings → Reviews: feedback after visits, the review link, the template texts. */
+    settings: (businessId: Id) => ["reviews", businessId, "settings"] as const,
+    /** The last 30 days in numbers. */
+    stats: (businessId: Id) => ["reviews", businessId, "stats"] as const,
+    /** The latest visits asked about (audited as a view). */
+    requests: (businessId: Id) => ["reviews", businessId, "requests"] as const,
+  },
+
   notifications: {
     all: (businessId: Id) => ["notifications", businessId] as const,
     /** Staff contacts with their delivery state. */
