@@ -8,6 +8,9 @@ import tempfile
 from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
+from typing import LiteralString
+
+from psycopg import sql
 
 from app.gateways.cli import backup, restore_check
 from app.gateways.cli.backup_wiring import build_bucket
@@ -69,13 +72,15 @@ class BackupDrillWorld:
                             business_id if table == "businesses" else f"{table}_{index}"
                         )
                         connection.execute(
-                            f"insert into workshop.{table} (document_key, business_id,"  # noqa: S608
-                            " document, created_at, updated_at)"
-                            " values (%s, %s, '{}', 1, 1)",
+                            sql.SQL(
+                                "insert into workshop.{} (document_key, business_id,"
+                                " document, created_at, updated_at)"
+                                " values (%s, %s, '{{}}', 1, 1)"
+                            ).format(sql.Identifier(table)),
                             [f"{business_id}_{key}", business_id],
                         )
 
-    def run_as_admin(self, statement: str) -> None:
+    def run_as_admin(self, statement: LiteralString) -> None:
         with self.server.admin_connection(self.database_name) as connection:
             connection.execute(statement)
 

@@ -27,9 +27,9 @@ from app.gateways.cli.backup_wiring import (
     EXIT_FAILED,
     EXIT_NOT_CONFIGURED,
     EXIT_OK,
-    MonitoredRun,
     build_bucket,
     load_settings,
+    monitored_run,
     work_directory,
 )
 from app.operators.pipeline_operator import PipelineOperator
@@ -100,7 +100,7 @@ def main(
             )
 
     try:
-        report: DatabaseBackupReport = MonitoredRun(
+        report: DatabaseBackupReport = monitored_run(
             settings, BACKUP_JOB, BACKUP_INTERVAL
         ).run(take_backup, lambda _report: True)
     except Exception as error:  # noqa: BLE001 - reported, then the exit code

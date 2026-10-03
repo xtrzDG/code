@@ -13,7 +13,10 @@ from typing import TextIO
 from typed_time_provider import Microseconds, WallClock
 
 from app.clients.object_storage.s3_backup_bucket_client import S3BackupBucketClient
-from app.contracts.observability import JobMonitorFacilitatorContract
+from app.contracts.observability import (
+    ErrorReportingFacilitatorContract,
+    JobMonitorFacilitatorContract,
+)
 from app.facilitators.observability.job_monitor_factory import (
     build_job_monitor_facilitator,
 )
@@ -69,29 +72,44 @@ def work_directory(parent: str | None) -> Generator[LocalDirectoryPath]:
         yield LocalDirectoryPath(path)
 
 
+def monitored_run(
+    settings: AppSettings,
+    job_name: JobName,
+    interval: JobIntervalSeconds,
+) -> MonitoredRun:
+    """A run reported to Sentry when SENTRY_DSN is set, else to the log."""
+
+    error_reporter = SentryErrorReportingFacilitator(
+        dsn=settings.sentry_dsn,
+        environment=settings.environment,
+        release=settings.release_version,
+    )
+    return MonitoredRun(
+        job_name=job_name,
+        interval=interval,
+        error_reporter=error_reporter,
+        monitor=build_job_monitor_facilitator(error_reporter),
+    )
+
+
 class MonitoredRun:
     """
-    One run of a scheduled command, reported to Sentry when SENTRY_DSN is
-    set: a Crons check-in when it starts and ends (a run that never comes
-    shows up as missed) and the error that failed it.
+    One run of a scheduled command: a Crons check-in when it starts and
+    ends (a run that never comes shows up as missed) and the error that
+    failed it.
     """
 
     def __init__(
         self,
-        settings: AppSettings,
         job_name: JobName,
         interval: JobIntervalSeconds,
+        error_reporter: ErrorReportingFacilitatorContract,
+        monitor: JobMonitorFacilitatorContract,
     ) -> None:
-        self._error_reporter = SentryErrorReportingFacilitator(
-            dsn=settings.sentry_dsn,
-            environment=settings.environment,
-            release=settings.release_version,
-        )
-        self._monitor: JobMonitorFacilitatorContract = build_job_monitor_facilitator(
-            self._error_reporter
-        )
         self._job_name: JobName = job_name
         self._interval: JobIntervalSeconds = interval
+        self._error_reporter: ErrorReportingFacilitatorContract = error_reporter
+        self._monitor: JobMonitorFacilitatorContract = monitor
 
     def run[Result](
         self,

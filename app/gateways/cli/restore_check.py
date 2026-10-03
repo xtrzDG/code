@@ -35,9 +35,9 @@ from app.gateways.cli.backup_wiring import (
     EXIT_FAILED,
     EXIT_NOT_CONFIGURED,
     EXIT_OK,
-    MonitoredRun,
     build_bucket,
     load_settings,
+    monitored_run,
     work_directory,
 )
 from app.gateways.cli.migrate import DEFAULT_MIGRATIONS_DIRECTORY
@@ -130,7 +130,7 @@ def main(
                 )
             )
 
-    monitored = MonitoredRun(settings, RESTORE_DRILL_JOB, RESTORE_DRILL_INTERVAL)
+    monitored = monitored_run(settings, RESTORE_DRILL_JOB, RESTORE_DRILL_INTERVAL)
     try:
         report: RestoreCheckReport = monitored.run(
             run_drill, lambda result: not result.problems

@@ -1,7 +1,7 @@
 """The backup bucket client against moto's S3 server and scripted replies."""
 
 import os
-from collections.abc import Callable
+from collections.abc import Callable, Generator
 from pathlib import Path
 
 import httpx
@@ -48,7 +48,7 @@ def file_with(path: Path, content: bytes) -> LocalFilePath:
 
 
 @pytest.fixture(scope="module")
-def storage() -> MotoStorage:
+def storage() -> Generator[MotoStorage]:
     with moto_storage() as running:
         yield running
 
