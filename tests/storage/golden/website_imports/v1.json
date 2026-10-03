@@ -1,0 +1,22 @@
+{
+  "batch_id": "menu_import_c4ddf5fc-3523-4fd9-9f6a-9eedee6940f3",
+  "business_id": "business_46d6aecf-f4d0-4ad4-a40f-958d09a29942",
+  "cost_micro_usd": 1,
+  "created_at": 1790000000000000,
+  "finished_at": 1790000000000000,
+  "id": "website_import_record_50867e7d-bfa1-525f-a305-5b33bd2bafb3",
+  "import_id": "website_import_a091cd94-86d7-4ee5-af91-87571f6ca69b",
+  "items_found": 1,
+  "pages_planned": 1,
+  "pages_read": 1,
+  "pages_skipped": 1,
+  "problem": "website_link_invalid",
+  "problem_detail": "http_status:404",
+  "requested_by": "user_7eafe2aa-b553-4cd1-92ec-73fb38373bb5",
+  "schema_version": "1",
+  "skipped_line_count": 1,
+  "started_at": 1790000000000000,
+  "status": "queued",
+  "updated_at": 1790000000000000,
+  "url": "https://example.com/menu"
+}

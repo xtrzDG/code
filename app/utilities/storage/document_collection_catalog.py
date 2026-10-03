@@ -62,6 +62,7 @@ from app.schemas.domain.users import (
     UserDocument,
     UserSessionDocument,
 )
+from app.schemas.domain.website_imports import WebsiteImportDocument
 from app.schemas.exceptions.application_errors import NotFoundError
 from app.schemas.typings.storage.constrained_strings import DocumentCollectionName
 
@@ -205,6 +206,10 @@ DOCUMENT_COLLECTIONS: tuple[DocumentCollectionDefinition, ...] = (
     ),
     DocumentCollectionDefinition(
         DocumentCollectionName("assistant_applies"), AssistantApplyDocument
+    ),
+    # The current knowledge import from each business's website (1054).
+    DocumentCollectionDefinition(
+        DocumentCollectionName("website_imports"), WebsiteImportDocument
     ),
 )
 

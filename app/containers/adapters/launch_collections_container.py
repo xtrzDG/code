@@ -11,14 +11,17 @@ from app.schemas.domain.setup import (
     AssistantApplyDocument,
     SetupStateDocument,
 )
+from app.schemas.domain.website_imports import WebsiteImportDocument
 
 
 class LaunchCollectionsContainer(containers.DeclarativeContainer):
     """
     The document collections of the guided launch (migration 1044): each
     business's milestones, the setup steps it skipped and its current
-    "Apply changes". A sibling of DocumentCollectionsContainer with the
-    same storage factory (Postgres with DATABASE_URL, else in memory).
+    "Apply changes"; and its current knowledge import from its website
+    (migration 1054), which the wizard offers too. A sibling of
+    DocumentCollectionsContainer with the same storage factory (Postgres
+    with DATABASE_URL, else in memory).
     """
 
     clients: ClientsContainer = DependenciesContainer()  # type: ignore[assignment]
@@ -40,6 +43,14 @@ class LaunchCollectionsContainer(containers.DeclarativeContainer):
     assistant_apply_collection = document_collection(
         AssistantApplyDocument,
         "assistant_applies",
+        config,
+        clients,
+        utilities,
+        time_provider,
+    )
+    website_import_collection = document_collection(
+        WebsiteImportDocument,
+        "website_imports",
         config,
         clients,
         utilities,

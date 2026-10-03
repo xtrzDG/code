@@ -84,6 +84,7 @@ from app.repositories.user_repositories import (
     UserRepository,
     UserSessionRepository,
 )
+from app.repositories.website_import_repository import WebsiteImportRepository
 from app.repositories.worker_heartbeat_repository import WorkerHeartbeatRepository
 
 
@@ -280,6 +281,11 @@ class RepositoriesContainer(containers.DeclarativeContainer):
     assistant_apply_repo: Singleton[AssistantApplyRepository] = Singleton(
         AssistantApplyRepository,
         collection=launch_collections.assistant_apply_collection,
+    )
+    # The current website import of each business (1054).
+    website_import_repo: Singleton[WebsiteImportRepository] = Singleton(
+        WebsiteImportRepository,
+        collection=launch_collections.website_import_collection,
     )
     activation_probe_repo: Singleton[ActivationProbeRepository] = Singleton(
         ActivationProbeRepository,
