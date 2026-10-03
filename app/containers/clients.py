@@ -8,6 +8,7 @@ from app.clients.anthropic.anthropic_messages_client import AnthropicMessagesCli
 from app.clients.email.smtp_email_client import SmtpEmailClient
 from app.clients.flitt.flitt_client import FlittClient
 from app.clients.google.google_calendar_client import GoogleCalendarClient
+from app.clients.http.safe_http_fetcher import SafeHttpFetcher
 from app.clients.langfuse.langfuse_ingestion_client import LangfuseIngestionClient
 from app.clients.meta.meta_graph_client import MetaGraphClient
 from app.clients.meta.whatsapp_authentication_client import (
@@ -42,6 +43,7 @@ from app.containers.factories import (
 from app.containers.notification_factories import build_web_push_client
 from app.contracts.channel_clients import ElevenLabsApiClientContract
 from app.contracts.object_storage import ObjectStorageClientContract
+from app.contracts.web_fetching import SafeHttpFetcherContract
 
 
 class ClientsContainer(containers.DeclarativeContainer):
@@ -118,3 +120,6 @@ class ClientsContainer(containers.DeclarativeContainer):
         build_web_push_client,
         settings=config.app_settings,
     )
+    # Outside web addresses (a business's website, menu links): public
+    # addresses only, connected at the vetted address (the SSRF guard).
+    safe_http_fetcher: Singleton[SafeHttpFetcherContract] = Singleton(SafeHttpFetcher)

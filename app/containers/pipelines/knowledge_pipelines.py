@@ -88,3 +88,14 @@ class KnowledgePipelinesContainer(containers.DeclarativeContainer):
     discard_import_batch_pipeline = orchestrator_pipeline(
         knowledge_orchestrators.discard_import_batch_orchestrator
     )
+
+    # --- Website import.
+    start_website_import_pipeline = orchestrator_pipeline(
+        knowledge_orchestrators.start_website_import_orchestrator
+    )
+    get_website_import_pipeline = orchestrator_pipeline(
+        knowledge_orchestrators.get_website_import_orchestrator
+    )
+    run_website_import_pipeline = orchestrator_pipeline(
+        knowledge_orchestrators.run_website_import_orchestrator
+    )

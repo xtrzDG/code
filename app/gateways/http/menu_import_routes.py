@@ -34,7 +34,8 @@ IMPORT_RESPONSES: dict[int | str, dict[str, Any]] = {
         "model": ErrorBody,
         "description": (
             "The source cannot be read. For a link, reasons[].code is "
-            "menu_link_invalid (not a public http(s) address), "
+            "menu_link_invalid (not a public http(s) address on port 80 or "
+            "443), "
             "menu_link_unreachable (unknown host, timeout, no connection, HTTP "
             "error, redirect trouble) or menu_link_unreadable (too large, not "
             "a photo, PDF, text or web page), with details such as "

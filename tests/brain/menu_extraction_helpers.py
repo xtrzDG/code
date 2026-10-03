@@ -2,14 +2,12 @@
 
 import base64
 import json
-from collections.abc import Callable
 from typing import Any
-
-import httpx
 
 from app.adapters.llm.menu_extraction.menu_extraction_adapter import (
     MenuExtractionAdapter,
 )
+from app.clients.http.safe_http_fetcher import SafeHttpFetcher
 from app.schemas.dto.menu_import import MenuExtractionRequest
 from app.schemas.exceptions.application_errors import ValidationFailedError
 from app.schemas.typings.assistants.constrained_strings import LlmModelId
@@ -28,6 +26,7 @@ from tests.brain.provider_http_fakes import (
     openai_message_item,
     openai_response,
 )
+from tests.web_fetching.fetch_fakes import FakeNetwork
 
 MENU_JSON: dict[str, Any] = {
     "items": [
@@ -72,18 +71,15 @@ PNG_BYTES: bytes = b"\x89PNG\r\n\x1a\n-menu-photo"
 
 def build_adapter(
     http: ScriptedHttp,
-    page_handler: Any = None,
-    addresses: list[str] | None = None,
+    network: FakeNetwork | None = None,
 ) -> MenuExtractionAdapter:
+    """The adapter, reading menu links from `network` (none: no links)."""
+
+    pages: FakeNetwork = FakeNetwork({}) if network is None else network
     return MenuExtractionAdapter(
         client=build_openai_client(http),
         model_id=LlmModelId("gpt-5-mini"),
-        page_transport=None
-        if page_handler is None
-        else httpx.MockTransport(page_handler),
-        host_resolver=lambda host: (
-            ["93.184.216.34"] if addresses is None else addresses
-        ),
+        page_fetcher=SafeHttpFetcher(resolver=pages.resolve, connector=pages.connect),
     )
 
 
@@ -115,24 +111,3 @@ def link_request(url: str = "https://cafe.example/menu") -> MenuExtractionReques
         data_base64=None,
         url=WebLink(url),
     )
-
-
-def respond(
-    status_code: int,
-    headers: dict[str, str] | None = None,
-    content: bytes = b"",
-) -> Callable[[httpx.Request], httpx.Response]:
-    """A page handler that answers every request the same way."""
-
-    def serve(request: httpx.Request) -> httpx.Response:
-        del request
-        return httpx.Response(status_code, headers=headers, content=content)
-
-    return serve
-
-
-def fail_with(error: httpx.HTTPError) -> Any:
-    def serve(request: httpx.Request) -> httpx.Response:
-        raise error
-
-    return serve

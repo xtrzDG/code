@@ -90,3 +90,14 @@ class KnowledgeOrchestratorsContainer(containers.DeclarativeContainer):
     discard_import_batch_orchestrator = use_case_orchestrator(
         menu_import_use_cases.discard_import_batch_use_case
     )
+
+    # --- Website import.
+    start_website_import_orchestrator = use_case_orchestrator(
+        menu_import_use_cases.start_website_import_use_case
+    )
+    get_website_import_orchestrator = use_case_orchestrator(
+        menu_import_use_cases.get_website_import_use_case
+    )
+    run_website_import_orchestrator = use_case_orchestrator(
+        menu_import_use_cases.run_website_import_use_case
+    )

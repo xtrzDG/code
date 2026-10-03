@@ -29,6 +29,7 @@ from app.gateways.http.user_authentication import (
 )
 from app.gateways.http.users_routes import build_users_router
 from app.gateways.http.voice_routes import build_voice_router
+from app.gateways.http.website_import_routes import build_website_import_router
 from app.gateways.http.widget_error_routes import build_widget_error_router
 from app.gateways.http.widget_script_routes import build_widget_script_router
 
@@ -125,6 +126,11 @@ def build_application_routers(app_container: AppContainer) -> list[APIRouter]:
             import_menu_operator=knowledge.import_menu_operator(),
             confirm_imported_items_operator=knowledge.confirm_imported_items_operator(),
             discard_import_batch_operator=knowledge.discard_import_batch_operator(),
+            current_user=current_user,
+        ),
+        build_website_import_router(
+            start_website_import_operator=knowledge.start_website_import_operator(),
+            get_website_import_operator=knowledge.get_website_import_operator(),
             current_user=current_user,
         ),
         build_resource_router(
