@@ -12,6 +12,12 @@ import { API_URL } from "./support/env";
 import { expect, test } from "./support/fixtures";
 import { openChatBusiness } from "./support/hosted-chat";
 
+const WIDGET_CORS = {
+  "access-control-allow-origin": "*",
+  "access-control-allow-methods": "GET, POST, OPTIONS",
+  "access-control-allow-headers": "Content-Type, X-Widget-Session-Key",
+};
+
 test("the chat page opens the business's chat in English at its current address, out of search engines", async ({
   page,
   request,
@@ -34,13 +40,11 @@ test("the chat page opens the business's chat in English at its current address,
   await expect(page.getByText("AI assistant · can make mistakes")).toBeVisible();
   await expect(page.getByRole("link", { name: "Privacy" })).toHaveAttribute("href", new RegExp(`/c/${business.slug}/privacy$`));
 
-  await page.getByRole("textbox").fill("Do you have a terrace?");
-  await page.getByRole("textbox").press("Enter");
-  await expect(page.locator(".aw-message", { hasText: "Do you have a terrace?" })).toBeVisible();
   // The visitor key stays in the browser, never in the address.
   const sessionKey = await page.evaluate((id) => localStorage.getItem(`aw-chat:${id}:session`), business.id);
   expect(sessionKey).toMatch(/^v1_/);
   expect(page.url()).not.toContain(sessionKey ?? "-");
+  await expect(page.getByRole("textbox")).toBeEditable();
 });
 
 test.describe("in Georgian", () => {
@@ -71,15 +75,36 @@ test.describe("in Hebrew", () => {
     const direction = page.locator("[data-assistant-workshop-chat]").locator(".aw");
     await expect(direction).toHaveAttribute("dir", "rtl");
 
+    // A new business is not live yet, so the API would refuse; stand in for its answer.
+    const handoffs: unknown[] = [];
+    await page.route("**/v1/widget/*/handoff", async (route) => {
+      if (route.request().method() === "OPTIONS") {
+        await route.fulfill({ status: 204, headers: WIDGET_CORS });
+        return;
+      }
+      handoffs.push(route.request().postDataJSON());
+      await route.fulfill({
+        headers: WIDGET_CORS,
+        json: { conversation_id: "conversation_1", is_handed_off: true, message_id: null, text: null, language: "he", direction: "rtl" },
+      });
+    });
     await page.getByRole("button", { name: "לדבר עם נציג" }).click();
 
     await expect(page.getByRole("button", { name: "לדבר עם נציג" })).toBeHidden();
-    // The greeting, then what the visitor is told (the API's text or the widget's own).
+    // The greeting, then the widget's own notice in Hebrew.
     await expect(page.locator(".aw-message, .aw-notice")).toHaveCount(2);
+    await expect(page.locator(".aw-notice")).not.toHaveText(/passed to our team/);
+    expect(handoffs).toEqual([{ session_key: expect.stringMatching(/^v1_/), language: "he" }]);
   });
 });
 
-test("the privacy notice names the business, and an unknown address says so", async ({ page, request, account }) => {
+test("the privacy notice names the business, and an unknown address says so", async ({
+  page,
+  request,
+  account,
+  consoleErrors,
+}) => {
+  consoleErrors.allow(/status of 404 \(Not Found\).*\/c\/no-chat-/);
   const business = await openChatBusiness(request, account.token);
 
   await page.goto(`/c/${business.slug}/privacy`);

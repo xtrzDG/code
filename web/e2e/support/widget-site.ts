@@ -152,7 +152,8 @@ export async function serveSite(context: BrowserContext, api: FakeWidgetApi, opt
     });
   });
   await context.route(`${API}/widget.js`, (route) =>
-    route.fulfill({ contentType: "application/javascript", body: WIDGET_SOURCE }),
+    // UTF-8 like the real API: the host page itself declares no charset.
+    route.fulfill({ contentType: "application/javascript; charset=utf-8", body: WIDGET_SOURCE }),
   );
   await context.route(`${API}/v1/widget/**`, (route) => api.handle(route));
 }

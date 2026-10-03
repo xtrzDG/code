@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { headers } from "next/headers";
-import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
 
 import { getI18n } from "@/i18n/server";
@@ -82,7 +81,8 @@ export default async function PrivacyNoticePage({ params }: PageProps<"/c/[slug]
         ))}
         <p className="hc-document-lead">{t("privacyNotice.platformNote", values)}</p>
         <p>
-          <Link href={hostedChatPath(view.slug ?? slug)}>{t("privacyNotice.backToChat")}</Link>
+          {/* A full page load: the chat page gets its own policy from the proxy. */}
+          <a href={hostedChatPath(view.slug ?? slug)}>{t("privacyNotice.backToChat")}</a>
         </p>
       </article>
     </HostedChatShell>

@@ -33,11 +33,16 @@ async function readQrPng(page: Page, download: Download): Promise<string | null>
   return jsQR(Uint8ClampedArray.from(image.pixels), image.side, image.side)?.data ?? null;
 }
 
+/** The website chat's embed code needs APP_BASE_URL, which the suite's API does not set. */
+const SNIPPET_UNAVAILABLE = /status of 502 \(Bad Gateway\).*\/channels\/web\/snippet/;
+
 test("the Share card gives a tagged chat page link whose QR code, files and table card open it", async ({
   page,
   request,
   account,
+  consoleErrors,
 }) => {
+  consoleErrors.allow(SNIPPET_UNAVAILABLE);
   const business = await openChatBusiness(request, account.token);
   await page.goto(`/b/${business.id}/assistant/channels`);
   const share = page.getByRole("region", { name: en.share.title });
@@ -68,7 +73,13 @@ test("the Share card gives a tagged chat page link whose QR code, files and tabl
   await expect(card.getByText(`${new URL(WEB_URL).host}/c/${business.slug}?src=table`)).toBeVisible();
 });
 
-test("a new chat page address is taken at once, and the old one leads to it", async ({ page, request, account }) => {
+test("a new chat page address is taken at once, and the old one leads to it", async ({
+  page,
+  request,
+  account,
+  consoleErrors,
+}) => {
+  consoleErrors.allow(SNIPPET_UNAVAILABLE);
   const business = await openChatBusiness(request, account.token);
   const address = `shalom-${uniqueSuffix()}`;
   await page.goto(`/b/${business.id}/assistant/channels`);
