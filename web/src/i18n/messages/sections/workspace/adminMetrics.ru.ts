@@ -33,7 +33,7 @@ export const adminMetricsRu: Translation<typeof adminMetricsEn> = {
     wentLive: "Запустились",
     ofSignUps: "{percent} от регистраций",
     timeToLive: "Медианное время до запуска",
-    timeToLiveDetail: "От регистрации до первого запущенного ассистента",
+    timeToLiveDetail: "От регистрации до первого запущенного помощника",
     activation: "Активированы за 7 дней",
     activationDetail: "{activated} из {eligible} бизнесов; {pending} ещё в первой неделе",
     trialToPaid: "Из пробного в оплату",
@@ -81,7 +81,7 @@ export const adminMetricsRu: Translation<typeof adminMetricsEn> = {
   tunnel: {
     title: "Туннель настройки",
     description:
-      "Экраны «Создать ИИ-ассистента»: сколько владельцев открыли, прошли и пропустили каждый, и где остановились те, кто так и не запустился.",
+      "Экраны «Создать AI-помощника»: сколько владельцев открыли, прошли и пропустили каждый, и где остановились те, кто так и не запустился.",
     screen: "Экран",
     entered: "Открыли",
     completed: "Прошли",
@@ -162,7 +162,7 @@ export const adminMetricsRu: Translation<typeof adminMetricsEn> = {
     empty: "Источников пока нет.",
   },
   vitals: {
-    title: "Web Vitals",
+    title: "Скорость страниц кабинета (Web Vitals)",
     description: "75-й перцентиль страниц кабинета для вошедших пользователей за период, оценка по порогам Google.",
     page: "Страница",
     device: "Устройство",

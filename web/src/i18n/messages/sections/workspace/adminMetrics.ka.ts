@@ -154,7 +154,7 @@ export const adminMetricsKa: Translation<typeof adminMetricsEn> = {
     empty: "წყაროები ჯერ არ არის.",
   },
   vitals: {
-    title: "Web Vitals",
+    title: "კაბინეტის გვერდების სიჩქარე (Web Vitals)",
     description: "კაბინეტის გვერდების 75-ე პროცენტილი შესული მომხმარებლებისთვის პერიოდში, Google-ის ზღვრებით შეფასებული.",
     page: "გვერდი",
     device: "მოწყობილობა",
