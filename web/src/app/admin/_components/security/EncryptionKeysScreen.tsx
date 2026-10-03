@@ -67,7 +67,7 @@ function KeyRingCard({ keyCount }: { keyCount: number }) {
   const { t, tp, locale } = useI18n();
   const olderKeys = keyCount - 1;
   return (
-    <Card title={t("adminSecurity.ring.title")}>
+    <Card aria-label={t("adminSecurity.ring.title")} title={t("adminSecurity.ring.title")}>
       <div className="space-y-3">
         <Facts items={[{ label: t("adminSecurity.ring.keyCount"), value: formatNumber(keyCount, locale) }]} />
         <p className="text-sm text-ink-muted">

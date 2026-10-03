@@ -23,6 +23,7 @@ import {
   ARTIFACTS_DIRECTORY,
   E2E_VAPID_PRIVATE_KEY,
   E2E_VAPID_PUBLIC_KEY,
+  PLATFORM_ADMIN_EMAIL,
   REPOSITORY_ROOT,
   WEB_DIRECTORY,
   WEB_PORT,
@@ -116,6 +117,8 @@ export default defineConfig({
         OTP_SENDS_PER_IP_PER_HOUR: "100000",
         OTP_VERIFIES_PER_IP_PER_10_MINUTES: "100000",
         OTP_SENDS_PER_COUNTRY_PER_HOUR: "100000",
+        // One platform admin for the admin pages (encryption-keys.spec.ts).
+        PLATFORM_ADMIN_EMAILS: PLATFORM_ADMIN_EMAIL,
         // Notification links lead to this cabinet; device notifications go
         // to the push service a test starts (notifications.spec.ts).
         CABINET_BASE_URL: WEB_URL,

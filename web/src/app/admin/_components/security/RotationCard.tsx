@@ -41,6 +41,7 @@ export function RotationCard({ latest, keyCount, isRunning, isStarting, startErr
 
   return (
     <Card
+      aria-label={t("adminSecurity.run.title")}
       title={t("adminSecurity.run.title")}
       description={t("adminSecurity.run.description")}
       actions={

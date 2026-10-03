@@ -29,3 +29,6 @@ export const API_LOG_PATH = path.join(ARTIFACTS_DIRECTORY, "api.log");
  */
 export const E2E_VAPID_PUBLIC_KEY = "BCLJ-FEI59ekpdxEjnCQyhvo4e9t5e69gJwPrZLPLkp2tGkJ2aB6iqFph27ulfJ6h4Barq-NsmZFIumwXoK5RRE";
 export const E2E_VAPID_PRIVATE_KEY = "TvFxPI0UYWj6Tk2K1oObluuz01W1zeWieAwrRpfzfhQ"; // gitleaks:allow
+
+/** The API signs this address in as a platform admin (encryption-keys.spec.ts). */
+export const PLATFORM_ADMIN_EMAIL = "platform-admin@e2e.workshop.example";
