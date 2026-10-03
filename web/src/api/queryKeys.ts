@@ -221,5 +221,7 @@ export const queryKeys = {
     client: (businessId: Id) => ["admin", "client", businessId] as const,
     /** The key ring and the latest re-encryption run. */
     encryptionKeys: () => ["admin", "encryptionKeys"] as const,
+    /** The founder's growth metrics for one set of filters. */
+    metrics: (filters: string) => ["admin", "metrics", filters] as const,
   },
 } satisfies Record<string, Record<string, (...args: never[]) => QueryKey>>;

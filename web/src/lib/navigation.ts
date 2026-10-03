@@ -43,6 +43,8 @@ export const CREATE_PATH = "/create";
 export const ADMIN_PATH = "/admin";
 /** The platform admin's key ring and re-encryption of stored tokens. */
 export const ADMIN_SECURITY_PATH = "/admin/security";
+/** The founder's growth metrics: funnel, MRR, cohorts, Web Vitals. */
+export const ADMIN_METRICS_PATH = "/admin/metrics";
 /** Shown by the service worker (public/sw.js) when a page cannot be loaded. */
 export const OFFLINE_PATH = "/offline";
 
