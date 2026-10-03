@@ -73,6 +73,9 @@ class ChannelPipelinesContainer(containers.DeclarativeContainer):
         customer_message_pipeline=conversation_pipelines.customer_message_pipeline,
         finish_inbound_event=delivery_use_cases.finish_inbound_event_use_case,
         release_inbound_event=delivery_use_cases.release_inbound_event_use_case,
+        read_inbound_attachments=(
+            channel_orchestrators.read_inbound_attachments_orchestrator
+        ),
     )
     telegram_webhook_pipeline = orchestrator_pipeline(telegram_webhook_orchestrator)
     meta_webhook_pipeline = orchestrator_pipeline(meta_webhook_orchestrator)

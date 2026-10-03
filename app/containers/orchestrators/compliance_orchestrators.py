@@ -24,6 +24,9 @@ class ComplianceOrchestratorsContainer(containers.DeclarativeContainer):
     ] = Factory(
         PurgeExpiredRecordingsJobOrchestrator,
         purge_expired_recordings=compliance_use_cases.purge_expired_recordings_use_case,
+        purge_expired_message_media=(
+            compliance_use_cases.purge_expired_message_media_use_case
+        ),
     )
 
     # --- Compliance.

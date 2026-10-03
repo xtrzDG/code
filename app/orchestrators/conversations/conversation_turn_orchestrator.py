@@ -68,10 +68,10 @@ class ConversationTurnOrchestrator(ConversationTurnOrchestratorContract):
     assistant can read (a sticker, a file) gets a polite request to write.
     Otherwise generate the reply with tools and the invented-numbers guard.
     When the model refuses, is unavailable, cannot finish or keeps
-    unverified numbers, the conversation goes to a colleague (unless the model already handed it
-    over) and the customer hears so in their language. Finally the reply is
-    stored with its usage; on the phone the call ends after a handoff or the
-    caller's goodbye.
+    unverified numbers, the conversation goes to a colleague (unless the
+    model already handed it over) and the customer hears so in their
+    language. Finally the reply is stored with its usage; on the phone the
+    call ends after a handoff or the caller's goodbye.
     """
 
     def __init__(

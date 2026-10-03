@@ -146,6 +146,7 @@ class OrchestratorsContainer(containers.DeclarativeContainer):
         channel_use_cases=use_cases.channels,
         delivery_use_cases=use_cases.deliveries,
         follow_up_use_cases=use_cases.follow_ups,
+        conversation_use_cases=use_cases.conversations,
     )
     billing: BillingOrchestratorsContainer = Container(  # type: ignore[assignment]
         BillingOrchestratorsContainer,

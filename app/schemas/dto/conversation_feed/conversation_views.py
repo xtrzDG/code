@@ -18,6 +18,7 @@ from app.schemas.constants.conversations import (
     StaffMessageDelivery,
     StaffReplyBlock,
 )
+from app.schemas.constants.media import AttachmentKind
 from app.schemas.domain.contacts import ContactDocument
 from app.schemas.domain.conversations import ConversationDocument, MessageDocument
 from app.schemas.dto.bookings import BookingView
@@ -141,6 +142,7 @@ class ConversationSummaryView(ImmutableDTO):
     message_count: ConversationMessageCount
     customer_message_count: ConversationMessageCount
     last_message_text: MessagePreview | None = None
+    last_message_attachment: AttachmentKind | None = None
     last_message_author: MessageAuthor | None = None
     last_message_at: Microseconds
     created_at: Microseconds

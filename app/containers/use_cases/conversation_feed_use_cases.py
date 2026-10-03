@@ -2,6 +2,7 @@ from dependency_injector import containers
 from dependency_injector.providers import DependenciesContainer, Factory
 
 from app.containers.adapters.adapters_container import AdaptersContainer
+from app.containers.container_edges import composed_container_edge
 from app.containers.facilitators import FacilitatorsContainer
 from app.containers.repositories import RepositoriesContainer
 from app.containers.time_provider import TimeProviderContainer
@@ -24,6 +25,7 @@ from app.schemas.dto.conversation_feed.conversation_views import (
     MessagePage,
 )
 from app.schemas.dto.conversation_feed.owner_test_chat import OwnerTestChatVersionQuery
+from app.schemas.dto.media import MessageMediaQuery, StoredMediaFile
 from app.schemas.typings.assistants.prefixed_id import AssistantVersionId
 from app.use_cases.conversations.card.list_conversation_messages_use_case import (
     ListConversationMessagesUseCase,
@@ -32,6 +34,9 @@ from app.use_cases.conversations.get_call_recording_use_case import (
     GetCallRecordingUseCase,
 )
 from app.use_cases.conversations.get_conversation_use_case import GetConversationUseCase
+from app.use_cases.conversations.get_message_media_use_case import (
+    GetMessageMediaUseCase,
+)
 from app.use_cases.conversations.list_conversations_use_case import (
     ListConversationsUseCase,
 )
@@ -52,7 +57,7 @@ class ConversationFeedUseCasesContainer(containers.DeclarativeContainer):
     messages, ratings, and the version the owner's test chat talks to.
     """
 
-    adapters: AdaptersContainer = DependenciesContainer()  # type: ignore[assignment]
+    adapters: AdaptersContainer = composed_container_edge(AdaptersContainer)  # type: ignore[assignment]
     facilitators: FacilitatorsContainer = DependenciesContainer()  # type: ignore[assignment]
     repositories: RepositoriesContainer = DependenciesContainer()  # type: ignore[assignment]
     time_provider: TimeProviderContainer = DependenciesContainer()  # type: ignore[assignment]
@@ -99,6 +104,16 @@ class ConversationFeedUseCasesContainer(containers.DeclarativeContainer):
         conversation_repo=repositories.conversation_repo,
         message_repo=repositories.message_repo,
         message_transformer=transformers.message_view_transformer,
+        audit_log_repo=repositories.audit_log_repo,
+        wall_clock=time_provider.microsecond_wall_clock,
+    )
+    get_message_media_use_case: Factory[
+        UseCaseContract[MessageMediaQuery, StoredMediaFile]
+    ] = Factory(
+        GetMessageMediaUseCase,
+        authorize_business_access=account_use_cases.authorize_business_access_use_case,
+        message_media_repo=repositories.message_media_repo,
+        media_storage=adapters.media.media_storage,
         audit_log_repo=repositories.audit_log_repo,
         wall_clock=time_provider.microsecond_wall_clock,
     )

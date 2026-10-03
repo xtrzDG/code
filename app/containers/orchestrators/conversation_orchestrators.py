@@ -173,6 +173,9 @@ class ConversationOrchestratorsContainer(containers.DeclarativeContainer):
     get_call_recording_orchestrator = use_case_orchestrator(
         conversation_feed_use_cases.get_call_recording_use_case
     )
+    get_message_media_orchestrator = use_case_orchestrator(
+        conversation_feed_use_cases.get_message_media_use_case
+    )
 
     # --- Voice call start.
     start_voice_call_orchestrator = use_case_orchestrator(

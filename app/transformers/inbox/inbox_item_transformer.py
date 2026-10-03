@@ -9,7 +9,10 @@ from app.schemas.dto.inbox.inbox_views import (
     InboxItemView,
     InboxRequestSummary,
 )
-from app.utilities.conversations.message_previews import build_message_preview
+from app.utilities.conversations.message_previews import (
+    build_written_message_preview,
+    first_attachment_kind,
+)
 
 
 class InboxItemTransformer(TransformerContract[InboxItemSource, InboxItemView]):
@@ -53,7 +56,10 @@ class InboxItemTransformer(TransformerContract[InboxItemSource, InboxItemView]):
             last_message_text=(
                 None
                 if last_message is None
-                else build_message_preview(last_message.text)
+                else build_written_message_preview(last_message)
+            ),
+            last_message_attachment=(
+                None if last_message is None else first_attachment_kind(last_message)
             ),
             last_message_author=None if last_message is None else last_message.author,
             last_message_at=conversation.last_message_at,

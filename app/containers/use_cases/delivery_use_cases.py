@@ -3,11 +3,13 @@ from dependency_injector.providers import DependenciesContainer, Factory
 
 from app.containers.adapters.adapters_container import AdaptersContainer
 from app.containers.config import ConfigContainer
+from app.containers.container_edges import composed_container_edge
 from app.containers.facilitators import FacilitatorsContainer
 from app.containers.repositories import RepositoriesContainer
 from app.containers.time_provider import TimeProviderContainer
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.domain.inbound_events import InboundEventDocument
+from app.schemas.domain.message_media import MessageAttachment
 from app.schemas.domain.outbound_messages import OutboundMessageDocument
 from app.schemas.dto.channels.staff_links import (
     PlatformBotWebhookOutcome,
@@ -26,6 +28,7 @@ from app.schemas.dto.deliveries import (
 )
 from app.schemas.dto.handoffs import HandoffCommand
 from app.schemas.dto.jobs import QueuedJobInput
+from app.schemas.dto.media_requests import InboundMediaRequest
 from app.schemas.dto.voice_webhooks import (
     FinishedCallReport,
     PostCallWebhookOutcome,
@@ -36,6 +39,9 @@ from app.use_cases.channels.inbox.accept_platform_bot_update_use_case import (
 )
 from app.use_cases.channels.inbox.claim_inbound_event_use_case import (
     ClaimInboundEventUseCase,
+)
+from app.use_cases.channels.inbox.fetch_inbound_media_use_case import (
+    FetchInboundMediaUseCase,
 )
 from app.use_cases.channels.inbox.finish_inbound_event_use_case import (
     FinishInboundEventUseCase,
@@ -79,7 +85,7 @@ class DeliveryUseCasesContainer(containers.DeclarativeContainer):
     worker with retries).
     """
 
-    adapters: AdaptersContainer = DependenciesContainer()  # type: ignore[assignment]
+    adapters: AdaptersContainer = composed_container_edge(AdaptersContainer)  # type: ignore[assignment]
     config: ConfigContainer = DependenciesContainer()  # type: ignore[assignment]
     facilitators: FacilitatorsContainer = DependenciesContainer()  # type: ignore[assignment]
     repositories: RepositoriesContainer = DependenciesContainer()  # type: ignore[assignment]
@@ -201,4 +207,17 @@ class DeliveryUseCasesContainer(containers.DeclarativeContainer):
         BuildUndeliveredReplyHandoffUseCase,
         business_repo=repositories.business_repo,
         conversation_repo=repositories.conversation_repo,
+    )
+    # Voice notes and photos of a customer message, read by the worker.
+    fetch_inbound_media_use_case: Factory[
+        UseCaseContract[InboundMediaRequest, list[MessageAttachment]]
+    ] = Factory(
+        FetchInboundMediaUseCase,
+        channel_repo=repositories.channel_repo,
+        secret_cipher=adapters.secret_cipher,
+        media_fetcher=adapters.media.media_fetcher,
+        media_storage=adapters.media.media_storage,
+        message_media_repo=repositories.message_media_repo,
+        media_settings=config.app_settings.provided.media,
+        wall_clock=time_provider.microsecond_wall_clock,
     )

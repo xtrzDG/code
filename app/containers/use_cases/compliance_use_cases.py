@@ -3,6 +3,7 @@ from dependency_injector.providers import DependenciesContainer, Factory
 
 from app.containers.adapters.adapters_container import AdaptersContainer
 from app.containers.config import ConfigContainer
+from app.containers.container_edges import composed_container_edge
 from app.containers.facilitators import FacilitatorsContainer
 from app.containers.registries import RegistriesContainer
 from app.containers.repositories import RepositoriesContainer
@@ -34,6 +35,7 @@ from app.schemas.dto.contacts import (
     ContactPage,
     ContactQuery,
 )
+from app.schemas.dto.media import MessageMediaPurgeResult
 from app.use_cases.compliance.accept_dpa_use_case import AcceptDpaUseCase
 from app.use_cases.compliance.collect_contact_records_use_case import (
     CollectContactRecordsUseCase,
@@ -49,6 +51,9 @@ from app.use_cases.compliance.get_dpa_document_use_case import (
 )
 from app.use_cases.compliance.get_dpa_status_use_case import GetDpaStatusUseCase
 from app.use_cases.compliance.list_audit_log_use_case import ListAuditLogUseCase
+from app.use_cases.compliance.purge_expired_message_media_use_case import (
+    PurgeExpiredMessageMediaUseCase,
+)
 from app.use_cases.compliance.purge_expired_recordings_use_case import (
     PurgeExpiredRecordingsUseCase,
 )
@@ -62,7 +67,7 @@ class ComplianceUseCasesContainer(containers.DeclarativeContainer):
     erasure), retention of call recordings.
     """
 
-    adapters: AdaptersContainer = DependenciesContainer()  # type: ignore[assignment]
+    adapters: AdaptersContainer = composed_container_edge(AdaptersContainer)  # type: ignore[assignment]
     config: ConfigContainer = DependenciesContainer()  # type: ignore[assignment]
     facilitators: FacilitatorsContainer = DependenciesContainer()  # type: ignore[assignment]
     registries: RegistriesContainer = DependenciesContainer()  # type: ignore[assignment]
@@ -170,6 +175,19 @@ class ComplianceUseCasesContainer(containers.DeclarativeContainer):
         audit_log_repo=repositories.audit_log_repo,
         wall_clock=time_provider.microsecond_wall_clock,
         note_repo=repositories.conversation_note_repo,
+        media_storage=adapters.media.media_storage,
+        message_media_repo=repositories.message_media_repo,
+    )
+    purge_expired_message_media_use_case: Factory[
+        UseCaseContract[PurgeExpiredRecordingsCommand, MessageMediaPurgeResult]
+    ] = Factory(
+        PurgeExpiredMessageMediaUseCase,
+        business_repo=repositories.business_repo,
+        message_media_repo=repositories.message_media_repo,
+        message_repo=repositories.message_repo,
+        media_storage=adapters.media.media_storage,
+        audit_log_repo=repositories.audit_log_repo,
+        wall_clock=time_provider.microsecond_wall_clock,
     )
     purge_expired_recordings_use_case: Factory[
         UseCaseContract[PurgeExpiredRecordingsCommand, RecordingPurgeResult]
