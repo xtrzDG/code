@@ -23,7 +23,8 @@
   min-height: 100dvh;
   justify-content: center;
   align-items: stretch;
-  overflow: hidden;
+  /* The glows never widen the page; a long notice still makes it taller. */
+  overflow: clip;
   background: var(--hc-canvas);
   color: var(--hc-ink);
   font-family:
@@ -186,6 +187,7 @@
 .hc-document h1 {
   margin: 0 0 6px;
   font-size: 26px;
+  font-weight: 650;
   line-height: 1.25;
   overflow-wrap: anywhere;
 }
@@ -193,6 +195,7 @@
 .hc-document h2 {
   margin: 28px 0 6px;
   font-size: 17px;
+  font-weight: 600;
 }
 
 .hc-document p,
@@ -223,7 +226,6 @@
 @media (min-width: 640px) {
   .hc-page:has(.hc-document) {
     align-items: flex-start;
-    overflow: visible;
   }
 
   .hc-document {

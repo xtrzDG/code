@@ -44,6 +44,12 @@ export class FakeWidgetApi {
   /** The next POSTs are refused with 429 and this Retry-After (seconds). */
   refusePostsFor: number | null = null;
   polls: { url: string; sessionKey: string | null }[] = [];
+  /** More config fields (starter questions, privacy link, other channels). */
+  configExtras: Record<string, unknown> = {};
+  /** The visitor keys of the messages sent, in order. */
+  sessionKeys: string[] = [];
+  /** "Talk to a person" requests. */
+  handoffs: { session_key: string; language: string }[] = [];
   private nextId = 1;
 
   async handle(route: Route): Promise<void> {
@@ -59,6 +65,21 @@ export class FakeWidgetApi {
         business_name: "Cafe Batumi",
         languages: [{ tag: "en", direction: "ltr", native_name: "English" }],
         default_language: "en",
+        ...this.configExtras,
+      });
+      return;
+    }
+    if (request.method() === "POST" && url.pathname.endsWith("/handoff")) {
+      this.handoffs.push(JSON.parse(request.postData() ?? "{}") as { session_key: string; language: string });
+      this.isHandedOff = true;
+      const notice = this.add("assistant", "A person from our team will answer here.");
+      await this.json(route, {
+        conversation_id: "conversation_1",
+        is_handed_off: true,
+        message_id: notice.id,
+        text: notice.text,
+        language: "en",
+        direction: "ltr",
       });
       return;
     }
@@ -75,7 +96,8 @@ export class FakeWidgetApi {
       return;
     }
     if (request.method() === "POST") {
-      const body = JSON.parse(request.postData() ?? "{}") as { text: string };
+      const body = JSON.parse(request.postData() ?? "{}") as { text: string; session_key: string };
+      this.sessionKeys.push(body.session_key);
       const question = this.add("customer", body.text);
       const answer = this.add("assistant", `Answer to ${body.text}`);
       const reply = { text: answer.text, message_id: answer.id, cursor: question.id, is_handed_off: false, direction: "ltr" };
