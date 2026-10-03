@@ -11,6 +11,9 @@ from app.containers.utilities import UtilitiesContainer
 from app.gateways.worker.background_worker import BackgroundWorker, PeriodicJobSpec
 from app.gateways.worker.heartbeat_recorder import WorkerHeartbeatRecorder
 from app.gateways.worker.periodic.purge_stale_rows import purge_stale_rows_job
+from app.gateways.worker.periodic.request_visit_feedback import (
+    request_visit_feedback_job,
+)
 from app.gateways.worker.periodic.send_value_reports import send_value_reports_job
 from app.gateways.worker.periodic.sweep_rate_limit_buckets import (
     sweep_rate_limit_buckets_job,
@@ -130,6 +133,11 @@ class GatewaysContainer(containers.DeclarativeContainer):
         # The owners' digests and monthly reports (09:00 business time).
         Factory(
             send_value_reports_job, operator=operators.value.send_value_reports_operator
+        ),
+        # Customers asked how their visit went (Settings → Reviews).
+        Factory(
+            request_visit_feedback_job,
+            operator=operators.feedback.request_visit_feedback_operator,
         ),
     )
     # Handlers of queued jobs by job name (the queue is filled by use cases

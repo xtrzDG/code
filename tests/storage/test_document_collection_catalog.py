@@ -13,6 +13,9 @@ from app.containers.adapters.call_adapters_container import CallAdaptersContaine
 from app.containers.adapters.document_collections_container import (
     DocumentCollectionsContainer,
 )
+from app.containers.adapters.feedback_collections_container import (
+    FeedbackCollectionsContainer,
+)
 from app.containers.adapters.inbox_collections_container import (
     InboxCollectionsContainer,
 )
@@ -102,6 +105,7 @@ COLLECTION_CONTAINERS = (
     InboxCollectionsContainer,
     SecurityCollectionsContainer,
     ValueCollectionsContainer,
+    FeedbackCollectionsContainer,
 )
 
 

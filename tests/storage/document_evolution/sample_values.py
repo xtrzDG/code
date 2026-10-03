@@ -45,6 +45,7 @@ CONSTRAINED_TEXT_SAMPLES: dict[str, str] = {
     "QuestionKey": "parking",
     "QuickReplyShortcut": "hours",
     "ReleaseVersion": "4718714c0f2e9a1b",
+    "ReviewLinkToken": "q3Jd8sLq0Pz-Xb7W2nVc1A",
     "TimezoneName": "Asia/Tbilisi",
     "ValueReportPeriodKey": "2026-W38",
     "WebLink": "https://example.com/menu",

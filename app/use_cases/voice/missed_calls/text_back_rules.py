@@ -1,7 +1,8 @@
 """
 The rules of a text-back: in which language, through which channel, and
-the callers who are not texted (opted out, already writing with the
-business, texted in the last day).
+the callers who are not texted (already writing with the business, texted
+in the last day, past the daily caps of unrequested messages). Opted-out
+customers are found by `app.utilities.channels.opt_out`.
 """
 
 from datetime import timedelta
@@ -37,6 +38,7 @@ from app.utilities.calls.call_follow_up_keys import (
     caller_text_back_key,
 )
 from app.utilities.channels.channel_health import is_channel_active
+from app.utilities.channels.proactive_limits import proactive_message_counter
 
 MICROSECONDS_PER_SECOND: int = 1_000_000
 # A caller is texted within minutes; a report that arrives hours late (the
@@ -111,12 +113,6 @@ def choose_text_back_channel(
     return None
 
 
-def is_opted_out(contact: ContactDocument | None) -> bool:
-    """A customer who asked for no unrequested messages in any channel."""
-
-    return contact is not None and bool(contact.opted_out_channels)
-
-
 def is_in_conversation(
     conversation_repo: ConversationRepoContract,
     business: BusinessDocument,
@@ -152,10 +148,14 @@ def is_in_conversation(
 def text_back_counters(
     business: BusinessDocument,
     caller_phone_number: E164PhoneNumber,
+    contact: ContactDocument | None,
 ) -> list[RateLimitCounter]:
-    """One text-back per caller and day, and a daily cap per business."""
+    """
+    One text-back per caller and day, a daily cap per business, and, for a
+    known customer, their shared daily cap of unrequested messages.
+    """
 
-    return [
+    counters: list[RateLimitCounter] = [
         RateLimitCounter(
             key=caller_text_back_key(business.id, caller_phone_number),
             limit=CALLER_DAILY_LIMIT,
@@ -164,15 +164,23 @@ def text_back_counters(
             key=business_text_back_key(business.id), limit=BUSINESS_DAILY_LIMIT
         ),
     ]
+    if contact is not None:
+        counters.append(proactive_message_counter(business.id, contact.id))
+
+    return counters
 
 
 def refusal_reason(
     business: BusinessDocument,
+    caller_phone_number: E164PhoneNumber,
     refused_key: RateLimitKey,
 ) -> TextBackSkipReason:
-    """Which daily limit refused the text-back."""
+    """
+    Which daily limit refused the text-back: the caller was texted today,
+    else a cap (the business's, or the customer's unrequested messages).
+    """
 
-    if refused_key == business_text_back_key(business.id):
-        return TextBackSkipReason.DAILY_LIMIT
+    if refused_key == caller_text_back_key(business.id, caller_phone_number):
+        return TextBackSkipReason.ALREADY_TEXTED
 
-    return TextBackSkipReason.ALREADY_TEXTED
+    return TextBackSkipReason.DAILY_LIMIT

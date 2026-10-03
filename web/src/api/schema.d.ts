@@ -1013,6 +1013,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/businesses/{business_id}/feedback-requests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Feedback Requests */
+        get: operations["list_feedback_requests_v1_businesses__business_id__feedback_requests_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/businesses/{business_id}/handoffs": {
         parameters: {
             query?: never;
@@ -1676,6 +1693,41 @@ export interface paths {
         patch: operations["update_resource_v1_businesses__business_id__resources__resource_id__patch"];
         trace?: never;
     };
+    "/v1/businesses/{business_id}/review-settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Review Settings */
+        get: operations["get_review_settings_v1_businesses__business_id__review_settings_get"];
+        /** Update Review Settings */
+        put: operations["update_review_settings_v1_businesses__business_id__review_settings_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/businesses/{business_id}/review-stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Review Stats */
+        get: operations["get_review_stats_v1_businesses__business_id__review_stats_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/businesses/{business_id}/schedule-exceptions": {
         parameters: {
             query?: never;
@@ -2248,6 +2300,23 @@ export interface paths {
         };
         /** Get Hosted Chat */
         get: operations["get_hosted_chat_v1_public_chat__address__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/public/reviews/{token}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Open Review */
+        get: operations["open_review_v1_public_reviews__token__get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3252,9 +3321,11 @@ export interface components {
          * @description Links from the profile the assistant may send (send_link tool). PRIVACY
          *     is the business's own privacy notice; the website chat links to it (or,
          *     without one, to the platform's default notice for the business).
+         *     GOOGLE_REVIEW is the business's Google review page, which every
+         *     customer who rates a visit is invited to (Settings → Reviews).
          * @enum {string}
          */
-        BusinessLinkKind: "menu" | "map" | "payment" | "booking_page" | "delivery" | "website" | "privacy";
+        BusinessLinkKind: "menu" | "map" | "payment" | "booking_page" | "delivery" | "website" | "privacy" | "google_review";
         /**
          * BusinessMemberRole
          * @description Role of a user inside one business.
@@ -4027,7 +4098,9 @@ export interface components {
          *     (`is_phone_verified`), otherwise the one the customer typed. Counts and
          *     channels leave out the owner's test chats. An erased customer
          *     (`erased_at`) has no name, phone or language left; their anonymous
-         *     conversations and bookings still count.
+         *     conversations and bookings still count. `opted_out_channels`: where the
+         *     customer sent STOP; while any is listed they get no reminders, feedback
+         *     requests or messages after a missed call.
          */
         ContactSummaryView: {
             /** Booking Count */
@@ -4055,6 +4128,8 @@ export interface components {
             lead_count: number;
             /** Name */
             name?: string | null;
+            /** Opted Out Channels */
+            opted_out_channels?: components["schemas"]["ChannelKind"][];
             /** Phone Number */
             phone_number?: string | null;
         };
@@ -4707,6 +4782,82 @@ export interface components {
             outcome: components["schemas"]["AutotestOutcome"];
             /** Scenario Key */
             scenario_key: string;
+        };
+        /** FeedbackRequestPage */
+        FeedbackRequestPage: {
+            /** Items */
+            items: components["schemas"]["FeedbackRequestView"][];
+            /** Next Cursor */
+            next_cursor?: string | null;
+        };
+        /**
+         * FeedbackRequestStatus
+         * @description Where the request for feedback after one visit stands.
+         *
+         *     SENT went into the outbox and waits for the customer's rating;
+         *     ANSWERED got one; SKIPPED was never sent (`FeedbackSkipReason`);
+         *     FAILED was given up by the outbox (the platform refused it, or every
+         *     retry failed).
+         * @enum {string}
+         */
+        FeedbackRequestStatus: "sent" | "answered" | "skipped" | "failed";
+        /**
+         * FeedbackRequestView
+         * @description One visit and its request: the customer (their name when known), when
+         *     the visit ended, whether they were asked and how (or why not), their
+         *     rating, whether they opened the review link, and the conversation it
+         *     led to.
+         */
+        FeedbackRequestView: {
+            /** Answered At */
+            answered_at?: number | null;
+            /** Booking Id */
+            booking_id: string;
+            channel?: components["schemas"]["ChannelKind"] | null;
+            /** Contact Id */
+            contact_id: string;
+            /** Contact Name */
+            contact_name?: string | null;
+            /** Conversation Id */
+            conversation_id?: string | null;
+            /** Id */
+            id: string;
+            /** Last Error */
+            last_error?: string | null;
+            /** Review Clicks */
+            review_clicks: number;
+            /** Score */
+            score?: number | null;
+            /** Sent At */
+            sent_at?: number | null;
+            skip_reason?: components["schemas"]["FeedbackSkipReason"] | null;
+            status: components["schemas"]["FeedbackRequestStatus"];
+            /** Visit Ended At */
+            visit_ended_at: number;
+        };
+        /**
+         * FeedbackSkipReason
+         * @description Why a visit was not asked about: the customer opted out of messages
+         *     they did not ask for, is unknown or erased, can be reached in no
+         *     connected messenger, can be reached only where the 24-hour window is
+         *     closed and no approved template is named, was already asked today
+         *     about another visit, or a daily cap was reached.
+         * @enum {string}
+         */
+        FeedbackSkipReason: "opted_out" | "no_contact" | "no_channel" | "window_closed" | "already_asked" | "daily_limit";
+        /**
+         * FeedbackTemplatePreview
+         * @description The feedback request in one language: the body to register as the
+         *     WhatsApp template (its one parameter {{1}} is the business name) and
+         *     how a customer reads it.
+         */
+        FeedbackTemplatePreview: {
+            /** Example */
+            example: string;
+            /** Language */
+            language: string;
+            /** Template Body */
+            template_body: string;
         };
         /**
          * FilledQuickReplyList
@@ -6621,6 +6772,55 @@ export interface components {
             updated_at: number;
         };
         /**
+         * ReviewSettingsView
+         * @description The settings with what they rely on: whether the business's WhatsApp
+         *     number is connected (the template), whether review-link visits can be
+         *     counted (the platform's public address is set), and the request in
+         *     each language of the business.
+         */
+        ReviewSettingsView: {
+            /** Delay Minutes */
+            delay_minutes: number;
+            /** Feedback Template Name */
+            feedback_template_name?: string | null;
+            /** Google Review Url */
+            google_review_url?: string | null;
+            /** Is Feedback Enabled */
+            is_feedback_enabled: boolean;
+            /** Is Link Tracked */
+            is_link_tracked: boolean;
+            /** Is Whatsapp Connected */
+            is_whatsapp_connected: boolean;
+            /** Template Previews */
+            template_previews?: components["schemas"]["FeedbackTemplatePreview"][];
+        };
+        /**
+         * ReviewStatsView
+         * @description The requests of the last `period_days`: how many customers were asked
+         *     (sent, answered or not), how many answered and their average rating
+         *     with the count of each score (1 to 5), how many of them opened the
+         *     review link, and how many visits were not asked (skipped) or whose
+         *     request could not be delivered (failed).
+         */
+        ReviewStatsView: {
+            /** Answered Count */
+            answered_count: number;
+            /** Asked Count */
+            asked_count: number;
+            /** Average Score */
+            average_score?: number | null;
+            /** Failed Count */
+            failed_count: number;
+            /** Period Days */
+            period_days: number;
+            /** Review Opened Count */
+            review_opened_count: number;
+            /** Score Counts */
+            score_counts?: components["schemas"]["VisitScoreCount"][];
+            /** Skipped Count */
+            skipped_count: number;
+        };
+        /**
          * ScheduleExceptionList
          * @description Schedule exceptions ordered by date.
          */
@@ -7498,6 +7698,16 @@ export interface components {
             request_count: number;
             /** Staff Minutes Saved */
             staff_minutes_saved: number;
+        };
+        /**
+         * VisitScoreCount
+         * @description How many customers rated their visit with one score.
+         */
+        VisitScoreCount: {
+            /** Count */
+            count: number;
+            /** Score */
+            score: number;
         };
         /**
          * WebsiteImportProblem
@@ -14367,6 +14577,96 @@ export interface operations {
             };
         };
     };
+    list_feedback_requests_v1_businesses__business_id__feedback_requests_get: {
+        parameters: {
+            query?: {
+                limit?: string | null;
+                cursor?: string | null;
+            };
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeedbackRequestPage"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
     get_handoffs_v1_businesses__business_id__handoffs_get: {
         parameters: {
             query?: {
@@ -17629,9 +17929,11 @@ export interface operations {
                          * @description Links from the profile the assistant may send (send_link tool). PRIVACY
                          *     is the business's own privacy notice; the website chat links to it (or,
                          *     without one, to the platform's default notice for the business).
+                         *     GOOGLE_REVIEW is the business's Google review page, which every
+                         *     customer who rates a visit is invited to (Settings → Reviews).
                          * @enum {string}
                          */
-                        kind: "menu" | "map" | "payment" | "booking_page" | "delivery" | "website" | "privacy";
+                        kind: "menu" | "map" | "payment" | "booking_page" | "delivery" | "website" | "privacy" | "google_review";
                         /** Url */
                         url: string;
                     }[];
@@ -17798,9 +18100,11 @@ export interface operations {
                          * @description Links from the profile the assistant may send (send_link tool). PRIVACY
                          *     is the business's own privacy notice; the website chat links to it (or,
                          *     without one, to the platform's default notice for the business).
+                         *     GOOGLE_REVIEW is the business's Google review page, which every
+                         *     customer who rates a visit is invited to (Settings → Reviews).
                          * @enum {string}
                          */
-                        kind: "menu" | "map" | "payment" | "booking_page" | "delivery" | "website" | "privacy";
+                        kind: "menu" | "map" | "payment" | "booking_page" | "delivery" | "website" | "privacy" | "google_review";
                         /** Url */
                         url: string;
                     }[] | null;
@@ -18162,9 +18466,11 @@ export interface operations {
                          * @description Links from the profile the assistant may send (send_link tool). PRIVACY
                          *     is the business's own privacy notice; the website chat links to it (or,
                          *     without one, to the platform's default notice for the business).
+                         *     GOOGLE_REVIEW is the business's Google review page, which every
+                         *     customer who rates a visit is invited to (Settings → Reviews).
                          * @enum {string}
                          */
-                        kind: "menu" | "map" | "payment" | "booking_page" | "delivery" | "website" | "privacy";
+                        kind: "menu" | "map" | "payment" | "booking_page" | "delivery" | "website" | "privacy" | "google_review";
                         /** Url */
                         url: string;
                     }[];
@@ -19352,6 +19658,286 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ResourceView"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    get_review_settings_v1_businesses__business_id__review_settings_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReviewSettingsView"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    update_review_settings_v1_businesses__business_id__review_settings_put: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /**
+                     * Delay Minutes
+                     * @default 120
+                     */
+                    delay_minutes?: number;
+                    /** Feedback Template Name */
+                    feedback_template_name?: string | null;
+                    /** Google Review Url */
+                    google_review_url?: string | null;
+                    /**
+                     * Is Feedback Enabled
+                     * @default false
+                     */
+                    is_feedback_enabled?: boolean;
+                };
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReviewSettingsView"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    get_review_stats_v1_businesses__business_id__review_stats_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReviewStatsView"];
                 };
             };
             /** @description Sign-in required: the bearer token is missing, invalid or expired. */
@@ -22754,6 +23340,89 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["HostedChatView"];
                 };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    open_review_v1_public_reviews__token__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                token: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description On to the business's review page (Location). */
+            302: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Sign-in required: the bearer token is missing, invalid or expired. */
             401: {

@@ -18,6 +18,7 @@ from app.schemas.typings.assistants.constrained_integers import (
     LlmMaxOutputTokens,
     LlmToolRoundLimit,
 )
+from app.schemas.typings.channels.constrained_strings import PublicBaseUrl
 from app.schemas.typings.conversations.constrained_integers import ContactMessageLimit
 from app.use_cases.conversations.open_voice_conversation_use_case import (
     OpenVoiceConversationUseCase,
@@ -33,6 +34,9 @@ from app.use_cases.conversations.replies.generate_assistant_reply_use_case impor
 )
 from app.use_cases.conversations.turns.prepare_conversation_turn_use_case import (
     PrepareConversationTurnUseCase,
+)
+from app.use_cases.feedback.answers.answer_customer_signal_use_case import (
+    AnswerCustomerSignalUseCase,
 )
 from app.utilities.conversations.language_detector import LanguageDetector
 from app.utilities.localization.localized_text_resolver import LocalizedTextResolver
@@ -58,6 +62,7 @@ def build_brain_orchestrators(
     *,
     contact_message_limit: ContactMessageLimit,
     tool_round_limit: LlmToolRoundLimit,
+    app_base_url: PublicBaseUrl | None = None,
 ) -> BrainOrchestrators:
     storage_scope = StorageScopeContext()
     live_events = RecordingEventPublisher()
@@ -97,6 +102,16 @@ def build_brain_orchestrators(
         ),
         localized_text_resolver=texts,
         storage_scope=storage_scope,
+        answer_customer_signal=AnswerCustomerSignalUseCase(
+            contact_repo=repos.contact_repo,
+            audit_log_repo=repos.audit_log_repo,
+            feedback_request_repo=repos.feedback_request_repo,
+            message_repo=repos.message_repo,
+            profile_repo=repos.profile_repo,
+            text_resolver=texts,
+            wall_clock=wall_clock,
+            app_base_url=app_base_url,
+        ),
     )
     voice_orchestrator = VoiceToolCallOrchestrator(
         open_voice_conversation=OpenVoiceConversationUseCase(

@@ -89,6 +89,9 @@ export const settingsRecordsKa: Translation<typeof settingsRecordsEn> = {
       conversation_note: "გუნდის შენიშვნა",
       quick_reply: "სწრაფი პასუხი",
       inbox_settings: "ავტომატური დანიშვნა",
+      message_opt_out: "კლიენტის უარი შეტყობინებებზე",
+      review_settings: "შეფასებების პარამეტრები",
+      feedback_request: "შეფასების მოთხოვნები",
     },
   },
   roles: {
@@ -112,6 +115,7 @@ export const settingsRecordsKa: Translation<typeof settingsRecordsEn> = {
     erasedName: "წაშლილი მომხმარებელი",
     erasedOn: "მონაცემები წაიშალა {date}",
     verifiedPhone: "დადასტურებული ტელეფონი",
+    optedOut: "უპასუხა სტოპ",
     bookings: { one: "{count} ჯავშანი", other: "{count} ჯავშანი" },
     leads: { one: "{count} მოთხოვნა", other: "{count} მოთხოვნა" },
     lastActivity: "ბოლო აქტივობა {date}",

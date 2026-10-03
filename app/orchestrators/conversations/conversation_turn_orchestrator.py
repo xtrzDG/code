@@ -17,6 +17,7 @@ from app.schemas.dto.conversation_engine import (
     ReplyRecord,
 )
 from app.schemas.dto.conversations import AssistantReply, InboundMessage
+from app.schemas.dto.feedback.customer_signals import CustomerSignalReply
 from app.schemas.dto.handoffs import (
     CodedHandoffSummary,
     HandoffCommand,
@@ -56,7 +57,9 @@ class ConversationTurnOrchestrator(ConversationTurnOrchestratorContract):
     Answer one customer message (concept section 1, "path of a message").
 
     Prepare the turn (business, contact, conversation pinned to a version,
-    language, inbound message); while staff own the conversation stay silent
+    language, inbound message); a customer's STOP, START or visit rating is
+    answered by the platform (and a low rating handed to a colleague)
+    without the model; while staff own the conversation stay silent
     in chat and promise a call back on the phone; past the contact's message
     limit answer once with a polite stop message. Otherwise generate the
     reply with tools and the invented-numbers guard. When the model refuses,
@@ -75,7 +78,13 @@ class ConversationTurnOrchestrator(ConversationTurnOrchestratorContract):
         record_reply: UseCaseContract[ReplyRecord, AssistantReply],
         localized_text_resolver: LocalizedTextResolverContract,
         storage_scope: StorageScopeContract,
+        answer_customer_signal: UseCaseContract[
+            PreparedTurn, CustomerSignalReply | None
+        ],
     ) -> None:
+        self._answer_customer_signal: UseCaseContract[
+            PreparedTurn, CustomerSignalReply | None
+        ] = answer_customer_signal
         self._prepare_turn: UseCaseContract[InboundMessage, PreparedTurn] = prepare_turn
         self._generate_reply: UseCaseContract[PreparedTurn, GeneratedReply] = (
             generate_reply
@@ -105,6 +114,10 @@ class ConversationTurnOrchestrator(ConversationTurnOrchestratorContract):
 
     def _answer(self, turn: PreparedTurn) -> AssistantReply:
         is_phone: bool = turn.conversation.channel is ChannelKind.PHONE
+        signal: CustomerSignalReply | None = self._answer_customer_signal.run(turn)
+        if signal is not None:
+            return self._record_reply.run(self._build_signal_record(turn, signal))
+
         if turn.gate is not TurnGate.ANSWER:
             return self._record_reply.run(self._build_gated_record(turn, is_phone))
 
@@ -155,6 +168,30 @@ class ConversationTurnOrchestrator(ConversationTurnOrchestratorContract):
             turn=turn,
             is_handed_off=turn.gate is TurnGate.STAFF_SILENCE,
             should_end_call=is_phone,
+        )
+
+    def _build_signal_record(
+        self, turn: PreparedTurn, signal: CustomerSignalReply
+    ) -> ReplyRecord:
+        """
+        The platform's answer to a signal; a low visit rating also opens
+        its handoff (a failure is logged: the customer is still thanked).
+        """
+
+        handoff_ids: list[HandoffId] = []
+        if signal.handoff is not None:
+            try:
+                handoff_ids.append(self._handoff_to_human.run(signal.handoff).id)
+            except ApplicationError:
+                LOGGER.exception(
+                    "Handoff after a visit rating in %s failed.", turn.conversation.id
+                )
+
+        return ReplyRecord(
+            turn=turn,
+            text=signal.text,
+            created_handoff_ids=handoff_ids,
+            is_handed_off=bool(handoff_ids),
         )
 
     def _hand_over(

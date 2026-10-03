@@ -4,6 +4,9 @@ from dependency_injector import containers
 from dependency_injector.providers import Container
 
 from app.containers.adapters.adapters_container import AdaptersContainer
+from app.containers.adapters.feedback_collections_container import (
+    FeedbackCollectionsContainer,
+)
 from app.containers.adapters.inbox_collections_container import (
     InboxCollectionsContainer,
 )
@@ -92,11 +95,20 @@ class AppContainer(containers.DeclarativeContainer):
         time_provider=time_provider,
         utilities=utilities,
     )
+    # The feedback after visits' collections (1062), another sibling.
+    feedback_collections: FeedbackCollectionsContainer = Container(  # type: ignore[assignment]
+        FeedbackCollectionsContainer,
+        clients=clients,
+        config=config,
+        time_provider=time_provider,
+        utilities=utilities,
+    )
     repositories: RepositoriesContainer = Container(  # type: ignore[assignment]
         RepositoriesContainer,
         inbox_collections=inbox_collections,
         security_collections=security_collections,
         value_collections=value_collections,
+        feedback_collections=feedback_collections,
         collections=adapters.collections,
         notification_collections=adapters.notification_collections,
         launch_collections=adapters.launch_collections,

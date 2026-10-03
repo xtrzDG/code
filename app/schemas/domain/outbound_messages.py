@@ -23,6 +23,7 @@ from app.schemas.typings.deliveries.constrained_strings import (
 )
 from app.schemas.typings.deliveries.prefixed_id import OutboundMessageId
 from app.schemas.typings.deliveries.strings import DeliveryErrorText
+from app.schemas.typings.feedback.prefixed_id import FeedbackRequestId
 from app.schemas.typings.handoffs.prefixed_id import HandoffId
 from app.schemas.typings.notifications.constrained_strings import (
     CabinetDeepLink,
@@ -45,10 +46,15 @@ class CustomerRecipient(PersistentDocument):
 
 
 class OutboundTemplate(PersistentDocument):
-    """A Meta-approved WhatsApp template; the message text is its parameter."""
+    """
+    A Meta-approved WhatsApp template. Its body parameters are
+    `body_parameters` when named (a customer's template message), else the
+    message text (a staff notification).
+    """
 
     name: WhatsAppTemplateName
     language_code: WhatsAppTemplateLanguageCode
+    body_parameters: list[MessageText] = Field(default_factory=list[MessageText])
 
 
 class PushRecipient(PersistentDocument):
@@ -82,9 +88,14 @@ class OutboundMessageDocument(BaseDocument):
 
     Version 2: a staff notification may go to a cabinet user's device
     (`push`) instead of a staff contact.
+
+    Version 3: a message to a customer may be a WhatsApp template with its
+    own parameters (`template.body_parameters`; outside the 24-hour
+    window), and a request for feedback after a visit names its request
+    (`feedback_request_id`), which follows its delivery. Both optional.
     """
 
-    schema_version: SchemaVersion = SchemaVersion("2")
+    schema_version: SchemaVersion = SchemaVersion("3")
     id: OutboundMessageId
     business_id: BusinessId
     kind: OutboundMessageKind
@@ -98,6 +109,7 @@ class OutboundMessageDocument(BaseDocument):
     conversation_id: ConversationId | None = None
     source_message_id: MessageId | None = None
     handoff_id: HandoffId | None = None
+    feedback_request_id: FeedbackRequestId | None = None
     status: OutboundMessageStatus = OutboundMessageStatus.PENDING
     attempts: DeliveryAttemptCount = DeliveryAttemptCount(0)
     delivered_parts: DeliveredMessageCount = DeliveredMessageCount(0)

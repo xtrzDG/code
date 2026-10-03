@@ -47,6 +47,7 @@ LINK_LABELS: dict[BusinessLinkKind, str] = {
     BusinessLinkKind.DELIVERY: "Delivery link",
     BusinessLinkKind.WEBSITE: "Website",
     BusinessLinkKind.PRIVACY: "Privacy notice",
+    BusinessLinkKind.GOOGLE_REVIEW: "Google review page",
 }
 
 

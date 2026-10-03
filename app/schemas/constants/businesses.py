@@ -39,6 +39,8 @@ class BusinessLinkKind(StrEnum):
     Links from the profile the assistant may send (send_link tool). PRIVACY
     is the business's own privacy notice; the website chat links to it (or,
     without one, to the platform's default notice for the business).
+    GOOGLE_REVIEW is the business's Google review page, which every
+    customer who rates a visit is invited to (Settings → Reviews).
     """
 
     MENU = "menu"
@@ -48,6 +50,7 @@ class BusinessLinkKind(StrEnum):
     DELIVERY = "delivery"
     WEBSITE = "website"
     PRIVACY = "privacy"
+    GOOGLE_REVIEW = "google_review"
 
 
 class BusinessSettingsRefusalCode(StrEnum):

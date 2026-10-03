@@ -16,6 +16,7 @@ from app.gateways.http.channel_settings_routes import build_channel_settings_rou
 from app.gateways.http.compliance_routes import build_compliance_router
 from app.gateways.http.conversation_routes import build_conversation_router
 from app.gateways.http.events_routes import build_events_router
+from app.gateways.http.feedback_router_assembly import build_feedback_routers
 from app.gateways.http.health_routes import build_readiness_router
 from app.gateways.http.inbox_router_assembly import build_inbox_routers
 from app.gateways.http.knowledge_routes import build_knowledge_router
@@ -292,4 +293,5 @@ def build_application_routers(app_container: AppContainer) -> list[APIRouter]:
         *build_sharing_routers(operators, current_user),
         *build_security_routers(operators, current_user),
         *build_value_routers(operators, current_user),
+        *build_feedback_routers(operators, current_user),
     ]

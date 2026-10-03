@@ -15,6 +15,7 @@ from app.containers.pipelines.conversation_pipelines import (
     ConversationPipelinesContainer,
 )
 from app.containers.pipelines.demo_pipelines import DemoPipelinesContainer
+from app.containers.pipelines.feedback_pipelines import FeedbackPipelinesContainer
 from app.containers.pipelines.inbox_pipelines import InboxPipelinesContainer
 from app.containers.pipelines.knowledge_pipelines import KnowledgePipelinesContainer
 from app.containers.pipelines.notification_pipelines import (
@@ -112,6 +113,10 @@ class PipelinesContainer(containers.DeclarativeContainer):
         SharingPipelinesContainer,
         sharing_orchestrators=orchestrators.sharing,
         registries=registries,
+    )
+    feedback: FeedbackPipelinesContainer = Container(  # type: ignore[assignment]
+        FeedbackPipelinesContainer,
+        feedback=orchestrators.feedback,
     )
     demo: DemoPipelinesContainer = Container(  # type: ignore[assignment]
         DemoPipelinesContainer,

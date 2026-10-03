@@ -44,6 +44,7 @@ from app.repositories.conversation_repositories import (
     LlmTurnRepository,
     MessageRepository,
 )
+from app.repositories.feedback_repositories import FeedbackRequestRepository
 from app.repositories.knowledge_repositories import (
     KnowledgeItemRepository,
     ScheduleExceptionRepository,
@@ -65,6 +66,7 @@ from app.schemas.dto.conversations import AssistantReply, InboundMessage
 from app.schemas.dto.knowledge import KnowledgeItemView
 from app.schemas.typings.assistants.constrained_integers import LlmToolRoundLimit
 from app.schemas.typings.assistants.prefixed_id import AssistantVersionId
+from app.schemas.typings.channels.constrained_strings import PublicBaseUrl
 from app.schemas.typings.contacts.strings import ContactName
 from app.schemas.typings.conversations.constrained_integers import ContactMessageLimit
 from app.schemas.typings.conversations.strings import ChannelUserId, MessageText
@@ -121,6 +123,7 @@ class BrainWorld:
     audit_log_repo: AuditLogRepository
     user_repo: UserRepository
     knowledge_item_repo: KnowledgeItemRepository
+    feedback_request_repo: FeedbackRequestRepository
     bookings: FakeBookings
     search_knowledge: FakeSearchKnowledge
     get_price: FakeGetPrice
@@ -209,6 +212,7 @@ def build_world(
     facts: list[tuple[str, str, str]] | None = None,
     hours: list[tuple[int, int]] | None = None,
     is_published: bool = True,
+    app_base_url: str | None = None,
 ) -> BrainWorld:
     clock = ManualClock()
     wall_clock: WallClock[Microseconds] = clock.wall_clock()
@@ -232,6 +236,7 @@ def build_world(
         wall_clock,
         contact_message_limit=ContactMessageLimit(contact_message_limit),
         tool_round_limit=LlmToolRoundLimit(tool_round_limit),
+        app_base_url=None if app_base_url is None else PublicBaseUrl(app_base_url),
     )
     return BrainWorld(
         clock=clock,
@@ -255,6 +260,7 @@ def build_world(
         audit_log_repo=repos.audit_log_repo,
         user_repo=repos.user_repo,
         knowledge_item_repo=repos.knowledge_item_repo,
+        feedback_request_repo=repos.feedback_request_repo,
         bookings=brain_tools.bookings,
         search_knowledge=brain_tools.search_knowledge,
         get_price=brain_tools.get_price,

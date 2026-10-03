@@ -35,6 +35,7 @@ from app.schemas.domain.conversations import (
     LlmTurnDocument,
     MessageDocument,
 )
+from app.schemas.domain.feedback import FeedbackRequestDocument, ReviewSettingsDocument
 from app.schemas.domain.handoffs import HandoffDocument, UnansweredQuestionDocument
 from app.schemas.domain.inbound_events import InboundEventDocument
 from app.schemas.domain.inbox_settings import InboxSettingsDocument
@@ -258,6 +259,14 @@ DOCUMENT_COLLECTIONS: tuple[DocumentCollectionDefinition, ...] = (
     ),
     DocumentCollectionDefinition(
         DocumentCollectionName("value_reports"), ValueReportDocument
+    ),
+    # Feedback after visits: each business's review settings and the
+    # request for feedback after each visit (1062).
+    DocumentCollectionDefinition(
+        DocumentCollectionName("review_settings"), ReviewSettingsDocument
+    ),
+    DocumentCollectionDefinition(
+        DocumentCollectionName("feedback_requests"), FeedbackRequestDocument
     ),
     # Key management: the latest re-encryption of the stored secrets (1063).
     DocumentCollectionDefinition(

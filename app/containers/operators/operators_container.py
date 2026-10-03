@@ -12,6 +12,7 @@ from app.containers.operators.conversation_operators import (
     ConversationOperatorsContainer,
 )
 from app.containers.operators.demo_operators import DemoOperatorsContainer
+from app.containers.operators.feedback_operators import FeedbackOperatorsContainer
 from app.containers.operators.inbox_operators import InboxOperatorsContainer
 from app.containers.operators.knowledge_operators import KnowledgeOperatorsContainer
 from app.containers.operators.notification_operators import (
@@ -112,6 +113,11 @@ class OperatorsContainer(containers.DeclarativeContainer):
     sharing: SharingOperatorsContainer = Container(  # type: ignore[assignment]
         SharingOperatorsContainer,
         sharing_pipelines=pipelines.sharing,
+        utilities=utilities,
+    )
+    feedback: FeedbackOperatorsContainer = Container(  # type: ignore[assignment]
+        FeedbackOperatorsContainer,
+        feedback_pipelines=pipelines.feedback,
         utilities=utilities,
     )
     demo: DemoOperatorsContainer = Container(  # type: ignore[assignment]

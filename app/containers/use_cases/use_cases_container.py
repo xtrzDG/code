@@ -15,6 +15,7 @@ from app.containers.use_cases.conversation_use_cases import (
 from app.containers.use_cases.core_use_cases_container import CoreUseCasesContainer
 from app.containers.use_cases.delivery_use_cases import DeliveryUseCasesContainer
 from app.containers.use_cases.demo_use_cases import DemoUseCasesContainer
+from app.containers.use_cases.feedback_use_cases import FeedbackUseCasesContainer
 from app.containers.use_cases.launch_use_cases import LaunchUseCasesContainer
 from app.containers.use_cases.notification_use_cases import (
     NotificationUseCasesContainer,
@@ -217,6 +218,16 @@ class UseCasesContainer(CoreUseCasesContainer):
         registries=CoreUseCasesContainer.registries,
         repositories=CoreUseCasesContainer.repositories,
         time_provider=CoreUseCasesContainer.time_provider,
+        account_use_cases=CoreUseCasesContainer.accounts,
+    )
+    feedback: FeedbackUseCasesContainer = Container(  # type: ignore[assignment]
+        FeedbackUseCasesContainer,
+        config=CoreUseCasesContainer.config,
+        facilitators=CoreUseCasesContainer.facilitators,
+        registries=CoreUseCasesContainer.registries,
+        repositories=CoreUseCasesContainer.repositories,
+        time_provider=CoreUseCasesContainer.time_provider,
+        utilities=CoreUseCasesContainer.utilities,
         account_use_cases=CoreUseCasesContainer.accounts,
     )
     demo: DemoUseCasesContainer = Container(  # type: ignore[assignment]

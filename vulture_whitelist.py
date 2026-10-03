@@ -234,6 +234,15 @@ _.template_previews  # app/schemas/dto/calls/call_settings.py
 _.notified_count  # app/schemas/dto/calls/call_summaries.py
 _.text_back_status  # app/schemas/dto/calls/missed_calls.py
 
+# Settings → Reviews: response fields the cabinet reads; no Python code does.
+_.is_link_tracked  # app/schemas/dto/feedback/review_settings.py
+_.period_days  # app/schemas/dto/feedback/review_stats.py
+_.asked_count  # app/schemas/dto/feedback/review_stats.py
+_.answered_count  # app/schemas/dto/feedback/review_stats.py
+_.review_opened_count  # app/schemas/dto/feedback/review_stats.py
+_.skipped_count  # app/schemas/dto/feedback/review_stats.py
+_.failed_count  # app/schemas/dto/feedback/review_stats.py
+
 # The team inbox's views: fields the cabinet reads (R6 inbox UI).
 _.is_assigned_automatically  # app/schemas/dto/inbox/assignment.py, inbox_views.py
 _.assignment  # app/schemas/dto/inbox/assignment.py

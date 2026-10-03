@@ -69,7 +69,9 @@ class ContactSummaryView(ImmutableDTO):
     (`is_phone_verified`), otherwise the one the customer typed. Counts and
     channels leave out the owner's test chats. An erased customer
     (`erased_at`) has no name, phone or language left; their anonymous
-    conversations and bookings still count.
+    conversations and bookings still count. `opted_out_channels`: where the
+    customer sent STOP; while any is listed they get no reminders, feedback
+    requests or messages after a missed call.
     """
 
     id: ContactId
@@ -84,6 +86,7 @@ class ContactSummaryView(ImmutableDTO):
     first_seen_at: Microseconds
     last_activity_at: Microseconds
     erased_at: Microseconds | None = None
+    opted_out_channels: list[ChannelKind] = Field(default_factory=list[ChannelKind])
 
 
 class ContactPage(ImmutableDTO):

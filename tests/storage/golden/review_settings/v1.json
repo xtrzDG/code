@@ -1,0 +1,10 @@
+{
+  "business_id": "business_ad327663-68ba-4d64-95cb-1d6a0b7e98f2",
+  "created_at": 1790000000000000,
+  "delay_minutes": 15,
+  "feedback_template_name": "booking_reminder",
+  "id": "review_settings_6e594384-18bd-5ce1-97c3-3c675b8aa390",
+  "is_feedback_enabled": true,
+  "schema_version": "1",
+  "updated_at": 1790000000000000
+}

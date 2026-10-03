@@ -1,6 +1,7 @@
 """
 What a delivery outcome changes outside the outbox: the health of the
-business's channel and the state of the handoff a notification is about.
+business's channel, the state of the handoff a notification is about and
+of the feedback request a message carries.
 """
 
 from collections.abc import Callable
@@ -10,9 +11,14 @@ from typed_time_provider import Microseconds
 from app.contracts.live_events import EventPublisherFacilitatorContract
 from app.contracts.repositories.booking_repositories import HandoffRepoContract
 from app.contracts.repositories.business_repositories import ChannelRepoContract
+from app.contracts.repositories.feedback_repositories import (
+    FeedbackRequestRepoContract,
+)
 from app.schemas.constants.deliveries import DeliveryFailureKind, OutboundMessageStatus
+from app.schemas.constants.feedback import FeedbackRequestStatus
 from app.schemas.constants.handoffs import HandoffStatus
 from app.schemas.domain.channels import ChannelDocument
+from app.schemas.domain.feedback import FeedbackRequestDocument
 from app.schemas.domain.handoffs import HandoffDocument
 from app.schemas.domain.outbound_messages import OutboundMessageDocument
 from app.schemas.dto.deliveries import OutboundAttempt
@@ -125,3 +131,38 @@ def failed_handoff(handoff: HandoffDocument) -> HandoffStatus | None:
         return HandoffStatus.NOTIFICATION_FAILED
 
     return None
+
+
+def update_feedback_request(
+    feedback_request_repo: FeedbackRequestRepoContract,
+    message: OutboundMessageDocument,
+    now: Microseconds,
+) -> None:
+    """
+    A delivered request for feedback notes when it arrived; one given up
+    becomes FAILED with the platform's reason (only while it still waits
+    for the rating: an answer is never undone).
+    """
+
+    if message.feedback_request_id is None or message.status not in (
+        OutboundMessageStatus.DELIVERED,
+        OutboundMessageStatus.DEAD,
+    ):
+        return
+
+    def change(request: FeedbackRequestDocument) -> FeedbackRequestDocument | None:
+        if request.status is not FeedbackRequestStatus.SENT:
+            return None
+
+        if message.status is OutboundMessageStatus.DELIVERED:
+            request.delivered_at = now
+        else:
+            request.status = FeedbackRequestStatus.FAILED
+            request.last_error = message.last_error
+
+        request.updated_at = now
+        return request
+
+    feedback_request_repo.update(
+        message.business_id, message.feedback_request_id, change
+    )

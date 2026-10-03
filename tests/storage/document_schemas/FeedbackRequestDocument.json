@@ -1,0 +1,215 @@
+{
+  "collection": "feedback_requests",
+  "document_type": "FeedbackRequestDocument",
+  "schema_version": 1,
+  "shape": {
+    "additionalProperties": false,
+    "properties": {
+      "answered_at": {
+        "anyOf": [
+          {
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "booking_id": {
+        "pattern": "^booking_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "business_id": {
+        "pattern": "^business_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "channel": {
+        "anyOf": [
+          {
+            "enum": [
+              "phone",
+              "whatsapp",
+              "instagram",
+              "messenger",
+              "telegram",
+              "web_chat",
+              "viber",
+              "owner_test"
+            ],
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "contact_id": {
+        "pattern": "^contact_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "conversation_id": {
+        "anyOf": [
+          {
+            "pattern": "^conversation_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "created_at": {
+        "type": "integer"
+      },
+      "delivered_at": {
+        "anyOf": [
+          {
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "first_clicked_at": {
+        "anyOf": [
+          {
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "id": {
+        "pattern": "^feedback_request_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "language": {
+        "maxLength": 16,
+        "minLength": 2,
+        "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$",
+        "type": "string"
+      },
+      "last_error": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "outbound_message_id": {
+        "anyOf": [
+          {
+            "pattern": "^outbound_message_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "review_clicks": {
+        "default": 0,
+        "minimum": 0,
+        "type": "integer"
+      },
+      "review_token": {
+        "anyOf": [
+          {
+            "maxLength": 22,
+            "minLength": 22,
+            "pattern": "^[A-Za-z0-9_-]{22}$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "schema_version": {
+        "default": "1",
+        "type": "string"
+      },
+      "score": {
+        "anyOf": [
+          {
+            "maximum": 5,
+            "minimum": 1,
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "sent_at": {
+        "anyOf": [
+          {
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "skip_reason": {
+        "anyOf": [
+          {
+            "enum": [
+              "opted_out",
+              "no_contact",
+              "no_channel",
+              "window_closed",
+              "already_asked",
+              "daily_limit"
+            ],
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "status": {
+        "enum": [
+          "sent",
+          "answered",
+          "skipped",
+          "failed"
+        ],
+        "type": "string"
+      },
+      "updated_at": {
+        "type": "integer"
+      },
+      "visit_ended_at": {
+        "type": "integer"
+      }
+    },
+    "required": [
+      "id",
+      "business_id",
+      "booking_id",
+      "contact_id",
+      "visit_ended_at",
+      "language",
+      "status"
+    ],
+    "type": "object"
+  }
+}

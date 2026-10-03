@@ -14,6 +14,7 @@ from app.containers.use_cases.conversation_use_cases import (
     ConversationUseCasesContainer,
 )
 from app.containers.use_cases.delivery_use_cases import DeliveryUseCasesContainer
+from app.containers.use_cases.feedback_use_cases import FeedbackUseCasesContainer
 from app.containers.use_cases.follow_up_use_cases import FollowUpUseCasesContainer
 from app.containers.use_cases.voice_use_cases import VoiceUseCasesContainer
 from app.containers.utilities import UtilitiesContainer
@@ -72,6 +73,7 @@ class ConversationOrchestratorsContainer(containers.DeclarativeContainer):
     delivery_use_cases: DeliveryUseCasesContainer = DependenciesContainer()  # type: ignore[assignment]
     call_use_cases: CallUseCasesContainer = DependenciesContainer()  # type: ignore[assignment]
     call_orchestrators: CallOrchestratorsContainer = DependenciesContainer()  # type: ignore[assignment]
+    feedback_use_cases: FeedbackUseCasesContainer = DependenciesContainer()  # type: ignore[assignment]
 
     # --- Conversation engine: one customer message, one voice tool call.
     conversation_turn_orchestrator: Factory[ConversationTurnOrchestratorContract] = (
@@ -83,6 +85,7 @@ class ConversationOrchestratorsContainer(containers.DeclarativeContainer):
             record_reply=conversation_use_cases.record_assistant_reply_use_case,
             localized_text_resolver=utilities.localized_text_resolver,
             storage_scope=utilities.storage_scope,
+            answer_customer_signal=feedback_use_cases.answer_customer_signal_use_case,
         )
     )
     voice_tool_call_orchestrator: Factory[VoiceToolCallOrchestratorContract] = Factory(

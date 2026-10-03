@@ -1,7 +1,7 @@
 {
   "collection": "business_profiles",
   "document_type": "BusinessProfileDocument",
-  "schema_version": 2,
+  "schema_version": 3,
   "shape": {
     "additionalProperties": false,
     "properties": {
@@ -176,6 +176,20 @@
         },
         "type": "array"
       },
+      "google_review_url": {
+        "anyOf": [
+          {
+            "maxLength": 2048,
+            "minLength": 10,
+            "pattern": "^https?://[^\\s/]+(/[^\\s]*)?$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
       "handoff_rules": {
         "items": {
           "type": "string"
@@ -234,7 +248,8 @@
                 "booking_page",
                 "delivery",
                 "website",
-                "privacy"
+                "privacy",
+                "google_review"
               ],
               "type": "string"
             },
@@ -311,7 +326,7 @@
         "default": null
       },
       "schema_version": {
-        "default": "2",
+        "default": "3",
         "type": "string"
       },
       "tone": {

@@ -180,4 +180,18 @@ DOCUMENT_LOOKUP_FIELDS: Mapping[
     # The stored digests and monthly reports of a business, newest period
     # first, of one kind (1061).
     DocumentCollectionName("value_reports"): (_text("kind"), _integer("starts_at")),
+    # Feedback after visits (1062): the businesses that ask (the periodic
+    # job, across businesses); a customer's request waiting for a rating;
+    # a review link by its public token (across businesses); the requests
+    # of a business newest first, and their counts, rating and link-visit
+    # sums by status for the statistics.
+    DocumentCollectionName("review_settings"): (_text("is_feedback_enabled"),),
+    DocumentCollectionName("feedback_requests"): (
+        _text("contact_id"),
+        _text("status"),
+        _text("review_token"),
+        _integer("created_at"),
+        _integer("score"),
+        _integer("review_clicks"),
+    ),
 }

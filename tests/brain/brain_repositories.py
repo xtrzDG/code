@@ -21,6 +21,7 @@ from app.repositories.conversation_repositories import (
     LlmTurnRepository,
     MessageRepository,
 )
+from app.repositories.feedback_repositories import FeedbackRequestRepository
 from app.repositories.knowledge_repositories import (
     KnowledgeItemRepository,
     ScheduleExceptionRepository,
@@ -38,6 +39,7 @@ from app.schemas.domain.conversations import (
     LlmTurnDocument,
     MessageDocument,
 )
+from app.schemas.domain.feedback import FeedbackRequestDocument
 from app.schemas.domain.handoffs import HandoffDocument
 from app.schemas.domain.knowledge import KnowledgeItemDocument
 from app.schemas.domain.profiles import BusinessProfileDocument
@@ -62,6 +64,7 @@ class BrainRepositories:
     audit_log_repo: AuditLogRepository
     user_repo: UserRepository
     knowledge_item_repo: KnowledgeItemRepository
+    feedback_request_repo: FeedbackRequestRepository
 
 
 def build_brain_repositories() -> BrainRepositories:
@@ -120,5 +123,8 @@ def build_brain_repositories() -> BrainRepositories:
             InMemoryDocumentCollectionAdapter[KnowledgeItemDocument](
                 KnowledgeItemDocument
             )
+        ),
+        feedback_request_repo=FeedbackRequestRepository(
+            InMemoryDocumentCollectionAdapter(FeedbackRequestDocument)
         ),
     )

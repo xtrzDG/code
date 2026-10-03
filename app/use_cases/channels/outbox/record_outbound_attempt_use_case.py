@@ -12,6 +12,9 @@ from app.contracts.repositories.business_repositories import ChannelRepoContract
 from app.contracts.repositories.delivery_repositories import (
     OutboundMessageRepoContract,
 )
+from app.contracts.repositories.feedback_repositories import (
+    FeedbackRequestRepoContract,
+)
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.deliveries import OutboundMessageStatus
 from app.schemas.constants.jobs import JobLane
@@ -20,6 +23,7 @@ from app.schemas.dto.deliveries import OutboundAttempt
 from app.schemas.typings.deliveries.constrained_integers import DeliveryAttemptCount
 from app.use_cases.channels.outbox.delivery_follow_ups import (
     update_channel_health,
+    update_feedback_request,
     update_handoff_notification,
 )
 from app.utilities.deliveries.delivery_jobs import (
@@ -45,8 +49,9 @@ class RecordOutboundAttemptUseCase(
     has its job). A refusal, a missing provider or the last attempt: DEAD.
 
     The channel's health follows its replies (`update_channel_health`), a
-    handoff follows its notifications (`update_handoff_notification`), and
-    a staff contact's or device's delivery state follows its own.
+    handoff follows its notifications (`update_handoff_notification`), a
+    feedback request its message (`update_feedback_request`), and a staff
+    contact's or device's delivery state follows its own.
     """
 
     def __init__(
@@ -57,9 +62,11 @@ class RecordOutboundAttemptUseCase(
         handoff_repo: HandoffRepoContract,
         live_events: EventPublisherFacilitatorContract,
         delivery_recorder: StaffDeliveryRecorderContract,
+        feedback_request_repo: FeedbackRequestRepoContract,
         # Spreads retry times only; nothing secret depends on it.
         jitter: Callable[[], float] = random.random,  # nosec B311
     ) -> None:
+        self._feedback_request_repo: FeedbackRequestRepoContract = feedback_request_repo
         self._outbound_message_repo: OutboundMessageRepoContract = outbound_message_repo
         self._job_queue: JobQueueFacilitatorContract = job_queue
         self._channel_repo: ChannelRepoContract = channel_repo
@@ -130,5 +137,6 @@ class RecordOutboundAttemptUseCase(
             self._channel_repo, self._live_events, stored, input_data, now
         )
         update_handoff_notification(self._handoff_repo, stored, now)
+        update_feedback_request(self._feedback_request_repo, stored, now)
         self._delivery_recorder.record(stored)
         return stored

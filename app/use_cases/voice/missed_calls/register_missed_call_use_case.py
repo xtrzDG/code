@@ -49,7 +49,6 @@ from app.use_cases.voice.missed_calls.text_back_rules import (
     choose_text_back_channel,
     choose_text_back_language,
     is_in_conversation,
-    is_opted_out,
     is_too_late,
     refusal_reason,
     text_back_counters,
@@ -63,6 +62,7 @@ from app.utilities.calls.text_back_jobs import (
     encode_text_back_payload,
 )
 from app.utilities.channels.delivery_targets import find_business_channel
+from app.utilities.channels.opt_out import is_opted_out
 
 
 class RegisterMissedCallUseCase(
@@ -77,10 +77,11 @@ class RegisterMissedCallUseCase(
 
     Not texted (SKIPPED, with the reason): text-backs off, a hidden
     number, an assistant that is not live, a report hours late, no
-    channel, a customer who opted out or already writes with the business
-    in a messenger, and a caller texted in the last day (one per caller per
-    day, at most 200 per business per day, counted for every API instance
-    together). A report of the same call again changes nothing; None when
+    channel, a customer who opted out (STOP) or already writes with the
+    business in a messenger, and a caller texted in the last day (one per
+    caller per day, at most 200 per business per day, and within the
+    customer's shared daily cap of unrequested messages, counted for every
+    API instance together). A report of the same call again changes nothing; None when
     no business has the line.
     """
 
@@ -231,9 +232,9 @@ class RegisterMissedCallUseCase(
             return TextBackSkipReason.IN_CONVERSATION
 
         refused: RateLimitKey | None = self._rate_limits.try_acquire_all(
-            text_back_counters(business, caller), DAY_WINDOW, now
+            text_back_counters(business, caller, contact), DAY_WINDOW, now
         )
         if refused is not None:
-            return refusal_reason(business, refused)
+            return refusal_reason(business, caller, refused)
 
         return channel

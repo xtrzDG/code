@@ -91,6 +91,8 @@ class DemoUseCasesContainer(containers.DeclarativeContainer):
         package_usage_warning_repo=repositories.package_usage_warning_repo,
         dpa_acceptance_repo=repositories.dpa_acceptance_repo,
         audit_log_repo=repositories.audit_log_repo,
+        review_settings_repo=repositories.review_settings_repo,
+        feedback_request_repo=repositories.feedback_request_repo,
         app_settings=config.app_settings,
     )
     # `workshop seed-load`: owners and plans, then each business's bulk history.
