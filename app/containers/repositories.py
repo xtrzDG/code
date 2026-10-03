@@ -9,6 +9,7 @@ from app.containers.adapters.notification_collections_container import (
 from app.containers.call_repositories import CallRepositoriesContainer
 from app.containers.inbox_repositories import InboxRepositoriesContainer
 from app.containers.launch_repositories import LaunchRepositoriesContainer
+from app.containers.value_repositories import ValueRepositoriesContainer
 from app.repositories.activation_probe_repository import ActivationProbeRepository
 from app.repositories.assistant_repositories import (
     AssistantVersionRepository,
@@ -79,15 +80,20 @@ from app.repositories.user_repositories import (
     UserRepository,
     UserSessionRepository,
 )
+from app.repositories.value_count_repository import ValueCountRepository
 from app.repositories.worker_heartbeat_repository import WorkerHeartbeatRepository
 
 
 class RepositoriesContainer(
-    CallRepositoriesContainer, InboxRepositoriesContainer, LaunchRepositoriesContainer
+    CallRepositoriesContainer,
+    InboxRepositoriesContainer,
+    LaunchRepositoriesContainer,
+    ValueRepositoriesContainer,
 ):
     """
     The repositories (singletons); those of what follows a call, of the team
-    inbox and over the launch collections come from the three bases.
+    inbox, over the launch collections and of the value reports come from
+    the four bases.
     """
 
     collections: DocumentCollectionsContainer = DependenciesContainer()  # type: ignore[assignment]
@@ -173,6 +179,12 @@ class RepositoriesContainer(
         lead_collection=collections.lead_collection,
         booking_collection=collections.booking_collection,
         channel_collection=collections.channel_collection,
+    )
+    # Counts of the value model beyond the dashboard's (1061).
+    value_count_repo: Singleton[ValueCountRepository] = Singleton(
+        ValueCountRepository,
+        booking_collection=collections.booking_collection,
+        message_collection=collections.message_collection,
     )
     unanswered_question_repo: Singleton[UnansweredQuestionRepository] = Singleton(
         UnansweredQuestionRepository,
