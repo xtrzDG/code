@@ -59,8 +59,9 @@ services:
     dockerContext: .
     dockerCommand: workshop api
     preDeployCommand: workshop migrate
-    # Readiness: the database answers, every migration of this build is
-    # applied and a connection is free (GET /healthz is liveness only).
+    # Readiness: the database answers and every migration of this build is
+    # applied; a busy pool is "degraded" (200) and fails only after 30 s
+    # (GET /healthz is liveness only).
     healthCheckPath: /readyz
     # SIGTERM first: uvicorn finishes open requests (25 s), then exits.
     maxShutdownDelaySeconds: 30
@@ -73,6 +74,14 @@ services:
       - fromGroup: workshop-staging
       - key: PORT
         value: "8000"
+      # The connection budget of production (render.yaml) with one instance;
+      # the defaults (64 threads, 32 connections) would not fit basic-256mb.
+      - key: THREADPOOL_SIZE
+        value: "40"
+      - key: DB_POOL_SIZE
+        value: "12"
+      - key: LLM_MAX_CONCURRENCY
+        value: "8"
       - key: DATABASE_URL
         fromDatabase:
           name: workshop-staging-db
@@ -127,6 +136,12 @@ services:
         fromDatabase:
           name: workshop-staging-db
           property: connectionString
+      - key: THREADPOOL_SIZE
+        value: "20"
+      - key: DB_POOL_SIZE
+        value: "16"
+      - key: LLM_MAX_CONCURRENCY
+        value: "12"
       - key: APP_BASE_URL
         fromService:
           type: web

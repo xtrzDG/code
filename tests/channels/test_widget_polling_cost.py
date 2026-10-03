@@ -72,7 +72,7 @@ class TestWidgetPollingCost:
             testbed.conversation_repo.save(other)
             for note in range(20):
                 add_staff_message(testbed, business.id, other.id, f"Note {note}", "en")
-        reply = send(client, business.id, "Hi")
+        reply = send(testbed, business.id, "Hi")
         conversations.read_count = messages.read_count = 0
 
         body = poll(client, business.id, after=reply["cursor"]).json()
@@ -90,7 +90,7 @@ class TestWidgetPollingCost:
         testbed = ChannelsTestbed()
         business = enable_widget(testbed)
         client = testbed.build_http_client()
-        reply = send(client, business.id, "Hi")
+        reply = send(testbed, business.id, "Hi")
 
         answers = [
             poll(client, business.id, after=reply["cursor"]).status_code
@@ -113,7 +113,7 @@ class TestWidgetPollingCost:
         testbed = ChannelsTestbed()
         business = enable_widget(testbed)
         client = testbed.build_http_client()
-        reply = send(client, business.id, "Hi")
+        reply = send(testbed, business.id, "Hi")
         path = f"/v1/widget/{business.id}/messages"
 
         in_the_url = client.get(

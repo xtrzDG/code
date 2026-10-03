@@ -14,6 +14,7 @@ from app.schemas.typings.platform.constrained_integers import (
     ElapsedMilliseconds,
     HeartbeatAgeSeconds,
     MigrationCount,
+    PoolExhaustedSeconds,
 )
 from app.schemas.typings.platform.constrained_strings import ReleaseVersion
 from app.schemas.typings.storage.constrained_strings import SchemaMigrationName
@@ -56,11 +57,17 @@ class MigrationsCheck(ImmutableDTO):
 
 
 class ConnectionPoolCheck(ImmutableDTO):
-    """A database connection was free within the probe's timeout."""
+    """
+    A database connection was free within the probe's timeout. When none
+    was, `exhausted_seconds` says for how long every probe found the pool
+    busy: DEGRADED at first (model calls and bursts pass), FAILED only past
+    the readiness check's limit.
+    """
 
     status: HealthCheckStatus
     in_use: DatabaseConnectionCount | None = None
     size: DatabasePoolSize | None = None
+    exhausted_seconds: PoolExhaustedSeconds | None = None
 
 
 class WorkerCheck(ImmutableDTO):

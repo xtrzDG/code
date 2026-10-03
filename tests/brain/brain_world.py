@@ -28,6 +28,7 @@ from app.pipelines.conversations.customer_message_pipeline import (
 from app.registries.locks.customer_message_lock_registry import (
     CustomerMessageLockRegistry,
 )
+from app.registries.turns.turn_slot_registry import build_customer_turn_slots
 from app.repositories.assistant_repositories import AssistantVersionRepository
 from app.repositories.billing_repositories import UsageEventRepository
 from app.repositories.booking_repositories import HandoffRepository
@@ -80,6 +81,9 @@ from app.use_cases.conversations.build_call_greeting_use_case import (
 )
 from app.use_cases.conversations.tools.run_assistant_tool_use_case import (
     RunAssistantToolUseCase,
+)
+from app.utilities.config_helpers.app_settings.app_settings_assembler import (
+    assemble_app_settings,
 )
 from app.utilities.localization.localized_text_resolver import LocalizedTextResolver
 from tests.brain.brain_business_seed import seed_business
@@ -279,6 +283,7 @@ def build_world(
         pipeline=CustomerMessagePipeline(
             orchestrators.orchestrator,
             CustomerMessageLockRegistry(InMemoryAdvisoryLockAdapter()),
+            build_customer_turn_slots(assemble_app_settings({})),
         ),
         voice_orchestrator=orchestrators.voice_orchestrator,
         greeting=BuildCallGreetingUseCase(

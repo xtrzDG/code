@@ -24,7 +24,7 @@ class TestWidgetPolling:
         business = enable_widget(testbed)
         client = testbed.build_http_client()
         testbed.pipeline.is_silent = True
-        reply = send(client, business.id, "אני רוצה לדבר עם מישהו")
+        reply = send(testbed, business.id, "אני רוצה לדבר עם מישהו")
         assert reply["is_handed_off"] is True
 
         nothing_yet = poll(client, business.id, after=reply["cursor"])
@@ -60,7 +60,7 @@ class TestWidgetPolling:
         testbed = ChannelsTestbed()
         business = enable_widget(testbed)
         client = testbed.build_http_client()
-        reply = send(client, business.id, "Hi")
+        reply = send(testbed, business.id, "Hi")
 
         body = poll(client, business.id, after=reply["cursor"]).json()
 
@@ -73,8 +73,8 @@ class TestWidgetPolling:
         testbed = ChannelsTestbed()
         business = enable_widget(testbed)
         client = testbed.build_http_client()
-        first = send(client, business.id, "Hi")
-        send(client, business.id, "And another thing")
+        first = send(testbed, business.id, "Hi")
+        send(testbed, business.id, "And another thing")
         other = ConversationDocument(
             business_id=business.id,
             contact_id=ContactId(),
@@ -116,7 +116,7 @@ class TestWidgetPolling:
         testbed = ChannelsTestbed()
         business = enable_widget(testbed)
         client = testbed.build_http_client()
-        reply = send(client, business.id, "Hi")
+        reply = send(testbed, business.id, "Hi")
 
         fresh = poll(client, business.id).json()
         erased = poll(client, business.id, after=str(MessageId())).json()
@@ -135,7 +135,7 @@ class TestWidgetPolling:
         testbed = ChannelsTestbed()
         business = enable_widget(testbed)
         client = testbed.build_http_client()
-        reply = send(client, business.id, "Do you deliver to Batumi?")
+        reply = send(testbed, business.id, "Do you deliver to Batumi?")
 
         position = poll(client, business.id).json()
         missed = poll(client, business.id, after=position["cursor"]).json()
@@ -149,7 +149,7 @@ class TestWidgetPolling:
         business = enable_widget(testbed)
         client = testbed.build_http_client()
         testbed.pipeline.is_silent = True
-        reply = send(client, business.id, "Hello?")
+        reply = send(testbed, business.id, "Hello?")
         for number in range(55):
             add_staff_message(
                 testbed,
@@ -174,7 +174,7 @@ class TestWidgetPolling:
         business = enable_widget(testbed)
         client = testbed.build_http_client()
         testbed.pipeline.is_silent = True
-        reply = send(client, business.id, "Help")
+        reply = send(testbed, business.id, "Help")
         conversation = testbed.conversation_repo.get(
             business.id, testbed.pipeline.conversation_id
         )

@@ -25,12 +25,15 @@
  * session key kept in localStorage; the widget renders inside a shadow root,
  * so the host page's styles and the widget's styles never mix.
  *
- * The widget polls GET .../messages for answers it has not shown: while a
- * handoff to staff is open, while the panel is open within 24 hours of the
- * visitor's last exchange (staff can write to any website chat), and after
- * a page was left while an answer was being written. Every few seconds at
- * first, slower while nothing new arrives, and not at all while the page is
- * hidden. The visitor key travels in a request header, never in the URL.
+ * Sending a message is accepted at once (202): a worker answers it, and the
+ * widget shows the assistant typing while it polls GET .../messages for the
+ * answer, every second or so, until it arrives or staff take over. It also
+ * polls for answers it has not shown: while a handoff to staff is open,
+ * while the panel is open within 24 hours of the visitor's last exchange
+ * (staff can write to any website chat), and after a page was left while
+ * an answer was being written. Every few seconds at first, slower while
+ * nothing new arrives, and not at all while the page is hidden. The
+ * visitor key travels in a request header, never in the URL.
  * When the API says "too many messages" (429), sending and Retry wait for
  * its Retry-After, and polls slow down to it.
  * Tabs of one site share one history: each tab adopts what the others saved.
@@ -81,6 +84,11 @@
   var POLL_MAX_DELAY_OPEN_MS = 30000;
   var POLL_MAX_DELAY_CLOSED_MS = 60000;
   var POLL_MORE_DELAY_MS = 500;
+  // Waiting for the answer to an accepted message (202): a worker writes it
+  // within seconds, so poll often, a little slower each time.
+  var POLL_AWAIT_DELAY_MS = 1000;
+  var POLL_AWAIT_MAX_DELAY_MS = 3000;
+  var POLL_AWAIT_BACKOFF_FACTOR = 1.25;
   // A handoff or an exchange in the last 24 hours keeps an open panel
   // polling: staff can write to any website chat.
   var HANDOFF_MEMORY_MS = 24 * 60 * 60 * 1000;

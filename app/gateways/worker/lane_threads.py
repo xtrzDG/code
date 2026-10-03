@@ -11,6 +11,7 @@ from app.schemas.domain.jobs import QueuedJobDocument
 from app.schemas.typings.platform.constrained_integers import (
     JobClaimLimit,
     WorkerLaneConcurrency,
+    WorkerLanePollSeconds,
     WorkerPollSeconds,
 )
 from app.schemas.typings.platform.constrained_strings import JobLeaseToken, JobName
@@ -29,7 +30,11 @@ class LaneThreads:
     only take jobs of their lane, so a long autotest run never holds up a
     customer message or a notification, and a busy lane never starves
     another. A thread with nothing to do waits for a wake-up (a job queued
-    in this process) or its next poll.
+    by any process, `JobWakeupContract`) or its lane's next poll, the
+    safety net of a lost wake-up (WORKER_INBOUND_POLL_SECONDS for customer
+    messages, WORKER_POLL_SECONDS for the rest). The threads of a lane
+    start their polls spread over one interval, so they never poll in
+    lockstep.
 
     Threads are daemons: on shutdown `join` waits a grace period for
     running jobs, then the process may exit; a job cut off this way is
@@ -41,7 +46,7 @@ class LaneThreads:
         runner: QueuedJobRunner,
         lane_concurrency: Mapping[JobLane, WorkerLaneConcurrency],
         job_wakeup: JobWakeupContract,
-        poll_seconds: WorkerPollSeconds,
+        lane_poll_seconds: Mapping[JobLane, WorkerLanePollSeconds],
         failure_reporter: JobFailureReporter,
     ) -> None:
         self._runner: QueuedJobRunner = runner
@@ -49,7 +54,9 @@ class LaneThreads:
             lane_concurrency
         )
         self._job_wakeup: JobWakeupContract = job_wakeup
-        self._poll_seconds: WorkerPollSeconds = poll_seconds
+        self._lane_poll_seconds: dict[JobLane, WorkerLanePollSeconds] = dict(
+            lane_poll_seconds
+        )
         self._failure_reporter: JobFailureReporter = failure_reporter
         self._threads: list[threading.Thread] = []
 
@@ -59,7 +66,7 @@ class LaneThreads:
             for index in range(concurrency):
                 thread = threading.Thread(
                     target=self._work,
-                    args=(lane, stop_event),
+                    args=(lane, stop_event, index * self._poll_of(lane) / concurrency),
                     name=f"worker-{lane.value}-{index + 1}",
                     daemon=True,
                 )
@@ -99,7 +106,19 @@ class LaneThreads:
 
         return not running
 
-    def _work(self, lane: JobLane, stop_event: threading.Event) -> None:
+    def _work(
+        self,
+        lane: JobLane,
+        stop_event: threading.Event,
+        first_poll_delay_seconds: float,
+    ) -> None:
+        # The first thread of a lane claims at once (jobs left from before a
+        # restart); the others first wait their share of the poll interval
+        # unless a job wakes them, so the lane's polls stay spread out.
+        if first_poll_delay_seconds > 0:
+            self._job_wakeup.wait(lane, first_poll_delay_seconds)
+
+        poll_seconds: float = self._poll_of(lane)
         consecutive_failures: int = 0
         while not stop_event.is_set():
             try:
@@ -108,14 +127,16 @@ class LaneThreads:
             except Exception as error:  # noqa: BLE001 - the queue may be unreachable
                 consecutive_failures += 1
                 self._failure_reporter.report(JobName(f"claim_{lane.value}"), error)
-                stop_event.wait(timeout=self._backoff_seconds(consecutive_failures))
+                stop_event.wait(
+                    timeout=self._backoff_seconds(lane, consecutive_failures)
+                )
                 continue
 
             if jobs:
                 self._run_all(jobs, lease_token)
                 continue
 
-            self._job_wakeup.wait(lane, float(int(self._poll_seconds)))
+            self._job_wakeup.wait(lane, poll_seconds)
 
     def _run_all(
         self, jobs: list[QueuedJobDocument], lease_token: JobLeaseToken
@@ -123,7 +144,30 @@ class LaneThreads:
         for job in jobs:
             self._runner.run(job, lease_token)
 
-    def _backoff_seconds(self, consecutive_failures: int) -> float:
-        poll_seconds: int = int(self._poll_seconds)
+    def _poll_of(self, lane: JobLane) -> float:
+        return float(int(self._lane_poll_seconds[lane]))
+
+    def _backoff_seconds(self, lane: JobLane, consecutive_failures: int) -> float:
+        poll_seconds: int = int(self._lane_poll_seconds[lane])
         backoff_seconds: int = poll_seconds * (1 << min(consecutive_failures, 16))
         return float(min(backoff_seconds, max(poll_seconds, MAX_CLAIM_BACKOFF_SECONDS)))
+
+
+def build_lane_poll_seconds(
+    poll_seconds: WorkerPollSeconds,
+    inbound_poll_seconds: WorkerLanePollSeconds | None,
+) -> dict[JobLane, WorkerLanePollSeconds]:
+    """
+    How often each lane's idle threads look at the queue without a wake-up:
+    customer messages every WORKER_INBOUND_POLL_SECONDS (when given, and
+    never slower than the rest), the other lanes every WORKER_POLL_SECONDS.
+    """
+
+    regular = WorkerLanePollSeconds(int(poll_seconds))
+    poll_by_lane: dict[JobLane, WorkerLanePollSeconds] = dict.fromkeys(JobLane, regular)
+    if inbound_poll_seconds is not None:
+        poll_by_lane[JobLane.INBOUND] = WorkerLanePollSeconds(
+            min(int(inbound_poll_seconds), int(regular))
+        )
+
+    return poll_by_lane

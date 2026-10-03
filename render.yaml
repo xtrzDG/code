@@ -75,8 +75,9 @@ services:
     # advisory locks and the rate limits are counted in Postgres, so both
     # instances share them (docs/LAUNCH.md, "Несколько экземпляров API").
     numInstances: 2
-    # Readiness: the database answers, every migration of this build is
-    # applied and a connection is free (GET /healthz is liveness only).
+    # Readiness: the database answers and every migration of this build is
+    # applied; a busy pool is "degraded" (200) and fails only after 30 s
+    # (GET /healthz is liveness only).
     healthCheckPath: /readyz
     # SIGTERM first: uvicorn finishes open requests (25 s), then exits.
     maxShutdownDelaySeconds: 30
@@ -93,15 +94,20 @@ services:
       - fromGroup: workshop-backend
       - key: PORT
         value: "8000"
-      # Connections: 2 instances x 30 + the worker's 20 stay below the 100 of
-      # basic-256mb (a thread holds one connection at most, so the pool
-      # matches the request threads). Half the threads may wait for the model.
+      # Connection budget (docs/operations/capacity.md): during a deploy the
+      # old and new instances run together, 2 x 2 x (12 + 1 LISTEN), plus the
+      # worker's 2 x (16 + 1), the backup's 2, the migration's 1 and 5 kept
+      # for superusers and operators: 94 of the 100 of basic-256mb
+      # (tests/platform/test_connection_budget.py). Requests hold a
+      # connection for a moment, so the threads outnumber the pool. Customer
+      # turns run on the worker; the API's own model calls (the owners' test
+      # chat, imports) are few.
       - key: THREADPOOL_SIZE
-        value: "30"
+        value: "40"
       - key: DB_POOL_SIZE
-        value: "30"
+        value: "12"
       - key: LLM_MAX_CONCURRENCY
-        value: "15"
+        value: "8"
       - key: DATABASE_URL
         fromDatabase:
           name: workshop-db
@@ -262,12 +268,14 @@ services:
         fromDatabase:
           name: workshop-db
           property: connectionString
-      # The worker's lanes run 16 jobs at once (WORKER_LANE_CONCURRENCY), plus
-      # its scheduler: 20 connections; it serves no requests.
+      # The worker's lanes run 16 jobs at once (WORKER_LANE_CONCURRENCY); a
+      # job holds one connection at most, and only a customer turn holds it
+      # for long (its lock), so 16 connections serve them and the scheduler.
+      # It serves no requests (connection budget: see workshop-api).
       - key: THREADPOOL_SIZE
         value: "20"
       - key: DB_POOL_SIZE
-        value: "20"
+        value: "16"
       - key: LLM_MAX_CONCURRENCY
         value: "12"
       - key: APP_BASE_URL

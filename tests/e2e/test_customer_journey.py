@@ -13,6 +13,7 @@ from tests.e2e.journeys import (
     WIZARD_STEPS,
     JsonObject,
 )
+from tests.e2e.widget_turns import answer_of, ask_widget, post_widget_message
 
 
 def test_georgian_restaurant_from_sign_in_to_a_booked_and_handed_off_chat(
@@ -204,18 +205,19 @@ def test_georgian_restaurant_from_sign_in_to_a_booked_and_handed_off_chat(
 
     # A website visitor books a table through the tool loop.
     widget_origin = {"Origin": "https://salobie.example"}
-    booked = client.post(
-        f"/v1/widget/{business['id']}/messages",
-        json={
-            "session_key": WIDGET_SESSION,
-            "text": BOOKING_REQUEST_RU,
-            "contact_name": "Нино",
-        },
+    booked = post_widget_message(
+        workshop,
+        business["id"],
+        WIDGET_SESSION,
+        BOOKING_REQUEST_RU,
+        contact_name="Нино",
         headers=widget_origin,
     )
-    assert booked.status_code == 200, booked.text
+    assert booked.status_code == 202, booked.text
     assert booked.headers["access-control-allow-origin"] == "*"
-    reply: JsonObject = booked.json()
+    # The worker answers; the staff notice waits in the outbox until then.
+    assert workshop.telegram.bodies("sendMessage") == []
+    reply: JsonObject = answer_of(workshop, booked)
     assert reply["language"] == "ru"
     assert reply["is_handed_off"] is False
     assert reply["text"].startswith("Здравствуйте! Я AI-ассистент «Salobie Bia».")
@@ -229,28 +231,21 @@ def test_georgian_restaurant_from_sign_in_to_a_booked_and_handed_off_chat(
     assert bookings[0]["source_channel"] == "web_chat"
     assert bookings[0]["status"] == "confirmed"
     # Staff hear about it from the outbox, sent by the worker.
-    assert workshop.telegram.bodies("sendMessage") == []
-    workshop.run_queued_jobs()
     staff_messages = workshop.telegram.bodies("sendMessage")
     assert staff_messages[-1]["chat_id"] == "70001"
     assert staff_messages[-1]["text"].startswith("Новая бронь · Salobie Bia")
 
     # The visitor asks for a person: staff are notified, the bot goes silent.
-    handed_off = client.post(
-        f"/v1/widget/{business['id']}/messages",
-        json={"session_key": WIDGET_SESSION, "text": "Позовите, пожалуйста, менеджера"},
-    ).json()
+    handed_off = ask_widget(
+        workshop, business["id"], WIDGET_SESSION, "Позовите, пожалуйста, менеджера"
+    )
     assert handed_off["is_handed_off"] is True
     assert handed_off["text"] == "Ваш вопрос передан коллеге. Вам скоро ответят."
-    workshop.run_queued_jobs()
     assert (
         "Клиенту нужен человек" in workshop.telegram.bodies("sendMessage")[-1]["text"]
     )
     model_calls_before = workshop.model.assistant_calls
-    silent = client.post(
-        f"/v1/widget/{business['id']}/messages",
-        json={"session_key": WIDGET_SESSION, "text": "Алло?"},
-    ).json()
+    silent = ask_widget(workshop, business["id"], WIDGET_SESSION, "Алло?")
     assert silent["text"] is None
     assert silent["is_handed_off"] is True
     assert workshop.model.assistant_calls == model_calls_before

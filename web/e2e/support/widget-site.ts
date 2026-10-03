@@ -41,6 +41,9 @@ export class FakeWidgetApi {
   isHandedOff = false;
   /** POSTs are recorded and answered on the server, but the page never gets the reply. */
   holdPosts = false;
+  /** Answers wait for releaseAnswers(), like a worker still writing them. */
+  holdAnswers = false;
+  private heldAnswers: string[] = [];
   /** The next POSTs are refused with 429 and this Retry-After (seconds). */
   refusePostsFor: number | null = null;
   polls: { url: string; sessionKey: string | null }[] = [];
@@ -98,19 +101,30 @@ export class FakeWidgetApi {
     if (request.method() === "POST") {
       const body = JSON.parse(request.postData() ?? "{}") as { text: string; session_key: string };
       this.sessionKeys.push(body.session_key);
-      const question = this.add("customer", body.text);
-      const answer = this.add("assistant", `Answer to ${body.text}`);
-      const reply = { text: answer.text, message_id: answer.id, cursor: question.id, is_handed_off: false, direction: "ltr" };
+      // Accepted at once (202), like the API: a worker answers, the widget polls.
+      this.add("customer", body.text);
+      if (this.holdAnswers) {
+        this.heldAnswers.push(`Answer to ${body.text}`);
+      } else {
+        this.add("assistant", `Answer to ${body.text}`);
+      }
       if (this.holdPosts) {
         // The visitor leaves before the answer arrives: the request is
         // never answered and the browser drops it on navigation.
         return;
       }
-      await this.json(route, reply);
+      await this.json(route, { event_id: `inbound_event_${this.nextId}` }, 202);
       return;
     }
     this.polls.push({ url: request.url(), sessionKey: request.headers()["x-widget-session-key"] ?? null });
     await this.json(route, this.page(url.searchParams.get("after")));
+  }
+
+  /** The worker finishes the answers held so far; the next poll brings them. */
+  releaseAnswers(): void {
+    for (const text of this.heldAnswers.splice(0)) {
+      this.add("assistant", text);
+    }
   }
 
   add(author: FakeMessage["author"], text: string, direction: "ltr" | "rtl" = "ltr"): FakeMessage {
@@ -130,8 +144,8 @@ export class FakeWidgetApi {
     return { items, cursor: latest, has_more: false, is_handed_off: this.isHandedOff };
   }
 
-  private async json(route: Route, body: unknown): Promise<void> {
-    await route.fulfill({ headers: CORS_HEADERS, json: body });
+  private async json(route: Route, body: unknown, status = 200): Promise<void> {
+    await route.fulfill({ status, headers: CORS_HEADERS, json: body });
   }
 }
 

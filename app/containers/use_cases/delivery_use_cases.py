@@ -13,6 +13,7 @@ from app.schemas.dto.channels.staff_links import (
     PlatformBotWebhookOutcome,
     PlatformBotWebhookRequest,
 )
+from app.schemas.dto.channels.widget_turns import WidgetMessageAcceptedView
 from app.schemas.dto.conversations import InboundMessage
 from app.schemas.dto.deliveries import (
     InboundAnswer,
@@ -38,9 +39,6 @@ from app.use_cases.channels.inbox.claim_inbound_event_use_case import (
 )
 from app.use_cases.channels.inbox.finish_inbound_event_use_case import (
     FinishInboundEventUseCase,
-)
-from app.use_cases.channels.inbox.open_widget_event_use_case import (
-    OpenWidgetEventUseCase,
 )
 from app.use_cases.channels.inbox.read_accepted_post_call_use_case import (
     ReadAcceptedPostCallUseCase,
@@ -68,6 +66,9 @@ from app.use_cases.channels.outbox.send_outbound_message_use_case import (
 )
 from app.use_cases.channels.outbox.take_due_outbound_message_use_case import (
     TakeDueOutboundMessageUseCase,
+)
+from app.use_cases.widget.queue_widget_message_use_case import (
+    QueueWidgetMessageUseCase,
 )
 
 
@@ -110,13 +111,16 @@ class DeliveryUseCasesContainer(containers.DeclarativeContainer):
         job_queue=facilitators.job_queue_facilitator,
         wall_clock=time_provider.microsecond_wall_clock,
     )
-    open_widget_event_use_case: Factory[
-        UseCaseContract[InboundMessage, InboundEventClaim]
+    # The website widget's messages: into the inbox and queued in one
+    # transaction; a worker answers them like every channel's.
+    queue_widget_message_use_case: Factory[
+        UseCaseContract[InboundMessage, WidgetMessageAcceptedView]
     ] = Factory(
-        OpenWidgetEventUseCase,
+        QueueWidgetMessageUseCase,
         inbound_event_repo=repositories.inbound_event_repo,
         job_queue=facilitators.job_queue_facilitator,
         wall_clock=time_provider.microsecond_wall_clock,
+        unit_of_work=adapters.storage_unit_of_work,
     )
 
     # --- The inbox: what the worker does with an event.

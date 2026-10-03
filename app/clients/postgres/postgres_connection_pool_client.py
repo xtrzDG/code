@@ -5,12 +5,16 @@ from contextlib import contextmanager
 
 import psycopg
 
-from app.clients.postgres.pinned_connections import (
+from app.clients.postgres.idle_connections import (
     IdleConnection,
+    IdleConnections,
+    is_usable,
+)
+from app.clients.postgres.pinned_connections import (
     PinnedConnections,
     PostgresConnection,
     build_session_options,
-    is_idle,
+    reset_for_reuse,
 )
 from app.contracts.client_contract import ClientContract
 from app.schemas.exceptions.application_errors import ExternalServiceError
@@ -22,6 +26,7 @@ DEFAULT_MAX_POOL_SIZE: int = 10
 DEFAULT_ACQUIRE_TIMEOUT_SECONDS: float = 30.0
 DEFAULT_CONNECT_TIMEOUT_SECONDS: int = 10
 DEFAULT_IDLE_CHECK_SECONDS: float = 30.0
+DEFAULT_MIN_POOL_SIZE: int = 0
 DEFAULT_APPLICATION_NAME: str = "assistant-workshop"
 
 
@@ -37,6 +42,12 @@ class PostgresConnectionPoolClient(ClientContract):
     is discarded; one idle for longer than `idle_check_seconds` is pinged
     before reuse and replaced when the server dropped it (restart, idle
     timeout), so a stale connection rarely fails a request.
+
+    The pool shrinks after a burst: whenever it is used (a request, the
+    readiness probe, a worker's poll), connections idle for
+    `max_idle_seconds` are closed while more than `min_size` are open, so a
+    process does not keep its peak and a deploy's overlap fits the server's
+    connection limit.
 
     Prepared statements are off by default: transaction poolers in front of
     managed Postgres (PgBouncer, Supavisor) do not support them.
@@ -63,11 +74,16 @@ class PostgresConnectionPoolClient(ClientContract):
         is_statement_preparation_enabled: bool = False,
         statement_timeout_seconds: int | None = None,
         idle_in_transaction_timeout_seconds: int | None = None,
+        min_size: int = DEFAULT_MIN_POOL_SIZE,
+        max_idle_seconds: float | None = None,
     ) -> None:
         if max_size < 1:
             raise ValueError(
                 "A connection pool needs room for at least one connection."
             )
+
+        # A floor above the ceiling would only keep every connection.
+        self._min_size: int = max(0, min(min_size, max_size))
 
         self._database_url: DatabaseUrl = database_url
         self._max_size: int = max_size
@@ -82,7 +98,7 @@ class PostgresConnectionPoolClient(ClientContract):
             statement_timeout_seconds, idle_in_transaction_timeout_seconds
         )
         self._condition: threading.Condition = threading.Condition()
-        self._idle_connections: list[IdleConnection] = []
+        self._idle_connections: IdleConnections = IdleConnections(max_idle_seconds)
         self._open_connection_count: int = 0
         self._is_closed: bool = False
         self._pins: PinnedConnections = PinnedConnections()
@@ -159,8 +175,7 @@ class PostgresConnectionPoolClient(ClientContract):
 
         with self._condition:
             self._is_closed = True
-            idle_connections: list[IdleConnection] = self._idle_connections
-            self._idle_connections = []
+            idle_connections: list[IdleConnection] = self._idle_connections.take_all()
             self._open_connection_count -= len(idle_connections)
             self._condition.notify_all()
 
@@ -175,6 +190,7 @@ class PostgresConnectionPoolClient(ClientContract):
             return
 
     def _acquire(self, timeout_seconds: float) -> PostgresConnection:
+        self._close_expired()
         deadline: float = time.monotonic() + timeout_seconds
         while True:
             idle_connection: IdleConnection | None = self._reserve(
@@ -183,7 +199,7 @@ class PostgresConnectionPoolClient(ClientContract):
             if idle_connection is None:
                 return self._open_new_connection()
 
-            if self._is_usable(idle_connection):
+            if is_usable(idle_connection, self._idle_check_seconds):
                 return idle_connection.connection
 
             self._discard(idle_connection.connection)
@@ -200,8 +216,11 @@ class PostgresConnectionPoolClient(ClientContract):
                         "The database connection pool is closed."
                     )
 
-                if self._idle_connections:
-                    return self._idle_connections.pop()
+                idle_connection: IdleConnection | None = (
+                    self._idle_connections.pop_freshest()
+                )
+                if idle_connection is not None:
+                    return idle_connection
 
                 if self._open_connection_count < self._max_size:
                     self._open_connection_count += 1
@@ -237,29 +256,11 @@ class PostgresConnectionPoolClient(ClientContract):
             self._forget_slot()
             raise
 
-    def _is_usable(self, idle_connection: IdleConnection) -> bool:
-        connection: PostgresConnection = idle_connection.connection
-        if connection.closed or connection.broken:
-            return False
-
-        idle_seconds: float = time.monotonic() - idle_connection.idle_since
-        if idle_seconds < self._idle_check_seconds:
-            return True
-
-        try:
-            connection.execute("select 1")
-        except psycopg.Error:
-            return False
-
-        return True
-
     def _release(self, connection: PostgresConnection) -> None:
-        is_reusable: bool = self._reset_for_reuse(connection)
+        is_reusable: bool = reset_for_reuse(connection)
         with self._condition:
             if is_reusable and not self._is_closed:
-                self._idle_connections.append(
-                    IdleConnection(connection=connection, idle_since=time.monotonic())
-                )
+                self._idle_connections.push(connection, time.monotonic())
                 self._condition.notify()
                 return
 
@@ -268,19 +269,17 @@ class PostgresConnectionPoolClient(ClientContract):
 
         connection.close()
 
-    def _reset_for_reuse(self, connection: PostgresConnection) -> bool:
-        if connection.closed or connection.broken:
-            return False
+    def _close_expired(self) -> None:
+        """Close the connections idle past `max_idle_seconds` (down to min_size)."""
 
-        if is_idle(connection):
-            return True
+        with self._condition:
+            expired: list[PostgresConnection] = self._idle_connections.take_expired(
+                time.monotonic(), self._open_connection_count, self._min_size
+            )
+            self._open_connection_count -= len(expired)
 
-        try:
-            connection.rollback()
-        except psycopg.Error:
-            return False
-
-        return is_idle(connection)
+        for connection in expired:
+            connection.close()
 
     def _discard(self, connection: PostgresConnection) -> None:
         self._forget_slot()

@@ -6,6 +6,7 @@ note never reaches the language model, the visitor or a staff alert.
 
 from tests.e2e.harness import Workshop
 from tests.e2e.journeys import WIDGET_SESSION, JsonObject, open_restaurant
+from tests.e2e.widget_turns import ask_widget
 
 NOTE_TEXT: str = "Постоянный гость, код скидки VIP-7731, не звонить после 21:00"
 NOTE_MARKER: str = "VIP-7731"
@@ -21,10 +22,9 @@ def test_the_team_shares_a_handed_off_conversation_and_notes_stay_internal(
     widget_messages = f"/v1/widget/{restaurant.business_id}/messages"
 
     # A visitor says hello; the owner notes something about them.
-    greeted: JsonObject = client.post(
-        widget_messages,
-        json={"session_key": WIDGET_SESSION, "text": "Здравствуйте, у меня вопрос"},
-    ).json()
+    greeted: JsonObject = ask_widget(
+        workshop, restaurant.business_id, WIDGET_SESSION, "Здравствуйте, у меня вопрос"
+    )
     conversation_id = str(greeted["conversation_id"])
     conversation_path = f"{base}/conversations/{conversation_id}"
     noted = client.post(
@@ -37,13 +37,9 @@ def test_the_team_shares_a_handed_off_conversation_and_notes_stay_internal(
     # The visitor goes on and asks for a manager: the model answers twice
     # and never sees the note; neither the visitor nor the staff alert does.
     for text in ("Сколько стоит хачапури?", "Позовите менеджера, пожалуйста"):
-        answered = client.post(
-            widget_messages, json={"session_key": WIDGET_SESSION, "text": text}
-        )
-        assert answered.status_code == 200, answered.text
-        assert NOTE_MARKER not in answered.text
-    assert answered.json()["is_handed_off"] is True
-    workshop.run_queued_jobs()
+        answered = ask_widget(workshop, restaurant.business_id, WIDGET_SESSION, text)
+        assert NOTE_MARKER not in str(answered)
+    assert answered["is_handed_off"] is True
     new_requests = workshop.llm.requests[model_requests_before:]
     assert new_requests
     assert all(NOTE_MARKER not in request.model_dump_json() for request in new_requests)

@@ -1,6 +1,7 @@
 from app.contracts.conversation_flow import ConversationTurnOrchestratorContract
 from app.contracts.orchestrator_contract import OrchestratorContract
 from app.contracts.pipeline_contract import PipelineContract
+from app.contracts.turn_slots import TurnSlotRegistryContract
 from app.schemas.constants.setup import ActivationEventKind
 from app.schemas.dto.conversation_feed.owner_test_chat import OwnerTestChatCommand
 from app.schemas.dto.conversations import AssistantReply, InboundMessage
@@ -14,6 +15,11 @@ class OwnerTestChatPipeline(PipelineContract[OwnerTestChatCommand, AssistantRepl
     same conversation turn real customers get (sandbox, OWNER_TEST
     channel). The first answered test message is the TEST_CHAT_TRIED
     milestone of the guided setup.
+
+    The owner waits for the answer in the request, so the test chat has
+    places of its own (TEST_CHAT_MAX_CONCURRENCY per API process): a few
+    owners trying their assistants never take the threads the cabinet
+    needs; beyond them the owner is asked to try again in a moment (429).
     """
 
     def __init__(
@@ -24,6 +30,7 @@ class OwnerTestChatPipeline(PipelineContract[OwnerTestChatCommand, AssistantRepl
         ],
         turn_orchestrator: ConversationTurnOrchestratorContract,
         record_activation_event: OrchestratorContract[ActivationEventRecord, None],
+        test_chat_slots: TurnSlotRegistryContract,
     ) -> None:
         self._prepare_test_chat_version: OrchestratorContract[
             OwnerTestChatCommand, None
@@ -37,11 +44,14 @@ class OwnerTestChatPipeline(PipelineContract[OwnerTestChatCommand, AssistantRepl
         self._record_activation_event: OrchestratorContract[
             ActivationEventRecord, None
         ] = record_activation_event
+        self._test_chat_slots: TurnSlotRegistryContract = test_chat_slots
 
     def start(self, input_data: OwnerTestChatCommand) -> AssistantReply:
-        self._prepare_test_chat_version.execute(input_data)
-        message: InboundMessage = self._prepare_test_message.execute(input_data)
-        reply: AssistantReply = self._turn_orchestrator.execute(message)
+        with self._test_chat_slots.hold():
+            self._prepare_test_chat_version.execute(input_data)
+            message: InboundMessage = self._prepare_test_message.execute(input_data)
+            reply: AssistantReply = self._turn_orchestrator.execute(message)
+
         self._record_activation_event.execute(
             ActivationEventRecord(
                 business_id=input_data.business_id,

@@ -164,7 +164,7 @@ class PlatformUseCasesContainer(containers.DeclarativeContainer):
         authorize_platform_admin=authorize_platform_admin_use_case,
         job_repo=repositories.queued_job_repo,
         audit_log_repo=repositories.audit_log_repo,
-        job_wakeup=utilities.job_wakeup,
+        job_wakeup=adapters.job_wakeup,
         wall_clock=time_provider.microsecond_wall_clock,
     )
     discard_queued_job_use_case: Factory[
@@ -194,6 +194,7 @@ class PlatformUseCasesContainer(containers.DeclarativeContainer):
         worker_heartbeat_repo=repositories.worker_heartbeat_repo,
         storage_scope=utilities.storage_scope,
         wall_clock=time_provider.microsecond_wall_clock,
+        memory=utilities.readiness_memory,
     )
     report_widget_error_use_case: Factory[UseCaseContract[WidgetErrorCommand, None]] = (
         Factory(

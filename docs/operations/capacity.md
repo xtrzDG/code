@@ -13,6 +13,9 @@ one API instance and one worker carry, and where the known limits are.
 | `perf/k6/*.js` | concurrency against docker compose: cabinet browsing, 1000 polling widget visitors, webhook bursts of 200 messages a second | weekly and on demand |
 | `tests/storage/test_list_query_plans.py` | every cabinet list, count and sum uses its index on realistic tables (EXPLAIN) | every CI run |
 | `tests/architecture_policy/test_lists_page_in_the_database.py` | lists, cards and dashboards never load a business's whole history | every CI run |
+| `tests/storage/test_worker_pickup.py` | a customer message accepted by an API process is taken by a separate worker within 500 ms (its polls set to a minute, so only the wake-up can do it) | every CI run |
+| `tests/storage/test_widget_burst.py` | 64 widget messages at once with a 20 s model (`SCRIPTED_LLM_LATENCY_MS=20000`): all accepted, `/readyz` stays 200 and `GET /v1/me` under 200 ms | every CI run |
+| `tests/platform/test_connection_budget.py` | the Render Blueprints fit the database's connection limit during a deploy (below) | every CI run |
 
 ### Latency budgets (tests/perf)
 
@@ -125,10 +128,14 @@ against any stack you seeded (only ever a load-test one).
   requests at once. Reads of the cabinet and widget polls take
   milliseconds (the table above), so polling is cheap: 1,000 visitors
   polling every 4 seconds are 250 requests a second, a few threads busy.
-  A widget message holds its thread for the whole model answer: with
-  800 ms of model latency one instance answers at most about 80 widget
-  messages a second, less what else it serves. Scale API instances for
-  chat traffic, not for lists. Polls that arrive in lockstep queue
+  A widget message is stored and queued in one transaction and answered
+  `202` at once; the worker answers it like every channel's message and
+  the widget shows the typing dots until a poll brings the answer. A slow
+  model therefore holds worker threads, never request threads: scale
+  workers for chat traffic, API instances for requests. Only the owners'
+  test chat still answers in the request, on at most
+  `TEST_CHAT_MAX_CONCURRENCY` (4) threads per instance; one more owner gets
+  `429` "try again in a few seconds". Polls that arrive in lockstep queue
   behind each other (one process runs Python one request at a time):
   60 visitors polling at the same instant saw a p95 of 0.5 s, spread
   over the 4 seconds 25 ms; real visitors open their pages at random
@@ -149,8 +156,104 @@ against any stack you seeded (only ever a load-test one).
   workers when the queue's wait grows (admin jobs page; the
   `inbound` lane's oldest queued job).
 - **Database connections.** Every process keeps up to `DB_POOL_SIZE`
-  connections; the sum over API instances and workers must stay below the
-  Postgres limit.
+  connections (half of `THREADPOOL_SIZE` unless set) and closes those idle
+  for `DB_POOL_MAX_IDLE_SECONDS` (300) down to `DB_POOL_MIN_SIZE` (2), so a
+  burst's peak does not stay open. `THREADPOOL_SIZE` stays above
+  `DB_POOL_SIZE`: a request holds a connection for milliseconds, and one
+  waiting a moment for it is better than one refused. See "Connection
+  budget" for the sum.
+- **Turn places before locks.** A customer turn first takes one of the
+  process's `LLM_MAX_CONCURRENCY` turn places and only then the
+  customer's lock, a session advisory lock that pins a connection for the
+  whole turn. A turn waiting for a place (a slow model, a burst) holds no
+  connection, so waiting turns cannot drain the pool.
+
+## Pickup: from a customer message to a worker
+
+The pickup delay is the time from the moment a job became due to the
+moment a worker claimed it. Every claim logs it:
+
+```
+Picked up job process_inbound_message on the inbound lane 41 ms after it was due
+```
+
+with the structured fields `pickup_delay_ms`, `lane`, `attempt`,
+`job_name` and `job_id` (one JSON line in production; search Render's
+logs for `pickup_delay_ms`). The SLI is the p95 of `pickup_delay_ms` of
+`process_inbound_message` on the `inbound` lane; the target is 500 ms.
+
+- **How it stays low.** The queue inserts a job and runs
+  `pg_notify('workshop_jobs', <lane>)` in the same transaction: Postgres
+  delivers the notification only when the job commits (a rolled-back
+  enqueue wakes nobody). Each worker keeps one `LISTEN workshop_jobs`
+  connection (`application_name` `assistant-workshop-job-wakeup`, on
+  `LIVE_EVENTS_DATABASE_URL` or `DATABASE_URL`; it reconnects with
+  backoff like the API's live events listener) and wakes the lane's idle
+  threads at once.
+- **The safety net.** Lane threads still poll: the `inbound` lane every
+  `WORKER_INBOUND_POLL_SECONDS` (2), the others every
+  `WORKER_POLL_SECONDS` (15). The first polls are staggered (thread i of
+  n waits i/n of the period), so the threads of a lane never query
+  together. After a reconnect every lane polls at once.
+- **Reading it.** Pickups spread evenly up to 2,000 ms: wake-ups are not
+  arriving (the LISTEN connection is down, or `DATABASE_URL` goes through
+  a transaction pooler without `LIVE_EVENTS_DATABASE_URL`), and only
+  polling finds the jobs. Growing far beyond that: every `inbound` thread
+  is busy; raise the lane's concurrency or add workers (above).
+
+## Readiness under load
+
+`GET /readyz` (Render's health check, which takes an instance out of
+traffic) fails only when the instance cannot serve at all: the database
+does not answer (`select 1`, 2 s) or a migration of this build is missing.
+A pool with no free connection (the probe's `pool_exhausted`) is load,
+not a fault: the report stays `ready` (`200`) with the database and pool
+checks `degraded` and the pool's `exhausted_seconds`, and the migrations'
+last reading is reused instead of waiting for a connection. Only a pool
+exhausted for more than 30 s in a row fails it (`503`, and an error in the
+log): then requests are stuck, not busy. `GET /healthz` (liveness) never
+touches the database.
+
+## Connection budget
+
+Render's `basic-256mb` Postgres accepts 100 connections. The worst moment
+is a deploy: Render starts the new instances of the API and the worker
+before it stops the old ones, while the backup may run and the migration
+runs before. `tests/platform/test_connection_budget.py` reads every
+Blueprint and checks
+
+```
+2 x API instances x (DB_POOL_SIZE + 1 LISTEN)
++ 2 x workers x (DB_POOL_SIZE + 1 LISTEN)
++ backup 2 + migrate 1 + reserved 5   <=   the plan's limit
+```
+
+(reserved: Postgres's three superuser connections, an operator's psql and
+Render's own checks). Production (`render.yaml`): 2 x 2 x (12 + 1) = 52
+for the API, 2 x (16 + 1) = 34 for the worker, 2 + 1 + 5: 94 of 100.
+Staging (one API instance) sets the same pools. The defaults (64 threads,
+32 connections) would not fit: a Blueprint without `DB_POOL_SIZE` fails
+the test.
+
+When more is needed (a third API instance, a second worker, larger
+pools), pick one route and update the Blueprint and the test together:
+
+- **A larger database plan.** Add its connection limit (Render, "Postgres
+  connection limits") to `PLAN_CONNECTION_LIMITS` in
+  `tests/platform/connection_budget.py`.
+- **PgBouncer in front.** Run PgBouncer as a private service in session
+  mode with `max_db_connections` below the plan's limit minus the
+  reserve, and point `DATABASE_URL` of the API and the worker at it: a
+  deploy's peak then waits in PgBouncer instead of failing with "too many
+  clients", and idle pools (closed after 300 s) free their server
+  connections. Transaction mode is not enough: a customer turn holds a
+  session advisory lock on its connection
+  (`app/adapters/locks/postgres_advisory_lock_adapter.py`), and LISTEN
+  needs a session (`LIVE_EVENTS_DATABASE_URL` then names the direct
+  address). Count PgBouncer's limit, not the pools, in the test.
+- **Smaller pools.** Lower `DB_POOL_SIZE` per process; requests queue
+  for a connection a little longer, and readiness stays green while they
+  do.
 
 ## How lists stay fast as history grows
 

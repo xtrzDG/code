@@ -125,9 +125,13 @@
         text: item.text
       }).then(
         guarded("send", function (result) {
-          showTyping(false);
           state.isSending = false;
           state.pendingItem = null;
+          if (result.status === 202) {
+            awaitAnswer(item);
+            return;
+          }
+          showTyping(false);
           if (result.ok && result.body) {
             receiveReply(result.body);
           } else {
@@ -157,6 +161,21 @@
       );
     }
 
+    // The API accepted the message (202) and a worker is answering it: the
+    // typing dots stay and polling brings the answer (mount_polling).
+    function awaitAnswer(item) {
+      item.pending = true;
+      item.sentAt = Date.now();
+      markActivity();
+      saveHistory();
+      updateSendButton();
+      renderLog();
+      state.pollDelay = POLL_AWAIT_DELAY_MS;
+      schedulePoll(POLL_AWAIT_DELAY_MS);
+    }
+
+    // An answer in the response itself (200): an API instance of an older
+    // release during a deploy still answers in the request.
     function receiveReply(reply) {
       clearPending();
       if (typeof reply.text === "string" && reply.text) {
@@ -167,10 +186,8 @@
           direction: reply.direction === "rtl" ? "rtl" : "ltr"
         });
         noteReply(reply.text);
-      } else if (reply.is_handed_off && !state.handoffNoticeShown) {
-        state.handoffNoticeShown = true;
-        state.history.push({ role: "notice", key: "handedOff" });
-        announce(text("handedOff"));
+      } else if (reply.is_handed_off) {
+        noteHandoff();
       }
       // The position only moves forward by polling (right after this reply),
       // so staff messages written meanwhile are never skipped.
@@ -183,3 +200,12 @@
       renderLog();
     }
 
+    // Staff took the conversation over: say so once.
+    function noteHandoff() {
+      if (state.handoffNoticeShown) {
+        return;
+      }
+      state.handoffNoticeShown = true;
+      state.history.push({ role: "notice", key: "handedOff" });
+      announce(text("handedOff"));
+    }

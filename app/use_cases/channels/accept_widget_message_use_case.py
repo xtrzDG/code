@@ -6,12 +6,14 @@ from app.contracts.repositories.business_repositories import (
     ChannelRepoContract,
 )
 from app.contracts.use_case_contract import UseCaseContract
+from app.schemas.constants.businesses import BusinessStatus
 from app.schemas.constants.channels import ChannelKind, ChannelStatus
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.channels import ChannelDocument
 from app.schemas.dto.channels.widget import WidgetMessageCommand
 from app.schemas.dto.conversations import InboundMessage
 from app.schemas.exceptions.application_errors import (
+    ConflictError,
     NotFoundError,
     ValidationFailedError,
 )
@@ -33,8 +35,10 @@ class AcceptWidgetMessageUseCase(UseCaseContract[WidgetMessageCommand, InboundMe
 
     The business must exist and have the widget switched on; otherwise the
     chat is reported as unavailable (the same answer for both, so business
-    ids cannot be probed). The visitor is identified by the widget's random
-    session key.
+    ids cannot be probed). Its assistant must be live (409 otherwise, as a
+    turn would refuse it): the widget hears it at once instead of waiting
+    for an answer that never comes. The visitor is identified by the
+    widget's random session key.
 
     The endpoint is public and every message costs a model call, so
     messages are limited per visitor, per client network (an IPv6 /64), per
@@ -84,6 +88,9 @@ class AcceptWidgetMessageUseCase(UseCaseContract[WidgetMessageCommand, InboundMe
             or channel.status is not ChannelStatus.CONNECTED
         ):
             raise NotFoundError("This chat is not available.")
+
+        if business.status is not BusinessStatus.LIVE:
+            raise ConflictError(f"The assistant of {business.name} is not live.")
 
         return InboundMessage(
             business_id=business.id,

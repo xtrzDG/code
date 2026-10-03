@@ -1,3 +1,5 @@
+from contextlib import AbstractContextManager, nullcontext
+
 from typed_time_provider import Microseconds, WallClock
 
 from app.contracts.jobs import (
@@ -5,6 +7,7 @@ from app.contracts.jobs import (
     JobWakeupContract,
     QueuedJobRepoContract,
 )
+from app.contracts.storage import StorageUnitOfWorkContract
 from app.schemas.constants.jobs import JobLane
 from app.schemas.domain.jobs import QueuedJobDocument
 from app.schemas.typings.businesses.prefixed_id import BusinessId
@@ -15,9 +18,12 @@ from app.schemas.typings.platform.strings import JobPayloadJson
 
 class JobQueueFacilitator(JobQueueFacilitatorContract):
     """
-    Puts jobs into the durable queue read by the background workers, then
-    wakes the idle threads of the job's lane in this process (a worker in
-    another process finds the job at its next poll).
+    Puts jobs into the durable queue read by the background workers and
+    wakes the idle threads of the job's lane: in this process, and on
+    Postgres in every worker process (NOTIFY). The job row and its wake-up
+    are one storage transaction (`unit_of_work`), so the signal leaves only
+    once the job is committed and a woken worker always finds it; a job
+    queued for later is found by the polls when it is due.
     """
 
     def __init__(
@@ -25,10 +31,12 @@ class JobQueueFacilitator(JobQueueFacilitatorContract):
         job_repo: QueuedJobRepoContract,
         wall_clock: WallClock[Microseconds],
         job_wakeup: JobWakeupContract,
+        unit_of_work: StorageUnitOfWorkContract | None = None,
     ) -> None:
         self._job_repo: QueuedJobRepoContract = job_repo
         self._wall_clock: WallClock[Microseconds] = wall_clock
         self._job_wakeup: JobWakeupContract = job_wakeup
+        self._unit_of_work: StorageUnitOfWorkContract | None = unit_of_work
 
     def enqueue(
         self,
@@ -50,8 +58,15 @@ class JobQueueFacilitator(JobQueueFacilitatorContract):
             created_at=now,
             updated_at=now,
         )
-        self._job_repo.save(job)
-        if job.run_at <= now:
-            self._job_wakeup.notify(lane)
+        with self._transaction():
+            self._job_repo.save(job)
+            if job.run_at <= now:
+                self._job_wakeup.notify(lane)
 
         return job.id
+
+    def _transaction(self) -> AbstractContextManager[None]:
+        if self._unit_of_work is None:
+            return nullcontext()
+
+        return self._unit_of_work.unit_of_work()

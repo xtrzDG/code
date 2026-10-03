@@ -13,6 +13,7 @@ from app.schemas.domain.jobs import QueuedJobDocument
 from app.schemas.dto.job_queue import ExpiredLeaseRelease, JobClaimRequest
 from app.schemas.dto.jobs import QueuedJobInput
 from app.schemas.typings.platform.constrained_integers import (
+    ElapsedMilliseconds,
     JobAttemptCount,
     JobClaimLimit,
     JobLeaseSeconds,
@@ -20,9 +21,11 @@ from app.schemas.typings.platform.constrained_integers import (
 from app.schemas.typings.platform.constrained_strings import JobLeaseToken, JobName
 from app.schemas.typings.platform.strings import JobErrorText
 from app.utilities.observability.log_context import bound_log_context
+from app.utilities.observability.log_formatting import log_fields
 
 LOGGER: logging.Logger = logging.getLogger(__name__)
 MICROSECONDS_PER_SECOND: int = 1_000_000
+MICROSECONDS_PER_MILLISECOND: int = 1_000
 MAX_QUEUED_JOB_ATTEMPTS: JobAttemptCount = JobAttemptCount(5)
 RETRY_BASE_DELAY_SECONDS: int = 30
 LEASE_EXPIRED_ERROR: JobErrorText = JobErrorText(
@@ -88,6 +91,7 @@ class QueuedJobRunner:
         )
         for job in jobs:
             self._held_leases.hold_job(job.id, lease_token)
+            log_pickup(job, now)
 
         return jobs, lease_token
 
@@ -194,4 +198,30 @@ class QueuedJobRunner:
     def _lease_end(self, now: Microseconds) -> Microseconds:
         return Microseconds(
             int(now) + int(self._lease_seconds) * MICROSECONDS_PER_SECOND
+        )
+
+
+def log_pickup(job: QueuedJobDocument, claimed_at: Microseconds) -> None:
+    """
+    One line per claimed job with `pickup_delay_ms`: how long it waited
+    between being due (queued for now, or its retry time) and a worker
+    taking it, the queue-to-claim SLI of docs/operations/capacity.md.
+    """
+
+    delay = ElapsedMilliseconds(
+        max(0, (int(claimed_at) - int(job.run_at)) // MICROSECONDS_PER_MILLISECOND)
+    )
+    with bound_log_context(
+        job_name=job.name, job_id=job.id, business_id=job.business_id
+    ):
+        LOGGER.info(
+            "Picked up job %s on the %s lane %d ms after it was due",
+            job.name,
+            job.lane.value,
+            int(delay),
+            extra=log_fields(
+                pickup_delay_ms=int(delay),
+                lane=job.lane.value,
+                attempt=int(job.attempts),
+            ),
         )

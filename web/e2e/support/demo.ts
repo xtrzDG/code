@@ -73,14 +73,27 @@ export interface Visitor {
   sessionKey: string;
 }
 
-/** A visitor writes in the website chat; the assistant hands the chat to a person. */
+/**
+ * A visitor writes in the website chat; the assistant hands the chat to a
+ * person. The API accepts the message at once (202) and its worker answers,
+ * so the handoff is read from the widget's poll.
+ */
 export async function visitorAsksForPerson(request: APIRequestContext, businessId: string, name: string): Promise<Visitor> {
   const sessionKey = `e2e_${uniqueSuffix()}_visitor`;
-  const response = await request.post(`${API_URL}/v1/widget/${businessId}/messages`, {
+  const url = `${API_URL}/v1/widget/${businessId}/messages`;
+  const response = await request.post(url, {
     data: { session_key: sessionKey, text: "Hello, can I talk to a manager?", contact_name: name },
   });
-  expect(response.ok(), await response.text()).toBe(true);
-  expect(((await response.json()) as { is_handed_off: boolean }).is_handed_off).toBe(true);
+  expect(response.status(), await response.text()).toBe(202);
+  await expect
+    .poll(
+      async () => {
+        const poll = await request.get(url, { headers: { "X-Widget-Session-Key": sessionKey } });
+        return poll.ok() && ((await poll.json()) as { is_handed_off: boolean }).is_handed_off;
+      },
+      { message: "the worker handed the chat to a person", timeout: 15_000 },
+    )
+    .toBe(true);
   return { name, sessionKey };
 }
 

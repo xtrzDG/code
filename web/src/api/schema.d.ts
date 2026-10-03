@@ -7881,6 +7881,17 @@ export interface components {
             tag: string;
         };
         /**
+         * WidgetMessageAcceptedView
+         * @description The visitor's message is in the inbox and a worker is answering it (202
+         *     Accepted): the widget shows that the assistant is typing and polls
+         *     GET .../messages until the answer, or a staff message, arrives.
+         *     `event_id` names the message in the inbox (support and logs).
+         */
+        WidgetMessageAcceptedView: {
+            /** Event Id */
+            event_id: string;
+        };
+        /**
          * WidgetMessageView
          * @description An assistant or staff message as the widget shows it.
          */
@@ -7925,31 +7936,6 @@ export interface components {
          * @enum {string}
          */
         WidgetPosition: "left" | "right";
-        /**
-         * WidgetReplyView
-         * @description The assistant's answer in the widget.
-         *
-         *     `text` is None while staff handle the conversation; `direction` tells the
-         *     widget how to lay the answer out (right-to-left for Hebrew, Arabic, ...).
-         *     `message_id` is the stored answer (None without one); `cursor` is the
-         *     visitor's message, so polling GET .../messages?after=<cursor> returns
-         *     the answer again (skip it by id) and every staff message written since.
-         */
-        WidgetReplyView: {
-            /** Conversation Id */
-            conversation_id: string;
-            /** Cursor */
-            cursor?: string | null;
-            direction: components["schemas"]["TextDirection"];
-            /** Is Handed Off */
-            is_handed_off: boolean;
-            /** Language */
-            language: string;
-            /** Message Id */
-            message_id?: string | null;
-            /** Text */
-            text: string | null;
-        };
         /**
          * WidgetSnippetView
          * @description Embed code the owner pastes into the website, and the page that shows
@@ -24323,12 +24309,12 @@ export interface operations {
         };
         responses: {
             /** @description Successful Response */
-            200: {
+            202: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["WidgetReplyView"];
+                    "application/json": components["schemas"]["WidgetMessageAcceptedView"];
                 };
             };
             /** @description Sign-in required: the bearer token is missing, invalid or expired. */

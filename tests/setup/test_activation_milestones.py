@@ -4,6 +4,7 @@ from typing import Any
 
 from tests.e2e.harness import Workshop
 from tests.e2e.journeys import BOOKING_REQUEST_RU, WIDGET_SESSION
+from tests.e2e.widget_turns import ask_widget
 from tests.setup.launch_steps import (
     NewAssistant,
     create_assistant,
@@ -35,12 +36,7 @@ def celebrate(
 def write_from_the_website(
     workshop: Workshop, assistant: NewAssistant, text: str
 ) -> dict[str, Any]:
-    sent = workshop.client.post(
-        f"/v1/widget/{assistant.business_id}/messages",
-        json={"session_key": WIDGET_SESSION, "text": text},
-    )
-    assert sent.status_code == 200, sent.text
-    return dict(sent.json())
+    return ask_widget(workshop, assistant.business_id, WIDGET_SESSION, text)
 
 
 def open_with_website_chat(workshop: Workshop) -> NewAssistant:

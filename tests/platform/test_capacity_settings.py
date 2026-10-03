@@ -18,16 +18,18 @@ from tests.e2e.workshop_container import replace_provider
 PRODUCTION: dict[str, str] = {"APP_ENV": "production", "ENCRYPTION_KEY": "x" * 40}
 
 
-def test_the_database_pool_follows_the_request_threads_unless_set() -> None:
+def test_the_database_pool_is_half_the_request_threads_unless_set() -> None:
     default = assemble_app_settings({})
-    fewer_threads = assemble_app_settings({"THREADPOOL_SIZE": "32"})
+    fewer_threads = assemble_app_settings({"THREADPOOL_SIZE": "31"})
     own_pool = assemble_app_settings({"THREADPOOL_SIZE": "32", "DB_POOL_SIZE": "20"})
 
-    assert (int(default.threadpool_size), int(default.db_pool_size)) == (64, 64)
+    # A thread waiting for the model holds no connection: threads > pool.
+    assert (int(default.threadpool_size), int(default.db_pool_size)) == (64, 32)
     assert (int(fewer_threads.threadpool_size), int(fewer_threads.db_pool_size)) == (
-        32,
-        32,
+        31,
+        16,
     )
+    assert int(assemble_app_settings({"THREADPOOL_SIZE": "1"}).db_pool_size) == 1
     assert int(own_pool.db_pool_size) == 20
     # Model calls: half the request threads by default.
     assert int(default.llm_max_concurrency) == 32
@@ -35,6 +37,29 @@ def test_the_database_pool_follows_the_request_threads_unless_set() -> None:
         int(assemble_app_settings({"LLM_MAX_CONCURRENCY": "8"}).llm_max_concurrency)
         == 8
     )
+
+
+def test_idle_connections_close_and_customer_messages_are_polled_often() -> None:
+    default = assemble_app_settings({})
+    tuned = assemble_app_settings(
+        {
+            "DB_POOL_MIN_SIZE": "0",
+            "DB_POOL_MAX_IDLE_SECONDS": "60",
+            "WORKER_INBOUND_POLL_SECONDS": "5",
+            "TEST_CHAT_MAX_CONCURRENCY": "2",
+        }
+    )
+
+    assert int(default.db_pool_min_size) == 2
+    assert int(default.db_pool_max_idle_seconds) == 300
+    assert int(default.worker_inbound_poll_seconds) == 2
+    assert int(default.test_chat_max_concurrency) == 4
+    assert (
+        int(tuned.db_pool_min_size),
+        int(tuned.db_pool_max_idle_seconds),
+        int(tuned.worker_inbound_poll_seconds),
+        int(tuned.test_chat_max_concurrency),
+    ) == (0, 60, 5, 2)
 
 
 @pytest.mark.parametrize(
@@ -46,6 +71,10 @@ def test_the_database_pool_follows_the_request_threads_unless_set() -> None:
         {"LOG_FORMAT": "xml"},
         {"LLM_CALL_TIMEOUT_SECONDS": "0"},
         {"LLM_MAX_CONCURRENCY": "0"},
+        {"DB_POOL_MIN_SIZE": "-1"},
+        {"DB_POOL_MAX_IDLE_SECONDS": "5"},
+        {"WORKER_INBOUND_POLL_SECONDS": "0"},
+        {"TEST_CHAT_MAX_CONCURRENCY": "0"},
         {"APP_RELEASE": "not a release!"},
     ],
 )

@@ -8,6 +8,7 @@ their run per period, so a restart or a second worker never repeats one.
 """
 
 from collections.abc import Callable
+from contextlib import AbstractContextManager
 from typing import Protocol
 
 from typed_time_provider import Microseconds
@@ -216,17 +217,30 @@ class JobQueueFacilitatorContract(FacilitatorContract, Protocol):
 
 class JobWakeupContract(UtilityContract, Protocol):
     """
-    In-process signal "a job was queued in this lane": idle lane threads
-    of a worker in the same process start at once instead of at their
-    next poll. Workers in other processes find the job at their next poll.
+    The signal "a job was queued in this lane": idle lane threads start at
+    once instead of at their next poll. In memory it reaches the threads of
+    the same process; on Postgres (NOTIFY on `workshop_jobs`) the worker
+    processes that `listen`. A lost or spurious wake-up costs only one poll
+    interval or one empty claim: a woken thread claims from the queue.
     """
 
     def notify(self, lane: JobLane) -> None:
+        """
+        Signal `lane`. Called inside the enqueue's storage transaction, the
+        signal leaves when the job is committed, never before.
+        """
         raise NotImplementedError
 
     def wait(self, lane: JobLane, timeout_seconds: float) -> bool:
         """
         Wait until `lane` is notified or the timeout passes; True when it
         was notified. A notification that came before the wait counts.
+        """
+        raise NotImplementedError
+
+    def listen(self) -> AbstractContextManager[None]:
+        """
+        Receive the signals of every process for the block (a worker while
+        its lane threads run); outside it only this process's own count.
         """
         raise NotImplementedError

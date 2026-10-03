@@ -9,6 +9,27 @@ class DatabaseConnectionCount(BaseConstrainedTypedInt):
     ge = 0
 
 
+class DatabaseIdleSeconds(BaseConstrainedTypedInt):
+    """
+    How long a pooled Postgres connection may sit unused before the pool
+    closes it (DB_POOL_MAX_IDLE_SECONDS), so a burst's connections go back
+    to the server.
+    """
+
+    ge = 10
+    le = 86_400
+
+
+class DatabasePoolMinSize(BaseConstrainedTypedInt):
+    """
+    Idle Postgres connections one process keeps open however quiet it is
+    (DB_POOL_MIN_SIZE), so the first requests after a pause need no connect.
+    """
+
+    ge = 0
+    le = 512
+
+
 class DatabasePoolSize(BaseConstrainedTypedInt):
     """
     How many Postgres connections one process may hold at once (DB_POOL_SIZE);
@@ -98,6 +119,12 @@ class PageSize(BaseConstrainedTypedInt):
     le = 200
 
 
+class PoolExhaustedSeconds(BaseConstrainedTypedInt):
+    """How long every readiness probe has found the connection pool busy."""
+
+    ge = 0
+
+
 class ProcessedItemCount(BaseConstrainedTypedInt):
     """How many items one background job run processed."""
 
@@ -131,6 +158,17 @@ class RetryAfterSeconds(BaseConstrainedTypedInt):
     le = 24 * 60 * 60
 
 
+class TestChatConcurrencyLimit(BaseConstrainedTypedInt):
+    """
+    Owner test-chat turns one API process answers at once
+    (TEST_CHAT_MAX_CONCURRENCY): each holds a request thread for its model
+    calls, so a few of them never take the threads the cabinet needs.
+    """
+
+    ge = 1
+    le = 64
+
+
 class ThreadPoolSize(BaseConstrainedTypedInt):
     """
     How many request handlers of the API run at the same time in worker
@@ -141,11 +179,38 @@ class ThreadPoolSize(BaseConstrainedTypedInt):
     le = 512
 
 
+class TurnSlotCount(BaseConstrainedTypedInt):
+    """
+    How many conversation turns of one kind one process runs at once; a
+    turn beyond them waits for a place before it takes anything else.
+    """
+
+    ge = 1
+    le = 512
+
+
+class TurnSlotWaitSeconds(BaseConstrainedTypedInt):
+    """How long a turn waits for a free place before it is refused."""
+
+    ge = 1
+    le = 3600
+
+
 class WorkerLaneConcurrency(BaseConstrainedTypedInt):
     """How many jobs of one worker lane one worker process runs at the same time."""
 
     ge = 1
     le = 64
+
+
+class WorkerLanePollSeconds(BaseConstrainedTypedInt):
+    """
+    How long an idle lane thread of the worker waits for a wake-up before
+    it looks at the queue again (the safety net of a lost wake-up).
+    """
+
+    ge = 1
+    le = 3600
 
 
 class WorkerPollSeconds(BaseConstrainedTypedInt):
