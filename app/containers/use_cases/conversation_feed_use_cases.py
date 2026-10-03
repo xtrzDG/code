@@ -8,7 +8,7 @@ from app.containers.time_provider import TimeProviderContainer
 from app.containers.transformers import TransformersContainer
 from app.containers.use_cases.account_use_cases import AccountUseCasesContainer
 from app.contracts.use_case_contract import UseCaseContract
-from app.schemas.dto.call_recordings import CallRecordingQuery, RecordingAudio
+from app.schemas.dto.call_recordings import CallRecordingQuery, RecordingPart
 from app.schemas.dto.conversation_feed.conversation_actions import (
     RateConversationCommand,
     SendStaffMessageCommand,
@@ -103,7 +103,7 @@ class ConversationFeedUseCasesContainer(containers.DeclarativeContainer):
         wall_clock=time_provider.microsecond_wall_clock,
     )
     get_call_recording_use_case: Factory[
-        UseCaseContract[CallRecordingQuery, RecordingAudio]
+        UseCaseContract[CallRecordingQuery, RecordingPart]
     ] = Factory(
         GetCallRecordingUseCase,
         authorize_business_access=account_use_cases.authorize_business_access_use_case,

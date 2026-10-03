@@ -3,6 +3,9 @@
 import threading
 import time
 
+from app.adapters.locks.in_memory_advisory_lock_adapter import (
+    InMemoryAdvisoryLockAdapter,
+)
 from app.adapters.storage.in_memory_document_collection import (
     InMemoryDocumentCollectionAdapter,
 )
@@ -31,7 +34,7 @@ from tests.operations.fakes import RecordingManagerNotifier
 
 
 def test_lock_registry_serializes_one_business_but_not_others() -> None:
-    registry = BusinessLockRegistry()
+    registry = BusinessLockRegistry(InMemoryAdvisoryLockAdapter())
     first, second = BusinessId(), BusinessId()
     events: list[str] = []
 
@@ -55,7 +58,6 @@ def test_lock_registry_serializes_one_business_but_not_others() -> None:
     holder.join()
 
     assert events == ["first-start", "second", "first-end", "first-again"]
-    assert registry.lock_for(first) is registry.lock_for(first)
 
 
 def test_broadcast_counts_deliveries_and_survives_failures() -> None:

@@ -1,5 +1,5 @@
 from dependency_injector import containers
-from dependency_injector.providers import Container
+from dependency_injector.providers import Container, DependenciesContainer
 
 from app.containers.container_edges import composed_container_edge
 from app.containers.orchestrators.orchestrators_container import (
@@ -17,6 +17,7 @@ from app.containers.pipelines.demo_pipelines import DemoPipelinesContainer
 from app.containers.pipelines.knowledge_pipelines import KnowledgePipelinesContainer
 from app.containers.pipelines.operations_pipelines import OperationsPipelinesContainer
 from app.containers.pipelines.platform_pipelines import PlatformPipelinesContainer
+from app.containers.registries import RegistriesContainer
 from app.containers.use_cases.use_cases_container import UseCasesContainer
 
 
@@ -35,6 +36,7 @@ class PipelinesContainer(containers.DeclarativeContainer):
         OrchestratorsContainer
     )
     use_cases: UseCasesContainer = composed_container_edge(UseCasesContainer)  # type: ignore[assignment]
+    registries: RegistriesContainer = DependenciesContainer()  # type: ignore[assignment]
 
     accounts: AccountPipelinesContainer = Container(  # type: ignore[assignment]
         AccountPipelinesContainer,
@@ -55,6 +57,7 @@ class PipelinesContainer(containers.DeclarativeContainer):
     conversations: ConversationPipelinesContainer = Container(  # type: ignore[assignment]
         ConversationPipelinesContainer,
         conversation_orchestrators=orchestrators.conversations,
+        registries=registries,
     )
     assistants: AssistantPipelinesContainer = Container(  # type: ignore[assignment]
         AssistantPipelinesContainer,

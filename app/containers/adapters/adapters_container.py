@@ -17,6 +17,9 @@ from app.adapters.llm.call_limited_llm_adapter import (
     CHAT_CALL_RETRY_LIMIT,
     CallLimitedLlmAdapter,
 )
+from app.adapters.llm.concurrency_limited_llm_adapter import (
+    ConcurrencyLimitedLlmAdapter,
+)
 from app.adapters.llm.menu_extraction.menu_extraction_adapter import (
     MenuExtractionAdapter,
 )
@@ -24,14 +27,20 @@ from app.adapters.llm.offline_llm_adapter import OfflineLlmAdapter
 from app.adapters.llm.openai_llm_adapter import OpenAiLlmAdapter
 from app.adapters.llm.routing_llm_adapter import RoutingLlmAdapter
 from app.adapters.llm.tracing_llm_adapter import TracingLlmAdapter
+from app.adapters.locks.advisory_lock_adapter_factory import (
+    build_advisory_lock_adapter,
+)
 from app.adapters.payments.flitt_payment_gateway_adapter import (
     FlittPaymentGatewayAdapter,
+)
+from app.adapters.rate_limits.rate_limit_bucket_adapter_factory import (
+    build_rate_limit_bucket_adapter,
 )
 from app.adapters.recordings.cached_recording_storage_adapter import (
     CachedRecordingStorageAdapter,
 )
-from app.adapters.recordings.local_recording_storage_adapter import (
-    LocalRecordingStorageAdapter,
+from app.adapters.recordings.recording_storage_factory import (
+    build_own_recording_storage,
 )
 from app.adapters.security.secret_cipher_adapter import SecretCipherAdapter
 from app.adapters.storage.postgres.sql_file_migration_source_adapter import (
@@ -54,7 +63,6 @@ from app.containers.clients import ClientsContainer
 from app.containers.config import ConfigContainer
 from app.containers.factories import (
     build_llm_trace_facilitator,
-    resolve_recordings_directory,
     select_menu_extraction_model_id,
 )
 from app.containers.time_provider import TimeProviderContainer
@@ -62,7 +70,10 @@ from app.containers.utilities import UtilitiesContainer
 from app.contracts.health import DatabaseProbeAdapterContract
 from app.contracts.live_events import LiveEventBusAdapterContract
 from app.contracts.llm import LlmAdapterContract
+from app.contracts.locks import AdvisoryLockAdapterContract
 from app.contracts.observability import LlmTraceFacilitatorContract
+from app.contracts.rate_limits import RateLimitBucketAdapterContract
+from app.contracts.recording_storage import RecordingStorageAdapterContract
 from app.schemas.dto.conversations import LlmCallLimits
 
 
@@ -98,6 +109,19 @@ class AdaptersContainer(containers.DeclarativeContainer):
         SqlFileMigrationSourceAdapter,
         migrations_directory=BUILD_MIGRATIONS_DIRECTORY,
     )
+    # Locks every process respects (Postgres advisory locks over the shared
+    # pool; in-process locks without a database).
+    advisory_locks: Singleton[AdvisoryLockAdapterContract] = Singleton(
+        build_advisory_lock_adapter,
+        connection_pool=clients.postgres_pool,
+        storage_scope=utilities.storage_scope,
+    )
+    # Request counters of the rate limits (Postgres: shared by every
+    # instance; in memory without a database).
+    rate_limit_buckets: Singleton[RateLimitBucketAdapterContract] = Singleton(
+        build_rate_limit_bucket_adapter,
+        connection_pool=clients.postgres_pool,
+    )
 
     # --- The cabinet's live updates between processes: Postgres
     # NOTIFY/LISTEN with DATABASE_URL, else in this process.
@@ -113,24 +137,25 @@ class AdaptersContainer(containers.DeclarativeContainer):
         SecretCipherAdapter,
         app_settings=config.app_settings,
     )
-    local_recording_storage: Singleton[LocalRecordingStorageAdapter] = Singleton(
-        LocalRecordingStorageAdapter,
-        root_directory=Callable(
-            resolve_recordings_directory,
-            settings=config.app_settings,
-        ),
+    # Recordings the platform keeps itself: EU object storage encrypted per
+    # business (RECORDINGS_STORAGE=s3), files of this server in development.
+    own_recording_storage: Singleton[RecordingStorageAdapterContract] = Singleton(
+        build_own_recording_storage,
+        settings=config.app_settings,
+        object_storage_client=clients.object_storage_client,
     )
-    # ElevenLabs keeps call audio in its own (EU) storage; other paths are
-    # files of this server.
+    # ElevenLabs keeps call audio in its own (EU) storage until it is
+    # archived; other paths are the platform's own.
     platform_recording_storage: Singleton[ElevenLabsRecordingStorageAdapter] = (
         Singleton(
             ElevenLabsRecordingStorageAdapter,
             elevenlabs_client=clients.elevenlabs_client,
-            fallback=local_recording_storage,
+            fallback=own_recording_storage,
         )
     )
-    # A player asks for parts of a recording while it plays and seeks: keep
-    # a played one in memory for a few minutes instead of downloading it again.
+    # The voice platform hands out a recording only whole, and a player asks
+    # for parts while it plays and seeks: keep a played one in memory for a
+    # few minutes instead of downloading it again.
     recording_storage: Singleton[CachedRecordingStorageAdapter] = Singleton(
         CachedRecordingStorageAdapter,
         storage=platform_recording_storage,
@@ -201,14 +226,22 @@ class AdaptersContainer(containers.DeclarativeContainer):
         build_llm_trace_facilitator,
         langfuse_client=clients.langfuse_ingestion_client,
     )
-    # The adapter every use case gets: routing by model id, traced.
-    llm_adapter: Singleton[TracingLlmAdapter] = Singleton(
+    # Every model call traced (Langfuse) ...
+    traced_llm_adapter: Singleton[TracingLlmAdapter] = Singleton(
         TracingLlmAdapter,
         inner_adapter=routing_llm_adapter,
         trace_facilitator=llm_trace_facilitator,
         wall_clock=time_provider.microsecond_wall_clock,
         monotonic_clock=time_provider.monotonic_clock,
         is_content_traced=config.app_settings.provided.is_llm_content_traced,
+    )
+    # ... and the adapter every use case gets: routing by model id, traced,
+    # at most LLM_MAX_CONCURRENCY calls of this process at once.
+    llm_adapter: Singleton[ConcurrencyLimitedLlmAdapter] = Singleton(
+        ConcurrencyLimitedLlmAdapter,
+        inner_adapter=traced_llm_adapter,
+        max_concurrency=config.app_settings.provided.llm_max_concurrency,
+        wait_seconds=config.app_settings.provided.llm_call_timeout_seconds,
     )
     # The adapter of a customer chat: each call bounded by
     # LLM_CALL_TIMEOUT_SECONDS and retried once.

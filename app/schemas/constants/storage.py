@@ -61,3 +61,14 @@ class StoredDocumentVersionState(StrEnum):
     OLDER = "older"
     CURRENT = "current"
     NEWER = "newer"
+
+
+class RecordingStorageKind(StrEnum):
+    """
+    Where this platform keeps call recordings it stores itself
+    (RECORDINGS_STORAGE): files of this server (development), or
+    S3-compatible object storage in the EU, encrypted per business.
+    """
+
+    LOCAL = "local"
+    OBJECT_STORAGE = "s3"

@@ -10,6 +10,7 @@ from app.schemas.constants.assistants import LlmEffort, LlmProvider
 from app.schemas.typings.assistants.constrained_integers import (
     AutotestTurnLimit,
     LlmCallTimeoutSeconds,
+    LlmConcurrencyLimit,
     LlmMaxOutputTokens,
     LlmToolRoundLimit,
     ScriptedLlmLatencyMilliseconds,
@@ -35,6 +36,9 @@ DEFAULT_OPENAI_BASE_URL: str = "https://eu.api.openai.com/v1"
 # One model call of a customer chat (retried once) may take this long, so a
 # slow provider costs a customer at most about a minute, not three.
 DEFAULT_LLM_CALL_TIMEOUT_SECONDS: int = 25
+# Model calls of one process at once: half the request threads
+# (THREADPOOL_SIZE 64), so slow model calls never take every thread.
+DEFAULT_LLM_MAX_CONCURRENCY: int = 32
 
 
 class LlmSettingsSection(TypedDict):
@@ -48,6 +52,7 @@ class LlmSettingsSection(TypedDict):
     llm_max_output_tokens: LlmMaxOutputTokens
     llm_tool_round_limit: LlmToolRoundLimit
     llm_call_timeout_seconds: LlmCallTimeoutSeconds
+    llm_max_concurrency: LlmConcurrencyLimit
     openai_base_url: PublicBaseUrl
     openai_project_id: PlatformIdentifier | None
     autotest_turn_limit: AutotestTurnLimit
@@ -95,6 +100,15 @@ def read_llm_settings(
                 DEFAULT_LLM_CALL_TIMEOUT_SECONDS,
             ),
             LlmCallTimeoutSeconds,
+        ),
+        llm_max_concurrency=parse_setting(
+            "LLM_MAX_CONCURRENCY",
+            read_integer(
+                environment_variables,
+                "LLM_MAX_CONCURRENCY",
+                DEFAULT_LLM_MAX_CONCURRENCY,
+            ),
+            LlmConcurrencyLimit,
         ),
         openai_base_url=PublicBaseUrl(
             read_text(environment_variables, "OPENAI_BASE_URL", DEFAULT_OPENAI_BASE_URL)

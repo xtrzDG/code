@@ -11,9 +11,15 @@ from app.containers.utilities import UtilitiesContainer
 from app.gateways.worker.background_worker import BackgroundWorker, PeriodicJobSpec
 from app.gateways.worker.heartbeat_recorder import WorkerHeartbeatRecorder
 from app.gateways.worker.periodic.purge_stale_rows import purge_stale_rows_job
+from app.gateways.worker.periodic.sweep_rate_limit_buckets import (
+    sweep_rate_limit_buckets_job,
+)
 from app.schemas.typings.platform.constrained_integers import JobIntervalSeconds
 from app.schemas.typings.platform.constrained_strings import JobName
 from app.use_cases.autotests.enqueue_autotest_run_use_case import RUN_AUTOTESTS_JOB
+from app.use_cases.voice.recordings.recording_archive_paths import (
+    ARCHIVE_CALL_RECORDING_JOB,
+)
 from app.utilities.deliveries.delivery_jobs import (
     DELIVER_OUTBOUND_JOB,
     PROCESS_INBOUND_MESSAGE_JOB,
@@ -109,6 +115,10 @@ class GatewaysContainer(containers.DeclarativeContainer):
         Factory(
             purge_stale_rows_job, operator=operators.platform.purge_stale_rows_operator
         ),
+        Factory(
+            sweep_rate_limit_buckets_job,
+            operator=operators.platform.sweep_rate_limit_buckets_operator,
+        ),
     )
     # Handlers of queued jobs by job name (the queue is filled by use cases
     # through the job queue facilitator).
@@ -123,6 +133,10 @@ class GatewaysContainer(containers.DeclarativeContainer):
                 operators.channels.process_platform_bot_update_operator
             ),
             PROCESS_POST_CALL_JOB: operators.conversations.process_post_call_operator,
+            # A finished call's recording moved into the EU object storage.
+            ARCHIVE_CALL_RECORDING_JOB: (
+                operators.conversations.archive_call_recording_operator
+            ),
             # The outbox: replies and staff notifications sent with retries.
             DELIVER_OUTBOUND_JOB: operators.channels.deliver_outbound_operator,
         }

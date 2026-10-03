@@ -38,6 +38,10 @@ class ConversationOperatorsContainer(containers.DeclarativeContainer):
     process_post_call_operator = platform_pipeline_operator(
         conversation_pipelines.process_post_call_pipeline, storage_scope
     )
+    # The archive job names its business: it runs in that business's scope.
+    archive_call_recording_operator = pipeline_operator(
+        conversation_pipelines.archive_call_recording_pipeline, storage_scope
+    )
 
     # --- Conversation feed.
     list_conversations_operator = pipeline_operator(

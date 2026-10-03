@@ -6,9 +6,19 @@ from app.adapters.voice.elevenlabs_recording_storage_adapter import (
     ElevenLabsRecordingStorageAdapter,
 )
 from app.contracts.recording_storage import RecordingStorageAdapterContract
-from app.schemas.dto.call_recordings import RecordingAudio
-from app.schemas.exceptions.application_errors import ExternalServiceError
+from app.schemas.dto.call_recordings import (
+    RecordingAudio,
+    RecordingByteRange,
+    RecordingLocation,
+    RecordingPart,
+)
+from app.schemas.exceptions.application_errors import (
+    ExternalServiceError,
+    ValidationFailedError,
+)
 from app.schemas.typings.assistants.strings import VoiceAgentId
+from app.schemas.typings.businesses.prefixed_id import BusinessId
+from app.schemas.typings.conversations.constrained_strings import RecordingMediaType
 from app.schemas.typings.conversations.strings import RecordingStoragePath
 from tests.channels.testbed import ChannelsTestbed
 from tests.channels.voice_agent_specs import build_spec, provisioner
@@ -131,6 +141,10 @@ class TestAgentUpdate:
         )
 
 
+def at(path: str) -> RecordingLocation:
+    return RecordingLocation(business_id=BusinessId(), path=RecordingStoragePath(path))
+
+
 class TestRecordingStorage:
     def test_platform_recordings_are_deleted_there_others_go_to_the_fallback(
         self,
@@ -138,21 +152,33 @@ class TestRecordingStorage:
         testbed = ChannelsTestbed()
         testbed.elevenlabs_transport.respond("DELETE", r"/conversations/", {})
         deleted_elsewhere: list[str] = []
+        stored_elsewhere: list[str] = []
 
-        class LocalStorage(RecordingStorageAdapterContract):
+        class OwnStorage(RecordingStorageAdapterContract):
             def read(
-                self, recording_path: RecordingStoragePath
-            ) -> RecordingAudio | None:
+                self,
+                location: RecordingLocation,
+                wanted: RecordingByteRange | None = None,
+            ) -> RecordingPart | None:
                 raise AssertionError("Deleting reads nothing.")
 
-            def delete(self, recording_path: RecordingStoragePath) -> None:
-                deleted_elsewhere.append(str(recording_path))
+            def store(self, location: RecordingLocation, audio: RecordingAudio) -> None:
+                stored_elsewhere.append(str(location.path))
+
+            def delete(self, location: RecordingLocation) -> None:
+                deleted_elsewhere.append(str(location.path))
 
         storage = ElevenLabsRecordingStorageAdapter(
-            testbed.elevenlabs_client, LocalStorage()
+            testbed.elevenlabs_client, OwnStorage()
         )
-        storage.delete(RecordingStoragePath("elevenlabs/conversations/conv_1"))
-        storage.delete(RecordingStoragePath("calls/2026/conv_2.mp3"))
+        storage.delete(at("elevenlabs/conversations/conv_1"))
+        storage.delete(at("calls/2026/conv_2.mp3"))
+        audio = RecordingAudio(
+            content=b"id3", media_type=RecordingMediaType("audio/mpeg")
+        )
+        storage.store(at("businesses/b/calls/c.mp3"), audio)
+        with pytest.raises(ValidationFailedError):
+            storage.store(at("elevenlabs/conversations/conv_1"), audio)
 
         [request] = testbed.elevenlabs_transport.requests
         assert (request.method, request.path) == (
@@ -160,17 +186,23 @@ class TestRecordingStorage:
             "/v1/convai/conversations/conv_1",
         )
         assert deleted_elsewhere == ["calls/2026/conv_2.mp3"]
+        assert stored_elsewhere == ["businesses/b/calls/c.mp3"]
 
     def test_missing_recordings_are_not_errors(self) -> None:
         testbed = ChannelsTestbed()
         testbed.elevenlabs_transport.respond("DELETE", r"/conversations/", {}, 404)
+        without_fallback = ElevenLabsRecordingStorageAdapter(testbed.elevenlabs_client)
 
-        ElevenLabsRecordingStorageAdapter(testbed.elevenlabs_client).delete(
-            RecordingStoragePath("elevenlabs/conversations/conv_1")
-        )
-        ElevenLabsRecordingStorageAdapter(testbed.elevenlabs_client).delete(
-            RecordingStoragePath("local/file.mp3")
-        )
+        without_fallback.delete(at("elevenlabs/conversations/conv_1"))
+        without_fallback.delete(at("local/file.mp3"))
+        assert without_fallback.read(at("local/file.mp3")) is None
+        with pytest.raises(ValidationFailedError):
+            without_fallback.store(
+                at("local/file.mp3"),
+                RecordingAudio(
+                    content=b"", media_type=RecordingMediaType("audio/mpeg")
+                ),
+            )
 
     def test_platform_errors_are_raised(self) -> None:
         testbed = ChannelsTestbed()
@@ -180,7 +212,7 @@ class TestRecordingStorage:
 
         with pytest.raises(ExternalServiceError):
             ElevenLabsRecordingStorageAdapter(testbed.elevenlabs_client).delete(
-                RecordingStoragePath("elevenlabs/conversations/conv_1")
+                at("elevenlabs/conversations/conv_1")
             )
 
 

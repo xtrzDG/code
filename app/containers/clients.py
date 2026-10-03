@@ -13,6 +13,9 @@ from app.clients.meta.meta_graph_client import MetaGraphClient
 from app.clients.meta.whatsapp_authentication_client import (
     WhatsAppAuthenticationClient,
 )
+from app.clients.object_storage.object_storage_client_factory import (
+    build_object_storage_client,
+)
 from app.clients.openai.openai_responses_client import OpenAiResponsesClient
 from app.clients.postgres.postgres_connection_pool_client import (
     PostgresConnectionPoolClient,
@@ -36,6 +39,7 @@ from app.containers.factories import (
     build_whatsapp_authentication_client,
 )
 from app.contracts.channel_clients import ElevenLabsApiClientContract
+from app.contracts.object_storage import ObjectStorageClientContract
 
 
 class ClientsContainer(containers.DeclarativeContainer):
@@ -60,6 +64,11 @@ class ClientsContainer(containers.DeclarativeContainer):
     meta_graph_client: Singleton[MetaGraphClient] = Singleton(MetaGraphClient)
     elevenlabs_client: Singleton[ElevenLabsApiClientContract] = Singleton(
         build_elevenlabs_client,
+        settings=config.app_settings,
+    )
+    # The EU bucket of call recordings (RECORDINGS_STORAGE=s3), else None.
+    object_storage_client: Singleton[ObjectStorageClientContract | None] = Singleton(
+        build_object_storage_client,
         settings=config.app_settings,
     )
     google_calendar_client: Singleton[GoogleCalendarClient] = Singleton(

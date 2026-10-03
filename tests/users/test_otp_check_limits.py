@@ -98,4 +98,6 @@ def test_a_refused_check_answers_429_with_retry_after() -> None:
     assert first.status_code == 401
     assert second.status_code == 429
     assert second.json()["error"] == "rate_limited"
-    assert 1 <= int(second.headers["Retry-After"]) <= 600
+    # A limit of one waits until the previous window's weight has faded:
+    # at most two windows of ten minutes.
+    assert 1 <= int(second.headers["Retry-After"]) <= 2 * 600

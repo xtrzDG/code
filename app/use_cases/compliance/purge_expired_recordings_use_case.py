@@ -8,6 +8,7 @@ from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.compliance import AuditAction
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.compliance import AuditLogEntryDocument
+from app.schemas.dto.call_recordings import RecordingLocation
 from app.schemas.dto.compliance import (
     PurgeExpiredRecordingsCommand,
     RecordingPurgeResult,
@@ -97,7 +98,11 @@ class PurgeExpiredRecordingsUseCase(
                 continue
 
             if call.recording_path is not None:
-                self._recording_storage.delete(call.recording_path)
+                self._recording_storage.delete(
+                    RecordingLocation(
+                        business_id=call.business_id, path=call.recording_path
+                    )
+                )
                 deleted_recordings += 1
 
             call.recording_path = None

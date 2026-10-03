@@ -4,8 +4,15 @@ from collections import OrderedDict
 from typed_time_provider import Microseconds, WallClock
 
 from app.contracts.recording_storage import RecordingStorageAdapterContract
-from app.schemas.dto.call_recordings import RecordingAudio
+from app.schemas.dto.call_recordings import (
+    RecordingAudio,
+    RecordingByteRange,
+    RecordingLocation,
+    RecordingPart,
+)
 from app.schemas.typings.conversations.strings import RecordingStoragePath
+from app.utilities.channels.voice_recordings import read_voice_platform_call_id
+from app.utilities.recordings.recording_byte_ranges import cut_recording_part
 
 RECORDING_CACHE_SECONDS: int = 300
 RECORDING_CACHE_BYTES: int = 64 * 1024 * 1024
@@ -14,10 +21,11 @@ MICROSECONDS_PER_SECOND: int = 1_000_000
 
 class CachedRecordingStorageAdapter(RecordingStorageAdapterContract):
     """
-    Keeps recently played recordings in this process's memory for a few
-    minutes, so the parts a player asks for while it plays and seeks
-    (byte ranges) do not download the whole recording from the voice
-    platform each time.
+    Keeps recently played recordings of the voice platform in this
+    process's memory for a few minutes: the platform hands out a recording
+    only whole, so the parts a player asks for while it plays and seeks
+    (byte ranges) would download all of it each time. Recordings in object
+    storage are read by range and are not cached.
 
     The cache is private to the process (no HTTP cache holds personal
     data), bounded in total size (the least recently used recordings go
@@ -44,29 +52,44 @@ class CachedRecordingStorageAdapter(RecordingStorageAdapterContract):
         )
         self._lock: threading.Lock = threading.Lock()
 
-    def read(self, recording_path: RecordingStoragePath) -> RecordingAudio | None:
+    def read(
+        self,
+        location: RecordingLocation,
+        wanted: RecordingByteRange | None = None,
+    ) -> RecordingPart | None:
+        if read_voice_platform_call_id(location.path) is None:
+            return self._storage.read(location, wanted)
+
+        path: RecordingStoragePath = location.path
         now: int = int(self._wall_clock.now_unix())
         with self._lock:
-            entry: tuple[int, RecordingAudio] | None = self._entries.get(recording_path)
+            entry: tuple[int, RecordingAudio] | None = self._entries.get(path)
             if entry is not None and entry[0] > now:
-                self._entries.move_to_end(recording_path)
-                return entry[1]
+                self._entries.move_to_end(path)
+                return cut_recording_part(entry[1], wanted)
 
-            self._entries.pop(recording_path, None)
+            self._entries.pop(path, None)
 
-        audio: RecordingAudio | None = self._storage.read(recording_path)
-        if audio is not None and len(audio.content) <= self._max_bytes:
+        whole: RecordingPart | None = self._storage.read(location)
+        if whole is None:
+            return None
+
+        audio = RecordingAudio(content=whole.content, media_type=whole.media_type)
+        if len(audio.content) <= self._max_bytes:
             with self._lock:
-                self._entries[recording_path] = (now + self._keep_microseconds, audio)
+                self._entries[path] = (now + self._keep_microseconds, audio)
                 self._evict(now)
 
-        return audio
+        return cut_recording_part(audio, wanted)
 
-    def delete(self, recording_path: RecordingStoragePath) -> None:
+    def store(self, location: RecordingLocation, audio: RecordingAudio) -> None:
+        self._storage.store(location, audio)
+
+    def delete(self, location: RecordingLocation) -> None:
         with self._lock:
-            self._entries.pop(recording_path, None)
+            self._entries.pop(location.path, None)
 
-        self._storage.delete(recording_path)
+        self._storage.delete(location)
 
     def _evict(self, now: int) -> None:
         for path, (expires_at, _) in list(self._entries.items()):

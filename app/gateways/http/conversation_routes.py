@@ -5,7 +5,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, Query, Request, Response
 
 from app.contracts.operator_contract import OperatorContract
-from app.gateways.http.byte_ranges import ByteRange, read_byte_range
+from app.gateways.http.byte_ranges import read_byte_range, starts_at_beginning
 from app.gateways.http.conversations.feed_query_values import (
     parse_channel,
     parse_include_sandbox,
@@ -26,7 +26,11 @@ from app.gateways.http.strict_request_parsing import (
     read_client_ip_address,
 )
 from app.gateways.http.user_authentication import CurrentUserDependency
-from app.schemas.dto.call_recordings import CallRecordingQuery, RecordingAudio
+from app.schemas.dto.call_recordings import (
+    CallRecordingQuery,
+    RecordingByteRange,
+    RecordingPart,
+)
 from app.schemas.dto.conversation_feed.conversation_actions import (
     ConversationRatingRequest,
     RateConversationCommand,
@@ -76,7 +80,7 @@ def build_conversation_router(
         SendStaffMessageCommand,
         StaffMessageResult,
     ],
-    get_call_recording_operator: OperatorContract[CallRecordingQuery, RecordingAudio],
+    get_call_recording_operator: OperatorContract[CallRecordingQuery, RecordingPart],
     list_conversation_messages_operator: OperatorContract[
         ConversationMessagesQuery, MessagePage
     ],
@@ -241,22 +245,21 @@ def build_conversation_router(
         call_id: str,
         user_id: Annotated[UserId, Depends(current_user)],
     ) -> Response:
-        requested_range: ByteRange | None = read_byte_range(
+        requested_range: RecordingByteRange | None = read_byte_range(
             request.headers.get("range"),
             request.headers.get("if-range"),
         )
-        audio: RecordingAudio = get_call_recording_operator.operate(
+        part: RecordingPart = get_call_recording_operator.operate(
             CallRecordingQuery(
                 user_id=user_id,
                 business_id=parse_path_identifier(business_id, BusinessId, "Business"),
                 call_id=parse_path_identifier(call_id, CallId, "Call"),
                 client_ip_address=read_client_ip_address(request),
-                starts_playback=(
-                    requested_range is None or requested_range.starts_at_beginning()
-                ),
+                starts_playback=starts_at_beginning(requested_range),
+                byte_range=requested_range,
             )
         )
-        return build_recording_response(audio, requested_range)
+        return build_recording_response(part, requested_range)
 
     @router.post(
         "/v1/businesses/{business_id}/test-chat",

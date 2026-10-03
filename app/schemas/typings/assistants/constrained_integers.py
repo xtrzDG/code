@@ -46,6 +46,16 @@ class LlmCallTimeoutSeconds(BaseConstrainedTypedInt):
     le = 600
 
 
+class LlmConcurrencyLimit(BaseConstrainedTypedInt):
+    """
+    How many language-model calls one process makes at the same time
+    (LLM_MAX_CONCURRENCY); further calls wait for a free place.
+    """
+
+    ge = 1
+    le = 512
+
+
 class LlmMaxOutputTokens(BaseConstrainedTypedInt):
     """Upper bound of output tokens for one language-model request."""
 

@@ -1,9 +1,10 @@
 from dependency_injector import containers
-from dependency_injector.providers import DependenciesContainer, Factory
+from dependency_injector.providers import Callable, DependenciesContainer, Factory
 
 from app.containers.adapters.adapters_container import AdaptersContainer
 from app.containers.config import ConfigContainer
 from app.containers.facilitators import FacilitatorsContainer
+from app.containers.factories import is_recording_archive_enabled
 from app.containers.registries import RegistriesContainer
 from app.containers.repositories import RepositoriesContainer
 from app.containers.time_provider import TimeProviderContainer
@@ -15,6 +16,7 @@ from app.containers.utilities import UtilitiesContainer
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.dto.call_audits import CallAudit, CallAuditRequest
 from app.schemas.dto.conversations import VoiceToolCallRequest
+from app.schemas.dto.jobs import JobReport, QueuedJobInput
 from app.schemas.dto.voice_webhooks import (
     CallInitiationData,
     CallInitiationWebhookRequest,
@@ -35,6 +37,12 @@ from app.use_cases.voice.authenticate_voice_tool_call_use_case import (
 )
 from app.use_cases.voice.finished_call.record_finished_call_use_case import (
     RecordFinishedCallUseCase,
+)
+from app.use_cases.voice.recordings.archive_call_recording_use_case import (
+    ArchiveCallRecordingUseCase,
+)
+from app.use_cases.voice.recordings.schedule_recording_archive_use_case import (
+    ScheduleRecordingArchiveUseCase,
 )
 from app.use_cases.voice.remove_voice_agent_use_case import RemoveVoiceAgentUseCase
 from app.use_cases.voice.send_call_confirmation_use_case import (
@@ -154,4 +162,25 @@ class VoiceUseCasesContainer(containers.DeclarativeContainer):
             channel_message_sender=facilitators.channel_message_sender,
             text_resolver=utilities.localized_text_resolver,
         )
+    )
+    # Recordings archived from the voice platform into the EU object storage
+    # (RECORDINGS_STORAGE=s3): queued after a call, run by the worker.
+    schedule_recording_archive_use_case: Factory[
+        UseCaseContract[RecordedCall, bool]
+    ] = Factory(
+        ScheduleRecordingArchiveUseCase,
+        call_repo=repositories.call_repo,
+        job_queue=facilitators.job_queue_facilitator,
+        is_archive_enabled=Callable(
+            is_recording_archive_enabled, settings=config.app_settings
+        ),
+    )
+    archive_call_recording_use_case: Factory[
+        UseCaseContract[QueuedJobInput, JobReport]
+    ] = Factory(
+        ArchiveCallRecordingUseCase,
+        call_repo=repositories.call_repo,
+        recording_storage=adapters.recording_storage,
+        audit_log_repo=repositories.audit_log_repo,
+        wall_clock=time_provider.microsecond_wall_clock,
     )

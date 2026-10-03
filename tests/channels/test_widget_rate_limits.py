@@ -7,6 +7,9 @@ business and for the platform, and a refused request leaves no state.
 import pytest
 from typed_time_provider import Microseconds
 
+from app.adapters.rate_limits.in_memory_rate_limit_bucket_adapter import (
+    InMemoryRateLimitBucketAdapter,
+)
 from app.registries.limits.request_rate_limit_registry import RequestRateLimitRegistry
 from app.schemas.exceptions.application_errors import RateLimitedError
 from app.schemas.typings.businesses.prefixed_id import BusinessId
@@ -38,7 +41,7 @@ def send(
 
 
 def test_addresses_of_one_ipv6_network_share_the_limit() -> None:
-    registry = RequestRateLimitRegistry()
+    registry = RequestRateLimitRegistry(InMemoryRateLimitBucketAdapter())
     business_id = BusinessId()
     limit = WIDGET_MESSAGE_LIMITS.per_address_per_minute
 
@@ -52,7 +55,7 @@ def test_addresses_of_one_ipv6_network_share_the_limit() -> None:
 
 
 def test_one_business_is_limited_across_networks() -> None:
-    registry = RequestRateLimitRegistry()
+    registry = RequestRateLimitRegistry(InMemoryRateLimitBucketAdapter())
     business_id = BusinessId()
     limit = WIDGET_MESSAGE_LIMITS.per_business_per_minute
 
@@ -66,13 +69,15 @@ def test_one_business_is_limited_across_networks() -> None:
 
     with pytest.raises(RateLimitedError) as refusal:
         send(registry, business_id, "visitor_one_more_0001", "203.0.113.200")
-    assert refusal.value.retry_after_seconds == 60
+    # NOW is 20 s into a one-minute window: the next window starts in 40 s,
+    # and half a second into it this window's weight leaves room for one.
+    assert refusal.value.retry_after_seconds == 41
     # The same network still reaches another business.
     send(registry, BusinessId(), "visitor_one_more_0001", "203.0.113.200")
 
 
 def test_the_platform_is_limited_across_businesses() -> None:
-    registry = RequestRateLimitRegistry()
+    registry = RequestRateLimitRegistry(InMemoryRateLimitBucketAdapter())
     limit = WIDGET_MESSAGE_LIMITS.per_platform_per_minute
 
     for index in range(limit):
@@ -88,16 +93,17 @@ def test_the_platform_is_limited_across_businesses() -> None:
 
 
 def test_a_refused_request_counts_against_no_limit() -> None:
-    registry = RequestRateLimitRegistry()
+    buckets = InMemoryRateLimitBucketAdapter()
+    registry = RequestRateLimitRegistry(buckets)
     business_id = BusinessId()
     for index in range(WIDGET_MESSAGE_LIMITS.per_address_per_minute):
         send(registry, business_id, f"visitor_{index:012d}", "203.0.113.7")
-    keys_before = set(registry._requests)  # pyright: ignore[reportPrivateUsage]
+    buckets_before = dict(buckets._buckets)  # pyright: ignore[reportPrivateUsage]
 
     with pytest.raises(RateLimitedError):
         send(registry, business_id, "visitor_new_000000001", "203.0.113.7")
 
-    assert set(registry._requests) == keys_before  # pyright: ignore[reportPrivateUsage]
+    assert buckets._buckets == buckets_before  # pyright: ignore[reportPrivateUsage]
     # The refused visitor used none of its own limit.
     for _ in range(WIDGET_MESSAGE_LIMITS.per_visitor_per_minute):
         send(registry, business_id, "visitor_new_000000001", "198.51.100.1")

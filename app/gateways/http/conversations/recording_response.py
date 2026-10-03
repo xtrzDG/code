@@ -6,9 +6,8 @@ media player asked for.
 from fastapi import Response
 from fastapi.responses import JSONResponse
 
-from app.gateways.http.byte_ranges import ByteRange, resolve_byte_range
 from app.schemas.constants.errors import ApiErrorCode
-from app.schemas.dto.call_recordings import RecordingAudio
+from app.schemas.dto.call_recordings import RecordingByteRange, RecordingPart
 from app.schemas.dto.errors import ErrorBody
 from app.schemas.typings.platform.strings import ErrorMessageText
 
@@ -35,27 +34,27 @@ RECORDING_OPENAPI_RESPONSES: dict[int | str, dict[str, object]] = {
 
 
 def build_recording_response(
-    audio: RecordingAudio,
-    requested_range: ByteRange | None,
+    part: RecordingPart,
+    requested_range: RecordingByteRange | None,
 ) -> Response:
     """
-    The whole recording, or the one range a media player asked for (206),
-    or 416 for a range outside it. Every answer says ranges are served:
-    Safari and iOS play only media that supports them, and other browsers
-    can then seek.
+    The whole recording, or the part a media player asked for (206; an
+    open range may be answered with its first megabytes, the player asks
+    for the rest), or 416 for a range outside it. Every answer says ranges
+    are served: Safari and iOS play only media that supports them, and
+    other browsers can then seek.
     """
 
-    total_length: int = len(audio.content)
+    total_length: int = int(part.total_bytes)
     headers: dict[str, str] = {**RECORDING_RESPONSE_HEADERS, "Accept-Ranges": "bytes"}
     if requested_range is None:
         return Response(
-            content=audio.content,
-            media_type=str(audio.media_type),
+            content=part.content,
+            media_type=str(part.media_type),
             headers=headers,
         )
 
-    span: tuple[int, int] | None = resolve_byte_range(requested_range, total_length)
-    if span is None:
+    if not part.content:
         return JSONResponse(
             status_code=416,
             content=ErrorBody(
@@ -65,11 +64,12 @@ def build_recording_response(
             headers={**headers, "Content-Range": f"bytes */{total_length}"},
         )
 
-    first_byte, last_byte = span
+    first_byte: int = int(part.first_byte)
+    last_byte: int = first_byte + len(part.content) - 1
     return Response(
-        content=audio.content[first_byte : last_byte + 1],
+        content=part.content,
         status_code=206,
-        media_type=str(audio.media_type),
+        media_type=str(part.media_type),
         headers={
             **headers,
             "Content-Range": f"bytes {first_byte}-{last_byte}/{total_length}",

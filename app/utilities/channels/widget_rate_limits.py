@@ -17,13 +17,18 @@ from dataclasses import dataclass
 from typed_time_provider import Microseconds
 
 from app.contracts.registries import RequestRateLimitRegistryContract
+from app.schemas.dto.rate_limits import RateLimitCounter
 from app.schemas.exceptions.application_errors import RateLimitedError
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.channels.constrained_strings import WidgetSessionKey
 from app.schemas.typings.compliance.strings import ClientIpAddress
-from app.schemas.typings.platform.constrained_integers import RetryAfterSeconds
+from app.schemas.typings.platform.constrained_integers import (
+    RateWindowSeconds,
+    RequestsPerWindow,
+)
+from app.schemas.typings.platform.constrained_strings import RateLimitKey
 
-RATE_WINDOW_SECONDS: int = 60
+RATE_WINDOW_SECONDS: RateWindowSeconds = RateWindowSeconds(60)
 IPV6_NETWORK_PREFIX_LENGTH: int = 64
 
 
@@ -108,31 +113,55 @@ def refuse_too_frequent_widget_requests(
             seconds until that limit frees a place (Retry-After).
     """
 
-    counters: list[tuple[str, int]] = [
-        (
-            f"{limits.key_prefix}:visitor:{business_id}:{session_key}",
-            limits.per_visitor_per_minute,
+    counters: list[RateLimitCounter] = [
+        RateLimitCounter(
+            key=RateLimitKey(
+                f"{limits.key_prefix}:visitor:{business_id}:{session_key}"
+            ),
+            limit=RequestsPerWindow(limits.per_visitor_per_minute),
         )
     ]
     if client_ip_address is not None:
         counters.append(
-            (
-                f"{limits.key_prefix}:address:"
-                f"{describe_client_network(client_ip_address)}",
-                limits.per_address_per_minute,
+            RateLimitCounter(
+                key=RateLimitKey(
+                    f"{limits.key_prefix}:address:"
+                    f"{describe_client_network(client_ip_address)}"
+                ),
+                limit=RequestsPerWindow(limits.per_address_per_minute),
             )
         )
     counters.extend(
         [
-            (
-                f"{limits.key_prefix}:business:{business_id}",
-                limits.per_business_per_minute,
+            RateLimitCounter(
+                key=RateLimitKey(f"{limits.key_prefix}:business:{business_id}"),
+                limit=RequestsPerWindow(limits.per_business_per_minute),
             ),
-            (f"{limits.key_prefix}:platform", limits.per_platform_per_minute),
+            RateLimitCounter(
+                key=RateLimitKey(f"{limits.key_prefix}:platform"),
+                limit=RequestsPerWindow(limits.per_platform_per_minute),
+            ),
         ]
     )
+    refuse_over_limits(rate_limit_registry, counters, limits.refusal, now)
 
-    refused_key: str | None = rate_limit_registry.try_acquire_all(
+
+def refuse_over_limits(
+    rate_limit_registry: RequestRateLimitRegistryContract,
+    counters: list[RateLimitCounter],
+    refusal: str,
+    now: Microseconds,
+) -> None:
+    """
+    Count one request against every counter in a one-minute window, or
+    against none of them.
+
+    Raises:
+        RateLimitedError: one of the limits is used up; it carries the
+            seconds until that limit frees a place (Retry-After).
+    """
+
+    refused_key: RateLimitKey | None = rate_limit_registry.try_acquire_all(
         counters,
         RATE_WINDOW_SECONDS,
         now,
@@ -140,13 +169,12 @@ def refuse_too_frequent_widget_requests(
     if refused_key is None:
         return
 
-    wait_seconds: int = rate_limit_registry.seconds_until_free(
-        refused_key,
-        dict(counters)[refused_key],
-        RATE_WINDOW_SECONDS,
-        now,
+    refused: RateLimitCounter = next(
+        counter for counter in counters if counter.key == refused_key
     )
     raise RateLimitedError(
-        limits.refusal,
-        retry_after_seconds=RetryAfterSeconds(max(1, wait_seconds)),
+        refusal,
+        retry_after_seconds=rate_limit_registry.seconds_until_free(
+            refused, RATE_WINDOW_SECONDS, now
+        ),
     )

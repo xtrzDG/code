@@ -44,6 +44,9 @@ from app.use_cases.admin.open_client_cabinet_use_case import OpenClientCabinetUs
 from app.use_cases.admin.summarize_client_use_case import SummarizeClientUseCase
 from app.use_cases.jobs.purge_finished_jobs_use_case import PurgeFinishedJobsUseCase
 from app.use_cases.maintenance.purge_stale_rows_use_case import PurgeStaleRowsUseCase
+from app.use_cases.maintenance.sweep_rate_limit_buckets_use_case import (
+    SweepRateLimitBucketsUseCase,
+)
 from app.use_cases.observability.check_readiness_use_case import (
     CheckReadinessUseCase,
 )
@@ -137,6 +140,13 @@ class PlatformUseCasesContainer(containers.DeclarativeContainer):
         outbound_message_repo=repositories.outbound_message_repo,
         audit_log_repo=repositories.audit_log_repo,
         wall_clock=time_provider.microsecond_wall_clock,
+    )
+    sweep_rate_limit_buckets_use_case: Factory[UseCaseContract[JobTick, JobReport]] = (
+        Factory(
+            SweepRateLimitBucketsUseCase,
+            rate_limit_registry=registries.request_rate_limit_registry,
+            wall_clock=time_provider.microsecond_wall_clock,
+        )
     )
     # --- The job queue: the admin's dead letters and the purge job.
     list_queued_jobs_use_case: Factory[

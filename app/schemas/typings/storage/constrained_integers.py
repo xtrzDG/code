@@ -42,4 +42,14 @@ class DocumentUpgradeBatchSize(BaseConstrainedTypedInt):
     le = 10_000
 
 
+class LockWaitSeconds(BaseConstrainedTypedInt):
+    """
+    How long a caller waits for a lock that someone else holds before it
+    gives up (the request fails instead of hanging).
+    """
+
+    ge = 1
+    le = 600
+
+
 # Keep abc order for all non example types, if possible.

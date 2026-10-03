@@ -29,6 +29,9 @@ from app.schemas.dto.jobs import JobReport, QueuedJobInput
 from app.schemas.dto.voice_webhooks import PostCallWebhookOutcome
 from app.schemas.typings.platform.constrained_integers import WorkerPollSeconds
 from app.schemas.typings.platform.constrained_strings import JobName
+from app.use_cases.voice.recordings.schedule_recording_archive_use_case import (
+    ScheduleRecordingArchiveUseCase,
+)
 from app.utilities.deliveries.delivery_jobs import (
     DELIVER_OUTBOUND_JOB,
     PROCESS_INBOUND_MESSAGE_JOB,
@@ -93,6 +96,9 @@ class ChannelsDeliveries(ChannelsInbox):
                             self.audit_call_replies,
                             self.send_call_confirmation,
                             self.send_call_links,
+                            ScheduleRecordingArchiveUseCase(
+                                self.call_repo, self.job_queue, is_archive_enabled=False
+                            ),
                         ),
                         self.post_call_outcomes,
                     ),

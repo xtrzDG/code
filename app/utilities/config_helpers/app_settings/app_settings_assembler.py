@@ -43,6 +43,9 @@ from app.utilities.config_helpers.app_settings.platform_admin_settings_section i
 from app.utilities.config_helpers.app_settings.public_address_settings_section import (
     read_public_address_settings,
 )
+from app.utilities.config_helpers.app_settings.recordings_settings_section import (
+    read_recording_storage_settings,
+)
 from app.utilities.config_helpers.app_settings.runtime_settings_section import (
     read_runtime_settings,
 )
@@ -73,6 +76,9 @@ def assemble_app_settings(environment_variables: Mapping[str, str]) -> AppSettin
     database_url: DatabaseUrl | None = optional_text(
         environment_variables, "DATABASE_URL", DatabaseUrl
     )
+    encryption_key: PlatformSecret | None = optional_text(
+        environment_variables, "ENCRYPTION_KEY", PlatformSecret
+    )
 
     return AppSettings(
         environment=environment,
@@ -81,9 +87,7 @@ def assemble_app_settings(environment_variables: Mapping[str, str]) -> AppSettin
         live_events_database_url=optional_text(
             environment_variables, "LIVE_EVENTS_DATABASE_URL", DatabaseUrl
         ),
-        encryption_key=optional_text(
-            environment_variables, "ENCRYPTION_KEY", PlatformSecret
-        ),
+        encryption_key=encryption_key,
         **read_llm_settings(environment_variables, llm_provider),
         **read_login_settings(environment_variables, is_otp_code_logging_enabled),
         **read_compliance_settings(environment_variables),
@@ -98,5 +102,8 @@ def assemble_app_settings(environment_variables: Mapping[str, str]) -> AppSettin
             environment_variables,
             environment=environment,
             has_database=database_url is not None,
+        ),
+        **read_recording_storage_settings(
+            environment_variables, has_encryption_key=encryption_key is not None
         ),
     )

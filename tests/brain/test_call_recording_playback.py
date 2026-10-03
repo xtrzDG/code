@@ -6,18 +6,17 @@ import pytest
 from fastapi.testclient import TestClient
 from typed_time_provider import Microseconds
 
-from app.gateways.http.byte_ranges import (
-    ByteRange,
-    read_byte_range,
-    resolve_byte_range,
-)
+from app.gateways.http.byte_ranges import read_byte_range
 from app.schemas.constants.compliance import AuditAction
 from app.schemas.domain.compliance import AuditLogEntryDocument
 from app.schemas.domain.conversations import CallDocument
+from app.schemas.dto.call_recordings import RecordingByteRange
 from app.schemas.dto.menu_import import MenuExtraction, MenuExtractionRequest
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.conversations.constrained_integers import (
     CallDurationSeconds,
+    RecordingByteCount,
+    RecordingByteOffset,
 )
 from app.schemas.typings.conversations.prefixed_id import CallId
 from app.schemas.typings.conversations.strings import (
@@ -25,6 +24,7 @@ from app.schemas.typings.conversations.strings import (
     RecordingStoragePath,
 )
 from app.schemas.typings.users.prefixed_id import UserId
+from app.utilities.recordings.recording_byte_ranges import resolve_byte_span
 from tests.brain.brain_world import BrainWorld, build_world
 from tests.brain.cabinet_fakes import CabinetStorage
 from tests.brain.cabinet_http import bearer, build_cabinet_client
@@ -216,14 +216,26 @@ def test_parts_of_a_playback_still_need_access() -> None:
     assert playback.storage.recording_storage.reads == []
 
 
+def span(
+    first: int | None = None,
+    last: int | None = None,
+    suffix: int | None = None,
+) -> RecordingByteRange:
+    return RecordingByteRange(
+        first_byte=None if first is None else RecordingByteOffset(first),
+        last_byte=None if last is None else RecordingByteOffset(last),
+        suffix_length=None if suffix is None else RecordingByteCount(suffix),
+    )
+
+
 @pytest.mark.parametrize(
     ("header", "expected"),
     [
         (None, None),
-        ("bytes=0-1", ByteRange(0, 1)),
-        ("bytes=10-", ByteRange(10, None)),
-        ("bytes=-500", ByteRange(None, None, 500)),
-        (" Bytes=0-1 ", ByteRange(0, 1)),
+        ("bytes=0-1", span(0, 1)),
+        ("bytes=10-", span(10)),
+        ("bytes=-500", span(suffix=500)),
+        (" Bytes=0-1 ", span(0, 1)),
         ("bytes=5-2", None),
         ("bytes=-", None),
         ("bytes=0-1,4-5", None),
@@ -233,17 +245,17 @@ def test_parts_of_a_playback_still_need_access() -> None:
 )
 def test_one_byte_range_is_read_from_the_header(
     header: str | None,
-    expected: ByteRange | None,
+    expected: RecordingByteRange | None,
 ) -> None:
     assert read_byte_range(header, None) == expected
 
 
 def test_byte_ranges_are_clamped_to_the_body() -> None:
-    assert resolve_byte_range(ByteRange(0, 1), 10) == (0, 1)
-    assert resolve_byte_range(ByteRange(5, 99), 10) == (5, 9)
-    assert resolve_byte_range(ByteRange(5, None), 10) == (5, 9)
-    assert resolve_byte_range(ByteRange(None, None, 3), 10) == (7, 9)
-    assert resolve_byte_range(ByteRange(None, None, 30), 10) == (0, 9)
-    assert resolve_byte_range(ByteRange(10, None), 10) is None
-    assert resolve_byte_range(ByteRange(None, None, 0), 10) is None
-    assert resolve_byte_range(ByteRange(0, None), 0) is None
+    assert resolve_byte_span(span(0, 1), 10) == (0, 1)
+    assert resolve_byte_span(span(5, 99), 10) == (5, 9)
+    assert resolve_byte_span(span(5), 10) == (5, 9)
+    assert resolve_byte_span(span(suffix=3), 10) == (7, 9)
+    assert resolve_byte_span(span(suffix=30), 10) == (0, 9)
+    assert resolve_byte_span(span(10), 10) is None
+    assert resolve_byte_span(span(suffix=0), 10) is None
+    assert resolve_byte_span(span(0), 0) is None

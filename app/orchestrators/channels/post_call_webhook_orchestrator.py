@@ -12,6 +12,7 @@ from app.schemas.typings.channels.booleans import (
     IsCallConfirmationSent,
     IsCallLinkMessageSent,
 )
+from app.schemas.typings.conversations.booleans import IsRecordingArchiveScheduled
 
 
 class PostCallWebhookOrchestrator(
@@ -22,8 +23,9 @@ class PostCallWebhookOrchestrator(
     store the call with its outcome and cost, check what the assistant said
     against the business data (the invented-numbers guard, with a handoff
     when a booking or lead was made on unverified values), confirm a
-    booking made during the call by a messenger message, and text the links
-    the assistant promised.
+    booking made during the call by a messenger message, text the links
+    the assistant promised, and queue the archive of the recording into the
+    EU object storage.
     """
 
     def __init__(
@@ -36,6 +38,9 @@ class PostCallWebhookOrchestrator(
         audit_call_replies: UseCaseContract[CallAuditRequest, CallAudit],
         send_call_confirmation: UseCaseContract[RecordedCall, IsCallConfirmationSent],
         send_call_links: UseCaseContract[RecordedCall, IsCallLinkMessageSent],
+        schedule_recording_archive: UseCaseContract[
+            RecordedCall, IsRecordingArchiveScheduled
+        ],
     ) -> None:
         self._authenticate_post_call: UseCaseContract[
             PostCallWebhookRequest,
@@ -54,6 +59,9 @@ class PostCallWebhookOrchestrator(
         self._send_call_links: UseCaseContract[RecordedCall, IsCallLinkMessageSent] = (
             send_call_links
         )
+        self._schedule_recording_archive: UseCaseContract[
+            RecordedCall, IsRecordingArchiveScheduled
+        ] = schedule_recording_archive
 
     def execute(self, input_data: PostCallWebhookRequest) -> PostCallWebhookOutcome:
         report: FinishedCallReport | None = self._authenticate_post_call.run(input_data)
@@ -68,6 +76,7 @@ class PostCallWebhookOrchestrator(
             recorded_call
         )
         self._send_call_links.run(recorded_call)
+        self._schedule_recording_archive.run(recorded_call)
         return PostCallWebhookOutcome(
             status=recorded_call.status,
             call_id=recorded_call.call_id,

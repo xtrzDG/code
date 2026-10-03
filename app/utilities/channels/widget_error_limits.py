@@ -9,13 +9,14 @@ and a script cannot either.
 from typed_time_provider import Microseconds
 
 from app.contracts.registries import RequestRateLimitRegistryContract
-from app.schemas.exceptions.application_errors import RateLimitedError
+from app.schemas.dto.rate_limits import RateLimitCounter
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.compliance.strings import ClientIpAddress
-from app.schemas.typings.platform.constrained_integers import RetryAfterSeconds
+from app.schemas.typings.platform.constrained_integers import RequestsPerWindow
+from app.schemas.typings.platform.constrained_strings import RateLimitKey
 from app.utilities.channels.widget_rate_limits import (
-    RATE_WINDOW_SECONDS,
     describe_client_network,
+    refuse_over_limits,
 )
 
 KEY_PREFIX: str = "widget-error"
@@ -40,29 +41,27 @@ def refuse_too_many_error_reports(
         RateLimitedError: one of the limits is used up (HTTP 429).
     """
 
-    counters: list[tuple[str, int]] = []
+    counters: list[RateLimitCounter] = []
     if client_ip_address is not None:
         counters.append(
-            (
-                f"{KEY_PREFIX}:address:{describe_client_network(client_ip_address)}",
-                PER_ADDRESS_PER_MINUTE,
+            RateLimitCounter(
+                key=RateLimitKey(
+                    f"{KEY_PREFIX}:address:{describe_client_network(client_ip_address)}"
+                ),
+                limit=RequestsPerWindow(PER_ADDRESS_PER_MINUTE),
             )
         )
     if business_id is not None:
         counters.append(
-            (f"{KEY_PREFIX}:business:{business_id}", PER_BUSINESS_PER_MINUTE)
+            RateLimitCounter(
+                key=RateLimitKey(f"{KEY_PREFIX}:business:{business_id}"),
+                limit=RequestsPerWindow(PER_BUSINESS_PER_MINUTE),
+            )
         )
-    counters.append((f"{KEY_PREFIX}:platform", PER_PLATFORM_PER_MINUTE))
-
-    refused_key: str | None = rate_limit_registry.try_acquire_all(
-        counters, RATE_WINDOW_SECONDS, now
+    counters.append(
+        RateLimitCounter(
+            key=RateLimitKey(f"{KEY_PREFIX}:platform"),
+            limit=RequestsPerWindow(PER_PLATFORM_PER_MINUTE),
+        )
     )
-    if refused_key is None:
-        return
-
-    wait_seconds: int = rate_limit_registry.seconds_until_free(
-        refused_key, dict(counters)[refused_key], RATE_WINDOW_SECONDS, now
-    )
-    raise RateLimitedError(
-        REFUSAL, retry_after_seconds=RetryAfterSeconds(max(1, wait_seconds))
-    )
+    refuse_over_limits(rate_limit_registry, counters, REFUSAL, now)

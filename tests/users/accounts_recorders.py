@@ -11,7 +11,12 @@ from app.contracts.recording_storage import RecordingStorageAdapterContract
 from app.schemas.constants.businesses import BusinessStatus
 from app.schemas.constants.localization import OtpDeliveryChannel
 from app.schemas.domain.businesses import BusinessDocument
-from app.schemas.dto.call_recordings import RecordingAudio
+from app.schemas.dto.call_recordings import (
+    RecordingAudio,
+    RecordingByteRange,
+    RecordingLocation,
+    RecordingPart,
+)
 from app.schemas.exceptions.application_errors import ExternalServiceError
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.conversations.strings import RecordingStoragePath
@@ -99,12 +104,19 @@ class InMemoryRecordingStorage(RecordingStorageAdapterContract):
         self.deleted_paths: list[RecordingStoragePath] = []
         self.is_failing: bool = False
 
-    def read(self, recording_path: RecordingStoragePath) -> RecordingAudio | None:
-        del recording_path
+    def read(
+        self,
+        location: RecordingLocation,
+        wanted: RecordingByteRange | None = None,
+    ) -> RecordingPart | None:
+        del location, wanted
         return None
 
-    def delete(self, recording_path: RecordingStoragePath) -> None:
+    def store(self, location: RecordingLocation, audio: RecordingAudio) -> None:
+        del location, audio
+
+    def delete(self, location: RecordingLocation) -> None:
         if self.is_failing:
             raise ExternalServiceError("Recording storage is unavailable.")
 
-        self.deleted_paths.append(recording_path)
+        self.deleted_paths.append(location.path)
