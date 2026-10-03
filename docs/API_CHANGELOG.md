@@ -11,6 +11,37 @@ Kinds of change: **Added**, **Changed** (additive), **Deprecated** (with
 sunset date), **Removed** and **Breaking** (only with the `api-breaking`
 label and a migration path).
 
+## 2026-10-03 — hosted chat page, share links and QR codes, a better widget
+
+Spec: `7ad2f92ba01caf7a`
+
+- **Added** `GET /v1/businesses/{business_id}/share-links?src=<tag>`
+  (owners and staff): the hosted chat page (`/c/{slug}` on the cabinet's
+  site; `hosted_chat_url` is null with the gap `not_configured` while
+  `CABINET_BASE_URL` is not set) and a link per switched-on channel
+  (`wa.me`, `t.me`, `m.me`, `ig.me`, `tel:`), tagged with `?src=` on the
+  hosted page and `?ref=` on m.me and ig.me; a channel whose public address
+  is not known yet has the gap `reconnect_channel` (`ShareLinksView`). The
+  first call gives the business its address (a slug from its name).
+- **Added** `PUT /v1/businesses/{business_id}/public-slug` (owners): a new
+  address for the hosted chat page; 409 `slug_taken`, 422 `slug_reserved`.
+  Older addresses keep leading to the business.
+- **Added** `GET /v1/public/chat/{address}` (public, `noindex`, no-store):
+  what the hosted chat page needs before the widget loads, by slug or
+  business id (`HostedChatView`); an unknown address is 404.
+- **Added** `POST /v1/widget/{business_id}/handoff` (public, widget CORS):
+  "Talk to a person" for the visitor key in the body; the conversation is handed to staff with the reason
+  `customer_request` (`WidgetHandoffView`); 404 when the website chat is
+  off, 409 when the business is not live, 429 past its own per-visitor
+  limits.
+- **Changed** `WidgetConfigView` has `starter_questions` (up to three per
+  language from the business's FAQ), `privacy_url` (the business's own
+  notice, else the platform's default at `/c/{slug}/privacy`) and
+  `contact_links` (the other channels, for the hosted page).
+- **Changed** `BusinessLinkKind` has `privacy` (the privacy notice link in
+  the profile's links). Profile reads may now return it; it is stored in a
+  field of its own so earlier releases can still read the profile.
+
 ## 2026-10-03 — guided launch: one-call creation, setup progress, starter answers, "Apply changes", trial at go-live
 
 Spec: `a4c5c025e7a96d6c`

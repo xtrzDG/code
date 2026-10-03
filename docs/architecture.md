@@ -92,6 +92,7 @@ repositories ─ adapters (app/adapters/) ─ clients (app/clients/)  внешн
 | входящие и исходящие доставки | `InboundEventDocument` (уровень платформы), `OutboundMessageDocument` |
 | профиль анкеты (§3) | `BusinessProfileDocument` |
 | пошаговый запуск | `SetupStateDocument` (пропущенные шаги), `ActivationEventDocument` (вехи), `AssistantApplyDocument` («Применить изменения») |
+| адреса страницы чата | `PublicSlugClaimDocument` (коллекция `public_slug_claims`, ключ — сам адрес); текущий адрес — `BusinessDocument.public_slug` |
 
 ## Пошаговый запуск
 
@@ -116,6 +117,40 @@ repositories ─ adapters (app/adapters/) ─ clients (app/clients/)  внешн
   модули разговоров и броней о вехах не знают;
 - тестовый чат владельца перед ответом собирает черновик, если в версиях ещё
   нет его последних правок (`PrepareTestChatVersionUseCase`).
+
+## Страница чата и ссылки
+
+Контекст `sharing` (`app/use_cases/sharing/`, маршруты
+`sharing_routes.py` и `public_chat_routes.py`):
+
+- адрес страницы чата `/c/{slug}` — запись `public_slug_claims` с ключом-адресом,
+  вставляется «если нет» (`insert_if_absent`), поэтому один адрес не достаётся
+  двум бизнесам даже при гонке и под RLS; записи остаются у бизнеса навсегда,
+  так что старый адрес (и напечатанный QR-код) ведёт к нему же. Коллекция —
+  бизнеса (`business_id`), публичный поиск по адресу явно поднимается через
+  `platform_wide()` (`ResolveHostedChatUseCase`), затем страница читается в
+  области найденного бизнеса (`HostedChatOrchestrator`). Первый адрес — из
+  названия (`app/utilities/sharing/`: транслитерация грузинского, кириллицы,
+  армянского), при занятости — с номером, в крайнем случае `chat-<hex>`
+  (такие адреса зарезервированы и владельцу недоступны);
+- ссылки каналов строит `app/utilities/channels/channel_links.py`; публичные
+  адреса аккаунтов (номер WhatsApp, username страницы и Instagram) API узнаёт
+  при подключении канала (`ChannelDocument.public_profile`); канал без них
+  отдаёт «переподключите»;
+- ссылка на политику конфиденциальности — вид `privacy` в ссылках анкеты; она
+  хранится в отдельном поле `BusinessProfileDocument.privacy_notice_url`
+  (правило expand/contract: новое значение перечисления не пишется в
+  документы в том же выпуске, где появилось), API показывает её среди ссылок;
+- «Позвать человека» из виджета (`WidgetHandoffPipeline`) держит ту же
+  блокировку клиента, что и входящее сообщение, открывает или находит
+  разговор посетителя и передаёт его через `HandoffToHumanUseCase` с причиной
+  `customer_request`; уже переданный разговор второй передачи не получает.
+
+Страницу `/c/{slug}` рисует кабинет (`web/src/app/c/[slug]/`): прокси узнаёт
+бизнес у `GET /v1/public/chat/{address}`, переводит старые адреса и id на
+текущий, ставит строгую CSP с адресом API в `connect-src` и передаёт ответ
+странице в заголовке запроса (повторного вызова нет); страница грузит
+`widget.js` с nonce в режиме страницы.
 
 ## Адаптивность под любую страну
 
