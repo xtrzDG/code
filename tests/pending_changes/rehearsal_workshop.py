@@ -35,15 +35,6 @@ def read_pending(
     return dict(read.json())
 
 
-def list_knowledge(workshop: Workshop, assistant: NewAssistant) -> list[JsonObject]:
-    listed = workshop.client.get(
-        f"{assistant.base}/knowledge", headers=assistant.headers
-    )
-    assert listed.status_code == 200, listed.text
-    body: Any = listed.json()
-    return list(body["items"] if isinstance(body, dict) else body)
-
-
 def add_item(
     workshop: Workshop, assistant: NewAssistant, body: JsonObject
 ) -> JsonObject:
