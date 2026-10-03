@@ -67,7 +67,11 @@ SENT: dict[str, Any] = {"messages": [{"id": "wamid.feedback"}]}
 class FeedbackSetup:
     """The business, its feedback settings, rate limits and the job."""
 
-    def __init__(self, status: BusinessStatus = BusinessStatus.LIVE) -> None:
+    def __init__(
+        self,
+        status: BusinessStatus = BusinessStatus.LIVE,
+        has_settings: bool = True,
+    ) -> None:
         self.testbed = ChannelsTestbed()
         owner_id = self.testbed.add_user("owner")
         self.business: BusinessDocument = self.testbed.add_business(
@@ -114,7 +118,8 @@ class FeedbackSetup:
             live_events=self.testbed.live_events,
             wall_clock=self.testbed.wall_clock,
         )
-        self.save_settings()
+        if has_settings:
+            self.save_settings()
 
     def now_seconds(self) -> int:
         return self.testbed.clock.now_seconds()
