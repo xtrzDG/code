@@ -32,7 +32,7 @@ export function Brand({
       </span>
       <span
         className={cn(
-          "line-clamp-2 text-sm leading-tight font-semibold tracking-tight text-ink",
+          "text-sm leading-tight font-semibold tracking-tight [overflow-wrap:anywhere] text-ink",
           hideNameOnPhones && "sr-only sm:not-sr-only",
           hideName && "sr-only",
         )}

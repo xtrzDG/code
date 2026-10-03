@@ -37,7 +37,9 @@ export function buttonClasses(
   return mergeClassOverrides(
     cn(
       // motion-press: colours fade, the press is a spring (src/styles/motion.css).
-      "motion-press inline-flex shrink-0 cursor-pointer items-center justify-center font-medium whitespace-nowrap select-none",
+      // A label longer than the space (Georgian, Russian) wraps inside the button
+      // instead of pushing it out of the screen.
+      "motion-press inline-flex max-w-full shrink-0 cursor-pointer items-center justify-center text-center font-medium select-none",
       "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus",
       "disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50",
       VARIANTS[variant],

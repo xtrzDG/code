@@ -152,7 +152,7 @@ function ConversationRow({
         </span>
         <span className="min-w-0 flex-1">
           <span className="flex items-baseline justify-between gap-2">
-            <span className="truncate text-sm font-medium text-ink">
+            <span className="min-w-0 text-sm font-medium [overflow-wrap:anywhere] text-ink">
               {conversation.contact_name ? (
                 <CustomerName name={conversation.contact_name} />
               ) : conversation.contact_phone_number ? (
@@ -164,7 +164,7 @@ function ConversationRow({
             <span className="shrink-0 text-xs text-ink-subtle">{when}</span>
           </span>
           {conversation.last_message_text ? (
-            <span className="mt-0.5 line-clamp-2 text-sm break-words text-ink-muted">
+            <span className="mt-0.5 line-clamp-2 text-sm break-words text-ink-muted" data-clip="content">
               {conversation.last_message_author && conversation.last_message_author !== "customer" ? (
                 <span className="text-ink-subtle">{t(MESSAGE_AUTHORS[conversation.last_message_author])}: </span>
               ) : null}

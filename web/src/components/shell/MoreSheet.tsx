@@ -47,7 +47,7 @@ function MoreLinks({ items, onNavigate }: { items: readonly ShellNavItem[]; onNa
                       page.isActive ? "font-medium text-accent" : "text-ink",
                     )}
                   >
-                    <span className="min-w-0 flex-1 truncate">{page.label}</span>
+                    <span className="min-w-0 flex-1 py-2 [overflow-wrap:anywhere]">{page.label}</span>
                     <NavBadge count={page.badge ?? 0} />
                     <IconChevronRight className="size-4 shrink-0 text-ink-subtle rtl:-scale-x-100" aria-hidden />
                   </Link>
