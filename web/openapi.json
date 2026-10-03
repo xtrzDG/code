@@ -2346,7 +2346,7 @@
         "type": "object"
       },
       "BusinessLinkKind": {
-        "description": "Links from the profile the assistant may send (send_link tool). PRIVACY\nis the business's own privacy notice; the website chat links to it (or,\nwithout one, to the platform's default notice for the business).",
+        "description": "Links from the profile the assistant may send (send_link tool). PRIVACY\nis the business's own privacy notice; the website chat links to it (or,\nwithout one, to the platform's default notice for the business).\nGOOGLE_REVIEW is the business's Google review page, which every\ncustomer who rates a visit is invited to (Settings → Reviews).",
         "enum": [
           "menu",
           "map",
@@ -2354,7 +2354,8 @@
           "booking_page",
           "delivery",
           "website",
-          "privacy"
+          "privacy",
+          "google_review"
         ],
         "title": "BusinessLinkKind",
         "type": "string"
@@ -5949,6 +5950,217 @@
           "outcome"
         ],
         "title": "FailedAutotestView",
+        "type": "object"
+      },
+      "FeedbackRequestPage": {
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/FeedbackRequestView"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "minLength": 1,
+                "pattern": "^[A-Za-z0-9_-]+$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "FeedbackRequestPage",
+        "type": "object"
+      },
+      "FeedbackRequestStatus": {
+        "description": "Where the request for feedback after one visit stands.\n\nSENT went into the outbox and waits for the customer's rating;\nANSWERED got one; SKIPPED was never sent (`FeedbackSkipReason`);\nFAILED was given up by the outbox (the platform refused it, or every\nretry failed).",
+        "enum": [
+          "sent",
+          "answered",
+          "skipped",
+          "failed"
+        ],
+        "title": "FeedbackRequestStatus",
+        "type": "string"
+      },
+      "FeedbackRequestView": {
+        "additionalProperties": false,
+        "description": "One visit and its request: the customer (their name when known), when\nthe visit ended, whether they were asked and how (or why not), their\nrating, whether they opened the review link, and the conversation it\nled to.",
+        "properties": {
+          "answered_at": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Answered At"
+          },
+          "booking_id": {
+            "title": "Booking Id",
+            "type": "string"
+          },
+          "channel": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ChannelKind"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "contact_id": {
+            "title": "Contact Id",
+            "type": "string"
+          },
+          "contact_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Contact Name"
+          },
+          "conversation_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Conversation Id"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "last_error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Error"
+          },
+          "review_clicks": {
+            "minimum": 0.0,
+            "title": "Review Clicks",
+            "type": "integer"
+          },
+          "score": {
+            "anyOf": [
+              {
+                "maximum": 5.0,
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Score"
+          },
+          "sent_at": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sent At"
+          },
+          "skip_reason": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/FeedbackSkipReason"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "status": {
+            "$ref": "#/components/schemas/FeedbackRequestStatus"
+          },
+          "visit_ended_at": {
+            "title": "Visit Ended At",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "booking_id",
+          "contact_id",
+          "visit_ended_at",
+          "status",
+          "review_clicks"
+        ],
+        "title": "FeedbackRequestView",
+        "type": "object"
+      },
+      "FeedbackSkipReason": {
+        "description": "Why a visit was not asked about: the customer opted out of messages\nthey did not ask for, is unknown or erased, can be reached in no\nconnected messenger, can be reached only where the 24-hour window is\nclosed and no approved template is named, was already asked today\nabout another visit, or a daily cap was reached.",
+        "enum": [
+          "opted_out",
+          "no_contact",
+          "no_channel",
+          "window_closed",
+          "already_asked",
+          "daily_limit"
+        ],
+        "title": "FeedbackSkipReason",
+        "type": "string"
+      },
+      "FeedbackTemplatePreview": {
+        "additionalProperties": false,
+        "description": "The feedback request in one language: the body to register as the\nWhatsApp template (its one parameter {{1}} is the business name) and\nhow a customer reads it.",
+        "properties": {
+          "example": {
+            "title": "Example",
+            "type": "string"
+          },
+          "language": {
+            "maxLength": 16,
+            "minLength": 2,
+            "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$",
+            "title": "Language",
+            "type": "string"
+          },
+          "template_body": {
+            "title": "Template Body",
+            "type": "string"
+          }
+        },
+        "required": [
+          "language",
+          "template_body",
+          "example"
+        ],
+        "title": "FeedbackTemplatePreview",
         "type": "object"
       },
       "FilledQuickReplyList": {
@@ -10666,6 +10878,140 @@
         "title": "ResourceView",
         "type": "object"
       },
+      "ReviewSettingsView": {
+        "additionalProperties": false,
+        "description": "The settings with what they rely on: whether the business's WhatsApp\nnumber is connected (the template), whether review-link visits can be\ncounted (the platform's public address is set), and the request in\neach language of the business.",
+        "properties": {
+          "delay_minutes": {
+            "maximum": 4320.0,
+            "minimum": 15.0,
+            "title": "Delay Minutes",
+            "type": "integer"
+          },
+          "feedback_template_name": {
+            "anyOf": [
+              {
+                "maxLength": 512,
+                "minLength": 1,
+                "pattern": "^[a-z0-9_]{1,512}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Feedback Template Name"
+          },
+          "google_review_url": {
+            "anyOf": [
+              {
+                "maxLength": 2048,
+                "minLength": 10,
+                "pattern": "^https?://[^\\s/]+(/[^\\s]*)?$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Google Review Url"
+          },
+          "is_feedback_enabled": {
+            "title": "Is Feedback Enabled",
+            "type": "boolean"
+          },
+          "is_link_tracked": {
+            "title": "Is Link Tracked",
+            "type": "boolean"
+          },
+          "is_whatsapp_connected": {
+            "title": "Is Whatsapp Connected",
+            "type": "boolean"
+          },
+          "template_previews": {
+            "items": {
+              "$ref": "#/components/schemas/FeedbackTemplatePreview"
+            },
+            "title": "Template Previews",
+            "type": "array"
+          }
+        },
+        "required": [
+          "is_feedback_enabled",
+          "delay_minutes",
+          "is_whatsapp_connected",
+          "is_link_tracked"
+        ],
+        "title": "ReviewSettingsView",
+        "type": "object"
+      },
+      "ReviewStatsView": {
+        "additionalProperties": false,
+        "description": "The requests of the last `period_days`: how many customers were asked\n(sent, answered or not), how many answered and their average rating\nwith the count of each score (1 to 5), how many of them opened the\nreview link, and how many visits were not asked (skipped) or whose\nrequest could not be delivered (failed).",
+        "properties": {
+          "answered_count": {
+            "minimum": 0.0,
+            "title": "Answered Count",
+            "type": "integer"
+          },
+          "asked_count": {
+            "minimum": 0.0,
+            "title": "Asked Count",
+            "type": "integer"
+          },
+          "average_score": {
+            "anyOf": [
+              {
+                "maximum": 5.0,
+                "minimum": 1.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Average Score"
+          },
+          "failed_count": {
+            "minimum": 0.0,
+            "title": "Failed Count",
+            "type": "integer"
+          },
+          "period_days": {
+            "maximum": 366.0,
+            "minimum": 1.0,
+            "title": "Period Days",
+            "type": "integer"
+          },
+          "review_opened_count": {
+            "minimum": 0.0,
+            "title": "Review Opened Count",
+            "type": "integer"
+          },
+          "score_counts": {
+            "items": {
+              "$ref": "#/components/schemas/VisitScoreCount"
+            },
+            "title": "Score Counts",
+            "type": "array"
+          },
+          "skipped_count": {
+            "minimum": 0.0,
+            "title": "Skipped Count",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "period_days",
+          "asked_count",
+          "answered_count",
+          "review_opened_count",
+          "skipped_count",
+          "failed_count"
+        ],
+        "title": "ReviewStatsView",
+        "type": "object"
+      },
       "ScheduleExceptionList": {
         "additionalProperties": false,
         "description": "Schedule exceptions ordered by date.",
@@ -12419,6 +12765,29 @@
           "is_platform_admin"
         ],
         "title": "UserView",
+        "type": "object"
+      },
+      "VisitScoreCount": {
+        "additionalProperties": false,
+        "description": "How many customers rated their visit with one score.",
+        "properties": {
+          "count": {
+            "minimum": 0.0,
+            "title": "Count",
+            "type": "integer"
+          },
+          "score": {
+            "maximum": 5.0,
+            "minimum": 1.0,
+            "title": "Score",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "score",
+          "count"
+        ],
+        "title": "VisitScoreCount",
         "type": "object"
       },
       "WebsiteImportProblem": {
@@ -23666,6 +24035,156 @@
         ]
       }
     },
+    "/v1/businesses/{business_id}/feedback-requests": {
+      "get": {
+        "operationId": "list_feedback_requests_v1_businesses__business_id__feedback_requests_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Limit"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FeedbackRequestPage"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "List Feedback Requests",
+        "tags": [
+          "reviews"
+        ]
+      }
+    },
     "/v1/businesses/{business_id}/handoffs": {
       "get": {
         "operationId": "get_handoffs_v1_businesses__business_id__handoffs_get",
@@ -29170,7 +29689,7 @@
                           "description": "A link the assistant may send (menu, map, payment, booking page).",
                           "properties": {
                             "kind": {
-                              "description": "Links from the profile the assistant may send (send_link tool). PRIVACY\nis the business's own privacy notice; the website chat links to it (or,\nwithout one, to the platform's default notice for the business).",
+                              "description": "Links from the profile the assistant may send (send_link tool). PRIVACY\nis the business's own privacy notice; the website chat links to it (or,\nwithout one, to the platform's default notice for the business).\nGOOGLE_REVIEW is the business's Google review page, which every\ncustomer who rates a visit is invited to (Settings → Reviews).",
                               "enum": [
                                 "menu",
                                 "map",
@@ -29178,7 +29697,8 @@
                                 "booking_page",
                                 "delivery",
                                 "website",
-                                "privacy"
+                                "privacy",
+                                "google_review"
                               ],
                               "title": "BusinessLinkKind",
                               "type": "string"
@@ -29641,7 +30161,7 @@
                       "description": "A link the assistant may send (menu, map, payment, booking page).",
                       "properties": {
                         "kind": {
-                          "description": "Links from the profile the assistant may send (send_link tool). PRIVACY\nis the business's own privacy notice; the website chat links to it (or,\nwithout one, to the platform's default notice for the business).",
+                          "description": "Links from the profile the assistant may send (send_link tool). PRIVACY\nis the business's own privacy notice; the website chat links to it (or,\nwithout one, to the platform's default notice for the business).\nGOOGLE_REVIEW is the business's Google review page, which every\ncustomer who rates a visit is invited to (Settings → Reviews).",
                           "enum": [
                             "menu",
                             "map",
@@ -29649,7 +30169,8 @@
                             "booking_page",
                             "delivery",
                             "website",
-                            "privacy"
+                            "privacy",
+                            "google_review"
                           ],
                           "title": "BusinessLinkKind",
                           "type": "string"
@@ -30715,7 +31236,7 @@
                           "description": "A link the assistant may send (menu, map, payment, booking page).",
                           "properties": {
                             "kind": {
-                              "description": "Links from the profile the assistant may send (send_link tool). PRIVACY\nis the business's own privacy notice; the website chat links to it (or,\nwithout one, to the platform's default notice for the business).",
+                              "description": "Links from the profile the assistant may send (send_link tool). PRIVACY\nis the business's own privacy notice; the website chat links to it (or,\nwithout one, to the platform's default notice for the business).\nGOOGLE_REVIEW is the business's Google review page, which every\ncustomer who rates a visit is invited to (Settings → Reviews).",
                               "enum": [
                                 "menu",
                                 "map",
@@ -30723,7 +31244,8 @@
                                 "booking_page",
                                 "delivery",
                                 "website",
-                                "privacy"
+                                "privacy",
+                                "google_review"
                               ],
                               "title": "BusinessLinkKind",
                               "type": "string"
@@ -32828,6 +33350,413 @@
         "summary": "Update Resource",
         "tags": [
           "resources"
+        ]
+      }
+    },
+    "/v1/businesses/{business_id}/review-settings": {
+      "get": {
+        "operationId": "get_review_settings_v1_businesses__business_id__review_settings_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReviewSettingsView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Get Review Settings",
+        "tags": [
+          "reviews"
+        ]
+      },
+      "put": {
+        "operationId": "update_review_settings_v1_businesses__business_id__review_settings_put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "description": "The owner's choices: ask customers how their visit went\n(`delay_minutes` after it ended), the approved WhatsApp template for a\nclosed 24-hour window, and the Google review page everyone who answers\nis invited to (the profile's link of kind `google_review`).",
+                "properties": {
+                  "delay_minutes": {
+                    "default": 120,
+                    "maximum": 4320,
+                    "minimum": 15,
+                    "title": "Delay Minutes",
+                    "type": "integer"
+                  },
+                  "feedback_template_name": {
+                    "anyOf": [
+                      {
+                        "maxLength": 512,
+                        "minLength": 1,
+                        "pattern": "^[a-z0-9_]{1,512}$",
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Feedback Template Name"
+                  },
+                  "google_review_url": {
+                    "anyOf": [
+                      {
+                        "maxLength": 2048,
+                        "minLength": 10,
+                        "pattern": "^https?://[^\\s/]+(/[^\\s]*)?$",
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Google Review Url"
+                  },
+                  "is_feedback_enabled": {
+                    "default": false,
+                    "title": "Is Feedback Enabled",
+                    "type": "boolean"
+                  }
+                },
+                "title": "ReviewSettingsRequest",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReviewSettingsView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Update Review Settings",
+        "tags": [
+          "reviews"
+        ]
+      }
+    },
+    "/v1/businesses/{business_id}/review-stats": {
+      "get": {
+        "operationId": "get_review_stats_v1_businesses__business_id__review_stats_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReviewStatsView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Get Review Stats",
+        "tags": [
+          "reviews"
         ]
       }
     },
@@ -37059,6 +37988,101 @@
         "summary": "Get Hosted Chat",
         "tags": [
           "widget"
+        ]
+      }
+    },
+    "/v1/public/reviews/{token}": {
+      "get": {
+        "operationId": "open_review_v1_public_reviews__token__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "token",
+            "required": true,
+            "schema": {
+              "title": "Token",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "302": {
+            "description": "On to the business's review page (Location)."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Open Review",
+        "tags": [
+          "reviews"
         ]
       }
     },

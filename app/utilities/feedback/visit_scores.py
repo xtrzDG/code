@@ -25,7 +25,6 @@ MAX_RATING_MESSAGE_LENGTH: int = 300
 MIN_SCORE: int = 1
 MAX_SCORE: int = 5
 FILLED_STARS: frozenset[str] = frozenset({"⭐", "★", "\U0001f31f"})
-EMPTY_STARS: frozenset[str] = frozenset({"☆"})
 # Marks that dress an emoji or a keycap ("5️⃣") without changing it.
 PRESENTATION_MARKS: tuple[str, ...] = ("️", "︎", "⃣")
 QUESTION_MARKS: frozenset[str] = frozenset({"?", "？", "؟", ";"})

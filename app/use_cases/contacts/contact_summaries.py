@@ -132,4 +132,5 @@ def summarize_contact(
         first_seen_at=contact.created_at,
         last_activity_at=max(moments),
         erased_at=contact.erased_at,
+        opted_out_channels=list(contact.opted_out_channels),
     )

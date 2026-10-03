@@ -190,6 +190,7 @@ class BookingUseCasesContainer(containers.DeclarativeContainer):
                 transformers.booking_reminder_template_transformer
             ),
             wall_clock=time_provider.microsecond_wall_clock,
+            rate_limits=registries.request_rate_limit_registry,
             whatsapp_reminder_template=(
                 config.app_settings.provided.whatsapp_reminder_template_name
             ),

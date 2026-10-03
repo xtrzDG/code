@@ -4,6 +4,12 @@ from datetime import datetime
 
 from typed_time_provider import Microseconds
 
+from app.adapters.rate_limits.in_memory_rate_limit_bucket_adapter import (
+    InMemoryRateLimitBucketAdapter,
+)
+from app.registries.limits.request_rate_limit_registry import (
+    RequestRateLimitRegistry,
+)
 from app.schemas.constants.bookings import BookingStatus
 from app.schemas.constants.channels import ChannelKind, MessageDirection
 from app.schemas.constants.conversations import MessageAuthor
@@ -54,6 +60,7 @@ class ReminderScene:
         self.world.add_profile(self.business)
         self.table: ResourceDocument = self.world.add_resource(self.business, "Table 1")
         self.sender = RecordingChannelSender(failing_channels)
+        self.rate_limits = RequestRateLimitRegistry(InMemoryRateLimitBucketAdapter())
         self.reminders = SendBookingRemindersUseCase(
             business_repo=self.world.business_repo,
             business_profile_repo=self.world.profile_repo,
@@ -66,6 +73,7 @@ class ReminderScene:
             reminder_transformer=BookingReminderTransformer(LocalizedTextResolver()),
             reminder_template_transformer=BookingReminderTemplateTransformer(),
             wall_clock=self.world.clock.wall_clock,
+            rate_limits=self.rate_limits,
             whatsapp_reminder_template=(
                 None
                 if reminder_template is None

@@ -6,6 +6,7 @@ from zoneinfo import ZoneInfo
 from typed_time_provider import Microseconds, WallClock
 
 from app.contracts.facilitators import ChannelMessageSenderFacilitatorContract
+from app.contracts.registries import RequestRateLimitRegistryContract
 from app.contracts.repositories.booking_repositories import BookingRepoContract
 from app.contracts.repositories.business_repositories import (
     BusinessProfileRepoContract,
@@ -20,7 +21,6 @@ from app.contracts.repositories.knowledge_repositories import ResourceRepoContra
 from app.contracts.transformer_contract import TransformerContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.bookings import BookingStatus
-from app.schemas.constants.channels import ChannelKind
 from app.schemas.domain.bookings import BookingDocument
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.contacts import ChannelIdentity, ContactDocument
@@ -33,16 +33,18 @@ from app.schemas.typings.channels.constrained_strings import WhatsAppTemplateNam
 from app.schemas.typings.conversations.strings import MessageText
 from app.schemas.typings.platform.constrained_integers import ProcessedItemCount
 from app.schemas.typings.profiles.strings import CancellationPolicyText
-from app.use_cases.bookings.reminders.messaging_window import (
-    WINDOWED_CHANNELS,
-    is_messaging_window_open,
-)
+from app.use_cases.bookings.reminders.reminder_delivery import ReminderDelivery
 from app.use_cases.bookings.reminders.reminder_rules import (
     build_reminder_message,
     choose_reminder_identities,
     is_reminder_due,
     read_cancellation_policy,
     sends_reminders,
+)
+from app.utilities.channels.opt_out import is_opted_out
+from app.utilities.channels.proactive_limits import (
+    PROACTIVE_WINDOW,
+    proactive_message_counter,
 )
 from app.utilities.scheduling.zoned_time import (
     load_time_zone,
@@ -75,6 +77,10 @@ class SendBookingRemindersUseCase(UseCaseContract[JobTick, JobReport]):
     (business, date, time, name), and Messenger and Instagram are skipped
     for the next messenger. The channel sender meters each delivery once.
 
+    A customer who opted out of unrequested messages (STOP) gets no
+    reminder, and every reminder counts against the customer's shared
+    daily cap of such messages.
+
     The booking is read again right before it is reminded and before it is
     marked, and only `reminder_sent_at` is changed on that fresh copy, so a
     cancellation or a move made meanwhile is never undone (and a booking
@@ -101,6 +107,7 @@ class SendBookingRemindersUseCase(UseCaseContract[JobTick, JobReport]):
             BookingMessageInput, list[MessageText]
         ],
         wall_clock: WallClock[Microseconds],
+        rate_limits: RequestRateLimitRegistryContract,
         whatsapp_reminder_template: WhatsAppTemplateName | None = None,
         reminder_lead: BookingReminderLeadSeconds = DEFAULT_REMINDER_LEAD,
     ) -> None:
@@ -109,21 +116,17 @@ class SendBookingRemindersUseCase(UseCaseContract[JobTick, JobReport]):
         self._booking_repo: BookingRepoContract = booking_repo
         self._resource_repo: ResourceRepoContract = resource_repo
         self._contact_repo: ContactRepoContract = contact_repo
-        self._conversation_repo: ConversationRepoContract = conversation_repo
-        self._message_repo: MessageRepoContract = message_repo
-        self._channel_message_sender: ChannelMessageSenderFacilitatorContract = (
-            channel_message_sender
+        self._delivery: ReminderDelivery = ReminderDelivery(
+            conversation_repo=conversation_repo,
+            message_repo=message_repo,
+            channel_message_sender=channel_message_sender,
+            reminder_transformer=reminder_transformer,
+            reminder_template_transformer=reminder_template_transformer,
+            wall_clock=wall_clock,
+            whatsapp_reminder_template=whatsapp_reminder_template,
         )
-        self._reminder_transformer: TransformerContract[
-            BookingMessageInput, MessageText
-        ] = reminder_transformer
-        self._reminder_template_transformer: TransformerContract[
-            BookingMessageInput, list[MessageText]
-        ] = reminder_template_transformer
+        self._rate_limits: RequestRateLimitRegistryContract = rate_limits
         self._wall_clock: WallClock[Microseconds] = wall_clock
-        self._whatsapp_reminder_template: WhatsAppTemplateName | None = (
-            whatsapp_reminder_template
-        )
         self._reminder_lead: BookingReminderLeadSeconds = reminder_lead
 
     def run(self, input_data: JobTick) -> JobReport:
@@ -190,14 +193,14 @@ class SendBookingRemindersUseCase(UseCaseContract[JobTick, JobReport]):
             business.id,
             booking.contact_id,
         )
-        if contact is None:
+        if contact is None or is_opted_out(contact):
             return False
 
         identities: list[ChannelIdentity] = choose_reminder_identities(
             contact,
             booking.source_channel,
         )
-        if not identities:
+        if not identities or not self._within_daily_cap(business, contact):
             return False
 
         resource: ResourceDocument | None = self._resource_repo.get(
@@ -210,7 +213,9 @@ class SendBookingRemindersUseCase(UseCaseContract[JobTick, JobReport]):
 
         for identity in identities:
             try:
-                if not self._deliver(business, contact, identity, message_input):
+                if not self._delivery.deliver(
+                    business, contact, identity, message_input
+                ):
                     continue
             except ApplicationError as error:
                 logger.warning(
@@ -226,55 +231,23 @@ class SendBookingRemindersUseCase(UseCaseContract[JobTick, JobReport]):
 
         return False
 
-    def _deliver(
-        self,
-        business: BusinessDocument,
-        contact: ContactDocument,
-        identity: ChannelIdentity,
-        message_input: BookingMessageInput,
+    def _within_daily_cap(
+        self, business: BusinessDocument, contact: ContactDocument
     ) -> bool:
-        """Send through one identity; False when that channel cannot carry it."""
+        """The customer's shared daily cap of unrequested messages allows one."""
 
-        if identity.channel not in WINDOWED_CHANNELS or is_messaging_window_open(
-            self._conversation_repo,
-            self._message_repo,
-            business,
-            contact,
-            identity.channel,
+        refused = self._rate_limits.try_acquire_all(
+            [proactive_message_counter(business.id, contact.id)],
+            PROACTIVE_WINDOW,
             self._wall_clock.now_unix(),
-        ):
-            self._channel_message_sender.send(
-                business.id,
-                identity.channel,
-                identity.channel_user_id,
-                self._reminder_transformer.transform(message_input),
-            )
-            return True
-
-        if (
-            identity.channel is not ChannelKind.WHATSAPP
-            or self._whatsapp_reminder_template is None
-        ):
-            logger.info(
-                "Reminder through %s skipped: the customer wrote there more than "
-                "24 hours ago%s.",
-                identity.channel.value,
-                (
-                    " and WHATSAPP_REMINDER_TEMPLATE is not configured"
-                    if identity.channel is ChannelKind.WHATSAPP
-                    else ""
-                ),
-            )
-            return False
-
-        self._channel_message_sender.send_whatsapp_template(
-            business.id,
-            identity.channel_user_id,
-            self._whatsapp_reminder_template,
-            message_input.language,
-            self._reminder_template_transformer.transform(message_input),
         )
-        return True
+        if refused is not None:
+            logger.info(
+                "Reminder to contact %s skipped: the daily cap of messages is used.",
+                contact.id,
+            )
+
+        return refused is None
 
     def _mark_reminded(self, booking: BookingDocument) -> None:
         """

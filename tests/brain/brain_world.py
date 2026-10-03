@@ -44,6 +44,7 @@ from app.repositories.conversation_repositories import (
     LlmTurnRepository,
     MessageRepository,
 )
+from app.repositories.feedback_repositories import FeedbackRequestRepository
 from app.repositories.knowledge_repositories import (
     KnowledgeItemRepository,
     ScheduleExceptionRepository,
@@ -121,6 +122,7 @@ class BrainWorld:
     audit_log_repo: AuditLogRepository
     user_repo: UserRepository
     knowledge_item_repo: KnowledgeItemRepository
+    feedback_request_repo: FeedbackRequestRepository
     bookings: FakeBookings
     search_knowledge: FakeSearchKnowledge
     get_price: FakeGetPrice
@@ -255,6 +257,7 @@ def build_world(
         audit_log_repo=repos.audit_log_repo,
         user_repo=repos.user_repo,
         knowledge_item_repo=repos.knowledge_item_repo,
+        feedback_request_repo=repos.feedback_request_repo,
         bookings=brain_tools.bookings,
         search_knowledge=brain_tools.search_knowledge,
         get_price=brain_tools.get_price,
