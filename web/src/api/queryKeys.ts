@@ -83,6 +83,8 @@ export const queryKeys = {
       ["knowledge", businessId, "questions", includeResolved, includeSandbox] as const,
     /** The open questions counted for the items page's warning. */
     questionsAlert: (businessId: Id) => ["knowledge", businessId, "questionsAlert"] as const,
+    /** The business's current import from its website (progress and drafts). */
+    websiteImport: (businessId: Id) => ["knowledge", businessId, "websiteImport"] as const,
   },
 
   resources: {

@@ -7,6 +7,7 @@ import { useI18n } from "@/i18n/client";
 import type { MessageKey } from "@/i18n/translate";
 import { cn } from "@/lib/cn";
 import { confidenceLevel, type ConfidenceLevel, type ImportedMenuItem } from "@/lib/knowledge/menuImport";
+import { pageLabel } from "@/lib/knowledge/websiteImport";
 
 import { KIND_LABELS } from "../../_components/hooks";
 
@@ -63,6 +64,18 @@ export function ImportDraftRow({
           {price ?? (entry.is_currency_mismatch ? null : t("knowledge.import.noPrice"))}
           {entry.item.duration_minutes ? ` · ${t("knowledge.items.minutes", { count: entry.item.duration_minutes })}` : null}
         </p>
+        {entry.source_page_url ? (
+          <p className="mt-1 truncate text-xs text-ink-subtle">
+            <a
+              href={entry.source_page_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline decoration-line-strong underline-offset-2 hover:text-ink"
+            >
+              {t("knowledge.website.sourcePage", { page: pageLabel(entry.source_page_url) })}
+            </a>
+          </p>
+        ) : null}
         {entry.is_currency_mismatch ? (
           <p className="mt-1.5 text-sm text-warning">
             {t("knowledge.import.currencyMismatch", {

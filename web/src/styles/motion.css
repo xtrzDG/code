@@ -44,6 +44,9 @@
   /* Backwards only: when it ends nothing stays applied, so no transform lingers on the page. */
   --animate-page-in: aw-page-in var(--motion-slow) var(--ease-emphasized) backwards;
   --animate-countdown: aw-countdown 5s linear forwards;
+  /* The website import: a scan line runs down the page being read, light runs along the bar. */
+  --animate-page-scan: aw-page-scan 1.6s var(--ease-standard) infinite;
+  --animate-bar-glint: aw-shimmer 1.8s linear infinite;
 
   @keyframes aw-shimmer {
     from {
@@ -71,6 +74,14 @@
     to {
       opacity: 1;
       transform: none;
+    }
+  }
+  @keyframes aw-page-scan {
+    from {
+      transform: translateY(-100%);
+    }
+    to {
+      transform: translateY(420%);
     }
   }
   @keyframes aw-countdown {
