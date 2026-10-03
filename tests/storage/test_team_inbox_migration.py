@@ -4,6 +4,7 @@ in-progress request get `has_open_request`, those with a request open or a
 person needed get `awaits_team`, the rest stay as they were.
 """
 
+from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
 
@@ -108,12 +109,12 @@ def insert(
     table: str,
     key: str,
     business_id: str,
-    document: dict[str, object],
+    document: Mapping[str, object],
 ) -> None:
     connection.execute(
         sql.SQL(
             "insert into {} (document_key, business_id, document, created_at, "
             "updated_at) values (%s, %s, %s, 1, 1)"
         ).format(sql.Identifier("workshop", table)),
-        (key, business_id, Jsonb(document)),
+        (key, business_id, Jsonb(dict(document))),
     )

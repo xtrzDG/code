@@ -153,6 +153,7 @@ _.anonymized_handoffs  # app/schemas/dto/compliance.py
 _.anonymized_leads  # app/schemas/dto/compliance.py
 _.current_document_version  # app/schemas/dto/compliance.py
 _.deleted_messages  # app/schemas/dto/compliance.py
+_.deleted_notes  # app/schemas/dto/compliance.py
 _.document_url  # app/schemas/dto/compliance.py
 _.entities  # app/schemas/dto/compliance.py
 _.erased_calls  # app/schemas/dto/compliance.py
