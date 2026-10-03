@@ -66,6 +66,7 @@ from app.schemas.dto.conversations import AssistantReply, InboundMessage
 from app.schemas.dto.knowledge import KnowledgeItemView
 from app.schemas.typings.assistants.constrained_integers import LlmToolRoundLimit
 from app.schemas.typings.assistants.prefixed_id import AssistantVersionId
+from app.schemas.typings.channels.constrained_strings import PublicBaseUrl
 from app.schemas.typings.contacts.strings import ContactName
 from app.schemas.typings.conversations.constrained_integers import ContactMessageLimit
 from app.schemas.typings.conversations.strings import ChannelUserId, MessageText
@@ -211,6 +212,7 @@ def build_world(
     facts: list[tuple[str, str, str]] | None = None,
     hours: list[tuple[int, int]] | None = None,
     is_published: bool = True,
+    app_base_url: str | None = None,
 ) -> BrainWorld:
     clock = ManualClock()
     wall_clock: WallClock[Microseconds] = clock.wall_clock()
@@ -234,6 +236,7 @@ def build_world(
         wall_clock,
         contact_message_limit=ContactMessageLimit(contact_message_limit),
         tool_round_limit=LlmToolRoundLimit(tool_round_limit),
+        app_base_url=None if app_base_url is None else PublicBaseUrl(app_base_url),
     )
     return BrainWorld(
         clock=clock,
