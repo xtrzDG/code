@@ -59,6 +59,7 @@ Behind a reverse proxy, run the API with
 | `npm run dev` / `build` / `start` | Next.js development server, production build, production server |
 | `npm run lint` | ESLint (`eslint-config-next` + strict project rules), zero warnings allowed; every file in `src/` and `e2e/` has at most 300 lines (`max-lines`; the generated `schema.d.ts` and `*.generated.ts` are exempt) |
 | `npm run typecheck` | `next typegen` (route types) + `tsc --noEmit` |
+| `npm run check:intl` | Fails when this Node lacks full ICU or cannot format Georgian, Russian and English (dates, plurals, relative time, lists); CI runs it before the build, and the cabinet's image before `next build` |
 | `npm test` | Vitest unit tests (`src/**/*.test.ts`) |
 | `npm run e2e` | Playwright end-to-end tests against the real API (see [End-to-end tests](#end-to-end-tests)) |
 | `npm run gen:icons` | Draw the installed app's PNG icons (`public/icons/`, `src/app/apple-icon.png`) from `src/app/icon.svg` in Chromium; run after changing the mark and commit the files |

@@ -25,7 +25,10 @@ WORKDIR /web
 ENV NEXT_TELEMETRY_DISABLED=1
 COPY --from=deps /web/node_modules ./node_modules
 COPY . .
-RUN npm run build \
+# The server renders Georgian and Russian dates and plurals: refuse a Node
+# without full ICU (scripts/check-intl.mjs).
+RUN node scripts/check-intl.mjs \
+    && npm run build \
     && npm prune --omit=dev --no-audit --no-fund
 
 # --- Runtime -----------------------------------------------------------------

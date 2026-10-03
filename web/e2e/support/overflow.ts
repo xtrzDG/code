@@ -43,6 +43,24 @@ export function findOverflow(page: Page): Promise<string[]> {
         .replace(/\s+/g, " ")
         .slice(0, 60)}”`;
 
+    const textReachesPast = (control: HTMLElement, box: DOMRect): boolean => {
+      const walker = document.createTreeWalker(control, NodeFilter.SHOW_TEXT);
+      for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+        if (!node.textContent?.trim()) {
+          continue;
+        }
+        const range = document.createRange();
+        range.selectNodeContents(node);
+        for (const line of range.getClientRects()) {
+          if (line.width > 0 && (line.right > box.right + 1 || line.left < box.left - 1 || line.bottom > box.bottom + 1)) {
+            return true;
+          }
+        }
+      }
+      return false;
+    };
+    const isText = (element: HTMLElement): boolean => (element.innerText || "").includes("[");
+
     const controls = document.querySelectorAll<HTMLElement>('button, [role="tab"], [role="button"], a');
     for (const control of controls) {
       const box = control.getBoundingClientRect();
@@ -51,10 +69,10 @@ export function findOverflow(page: Page): Promise<string[]> {
       if (box.width <= 1 || box.height <= 1 || style.visibility === "hidden" || control.closest("[aria-hidden='true'], [inert]")) {
         continue;
       }
-      // Clipped: the control's own content is wider than the control and hidden or cut.
-      const isText = (element: HTMLElement): boolean => (element.innerText || "").includes("[");
-      if (control.scrollWidth > control.clientWidth + 1 && style.overflowX !== "visible" && isText(control)) {
-        problems.push(`${describe(control)} is cut: ${control.scrollWidth} px of text in ${control.clientWidth} px`);
+      // Clipped: a text of the control reaches past its edge while the control hides overflow.
+      const hidesOverflow = style.overflowX !== "visible" || style.overflowY !== "visible";
+      if (hidesOverflow && isText(control) && textReachesPast(control, box)) {
+        problems.push(`${describe(control)} is cut at its edge`);
       }
       // A text cut short inside the control: with an ellipsis, or after its last allowed line.
       for (const part of control.querySelectorAll<HTMLElement>("*")) {

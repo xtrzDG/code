@@ -102,6 +102,10 @@ jobs:
       - name: Install dependencies
         run: npm ci --no-audit --no-fund
 
+      # Georgian and Russian dates, plurals and lists need Node with full ICU.
+      - name: Node formats Georgian, Russian and English (full ICU)
+        run: npm run check:intl
+
       # Includes max-lines: at most 300 lines per file in src/ and e2e/.
       - name: Lint
         run: npm run lint
