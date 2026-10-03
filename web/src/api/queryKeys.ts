@@ -108,6 +108,16 @@ export const queryKeys = {
     readiness: (businessId: Id, versionId: Id) => ["assistant", businessId, "version", versionId, "readiness"] as const,
   },
 
+  setup: {
+    all: (businessId: Id) => ["setup", businessId] as const,
+    /** The guided setup: steps, progress, links, milestones and the launch. */
+    progress: (businessId: Id, locale: Locale) => ["setup", businessId, "progress", locale] as const,
+    /** The niche's starter answers (hours, booking rules, examples). */
+    starters: (businessId: Id, locale: Locale) => ["setup", businessId, "starters", locale] as const,
+    /** "Apply changes" (the launch) and its progress. */
+    apply: (businessId: Id, locale: Locale) => ["setup", businessId, "apply", locale] as const,
+  },
+
   channels: {
     all: (businessId: Id) => ["channels", businessId] as const,
     list: (businessId: Id) => ["channels", businessId, "list"] as const,

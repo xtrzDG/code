@@ -2,6 +2,7 @@
 @import "../styles/motion.css";
 @import "../styles/landing.css";
 @import "../styles/shell.css";
+@import "../styles/tunnel.css";
 
 /*
  * Design tokens. Components use the semantic utilities below (bg-canvas,

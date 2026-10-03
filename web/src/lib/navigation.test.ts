@@ -16,7 +16,8 @@ describe("business pages", () => {
     expect(businessPath("biz_1")).toBe("/b/biz_1/overview");
     expect(businessPath("biz_1", "messages/handoffs")).toBe("/b/biz_1/messages/handoffs");
     expect(businessPath("a b/c", "settings")).toBe("/b/a%20b%2Fc/settings");
-    expect(setupPath("biz_1")).toBe("/b/biz_1/onboarding");
+    expect(setupPath("biz_1")).toBe("/b/biz_1/setup");
+    expect(setupPath("biz 1", "hours")).toBe("/b/biz%201/setup?step=hours");
   });
 
   it("knows its pages", () => {
@@ -38,6 +39,7 @@ describe("business pages", () => {
   });
 
   it("tells the setup flow and unknown places apart", () => {
+    expect(businessLocation("/b/biz_1/setup")).toEqual({ businessId: "biz_1", page: null, isSetup: true });
     expect(businessLocation("/b/biz_1/onboarding")).toEqual({ businessId: "biz_1", page: null, isSetup: true });
     expect(businessLocation("/b/biz_1")).toEqual({ businessId: "biz_1", page: null, isSetup: false });
     expect(businessLocation("/b/biz_1/dashboard")?.page).toBeNull();
