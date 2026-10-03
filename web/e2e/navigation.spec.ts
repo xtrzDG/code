@@ -91,7 +91,7 @@ test.describe("on a phone", () => {
   test("the tab bar opens four sections and More the rest", async ({ page, owner }) => {
     await page.goto(`/b/${owner.businessId}/overview`);
     const tabBar = page.getByRole("navigation", { name: en.navigation.tabBar });
-    const inTabBar: BusinessSection[] = ["overview", "messages", "bookings", "assistant"];
+    const inTabBar: BusinessSection[] = ["overview", "inbox", "bookings", "assistant"];
 
     for (const section of inTabBar) {
       await test.step(section, async () => {

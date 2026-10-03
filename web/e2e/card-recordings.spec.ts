@@ -10,7 +10,7 @@ import type { Route } from "@playwright/test";
 import { expect, test } from "./support/fixtures";
 import { waitForNetworkQuiet } from "./support/network";
 import { en } from "./support/messages";
-import { CONVERSATION_ID, cardWithCalls, datedLabel, playerLabel, serveCard, silentWav } from "./support/conversation-card";
+import { CONVERSATION_ID, cardWithCalls, datedLabel, openCard, openDetails, playerLabel, serveCard, silentWav } from "./support/conversation-card";
 
 test("a call recording loads only when played, seeks, and a missing one says so", async ({ page, owner, consoleErrors }) => {
   consoleErrors.allow(/Failed to load resource: the server responded with a status of 404/);
@@ -25,7 +25,8 @@ test("a call recording loads only when played, seeks, and a missing one says so"
       : route.fulfill({ status: 404, json: { error: "not_found", message: "This call has no recording." } });
   });
 
-  await page.goto(`/b/${owner.businessId}/messages/${CONVERSATION_ID}`);
+  await openCard(page, owner.businessId);
+  await openDetails(page);
   const playButtons = page.getByRole("button", { name: datedLabel(en.conversations.calls.playLabel) });
   await expect(playButtons).toHaveCount(2);
   await waitForNetworkQuiet(page);
@@ -71,7 +72,8 @@ test("a recording the service could not give can be tried again from the keyboar
       : route.fulfill({ status: 200, contentType: "audio/wav", body: silentWav() });
   });
 
-  await page.goto(`/b/${owner.businessId}/messages/${CONVERSATION_ID}`);
+  await openCard(page, owner.businessId);
+  await openDetails(page);
   await page.getByRole("button", { name: datedLabel(en.conversations.calls.playLabel) }).click();
   const failure = page.getByRole("alert").filter({ hasText: en.conversations.calls.playError });
   await expect(failure).toBeVisible();
@@ -97,10 +99,11 @@ test("an expired session sends the player to sign-in", async ({ page, owner, con
     route.fulfill({ status: 401, json: { error: "authentication_required", message: "Sign in again." } }),
   );
 
-  await page.goto(`/b/${owner.businessId}/messages/${CONVERSATION_ID}`);
+  await openCard(page, owner.businessId);
+  await openDetails(page);
   await page.getByRole("button", { name: datedLabel(en.conversations.calls.playLabel) }).click();
 
   await expect(page).toHaveURL(/\/login\?.*reason=expired/);
   const next = new URL(page.url()).searchParams.get("next");
-  expect(next).toBe(`/b/${owner.businessId}/messages/${CONVERSATION_ID}`);
+  expect(next).toBe(`/b/${owner.businessId}/inbox/${CONVERSATION_ID}`);
 });

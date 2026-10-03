@@ -6,7 +6,8 @@ import type { navigationEn } from "./navigation.en";
 export const navigationKa: Translation<typeof navigationEn> = {
   sections: {
     overview: "მიმოხილვა",
-    inbox: "შემოსულები",
+    // "შემოსული", not "შემოსულები": the word fits the phone tab bar on one line.
+    inbox: "შემოსული",
     bookings: "ჯავშნები",
     assistant: "ასისტენტი",
     settings: "პარამეტრები",

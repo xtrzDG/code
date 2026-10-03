@@ -1,13 +1,15 @@
 /**
- * A leads list served by the test itself: leads come from the assistant's
- * conversations, which an empty test API has none of, so the page's own
- * list call (the BFF path the browser uses) is answered with a page shaped
- * like the API's. Status changes are answered by each test.
+ * A request (lead) on a conversation card served by the test itself:
+ * requests come from the assistant's conversations, which an empty test
+ * API has none of (see support/conversation-card.ts). Status changes are
+ * answered by each test.
  */
 
 import type { Page, Route } from "@playwright/test";
 
 import type { Schema } from "../../src/api/types";
+
+import { conversationCard, type ConversationDetail } from "./conversation-card";
 
 export type LeadListItem = Schema<"LeadListItem">;
 type LeadStatus = LeadListItem["status"];
@@ -32,23 +34,11 @@ export function leadOf(businessId: string, status: LeadStatus): LeadListItem {
   };
 }
 
-/** The status counts of a page that holds just this lead. */
-function countsFor(status: LeadStatus): Schema<"LeadStatusCount">[] {
-  return (["new", "in_progress", "won", "lost"] as const).map((each) => ({ status: each, count: each === status ? 1 : 0 }));
-}
-
-/** Answers GET …/leads with one lead (whatever the tab asks for, the counts stay true). */
-export async function serveLeads(page: Page, businessId: string, lead: () => LeadListItem): Promise<void> {
-  const path = `/api/backend/v1/businesses/${businessId}/leads`;
-  await page.route(
-    (url) => url.pathname === path,
-    (route) => {
-      const current = lead();
-      const tab = new URL(route.request().url()).searchParams.get("status");
-      const items = tab === null || tab === current.status ? [current] : [];
-      return route.fulfill({ json: { items, next_cursor: null, status_counts: countsFor(current.status) } });
-    },
-  );
+/** The served conversation of the request's customer, with the request on it. */
+export function cardWithLead(businessId: string, lead: LeadListItem): ConversationDetail {
+  const card = conversationCard(businessId, { leads: [lead] });
+  card.conversation.contact_name = LEAD_CUSTOMER;
+  return card;
 }
 
 /** Calls `answer` for every PATCH of the lead; other methods go on. */

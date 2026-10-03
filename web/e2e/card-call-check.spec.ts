@@ -8,7 +8,7 @@
 
 import { expect, test } from "./support/fixtures";
 import { en } from "./support/messages";
-import { CONVERSATION_ID, cardWithCalls, serveCard } from "./support/conversation-card";
+import { cardWithCalls, openCard, openDetails, serveCard } from "./support/conversation-card";
 
 test("a checked call is labelled and one with values missing from the data says what to check", async ({ page, owner }) => {
   const card = cardWithCalls(owner.businessId, ["call_clean", "call_flagged"]);
@@ -19,7 +19,8 @@ test("a checked call is labelled and one with values missing from the data says 
   );
   await serveCard(page, owner.businessId, card);
 
-  await page.goto(`/b/${owner.businessId}/messages/${CONVERSATION_ID}`);
+  await openCard(page, owner.businessId);
+  await openDetails(page);
 
   const guard = en.conversations.calls.guard;
   await expect(page.getByText(guard.clean, { exact: true })).toBeVisible();
@@ -39,7 +40,8 @@ test("on a phone the findings fit the screen", async ({ page, owner }) => {
   card.calls = (card.calls ?? []).map((call) => ({ ...call, guard_verdict: "flagged", unverified_values: ["50 GEL"] }));
   await serveCard(page, owner.businessId, card);
 
-  await page.goto(`/b/${owner.businessId}/messages/${CONVERSATION_ID}`);
+  await openCard(page, owner.businessId);
+  await openDetails(page);
 
   const title = page.getByText(en.conversations.calls.guard.flaggedTitle, { exact: true });
   await expect(title).toBeVisible();
