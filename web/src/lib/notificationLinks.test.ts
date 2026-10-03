@@ -39,10 +39,13 @@ describe("notification links", () => {
   it("open the page of their target", () => {
     const business = `/b/business_${BUSINESS_UUID}`;
     expect(linkTargetPath(view({ target: "conversation", conversation_id: "conversation_1" }))).toBe(
-      `${business}/messages/conversation_1`,
+      `${business}/inbox/conversation_1`,
     );
-    expect(linkTargetPath(view({ target: "conversation" }))).toBe(`${business}/messages/handoffs`);
-    expect(linkTargetPath(view({ target: "lead", lead_id: "lead_1" }))).toBe(`${business}/messages/leads`);
+    expect(linkTargetPath(view({ target: "conversation" }))).toBe(`${business}/inbox`);
+    expect(linkTargetPath(view({ target: "lead", lead_id: "lead_1" }))).toBe(`${business}/inbox?view=requests`);
+    expect(linkTargetPath(view({ target: "lead", lead_id: "lead_1", conversation_id: "conversation_2" }))).toBe(
+      `${business}/inbox/conversation_2`,
+    );
     expect(linkTargetPath(view({ target: "booking", booking_date: "2026-10-10" }))).toBe(
       `${business}/bookings?range=custom&from=2026-10-10&to=2026-10-10`,
     );

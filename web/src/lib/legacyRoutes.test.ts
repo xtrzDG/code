@@ -4,6 +4,12 @@ import { LEGACY_ROUTES, legacyDestination, legacyRedirects } from "./legacyRoute
 import { isBusinessPage } from "./navigation";
 
 describe("addresses from before the five sections", () => {
+  it("check a page before the section it is in (the first match wins)", () => {
+    const order = LEGACY_ROUTES.map((route) => route.from);
+    expect(order.indexOf("messages/handoffs")).toBeLessThan(order.indexOf("messages"));
+    expect(order.indexOf("messages/leads")).toBeLessThan(order.indexOf("messages"));
+  });
+
   it("lead to pages that exist", () => {
     for (const route of LEGACY_ROUTES) {
       expect(isBusinessPage(route.to), route.to).toBe(true);
@@ -15,7 +21,12 @@ describe("addresses from before the five sections", () => {
     expect(legacyRedirects()[0]).toEqual({ source: "/b/:businessId", destination: "/b/:businessId/overview", permanent: false });
     expect(legacyRedirects()).toContainEqual({
       source: "/b/:businessId/conversations/:rest*",
-      destination: "/b/:businessId/messages/:rest*",
+      destination: "/b/:businessId/inbox/:rest*",
+      permanent: false,
+    });
+    expect(legacyRedirects()).toContainEqual({
+      source: "/b/:businessId/messages/handoffs",
+      destination: "/b/:businessId/inbox?view=needs_person",
       permanent: false,
     });
     expect(legacyRedirects()).toContainEqual({
@@ -28,10 +39,14 @@ describe("addresses from before the five sections", () => {
 
   it("map every old section to its new place", () => {
     expect(legacyDestination("/b/biz_1/dashboard")).toBe("/b/biz_1/overview");
-    expect(legacyDestination("/b/biz_1/conversations")).toBe("/b/biz_1/messages");
-    expect(legacyDestination("/b/biz_1/conversations/conv_9")).toBe("/b/biz_1/messages/conv_9");
-    expect(legacyDestination("/b/biz_1/handoffs")).toBe("/b/biz_1/messages/handoffs");
-    expect(legacyDestination("/b/biz_1/leads")).toBe("/b/biz_1/messages/leads");
+    expect(legacyDestination("/b/biz_1/conversations")).toBe("/b/biz_1/inbox");
+    expect(legacyDestination("/b/biz_1/conversations/conv_9")).toBe("/b/biz_1/inbox/conv_9");
+    expect(legacyDestination("/b/biz_1/messages")).toBe("/b/biz_1/inbox");
+    expect(legacyDestination("/b/biz_1/messages/conv_9")).toBe("/b/biz_1/inbox/conv_9");
+    expect(legacyDestination("/b/biz_1/handoffs")).toBe("/b/biz_1/inbox?view=needs_person");
+    expect(legacyDestination("/b/biz_1/leads")).toBe("/b/biz_1/inbox?view=requests");
+    expect(legacyDestination("/b/biz_1/messages/handoffs")).toBe("/b/biz_1/inbox?view=needs_person");
+    expect(legacyDestination("/b/biz_1/messages/leads")).toBe("/b/biz_1/inbox?view=requests");
     expect(legacyDestination("/b/biz_1/knowledge/import")).toBe("/b/biz_1/assistant/knowledge/import");
     expect(legacyDestination("/b/biz_1/channels")).toBe("/b/biz_1/assistant/channels");
     expect(legacyDestination("/b/biz_1/billing")).toBe("/b/biz_1/settings/billing");

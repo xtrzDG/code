@@ -26,10 +26,9 @@ export function pageBadge(page: BusinessPage, counts: AttentionCounts | null): n
     return 0;
   }
   switch (page) {
-    case "messages/handoffs":
-      return counts.openHandoffs;
-    case "messages/leads":
-      return counts.newLeads;
+    case "inbox":
+      // Everything that waits for the team: people asked for, new requests.
+      return counts.openHandoffs + counts.newLeads;
     case "bookings":
       return counts.unconfirmedBookings;
     case "assistant/channels":

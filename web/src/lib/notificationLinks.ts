@@ -13,7 +13,7 @@
 
 import type { Schema } from "@/api/types";
 
-import { businessPath } from "./navigation";
+import { businessPath, conversationPath, inboxPath } from "./navigation";
 
 export type StaffLinkView = Schema<"StaffLinkView">;
 
@@ -53,11 +53,10 @@ export function linkTargetPath(view: StaffLinkView): string {
   const business = view.business_id;
   switch (view.target) {
     case "conversation":
-      return view.conversation_id
-        ? `${businessPath(business, "messages")}/${encodeURIComponent(view.conversation_id)}`
-        : businessPath(business, "messages/handoffs");
+      return view.conversation_id ? conversationPath(business, view.conversation_id) : inboxPath(business, "needs_person");
     case "lead":
-      return businessPath(business, "messages/leads");
+      // A request opens its conversation, where its status is changed.
+      return view.conversation_id ? conversationPath(business, view.conversation_id) : inboxPath(business, "requests");
     case "booking": {
       if (!view.booking_date) {
         return businessPath(business, "bookings");

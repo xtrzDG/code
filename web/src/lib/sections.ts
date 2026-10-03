@@ -1,19 +1,21 @@
 /**
  * The information architecture of a business: five sections (Overview,
- * Messages, Bookings, Assistant, Settings), the pages inside each and who
+ * Inbox, Bookings, Assistant, Settings), the pages inside each and who
  * may open them. The sidebar, the phone tab bar, the section tabs and the
  * page titles are all built from these tables.
  *
- * Staff see Overview, Messages, Bookings, the assistant's test chat and
- * Settings → Notifications (their own devices); owners see everything. Versions and autotests sit in the "advanced"
- * group of the Assistant.
+ * The Inbox is one page: conversations, the ones that need a person and
+ * customers' requests are its views. Staff see Overview, Inbox, Bookings,
+ * the assistant's test chat and Settings → Notifications (their own
+ * devices); owners see everything. Versions and autotests sit in the
+ * "advanced" group of the Assistant.
  */
 
 import type { MessageKey } from "@/i18n/translate";
 
 import type { BusinessPage } from "./navigation";
 
-export const BUSINESS_SECTIONS = ["overview", "messages", "bookings", "assistant", "settings"] as const;
+export const BUSINESS_SECTIONS = ["overview", "inbox", "bookings", "assistant", "settings"] as const;
 
 export type BusinessSection = (typeof BUSINESS_SECTIONS)[number];
 
@@ -34,7 +36,7 @@ export interface PageEntry {
 
 export const SECTION_LABELS: Record<BusinessSection, MessageKey> = {
   overview: "navigation.sections.overview",
-  messages: "navigation.sections.messages",
+  inbox: "navigation.sections.inbox",
   bookings: "navigation.sections.bookings",
   assistant: "navigation.sections.assistant",
   settings: "navigation.sections.settings",
@@ -42,7 +44,7 @@ export const SECTION_LABELS: Record<BusinessSection, MessageKey> = {
 
 export const SECTION_DESCRIPTIONS: Record<BusinessSection, MessageKey> = {
   overview: "navigation.descriptions.overview",
-  messages: "navigation.descriptions.messages",
+  inbox: "navigation.descriptions.inbox",
   bookings: "navigation.descriptions.bookings",
   assistant: "navigation.descriptions.assistant",
   settings: "navigation.descriptions.settings",
@@ -51,11 +53,7 @@ export const SECTION_DESCRIPTIONS: Record<BusinessSection, MessageKey> = {
 /** The pages of each section in order; the first one is the section's own address. */
 export const SECTION_PAGES: Record<BusinessSection, readonly PageEntry[]> = {
   overview: [{ page: "overview", label: "navigation.sections.overview", roles: EVERYONE }],
-  messages: [
-    { page: "messages", label: "navigation.pages.messagesAll", roles: EVERYONE },
-    { page: "messages/handoffs", label: "navigation.pages.messagesHandoffs", roles: EVERYONE },
-    { page: "messages/leads", label: "navigation.pages.messagesLeads", roles: EVERYONE },
-  ],
+  inbox: [{ page: "inbox", label: "navigation.sections.inbox", roles: EVERYONE }],
   bookings: [{ page: "bookings", label: "navigation.sections.bookings", roles: EVERYONE }],
   assistant: [
     { page: "assistant", label: "navigation.pages.assistantTest", roles: EVERYONE },
@@ -69,6 +67,7 @@ export const SECTION_PAGES: Record<BusinessSection, readonly PageEntry[]> = {
     { page: "settings/team", label: "navigation.pages.settingsTeam", roles: OWNERS },
     // Everyone turns notifications on for their own devices; owners also manage the staff contacts.
     { page: "settings/notifications", label: "navigation.pages.settingsNotifications", roles: EVERYONE },
+    { page: "settings/quick-replies", label: "navigation.pages.settingsQuickReplies", roles: OWNERS },
     { page: "settings/calls", label: "navigation.pages.settingsCalls", roles: OWNERS },
     { page: "settings/billing", label: "navigation.pages.settingsBilling", roles: OWNERS },
     { page: "settings/privacy", label: "navigation.pages.settingsPrivacy", roles: OWNERS },
@@ -79,15 +78,14 @@ export const SECTION_PAGES: Record<BusinessSection, readonly PageEntry[]> = {
 /** What a page is for, under its title (pages without one show none). */
 export const PAGE_DESCRIPTIONS: Partial<Record<BusinessPage, MessageKey>> = {
   overview: "navigation.descriptions.overview",
-  messages: "pages.conversations.description",
-  "messages/handoffs": "pages.handoffs.description",
-  "messages/leads": "pages.leads.description",
+  inbox: "navigation.descriptions.inbox",
   bookings: "pages.bookings.description",
   assistant: "navigation.descriptions.assistantTest",
   "assistant/knowledge": "pages.knowledge.description",
   "assistant/profile": "navigation.descriptions.assistantProfile",
   "assistant/channels": "pages.channels.description",
   "assistant/versions": "navigation.descriptions.assistantVersions",
+  "settings/quick-replies": "quickReplies.description",
   "settings/calls": "callSettings.description",
   "settings/billing": "pages.billing.description",
 };
@@ -127,7 +125,7 @@ export function pageLabel(page: BusinessPage): MessageKey {
   return SECTION_PAGES[section].length === 1 ? SECTION_LABELS[section] : entryOf(page).label;
 }
 
-/** The page title in the browser: "Needs a person · Messages" (the business name follows). */
+/** The page title in the browser: "Team · Settings" (the business name follows). */
 export function pageTitleKeys(page: BusinessPage): readonly MessageKey[] {
   const section = sectionOf(page);
   const label = pageLabel(page);
