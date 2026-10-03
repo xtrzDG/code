@@ -28,9 +28,6 @@ from app.use_cases.channels.inbox.claim_inbound_event_use_case import (
 from app.use_cases.channels.inbox.finish_inbound_event_use_case import (
     FinishInboundEventUseCase,
 )
-from app.use_cases.channels.inbox.open_widget_event_use_case import (
-    OpenWidgetEventUseCase,
-)
 from app.use_cases.channels.inbox.read_accepted_post_call_use_case import (
     ReadAcceptedPostCallUseCase,
 )
@@ -57,6 +54,9 @@ from app.use_cases.channels.outbox.send_outbound_message_use_case import (
 )
 from app.use_cases.channels.outbox.take_due_outbound_message_use_case import (
     TakeDueOutboundMessageUseCase,
+)
+from app.use_cases.widget.queue_widget_message_use_case import (
+    QueueWidgetMessageUseCase,
 )
 from tests.channels.channels_use_cases import ChannelsUseCases
 from tests.notifications.staff_alert_fakes import push_subscription_repo
@@ -104,7 +104,7 @@ class ChannelsInbox(ChannelsUseCases):
         self.store_post_call_report = StorePostCallReportUseCase(
             self.inbound_event_repo, self.job_queue, self.wall_clock
         )
-        self.open_widget_event = OpenWidgetEventUseCase(
+        self.queue_widget_message = QueueWidgetMessageUseCase(
             self.inbound_event_repo, self.job_queue, self.wall_clock
         )
         self.claim_inbound_event = ClaimInboundEventUseCase(

@@ -35,8 +35,6 @@ from app.schemas.dto.channels.widget import (
     WidgetMessageCommand,
     WidgetMessagesQuery,
     WidgetMessagesView,
-    WidgetReplyInput,
-    WidgetReplyView,
     WidgetSnippetQuery,
     WidgetSnippetView,
 )
@@ -48,7 +46,6 @@ from app.schemas.typings.channels.strings import MetaWebhookChallenge
 from app.use_cases.channels.accept_widget_message_use_case import (
     AcceptWidgetMessageUseCase,
 )
-from app.use_cases.channels.build_widget_reply_use_case import BuildWidgetReplyUseCase
 from app.use_cases.channels.configure_platform_bot_webhook_use_case import (
     ConfigurePlatformBotWebhookUseCase,
 )
@@ -193,13 +190,6 @@ class ChannelUseCasesContainer(containers.DeclarativeContainer):
         channel_repo=repositories.channel_repo,
         rate_limit_registry=registries.request_rate_limit_registry,
         wall_clock=time_provider.microsecond_wall_clock,
-    )
-    build_widget_reply_use_case: Factory[
-        UseCaseContract[WidgetReplyInput, WidgetReplyView]
-    ] = Factory(
-        BuildWidgetReplyUseCase,
-        message_repo=repositories.message_repo,
-        language_registry=registries.language_registry,
     )
     get_widget_snippet_use_case: Factory[
         UseCaseContract[WidgetSnippetQuery, WidgetSnippetView]

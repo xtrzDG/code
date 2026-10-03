@@ -32,6 +32,11 @@ from app.registries.niches.niche_template_registry import NicheTemplateRegistry
 from app.registries.niches.niche_value_registry import NicheValueRegistry
 from app.registries.niches.starter_answer_registry import StarterAnswerRegistry
 from app.registries.tools.assistant_tool_registry import AssistantToolRegistry
+from app.registries.turns.turn_slot_registry import (
+    TurnSlotRegistry,
+    build_customer_turn_slots,
+    build_test_chat_slots,
+)
 
 
 class RegistriesContainer(containers.DeclarativeContainer):
@@ -83,6 +88,15 @@ class RegistriesContainer(containers.DeclarativeContainer):
     )
     customer_message_lock_registry: Singleton[CustomerMessageLockRegistry] = Singleton(
         CustomerMessageLockRegistry, advisory_locks=adapters.advisory_locks
+    )
+    # Places for turns in this process, taken before anything held for long:
+    # customer turns before their lock (LLM_MAX_CONCURRENCY), the owners'
+    # test chat before its model calls (TEST_CHAT_MAX_CONCURRENCY).
+    customer_turn_slots: Singleton[TurnSlotRegistry] = Singleton(
+        build_customer_turn_slots, settings=config.app_settings
+    )
+    test_chat_slots: Singleton[TurnSlotRegistry] = Singleton(
+        build_test_chat_slots, settings=config.app_settings
     )
     # Request counters of public endpoints (the website widget, login code
     # checks), shared by every API instance through Postgres.

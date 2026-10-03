@@ -72,8 +72,19 @@
       );
     }
 
+    // The typing dots show while a message is on its way and while the
+    // answer to an accepted one is being written (not once staff took over:
+    // the assistant stays silent then).
+    function syncTyping() {
+      var isTyping = state.isSending || (awaitingAnswer() && !state.isHandedOff);
+      if (isTyping !== (typingRow !== null)) {
+        showTyping(isTyping);
+      }
+    }
+
     function schedulePoll(delay) {
       stopPolling();
+      syncTyping();
       if (!shouldPoll() || state.isSending) {
         return;
       }
@@ -93,6 +104,11 @@
     }
 
     function nextDelay() {
+      if (awaitingAnswer() && !state.isHandedOff) {
+        var awaitDelay = Math.max(state.pollDelay, POLL_AWAIT_DELAY_MS) * POLL_AWAIT_BACKOFF_FACTOR;
+        state.pollDelay = Math.min(Math.round(awaitDelay), POLL_AWAIT_MAX_DELAY_MS);
+        return state.pollDelay;
+      }
       var limit = state.isOpen ? POLL_MAX_DELAY_OPEN_MS : POLL_MAX_DELAY_CLOSED_MS;
       state.pollDelay = Math.min(Math.round(state.pollDelay * POLL_BACKOFF_FACTOR), limit);
       return state.pollDelay;
@@ -111,7 +127,8 @@
       adoptStoredState();
       state.isPolling = true;
       var url = messagesUrl;
-      if (state.cursor) {
+      var hadCursor = Boolean(state.cursor);
+      if (hadCursor) {
         url += "?after=" + encodeURIComponent(state.cursor);
       }
       requestJson(url, null, state.sessionKey).then(
@@ -127,7 +144,9 @@
             return;
           }
           var added = receiveMessages(result.body);
-          if (result.body.has_more === true) {
+          if (result.body.has_more === true || (!hadCursor && state.cursor && awaitingAnswer())) {
+            // More to read, or the first position of a new visitor: the
+            // answer comes right after it.
             schedulePoll(POLL_MORE_DELAY_MS);
           } else if (added > 0) {
             state.pollDelay = POLL_FIRST_DELAY_MS;
@@ -173,6 +192,13 @@
         saveCursor(page.cursor);
       }
       setHandedOff(page.is_handed_off === true);
+      if (state.isHandedOff && awaitingAnswer()) {
+        // Staff handle the conversation: they answer, not the assistant.
+        clearPending();
+        noteHandoff();
+        saveHistory();
+        renderLog();
+      }
       if (added > 0) {
         clearPending();
         markActivity();

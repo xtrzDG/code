@@ -25,7 +25,8 @@ from app.schemas.dto.channels.channel_webhooks import (
     MetaWebhookRequest,
     TelegramWebhookRequest,
 )
-from app.schemas.dto.channels.widget import WidgetMessageCommand, WidgetReplyView
+from app.schemas.dto.channels.widget import WidgetMessageCommand
+from app.schemas.dto.channels.widget_turns import WidgetMessageAcceptedView
 from app.schemas.dto.jobs import JobReport, QueuedJobInput
 
 
@@ -57,15 +58,11 @@ class ChannelPipelinesContainer(containers.DeclarativeContainer):
         store_inbound_messages=delivery_use_cases.store_inbound_messages_use_case,
     )
     widget_message_orchestrator: Factory[
-        OrchestratorContract[WidgetMessageCommand, WidgetReplyView]
+        OrchestratorContract[WidgetMessageCommand, WidgetMessageAcceptedView]
     ] = Factory(
         WidgetMessageOrchestrator,
         accept_widget_message=channel_use_cases.accept_widget_message_use_case,
-        open_widget_event=delivery_use_cases.open_widget_event_use_case,
-        customer_message_pipeline=conversation_pipelines.customer_message_pipeline,
-        finish_inbound_event=delivery_use_cases.finish_inbound_event_use_case,
-        release_inbound_event=delivery_use_cases.release_inbound_event_use_case,
-        build_widget_reply=channel_use_cases.build_widget_reply_use_case,
+        queue_widget_message=delivery_use_cases.queue_widget_message_use_case,
     )
     process_inbound_message_orchestrator: Factory[
         OrchestratorContract[QueuedJobInput, JobReport]

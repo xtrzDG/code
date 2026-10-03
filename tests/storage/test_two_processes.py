@@ -1,8 +1,9 @@
 """
-Two API processes on one Postgres database, as `render.yaml` runs them:
-the last free table goes to exactly one booking, the widget's limits are
-counted once for both, and one customer's messages are answered one at a
-time whichever process receives them.
+Two API processes and two workers on one Postgres database, as
+`render.yaml` runs them: the last free table goes to exactly one booking,
+the widget's limits are counted once for both API processes, and one
+customer's messages are answered one at a time whichever process receives
+them and whichever worker answers them.
 """
 
 import time
@@ -20,9 +21,11 @@ from tests.storage.two_process_world import (
     api_processes,
     read_model_calls,
     seed_restaurant,
+    worker_processes,
 )
 
 # The restaurant has one table kind with three units (tests/e2e/journeys.py).
+ANSWER_SECONDS: float = 60.0
 TABLE_UNITS: int = 3
 RACE_HOURS: tuple[int, ...] = (12, 14, 16, 18, 20)
 RACERS_PER_HOUR: int = 10
@@ -62,10 +65,14 @@ def two_processes(
         template_name=migrated_template_database
     )
     database_url = str(postgres_server.app_database_url(database_name))
-    call_log = tmp_path_factory.mktemp("two-processes") / "model-calls.log"
+    directory = tmp_path_factory.mktemp("two-processes")
+    call_log = directory / "model-calls.log"
     try:
         restaurant = seed_restaurant(database_url)
-        with api_processes(database_url, call_log) as urls:
+        with (
+            api_processes(database_url, call_log) as urls,
+            worker_processes(database_url, call_log, directory, count=2),
+        ):
             yield TwoProcesses(
                 restaurant, urls, call_log, postgres_server, database_name
             )
@@ -97,6 +104,36 @@ def send_widget_message(
         json={"session_key": session_key, "text": text},
         timeout=120,
     )
+
+
+def wait_for_model_calls(
+    world: TwoProcesses, count: int
+) -> list[tuple[int, float, float]]:
+    """The model calls once the workers made `count` of them (all, at most)."""
+
+    deadline = time.monotonic() + ANSWER_SECONDS
+    while len(read_model_calls(world.call_log)) < count and time.monotonic() < deadline:
+        time.sleep(0.2)
+
+    return read_model_calls(world.call_log)
+
+
+def wait_until_inbox_answered(world: TwoProcesses) -> bool:
+    """True once no customer message waits in the job queue."""
+
+    deadline = time.monotonic() + ANSWER_SECONDS
+    while time.monotonic() < deadline:
+        with world.postgres_server.admin_connection(world.database_name) as connection:
+            row = connection.execute(
+                "select count(*) from workshop.queued_jobs "
+                "where document ->> 'name' = 'process_inbound_message' "
+                "and document ->> 'status' in ('pending', 'running')"
+            ).fetchone()
+        if row is not None and int(row[0]) == 0:
+            return True
+        time.sleep(0.2)
+
+    return False
 
 
 def outside_a_minute_boundary() -> None:
@@ -142,6 +179,7 @@ def test_the_widget_limit_is_counted_once_for_both_processes(
 ) -> None:
     outside_a_minute_boundary()
     session_key = "visitor_limit_shared_0001"
+    calls_before = len(read_model_calls(two_processes.call_log))
 
     def ask(index: int) -> httpx.Response:
         return send_widget_message(two_processes, index, session_key, f"Вопрос {index}")
@@ -151,10 +189,13 @@ def test_the_widget_limit_is_counted_once_for_both_processes(
 
     statuses = [answer.status_code for answer in answers]
     # Counted per process, each would let 12 through: 18 in all.
-    assert statuses.count(200) == WIDGET_MESSAGES_PER_VISITOR, statuses
+    assert statuses.count(202) == WIDGET_MESSAGES_PER_VISITOR, statuses
     assert statuses.count(429) == 6
     refused = next(answer for answer in answers if answer.status_code == 429)
     assert int(refused.headers["Retry-After"]) >= 1
+    # The workers answer every accepted message, one after another.
+    assert wait_until_inbox_answered(two_processes)
+    assert len(read_model_calls(two_processes.call_log)) > calls_before
 
 
 def test_one_customers_messages_are_answered_one_at_a_time(
@@ -171,11 +212,11 @@ def test_one_customers_messages_are_answered_one_at_a_time(
     with ThreadPoolExecutor(max_workers=4) as pool:
         answers = list(pool.map(write, range(4)))
 
-    assert [answer.status_code for answer in answers] == [200] * 4
-    calls = read_model_calls(two_processes.call_log)[calls_before:]
-    # Both processes answered, and no turn's model call overlapped another.
+    # Both API processes took messages; the workers answer them.
+    assert [answer.status_code for answer in answers] == [202] * 4
+    calls = wait_for_model_calls(two_processes, calls_before + 4)[calls_before:]
+    # No turn's model call overlapped another.
     assert len(calls) == 4
-    assert len({pid for pid, _, _ in calls}) == 2
     for (_, _, previous_end), (_, next_start, _) in zip(calls, calls[1:], strict=False):
         assert next_start >= previous_end - 0.001
     # The transcript alternates: every reply follows its own message.

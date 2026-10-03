@@ -16,6 +16,7 @@ from app.use_cases.observability.check_readiness_use_case import (
     WORKER_HEARTBEAT_STALE_SECONDS,
     CheckReadinessUseCase,
 )
+from app.utilities.observability.readiness_memory import ReadinessMemory
 from app.utilities.storage.storage_scope_context import StorageScopeContext
 from tests.platform.readiness_fakes import (
     MIGRATION_NAMES,
@@ -47,6 +48,8 @@ def check(
     probe: DatabaseProbe,
     heartbeats: WorkerHeartbeatRepoContract | None = None,
     source: StaticMigrationSource | None = None,
+    memory: ReadinessMemory | None = None,
+    now: int = NOW,
 ) -> ReadinessReport:
     use_case = CheckReadinessUseCase(
         database_probe=ScriptedProbe(probe),
@@ -57,8 +60,9 @@ def check(
         storage_scope=StorageScopeContext(),
         wall_clock=WallClock(
             preferred_time_unit_type=Microseconds,
-            unix_nanosecond_factory=lambda: NOW * 1000,
+            unix_nanosecond_factory=lambda: now * 1000,
         ),
+        memory=ReadinessMemory() if memory is None else memory,
     )
     return use_case.run(ReadinessQuery())
 
@@ -90,14 +94,6 @@ def test_a_database_that_is_down_makes_the_instance_not_ready() -> None:
     assert report.checks.database.failure is DatabaseProbeFailure.UNREACHABLE
     assert report.checks.migrations.status is HealthCheckStatus.FAILED
     assert report.checks.pool.status is HealthCheckStatus.OK
-
-
-def test_an_exhausted_pool_fails_the_pool_check() -> None:
-    report = check(failed_probe(DatabaseProbeFailure.POOL_EXHAUSTED))
-
-    assert report.status is ReadinessState.NOT_READY
-    assert report.checks.pool.status is HealthCheckStatus.FAILED
-    assert report.checks.pool.in_use == 64
 
 
 def test_a_migration_of_this_build_that_is_not_applied_is_not_ready() -> None:

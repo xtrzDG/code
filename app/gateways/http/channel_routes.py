@@ -35,8 +35,8 @@ from app.schemas.dto.channels.widget import (
     WidgetMessageRequest,
     WidgetMessagesQuery,
     WidgetMessagesView,
-    WidgetReplyView,
 )
+from app.schemas.dto.channels.widget_turns import WidgetMessageAcceptedView
 from app.schemas.exceptions.application_errors import ValidationFailedError
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.channels.constrained_strings import WidgetSessionKey
@@ -77,7 +77,9 @@ def build_channel_router(
         PlatformBotWebhookOutcome,
     ],
     widget_config_operator: OperatorContract[BusinessId, WidgetConfigView],
-    widget_message_operator: OperatorContract[WidgetMessageCommand, WidgetReplyView],
+    widget_message_operator: OperatorContract[
+        WidgetMessageCommand, WidgetMessageAcceptedView
+    ],
     widget_messages_operator: OperatorContract[
         WidgetMessagesQuery,
         WidgetMessagesView,
@@ -92,6 +94,8 @@ def build_channel_router(
         POST /v1/channels/telegram-platform/webhook       staff bot updates
         GET  /v1/widget/{business_id}/config              public widget config
         POST /v1/widget/{business_id}/messages            widget visitor message
+                                                          (202: a worker answers;
+                                                          the widget polls)
         GET  /v1/widget/{business_id}/messages            new assistant and staff
                                                           messages (header
                                                           X-Widget-Session-Key,
@@ -178,6 +182,7 @@ def build_channel_router(
 
     @router.post(
         WIDGET_MESSAGES_PATH,
+        status_code=status.HTTP_202_ACCEPTED,
         openapi_extra=describe_json_body(WidgetMessageRequest),
     )
     def send_widget_message(
@@ -185,7 +190,7 @@ def build_channel_router(
         business_id: str,
         response: Response,
         body: Annotated[WidgetMessageRequest, Depends(read_widget_message_body)],
-    ) -> WidgetReplyView:
+    ) -> WidgetMessageAcceptedView:
         response.headers.update(WIDGET_CORS_HEADERS)
         return widget_message_operator.operate(
             WidgetMessageCommand(

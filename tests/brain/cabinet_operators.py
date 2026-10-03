@@ -14,6 +14,7 @@ from app.orchestrators.conversations.owner_test_chat_orchestrator import (
 from app.orchestrators.use_case_orchestrator import UseCaseOrchestrator
 from app.pipelines.conversations.owner_test_chat_pipeline import OwnerTestChatPipeline
 from app.pipelines.orchestrator_pipeline import OrchestratorPipeline
+from app.registries.turns.turn_slot_registry import build_test_chat_slots
 from app.repositories.setup_repositories import ActivationEventRepository
 from app.schemas.domain.setup import ActivationEventDocument
 from app.schemas.dto.call_recordings import CallRecordingQuery, RecordingPart
@@ -76,6 +77,9 @@ from app.use_cases.menu_import.discard_import_batch_use_case import (
 from app.use_cases.menu_import.import_menu_use_case import ImportMenuUseCase
 from app.use_cases.setup.record_activation_event_use_case import (
     RecordActivationEventUseCase,
+)
+from app.utilities.config_helpers.app_settings.app_settings_assembler import (
+    assemble_app_settings,
 )
 from tests.brain.brain_world import BrainWorld
 from tests.brain.cabinet_fakes import CabinetStorage, KeepTestChatVersions
@@ -224,6 +228,7 @@ def build_cabinet_operators(
                         world.clock.wall_clock(),
                     )
                 ),
+                test_chat_slots=build_test_chat_slots(assemble_app_settings({})),
             )
         ),
         import_menu=PipelineOperator(

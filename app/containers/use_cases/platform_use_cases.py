@@ -194,6 +194,7 @@ class PlatformUseCasesContainer(containers.DeclarativeContainer):
         worker_heartbeat_repo=repositories.worker_heartbeat_repo,
         storage_scope=utilities.storage_scope,
         wall_clock=time_provider.microsecond_wall_clock,
+        memory=utilities.readiness_memory,
     )
     report_widget_error_use_case: Factory[UseCaseContract[WidgetErrorCommand, None]] = (
         Factory(

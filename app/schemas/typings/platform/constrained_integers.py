@@ -119,6 +119,12 @@ class PageSize(BaseConstrainedTypedInt):
     le = 200
 
 
+class PoolExhaustedSeconds(BaseConstrainedTypedInt):
+    """How long every readiness probe has found the connection pool busy."""
+
+    ge = 0
+
+
 class ProcessedItemCount(BaseConstrainedTypedInt):
     """How many items one background job run processed."""
 
@@ -171,6 +177,23 @@ class ThreadPoolSize(BaseConstrainedTypedInt):
 
     ge = 1
     le = 512
+
+
+class TurnSlotCount(BaseConstrainedTypedInt):
+    """
+    How many conversation turns of one kind one process runs at once; a
+    turn beyond them waits for a place before it takes anything else.
+    """
+
+    ge = 1
+    le = 512
+
+
+class TurnSlotWaitSeconds(BaseConstrainedTypedInt):
+    """How long a turn waits for a free place before it is refused."""
+
+    ge = 1
+    le = 3600
 
 
 class WorkerLaneConcurrency(BaseConstrainedTypedInt):

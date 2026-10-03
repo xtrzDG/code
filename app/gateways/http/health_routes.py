@@ -31,12 +31,17 @@ def build_readiness_router(
 ) -> APIRouter:
     """
     Route (no bearer token, not in the API description):
-        GET /readyz    200 when the database, the migrations and the pool are
-                       fine, else 503; the body names each check, and the
-                       age of the freshest worker heartbeat (reported only).
+        GET /readyz    200 while the instance can serve: the database answers
+                       and every migration of this build is applied; a pool
+                       busy with load is DEGRADED and keeps the traffic
+                       unless it stays exhausted for more than 30 s. 503
+                       otherwise. The body names each check, and the age of
+                       the freshest worker heartbeat (reported only).
 
-    `GET /healthz` (liveness, in `application.py`) never touches the
-    database; Render routes traffic by this one.
+    Render routes traffic by this one (`healthCheckPath: /readyz` in
+    render.yaml and render.staging.yaml) and takes an instance out of
+    rotation while it answers 503. `GET /healthz` (liveness, in
+    `application.py`) never touches the database.
     """
 
     router = APIRouter()

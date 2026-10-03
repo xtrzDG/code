@@ -29,7 +29,6 @@ from app.registries.billing.plan_registry import PlanRegistry
 from app.use_cases.channels.accept_widget_message_use_case import (
     AcceptWidgetMessageUseCase,
 )
-from app.use_cases.channels.build_widget_reply_use_case import BuildWidgetReplyUseCase
 from app.use_cases.channels.get_widget_config_use_case import GetWidgetConfigUseCase
 from app.use_cases.channels.get_widget_messages_use_case import GetWidgetMessagesUseCase
 from app.use_cases.channels.get_widget_snippet_use_case import GetWidgetSnippetUseCase
@@ -101,13 +100,7 @@ def build_channels_http_client(testbed: ChannelsCallFollowUps) -> TestClient:
                         testbed.widget_rate_limits,
                         testbed.wall_clock,
                     ),
-                    testbed.open_widget_event,
-                    testbed.pipeline,
-                    testbed.finish_inbound_event,
-                    testbed.release_inbound_event,
-                    BuildWidgetReplyUseCase(
-                        testbed.message_repo, testbed.language_registry
-                    ),
+                    testbed.queue_widget_message,
                 )
             ),
             widget_messages_operator=wrap_use_case(

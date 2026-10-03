@@ -40,6 +40,7 @@ class ConversationPipelinesContainer(containers.DeclarativeContainer):
         CustomerMessagePipeline,
         turn_orchestrator=conversation_orchestrators.conversation_turn_orchestrator,
         customer_locks=registries.customer_message_lock_registry,
+        turn_slots=registries.customer_turn_slots,
     )
 
     # --- The owner's test chat.
@@ -51,6 +52,7 @@ class ConversationPipelinesContainer(containers.DeclarativeContainer):
         prepare_test_message=conversation_orchestrators.owner_test_chat_orchestrator,
         turn_orchestrator=conversation_orchestrators.conversation_turn_orchestrator,
         record_activation_event=setup_orchestrators.record_activation_event_orchestrator,
+        test_chat_slots=registries.test_chat_slots,
     )
 
     # --- Voice webhooks.

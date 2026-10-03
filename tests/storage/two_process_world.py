@@ -90,6 +90,69 @@ def process_environment(database_url: str) -> dict[str, str]:
     }
 
 
+def worker_environment(
+    database_url: str, extra: Mapping[str, str] | None = None
+) -> dict[str, str]:
+    """A worker process: JSON logs, so the test can read their fields."""
+
+    return {
+        **process_environment(database_url),
+        "LOG_FORMAT": "json",
+        **({} if extra is None else dict(extra)),
+    }
+
+
+@contextmanager
+def worker_processes(
+    database_url: str,
+    call_log: Path | None,
+    log_directory: Path,
+    count: int = 1,
+    extra_environment: Mapping[str, str] | None = None,
+) -> Generator[list[Path]]:
+    """
+    Start `count` worker processes; yield the files of their logs. With a
+    model call log they answer with the logging stand-in model, without
+    one they are the real `workshop worker` (its scripted model).
+    """
+
+    environment = worker_environment(database_url, extra_environment)
+    logs: list[Path] = [log_directory / f"worker-{index}.log" for index in range(count)]
+    handles = [log.open("wb") for log in logs]
+    command: list[str] = (
+        [sys.executable, "-m", "app.worker_main"]
+        if call_log is None
+        else [sys.executable, "-m", "tests.storage.two_process_worker", str(call_log)]
+    )
+    processes = [
+        subprocess.Popen(
+            command,
+            cwd=PROJECT_ROOT_DIRECTORY,
+            env=environment,
+            stderr=handle,
+            stdout=handle,
+        )
+        for handle in handles
+    ]
+    try:
+        yield logs
+    finally:
+        stop_processes(processes)
+        for handle in handles:
+            handle.close()
+
+
+def stop_processes(processes: list[subprocess.Popen[bytes]]) -> None:
+    for process in processes:
+        process.terminate()
+    for process in processes:
+        try:
+            process.wait(timeout=30)
+        except subprocess.TimeoutExpired:
+            process.kill()
+            process.wait()
+
+
 def wait_until_ready(process: subprocess.Popen[bytes], url: str) -> None:
     deadline = time.monotonic() + STARTUP_SECONDS
     while time.monotonic() < deadline:
@@ -110,10 +173,14 @@ def api_processes(
     database_url: str,
     call_log: Path,
     count: int = 2,
+    extra_environment: Mapping[str, str] | None = None,
 ) -> Generator[list[str]]:
     """Start `count` API processes on the database; yield their base URLs."""
 
-    environment: Mapping[str, str] = process_environment(database_url)
+    environment: Mapping[str, str] = {
+        **process_environment(database_url),
+        **({} if extra_environment is None else dict(extra_environment)),
+    }
     ports: list[int] = [free_port() for _ in range(count)]
     processes = [
         subprocess.Popen(
@@ -135,14 +202,7 @@ def api_processes(
             wait_until_ready(process, url)
         yield urls
     finally:
-        for process in processes:
-            process.terminate()
-        for process in processes:
-            try:
-                process.wait(timeout=30)
-            except subprocess.TimeoutExpired:
-                process.kill()
-                process.wait()
+        stop_processes(processes)
 
 
 def read_model_calls(call_log: Path) -> list[tuple[int, float, float]]:

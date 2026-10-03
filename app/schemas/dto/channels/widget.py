@@ -8,7 +8,6 @@ from app.schemas.constants.channels import WidgetPosition
 from app.schemas.constants.conversations import MessageAuthor
 from app.schemas.constants.localization import TextDirection
 from app.schemas.constants.sharing import ShareLinkKind
-from app.schemas.dto.conversations import AssistantReply
 from app.schemas.typings.businesses.constrained_strings import WebLink
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.businesses.strings import BusinessName
@@ -31,7 +30,7 @@ from app.schemas.typings.channels.strings import (
 )
 from app.schemas.typings.compliance.strings import ClientIpAddress
 from app.schemas.typings.conversations.booleans import IsConversationHandedOff
-from app.schemas.typings.conversations.prefixed_id import ConversationId, MessageId
+from app.schemas.typings.conversations.prefixed_id import MessageId
 from app.schemas.typings.conversations.strings import MessageText
 from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.schemas.typings.localization.strings import LanguageDisplayName
@@ -119,33 +118,6 @@ class WidgetMessageCommand(ImmutableDTO):
     business_id: BusinessId
     request: WidgetMessageRequest
     client_ip_address: ClientIpAddress | None = None
-
-
-class WidgetReplyView(ImmutableDTO):
-    """
-    The assistant's answer in the widget.
-
-    `text` is None while staff handle the conversation; `direction` tells the
-    widget how to lay the answer out (right-to-left for Hebrew, Arabic, ...).
-    `message_id` is the stored answer (None without one); `cursor` is the
-    visitor's message, so polling GET .../messages?after=<cursor> returns
-    the answer again (skip it by id) and every staff message written since.
-    """
-
-    conversation_id: ConversationId
-    text: MessageText | None
-    language: LanguageTag
-    direction: TextDirection
-    is_handed_off: IsConversationHandedOff
-    message_id: MessageId | None = None
-    cursor: MessageId | None = None
-
-
-class WidgetReplyInput(ImmutableDTO):
-    """The assistant's answer to a widget visitor of one business."""
-
-    business_id: BusinessId
-    reply: AssistantReply
 
 
 class WidgetMessagesQuery(ImmutableDTO):

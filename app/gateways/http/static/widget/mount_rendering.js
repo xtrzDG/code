@@ -75,7 +75,9 @@
           return;
         }
         var row = messageRow(item.role, item.text, item.direction, item.role === "staff" ? text("staff") : "");
-        if (item === state.pendingItem || (item.role === "visitor" && isAwaiting(item))) {
+        // Faded while on its way; once the API has it, the typing dots say
+        // that the answer is coming.
+        if (item === state.pendingItem) {
           row.className += " aw-pending";
         }
         log.appendChild(row);
