@@ -1,7 +1,8 @@
 # Reviewed gitleaks findings (2026-10-02/03): made-up keys of test settings,
 # the sample job lease token of the stored-document golden fixtures, the
 # public RFC 8291 Web Push test vector, environment variable names in
-# render.yaml and a test visitor session key; never real credentials. One
+# render.yaml, a test visitor session key and the sample review link token
+# of the feedback fixtures; never real credentials. One
 # fingerprint per finding (<commit>:<file>:<rule>:<line>); add a line only
 # after checking the value is not a real secret, and rotate any real secret
 # that was committed.
@@ -18,3 +19,5 @@ e3306166685a1b324c58b50865ce769c9013a338:tests/billing/test_return_urls.py:gener
 23578b5c9811905bbcbc6520c09bf2c001467ae3:render.yaml:generic-api-key:431
 23578b5c9811905bbcbc6520c09bf2c001467ae3:render.yaml:generic-api-key:435
 c1b77653af7791923b42874f8ef115d4558583cd:tests/storage/test_two_processes.py:generic-api-key:163
+8124a696c211e8a1d13d4d96c8bcde0c9ca54705:tests/storage/document_evolution/sample_values.py:generic-api-key:48
+8124a696c211e8a1d13d4d96c8bcde0c9ca54705:tests/storage/golden/feedback_requests/v1.json:generic-api-key:17
