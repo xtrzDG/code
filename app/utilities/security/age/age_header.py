@@ -50,6 +50,10 @@ class AgeFormatError(ValueError):
     """The bytes are not an age v1 file, or none of its stanzas opens."""
 
 
+class AgeIdentityMismatchError(AgeFormatError):
+    """A well-formed age file encrypted to recipients other than the identity."""
+
+
 @dataclass(frozen=True)
 class Stanza:
     """One recipient stanza: its type, its arguments and its body."""
@@ -166,7 +170,7 @@ def open_file_key(header: ParsedHeader, identity: X25519PrivateKey) -> bytes:
 
         return file_key
 
-    raise AgeFormatError("The backup is not encrypted to this identity.")
+    raise AgeIdentityMismatchError("The backup is not encrypted to this identity.")
 
 
 def unwrap_x25519(

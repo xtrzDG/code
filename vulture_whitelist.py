@@ -242,6 +242,11 @@ _.awaiting_count  # app/schemas/dto/inbox/inbox_views.py
 _.variables  # app/schemas/dto/inbox/quick_replies.py
 _.missing_variables  # app/schemas/dto/inbox/quick_replies.py
 
+# The platform admin's key ring view (GET /v1/admin/security/encryption-keys):
+# response fields read by the admin and the runbook, never by Python code.
+_.latest_rotation  # app/schemas/dto/key_rotation.py
+_.requested_at  # app/schemas/dto/key_rotation.py
+
 # Read by the website chat widget (widget.js) and the hosted chat page
 # (web/src/app/c), never by Python code.
 _.starter_questions  # app/schemas/dto/channels/widget.py

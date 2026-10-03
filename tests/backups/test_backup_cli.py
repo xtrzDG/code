@@ -12,7 +12,8 @@ from app.schemas.constants.observability import PeriodicJobOutcome
 from app.schemas.dto.observability import JobCheckIn
 from app.schemas.typings.platform.constrained_integers import JobIntervalSeconds
 from app.schemas.typings.platform.constrained_strings import JobName
-from app.utilities.security.age.age_keys import generate_identity, recipient_of
+from app.utilities.security.age.age_keys import recipient_of
+from tests.backups.age_test_keys import generate_identity
 from tests.backups.test_backup_settings import BUCKET
 
 

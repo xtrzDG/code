@@ -40,8 +40,9 @@ from app.use_cases.maintenance.backups.check_backup_restore_use_case import (
 from app.use_cases.maintenance.backups.create_database_backup_use_case import (
     CreateDatabaseBackupUseCase,
 )
-from app.utilities.security.age.age_keys import generate_identity, recipient_of
+from app.utilities.security.age.age_keys import recipient_of
 from app.utilities.storage.schema_migration_files import compute_migration_checksum
+from tests.backups.age_test_keys import generate_identity
 from tests.backups.backup_fakes import (
     DUMP_BYTES,
     PREFIX,

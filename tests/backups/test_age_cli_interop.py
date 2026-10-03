@@ -14,7 +14,8 @@ import pytest
 from app.adapters.backup.age_backup_cipher_adapter import AgeBackupCipherAdapter
 from app.schemas.typings.backups.constrained_strings import AgeIdentity, AgeRecipient
 from app.schemas.typings.platform.strings import LocalFilePath
-from app.utilities.security.age.age_keys import generate_identity, recipient_of
+from app.utilities.security.age.age_keys import recipient_of
+from tests.backups.age_test_keys import generate_identity
 
 AGE: str | None = shutil.which("age")
 pytestmark = pytest.mark.skipif(AGE is None, reason="the age tool is not installed")

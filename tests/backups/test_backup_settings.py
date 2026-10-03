@@ -6,7 +6,8 @@ from app.schemas.exceptions.application_errors import ValidationFailedError
 from app.utilities.config_helpers.app_settings.app_settings_assembler import (
     assemble_app_settings,
 )
-from app.utilities.security.age.age_keys import generate_identity, recipient_of
+from app.utilities.security.age.age_keys import recipient_of
+from tests.backups.age_test_keys import generate_identity
 
 IDENTITY = generate_identity()
 BUCKET: dict[str, str] = {

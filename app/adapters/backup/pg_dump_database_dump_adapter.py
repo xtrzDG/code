@@ -59,8 +59,8 @@ class PgDumpDatabaseDumpAdapter(DatabaseDumpAdapterContract):
             ) from error
 
         with connection:
-            connection.isolation_level = IsolationLevel.REPEATABLE_READ
-            connection.read_only = True
+            connection.set_isolation_level(IsolationLevel.REPEATABLE_READ)
+            connection.set_read_only(True)
             try:
                 snapshot_row = connection.execute(
                     "select pg_export_snapshot()"

@@ -50,13 +50,6 @@ def recipient_of(identity: AgeIdentity) -> AgeRecipient:
     return AgeRecipient(bech32_encode(RECIPIENT_PREFIX, public_key))
 
 
-def generate_identity() -> AgeIdentity:
-    """A new random identity (what `age-keygen` prints)."""
-
-    private_key: bytes = X25519PrivateKey.generate().private_bytes_raw()
-    return AgeIdentity(bech32_encode(IDENTITY_PREFIX.lower(), private_key).upper())
-
-
 def decode_key(text: str, prefix: str) -> bytes:
     try:
         key: bytes = bech32_decode(text, prefix)

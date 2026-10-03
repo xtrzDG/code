@@ -22,6 +22,9 @@ from app.containers.adapters.launch_collections_container import (
 from app.containers.adapters.notification_collections_container import (
     NotificationCollectionsContainer,
 )
+from app.containers.adapters.security_collections_container import (
+    SecurityCollectionsContainer,
+)
 from app.schemas.constants.compliance import AuditAction
 from app.schemas.constants.storage import CollectionIsolation
 from app.schemas.domain.assistants import AssistantVersionDocument
@@ -35,6 +38,7 @@ from app.schemas.domain.jobs import (
     QueuedJobDocument,
     WorkerHeartbeatDocument,
 )
+from app.schemas.domain.key_rotations import KeyRotationDocument
 from app.schemas.domain.profiles import BusinessProfileDocument
 from app.schemas.domain.users import (
     OtpChallengeDocument,
@@ -79,6 +83,8 @@ PLATFORM_DOCUMENT_TYPES: frozenset[type[PersistentDocument]] = frozenset(
         # Staff-bot updates and finished-call reports arrive before their
         # business is known.
         InboundEventDocument,
+        # A re-encryption run covers every business at once.
+        KeyRotationDocument,
     }
 )
 
@@ -91,6 +97,7 @@ COLLECTION_CONTAINERS = (
     LaunchCollectionsContainer,
     CallAdaptersContainer,
     InboxCollectionsContainer,
+    SecurityCollectionsContainer,
 )
 
 

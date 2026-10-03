@@ -17,7 +17,8 @@ from app.gateways.cli.backup_wiring import build_bucket
 from app.gateways.cli.migrate import DEFAULT_MIGRATIONS_DIRECTORY
 from app.schemas.typings.backups.constrained_strings import BackupObjectKey
 from app.schemas.typings.platform.strings import LocalFilePath
-from app.utilities.security.age.age_keys import generate_identity, recipient_of
+from app.utilities.security.age.age_keys import recipient_of
+from tests.backups.age_test_keys import generate_identity
 from tests.compliance.moto_object_storage import (
     ACCESS_KEY_ID,
     REGION,

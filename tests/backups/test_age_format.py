@@ -2,10 +2,14 @@
 
 import io
 import os
+from pathlib import Path
 
 import pytest
 
+from app.adapters.backup.age_backup_cipher_adapter import AgeBackupCipherAdapter
+from app.schemas.exceptions.backup_errors import BackupArchiveCorruptError
 from app.schemas.typings.backups.constrained_strings import AgeIdentity, AgeRecipient
+from app.schemas.typings.platform.strings import LocalFilePath
 from app.utilities.security.age.age_header import (
     AgeFormatError,
     decode_base64,
@@ -13,7 +17,6 @@ from app.utilities.security.age.age_header import (
 )
 from app.utilities.security.age.age_keys import (
     AgeKeyError,
-    generate_identity,
     read_identity,
     read_recipient,
     recipient_of,
@@ -24,6 +27,7 @@ from app.utilities.security.age.age_stream import (
     encrypt_stream,
 )
 from app.utilities.security.age.bech32 import Bech32Error, bech32_decode
+from tests.backups.age_test_keys import generate_identity
 
 # A key pair written by `age-keygen` (a test key, it protects nothing).
 KNOWN_IDENTITY: str = (
@@ -161,3 +165,23 @@ def test_damaged_keys_are_refused() -> None:
         bech32_decode("agexyz", "age")
     with pytest.raises(Bech32Error, match="outside its alphabet"):
         bech32_decode("age1bbbbbbbbbb", "age")
+
+
+def test_the_cipher_names_the_recipient_of_a_wrong_identity(tmp_path: Path) -> None:
+    drill, stranger = generate_identity(), generate_identity()
+    dump, archive, restored = (
+        LocalFilePath(str(tmp_path / name)) for name in ("dump", "archive", "out")
+    )
+    Path(str(dump)).write_bytes(b"pg_dump output")
+    AgeBackupCipherAdapter([recipient_of(drill)]).encrypt_file(dump, archive)
+
+    with pytest.raises(BackupArchiveCorruptError) as raised:
+        AgeBackupCipherAdapter([], stranger).decrypt_file(archive, restored)
+
+    assert str(raised.value) == (
+        "The backup is not encrypted to this identity. BACKUP_AGE_IDENTITY is "
+        f"the key of {recipient_of(stranger)}, which was not among "
+        "BACKUP_AGE_PUBLIC_KEY when the archive was made."
+    )
+    assert not Path(str(restored)).exists()
+    assert str(stranger) not in str(raised.value)

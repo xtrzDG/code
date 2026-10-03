@@ -24,6 +24,9 @@ from app.gateways.worker.periodic.sweep_rate_limit_buckets import (
     SWEEP_RATE_LIMIT_BUCKETS_JOB,
 )
 from app.schemas.typings.platform.constrained_strings import JobName
+from app.use_cases.admin.security.key_rotation_views import (
+    ROTATE_ENCRYPTED_SECRETS_JOB,
+)
 from app.use_cases.autotests.enqueue_autotest_run_use_case import RUN_AUTOTESTS_JOB
 from app.use_cases.knowledge.website_import.start_website_import_use_case import (
     IMPORT_WEBSITE_JOB,
@@ -83,6 +86,7 @@ def test_worker_ticks_once_with_every_job_registered() -> None:
         DELIVER_OUTBOUND_JOB,
         SEND_TEXT_BACK_JOB,
         IMPORT_WEBSITE_JOB,
+        ROTATE_ENCRYPTED_SECRETS_JOB,
     ]
     assert (first.periodic_runs, first.queued_runs, first.failures) == (10, 0, 0)
     assert right_after.periodic_runs == 0
