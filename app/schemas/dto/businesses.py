@@ -9,6 +9,7 @@ from app.schemas.constants.localization import DataRegion
 from app.schemas.constants.niches import NicheKey
 from app.schemas.constants.users import BusinessMemberRole
 from app.schemas.domain.businesses import BusinessDocument
+from app.schemas.domain.notification_preferences import StaffNotificationPreferences
 from app.schemas.domain.users import UserDocument
 from app.schemas.typings.assistants.prefixed_id import AssistantVersionId
 from app.schemas.typings.businesses.constrained_integers import (
@@ -22,6 +23,7 @@ from app.schemas.typings.businesses.strings import (
     RawManagerContactAddress,
 )
 from app.schemas.typings.compliance.strings import ClientIpAddress
+from app.schemas.typings.handoffs.constrained_strings import ManagerTelegramUsername
 from app.schemas.typings.handoffs.strings import ManagerContactAddress, ManagerName
 from app.schemas.typings.localization.constrained_strings import (
     CountryCode,
@@ -47,22 +49,30 @@ class ManagerContactInput(ImmutableDTO):
     The address is checked per channel: a numeric chat id for Telegram, a
     phone number of any country for WhatsApp and SMS (national formats use
     the business country), an e-mail address for e-mail. Without `language`
-    the owner's language is used.
+    the owner's language is used; without `preferences` every event arrives
+    at any hour.
     """
 
     name: ManagerName
     channel: ManagerContactChannel
     address: RawManagerContactAddress
     language: LanguageTag | None = None
+    preferences: StaffNotificationPreferences | None = None
 
 
 class ManagerContactView(ImmutableDTO):
-    """Validated staff contact that receives handoffs, bookings and leads."""
+    """
+    Validated staff contact that receives handoffs, bookings and leads:
+    which events and quiet hours (None: all, any hour), and the Telegram
+    @username of a chat linked through the platform bot.
+    """
 
     name: ManagerName
     channel: ManagerContactChannel
     address: ManagerContactAddress
     language: LanguageTag
+    preferences: StaffNotificationPreferences | None = None
+    telegram_username: ManagerTelegramUsername | None = None
 
 
 class BusinessMemberView(ImmutableDTO):

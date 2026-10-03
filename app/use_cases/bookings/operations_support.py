@@ -1,7 +1,6 @@
 """Steps shared by the operations use cases (bookings, leads, handoffs):
 loading tenant documents, contact updates with audit, staff messages."""
 
-from collections.abc import Callable
 from typing import NamedTuple
 
 from typed_time_provider import Microseconds
@@ -14,7 +13,6 @@ from app.schemas.constants.compliance import AuditAction
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.compliance import AuditLogEntryDocument
 from app.schemas.domain.contacts import ContactDocument
-from app.schemas.dto.operations.message_texts import StaffMessage
 from app.schemas.exceptions.application_errors import (
     InvalidPhoneNumberError,
     NotFoundError,
@@ -26,11 +24,8 @@ from app.schemas.typings.compliance.strings import (
 )
 from app.schemas.typings.contacts.prefixed_id import ContactId
 from app.schemas.typings.contacts.strings import ContactName
-from app.schemas.typings.conversations.strings import MessageText
-from app.schemas.typings.handoffs.prefixed_id import HandoffId
 from app.schemas.typings.localization.constrained_strings import (
     E164PhoneNumber,
-    LanguageTag,
 )
 from app.schemas.typings.localization.strings import (
     FormattedPhoneNumber,
@@ -153,33 +148,3 @@ def build_audit_entry(
         created_at=now,
         updated_at=now,
     )
-
-
-def build_staff_messages(
-    business: BusinessDocument,
-    render_for_language: Callable[[LanguageTag], MessageText],
-    handoff_id: HandoffId | None = None,
-) -> list[StaffMessage]:
-    """
-    One message per manager contact, rendered once per language
-    (`handoff_id`: the handoff the messages are about).
-    """
-
-    texts: dict[LanguageTag, MessageText] = {}
-    messages: list[StaffMessage] = []
-    for manager_contact in business.manager_contacts:
-        text: MessageText | None = texts.get(manager_contact.language)
-        if text is None:
-            text = render_for_language(manager_contact.language)
-            texts[manager_contact.language] = text
-
-        messages.append(
-            StaffMessage(
-                business_id=business.id,
-                contact=manager_contact,
-                text=text,
-                handoff_id=handoff_id,
-            )
-        )
-
-    return messages

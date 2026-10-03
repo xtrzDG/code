@@ -7,7 +7,11 @@ from email.utils import formatdate, make_msgid, parseaddr
 
 from app.contracts.messaging_clients import EmailSenderClientContract
 from app.schemas.constants.messaging import SmtpSecurity
-from app.schemas.exceptions.application_errors import ExternalServiceError
+from app.schemas.exceptions.application_errors import (
+    DeliveryNotConfiguredError,
+    ExternalServiceError,
+    ProviderRejectedMessageError,
+)
 from app.schemas.typings.messaging.constrained_integers import SmtpPort
 from app.schemas.typings.messaging.constrained_strings import (
     EmailSenderAddress,
@@ -57,6 +61,9 @@ class SmtpEmailClient(EmailSenderClientContract):
 
     The password is only handed to smtplib (debug output stays off); errors
     name the failure kind, never the password, the recipient or the body.
+    A refused login, sender or STARTTLS is a setting to fix
+    (DeliveryNotConfiguredError), a refused recipient is final
+    (ProviderRejectedMessageError), anything else may pass on another try.
     """
 
     def __init__(
@@ -110,21 +117,21 @@ class SmtpEmailClient(EmailSenderClientContract):
                 with suppress(smtplib.SMTPException, OSError):
                     connection.quit()
         except smtplib.SMTPAuthenticationError:
-            raise ExternalServiceError(
+            raise DeliveryNotConfiguredError(
                 "The SMTP server rejected the login; check SMTP_USERNAME and "
                 "SMTP_PASSWORD."
             ) from None
         except smtplib.SMTPNotSupportedError:
-            raise ExternalServiceError(
+            raise DeliveryNotConfiguredError(
                 "The SMTP server does not offer STARTTLS; set SMTP_SECURITY=ssl "
                 "(port 465)."
             ) from None
         except smtplib.SMTPRecipientsRefused:
-            raise ExternalServiceError(
+            raise ProviderRejectedMessageError(
                 "The SMTP server refused the recipient address."
             ) from None
         except smtplib.SMTPSenderRefused:
-            raise ExternalServiceError(
+            raise DeliveryNotConfiguredError(
                 "The SMTP server refused the sender; check SMTP_FROM."
             ) from None
         except (smtplib.SMTPException, OSError) as error:

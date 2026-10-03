@@ -42,11 +42,16 @@ from app.schemas.domain.jobs import (
 )
 from app.schemas.domain.knowledge import KnowledgeItemDocument
 from app.schemas.domain.manager_links import ManagerTelegramLinkDocument
+from app.schemas.domain.notification_preferences import (
+    UserNotificationPreferencesDocument,
+)
 from app.schemas.domain.outbound_messages import OutboundMessageDocument
 from app.schemas.domain.package_usage import PackageUsageWarningDocument
 from app.schemas.domain.payments import PaymentOrderDocument
 from app.schemas.domain.profiles import BusinessProfileDocument
+from app.schemas.domain.push_subscriptions import PushSubscriptionDocument
 from app.schemas.domain.resources import ResourceDocument, ScheduleExceptionDocument
+from app.schemas.domain.staff_deliveries import StaffDeliveryStateDocument
 from app.schemas.domain.users import (
     OtpChallengeDocument,
     UserDocument,
@@ -172,6 +177,18 @@ DOCUMENT_COLLECTIONS: tuple[DocumentCollectionDefinition, ...] = (
     DocumentCollectionDefinition(
         DocumentCollectionName("package_usage_warnings"),
         PackageUsageWarningDocument,
+    ),
+    # Staff notifications: devices that receive them (Web Push), each
+    # user's preferences, how delivery to each staff contact went (1043).
+    DocumentCollectionDefinition(
+        DocumentCollectionName("push_subscriptions"), PushSubscriptionDocument
+    ),
+    DocumentCollectionDefinition(
+        DocumentCollectionName("notification_preferences"),
+        UserNotificationPreferencesDocument,
+    ),
+    DocumentCollectionDefinition(
+        DocumentCollectionName("staff_delivery_states"), StaffDeliveryStateDocument
     ),
 )
 

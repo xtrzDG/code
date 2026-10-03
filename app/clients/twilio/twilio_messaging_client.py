@@ -1,7 +1,12 @@
 import httpx
 
 from app.contracts.messaging_clients import SmsMessagingClientContract
-from app.schemas.exceptions.application_errors import ExternalServiceError
+from app.schemas.exceptions.application_errors import (
+    DeliveryNotConfiguredError,
+    ExternalServiceError,
+    ProviderRateLimitedError,
+    ProviderRejectedMessageError,
+)
 from app.schemas.typings.localization.constrained_strings import E164PhoneNumber
 from app.schemas.typings.messaging.constrained_strings import (
     SmsSenderId,
@@ -29,7 +34,10 @@ class TwilioMessagingClient(SmsMessagingClientContract):
     picks a number or an alphanumeric sender per country), else the "From"
     number. The auth token travels only in the Basic authorization header;
     errors name Twilio's numeric error code, never the token, the recipient
-    or the text.
+    or the text. Refused credentials are a setting to fix
+    (DeliveryNotConfiguredError), 429 asks to slow down, another 4xx (an
+    invalid or blocked number) is final, 5xx and network errors may pass on
+    another try.
     """
 
     def __init__(
@@ -77,15 +85,22 @@ class TwilioMessagingClient(SmsMessagingClientContract):
             return
 
         if response.status_code == 401:
-            raise ExternalServiceError(
+            raise DeliveryNotConfiguredError(
                 "Twilio rejected the credentials; check TWILIO_ACCOUNT_SID and "
                 "TWILIO_AUTH_TOKEN."
             )
 
         body: JsonObject = parse_json_object(response.content) or {}
         error_code: int | None = read_integer(body, "code")
-        raise ExternalServiceError(
+        message: str = (
             f"Twilio refused the SMS (HTTP {response.status_code}"
             + ("" if error_code is None else f", error {error_code}")
             + ")."
         )
+        if response.status_code == 429:
+            raise ProviderRateLimitedError(message)
+
+        if response.status_code < 500:
+            raise ProviderRejectedMessageError(message)
+
+        raise ExternalServiceError(message)

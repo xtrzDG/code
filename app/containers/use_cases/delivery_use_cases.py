@@ -174,6 +174,7 @@ class DeliveryUseCasesContainer(containers.DeclarativeContainer):
         channel_repo=repositories.channel_repo,
         secret_cipher=adapters.secret_cipher,
         staff_sender=facilitators.staff_notification_sender,
+        push_sender=facilitators.push_notification_sender,
         usage_event_repo=repositories.usage_event_repo,
         wall_clock=time_provider.microsecond_wall_clock,
     )
@@ -186,6 +187,7 @@ class DeliveryUseCasesContainer(containers.DeclarativeContainer):
         channel_repo=repositories.channel_repo,
         handoff_repo=repositories.handoff_repo,
         live_events=facilitators.event_publisher,
+        delivery_recorder=facilitators.staff_delivery_recorder,
     )
     build_undelivered_reply_handoff_use_case: Factory[
         UseCaseContract[OutboundMessageDocument, HandoffCommand | None]

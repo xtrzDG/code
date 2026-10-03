@@ -26,6 +26,7 @@ from app.clients.turnstile.turnstile_verification_client import (
     TurnstileVerificationClient,
 )
 from app.clients.twilio.twilio_messaging_client import TwilioMessagingClient
+from app.clients.webpush.web_push_client import WebPushClient
 from app.containers.config import ConfigContainer
 from app.containers.factories import (
     build_elevenlabs_client,
@@ -38,6 +39,7 @@ from app.containers.factories import (
     build_twilio_messaging_client,
     build_whatsapp_authentication_client,
 )
+from app.containers.notification_factories import build_web_push_client
 from app.contracts.channel_clients import ElevenLabsApiClientContract
 from app.contracts.object_storage import ObjectStorageClientContract
 
@@ -109,4 +111,10 @@ class ClientsContainer(containers.DeclarativeContainer):
             build_turnstile_verification_client,
             settings=config.app_settings,
         )
+    )
+    # Notifications on cabinet users' devices; None until WEB_PUSH_VAPID_*
+    # are set.
+    web_push_client: Singleton[WebPushClient | None] = Singleton(
+        build_web_push_client,
+        settings=config.app_settings,
     )

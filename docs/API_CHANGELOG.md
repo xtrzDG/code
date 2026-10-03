@@ -11,6 +11,38 @@ Kinds of change: **Added**, **Changed** (additive), **Deprecated** (with
 sunset date), **Removed** and **Breaking** (only with the `api-breaking`
 label and a migration path).
 
+## 2026-10-02 — staff notifications: checks, preferences, devices, links
+
+Spec: `1e527cb396131ef6`
+
+- **Added** `GET /v1/businesses/{business_id}/notification-contacts` (owners
+  and staff): every staff contact with its `key`, preferences, Telegram
+  `telegram_username`, whether this server has a provider for its channel
+  (`provider_ready`) and how its latest notification went (`delivery`:
+  `pending`, `delivered` or `dead` with `last_error`).
+- **Added** `POST /v1/businesses/{business_id}/notification-contacts/{contact_key}/test`
+  (owners): sends a test notification at once and answers how it went
+  (`NotificationCheckResult`; `is_simulated` when no provider is set
+  outside production). At most 5 per contact and hour (429 with
+  `Retry-After`).
+- **Added** `GET` and `PUT /v1/businesses/{business_id}/notification-preferences`
+  (owners and staff, each their own): events (`handoff`, `lead`,
+  `booking`) and quiet hours for their devices, the devices, and
+  `push_public_key` (None while Web Push is off).
+- **Added** `POST /v1/businesses/{business_id}/push-subscriptions` (201,
+  turn this device on; the https push services of the browsers only, and
+  outside production also a local test push service over http),
+  `DELETE …/push-subscriptions/{subscription_id}` (204) and
+  `POST …/push-subscriptions/{subscription_id}/test` (own devices only).
+- **Added** `GET /v1/businesses/{business_id}/notification-links/{token}`:
+  where a signed notification link leads (conversation, request, booking
+  with its `booking_date`, or the notification settings); an expired link
+  answers `is_expired: true` and names no page, a forged one 404.
+- **Changed** `ManagerContactInput` and `ManagerContactView` (in
+  `PATCH /v1/businesses/{business_id}` and the business view) gain
+  optional `preferences` (events and quiet hours); the view also shows
+  `telegram_username` of a chat linked through the platform bot.
+
 ## 2026-10-02 — live cabinet: event stream and attention counts
 
 Spec: `761afe1ef683fde3`

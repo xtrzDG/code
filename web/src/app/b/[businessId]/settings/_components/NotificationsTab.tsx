@@ -10,27 +10,38 @@ import { businessPath } from "@/lib/navigation";
 import { MAX_MANAGER_CONTACTS, type ManagerContact } from "../_lib/contacts";
 import { languageChoices } from "../_lib/general";
 import { useManagerContacts } from "../_lib/useManagerContacts";
+import { useMyNotifications } from "../_lib/useMyNotifications";
+import { useNotificationContacts } from "../_lib/useNotificationContacts";
 import { ContactFormView } from "./notifications/ContactFormView";
 import { ContactRow } from "./notifications/ContactRow";
 import { STALE_LIST_MESSAGES } from "./notifications/contactTexts";
+import { MyEventsCard } from "./notifications/MyEventsCard";
+import { ThisDeviceCard } from "./notifications/ThisDeviceCard";
 
 /**
- * Staff who receive handoffs, bookings and leads. The API saves the whole
- * list at once, and the list can change meanwhile (another owner, a manager
- * added by the platform bot), so each change is made to the list as shown
- * and saved with its revision. When someone saved since, the API refuses;
- * the tab reloads the list and the open dialog says so, keeping what was
- * typed for another try.
+ * Settings → Notifications, for every member: this device (Web Push), the
+ * events and quiet hours of my devices, and the staff contacts with how
+ * notifications reach each one (owners add, check, edit and remove them).
+ *
+ * The API saves the contact list at once, and the list can change
+ * meanwhile (another owner, a manager added by the platform bot), so each
+ * change is made to the list as shown and saved with its revision. When
+ * someone saved since, the API refuses; the tab reloads the list and the
+ * open dialog says so, keeping what was typed for another try.
  */
 export function NotificationsTab() {
   const { t } = useI18n();
   const { business, isOwner } = useBusiness();
+  const mine = useMyNotifications();
+  const delivery = useNotificationContacts();
   const list = useManagerContacts();
   const { contacts, isFull, editing, removing } = list;
   const removingContact = removing ?? undefined;
 
   return (
     <div className="space-y-6">
+      <ThisDeviceCard mine={mine} />
+      <MyEventsCard mine={mine} />
       <Card
         title={t("settings.contacts.title")}
         description={t("settings.contacts.description")}
@@ -62,6 +73,9 @@ export function NotificationsTab() {
               <ContactRow
                 key={`${contact.channel}-${contact.address}`}
                 contact={contact}
+                status={delivery.statusOf(contact)}
+                isChecking={delivery.checkingKey !== null && delivery.checkingKey === delivery.statusOf(contact)?.key}
+                onTest={(status) => void delivery.sendTest(status)}
                 onEdit={() => list.startEditing(contact)}
                 onRemove={() => list.startRemoving(contact)}
               />
@@ -70,14 +84,16 @@ export function NotificationsTab() {
         )}
       </Card>
 
-      <Card>
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <p className="text-sm text-ink-muted">{t("settings.contacts.telegramLinkHint")}</p>
-          <ButtonLink href={businessPath(business.id, "assistant/channels")} variant="secondary" size="sm">
-            {t("settings.contacts.openChannels")}
-          </ButtonLink>
-        </div>
-      </Card>
+      {isOwner ? (
+        <Card>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <p className="text-sm text-ink-muted">{t("settings.contacts.telegramLinkHint")}</p>
+            <ButtonLink href={businessPath(business.id, "assistant/channels")} variant="secondary" size="sm">
+              {t("settings.contacts.openChannels")}
+            </ButtonLink>
+          </div>
+        </Card>
+      ) : null}
 
       <Modal
         open={editing !== null}

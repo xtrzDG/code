@@ -2,9 +2,10 @@
 The declared lookup fields of the document collections, by collection.
 
 Each TEXT, FILTER_TEXT and INTEGER field is a generated column
-`doc_<field>` (migrations 1010 and 1042), each ELEMENT_TEXT field a trigger
-over `workshop.document_lookup_keys`; `document_lookup_fields` explains the
-kinds and checks queries against this catalog.
+`doc_<field>` (migrations 1010, 1040, 1042 and 1043), each ELEMENT_TEXT
+field a trigger over `workshop.document_lookup_keys`;
+`document_lookup_fields` explains the kinds and checks queries against
+this catalog.
 """
 
 from collections.abc import Mapping
@@ -160,4 +161,6 @@ DOCUMENT_LOOKUP_FIELDS: Mapping[
     DocumentCollectionName("manager_telegram_links"): (_text("code_hash"),),
     # The freshest worker pulse (GET /readyz) and the purge of old ones.
     DocumentCollectionName("worker_heartbeats"): (_integer("beat_at"),),
+    # The devices of one user in a business (Settings, "this device").
+    DocumentCollectionName("push_subscriptions"): (_text("user_id"),),
 }

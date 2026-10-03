@@ -77,12 +77,16 @@ def test_owner_creates_lists_reads_and_updates_a_business() -> None:
             "channel": "whatsapp",
             "address": "+995599123456",
             "language": "ka",
+            "preferences": None,
+            "telegram_username": None,
         },
         {
             "name": "Dana",
             "channel": "email",
             "address": "dana@example.com",
             "language": "he",
+            "preferences": None,
+            "telegram_username": None,
         },
     ]
 

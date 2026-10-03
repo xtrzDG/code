@@ -125,6 +125,14 @@ export const queryKeys = {
     audit: (businessId: Id, filters: string) => ["settings", businessId, "audit", filters] as const,
   },
 
+  notifications: {
+    all: (businessId: Id) => ["notifications", businessId] as const,
+    /** Staff contacts with their delivery state. */
+    contacts: (businessId: Id) => ["notifications", businessId, "contacts"] as const,
+    /** My events, quiet hours and devices. */
+    mine: (businessId: Id) => ["notifications", businessId, "mine"] as const,
+  },
+
   catalog: {
     countries: (locale: Locale) => ["catalog", "countries", locale] as const,
     country: (countryCode: string, locale: Locale) => ["catalog", "country", countryCode, locale] as const,

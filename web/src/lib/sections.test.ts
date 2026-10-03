@@ -30,8 +30,9 @@ describe("the five sections", () => {
     expect(BUSINESS_PAGES.every((page) => canOpenPage(page, "owner"))).toBe(true);
   });
 
-  it("show staff the overview, messages, bookings and the test chat", () => {
-    expect(visibleSections("staff")).toEqual(["overview", "messages", "bookings", "assistant"]);
+  it("show staff the overview, messages, bookings, the test chat and their notifications", () => {
+    expect(visibleSections("staff")).toEqual(["overview", "messages", "bookings", "assistant", "settings"]);
+    expect(visiblePages("settings", "staff").map((entry) => entry.page)).toEqual(["settings/notifications"]);
     expect(visiblePages("assistant", "staff").map((entry) => entry.page)).toEqual(["assistant"]);
     expect(visiblePages("messages", "staff")).toHaveLength(3);
     expect(canOpenPage("settings/billing", "staff")).toBe(false);

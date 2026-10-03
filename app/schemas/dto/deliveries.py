@@ -112,13 +112,15 @@ class StaffNotification(ImmutableDTO):
     """
     A message to one staff contact of a business. A notification about a
     handoff is queued once per handoff and contact, and its delivery moves
-    the handoff to NOTIFIED or NOTIFICATION_FAILED.
+    the handoff to NOTIFIED or NOTIFICATION_FAILED. `deliver_after` holds it
+    until the contact's quiet hours end.
     """
 
     business_id: BusinessId
     contact: ManagerContact
     text: MessageText
     handoff_id: HandoffId | None = None
+    deliver_after: Microseconds | None = None
 
 
 class OutboundAttempt(ImmutableDTO):

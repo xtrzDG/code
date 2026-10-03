@@ -85,8 +85,9 @@ class FollowUpUseCasesContainer(containers.DeclarativeContainer):
             audit_log_repo=repositories.audit_log_repo,
             phone_number_parser=utilities.phone_number_parser,
             staff_notification_transformer=transformers.new_lead_notification_transformer,
-            manager_broadcaster=facilitators.manager_broadcast_facilitator,
             live_events=facilitators.event_publisher,
+            staff_brief_transformer=transformers.staff_alert_brief_transformer,
+            staff_alerts=facilitators.staff_alert_facilitator,
             wall_clock=time_provider.microsecond_wall_clock,
         )
     )
@@ -119,8 +120,9 @@ class FollowUpUseCasesContainer(containers.DeclarativeContainer):
         phone_number_parser=utilities.phone_number_parser,
         staff_notification_transformer=transformers.handoff_notification_transformer,
         customer_message_transformer=transformers.handoff_customer_message_transformer,
-        manager_broadcaster=facilitators.manager_broadcast_facilitator,
         live_events=facilitators.event_publisher,
+        staff_brief_transformer=transformers.staff_alert_brief_transformer,
+        staff_alerts=facilitators.staff_alert_facilitator,
         wall_clock=time_provider.microsecond_wall_clock,
     )
     resolve_handoff_use_case: Factory[

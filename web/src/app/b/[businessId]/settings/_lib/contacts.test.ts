@@ -26,8 +26,18 @@ describe("notification contacts", () => {
     });
   });
 
-  it("maps contacts to the PATCH input", () => {
+  it("maps contacts to the PATCH input, with their choices", () => {
     expect(contactsToInput(existing)).toEqual(existing);
+    const choosy = { ...existing[0]!, preferences: { events: ["lead" as const] }, telegram_username: "nino" };
+    expect(contactsToInput([choosy])).toEqual([{ ...existing[0], preferences: { events: ["lead"] } }]);
+    const quiet = { events: ["handoff" as const], hasQuietHours: true, from: "22:00", until: "08:00" };
+    expect(contactFromForm({ name: "Gio", channel: "sms", address: "599", language: "ru", preferences: quiet })).toMatchObject({
+      preferences: { events: ["handoff"], quiet_hours: { starts_at: "22:00", ends_at: "08:00" } },
+    });
+    const everything = { ...quiet, events: ["handoff" as const, "lead" as const, "booking" as const], hasQuietHours: false };
+    expect(contactFromForm({ name: "Gio", channel: "sms", address: "599", language: "ru", preferences: everything })).not.toHaveProperty(
+      "preferences",
+    );
     expect(contactFromForm({ name: " Levan ", channel: "sms", address: " 599 ", language: "ru" })).toEqual({
       name: "Levan",
       channel: "sms",

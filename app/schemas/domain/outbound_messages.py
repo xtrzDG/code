@@ -1,9 +1,10 @@
-from base_pydantic_schemas import BaseDocument, PersistentDocument
+from base_pydantic_schemas import BaseDocument, PersistentDocument, SchemaVersion
 from pydantic import Field
 from typed_time_provider import Microseconds
 
 from app.schemas.constants.channels import ChannelKind
 from app.schemas.constants.deliveries import OutboundMessageKind, OutboundMessageStatus
+from app.schemas.constants.notifications import WebPushUrgency
 from app.schemas.domain.businesses import ManagerContact
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.channels.constrained_integers import DeliveredMessageCount
@@ -23,6 +24,13 @@ from app.schemas.typings.deliveries.constrained_strings import (
 from app.schemas.typings.deliveries.prefixed_id import OutboundMessageId
 from app.schemas.typings.deliveries.strings import DeliveryErrorText
 from app.schemas.typings.handoffs.prefixed_id import HandoffId
+from app.schemas.typings.notifications.constrained_strings import (
+    CabinetDeepLink,
+    PushNotificationTag,
+)
+from app.schemas.typings.notifications.prefixed_id import PushSubscriptionId
+from app.schemas.typings.notifications.strings import StaffAlertTitle
+from app.schemas.typings.users.prefixed_id import UserId
 
 
 class CustomerRecipient(PersistentDocument):
@@ -43,6 +51,23 @@ class OutboundTemplate(PersistentDocument):
     language_code: WhatsAppTemplateLanguageCode
 
 
+class PushRecipient(PersistentDocument):
+    """
+    A cabinet user's device (Web Push subscription) and what its
+    notification shows besides the text: the title, the page it opens, the
+    tag a newer notification about the same thing replaces it by, and how
+    soon the device should wake. The subscription's keys are read at send
+    time (never copied here).
+    """
+
+    subscription_id: PushSubscriptionId
+    user_id: UserId
+    title: StaffAlertTitle
+    url: CabinetDeepLink | None = None
+    tag: PushNotificationTag | None = None
+    urgency: WebPushUrgency = WebPushUrgency.NORMAL
+
+
 class OutboundMessageDocument(BaseDocument):
     """
     One message to send (the outbox): an assistant reply to a customer or a
@@ -54,8 +79,12 @@ class OutboundMessageDocument(BaseDocument):
     counts those already sent, so a retry continues after them instead of
     repeating them. `recipient_key` names who it goes to: messages of one
     recipient go out in the order they were queued.
+
+    Version 2: a staff notification may go to a cabinet user's device
+    (`push`) instead of a staff contact.
     """
 
+    schema_version: SchemaVersion = SchemaVersion("2")
     id: OutboundMessageId
     business_id: BusinessId
     kind: OutboundMessageKind
@@ -63,6 +92,7 @@ class OutboundMessageDocument(BaseDocument):
     recipient_key: OutboundRecipientKey
     customer: CustomerRecipient | None = None
     staff_contact: ManagerContact | None = None
+    push: PushRecipient | None = None
     text: MessageText = Field(repr=False)
     template: OutboundTemplate | None = None
     conversation_id: ConversationId | None = None

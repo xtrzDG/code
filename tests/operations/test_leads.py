@@ -81,7 +81,9 @@ def test_lead_notifies_managers_with_all_details() -> None:
         "Бюджет: about 6000 lari",
     ]
     assert texts["ka"].startswith("ახალი მოთხოვნა · Salobie Bia\nტიპი: ბანკეტი")
-    assert "Type: Banquet" in texts["en"]
+    assert texts["en"] == (
+        "New request · Salobie Bia\nBanquet · Saturday, November 14, 2026"
+    )
     contact = leads.world.contact_repo.get(leads.business.id, leads.contact.id)
     assert contact is not None and contact.phone_number == "+995577112233"
 

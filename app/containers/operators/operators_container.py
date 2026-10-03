@@ -12,6 +12,9 @@ from app.containers.operators.conversation_operators import (
 )
 from app.containers.operators.demo_operators import DemoOperatorsContainer
 from app.containers.operators.knowledge_operators import KnowledgeOperatorsContainer
+from app.containers.operators.notification_operators import (
+    NotificationOperatorsContainer,
+)
 from app.containers.operators.operations_operators import OperationsOperatorsContainer
 from app.containers.operators.platform_operators import PlatformOperatorsContainer
 from app.containers.pipelines.pipelines_container import PipelinesContainer
@@ -68,6 +71,11 @@ class OperatorsContainer(containers.DeclarativeContainer):
     billing: BillingOperatorsContainer = Container(  # type: ignore[assignment]
         BillingOperatorsContainer,
         billing_pipelines=pipelines.billing,
+        utilities=utilities,
+    )
+    notifications: NotificationOperatorsContainer = Container(  # type: ignore[assignment]
+        NotificationOperatorsContainer,
+        notification_pipelines=pipelines.notifications,
         utilities=utilities,
     )
     platform: PlatformOperatorsContainer = Container(  # type: ignore[assignment]

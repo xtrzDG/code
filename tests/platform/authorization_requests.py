@@ -14,6 +14,8 @@ from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from httpx2 import Response
 
+from tests.platform.authorization_notifications import NOTIFICATION_BODIES
+
 type JsonObject = dict[str, Any]
 
 BUSINESS_PREFIX: str = "/v1/businesses/{business_id}"
@@ -55,6 +57,7 @@ REQUEST_BODIES: dict[str, JsonObject] = {
         "answer": "Yes, dogs are welcome on the terrace."
     },
 }
+REQUEST_BODIES.update(NOTIFICATION_BODIES)
 REQUIRED_QUERIES: dict[str, dict[str, str]] = {
     f"GET {B}/availability": {"date": "2026-10-20"},
 }

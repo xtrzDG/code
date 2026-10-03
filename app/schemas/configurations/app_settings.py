@@ -45,6 +45,10 @@ from app.schemas.typings.messaging.constrained_strings import (
     TwilioMessagingServiceSid,
 )
 from app.schemas.typings.messaging.strings import SmtpUsername
+from app.schemas.typings.notifications.constrained_strings import (
+    VapidPublicKey,
+    VapidSubject,
+)
 from app.schemas.typings.platform.booleans import (
     IsDemoDataSeedingEnabled,
     IsEmbeddedWorkerEnabled,
@@ -184,6 +188,11 @@ class AppSettings(ImmutableDTO):
     google_oauth_client_secret: PlatformSecret | None = None
     flitt_merchant_id: PlatformIdentifier | None = None
     flitt_secret_key: PlatformSecret | None = None
+    # Notifications on the devices of cabinet users (Web Push, VAPID); off
+    # unless all three are set (see `.env.example`, "Staff notifications").
+    web_push_vapid_public_key: VapidPublicKey | None = None
+    web_push_vapid_private_key: PlatformSecret | None = None
+    web_push_vapid_subject: VapidSubject | None = None
     langfuse_public_key: PlatformIdentifier | None = None
     langfuse_secret_key: PlatformSecret | None = None
     langfuse_host: PublicBaseUrl

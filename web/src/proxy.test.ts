@@ -39,4 +39,11 @@ describe("proxy", () => {
       "https://app.example.com/login?next=%2Fb%2Fbiz_1%2Fbilling%3Fcheckout%3Dreturn",
     );
   });
+
+  it("sends visitors opening a notification link to sign in first, then back to it", async () => {
+    const response = await proxy(new NextRequest("https://app.example.com/n/AQID_token-text"));
+
+    expect(response.status).toBe(307);
+    expect(response.headers.get("location")).toBe("https://app.example.com/login?next=%2Fn%2FAQID_token-text");
+  });
 });

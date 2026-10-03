@@ -212,3 +212,5 @@ _.telegram_channel_id  # app/schemas/dto/load_data.py
 _.telegram_webhook_secret  # app/schemas/dto/load_data.py
 _.channel_error_count  # app/schemas/dto/operations/attention_counts.py
 _.unconfirmed_booking_count  # app/schemas/dto/operations/attention_counts.py
+_.provider_ready  # app/schemas/dto/notifications/notification_settings.py
+_.booking_date  # app/schemas/dto/notifications/staff_links.py

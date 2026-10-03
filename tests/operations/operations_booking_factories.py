@@ -19,6 +19,9 @@ from app.transformers.notifications.new_booking_notification_transformer import 
 from app.transformers.notifications.reschedule_confirmation_transformer import (
     RescheduleConfirmationTransformer,
 )
+from app.transformers.notifications.staff_alert_brief_transformer import (
+    StaffAlertBriefTransformer,
+)
 from app.use_cases.bookings.cancel_booking_use_case import CancelBookingUseCase
 from app.use_cases.bookings.check_availability_use_case import CheckAvailabilityUseCase
 from app.use_cases.bookings.create_booking_use_case import CreateBookingUseCase
@@ -62,7 +65,8 @@ class OperationsBookingFactories(OperationsSeeding):
             staff_notification_transformer=NewBookingNotificationTransformer(
                 self.resolver
             ),
-            manager_broadcaster=self.broadcaster,
+            staff_brief_transformer=StaffAlertBriefTransformer(self.resolver),
+            staff_alerts=self.staff_alerts,
             calendar_sync=calendar_sync or self.calendar_sync,
             live_events=self.live_events,
             wall_clock=self.clock.wall_clock,
@@ -82,7 +86,8 @@ class OperationsBookingFactories(OperationsSeeding):
             staff_notification_transformer=BookingCancelledNotificationTransformer(
                 self.resolver
             ),
-            manager_broadcaster=self.broadcaster,
+            staff_brief_transformer=StaffAlertBriefTransformer(self.resolver),
+            staff_alerts=self.staff_alerts,
             calendar_sync=self.calendar_sync,
             live_events=self.live_events,
             wall_clock=self.clock.wall_clock,
@@ -102,7 +107,8 @@ class OperationsBookingFactories(OperationsSeeding):
             staff_notification_transformer=BookingMovedNotificationTransformer(
                 self.resolver
             ),
-            manager_broadcaster=self.broadcaster,
+            staff_brief_transformer=StaffAlertBriefTransformer(self.resolver),
+            staff_alerts=self.staff_alerts,
             calendar_sync=self.calendar_sync,
             live_events=self.live_events,
             wall_clock=self.clock.wall_clock,

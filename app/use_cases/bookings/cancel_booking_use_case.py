@@ -4,10 +4,10 @@ from typed_time_provider import Microseconds, WallClock
 
 from app.contracts.live_events import EventPublisherFacilitatorContract
 from app.contracts.localization_utilities import PhoneNumberParserContract
+from app.contracts.notifications import StaffAlertFacilitatorContract
 from app.contracts.operations import (
     BookingCalendarSyncFacilitatorContract,
     BusinessLockRegistryContract,
-    ManagerBroadcastFacilitatorContract,
 )
 from app.contracts.repositories.booking_repositories import BookingRepoContract
 from app.contracts.repositories.business_repositories import (
@@ -23,9 +23,14 @@ from app.contracts.transformer_contract import TransformerContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.bookings import BookingStatus
 from app.schemas.constants.live_events import LiveEventKind
+from app.schemas.constants.notifications import StaffBookingChange
 from app.schemas.domain.bookings import BookingDocument
 from app.schemas.domain.resources import ResourceDocument
 from app.schemas.dto.bookings import BookingResult, BookingView, CancelBookingCommand
+from app.schemas.dto.notifications.staff_alerts import (
+    StaffAlertBrief,
+    StaffAlertBriefInput,
+)
 from app.schemas.dto.operations.message_texts import (
     BookingMessageInput,
     BookingStaffNotificationInput,
@@ -74,7 +79,10 @@ class CancelBookingUseCase(UseCaseContract[CancelBookingCommand, BookingResult])
         staff_notification_transformer: TransformerContract[
             BookingStaffNotificationInput, MessageText
         ],
-        manager_broadcaster: ManagerBroadcastFacilitatorContract,
+        staff_brief_transformer: TransformerContract[
+            StaffAlertBriefInput, StaffAlertBrief
+        ],
+        staff_alerts: StaffAlertFacilitatorContract,
         calendar_sync: BookingCalendarSyncFacilitatorContract,
         live_events: EventPublisherFacilitatorContract,
         wall_clock: WallClock[Microseconds],
@@ -95,9 +103,10 @@ class CancelBookingUseCase(UseCaseContract[CancelBookingCommand, BookingResult])
         self._staff_notification_transformer: TransformerContract[
             BookingStaffNotificationInput, MessageText
         ] = staff_notification_transformer
-        self._manager_broadcaster: ManagerBroadcastFacilitatorContract = (
-            manager_broadcaster
-        )
+        self._staff_brief_transformer: TransformerContract[
+            StaffAlertBriefInput, StaffAlertBrief
+        ] = staff_brief_transformer
+        self._staff_alerts: StaffAlertFacilitatorContract = staff_alerts
         self._calendar_sync: BookingCalendarSyncFacilitatorContract = calendar_sync
         self._wall_clock: WallClock[Microseconds] = wall_clock
         self._live_events: EventPublisherFacilitatorContract = live_events
@@ -164,11 +173,13 @@ class CancelBookingUseCase(UseCaseContract[CancelBookingCommand, BookingResult])
             )
             if is_customer_request:
                 notify_staff_about_booking(
-                    self._manager_broadcaster,
+                    self._staff_alerts,
                     self._staff_notification_transformer,
+                    self._staff_brief_transformer,
                     self._phone_number_parser,
                     inputs.business,
                     view,
+                    StaffBookingChange.CANCELLED,
                 )
 
             self._calendar_sync.sync(booking)

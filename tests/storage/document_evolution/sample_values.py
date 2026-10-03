@@ -10,6 +10,9 @@ SAMPLE_MICROSECONDS: int = 1_790_000_000_000_000
 
 CONSTRAINED_TEXT_SAMPLES: dict[str, str] = {
     "AutotestScenarioKey": "booking-happy-path",
+    "CabinetDeepLink": (
+        "https://app.example.com/n/AQ3xL8nYtQ2bS0pK9mVwZcRj5uHfE1gDaB7iO4lN6eT"
+    ),
     "CountryCode": "GE",
     "CurrencyCode": "GEL",
     "DpaDocumentVersion": "2026-07",
@@ -25,7 +28,15 @@ CONSTRAINED_TEXT_SAMPLES: dict[str, str] = {
     "LanguageTag": "ka",
     "LlmModelId": "gpt-5-mini",
     "LocalDate": "2026-09-21",
+    "LocalTimeOfDay": "22:00",
+    "ManagerTelegramUsername": "nino_k",
     "PaymentCheckoutUrl": "https://pay.example.com/checkout/42",
+    "PushAuthSecret": "BTBZMqHH6r4Tts7J_aSIgg",
+    "PushEndpointUrl": "https://push.example.com/send/c1d2e3",
+    "PushNotificationTag": "handoff:handoff_42",
+    "PushPublicKey": (
+        "BCVxsr7N_eNgVRqvHtD0zTZsEc6-VV-JvLexhqUzORcxaOzi6-AYWXvTBHm4bjyPjs7Vd8pZGH6SRpkNtoIAiw4"
+    ),
     "QuestionKey": "parking",
     "ReleaseVersion": "4718714c0f2e9a1b",
     "TimezoneName": "Asia/Tbilisi",

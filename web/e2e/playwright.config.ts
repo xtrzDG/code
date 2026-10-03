@@ -21,6 +21,8 @@ import {
   API_PORT,
   API_URL,
   ARTIFACTS_DIRECTORY,
+  E2E_VAPID_PRIVATE_KEY,
+  E2E_VAPID_PUBLIC_KEY,
   REPOSITORY_ROOT,
   WEB_DIRECTORY,
   WEB_PORT,
@@ -114,6 +116,12 @@ export default defineConfig({
         OTP_SENDS_PER_IP_PER_HOUR: "100000",
         OTP_VERIFIES_PER_IP_PER_10_MINUTES: "100000",
         OTP_SENDS_PER_COUNTRY_PER_HOUR: "100000",
+        // Notification links lead to this cabinet; device notifications go
+        // to the push service a test starts (notifications.spec.ts).
+        CABINET_BASE_URL: WEB_URL,
+        WEB_PUSH_VAPID_PUBLIC_KEY: E2E_VAPID_PUBLIC_KEY,
+        WEB_PUSH_VAPID_PRIVATE_KEY: E2E_VAPID_PRIVATE_KEY,
+        WEB_PUSH_VAPID_SUBJECT: "mailto:e2e@workshop.example",
         PYTHONUNBUFFERED: "1",
       },
       reuseExistingServer: false,

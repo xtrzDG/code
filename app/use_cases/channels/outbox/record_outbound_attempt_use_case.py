@@ -6,6 +6,7 @@ from typed_time_provider import Microseconds
 
 from app.contracts.jobs import JobQueueFacilitatorContract
 from app.contracts.live_events import EventPublisherFacilitatorContract
+from app.contracts.notifications import StaffDeliveryRecorderContract
 from app.contracts.repositories.booking_repositories import HandoffRepoContract
 from app.contracts.repositories.business_repositories import ChannelRepoContract
 from app.contracts.repositories.delivery_repositories import (
@@ -43,8 +44,9 @@ class RecordOutboundAttemptUseCase(
     a job queued for that moment (queued first, so a waiting message always
     has its job). A refusal, a missing provider or the last attempt: DEAD.
 
-    The channel's health follows its replies (`update_channel_health`) and
-    a handoff follows its notifications (`update_handoff_notification`).
+    The channel's health follows its replies (`update_channel_health`), a
+    handoff follows its notifications (`update_handoff_notification`), and
+    a staff contact's or device's delivery state follows its own.
     """
 
     def __init__(
@@ -54,6 +56,7 @@ class RecordOutboundAttemptUseCase(
         channel_repo: ChannelRepoContract,
         handoff_repo: HandoffRepoContract,
         live_events: EventPublisherFacilitatorContract,
+        delivery_recorder: StaffDeliveryRecorderContract,
         # Spreads retry times only; nothing secret depends on it.
         jitter: Callable[[], float] = random.random,  # nosec B311
     ) -> None:
@@ -62,6 +65,7 @@ class RecordOutboundAttemptUseCase(
         self._channel_repo: ChannelRepoContract = channel_repo
         self._handoff_repo: HandoffRepoContract = handoff_repo
         self._live_events: EventPublisherFacilitatorContract = live_events
+        self._delivery_recorder: StaffDeliveryRecorderContract = delivery_recorder
         self._jitter: Callable[[], float] = jitter
 
     def run(self, input_data: OutboundAttempt) -> OutboundMessageDocument | None:
@@ -126,4 +130,5 @@ class RecordOutboundAttemptUseCase(
             self._channel_repo, self._live_events, stored, input_data, now
         )
         update_handoff_notification(self._handoff_repo, stored, now)
+        self._delivery_recorder.record(stored)
         return stored

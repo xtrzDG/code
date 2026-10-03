@@ -56,6 +56,7 @@ from app.schemas.typings.bookings.strings import ScheduleExceptionNote
 from app.schemas.typings.businesses.constrained_strings import WebLink
 from app.schemas.typings.businesses.strings import AddressText, BusinessName, CityName
 from app.schemas.typings.channels.strings import ChannelSecret
+from app.schemas.typings.handoffs.constrained_strings import ManagerTelegramUsername
 from app.schemas.typings.handoffs.strings import ManagerContactAddress, ManagerName
 from app.schemas.typings.localization.constrained_strings import (
     CountryCode,
@@ -118,6 +119,7 @@ def build_restaurant_foundation(
                 channel=ManagerContactChannel.TELEGRAM,
                 address=ManagerContactAddress("700100200"),
                 language=LanguageTag("ru"),
+                telegram_username=ManagerTelegramUsername("tamar_mtsvane"),
             ),
             ManagerContact(
                 name=ManagerName("გიორგი, შეფ-მზარეული"),

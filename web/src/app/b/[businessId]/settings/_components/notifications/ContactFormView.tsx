@@ -21,9 +21,11 @@ import {
   type ManagerContactInput,
 } from "../../_lib/contacts";
 import { languageChoices } from "../../_lib/general";
+import { preferencesForm, quietHoursErrors, type PreferencesForm } from "../../_lib/notifications";
 import { ADDRESS_HINTS, ADDRESS_LABELS, CHANNEL_LABELS, CHANNELS, CONTACT_ERRORS, STALE_LIST_MESSAGES } from "./contactTexts";
+import { PreferencesFields } from "./PreferencesFields";
 
-/** A manager contact's name, channel, notification language and address. */
+/** A manager contact's name, channel, notification language, address, events and quiet hours. */
 export function ContactFormView({
   initial,
   others,
@@ -49,7 +51,10 @@ export function ContactFormView({
     address: initial?.address ?? "",
     language: initial?.language ?? business.owner_language,
   });
+  const [preferences, setPreferences] = useState<PreferencesForm>(() => preferencesForm(initial?.preferences));
   const [errors, setErrors] = useState<Partial<Record<ContactField, ContactError>>>({});
+  const [isChecked, setIsChecked] = useState(false);
+  const quietErrors = isChecked ? quietHoursErrors(preferences) : {};
   const languageOptions = languageChoices(languages, [form.language]);
 
   const update = (patch: Partial<ContactForm>) => {
@@ -61,8 +66,9 @@ export function ContactFormView({
     event.preventDefault();
     const found = validateContact(form, others);
     setErrors(found);
-    if (Object.keys(found).length === 0) {
-      onSubmit(contactFromForm(form));
+    setIsChecked(true);
+    if (Object.keys(found).length === 0 && Object.keys(quietHoursErrors(preferences)).length === 0) {
+      onSubmit(contactFromForm({ ...form, preferences }));
     }
   };
 
@@ -122,6 +128,7 @@ export function ContactFormView({
           />
         )}
       </Field>
+      <PreferencesFields value={preferences} errors={quietErrors} disabled={isPending} onChange={setPreferences} />
       <InlineError error={error} overrides={STALE_LIST_MESSAGES} />
       <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
         <Button variant="secondary" onClick={onCancel} disabled={isPending}>

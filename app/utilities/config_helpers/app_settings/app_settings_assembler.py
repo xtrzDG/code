@@ -52,6 +52,9 @@ from app.utilities.config_helpers.app_settings.runtime_settings_section import (
 from app.utilities.config_helpers.app_settings.voice_settings_section import (
     read_voice_settings,
 )
+from app.utilities.config_helpers.app_settings.web_push_settings_section import (
+    read_web_push_settings,
+)
 
 
 def get_app_settings() -> AppSettings:
@@ -95,6 +98,7 @@ def assemble_app_settings(environment_variables: Mapping[str, str]) -> AppSettin
         **read_otp_provider_settings(environment_variables, smtp_security),
         **read_voice_settings(environment_variables, is_production=not is_development),
         **read_integration_settings(environment_variables),
+        **read_web_push_settings(environment_variables),
         **read_observability_settings(
             environment_variables, is_production=not is_development
         ),

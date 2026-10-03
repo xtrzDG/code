@@ -27,6 +27,7 @@ OPTIONAL_PROVIDERS: frozenset[str] = frozenset(
         "clients.smtp_email_client",
         "clients.turnstile_verification_client",
         "clients.object_storage_client",
+        "clients.web_push_client",
     }
 )
 

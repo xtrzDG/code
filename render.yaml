@@ -208,6 +208,13 @@ services:
         sync: false
       - key: TELEGRAM_PLATFORM_BOT_TOKEN
         sync: false
+      # staff notifications on cabinet devices (Web Push, VAPID)
+      - key: WEB_PUSH_VAPID_PUBLIC_KEY
+        sync: false
+      - key: WEB_PUSH_VAPID_PRIVATE_KEY
+        sync: false
+      - key: WEB_PUSH_VAPID_SUBJECT
+        sync: false
       # Google Calendar
       - key: GOOGLE_OAUTH_CLIENT_ID
         sync: false
@@ -483,6 +490,21 @@ services:
           type: web
           name: workshop-api
           envVarKey: TELEGRAM_PLATFORM_BOT_TOKEN
+      - key: WEB_PUSH_VAPID_PUBLIC_KEY
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: WEB_PUSH_VAPID_PUBLIC_KEY
+      - key: WEB_PUSH_VAPID_PRIVATE_KEY
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: WEB_PUSH_VAPID_PRIVATE_KEY
+      - key: WEB_PUSH_VAPID_SUBJECT
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: WEB_PUSH_VAPID_SUBJECT
       - key: GOOGLE_OAUTH_CLIENT_ID
         fromService:
           type: web

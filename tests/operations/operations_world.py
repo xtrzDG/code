@@ -9,6 +9,9 @@ from app.transformers.notifications.handoff_notification_transformer import (
 from app.transformers.notifications.new_lead_notification_transformer import (
     NewLeadNotificationTransformer,
 )
+from app.transformers.notifications.staff_alert_brief_transformer import (
+    StaffAlertBriefTransformer,
+)
 from app.use_cases.handoffs.answer_unanswered_question_use_case import (
     AnswerUnansweredQuestionUseCase,
 )
@@ -45,8 +48,9 @@ class OperationsWorld(OperationsBookingFactories):
             staff_notification_transformer=NewLeadNotificationTransformer(
                 self.resolver
             ),
-            manager_broadcaster=self.broadcaster,
             live_events=self.live_events,
+            staff_brief_transformer=StaffAlertBriefTransformer(self.resolver),
+            staff_alerts=self.staff_alerts,
             wall_clock=self.clock.wall_clock,
         )
 
@@ -81,8 +85,9 @@ class OperationsWorld(OperationsBookingFactories):
             customer_message_transformer=HandoffCustomerMessageTransformer(
                 self.resolver
             ),
-            manager_broadcaster=self.broadcaster,
             live_events=self.live_events,
+            staff_brief_transformer=StaffAlertBriefTransformer(self.resolver),
+            staff_alerts=self.staff_alerts,
             wall_clock=self.clock.wall_clock,
         )
 

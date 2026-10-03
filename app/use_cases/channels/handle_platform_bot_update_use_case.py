@@ -109,21 +109,17 @@ class HandlePlatformBotUpdateUseCase(
                 result=PlatformBotCommandResult.INSTRUCTIONS_SENT
             )
 
-        result: PlatformBotCommandResult = self._link(
-            bot_token,
-            chat_id,
-            argument,
-            message.sender_language,
-        )
+        result: PlatformBotCommandResult = self._link(bot_token, message, argument)
         return PlatformBotWebhookOutcome(result=result)
 
     def _link(
         self,
         bot_token: PlatformSecret,
-        chat_id: str,
+        message: StaffBotMessage,
         raw_code: str,
-        sender_language: LanguageTag,
     ) -> PlatformBotCommandResult:
+        chat_id: str = str(message.chat_id)
+        sender_language: LanguageTag = message.sender_language
         now: Microseconds = self._wall_clock.now_unix()
         code: ManagerLinkCode | None = read_link_code(raw_code)
         link: ManagerTelegramLinkDocument | None = (
@@ -148,6 +144,7 @@ class HandlePlatformBotUpdateUseCase(
             channel=ManagerContactChannel.TELEGRAM,
             address=address,
             language=link.language,
+            telegram_username=message.sender_username,
         )
         contact_limit_reached: list[bool] = []
 
@@ -166,7 +163,20 @@ class HandlePlatformBotUpdateUseCase(
                 contact_limit_reached.append(True)
                 return
 
-            current.manager_contacts = [*other_contacts, linked_contact]
+            # Linking the same chat again keeps its notification choices.
+            previous = next(
+                (c for c in current.manager_contacts if c not in other_contacts), None
+            )
+            current.manager_contacts = [
+                *other_contacts,
+                linked_contact.model_copy(
+                    update={
+                        "preferences": None
+                        if previous is None
+                        else previous.preferences
+                    }
+                ),
+            ]
             current.updated_at = now
 
         business = self._business_repo.update(business.id, link_contact)

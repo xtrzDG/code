@@ -2,6 +2,7 @@ from typed_time_provider import Microseconds, WallClock
 
 from app.contracts.channels import ChannelAdapterContract
 from app.contracts.facilitators import StaffNotificationSenderContract
+from app.contracts.notifications import PushNotificationSenderContract
 from app.contracts.repositories.billing_repositories import UsageEventRepoContract
 from app.contracts.repositories.business_repositories import ChannelRepoContract
 from app.contracts.secret_cipher import SecretCipherAdapterContract
@@ -16,6 +17,7 @@ from app.schemas.typings.channels.strings import ProviderMessageId
 from app.use_cases.channels.outbox.outbound_routes import (
     OutboundRoute,
     route_customer_reply,
+    route_push_notification,
     route_staff_notification,
 )
 from app.utilities.channels.delivery_targets import build_whatsapp_usage_event
@@ -47,6 +49,7 @@ class SendOutboundMessageUseCase(
         channel_repo: ChannelRepoContract,
         secret_cipher: SecretCipherAdapterContract,
         staff_sender: StaffNotificationSenderContract,
+        push_sender: PushNotificationSenderContract,
         usage_event_repo: UsageEventRepoContract,
         wall_clock: WallClock[Microseconds],
     ) -> None:
@@ -59,6 +62,7 @@ class SendOutboundMessageUseCase(
         self._channel_repo: ChannelRepoContract = channel_repo
         self._secret_cipher: SecretCipherAdapterContract = secret_cipher
         self._staff_sender: StaffNotificationSenderContract = staff_sender
+        self._push_sender: PushNotificationSenderContract = push_sender
         self._usage_event_repo: UsageEventRepoContract = usage_event_repo
         self._wall_clock: WallClock[Microseconds] = wall_clock
 
@@ -107,6 +111,9 @@ class SendOutboundMessageUseCase(
             return route_staff_notification(
                 message, message.staff_contact, self._staff_sender
             )
+
+        if message.push is not None:
+            return route_push_notification(message, message.push, self._push_sender)
 
         raise ValidationFailedError("The outbox message names no recipient.")
 

@@ -196,6 +196,7 @@ def test_openapi_documents_bodies_read_by_the_strict_parser() -> None:
         "channel",
         "address",
         "language",
+        "preferences",
     }
     assert "requestBody" in paths["/v1/me"]["patch"]
     assert "requestBody" in paths["/v1/businesses/{business_id}/members"]["post"]

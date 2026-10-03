@@ -18,6 +18,7 @@ from app.gateways.http.events_routes import build_events_router
 from app.gateways.http.health_routes import build_readiness_router
 from app.gateways.http.knowledge_routes import build_knowledge_router
 from app.gateways.http.menu_import_routes import build_menu_import_router
+from app.gateways.http.notification_routes import build_notification_router
 from app.gateways.http.operations_routes import build_operations_router
 from app.gateways.http.profile_routes import build_profile_router
 from app.gateways.http.resource_routes import build_resource_router
@@ -49,6 +50,7 @@ def build_application_routers(app_container: AppContainer) -> list[APIRouter]:
     channels = operators.channels
     billing = operators.billing
     platform = operators.platform
+    notifications = operators.notifications
     current_user: CurrentUserDependency = build_current_user_dependency(
         accounts.authenticate_user_operator()
     )
@@ -255,6 +257,19 @@ def build_application_routers(app_container: AppContainer) -> list[APIRouter]:
             retry_queued_job_operator=platform.retry_queued_job_operator(),
             discard_queued_job_operator=platform.discard_queued_job_operator(),
             current_user=current_user,
+        ),
+        build_notification_router(
+            current_user=current_user,
+            list_contacts=notifications.list_notification_contacts_operator(),
+            check_contact=notifications.check_contact_operator(),
+            get_settings=notifications.get_notification_settings_operator(),
+            update_preferences=(
+                notifications.update_notification_preferences_operator()
+            ),
+            subscribe_push=notifications.subscribe_push_operator(),
+            unsubscribe_push=notifications.unsubscribe_push_operator(),
+            check_device=notifications.check_device_operator(),
+            resolve_link=notifications.resolve_staff_link_operator(),
         ),
         build_widget_script_router(),
         build_readiness_router(platform.check_readiness_operator()),

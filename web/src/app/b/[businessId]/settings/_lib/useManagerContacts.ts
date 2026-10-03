@@ -58,7 +58,8 @@ export function useManagerContacts() {
           expected_revision: base.revision,
         },
       }),
-    { errorToast: false },
+    // The delivery view of the contacts follows the saved list.
+    { errorToast: false, invalidate: [queryKeys.notifications.contacts(business.id)] },
   );
   const isBusy = save.isPending || (saved === null && stored.isLoading);
 

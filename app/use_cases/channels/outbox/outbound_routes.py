@@ -9,6 +9,7 @@ from dataclasses import dataclass
 
 from app.contracts.channels import ChannelAdapterContract
 from app.contracts.facilitators import StaffNotificationSenderContract
+from app.contracts.notifications import PushNotificationSenderContract
 from app.contracts.repositories.business_repositories import ChannelRepoContract
 from app.contracts.secret_cipher import SecretCipherAdapterContract
 from app.schemas.constants.channels import ChannelKind
@@ -17,6 +18,7 @@ from app.schemas.domain.channels import ChannelDocument
 from app.schemas.domain.outbound_messages import (
     CustomerRecipient,
     OutboundMessageDocument,
+    PushRecipient,
 )
 from app.schemas.dto.channels.channel_webhooks import ChannelDeliveryTarget
 from app.schemas.exceptions.application_errors import (
@@ -102,3 +104,17 @@ def route_staff_notification(
         parts=staff_sender.split(contact, message.text),
         send_part=lambda part: staff_sender.send(contact, part, message.template),
     )
+
+
+def route_push_notification(
+    message: OutboundMessageDocument,
+    recipient: PushRecipient,
+    push_sender: PushNotificationSenderContract,
+) -> OutboundRoute:
+    """To a cabinet user's device, as one notification."""
+
+    def send_part(part: MessageText) -> ProviderMessageId | None:
+        push_sender.send(message.business_id, recipient, part)
+        return None
+
+    return OutboundRoute(parts=[message.text], send_part=send_part)

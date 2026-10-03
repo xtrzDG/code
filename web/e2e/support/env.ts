@@ -22,3 +22,10 @@ export const REPOSITORY_ROOT = path.resolve(WEB_DIRECTORY, "..");
 export const ARTIFACTS_DIRECTORY = path.join(WEB_DIRECTORY, "e2e", ".artifacts");
 /** The API's stdout and stderr: development login codes are logged here. */
 export const API_LOG_PATH = path.join(ARTIFACTS_DIRECTORY, "api.log");
+
+/**
+ * A VAPID key pair for the suite only (device notifications are on in the
+ * test API): generated for these tests, never used anywhere else.
+ */
+export const E2E_VAPID_PUBLIC_KEY = "BCLJ-FEI59ekpdxEjnCQyhvo4e9t5e69gJwPrZLPLkp2tGkJ2aB6iqFph27ulfJ6h4Barq-NsmZFIumwXoK5RRE";
+export const E2E_VAPID_PRIVATE_KEY = "TvFxPI0UYWj6Tk2K1oObluuz01W1zeWieAwrRpfzfhQ"; // gitleaks:allow

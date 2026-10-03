@@ -44,7 +44,7 @@ interface Handled {
   waited?: Promise<unknown>;
 }
 
-function startWorker() {
+function startWorker(search = "") {
   const handlers = new Map<string, (event: unknown) => void>();
   let online = true;
   const network = vi.fn(async (request: Request | string) => {
@@ -66,7 +66,7 @@ function startWorker() {
   };
   const windows = [{ url: `${ORIGIN}/b/biz/messages`, focus: vi.fn(async () => "focused") }];
   const self = {
-    location: { origin: ORIGIN },
+    location: { origin: ORIGIN, search },
     addEventListener: (type: string, handler: (event: unknown) => void) => handlers.set(type, handler),
     skipWaiting: vi.fn(async () => undefined),
     clients: { claim: vi.fn(async () => undefined), matchAll: vi.fn(async () => windows), openWindow: vi.fn(async () => "opened") },
@@ -191,5 +191,25 @@ describe("service worker: notifications", () => {
     expect(worker.windows[0]?.focus).toHaveBeenCalled();
     await worker.dispatch("notificationclick", notification(`${ORIGIN}/b/biz/bookings`)).waited;
     expect(worker.self.clients.openWindow).toHaveBeenCalledWith(`${ORIGIN}/b/biz/bookings`);
+  });
+});
+
+describe("service worker: push only (a development server)", () => {
+  it("keeps nothing and leaves requests alone, but shows notifications", async () => {
+    const pushOnly = startWorker("?push-only=1");
+    await pushOnly.dispatch("install").waited;
+
+    expect(pushOnly.stores.size).toBe(0);
+    expect(pushOnly.self.skipWaiting).toHaveBeenCalled();
+    const page = pushOnly.request("/b/biz/overview", { mode: "navigate" });
+    expect(pushOnly.dispatch("fetch", { request: page }).responded).toBeUndefined();
+    const chunk = pushOnly.request("/_next/static/chunks/main.js");
+    expect(pushOnly.dispatch("fetch", { request: chunk }).responded).toBeUndefined();
+    const message = { data: { json: () => ({ title: "Test", url: "/n/token" }), text: () => "" } };
+    await pushOnly.dispatch("push", message).waited;
+    expect(pushOnly.self.registration.showNotification).toHaveBeenCalledWith(
+      "Test",
+      expect.objectContaining({ data: { url: `${ORIGIN}/n/token` } }),
+    );
   });
 });

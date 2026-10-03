@@ -10,7 +10,11 @@ import pytest
 
 from app.clients.email.smtp_email_client import SmtpEmailClient
 from app.schemas.constants.messaging import SmtpSecurity
-from app.schemas.exceptions.application_errors import ExternalServiceError
+from app.schemas.exceptions.application_errors import (
+    DeliveryNotConfiguredError,
+    ExternalServiceError,
+    ProviderRejectedMessageError,
+)
 from app.schemas.typings.messaging.constrained_integers import SmtpPort
 from app.schemas.typings.messaging.constrained_strings import (
     EmailSenderAddress,
@@ -151,26 +155,46 @@ def test_tls_from_the_start_and_no_login() -> None:
 
 
 @pytest.mark.parametrize(
-    ("failure", "expected"),
+    ("failure", "expected", "kind"),
     [
-        (smtplib.SMTPAuthenticationError(535, b"bad credentials"), "SMTP_PASSWORD"),
-        (smtplib.SMTPNotSupportedError("no STARTTLS"), "SMTP_SECURITY=ssl"),
+        (
+            smtplib.SMTPAuthenticationError(535, b"bad credentials"),
+            "SMTP_PASSWORD",
+            DeliveryNotConfiguredError,
+        ),
+        (
+            smtplib.SMTPNotSupportedError("no STARTTLS"),
+            "SMTP_SECURITY=ssl",
+            DeliveryNotConfiguredError,
+        ),
         (
             smtplib.SMTPRecipientsRefused(
                 {"owner@example.com": (550, b"no such user")}
             ),
             "refused the recipient",
+            ProviderRejectedMessageError,
         ),
-        (smtplib.SMTPSenderRefused(553, b"not allowed", "x"), "SMTP_FROM"),
-        (smtplib.SMTPServerDisconnected("gone"), "SMTPServerDisconnected"),
-        (TimeoutError("timed out"), "TimeoutError"),
+        (
+            smtplib.SMTPSenderRefused(553, b"not allowed", "x"),
+            "SMTP_FROM",
+            DeliveryNotConfiguredError,
+        ),
+        (
+            smtplib.SMTPServerDisconnected("gone"),
+            "SMTPServerDisconnected",
+            ExternalServiceError,
+        ),
+        (TimeoutError("timed out"), "TimeoutError", ExternalServiceError),
     ],
 )
 def test_failures_are_external_errors_without_secrets(
     failure: Exception,
     expected: str,
+    kind: type[ExternalServiceError],
     caplog: pytest.LogCaptureFixture,
 ) -> None:
+    """Settings to fix and refused recipients are final; the rest is retried."""
+
     connections = Connections(FakeSmtp(failure))
 
     with (
@@ -179,6 +203,7 @@ def test_failures_are_external_errors_without_secrets(
     ):
         send(build_client(connections))
 
+    assert type(raised.value) is kind
     message = str(raised.value)
     assert "smtp-password-secret" not in message + caplog.text
     assert "owner@example.com" not in message

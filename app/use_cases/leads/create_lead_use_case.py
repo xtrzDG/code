@@ -2,7 +2,7 @@ from typed_time_provider import Microseconds, WallClock
 
 from app.contracts.live_events import EventPublisherFacilitatorContract
 from app.contracts.localization_utilities import PhoneNumberParserContract
-from app.contracts.operations import ManagerBroadcastFacilitatorContract
+from app.contracts.notifications import StaffAlertFacilitatorContract
 from app.contracts.repositories.booking_repositories import LeadRepoContract
 from app.contracts.repositories.business_repositories import BusinessRepoContract
 from app.contracts.repositories.compliance_repositories import AuditLogRepoContract
@@ -15,27 +15,33 @@ from app.schemas.domain.bookings import LeadDocument
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.contacts import ContactDocument
 from app.schemas.dto.bookings import CreateLeadCommand, LeadView
+from app.schemas.dto.notifications.staff_alerts import (
+    LeadBrief,
+    StaffAlertBrief,
+    StaffAlertBriefInput,
+)
 from app.schemas.dto.operations.message_texts import LeadStaffNotificationInput
 from app.schemas.typings.conversations.strings import MessageText
 from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.schemas.typings.localization.strings import FormattedPhoneNumber
 from app.use_cases.bookings.operations_support import (
     ContactDetails,
-    build_staff_messages,
     display_phone,
     require_business,
     require_contact,
     update_contact_details,
 )
 from app.use_cases.leads.lead_views import build_lead_view
+from app.use_cases.notifications.staff_alerts import StaffAlertTexts, lead_alert
 
 
 class CreateLeadUseCase(UseCaseContract[CreateLeadCommand, LeadView]):
     """
     Request for a manager (model tool create_lead): banquets, groups,
     corporate events and anything non-standard. The contact's name and phone
-    are updated; real (non-sandbox) leads notify every staff contact in their
-    language. Notification failures never lose the lead.
+    are updated; real (non-sandbox) leads notify every staff contact and
+    subscribed device in their language, with a link to the conversation.
+    Notification failures never lose the lead.
     """
 
     def __init__(
@@ -48,8 +54,11 @@ class CreateLeadUseCase(UseCaseContract[CreateLeadCommand, LeadView]):
         staff_notification_transformer: TransformerContract[
             LeadStaffNotificationInput, MessageText
         ],
-        manager_broadcaster: ManagerBroadcastFacilitatorContract,
         live_events: EventPublisherFacilitatorContract,
+        staff_brief_transformer: TransformerContract[
+            StaffAlertBriefInput, StaffAlertBrief
+        ],
+        staff_alerts: StaffAlertFacilitatorContract,
         wall_clock: WallClock[Microseconds],
     ) -> None:
         self._business_repo: BusinessRepoContract = business_repo
@@ -60,9 +69,10 @@ class CreateLeadUseCase(UseCaseContract[CreateLeadCommand, LeadView]):
         self._staff_notification_transformer: TransformerContract[
             LeadStaffNotificationInput, MessageText
         ] = staff_notification_transformer
-        self._manager_broadcaster: ManagerBroadcastFacilitatorContract = (
-            manager_broadcaster
-        )
+        self._staff_brief_transformer: TransformerContract[
+            StaffAlertBriefInput, StaffAlertBrief
+        ] = staff_brief_transformer
+        self._staff_alerts: StaffAlertFacilitatorContract = staff_alerts
         self._wall_clock: WallClock[Microseconds] = wall_clock
         self._live_events: EventPublisherFacilitatorContract = live_events
 
@@ -106,13 +116,14 @@ class CreateLeadUseCase(UseCaseContract[CreateLeadCommand, LeadView]):
         )
         view: LeadView = build_lead_view(lead)
         if not lead.is_sandbox:
-            self._notify_staff(business, view, contact)
+            self._notify_staff(business, lead, view, contact)
 
         return view
 
     def _notify_staff(
         self,
         business: BusinessDocument,
+        lead: LeadDocument,
         view: LeadView,
         contact: ContactDocument,
     ) -> None:
@@ -131,4 +142,19 @@ class CreateLeadUseCase(UseCaseContract[CreateLeadCommand, LeadView]):
                 )
             )
 
-        self._manager_broadcaster.broadcast(build_staff_messages(business, render))
+        def render_brief(language: LanguageTag) -> StaffAlertBrief:
+            return self._staff_brief_transformer.transform(
+                StaffAlertBriefInput(
+                    business_name=business.name,
+                    language=language,
+                    lead=LeadBrief(
+                        lead_type=lead.lead_type, requested_date=lead.requested_date
+                    ),
+                )
+            )
+
+        self._staff_alerts.alert(
+            business,
+            lead_alert(business.id, lead.id, lead.conversation_id),
+            StaffAlertTexts(detailed=render, brief=render_brief),
+        )

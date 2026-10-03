@@ -74,6 +74,12 @@ from app.transformers.notifications.new_lead_notification_transformer import (
 from app.transformers.notifications.reschedule_confirmation_transformer import (
     RescheduleConfirmationTransformer,
 )
+from app.transformers.notifications.staff_alert_brief_transformer import (
+    StaffAlertBriefTransformer,
+)
+from app.transformers.notifications.staff_notification_text_transformer import (
+    StaffNotificationTextTransformer,
+)
 from app.transformers.users.user_view_transformer import UserViewTransformer
 
 
@@ -196,6 +202,18 @@ class TransformersContainer(containers.DeclarativeContainer):
     calendar_event_text_transformer: Singleton[CalendarEventTextTransformer] = (
         Singleton(
             CalendarEventTextTransformer,
+            text_resolver=utilities.localized_text_resolver,
+        )
+    )
+    # Staff alerts: the brief of e-mail, SMS and devices (no customer
+    # details) and the text each recipient gets, with its link.
+    staff_alert_brief_transformer: Singleton[StaffAlertBriefTransformer] = Singleton(
+        StaffAlertBriefTransformer,
+        text_resolver=utilities.localized_text_resolver,
+    )
+    staff_notification_text_transformer: Singleton[StaffNotificationTextTransformer] = (
+        Singleton(
+            StaffNotificationTextTransformer,
             text_resolver=utilities.localized_text_resolver,
         )
     )
