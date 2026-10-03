@@ -1,7 +1,5 @@
 """What the inbox records for each message: answered, silent, refused, recovered."""
 
-import pytest
-
 from app.schemas.constants.channels import ChannelKind
 from app.schemas.constants.deliveries import InboundEventKind, InboundEventStatus
 from app.schemas.exceptions.application_errors import ConflictError
@@ -71,11 +69,13 @@ def test_platform_events_are_kept_until_the_worker_handles_them() -> None:
 
 
 class TestWidgetInbox:
-    def test_the_widget_answers_at_once_and_records_the_message(self) -> None:
+    def test_a_widget_message_goes_through_the_inbox_like_any_channels(
+        self,
+    ) -> None:
         testbed = ChannelsTestbed()
         business = enable_widget(testbed)
 
-        reply = send(testbed.build_http_client(), business.id, "Shalom")
+        reply = send(testbed, business.id, "Shalom")
 
         assert reply["text"] == "Reply: Shalom"
         [event] = inbox(testbed)
@@ -83,30 +83,27 @@ class TestWidgetInbox:
         assert event.status is InboundEventStatus.ANSWERED
         assert event.outbound_message_id is None  # the widget polls, no push
         assert reply["message_id"] == str(event.reply_message_id)
-
-        # The safety job finds the message answered and does nothing.
-        testbed.clock.advance(PAST_THE_LEASE_SECONDS)
+        # Answered once: running the queue again changes nothing.
         testbed.run_worker()
         assert len(testbed.pipeline.messages) == 1
 
-    def test_a_crash_during_the_turn_is_answered_by_the_worker(self) -> None:
+    def test_a_crash_during_the_turn_is_answered_on_the_next_attempt(self) -> None:
         testbed = ChannelsTestbed()
         business = enable_widget(testbed)
         client = testbed.build_http_client()
         testbed.pipeline.crashing_texts = {"Shalom"}
 
-        with pytest.raises(RuntimeError):
-            client.post(
-                f"/v1/widget/{business.id}/messages",
-                json={"session_key": SESSION_KEY, "text": "Shalom"},
-            )
-
-        [held] = inbox(testbed)
-        assert held.status is InboundEventStatus.PROCESSING
-        testbed.pipeline.crashing_texts = set()
+        accepted = client.post(
+            f"/v1/widget/{business.id}/messages",
+            json={"session_key": SESSION_KEY, "text": "Shalom"},
+        )
         testbed.run_worker()
-        assert len(testbed.pipeline.messages) == 1  # held until the lease ends
 
+        # The visitor heard 202; the crash happened in the worker.
+        assert accepted.status_code == 202
+        [crashed] = inbox(testbed)
+        assert crashed.status is not InboundEventStatus.ANSWERED
+        testbed.pipeline.crashing_texts = set()
         testbed.clock.advance(PAST_THE_LEASE_SECONDS)
         testbed.run_worker()
 
@@ -125,10 +122,11 @@ class TestWidgetInbox:
             f"/v1/widget/{business.id}/messages",
             json={"session_key": SESSION_KEY, "text": "Shalom"},
         )
+        testbed.run_worker()
         testbed.clock.advance(PAST_THE_LEASE_SECONDS)
         testbed.run_worker()
 
-        assert response.status_code == 409
+        assert response.status_code == 202
         [failed] = inbox(testbed)
         assert failed.status is InboundEventStatus.FAILED
         assert len(testbed.pipeline.messages) == 1

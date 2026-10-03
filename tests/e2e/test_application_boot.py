@@ -28,6 +28,9 @@ OPTIONAL_PROVIDERS: frozenset[str] = frozenset(
         "clients.turnstile_verification_client",
         "clients.object_storage_client",
         "clients.web_push_client",
+        # In memory there is no transaction to group writes in.
+        "adapters.processes.storage_unit_of_work",
+        "adapters.storage_unit_of_work",
     }
 )
 

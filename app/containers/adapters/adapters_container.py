@@ -11,8 +11,6 @@ from app.adapters.channels.messenger_channel_adapter import MessengerChannelAdap
 from app.adapters.channels.telegram_channel_adapter import TelegramChannelAdapter
 from app.adapters.channels.whatsapp_channel_adapter import WhatsAppChannelAdapter
 from app.adapters.events.live_event_bus_factory import build_live_event_bus_adapter
-from app.adapters.health.database_probe_factory import build_database_probe_adapter
-from app.adapters.jobs.job_wakeup_adapter_factory import build_job_wakeup_adapter
 from app.adapters.llm.anthropic_llm_adapter import AnthropicLlmAdapter
 from app.adapters.llm.call_limited_llm_adapter import (
     CHAT_CALL_RETRY_LIMIT,
@@ -44,11 +42,6 @@ from app.adapters.recordings.recording_storage_factory import (
     build_own_recording_storage,
 )
 from app.adapters.security.secret_cipher_adapter import SecretCipherAdapter
-from app.adapters.storage.postgres.sql_file_migration_source_adapter import (
-    BUILD_MIGRATIONS_DIRECTORY,
-    SqlFileMigrationSourceAdapter,
-)
-from app.adapters.storage.unit_of_work_factory import build_unit_of_work_adapter
 from app.adapters.voice.elevenlabs_recording_storage_adapter import (
     ElevenLabsRecordingStorageAdapter,
 )
@@ -68,6 +61,9 @@ from app.containers.adapters.launch_collections_container import (
 from app.containers.adapters.notification_collections_container import (
     NotificationCollectionsContainer,
 )
+from app.containers.adapters.process_adapters_container import (
+    ProcessAdaptersContainer,
+)
 from app.containers.clients import ClientsContainer
 from app.containers.config import ConfigContainer
 from app.containers.factories import (
@@ -76,15 +72,12 @@ from app.containers.factories import (
 )
 from app.containers.time_provider import TimeProviderContainer
 from app.containers.utilities import UtilitiesContainer
-from app.contracts.health import DatabaseProbeAdapterContract
-from app.contracts.jobs import JobWakeupContract
 from app.contracts.live_events import LiveEventBusAdapterContract
 from app.contracts.llm import LlmAdapterContract
 from app.contracts.locks import AdvisoryLockAdapterContract
 from app.contracts.observability import LlmTraceFacilitatorContract
 from app.contracts.rate_limits import RateLimitBucketAdapterContract
 from app.contracts.recording_storage import RecordingStorageAdapterContract
-from app.contracts.storage import StorageUnitOfWorkContract
 from app.schemas.dto.conversations import LlmCallLimits
 
 
@@ -131,36 +124,20 @@ class AdaptersContainer(containers.DeclarativeContainer):
         utilities=utilities,
     )
 
-    # --- Readiness (GET /readyz): the database probe over the shared pool and
-    # the migration files of this build.
-    database_probe: Singleton[DatabaseProbeAdapterContract] = Singleton(
-        build_database_probe_adapter,
-        connection_pool=clients.postgres_pool,
+    # Readiness, storage transactions and the job queue's wake-ups.
+    processes: ProcessAdaptersContainer = Container(  # type: ignore[assignment]
+        ProcessAdaptersContainer, clients=clients, config=config, utilities=utilities
     )
-    migration_source: Singleton[SqlFileMigrationSourceAdapter] = Singleton(
-        SqlFileMigrationSourceAdapter,
-        migrations_directory=BUILD_MIGRATIONS_DIRECTORY,
-    )
+    database_probe = processes.database_probe
+    migration_source = processes.migration_source
+    storage_unit_of_work = processes.storage_unit_of_work
+    job_wakeup = processes.job_wakeup
     # Locks every process respects (Postgres advisory locks over the shared
     # pool; in-process locks without a database).
     advisory_locks: Singleton[AdvisoryLockAdapterContract] = Singleton(
         build_advisory_lock_adapter,
         connection_pool=clients.postgres_pool,
         storage_scope=utilities.storage_scope,
-    )
-    # One storage transaction for a block (Postgres), None in memory.
-    storage_unit_of_work: Singleton[StorageUnitOfWorkContract | None] = Singleton(
-        build_unit_of_work_adapter,
-        connection_pool=clients.postgres_pool,
-        storage_scope=utilities.storage_scope,
-    )
-    # Queued jobs wake idle lane threads at once: Postgres NOTIFY/LISTEN
-    # reaches the worker processes, the in-process signal without a database.
-    job_wakeup: Singleton[JobWakeupContract] = Singleton(
-        build_job_wakeup_adapter,
-        connection_pool=clients.postgres_pool,
-        database_url=config.app_settings.provided.database_url,
-        listen_database_url=config.app_settings.provided.live_events_database_url,
     )
     # Request counters of the rate limits (Postgres: shared by every
     # instance; in memory without a database).

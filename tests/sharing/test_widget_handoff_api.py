@@ -4,6 +4,7 @@ from typing import Any
 
 from tests.e2e.harness import Workshop
 from tests.e2e.journeys import OpenRestaurant, open_restaurant
+from tests.e2e.widget_turns import ask_widget
 
 VISITOR: str = "visitor_handoff_0123456789"
 OTHER_VISITOR: str = "visitor_handoff_9876543210"
@@ -71,15 +72,13 @@ def test_the_staff_summary_quotes_the_visitors_last_message(
     workshop: Workshop,
 ) -> None:
     restaurant = open_web_chat(workshop)
-    asked = workshop.client.post(
-        f"/v1/widget/{restaurant.business_id}/messages",
-        json={"session_key": VISITOR, "text": "Есть ли у вас веганское меню?"},
+    asked = ask_widget(
+        workshop, restaurant.business_id, VISITOR, "Есть ли у вас веганское меню?"
     )
-    assert asked.status_code == 200, asked.text
 
     response = ask_for_person(workshop, restaurant)
 
-    assert response.json()["conversation_id"] == asked.json()["conversation_id"]
+    assert response.json()["conversation_id"] == asked["conversation_id"]
     [handoff] = handoffs(workshop, restaurant)
     assert "Есть ли у вас веганское меню?" in handoff["summary"]
 
@@ -103,10 +102,7 @@ def test_messages_after_the_request_wait_for_staff(workshop: Workshop) -> None:
     ask_for_person(workshop, restaurant)
     model_calls = workshop.model.assistant_calls
 
-    reply = workshop.client.post(
-        f"/v1/widget/{restaurant.business_id}/messages",
-        json={"session_key": VISITOR, "text": "Я жду ответа"},
-    ).json()
+    reply = ask_widget(workshop, restaurant.business_id, VISITOR, "Я жду ответа")
 
     assert reply["is_handed_off"] is True
     assert reply["text"] is None

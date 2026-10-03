@@ -10,6 +10,7 @@ from app.utilities.storage.document_collection_catalog import DOCUMENT_COLLECTIO
 from tests.e2e.harness import start_workshop
 from tests.e2e.harness_settings import E2E_ENVIRONMENT
 from tests.e2e.journeys import BOOKING_REQUEST_RU, WIDGET_SESSION, open_restaurant
+from tests.e2e.widget_turns import ask_widget
 from tests.storage.postgres_server import ThrowawayPostgresServer
 
 
@@ -46,22 +47,16 @@ def test_published_assistant_books_a_table_with_everything_in_postgres(
             headers=restaurant.headers,
         )
         assert connected.status_code == 200, connected.text
-        reply = client.post(
-            f"/v1/widget/{restaurant.business_id}/messages",
-            json={"session_key": WIDGET_SESSION, "text": BOOKING_REQUEST_RU},
-        )
-        assert reply.status_code == 200, reply.text
+        ask_widget(workshop, restaurant.business_id, WIDGET_SESSION, BOOKING_REQUEST_RU)
         # JSONB cannot store NUL; the message is still answered, not dropped.
-        with_nul = client.post(
-            f"/v1/widget/{restaurant.business_id}/messages",
-            json={
-                "session_key": WIDGET_SESSION,
-                "text": "Спасибо\u0000!",
-                "contact_name": "Нино\u0000",
-            },
+        with_nul = ask_widget(
+            workshop,
+            restaurant.business_id,
+            WIDGET_SESSION,
+            "Спасибо\u0000!",
+            contact_name="Нино\u0000",
         )
-        assert with_nul.status_code == 200, with_nul.text
-        assert with_nul.json()["text"] is not None
+        assert with_nul["text"] is not None
         bookings = client.get(
             f"{restaurant.base}/bookings", headers=restaurant.headers
         ).json()["items"]

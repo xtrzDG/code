@@ -167,4 +167,6 @@ def test_the_widget_polls_the_workers_answer(pickup_world: PickupWorld) -> None:
         ]
         time.sleep(0.3)
 
-    assert texts == ["Спасибо! Сейчас уточню и отвечу."]
+    # The first answer starts with the AI disclosure.
+    [answer] = texts
+    assert answer.endswith("Спасибо! Сейчас уточню и отвечу.")

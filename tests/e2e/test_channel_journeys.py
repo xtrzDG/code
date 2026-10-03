@@ -14,6 +14,7 @@ from tests.e2e.journeys import (
     JsonObject,
     open_restaurant,
 )
+from tests.e2e.widget_turns import ask_widget
 
 
 def test_telegram_customer_books_and_the_worker_sends_the_reminder(
@@ -117,10 +118,12 @@ def test_staff_reply_from_the_cabinet_reaches_the_website_widget(
     widget_messages = f"/v1/widget/{restaurant.business_id}/messages"
 
     # A website visitor asks for a person; the assistant hands off.
-    handed_off: JsonObject = client.post(
-        widget_messages,
-        json={"session_key": WIDGET_SESSION, "text": "Позовите, пожалуйста, менеджера"},
-    ).json()
+    handed_off: JsonObject = ask_widget(
+        workshop,
+        restaurant.business_id,
+        WIDGET_SESSION,
+        "Позовите, пожалуйста, менеджера",
+    )
     assert handed_off["is_handed_off"] is True
     # The harness clock stands still, so the visitor's message and the answer
     # share a time; poll after the answer itself.

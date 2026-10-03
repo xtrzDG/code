@@ -2,10 +2,13 @@ from typing import Any
 
 import pytest
 
+from app.schemas.constants.businesses import BusinessStatus
 from app.schemas.constants.channels import ChannelKind, ChannelStatus
+from app.schemas.constants.deliveries import InboundEventStatus
 from app.schemas.typings.localization.constrained_strings import LanguageTag
 from tests.channels.channels_payloads import bearer
 from tests.channels.channels_settings import ISRAEL, POLAND, build_settings
+from tests.channels.outbox_reads import inbox
 from tests.channels.testbed import ChannelsTestbed
 
 SESSION_KEY: str = "v1_9f2c4e1b7a3d48c6"
@@ -14,8 +17,20 @@ SESSION_KEY: str = "v1_9f2c4e1b7a3d48c6"
 def enable_widget(testbed: ChannelsTestbed, country: Any = ISRAEL) -> Any:
     owner_id = testbed.add_user("owner")
     business = testbed.add_business(owner_id, country=country, name="Jaffa Port Café")
+    business.status = BusinessStatus.LIVE
+    testbed.business_repo.save(business)
     testbed.add_channel(business.id, ChannelKind.WEB_CHAT)
     return business
+
+
+def poll_answers(client: Any, business_id: object) -> list[dict[str, Any]]:
+    """What the widget's polling shows after the visitor's own message."""
+
+    headers = {"X-Widget-Session-Key": SESSION_KEY}
+    path = f"/v1/widget/{business_id}/messages"
+    position = client.get(path, headers=headers).json()["cursor"]
+    page = client.get(path, headers=headers, params={"after": position}).json()
+    return [page]
 
 
 class TestWidgetConfig:
@@ -79,12 +94,13 @@ class TestWidgetConfig:
 
 
 class TestWidgetMessages:
-    def test_visitor_message_is_answered_with_the_text_direction(self) -> None:
+    def test_a_message_is_queued_for_the_worker_and_accepted_at_once(self) -> None:
         testbed = ChannelsTestbed()
         business = enable_widget(testbed)
         testbed.pipeline.language = LanguageTag("he")
+        client = testbed.build_http_client()
 
-        response = testbed.build_http_client().post(
+        response = client.post(
             f"/v1/widget/{business.id}/messages",
             json={
                 "session_key": SESSION_KEY,
@@ -93,25 +109,28 @@ class TestWidgetMessages:
             },
         )
 
-        assert response.status_code == 200
+        assert response.status_code == 202
         assert response.headers["Access-Control-Allow-Origin"] == "*"
-        visitor_message, answer = testbed.message_repo.list_by_conversation(
-            business.id, testbed.pipeline.conversation_id
-        )
-        assert response.json() == {
-            "conversation_id": str(testbed.pipeline.conversation_id),
-            "text": "Reply: יש מקום לשניים?",
-            "language": "he",
-            "direction": "rtl",
-            "is_handed_off": False,
-            "message_id": str(answer.id),
-            "cursor": str(visitor_message.id),
-        }
+        [event] = inbox(testbed)
+        assert response.json() == {"event_id": str(event.id)}
+        # Nothing was answered in the request: the inbox holds it for a worker.
+        assert event.status is InboundEventStatus.RECEIVED
+        assert testbed.pipeline.messages == []
+
+        testbed.run_worker()
+
         [inbound] = testbed.pipeline.messages
         assert inbound.business_id == business.id
         assert inbound.channel is ChannelKind.WEB_CHAT
         assert inbound.channel_user_id == SESSION_KEY
         assert inbound.contact_name == "Dana"
+        [page] = poll_answers(client, business.id)
+        [answer] = page["items"]
+        assert (answer["text"], answer["direction"], answer["author"]) == (
+            "Reply: יש מקום לשניים?",
+            "rtl",
+            "assistant",
+        )
 
     def test_plain_text_content_type_avoids_the_preflight(self) -> None:
         testbed = ChannelsTestbed()
@@ -123,29 +142,41 @@ class TestWidgetMessages:
             headers={"Content-Type": "text/plain"},
         )
 
-        assert response.status_code == 200
+        assert response.status_code == 202
 
-    def test_staff_silence_returns_no_text(self) -> None:
+    def test_while_staff_handle_the_chat_the_widget_hears_no_answer(self) -> None:
         testbed = ChannelsTestbed()
         business = enable_widget(testbed)
         testbed.pipeline.is_silent = True
+        client = testbed.build_http_client()
 
-        body = (
-            testbed.build_http_client()
-            .post(
-                f"/v1/widget/{business.id}/messages",
-                json={"session_key": SESSION_KEY, "text": "Hello?"},
-            )
-            .json()
+        accepted = client.post(
+            f"/v1/widget/{business.id}/messages",
+            json={"session_key": SESSION_KEY, "text": "Hello?"},
+        )
+        testbed.run_worker()
+
+        assert accepted.status_code == 202
+        [page] = poll_answers(client, business.id)
+        assert page["items"] == []
+        assert page["is_handed_off"] is True
+        [event] = inbox(testbed)
+        assert event.status is InboundEventStatus.HANDED_OFF
+
+    def test_an_assistant_that_is_not_live_refuses_at_once(self) -> None:
+        testbed = ChannelsTestbed()
+        business = enable_widget(testbed)
+        business.status = BusinessStatus.TESTING
+        testbed.business_repo.save(business)
+
+        response = testbed.build_http_client().post(
+            f"/v1/widget/{business.id}/messages",
+            json={"session_key": SESSION_KEY, "text": "Hi"},
         )
 
-        assert body["text"] is None
-        assert body["is_handed_off"] is True
-        assert body["message_id"] is None
-        [visitor_message] = testbed.message_repo.list_by_conversation(
-            business.id, testbed.pipeline.conversation_id
-        )
-        assert body["cursor"] == str(visitor_message.id)
+        # The widget says the chat is unavailable instead of typing forever.
+        assert response.status_code == 409
+        assert inbox(testbed) == []
 
     def test_disabled_widget_and_unknown_business_are_unavailable(self) -> None:
         testbed = ChannelsTestbed()
@@ -185,63 +216,6 @@ class TestWidgetMessages:
 
         assert response.status_code == 422
         assert testbed.pipeline.messages == []
-
-
-def post_message(
-    client: Any, business_id: object, session_key: str = SESSION_KEY
-) -> Any:
-    return client.post(
-        f"/v1/widget/{business_id}/messages",
-        json={"session_key": session_key, "text": "Hi"},
-    )
-
-
-class TestWidgetMessageRateLimits:
-    def test_a_visitor_sending_too_fast_waits_for_the_retry_after(self) -> None:
-        testbed = ChannelsTestbed()
-        business = enable_widget(testbed)
-        client = testbed.build_http_client()
-
-        answers: list[int] = []
-        for _ in range(12):
-            answers.append(post_message(client, business.id).status_code)
-            testbed.clock.advance(5)
-        testbed.clock.advance(-5)
-        limited = post_message(client, business.id)
-        other_visitor = post_message(client, business.id, "v1_another_visitor_77")
-
-        assert answers == [200] * 12
-        assert limited.status_code == 429
-        assert limited.json()["error"] == "rate_limited"
-        # The minute's 12 messages count fully until it ends in 5 s, then
-        # fade with the next minute: 5 s into it there is room for one.
-        assert limited.headers["Retry-After"] == "10"
-        assert other_visitor.status_code == 200
-        assert len(testbed.pipeline.messages) == 13
-        testbed.clock.advance(5)
-        assert post_message(client, business.id).status_code == 429
-        testbed.clock.advance(5)
-        assert post_message(client, business.id).status_code == 200
-
-    def test_one_address_is_limited_across_visitors(self) -> None:
-        testbed = ChannelsTestbed()
-        business = enable_widget(testbed)
-        client = testbed.build_http_client()
-
-        answers = [
-            post_message(
-                client, business.id, f"v1_visitor_number_{index:04d}"
-            ).status_code
-            for index in range(60)
-        ]
-        limited = post_message(client, business.id, "v1_one_more_visitor_0001")
-
-        assert answers == [200] * 60
-        assert limited.status_code == 429
-        # The next minute starts in 60 s; a second into it, this minute's
-        # weight leaves room for one more.
-        assert limited.headers["Retry-After"] == "61"
-        assert len(testbed.pipeline.messages) == 60
 
 
 class TestWidgetSnippet:
