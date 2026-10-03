@@ -1,10 +1,11 @@
 "use client";
 
-import { Card, Table, TBody, Td, Th, THead, Tr } from "@/components/ui";
+import { Card, TBody, Td, Th, THead, Tr } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { cn } from "@/lib/cn";
 
 import { movementSign, type MarginView, type MrrView } from "../../_lib/metrics";
+import { ScrollingTable } from "./ScrollingTable";
 import type { MetricsFormat } from "./useMetricsFormat";
 
 /**
@@ -18,7 +19,7 @@ export function MrrCard({ mrr, format }: { mrr: MrrView; format: MetricsFormat }
   const currency = mrr.end.currency_code;
   return (
     <Card title={title} description={t("adminMetrics.mrr.description")} padded={false} aria-label={title}>
-      <Table caption={title}>
+      <ScrollingTable caption={title}>
         <THead>
           <Tr>
             <Th>{t("adminMetrics.mrr.movement")}</Th>
@@ -68,7 +69,7 @@ export function MrrCard({ mrr, format }: { mrr: MrrView; format: MetricsFormat }
             </Td>
           </Tr>
         </TBody>
-      </Table>
+      </ScrollingTable>
       {mrr.unconverted_currencies.length > 0 ? (
         <p className="border-t border-line px-5 py-3 text-xs text-warning">
           {t("adminMetrics.mrr.unconverted", { currencies: mrr.unconverted_currencies.join(", ") })}

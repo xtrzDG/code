@@ -1,11 +1,12 @@
 "use client";
 
-import { Card, Table, TBody, Td, Th, THead, Tr } from "@/components/ui";
+import { Card, TBody, Td, Th, THead, Tr } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { cn } from "@/lib/cn";
 import { dateTimeFormat } from "@/lib/intl/formatters";
 
 import { cohortColumns, cohortShade, type CohortRowView } from "../../_lib/metrics";
+import { ScrollingTable } from "./ScrollingTable";
 import type { MetricsFormat } from "./useMetricsFormat";
 
 /**
@@ -26,7 +27,7 @@ export function CohortGrid({ rows, format }: { rows: readonly CohortRowView[]; f
       {rows.length === 0 ? (
         <p className="p-5 text-sm text-ink-muted">{t("adminMetrics.cohorts.empty")}</p>
       ) : (
-        <Table caption={title}>
+        <ScrollingTable caption={title}>
           <THead>
             <Tr>
               <Th>{t("adminMetrics.cohorts.month")}</Th>
@@ -75,7 +76,7 @@ export function CohortGrid({ rows, format }: { rows: readonly CohortRowView[]; f
               </Tr>
             ))}
           </TBody>
-        </Table>
+        </ScrollingTable>
       )}
     </Card>
   );

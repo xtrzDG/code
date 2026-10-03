@@ -1,9 +1,10 @@
 "use client";
 
-import { Badge, Card, Table, TBody, Td, Th, THead, Tr, type BadgeTone } from "@/components/ui";
+import { Badge, Card, TBody, Td, Th, THead, Tr, type BadgeTone } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 
 import { payingShare, type SourceRowView, type WebVitalView } from "../../_lib/metrics";
+import { ScrollingTable } from "./ScrollingTable";
 import type { MetricsFormat } from "./useMetricsFormat";
 
 const KNOWN_SOURCES = new Set(["direct", "unknown", "referral", "hosted_chat"]);
@@ -25,7 +26,7 @@ export function SourcesCard({ rows, format }: { rows: readonly SourceRowView[]; 
       {rows.length === 0 ? (
         <p className="p-5 text-sm text-ink-muted">{t("adminMetrics.sources.empty")}</p>
       ) : (
-        <Table caption={title}>
+        <ScrollingTable caption={title}>
           <THead>
             <Tr>
               <Th>{t("adminMetrics.sources.source")}</Th>
@@ -56,7 +57,7 @@ export function SourcesCard({ rows, format }: { rows: readonly SourceRowView[]; 
               </Tr>
             ))}
           </TBody>
-        </Table>
+        </ScrollingTable>
       )}
     </Card>
   );
@@ -77,7 +78,7 @@ export function WebVitalsCard({ rows, format }: { rows: readonly WebVitalView[];
       {rows.length === 0 ? (
         <p className="p-5 text-sm text-ink-muted">{t("adminMetrics.vitals.empty")}</p>
       ) : (
-        <Table caption={title}>
+        <ScrollingTable caption={title}>
           <THead>
             <Tr>
               <Th>{t("adminMetrics.vitals.page")}</Th>
@@ -108,7 +109,7 @@ export function WebVitalsCard({ rows, format }: { rows: readonly WebVitalView[];
               </Tr>
             ))}
           </TBody>
-        </Table>
+        </ScrollingTable>
       )}
     </Card>
   );

@@ -1,9 +1,10 @@
 "use client";
 
-import { Card, Table, TBody, Td, Th, THead, Tr } from "@/components/ui";
+import { Card, TBody, Td, Th, THead, Tr } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 
 import { barPercent, type FunnelStepView, type TunnelStepView } from "../../_lib/metrics";
+import { ScrollingTable } from "./ScrollingTable";
 import type { MetricsFormat } from "./useMetricsFormat";
 
 /**
@@ -48,7 +49,7 @@ export function TunnelCard({ steps, format }: { steps: readonly TunnelStepView[]
   const title = t("adminMetrics.tunnel.title");
   return (
     <Card title={title} description={t("adminMetrics.tunnel.description")} padded={false} aria-label={title}>
-      <Table caption={title}>
+      <ScrollingTable caption={title}>
         <THead>
           <Tr>
             <Th>{t("adminMetrics.tunnel.screen")}</Th>
@@ -79,7 +80,7 @@ export function TunnelCard({ steps, format }: { steps: readonly TunnelStepView[]
             </Tr>
           ))}
         </TBody>
-      </Table>
+      </ScrollingTable>
     </Card>
   );
 }
