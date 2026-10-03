@@ -23,15 +23,14 @@ from app.orchestrators.channels.outbox.deliver_outbound_message_orchestrator imp
 from app.orchestrators.channels.post_call_webhook_orchestrator import (
     PostCallWebhookOrchestrator,
 )
+from app.orchestrators.use_case_orchestrator import UseCaseOrchestrator
 from app.pipelines.orchestrator_pipeline import OrchestratorPipeline
 from app.schemas.configurations.app_settings import AppSettings
 from app.schemas.dto.jobs import JobReport, QueuedJobInput
 from app.schemas.dto.voice_webhooks import PostCallWebhookOutcome
 from app.schemas.typings.platform.constrained_integers import WorkerPollSeconds
 from app.schemas.typings.platform.constrained_strings import JobName
-from app.use_cases.voice.recordings.schedule_recording_archive_use_case import (
-    ScheduleRecordingArchiveUseCase,
-)
+from app.utilities.calls.text_back_jobs import SEND_TEXT_BACK_JOB
 from app.utilities.deliveries.delivery_jobs import (
     DELIVER_OUTBOUND_JOB,
     PROCESS_INBOUND_MESSAGE_JOB,
@@ -39,11 +38,11 @@ from app.utilities.deliveries.delivery_jobs import (
     PROCESS_POST_CALL_JOB,
 )
 from app.utilities.storage.storage_scope_context import StorageScopeContext
+from tests.channels.channels_call_follow_ups import ChannelsCallFollowUps
 from tests.channels.channels_fakes import (
     RecordingHandoffToHuman,
     RecordingOrchestrator,
 )
-from tests.channels.channels_inbox import ChannelsInbox
 from tests.platform.worker_fakes import TEST_LANE_CONCURRENCY, RecordingErrorReporter
 
 # Enough ticks to drain chains of jobs (a message, its reply, a retry).
@@ -56,7 +55,7 @@ def as_job_operator(
     return PipelineOperator(OrchestratorPipeline(orchestrator))
 
 
-class ChannelsDeliveries(ChannelsInbox):
+class ChannelsDeliveries(ChannelsCallFollowUps):
     """The worker's side: processing inbox events and sending the outbox."""
 
     def __init__(self, settings: AppSettings | None = None) -> None:
@@ -93,12 +92,7 @@ class ChannelsDeliveries(ChannelsInbox):
                         PostCallWebhookOrchestrator(
                             self.read_accepted_post_call,
                             self.record_finished_call,
-                            self.audit_call_replies,
-                            self.send_call_confirmation,
-                            self.send_call_links,
-                            ScheduleRecordingArchiveUseCase(
-                                self.call_repo, self.job_queue, is_archive_enabled=False
-                            ),
+                            self.post_call_follow_ups(),
                         ),
                         self.post_call_outcomes,
                     ),
@@ -114,6 +108,9 @@ class ChannelsDeliveries(ChannelsInbox):
                     self.build_undelivered_reply_handoff,
                     self.handoffs_to_human,
                 )
+            ),
+            SEND_TEXT_BACK_JOB: as_job_operator(
+                UseCaseOrchestrator(self.send_text_back)
             ),
         }
 

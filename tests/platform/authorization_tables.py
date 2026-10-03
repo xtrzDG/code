@@ -25,6 +25,8 @@ OWNER_ONLY_OPERATIONS: frozenset[str] = frozenset(
         f"POST {B}/billing/plan",
         f"POST {B}/billing/subscribe",
         f"POST {B}/billing/trial",
+        f"GET {B}/call-settings",
+        f"PUT {B}/call-settings",
         f"PUT {B}/channels/whatsapp/staff-template",
         f"PUT {B}/channels/{{channel}}",
         f"DELETE {B}/channels/{{channel}}",
@@ -46,6 +48,7 @@ OWNER_ONLY_OPERATIONS: frozenset[str] = frozenset(
         f"POST {B}/setup/starter-answers/apply",
         f"PUT {B}/setup/skipped-steps/{{setup_step}}",
         f"DELETE {B}/setup/skipped-steps/{{setup_step}}",
+        f"GET {B}/text-backs",
         f"POST {B}/unanswered-questions/{{question_id}}/answer",
     }
 )

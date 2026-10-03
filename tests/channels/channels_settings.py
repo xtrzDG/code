@@ -14,6 +14,7 @@ WHATSAPP_SYSTEM_TOKEN: str = "whatsapp-system-user-token"
 PLATFORM_BOT_TOKEN: str = "700000001:PLATFORMbotTOKENfortestsPLATFORMbotTOKEN"
 ELEVENLABS_WEBHOOK_SECRET: str = "elevenlabs-webhook-secret-for-tests"
 ENCRYPTION_KEY: str = "an-encryption-key-that-is-long-enough-for-tests"
+ZADARMA_API_SECRET: str = "zadarma-api-secret-for-tests"
 TELEGRAM_BOT_TOKEN: str = "123456789:AAHdqTcvCH1vGWJxfSeofSAs0K5PALDsaw"
 OTHER_TELEGRAM_BOT_TOKEN: str = "987654321:BBHdqTcvCH1vGWJxfSeofSAs0K5PALDsbx"
 PAGE_ACCESS_TOKEN: str = "EAAGpageAccessTokenForTests0123456789"
@@ -30,6 +31,7 @@ TEST_ENVIRONMENT: dict[str, str] = {
     "TELEGRAM_PLATFORM_BOT_TOKEN": PLATFORM_BOT_TOKEN,
     "ELEVENLABS_API_KEY": "elevenlabs-api-key",
     "ELEVENLABS_WEBHOOK_SECRET": ELEVENLABS_WEBHOOK_SECRET,
+    "ZADARMA_API_SECRET": ZADARMA_API_SECRET,
 }
 
 

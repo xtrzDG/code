@@ -12,7 +12,7 @@ from app.contracts.repositories.conversation_repositories import (
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.channel_events import PostCallEventStatus
 from app.schemas.constants.channels import ChannelKind
-from app.schemas.constants.conversations import MessageAuthor
+from app.schemas.constants.conversations import CallOutcome, MessageAuthor
 from app.schemas.constants.live_events import LiveEventKind
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.contacts import ChannelIdentity, ContactDocument
@@ -30,8 +30,8 @@ class OpenCallConversationUseCase(UseCaseContract[StoredFinishedCall, RecordedCa
     its summary. It gets one now: a phone conversation of the caller (the
     contact whose phone the call proved, else a new one) pinned to the
     live version, and the call points to it. Calls with a conversation,
-    calls nobody spoke in and calls of a business without a live version
-    stay as they are.
+    calls nobody spoke in, abandoned calls and calls of a business without
+    a live version stay as they are.
     """
 
     def __init__(
@@ -57,6 +57,7 @@ class OpenCallConversationUseCase(UseCaseContract[StoredFinishedCall, RecordedCa
             or recorded.business_id is None
             or recorded.call_id is None
             or recorded.conversation_id is not None
+            or recorded.outcome is CallOutcome.ABANDONED
             or not any(
                 line.author is MessageAuthor.CUSTOMER
                 for line in input_data.report.transcript

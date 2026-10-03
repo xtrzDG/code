@@ -53,6 +53,8 @@ RENDER_OPTIONAL_VARIABLES: frozenset[str] = frozenset(
         # The default follows LLM_PROVIDER (gpt-5-mini, claude-opus-5-5).
         "LLM_MODEL_ID",
         "LLM_JUDGE_MODEL_ID",
+        # Call summaries use LLM_MODEL_ID when it is unset.
+        "LLM_SUMMARY_MODEL_ID",
         # Development and tests only; refused in production.
         "OTP_LOG_CODES",
         # The default follows APP_ENV (json in production) and THREADPOOL_SIZE.

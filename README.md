@@ -392,6 +392,7 @@ UI-тестов); `color`, `position` и `language` в ней показываю
 | `LIVE_EVENTS_DATABASE_URL` | живые обновления кабинета слушают события (`LISTEN`) через `DATABASE_URL`; задайте прямое (сессионное) подключение к той же базе, только если `DATABASE_URL` идёт через пулер транзакций (PgBouncer, Supavisor на порту 6543): там `LISTEN` не работает. Без `DATABASE_URL` события передаются внутри процесса |
 | `ENCRYPTION_KEY` | временный ключ: токены каналов не переживут перезапуск; в `production` — ошибка запуска (как и с общеизвестным значением по умолчанию из `docker-compose.yml`). Ключ Fernet или любая случайная строка от 32 символов; после первого запуска не меняется |
 | `LLM_PROVIDER`, `LLM_MODEL_ID`, `LLM_JUDGE_MODEL_ID` | `openai` и `gpt-5-mini` (`anthropic` — `claude-opus-5-5`; `scripted` — без модели и ключей: каждый ответ — одна фиксированная фраза, для staging и проверок); `LLM_JUDGE_MODEL_ID` — модель клиента и судьи автотестов, по умолчанию та же модель провайдера |
+| `LLM_SUMMARY_MODEL_ID` | модель итогов звонков для персонала (дешёвая, например `gpt-5-nano`); по умолчанию — `LLM_MODEL_ID` |
 | `LLM_CHAT_EFFORT`, `LLM_JUDGE_EFFORT` | усилие рассуждений: `low` в чате, `medium` у судьи автотестов (`minimal`, `low`, `medium`, `high`) |
 | `LLM_MAX_OUTPUT_TOKENS`, `LLM_TOOL_ROUND_LIMIT` | 16000 токенов ответа, 8 кругов вызова инструментов на один ответ |
 | `LLM_CALL_TIMEOUT_SECONDS` | 25: столько секунд ждём один вызов модели в чате с клиентом, затем одна повторная попытка; после второй неудачи разговор передаётся сотруднику |
@@ -425,7 +426,8 @@ UI-тестов); `color`, `position` и `language` в ней показываю
 | `DPA_DOCUMENT_VERSION` | `2026-10-01` — действующая версия договора из `docs/legal/` |
 | `ELEVENLABS_API_KEY`, `ELEVENLABS_WEBHOOK_SECRET`, `ELEVENLABS_API_BASE_URL` | голосовой агент не создаётся: в `production` публикация версии с голосом отклоняется (409, причина `voice_configuration`), в `development`/`test` версия выходит без голосового агента (предупреждение в логе). Адрес по умолчанию — `https://api.eu.residency.elevenlabs.io` (хранение в ЕС) |
 | `ELEVENLABS_ALLOW_NON_EU_REGION` | `false`: в `production` другой адрес ElevenLabs, кроме ЕС, — ошибка запуска |
-| `ZADARMA_API_KEY`, `ZADARMA_API_SECRET` | пока не используются: номер помощника покупается в Zadarma вручную и вводится в кабинете (канал «Телефон») |
+| `ZADARMA_API_KEY` | пока не используется: номер помощника покупается в Zadarma вручную и вводится в кабинете (канал «Телефон») |
+| `ZADARMA_API_SECRET` | секрет API Zadarma: им подписаны уведомления АТС о звонках (`POST /v1/telephony/zadarma/notifications`); без него уведомления отклоняются, и пропущенные звонки на линии (занято, нет ответа, сброс) не находятся |
 | `META_APP_SECRET`, `META_VERIFY_TOKEN`, `WHATSAPP_SYSTEM_USER_TOKEN` | WhatsApp, Instagram и Messenger не принимают вебхуки, WhatsApp не подключается и не отправляет сообщения |
 | `META_APP_ID` | пока не используется |
 | `TELEGRAM_PLATFORM_BOT_TOKEN`, `WHATSAPP_NOTIFICATION_PHONE_NUMBER_ID`, `WHATSAPP_NOTIFICATION_TEMPLATE` | уведомления сотрудникам в Telegram и WhatsApp не уходят (контакт показывает причину). Почта и SMS сотрудникам идут через `SMTP_*` и `TWILIO_*` (как коды входа); без них вне `production` пишутся в лог |

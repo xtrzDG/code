@@ -84,8 +84,8 @@ class CallSummaryWriter:
         )
         try:
             response: LlmResponse = self._llm_adapter.complete(request)
-        except ApplicationError:
-            LOGGER.exception("The summary of a call of %s failed.", business.id)
+        except ApplicationError as error:
+            LOGGER.warning("The summary of a call of %s failed: %s", business.id, error)
             return []
 
         summaries = read_call_summaries(

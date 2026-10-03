@@ -28,6 +28,7 @@ from app.use_cases.autotests.enqueue_autotest_run_use_case import RUN_AUTOTESTS_
 from app.use_cases.voice.recordings.recording_archive_paths import (
     ARCHIVE_CALL_RECORDING_JOB,
 )
+from app.utilities.calls.text_back_jobs import SEND_TEXT_BACK_JOB
 from app.utilities.deliveries.delivery_jobs import (
     DELIVER_OUTBOUND_JOB,
     PROCESS_INBOUND_MESSAGE_JOB,
@@ -77,6 +78,7 @@ def test_worker_ticks_once_with_every_job_registered() -> None:
         PROCESS_POST_CALL_JOB,
         ARCHIVE_CALL_RECORDING_JOB,
         DELIVER_OUTBOUND_JOB,
+        SEND_TEXT_BACK_JOB,
     ]
     assert (first.periodic_runs, first.queued_runs, first.failures) == (10, 0, 0)
     assert right_after.periodic_runs == 0

@@ -225,3 +225,10 @@ _.next_action  # app/schemas/dto/setup/setup_progress.py
 _.applied_sections  # app/schemas/dto/setup/starter_answers.py
 _.kept_sections  # app/schemas/dto/setup/starter_answers.py
 _.offer_examples  # app/schemas/dto/setup/starter_answers.py
+
+# Settings → Calls and the telephony webhook: response fields the cabinet
+# (and Zadarma's retries log) read; no Python code does.
+_.is_whatsapp_connected  # app/schemas/dto/calls/call_settings.py
+_.template_previews  # app/schemas/dto/calls/call_settings.py
+_.notified_count  # app/schemas/dto/calls/call_summaries.py
+_.text_back_status  # app/schemas/dto/calls/missed_calls.py

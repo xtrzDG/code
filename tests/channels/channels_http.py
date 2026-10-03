@@ -41,7 +41,7 @@ from app.use_cases.voice.authenticate_voice_tool_call_use_case import (
     AuthenticateVoiceToolCallUseCase,
 )
 from app.use_cases.voice.start_voice_call_use_case import StartVoiceCallUseCase
-from tests.channels.channels_inbox import ChannelsInbox
+from tests.channels.channels_call_follow_ups import ChannelsCallFollowUps
 
 
 def wrap[InputData, OutputData](
@@ -60,7 +60,7 @@ def wrap_use_case[InputData, OutputData](
     return PipelineOperator(OrchestratorPipeline(UseCaseOrchestrator(use_case)))
 
 
-def build_channels_http_client(testbed: ChannelsInbox) -> TestClient:
+def build_channels_http_client(testbed: ChannelsCallFollowUps) -> TestClient:
     http_application = FastAPI()
     install_error_handlers(http_application)
     http_application.include_router(
@@ -173,6 +173,8 @@ def build_channels_http_client(testbed: ChannelsInbox) -> TestClient:
                         testbed.voice_webhook_adapter, testbed.wall_clock
                     ),
                     testbed.store_post_call_report,
+                    testbed.read_failed_call_start,
+                    testbed.missed_calls,
                 )
             ),
         )
