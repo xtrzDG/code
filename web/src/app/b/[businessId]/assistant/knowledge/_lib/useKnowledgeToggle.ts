@@ -30,7 +30,7 @@ function saveIntoLists(businessId: string, saved: KnowledgeItemDetails) {
  * item switched off leaves the "active" list) and go back if the API
  * refuses. The switch itself undoes it, so no Undo toast.
  */
-export function useKnowledgeToggle(onChanged: () => void) {
+export function useKnowledgeToggle() {
   const { t, locale } = useI18n();
   const toast = useToast();
   const { business } = useBusiness();
@@ -45,6 +45,7 @@ export function useKnowledgeToggle(onChanged: () => void) {
       optimistic: (item, isActive) => saveIntoLists(business.id, { ...item, is_active: isActive }),
       // The profile's gaps and the assistant's go-live checks count the items.
       stale: [queryKeys.profile.all(business.id), queryKeys.assistant.all(business.id)],
+      invalidate: [queryKeys.assistant.pendingAll(business.id)],
     },
   );
 
@@ -52,7 +53,6 @@ export function useKnowledgeToggle(onChanged: () => void) {
     const result = await mutation.run(item, isActive);
     if (result.ok) {
       saveIntoLists(business.id, result.data);
-      onChanged();
       toast.success(
         isActive
           ? t("knowledge.items.switchedOn", { title: item.title })

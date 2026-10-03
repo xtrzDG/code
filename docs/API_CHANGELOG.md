@@ -99,6 +99,35 @@ Spec: `35be369c1300ba27`
   a trial costs the platform by design, and with every margin now known it
   would otherwise make every trialing client critical.
 
+## 2026-10-03 — changes not live yet and one "Apply changes"
+
+Spec: `4d1d0054fa6321f1`
+
+- **Added** `GET /v1/businesses/{business_id}/assistant/pending-changes`
+  (owners and staff; `?language=`; `PendingChangesView`): what customers do
+  not get yet, change by change against the live version (`is_live`,
+  `live_version_number`, `has_unapplied_changes`, `count` and `changes`).
+  Each `PendingChange` has an `area` (`profile`, `hours`, `special_days`,
+  `answers`, `offer`, `questions`, `resources`, `booking_rules`, `links`,
+  `languages`, `calls`, `conversation`) and an `action` (`added`,
+  `changed`, `removed`), and names what it is about: `field`, `weekday`,
+  `link_kind`, `date`, `item_kind` or the owner's own words in `subject`.
+  A changed offer item has `detail` (`price` with `before` and `after`,
+  or `details`). Before the first go-live `is_live` is false and the list
+  is empty.
+- **Changed** `has_unapplied_changes` of `GET …/assistant/apply` (and of
+  the setup's `apply`) now means exactly "the pending changes are not
+  empty": a removed knowledge item counts, and an edit undone before
+  applying does not.
+- **Changed** `POST …/assistant/apply` after the first go-live checks the
+  changed scenarios and three core ones instead of every scenario
+  (`checks_total` is smaller); the first go-live still plays them all.
+- **Changed** `GET …/assistant-versions` leaves out drafts discarded when a
+  newer version went live; `GET …/assistant-versions/{version_id}` still
+  reads them.
+- **Added** the live event `assistant.apply` (ids of the apply and its
+  version) whenever "Apply changes" moves to another stage.
+
 ## 2026-10-03 — encryption key rotation for platform admins
 
 Spec: `0ee9211ca86eb0d0`

@@ -29,7 +29,7 @@ type DetailTab = "autotests" | "facts" | "instruction" | "tools";
  * One assistant update: status, go-live checks, checks, facts and tools;
  * platform admins also see the model's instruction.
  */
-export function VersionDetailScreen({ versionId }: { versionId: string }) {
+export function VersionDetailScreen({ versionId, showProblems = false }: { versionId: string; showProblems?: boolean }) {
   const { t } = useI18n();
   const router = useRouter();
   const { business, isOwner, isPlatformAdmin } = useBusiness();
@@ -114,7 +114,13 @@ export function VersionDetailScreen({ versionId }: { versionId: string }) {
             ) : run.error && run.error.code !== "not_found" && !run.data ? (
               <ErrorState error={run.error} onRetry={run.reload} />
             ) : (
-              <AutotestsPanel run={runData} isRunning={isRunning} canRun={canRunAutotests} onRun={() => setDialog("autotests")} />
+              <AutotestsPanel
+                run={runData}
+                isRunning={isRunning}
+                canRun={canRunAutotests}
+                onRun={() => setDialog("autotests")}
+                initialOutcome={showProblems ? "problems" : "all"}
+              />
             )
           ) : null}
 

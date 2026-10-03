@@ -113,6 +113,11 @@ export default defineConfig({
         OTP_LOG_CODES: "true",
         // The demo restaurant is live with its website chat on (live.spec.ts).
         SEED_DEMO_DATA: "true",
+        // No model and no key: the rehearsal model plays the assistant, the
+        // test customers and the judge, so "Apply changes" can pass its
+        // checks (apply-changes.spec.ts) and a request for a person is
+        // passed on (live.spec.ts).
+        LLM_PROVIDER: "scripted",
         // Every test signs in from 127.0.0.1: lift the per-address caps.
         OTP_SENDS_PER_IP_PER_HOUR: "100000",
         OTP_VERIFIES_PER_IP_PER_10_MINUTES: "100000",

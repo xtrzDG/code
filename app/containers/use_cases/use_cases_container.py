@@ -20,6 +20,9 @@ from app.containers.use_cases.launch_use_cases import LaunchUseCasesContainer
 from app.containers.use_cases.notification_use_cases import (
     NotificationUseCasesContainer,
 )
+from app.containers.use_cases.pending_change_use_cases import (
+    PendingChangeUseCasesContainer,
+)
 from app.containers.use_cases.platform_use_cases import PlatformUseCasesContainer
 from app.containers.use_cases.security_use_cases import SecurityUseCasesContainer
 from app.containers.use_cases.setup_use_cases import SetupUseCasesContainer
@@ -94,6 +97,15 @@ class UseCasesContainer(CoreUseCasesContainer):
         repositories=CoreUseCasesContainer.repositories,
         time_provider=CoreUseCasesContainer.time_provider,
     )
+    pending_changes: PendingChangeUseCasesContainer = Container(  # type: ignore[assignment]
+        PendingChangeUseCasesContainer,
+        registries=CoreUseCasesContainer.registries,
+        repositories=CoreUseCasesContainer.repositories,
+        time_provider=CoreUseCasesContainer.time_provider,
+        transformers=CoreUseCasesContainer.transformers,
+        utilities=CoreUseCasesContainer.utilities,
+        account_use_cases=CoreUseCasesContainer.accounts,
+    )
     assistants: AssistantUseCasesContainer = Container(  # type: ignore[assignment]
         AssistantUseCasesContainer,
         adapters=CoreUseCasesContainer.adapters,
@@ -107,14 +119,17 @@ class UseCasesContainer(CoreUseCasesContainer):
         conversation_use_cases=conversations,
         voice_use_cases=voice,
         launch_use_cases=launch,
+        pending_change_use_cases=pending_changes,
     )
     apply: ApplyUseCasesContainer = Container(  # type: ignore[assignment]
         ApplyUseCasesContainer,
+        facilitators=CoreUseCasesContainer.facilitators,
         repositories=CoreUseCasesContainer.repositories,
         time_provider=CoreUseCasesContainer.time_provider,
         utilities=CoreUseCasesContainer.utilities,
         account_use_cases=CoreUseCasesContainer.accounts,
         assistant_use_cases=assistants,
+        pending_change_use_cases=pending_changes,
     )
     setup: SetupUseCasesContainer = Container(  # type: ignore[assignment]
         SetupUseCasesContainer,

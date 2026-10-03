@@ -3,8 +3,8 @@
 /**
  * The launch as state: the data processing agreement (accepted once, here
  * or in Settings), the free trial or the plan, and "Apply changes" with
- * its progress, read again every 1.5 s while it runs. When the assistant
- * is live, the tunnel moves on to the finale.
+ * its progress (useStagedApply). When the assistant is live, the tunnel
+ * moves on to the finale.
  */
 
 import { useEffect, useState } from "react";
@@ -17,18 +17,16 @@ import { useMutation } from "@/api/useMutation";
 import { useQuery } from "@/api/useQuery";
 import { useBusiness } from "@/components/business/BusinessContext";
 import { useI18n } from "@/i18n/client";
-import { LAUNCH_POLL_MS, launchPhase, shouldPoll } from "@/lib/tunnel/launch";
 
 import type { StepContext } from "../flow/stepContext";
+import { useStagedApply } from "./useStagedApply";
 
 export function useLaunch(ctx: StepContext) {
   const { locale } = useI18n();
   const { business } = useBusiness();
   const { businessId } = ctx;
-  const apply = useQuery(queryKeys.setup.apply(businessId, locale), () =>
-    api.GET("/v1/businesses/{business_id}/assistant/apply", { params: { path: { business_id: businessId }, query: { language: locale } } }),
-  );
-  const view = apply.data ?? ctx.setup.apply;
+  const staged = useStagedApply(businessId, ctx.setup.apply);
+  const { view, phase } = staged;
   const dpa = useQuery(queryKeys.settings.dpa(businessId), () =>
     api.GET("/v1/businesses/{business_id}/dpa", { params: { path: { business_id: businessId } } }),
   );
@@ -42,22 +40,6 @@ export function useLaunch(ctx: StepContext) {
   const acceptDpa = useMutation(() => api.POST("/v1/businesses/{business_id}/dpa", { params: { path: { business_id: businessId } } }), {
     stale: [queryKeys.assistant.all(businessId)],
   });
-  const start = useMutation(() => api.POST("/v1/businesses/{business_id}/assistant/apply", { params: { path: { business_id: businessId } } }), {
-    stale: [queryKeys.assistant.all(businessId)],
-  });
-
-  const phase = launchPhase(view);
-  const isPolling = shouldPoll(view);
-  const reloadApply = apply.reload;
-
-  // While it runs, ask how far it got.
-  useEffect(() => {
-    if (!isPolling) {
-      return;
-    }
-    const timer = setInterval(reloadApply, LAUNCH_POLL_MS);
-    return () => clearInterval(timer);
-  }, [isPolling, reloadApply]);
 
   // Live: everything the cabinet shows changed; the finale is next.
   const { refresh, goTo } = ctx;
@@ -82,11 +64,7 @@ export function useLaunch(ctx: StepContext) {
       }
       dpa.setData(accepted.data);
     }
-    const started = await start.run();
-    if (started.ok) {
-      apply.setData(started.data);
-      reloadApply();
-    }
+    await staged.start();
   };
 
   return {
@@ -109,7 +87,7 @@ export function useLaunch(ctx: StepContext) {
       hasPlan: Boolean(billing.data?.subscription),
       days: trialDays,
     },
-    isStarting: acceptDpa.isPending || start.isPending,
+    isStarting: acceptDpa.isPending || staged.isStarting,
     launch,
   };
 }

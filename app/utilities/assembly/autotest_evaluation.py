@@ -222,18 +222,20 @@ def decide_version_status(
     is_passed: bool,
     is_full_coverage: bool,
     previous_status: AssistantVersionStatus,
+    is_smoke_check: bool = False,
 ) -> AssistantVersionStatus:
     """
     The version status after a run: READY only after a passed run that
-    covered everything; TESTS_FAILED after any failed run; after a passed
-    narrowed run, the status from before the run (DRAFT when it was neither
-    READY nor TESTS_FAILED).
+    covered everything or the passed quick check of "Apply changes";
+    TESTS_FAILED after any failed run; after a passed narrowed run, the
+    status from before the run (DRAFT when it was neither READY nor
+    TESTS_FAILED).
     """
 
     if not is_passed:
         return AssistantVersionStatus.TESTS_FAILED
 
-    if is_full_coverage:
+    if is_full_coverage or is_smoke_check:
         return AssistantVersionStatus.READY
 
     if previous_status in (

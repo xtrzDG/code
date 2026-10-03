@@ -12,6 +12,9 @@ from app.containers.use_cases.conversation_use_cases import (
     ConversationUseCasesContainer,
 )
 from app.containers.use_cases.launch_use_cases import LaunchUseCasesContainer
+from app.containers.use_cases.pending_change_use_cases import (
+    PendingChangeUseCasesContainer,
+)
 from app.containers.use_cases.voice_use_cases import VoiceUseCasesContainer
 from app.containers.utilities import UtilitiesContainer
 from app.contracts.use_case_contract import UseCaseContract
@@ -84,6 +87,7 @@ class AssistantUseCasesContainer(containers.DeclarativeContainer):
     conversation_use_cases: ConversationUseCasesContainer = DependenciesContainer()  # type: ignore[assignment]
     voice_use_cases: VoiceUseCasesContainer = DependenciesContainer()  # type: ignore[assignment]
     launch_use_cases: LaunchUseCasesContainer = DependenciesContainer()  # type: ignore[assignment]
+    pending_change_use_cases: PendingChangeUseCasesContainer = DependenciesContainer()  # type: ignore[assignment]
 
     assemble_assistant_version_use_case: Factory[
         UseCaseContract[AssembleAssistantVersionCommand, AssistantVersionDetails]
@@ -91,18 +95,8 @@ class AssistantUseCasesContainer(containers.DeclarativeContainer):
         AssembleAssistantVersionUseCase,
         authorize_business_access=account_use_cases.authorize_business_access_use_case,
         business_repo=repositories.business_repo,
-        business_profile_repo=repositories.business_profile_repo,
-        knowledge_item_repo=repositories.knowledge_item_repo,
-        resource_repo=repositories.resource_repo,
-        schedule_exception_repo=repositories.schedule_exception_repo,
         assistant_version_repo=repositories.assistant_version_repo,
-        country_registry=registries.country_registry,
-        language_registry=registries.language_registry,
-        niche_template_registry=registries.niche_template_registry,
-        plan_registry=registries.plan_registry,
-        business_facts_transformer=transformers.business_facts_transformer,
-        assistant_instruction_transformer=transformers.assistant_instruction_transformer,
-        phone_instruction_transformer=transformers.phone_instruction_transformer,
+        build_assistant_draft=pending_change_use_cases.build_assistant_draft_use_case,
         version_details_transformer=transformers.assistant_version_details_transformer,
         app_settings=config.app_settings,
         wall_clock=time_provider.microsecond_wall_clock,

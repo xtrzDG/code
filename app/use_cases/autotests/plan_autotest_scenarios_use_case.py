@@ -13,8 +13,10 @@ from app.schemas.domain.knowledge import KnowledgeItemDocument
 from app.schemas.domain.profiles import BusinessProfileDocument
 from app.schemas.dto.assistants.autotest_runs import (
     AutotestPlanningRequest,
+    AutotestScenario,
     AutotestScenarioPlanning,
 )
+from app.schemas.dto.assistants.smoke_checks import SmokeCheckSelection
 from app.schemas.dto.niches import NicheTemplate
 from app.schemas.typings.assistants.constrained_integers import (
     PriceQuestionScenarioLimit,
@@ -33,6 +35,7 @@ from app.utilities.assembly.language_profiles import (
     build_autotest_languages,
     collect_language_profiles,
 )
+from app.utilities.assembly.smoke_selection import plan_smoke_scenarios
 
 DEFAULT_PRICE_QUESTION_LIMIT: PriceQuestionScenarioLimit = PriceQuestionScenarioLimit(
     10
@@ -51,7 +54,9 @@ class PlanAutotestScenariosUseCase(
     books), plus one price question per priced knowledge item, at most
     `price_question_limit`. The plan has full coverage when every version
     language and every applicable kind was selected: only such a run can
-    show that a version is ready for customers.
+    show that a version is ready for customers. The quick check of an
+    apply (`smoke_check`) plans exactly its scenarios instead and never has
+    full coverage.
     """
 
     def __init__(
@@ -74,27 +79,35 @@ class PlanAutotestScenariosUseCase(
         business: BusinessDocument = input_data.business
         version: AssistantVersionDocument = input_data.version
         niche: NicheTemplate = self._niche_template_registry.get(version.niche_key)
-        languages: list[LanguageTag] = select_languages(
-            version.languages,
-            input_data.languages,
-        )
         applicable_kinds: list[AutotestScenarioKind] = list_applicable_kinds(
             niche.autotest_kinds,
             version.tools,
+        )
+        party_size: int = self._party_size(business)
+        resource_noun: str = (
+            read_english_text(niche.resource_nouns)
+            or RESOURCE_KIND_NOUNS[niche.resource_kind]
+        )
+        if input_data.smoke_check is not None:
+            return AutotestScenarioPlanning(
+                scenarios=self._plan_smoke_check(
+                    input_data.smoke_check,
+                    version,
+                    applicable_kinds,
+                    resource_noun,
+                    party_size,
+                ),
+                is_full_coverage=False,
+            )
+
+        languages: list[LanguageTag] = select_languages(
+            version.languages,
+            input_data.languages,
         )
         kinds: list[AutotestScenarioKind] = select_kinds(
             applicable_kinds,
             input_data.kinds,
         )
-        profile: BusinessProfileDocument | None = (
-            self._business_profile_repo.get_by_business(business.id)
-        )
-        party_size: int = DEFAULT_PARTY_SIZE
-        if profile is not None and profile.booking_rules is not None:
-            party_size = min(
-                DEFAULT_PARTY_SIZE, int(profile.booking_rules.max_party_size)
-            )
-
         priced_items: list[KnowledgeItemDocument] = sorted(
             (
                 item
@@ -116,14 +129,49 @@ class PlanAutotestScenariosUseCase(
                 kinds=kinds,
                 priced_item_titles=[str(item.title) for item in priced_items],
                 price_question_limit=int(self._price_question_limit),
-                resource_noun=(
-                    read_english_text(niche.resource_nouns)
-                    or RESOURCE_KIND_NOUNS[niche.resource_kind]
-                ),
+                resource_noun=resource_noun,
                 party_size=party_size,
             ),
             is_full_coverage=(
                 set(languages) >= set(version.languages)
                 and set(kinds) >= set(applicable_kinds)
             ),
+        )
+
+    def _party_size(self, business: BusinessDocument) -> int:
+        """Two people, or fewer when the booking rules allow fewer."""
+
+        profile: BusinessProfileDocument | None = (
+            self._business_profile_repo.get_by_business(business.id)
+        )
+        if profile is None or profile.booking_rules is None:
+            return DEFAULT_PARTY_SIZE
+
+        return min(DEFAULT_PARTY_SIZE, int(profile.booking_rules.max_party_size))
+
+    def _plan_smoke_check(
+        self,
+        selection: SmokeCheckSelection,
+        version: AssistantVersionDocument,
+        applicable_kinds: list[AutotestScenarioKind],
+        resource_noun: str,
+        party_size: int,
+    ) -> list[AutotestScenario]:
+        """The quick check's scenarios in the version's own languages."""
+
+        languages: list[LanguageTag] = [
+            language
+            for language in version.languages
+            if language == selection.price_language
+            or any(pick.language == language for pick in selection.picks)
+        ]
+        return plan_smoke_scenarios(
+            selection,
+            build_autotest_languages(
+                languages,
+                collect_language_profiles(self._language_registry, languages),
+            ),
+            applicable_kinds,
+            resource_noun,
+            party_size,
         )

@@ -4,8 +4,10 @@ from collections.abc import Sequence
 
 from typed_time_provider import Microseconds
 
+from app.contracts.live_events import EventPublisherFacilitatorContract
 from app.contracts.repositories.setup_repositories import AssistantApplyRepoContract
 from app.schemas.constants.assistants import AssistantVersionStatus
+from app.schemas.constants.live_events import LiveEventKind
 from app.schemas.constants.setup import ApplyChangesStage
 from app.schemas.domain.assistants import AssistantVersionDocument
 from app.schemas.domain.setup import ApplyAttentionReason, AssistantApplyDocument
@@ -45,6 +47,7 @@ def is_apply_running(
 
 def move_apply(
     apply_repo: AssistantApplyRepoContract,
+    live_events: EventPublisherFacilitatorContract,
     business_id: BusinessId,
     version_id: AssistantVersionId | None,
     stage: ApplyChangesStage,
@@ -54,7 +57,8 @@ def move_apply(
     """
     Move the business's apply to `stage` (with its version and, for
     NEEDS_ATTENTION, the reasons), unless a newer apply of another version
-    replaced it meanwhile.
+    replaced it meanwhile, and tell the business's open cabinets
+    (`assistant.apply`), so the progress they show follows at once.
     """
 
     def move(stored: AssistantApplyDocument) -> AssistantApplyDocument | None:
@@ -74,4 +78,23 @@ def move_apply(
         stored.updated_at = now
         return stored
 
-    return apply_repo.modify(business_id, move)
+    moved: AssistantApplyDocument | None = apply_repo.modify(business_id, move)
+    if moved is not None:
+        announce_apply(live_events, moved)
+
+    return moved
+
+
+def announce_apply(
+    live_events: EventPublisherFacilitatorContract,
+    apply: AssistantApplyDocument,
+) -> None:
+    """The apply moved: its id, and its version's once it has one."""
+
+    live_events.publish(
+        apply.business_id,
+        LiveEventKind.ASSISTANT_APPLY,
+        (apply.id,)
+        if apply.assistant_version_id is None
+        else (apply.id, apply.assistant_version_id),
+    )

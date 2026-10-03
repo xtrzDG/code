@@ -227,7 +227,7 @@ web/
                                replies after "/", assign menu, notes and details in a panel or sheet)
         bookings/              server-paged bookings by day ("show more"), manual booking with free
                                slots (whole-day mode), details, edit, move, cancel
-        assistant/             layout.tsx: the Assistant frame (live version, "Apply changes", tabs);
+        assistant/             layout.tsx: the Assistant frame (live or not, "Apply changes", tabs);
                                page.tsx: the test chat ("Try it", `?version=…`)
           knowledge/           items (layout.tsx: pill tabs; server-paged, filtered by the API) + questions/
                                (unanswered, server-paged), import/ (menu photo, PDF or link; discard a
@@ -318,7 +318,13 @@ web/
                                StepScreen, SaveTracker, useAutosave, useTunnelPlace, QrImage), create/
                                (/create), flow/ (/b/{id}/setup: SetupTunnel, the step context, saving),
                                steps/ and fields/ (the first two screens), offer/, hours/, people/,
-                               channels/, try/, launch/, finale/
+                               channels/, try/, launch/ (useStagedApply: "Apply changes" as staged
+                               progress, shared with the cabinet), finale/
+      assistant/               "Apply changes" in the daily cabinet: ApplyChangesProvider (in
+                               BusinessShell, owners), PendingChangesBanner over every page ("2 changes
+                               are not with your customers yet · Review and apply"), ApplyChangesSheet
+                               (the changes in the owner's words, the launch's stages, why it stopped
+                               with the page that fixes it and the failed conversation), usePendingChanges
       theme/                   ThemeProvider (useTheme), ThemeSwitcher (dark / light / system),
                                useResolvedScheme (the scheme showing now, for the WebGL scene)
       business/                BusinessContext (useBusiness, useBusinessFormat, isSetUp), status badges,
@@ -429,13 +435,14 @@ section tabs, page titles and the e2e suite read it):
 | Inbox | The team's one list: views Needs a person, Requests, Mine, Unassigned and All with live counts; a search and the history filters (period, status, test conversations) look through All; who handles each conversation, its notes, what waits. See [Inbox](#inbox) |
 | Inbox → a conversation | Made for a phone: the transcript under a folded header (customer, channel, who handles it; the rest in Details), what waits above it (the handoff's reason and urgency, open requests with their status), a sticky reply box with Resolve, Call and Book and quick replies after "/"; the assign menu; notes and details in a side panel (a column of their own from 1536 px, a sheet below). Calls with their summary and recording (downloaded once and audited when "Play recording" is pressed), rating, linked bookings, staff reply (after the WhatsApp 24-hour window: in the owner's approved template, or a pointer to Channels), booking for the customer with the confirmation prefilled. Model, tokens, cost and tool calls stay behind "Technical details" (open by default for platform admins) |
 | Bookings | Server-paged day groups with place and order filters, manual booking with free slots (whole day), edit, confirm / complete / no-show / move / cancel and the customer text |
-| Assistant → Try it | Test chat with tool calls (`?version=…` talks to a chosen version); "Apply changes" builds a new version from the profile and knowledge |
+| Assistant → Try it | Test chat with tool calls (`?version=…` talks to a chosen version); "Apply changes" opens the sheet with what customers do not get yet |
+| Every page (owners) | The banner "N changes are not with your customers yet · Review and apply" while the profile, knowledge, hours, prices or booking rules differ from what customers get (`GET …/assistant/pending-changes`); its sheet lists them in the owner's words and applies them: the tunnel's three stages over `POST`/`GET …/assistant/apply` and the live event stream, a quick check of what changed, then the toast "Your assistant now knows: …"; a stop says why in plain words with the page that fixes it and the conversation that failed (`versions/{id}?checks=problems`) |
 | Assistant → Knowledge | Server-paged items and search, unanswered questions to FAQ, menu import with review and batch discard, import from the business's website (queued, live progress, same review; `?source=website`), resources and special days |
 | Assistant → Hours and rules | The six profile steps (niche and languages, contacts and hours, offer, booking rules, FAQ and handoff, channels), each saved on its own; the "what to add" summary opens the full list in a side panel |
 | Assistant → Channels | Connect messengers and see why one stopped, WhatsApp's template for staff replies after 24 hours (name and language), website chat snippet, colour and corner, call forwarding codes, Google Calendar state and last sync, staff Telegram link |
 | Assistant → Channels → Share | The hosted chat page's link (copy, open, a new address for owners: old addresses keep working) and a link per switched-on channel, tagged with where it goes (`?src=`); a QR code made in the browser (`uqr`) as PNG or SVG, and a printable A6 table card in a business language (an iframe preview printed as is) |
 | Hosted chat page (`/c/{address}`) | Public, for customers: the widget in page mode, full screen on phones, in the visitor's language (Accept-Language among the business's), the business's colour; older addresses and the business id move to the current one; `noindex`, a policy that allows only the API; texts in all widget languages (`lib/hostedChat/`); `/c/{address}/privacy` is the platform's default privacy notice (ka, ru, en) |
-| Assistant → Advanced | Versions, go-live checklist with fix links, autotests with live progress, publish and rollback with reasons |
+| Assistant → Advanced | Versions (and building one by hand), go-live checklist with fix links, autotests with live progress, publish and rollback with reasons; drafts a newer live version left behind are discarded |
 | Settings → Plan and billing | Trial (it starts by itself at the first go-live; the card says so until then, and the owner may start it earlier), subscribe with payment (after the trial, an overdue payment or a cancellation), plan change, usage meters, invoices, payment |
 | Settings → Quick replies | Owners: the replies the team sends often, each with a name, a shortcut typed after "/" and a text per language of the business; buttons insert the variables the API fills (`{name}`, `{booking_time}`, `{business_name}`) and a preview shows how a customer reads it; a shortcut already taken or too many replies are said in the form |
 | Settings → Notifications | For everyone: **On this device** (Web Push: the browser asks for permission, subscribes with the server's VAPID key and the subscription goes to the API; "Send a test" answers whether it arrived; "Turn off"; my other devices), **What reaches me** (events and quiet hours of my devices, in the business time zone). For the staff contacts: how notifications reach each one (channel without a provider on the server, the latest one delivered, waiting or failed with the reason), the linked Telegram chat's @username, and for owners "Send a test" (at most 5 per contact and hour) and each contact's events and quiet hours in its dialog |
@@ -737,6 +744,11 @@ const result = await setStatus.run(lead, "won"); // failures are shown as a loca
   `invalidate(queryKeys.leads.all(businessId))` reaches every leads list of
   the business. `invalidate(prefix)` (`src/api/queryCache.ts`) is public: the
   live event stream calls it when the server reports a change.
+- What the assistant knows changed? The changes not live yet
+  (`usePendingChanges`) read themselves again whenever a key of the
+  business, profile, knowledge, resources or billing sections is marked out
+  of date (`queryCache.onInvalidate`); a save that touches none of them
+  adds `invalidate: [queryKeys.assistant.pendingAll(businessId)]`.
 - Data counts as fresh for 30 s (`staleMs`); `staleMs: 0` reloads on every
   mount (free slots, go-live checks). Forms that save with the revision they
   start from use `requireFresh: true`: they never start from a cached copy.

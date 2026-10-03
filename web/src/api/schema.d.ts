@@ -399,6 +399,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/businesses/{business_id}/assistant/pending-changes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Pending Changes */
+        get: operations["get_pending_changes_v1_businesses__business_id__assistant_pending_changes_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/businesses/{business_id}/attention-counts": {
         parameters: {
             query?: never;
@@ -6415,6 +6432,86 @@ export interface components {
             text_back_status?: components["schemas"]["TextBackStatus"] | null;
         };
         /**
+         * PendingChange
+         * @description One change customers do not get yet, typed so the cabinet can say it in
+         *     the owner's language: the `area` and the `action`, and what it is about
+         *     (one of `field`, `weekday`, `link_kind`, `date` or the owner's own
+         *     words in `subject`, with the `item_kind` of an offer item or
+         *     question). A changed price of an offer item has `detail` PRICE with the
+         *     prices `before` and `after` as the assistant states them.
+         */
+        PendingChange: {
+            action: components["schemas"]["PendingChangeAction"];
+            /** After */
+            after?: string | null;
+            area: components["schemas"]["PendingChangeArea"];
+            /** Before */
+            before?: string | null;
+            /** Date */
+            date?: string | null;
+            detail?: components["schemas"]["PendingChangeDetail"] | null;
+            field?: components["schemas"]["PendingChangeField"] | null;
+            item_kind?: components["schemas"]["KnowledgeItemKind"] | null;
+            link_kind?: components["schemas"]["BusinessLinkKind"] | null;
+            /** Subject */
+            subject?: string | null;
+            weekday?: components["schemas"]["Weekday"] | null;
+        };
+        /**
+         * PendingChangeAction
+         * @description Whether something is new to the assistant, changed, or gone.
+         * @enum {string}
+         */
+        PendingChangeAction: "added" | "changed" | "removed";
+        /**
+         * PendingChangeArea
+         * @description The part of what the assistant knows that a change not live yet
+         *     touches: PROFILE (name, kind, city, country, address, map, public
+         *     phone, time zone), HOURS, SPECIAL_DAYS, ANSWERS (the niche questions),
+         *     OFFER (menu items, services, rooms, packages, vehicles, products),
+         *     QUESTIONS (frequent questions and policies), RESOURCES (what customers
+         *     book), BOOKING_RULES, LINKS, LANGUAGES, CALLS (the phone line comes
+         *     with the plan or goes) and CONVERSATION (tone, what never to say, when
+         *     to call a person).
+         * @enum {string}
+         */
+        PendingChangeArea: "profile" | "hours" | "special_days" | "answers" | "offer" | "questions" | "resources" | "booking_rules" | "links" | "languages" | "calls" | "conversation";
+        /**
+         * PendingChangeDetail
+         * @description What changed in a CHANGED offer item: its PRICE (the before and after
+         *     prices are given), or other DETAILS (description, duration, tags).
+         * @enum {string}
+         */
+        PendingChangeDetail: "price" | "details";
+        /**
+         * PendingChangeField
+         * @description The named fact a PROFILE, BOOKING_RULES or LANGUAGES change touches;
+         *     the values are the fact table's own keys.
+         * @enum {string}
+         */
+        PendingChangeField: "business_name" | "business_type" | "city" | "country" | "address" | "maps_link" | "public_phone" | "time_zone" | "booking_unit" | "booking_length" | "booking_max_party_size" | "booking_min_notice" | "booking_deposit" | "booking_cancellation" | "languages" | "default_language";
+        /**
+         * PendingChangesView
+         * @description The changes customers do not get yet. Before the first go-live there is
+         *     nothing to compare with: `is_live` is False and `changes` is empty,
+         *     while `has_unapplied_changes` says whether there is a profile to
+         *     launch.
+         */
+        PendingChangesView: {
+            /** Business Id */
+            business_id: string;
+            /** Changes */
+            changes?: components["schemas"]["PendingChange"][];
+            /** Count */
+            count: number;
+            /** Has Unapplied Changes */
+            has_unapplied_changes: boolean;
+            /** Is Live */
+            is_live: boolean;
+            /** Live Version Number */
+            live_version_number?: number | null;
+        };
+        /**
          * PhoneNumberDetails
          * @description A phone number of any country, validated against its numbering plan.
          */
@@ -10516,6 +10613,95 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ApplyChangesView"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    get_pending_changes_v1_businesses__business_id__assistant_pending_changes_get: {
+        parameters: {
+            query?: {
+                language?: string | null;
+            };
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PendingChangesView"];
                 };
             };
             /** @description Sign-in required: the bearer token is missing, invalid or expired. */

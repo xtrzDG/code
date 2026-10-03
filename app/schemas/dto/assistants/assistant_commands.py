@@ -7,6 +7,7 @@ from base_pydantic_schemas import ImmutableDTO
 from pydantic import Field
 
 from app.schemas.constants.assistants import AutotestScenarioKind
+from app.schemas.dto.assistants.smoke_checks import SmokeCheckSelection
 from app.schemas.typings.assistants.booleans import (
     AcceptsFailedAutotests,
     ShouldRunAutotests,
@@ -63,13 +64,17 @@ class RunAutotestsRequest(ImmutableDTO):
 
 
 class RunAutotestsCommand(ImmutableDTO):
-    """Owner runs the autotests of one version, optionally narrowed."""
+    """
+    Owner runs the autotests of one version, optionally narrowed; "Apply
+    changes" runs its quick `smoke_check` instead (never from HTTP).
+    """
 
     user_id: UserId
     business_id: BusinessId
     version_id: AssistantVersionId
     languages: list[LanguageTag] | None = None
     kinds: list[AutotestScenarioKind] | None = None
+    smoke_check: SmokeCheckSelection | None = None
 
 
 class PublishAssistantVersionRequest(ImmutableDTO):

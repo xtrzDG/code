@@ -4,7 +4,7 @@ import json
 
 import pytest
 
-from app.adapters.llm.offline_llm_adapter import OFFLINE_REPLY, OfflineLlmAdapter
+from app.adapters.llm.offline_llm_adapter import OfflineLlmAdapter
 from app.containers.app import AppContainer
 from app.schemas.constants.assistants import LlmEffort
 from app.schemas.constants.conversations import LlmStopReason
@@ -24,7 +24,14 @@ from app.schemas.typings.conversations.strings import (
 from app.utilities.config_helpers.app_settings.app_settings_assembler import (
     assemble_app_settings,
 )
+from app.utilities.llm_rehearsal.assistant_phrases import (
+    ASSISTANT_PHRASES,
+    RehearsalReply,
+)
 from tests.e2e.workshop_container import replace_provider
+
+# What the scripted model answers an English message it has no script for.
+OFFLINE_REPLY: str = ASSISTANT_PHRASES["en"][RehearsalReply.ANSWER]
 
 
 def build_request(model_id: str) -> LlmRequest:

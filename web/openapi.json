@@ -10145,6 +10145,233 @@
         "title": "PbxCallWebhookOutcome",
         "type": "object"
       },
+      "PendingChange": {
+        "additionalProperties": false,
+        "description": "One change customers do not get yet, typed so the cabinet can say it in\nthe owner's language: the `area` and the `action`, and what it is about\n(one of `field`, `weekday`, `link_kind`, `date` or the owner's own\nwords in `subject`, with the `item_kind` of an offer item or\nquestion). A changed price of an offer item has `detail` PRICE with the\nprices `before` and `after` as the assistant states them.",
+        "properties": {
+          "action": {
+            "$ref": "#/components/schemas/PendingChangeAction"
+          },
+          "after": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "After"
+          },
+          "area": {
+            "$ref": "#/components/schemas/PendingChangeArea"
+          },
+          "before": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Before"
+          },
+          "date": {
+            "anyOf": [
+              {
+                "maxLength": 10,
+                "minLength": 10,
+                "pattern": "^(19|20|21)[0-9]{2}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Date"
+          },
+          "detail": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PendingChangeDetail"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "field": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PendingChangeField"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "item_kind": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/KnowledgeItemKind"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "link_kind": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BusinessLinkKind"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "subject": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subject"
+          },
+          "weekday": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Weekday"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "area",
+          "action"
+        ],
+        "title": "PendingChange",
+        "type": "object"
+      },
+      "PendingChangeAction": {
+        "description": "Whether something is new to the assistant, changed, or gone.",
+        "enum": [
+          "added",
+          "changed",
+          "removed"
+        ],
+        "title": "PendingChangeAction",
+        "type": "string"
+      },
+      "PendingChangeArea": {
+        "description": "The part of what the assistant knows that a change not live yet\ntouches: PROFILE (name, kind, city, country, address, map, public\nphone, time zone), HOURS, SPECIAL_DAYS, ANSWERS (the niche questions),\nOFFER (menu items, services, rooms, packages, vehicles, products),\nQUESTIONS (frequent questions and policies), RESOURCES (what customers\nbook), BOOKING_RULES, LINKS, LANGUAGES, CALLS (the phone line comes\nwith the plan or goes) and CONVERSATION (tone, what never to say, when\nto call a person).",
+        "enum": [
+          "profile",
+          "hours",
+          "special_days",
+          "answers",
+          "offer",
+          "questions",
+          "resources",
+          "booking_rules",
+          "links",
+          "languages",
+          "calls",
+          "conversation"
+        ],
+        "title": "PendingChangeArea",
+        "type": "string"
+      },
+      "PendingChangeDetail": {
+        "description": "What changed in a CHANGED offer item: its PRICE (the before and after\nprices are given), or other DETAILS (description, duration, tags).",
+        "enum": [
+          "price",
+          "details"
+        ],
+        "title": "PendingChangeDetail",
+        "type": "string"
+      },
+      "PendingChangeField": {
+        "description": "The named fact a PROFILE, BOOKING_RULES or LANGUAGES change touches;\nthe values are the fact table's own keys.",
+        "enum": [
+          "business_name",
+          "business_type",
+          "city",
+          "country",
+          "address",
+          "maps_link",
+          "public_phone",
+          "time_zone",
+          "booking_unit",
+          "booking_length",
+          "booking_max_party_size",
+          "booking_min_notice",
+          "booking_deposit",
+          "booking_cancellation",
+          "languages",
+          "default_language"
+        ],
+        "title": "PendingChangeField",
+        "type": "string"
+      },
+      "PendingChangesView": {
+        "additionalProperties": false,
+        "description": "The changes customers do not get yet. Before the first go-live there is\nnothing to compare with: `is_live` is False and `changes` is empty,\nwhile `has_unapplied_changes` says whether there is a profile to\nlaunch.",
+        "properties": {
+          "business_id": {
+            "title": "Business Id",
+            "type": "string"
+          },
+          "changes": {
+            "items": {
+              "$ref": "#/components/schemas/PendingChange"
+            },
+            "title": "Changes",
+            "type": "array"
+          },
+          "count": {
+            "maximum": 100000.0,
+            "minimum": 0.0,
+            "title": "Count",
+            "type": "integer"
+          },
+          "has_unapplied_changes": {
+            "title": "Has Unapplied Changes",
+            "type": "boolean"
+          },
+          "is_live": {
+            "title": "Is Live",
+            "type": "boolean"
+          },
+          "live_version_number": {
+            "anyOf": [
+              {
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Live Version Number"
+          }
+        },
+        "required": [
+          "business_id",
+          "is_live",
+          "has_unapplied_changes",
+          "count"
+        ],
+        "title": "PendingChangesView",
+        "type": "object"
+      },
       "PhoneNumberDetails": {
         "additionalProperties": false,
         "description": "A phone number of any country, validated against its numbering plan.",
@@ -18483,6 +18710,140 @@
           }
         },
         "summary": "Apply Changes",
+        "tags": [
+          "assistant"
+        ]
+      }
+    },
+    "/v1/businesses/{business_id}/assistant/pending-changes": {
+      "get": {
+        "operationId": "get_pending_changes_v1_businesses__business_id__assistant_pending_changes_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "language",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Language"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PendingChangesView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Get Pending Changes",
         "tags": [
           "assistant"
         ]

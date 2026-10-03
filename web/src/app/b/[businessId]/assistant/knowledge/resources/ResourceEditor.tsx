@@ -3,6 +3,7 @@
 import { useId, useState, type FormEvent } from "react";
 
 import { api } from "@/api/client";
+import { queryKeys } from "@/api/queryKeys";
 import { useMutation } from "@/api/useMutation";
 import type { OpeningInterval, ResourceKind, Weekday } from "@/api/types";
 import { useBusiness, useBusinessFormat } from "@/components/business/BusinessContext";
@@ -76,14 +77,20 @@ export function ResourceEditor({
   const [hoursErrors, setHoursErrors] = useState<Partial<Record<Weekday, MessageKey>>>({});
   const [hoursMissing, setHoursMissing] = useState(false);
 
-  const create = useMutation((body: ResourceCreateBody) =>
-    api.POST("/v1/businesses/{business_id}/resources", { params: { path: { business_id: business.id } }, body }),
+  // What the assistant knows changed: the changes customers do not get yet are read again.
+  const settled = { invalidate: [queryKeys.assistant.pendingAll(business.id)] };
+  const create = useMutation(
+    (body: ResourceCreateBody) =>
+      api.POST("/v1/businesses/{business_id}/resources", { params: { path: { business_id: business.id } }, body }),
+    settled,
   );
-  const update = useMutation((resourceId: string, body: ResourcePatchBody) =>
-    api.PATCH("/v1/businesses/{business_id}/resources/{resource_id}", {
-      params: { path: { business_id: business.id, resource_id: resourceId } },
-      body,
-    }),
+  const update = useMutation(
+    (resourceId: string, body: ResourcePatchBody) =>
+      api.PATCH("/v1/businesses/{business_id}/resources/{resource_id}", {
+        params: { path: { business_id: business.id, resource_id: resourceId } },
+        body,
+      }),
+    settled,
   );
 
   const change = (patch: Partial<ResourceForm>) => {

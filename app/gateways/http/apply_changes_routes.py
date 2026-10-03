@@ -14,16 +14,24 @@ from app.schemas.dto.setup.apply_changes import (
     ApplyChangesQuery,
     ApplyChangesView,
 )
+from app.schemas.dto.setup.pending_changes import (
+    PendingChangesQuery,
+    PendingChangesView,
+)
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.users.prefixed_id import UserId
 
 APPLY_PATH: str = "/v1/businesses/{business_id}/assistant/apply"
+PENDING_CHANGES_PATH: str = "/v1/businesses/{business_id}/assistant/pending-changes"
 
 
 def build_apply_changes_router(
     current_user: CurrentUserDependency,
     apply_changes_operator: OperatorContract[ApplyChangesCommand, ApplyChangesView],
     get_apply_changes_operator: OperatorContract[ApplyChangesQuery, ApplyChangesView],
+    get_pending_changes_operator: OperatorContract[
+        PendingChangesQuery, PendingChangesView
+    ],
 ) -> APIRouter:
     """
     Routes (bearer token):
@@ -37,6 +45,13 @@ def build_apply_changes_router(
              live, needs_attention), checks done of total, plain-language
              reasons with where to fix each, and whether changes are not
              live yet
+        GET  /v1/businesses/{business_id}/assistant/pending-changes
+             owners and staff: what customers do not get yet, change by
+             change against the live version (profile, hours, special days,
+             niche answers, offer items with their old and new price,
+             questions, resources, booking rules, links, languages, calls,
+             conversation rules), typed for the cabinet's own words; niche
+             questions in ?language= (the owner's language by default)
 
     The first publish is the go-live: it starts the free trial when it is
     still due. Versions and autotests stay available under
@@ -66,6 +81,20 @@ def build_apply_changes_router(
     ) -> ApplyChangesView:
         return get_apply_changes_operator.operate(
             ApplyChangesQuery(
+                user_id=user_id,
+                business_id=parse_business_id(business_id),
+                language=parse_language_parameter(language),
+            )
+        )
+
+    @router.get(PENDING_CHANGES_PATH)
+    def get_pending_changes(
+        business_id: str,
+        user_id: Annotated[UserId, Depends(current_user)],
+        language: Annotated[str | None, Query()] = None,
+    ) -> PendingChangesView:
+        return get_pending_changes_operator.operate(
+            PendingChangesQuery(
                 user_id=user_id,
                 business_id=parse_business_id(business_id),
                 language=parse_language_parameter(language),

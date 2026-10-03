@@ -1,5 +1,6 @@
 from typed_time_provider import Microseconds, WallClock
 
+from app.contracts.live_events import EventPublisherFacilitatorContract
 from app.contracts.repositories.assistant_repositories import (
     AssistantVersionRepoContract,
 )
@@ -40,6 +41,7 @@ class CheckAppliedVersionUseCase(UseCaseContract[AppliedVersion, IsApplyInProgre
         check_go_live_readiness: UseCaseContract[
             GoLiveReadinessRequest, GoLiveReadiness
         ],
+        live_events: EventPublisherFacilitatorContract,
         wall_clock: WallClock[Microseconds],
     ) -> None:
         self._assistant_apply_repo: AssistantApplyRepoContract = assistant_apply_repo
@@ -50,6 +52,7 @@ class CheckAppliedVersionUseCase(UseCaseContract[AppliedVersion, IsApplyInProgre
         self._check_go_live_readiness: UseCaseContract[
             GoLiveReadinessRequest, GoLiveReadiness
         ] = check_go_live_readiness
+        self._live_events: EventPublisherFacilitatorContract = live_events
         self._wall_clock: WallClock[Microseconds] = wall_clock
 
     def run(self, input_data: AppliedVersion) -> IsApplyInProgress:
@@ -72,6 +75,7 @@ class CheckAppliedVersionUseCase(UseCaseContract[AppliedVersion, IsApplyInProgre
         )
         move_apply(
             self._assistant_apply_repo,
+            self._live_events,
             business.id,
             version.id,
             ApplyChangesStage.NEEDS_ATTENTION

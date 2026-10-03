@@ -16,7 +16,6 @@ import { businessPath } from "@/lib/navigation";
 
 import { useKnowledgeKinds } from "../_components/hooks";
 import { KnowledgeItemEditor } from "../_components/KnowledgeItemEditor";
-import { ReassemblyNotice } from "../_components/ReassemblyNotice";
 import { ImportReviewCard } from "./_components/ImportReviewCard";
 import { MenuSourceForm } from "./_components/MenuSourceForm";
 import { useImportReview } from "./_lib/useImportReview";
@@ -80,7 +79,6 @@ export function MenuImportScreen() {
             </div>
           }
         />
-        <ReassemblyNotice className="mt-2" />
       </Card>
     );
   }

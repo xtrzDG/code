@@ -200,6 +200,7 @@ class CreateBookingUseCase(UseCaseContract[CreateBookingCommand, BookingResult])
                     earliest_start=microseconds_to_seconds(int(now))
                     + min_notice_seconds(inputs.rules),
                     include_sandbox=input_data.is_sandbox,
+                    sandbox_conversation_id=input_data.conversation_id,
                 ),
             )
             booking = BookingDocument(

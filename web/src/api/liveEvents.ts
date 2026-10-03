@@ -23,6 +23,7 @@ export const LIVE_EVENT_NAMES = [
   "channel.changed",
   "autotest.progress",
   "knowledge_import.progress",
+  "assistant.apply",
 ] as const;
 
 export type LiveEventName = (typeof LIVE_EVENT_NAMES)[number];
@@ -140,7 +141,11 @@ export function invalidationsFor(event: LiveEvent, businessId: string): QueryKey
     case "channel.changed":
       return [counts, queryKeys.channels.all(businessId)];
     case "autotest.progress":
-      return [queryKeys.assistant.all(businessId)];
+      // The checks of a version, and of "Apply changes" while it checks.
+      return [queryKeys.assistant.all(businessId), queryKeys.setup.applyAll(businessId)];
+    case "assistant.apply":
+      // "Apply changes" moved on: its progress, the versions, the changes still pending.
+      return [queryKeys.setup.all(businessId), queryKeys.assistant.all(businessId), dashboard];
     case "knowledge_import.progress":
       // The import's progress, and its drafts among the knowledge items.
       return [queryKeys.knowledge.all(businessId)];

@@ -49,6 +49,7 @@ def free_time_slots(
         resource,
         request.include_sandbox,
         request.excluded_booking_id,
+        request.sandbox_conversation_id,
     )
     return [
         slot
@@ -119,6 +120,7 @@ def place_stay(
         resource,
         request.include_sandbox,
         request.excluded_booking_id,
+        request.sandbox_conversation_id,
     )
     if not has_free_unit(
         busy, bounds.starts_at, bounds.ends_at, int(resource.unit_count)
@@ -156,6 +158,7 @@ def place_time_slot(
         resource,
         request.include_sandbox,
         request.excluded_booking_id,
+        request.sandbox_conversation_id,
     )
     if not has_free_unit(busy, slot.starts_at, slot.ends_at, int(resource.unit_count)):
         return FAILURE_TAKEN

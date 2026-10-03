@@ -55,7 +55,11 @@ class EnqueueAutotestRunUseCase(UseCaseContract[AutotestRunPlan, AutotestRunView
         # cannot take every autotest slot of the worker.
         self._job_queue.enqueue(
             RUN_AUTOTESTS_JOB,
-            JobPayloadJson(AutotestJobPayload(run_id=run.id).model_dump_json()),
+            JobPayloadJson(
+                AutotestJobPayload(
+                    run_id=run.id, smoke_check=input_data.smoke_check
+                ).model_dump_json()
+            ),
             input_data.business.id,
             lane=JobLane.AUTOTESTS,
             serial_key=JobSerialKey(

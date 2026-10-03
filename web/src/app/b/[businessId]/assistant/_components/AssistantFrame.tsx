@@ -4,6 +4,7 @@ import { useMemo, useState, type ReactNode } from "react";
 
 import { sectionQueries } from "@/api/sectionQueries";
 import { useQuery } from "@/api/useQuery";
+import { useApplyChanges } from "@/components/assistant/ApplyChangesContext";
 import { useBusiness, useBusinessFormat } from "@/components/business/BusinessContext";
 import { IconSparkles } from "@/components/icons";
 import { SectionFrame } from "@/components/shell/SectionFrame";
@@ -16,14 +17,16 @@ import { BuildVersionDialog } from "./BuildVersionDialog";
 
 /**
  * The Assistant section: try it, what it knows, hours and rules, where it
- * answers and (under Advanced) versions and autotests. Above the tabs the
- * version customers talk to now, and for owners "Apply changes": a new
- * version built from the profile and knowledge.
+ * answers and (under Advanced) versions and checks. Above the tabs whether
+ * customers get answers, and for owners "Apply changes": the sheet with
+ * the changes customers do not get yet (components/assistant). Building a
+ * version by hand stays under Advanced (the versions page).
  */
 export function AssistantFrame({ children }: { children: ReactNode }) {
   const { t } = useI18n();
   const { business, isOwner } = useBusiness();
   const format = useBusinessFormat();
+  const applyChanges = useApplyChanges();
   const [isBuilding, setBuilding] = useState(false);
 
   const versionsQuery = sectionQueries.assistantVersions(business.id);
@@ -40,10 +43,11 @@ export function AssistantFrame({ children }: { children: ReactNode }) {
           isOwner ? (
             <Button
               leadingIcon={<IconSparkles className="size-4" aria-hidden />}
-              onClick={() => setBuilding(true)}
-              title={t("navigation.applyChangesHint")}
+              onClick={applyChanges.open}
+              title={t("applyChanges.hint")}
+              aria-haspopup="dialog"
             >
-              {t("navigation.applyChanges")}
+              {t("applyChanges.sheet.apply")}
             </Button>
           ) : undefined
         }
@@ -57,9 +61,9 @@ export function AssistantFrame({ children }: { children: ReactNode }) {
               <span>
                 {live
                   ? live.published_at
-                    ? t("assistant.liveSince", { number: live.version_number, date: format.dateTime(live.published_at) })
-                    : t("assistant.live", { number: live.version_number })
-                  : t("assistant.notLive")}
+                    ? t("applyChanges.status.liveSince", { date: format.dateTime(live.published_at) })
+                    : t("applyChanges.status.live")
+                  : t("applyChanges.status.notLive")}
               </span>
             </p>
           ) : null

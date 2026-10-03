@@ -4,7 +4,8 @@
  * The launch under way: a glowing bar that fills as the assistant is
  * built, tried on test conversations and switched on, and the three stages
  * with their state (the checks counted as they run). Reduced motion keeps
- * the same states without the glide (the fill's transition is CSS).
+ * the same states without the glide (the fill's transition is CSS). The
+ * cabinet's "Apply changes" shows the same stages in its own words.
  */
 
 import type { Schema } from "@/api/types";
@@ -16,6 +17,7 @@ import {
   LAUNCH_STAGES,
   launchProgress,
   stageStates,
+  type LaunchStage,
   type StageState,
 } from "@/lib/tunnel/launch";
 
@@ -49,7 +51,17 @@ function StageMark({ state }: { state: StageState }) {
   );
 }
 
-export function LaunchProgress({ view }: { view: Schema<"ApplyChangesView"> }) {
+export function LaunchProgress({
+  view,
+  label,
+  stageLabel,
+}: {
+  view: Schema<"ApplyChangesView">;
+  /** The progress bar's name (the tunnel's by default). */
+  label?: string;
+  /** The name of each stage (the tunnel's by default). */
+  stageLabel?: (stage: LaunchStage) => string;
+}) {
   const { t } = useI18n();
   const states = stageStates(view);
   const progress = launchProgress(view);
@@ -60,7 +72,7 @@ export function LaunchProgress({ view }: { view: Schema<"ApplyChangesView"> }) {
       {view.stage === "needs_attention" ? null : (
         <div
           role="progressbar"
-          aria-label={t("tunnelLaunch.launch.stagesLabel")}
+          aria-label={label ?? t("tunnelLaunch.launch.stagesLabel")}
           aria-valuemin={0}
           aria-valuemax={100}
           aria-valuenow={Math.round(progress * 100)}
@@ -95,7 +107,7 @@ export function LaunchProgress({ view }: { view: Schema<"ApplyChangesView"> }) {
                   state === "todo" ? "text-ink-muted" : "font-medium text-ink",
                 )}
               >
-                {t(`tunnelLaunch.launch.stages.${stage}`)}
+                {stageLabel ? stageLabel(stage) : t(`tunnelLaunch.launch.stages.${stage}`)}
               </span>
               {stage === "checking" && isChecking ? (
                 <span className="text-sm text-ink-muted tabular-nums">

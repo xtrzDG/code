@@ -22,7 +22,6 @@ import {
 } from "@/lib/resources";
 
 import { useNicheDetails } from "../_components/hooks";
-import { ReassemblyNotice } from "../_components/ReassemblyNotice";
 import { ExceptionsCard } from "./_components/ExceptionsCard";
 import { ResourceRow } from "./_components/ResourceRow";
 import { ExceptionEditor } from "./ExceptionEditor";
@@ -51,7 +50,6 @@ export function ResourcesScreen() {
   const [resourceEditor, setResourceEditor] = useState<{ key: number; resource: ResourceView | null } | null>(null);
   const [exceptionEditor, setExceptionEditor] = useState<number | null>(null);
   const [deleting, setDeleting] = useState<ScheduleExceptionView | null>(null);
-  const [hasChanges, setHasChanges] = useState(false);
 
   // The switch moves at once and goes back if the API refuses.
   const toggle = useMutation(
@@ -66,12 +64,15 @@ export function ResourcesScreen() {
           items: (data.items ?? []).map((item) => (item.id === resource.id ? { ...item, is_active: isActive } : item)),
         })),
       stale: [queryKeys.bookings.all(business.id), queryKeys.assistant.all(business.id)],
+      invalidate: [queryKeys.assistant.pendingAll(business.id)],
     },
   );
-  const removeException = useMutation((exceptionId: string) =>
-    api.DELETE("/v1/businesses/{business_id}/schedule-exceptions/{exception_id}", {
-      params: { path: { business_id: business.id, exception_id: exceptionId } },
-    }),
+  const removeException = useMutation(
+    (exceptionId: string) =>
+      api.DELETE("/v1/businesses/{business_id}/schedule-exceptions/{exception_id}", {
+        params: { path: { business_id: business.id, exception_id: exceptionId } },
+      }),
+    { invalidate: [queryKeys.assistant.pendingAll(business.id)] },
   );
 
   const resourceList = sortResources(resources.data?.items ?? [], locale);
@@ -92,7 +93,6 @@ export function ResourcesScreen() {
     const result = await toggle.run(resource, isActive);
     if (result.ok) {
       replaceResource(result.data);
-      setHasChanges(true);
       toast.success(
         isActive
           ? t("knowledge.resources.switchedOn", { name: resource.name })
@@ -110,14 +110,12 @@ export function ResourcesScreen() {
       const deletedId = deleting.id;
       exceptions.setData((current) => ({ items: (current?.items ?? []).filter((item) => item.id !== deletedId) }));
       toast.success(t("knowledge.exceptions.deleted", { date: formatLocalDate(deleting.date, locale) }));
-      setHasChanges(true);
       setDeleting(null);
     }
   };
 
   return (
     <div className="space-y-6">
-      {hasChanges ? <ReassemblyNotice /> : null}
 
       <Card
         padded={false}
@@ -186,8 +184,7 @@ export function ResourcesScreen() {
           onClose={() => setResourceEditor(null)}
           onSaved={(saved) => {
             replaceResource(saved);
-            setHasChanges(true);
-            setResourceEditor(null);
+                  setResourceEditor(null);
           }}
         />
       ) : null}
@@ -200,8 +197,7 @@ export function ResourcesScreen() {
           onClose={() => setExceptionEditor(null)}
           onSaved={(saved) => {
             exceptions.setData((current) => ({ items: [...(current?.items ?? []), saved] }));
-            setHasChanges(true);
-            setExceptionEditor(null);
+                  setExceptionEditor(null);
           }}
         />
       ) : null}

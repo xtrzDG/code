@@ -35,7 +35,7 @@ export const assistantChecksEn = {
     allErroredDescription: "The language model did not answer. Try again later; if it keeps happening, contact support.",
     erroredTitle: "The checks stopped before they finished",
     erroredDescription: "Not every test conversation could be held. Run the checks again; if it keeps happening, contact support.",
-    partialRun: "Partial run: only the languages and scenarios you chose were checked.",
+    partialRun: "Partial run: only some languages and scenarios were checked (a quick check after your changes, or the ones you chose).",
     filterLabel: "Show scenarios",
     filterAll: "All ({count})",
     filterProblems: "Problems ({count})",

@@ -6,11 +6,6 @@ from app.contracts.repositories.assistant_repositories import (
 from app.contracts.repositories.business_repositories import (
     BusinessProfileRepoContract,
 )
-from app.contracts.repositories.knowledge_repositories import (
-    KnowledgeItemRepoContract,
-    ResourceRepoContract,
-    ScheduleExceptionRepoContract,
-)
 from app.contracts.repositories.setup_repositories import AssistantApplyRepoContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.assistants import AssistantVersionStatus
@@ -28,12 +23,12 @@ from app.schemas.dto.setup.apply_changes import (
     ApplyChangesView,
     SetupActionView,
 )
+from app.schemas.dto.setup.pending_changes import PendingChange, PendingChangesRequest
 from app.schemas.typings.assistants.constrained_integers import AutotestScenarioCount
 from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.schemas.typings.setup.strings import ApplyAttentionMessage, SetupActionLabel
 from app.utilities.assembly.autotest_evaluation import count_run_scenarios
 from app.utilities.setup.apply_attention import ATTENTION_TARGETS, ATTENTION_TEXTS
-from app.utilities.setup.pending_changes import has_unapplied_changes
 from app.utilities.setup.setup_texts import ACTION_LABELS
 
 RUNNING_STAGES: frozenset[ApplyChangesStage] = frozenset(
@@ -51,8 +46,9 @@ class DescribeApplyChangesUseCase(
     """
     Where "Apply changes" of a business stands, in the owner's words:
     the stage, how many automatic checks have run, why it needs attention
-    (each reason with where to fix it), and whether the profile or
-    knowledge changed since the live version was built. A version whose
+    (each reason with where to fix it), and whether anything the
+    assistant is built from changed since the live version (the same
+    changes GET /assistant/pending-changes lists). A version whose
     checks finished while the worker has not published it yet shows as
     PUBLISHING.
     """
@@ -63,9 +59,9 @@ class DescribeApplyChangesUseCase(
         assistant_version_repo: AssistantVersionRepoContract,
         autotest_run_repo: AutotestRunRepoContract,
         business_profile_repo: BusinessProfileRepoContract,
-        knowledge_item_repo: KnowledgeItemRepoContract,
-        resource_repo: ResourceRepoContract,
-        schedule_exception_repo: ScheduleExceptionRepoContract,
+        collect_pending_changes: UseCaseContract[
+            PendingChangesRequest, list[PendingChange]
+        ],
         localized_text_resolver: LocalizedTextResolverContract,
     ) -> None:
         self._assistant_apply_repo: AssistantApplyRepoContract = assistant_apply_repo
@@ -74,11 +70,9 @@ class DescribeApplyChangesUseCase(
         )
         self._autotest_run_repo: AutotestRunRepoContract = autotest_run_repo
         self._business_profile_repo: BusinessProfileRepoContract = business_profile_repo
-        self._knowledge_item_repo: KnowledgeItemRepoContract = knowledge_item_repo
-        self._resource_repo: ResourceRepoContract = resource_repo
-        self._schedule_exception_repo: ScheduleExceptionRepoContract = (
-            schedule_exception_repo
-        )
+        self._collect_pending_changes: UseCaseContract[
+            PendingChangesRequest, list[PendingChange]
+        ] = collect_pending_changes
         self._resolver: LocalizedTextResolverContract = localized_text_resolver
 
     def run(self, input_data: ApplyChangesSource) -> ApplyChangesView:
@@ -159,13 +153,18 @@ class DescribeApplyChangesUseCase(
                 business.id, business.published_assistant_version_id
             )
         )
-        return has_unapplied_changes(
-            business,
-            live,
-            self._business_profile_repo.get_by_business(business.id),
-            self._knowledge_item_repo.list_by_business(business.id),
-            self._resource_repo.list_by_business(business.id),
-            self._schedule_exception_repo.list_by_business(business.id),
+        if live is None:
+            # Nothing is live yet: a profile is something to launch.
+            return self._business_profile_repo.get_by_business(business.id) is not None
+
+        return bool(
+            self._collect_pending_changes.run(
+                PendingChangesRequest(
+                    business=business,
+                    version=live,
+                    language=business.owner_language,
+                )
+            )
         )
 
 

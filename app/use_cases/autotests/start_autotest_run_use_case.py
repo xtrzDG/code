@@ -40,7 +40,9 @@ class StartAutotestRunUseCase(UseCaseContract[RunAutotestsCommand, AutotestRunPl
     stored as RUNNING and the version moves to TESTING and points to it, so
     the cabinet can follow the run while it is played. Live and archived
     versions are not re-tested, because that would change their status, and
-    a version already under test is not tested twice at once. The AI
+    a version already under test is not tested twice at once. The quick
+    check of "Apply changes" (`smoke_check`) records the languages and
+    kinds it plays. The AI
     customer gets a valid example mobile number of the business country, so
     bookings work for any country.
     """
@@ -110,6 +112,7 @@ class StartAutotestRunUseCase(UseCaseContract[RunAutotestsCommand, AutotestRunPl
                 version=version,
                 languages=input_data.languages,
                 kinds=input_data.kinds,
+                smoke_check=input_data.smoke_check,
             )
         )
         if not planning.scenarios:
@@ -122,8 +125,16 @@ class StartAutotestRunUseCase(UseCaseContract[RunAutotestsCommand, AutotestRunPl
             business_id=business.id,
             assistant_version_id=version.id,
             status=AutotestRunStatus.RUNNING,
-            languages=input_data.languages,
-            kinds=input_data.kinds,
+            languages=(
+                input_data.languages
+                if input_data.smoke_check is None
+                else list(dict.fromkeys(item.language for item in planning.scenarios))
+            ),
+            kinds=(
+                input_data.kinds
+                if input_data.smoke_check is None
+                else list(dict.fromkeys(item.kind for item in planning.scenarios))
+            ),
             is_full_coverage=planning.is_full_coverage,
             planned_scenario_count=AutotestScenarioCount(len(planning.scenarios)),
             previous_version_status=previous_status,
@@ -146,6 +157,7 @@ class StartAutotestRunUseCase(UseCaseContract[RunAutotestsCommand, AutotestRunPl
             version=version,
             scenarios=planning.scenarios,
             is_full_coverage=planning.is_full_coverage,
+            smoke_check=input_data.smoke_check,
             previous_version_status=previous_status,
             customer_phone_number=find_example_mobile_number(business.country_code),
             started_at=now,

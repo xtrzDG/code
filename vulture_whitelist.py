@@ -82,6 +82,13 @@ _.SETTINGS  # app/schemas/constants/client_health.py
 _.TEST  # app/schemas/constants/environment.py
 _.UNSUPPORTED  # app/schemas/constants/localization.py
 _.US  # app/schemas/constants/localization.py
+# The booking rule rows a pending change names, found by their fact key.
+_.BOOKING_UNIT  # app/schemas/constants/setup.py
+_.BOOKING_LENGTH  # app/schemas/constants/setup.py
+_.BOOKING_MAX_PARTY_SIZE  # app/schemas/constants/setup.py
+_.BOOKING_MIN_NOTICE  # app/schemas/constants/setup.py
+_.BOOKING_DEPOSIT  # app/schemas/constants/setup.py
+_.BOOKING_CANCELLATION  # app/schemas/constants/setup.py
 # What the website widget's error beacon sends (widget.js, errors.js).
 _.SCRIPT_ERROR  # app/schemas/constants/observability.py
 _.CONFIG_FAILED  # app/schemas/constants/observability.py
@@ -124,6 +131,8 @@ _.opened_at  # app/schemas/dto/admin.py
 _.payments  # app/schemas/dto/admin.py
 _.subscription_status  # app/schemas/dto/admin.py
 _.version_status  # app/schemas/dto/assistants/assistant_views.py
+_.item_kind  # app/schemas/dto/setup/pending_changes.py
+_.live_version_number  # app/schemas/dto/setup/pending_changes.py
 _.dialog_usage_percent  # app/schemas/dto/billing_cabinet.py
 _.issued_at  # app/schemas/dto/billing_cabinet.py
 _.overage_cost  # app/schemas/dto/billing_cabinet.py

@@ -10,6 +10,7 @@ class LiveEventKind(StrEnum):
     only, never customer text.
     """
 
+    ASSISTANT_APPLY = "assistant.apply"
     AUTOTEST_PROGRESS = "autotest.progress"
     BOOKING_CHANGED = "booking.changed"
     BOOKING_CREATED = "booking.created"

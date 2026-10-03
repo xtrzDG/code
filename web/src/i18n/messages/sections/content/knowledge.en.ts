@@ -21,12 +21,6 @@ export const knowledgeEn = {
     faq: "Questions and answers",
     policy: "Rules",
   },
-  reassembly: {
-    title: "Customers will see the changes after the next update",
-    owner: "The assistant answers from its live update. When you finish editing, prepare an update and publish it.",
-    staff: "The assistant answers from its live update. Ask the owner to prepare and publish a new one.",
-    action: "Prepare an update",
-  },
   paging: {
     more: "Show more",
     failed: "More items could not be loaded.",
@@ -121,7 +115,7 @@ export const knowledgeEn = {
     faqTitleHint: "You can rephrase the customer's wording.",
     saveAnswer: "Save the answer",
     saved: "Answer saved",
-    savedHint: "Prepare an assistant update so customers get it.",
+    savedHint: "Apply your changes so customers get the answer.",
   },
   import: {
     title: "Import a menu or price list",

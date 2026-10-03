@@ -43,11 +43,13 @@ from app.utilities.assembly.go_live_refusals import (
     find_blocking_failures,
     is_voice_configured,
 )
+from app.utilities.assembly.version_retirement import retire_other_versions
 from app.utilities.assembly.voice_agents import find_existing_voice_agent_id
 from app.utilities.businesses.business_revisions import build_stale_revision_error
 from app.utilities.channels.voice_service import find_transfer_phone_number
 
 LOGGER: logging.Logger = logging.getLogger(__name__)
+
 # Whether an untested version may go live is decided by publishing (a
 # platform admin may force it); rollback restores a version that was live.
 CHECKS_DECIDED_BY_CALLER: frozenset[GoLiveCheckCode] = frozenset(
@@ -77,7 +79,8 @@ class ActivateAssistantVersionUseCase(
     ExternalServiceError is raised and nothing is published. Then the
     business goes live with this version (see `_store_business`: a save
     made meanwhile is never overwritten), the previously published version
-    is archived and this one is published. Activating a version without voice
+    is archived, older versions that never went live are discarded, and
+    this one is published. Activating a version without voice
     removes the agent of earlier versions. In development and test, a voice
     version goes live without an agent while ElevenLabs is not configured
     (a warning is logged). The first go-live starts the free trial when it
@@ -170,14 +173,8 @@ class ActivateAssistantVersionUseCase(
         # The business first: when that write is refused, the versions stay
         # as they were and the business keeps pointing at its live one.
         self._store_business(input_data, trial, now)
-        for other_version in versions:
-            if (
-                other_version.id != version.id
-                and other_version.status is AssistantVersionStatus.PUBLISHED
-            ):
-                other_version.status = AssistantVersionStatus.ARCHIVED
-                other_version.updated_at = now
-                self._assistant_version_repo.save(other_version)
+        for other_version in retire_other_versions(versions, version, now):
+            self._assistant_version_repo.save(other_version)
 
         version.status = AssistantVersionStatus.PUBLISHED
         version.published_at = now

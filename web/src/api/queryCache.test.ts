@@ -145,6 +145,15 @@ describe("QueryCache", () => {
       expect(cache.get(["handoffs", "b1"]).isInvalidated).toBe(true);
       unsubscribe();
     });
+
+    it("tells its watchers every prefix marked, loaded or not, until they stop", () => {
+      const seen: unknown[] = [];
+      const stop = cache.onInvalidate((prefix) => seen.push(prefix));
+      cache.invalidate(["knowledge", "b1"], { refetchActive: false });
+      stop();
+      cache.invalidate(["leads", "b1"]);
+      expect(seen).toEqual([["knowledge", "b1"]]);
+    });
   });
 
   describe("optimistic update and rollback", () => {

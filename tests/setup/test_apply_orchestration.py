@@ -90,10 +90,9 @@ def start_use_case(
         apply_repo or testbed.apply_repo,
         testbed.version_repo,
         testbed.profile_repo,
-        testbed.knowledge_repo,
-        testbed.resource_repo,
-        testbed.exception_repo,
+        testbed.collect_pending_changes_use_case,
         testbed.audit_repo,
+        testbed.apply_events,
         testbed.wall_clock,
     )
 
@@ -116,13 +115,15 @@ def orchestrator(
             testbed.version_repo,
             testbed.business_repo,
             testbed.check_readiness_use_case,
+            testbed.apply_events,
             testbed.wall_clock,
         ),
+        select_smoke_checks=testbed.select_smoke_checks_use_case,
         start_autotest_run=start_autotest_run or testbed.start_autotest_run_use_case,
         enqueue_autotest_run=testbed.enqueue_autotest_run_use_case,
         publish_applied_version=testbed.publish_applied_use_case,
         fail_apply_changes=FailApplyChangesUseCase(
-            testbed.apply_repo, testbed.wall_clock
+            testbed.apply_repo, testbed.apply_events, testbed.wall_clock
         ),
         get_apply_changes=testbed.get_apply_use_case,
     )

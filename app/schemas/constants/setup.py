@@ -125,3 +125,71 @@ class ApplyAttentionCode(StrEnum):
     CHECKS_STOPPED = "checks_stopped"
     VOICE_NOT_READY = "voice_not_ready"
     PUBLISH_FAILED = "publish_failed"
+
+
+class PendingChangeArea(StrEnum):
+    """
+    The part of what the assistant knows that a change not live yet
+    touches: PROFILE (name, kind, city, country, address, map, public
+    phone, time zone), HOURS, SPECIAL_DAYS, ANSWERS (the niche questions),
+    OFFER (menu items, services, rooms, packages, vehicles, products),
+    QUESTIONS (frequent questions and policies), RESOURCES (what customers
+    book), BOOKING_RULES, LINKS, LANGUAGES, CALLS (the phone line comes
+    with the plan or goes) and CONVERSATION (tone, what never to say, when
+    to call a person).
+    """
+
+    PROFILE = "profile"
+    HOURS = "hours"
+    SPECIAL_DAYS = "special_days"
+    ANSWERS = "answers"
+    OFFER = "offer"
+    QUESTIONS = "questions"
+    RESOURCES = "resources"
+    BOOKING_RULES = "booking_rules"
+    LINKS = "links"
+    LANGUAGES = "languages"
+    CALLS = "calls"
+    CONVERSATION = "conversation"
+
+
+class PendingChangeAction(StrEnum):
+    """Whether something is new to the assistant, changed, or gone."""
+
+    ADDED = "added"
+    CHANGED = "changed"
+    REMOVED = "removed"
+
+
+class PendingChangeDetail(StrEnum):
+    """
+    What changed in a CHANGED offer item: its PRICE (the before and after
+    prices are given), or other DETAILS (description, duration, tags).
+    """
+
+    PRICE = "price"
+    DETAILS = "details"
+
+
+class PendingChangeField(StrEnum):
+    """
+    The named fact a PROFILE, BOOKING_RULES or LANGUAGES change touches;
+    the values are the fact table's own keys.
+    """
+
+    BUSINESS_NAME = "business_name"
+    BUSINESS_TYPE = "business_type"
+    CITY = "city"
+    COUNTRY = "country"
+    ADDRESS = "address"
+    MAPS_LINK = "maps_link"
+    PUBLIC_PHONE = "public_phone"
+    TIME_ZONE = "time_zone"
+    BOOKING_UNIT = "booking_unit"
+    BOOKING_LENGTH = "booking_length"
+    BOOKING_MAX_PARTY_SIZE = "booking_max_party_size"
+    BOOKING_MIN_NOTICE = "booking_min_notice"
+    BOOKING_DEPOSIT = "booking_deposit"
+    BOOKING_CANCELLATION = "booking_cancellation"
+    LANGUAGES = "languages"
+    DEFAULT_LANGUAGE = "default_language"

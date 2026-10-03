@@ -48,6 +48,9 @@ class AvailabilityQuery(ImmutableDTO):
     use `nights`. Times are in the business time zone, with schedule
     exceptions (holidays) applied.
 
+    A sandbox query from a test conversation (`conversation_id`) sees that
+    conversation's own test bookings, not those of other tests.
+
     `full_day` is the staff view: every free slot of the date for every
     matching resource (no nearest-time or count limit), by the cabinet's
     rules (no minimum notice, no online party-size limit).
@@ -62,6 +65,7 @@ class AvailabilityQuery(ImmutableDTO):
     duration_minutes: BookingDurationMinutes | None = None
     nights: NightCount | None = None
     is_sandbox: IsSandboxConversation = False
+    conversation_id: ConversationId | None = None
     full_day: IsFullDayAvailability = False
 
 
