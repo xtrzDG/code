@@ -93,12 +93,12 @@ export function ShareAddress({ view, isWebChatOn, canManage }: { view: ShareLink
         <Alert tone="info">{t("share.notConfigured")}</Alert>
       ) : (
         <div className="flex flex-wrap items-center gap-2">
-          {/* A middle ellipsis: the host gives way first, the page's own name stays readable. */}
+          {/* A row of its own on a phone, and a middle ellipsis: the host gives way first, the page's own name stays readable. */}
           <code
             dir="ltr"
             data-testid="share-chat-page-url"
             title={displayUrl(url)}
-            className="flex min-w-0 flex-[1_1_12rem] rounded-lg border border-line bg-surface-muted px-3 py-2 font-mono text-sm text-ink"
+            className="flex min-w-0 basis-full rounded-lg border border-line bg-surface-muted px-3 py-2 font-mono text-sm text-ink sm:flex-[1_1_12rem]"
           >
             <span className="min-w-[4ch] shrink-[1000] truncate">{splitForMiddleEllipsis(displayUrl(url)).head}</span>
             <span className="min-w-0 truncate" data-share-slug="">

@@ -135,7 +135,8 @@ test.describe("the rail and the offer step", () => {
 
     const before = (await rail.boundingBox())!;
     await priceOf(page, 1).fill("35");
-    await priceOf(page, 1).press("Tab");
+    // Leaving the line saves it.
+    await page.getByRole("heading", { level: 1, name: en.tunnelOffer.offer.title }).click();
     await expect(page.locator("[data-save-slot]").getByText(en.tunnel.saved, { exact: true })).toBeVisible();
     const after = (await rail.boundingBox())!;
     expect([after.x, after.width]).toEqual([before.x, before.width]);
