@@ -20,9 +20,8 @@ from app.contracts.repositories.knowledge_repositories import (
     ScheduleExceptionRepoContract,
 )
 from app.contracts.use_case_contract import UseCaseContract
-from app.schemas.constants.assistants import AssistantToolName
-from app.schemas.constants.businesses import BusinessStatus, ServiceMode
-from app.schemas.constants.channels import ChannelKind, MessageDirection
+from app.schemas.constants.businesses import BusinessStatus
+from app.schemas.constants.channels import MessageDirection
 from app.schemas.constants.conversation_engine import TurnGate
 from app.schemas.constants.conversations import MessageAuthor
 from app.schemas.constants.live_events import LiveEventKind
@@ -30,8 +29,8 @@ from app.schemas.domain.assistants import AssistantVersionDocument
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.contacts import ContactDocument
 from app.schemas.domain.conversations import ConversationDocument, MessageDocument
+from app.schemas.domain.message_media import MessageAttachment
 from app.schemas.domain.profiles import BusinessProfileDocument
-from app.schemas.dto.assistant_tools import AssistantToolContext
 from app.schemas.dto.conversation_engine import PreparedTurn
 from app.schemas.dto.conversations import InboundMessage
 from app.schemas.exceptions.application_errors import ConflictError, NotFoundError
@@ -49,6 +48,11 @@ from app.use_cases.conversations.turns.inbound_message_rules import (
     is_sandbox_message,
     remove_nul_characters,
 )
+from app.use_cases.conversations.turns.prepared_turn_parts import (
+    build_tool_context,
+    build_turn_context_line,
+    touch_conversation,
+)
 from app.use_cases.conversations.turns.turn_gate import choose_turn_gate
 from app.use_cases.shared.conversation_resolution import (
     resolve_conversation,
@@ -56,7 +60,11 @@ from app.use_cases.shared.conversation_resolution import (
 from app.use_cases.shared.turn_time import to_local_datetime
 from app.utilities.conversations.opening_hours import is_open_at
 from app.utilities.conversations.tool_selection import select_available_tools
-from app.utilities.conversations.turn_context import TurnContext, build_context_line
+from app.utilities.media.attachment_texts import (
+    describe_message_for_model,
+    has_readable_content,
+    readable_message_text,
+)
 
 # Longer messages are cut: no customer needs more, and tokens cost money.
 MAX_CUSTOMER_TEXT_LENGTH: int = 4000
@@ -85,7 +93,10 @@ class PrepareConversationTurnUseCase(UseCaseContract[InboundMessage, PreparedTur
     5. The language among the version's languages (fallback: the
        conversation's, then the version default), the after-hours flag from
        the profile hours in the business time zone, the inbound message and
-       the context line for the model.
+       the context line for the model. A message with nothing the assistant
+       can read (a sticker, a file, a voice note without words) is answered
+       with the platform's request to write (ATTACHMENT_NOTICE); voice-note
+       transcripts and places count as what the customer said.
     """
 
     def __init__(
@@ -160,7 +171,14 @@ class PrepareConversationTurnUseCase(UseCaseContract[InboundMessage, PreparedTur
             conversation,
             now,
         )
-        customer_text = MessageText(str(input_data.text)[:MAX_CUSTOMER_TEXT_LENGTH])
+        written_text = MessageText(str(input_data.text)[:MAX_CUSTOMER_TEXT_LENGTH])
+        attachments: list[MessageAttachment] = list(input_data.attachments)
+        customer_text = MessageText(readable_message_text(written_text, attachments))
+        if gate is TurnGate.ANSWER and not has_readable_content(
+            written_text, attachments
+        ):
+            gate = TurnGate.ATTACHMENT_NOTICE
+
         language: LanguageTag = self._language_detector.detect(
             str(customer_text),
             list(version.languages),
@@ -192,16 +210,14 @@ class PrepareConversationTurnUseCase(UseCaseContract[InboundMessage, PreparedTur
                 business_id=business.id,
                 direction=MessageDirection.INBOUND,
                 author=MessageAuthor.CUSTOMER,
-                text=customer_text,
+                text=written_text,
                 language=language,
+                attachments=attachments,
                 created_at=now,
                 updated_at=now,
             )
         )
-        conversation.language = language
-        conversation.is_after_hours = IsAfterHours(is_open is False)
-        conversation.last_message_at = now
-        conversation.updated_at = now
+        touch_conversation(conversation, language, IsAfterHours(is_open is False), now)
         self._conversation_repo.save(conversation)
         self._live_events.publish(
             business.id,
@@ -214,9 +230,6 @@ class PrepareConversationTurnUseCase(UseCaseContract[InboundMessage, PreparedTur
             contact.updated_at = now
             self._contact_repo.save(contact)
 
-        available_tools: list[AssistantToolName] = select_available_tools(
-            version, business
-        )
         return PreparedTurn(
             business=business,
             version=version,
@@ -227,49 +240,26 @@ class PrepareConversationTurnUseCase(UseCaseContract[InboundMessage, PreparedTur
             is_new_conversation=is_new_conversation,
             is_first_reply=is_first_reply,
             customer_text=customer_text,
-            reply_message_id=input_data.reply_message_id,
-            context_line=MessageText(
-                build_context_line(
-                    TurnContext(
-                        business_name=str(business.name),
-                        timezone_name=str(business.timezone),
-                        local_now=local_now,
-                        channel=conversation.channel,
-                        customer_name=None
-                        if contact.name is None
-                        else str(contact.name),
-                        customer_phone_number=(
-                            None
-                            if contact.phone_number is None
-                            else str(contact.phone_number)
-                        ),
-                        is_after_hours=is_open is False,
-                        is_leads_only=business.service_mode is ServiceMode.LEADS_ONLY,
-                        is_first_reply=(
-                            is_first_reply
-                            and conversation.channel is not ChannelKind.PHONE
-                        ),
-                    )
-                )
+            model_text=MessageText(
+                describe_message_for_model(written_text, attachments)
             ),
-            tool_context=AssistantToolContext(
-                business_id=business.id,
-                business_country_code=business.country_code,
-                contact_id=contact.id,
-                contact_name=contact.name,
-                contact_phone_number=contact.phone_number,
-                verified_phone_number=(
-                    None
-                    if conversation.is_sandbox
-                    else input_data.contact_phone_number
-                    or contact.verified_phone_number
-                ),
-                conversation_id=conversation.id,
-                channel=conversation.channel,
-                language=language,
-                is_sandbox=conversation.is_sandbox,
-                available_tools=available_tools,
-                business_timezone=business.timezone,
+            attachments=attachments,
+            reply_message_id=input_data.reply_message_id,
+            context_line=build_turn_context_line(
+                business,
+                contact,
+                conversation,
+                local_now,
+                is_open is False,
+                is_first_reply,
+            ),
+            tool_context=build_tool_context(
+                business,
+                contact,
+                conversation,
+                input_data,
+                language,
+                select_available_tools(version, business),
             ),
             received_at=now,
         )

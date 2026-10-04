@@ -100,9 +100,13 @@ class TestWhatsAppParsing:
         )
         assert [message.text for message in messages] == ["Confirm", "19:00"]
 
-    def test_media_statuses_and_other_objects_are_skipped(self) -> None:
-        image = whatsapp_message("995599123456", message_type="image")
-        assert self.parse(whatsapp_webhook([image])) == []
+    def test_statuses_reactions_and_other_objects_are_skipped(self) -> None:
+        reaction = whatsapp_message(
+            "995599123456",
+            message_type="reaction",
+            extra={"reaction": {"message_id": "wamid.0", "emoji": "+"}},
+        )
+        assert self.parse(whatsapp_webhook([reaction])) == []
         assert (
             self.parse(
                 whatsapp_webhook([], statuses=[{"id": "wamid.1", "status": "read"}])

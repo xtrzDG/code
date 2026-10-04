@@ -1,0 +1,139 @@
+[
+  {
+    "update_id": 900001,
+    "message": {
+      "message_id": 101,
+      "from": { "id": 555000111, "is_bot": false, "first_name": "Anna", "language_code": "ru" },
+      "chat": { "id": 555000111, "first_name": "Anna", "type": "private" },
+      "date": 1790856000,
+      "voice": {
+        "duration": 7,
+        "mime_type": "audio/ogg",
+        "file_id": "voice-file-0001",
+        "file_unique_id": "voice-unique-0001",
+        "file_size": 21480
+      }
+    }
+  },
+  {
+    "update_id": 900002,
+    "message": {
+      "message_id": 102,
+      "from": { "id": 555000111, "is_bot": false, "first_name": "Anna", "language_code": "ru" },
+      "chat": { "id": 555000111, "first_name": "Anna", "type": "private" },
+      "date": 1790856010,
+      "photo": [
+        { "file_id": "photo-file-small", "file_unique_id": "photo-unique-s", "file_size": 1520, "width": 90, "height": 67 },
+        { "file_id": "photo-file-medium", "file_unique_id": "photo-unique-m", "file_size": 21400, "width": 320, "height": 240 },
+        { "file_id": "photo-file-large", "file_unique_id": "photo-unique-l", "file_size": 118230, "width": 1280, "height": 960 }
+      ],
+      "caption": "Это блюдо есть в меню?"
+    }
+  },
+  {
+    "update_id": 900003,
+    "message": {
+      "message_id": 103,
+      "from": { "id": 555000111, "is_bot": false, "first_name": "Anna", "language_code": "ru" },
+      "chat": { "id": 555000111, "first_name": "Anna", "type": "private" },
+      "date": 1790856020,
+      "location": { "latitude": 41.693438, "longitude": 44.801525 }
+    }
+  },
+  {
+    "update_id": 900004,
+    "message": {
+      "message_id": 104,
+      "from": { "id": 555000111, "is_bot": false, "first_name": "Anna", "language_code": "ru" },
+      "chat": { "id": 555000111, "first_name": "Anna", "type": "private" },
+      "date": 1790856030,
+      "location": { "latitude": 41.6912, "longitude": 44.8073 },
+      "venue": {
+        "location": { "latitude": 41.6912, "longitude": 44.8073 },
+        "title": "Mtsvane Ezo",
+        "address": "Kote Abkhazi St 27"
+      }
+    }
+  },
+  {
+    "update_id": 900005,
+    "message": {
+      "message_id": 105,
+      "from": { "id": 555000111, "is_bot": false, "first_name": "Anna", "language_code": "ru" },
+      "chat": { "id": 555000111, "first_name": "Anna", "type": "private" },
+      "date": 1790856040,
+      "sticker": {
+        "width": 512,
+        "height": 512,
+        "emoji": "+",
+        "set_name": "HotCherry",
+        "is_animated": false,
+        "is_video": false,
+        "type": "regular",
+        "file_id": "sticker-file-0001",
+        "file_unique_id": "sticker-unique-0001",
+        "file_size": 22088
+      }
+    }
+  },
+  {
+    "update_id": 900006,
+    "message": {
+      "message_id": 106,
+      "from": { "id": 555000111, "is_bot": false, "first_name": "Anna", "language_code": "ru" },
+      "chat": { "id": 555000111, "first_name": "Anna", "type": "private" },
+      "date": 1790856050,
+      "document": {
+        "file_name": "IMG_2041.jpg",
+        "mime_type": "image/jpeg",
+        "file_id": "document-photo-0001",
+        "file_unique_id": "document-unique-0001",
+        "file_size": 845120
+      },
+      "caption": "Вот фото"
+    }
+  },
+  {
+    "update_id": 900007,
+    "message": {
+      "message_id": 107,
+      "from": { "id": 555000111, "is_bot": false, "first_name": "Anna", "language_code": "ru" },
+      "chat": { "id": 555000111, "first_name": "Anna", "type": "private" },
+      "date": 1790856060,
+      "contact": { "phone_number": "+48512345678", "first_name": "Ola", "user_id": 42 }
+    }
+  },
+  {
+    "update_id": 900008,
+    "message": {
+      "message_id": 108,
+      "from": { "id": 555000111, "is_bot": false, "first_name": "Anna", "language_code": "ru" },
+      "chat": { "id": 555000111, "first_name": "Anna", "type": "private" },
+      "date": 1790856070,
+      "video_note": {
+        "duration": 12,
+        "length": 240,
+        "file_id": "video-note-0001",
+        "file_unique_id": "video-note-unique-0001",
+        "file_size": 512000
+      }
+    }
+  },
+  {
+    "update_id": 900009,
+    "message": {
+      "message_id": 109,
+      "from": { "id": 555000111, "is_bot": false, "first_name": "Anna", "language_code": "ru" },
+      "chat": { "id": 555000111, "first_name": "Anna", "type": "private" },
+      "date": 1790856080,
+      "audio": {
+        "duration": 31,
+        "mime_type": "audio/mpeg",
+        "file_name": "question.mp3",
+        "file_id": "audio-file-0001",
+        "file_unique_id": "audio-unique-0001",
+        "file_size": 498000
+      }
+    }
+  }
+]

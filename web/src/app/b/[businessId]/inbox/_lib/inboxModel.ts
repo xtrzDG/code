@@ -26,6 +26,7 @@ import {
   type ConversationFilters,
   type ConversationPeriod,
 } from "./conversationModel";
+import type { AttachmentKind } from "./messageMedia";
 import type { InboxHandoffSummary, InboxItemView, InboxRequestSummary, InboxViewCounts } from "./types";
 
 export interface InboxFilters extends ConversationFilters {
@@ -119,6 +120,8 @@ export interface InboxRow {
   isAfterHours: boolean;
   isSandbox: boolean;
   lastMessageText: string | null;
+  /** What the last message carries besides text (a voice message, a photo…). */
+  lastMessageAttachment: AttachmentKind | null;
   lastMessageAuthor: MessageAuthor | null;
   lastMessageAt: number;
   /** Undefined when the source does not say (the feed has no assignments). */
@@ -142,6 +145,7 @@ export function rowFromInboxItem(item: InboxItemView): InboxRow {
     // The inbox leaves test conversations out.
     isSandbox: false,
     lastMessageText: item.last_message_text ?? null,
+    lastMessageAttachment: item.last_message_attachment ?? null,
     lastMessageAuthor: item.last_message_author ?? null,
     lastMessageAt: item.last_message_at,
     assigneeUserId: item.assignee_user_id ?? null,
@@ -164,6 +168,7 @@ export function rowFromConversation(item: ConversationSummaryView): InboxRow {
     isAfterHours: item.is_after_hours,
     isSandbox: item.is_sandbox,
     lastMessageText: item.last_message_text ?? null,
+    lastMessageAttachment: item.last_message_attachment ?? null,
     lastMessageAuthor: item.last_message_author ?? null,
     lastMessageAt: item.last_message_at,
     isAssignedAutomatically: false,

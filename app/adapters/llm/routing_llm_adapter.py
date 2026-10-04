@@ -1,10 +1,14 @@
+from collections.abc import Sequence
+
 from app.adapters.llm.llm_payloads import (
     build_tool_results_payload,
+    build_user_media_payload,
     build_user_text_payload,
 )
 from app.contracts.llm import LlmAdapterContract
 from app.schemas.constants.assistants import LlmProvider
 from app.schemas.dto.conversations import LlmRequest, LlmResponse, LlmToolResult
+from app.schemas.dto.media import LlmImageInput
 from app.schemas.exceptions.application_errors import ExternalServiceError
 from app.schemas.typings.conversations.strings import LlmProviderPayload, MessageText
 from app.utilities.conversations.llm_models import resolve_llm_provider
@@ -37,6 +41,13 @@ class RoutingLlmAdapter(LlmAdapterContract):
 
     def build_user_text_turn(self, text: MessageText) -> LlmProviderPayload:
         return build_user_text_payload(text)
+
+    def build_user_media_turn(
+        self,
+        text: MessageText,
+        images: Sequence[LlmImageInput],
+    ) -> LlmProviderPayload:
+        return build_user_media_payload(text, images)
 
     def build_tool_results_turn(
         self,

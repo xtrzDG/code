@@ -10,6 +10,7 @@ from app.repositories.conversation_repositories import (
 from app.schemas.constants.channels import MessageDirection
 from app.schemas.constants.conversations import ConversationStatus, MessageAuthor
 from app.schemas.domain.conversations import ConversationDocument, MessageDocument
+from app.schemas.domain.message_media import MessageAttachment
 from app.schemas.dto.conversations import AssistantReply, InboundMessage
 from app.schemas.exceptions.base_exception import ApplicationError
 from app.schemas.typings.assistants.prefixed_id import AssistantVersionId
@@ -69,6 +70,7 @@ class ScriptedCustomerPipeline(CustomerMessagePipelineContract):
             MessageAuthor.CUSTOMER,
             input_data.text,
             input_data.customer_message_id,
+            list(input_data.attachments),
         )
         if text is not None:
             self._store(
@@ -122,6 +124,7 @@ class ScriptedCustomerPipeline(CustomerMessagePipelineContract):
         author: MessageAuthor,
         text: MessageText,
         message_id: MessageId | None,
+        attachments: list[MessageAttachment] | None = None,
     ) -> None:
         now: Microseconds = self._clock.now_microseconds()
         self._message_repo.save(
@@ -137,6 +140,7 @@ class ScriptedCustomerPipeline(CustomerMessagePipelineContract):
                 author=author,
                 text=text,
                 language=self.language,
+                attachments=attachments or [],
                 created_at=now,
                 updated_at=now,
             )

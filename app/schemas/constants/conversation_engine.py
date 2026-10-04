@@ -9,6 +9,8 @@ class TurnGate(StrEnum):
     handoff) the assistant stays silent in chat and promises a call back on
     the phone. Past the per-contact message limit the assistant answers once
     with a polite stop message and then stays silent until the hour passes.
+    A message with nothing the assistant can read (a sticker, a file, a voice
+    note without words) gets the platform's request to write instead.
     """
 
     ANSWER = "answer"
@@ -16,6 +18,7 @@ class TurnGate(StrEnum):
     STAFF_CALLBACK = "staff_callback"
     LIMIT_NOTICE = "limit_notice"
     LIMIT_SILENCE = "limit_silence"
+    ATTACHMENT_NOTICE = "attachment_notice"
 
 
 class ReplyFailureKind(StrEnum):

@@ -1,10 +1,11 @@
 import json
 import time
 import uuid
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 
 from app.adapters.llm.llm_payloads import (
     build_tool_results_payload,
+    build_user_media_payload,
     build_user_text_payload,
 )
 from app.contracts.llm import LlmAdapterContract
@@ -16,6 +17,7 @@ from app.schemas.dto.conversations import (
     LlmToolResult,
 )
 from app.schemas.dto.llm_scripts import ScriptedLlmTurn
+from app.schemas.dto.media import LlmImageInput
 from app.schemas.typings.assistants.constrained_integers import (
     ScriptedLlmLatencyMilliseconds,
 )
@@ -61,6 +63,13 @@ class OfflineLlmAdapter(LlmAdapterContract):
 
     def build_user_text_turn(self, text: MessageText) -> LlmProviderPayload:
         return build_user_text_payload(text)
+
+    def build_user_media_turn(
+        self,
+        text: MessageText,
+        images: Sequence[LlmImageInput],
+    ) -> LlmProviderPayload:
+        return build_user_media_payload(text, images)
 
     def build_tool_results_turn(
         self,

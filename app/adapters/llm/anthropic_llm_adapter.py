@@ -1,10 +1,13 @@
 import json
+from collections.abc import Sequence
+from typing import cast
 
 from anthropic.types.beta import BetaMessage, BetaTextBlock, BetaToolUseBlock
 
 from app.adapters.llm.llm_call_limits import call_max_retries, call_timeout_seconds
 from app.adapters.llm.llm_payloads import (
     build_tool_results_payload,
+    build_user_media_payload,
     build_user_text_payload,
 )
 from app.contracts.llm import LlmAdapterContract
@@ -18,6 +21,7 @@ from app.schemas.dto.conversations import (
     LlmToolDefinition,
     LlmToolResult,
 )
+from app.schemas.dto.media import LlmImageInput
 from app.schemas.exceptions.application_errors import (
     LlmRefusedError,
 )
@@ -64,6 +68,7 @@ STOP_REASONS: dict[str, LlmStopReason] = {
     "pause_turn": LlmStopReason.PAUSE_TURN,
 }
 REFUSAL_STOP_REASON: str = "refusal"
+UNAVAILABLE_PHOTO_NOTE: str = "[Photo: it is no longer available]"
 MESSAGE_SEPARATOR: str = "\n\n"
 
 
@@ -84,6 +89,13 @@ class AnthropicLlmAdapter(LlmAdapterContract):
 
     def build_user_text_turn(self, text: MessageText) -> LlmProviderPayload:
         return build_user_text_payload(text)
+
+    def build_user_media_turn(
+        self,
+        text: MessageText,
+        images: Sequence[LlmImageInput],
+    ) -> LlmProviderPayload:
+        return build_user_media_payload(text, images)
 
     def build_tool_results_turn(
         self,
@@ -146,9 +158,33 @@ def build_anthropic_messages(
                 messages.append({"role": ASSISTANT_ROLE, "content": content})
             continue
 
-        messages.append({"role": turn["role"], "content": turn.get("content", [])})
+        messages.append(
+            {
+                "role": turn["role"],
+                "content": [
+                    keep_sendable_block(block)
+                    for block in read_object_list(turn.get("content"))
+                ],
+            }
+        )
 
     return messages
+
+
+def keep_sendable_block(block: dict[str, object]) -> dict[str, object]:
+    """
+    A content block as the Messages API takes it: a picture still naming a
+    stored file (never resolved to its bytes) becomes a short note.
+    """
+
+    source: object = block.get("source")
+    if read_string(block, "type") != "image" or (
+        isinstance(source, dict)
+        and cast(dict[str, object], source).get("type") == "base64"
+    ):
+        return block
+
+    return {"type": TEXT_BLOCK_TYPE, "text": UNAVAILABLE_PHOTO_NOTE}
 
 
 def convert_openai_items(turn: dict[str, object]) -> list[dict[str, object]]:

@@ -38,6 +38,9 @@ from app.utilities.config_helpers.app_settings.login_settings_section import (
     read_login_settings,
     read_otp_code_logging,
 )
+from app.utilities.config_helpers.app_settings.media_settings_section import (
+    read_media_settings,
+)
 from app.utilities.config_helpers.app_settings.observability_settings_section import (
     read_observability_settings,
 )
@@ -120,4 +123,5 @@ def assemble_app_settings(environment_variables: Mapping[str, str]) -> AppSettin
             has_encryption_key=key_ring["encryption_key"] is not None,
         ),
         **read_backup_settings(environment_variables),
+        **read_media_settings(environment_variables),
     )

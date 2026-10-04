@@ -11,6 +11,10 @@ from app.schemas.typings.conversations.strings import (
 )
 from app.use_cases.conversations.replies.turn_progress import TurnProgress
 from app.utilities.conversations.turn_context import EarlierMessage
+from app.utilities.media.attachment_texts import (
+    describe_message_for_model,
+    readable_message_text,
+)
 from app.utilities.reply_guard.invented_numbers import find_unverified_values
 
 
@@ -28,7 +32,7 @@ def collect_unanswered_messages(
     last_turn_at: int = int(stored_turns[-1].created_at) if stored_turns else -1
     return [
         EarlierMessage(
-            text=str(message.text),
+            text=describe_message_for_model(str(message.text), message.attachments),
             is_from_staff=message.author is MessageAuthor.STAFF,
         )
         for message in sorted(
@@ -65,7 +69,11 @@ def find_unverified_reply_values(
         turn.business.id, turn.conversation.id
     ):
         if message.direction is MessageDirection.INBOUND:
-            customer_texts.append(str(message.text))
+            # Voice-note transcripts and shared places are the customer's
+            # words too.
+            customer_texts.append(
+                readable_message_text(str(message.text), message.attachments)
+            )
             continue
 
         if message.author is MessageAuthor.ASSISTANT:

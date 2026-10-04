@@ -8,6 +8,7 @@ ExternalServiceError for every SDK, transport or configuration failure.
 from typing import Protocol
 
 from anthropic.types.beta import BetaMessage
+from openai.types.audio import Transcription
 from openai.types.responses import Response
 
 from app.contracts.client_contract import ClientContract
@@ -55,5 +56,25 @@ class AnthropicMessagesClientContract(ClientContract, Protocol):
         that do not support an option reject the whole request).
         `timeout_seconds` and `max_retries` bound this call instead of the
         client's defaults.
+        """
+        raise NotImplementedError
+
+
+class OpenAiTranscriptionClientContract(ClientContract, Protocol):
+    def transcribe(
+        self,
+        *,
+        model: str,
+        audio: bytes,
+        file_name: str,
+        language: str | None,
+        languages: list[str],
+        keywords: list[str],
+    ) -> Transcription:
+        """
+        One speech-to-text call (`/audio/transcriptions`, JSON). `language`
+        pins the language; `languages` and `keywords` hint the models that
+        take them (empty: not sent). Raises TranscriptionNotConfiguredError
+        without an API key, ExternalServiceError for every other failure.
         """
         raise NotImplementedError

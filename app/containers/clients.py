@@ -12,6 +12,7 @@ from app.clients.google.google_calendar_client import GoogleCalendarClient
 from app.clients.http.safe_http_fetcher import SafeHttpFetcher
 from app.clients.langfuse.langfuse_ingestion_client import LangfuseIngestionClient
 from app.clients.meta.meta_graph_client import MetaGraphClient
+from app.clients.meta.meta_media_client import MetaMediaClient
 from app.clients.meta.whatsapp_authentication_client import (
     WhatsAppAuthenticationClient,
 )
@@ -20,10 +21,14 @@ from app.clients.object_storage.object_storage_client_factory import (
     build_object_storage_client,
 )
 from app.clients.openai.openai_responses_client import OpenAiResponsesClient
+from app.clients.openai.openai_transcription_client import (
+    OpenAiTranscriptionClient,
+)
 from app.clients.postgres.postgres_connection_pool_client import (
     PostgresConnectionPoolClient,
 )
 from app.clients.telegram.telegram_bot_client import TelegramBotClient
+from app.clients.telegram.telegram_file_client import TelegramFileClient
 from app.clients.telegram.telegram_gateway_client import TelegramGatewayClient
 from app.clients.turnstile.turnstile_verification_client import (
     TurnstileVerificationClient,
@@ -68,6 +73,14 @@ class ClientsContainer(containers.DeclarativeContainer):
     # One Telegram client serves every business bot (token per call).
     telegram_bot_client: Singleton[TelegramBotClient] = Singleton(TelegramBotClient)
     meta_graph_client: Singleton[MetaGraphClient] = Singleton(MetaGraphClient)
+    # Files customers send: platform downloads, speech-to-text (EU project).
+    meta_media_client: Singleton[MetaMediaClient] = Singleton(MetaMediaClient)
+    telegram_file_client: Singleton[TelegramFileClient] = Singleton(TelegramFileClient)
+    openai_transcription_client: Singleton[OpenAiTranscriptionClient] = Singleton(
+        OpenAiTranscriptionClient,
+        base_url=config.app_settings.provided.openai_base_url,
+        project_id=config.app_settings.provided.openai_project_id,
+    )
     elevenlabs_client: Singleton[ElevenLabsApiClientContract] = Singleton(
         build_elevenlabs_client,
         settings=config.app_settings,

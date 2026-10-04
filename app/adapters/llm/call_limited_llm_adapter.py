@@ -1,3 +1,5 @@
+from collections.abc import Sequence
+
 from app.contracts.llm import LlmAdapterContract
 from app.schemas.dto.conversations import (
     LlmCallLimits,
@@ -5,6 +7,7 @@ from app.schemas.dto.conversations import (
     LlmResponse,
     LlmToolResult,
 )
+from app.schemas.dto.media import LlmImageInput
 from app.schemas.typings.assistants.constrained_integers import LlmCallRetryLimit
 from app.schemas.typings.conversations.strings import LlmProviderPayload, MessageText
 
@@ -30,6 +33,13 @@ class CallLimitedLlmAdapter(LlmAdapterContract):
 
     def build_user_text_turn(self, text: MessageText) -> LlmProviderPayload:
         return self._inner_adapter.build_user_text_turn(text)
+
+    def build_user_media_turn(
+        self,
+        text: MessageText,
+        images: Sequence[LlmImageInput],
+    ) -> LlmProviderPayload:
+        return self._inner_adapter.build_user_media_turn(text, images)
 
     def build_tool_results_turn(
         self,

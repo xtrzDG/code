@@ -1,6 +1,9 @@
 """The beginning of a message for a list row."""
 
+from app.schemas.constants.media import AttachmentKind
+from app.schemas.domain.conversations import MessageDocument
 from app.schemas.typings.conversations.strings import MessagePreview, MessageText
+from app.utilities.media.attachment_texts import readable_message_text
 
 PREVIEW_LENGTH: int = 160
 ELLIPSIS: str = "…"
@@ -22,3 +25,21 @@ def build_message_preview(text: MessageText) -> MessagePreview:
         cut = cut[:last_space]
 
     return MessagePreview(cut.rstrip() + ELLIPSIS)
+
+
+def build_written_message_preview(message: MessageDocument) -> MessagePreview:
+    """
+    The preview of a stored message: what was written, a voice note's
+    transcript and a shared place included (a photo alone has none; the
+    attachment's kind tells it).
+    """
+
+    return build_message_preview(
+        MessageText(readable_message_text(str(message.text), message.attachments))
+    )
+
+
+def first_attachment_kind(message: MessageDocument) -> AttachmentKind | None:
+    """What the message carries besides text, for an icon next to the preview."""
+
+    return message.attachments[0].kind if message.attachments else None

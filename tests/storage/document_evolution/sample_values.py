@@ -37,6 +37,7 @@ CONSTRAINED_TEXT_SAMPLES: dict[str, str] = {
     "LanguageTag": "ka",
     "LlmModelId": "gpt-5-mini",
     "LocalDate": "2026-09-21",
+    "MessageMediaType": "audio/ogg",
     "LocalTimeOfDay": "22:00",
     "ManagerTelegramUsername": "nino_k",
     "MetaPageUsername": "cafebatumi",

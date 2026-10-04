@@ -12,6 +12,7 @@ from dataclasses import dataclass, field
 from typing import Any, cast
 
 from dependency_injector import providers
+from typed_time_provider import Microseconds
 
 from app.containers.app import AppContainer
 from app.contracts.brain import MenuExtractionAdapterContract
@@ -200,6 +201,7 @@ def discover_path_values(
     )
     values["call_id"] = find_call(world)
     values["batch_id"] = seed_import_batch(world)
+    values["media_id"] = find_media(world)
     values.update(
         notification_path_values(
             world.workshop, world.storage_scope, world.business_b, world.owner_b
@@ -237,6 +239,18 @@ def find_call(world: AuthorizationWorld) -> str:
             return str(calls[0]["id"])
 
     raise AssertionError("The demo restaurant has no phone call.")
+
+
+def find_media(world: AuthorizationWorld) -> str:
+    """A voice note or photo a customer of business B sent (demo data)."""
+
+    business_id = BusinessId(world.business_b)
+    with world.storage_scope.scoped_to_business(business_id):
+        files = world.workshop.container.repositories.message_media_repo()
+        stored = files.list_created_before(business_id, Microseconds(2**62))
+
+    assert stored, "The demo restaurant has no customer media."
+    return str(stored[0].id)
 
 
 def seed_import_batch(world: AuthorizationWorld) -> str:

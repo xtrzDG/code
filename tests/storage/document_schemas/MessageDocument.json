@@ -1,10 +1,185 @@
 {
   "collection": "messages",
   "document_type": "MessageDocument",
-  "schema_version": 1,
+  "schema_version": 2,
   "shape": {
     "additionalProperties": false,
     "properties": {
+      "attachments": {
+        "items": {
+          "additionalProperties": false,
+          "properties": {
+            "byte_count": {
+              "anyOf": [
+                {
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "duration_seconds": {
+              "anyOf": [
+                {
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "kind": {
+              "enum": [
+                "audio",
+                "image",
+                "location",
+                "contact",
+                "sticker",
+                "other"
+              ],
+              "type": "string"
+            },
+            "location": {
+              "anyOf": [
+                {
+                  "additionalProperties": false,
+                  "properties": {
+                    "address": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "default": null
+                    },
+                    "latitude": {
+                      "maximum": 90.0,
+                      "minimum": -90.0,
+                      "type": "number"
+                    },
+                    "longitude": {
+                      "maximum": 180.0,
+                      "minimum": -180.0,
+                      "type": "number"
+                    },
+                    "name": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "default": null
+                    }
+                  },
+                  "required": [
+                    "latitude",
+                    "longitude"
+                  ],
+                  "type": "object"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "media_deleted_at": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "media_id": {
+              "anyOf": [
+                {
+                  "pattern": "^message_media_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "media_type": {
+              "anyOf": [
+                {
+                  "maxLength": 64,
+                  "minLength": 7,
+                  "pattern": "^(audio|image)/[a-z0-9][a-z0-9.+\\-]*$",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "problem": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "unsupported_kind",
+                    "too_large",
+                    "too_long",
+                    "unavailable",
+                    "unrecognized_format",
+                    "not_understood"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "storage_path": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "transcript": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            }
+          },
+          "required": [
+            "kind"
+          ],
+          "type": "object"
+        },
+        "type": "array"
+      },
       "author": {
         "enum": [
           "customer",
@@ -80,7 +255,7 @@
         "type": "integer"
       },
       "schema_version": {
-        "default": "1",
+        "default": "2",
         "type": "string"
       },
       "sent_by": {

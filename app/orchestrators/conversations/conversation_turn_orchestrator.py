@@ -28,6 +28,9 @@ from app.schemas.exceptions.base_exception import ApplicationError
 from app.schemas.typings.conversations.strings import MessageText
 from app.schemas.typings.handoffs.prefixed_id import HandoffId
 from app.schemas.typings.handoffs.strings import HandoffQuotedText
+from app.utilities.conversations.assistant_texts.attachment_notice_texts import (
+    CANNOT_READ_ATTACHMENT,
+)
 from app.utilities.conversations.assistant_texts.notice_texts import (
     COLLEAGUE_TAKES_OVER,
     COLLEAGUE_WILL_CALL_BACK,
@@ -61,13 +64,14 @@ class ConversationTurnOrchestrator(ConversationTurnOrchestratorContract):
     answered by the platform (and a low rating handed to a colleague)
     without the model; while staff own the conversation stay silent
     in chat and promise a call back on the phone; past the contact's message
-    limit answer once with a polite stop message. Otherwise generate the
-    reply with tools and the invented-numbers guard. When the model refuses,
-    is unavailable, cannot finish or keeps unverified numbers, the
-    conversation goes to a colleague (unless the model already handed it
-    over) and the customer hears so in their language. Finally the reply is
-    stored with its usage; on the phone the call ends after a handoff or the
-    caller's goodbye.
+    limit answer once with a polite stop message; a message with nothing the
+    assistant can read (a sticker, a file) gets a polite request to write.
+    Otherwise generate the reply with tools and the invented-numbers guard.
+    When the model refuses, is unavailable, cannot finish or keeps
+    unverified numbers, the conversation goes to a colleague (unless the
+    model already handed it over) and the customer hears so in their
+    language. Finally the reply is stored with its usage; on the phone the
+    call ends after a handoff or the caller's goodbye.
     """
 
     def __init__(
@@ -162,6 +166,11 @@ class ConversationTurnOrchestrator(ConversationTurnOrchestratorContract):
                 turn=turn,
                 text=self._resolve(CONTACT_LIMIT_NOTICE, turn),
                 should_end_call=is_phone,
+            )
+
+        if turn.gate is TurnGate.ATTACHMENT_NOTICE:
+            return ReplyRecord(
+                turn=turn, text=self._resolve(CANNOT_READ_ATTACHMENT, turn)
             )
 
         return ReplyRecord(

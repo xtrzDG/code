@@ -1227,6 +1227,32 @@
         "title": "AssistantVersionSummary",
         "type": "object"
       },
+      "AttachmentKind": {
+        "description": "What a customer's message carries besides text. AUDIO (voice notes and\naudio files) is transcribed, IMAGE is shown to the model, LOCATION is\nread as coordinates; CONTACT (someone's contact card), STICKER and\nOTHER (video, documents, polls, ...) get a polite request to write.",
+        "enum": [
+          "audio",
+          "image",
+          "location",
+          "contact",
+          "sticker",
+          "other"
+        ],
+        "title": "AttachmentKind",
+        "type": "string"
+      },
+      "AttachmentProblem": {
+        "description": "Why the assistant could not read an attachment: a kind it does not\nread, a file over the size cap, a voice note over the length cap, a\nfile the platform no longer hands out, a format that is not audio or\nan image after all, or a voice note without recognizable speech (or\nwith the transcription service unavailable).",
+        "enum": [
+          "unsupported_kind",
+          "too_large",
+          "too_long",
+          "unavailable",
+          "unrecognized_format",
+          "not_understood"
+        ],
+        "title": "AttachmentProblem",
+        "type": "string"
+      },
       "AuditAction": {
         "description": "Operation on personal data recorded in the audit log (concept section\n10), or a launch decision that must stay traceable (publishing a version\nthat has not passed its autotests).",
         "enum": [
@@ -5249,6 +5275,16 @@
             "title": "Last Message At",
             "type": "integer"
           },
+          "last_message_attachment": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AttachmentKind"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "last_message_author": {
             "anyOf": [
               {
@@ -7774,6 +7810,16 @@
             "title": "Last Message At",
             "type": "integer"
           },
+          "last_message_attachment": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AttachmentKind"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "last_message_author": {
             "anyOf": [
               {
@@ -9503,6 +9549,232 @@
         "title": "MenuImportResult",
         "type": "object"
       },
+      "MessageAttachment": {
+        "additionalProperties": false,
+        "description": "One attachment of a stored customer message, as the assistant read it.\n\nA voice note or photo the platform stored has `media_id` (its\n`MessageMediaDocument`) and `storage_path`; a voice note's text is\n`transcript`, a location its `location`. `problem` says why the\nassistant could not read it (the customer was asked to write instead);\n`media_deleted_at` is when the retention purge removed the file.",
+        "properties": {
+          "byte_count": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Byte Count"
+          },
+          "duration_seconds": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Duration Seconds"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/AttachmentKind"
+          },
+          "location": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SharedLocation"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "media_deleted_at": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Media Deleted At"
+          },
+          "media_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Media Id"
+          },
+          "media_type": {
+            "anyOf": [
+              {
+                "maxLength": 64,
+                "minLength": 7,
+                "pattern": "^(audio|image)/[a-z0-9][a-z0-9.+\\-]*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Media Type"
+          },
+          "problem": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AttachmentProblem"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "storage_path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Storage Path"
+          },
+          "transcript": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Transcript"
+          }
+        },
+        "required": [
+          "kind"
+        ],
+        "title": "MessageAttachment",
+        "type": "object"
+      },
+      "MessageAttachmentView": {
+        "additionalProperties": false,
+        "description": "An attachment of a customer message in the cabinet's transcript: a voice\nnote to play (`media_id`) with its transcript, a photo (`media_id`), a\nplace with a map link, or what the assistant could not read (`problem`).\n`is_media_deleted`: the retention purge removed the file.",
+        "properties": {
+          "byte_count": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Byte Count"
+          },
+          "duration_seconds": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Duration Seconds"
+          },
+          "is_media_deleted": {
+            "default": false,
+            "title": "Is Media Deleted",
+            "type": "boolean"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/AttachmentKind"
+          },
+          "location": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SharedLocation"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "map_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Map Url"
+          },
+          "media_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Media Id"
+          },
+          "media_type": {
+            "anyOf": [
+              {
+                "maxLength": 64,
+                "minLength": 7,
+                "pattern": "^(audio|image)/[a-z0-9][a-z0-9.+\\-]*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Media Type"
+          },
+          "problem": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AttachmentProblem"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "transcript": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Transcript"
+          }
+        },
+        "required": [
+          "kind"
+        ],
+        "title": "MessageAttachmentView",
+        "type": "object"
+      },
       "MessageAuthor": {
         "description": "Who wrote a message.",
         "enum": [
@@ -9525,8 +9797,15 @@
       },
       "MessageDocument": {
         "additionalProperties": false,
-        "description": "Stored message with model usage and cost (concept table `messages`).\n\n`sent_by` is the owner or staff member who wrote a STAFF message from\nthe cabinet.",
+        "description": "Stored message with model usage and cost (concept table `messages`).\n\n`sent_by` is the owner or staff member who wrote a STAFF message from\nthe cabinet. `text` is what the author wrote (for a customer, the typed\ntext and captions); `attachments` are the voice notes, photos, places\nand other files of a customer message, with the transcript of a voice\nnote.\n\nVersion 2: `attachments` (optional, so version 1 rows read as they are).",
         "properties": {
+          "attachments": {
+            "items": {
+              "$ref": "#/components/schemas/MessageAttachment"
+            },
+            "title": "Attachments",
+            "type": "array"
+          },
           "author": {
             "$ref": "#/components/schemas/MessageAuthor"
           },
@@ -9597,8 +9876,7 @@
             "type": "integer"
           },
           "schema_version": {
-            "default": "1",
-            "description": "Persistence schema version. This is not the package version or application release version.",
+            "default": "2",
             "title": "Schema Version",
             "type": "string"
           },
@@ -9671,8 +9949,15 @@
       },
       "MessageView": {
         "additionalProperties": false,
-        "description": "A message with the model usage behind it; `sent_by` is the owner or\nstaff member who wrote a staff message from the cabinet.",
+        "description": "A message with the model usage behind it; `sent_by` is the owner or\nstaff member who wrote a staff message from the cabinet; `attachments`\nare a customer's voice notes, photos and places.",
         "properties": {
+          "attachments": {
+            "items": {
+              "$ref": "#/components/schemas/MessageAttachmentView"
+            },
+            "title": "Attachments",
+            "type": "array"
+          },
           "author": {
             "$ref": "#/components/schemas/MessageAuthor"
           },
@@ -12769,6 +13054,52 @@
         "title": "ShareLinksView",
         "type": "object"
       },
+      "SharedLocation": {
+        "additionalProperties": false,
+        "description": "A place a customer shared: its coordinates, name and address.",
+        "properties": {
+          "address": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Address"
+          },
+          "latitude": {
+            "maximum": 90.0,
+            "minimum": -90.0,
+            "title": "Latitude",
+            "type": "number"
+          },
+          "longitude": {
+            "maximum": 180.0,
+            "minimum": -180.0,
+            "title": "Longitude",
+            "type": "number"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          }
+        },
+        "required": [
+          "latitude",
+          "longitude"
+        ],
+        "title": "SharedLocation",
+        "type": "object"
+      },
       "SourceRowView": {
         "additionalProperties": false,
         "description": "Owners from one acquisition source: sign-ups, live and paying today.",
@@ -14169,7 +14500,8 @@
           "dialog",
           "whatsapp_reply",
           "whatsapp_template",
-          "transfer_seconds"
+          "transfer_seconds",
+          "transcription_seconds"
         ],
         "title": "UsageKind",
         "type": "string"
@@ -30874,6 +31206,141 @@
         "summary": "Create Telegram Link",
         "tags": [
           "channels"
+        ]
+      }
+    },
+    "/v1/businesses/{business_id}/media/{media_id}": {
+      "get": {
+        "operationId": "get_message_media_v1_businesses__business_id__media__media_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "media_id",
+            "required": true,
+            "schema": {
+              "title": "Media Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "audio/*": {
+                "schema": {
+                  "format": "binary",
+                  "type": "string"
+                }
+              },
+              "image/*": {
+                "schema": {
+                  "format": "binary",
+                  "type": "string"
+                }
+              }
+            },
+            "description": "The voice note or photo as the customer sent it."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Get Message Media",
+        "tags": [
+          "conversations",
+          "conversations"
         ]
       }
     },

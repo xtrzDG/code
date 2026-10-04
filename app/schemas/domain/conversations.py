@@ -12,6 +12,7 @@ from app.schemas.constants.conversations import (
     LlmTurnRole,
     MessageAuthor,
 )
+from app.schemas.domain.message_media import MessageAttachment
 from app.schemas.typings.assistants.constrained_strings import LlmModelId
 from app.schemas.typings.assistants.prefixed_id import AssistantVersionId
 from app.schemas.typings.billing.constrained_integers import CostMicroUsd
@@ -112,9 +113,15 @@ class MessageDocument(BaseDocument):
     Stored message with model usage and cost (concept table `messages`).
 
     `sent_by` is the owner or staff member who wrote a STAFF message from
-    the cabinet.
+    the cabinet. `text` is what the author wrote (for a customer, the typed
+    text and captions); `attachments` are the voice notes, photos, places
+    and other files of a customer message, with the transcript of a voice
+    note.
+
+    Version 2: `attachments` (optional, so version 1 rows read as they are).
     """
 
+    schema_version: SchemaVersion = SchemaVersion("2")
     id: MessageId = Field(default_factory=MessageId)
     conversation_id: ConversationId
     business_id: BusinessId
@@ -128,6 +135,9 @@ class MessageDocument(BaseDocument):
     input_tokens: LlmTokenCount = LlmTokenCount(0)
     output_tokens: LlmTokenCount = LlmTokenCount(0)
     cost_micro_usd: CostMicroUsd = CostMicroUsd(0)
+    attachments: list[MessageAttachment] = Field(
+        default_factory=list[MessageAttachment]
+    )
 
 
 class LlmTurnDocument(BaseDocument):

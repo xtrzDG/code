@@ -1,9 +1,6 @@
 """
-Collection (table) names of every stored document type.
-
-One source of truth for the container wiring and the migrations: a test
-checks that `migrations/` creates a table for every entry here and that
-every collection of `DocumentCollectionsContainer` has an entry.
+Collection (table) names of every stored document type: one source of truth
+for the container wiring and the migrations (a test checks that both match).
 """
 
 from base_pydantic_schemas import PersistentDocument
@@ -46,6 +43,7 @@ from app.schemas.domain.jobs import (
 from app.schemas.domain.key_rotations import KeyRotationDocument
 from app.schemas.domain.knowledge import KnowledgeItemDocument
 from app.schemas.domain.manager_links import ManagerTelegramLinkDocument
+from app.schemas.domain.message_media import MessageMediaDocument
 from app.schemas.domain.missed_calls import MissedCallDocument
 from app.schemas.domain.notification_preferences import (
     UserNotificationPreferencesDocument,
@@ -109,13 +107,16 @@ DOCUMENT_COLLECTIONS: tuple[DocumentCollectionDefinition, ...] = (
     DocumentCollectionDefinition(
         DocumentCollectionName("schedule_exceptions"), ScheduleExceptionDocument
     ),
-    # Customers and conversations.
+    # Customers, conversations and the files customers sent (1081).
     DocumentCollectionDefinition(DocumentCollectionName("contacts"), ContactDocument),
     DocumentCollectionDefinition(
         DocumentCollectionName("conversations"), ConversationDocument
     ),
     DocumentCollectionDefinition(DocumentCollectionName("messages"), MessageDocument),
     DocumentCollectionDefinition(DocumentCollectionName("llm_turns"), LlmTurnDocument),
+    DocumentCollectionDefinition(
+        DocumentCollectionName("message_media"), MessageMediaDocument
+    ),
     DocumentCollectionDefinition(DocumentCollectionName("calls"), CallDocument),
     # Bookings, leads, handoffs and open questions.
     DocumentCollectionDefinition(DocumentCollectionName("bookings"), BookingDocument),

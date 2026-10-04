@@ -62,6 +62,9 @@ class ConversationOperatorsContainer(containers.DeclarativeContainer):
     get_call_recording_operator = pipeline_operator(
         conversation_pipelines.get_call_recording_pipeline, storage_scope
     )
+    get_message_media_operator = pipeline_operator(
+        conversation_pipelines.get_message_media_pipeline, storage_scope
+    )
 
     # --- Voice call start.
     start_voice_call_operator = platform_pipeline_operator(

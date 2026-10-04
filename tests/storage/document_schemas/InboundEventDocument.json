@@ -1,7 +1,7 @@
 {
   "collection": "inbound_events",
   "document_type": "InboundEventDocument",
-  "schema_version": 1,
+  "schema_version": 2,
   "shape": {
     "additionalProperties": false,
     "properties": {
@@ -68,6 +68,136 @@
           {
             "additionalProperties": false,
             "properties": {
+              "attachments": {
+                "items": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "caption": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "default": null
+                    },
+                    "declared_bytes": {
+                      "anyOf": [
+                        {
+                          "minimum": 0,
+                          "type": "integer"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "default": null
+                    },
+                    "duration_seconds": {
+                      "anyOf": [
+                        {
+                          "minimum": 0,
+                          "type": "integer"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "default": null
+                    },
+                    "kind": {
+                      "enum": [
+                        "audio",
+                        "image",
+                        "location",
+                        "contact",
+                        "sticker",
+                        "other"
+                      ],
+                      "type": "string"
+                    },
+                    "location": {
+                      "anyOf": [
+                        {
+                          "additionalProperties": false,
+                          "properties": {
+                            "address": {
+                              "anyOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ],
+                              "default": null
+                            },
+                            "latitude": {
+                              "maximum": 90.0,
+                              "minimum": -90.0,
+                              "type": "number"
+                            },
+                            "longitude": {
+                              "maximum": 180.0,
+                              "minimum": -180.0,
+                              "type": "number"
+                            },
+                            "name": {
+                              "anyOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ],
+                              "default": null
+                            }
+                          },
+                          "required": [
+                            "latitude",
+                            "longitude"
+                          ],
+                          "type": "object"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "default": null
+                    },
+                    "mime_type": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "default": null
+                    },
+                    "provider_media_id": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "default": null
+                    }
+                  },
+                  "required": [
+                    "kind"
+                  ],
+                  "type": "object"
+                },
+                "type": "array"
+              },
               "channel_user_id": {
                 "type": "string"
               },
@@ -192,7 +322,7 @@
         "type": "string"
       },
       "schema_version": {
-        "default": "1",
+        "default": "2",
         "type": "string"
       },
       "status": {

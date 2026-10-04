@@ -1,5 +1,6 @@
 from typed_time_provider import Microseconds, WallClock
 
+from app.contracts.media_storage import MediaStorageAdapterContract
 from app.contracts.recording_storage import RecordingStorageAdapterContract
 from app.contracts.repositories.booking_repositories import (
     BookingRepoContract,
@@ -17,6 +18,7 @@ from app.contracts.repositories.conversation_repositories import (
 from app.contracts.repositories.inbox_repositories import (
     ConversationNoteRepoContract,
 )
+from app.contracts.repositories.media_repositories import MessageMediaRepoContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.compliance import AuditAction
 from app.schemas.constants.conversations import ConversationStatus
@@ -33,6 +35,7 @@ from app.schemas.dto.compliance import (
     ContactRecords,
     ContactRecordsQuery,
 )
+from app.schemas.dto.media import MediaLocation
 from app.schemas.typings.bookings.strings import LeadDetails
 from app.schemas.typings.compliance.constrained_integers import (
     DeletedRecordingCount,
@@ -55,8 +58,9 @@ class DeleteContactDataUseCase(
     """
     Owner erases one visitor's personal data (right to erasure).
 
-    Recordings are deleted from storage first, so a storage failure leaves
-    the database untouched and the erasure can be retried. Then the messages,
+    Recordings, voice notes and photos are deleted from storage first, so a
+    storage failure leaves the database untouched and the erasure can be
+    retried. Then the messages,
     model transcripts and the team's internal notes of their conversations
     and call transcripts are deleted, and the contact keeps only its id and
     the erasure time (no name, phones, language or channel identities), so
@@ -87,6 +91,8 @@ class DeleteContactDataUseCase(
         audit_log_repo: AuditLogRepoContract,
         wall_clock: WallClock[Microseconds],
         note_repo: ConversationNoteRepoContract,
+        media_storage: MediaStorageAdapterContract,
+        message_media_repo: MessageMediaRepoContract,
     ) -> None:
         self._authorize_business_access: UseCaseContract[
             BusinessAccessRequest,
@@ -108,6 +114,8 @@ class DeleteContactDataUseCase(
         self._recording_storage: RecordingStorageAdapterContract = recording_storage
         self._audit_log_repo: AuditLogRepoContract = audit_log_repo
         self._wall_clock: WallClock[Microseconds] = wall_clock
+        self._media_storage: MediaStorageAdapterContract = media_storage
+        self._message_media_repo: MessageMediaRepoContract = message_media_repo
 
     def run(self, input_data: ContactDataCommand) -> ContactErasureResult:
         business: BusinessDocument = self._authorize_business_access.run(
@@ -126,6 +134,7 @@ class DeleteContactDataUseCase(
         contact: ContactDocument = records.contact
         now: Microseconds = self._wall_clock.now_unix()
         deleted_recordings: int = self._delete_recordings(records)
+        self._delete_message_media(business, records)
         self._erase_calls(records, now)
         deleted_llm_turns: int = self._erase_conversations(business, records, now)
         self._anonymize_business_records(records, now)
@@ -176,6 +185,21 @@ class DeleteContactDataUseCase(
                 deleted_recordings += 1
 
         return deleted_recordings
+
+    def _delete_message_media(
+        self, business: BusinessDocument, records: ContactRecords
+    ) -> None:
+        """The voice notes and photos the person sent, from the storage too."""
+
+        for message in records.messages:
+            for attachment in message.attachments:
+                if attachment.media_id is None or attachment.storage_path is None:
+                    continue
+
+                self._media_storage.delete(
+                    MediaLocation(business_id=business.id, path=attachment.storage_path)
+                )
+                self._message_media_repo.delete(business.id, attachment.media_id)
 
     def _erase_calls(self, records: ContactRecords, now: Microseconds) -> None:
         for call in records.calls:

@@ -3,6 +3,7 @@ from dependency_injector.providers import DependenciesContainer, Factory
 
 from app.containers.adapters.adapters_container import AdaptersContainer
 from app.containers.config import ConfigContainer
+from app.containers.container_edges import composed_container_edge
 from app.containers.facilitators import FacilitatorsContainer
 from app.containers.registries import RegistriesContainer
 from app.containers.repositories import RepositoriesContainer
@@ -31,6 +32,10 @@ from app.schemas.dto.conversations import (
     VoiceToolCallRequest,
     VoiceToolCallResult,
 )
+from app.schemas.dto.media import (
+    VoiceNoteTranscription,
+    VoiceNoteTranscriptionRequest,
+)
 from app.use_cases.conversations.build_call_greeting_use_case import (
     BuildCallGreetingUseCase,
 )
@@ -49,6 +54,9 @@ from app.use_cases.conversations.replies.generate_assistant_reply_use_case impor
 from app.use_cases.conversations.tools.run_assistant_tool_use_case import (
     RunAssistantToolUseCase,
 )
+from app.use_cases.conversations.transcribe_voice_note_use_case import (
+    TranscribeVoiceNoteUseCase,
+)
 from app.use_cases.conversations.turns.prepare_conversation_turn_use_case import (
     PrepareConversationTurnUseCase,
 )
@@ -60,7 +68,7 @@ class ConversationUseCasesContainer(containers.DeclarativeContainer):
     generate and record a turn; the voice turn's pieces and the call greeting.
     """
 
-    adapters: AdaptersContainer = DependenciesContainer()  # type: ignore[assignment]
+    adapters: AdaptersContainer = composed_container_edge(AdaptersContainer)  # type: ignore[assignment]
     config: ConfigContainer = DependenciesContainer()  # type: ignore[assignment]
     facilitators: FacilitatorsContainer = DependenciesContainer()  # type: ignore[assignment]
     registries: RegistriesContainer = DependenciesContainer()  # type: ignore[assignment]
@@ -154,4 +162,18 @@ class ConversationUseCasesContainer(containers.DeclarativeContainer):
         BuildCallGreetingUseCase,
         business_repo=repositories.business_repo,
         localized_text_resolver=utilities.localized_text_resolver,
+    )
+    # Voice notes and photos customers send: transcription, the cabinet.
+    transcribe_voice_note_use_case: Factory[
+        UseCaseContract[VoiceNoteTranscriptionRequest, VoiceNoteTranscription]
+    ] = Factory(
+        TranscribeVoiceNoteUseCase,
+        message_media_repo=repositories.message_media_repo,
+        media_storage=adapters.media.media_storage,
+        voice_transcriber=adapters.media.voice_transcriber,
+        business_repo=repositories.business_repo,
+        assistant_version_repo=repositories.assistant_version_repo,
+        usage_event_repo=repositories.usage_event_repo,
+        media_settings=config.app_settings.provided.media,
+        wall_clock=time_provider.microsecond_wall_clock,
     )

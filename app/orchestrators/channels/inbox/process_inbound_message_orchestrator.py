@@ -1,12 +1,14 @@
 from app.contracts.conversation_flow import CustomerMessagePipelineContract
+from app.contracts.orchestrator_contract import OrchestratorContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.orchestrators.channels.inbox.inbound_event_orchestrator import (
     InboundEventOrchestrator,
 )
 from app.schemas.domain.inbound_events import InboundEventDocument
-from app.schemas.dto.conversations import AssistantReply
+from app.schemas.dto.conversations import AssistantReply, InboundMessage
 from app.schemas.dto.deliveries import InboundAnswer, InboundEventClaim, InboundFailure
 from app.schemas.dto.jobs import QueuedJobInput
+from app.schemas.dto.media_requests import InboundMediaRequest
 from app.schemas.exceptions.application_errors import ValidationFailedError
 
 
@@ -17,7 +19,8 @@ class ProcessInboundMessageOrchestrator(InboundEventOrchestrator):
     runs through the customer-message pipeline (one customer's messages one
     at a time); its reply goes into the outbox. When an earlier attempt
     already stored the reply, that reply is queued instead of asking the
-    model again.
+    model again. Voice notes, photos and places are read first (downloaded,
+    stored, transcribed), so every message gets an answer.
     """
 
     def __init__(
@@ -33,10 +36,16 @@ class ProcessInboundMessageOrchestrator(InboundEventOrchestrator):
         release_inbound_event: UseCaseContract[
             InboundFailure, InboundEventDocument | None
         ],
+        read_inbound_attachments: OrchestratorContract[
+            InboundMediaRequest, InboundMessage
+        ],
     ) -> None:
         super().__init__(
             claim_inbound_event, finish_inbound_event, release_inbound_event
         )
+        self._read_inbound_attachments: OrchestratorContract[
+            InboundMediaRequest, InboundMessage
+        ] = read_inbound_attachments
         self._recall_inbound_reply: UseCaseContract[
             InboundEventDocument, InboundAnswer | None
         ] = recall_inbound_reply
@@ -52,7 +61,17 @@ class ProcessInboundMessageOrchestrator(InboundEventOrchestrator):
         if claim.message is None:
             raise ValidationFailedError("The inbox event holds no customer message.")
 
-        reply: AssistantReply = self._customer_message_pipeline.start(claim.message)
+        message: InboundMessage = claim.message
+        if claim.event.customer_message and claim.event.customer_message.attachments:
+            message = self._read_inbound_attachments.execute(
+                InboundMediaRequest(
+                    event=claim.event,
+                    message=message,
+                    is_final_attempt=claim.is_final_attempt,
+                )
+            )
+
+        reply: AssistantReply = self._customer_message_pipeline.start(message)
         return InboundAnswer(
             event=claim.event,
             conversation_id=reply.conversation_id,

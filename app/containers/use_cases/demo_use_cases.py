@@ -3,6 +3,7 @@ from dependency_injector.providers import DependenciesContainer, Factory
 
 from app.containers.adapters.adapters_container import AdaptersContainer
 from app.containers.config import ConfigContainer
+from app.containers.container_edges import composed_container_edge
 from app.containers.registries import RegistriesContainer
 from app.containers.repositories import RepositoriesContainer
 from app.containers.time_provider import TimeProviderContainer
@@ -42,7 +43,7 @@ class DemoUseCasesContainer(containers.DeclarativeContainer):
     and load-test datasets (`workshop seed-load`) built from them.
     """
 
-    adapters: AdaptersContainer = DependenciesContainer()  # type: ignore[assignment]
+    adapters: AdaptersContainer = composed_container_edge(AdaptersContainer)  # type: ignore[assignment]
     config: ConfigContainer = DependenciesContainer()  # type: ignore[assignment]
     registries: RegistriesContainer = DependenciesContainer()  # type: ignore[assignment]
     repositories: RepositoriesContainer = DependenciesContainer()  # type: ignore[assignment]
@@ -93,6 +94,8 @@ class DemoUseCasesContainer(containers.DeclarativeContainer):
         audit_log_repo=repositories.audit_log_repo,
         review_settings_repo=repositories.review_settings_repo,
         feedback_request_repo=repositories.feedback_request_repo,
+        message_media_repo=repositories.message_media_repo,
+        media_storage=adapters.media.media_storage,
         app_settings=config.app_settings,
     )
     # `workshop seed-load`: owners and plans, then each business's bulk history.

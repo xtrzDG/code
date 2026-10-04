@@ -10,6 +10,7 @@ from app.schemas.domain.assistants import AssistantVersionDocument
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.contacts import ContactDocument
 from app.schemas.domain.conversations import ConversationDocument, ToolCallRecord
+from app.schemas.domain.message_media import MessageAttachment
 from app.schemas.dto.assistant_tools import AssistantToolContext, AssistantToolOutcome
 from app.schemas.dto.conversations import LlmToolCall
 from app.schemas.typings.assistants.constrained_strings import LlmModelId
@@ -38,6 +39,10 @@ class PreparedTurn(ImmutableDTO):
     `context_line` is the server-written preamble (local date and time,
     channel, known phone, notes) placed before the customer's text in the
     model's user turn; `tool_context` is what tools run with.
+    `customer_text` is everything the customer said, readable (typed text,
+    captions and voice-note transcripts); `model_text` is the message as the
+    model reads it (the same, with lines that say what was a voice note, a
+    photo or a place); `attachments` are those of the message.
     `reply_message_id` is the id the reply must be stored under (chosen by
     the inbox), None for a new one.
     """
@@ -51,6 +56,10 @@ class PreparedTurn(ImmutableDTO):
     is_new_conversation: IsNewConversation
     is_first_reply: IsFirstAssistantReply
     customer_text: MessageText
+    model_text: MessageText
+    attachments: list[MessageAttachment] = Field(
+        default_factory=list[MessageAttachment]
+    )
     reply_message_id: MessageId | None = None
     context_line: MessageText
     tool_context: AssistantToolContext

@@ -3,16 +3,24 @@ from dependency_injector.providers import DependenciesContainer, Factory
 
 from app.containers.provider_chains import use_case_orchestrator
 from app.containers.use_cases.channel_use_cases import ChannelUseCasesContainer
+from app.containers.use_cases.conversation_use_cases import (
+    ConversationUseCasesContainer,
+)
 from app.containers.use_cases.delivery_use_cases import DeliveryUseCasesContainer
 from app.containers.use_cases.follow_up_use_cases import FollowUpUseCasesContainer
 from app.contracts.orchestrator_contract import OrchestratorContract
 from app.orchestrators.channels.inbox.process_platform_bot_update_orchestrator import (
     ProcessPlatformBotUpdateOrchestrator,
 )
+from app.orchestrators.channels.inbox.read_inbound_attachments_orchestrator import (
+    ReadInboundAttachmentsOrchestrator,
+)
 from app.orchestrators.channels.outbox.deliver_outbound_message_orchestrator import (
     DeliverOutboundMessageOrchestrator,
 )
+from app.schemas.dto.conversations import InboundMessage
 from app.schemas.dto.jobs import JobReport, QueuedJobInput
+from app.schemas.dto.media_requests import InboundMediaRequest
 
 
 class ChannelOrchestratorsContainer(containers.DeclarativeContainer):
@@ -24,6 +32,16 @@ class ChannelOrchestratorsContainer(containers.DeclarativeContainer):
     channel_use_cases: ChannelUseCasesContainer = DependenciesContainer()  # type: ignore[assignment]
     delivery_use_cases: DeliveryUseCasesContainer = DependenciesContainer()  # type: ignore[assignment]
     follow_up_use_cases: FollowUpUseCasesContainer = DependenciesContainer()  # type: ignore[assignment]
+    conversation_use_cases: ConversationUseCasesContainer = DependenciesContainer()  # type: ignore[assignment]
+
+    # --- Voice notes and photos of a customer message, read by the worker.
+    read_inbound_attachments_orchestrator: Factory[
+        OrchestratorContract[InboundMediaRequest, InboundMessage]
+    ] = Factory(
+        ReadInboundAttachmentsOrchestrator,
+        fetch_inbound_media=delivery_use_cases.fetch_inbound_media_use_case,
+        transcribe_voice_note=conversation_use_cases.transcribe_voice_note_use_case,
+    )
 
     # --- Channels: webhooks, widget, cabinet settings, staff links.
     verify_meta_webhook_orchestrator = use_case_orchestrator(

@@ -12,6 +12,7 @@ from app.schemas.constants.channels import ChannelKind
 from app.schemas.constants.conversations import ConversationStatus, MessageAuthor
 from app.schemas.constants.handoffs import HandoffReason, HandoffStatus, HandoffUrgency
 from app.schemas.constants.inbox import InboxView
+from app.schemas.constants.media import AttachmentKind
 from app.schemas.constants.users import BusinessMemberRole
 from app.schemas.domain.bookings import LeadDocument
 from app.schemas.domain.contacts import ContactDocument
@@ -134,6 +135,7 @@ class InboxItemView(ImmutableDTO):
     is_assigned_automatically: IsAssignedAutomatically = False
     assignment_revision: AssignmentRevision
     last_message_text: MessagePreview | None = None
+    last_message_attachment: AttachmentKind | None = None
     last_message_author: MessageAuthor | None = None
     last_message_at: Microseconds
     created_at: Microseconds

@@ -88,6 +88,9 @@ class ConversationPipelinesContainer(containers.DeclarativeContainer):
     get_call_recording_pipeline = orchestrator_pipeline(
         conversation_orchestrators.get_call_recording_orchestrator
     )
+    get_message_media_pipeline = orchestrator_pipeline(
+        conversation_orchestrators.get_message_media_orchestrator
+    )
 
     # --- Voice call start.
     start_voice_call_pipeline = orchestrator_pipeline(

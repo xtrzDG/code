@@ -150,6 +150,32 @@ describe("one row shape for both answers", () => {
     } as unknown as ConversationSummaryView;
     const row = rowFromConversation(conversation);
     expect(row.assigneeUserId).toBeUndefined();
-    expect(row).toMatchObject({ isSandbox: true, noteCount: 0, rating: "good", lastMessageText: null });
+    expect(row).toMatchObject({ isSandbox: true, noteCount: 0, rating: "good", lastMessageText: null, lastMessageAttachment: null });
+  });
+
+  it("keeps what the last message carries besides text, for its icon", () => {
+    const voice = rowFromInboxItem({
+      id: "conversation_3",
+      channel: "telegram",
+      status: "open",
+      is_after_hours: false,
+      last_message_at: 7,
+      last_message_text: "Is there a table for four?",
+      last_message_attachment: "audio",
+      note_count: 0,
+      is_assigned_automatically: false,
+    } as unknown as InboxItemView);
+    expect(voice).toMatchObject({ lastMessageText: "Is there a table for four?", lastMessageAttachment: "audio" });
+
+    const photo = rowFromConversation({
+      id: "conversation_4",
+      channel: "whatsapp",
+      status: "open",
+      is_after_hours: false,
+      is_sandbox: false,
+      last_message_at: 8,
+      last_message_attachment: "image",
+    } as unknown as ConversationSummaryView);
+    expect(photo).toMatchObject({ lastMessageText: null, lastMessageAttachment: "image" });
   });
 });

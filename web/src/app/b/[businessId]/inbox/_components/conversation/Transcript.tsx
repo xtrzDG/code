@@ -7,6 +7,8 @@
  * under its message ("Checked free time"); the requests behind it, the
  * model and the cost are in "Technical details". Internal notes of the
  * team are never here: this is what the customer and the assistant said.
+ * Voice messages, photos and places a customer sent are shown above the
+ * words they came with (MessageAttachments).
  */
 
 import { describeError } from "@/api/errors";
@@ -20,7 +22,9 @@ import { useI18n } from "@/i18n/client";
 import { cn } from "@/lib/cn";
 
 import { groupMessagesByDay, messageSide } from "../../_lib/conversationModel";
+import { messageAttachments } from "../../_lib/messageMedia";
 import type { EarlierMessages } from "../../_lib/useEarlierMessages";
+import { MessageAttachments } from "./MessageAttachments";
 import { hasTechnicalDetails, MessageTechnicalDetails } from "./TechnicalDetails";
 
 const BUBBLE: Record<MessageView["author"], string> = {
@@ -108,6 +112,9 @@ function MessageBubble({ message }: { message: MessageView }) {
       : memberName(business.members.find((member) => member.user_id === message.sent_by))
     : null;
   const calls = message.tool_calls ?? [];
+  const attachments = messageAttachments(message);
+  // A voice message or photo alone has no words of its own to show.
+  const hasText = message.text.trim() !== "" || attachments.length === 0;
 
   return (
     <li className={cn("flex", side === "end" ? "justify-end" : side === "center" ? "justify-center" : "justify-start")}>
@@ -131,10 +138,17 @@ function MessageBubble({ message }: { message: MessageView }) {
           {" · "}
           <time dateTime={new Date(message.created_at / 1000).toISOString()}>{format.time(message.created_at)}</time>
         </p>
-        {isVoiceAction ? null : (
+        {attachments.length > 0 ? (
+          <MessageAttachments attachments={attachments} caption={message.text.trim() || null} alignEnd={side === "end"} />
+        ) : null}
+        {isVoiceAction || !hasText ? null : (
           <div
             dir="auto"
-            className={cn("rounded-2xl px-4 py-2.5 text-[0.9375rem] leading-6 break-words whitespace-pre-wrap", BUBBLE[message.author])}
+            className={cn(
+              "rounded-2xl px-4 py-2.5 text-[0.9375rem] leading-6 break-words whitespace-pre-wrap",
+              BUBBLE[message.author],
+              attachments.length > 0 && "mt-2",
+            )}
           >
             {message.text}
           </div>

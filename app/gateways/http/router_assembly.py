@@ -202,6 +202,7 @@ def build_application_routers(app_container: AppContainer) -> list[APIRouter]:
             list_conversation_messages_operator=(
                 conversations.list_conversation_messages_operator()
             ),
+            get_message_media_operator=conversations.get_message_media_operator(),
         ),
         build_assistant_router(
             assemble_assistant_version_operator=(

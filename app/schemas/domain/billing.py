@@ -97,8 +97,13 @@ class InvoiceDocument(BaseDocument):
 
 
 class UsageEventDocument(BaseDocument):
-    """Metered usage with provider cost (concept table `usage_events`)."""
+    """
+    Metered usage with provider cost (concept table `usage_events`).
 
+    Version 2: the kind `transcription_seconds` (voice notes transcribed).
+    """
+
+    schema_version: SchemaVersion = SchemaVersion("2")
     id: UsageEventId = Field(default_factory=UsageEventId)
     business_id: BusinessId
     conversation_id: ConversationId | None = None

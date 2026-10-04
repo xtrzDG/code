@@ -11,8 +11,13 @@ from app.clients.elevenlabs.elevenlabs_client import ElevenLabsClient
 from app.clients.google.google_calendar_client import GoogleCalendarClient
 from app.clients.langfuse.langfuse_ingestion_client import LangfuseIngestionClient
 from app.clients.meta.meta_graph_client import MetaGraphClient
+from app.clients.meta.meta_media_client import MetaMediaClient
 from app.clients.openai.openai_responses_client import OpenAiResponsesClient
+from app.clients.openai.openai_transcription_client import (
+    OpenAiTranscriptionClient,
+)
 from app.clients.telegram.telegram_bot_client import TelegramBotClient
+from app.clients.telegram.telegram_file_client import TelegramFileClient
 from app.containers.app import AppContainer
 from app.schemas.dto.live_events import LiveStreamLimits
 from app.schemas.typings.channels.constrained_strings import PublicBaseUrl
@@ -37,6 +42,7 @@ from tests.e2e.edge_fakes import (
     refuse_openai_sdk,
 )
 from tests.e2e.harness_settings import ELEVENLABS_BASE_URL
+from tests.media.media_fakes import InMemoryMediaStorage
 
 
 class OverridableProvider(Protocol):
@@ -100,6 +106,24 @@ def build_workshop_container(
         container.clients.meta_graph_client,
         MetaGraphClient(transport=build_transport(meta, answer_with_empty_object)),
     )
+    # Files customers send: downloads, speech-to-text and storage stay here.
+    replace_provider(
+        container.clients.telegram_file_client,
+        TelegramFileClient(transport=build_transport(telegram, answer_telegram)),
+    )
+    replace_provider(
+        container.clients.meta_media_client,
+        MetaMediaClient(transport=build_transport(meta, answer_with_empty_object)),
+    )
+    replace_provider(
+        container.clients.openai_transcription_client,
+        OpenAiTranscriptionClient(
+            base_url=settings.openai_base_url,
+            project_id=None,
+            sdk_factory=refuse_openai_sdk,
+        ),
+    )
+    replace_provider(container.adapters.media.media_storage, InMemoryMediaStorage())
     replace_provider(
         container.clients.elevenlabs_client,
         ElevenLabsClient(

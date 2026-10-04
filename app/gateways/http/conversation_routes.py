@@ -17,6 +17,7 @@ from app.gateways.http.conversations.recording_response import (
     RECORDING_OPENAPI_RESPONSES,
     build_recording_response,
 )
+from app.gateways.http.message_media_routes import build_message_media_router
 from app.gateways.http.openapi_error_contract import standard_error_responses
 from app.gateways.http.paging_query import parse_page_request
 from app.gateways.http.strict_request_parsing import (
@@ -52,6 +53,7 @@ from app.schemas.dto.conversation_feed.owner_test_chat import (
     OwnerTestChatRequest,
 )
 from app.schemas.dto.conversations import AssistantReply
+from app.schemas.dto.media import MessageMediaQuery, StoredMediaFile
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.conversations.prefixed_id import CallId, ConversationId
 from app.schemas.typings.users.prefixed_id import UserId
@@ -84,6 +86,7 @@ def build_conversation_router(
     list_conversation_messages_operator: OperatorContract[
         ConversationMessagesQuery, MessagePage
     ],
+    get_message_media_operator: OperatorContract[MessageMediaQuery, StoredMediaFile],
 ) -> APIRouter:
     """
     Routes (all require a bearer token; owners and staff):
@@ -278,4 +281,7 @@ def build_conversation_router(
             )
         )
 
+    router.include_router(
+        build_message_media_router(get_message_media_operator, current_user)
+    )
     return router

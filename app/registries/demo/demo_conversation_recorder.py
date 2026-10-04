@@ -3,6 +3,7 @@ from collections.abc import Sequence
 from typed_time_provider import Microseconds
 
 from app.registries.demo.demo_clock import MICROSECONDS_PER_SECOND, DemoClock
+from app.registries.demo.demo_media_lines import record_line_media
 from app.schemas.constants.channels import ChannelKind, MessageDirection
 from app.schemas.constants.conversations import (
     CallGuardVerdict,
@@ -19,9 +20,10 @@ from app.schemas.domain.conversations import (
     ConversationDocument,
     MessageDocument,
 )
+from app.schemas.domain.message_media import MessageAttachment
 from app.schemas.domain.profiles import OpeningInterval
 from app.schemas.domain.resources import ScheduleExceptionDocument
-from app.schemas.dto.demo_data import DemoMessageLine
+from app.schemas.dto.demo_data import DemoMediaFile, DemoMessageLine
 from app.schemas.typings.assistants.constrained_strings import LlmModelId
 from app.schemas.typings.assistants.prefixed_id import AssistantVersionId
 from app.schemas.typings.billing.constrained_integers import CostMicroUsd
@@ -31,6 +33,7 @@ from app.schemas.typings.conversations.constrained_integers import (
     CallDurationSeconds,
     LlmTokenCount,
 )
+from app.schemas.typings.conversations.prefixed_id import MessageId
 from app.schemas.typings.conversations.strings import (
     CallTranscriptText,
     ChannelUserId,
@@ -82,6 +85,7 @@ class DemoConversationRecorder:
         self.conversations: list[ConversationDocument] = []
         self.messages: list[MessageDocument] = []
         self.calls: list[CallDocument] = []
+        self.media_files: list[DemoMediaFile] = []
 
     def contact(
         self,
@@ -223,7 +227,14 @@ class DemoConversationRecorder:
     ) -> MessageDocument:
         is_model_reply: bool = line.author is MessageAuthor.ASSISTANT
         output_tokens: int = len(str(line.text)) // CHARACTERS_PER_TOKEN + 20
+        message_id = MessageId()
+        attachments: list[MessageAttachment]
+        attachments, files = record_line_media(
+            self._business.id, message_id, line, moment
+        )
+        self.media_files.extend(files)
         return MessageDocument(
+            id=message_id,
             conversation_id=conversation.id,
             business_id=self._business.id,
             direction=(
@@ -238,6 +249,7 @@ class DemoConversationRecorder:
                 self._team_member_id if line.author is MessageAuthor.STAFF else None
             ),
             tool_calls=list(line.tool_calls),
+            attachments=attachments,
             model_id=self._model_id if is_model_reply else None,
             input_tokens=LlmTokenCount(REPLY_INPUT_TOKENS if is_model_reply else 0),
             output_tokens=LlmTokenCount(output_tokens if is_model_reply else 0),

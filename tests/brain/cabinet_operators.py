@@ -34,6 +34,7 @@ from app.schemas.dto.conversation_feed.conversation_views import (
 )
 from app.schemas.dto.conversation_feed.owner_test_chat import OwnerTestChatCommand
 from app.schemas.dto.conversations import AssistantReply
+from app.schemas.dto.media import MessageMediaQuery, StoredMediaFile
 from app.schemas.dto.menu_import import (
     ConfirmImportedItemsCommand,
     ConfirmImportedItemsResult,
@@ -56,6 +57,9 @@ from app.use_cases.conversations.get_call_recording_use_case import (
     GetCallRecordingUseCase,
 )
 from app.use_cases.conversations.get_conversation_use_case import GetConversationUseCase
+from app.use_cases.conversations.get_message_media_use_case import (
+    GetMessageMediaUseCase,
+)
 from app.use_cases.conversations.list_conversations_use_case import (
     ListConversationsUseCase,
 )
@@ -97,6 +101,7 @@ class CabinetOperators:
     owner_test_chat: OperatorContract[OwnerTestChatCommand, AssistantReply]
     send_staff_message: OperatorContract[SendStaffMessageCommand, StaffMessageResult]
     get_call_recording: OperatorContract[CallRecordingQuery, RecordingPart]
+    get_message_media: OperatorContract[MessageMediaQuery, StoredMediaFile]
     list_conversation_messages: OperatorContract[ConversationMessagesQuery, MessagePage]
     import_menu: OperatorContract[ImportMenuCommand, MenuImportResult]
     confirm_imported_items: OperatorContract[
@@ -190,6 +195,19 @@ def build_cabinet_operators(
                         authorize_business_access=world.authorize,
                         call_repo=world.call_repo,
                         recording_storage=storage.recording_storage,
+                        audit_log_repo=world.audit_log_repo,
+                        wall_clock=world.clock.wall_clock(),
+                    )
+                )
+            )
+        ),
+        get_message_media=PipelineOperator(
+            OrchestratorPipeline(
+                UseCaseOrchestrator(
+                    GetMessageMediaUseCase(
+                        authorize_business_access=world.authorize,
+                        message_media_repo=storage.message_media_repo,
+                        media_storage=storage.media_storage,
                         audit_log_repo=world.audit_log_repo,
                         wall_clock=world.clock.wall_clock(),
                     )

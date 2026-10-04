@@ -5,9 +5,13 @@ and replayed in order, so the transcript stays append-only.
 """
 
 import json
+from collections.abc import Sequence
 
 from app.schemas.dto.conversations import LlmToolResult
+from app.schemas.dto.media import LlmImageInput
 from app.schemas.typings.conversations.strings import LlmProviderPayload, MessageText
+
+STORED_MEDIA_SOURCE: str = "stored_media"
 
 
 def build_user_text_payload(text: MessageText) -> LlmProviderPayload:
@@ -16,6 +20,33 @@ def build_user_text_payload(text: MessageText) -> LlmProviderPayload:
             {"role": "user", "content": [{"type": "text", "text": str(text)}]},
             ensure_ascii=False,
         )
+    )
+
+
+def build_user_media_payload(
+    text: MessageText, images: Sequence[LlmImageInput]
+) -> LlmProviderPayload:
+    """
+    The text, then one `image` block per photo whose source names the
+    stored file (`stored_media`); `media_resolving_llm_adapter` turns it
+    into the picture's bytes for each request.
+    """
+
+    content: list[dict[str, object]] = [{"type": "text", "text": str(text)}]
+    content.extend(
+        {
+            "type": "image",
+            "source": {
+                "type": STORED_MEDIA_SOURCE,
+                "business_id": str(image.location.business_id),
+                "path": str(image.location.path),
+                "media_type": str(image.media_type),
+            },
+        }
+        for image in images
+    )
+    return LlmProviderPayload(
+        json.dumps({"role": "user", "content": content}, ensure_ascii=False)
     )
 
 

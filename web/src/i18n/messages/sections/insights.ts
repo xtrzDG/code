@@ -17,6 +17,9 @@ import { bookingsRu } from "./insights/bookings.ru";
 import { insightsCommonEn } from "./insights/common.en";
 import { insightsCommonKa } from "./insights/common.ka";
 import { insightsCommonRu } from "./insights/common.ru";
+import { conversationMediaEn } from "./insights/conversationMedia.en";
+import { conversationMediaKa } from "./insights/conversationMedia.ka";
+import { conversationMediaRu } from "./insights/conversationMedia.ru";
 import { conversationsEn } from "./insights/conversations.en";
 import { conversationsKa } from "./insights/conversations.ka";
 import { conversationsRu } from "./insights/conversations.ru";
@@ -49,6 +52,7 @@ export const insightsEn = {
   insights: insightsCommonEn,
   dashboard: dashboardEn,
   conversations: conversationsEn,
+  conversationMedia: conversationMediaEn,
   bookings: bookingsEn,
   leads: leadsEn,
   handoffs: handoffsEn,
@@ -63,6 +67,7 @@ export const insightsRu: Translation<typeof insightsEn> = {
   insights: insightsCommonRu,
   dashboard: dashboardRu,
   conversations: conversationsRu,
+  conversationMedia: conversationMediaRu,
   bookings: bookingsRu,
   leads: leadsRu,
   handoffs: handoffsRu,
@@ -77,6 +82,7 @@ export const insightsKa: Translation<typeof insightsEn> = {
   insights: insightsCommonKa,
   dashboard: dashboardKa,
   conversations: conversationsKa,
+  conversationMedia: conversationMediaKa,
   bookings: bookingsKa,
   leads: leadsKa,
   handoffs: handoffsKa,

@@ -114,6 +114,7 @@ class DemoActivityBuilder:
             feedback_requests=build_demo_feedback_requests(
                 self.business, self.desk.bookings, self.talk.contacts, self.clock.now
             ),
+            media_files=self.talk.media_files,
         )
 
     def _assign_oldest_waiting_conversation(self) -> None:

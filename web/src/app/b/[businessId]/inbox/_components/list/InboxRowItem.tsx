@@ -23,6 +23,8 @@ import { formatPhone } from "@/lib/phone";
 
 import { initialsOf } from "../../_lib/conversationModel";
 import type { InboxRow } from "../../_lib/inboxModel";
+import { ATTACHMENT_KIND_LABELS } from "../../_lib/messageMedia";
+import { ATTACHMENT_ICONS } from "../attachmentIcons";
 import type { TeamMember } from "../../_lib/team";
 import { MemberAvatar } from "../MemberAvatar";
 
@@ -51,6 +53,21 @@ function Assignee({ row, member }: { row: InboxRow; member: TeamMember | null })
         {name}
       </span>
     </span>
+  );
+}
+
+/** A voice message, photo or place in the preview: an icon, and its name when nothing was written. */
+function AttachmentMark({ kind, withLabel }: { kind: NonNullable<InboxRow["lastMessageAttachment"]>; withLabel: boolean }) {
+  const { t } = useI18n();
+  const Icon = ATTACHMENT_ICONS[kind];
+  return (
+    <>
+      <Icon className="me-1 inline-block size-4 align-[-3px] text-ink-subtle" aria-hidden />
+      <span className={withLabel ? undefined : "sr-only"}>
+        {t(ATTACHMENT_KIND_LABELS[kind])}
+        {withLabel ? null : ": "}
+      </span>
+    </>
   );
 }
 
@@ -103,12 +120,13 @@ export function InboxRowItem({
             </span>
             <span className="shrink-0 text-xs text-ink-subtle">{when}</span>
           </span>
-          {row.lastMessageText ? (
+          {row.lastMessageText || row.lastMessageAttachment ? (
             <span className="mt-0.5 line-clamp-2 text-sm break-words text-ink-muted" data-clip="content">
               {row.lastMessageAuthor && row.lastMessageAuthor !== "customer" ? (
                 <span className="text-ink-subtle">{t(MESSAGE_AUTHORS[row.lastMessageAuthor])}: </span>
               ) : null}
-              <bdi>{row.lastMessageText}</bdi>
+              {row.lastMessageAttachment ? <AttachmentMark kind={row.lastMessageAttachment} withLabel={!row.lastMessageText} /> : null}
+              {row.lastMessageText ? <bdi>{row.lastMessageText}</bdi> : null}
             </span>
           ) : null}
           <span className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1.5 text-xs text-ink-muted">
