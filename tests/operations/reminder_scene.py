@@ -31,6 +31,7 @@ from app.transformers.notifications.booking_reminder_transformer import (
     BookingReminderTransformer,
 )
 from app.use_cases.bookings.reminders.send_booking_reminders_use_case import (
+    DEFAULT_REMINDER_LEAD,
     SendBookingRemindersUseCase,
 )
 from app.utilities.localization.localized_text_resolver import LocalizedTextResolver
@@ -86,7 +87,9 @@ class ReminderScene:
                 if reminder_template is None
                 else WhatsAppTemplateName(reminder_template)
             ),
-            **({} if reminder_lead is None else {"reminder_lead": reminder_lead}),
+            reminder_lead=(
+                DEFAULT_REMINDER_LEAD if reminder_lead is None else reminder_lead
+            ),
         )
 
     def customer_wrote(

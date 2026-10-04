@@ -1,6 +1,5 @@
 """Meta channels refused by the platform turn ERROR and heal."""
 
-
 from app.schemas.constants.channels import ChannelKind, ChannelStatus
 from app.utilities.channels.channel_health import summarize_channel_error
 from tests.channels.channels_settings import PAGE_ACCESS_TOKEN

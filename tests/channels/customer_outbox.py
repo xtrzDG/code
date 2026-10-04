@@ -23,9 +23,7 @@ from app.utilities.deliveries.delivery_keys import (
 from tests.channels.testbed import ChannelsTestbed
 
 
-def template(
-    name: str, language_code: str, parameters: list[str]
-) -> OutboundTemplate:
+def template(name: str, language_code: str, parameters: list[str]) -> OutboundTemplate:
     return OutboundTemplate(
         name=WhatsAppTemplateName(name),
         language_code=WhatsAppTemplateLanguageCode(language_code),
