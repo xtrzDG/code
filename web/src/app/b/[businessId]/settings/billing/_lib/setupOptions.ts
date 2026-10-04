@@ -26,7 +26,12 @@ export function setupOptionFee(quote: PlanQuote, option: SetupOption, period: Bi
   return fee && fee.money.amount_minor > 0 ? fee : null;
 }
 
-/** How the subscription's business gets set up, as the billing page tells it (null: chosen when subscribing). */
+/**
+ * How the subscription's business gets set up, as the billing page tells
+ * it: null before any subscription (chosen when subscribing); a
+ * subscription from before the choice, or a trial, pays no setup fee,
+ * like a self-serve one.
+ */
 export type SetupState =
   | { kind: "self_serve" }
   | { kind: "done_for_you"; requestedAt: number | null }
@@ -36,5 +41,5 @@ export function setupState(subscription: SubscriptionView | null | undefined): S
   if (subscription?.setup_option === "done_for_you") {
     return { kind: "done_for_you", requestedAt: subscription.onboarding_requested_at ?? null };
   }
-  return subscription?.setup_option === "self_serve" ? { kind: "self_serve" } : null;
+  return subscription ? { kind: "self_serve" } : null;
 }

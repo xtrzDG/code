@@ -54,9 +54,9 @@ describe("setup state", () => {
     });
   });
 
-  it("tells a self-serve setup, and nothing before the choice", () => {
+  it("tells a self-serve setup (a trial or an older subscription pays no fee either), and nothing before a subscription", () => {
     expect(setupState(subscription({ setup_option: "self_serve" }))).toEqual({ kind: "self_serve" });
-    expect(setupState(subscription({}))).toBeNull();
+    expect(setupState(subscription({}))).toEqual({ kind: "self_serve" });
     expect(setupState(null)).toBeNull();
   });
 });
