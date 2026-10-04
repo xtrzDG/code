@@ -34,6 +34,7 @@ export function ExportCsvButton({
   iconOnly?: boolean;
   variant?: ButtonVariant;
   disabled?: boolean;
+  /** Size overrides (an icon-only button is 2rem square unless this sets its width). */
   className?: string;
 }) {
   const { t } = useI18n();
@@ -54,7 +55,7 @@ export function ExportCsvButton({
       leadingIcon={<IconDownload className="size-4" aria-hidden />}
       aria-label={label ?? (iconOnly ? text : undefined)}
       title={hint ?? label}
-      className={cn(iconOnly && "w-8 gap-0 px-0", className)}
+      className={cn(iconOnly && "gap-0 px-0", className ?? (iconOnly ? "w-8" : undefined))}
       onClick={() => void download(table, query)}
     >
       {iconOnly ? null : text}

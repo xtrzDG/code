@@ -7,7 +7,7 @@
  * says how many are set.
  */
 
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 
 import { IconSearch, IconX } from "@/components/icons";
 import { Button, Input, Sheet } from "@/components/ui";
@@ -26,7 +26,16 @@ function FilterGlyph() {
   );
 }
 
-export function InboxToolbar({ filters, onChange }: { filters: InboxFilters; onChange: (filters: InboxFilters) => void }) {
+export function InboxToolbar({
+  filters,
+  onChange,
+  trailing,
+}: {
+  filters: InboxFilters;
+  onChange: (filters: InboxFilters) => void;
+  /** After the search and the filters button (the export button). */
+  trailing?: ReactNode;
+}) {
   const { t } = useI18n();
   const id = useId();
   // Typed text not yet applied; null shows the applied search.
@@ -92,6 +101,7 @@ export function InboxToolbar({ filters, onChange }: { filters: InboxFilters; onC
         >
           {filterCount > 0 ? t("inbox.filters.openWithCount", { count: filterCount }) : t("inbox.filters.open")}
         </Button>
+        {trailing}
       </div>
 
       <div className="hidden lg:block">

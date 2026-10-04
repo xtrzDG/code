@@ -43,6 +43,18 @@ export function InboxShell({ children }: { children: ReactNode }) {
   const linkQuery = inboxFiltersQuery(filters);
 
   const setFilters = (next: InboxFilters) => replaceUrlQuery(inboxFiltersQuery(next));
+  // The view and channel as CSV, every message included (owners only).
+  const exportButton = (variant: "ghost" | "secondary", className?: string) => (
+    <ExportCsvButton
+      table="conversations"
+      query={inboxApiQuery(filters)}
+      label={t("dataExports.csv.inboxLabel")}
+      hint={t("dataExports.csv.inboxHint")}
+      variant={variant}
+      className={className}
+      iconOnly
+    />
+  );
 
   return (
     <div className="lg:grid lg:h-[calc(100dvh-4rem)] lg:grid-cols-[minmax(19rem,23rem)_minmax(0,1fr)] lg:gap-5 xl:grid-cols-[minmax(21rem,25rem)_minmax(0,1fr)]">
@@ -56,14 +68,8 @@ export function InboxShell({ children }: { children: ReactNode }) {
           </h1>
           <div className="flex items-center gap-2">
             <LiveStatus updatedAt={list.page.updatedAt} isFetching={list.page.isFetching && list.rows !== undefined} />
-            <ExportCsvButton
-              table="conversations"
-              query={inboxApiQuery(filters)}
-              label={t("dataExports.csv.inboxLabel")}
-              hint={t("dataExports.csv.inboxHint")}
-              variant="ghost"
-              iconOnly
-            />
+            {/* Phones: beside the title (the live status is a dot in the top bar); large screens: by the search. */}
+            <div className="lg:hidden">{exportButton("ghost")}</div>
           </div>
         </header>
         <InboxViewTabs
@@ -71,7 +77,11 @@ export function InboxShell({ children }: { children: ReactNode }) {
           counts={list.counts}
           onChange={(view) => setFilters(withView(filters, view))}
         />
-        <InboxToolbar filters={filters} onChange={setFilters} />
+        <InboxToolbar
+          filters={filters}
+          onChange={setFilters}
+          trailing={<div className="hidden lg:block">{exportButton("secondary", "h-10 w-10")}</div>}
+        />
         <InboxList
           list={list}
           filters={filters}
