@@ -1,10 +1,9 @@
 """Imported knowledge and customer-typed tool data reach the model fenced."""
 
-from app.schemas.constants.knowledge import KnowledgeItemKind, KnowledgeItemSource
+from app.schemas.constants.knowledge import KnowledgeItemSource
 from app.schemas.domain.assistants import BusinessFact
-from app.schemas.dto.knowledge import KnowledgeItemView, KnowledgeSearchResult
-from app.schemas.typings.knowledge.prefixed_id import KnowledgeItemId
-from app.schemas.typings.knowledge.strings import KnowledgeBody, KnowledgeTitle
+from app.schemas.dto.knowledge import KnowledgeSearchResult
+from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.schemas.typings.profiles.constrained_strings import FactKey
 from app.schemas.typings.profiles.strings import FactLabel, FactValue
 from app.transformers.assembly.business_facts_transformer import (
@@ -16,6 +15,7 @@ from app.utilities.assembly.phone_instruction_sections import (
 )
 from app.utilities.conversations.tool_payloads import render_knowledge_search
 from app.utilities.conversations.untrusted_text import UNTRUSTED_RULE, wrap_untrusted
+from app.utilities.knowledge.knowledge_item_views import to_item_view
 from tests.assembly.builders import build_menu_item
 from tests.assembly.business_facts_helpers import build_source
 from tests.assembly.georgian_restaurant_seed import seed_georgian_restaurant
@@ -75,19 +75,21 @@ def test_items_imported_from_a_website_become_imported_facts() -> None:
     )
 
 
-def test_imported_bodies_in_search_results_are_wrapped() -> None:
-    def item(is_imported: bool) -> KnowledgeItemView:
-        return KnowledgeItemView(
-            id=KnowledgeItemId(),
-            kind=KnowledgeItemKind.FAQ,
-            title=KnowledgeTitle("Parking"),
-            body=KnowledgeBody(INJECTED_BODY),
-            is_imported=is_imported,
-        )
+def test_imported_bodies_reach_the_model_wrapped() -> None:
+    testbed = AssemblyTestbed()
+    business = seed_georgian_restaurant(testbed)
+    imported = build_menu_item(business, "Imported soup", 900, body=INJECTED_BODY)
+    imported.source = KnowledgeItemSource.MENU_IMPORT
+    owned = build_menu_item(business, "Owner soup", 900, body="Hot and fresh.")
 
+    imported_view = to_item_view(imported, business.currency_code, LanguageTag("en"))
+    owned_view = to_item_view(owned, business.currency_code, LanguageTag("en"))
     payload = str(
-        render_knowledge_search(KnowledgeSearchResult(items=[item(True), item(False)]))
+        render_knowledge_search(
+            KnowledgeSearchResult(items=[imported_view, owned_view])
+        )
     )
 
+    assert str(imported_view.body) == wrap_untrusted(INJECTED_BODY)
+    assert str(owned_view.body) == "Hot and fresh."
     assert payload.count("<untrusted>") == 1
-    assert "‹/untrusted›" in payload

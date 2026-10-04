@@ -62,8 +62,8 @@ def test_the_cabinet_gets_the_code_the_quote_and_the_values() -> None:
     assert item.flagged_values == ["250 ₪", "19:30"]
     # The owner writes in Hebrew, which has no template: English it is.
     assert str(item.summary) == (
-        "The assistant held back an answer with figures that are not in your "
-        "business details (250 ₪, 19:30). "
+        "The assistant held back an answer with figures or statements that are "
+        "not in your business details (250 ₪, 19:30). "
         f"The customer's message: “{QUESTION}”"
     )
 
@@ -88,8 +88,8 @@ def test_every_staff_contact_reads_it_in_their_own_language() -> None:
         for contact, text in fixture.world.notifier.sent
     }
     assert (
-        "Помощник не отправил ответ: в нём были цифры, которых нет в данных "
-        f"бизнеса (250 ₪, 19:30). Сообщение клиента: «{QUESTION}»"
+        "Помощник не отправил ответ: в нём были цифры или утверждения, которых "
+        f"нет в данных бизнеса (250 ₪, 19:30). Сообщение клиента: «{QUESTION}»"
     ) in texts["ru"].splitlines()
     assert "ასისტენტმა პასუხი არ გაგზავნა" in texts["ka"]
     assert "The AI model" not in texts["ru"] + texts["ka"]

@@ -11,6 +11,31 @@ Kinds of change: **Added**, **Changed** (additive), **Deprecated** (with
 sunset date), **Removed** and **Breaking** (only with the `api-breaking`
 label and a migration path).
 
+## 2026-10-04 — reply guard beyond numbers: stored verdicts, GUARD_SPIKE
+
+Spec: `a4d3fb74c835b55f`
+
+- **Changed** `MessageView` (`GET /v1/businesses/{business_id}/conversations/{conversation_id}`
+  and `.../{conversation_id}/messages`) gains `guard` (`MessageGuardView`, null when
+  there is nothing to show): on an assistant reply its `verdict` (`clean`,
+  `rewritten`, `handed_off`), `reasons` (`unverified_values`,
+  `unsupported_claims`, `personal_data`), the `unverified_values` and the
+  checked `claim_findings` (`ClaimFindingView`: `claim`, `topic` —
+  `policy` or `availability` — and `verdict` — `supported`,
+  `unsupported` or `unchecked`); on a customer message its
+  `injection_flag` (`instruction_override`, `role_change`,
+  `prompt_extraction`, `data_exfiltration`, `fake_platform_text`).
+- **Changed** `AdminClientSummary` (`GET /v1/admin/clients`,
+  `GET /v1/admin/clients/{business_id}`) gains `guard_activity`
+  (`ClientGuardActivity`: `checked_replies`, `rewritten_replies`,
+  `handed_off_replies`, `injection_flags` of the last 7 days).
+- **Changed** `ClientHealthIssue` gains `guard_spike`: at least five
+  replies held back and at least one in six, or at least ten messages
+  flagged as prompt injection, in the last 7 days.
+- **Changed** `MessageDocument` (schema version 4) and
+  `AssistantVersionDocument` (schema version 5, `facts[].is_imported`)
+  gain optional fields; older rows read as they are.
+
 ## 2026-10-04 — wave 9 together: reply speed, any language, outbox everywhere, platform operations
 
 Spec: `26522d8605b0100d`

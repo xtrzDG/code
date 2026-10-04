@@ -7,12 +7,14 @@ from app.schemas.domain.knowledge import KnowledgeItemDocument
 from app.schemas.domain.resources import ResourceDocument
 from app.schemas.dto.knowledge import KnowledgeItemView
 from app.schemas.dto.knowledge_admin import KnowledgeItemDetails
+from app.schemas.typings.knowledge.strings import KnowledgeBody
 from app.schemas.typings.localization.constrained_strings import (
     CurrencyCode,
     LanguageTag,
 )
 from app.schemas.typings.localization.strings import FormattedMoneyText
 from app.utilities.bookings.offer_links import linked_performer_ids
+from app.utilities.conversations.untrusted_text import wrap_untrusted
 from app.utilities.knowledge.money_formatting import format_money_minor
 
 
@@ -37,13 +39,16 @@ def to_item_view(
     fallback_currency_code: CurrencyCode,
     language: LanguageTag,
 ) -> KnowledgeItemView:
-    """The item as the language model sees it (search_knowledge, get_price)."""
+    """
+    The item as the language model sees it (search_knowledge, get_price):
+    imported text as an untrusted block.
+    """
 
     return KnowledgeItemView(
         id=item.id,
         kind=item.kind,
         title=item.title,
-        body=item.body,
+        body=model_body(item),
         price_minor=item.price_minor,
         currency_code=(
             None
@@ -55,8 +60,19 @@ def to_item_view(
         buffer_minutes=item.buffer_minutes,
         seasonal_rates=list(item.seasonal_rates),
         tags=list(item.tags),
-        is_imported=item.source is KnowledgeItemSource.MENU_IMPORT,
     )
+
+
+def model_body(item: KnowledgeItemDocument) -> KnowledgeBody | None:
+    """
+    The item's text as the model reads it: text imported from a website or
+    a menu file comes as an untrusted block.
+    """
+
+    if item.body is None or item.source is not KnowledgeItemSource.MENU_IMPORT:
+        return item.body
+
+    return KnowledgeBody(wrap_untrusted(str(item.body)))
 
 
 def to_item_details(

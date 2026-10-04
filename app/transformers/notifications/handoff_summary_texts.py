@@ -29,12 +29,12 @@ SUMMARY_TEXTS: Mapping[HandoffSummaryCode, LocalizedText] = {
         ka="ასისტენტმა პასუხის დასრულება ვერ მოახერხა.",
     ),
     HandoffSummaryCode.UNVERIFIED_VALUES: localized(
-        en="The assistant held back an answer with figures that are not in "
-        "your business details.",
-        ru="Помощник не отправил ответ: в нём были цифры, которых нет в данных "
-        "бизнеса.",
-        ka="ასისტენტმა პასუხი არ გაგზავნა: მასში იყო ციფრები, რომლებიც "
-        "ბიზნესის მონაცემებში არ არის.",
+        en="The assistant held back an answer with figures or statements that "
+        "are not in your business details.",
+        ru="Помощник не отправил ответ: в нём были цифры или утверждения, "
+        "которых нет в данных бизнеса.",
+        ka="ასისტენტმა პასუხი არ გაგზავნა: მასში იყო ციფრები ან მტკიცებები, "
+        "რომლებიც ბიზნესის მონაცემებში არ არის.",
     ),
     HandoffSummaryCode.CALL_BOOKING_UNVERIFIED_VALUES: localized(
         en="On the call the assistant named figures that are not in your "
@@ -69,12 +69,12 @@ SUMMARY_TEXTS: Mapping[HandoffSummaryCode, LocalizedText] = {
 # What happened, for a code with flagged values: `{values}` lists them.
 SUMMARY_TEXTS_WITH_VALUES: Mapping[HandoffSummaryCode, LocalizedText] = {
     HandoffSummaryCode.UNVERIFIED_VALUES: localized(
-        en="The assistant held back an answer with figures that are not in "
-        "your business details ({values}).",
-        ru="Помощник не отправил ответ: в нём были цифры, которых нет в данных "
-        "бизнеса ({values}).",
-        ka="ასისტენტმა პასუხი არ გაგზავნა: მასში იყო ციფრები, რომლებიც "
-        "ბიზნესის მონაცემებში არ არის ({values}).",
+        en="The assistant held back an answer with figures or statements that "
+        "are not in your business details ({values}).",
+        ru="Помощник не отправил ответ: в нём были цифры или утверждения, "
+        "которых нет в данных бизнеса ({values}).",
+        ka="ასისტენტმა პასუხი არ გაგზავნა: მასში იყო ციფრები ან მტკიცებები, "
+        "რომლებიც ბიზნესის მონაცემებში არ არის ({values}).",
     ),
     HandoffSummaryCode.CALL_BOOKING_UNVERIFIED_VALUES: localized(
         en="On the call the assistant named figures that are not in your "

@@ -71,8 +71,7 @@ def render_knowledge_item(item: KnowledgeItemView) -> dict[str, object]:
         "title": str(item.title),
     }
     if item.body is not None:
-        body: str = str(item.body)
-        rendered["body"] = wrap_untrusted(body) if item.is_imported else body
+        rendered["body"] = str(item.body)
 
     if item.price_minor is not None and item.currency_code is not None:
         rendered["price"] = format_major_units(

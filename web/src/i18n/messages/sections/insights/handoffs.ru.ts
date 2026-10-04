@@ -50,7 +50,7 @@ export const handoffsRu: Translation<typeof handoffsEn> = {
     model_declined: "Помощник не стал отвечать на это сообщение.",
     model_unavailable: "Помощник был временно недоступен и не смог ответить.",
     answer_unfinished: "Помощник не смог закончить ответ.",
-    unverified_values: "Помощник не отправил ответ: в нём были цифры, которых нет в данных бизнеса.",
+    unverified_values: "Помощник не отправил ответ: в нём были цифры или утверждения, которых нет в данных бизнеса.",
     call_booking_unverified_values:
       "Во время звонка помощник назвал цифры, которых нет в данных бизнеса. Сверьте бронь из этого звонка с расшифровкой.",
     call_request_unverified_values:
@@ -59,7 +59,7 @@ export const handoffsRu: Translation<typeof handoffsEn> = {
     data_erased: "Данные удалены по просьбе клиента.",
   },
   summaryCodesWithValues: {
-    unverified_values: "Помощник не отправил ответ: в нём были цифры, которых нет в данных бизнеса ({values}).",
+    unverified_values: "Помощник не отправил ответ: в нём были цифры или утверждения, которых нет в данных бизнеса ({values}).",
     call_booking_unverified_values:
       "Во время звонка помощник назвал цифры, которых нет в данных бизнеса ({values}). Сверьте бронь из этого звонка с расшифровкой.",
     call_request_unverified_values:
