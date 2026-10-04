@@ -36,3 +36,5 @@ export const PLATFORM_ADMIN_EMAIL = "platform-admin@e2e.workshop.example";
 export const METRICS_ADMIN_EMAIL = "metrics-admin@e2e.workshop.example";
 /** A platform admin who sets up the authenticator app through the sign-in page (two-factor.spec.ts). */
 export const MFA_ADMIN_EMAIL = "mfa-admin@e2e.workshop.example";
+/** A platform admin of the System page (admin-system.spec.ts). */
+export const SYSTEM_ADMIN_EMAIL = "system-admin@e2e.workshop.example";

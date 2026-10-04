@@ -91,6 +91,7 @@ export const settingsRecordsEn = {
       message_opt_out: "Customer opt-out of messages",
       review_settings: "Review settings",
       feedback_request: "Feedback requests",
+      incident: "Platform incident",
     },
   },
   roles: {

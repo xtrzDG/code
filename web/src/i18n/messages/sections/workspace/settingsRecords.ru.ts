@@ -98,6 +98,7 @@ export const settingsRecordsRu: Translation<typeof settingsRecordsEn> = {
       message_opt_out: "Отказ клиента от рассылок",
       review_settings: "Настройки отзывов",
       feedback_request: "Запросы отзывов",
+      incident: "Инцидент платформы",
     },
   },
   roles: {

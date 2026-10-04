@@ -34,7 +34,7 @@ function leaves(tree: MessageTree, prefix = ""): Leaf[] {
 const NOT_CABINET = new Set(["landing"]);
 
 /** The Assistant's advanced pages (updates, checks) and the platform admin, where versions and autotests are named. */
-const ADVANCED = new Set(["assistant", "admin", "adminSecurity"]);
+const ADVANCED = new Set(["assistant", "admin", "adminSecurity", "adminSystem"]);
 
 const namespaceOf = (path: string) => path.split(".")[0] ?? "";
 

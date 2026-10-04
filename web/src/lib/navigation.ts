@@ -45,6 +45,8 @@ export const ADMIN_PATH = "/admin";
 export const ADMIN_SECURITY_PATH = "/admin/security";
 /** The founder's growth metrics: funnel, MRR, cohorts, Web Vitals. */
 export const ADMIN_METRICS_PATH = "/admin/metrics";
+/** The platform's health: alerts, workers, queues, dead letters, channels, storage, incidents. */
+export const ADMIN_SYSTEM_PATH = "/admin/system";
 /** Account → Security: the authenticator app and recovery codes. */
 export const ACCOUNT_SECURITY_PATH = "/account/security";
 /** Shown by the service worker (public/sw.js) when a page cannot be loaded. */
