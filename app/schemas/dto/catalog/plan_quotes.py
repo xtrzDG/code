@@ -3,7 +3,7 @@
 from base_pydantic_schemas import ImmutableDTO
 from pydantic import Field, computed_field
 
-from app.schemas.constants.billing import ExchangeRateSource, PlanKey
+from app.schemas.constants.billing import ExchangeRateSource, PlanKey, SetupOption
 from app.schemas.constants.channels import ChannelKind
 from app.schemas.dto.billing import Money
 from app.schemas.typings.billing.booleans import (
@@ -86,13 +86,26 @@ class QuotedMoney(ImmutableDTO):
     is_estimated: IsPriceEstimated = False
 
 
+class SetupOptionQuote(ImmutableDTO):
+    """
+    What one way of being set up costs, once: in EUR and, when known, in
+    the country's currency (SELF_SERVE is free everywhere).
+    """
+
+    option: SetupOption
+    fee: QuotedMoney
+    local_fee: QuotedMoney | None = None
+
+
 class PlanQuote(ImmutableDTO):
     """
     One plan priced in EUR and, when known, in the country's currency.
 
     `annual_price` is the price of twelve months with the annual discount.
     Local prices are None when neither the price book nor an official rate
-    knows the currency: prices are never invented.
+    knows the currency: prices are never invented. `setup_fee` is the
+    DONE_FOR_YOU setup fee; `setup_options` prices both ways of being set
+    up (the owner alone in the cabinet is free).
     """
 
     plan_key: PlanKey
@@ -113,6 +126,9 @@ class PlanQuote(ImmutableDTO):
     local_annual_price: QuotedMoney | None = None
     local_setup_fee: QuotedMoney | None = None
     local_overage_price_per_minute: QuotedMoney | None = None
+    setup_options: list[SetupOptionQuote] = Field(
+        default_factory=list[SetupOptionQuote]
+    )
 
 
 class PlanQuoteList(ImmutableDTO):

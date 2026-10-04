@@ -1793,6 +1793,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/businesses/{business_id}/setup/guide-dismissal": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Dismiss Guide */
+        put: operations["dismiss_guide_v1_businesses__business_id__setup_guide_dismissal_put"];
+        post?: never;
+        /** Bring Guide Back */
+        delete: operations["bring_guide_back_v1_businesses__business_id__setup_guide_dismissal_delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/businesses/{business_id}/setup/milestones/{kind}/celebrate": {
         parameters: {
             query?: never;
@@ -1804,6 +1822,58 @@ export interface paths {
         put?: never;
         /** Celebrate Milestone */
         post: operations["celebrate_milestone_v1_businesses__business_id__setup_milestones__kind__celebrate_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/businesses/{business_id}/setup/phone-check": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Start Phone Check */
+        post: operations["start_phone_check_v1_businesses__business_id__setup_phone_check_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/businesses/{business_id}/setup/reminders": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Reminders */
+        get: operations["get_reminders_v1_businesses__business_id__setup_reminders_get"];
+        /** Update Reminders */
+        put: operations["update_reminders_v1_businesses__business_id__setup_reminders_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/businesses/{business_id}/setup/share-marks/{mark}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Mark Shared */
+        post: operations["mark_shared_v1_businesses__business_id__setup_share_marks__mark__post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2501,10 +2571,15 @@ export interface components {
          * ActivationEventKind
          * @description A milestone on the way from sign-up to the first customers, recorded
          *     once per business: the owner tried the test chat, the assistant went
-         *     live (first publish), the first real conversation, booking and handoff.
+         *     live (first publish), the first real conversation, booking and handoff,
+         *     and the first booking made while the business was closed.
+         *
+         *     FIRST_AFTER_HOURS_BOOKING is new in this release, so it is kept in the
+         *     setup state (`SetupStateDocument.after_hours_booking_at`) rather than
+         *     in `activation_events`, which the release before reads.
          * @enum {string}
          */
-        ActivationEventKind: "test_chat_tried" | "went_live" | "first_conversation" | "first_booking" | "first_handoff";
+        ActivationEventKind: "test_chat_tried" | "went_live" | "first_conversation" | "first_booking" | "first_handoff" | "first_after_hours_booking";
         /**
          * ActivationMilestoneView
          * @description A milestone reached; `celebrated_at` is set once the cabinet showed it.
@@ -2559,6 +2634,8 @@ export interface components {
          * AdminClientSummary
          * @description One client in the admin list: subscription, assistant quality, staff
          *     load, package use in the current period, cost and margin, and health.
+         *     `setup_option` is how the business is set up; `onboarding_request` the
+         *     done-for-you setup its owner asked the platform team for.
          */
         AdminClientSummary: {
             autotest_verdict?: components["schemas"]["ClientAutotestVerdict"] | null;
@@ -2594,6 +2671,7 @@ export interface components {
             /** Name */
             name: string;
             niche_key: components["schemas"]["NicheKey"];
+            onboarding_request?: components["schemas"]["OnboardingRequestView"] | null;
             /** Open Unanswered Questions */
             open_unanswered_questions: number;
             /** Period End */
@@ -2604,6 +2682,7 @@ export interface components {
             /** Published Version Number */
             published_version_number?: number | null;
             service_mode: components["schemas"]["ServiceMode"];
+            setup_option?: components["schemas"]["SetupOption"] | null;
             subscription_status?: components["schemas"]["SubscriptionStatus"] | null;
             /** Tool Errors Last 7 Days */
             tool_errors_last_7_days: number;
@@ -6505,6 +6584,22 @@ export interface components {
             telegram_username?: string | null;
         };
         /**
+         * OnboardingRequestStatus
+         * @description A done-for-you setup the owner asked for: OPEN until the team is done.
+         * @enum {string}
+         */
+        OnboardingRequestStatus: "open" | "done";
+        /**
+         * OnboardingRequestView
+         * @description The owner asked the platform team to set the business up.
+         */
+        OnboardingRequestView: {
+            plan_key: components["schemas"]["PlanKey"];
+            /** Requested At */
+            requested_at: number;
+            status: components["schemas"]["OnboardingRequestStatus"];
+        };
+        /**
          * OpeningInterval
          * @description One opening interval in the business time zone (closing may be 24:00).
          */
@@ -6760,7 +6855,9 @@ export interface components {
          *
          *     `annual_price` is the price of twelve months with the annual discount.
          *     Local prices are None when neither the price book nor an official rate
-         *     knows the currency: prices are never invented.
+         *     knows the currency: prices are never invented. `setup_fee` is the
+         *     DONE_FOR_YOU setup fee; `setup_options` prices both ways of being set
+         *     up (the owner alone in the cabinet is free).
          */
         PlanQuote: {
             /** Annual Discount Percent */
@@ -6788,6 +6885,8 @@ export interface components {
             overage_price_per_minute: components["schemas"]["QuotedMoney"];
             plan_key: components["schemas"]["PlanKey"];
             setup_fee: components["schemas"]["QuotedMoney"];
+            /** Setup Options */
+            setup_options?: components["schemas"]["SetupOptionQuote"][];
             /** Trial Days */
             trial_days: number;
         };
@@ -7246,10 +7345,12 @@ export interface components {
          *     PROFILE (with a wizard step), STAFF_CONTACTS, CHANNELS,
          *     TEST_CHAT, AGREEMENT (the data processing agreement), BILLING,
          *     CHECKS (the automatic checks, under Advanced), APPLY_CHANGES, or
-         *     OVERVIEW once everything is done.
+         *     OVERVIEW once everything is done; after the launch PHONE_TEST (the
+         *     guide's QR code to write from a phone) and SHARE (the link and QR code
+         *     for customers).
          * @enum {string}
          */
-        SetupActionTarget: "profile" | "staff_contacts" | "channels" | "test_chat" | "agreement" | "billing" | "checks" | "apply_changes" | "overview";
+        SetupActionTarget: "profile" | "staff_contacts" | "channels" | "test_chat" | "agreement" | "billing" | "checks" | "apply_changes" | "overview" | "phone_test" | "share";
         /**
          * SetupActionView
          * @description Where the owner goes to act: a cabinet place (and the wizard step for
@@ -7262,13 +7363,90 @@ export interface components {
             target: components["schemas"]["SetupActionTarget"];
         };
         /**
+         * SetupGuideView
+         * @description The whole guide: the setup's seven steps (`SetupView.steps`) and the
+         *     three after the launch (`steps_after_launch`: writing from the owner's
+         *     own phone, a second channel, the link or QR code where customers see
+         *     it), with the guide's own next step, share done (skipped steps do not
+         *     count) and minutes left. `is_complete` once the assistant is live and
+         *     every step is done or skipped; `is_dismissed` once the owner put the
+         *     finished guide away.
+         *
+         *     `is_phone_check_listening` while a conversation that starts counts as
+         *     the owner's test (until `phone_check_until`); `phone_tested_at` is when
+         *     the first message from the owner's phone arrived.
+         */
+        SetupGuideView: {
+            /** Is Complete */
+            is_complete: boolean;
+            /**
+             * Is Dismissed
+             * @default false
+             */
+            is_dismissed: boolean;
+            /**
+             * Is Phone Check Listening
+             * @default false
+             */
+            is_phone_check_listening: boolean;
+            /** Minutes Left */
+            minutes_left: number;
+            next_action: components["schemas"]["SetupActionView"];
+            next_step?: components["schemas"]["SetupStepCode"] | null;
+            /** Percent */
+            percent: number;
+            /** Phone Check Until */
+            phone_check_until?: number | null;
+            /** Phone Tested At */
+            phone_tested_at?: number | null;
+            /** Steps After Launch */
+            steps_after_launch?: components["schemas"]["SetupStepView"][];
+        };
+        /**
+         * SetupOption
+         * @description How a business gets set up: SELF_SERVE, the owner in the cabinet's
+         *     guided setup (free), or DONE_FOR_YOU, the platform team sets it up for
+         *     the plan's setup fee (an onboarding request reaches the team).
+         * @enum {string}
+         */
+        SetupOption: "self_serve" | "done_for_you";
+        /**
+         * SetupOptionQuote
+         * @description What one way of being set up costs, once: in EUR and, when known, in
+         *     the country's currency (SELF_SERVE is free everywhere).
+         */
+        SetupOptionQuote: {
+            fee: components["schemas"]["QuotedMoney"];
+            local_fee?: components["schemas"]["QuotedMoney"] | null;
+            option: components["schemas"]["SetupOption"];
+        };
+        /**
+         * SetupRemindersView
+         * @description Whether the owners get activation reminders (by e-mail, Telegram and on
+         *     their devices) while the launch or the first customers are not there.
+         */
+        SetupRemindersView: {
+            /** Business Id */
+            business_id: string;
+            /** Is On */
+            is_on: boolean;
+        };
+        /**
          * SetupStepCode
          * @description One step of the guided setup, in the order the owner walks them: about
          *     the business, what it offers, hours and bookings, who receives handoffs,
-         *     where customers write, trying the assistant, and going live.
+         *     where customers write, trying the assistant, and going live. After the
+         *     launch the guide goes on to the first real customer: writing to the
+         *     assistant from the owner's own phone (PHONE_TEST), a second channel
+         *     where customers write (SECOND_CHANNEL), and the link or QR code where
+         *     customers see it (SHARE).
+         *
+         *     The steps after the launch are new in this release: a skip of one is
+         *     stored apart (`SetupStateDocument.skipped_after_launch`), which the
+         *     release before ignores.
          * @enum {string}
          */
-        SetupStepCode: "business" | "offer" | "hours_and_bookings" | "staff_contact" | "channels" | "test" | "launch";
+        SetupStepCode: "business" | "offer" | "hours_and_bookings" | "staff_contact" | "channels" | "test" | "launch" | "phone_test" | "second_channel" | "share";
         /**
          * SetupStepStatus
          * @description Where a setup step stands: DONE, SKIPPED (an optional step the owner
@@ -7304,7 +7482,8 @@ export interface components {
          *     `percent` counts done steps among those not skipped; `minutes_left`
          *     adds up the steps still ahead. `can_go_live` is True once every
          *     required step before the launch is done; `is_complete` once the
-         *     assistant is live and every required step is done.
+         *     assistant is live and every required step is done. `guide` goes on
+         *     after the launch, to the first real customers (the Overview's guide).
          */
         SetupView: {
             apply: components["schemas"]["ApplyChangesView"];
@@ -7312,6 +7491,7 @@ export interface components {
             business_id: string;
             /** Can Go Live */
             can_go_live: boolean;
+            guide: components["schemas"]["SetupGuideView"];
             /** Is Complete */
             is_complete: boolean;
             /** Is Live */
@@ -7426,11 +7606,15 @@ export interface components {
          * StaffLinkTarget
          * @description The cabinet page a notification link opens (after sign-in). REPORT is a
          *     stored digest or monthly report on the Reports page (owners), where its
-         *     reader also turns the summaries off. Link targets live only in signed
+         *     reader also turns the summaries off; OVERVIEW is the business's
+         *     Overview (a milestone's celebration waits there). The activation
+         *     reminders open SETUP (the guided setup, at the saved step), CHANNELS,
+         *     SHARE (the link and QR card on the Channels page) and BILLING (where
+         *     the done-for-you setup is chosen). Link targets live only in signed
          *     links, never in stored documents.
          * @enum {string}
          */
-        StaffLinkTarget: "conversation" | "lead" | "booking" | "notifications" | "report";
+        StaffLinkTarget: "conversation" | "lead" | "booking" | "notifications" | "report" | "overview" | "setup" | "channels" | "share" | "billing";
         /**
          * StaffLinkView
          * @description Where a link leads, for the cabinet to open (it maps the target to its
@@ -7660,7 +7844,10 @@ export interface components {
         SubscriptionStatus: "incomplete" | "trialing" | "active" | "past_due" | "cancelled";
         /**
          * SubscriptionView
-         * @description The subscription as the billing page shows it.
+         * @description The subscription as the billing page shows it; `setup_option` is how
+         *     the business is set up (None: chosen before the choice existed, free),
+         *     `onboarding_requested_at` when the owner asked the platform team to set
+         *     it up.
          */
         SubscriptionView: {
             billing_period: components["schemas"]["BillingPeriod"];
@@ -7670,6 +7857,8 @@ export interface components {
             has_auto_debit: boolean;
             /** Id */
             id: string;
+            /** Onboarding Requested At */
+            onboarding_requested_at?: number | null;
             /** Period End */
             period_end: number;
             /** Period Start */
@@ -7678,6 +7867,7 @@ export interface components {
             /** Plan Name */
             plan_name: string;
             price: components["schemas"]["QuotedMoney"];
+            setup_option?: components["schemas"]["SetupOption"] | null;
             status: components["schemas"]["SubscriptionStatus"];
             /** Trial Ends At */
             trial_ends_at?: number | null;
@@ -11868,6 +12058,15 @@ export interface operations {
                     plan_key: "chat" | "voice_and_chat" | "plus";
                     /** Return Url */
                     return_url?: string | null;
+                    /**
+                     * SetupOption
+                     * @description How a business gets set up: SELF_SERVE, the owner in the cabinet's
+                     *     guided setup (free), or DONE_FOR_YOU, the platform team sets it up for
+                     *     the plan's setup fee (an onboarding request reaches the team).
+                     * @default self_serve
+                     * @enum {string}
+                     */
+                    setup_option?: "self_serve" | "done_for_you";
                 };
             };
         };
@@ -20964,6 +21163,178 @@ export interface operations {
             };
         };
     };
+    dismiss_guide_v1_businesses__business_id__setup_guide_dismissal_put: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SetupView"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    bring_guide_back_v1_businesses__business_id__setup_guide_dismissal_delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
     celebrate_milestone_v1_businesses__business_id__setup_milestones__kind__celebrate_post: {
         parameters: {
             query?: never;
@@ -20986,6 +21357,360 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["ActivationMilestoneView"];
                 };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    start_phone_check_v1_businesses__business_id__setup_phone_check_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SetupView"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    get_reminders_v1_businesses__business_id__setup_reminders_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SetupRemindersView"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    update_reminders_v1_businesses__business_id__setup_reminders_put: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Is On */
+                    is_on: boolean;
+                };
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SetupRemindersView"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    mark_shared_v1_businesses__business_id__setup_share_marks__mark__post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+                mark: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Sign-in required: the bearer token is missing, invalid or expired. */
             401: {

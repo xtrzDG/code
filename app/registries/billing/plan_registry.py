@@ -4,9 +4,10 @@ from app.registries.billing.plan_catalog import (
     LOCAL_SETUP_FEE_BOOK,
     PLAN_DEFINITIONS,
 )
-from app.schemas.constants.billing import PlanKey
+from app.schemas.constants.billing import PlanKey, SetupOption
 from app.schemas.dto.billing import Money, PlanDefinition
 from app.schemas.exceptions.application_errors import NotFoundError
+from app.schemas.typings.billing.constrained_integers import MoneyAmountMinor
 from app.schemas.typings.localization.constrained_strings import CurrencyCode
 
 
@@ -60,6 +61,23 @@ class PlanRegistry(PlanRegistryContract):
             LOCAL_SETUP_FEE_BOOK.get(plan_key, ()),
             currency_code,
         )
+
+    def find_setup_fee(
+        self,
+        plan_key: PlanKey,
+        option: SetupOption,
+        currency_code: CurrencyCode,
+    ) -> Money | None:
+        if option is SetupOption.DONE_FOR_YOU:
+            return self.find_local_setup_fee(plan_key, currency_code)
+
+        for setup_fee in self.get(plan_key).setup_fees:
+            if setup_fee.option is option and setup_fee.fee.amount_minor == 0:
+                return Money(
+                    amount_minor=MoneyAmountMinor(0), currency_code=currency_code
+                )
+
+        return None
 
 
 def find_price_book_price(

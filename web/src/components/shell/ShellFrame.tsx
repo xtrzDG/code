@@ -33,6 +33,7 @@ export function ShellFrame({
   showTabBar = true,
   showPhoneTopBar = true,
   isWide = false,
+  ring,
   children,
 }: {
   items: readonly ShellNavItem[];
@@ -52,6 +53,8 @@ export function ShellFrame({
   showPhoneTopBar?: boolean;
   /** The page uses the full width of large screens (the inbox: a list beside a conversation). */
   isWide?: boolean;
+  /** The setup guide's progress: under the switcher, and in the phone's bar (compact). */
+  ring?: (compact: boolean) => ReactNode;
   children: ReactNode;
 }) {
   const { t } = useI18n();
@@ -82,7 +85,14 @@ export function ShellFrame({
       >
         <Sidebar
           items={items}
-          top={switcher?.(undefined, collapsed)}
+          top={
+            switcher || ring ? (
+              <>
+                {switcher?.(undefined, collapsed)}
+                {ring?.(collapsed)}
+              </>
+            ) : undefined
+          }
           replacement={sidebarReplacement}
           me={me}
           collapsed={collapsed}
@@ -95,6 +105,7 @@ export function ShellFrame({
         <PhoneTopBar
           title={title}
           context={context}
+          ring={ring?.(true)}
           action={
             showTabBar ? undefined : (
               <button

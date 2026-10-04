@@ -33,6 +33,12 @@ export const notificationsEn = {
     testFailed: "The test did not reach this device: {error}",
     testPending: "The test to this device will be tried again: {error}",
   },
+  setupReminders: {
+    title: "Setup reminders",
+    label: "Setup reminders",
+    description:
+      "A few short reminders in the first days, in Telegram, by e-mail and on your devices: when the assistant is not live yet, has one channel only or no customers yet. They stop by themselves once everything is done.",
+  },
   mine: {
     title: "What reaches me",
     description: "Your choice for your own devices in this business. Times are in the business time zone, {timeZone}.",

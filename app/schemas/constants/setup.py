@@ -7,7 +7,15 @@ class SetupStepCode(StrEnum):
     """
     One step of the guided setup, in the order the owner walks them: about
     the business, what it offers, hours and bookings, who receives handoffs,
-    where customers write, trying the assistant, and going live.
+    where customers write, trying the assistant, and going live. After the
+    launch the guide goes on to the first real customer: writing to the
+    assistant from the owner's own phone (PHONE_TEST), a second channel
+    where customers write (SECOND_CHANNEL), and the link or QR code where
+    customers see it (SHARE).
+
+    The steps after the launch are new in this release: a skip of one is
+    stored apart (`SetupStateDocument.skipped_after_launch`), which the
+    release before ignores.
     """
 
     BUSINESS = "business"
@@ -17,6 +25,9 @@ class SetupStepCode(StrEnum):
     CHANNELS = "channels"
     TEST = "test"
     LAUNCH = "launch"
+    PHONE_TEST = "phone_test"
+    SECOND_CHANNEL = "second_channel"
+    SHARE = "share"
 
 
 class SetupStepStatus(StrEnum):
@@ -37,7 +48,9 @@ class SetupActionTarget(StrEnum):
     PROFILE (with a wizard step), STAFF_CONTACTS, CHANNELS,
     TEST_CHAT, AGREEMENT (the data processing agreement), BILLING,
     CHECKS (the automatic checks, under Advanced), APPLY_CHANGES, or
-    OVERVIEW once everything is done.
+    OVERVIEW once everything is done; after the launch PHONE_TEST (the
+    guide's QR code to write from a phone) and SHARE (the link and QR code
+    for customers).
     """
 
     PROFILE = "profile"
@@ -49,6 +62,8 @@ class SetupActionTarget(StrEnum):
     CHECKS = "checks"
     APPLY_CHANGES = "apply_changes"
     OVERVIEW = "overview"
+    PHONE_TEST = "phone_test"
+    SHARE = "share"
 
 
 class StarterSection(StrEnum):
@@ -82,7 +97,12 @@ class ActivationEventKind(StrEnum):
     """
     A milestone on the way from sign-up to the first customers, recorded
     once per business: the owner tried the test chat, the assistant went
-    live (first publish), the first real conversation, booking and handoff.
+    live (first publish), the first real conversation, booking and handoff,
+    and the first booking made while the business was closed.
+
+    FIRST_AFTER_HOURS_BOOKING is new in this release, so it is kept in the
+    setup state (`SetupStateDocument.after_hours_booking_at`) rather than
+    in `activation_events`, which the release before reads.
     """
 
     TEST_CHAT_TRIED = "test_chat_tried"
@@ -90,6 +110,18 @@ class ActivationEventKind(StrEnum):
     FIRST_CONVERSATION = "first_conversation"
     FIRST_BOOKING = "first_booking"
     FIRST_HANDOFF = "first_handoff"
+    FIRST_AFTER_HOURS_BOOKING = "first_after_hours_booking"
+
+
+class SetupShareMark(StrEnum):
+    """
+    How the owner put the assistant where customers find it, as the cabinet
+    reports it: printed the QR card (PRINTED_QR) or saved the QR code as an
+    image (DOWNLOADED_QR).
+    """
+
+    PRINTED_QR = "printed_qr"
+    DOWNLOADED_QR = "downloaded_qr"
 
 
 class ApplyChangesStage(StrEnum):

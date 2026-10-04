@@ -11,7 +11,10 @@
  * that: one big "Create an AI assistant" entry, and every page shows the
  * invitation to create it. The setup flow itself (/b/{id}/setup) is full
  * screen, without the frame. Over the pages, owners see the changes their
- * customers do not get yet, with "Apply changes" (components/assistant).
+ * customers do not get yet, with "Apply changes" (components/assistant),
+ * and the setup guide's progress ring until the guide is finished; the
+ * first customers and bookings are celebrated with a toast (components/
+ * setupGuide).
  */
 
 import { usePathname } from "next/navigation";
@@ -23,6 +26,8 @@ import { ADMIN_PATH, businessLocation, businessPath, isConversationPath, type Bu
 import { SECTION_LABELS, canOpenPage, pageLabel, sectionOf, visiblePages, visibleSections, type BusinessSection } from "@/lib/sections";
 
 import { ApplyChangesProvider } from "../assistant/ApplyChangesContext";
+import { MilestoneCelebrations } from "../setupGuide/MilestoneCelebrations";
+import { SetupRing } from "../setupGuide/SetupRing";
 import { PendingChangesBanner } from "../assistant/PendingChangesBanner";
 import { BusinessSwitcher } from "../BusinessSwitcher";
 import { useBusiness } from "../business/BusinessContext";
@@ -104,6 +109,7 @@ function CabinetFrame({ children, prefetch, initialCollapsed }: { children: Reac
       showTabBar={!isConversationPath(pathname)}
       showPhoneTopBar={!isConversationPath(pathname)}
       isWide={page === "inbox"}
+      ring={(compact) => <SetupRing compact={compact} />}
       switcher={(onNavigate, compact) => (
         <BusinessSwitcher
           memberships={me.memberships ?? []}
@@ -121,6 +127,7 @@ function CabinetFrame({ children, prefetch, initialCollapsed }: { children: Reac
           {/* Changes customers do not get yet; an open conversation keeps the whole phone screen. */}
           {isConversationPath(pathname) ? null : <PendingChangesBanner />}
           {children}
+          <MilestoneCelebrations />
         </>
       )}
     </ShellFrame>

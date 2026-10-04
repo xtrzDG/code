@@ -19,6 +19,7 @@ import { BillingNotices } from "./_components/BillingNotices";
 import { BillingSkeleton } from "./_components/BillingSkeleton";
 import { InvoicesCard } from "./_components/InvoicesCard";
 import { PlansSection } from "./_components/PlansSection";
+import { SetupOptionsNote } from "./_components/SetupOptionsNote";
 import { SubscriptionCard } from "./_components/SubscriptionCard";
 import { UsageCard } from "./_components/UsageCard";
 import {
@@ -133,6 +134,8 @@ export function BillingScreen({ isCheckoutReturn }: { isCheckoutReturn: boolean 
             canManage={isOwner}
             onChoose={openChoice}
           />
+
+          <SetupOptionsNote subscription={data.subscription} />
 
           <InvoicesCard invoices={data.invoices} />
         </div>

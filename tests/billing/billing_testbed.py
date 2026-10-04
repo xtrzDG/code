@@ -15,7 +15,7 @@ from fastapi.testclient import TestClient
 from typed_time_provider import Microseconds
 
 from app.contracts.use_case_contract import UseCaseContract
-from app.schemas.constants.billing import PlanKey, UsageKind
+from app.schemas.constants.billing import PlanKey, SetupOption, UsageKind
 from app.schemas.constants.localization import DataRegion
 from app.schemas.constants.niches import NicheKey
 from app.schemas.constants.users import BusinessMemberRole, LoginMethod
@@ -125,6 +125,13 @@ class BillingTestbed(BillingUseCases):
         subscriptions = self.subscription_repo.list_by_business(business_id)
         assert len(subscriptions) == 1
         return subscriptions[0]
+
+    def set_up_for_you(self, business_id: BusinessId) -> None:
+        """The platform team sets this business up: the setup fee applies."""
+
+        subscription = self.subscription(business_id)
+        subscription.setup_option = SetupOption.DONE_FOR_YOU
+        self.subscription_repo.save(subscription)
 
     def invoices(self, business_id: BusinessId) -> list[InvoiceDocument]:
         return sorted(

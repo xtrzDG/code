@@ -1,7 +1,9 @@
 from collections.abc import Callable
 
-from typed_time_provider import Microseconds
+from typed_time_provider import Microseconds, WallClock
 
+from app.contracts.localization_utilities import LocalizedTextResolverContract
+from app.contracts.notifications import StaffAlertFacilitatorContract
 from app.contracts.repositories.assistant_repositories import (
     AssistantVersionRepoContract,
 )
@@ -9,15 +11,18 @@ from app.contracts.repositories.business_repositories import BusinessRepoContrac
 from app.contracts.repositories.setup_repositories import (
     ActivationEventRepoContract,
     ActivationProbeRepoContract,
+    SetupStateRepoContract,
 )
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.setup import ActivationEventKind
 from app.schemas.domain.businesses import BusinessDocument
+from app.schemas.domain.setup import SetupStateDocument
 from app.schemas.dto.setup.setup_progress import (
     ActivationEventRecord,
     ActivationMilestoneCheck,
 )
 from app.schemas.typings.businesses.prefixed_id import BusinessId
+from app.use_cases.setup.milestone_announcements import announce_milestone
 
 
 class RecordActivationMilestonesUseCase(
@@ -30,7 +35,10 @@ class RecordActivationMilestonesUseCase(
     were recorded), the first real conversation, booking and handoff (test
     chats and automatic checks do not count). Real customers only reach a
     business that went live, so nothing is probed before that; a milestone
-    already stored is never probed again.
+    already stored is never probed again. The first real conversation and
+    booking, noticed within a day, are announced to the team's devices and
+    Telegram chats (once: the alert names the milestone); a first
+    conversation that was the owner's own test from a phone is not.
     """
 
     def __init__(
@@ -39,7 +47,11 @@ class RecordActivationMilestonesUseCase(
         assistant_version_repo: AssistantVersionRepoContract,
         activation_event_repo: ActivationEventRepoContract,
         activation_probe_repo: ActivationProbeRepoContract,
+        setup_state_repo: SetupStateRepoContract,
         record_activation_event: UseCaseContract[ActivationEventRecord, None],
+        staff_alerts: StaffAlertFacilitatorContract,
+        localized_text_resolver: LocalizedTextResolverContract,
+        wall_clock: WallClock[Microseconds],
     ) -> None:
         self._business_repo: BusinessRepoContract = business_repo
         self._assistant_version_repo: AssistantVersionRepoContract = (
@@ -47,9 +59,13 @@ class RecordActivationMilestonesUseCase(
         )
         self._activation_event_repo: ActivationEventRepoContract = activation_event_repo
         self._activation_probe_repo: ActivationProbeRepoContract = activation_probe_repo
+        self._setup_state_repo: SetupStateRepoContract = setup_state_repo
         self._record_activation_event: UseCaseContract[ActivationEventRecord, None] = (
             record_activation_event
         )
+        self._staff_alerts: StaffAlertFacilitatorContract = staff_alerts
+        self._resolver: LocalizedTextResolverContract = localized_text_resolver
+        self._wall_clock: WallClock[Microseconds] = wall_clock
 
     def run(self, input_data: ActivationMilestoneCheck) -> None:
         business: BusinessDocument | None = self._business_repo.get(
@@ -87,8 +103,33 @@ class RecordActivationMilestonesUseCase(
                 continue
 
             occurred_at: Microseconds | None = probe(business.id)
-            if occurred_at is not None:
-                self._record(business.id, kind, occurred_at)
+            if occurred_at is None:
+                continue
+
+            self._record(business.id, kind, occurred_at)
+            if not self._is_owners_test(business, kind, occurred_at):
+                announce_milestone(
+                    self._staff_alerts,
+                    self._resolver,
+                    business,
+                    kind,
+                    occurred_at,
+                    self._wall_clock.now_unix(),
+                )
+
+    def _is_owners_test(
+        self,
+        business: BusinessDocument,
+        kind: ActivationEventKind,
+        occurred_at: Microseconds,
+    ) -> bool:
+        if kind is not ActivationEventKind.FIRST_CONVERSATION:
+            return False
+
+        state: SetupStateDocument | None = self._setup_state_repo.get_by_business(
+            business.id
+        )
+        return state is not None and state.phone_tested_at == occurred_at
 
     def _find_first_publish(self, business: BusinessDocument) -> Microseconds | None:
         if business.published_assistant_version_id is None:

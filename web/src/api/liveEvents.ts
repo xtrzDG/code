@@ -135,10 +135,14 @@ export function invalidationsFor(event: LiveEvent, businessId: string): QueryKey
       // A request opens or closes: the Requests view and the cards it is on.
       return [counts, dashboard, queryKeys.leads.all(businessId), queryKeys.conversations.all(businessId)];
     case "booking.created":
+      // A first booking is a milestone of the setup guide.
+      return [counts, dashboard, queryKeys.bookings.all(businessId), queryKeys.setup.progressAll(businessId)];
     case "booking.changed":
       return [counts, dashboard, queryKeys.bookings.all(businessId)];
-    case "channel.error":
     case "channel.changed":
+      // A second channel is a step of the setup guide.
+      return [counts, queryKeys.channels.all(businessId), queryKeys.setup.progressAll(businessId)];
+    case "channel.error":
       return [counts, queryKeys.channels.all(businessId)];
     case "autotest.progress":
       // The checks of a version, and of "Apply changes" while it checks.

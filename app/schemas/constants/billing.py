@@ -9,6 +9,24 @@ class PlanKey(StrEnum):
     PLUS = "plus"
 
 
+class SetupOption(StrEnum):
+    """
+    How a business gets set up: SELF_SERVE, the owner in the cabinet's
+    guided setup (free), or DONE_FOR_YOU, the platform team sets it up for
+    the plan's setup fee (an onboarding request reaches the team).
+    """
+
+    SELF_SERVE = "self_serve"
+    DONE_FOR_YOU = "done_for_you"
+
+
+class OnboardingRequestStatus(StrEnum):
+    """A done-for-you setup the owner asked for: OPEN until the team is done."""
+
+    OPEN = "open"
+    DONE = "done"
+
+
 class BillingPeriod(StrEnum):
     """How often a subscription is charged."""
 

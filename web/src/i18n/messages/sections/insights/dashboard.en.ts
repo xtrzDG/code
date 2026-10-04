@@ -40,7 +40,7 @@ export const dashboardEn = {
     },
     live: {
       title: "The assistant answers customers",
-      description: "Connect every channel your customers write and call in.",
+      description: "Customers get answers and bookings in the connected channels. The period is below.",
       action: "Channels",
     },
     paused: {

@@ -8,6 +8,7 @@ import { useI18n } from "@/i18n/client";
 
 import { encodeQr, qrPath, qrPngBlob, qrSide, qrSvgDocument, saveBlob } from "../_lib/qrCode";
 import { displayUrl, downloadName, LINK_KIND_LABELS, type ShareLink, type ShareSource } from "../_lib/share";
+import { useShareMark } from "../_lib/useShareMark";
 import { TableCardPanel } from "./TableCardPanel";
 
 /**
@@ -38,17 +39,20 @@ export function QrCard({
   const name = t(LINK_KIND_LABELS[link.kind]);
   const fileName = downloadName(slug, link.kind, source);
   const side = qrSide(matrix);
+  const markShared = useShareMark();
 
   const downloadPng = async () => {
     const blob = await qrPngBlob(matrix);
     if (blob) {
       saveBlob(blob, `${fileName}.png`);
+      markShared("downloaded_qr");
     } else {
       toast.info(t("share.printFailed"));
     }
   };
   const downloadSvg = () => {
     saveBlob(new Blob([qrSvgDocument(matrix, displayUrl(link.url))], { type: "image/svg+xml" }), `${fileName}.svg`);
+    markShared("downloaded_qr");
   };
 
   return (

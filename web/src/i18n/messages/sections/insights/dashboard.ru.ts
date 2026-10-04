@@ -45,7 +45,7 @@ export const dashboardRu: Translation<typeof dashboardEn> = {
     },
     live: {
       title: "Помощник отвечает клиентам",
-      description: "Подключите все каналы, в которых вам пишут и звонят клиенты.",
+      description: "Клиенты получают ответы и записи в подключённых каналах. Итоги периода — ниже.",
       action: "Каналы",
     },
     paused: {

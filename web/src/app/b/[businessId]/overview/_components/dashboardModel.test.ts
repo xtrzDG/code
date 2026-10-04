@@ -5,6 +5,7 @@ import {
   isDashboardPeriod,
   isLaunched,
   nearestDayIndex,
+  needsStatusCard,
   nextStep,
   periodRange,
   toBars,
@@ -40,6 +41,24 @@ describe("next step", () => {
     const step = nextStep({ status: "live", service_mode: "leads_only" });
     expect(step.page).toBe("settings/billing");
     expect(step.tone).toBe("danger");
+  });
+});
+
+describe("the status card", () => {
+  it("gives way to the setup guide for owners of a business being set up or live", () => {
+    expect(needsStatusCard({ status: "onboarding", service_mode: "full" }, true)).toBe(false);
+    expect(needsStatusCard({ status: "testing", service_mode: "full" }, true)).toBe(false);
+    expect(needsStatusCard({ status: "live", service_mode: "full" }, true)).toBe(false);
+  });
+
+  it("stays for owners when the plan is unpaid or the assistant is paused", () => {
+    expect(needsStatusCard({ status: "live", service_mode: "leads_only" }, true)).toBe(true);
+    expect(needsStatusCard({ status: "paused", service_mode: "full" }, true)).toBe(true);
+    expect(needsStatusCard({ status: "onboarding", service_mode: "leads_only" }, true)).toBe(false);
+  });
+
+  it("always shows staff the status", () => {
+    expect(needsStatusCard({ status: "live", service_mode: "full" }, false)).toBe(true);
   });
 });
 

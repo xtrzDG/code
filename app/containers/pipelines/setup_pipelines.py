@@ -33,3 +33,25 @@ class SetupPipelinesContainer(containers.DeclarativeContainer):
     patch_profile_pipeline = orchestrator_pipeline(
         setup_orchestrators.patch_profile_orchestrator
     )
+    # The guide after the launch and its two periodic jobs.
+    start_phone_check_pipeline = orchestrator_pipeline(
+        setup_orchestrators.start_phone_check_orchestrator
+    )
+    mark_setup_shared_pipeline = orchestrator_pipeline(
+        setup_orchestrators.mark_setup_shared_orchestrator
+    )
+    dismiss_setup_guide_pipeline = orchestrator_pipeline(
+        setup_orchestrators.dismiss_setup_guide_orchestrator
+    )
+    get_setup_reminders_pipeline = orchestrator_pipeline(
+        setup_orchestrators.get_setup_reminders_orchestrator
+    )
+    update_setup_reminders_pipeline = orchestrator_pipeline(
+        setup_orchestrators.update_setup_reminders_orchestrator
+    )
+    notice_milestones_pipeline = orchestrator_pipeline(
+        setup_orchestrators.notice_milestones_orchestrator
+    )
+    send_activation_nudges_pipeline = orchestrator_pipeline(
+        setup_orchestrators.send_activation_nudges_orchestrator
+    )

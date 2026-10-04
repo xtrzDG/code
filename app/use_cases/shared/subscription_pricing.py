@@ -12,7 +12,7 @@ from decimal import Decimal
 
 from app.contracts.catalog_registries import ExchangeRateRegistryContract
 from app.contracts.registries import PlanRegistryContract
-from app.schemas.constants.billing import BillingPeriod, PlanKey
+from app.schemas.constants.billing import BillingPeriod, PlanKey, SetupOption
 from app.schemas.dto.billing import Money, PlanDefinition
 from app.schemas.dto.catalog.plan_quotes import ExchangeRateQuote, QuotedMoney
 from app.schemas.exceptions.application_errors import ValidationFailedError
@@ -107,15 +107,17 @@ def price_setup_fee(
     plan_registry: PlanRegistryContract,
     plan_key: PlanKey,
     currency_code: CurrencyCode,
+    option: SetupOption = SetupOption.DONE_FOR_YOU,
 ) -> Money:
     """
+    The one-time fee of a setup option (SELF_SERVE is free).
+
     Raises:
         ValidationFailedError: the plan has no setup fee in this currency.
     """
 
-    setup_fee: Money | None = plan_registry.find_local_setup_fee(
-        plan_key,
-        currency_code,
+    setup_fee: Money | None = plan_registry.find_setup_fee(
+        plan_key, option, currency_code
     )
     if setup_fee is None:
         raise ValidationFailedError(

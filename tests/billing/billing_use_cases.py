@@ -21,6 +21,9 @@ from app.use_cases.billing.assemble_billing_overview_use_case import (
 from app.use_cases.billing.cancel_subscription_use_case import CancelSubscriptionUseCase
 from app.use_cases.billing.change_plan_use_case import ChangePlanUseCase
 from app.use_cases.billing.check_package_usage_use_case import CheckPackageUsageUseCase
+from app.use_cases.billing.choose_setup_option_use_case import (
+    ChooseSetupOptionUseCase,
+)
 from app.use_cases.billing.compute_client_cost_use_case import ComputeClientCostUseCase
 from app.use_cases.billing.end_trials_use_case import EndTrialsUseCase
 from app.use_cases.billing.enforce_grace_periods_use_case import (
@@ -67,6 +70,7 @@ class BillingUseCases(BillingInfrastructure):
             subscription_repo=self.subscription_repo,
             invoice_repo=self.invoice_repo,
             usage_event_repo=self.usage_event_repo,
+            onboarding_request_repo=self.onboarding_request_repo,
             plan_registry=self.plan_registry,
             exchange_rate_registry=self.exchange_rate_registry,
             localized_text_resolver=resolver,
@@ -124,12 +128,21 @@ class BillingUseCases(BillingInfrastructure):
             app_settings=self.settings,
             wall_clock=wall_clock,
         )
+        self.choose_setup_option = ChooseSetupOptionUseCase(
+            subscription_repo=self.subscription_repo,
+            invoice_repo=self.invoice_repo,
+            onboarding_request_repo=self.onboarding_request_repo,
+            manager_notifier=self.notifier,
+            app_settings=self.settings,
+            wall_clock=wall_clock,
+        )
         self.open_subscription = OpenSubscriptionUseCase(
             authorize_business_access=authorize,
             subscription_repo=self.subscription_repo,
             invoice_repo=self.invoice_repo,
             business_repo=self.business_repo,
             plan_registry=self.plan_registry,
+            choose_setup_option=self.choose_setup_option,
             app_settings=self.settings,
             wall_clock=wall_clock,
         )
@@ -216,6 +229,7 @@ class BillingUseCases(BillingInfrastructure):
             unanswered_question_repo=self.question_repo,
             message_repo=self.message_repo,
             usage_event_repo=self.usage_event_repo,
+            onboarding_request_repo=self.onboarding_request_repo,
             plan_registry=self.plan_registry,
             compute_client_cost=self.compute_client_cost,
             wall_clock=wall_clock,

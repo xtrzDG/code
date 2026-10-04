@@ -55,5 +55,11 @@ describe("notification links", () => {
       `${business}/overview/reports?report=value_report_1`,
     );
     expect(linkTargetPath(view({ target: "report" }))).toBe(`${business}/overview/reports`);
+    // A milestone's celebration and the activation reminders.
+    expect(linkTargetPath(view({ target: "overview" }))).toBe(`${business}/overview`);
+    expect(linkTargetPath(view({ target: "setup" }))).toBe(`${business}/setup`);
+    expect(linkTargetPath(view({ target: "channels" }))).toBe(`${business}/assistant/channels`);
+    expect(linkTargetPath(view({ target: "share" }))).toBe(`${business}/assistant/channels#share`);
+    expect(linkTargetPath(view({ target: "billing" }))).toBe(`${business}/settings/billing#setup-options`);
   });
 });

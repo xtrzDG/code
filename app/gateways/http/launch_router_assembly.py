@@ -4,6 +4,7 @@ from fastapi import APIRouter
 
 from app.containers.operators.operators_container import OperatorsContainer
 from app.gateways.http.apply_changes_routes import build_apply_changes_router
+from app.gateways.http.setup_guide_routes import build_setup_guide_router
 from app.gateways.http.setup_routes import build_setup_router
 from app.gateways.http.starter_routes import build_starter_router
 from app.gateways.http.user_authentication import CurrentUserDependency
@@ -24,6 +25,14 @@ def build_launch_routers(
             skip_setup_step_operator=setup.skip_setup_step_operator(),
             celebrate_milestone_operator=setup.celebrate_milestone_operator(),
             get_starter_answers_operator=setup.get_starter_answers_operator(),
+        ),
+        build_setup_guide_router(
+            current_user=current_user,
+            start_phone_check_operator=setup.start_phone_check_operator(),
+            mark_setup_shared_operator=setup.mark_setup_shared_operator(),
+            dismiss_setup_guide_operator=setup.dismiss_setup_guide_operator(),
+            get_setup_reminders_operator=setup.get_setup_reminders_operator(),
+            update_setup_reminders_operator=setup.update_setup_reminders_operator(),
         ),
         build_starter_router(
             current_user=current_user,

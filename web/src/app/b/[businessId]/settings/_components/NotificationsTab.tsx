@@ -16,12 +16,14 @@ import { ContactFormView } from "./notifications/ContactFormView";
 import { ContactRow } from "./notifications/ContactRow";
 import { STALE_LIST_MESSAGES } from "./notifications/contactTexts";
 import { MyEventsCard } from "./notifications/MyEventsCard";
+import { SetupRemindersCard } from "./notifications/SetupRemindersCard";
 import { ThisDeviceCard } from "./notifications/ThisDeviceCard";
 
 /**
  * Settings → Notifications, for every member: this device (Web Push), the
- * events and quiet hours of my devices, and the staff contacts with how
- * notifications reach each one (owners add, check, edit and remove them).
+ * events and quiet hours of my devices, the setup reminders (owners), and
+ * the staff contacts with how notifications reach each one (owners add,
+ * check, edit and remove them).
  *
  * The API saves the contact list at once, and the list can change
  * meanwhile (another owner, a manager added by the platform bot), so each
@@ -42,6 +44,7 @@ export function NotificationsTab() {
     <div className="space-y-6">
       <ThisDeviceCard mine={mine} />
       <MyEventsCard mine={mine} />
+      {isOwner ? <SetupRemindersCard /> : null}
       <Card
         title={t("settings.contacts.title")}
         description={t("settings.contacts.description")}

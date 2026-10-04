@@ -13,7 +13,7 @@
 
 import type { Schema } from "@/api/types";
 
-import { businessPath, conversationPath, inboxPath } from "./navigation";
+import { businessPath, conversationPath, inboxPath, setupPath } from "./navigation";
 
 export type StaffLinkView = Schema<"StaffLinkView">;
 
@@ -70,5 +70,16 @@ export function linkTargetPath(view: StaffLinkView): string {
       return view.value_report_id
         ? `${businessPath(business, "overview/reports")}?report=${encodeURIComponent(view.value_report_id)}`
         : businessPath(business, "overview/reports");
+    // A milestone's celebration and the activation reminders.
+    case "overview":
+      return businessPath(business, "overview");
+    case "setup":
+      return setupPath(business);
+    case "channels":
+      return businessPath(business, "assistant/channels");
+    case "share":
+      return `${businessPath(business, "assistant/channels")}#share`;
+    case "billing":
+      return `${businessPath(business, "settings/billing")}#setup-options`;
   }
 }

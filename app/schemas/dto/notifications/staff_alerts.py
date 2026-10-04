@@ -60,11 +60,13 @@ class StaffAlert(ImmutableDTO):
     older notification about the same thing. An alert with a `subject`
     reaches each recipient once however often it is raised (a handoff is
     always once per handoff); `contact_channels` limits the staff contacts
-    it goes to (None: every channel).
+    it goes to (None: every channel). An alert without an `event` (a
+    milestone of the business, such as its first booking) is news for
+    everyone it goes to, whatever events they chose.
     """
 
     business_id: BusinessId
-    event: StaffAlertEvent
+    event: StaffAlertEvent | None = None
     target: StaffLinkTarget
     conversation_id: ConversationId | None = None
     lead_id: LeadId | None = None

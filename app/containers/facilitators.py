@@ -53,6 +53,7 @@ from app.facilitators.observability.sentry_error_reporting_facilitator import (
 from app.facilitators.product_events.record_product_event_facilitator import (
     RecordProductEventFacilitator,
 )
+from app.facilitators.setup.owner_nudge_facilitator import OwnerNudgeFacilitator
 from app.facilitators.users.login_code_cap_alert_facilitator import (
     LoginCodeCapAlertFacilitator,
 )
@@ -216,6 +217,20 @@ class FacilitatorsContainer(containers.DeclarativeContainer):
         push_queue=push_notification_queue,
         link_signer=staff_link_signer,
         text_transformer=transformers.value_digest_text_transformer,
+        app_settings=config.app_settings,
+        wall_clock=time_provider.microsecond_wall_clock,
+    )
+    # Activation nudges: e-mail, Telegram and devices, once per nudge and
+    # recipient, through the same outbox.
+    owner_nudge_facilitator: Singleton[OwnerNudgeFacilitator] = Singleton(
+        OwnerNudgeFacilitator,
+        user_repo=repositories.user_repo,
+        push_subscription_repo=repositories.push_subscription_repo,
+        notification_preferences_repo=repositories.notification_preferences_repo,
+        manager_notifier=manager_notification_facilitator,
+        push_queue=push_notification_queue,
+        link_signer=staff_link_signer,
+        localized_text_resolver=utilities.localized_text_resolver,
         app_settings=config.app_settings,
         wall_clock=time_provider.microsecond_wall_clock,
     )

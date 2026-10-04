@@ -14,7 +14,9 @@ from app.schemas.constants.billing import (
     BillingPeriod,
     InvoiceKind,
     InvoiceStatus,
+    OnboardingRequestStatus,
     PlanKey,
+    SetupOption,
     SubscriptionStatus,
 )
 from app.schemas.constants.businesses import BusinessStatus, ServiceMode
@@ -122,10 +124,20 @@ class ClientAutotestVerdict(ImmutableDTO):
     average_score: AverageJudgeScore | None = None
 
 
+class OnboardingRequestView(ImmutableDTO):
+    """The owner asked the platform team to set the business up."""
+
+    status: OnboardingRequestStatus
+    plan_key: PlanKey
+    requested_at: Microseconds
+
+
 class AdminClientSummary(ImmutableDTO):
     """
     One client in the admin list: subscription, assistant quality, staff
     load, package use in the current period, cost and margin, and health.
+    `setup_option` is how the business is set up; `onboarding_request` the
+    done-for-you setup its owner asked the platform team for.
     """
 
     business_id: BusinessId
@@ -141,6 +153,8 @@ class AdminClientSummary(ImmutableDTO):
     period_end: Microseconds | None = None
     grace_until: Microseconds | None = None
     has_auto_debit: IsAutoDebitActive = False
+    setup_option: SetupOption | None = None
+    onboarding_request: OnboardingRequestView | None = None
     published_version_number: AssistantVersionNumber | None = None
     published_at: Microseconds | None = None
     last_test_score: AverageJudgeScore | None = None

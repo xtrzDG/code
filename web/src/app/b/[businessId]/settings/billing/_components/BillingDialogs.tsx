@@ -4,9 +4,10 @@ import { useBusinessFormat } from "@/components/business/BusinessContext";
 import { ConfirmDialog } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 
-import { planPrice, planSetupFee, quotedMoneyText, type BillingOverview, type BillingPeriod } from "../_lib/billing";
+import { planPrice, quotedMoneyText, type BillingOverview, type BillingPeriod } from "../_lib/billing";
 import type { BillingActions } from "../_lib/useBillingActions";
 import type { PlanChoice } from "./PlansSection";
+import { SetupOptionPicker } from "./SetupOptionPicker";
 
 /** Confirming a plan choice (a trial, a subscription or a switch) or a cancellation. */
 export function BillingDialogs({ actions, data }: { actions: BillingActions; data: BillingOverview | undefined }) {
@@ -40,7 +41,7 @@ export function BillingDialogs({ actions, data }: { actions: BillingActions; dat
         const price = quotedMoneyText(planPrice(choice.quote, choice.period), format.money);
         return choice.period === "annual"
           ? t("billing.subscribe.descriptionAnnual", { price })
-          : t("billing.subscribe.description", { price, setup: quotedMoneyText(planSetupFee(choice.quote), format.money) });
+          : t("billing.subscribe.description", { price });
       }
       case "switch":
         return t("billing.dialogs.changeDescription", { price: pricePer(choice) });
@@ -71,6 +72,15 @@ export function BillingDialogs({ actions, data }: { actions: BillingActions; dat
         }
       >
         {choice ? <p>{choiceDescription(choice)}</p> : null}
+        {choice?.action === "subscribe" ? (
+          <SetupOptionPicker
+            quote={choice.quote}
+            period={choice.period}
+            value={actions.setupOption}
+            onChange={actions.setSetupOption}
+            disabled={actions.isChoosing}
+          />
+        ) : null}
       </ConfirmDialog>
 
       <ConfirmDialog

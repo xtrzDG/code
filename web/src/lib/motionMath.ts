@@ -173,3 +173,27 @@ export function medianOf(values: readonly number[]): number {
   const middle = Math.floor(sorted.length / 2);
   return sorted.length % 2 === 1 ? (sorted[middle] ?? 0) : ((sorted[middle - 1] ?? 0) + (sorted[middle] ?? 0)) / 2;
 }
+
+export interface Spark {
+  x: number;
+  y: number;
+  /** Seconds after the burst starts. */
+  delay: number;
+}
+
+/**
+ * Where the sparks of a burst end: evenly around a circle, every other one
+ * a little closer and later, so the burst looks lively without randomness
+ * (server and browser draw the same).
+ */
+export function burstSparks(count: number, radius: number): Spark[] {
+  return Array.from({ length: count }, (_, index) => {
+    const angle = (index / count) * Math.PI * 2 - Math.PI / 2;
+    const reach = index % 2 === 0 ? radius : radius * 0.7;
+    return {
+      x: roundTo(Math.cos(angle) * reach, 2),
+      y: roundTo(Math.sin(angle) * reach, 2),
+      delay: index % 2 === 0 ? 0 : 0.05,
+    };
+  });
+}

@@ -5,13 +5,10 @@ from pydantic import Field
 from typed_time_provider import Microseconds
 
 from app.schemas.constants.channels import ChannelKind
-from app.schemas.constants.profiles import ProfileGapKind
-from app.schemas.constants.setup import (
-    ActivationEventKind,
-    SetupStepCode,
-    SetupStepStatus,
-)
+from app.schemas.constants.setup import ActivationEventKind, SetupStepCode
 from app.schemas.dto.setup.apply_changes import ApplyChangesView, SetupActionView
+from app.schemas.dto.setup.setup_guide import SetupGuideView
+from app.schemas.dto.setup.setup_steps_view import SetupStepView
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.schemas.typings.setup.booleans import (
@@ -19,16 +16,13 @@ from app.schemas.typings.setup.booleans import (
     IsAssistantLive,
     IsPhoneTestAnswering,
     IsSetupComplete,
-    IsSetupStepRequired,
     IsSetupStepSkipped,
 )
 from app.schemas.typings.setup.constrained_integers import (
     SetupMinutesLeft,
     SetupPercent,
-    SetupStepMinutes,
 )
 from app.schemas.typings.setup.constrained_strings import PhoneTestUrl
-from app.schemas.typings.setup.strings import SetupStepDescription, SetupStepTitle
 from app.schemas.typings.users.prefixed_id import UserId
 
 
@@ -38,23 +32,6 @@ class SetupQuery(ImmutableDTO):
     user_id: UserId
     business_id: BusinessId
     language: LanguageTag | None = None
-
-
-class SetupStepView(ImmutableDTO):
-    """
-    One step of the guided setup. `missing` names what the profile still
-    lacks for it (profile gap kinds); `minutes` is how long it usually
-    takes. Optional steps (`is_required` False) may be skipped.
-    """
-
-    code: SetupStepCode
-    status: SetupStepStatus
-    is_required: IsSetupStepRequired
-    title: SetupStepTitle
-    description: SetupStepDescription
-    minutes: SetupStepMinutes
-    action: SetupActionView
-    missing: list[ProfileGapKind] = Field(default_factory=list[ProfileGapKind])
 
 
 class PhoneTestLinkView(ImmutableDTO):
@@ -84,7 +61,8 @@ class SetupView(ImmutableDTO):
     `percent` counts done steps among those not skipped; `minutes_left`
     adds up the steps still ahead. `can_go_live` is True once every
     required step before the launch is done; `is_complete` once the
-    assistant is live and every required step is done.
+    assistant is live and every required step is done. `guide` goes on
+    after the launch, to the first real customers (the Overview's guide).
     """
 
     business_id: BusinessId
@@ -106,6 +84,7 @@ class SetupView(ImmutableDTO):
         default_factory=list[ActivationMilestoneView]
     )
     apply: ApplyChangesView
+    guide: SetupGuideView
 
 
 class SkipSetupStepCommand(ImmutableDTO):

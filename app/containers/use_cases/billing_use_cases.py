@@ -45,6 +45,9 @@ from app.use_cases.billing.assemble_billing_overview_use_case import (
 from app.use_cases.billing.cancel_subscription_use_case import CancelSubscriptionUseCase
 from app.use_cases.billing.change_plan_use_case import ChangePlanUseCase
 from app.use_cases.billing.check_package_usage_use_case import CheckPackageUsageUseCase
+from app.use_cases.billing.choose_setup_option_use_case import (
+    ChooseSetupOptionUseCase,
+)
 from app.use_cases.billing.compute_client_cost_use_case import ComputeClientCostUseCase
 from app.use_cases.billing.end_trials_use_case import EndTrialsUseCase
 from app.use_cases.billing.enforce_grace_periods_use_case import (
@@ -104,6 +107,7 @@ class BillingUseCasesContainer(containers.DeclarativeContainer):
         subscription_repo=repositories.subscription_repo,
         invoice_repo=repositories.invoice_repo,
         usage_event_repo=repositories.usage_event_repo,
+        onboarding_request_repo=repositories.onboarding_request_repo,
         plan_registry=registries.plan_registry,
         exchange_rate_registry=registries.exchange_rate_registry,
         localized_text_resolver=utilities.localized_text_resolver,
@@ -169,6 +173,15 @@ class BillingUseCasesContainer(containers.DeclarativeContainer):
         app_settings=config.app_settings,
         wall_clock=time_provider.microsecond_wall_clock,
     )
+    choose_setup_option_use_case: Factory[ChooseSetupOptionUseCase] = Factory(
+        ChooseSetupOptionUseCase,
+        subscription_repo=repositories.subscription_repo,
+        invoice_repo=repositories.invoice_repo,
+        onboarding_request_repo=repositories.onboarding_request_repo,
+        manager_notifier=facilitators.manager_notification_facilitator,
+        app_settings=config.app_settings,
+        wall_clock=time_provider.microsecond_wall_clock,
+    )
     open_subscription_use_case: Factory[
         UseCaseContract[SubscribeCommand, SubscriptionOpening]
     ] = Factory(
@@ -178,6 +191,7 @@ class BillingUseCasesContainer(containers.DeclarativeContainer):
         invoice_repo=repositories.invoice_repo,
         business_repo=repositories.business_repo,
         plan_registry=registries.plan_registry,
+        choose_setup_option=choose_setup_option_use_case,
         app_settings=config.app_settings,
         wall_clock=time_provider.microsecond_wall_clock,
     )

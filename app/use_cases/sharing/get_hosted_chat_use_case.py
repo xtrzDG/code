@@ -1,15 +1,19 @@
+from typed_time_provider import Microseconds, WallClock
+
 from app.contracts.registries import LanguageRegistryContract
 from app.contracts.repositories.business_repositories import (
     BusinessProfileRepoContract,
     BusinessRepoContract,
     ChannelRepoContract,
 )
+from app.contracts.repositories.setup_repositories import SetupStateRepoContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.configurations.app_settings import AppSettings
 from app.schemas.constants.channels import ChannelKind, ChannelStatus
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.channels import ChannelDocument, WebChatAppearance
 from app.schemas.domain.profiles import BusinessProfileDocument
+from app.schemas.domain.setup import SetupStateDocument
 from app.schemas.dto.sharing import HostedChatView
 from app.schemas.exceptions.application_errors import NotFoundError
 from app.schemas.typings.businesses.prefixed_id import BusinessId
@@ -33,6 +37,10 @@ class GetHostedChatUseCase(UseCaseContract[BusinessId, HostedChatView]):
     the API live (APP_BASE_URL) and the privacy notice. The widget loads
     the rest itself, with its usual limits. Nothing personal or secret is
     returned; an unknown business is not found.
+
+    The first visit to the page of a live business is noted in its setup
+    state (the guide's "Show customers where to write" step; the day-10
+    reminder is not needed then). Later visits change nothing.
     """
 
     def __init__(
@@ -41,13 +49,17 @@ class GetHostedChatUseCase(UseCaseContract[BusinessId, HostedChatView]):
         channel_repo: ChannelRepoContract,
         business_profile_repo: BusinessProfileRepoContract,
         language_registry: LanguageRegistryContract,
+        setup_state_repo: SetupStateRepoContract,
         app_settings: AppSettings,
+        wall_clock: WallClock[Microseconds],
     ) -> None:
         self._business_repo: BusinessRepoContract = business_repo
         self._channel_repo: ChannelRepoContract = channel_repo
         self._business_profile_repo: BusinessProfileRepoContract = business_profile_repo
         self._language_registry: LanguageRegistryContract = language_registry
+        self._setup_state_repo: SetupStateRepoContract = setup_state_repo
         self._app_settings: AppSettings = app_settings
+        self._wall_clock: WallClock[Microseconds] = wall_clock
 
     def run(self, input_data: BusinessId) -> HostedChatView:
         business: BusinessDocument | None = self._business_repo.get(input_data)
@@ -69,13 +81,17 @@ class GetHostedChatUseCase(UseCaseContract[BusinessId, HostedChatView]):
             self._business_profile_repo.get_by_business(business.id)
         )
         api_base_url: PublicBaseUrl | None = self._app_settings.app_base_url
+        is_enabled: bool = (
+            web_chat is not None and web_chat.status is ChannelStatus.CONNECTED
+        )
+        if is_enabled and business.published_assistant_version_id is not None:
+            self._note_first_visit(business)
+
         return HostedChatView(
             business_id=business.id,
             slug=business.public_slug,
             business_name=business.name,
-            is_enabled=(
-                web_chat is not None and web_chat.status is ChannelStatus.CONNECTED
-            ),
+            is_enabled=is_enabled,
             default_language=business.default_language,
             languages=build_widget_languages(
                 self._language_registry, business.languages
@@ -94,3 +110,18 @@ class GetHostedChatUseCase(UseCaseContract[BusinessId, HostedChatView]):
                 business, profile, self._app_settings.cabinet_base_url
             ),
         )
+
+    def _note_first_visit(self, business: BusinessDocument) -> None:
+        stored: SetupStateDocument | None = self._setup_state_repo.get_by_business(
+            business.id
+        )
+        if stored is not None and stored.hosted_page_visited_at is not None:
+            return
+
+        now: Microseconds = self._wall_clock.now_unix()
+
+        def note(state: SetupStateDocument) -> None:
+            if state.hosted_page_visited_at is None:
+                state.hosted_page_visited_at = now
+
+        self._setup_state_repo.change(business.id, note, now)

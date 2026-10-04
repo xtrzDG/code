@@ -11,6 +11,7 @@ import { languageName } from "@/lib/format";
 
 import type { QrMatrix } from "../_lib/qrCode";
 import { buildTableCardHtml, printFrame } from "../_lib/tableCard";
+import { useShareMark } from "../_lib/useShareMark";
 
 /** A6 at 96 CSS pixels per inch: 105 × 148 mm. */
 const CARD_WIDTH_PX = 397;
@@ -40,6 +41,7 @@ export function TableCardPanel({
   const { t, locale } = useI18n();
   const toast = useToast();
   const frame = useRef<HTMLIFrameElement>(null);
+  const markShared = useShareMark();
   const choices = languages.length > 0 ? languages : [defaultLanguage];
   const [language, setLanguage] = useState(choices.includes(defaultLanguage) ? defaultLanguage : (choices[0] ?? "en"));
 
@@ -96,7 +98,9 @@ export function TableCardPanel({
           size="sm"
           leadingIcon={<IconFile className="size-4" aria-hidden />}
           onClick={() => {
-            if (!printFrame(frame.current)) {
+            if (printFrame(frame.current)) {
+              markShared("printed_qr");
+            } else {
               toast.info(t("share.printFailed"));
             }
           }}

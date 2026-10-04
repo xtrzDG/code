@@ -27,6 +27,9 @@ STEP_MINUTES: dict[SetupStepCode, int] = {
     SetupStepCode.CHANNELS: 3,
     SetupStepCode.TEST: 2,
     SetupStepCode.LAUNCH: 2,
+    SetupStepCode.PHONE_TEST: 2,
+    SetupStepCode.SECOND_CHANNEL: 5,
+    SetupStepCode.SHARE: 3,
 }
 BUSINESS_ANSWER_STEPS: frozenset[ProfileWizardStep] = frozenset(
     {

@@ -2,13 +2,14 @@
   "components": {
     "schemas": {
       "ActivationEventKind": {
-        "description": "A milestone on the way from sign-up to the first customers, recorded\nonce per business: the owner tried the test chat, the assistant went\nlive (first publish), the first real conversation, booking and handoff.",
+        "description": "A milestone on the way from sign-up to the first customers, recorded\nonce per business: the owner tried the test chat, the assistant went\nlive (first publish), the first real conversation, booking and handoff,\nand the first booking made while the business was closed.\n\nFIRST_AFTER_HOURS_BOOKING is new in this release, so it is kept in the\nsetup state (`SetupStateDocument.after_hours_booking_at`) rather than\nin `activation_events`, which the release before reads.",
         "enum": [
           "test_chat_tried",
           "went_live",
           "first_conversation",
           "first_booking",
-          "first_handoff"
+          "first_handoff",
+          "first_after_hours_booking"
         ],
         "title": "ActivationEventKind",
         "type": "string"
@@ -150,7 +151,7 @@
       },
       "AdminClientSummary": {
         "additionalProperties": false,
-        "description": "One client in the admin list: subscription, assistant quality, staff\nload, package use in the current period, cost and margin, and health.",
+        "description": "One client in the admin list: subscription, assistant quality, staff\nload, package use in the current period, cost and margin, and health.\n`setup_option` is how the business is set up; `onboarding_request` the\ndone-for-you setup its owner asked the platform team for.",
         "properties": {
           "autotest_verdict": {
             "anyOf": [
@@ -262,6 +263,16 @@
           "niche_key": {
             "$ref": "#/components/schemas/NicheKey"
           },
+          "onboarding_request": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/OnboardingRequestView"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "open_unanswered_questions": {
             "minimum": 0.0,
             "title": "Open Unanswered Questions",
@@ -306,6 +317,16 @@
           },
           "service_mode": {
             "$ref": "#/components/schemas/ServiceMode"
+          },
+          "setup_option": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SetupOption"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "subscription_status": {
             "anyOf": [
@@ -10258,6 +10279,38 @@
         "title": "NotificationContactView",
         "type": "object"
       },
+      "OnboardingRequestStatus": {
+        "description": "A done-for-you setup the owner asked for: OPEN until the team is done.",
+        "enum": [
+          "open",
+          "done"
+        ],
+        "title": "OnboardingRequestStatus",
+        "type": "string"
+      },
+      "OnboardingRequestView": {
+        "additionalProperties": false,
+        "description": "The owner asked the platform team to set the business up.",
+        "properties": {
+          "plan_key": {
+            "$ref": "#/components/schemas/PlanKey"
+          },
+          "requested_at": {
+            "title": "Requested At",
+            "type": "integer"
+          },
+          "status": {
+            "$ref": "#/components/schemas/OnboardingRequestStatus"
+          }
+        },
+        "required": [
+          "status",
+          "plan_key",
+          "requested_at"
+        ],
+        "title": "OnboardingRequestView",
+        "type": "object"
+      },
       "OpeningInterval": {
         "additionalProperties": false,
         "description": "One opening interval in the business time zone (closing may be 24:00).",
@@ -10925,7 +10978,7 @@
       },
       "PlanQuote": {
         "additionalProperties": false,
-        "description": "One plan priced in EUR and, when known, in the country's currency.\n\n`annual_price` is the price of twelve months with the annual discount.\nLocal prices are None when neither the price book nor an official rate\nknows the currency: prices are never invented.",
+        "description": "One plan priced in EUR and, when known, in the country's currency.\n\n`annual_price` is the price of twelve months with the annual discount.\nLocal prices are None when neither the price book nor an official rate\nknows the currency: prices are never invented. `setup_fee` is the\nDONE_FOR_YOU setup fee; `setup_options` prices both ways of being set\nup (the owner alone in the cabinet is free).",
         "properties": {
           "annual_discount_percent": {
             "maximum": 100.0,
@@ -11022,6 +11075,13 @@
           },
           "setup_fee": {
             "$ref": "#/components/schemas/QuotedMoney"
+          },
+          "setup_options": {
+            "items": {
+              "$ref": "#/components/schemas/SetupOptionQuote"
+            },
+            "title": "Setup Options",
+            "type": "array"
           },
           "trial_days": {
             "maximum": 90.0,
@@ -12197,7 +12257,7 @@
         "type": "string"
       },
       "SetupActionTarget": {
-        "description": "The cabinet place where the owner acts; the cabinet maps it to a page:\nPROFILE (with a wizard step), STAFF_CONTACTS, CHANNELS,\nTEST_CHAT, AGREEMENT (the data processing agreement), BILLING,\nCHECKS (the automatic checks, under Advanced), APPLY_CHANGES, or\nOVERVIEW once everything is done.",
+        "description": "The cabinet place where the owner acts; the cabinet maps it to a page:\nPROFILE (with a wizard step), STAFF_CONTACTS, CHANNELS,\nTEST_CHAT, AGREEMENT (the data processing agreement), BILLING,\nCHECKS (the automatic checks, under Advanced), APPLY_CHANGES, or\nOVERVIEW once everything is done; after the launch PHONE_TEST (the\nguide's QR code to write from a phone) and SHARE (the link and QR code\nfor customers).",
         "enum": [
           "profile",
           "staff_contacts",
@@ -12207,7 +12267,9 @@
           "billing",
           "checks",
           "apply_changes",
-          "overview"
+          "overview",
+          "phone_test",
+          "share"
         ],
         "title": "SetupActionTarget",
         "type": "string"
@@ -12241,8 +12303,147 @@
         "title": "SetupActionView",
         "type": "object"
       },
+      "SetupGuideView": {
+        "additionalProperties": false,
+        "description": "The whole guide: the setup's seven steps (`SetupView.steps`) and the\nthree after the launch (`steps_after_launch`: writing from the owner's\nown phone, a second channel, the link or QR code where customers see\nit), with the guide's own next step, share done (skipped steps do not\ncount) and minutes left. `is_complete` once the assistant is live and\nevery step is done or skipped; `is_dismissed` once the owner put the\nfinished guide away.\n\n`is_phone_check_listening` while a conversation that starts counts as\nthe owner's test (until `phone_check_until`); `phone_tested_at` is when\nthe first message from the owner's phone arrived.",
+        "properties": {
+          "is_complete": {
+            "title": "Is Complete",
+            "type": "boolean"
+          },
+          "is_dismissed": {
+            "default": false,
+            "title": "Is Dismissed",
+            "type": "boolean"
+          },
+          "is_phone_check_listening": {
+            "default": false,
+            "title": "Is Phone Check Listening",
+            "type": "boolean"
+          },
+          "minutes_left": {
+            "maximum": 600.0,
+            "minimum": 0.0,
+            "title": "Minutes Left",
+            "type": "integer"
+          },
+          "next_action": {
+            "$ref": "#/components/schemas/SetupActionView"
+          },
+          "next_step": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SetupStepCode"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "percent": {
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Percent",
+            "type": "integer"
+          },
+          "phone_check_until": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone Check Until"
+          },
+          "phone_tested_at": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone Tested At"
+          },
+          "steps_after_launch": {
+            "items": {
+              "$ref": "#/components/schemas/SetupStepView"
+            },
+            "title": "Steps After Launch",
+            "type": "array"
+          }
+        },
+        "required": [
+          "next_action",
+          "percent",
+          "minutes_left",
+          "is_complete"
+        ],
+        "title": "SetupGuideView",
+        "type": "object"
+      },
+      "SetupOption": {
+        "description": "How a business gets set up: SELF_SERVE, the owner in the cabinet's\nguided setup (free), or DONE_FOR_YOU, the platform team sets it up for\nthe plan's setup fee (an onboarding request reaches the team).",
+        "enum": [
+          "self_serve",
+          "done_for_you"
+        ],
+        "title": "SetupOption",
+        "type": "string"
+      },
+      "SetupOptionQuote": {
+        "additionalProperties": false,
+        "description": "What one way of being set up costs, once: in EUR and, when known, in\nthe country's currency (SELF_SERVE is free everywhere).",
+        "properties": {
+          "fee": {
+            "$ref": "#/components/schemas/QuotedMoney"
+          },
+          "local_fee": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/QuotedMoney"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "option": {
+            "$ref": "#/components/schemas/SetupOption"
+          }
+        },
+        "required": [
+          "option",
+          "fee"
+        ],
+        "title": "SetupOptionQuote",
+        "type": "object"
+      },
+      "SetupRemindersView": {
+        "additionalProperties": false,
+        "description": "Whether the owners get activation reminders (by e-mail, Telegram and on\ntheir devices) while the launch or the first customers are not there.",
+        "properties": {
+          "business_id": {
+            "title": "Business Id",
+            "type": "string"
+          },
+          "is_on": {
+            "title": "Is On",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "business_id",
+          "is_on"
+        ],
+        "title": "SetupRemindersView",
+        "type": "object"
+      },
       "SetupStepCode": {
-        "description": "One step of the guided setup, in the order the owner walks them: about\nthe business, what it offers, hours and bookings, who receives handoffs,\nwhere customers write, trying the assistant, and going live.",
+        "description": "One step of the guided setup, in the order the owner walks them: about\nthe business, what it offers, hours and bookings, who receives handoffs,\nwhere customers write, trying the assistant, and going live. After the\nlaunch the guide goes on to the first real customer: writing to the\nassistant from the owner's own phone (PHONE_TEST), a second channel\nwhere customers write (SECOND_CHANNEL), and the link or QR code where\ncustomers see it (SHARE).\n\nThe steps after the launch are new in this release: a skip of one is\nstored apart (`SetupStateDocument.skipped_after_launch`), which the\nrelease before ignores.",
         "enum": [
           "business",
           "offer",
@@ -12250,7 +12451,10 @@
           "staff_contact",
           "channels",
           "test",
-          "launch"
+          "launch",
+          "phone_test",
+          "second_channel",
+          "share"
         ],
         "title": "SetupStepCode",
         "type": "string"
@@ -12319,7 +12523,7 @@
       },
       "SetupView": {
         "additionalProperties": false,
-        "description": "The guided setup in order: business, offer, hours and bookings, staff\ncontact, channels, test, launch; each done, skipped, next or to do.\n`percent` counts done steps among those not skipped; `minutes_left`\nadds up the steps still ahead. `can_go_live` is True once every\nrequired step before the launch is done; `is_complete` once the\nassistant is live and every required step is done.",
+        "description": "The guided setup in order: business, offer, hours and bookings, staff\ncontact, channels, test, launch; each done, skipped, next or to do.\n`percent` counts done steps among those not skipped; `minutes_left`\nadds up the steps still ahead. `can_go_live` is True once every\nrequired step before the launch is done; `is_complete` once the\nassistant is live and every required step is done. `guide` goes on\nafter the launch, to the first real customers (the Overview's guide).",
         "properties": {
           "apply": {
             "$ref": "#/components/schemas/ApplyChangesView"
@@ -12331,6 +12535,9 @@
           "can_go_live": {
             "title": "Can Go Live",
             "type": "boolean"
+          },
+          "guide": {
+            "$ref": "#/components/schemas/SetupGuideView"
           },
           "is_complete": {
             "title": "Is Complete",
@@ -12426,7 +12633,8 @@
           "can_go_live",
           "is_live",
           "is_complete",
-          "apply"
+          "apply",
+          "guide"
         ],
         "title": "SetupView",
         "type": "object"
@@ -12649,13 +12857,18 @@
         "type": "object"
       },
       "StaffLinkTarget": {
-        "description": "The cabinet page a notification link opens (after sign-in). REPORT is a\nstored digest or monthly report on the Reports page (owners), where its\nreader also turns the summaries off. Link targets live only in signed\nlinks, never in stored documents.",
+        "description": "The cabinet page a notification link opens (after sign-in). REPORT is a\nstored digest or monthly report on the Reports page (owners), where its\nreader also turns the summaries off; OVERVIEW is the business's\nOverview (a milestone's celebration waits there). The activation\nreminders open SETUP (the guided setup, at the saved step), CHANNELS,\nSHARE (the link and QR card on the Channels page) and BILLING (where\nthe done-for-you setup is chosen). Link targets live only in signed\nlinks, never in stored documents.",
         "enum": [
           "conversation",
           "lead",
           "booking",
           "notifications",
-          "report"
+          "report",
+          "overview",
+          "setup",
+          "channels",
+          "share",
+          "billing"
         ],
         "title": "StaffLinkTarget",
         "type": "string"
@@ -13230,7 +13443,7 @@
       },
       "SubscriptionView": {
         "additionalProperties": false,
-        "description": "The subscription as the billing page shows it.",
+        "description": "The subscription as the billing page shows it; `setup_option` is how\nthe business is set up (None: chosen before the choice existed, free),\n`onboarding_requested_at` when the owner asked the platform team to set\nit up.",
         "properties": {
           "billing_period": {
             "$ref": "#/components/schemas/BillingPeriod"
@@ -13254,6 +13467,17 @@
             "title": "Id",
             "type": "string"
           },
+          "onboarding_requested_at": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Onboarding Requested At"
+          },
           "period_end": {
             "title": "Period End",
             "type": "integer"
@@ -13271,6 +13495,16 @@
           },
           "price": {
             "$ref": "#/components/schemas/QuotedMoney"
+          },
+          "setup_option": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SetupOption"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "status": {
             "$ref": "#/components/schemas/SubscriptionStatus"
@@ -21103,7 +21337,7 @@
             "application/json": {
               "schema": {
                 "additionalProperties": false,
-                "description": "Body of a subscription paid now: the plan and billing period to pay\nfor, and the cabinet page to return to (as in the checkout request).\n\nExample: {\"plan_key\": \"chat\", \"billing_period\": \"annual\",\n\"return_url\": \"https://app.example.com/b/bus_1/billing\"}.",
+                "description": "Body of a subscription paid now: the plan and billing period to pay\nfor, how the business is set up (SELF_SERVE, free; DONE_FOR_YOU, the\nplatform team sets it up for the plan's setup fee), and the cabinet\npage to return to (as in the checkout request).\n\nExample: {\"plan_key\": \"chat\", \"billing_period\": \"annual\",\n\"setup_option\": \"self_serve\",\n\"return_url\": \"https://app.example.com/b/bus_1/billing\"}.",
                 "properties": {
                   "billing_period": {
                     "default": "monthly",
@@ -21138,6 +21372,16 @@
                       }
                     ],
                     "title": "Return Url"
+                  },
+                  "setup_option": {
+                    "default": "self_serve",
+                    "description": "How a business gets set up: SELF_SERVE, the owner in the cabinet's\nguided setup (free), or DONE_FOR_YOU, the platform team sets it up for\nthe plan's setup fee (an onboarding request reaches the team).",
+                    "enum": [
+                      "self_serve",
+                      "done_for_you"
+                    ],
+                    "title": "SetupOption",
+                    "type": "string"
                   }
                 },
                 "required": [
@@ -36953,6 +37197,233 @@
         ]
       }
     },
+    "/v1/businesses/{business_id}/setup/guide-dismissal": {
+      "delete": {
+        "operationId": "bring_guide_back_v1_businesses__business_id__setup_guide_dismissal_delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Bring Guide Back",
+        "tags": [
+          "setup"
+        ]
+      },
+      "put": {
+        "operationId": "dismiss_guide_v1_businesses__business_id__setup_guide_dismissal_put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SetupView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Dismiss Guide",
+        "tags": [
+          "setup"
+        ]
+      }
+    },
     "/v1/businesses/{business_id}/setup/milestones/{kind}/celebrate": {
       "post": {
         "operationId": "celebrate_milestone_v1_businesses__business_id__setup_milestones__kind__celebrate_post",
@@ -37075,6 +37546,500 @@
           }
         },
         "summary": "Celebrate Milestone",
+        "tags": [
+          "setup"
+        ]
+      }
+    },
+    "/v1/businesses/{business_id}/setup/phone-check": {
+      "post": {
+        "operationId": "start_phone_check_v1_businesses__business_id__setup_phone_check_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SetupView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Start Phone Check",
+        "tags": [
+          "setup"
+        ]
+      }
+    },
+    "/v1/businesses/{business_id}/setup/reminders": {
+      "get": {
+        "operationId": "get_reminders_v1_businesses__business_id__setup_reminders_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SetupRemindersView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Get Reminders",
+        "tags": [
+          "setup"
+        ]
+      },
+      "put": {
+        "operationId": "update_reminders_v1_businesses__business_id__setup_reminders_put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "description": "Body of the reminders switch.\n\nExample: {\"is_on\": false}.",
+                "properties": {
+                  "is_on": {
+                    "title": "Is On",
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "is_on"
+                ],
+                "title": "SetupRemindersRequest",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SetupRemindersView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Update Reminders",
+        "tags": [
+          "setup"
+        ]
+      }
+    },
+    "/v1/businesses/{business_id}/setup/share-marks/{mark}": {
+      "post": {
+        "operationId": "mark_shared_v1_businesses__business_id__setup_share_marks__mark__post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "mark",
+            "required": true,
+            "schema": {
+              "title": "Mark",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Mark Shared",
         "tags": [
           "setup"
         ]

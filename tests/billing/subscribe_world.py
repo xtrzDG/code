@@ -5,6 +5,7 @@ from app.schemas.constants.billing import (
     InvoiceKind,
     InvoiceStatus,
     PlanKey,
+    SetupOption,
 )
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.users import UserDocument
@@ -38,7 +39,10 @@ class World:
         billing_period: BillingPeriod = BillingPeriod.MONTHLY,
         return_url: str | None = f"{CABINET_ORIGIN}/billing",
         user: UserDocument | None = None,
+        setup_option: SetupOption = SetupOption.DONE_FOR_YOU,
     ) -> CheckoutSessionView:
+        """Subscribe and check out; done for you (with the setup fee) by default."""
+
         return self.testbed.subscribe.execute(
             SubscribeCommand(
                 user_id=(user or self.owner).id,
@@ -46,6 +50,7 @@ class World:
                 request=SubscribeRequest(
                     plan_key=plan_key,
                     billing_period=billing_period,
+                    setup_option=setup_option,
                     return_url=None
                     if return_url is None
                     else PaymentReturnUrl(return_url),
@@ -61,6 +66,7 @@ class World:
                 request=StartTrialRequest(),
             )
         )
+        self.testbed.set_up_for_you(self.business.id)
 
     def pay(self, session: CheckoutSessionView, payment_id: int = 1) -> None:
         order = self.testbed.payment_order_repo.get(session.payment_order_id)

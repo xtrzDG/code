@@ -82,6 +82,8 @@ _.SETTINGS  # app/schemas/constants/client_health.py
 _.TEST  # app/schemas/constants/environment.py
 _.UNSUPPORTED  # app/schemas/constants/localization.py
 _.US  # app/schemas/constants/localization.py
+_.PRINTED_QR  # app/schemas/constants/setup.py
+_.DOWNLOADED_QR  # app/schemas/constants/setup.py
 # The booking rule rows a pending change names, found by their fact key.
 _.BOOKING_UNIT  # app/schemas/constants/setup.py
 _.BOOKING_LENGTH  # app/schemas/constants/setup.py
@@ -243,6 +245,12 @@ _.milestones  # app/schemas/dto/setup/setup_progress.py
 _.minutes_left  # app/schemas/dto/setup/setup_progress.py
 _.next_action  # app/schemas/dto/setup/setup_progress.py
 _.applied_sections  # app/schemas/dto/setup/starter_answers.py
+_.steps_after_launch  # app/schemas/dto/setup/setup_guide.py
+_.is_phone_check_listening  # app/schemas/dto/setup/setup_guide.py
+_.phone_check_until  # app/schemas/dto/setup/setup_guide.py
+_.onboarding_requested_at  # app/schemas/dto/billing_cabinet.py
+_.onboarding_request  # app/schemas/dto/admin.py
+_.setup_options  # app/schemas/dto/catalog/plan_quotes.py
 _.kept_sections  # app/schemas/dto/setup/starter_answers.py
 _.offer_examples  # app/schemas/dto/setup/starter_answers.py
 

@@ -2,6 +2,7 @@ from dependency_injector import containers
 from dependency_injector.providers import DependenciesContainer
 
 from app.containers.provider_chains import use_case_orchestrator
+from app.containers.use_cases.guide_use_cases import GuideUseCasesContainer
 from app.containers.use_cases.launch_use_cases import LaunchUseCasesContainer
 from app.containers.use_cases.setup_use_cases import SetupUseCasesContainer
 
@@ -14,6 +15,7 @@ class SetupOrchestratorsContainer(containers.DeclarativeContainer):
 
     setup_use_cases: SetupUseCasesContainer = DependenciesContainer()  # type: ignore[assignment]
     launch_use_cases: LaunchUseCasesContainer = DependenciesContainer()  # type: ignore[assignment]
+    guide_use_cases: GuideUseCasesContainer = DependenciesContainer()  # type: ignore[assignment]
 
     get_setup_progress_orchestrator = use_case_orchestrator(
         setup_use_cases.get_setup_progress_use_case
@@ -40,4 +42,26 @@ class SetupOrchestratorsContainer(containers.DeclarativeContainer):
     )
     record_activation_event_orchestrator = use_case_orchestrator(
         launch_use_cases.record_activation_event_use_case
+    )
+    # The guide after the launch and its two periodic jobs.
+    start_phone_check_orchestrator = use_case_orchestrator(
+        guide_use_cases.start_phone_check_use_case
+    )
+    mark_setup_shared_orchestrator = use_case_orchestrator(
+        guide_use_cases.mark_setup_shared_use_case
+    )
+    dismiss_setup_guide_orchestrator = use_case_orchestrator(
+        guide_use_cases.dismiss_setup_guide_use_case
+    )
+    get_setup_reminders_orchestrator = use_case_orchestrator(
+        guide_use_cases.get_setup_reminders_use_case
+    )
+    update_setup_reminders_orchestrator = use_case_orchestrator(
+        guide_use_cases.update_setup_reminders_use_case
+    )
+    notice_milestones_orchestrator = use_case_orchestrator(
+        guide_use_cases.notice_milestones_use_case
+    )
+    send_activation_nudges_orchestrator = use_case_orchestrator(
+        guide_use_cases.send_activation_nudges_use_case
     )

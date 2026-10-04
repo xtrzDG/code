@@ -132,7 +132,7 @@ class StaffAlertFacilitator(StaffAlertFacilitatorContract):
         now: Microseconds,
     ) -> int:
         preferences = contact.preferences or DEFAULT_PREFERENCES
-        if alert.event not in preferences.events or (
+        if not is_wanted(alert, preferences) or (
             alert.contact_channels is not None
             and contact.channel not in alert.contact_channels
         ):
@@ -182,7 +182,7 @@ class StaffAlertFacilitator(StaffAlertFacilitatorContract):
                 preferences = self._preferences_of(business, subscription.user_id)
                 preferences_by_user[subscription.user_id] = preferences
 
-            if alert.event in preferences.events and self._push(
+            if is_wanted(alert, preferences) and self._push(
                 subscription, alert, texts, link, preferences, zone, now
             ):
                 queued += 1
@@ -249,3 +249,9 @@ class StaffAlertFacilitator(StaffAlertFacilitatorContract):
                 expires_at=link_expiry(now),
             ),
         )
+
+
+def is_wanted(alert: StaffAlert, preferences: StaffNotificationPreferences) -> bool:
+    """The recipient chose the alert's event; news without an event always is."""
+
+    return alert.event is None or alert.event in preferences.events

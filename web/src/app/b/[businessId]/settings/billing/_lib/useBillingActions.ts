@@ -16,11 +16,13 @@ import { businessPath } from "@/lib/navigation";
 
 import type { PlanChoice } from "../_components/PlansSection";
 import { checkoutReturnUrl, type BillingOverview, type BillingPeriod, type CheckoutSession } from "./billing";
+import { DEFAULT_SETUP_OPTION, type SetupOption } from "./setupOptions";
 
 /**
  * What the owner does on the billing page: start a trial, subscribe (on
- * the payment page), switch plans, cancel, and pay what is due. Each
- * choice is confirmed in a dialog that shows a refusal.
+ * the payment page, with who sets the assistant up), switch plans,
+ * cancel, and pay what is due. Each choice is confirmed in a dialog that
+ * shows a refusal.
  */
 export function useBillingActions(overview: Query<BillingOverview>) {
   const { t, locale } = useI18n();
@@ -28,6 +30,7 @@ export function useBillingActions(overview: Query<BillingOverview>) {
   const router = useRouter();
   const { business } = useBusiness();
   const [choice, setChoice] = useState<PlanChoice | null>(null);
+  const [setupOption, setSetupOption] = useState<SetupOption>(DEFAULT_SETUP_OPTION);
   const [isCancelling, setCancelling] = useState(false);
   const [dialogError, setDialogError] = useState<ApiError | null>(null);
   const [isPaying, setPaying] = useState(false);
@@ -69,7 +72,7 @@ export function useBillingActions(overview: Query<BillingOverview>) {
         const session = await openPaymentPage((returnUrl) =>
           api.POST("/v1/businesses/{business_id}/billing/subscribe", {
             params: pathParams,
-            body: returnUrl ? { ...body, return_url: returnUrl } : body,
+            body: { ...body, setup_option: setupOption, ...(returnUrl ? { return_url: returnUrl } : {}) },
           }),
         );
         window.location.assign(session.checkout_url);
@@ -138,6 +141,7 @@ export function useBillingActions(overview: Query<BillingOverview>) {
 
   const openChoice = (next: PlanChoice) => {
     setDialogError(null);
+    setSetupOption(DEFAULT_SETUP_OPTION);
     setChoice(next);
   };
   const openCancel = () => {
@@ -149,6 +153,8 @@ export function useBillingActions(overview: Query<BillingOverview>) {
     choice,
     closeChoice: () => setChoice(null),
     openChoice,
+    setupOption,
+    setSetupOption,
     onConfirmChoice,
     isChoosing: startTrial.isPending || changePlan.isPending || isSubscribing,
     isCancelling,

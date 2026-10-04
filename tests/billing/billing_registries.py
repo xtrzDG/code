@@ -3,7 +3,7 @@
 from app.contracts.registries import PlanRegistryContract
 from app.registries.billing.exchange_rate_registry import ExchangeRateRegistry
 from app.registries.billing.plan_registry import PlanRegistry
-from app.schemas.constants.billing import PlanKey
+from app.schemas.constants.billing import PlanKey, SetupOption
 from app.schemas.dto.billing import Money, PlanDefinition
 from app.schemas.typings.billing.constrained_integers import MoneyAmountMinor
 from app.schemas.typings.localization.constrained_strings import CurrencyCode
@@ -52,6 +52,17 @@ class PriceBookPlanRegistry(PlanRegistryContract):
             return self._plans.find_local_setup_fee(plan_key, currency_code)
 
         return Money(amount_minor=MoneyAmountMinor(amount), currency_code=currency_code)
+
+    def find_setup_fee(
+        self,
+        plan_key: PlanKey,
+        option: SetupOption,
+        currency_code: CurrencyCode,
+    ) -> Money | None:
+        if option is SetupOption.DONE_FOR_YOU:
+            return self.find_local_setup_fee(plan_key, currency_code)
+
+        return self._plans.find_setup_fee(plan_key, option, currency_code)
 
 
 def static_rate_registry(rates: list[tuple[str, str, str]]) -> ExchangeRateRegistry:

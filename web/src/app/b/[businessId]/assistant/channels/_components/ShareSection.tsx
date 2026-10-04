@@ -37,7 +37,7 @@ export function ShareSection({ isWebChatOn, accent }: { isWebChatOn: boolean; ac
   const qrLink = usable.find((link) => link.kind === selected) ?? usable[0] ?? null;
 
   return (
-    <section aria-labelledby="channels-share" className="space-y-4">
+    <section id="share" aria-labelledby="channels-share" className="scroll-mt-6 space-y-4">
       <div className="space-y-1">
         <h2 id="channels-share" className="text-lg font-semibold text-ink">
           {t("share.title")}

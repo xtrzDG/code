@@ -12,9 +12,11 @@ from app.containers.use_cases.assistant_use_cases import AssistantUseCasesContai
 from app.containers.use_cases.launch_use_cases import LaunchUseCasesContainer
 from app.containers.utilities import UtilitiesContainer
 from app.contracts.use_case_contract import UseCaseContract
+from app.schemas.domain.setup import SetupStateDocument
 from app.schemas.dto.conversation_feed.owner_test_chat import OwnerTestChatCommand
 from app.schemas.dto.profiles.business_profile import BusinessProfileView
 from app.schemas.dto.setup.profile_patch import PatchProfileCommand
+from app.schemas.dto.setup.setup_guide import GuideProgressCheck
 from app.schemas.dto.setup.setup_progress import (
     ActivationMilestoneCheck,
     ActivationMilestoneView,
@@ -38,6 +40,9 @@ from app.use_cases.setup.celebrate_milestone_use_case import (
 from app.use_cases.setup.get_setup_progress_use_case import GetSetupProgressUseCase
 from app.use_cases.setup.get_starter_answers_use_case import (
     GetStarterAnswersUseCase,
+)
+from app.use_cases.setup.notice_guide_progress_use_case import (
+    NoticeGuideProgressUseCase,
 )
 from app.use_cases.setup.patch_profile_use_case import PatchProfileUseCase
 from app.use_cases.setup.prepare_test_chat_version_use_case import (
@@ -112,13 +117,29 @@ class SetupUseCasesContainer(containers.DeclarativeContainer):
         assistant_version_repo=repositories.assistant_version_repo,
         activation_event_repo=repositories.activation_event_repo,
         activation_probe_repo=repositories.activation_probe_repo,
+        setup_state_repo=repositories.setup_state_repo,
         record_activation_event=launch_use_cases.record_activation_event_use_case,
+        staff_alerts=facilitators.staff_alert_facilitator,
+        localized_text_resolver=utilities.localized_text_resolver,
+        wall_clock=time_provider.microsecond_wall_clock,
+    )
+    notice_guide_progress_use_case: Factory[
+        UseCaseContract[GuideProgressCheck, SetupStateDocument | None]
+    ] = Factory(
+        NoticeGuideProgressUseCase,
+        setup_state_repo=repositories.setup_state_repo,
+        setup_probe_repo=repositories.setup_probe_repo,
+        user_repo=repositories.user_repo,
+        staff_alerts=facilitators.staff_alert_facilitator,
+        localized_text_resolver=utilities.localized_text_resolver,
+        wall_clock=time_provider.microsecond_wall_clock,
     )
     get_setup_progress_use_case: Factory[UseCaseContract[SetupQuery, SetupView]] = (
         Factory(
             GetSetupProgressUseCase,
             authorize_business_access=account_use_cases.authorize_business_access_use_case,
             record_activation_milestones=record_activation_milestones_use_case,
+            notice_guide_progress=notice_guide_progress_use_case,
             describe_apply_changes=apply_use_cases.describe_apply_changes_use_case,
             business_profile_repo=repositories.business_profile_repo,
             knowledge_item_repo=repositories.knowledge_item_repo,
@@ -127,7 +148,6 @@ class SetupUseCasesContainer(containers.DeclarativeContainer):
             subscription_repo=repositories.subscription_repo,
             dpa_acceptance_repo=repositories.dpa_acceptance_repo,
             activation_event_repo=repositories.activation_event_repo,
-            setup_state_repo=repositories.setup_state_repo,
             niche_template_registry=registries.niche_template_registry,
             plan_registry=registries.plan_registry,
             localized_text_resolver=utilities.localized_text_resolver,
@@ -152,6 +172,7 @@ class SetupUseCasesContainer(containers.DeclarativeContainer):
         authorize_business_access=account_use_cases.authorize_business_access_use_case,
         record_activation_milestones=record_activation_milestones_use_case,
         activation_event_repo=repositories.activation_event_repo,
+        setup_state_repo=repositories.setup_state_repo,
         wall_clock=time_provider.microsecond_wall_clock,
     )
     prepare_test_chat_version_use_case: Factory[

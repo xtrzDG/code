@@ -8,7 +8,7 @@ from typing import Protocol
 from typed_time_provider import Microseconds
 
 from app.contracts.registry_contract import RegistryContract
-from app.schemas.constants.billing import PlanKey
+from app.schemas.constants.billing import PlanKey, SetupOption
 from app.schemas.constants.channels import ChannelKind
 from app.schemas.constants.niches import NicheKey
 from app.schemas.dto.billing import Money, PlanDefinition
@@ -77,6 +77,19 @@ class PlanRegistryContract(RegistryContract, Protocol):
         plan_key: PlanKey,
         currency_code: CurrencyCode,
     ) -> Money | None:
+        """The DONE_FOR_YOU setup fee in a price-book currency, if set."""
+        raise NotImplementedError
+
+    def find_setup_fee(
+        self,
+        plan_key: PlanKey,
+        option: SetupOption,
+        currency_code: CurrencyCode,
+    ) -> Money | None:
+        """
+        What a setup option costs in a currency: SELF_SERVE nothing, in any
+        currency; DONE_FOR_YOU its price-book price (None when unknown).
+        """
         raise NotImplementedError
 
 

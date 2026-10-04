@@ -4,7 +4,12 @@ from app.contracts.registries import PlanRegistryContract
 from app.contracts.repositories.billing_repositories import InvoiceRepoContract
 from app.contracts.transformer_contract import TransformerContract
 from app.contracts.use_case_contract import UseCaseContract
-from app.schemas.constants.billing import BillingPeriod, InvoiceKind, InvoiceStatus
+from app.schemas.constants.billing import (
+    BillingPeriod,
+    InvoiceKind,
+    InvoiceStatus,
+    SetupOption,
+)
 from app.schemas.domain.billing import InvoiceDocument, SubscriptionDocument
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.dto.billing import Money, PlanDefinition
@@ -24,8 +29,11 @@ class IssueDueInvoicesUseCase(
     wording (concept tax rule: never "license" or "consultation").
 
     The one-time setup fee is invoiced together with the first monthly
-    period; an annual subscription includes it (concept: the setup fee is
-    credited to an annual payment), so a business that has already paid
+    period, and only for a business set up by the platform team
+    (DONE_FOR_YOU): an owner who set the assistant up in the cabinet
+    (SELF_SERVE, or a subscription from before the choice existed) pays no
+    setup fee. An annual subscription includes it (concept: the setup fee
+    is credited to an annual payment), so a business that has already paid
     any service period (an annual one included) never gets it again, for
     example after switching from annual to monthly. Issuing is idempotent:
     an existing invoice of the same period is reused, and an open one takes
@@ -73,6 +81,7 @@ class IssueDueInvoicesUseCase(
         if (
             not input_data.is_setup_fee_included
             or input_data.subscription.billing_period is not BillingPeriod.MONTHLY
+            or input_data.subscription.setup_option is not SetupOption.DONE_FOR_YOU
         ):
             return False
 
@@ -99,6 +108,7 @@ class IssueDueInvoicesUseCase(
             self._plan_registry,
             subscription.plan_key,
             subscription.currency_code,
+            SetupOption.DONE_FOR_YOU,
         )
         invoice = InvoiceDocument(
             business_id=subscription.business_id,

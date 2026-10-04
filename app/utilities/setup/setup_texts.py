@@ -32,6 +32,21 @@ STEP_TITLES: dict[SetupStepCode, LocalizedText] = {
         ka="გამოსცადეთ ასისტენტი",
     ),
     SetupStepCode.LAUNCH: build_localized_text(en="Go live", ru="Запуск", ka="გაშვება"),
+    SetupStepCode.PHONE_TEST: build_localized_text(
+        en="Try it from your phone",
+        ru="Проверьте с телефона",
+        ka="შეამოწმეთ ტელეფონიდან",
+    ),
+    SetupStepCode.SECOND_CHANNEL: build_localized_text(
+        en="Add a second channel",
+        ru="Подключите второй канал",
+        ka="დაამატეთ მეორე არხი",
+    ),
+    SetupStepCode.SHARE: build_localized_text(
+        en="Show customers where to write",
+        ru="Покажите клиентам, куда писать",
+        ka="აჩვენეთ კლიენტებს, სად მისწერონ",
+    ),
 }
 
 STEP_DESCRIPTIONS: dict[SetupStepCode, LocalizedText] = {
@@ -71,6 +86,23 @@ STEP_DESCRIPTIONS: dict[SetupStepCode, LocalizedText] = {
         ru="Мы проверим помощника и включим его для ваших клиентов.",
         ka="შევამოწმებთ ასისტენტს და ჩავრთავთ თქვენი კლიენტებისთვის.",
     ),
+    SetupStepCode.PHONE_TEST: build_localized_text(
+        en="Scan the code and write to your assistant as a customer would.",
+        ru="Отсканируйте код и напишите помощнику, как написал бы клиент.",
+        ka="დაასკანერეთ კოდი და მისწერეთ ასისტენტს ისე, როგორც კლიენტი მისწერდა.",
+    ),
+    SetupStepCode.SECOND_CHANNEL: build_localized_text(
+        en="Most customers write in WhatsApp, Telegram or Instagram: connect one.",
+        ru="Большинство клиентов пишут в WhatsApp, Telegram или Instagram — "
+        "подключите один из них.",
+        ka="კლიენტების უმეტესობა WhatsApp-ში, Telegram-სა ან Instagram-ში "
+        "წერს — დააკავშირეთ ერთ-ერთი.",
+    ),
+    SetupStepCode.SHARE: build_localized_text(
+        en="Print the QR card for the counter or share the chat link.",
+        ru="Распечатайте карточку с QR-кодом для стойки или поделитесь ссылкой на чат.",
+        ka="ამობეჭდეთ QR-ბარათი დახლისთვის ან გააზიარეთ ჩატის ბმული.",
+    ),
 }
 
 ACTION_LABELS: dict[SetupActionTarget, LocalizedText] = {
@@ -102,6 +134,14 @@ ACTION_LABELS: dict[SetupActionTarget, LocalizedText] = {
     ),
     SetupActionTarget.OVERVIEW: build_localized_text(
         en="Open the overview", ru="Открыть обзор", ka="მიმოხილვის გახსნა"
+    ),
+    SetupActionTarget.PHONE_TEST: build_localized_text(
+        en="Show the QR code", ru="Показать QR-код", ka="QR-კოდის ჩვენება"
+    ),
+    SetupActionTarget.SHARE: build_localized_text(
+        en="Get the link and QR card",
+        ru="Ссылка и карточка с QR",
+        ka="ბმული და QR-ბარათი",
     ),
 }
 

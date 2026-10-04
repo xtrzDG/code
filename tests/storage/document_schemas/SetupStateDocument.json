@@ -1,10 +1,32 @@
 {
   "collection": "setup_states",
   "document_type": "SetupStateDocument",
-  "schema_version": 1,
+  "schema_version": 2,
   "shape": {
     "additionalProperties": false,
     "properties": {
+      "after_hours_booking_at": {
+        "anyOf": [
+          {
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "after_hours_booking_celebrated_at": {
+        "anyOf": [
+          {
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
       "business_id": {
         "pattern": "^business_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
         "type": "string"
@@ -12,13 +34,97 @@
       "created_at": {
         "type": "integer"
       },
+      "guide_dismissed_at": {
+        "anyOf": [
+          {
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "hosted_page_visited_at": {
+        "anyOf": [
+          {
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
       "id": {
         "pattern": "^setup_state_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
         "type": "string"
       },
+      "phone_check_started_at": {
+        "anyOf": [
+          {
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "phone_tested_at": {
+        "anyOf": [
+          {
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "reminders_off_at": {
+        "anyOf": [
+          {
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
       "schema_version": {
-        "default": "1",
+        "default": "2",
         "type": "string"
+      },
+      "shared_at": {
+        "anyOf": [
+          {
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "skipped_after_launch": {
+        "items": {
+          "enum": [
+            "business",
+            "offer",
+            "hours_and_bookings",
+            "staff_contact",
+            "channels",
+            "test",
+            "launch",
+            "phone_test",
+            "second_channel",
+            "share"
+          ],
+          "type": "string"
+        },
+        "type": "array"
       },
       "skipped_steps": {
         "items": {
@@ -29,7 +135,10 @@
             "staff_contact",
             "channels",
             "test",
-            "launch"
+            "launch",
+            "phone_test",
+            "second_channel",
+            "share"
           ],
           "type": "string"
         },

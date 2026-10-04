@@ -19,6 +19,7 @@ from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.dto.access import BusinessAccessRequest
 from app.schemas.dto.billing import Money
 from app.schemas.dto.billing_cabinet import (
+    SetupOptionChoice,
     SubscribeCommand,
     SubscribeRequest,
     SubscriptionOpening,
@@ -50,6 +51,10 @@ class OpenSubscriptionUseCase(UseCaseContract[SubscribeCommand, SubscriptionOpen
     subscription is left as it is (the plan change is a separate step); one
     still INCOMPLETE is re-dated to now and its unpaid service periods are
     voided, so the owner never pays for days before the payment.
+
+    The chosen setup option goes with it (`ChooseSetupOptionUseCase`):
+    self-serve is free, done-for-you brings the setup fee and an
+    onboarding request for the platform team.
     """
 
     def __init__(
@@ -62,6 +67,7 @@ class OpenSubscriptionUseCase(UseCaseContract[SubscribeCommand, SubscriptionOpen
         invoice_repo: InvoiceRepoContract,
         business_repo: BusinessRepoContract,
         plan_registry: PlanRegistryContract,
+        choose_setup_option: UseCaseContract[SetupOptionChoice, None],
         app_settings: AppSettings,
         wall_clock: WallClock[Microseconds],
     ) -> None:
@@ -73,6 +79,9 @@ class OpenSubscriptionUseCase(UseCaseContract[SubscribeCommand, SubscriptionOpen
         self._invoice_repo: InvoiceRepoContract = invoice_repo
         self._business_repo: BusinessRepoContract = business_repo
         self._plan_registry: PlanRegistryContract = plan_registry
+        self._choose_setup_option: UseCaseContract[SetupOptionChoice, None] = (
+            choose_setup_option
+        )
         self._app_settings: AppSettings = app_settings
         self._wall_clock: WallClock[Microseconds] = wall_clock
 
@@ -90,18 +99,23 @@ class OpenSubscriptionUseCase(UseCaseContract[SubscribeCommand, SubscriptionOpen
             self._subscription_repo,
             business.id,
         )
+        is_created: bool = current is None
         if current is None:
-            return SubscriptionOpening(
-                subscription_id=self._open(business, input_data.request, now).id,
-                is_created=IsSubscriptionCreated(True),
-            )
-
-        if current.status is SubscriptionStatus.INCOMPLETE:
+            current = self._open(business, input_data.request, now)
+        elif current.status is SubscriptionStatus.INCOMPLETE:
             self._redate_unpaid(current, now)
 
+        self._choose_setup_option.run(
+            SetupOptionChoice(
+                user_id=input_data.user_id,
+                business=business,
+                subscription_id=current.id,
+                option=input_data.request.setup_option,
+            )
+        )
         return SubscriptionOpening(
             subscription_id=current.id,
-            is_created=IsSubscriptionCreated(False),
+            is_created=IsSubscriptionCreated(is_created),
         )
 
     def _open(
@@ -130,6 +144,7 @@ class OpenSubscriptionUseCase(UseCaseContract[SubscribeCommand, SubscriptionOpen
             status=SubscriptionStatus.INCOMPLETE,
             period_start=now,
             period_end=now,
+            setup_option=request.setup_option,
             created_at=now,
             updated_at=now,
         )

@@ -197,6 +197,8 @@ def build_admin_world() -> AdminWorld:
     )
     start_trial(testbed, owner, georgian)
     start_trial(testbed, owner, italian)
+    testbed.set_up_for_you(georgian.id)
+    testbed.set_up_for_you(italian.id)
 
     # The live version was published although its run failed (the owner
     # accepted the failed tests); the earlier one had passed.

@@ -78,6 +78,16 @@ export function nextStep(business: Pick<BusinessView, "status" | "service_mode">
   return NEXT_STEPS[business.status];
 }
 
+/**
+ * Whether the Overview shows the status card. Owners follow the setup
+ * guide instead (GET …/setup), unless the business needs something the
+ * guide does not cover: an unpaid plan or a pause. Staff, who do not set
+ * the business up, always see the status.
+ */
+export function needsStatusCard(business: Pick<BusinessView, "status" | "service_mode">, isOwner: boolean): boolean {
+  return !isOwner || business.status === "paused" || nextStep(business) === LEADS_ONLY_STEP;
+}
+
 /** Whether the assistant has gone live (it may be paused since); before that the tunnel is the way on. */
 export function isLaunched(status: BusinessStatus): boolean {
   return status === "live" || status === "paused";

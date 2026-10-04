@@ -119,7 +119,7 @@ def test_altered_foreign_and_malformed_tokens_are_refused() -> None:
     resigned = payload + signature_of(payload)
     encoded = base64.urlsafe_b64encode(resigned).rstrip(b"=").decode()
     assert signer.read(StaffLinkToken(encoded)) is None
-    unknown_target = struct.pack("!B16sB16sI", 1, bytes(16), 9, bytes(16), 1)
+    unknown_target = struct.pack("!B16sB16sI", 1, bytes(16), 99, bytes(16), 1)
     encoded = (
         base64.urlsafe_b64encode(unknown_target + signature_of(unknown_target))
         .rstrip(b"=")
