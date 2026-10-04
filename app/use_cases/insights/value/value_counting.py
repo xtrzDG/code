@@ -186,7 +186,7 @@ def count_value_totals(
         ),
         staff_minutes_saved=staff_minutes(replies, calls, rates),
         estimated_revenue_minor=money.estimated_revenue_minor,
-        valued_booking_count=PeriodItemCount(booked.count),
+        valued_booking_count=booked.count,
         booked_value_minor=money.booked_value_minor,
         revenue_source=money.revenue_source,
     )

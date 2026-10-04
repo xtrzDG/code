@@ -3,7 +3,11 @@
 from app.schemas.constants.bookings import BookingStatus
 from app.schemas.constants.value import RevenueSource, ValueBasis
 from app.schemas.dto.value.value_model import ValueModel
-from app.schemas.typings.value.constrained_integers import AverageCheckMinor
+from app.schemas.typings.insights.constrained_integers import PeriodItemCount
+from app.schemas.typings.value.constrained_integers import (
+    AverageCheckMinor,
+    BookedValueMinor,
+)
 from app.use_cases.insights.value.value_money import BookedMoney, estimate_money
 from tests.value.test_value_model import last_week
 from tests.value.value_scene import ValueScene
@@ -84,7 +88,7 @@ def test_staff_see_how_many_bookings_carry_a_value_but_no_money() -> None:
 
 
 def test_the_money_estimate_rules() -> None:
-    booked = BookedMoney(count=2, value_minor=10_000)
+    booked = BookedMoney(count=PeriodItemCount(2), value_minor=BookedValueMinor(10_000))
     check = AverageCheckMinor(3_000)
 
     mixed = estimate_money(ValueBasis.BOOKINGS, 5, booked, check)
@@ -102,5 +106,6 @@ def test_the_money_estimate_rules() -> None:
         12_000,
         None,
     )
-    nothing = estimate_money(ValueBasis.REQUESTS, 4, BookedMoney(0, 0), None)
+    none_valued = BookedMoney(PeriodItemCount(0), BookedValueMinor(0))
+    nothing = estimate_money(ValueBasis.REQUESTS, 4, none_valued, None)
     assert (nothing.estimated_revenue_minor, nothing.revenue_source) == (None, None)

@@ -12,6 +12,7 @@ from dataclasses import dataclass
 
 from app.schemas.constants.value import RevenueSource, ValueBasis
 from app.schemas.dto.operations.activity_counts import BookingValueCount
+from app.schemas.typings.insights.constrained_integers import PeriodItemCount
 from app.schemas.typings.localization.constrained_strings import CurrencyCode
 from app.schemas.typings.value.constrained_integers import (
     AverageCheckMinor,
@@ -25,8 +26,8 @@ from app.use_cases.insights.dashboard_values import EARNING_STATUSES
 class BookedMoney:
     """The assistant's earning bookings that carry a value, and what they are worth."""
 
-    count: int
-    value_minor: int
+    count: PeriodItemCount
+    value_minor: BookedValueMinor
 
 
 @dataclass(frozen=True)
@@ -54,7 +55,10 @@ def assistant_booked_money(
                 counts["all"] += sign * int(group.count)
                 values["all"] += sign * int(group.value_minor)
 
-    return BookedMoney(count=max(counts["all"], 0), value_minor=max(values["all"], 0))
+    return BookedMoney(
+        count=PeriodItemCount(max(counts["all"], 0)),
+        value_minor=BookedValueMinor(max(values["all"], 0)),
+    )
 
 
 def estimate_money(
@@ -70,7 +74,7 @@ def estimate_money(
     Requests: the check alone. None when nothing prices them.
     """
 
-    if basis is ValueBasis.REQUESTS or booked.count == 0:
+    if basis is ValueBasis.REQUESTS or int(booked.count) == 0:
         if average_check is None:
             return MoneyEstimate(None, None, None)
 
@@ -80,16 +84,16 @@ def estimate_money(
             RevenueSource.AVERAGE_CHECK,
         )
 
-    unvalued: int = max(earning_units - booked.count, 0)
+    unvalued: int = max(earning_units - int(booked.count), 0)
     if unvalued == 0 or average_check is None:
         return MoneyEstimate(
-            EstimatedRevenueMinor(booked.value_minor),
-            BookedValueMinor(booked.value_minor),
+            EstimatedRevenueMinor(int(booked.value_minor)),
+            booked.value_minor,
             RevenueSource.BOOKED_VALUES,
         )
 
     return MoneyEstimate(
-        EstimatedRevenueMinor(booked.value_minor + unvalued * int(average_check)),
-        BookedValueMinor(booked.value_minor),
+        EstimatedRevenueMinor(int(booked.value_minor) + unvalued * int(average_check)),
+        booked.value_minor,
         RevenueSource.MIXED,
     )
