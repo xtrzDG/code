@@ -77,10 +77,9 @@ export function SystemScreen() {
       ) : (
         <div className="space-y-6">
           <AlertsCard alerts={data.alerts} />
-          <div className="grid gap-6 xl:grid-cols-2">
-            <WorkersCard workers={data.workers} />
-            <LanesCard lanes={data.lanes} />
-          </div>
+          {/* Full width: both tables have six columns. */}
+          <WorkersCard workers={data.workers} />
+          <LanesCard lanes={data.lanes} />
           <DeadLettersCard tallies={data.dead_jobs} />
           <div className="grid gap-6 xl:grid-cols-2">
             <ChannelsCard
