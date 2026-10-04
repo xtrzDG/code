@@ -6,7 +6,6 @@ platform alerts, for platform admins only.
 
 import pytest
 
-from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.channels import ChannelStatus
 from app.schemas.constants.jobs import JobLane, QueuedJobStatus
 from app.schemas.constants.monitoring import (
@@ -18,7 +17,6 @@ from app.schemas.constants.monitoring import (
 )
 from app.schemas.domain.maintenance_runs import MaintenanceRunDocument
 from app.schemas.domain.platform_alerts import PlatformAlertStateDocument
-from app.schemas.domain.users import UserDocument
 from app.schemas.dto.admin_system import AdminSystemQuery, TableSizeView
 from app.schemas.dto.platform_health import DatabaseSize
 from app.schemas.exceptions.application_errors import (
@@ -50,16 +48,7 @@ from tests.platform_ops.ops_documents import (
     job,
     pulse,
 )
-from tests.platform_ops.ops_world import OpsWorld, put
-
-ADMIN: UserId = UserId()
-
-
-class AdminsOnly(UseCaseContract[UserId, UserDocument]):
-    def run(self, input_data: UserId) -> UserDocument:
-        if input_data != ADMIN:
-            raise AccessDeniedError("Platform admins only.")
-        return UserDocument.model_construct(id=ADMIN)
+from tests.platform_ops.ops_world import ADMIN, AdminsOnly, OpsWorld, put
 
 
 class MeasuredDatabase:

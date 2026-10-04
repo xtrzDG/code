@@ -19,6 +19,7 @@ from app.adapters.storage.in_memory_document_collection import (
     InMemoryDocumentCollectionAdapter,
 )
 from app.contracts.document_store import DocumentCollectionAdapterContract
+from app.contracts.use_case_contract import UseCaseContract
 from app.repositories.maintenance_run_repository import MaintenanceRunRepository
 from app.repositories.platform_activity_repository import PlatformActivityRepository
 from app.repositories.platform_alert_state_repository import (
@@ -34,10 +35,13 @@ from app.schemas.domain.jobs import QueuedJobDocument, WorkerHeartbeatDocument
 from app.schemas.domain.maintenance_runs import MaintenanceRunDocument
 from app.schemas.domain.outbound_messages import OutboundMessageDocument
 from app.schemas.domain.platform_alerts import PlatformAlertStateDocument
+from app.schemas.domain.users import UserDocument
+from app.schemas.exceptions.application_errors import AccessDeniedError
 from app.schemas.typings.monitoring.constrained_integers import AlertCooldownMinutes
 from app.schemas.typings.monitoring.constrained_strings import AlertChatId
 from app.schemas.typings.platform.constrained_strings import CabinetBaseUrl
 from app.schemas.typings.users.constrained_strings import EmailAddress
+from app.schemas.typings.users.prefixed_id import UserId
 from app.use_cases.admin.alerts.alert_checks import PlatformAlertChecks
 from app.use_cases.admin.alerts.check_platform_alerts_use_case import (
     CheckPlatformAlertsUseCase,
@@ -45,6 +49,7 @@ from app.use_cases.admin.alerts.check_platform_alerts_use_case import (
 from tests.knowledge.website_import.recording_job_queue import RecordingJobQueue
 from tests.platform_ops.ops_documents import NOW
 
+ADMIN: UserId = UserId()
 ALERT_CHAT: AlertChatId = AlertChatId("-1001234567890")
 ALERT_EMAIL: EmailAddress = EmailAddress("oncall@workshop.example")
 CABINET: CabinetBaseUrl = CabinetBaseUrl("https://cabinet.workshop.example")
@@ -57,6 +62,15 @@ def put[Stored: BaseDocument](
 
     for document in documents:
         collection.upsert(str(vars(document)["id"]), document)
+
+
+class AdminsOnly(UseCaseContract[UserId, UserDocument]):
+    """The platform admin check: ADMIN passes, everyone else is refused."""
+
+    def run(self, input_data: UserId) -> UserDocument:
+        if input_data != ADMIN:
+            raise AccessDeniedError("Platform admins only.")
+        return UserDocument.model_construct(id=ADMIN)
 
 
 class OpsClock:
