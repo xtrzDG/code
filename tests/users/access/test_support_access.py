@@ -121,10 +121,10 @@ def test_an_expired_grant_is_refused_and_the_job_closes_it() -> None:
     again = world.end_expired.run(tick)
 
     assert (int(first.processed_count), int(again.processed_count)) == (1, 0)
-    [grant] = world.testbed.grant_repo.list_open_of_admin(
-        world.business.id, world.support.id
-    ) or [None]
-    assert grant is None
+    assert (
+        world.testbed.grant_repo.list_open_of_admin(world.business.id, world.support.id)
+        == []
+    )
     ends = [
         entry
         for entry in world.testbed.audit_log_repo.list_by_business(world.business.id)
