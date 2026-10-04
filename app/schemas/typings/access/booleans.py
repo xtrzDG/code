@@ -7,4 +7,5 @@ Example:
 IsOwnSupportAccess = bool
 IsSupportViewer = bool
 IsSupportWriteAllowed = bool
+IsViewingAdmin = bool
 # Keep abc order for all non example types, if possible.

@@ -4,6 +4,7 @@ from typed_time_provider import Microseconds, WallClock
 
 from app.contracts.repositories.business_repositories import BusinessRepoContract
 from app.contracts.use_case_contract import UseCaseContract
+from app.schemas.constants.access import PlatformAdminPermission
 from app.schemas.constants.client_health import AdminClientSort, ClientHealthStatus
 from app.schemas.domain.users import UserDocument
 from app.schemas.dto.admin import (
@@ -14,10 +15,10 @@ from app.schemas.dto.admin import (
     ClientSummarySource,
 )
 from app.schemas.dto.billing import Money
+from app.schemas.dto.platform_admins import PlatformAdminAccessRequest
 from app.schemas.typings.billing.constrained_floats import GrossMarginPercent
 from app.schemas.typings.client_health.constrained_integers import ClientCount
 from app.schemas.typings.client_health.constrained_strings import ClientSearchText
-from app.schemas.typings.users.prefixed_id import UserId
 from app.utilities.paging.ordered_paging import take_ordered_page
 
 HEALTH_ORDER: dict[ClientHealthStatus, int] = {
@@ -45,14 +46,16 @@ class ListClientsUseCase(UseCaseContract[AdminClientsQuery, AdminClientPage]):
 
     def __init__(
         self,
-        authorize_platform_admin: UseCaseContract[UserId, UserDocument],
+        authorize_platform_admin: UseCaseContract[
+            PlatformAdminAccessRequest, UserDocument
+        ],
         business_repo: BusinessRepoContract,
         summarize_client: UseCaseContract[ClientSummarySource, AdminClientSummary],
         wall_clock: WallClock[Microseconds],
     ) -> None:
-        self._authorize_platform_admin: UseCaseContract[UserId, UserDocument] = (
-            authorize_platform_admin
-        )
+        self._authorize_platform_admin: UseCaseContract[
+            PlatformAdminAccessRequest, UserDocument
+        ] = authorize_platform_admin
         self._business_repo: BusinessRepoContract = business_repo
         self._summarize_client: UseCaseContract[
             ClientSummarySource,
@@ -61,7 +64,12 @@ class ListClientsUseCase(UseCaseContract[AdminClientsQuery, AdminClientPage]):
         self._wall_clock: WallClock[Microseconds] = wall_clock
 
     def run(self, input_data: AdminClientsQuery) -> AdminClientPage:
-        self._authorize_platform_admin.run(input_data.user_id)
+        self._authorize_platform_admin.run(
+            PlatformAdminAccessRequest(
+                user_id=input_data.user_id,
+                permission=PlatformAdminPermission.VIEW_CLIENTS,
+            )
+        )
         summaries: list[AdminClientSummary] = [
             self._summarize_client.run(ClientSummarySource(business=business))
             for business in self._business_repo.list_all()

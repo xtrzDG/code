@@ -27,6 +27,13 @@ from app.schemas.dto.mfa import (
     VerifyMfaLoginCommand,
     VerifyStepUpCommand,
 )
+from app.schemas.dto.sessions import (
+    RevokedSessionsView,
+    RevokeOtherSessionsCommand,
+    RevokeSessionCommand,
+    SessionsQuery,
+    UserSessionList,
+)
 from app.schemas.dto.users import LoginSessionView
 from app.schemas.typings.users.prefixed_id import UserId
 from app.use_cases.businesses.security.get_business_security_use_case import (
@@ -56,6 +63,15 @@ from app.use_cases.users.mfa.start_totp_enrollment_use_case import (
 )
 from app.use_cases.users.mfa.verify_mfa_login_use_case import VerifyMfaLoginUseCase
 from app.use_cases.users.mfa.verify_step_up_use_case import VerifyStepUpUseCase
+from app.use_cases.users.sessions.list_my_sessions_use_case import (
+    ListMySessionsUseCase,
+)
+from app.use_cases.users.sessions.revoke_other_sessions_use_case import (
+    RevokeOtherSessionsUseCase,
+)
+from app.use_cases.users.sessions.revoke_session_use_case import (
+    RevokeSessionUseCase,
+)
 
 
 class MfaUseCasesContainer(containers.DeclarativeContainer):
@@ -92,6 +108,8 @@ class MfaUseCasesContainer(containers.DeclarativeContainer):
         wall_clock=time_provider.microsecond_wall_clock,
         rate_limit_registry=registries.request_rate_limit_registry,
         product_events=facilitators.product_events,
+        platform_admins=registries.platform_admin_registry,
+        sign_in_notices=facilitators.sign_in_notice_facilitator,
     )
     start_mfa_login_enrollment_use_case: Factory[
         UseCaseContract[StartMfaEnrollmentCommand, TotpEnrollmentView]
@@ -116,6 +134,33 @@ class MfaUseCasesContainer(containers.DeclarativeContainer):
         recovery_code_repo=repositories.recovery_code_repo,
         session_assurance=utilities.session_assurance,
         app_settings=config.app_settings,
+        platform_admins=registries.platform_admin_registry,
+    )
+    # The person's signed-in devices (1103).
+    list_my_sessions_use_case: Factory[
+        UseCaseContract[SessionsQuery, UserSessionList]
+    ] = Factory(
+        ListMySessionsUseCase,
+        user_session_repo=repositories.user_session_repo,
+        session_assurance=utilities.session_assurance,
+        wall_clock=time_provider.microsecond_wall_clock,
+    )
+    revoke_session_use_case: Factory[UseCaseContract[RevokeSessionCommand, None]] = (
+        Factory(
+            RevokeSessionUseCase,
+            user_session_repo=repositories.user_session_repo,
+            audit_log_repo=repositories.audit_log_repo,
+            wall_clock=time_provider.microsecond_wall_clock,
+        )
+    )
+    revoke_other_sessions_use_case: Factory[
+        UseCaseContract[RevokeOtherSessionsCommand, RevokedSessionsView]
+    ] = Factory(
+        RevokeOtherSessionsUseCase,
+        user_session_repo=repositories.user_session_repo,
+        session_assurance=utilities.session_assurance,
+        audit_log_repo=repositories.audit_log_repo,
+        wall_clock=time_provider.microsecond_wall_clock,
     )
     start_totp_enrollment_use_case: Factory[
         UseCaseContract[UserId, TotpEnrollmentView]

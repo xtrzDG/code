@@ -56,3 +56,41 @@ class SecurityPipelinesContainer(containers.DeclarativeContainer):
     update_business_security_pipeline = orchestrator_pipeline(
         security_orchestrators.update_business_security_orchestrator
     )
+
+    # --- Device sessions, the admin team and support access (1103).
+    list_my_sessions_pipeline = orchestrator_pipeline(
+        security_orchestrators.list_my_sessions_orchestrator
+    )
+    revoke_session_pipeline = orchestrator_pipeline(
+        security_orchestrators.revoke_session_orchestrator
+    )
+    revoke_other_sessions_pipeline = orchestrator_pipeline(
+        security_orchestrators.revoke_other_sessions_orchestrator
+    )
+    list_platform_admins_pipeline = orchestrator_pipeline(
+        security_orchestrators.list_platform_admins_orchestrator
+    )
+    add_platform_admin_pipeline = orchestrator_pipeline(
+        security_orchestrators.add_platform_admin_orchestrator
+    )
+    change_platform_admin_role_pipeline = orchestrator_pipeline(
+        security_orchestrators.change_platform_admin_role_orchestrator
+    )
+    remove_platform_admin_pipeline = orchestrator_pipeline(
+        security_orchestrators.remove_platform_admin_orchestrator
+    )
+    close_client_cabinet_pipeline = orchestrator_pipeline(
+        security_orchestrators.close_client_cabinet_orchestrator
+    )
+    end_expired_support_access_pipeline = orchestrator_pipeline(
+        security_orchestrators.end_expired_support_access_orchestrator
+    )
+    get_support_access_pipeline = orchestrator_pipeline(
+        security_orchestrators.get_support_access_orchestrator
+    )
+    update_support_write_access_pipeline = orchestrator_pipeline(
+        security_orchestrators.update_support_write_access_orchestrator
+    )
+    end_support_access_pipeline = orchestrator_pipeline(
+        security_orchestrators.end_support_access_orchestrator
+    )

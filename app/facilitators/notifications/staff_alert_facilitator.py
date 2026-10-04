@@ -66,7 +66,8 @@ class StaffAlertFacilitator(StaffAlertFacilitatorContract):
       they end; urgent handoffs come through.
     - An alert that names a subject (a call's summary) reaches each
       recipient once, however often it is raised; one that names contact
-      channels skips the staff contacts of other channels.
+      channels skips the staff contacts of other channels; a personal one
+      (`recipient_user_ids`) reaches only those users' devices.
 
     One failing recipient never stops the others. Never raises.
     """
@@ -132,9 +133,13 @@ class StaffAlertFacilitator(StaffAlertFacilitatorContract):
         now: Microseconds,
     ) -> int:
         preferences = contact.preferences or DEFAULT_PREFERENCES
-        if not is_wanted(alert, preferences) or (
-            alert.contact_channels is not None
-            and contact.channel not in alert.contact_channels
+        if (
+            not is_wanted(alert, preferences)
+            or alert.recipient_user_ids is not None
+            or (
+                alert.contact_channels is not None
+                and contact.channel not in alert.contact_channels
+            )
         ):
             return 0
 
@@ -175,6 +180,12 @@ class StaffAlertFacilitator(StaffAlertFacilitatorContract):
         for subscription in self._push_subscription_repo.list_by_business(business.id):
             if subscription.user_id not in members:
                 self._push_subscription_repo.delete(business.id, subscription.id)
+                continue
+
+            if (
+                alert.recipient_user_ids is not None
+                and subscription.user_id not in alert.recipient_user_ids
+            ):
                 continue
 
             preferences = preferences_by_user.get(subscription.user_id)

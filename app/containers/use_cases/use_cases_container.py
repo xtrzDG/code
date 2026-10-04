@@ -230,10 +230,12 @@ class UseCasesContainer(CoreUseCasesContainer):
         clients=CoreUseCasesContainer.clients,
         config=CoreUseCasesContainer.config,
         facilitators=CoreUseCasesContainer.facilitators,
+        registries=CoreUseCasesContainer.registries,
         repositories=CoreUseCasesContainer.repositories,
         time_provider=CoreUseCasesContainer.time_provider,
         utilities=CoreUseCasesContainer.utilities,
         platform_use_cases=platform,
+        account_use_cases=CoreUseCasesContainer.accounts,
     )
     platform_ops: PlatformOpsUseCasesContainer = Container(  # type: ignore[assignment]
         PlatformOpsUseCasesContainer, adapters=CoreUseCasesContainer.adapters,

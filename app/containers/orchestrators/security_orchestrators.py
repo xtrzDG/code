@@ -56,3 +56,41 @@ class SecurityOrchestratorsContainer(containers.DeclarativeContainer):
     update_business_security_orchestrator = use_case_orchestrator(
         mfa_use_cases.update_business_security_use_case
     )
+
+    # --- Device sessions, the admin team and support access (1103).
+    list_my_sessions_orchestrator = use_case_orchestrator(
+        mfa_use_cases.list_my_sessions_use_case
+    )
+    revoke_session_orchestrator = use_case_orchestrator(
+        mfa_use_cases.revoke_session_use_case
+    )
+    revoke_other_sessions_orchestrator = use_case_orchestrator(
+        mfa_use_cases.revoke_other_sessions_use_case
+    )
+    list_platform_admins_orchestrator = use_case_orchestrator(
+        security_use_cases.list_platform_admins_use_case
+    )
+    add_platform_admin_orchestrator = use_case_orchestrator(
+        security_use_cases.add_platform_admin_use_case
+    )
+    change_platform_admin_role_orchestrator = use_case_orchestrator(
+        security_use_cases.change_platform_admin_role_use_case
+    )
+    remove_platform_admin_orchestrator = use_case_orchestrator(
+        security_use_cases.remove_platform_admin_use_case
+    )
+    close_client_cabinet_orchestrator = use_case_orchestrator(
+        security_use_cases.close_client_cabinet_use_case
+    )
+    end_expired_support_access_orchestrator = use_case_orchestrator(
+        security_use_cases.end_expired_support_access_use_case
+    )
+    get_support_access_orchestrator = use_case_orchestrator(
+        security_use_cases.get_support_access_use_case
+    )
+    update_support_write_access_orchestrator = use_case_orchestrator(
+        security_use_cases.update_support_write_access_use_case
+    )
+    end_support_access_orchestrator = use_case_orchestrator(
+        security_use_cases.end_support_access_use_case
+    )

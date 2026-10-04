@@ -1,6 +1,7 @@
 from typed_time_provider import Microseconds, WallClock
 
 from app.contracts.analytics import RecordProductEventFacilitatorContract
+from app.contracts.platform_admins import PlatformAdminRegistryContract
 from app.contracts.registries import RequestRateLimitRegistryContract
 from app.contracts.repositories.compliance_repositories import AuditLogRepoContract
 from app.contracts.repositories.mfa_repositories import (
@@ -12,6 +13,7 @@ from app.contracts.repositories.user_repositories import (
     UserRepoContract,
     UserSessionRepoContract,
 )
+from app.contracts.support_access import SignInNoticeFacilitatorContract
 from app.contracts.transformer_contract import TransformerContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.configurations.app_settings import AppSettings
@@ -30,7 +32,6 @@ from app.use_cases.users.otp_login.login_check_limits import (
     refuse_too_frequent_code_checks,
 )
 from app.use_cases.users.sign_in_completion import SignInCompletion
-from app.utilities.security.platform_admins import is_listed_platform_admin
 
 
 class VerifyOtpLoginUseCase(
@@ -66,6 +67,8 @@ class VerifyOtpLoginUseCase(
         wall_clock: WallClock[Microseconds],
         rate_limit_registry: RequestRateLimitRegistryContract,
         product_events: RecordProductEventFacilitatorContract,
+        platform_admins: PlatformAdminRegistryContract,
+        sign_in_notices: SignInNoticeFacilitatorContract,
         totp_factor_repo: TotpFactorRepoContract,
         mfa_challenge_repo: MfaChallengeRepoContract,
     ) -> None:
@@ -78,6 +81,7 @@ class VerifyOtpLoginUseCase(
         )
         self._totp_factor_repo: TotpFactorRepoContract = totp_factor_repo
         self._mfa_challenge_repo: MfaChallengeRepoContract = mfa_challenge_repo
+        self._platform_admins: PlatformAdminRegistryContract = platform_admins
         self._sign_in: SignInCompletion = SignInCompletion(
             user_session_repo,
             audit_log_repo,
@@ -85,6 +89,8 @@ class VerifyOtpLoginUseCase(
             app_settings,
             wall_clock,
             product_events,
+            platform_admins,
+            sign_in_notices,
         )
 
     def run(
@@ -124,7 +130,11 @@ class VerifyOtpLoginUseCase(
             return MfaRequiredView(mfa_challenge=mfa_challenge, is_new_user=is_new_user)
 
         return self._sign_in.open_session(
-            user, AuthLevel.ONE_FACTOR, is_new_user, input_data.client_ip_address
+            user,
+            AuthLevel.ONE_FACTOR,
+            is_new_user,
+            input_data.client_ip_address,
+            input_data.user_agent,
         )
 
     def _find_or_create_user(
@@ -150,7 +160,7 @@ class VerifyOtpLoginUseCase(
         if user.country_code is None:
             user.country_code = challenge.country_code
 
-        user.is_platform_admin = is_listed_platform_admin(user, self._app_settings)
+        user.is_platform_admin = self._platform_admins.role_of(user) is not None
         user.updated_at = now
         self._user_repo.save(user)
         return user, is_new_user

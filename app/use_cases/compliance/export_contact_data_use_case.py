@@ -3,6 +3,7 @@ from typed_time_provider import Microseconds, WallClock
 from app.contracts.repositories.compliance_repositories import AuditLogRepoContract
 from app.contracts.session_assurance import StepUpGuardContract
 from app.contracts.use_case_contract import UseCaseContract
+from app.schemas.constants.access import BusinessAccessMode
 from app.schemas.constants.compliance import AuditAction
 from app.schemas.constants.users import BusinessMemberRole
 from app.schemas.domain.businesses import BusinessDocument
@@ -58,6 +59,9 @@ class ExportContactDataUseCase(UseCaseContract[ContactDataCommand, ContactDataEx
                 user_id=input_data.user_id,
                 business_id=input_data.business_id,
                 required_role=BusinessMemberRole.OWNER,
+                # A copy of personal data leaving the platform: never for
+                # read-only platform support.
+                access_mode=BusinessAccessMode.WRITE,
             )
         )
         self._step_up.require_recent_authentication()

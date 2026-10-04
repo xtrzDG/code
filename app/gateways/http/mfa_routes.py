@@ -31,6 +31,7 @@ from app.schemas.dto.mfa import (
 )
 from app.schemas.dto.users import LoginSessionView
 from app.schemas.typings.users.prefixed_id import UserId
+from app.utilities.security.user_agents import read_user_agent
 
 read_verify_mfa_body = build_json_body_dependency(VerifyMfaLoginRequest)
 read_enroll_body = build_json_body_dependency(StartMfaEnrollmentRequest)
@@ -92,6 +93,7 @@ def build_mfa_router(
                 code=body.code,
                 recovery_code=body.recovery_code,
                 client_ip_address=read_client_ip_address(request),
+                user_agent=read_user_agent(request.headers.get("user-agent")),
             )
         )
 

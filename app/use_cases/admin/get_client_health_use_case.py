@@ -6,6 +6,7 @@ from app.contracts.repositories.assistant_repositories import (
 from app.contracts.repositories.billing_repositories import InvoiceRepoContract
 from app.contracts.repositories.business_repositories import BusinessRepoContract
 from app.contracts.use_case_contract import UseCaseContract
+from app.schemas.constants.access import PlatformAdminPermission
 from app.schemas.constants.assistants import AutotestOutcome
 from app.schemas.domain.assistants import AutotestRunDocument
 from app.schemas.domain.businesses import BusinessDocument
@@ -20,9 +21,9 @@ from app.schemas.dto.admin import (
     FailedAutotestView,
 )
 from app.schemas.dto.billing import Money
+from app.schemas.dto.platform_admins import PlatformAdminAccessRequest
 from app.schemas.exceptions.application_errors import NotFoundError
 from app.schemas.typings.assistants.prefixed_id import AutotestRunId
-from app.schemas.typings.users.prefixed_id import UserId
 from app.use_cases.admin.active_version import find_active_version, find_verdict_run_id
 from app.utilities.assembly.autotest_evaluation import MIN_PASSING_CRITERION_SCORE
 
@@ -41,7 +42,9 @@ class GetClientHealthUseCase(UseCaseContract[AdminClientQuery, ClientHealthView]
 
     def __init__(
         self,
-        authorize_platform_admin: UseCaseContract[UserId, UserDocument],
+        authorize_platform_admin: UseCaseContract[
+            PlatformAdminAccessRequest, UserDocument
+        ],
         business_repo: BusinessRepoContract,
         assistant_version_repo: AssistantVersionRepoContract,
         autotest_run_repo: AutotestRunRepoContract,
@@ -49,9 +52,9 @@ class GetClientHealthUseCase(UseCaseContract[AdminClientQuery, ClientHealthView]
         payment_order_repo: PaymentOrderRepoContract,
         summarize_client: UseCaseContract[ClientSummarySource, AdminClientSummary],
     ) -> None:
-        self._authorize_platform_admin: UseCaseContract[UserId, UserDocument] = (
-            authorize_platform_admin
-        )
+        self._authorize_platform_admin: UseCaseContract[
+            PlatformAdminAccessRequest, UserDocument
+        ] = authorize_platform_admin
         self._business_repo: BusinessRepoContract = business_repo
         self._assistant_version_repo: AssistantVersionRepoContract = (
             assistant_version_repo
@@ -65,7 +68,12 @@ class GetClientHealthUseCase(UseCaseContract[AdminClientQuery, ClientHealthView]
         ] = summarize_client
 
     def run(self, input_data: AdminClientQuery) -> ClientHealthView:
-        self._authorize_platform_admin.run(input_data.user_id)
+        self._authorize_platform_admin.run(
+            PlatformAdminAccessRequest(
+                user_id=input_data.user_id,
+                permission=PlatformAdminPermission.VIEW_CLIENTS,
+            )
+        )
         business: BusinessDocument | None = self._business_repo.get(
             input_data.business_id
         )

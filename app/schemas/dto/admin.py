@@ -33,6 +33,9 @@ from app.schemas.dto.billing import Money
 from app.schemas.dto.billing_ledger import ClientCostReport
 from app.schemas.dto.paging import PageRequest
 from app.schemas.dto.reply_speed import ClientReplySpeed
+from app.schemas.typings.access.booleans import IsSupportWriteAllowed
+from app.schemas.typings.access.constrained_strings import SupportAccessReason
+from app.schemas.typings.access.prefixed_id import SupportAccessGrantId
 from app.schemas.typings.assistants.booleans import IsAutotestRunPassed
 from app.schemas.typings.assistants.constrained_floats import AverageJudgeScore
 from app.schemas.typings.assistants.constrained_integers import (
@@ -97,10 +100,14 @@ class AdminClientQuery(ImmutableDTO):
 
 
 class OpenClientCabinetCommand(ImmutableDTO):
-    """A platform admin enters a client's cabinet; always audited."""
+    """
+    A platform admin enters a client's cabinet with a reason the owner
+    reads; always audited (SUPPORT_ACCESS_START, with the address).
+    """
 
     user_id: UserId
     business_id: BusinessId
+    reason: SupportAccessReason
     client_ip_address: ClientIpAddress | None = None
 
 
@@ -260,8 +267,10 @@ class ClientHealthView(ImmutableDTO):
 
 class ClientCabinetAccess(ImmutableDTO):
     """
-    What a platform admin may now open in the client's cabinet. Every later
-    cabinet request of the admin is audited again by the access check.
+    What a platform admin may now open in the client's cabinet, until
+    `expires_at`: reading only, unless the owner lets support change things
+    (`can_write`, checked again at every request). Every change the admin
+    makes is audited by the access check.
     """
 
     business_id: BusinessId
@@ -271,3 +280,6 @@ class ClientCabinetAccess(ImmutableDTO):
     sections: list[CabinetSection]
     audit_log_entry_id: AuditLogEntryId
     opened_at: Microseconds
+    support_access_grant_id: SupportAccessGrantId
+    expires_at: Microseconds
+    can_write: IsSupportWriteAllowed = False

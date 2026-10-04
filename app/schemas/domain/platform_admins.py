@@ -28,4 +28,3 @@ class PlatformAdminDocument(BaseDocument):
     email: EmailAddress | None = None
     role: PlatformAdminRole
     added_by: UserId | None = None
-

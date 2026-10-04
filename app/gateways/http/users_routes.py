@@ -33,6 +33,7 @@ from app.schemas.dto.users import (
 from app.schemas.exceptions.application_errors import ValidationFailedError
 from app.schemas.typings.localization.constrained_strings import CountryCode
 from app.schemas.typings.users.prefixed_id import UserId
+from app.utilities.security.user_agents import read_user_agent
 
 read_start_otp_login_body = build_json_body_dependency(StartOtpLoginRequest)
 read_verify_otp_login_body = build_json_body_dependency(VerifyOtpLoginRequest)
@@ -110,6 +111,7 @@ def build_users_router(
                 challenge_id=body.challenge_id,
                 code=body.code,
                 client_ip_address=read_client_ip_address(request),
+                user_agent=read_user_agent(request.headers.get("user-agent")),
                 signup_attribution=body.signup_attribution,
             )
         )

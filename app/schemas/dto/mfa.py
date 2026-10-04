@@ -7,6 +7,7 @@ and a business's two-factor requirement.
 from base_pydantic_schemas import ImmutableDTO
 from typed_time_provider import Microseconds
 
+from app.schemas.constants.access import BusinessAccessMode
 from app.schemas.constants.mfa import AuthLevel, StepUpMethod, TotpFactorStatus
 from app.schemas.dto.users import OtpChallengeView
 from app.schemas.typings.businesses.prefixed_id import BusinessId
@@ -29,7 +30,7 @@ from app.schemas.typings.mfa.strings import (
     TotpIssuerName,
     TotpProvisioningUri,
 )
-from app.schemas.typings.users.constrained_strings import OtpCode
+from app.schemas.typings.users.constrained_strings import OtpCode, SessionUserAgent
 from app.schemas.typings.users.prefixed_id import (
     OtpChallengeId,
     UserId,
@@ -41,13 +42,17 @@ class SessionAssurance(ImmutableDTO):
     """
     The signed-in session of the request being served: whose it is, how it
     was signed in and when its person last proved it is them (None for a
-    session from before two-factor sign-in existed).
+    session from before two-factor sign-in existed), and the request
+    itself: the caller's address and whether it reads or changes
+    (`access_mode`; WRITE unless the gateway knows it reads).
     """
 
     user_id: UserId
     session_id: UserSessionId
     auth_level: AuthLevel
     authenticated_at: Microseconds | None = None
+    client_ip_address: ClientIpAddress | None = None
+    access_mode: BusinessAccessMode = BusinessAccessMode.WRITE
 
 
 class VerifyMfaLoginRequest(ImmutableDTO):
@@ -63,6 +68,7 @@ class VerifyMfaLoginCommand(ImmutableDTO):
     code: TotpCode | None = None
     recovery_code: RawRecoveryCodeInput | None = None
     client_ip_address: ClientIpAddress | None = None
+    user_agent: SessionUserAgent | None = None
 
 
 class StartMfaEnrollmentRequest(ImmutableDTO):

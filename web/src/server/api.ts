@@ -17,11 +17,13 @@ import { readSessionToken } from "./sessionCookie";
 
 /**
  * Typed API client for Server Components, authenticated with the session
- * cookie. Prefer `serverFetch(...)` around its calls.
+ * cookie. Prefer `serverFetch(...)` around its calls. The browser's
+ * User-Agent and the client address the cabinet's proxies vouch for go
+ * along, so the API records the session's device, not the cabinet server.
  */
 export async function getServerApi(): Promise<Client<paths>> {
-  const [cookieStore, locale] = await Promise.all([cookies(), getLocale()]);
-  const upstreamHeaders = buildUpstreamHeaders(null, {
+  const [cookieStore, locale, incoming] = await Promise.all([cookies(), getLocale(), headers()]);
+  const upstreamHeaders = buildUpstreamHeaders(incoming, {
     token: readSessionToken(cookieStore),
     locale,
     requestId: sanitizeRequestId(null),

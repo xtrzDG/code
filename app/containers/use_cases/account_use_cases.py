@@ -10,6 +10,7 @@ from app.containers.transformers import TransformersContainer
 from app.containers.utilities import UtilitiesContainer
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.domain.businesses import BusinessDocument
+from app.schemas.domain.support_access_grants import SupportAccessGrantDocument
 from app.schemas.domain.users import OtpChallengeDocument
 from app.schemas.dto.access import BusinessAccessRequest
 from app.schemas.dto.businesses import (
@@ -24,6 +25,8 @@ from app.schemas.dto.login_options import LoginOptionsQuery, LoginOptionsView
 from app.schemas.dto.login_protection import SendLoginCodeCommand
 from app.schemas.dto.mfa import SessionAssurance
 from app.schemas.dto.mfa_login import MfaRequiredView
+from app.schemas.dto.sessions import SessionCheck
+from app.schemas.dto.support_access import SupportAccessCheck
 from app.schemas.dto.users import (
     CurrentUserView,
     LoginSessionView,
@@ -35,9 +38,11 @@ from app.schemas.dto.users import (
     VerifyOtpLoginCommand,
 )
 from app.schemas.typings.users.prefixed_id import UserId
-from app.schemas.typings.users.strings import AccessToken
 from app.use_cases.authorize_business_access_use_case import (
     AuthorizeBusinessAccessUseCase,
+)
+from app.use_cases.authorize_support_access_use_case import (
+    AuthorizeSupportAccessUseCase,
 )
 from app.use_cases.businesses.change_member_role_use_case import ChangeMemberRoleUseCase
 from app.use_cases.businesses.create_business_use_case import CreateBusinessUseCase
@@ -73,16 +78,25 @@ class AccountUseCasesContainer(containers.DeclarativeContainer):
     utilities: UtilitiesContainer = DependenciesContainer()  # type: ignore[assignment]
 
     # --- Access to a business (owners, staff, audited platform admins).
+    # Platform support during an open, time-boxed look (1103).
+    authorize_support_access_use_case: Factory[
+        UseCaseContract[SupportAccessCheck, SupportAccessGrantDocument]
+    ] = Factory(
+        AuthorizeSupportAccessUseCase,
+        user_repo=repositories.user_repo,
+        platform_admins=registries.platform_admin_registry,
+        grant_repo=repositories.support_access_grant_repo,
+        audit_log_repo=repositories.audit_log_repo,
+        session_assurance=utilities.session_assurance,
+        wall_clock=time_provider.microsecond_wall_clock,
+    )
     authorize_business_access_use_case: Factory[
         UseCaseContract[BusinessAccessRequest, BusinessDocument]
     ] = Factory(
         AuthorizeBusinessAccessUseCase,
         business_repo=repositories.business_repo,
-        user_repo=repositories.user_repo,
-        audit_log_repo=repositories.audit_log_repo,
-        wall_clock=time_provider.microsecond_wall_clock,
         session_assurance=utilities.session_assurance,
-        app_settings=config.app_settings,
+        authorize_support_access=authorize_support_access_use_case,
     )
 
     # --- Sign-in and the current user.
@@ -134,14 +148,18 @@ class AccountUseCasesContainer(containers.DeclarativeContainer):
         product_events=facilitators.product_events,
         totp_factor_repo=repositories.totp_factor_repo,
         mfa_challenge_repo=repositories.mfa_challenge_repo,
+        platform_admins=registries.platform_admin_registry,
+        sign_in_notices=facilitators.sign_in_notice_facilitator,
     )
     authenticate_user_use_case: Factory[
-        UseCaseContract[AccessToken, SessionAssurance]
+        UseCaseContract[SessionCheck, SessionAssurance]
     ] = Factory(
         AuthenticateUserUseCase,
         user_session_repo=repositories.user_session_repo,
         user_repo=repositories.user_repo,
         wall_clock=time_provider.microsecond_wall_clock,
+        platform_admins=registries.platform_admin_registry,
+        app_settings=config.app_settings,
     )
     logout_use_case: Factory[UseCaseContract[LogoutCommand, None]] = Factory(
         LogoutUseCase,
@@ -154,7 +172,7 @@ class AccountUseCasesContainer(containers.DeclarativeContainer):
             business_repo=repositories.business_repo,
             user_view_transformer=transformers.user_view_transformer,
             session_assurance=utilities.session_assurance,
-            app_settings=config.app_settings,
+            platform_admins=registries.platform_admin_registry,
         )
     )
     update_current_user_use_case: Factory[

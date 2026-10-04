@@ -13,7 +13,7 @@
 
 import type { Schema } from "@/api/types";
 
-import { businessPath, conversationPath, inboxPath, setupPath } from "./navigation";
+import { ACCOUNT_SECURITY_PATH, businessPath, conversationPath, inboxPath, setupPath } from "./navigation";
 
 export type StaffLinkView = Schema<"StaffLinkView">;
 
@@ -81,5 +81,8 @@ export function linkTargetPath(view: StaffLinkView): string {
       return `${businessPath(business, "assistant/channels")}#share`;
     case "billing":
       return `${businessPath(business, "settings/billing")}#setup-options`;
+    // A sign-in from a new device: the person's sessions.
+    case "account_security":
+      return ACCOUNT_SECURITY_PATH;
   }
 }

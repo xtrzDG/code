@@ -2,6 +2,7 @@ from base_pydantic_schemas import ImmutableDTO
 from pydantic import Field
 from typed_time_provider import Microseconds
 
+from app.schemas.constants.access import PlatformAdminPermission, PlatformAdminRole
 from app.schemas.constants.businesses import BusinessStatus
 from app.schemas.constants.localization import OtpDeliveryChannel
 from app.schemas.constants.mfa import AuthLevel
@@ -29,6 +30,7 @@ from app.schemas.typings.users.constrained_integers import OtpLifetimeSeconds
 from app.schemas.typings.users.constrained_strings import (
     EmailAddress,
     OtpCode,
+    SessionUserAgent,
     TurnstileResponseToken,
 )
 from app.schemas.typings.users.prefixed_id import OtpChallengeId, UserId
@@ -105,6 +107,7 @@ class VerifyOtpLoginCommand(ImmutableDTO):
     challenge_id: OtpChallengeId
     code: OtpCode
     client_ip_address: ClientIpAddress | None = None
+    user_agent: SessionUserAgent | None = None
     signup_attribution: SignupAttribution | None = None
 
 
@@ -156,8 +159,10 @@ class UserMembershipView(ImmutableDTO):
 
 class CurrentUserView(ImmutableDTO):
     """
-    The signed-in user and every business they work in, and how the current
-    session is signed in (None outside a signed-in request).
+    The signed-in user and every business they work in, how the current
+    session is signed in (None outside a signed-in request), and for a
+    platform admin their role and what it permits (which admin pages and
+    actions the cabinet offers).
     """
 
     user: UserView
@@ -165,6 +170,10 @@ class CurrentUserView(ImmutableDTO):
         default_factory=list[UserMembershipView]
     )
     auth_level: AuthLevel | None = None
+    platform_admin_role: PlatformAdminRole | None = None
+    platform_admin_permissions: list[PlatformAdminPermission] = Field(
+        default_factory=list[PlatformAdminPermission]
+    )
 
 
 class UpdateCurrentUserRequest(ImmutableDTO):
