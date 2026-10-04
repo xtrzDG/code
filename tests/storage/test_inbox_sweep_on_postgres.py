@@ -215,7 +215,8 @@ def sweep_plan_indexes(
         with recording_pool.transaction() as connection:
             connection.execute("set local enable_seqscan = off")
             for statement, parameters in recording_pool.transactions[0]:
-                replayed = cast(LiteralString, statement)
+                # Replays SQL the application composed itself (sql.SQL objects).
+                replayed: LiteralString = statement  # pyright: ignore[reportAssignmentType]
                 if "set_config" in statement:
                     connection.execute(replayed, parameters or None)
                     continue
