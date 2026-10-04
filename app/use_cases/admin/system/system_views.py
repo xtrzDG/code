@@ -71,9 +71,12 @@ def channel_issue_view(
 
 
 def run_view(run: MaintenanceRunDocument | None) -> MaintenanceRunView | None:
-    if run is None:
-        return None
+    """The run as the system page shows it (None: none was recorded)."""
 
+    return None if run is None else maintenance_run_view(run)
+
+
+def maintenance_run_view(run: MaintenanceRunDocument) -> MaintenanceRunView:
     return MaintenanceRunView(
         kind=run.kind,
         outcome=run.outcome,

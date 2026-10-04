@@ -55,6 +55,7 @@ PLATFORM_WIDE_OPERATORS: dict[str, str] = {
     "platform_ops.get_admin_system_operator": "platform admin's system page",
     "platform_ops.create_incident_operator": "incident across named businesses",
     "platform_ops.list_incidents_operator": "platform admin's incident log",
+    "platform_ops.record_maintenance_run_operator": "backup CLIs' run log",
     "security.rotate_encrypted_secrets_operator": "re-encryption over every business",
     "setup.notice_milestones_operator": "periodic job over every business",
     "setup.send_activation_nudges_operator": "periodic job over every business",

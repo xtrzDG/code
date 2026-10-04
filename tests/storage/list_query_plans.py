@@ -109,12 +109,16 @@ class ListRepositories:
 
 @dataclass(frozen=True)
 class ListQuery:
-    """A repository call of a list or count and the index its SQL must use."""
+    """
+    A repository call of a list or count and the index its SQL must use
+    (or an equally selective one the planner may prefer, `alternatives`).
+    """
 
     name: str
     run: Callable[[ListRepositories], object]
     table: str
     index: str
+    alternatives: tuple[str, ...] = ()
 
 
 LIST_QUERIES: tuple[ListQuery, ...] = (
@@ -240,6 +244,9 @@ LIST_QUERIES: tuple[ListQuery, ...] = (
         lambda r: r.handoffs.count_made_since(BUSINESS, RECENT),
         "handoffs",
         "handoffs_doc_created_at_idx",
+        # A short recent window: the platform alerts' index (1093) of the
+        # creation time alone reads as few rows.
+        ("handoffs_doc_created_at_platform_idx",),
     ),
     ListQuery(
         "newest written message of each conversation of a feed page",

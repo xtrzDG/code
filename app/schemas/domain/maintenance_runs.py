@@ -3,11 +3,9 @@ from pydantic import Field
 from typed_time_provider import Microseconds
 
 from app.schemas.constants.monitoring import MaintenanceRunKind, MaintenanceRunOutcome
-from app.schemas.typings.backups.constrained_integers import (
-    BackupArchiveSize,
-    TableRowCount,
-)
+from app.schemas.typings.backups.constrained_integers import BackupArchiveSize
 from app.schemas.typings.backups.constrained_strings import BackupObjectKey
+from app.schemas.typings.monitoring.constrained_integers import ArchivedRowCount
 from app.schemas.typings.monitoring.prefixed_id import MaintenanceRunId
 from app.schemas.typings.monitoring.strings import MaintenanceErrorText
 from app.schemas.typings.platform.constrained_strings import ReleaseVersion
@@ -31,6 +29,6 @@ class MaintenanceRunDocument(BaseDocument):
     finished_at: Microseconds
     archive_key: BackupObjectKey | None = None
     archive_size: BackupArchiveSize | None = None
-    row_count: TableRowCount | None = None
+    row_count: ArchivedRowCount | None = None
     error: MaintenanceErrorText | None = None
     release: ReleaseVersion | None = None

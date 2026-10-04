@@ -17,10 +17,7 @@ from app.schemas.constants.monitoring import (
     PlatformAlertCode,
     PlatformAlertStatus,
 )
-from app.schemas.typings.backups.constrained_integers import (
-    BackupArchiveSize,
-    TableRowCount,
-)
+from app.schemas.typings.backups.constrained_integers import BackupArchiveSize
 from app.schemas.typings.backups.constrained_strings import DatabaseTableName
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.businesses.strings import BusinessName
@@ -34,6 +31,7 @@ from app.schemas.typings.monitoring.booleans import (
 from app.schemas.typings.monitoring.constrained_integers import (
     AlertFigure,
     AlertThreshold,
+    ArchivedRowCount,
     ChannelIssueCount,
     CollectionRowEstimate,
     LaneJobCount,
@@ -133,7 +131,7 @@ class MaintenanceRunView(ImmutableDTO):
     started_at: Microseconds
     finished_at: Microseconds
     archive_size: BackupArchiveSize | None = None
-    row_count: TableRowCount | None = None
+    row_count: ArchivedRowCount | None = None
     error: MaintenanceErrorText | None = None
     release: ReleaseVersion | None = None
 

@@ -9,7 +9,11 @@ from app.containers.time_provider import TimeProviderContainer
 from app.containers.use_cases.platform_use_cases import PlatformUseCasesContainer
 from app.containers.utilities import UtilitiesContainer
 from app.contracts.use_case_contract import UseCaseContract
-from app.schemas.dto.admin_system import AdminSystemQuery, AdminSystemView
+from app.schemas.dto.admin_system import (
+    AdminSystemQuery,
+    AdminSystemView,
+    MaintenanceRunView,
+)
 from app.schemas.dto.incidents import (
     CreateIncidentCommand,
     IncidentPage,
@@ -17,6 +21,7 @@ from app.schemas.dto.incidents import (
     IncidentView,
 )
 from app.schemas.dto.jobs import JobReport, JobTick, QueuedJobInput
+from app.schemas.dto.maintenance_runs import RecordMaintenanceRunCommand
 from app.use_cases.admin.alerts.alert_checks import PlatformAlertChecks
 from app.use_cases.admin.alerts.check_platform_alerts_use_case import (
     CheckPlatformAlertsUseCase,
@@ -31,6 +36,9 @@ from app.use_cases.admin.incidents.list_incidents_use_case import ListIncidentsU
 from app.use_cases.admin.incidents.owner_breach_notices import OwnerBreachNotices
 from app.use_cases.admin.system.get_admin_system_use_case import (
     GetAdminSystemUseCase,
+)
+from app.use_cases.admin.system.record_maintenance_run_use_case import (
+    RecordMaintenanceRunUseCase,
 )
 
 
@@ -86,6 +94,15 @@ class PlatformOpsUseCasesContainer(containers.DeclarativeContainer):
         alert_state_repo=repositories.platform_alert_state_repo,
         database_size=adapters.database_size,
         backup_max_age=config.app_settings.provided.backup.max_age_hours,
+        wall_clock=time_provider.microsecond_wall_clock,
+    )
+    # The backup and restore drill commands report their runs.
+    record_maintenance_run_use_case: Factory[
+        UseCaseContract[RecordMaintenanceRunCommand, MaintenanceRunView]
+    ] = Factory(
+        RecordMaintenanceRunUseCase,
+        maintenance_run_repo=repositories.maintenance_run_repo,
+        release=config.app_settings.provided.release_version,
         wall_clock=time_provider.microsecond_wall_clock,
     )
 

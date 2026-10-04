@@ -49,6 +49,15 @@ class AlertWindowMinutes(BaseConstrainedTypedInt):
     le = 7 * 24 * 60
 
 
+class ArchivedRowCount(BaseConstrainedTypedInt):
+    """
+    How many rows a backup archive holds across every table (the dump's
+    row counts added up), as the system page shows a backup or drill.
+    """
+
+    ge = 0
+
+
 class ChannelIssueCount(BaseConstrainedTypedInt):
     """How many connected channels are in ERROR across the platform."""
 

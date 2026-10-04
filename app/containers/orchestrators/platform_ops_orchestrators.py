@@ -25,6 +25,9 @@ class PlatformOpsOrchestratorsContainer(containers.DeclarativeContainer):
     get_admin_system_orchestrator = use_case_orchestrator(
         platform_ops_use_cases.get_admin_system_use_case
     )
+    record_maintenance_run_orchestrator = use_case_orchestrator(
+        platform_ops_use_cases.record_maintenance_run_use_case
+    )
     create_incident_orchestrator = use_case_orchestrator(
         platform_ops_use_cases.create_incident_use_case
     )
