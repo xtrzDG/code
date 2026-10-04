@@ -22,8 +22,9 @@ from app.schemas.typings.client_health.constrained_integers import (
 # of them, so whether a client is slow never depends on where inside a
 # bucket a wait lies.
 REPLY_LATENCY_BUCKET_STARTS: tuple[int, ...] = (
-    0, 500, 1000, 1500, 2000, 3000, 4000, 5000, 6000, 8000, 10000, 12000,
-    15000, 20000, 25000, 30000, 45000, 60000, 90000, 120000, 180000, 300000,
+    0, 500, 1000, 1500, 2000, 2500, 3000, 3500, 4000, 5000, 6000, 7000,
+    8000, 9000, 10000, 12000, 15000, 20000, 25000, 30000, 45000, 60000,
+    90000, 120000, 180000, 300000,
 )  # fmt: skip
 MEDIAN: float = 0.5
 P95: float = 0.95

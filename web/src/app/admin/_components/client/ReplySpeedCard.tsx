@@ -4,6 +4,7 @@ import { CHANNEL_LABELS } from "@/components/insights/labels";
 import { Alert, Card, Table, TBody, Td, Th, THead, Tr } from "@/components/ui";
 import { Facts } from "@/components/workspace/Facts";
 import { useI18n } from "@/i18n/client";
+import { cn } from "@/lib/cn";
 import { formatNumber } from "@/lib/format";
 
 import type { AdminClientSummary } from "../../_lib/clients";
@@ -40,7 +41,7 @@ export function ReplySpeedCard({ summary }: { summary: AdminClientSummary }) {
               {
                 label: t("adminReplySpeed.p95"),
                 value: (
-                  <span className={isSlowPercentile(speed.p95_ms) ? "text-danger tabular-nums" : "tabular-nums"}>
+                  <span className={cn("tabular-nums", isSlowPercentile(speed.p95_ms) && "text-danger")}>
                     {wait(speed.p95_ms)}
                   </span>
                 ),
@@ -64,13 +65,13 @@ export function ReplySpeedCard({ summary }: { summary: AdminClientSummary }) {
                   {rows.map((row) => (
                     <Tr key={row.channel}>
                       <Td>{t(CHANNEL_LABELS[row.channel])}</Td>
-                      <Td align="right" className="tabular-nums">
+                      <Td align="right" className="whitespace-nowrap tabular-nums">
                         {formatNumber(row.reply_count, locale)}
                       </Td>
-                      <Td align="right" className="tabular-nums">
+                      <Td align="right" className="whitespace-nowrap tabular-nums">
                         {wait(row.p50_ms)}
                       </Td>
-                      <Td align="right" className={isSlowPercentile(row.p95_ms) ? "text-danger tabular-nums" : "tabular-nums"}>
+                      <Td align="right" className={cn("whitespace-nowrap tabular-nums", isSlowPercentile(row.p95_ms) && "text-danger")}>
                         {wait(row.p95_ms)}
                       </Td>
                     </Tr>
