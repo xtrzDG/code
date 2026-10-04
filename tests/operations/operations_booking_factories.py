@@ -30,6 +30,9 @@ from app.use_cases.bookings.manual_booking.create_manual_booking_use_case import
     CreateManualBookingUseCase,
 )
 from app.use_cases.bookings.reschedule_booking_use_case import RescheduleBookingUseCase
+from app.use_cases.bookings.revert_booking_status_use_case import (
+    RevertBookingStatusUseCase,
+)
 from app.use_cases.bookings.update_booking_use_case import UpdateBookingUseCase
 from tests.operations.operations_seeding import OperationsSeeding
 
@@ -154,6 +157,21 @@ class OperationsBookingFactories(OperationsSeeding):
             schedule_exception_repo=self.exception_repo,
             booking_repo=self.booking_repo,
             resource_repo=self.resource_repo,
+            contact_repo=self.contact_repo,
+            audit_log_repo=self.audit_repo,
+            lock_registry=self.lock_registry,
+            calendar_sync=self.calendar_sync,
+            live_events=self.live_events,
+            wall_clock=self.clock.wall_clock,
+        )
+
+    def revert_booking_status(self) -> RevertBookingStatusUseCase:
+        return RevertBookingStatusUseCase(
+            business_repo=self.business_repo,
+            business_profile_repo=self.profile_repo,
+            resource_repo=self.resource_repo,
+            schedule_exception_repo=self.exception_repo,
+            booking_repo=self.booking_repo,
             contact_repo=self.contact_repo,
             audit_log_repo=self.audit_repo,
             lock_registry=self.lock_registry,

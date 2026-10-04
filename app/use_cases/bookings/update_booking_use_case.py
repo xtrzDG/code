@@ -76,7 +76,8 @@ class UpdateBookingUseCase(UseCaseContract[UpdateBookingCommand, BookingView]):
 
     - Status: COMPLETED, NO_SHOW or CANCELLED (from PENDING or CONFIRMED),
       or CONFIRMED for a PENDING booking. Setting the current status again
-      is a no-op; other changes raise ConflictError.
+      is a no-op; other changes raise ConflictError. The staff member may
+      undo the change for a short while (RevertBookingStatusUseCase).
     - Party size and resource, only while the booking is PENDING or
       CONFIRMED: the resource must be active, booked the same way (time
       slots or nights), seat the party, be open at the booked time and have
@@ -142,7 +143,12 @@ class UpdateBookingUseCase(UseCaseContract[UpdateBookingCommand, BookingView]):
 
             is_changed: bool = self._apply_placement(booking, input_data, inputs)
             is_changed = apply_notes_change(booking, input_data.notes) or is_changed
-            is_changed = apply_status_change(booking, input_data.status) or is_changed
+            is_changed = (
+                apply_status_change(
+                    booking, input_data.status, input_data.actor_id, now
+                )
+                or is_changed
+            )
             if is_changed:
                 booking.updated_at = now
                 self._booking_repo.save(booking)

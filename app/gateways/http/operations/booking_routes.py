@@ -1,5 +1,5 @@
 """Cabinet routes of bookings: availability, the list, manual bookings,
-cancelling, rescheduling and edits."""
+cancelling, rescheduling, edits and undoing a status change."""
 
 from typing import Annotated
 
@@ -40,6 +40,8 @@ from app.schemas.dto.operations.bookings import (
     ManualBookingCommand,
     ManualBookingRequest,
     RescheduleBookingRequest,
+    RevertBookingStatusCommand,
+    RevertBookingStatusRequest,
     UpdateBookingCommand,
     UpdateBookingRequest,
 )
@@ -57,6 +59,7 @@ from app.schemas.typings.users.prefixed_id import UserId
 read_manual_booking_body = build_json_body_dependency(ManualBookingRequest)
 read_reschedule_body = build_json_body_dependency(RescheduleBookingRequest)
 read_booking_update_body = build_json_body_dependency(UpdateBookingRequest)
+read_revert_status_body = build_json_body_dependency(RevertBookingStatusRequest)
 
 
 def build_booking_routes(
@@ -69,6 +72,7 @@ def build_booking_routes(
     cancel_booking: OperatorContract[CancelBookingCommand, BookingResult],
     reschedule_booking: OperatorContract[RescheduleBookingCommand, BookingResult],
     update_booking: OperatorContract[UpdateBookingCommand, BookingView],
+    revert_booking_status: OperatorContract[RevertBookingStatusCommand, BookingView],
 ) -> APIRouter:
     """
     Availability and bookings under /v1/businesses/{business_id} (Bearer
@@ -189,6 +193,7 @@ def build_booking_routes(
                 booking_id=parse_path_id(booking_id, BookingId, "Booking"),
                 language=parse_optional_text(language, LanguageTag, "language")
                 or business.default_language,
+                actor_id=user_id,
             )
         )
 
@@ -236,6 +241,33 @@ def build_booking_routes(
                 resource_id=body.resource_id,
                 notes=body.notes,
                 contact_name=body.contact_name,
+            )
+        )
+
+    @router.post(
+        f"{BUSINESS_PREFIX}/bookings/{{booking_id}}/revert-status",
+        openapi_extra=describe_json_body(RevertBookingStatusRequest),
+    )
+    def post_booking_revert_status(
+        business_id: str,
+        booking_id: str,
+        user_id: Annotated[UserId, Depends(current_user)],
+        body: Annotated[RevertBookingStatusRequest, Depends(read_revert_status_body)],
+    ) -> BookingView:
+        """
+        Undo the last status change staff made to the booking (within 10
+        minutes): `status` is the status being undone. 409 with a reason
+        (nothing_to_undo, status_changed, undo_expired, slot_taken,
+        place_gone) when it cannot be undone.
+        """
+
+        business: BusinessDocument = authorize(user_id, business_id)
+        return revert_booking_status.operate(
+            RevertBookingStatusCommand(
+                business_id=business.id,
+                actor_id=user_id,
+                booking_id=parse_path_id(booking_id, BookingId, "Booking"),
+                status=body.status,
             )
         )
 

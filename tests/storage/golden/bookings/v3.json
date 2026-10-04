@@ -1,0 +1,28 @@
+{
+  "buffer_minutes": 15,
+  "business_id": "business_4c7ef2e0-5dbb-40a1-996b-27ef0cedf3ac",
+  "contact_id": "contact_9c876568-c3aa-45d8-9fb9-ef58081a3f1d",
+  "conversation_id": "conversation_87e7d4ae-9ba4-427f-b5a5-81bf3e2be2b2",
+  "created_at": 1790000000000000,
+  "currency_code": "GEL",
+  "ends_at": 1790003600,
+  "id": "booking_89906d2d-7dd3-4a8b-bb9c-8e831928b7e1",
+  "is_sandbox": true,
+  "language": "ka",
+  "last_status_change": {
+    "changed_at": 1790000000000000,
+    "changed_by": "user_0c571c19-d185-45bb-882e-d35cec8dde26",
+    "previous_status": "pending"
+  },
+  "notes": "Sample BookingNote",
+  "party_size": 1,
+  "reminder_sent_at": 1790000000000000,
+  "resource_id": "resource_1f885c79-8a0c-4163-bca5-cf391cfc9eb4",
+  "schema_version": "3",
+  "service_item_id": "knowledge_item_6523399e-5df7-4631-9d84-6318534e2eb2",
+  "source_channel": "phone",
+  "starts_at": 1790000000,
+  "status": "pending",
+  "updated_at": 1790000000000000,
+  "value_minor": 4500
+}

@@ -40,6 +40,7 @@ from app.schemas.dto.operations.bookings import (
     BookingPage,
     ListBookingsQuery,
     ManualBookingCommand,
+    RevertBookingStatusCommand,
     UpdateBookingCommand,
 )
 from app.schemas.dto.operations.calendar_connection import (
@@ -54,6 +55,7 @@ from app.schemas.dto.operations.handoffs import (
     HandoffListItem,
     HandoffPage,
     ListHandoffsQuery,
+    ReopenHandoffCommand,
     ResolveHandoffCommand,
 )
 from app.schemas.dto.operations.leads import (
@@ -82,10 +84,12 @@ def build_operations_router(
     cancel_booking: OperatorContract[CancelBookingCommand, BookingResult],
     reschedule_booking: OperatorContract[RescheduleBookingCommand, BookingResult],
     update_booking: OperatorContract[UpdateBookingCommand, BookingView],
+    revert_booking_status: OperatorContract[RevertBookingStatusCommand, BookingView],
     list_leads: OperatorContract[ListLeadsQuery, LeadPage],
     update_lead_status: OperatorContract[UpdateLeadStatusCommand, LeadView],
     list_handoffs: OperatorContract[ListHandoffsQuery, HandoffPage],
     resolve_handoff: OperatorContract[ResolveHandoffCommand, HandoffListItem],
+    reopen_handoff: OperatorContract[ReopenHandoffCommand, HandoffListItem],
     list_unanswered_questions: OperatorContract[
         ListUnansweredQuestionsQuery, UnansweredQuestionPage
     ],
@@ -127,6 +131,7 @@ def build_operations_router(
             cancel_booking=cancel_booking,
             reschedule_booking=reschedule_booking,
             update_booking=update_booking,
+            revert_booking_status=revert_booking_status,
         )
     )
     router.include_router(
@@ -137,6 +142,7 @@ def build_operations_router(
             update_lead_status=update_lead_status,
             list_handoffs=list_handoffs,
             resolve_handoff=resolve_handoff,
+            reopen_handoff=reopen_handoff,
             list_unanswered_questions=list_unanswered_questions,
             answer_unanswered_question=answer_unanswered_question,
         )

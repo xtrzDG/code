@@ -1,5 +1,5 @@
 """
-Handoffs in the cabinet: the list and resolving a handoff.
+Handoffs in the cabinet: the list, resolving a handoff and opening it again.
 
 Model-tool DTOs (handoff to a human) live in `app/schemas/dto/handoffs.py`.
 """
@@ -93,7 +93,19 @@ class HandoffPage(ImmutableDTO):
 
 
 class ResolveHandoffCommand(ImmutableDTO):
-    """Staff closes a handoff; the assistant may answer the conversation again."""
+    """
+    Staff closes a handoff; the assistant may answer the conversation
+    again. `actor_id` is who resolved it in the cabinet.
+    """
 
     business_id: BusinessId
+    handoff_id: HandoffId
+    actor_id: UserId | None = None
+
+
+class ReopenHandoffCommand(ImmutableDTO):
+    """Staff open a resolved handoff again (the Undo of "Resolved")."""
+
+    business_id: BusinessId
+    actor_id: UserId
     handoff_id: HandoffId

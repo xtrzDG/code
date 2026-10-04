@@ -35,6 +35,7 @@ REQUEST_BODIES: dict[str, JsonObject] = {
         "party_size": 2,
     },
     f"POST {B}/bookings/{{booking_id}}/reschedule": {"new_date": "2026-10-21"},
+    f"POST {B}/bookings/{{booking_id}}/revert-status": {"status": "completed"},
     f"PUT {B}/channels/whatsapp/staff-template": {
         "name": "staff_reply",
         "language_code": "en",

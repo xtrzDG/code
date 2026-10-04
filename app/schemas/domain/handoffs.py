@@ -25,6 +25,7 @@ from app.schemas.typings.handoffs.strings import (
 )
 from app.schemas.typings.knowledge.prefixed_id import KnowledgeItemId
 from app.schemas.typings.localization.constrained_strings import LanguageTag
+from app.schemas.typings.users.prefixed_id import UserId
 
 
 class HandoffDocument(BaseDocument):
@@ -38,10 +39,12 @@ class HandoffDocument(BaseDocument):
     render it again in each reader's language.
 
     Version 2: `summary_code`, `quoted_text` and `flagged_values` (all
-    optional, so version 1 rows read as they are).
+    optional, so version 1 rows read as they are). Version 3:
+    `status_before_resolve` and `resolved_by` (optional): the status a
+    reopened handoff goes back to, and who resolved it in the cabinet.
     """
 
-    schema_version: SchemaVersion = SchemaVersion("2")
+    schema_version: SchemaVersion = SchemaVersion("3")
     id: HandoffId = Field(default_factory=HandoffId)
     business_id: BusinessId
     conversation_id: ConversationId
@@ -57,6 +60,8 @@ class HandoffDocument(BaseDocument):
     status: HandoffStatus = HandoffStatus.PENDING
     resolved_at: Microseconds | None = None
     is_sandbox: IsSandboxConversation = False
+    status_before_resolve: HandoffStatus | None = None
+    resolved_by: UserId | None = None
 
 
 class UnansweredQuestionDocument(BaseDocument):

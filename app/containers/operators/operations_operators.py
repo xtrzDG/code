@@ -40,6 +40,9 @@ class OperationsOperatorsContainer(containers.DeclarativeContainer):
     update_booking_operator = pipeline_operator(
         operations_pipelines.update_booking_pipeline, storage_scope
     )
+    revert_booking_status_operator = pipeline_operator(
+        operations_pipelines.revert_booking_status_pipeline, storage_scope
+    )
     list_leads_operator = pipeline_operator(
         operations_pipelines.list_leads_pipeline, storage_scope
     )
@@ -51,6 +54,9 @@ class OperationsOperatorsContainer(containers.DeclarativeContainer):
     )
     resolve_handoff_operator = pipeline_operator(
         operations_pipelines.resolve_handoff_pipeline, storage_scope
+    )
+    reopen_handoff_operator = pipeline_operator(
+        operations_pipelines.reopen_handoff_pipeline, storage_scope
     )
     list_unanswered_questions_operator = pipeline_operator(
         operations_pipelines.list_unanswered_questions_pipeline, storage_scope

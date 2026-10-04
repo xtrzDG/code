@@ -14,25 +14,27 @@ from app.schemas.constants.handoffs import HandoffStatus
 from app.schemas.constants.live_events import LiveEventKind
 from app.schemas.domain.conversations import ConversationDocument
 from app.schemas.domain.handoffs import HandoffDocument
-from app.schemas.dto.operations.handoffs import HandoffListItem, ResolveHandoffCommand
+from app.schemas.dto.operations.handoffs import HandoffListItem, ReopenHandoffCommand
 from app.schemas.exceptions.application_errors import NotFoundError
-from app.use_cases.shared.handoff_views import (
-    HANDOFF_ENTITY,
-    build_handoff_list_item,
-    has_other_open_handoff,
-)
+from app.use_cases.shared.handoff_views import HANDOFF_ENTITY, build_handoff_list_item
 from app.use_cases.shared.operations_support import build_audit_entry
 
+# A handoff resolved before resolving kept its status waits as notified.
+UNKNOWN_STATUS_BEFORE_RESOLVE: HandoffStatus = HandoffStatus.NOTIFIED
 
-class ResolveHandoffUseCase(UseCaseContract[ResolveHandoffCommand, HandoffListItem]):
+
+class ReopenHandoffUseCase(UseCaseContract[ReopenHandoffCommand, HandoffListItem]):
     """
-    Staff closes a handoff (RESOLVED with the time). The conversation goes
-    back to OPEN, so the assistant answers again, unless another handoff of
-    the same conversation is still open. Resolving twice is harmless.
+    Staff open a resolved handoff again (the Undo of "Resolved", or a
+    problem that turned out not to be solved). The handoff gets back the
+    status it had before it was resolved (notified when that is unknown)
+    and waits for a person again; its conversation, which resolving gave
+    back to the assistant, goes to HANDOFF again, so the assistant stays
+    silent until staff resolve it (a closed conversation stays closed).
 
-    The handoff keeps the status it had and who resolved it, so staff can
-    open it again (ReopenHandoffUseCase); resolving in the cabinet is
-    audited with the staff member.
+    Reopening an open handoff is harmless. The change is audited with the
+    staff member and the cabinets of the business hear of it, without the
+    new-handoff alert: the handoff is not new.
     """
 
     def __init__(
@@ -48,39 +50,40 @@ class ResolveHandoffUseCase(UseCaseContract[ResolveHandoffCommand, HandoffListIt
         self._conversation_repo: ConversationRepoContract = conversation_repo
         self._contact_repo: ContactRepoContract = contact_repo
         self._audit_log_repo: AuditLogRepoContract = audit_log_repo
-        self._wall_clock: WallClock[Microseconds] = wall_clock
         self._live_events: EventPublisherFacilitatorContract = live_events
+        self._wall_clock: WallClock[Microseconds] = wall_clock
 
-    def run(self, input_data: ResolveHandoffCommand) -> HandoffListItem:
+    def run(self, input_data: ReopenHandoffCommand) -> HandoffListItem:
         handoff: HandoffDocument | None = self._handoff_repo.get(
             input_data.business_id, input_data.handoff_id
         )
         if handoff is None:
             raise NotFoundError(f"Handoff {input_data.handoff_id} was not found.")
 
-        if handoff.status is not HandoffStatus.RESOLVED:
+        if handoff.status is HandoffStatus.RESOLVED:
             now: Microseconds = self._wall_clock.now_unix()
-            handoff.status_before_resolve = handoff.status
-            handoff.resolved_by = input_data.actor_id
-            handoff.status = HandoffStatus.RESOLVED
-            handoff.resolved_at = now
+            handoff.status = handoff.status_before_resolve or (
+                UNKNOWN_STATUS_BEFORE_RESOLVE
+            )
+            handoff.status_before_resolve = None
+            handoff.resolved_at = None
+            handoff.resolved_by = None
             handoff.updated_at = now
             self._handoff_repo.save(handoff)
-            self._reopen_conversation(handoff, now)
-            if input_data.actor_id is not None:
-                self._audit_log_repo.append(
-                    build_audit_entry(
-                        handoff.business_id,
-                        input_data.actor_id,
-                        AuditAction.UPDATE,
-                        HANDOFF_ENTITY,
-                        str(handoff.id),
-                        now,
-                    )
+            self._hand_conversation_back(handoff, now)
+            self._audit_log_repo.append(
+                build_audit_entry(
+                    handoff.business_id,
+                    input_data.actor_id,
+                    AuditAction.UPDATE,
+                    HANDOFF_ENTITY,
+                    str(handoff.id),
+                    now,
                 )
+            )
             self._live_events.publish(
                 handoff.business_id,
-                LiveEventKind.HANDOFF_RESOLVED,
+                LiveEventKind.HANDOFF_REOPENED,
                 (handoff.id, handoff.conversation_id),
                 is_sandbox=handoff.is_sandbox,
             )
@@ -90,19 +93,15 @@ class ResolveHandoffUseCase(UseCaseContract[ResolveHandoffCommand, HandoffListIt
             self._contact_repo.get(handoff.business_id, handoff.contact_id),
         )
 
-    def _reopen_conversation(self, handoff: HandoffDocument, now: Microseconds) -> None:
-        if has_other_open_handoff(self._handoff_repo, handoff):
-            return
-
+    def _hand_conversation_back(
+        self, handoff: HandoffDocument, now: Microseconds
+    ) -> None:
         conversation: ConversationDocument | None = self._conversation_repo.get(
             handoff.business_id, handoff.conversation_id
         )
-        if (
-            conversation is None
-            or conversation.status is not ConversationStatus.HANDOFF
-        ):
+        if conversation is None or conversation.status is not ConversationStatus.OPEN:
             return
 
-        conversation.status = ConversationStatus.OPEN
+        conversation.status = ConversationStatus.HANDOFF
         conversation.updated_at = now
         self._conversation_repo.save(conversation)

@@ -1,10 +1,28 @@
 """Handoffs and unanswered questions rendered for the cabinet."""
 
+from app.contracts.repositories.booking_repositories import HandoffRepoContract
+from app.schemas.constants.handoffs import HandoffStatus
 from app.schemas.domain.contacts import ContactDocument
 from app.schemas.domain.handoffs import HandoffDocument, UnansweredQuestionDocument
 from app.schemas.dto.handoffs import UnansweredQuestionView
 from app.schemas.dto.operations.handoffs import HandoffListItem
 from app.schemas.dto.operations.unanswered_questions import UnansweredQuestionDetails
+from app.schemas.typings.compliance.strings import AuditEntityName
+
+HANDOFF_ENTITY: AuditEntityName = AuditEntityName("handoff")
+
+
+def has_other_open_handoff(
+    handoff_repo: HandoffRepoContract, handoff: HandoffDocument
+) -> bool:
+    """Whether another handoff of the same conversation still waits for a person."""
+
+    return any(
+        other.conversation_id == handoff.conversation_id
+        and other.id != handoff.id
+        and other.status is not HandoffStatus.RESOLVED
+        for other in handoff_repo.list_by_business(handoff.business_id)
+    )
 
 
 def build_handoff_list_item(

@@ -24,6 +24,7 @@ from app.schemas.dto.operations.handoffs import (
     HandoffListItem,
     HandoffPage,
     ListHandoffsQuery,
+    ReopenHandoffCommand,
     ResolveHandoffCommand,
 )
 from app.schemas.dto.operations.leads import (
@@ -48,6 +49,7 @@ from app.use_cases.handoffs.list_unanswered_questions_use_case import (
 from app.use_cases.handoffs.record_unanswered_question_use_case import (
     RecordUnansweredQuestionUseCase,
 )
+from app.use_cases.handoffs.reopen_handoff_use_case import ReopenHandoffUseCase
 from app.use_cases.handoffs.resolve_handoff_use_case import ResolveHandoffUseCase
 from app.use_cases.inbox.assignment.auto_assigning_handoff_use_case import (
     AutoAssigningHandoffUseCase,
@@ -132,6 +134,18 @@ class FollowUpUseCasesContainer(containers.DeclarativeContainer):
         handoff_repo=repositories.handoff_repo,
         conversation_repo=repositories.conversation_repo,
         contact_repo=repositories.contact_repo,
+        audit_log_repo=repositories.audit_log_repo,
+        live_events=facilitators.event_publisher,
+        wall_clock=time_provider.microsecond_wall_clock,
+    )
+    reopen_handoff_use_case: Factory[
+        UseCaseContract[ReopenHandoffCommand, HandoffListItem]
+    ] = Factory(
+        ReopenHandoffUseCase,
+        handoff_repo=repositories.handoff_repo,
+        conversation_repo=repositories.conversation_repo,
+        contact_repo=repositories.contact_repo,
+        audit_log_repo=repositories.audit_log_repo,
         live_events=facilitators.event_publisher,
         wall_clock=time_provider.microsecond_wall_clock,
     )

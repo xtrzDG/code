@@ -1,7 +1,7 @@
 {
   "collection": "bookings",
   "document_type": "BookingDocument",
-  "schema_version": 2,
+  "schema_version": 3,
   "shape": {
     "additionalProperties": false,
     "properties": {
@@ -81,6 +81,42 @@
         ],
         "default": null
       },
+      "last_status_change": {
+        "anyOf": [
+          {
+            "additionalProperties": false,
+            "properties": {
+              "changed_at": {
+                "type": "integer"
+              },
+              "changed_by": {
+                "pattern": "^user_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                "type": "string"
+              },
+              "previous_status": {
+                "enum": [
+                  "pending",
+                  "confirmed",
+                  "cancelled",
+                  "no_show",
+                  "completed"
+                ],
+                "type": "string"
+              }
+            },
+            "required": [
+              "previous_status",
+              "changed_at",
+              "changed_by"
+            ],
+            "type": "object"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
       "notes": {
         "anyOf": [
           {
@@ -113,7 +149,7 @@
         "type": "string"
       },
       "schema_version": {
-        "default": "2",
+        "default": "3",
         "type": "string"
       },
       "service_item_id": {

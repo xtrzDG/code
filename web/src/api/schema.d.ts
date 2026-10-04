@@ -765,6 +765,29 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/businesses/{business_id}/bookings/{booking_id}/revert-status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Post Booking Revert Status
+         * @description Undo the last status change staff made to the booking (within 10
+         *     minutes): `status` is the status being undone. 409 with a reason
+         *     (nothing_to_undo, status_changed, undo_expired, slot_taken,
+         *     place_gone) when it cannot be undone.
+         */
+        post: operations["post_booking_revert_status_v1_businesses__business_id__bookings__booking_id__revert_status_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/businesses/{business_id}/call-forwarding-instructions": {
         parameters: {
             query?: never;
@@ -1179,6 +1202,27 @@ export interface paths {
         get: operations["get_handoffs_v1_businesses__business_id__handoffs_get"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/businesses/{business_id}/handoffs/{handoff_id}/reopen": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Post Handoff Reopen
+         * @description Open a resolved handoff again (the Undo of "Resolved"): it waits for
+         *     a person and the assistant stays silent in its conversation again.
+         */
+        post: operations["post_handoff_reopen_v1_businesses__business_id__handoffs__handoff_id__reopen_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3606,6 +3650,10 @@ export interface components {
          *     value (`value_minor` in `currency_code`: the service price, or the
          *     nightly rates of the stay's nights). Without a priced item the value
          *     is unknown (None).
+         *
+         *     `last_status_change` is the last status change staff made in the
+         *     cabinet, which they may undo for a short while; any other change of
+         *     the status (the customer cancelling, an undo) clears it.
          */
         BookingDocument: {
             /** Buffer Minutes */
@@ -3634,6 +3682,7 @@ export interface components {
             is_sandbox: boolean;
             /** Language */
             language?: string | null;
+            last_status_change?: components["schemas"]["BookingStatusChange"] | null;
             /** Notes */
             notes?: string | null;
             /** Party Size */
@@ -3644,7 +3693,7 @@ export interface components {
             resource_id: string;
             /**
              * Schema Version
-             * @default 2
+             * @default 3
              */
             schema_version: string;
             /** Service Item Id */
@@ -3738,6 +3787,19 @@ export interface components {
          * @enum {string}
          */
         BookingStatus: "pending" | "confirmed" | "cancelled" | "no_show" | "completed";
+        /**
+         * BookingStatusChange
+         * @description The last status change staff made in the cabinet (`changed_by`, at
+         *     `changed_at`, UTC microseconds), from `previous_status`: what an Undo
+         *     restores within its window.
+         */
+        BookingStatusChange: {
+            /** Changed At */
+            changed_at: number;
+            /** Changed By */
+            changed_by: string;
+            previous_status: components["schemas"]["BookingStatus"];
+        };
         /**
          * BookingStatusCount
          * @description Bookings with one status.
@@ -5787,7 +5849,9 @@ export interface components {
          *     render it again in each reader's language.
          *
          *     Version 2: `summary_code`, `quoted_text` and `flagged_values` (all
-         *     optional, so version 1 rows read as they are).
+         *     optional, so version 1 rows read as they are). Version 3:
+         *     `status_before_resolve` and `resolved_by` (optional): the status a
+         *     reopened handoff goes back to, and who resolved it in the cabinet.
          */
         HandoffDocument: {
             /** Business Id */
@@ -5815,13 +5879,16 @@ export interface components {
             reason: components["schemas"]["HandoffReason"];
             /** Resolved At */
             resolved_at?: number | null;
+            /** Resolved By */
+            resolved_by?: string | null;
             /**
              * Schema Version
-             * @default 2
+             * @default 3
              */
             schema_version: string;
             /** @default pending */
             status: components["schemas"]["HandoffStatus"];
+            status_before_resolve?: components["schemas"]["HandoffStatus"] | null;
             /** Summary */
             summary: string;
             summary_code?: components["schemas"]["HandoffSummaryCode"] | null;
@@ -14456,6 +14523,105 @@ export interface operations {
             };
         };
     };
+    post_booking_revert_status_v1_businesses__business_id__bookings__booking_id__revert_status_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+                booking_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /**
+                     * BookingStatus
+                     * @description Lifecycle of a booking.
+                     * @enum {string}
+                     */
+                    status: "pending" | "confirmed" | "cancelled" | "no_show" | "completed";
+                };
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BookingView"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
     get_call_forwarding_instructions_v1_businesses__business_id__call_forwarding_instructions_get: {
         parameters: {
             query?: {
@@ -17255,6 +17421,94 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HandoffPage"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    post_handoff_reopen_v1_businesses__business_id__handoffs__handoff_id__reopen_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+                handoff_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HandoffListItem"];
                 };
             };
             /** @description Sign-in required: the bearer token is missing, invalid or expired. */

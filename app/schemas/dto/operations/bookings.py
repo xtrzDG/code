@@ -152,3 +152,22 @@ class UpdateBookingCommand(ImmutableDTO):
     resource_id: ResourceId | None = None
     notes: BookingNote | None = None
     contact_name: ContactName | None = None
+
+
+class RevertBookingStatusRequest(ImmutableDTO):
+    """
+    Body of an Undo of a booking's status change: `status` is the status
+    the change set (the one being undone), so an Undo never reverts a later
+    change it did not see.
+    """
+
+    status: BookingStatus
+
+
+class RevertBookingStatusCommand(ImmutableDTO):
+    """Staff undo the last status change they made to a booking."""
+
+    business_id: BusinessId
+    actor_id: UserId
+    booking_id: BookingId
+    status: BookingStatus

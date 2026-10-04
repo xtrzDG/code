@@ -29,6 +29,7 @@ from app.use_cases.handoffs.list_unanswered_questions_use_case import (
 from app.use_cases.handoffs.record_unanswered_question_use_case import (
     RecordUnansweredQuestionUseCase,
 )
+from app.use_cases.handoffs.reopen_handoff_use_case import ReopenHandoffUseCase
 from app.use_cases.handoffs.resolve_handoff_use_case import ResolveHandoffUseCase
 from app.use_cases.inbox.assignment.auto_assign_conversation_use_case import (
     AutoAssignConversationUseCase,
@@ -130,6 +131,17 @@ class OperationsWorld(OperationsBookingFactories):
             handoff_repo=self.handoff_repo,
             conversation_repo=self.conversation_repo,
             contact_repo=self.contact_repo,
+            audit_log_repo=self.audit_repo,
+            live_events=self.live_events,
+            wall_clock=self.clock.wall_clock,
+        )
+
+    def reopen_handoff(self) -> ReopenHandoffUseCase:
+        return ReopenHandoffUseCase(
+            handoff_repo=self.handoff_repo,
+            conversation_repo=self.conversation_repo,
+            contact_repo=self.contact_repo,
+            audit_log_repo=self.audit_repo,
             live_events=self.live_events,
             wall_clock=self.clock.wall_clock,
         )

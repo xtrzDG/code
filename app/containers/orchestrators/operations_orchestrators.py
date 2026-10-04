@@ -36,6 +36,9 @@ class OperationsOrchestratorsContainer(containers.DeclarativeContainer):
     update_booking_orchestrator = use_case_orchestrator(
         booking_use_cases.update_booking_use_case
     )
+    revert_booking_status_orchestrator = use_case_orchestrator(
+        booking_use_cases.revert_booking_status_use_case
+    )
     list_leads_orchestrator = use_case_orchestrator(
         follow_up_use_cases.list_leads_use_case
     )
@@ -47,6 +50,9 @@ class OperationsOrchestratorsContainer(containers.DeclarativeContainer):
     )
     resolve_handoff_orchestrator = use_case_orchestrator(
         follow_up_use_cases.resolve_handoff_use_case
+    )
+    reopen_handoff_orchestrator = use_case_orchestrator(
+        follow_up_use_cases.reopen_handoff_use_case
     )
     list_unanswered_questions_orchestrator = use_case_orchestrator(
         follow_up_use_cases.list_unanswered_questions_use_case
