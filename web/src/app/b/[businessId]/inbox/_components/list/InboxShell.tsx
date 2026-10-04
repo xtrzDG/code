@@ -13,6 +13,7 @@ import { useMemo, type ReactNode } from "react";
 
 import { replaceUrlQuery } from "@/components/insights/urlQuery";
 import { LiveStatus } from "@/components/shell/LiveStatus";
+import { usePageHelp } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { cn } from "@/lib/cn";
 
@@ -37,6 +38,7 @@ export function InboxShell({ children }: { children: ReactNode }) {
   const filters = useMemo(() => parseInboxFilters(new URLSearchParams(searchParams.toString())), [searchParams]);
   const list = useInboxList(filters);
   const team = useTeam();
+  const help = usePageHelp();
   const isOpen = selectedId !== null;
   const linkQuery = inboxFiltersQuery(filters);
 
@@ -49,9 +51,13 @@ export function InboxShell({ children }: { children: ReactNode }) {
         className={cn("flex min-h-0 min-w-0 flex-col gap-3", isOpen && "hidden lg:flex")}
       >
         <header className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
-          <h1 id="inbox-title" className="text-xl font-semibold tracking-tight text-ink sm:text-2xl">
-            {t("inbox.title")}
-          </h1>
+          <div className="flex min-w-0 items-center gap-2">
+            <h1 id="inbox-title" className="text-xl font-semibold tracking-tight text-ink sm:text-2xl">
+              {t("inbox.title")}
+            </h1>
+            {/* The phone's top bar has its own "?". */}
+            {help ? <div className="max-lg:hidden">{help}</div> : null}
+          </div>
           <LiveStatus updatedAt={list.page.updatedAt} isFetching={list.page.isFetching && list.rows !== undefined} />
         </header>
         <InboxViewTabs

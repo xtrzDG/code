@@ -7,12 +7,17 @@
  * BusinessShell (business pages) or AdminShell (platform admin). On phones
  * the page's header folds into the top bar and its primary action floats
  * above the tab bar (PhoneChromeProvider, components/ui/PhoneChrome).
+ * The page's "?" opens its help article in a drawer (components/help), and
+ * the platform team's announcements show above every page.
  */
 
 import { useState, type CSSProperties, type ReactNode } from "react";
 
 import type { CurrentUserView } from "@/api/types";
-import { PhoneChromeProvider, usePhoneChromeSnapshot } from "@/components/ui";
+import { AnnouncementBanner } from "@/components/help/AnnouncementBanner";
+import { HelpLink } from "@/components/help/HelpLink";
+import { HelpProvider } from "@/components/help/HelpProvider";
+import { PageHelpProvider, PhoneChromeProvider, usePhoneChromeSnapshot } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { cn } from "@/lib/cn";
 import { sidebarCookie } from "@/lib/shellPreferences";
@@ -56,6 +61,7 @@ export function ShellFrame({
   showPhoneTopBar = true,
   isWide = false,
   ring,
+  helpSlug = null,
   children,
 }: {
   items: readonly ShellNavItem[];
@@ -77,6 +83,8 @@ export function ShellFrame({
   isWide?: boolean;
   /** The setup guide's progress: under the switcher, and in the phone's bar (compact). */
   ring?: (compact: boolean) => ReactNode;
+  /** The help article of the page that is open (the "?" beside its title). */
+  helpSlug?: string | null;
   children: ReactNode;
 }) {
   const { t } = useI18n();
@@ -92,6 +100,8 @@ export function ShellFrame({
   };
 
   return (
+    <HelpProvider>
+    <PageHelpProvider help={helpSlug ? <HelpLink slug={helpSlug} /> : null}>
     <PhoneChromeProvider hasTopBar={showPhoneTopBar} hasFabSlot={showTabBar}>
     <div className="min-h-dvh" style={{ "--sidebar-width": collapsed ? "4.5rem" : "16rem" } as CSSProperties}>
       <ServiceWorker />
@@ -145,6 +155,7 @@ export function ShellFrame({
           }
         />
         ) : null}
+        <AnnouncementBanner />
         <ShellMain isWide={isWide} showTabBar={showTabBar}>
           {children}
         </ShellMain>
@@ -167,5 +178,7 @@ export function ShellFrame({
       />
     </div>
     </PhoneChromeProvider>
+    </PageHelpProvider>
+    </HelpProvider>
   );
 }

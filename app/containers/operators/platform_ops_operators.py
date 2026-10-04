@@ -46,3 +46,47 @@ class PlatformOpsOperatorsContainer(containers.DeclarativeContainer):
     check_channel_credentials_operator = platform_pipeline_operator(
         platform_ops_pipelines.check_channel_credentials_pipeline, storage_scope
     )
+
+    # The public status page, its daily record and the admin's
+    # announcements, the help center (no storage) and each person's
+    # guidance: platform collections only, read in the caller's unscoped
+    # storage (no business, nothing platform-wide).
+    record_platform_status_operator = pipeline_operator(
+        platform_ops_pipelines.record_platform_status_pipeline, storage_scope
+    )
+    create_announcement_operator = pipeline_operator(
+        platform_ops_pipelines.create_announcement_pipeline, storage_scope
+    )
+    update_announcement_operator = pipeline_operator(
+        platform_ops_pipelines.update_announcement_pipeline, storage_scope
+    )
+    list_announcements_operator = pipeline_operator(
+        platform_ops_pipelines.list_announcements_pipeline, storage_scope
+    )
+    get_platform_status_operator = pipeline_operator(
+        platform_ops_pipelines.get_platform_status_pipeline, storage_scope
+    )
+    get_help_center_operator = pipeline_operator(
+        platform_ops_pipelines.get_help_center_pipeline, storage_scope
+    )
+    get_help_article_operator = pipeline_operator(
+        platform_ops_pipelines.get_help_article_pipeline, storage_scope
+    )
+    search_help_operator = pipeline_operator(
+        platform_ops_pipelines.search_help_pipeline, storage_scope
+    )
+    get_support_contacts_operator = pipeline_operator(
+        platform_ops_pipelines.get_support_contacts_pipeline, storage_scope
+    )
+    get_help_progress_operator = pipeline_operator(
+        platform_ops_pipelines.get_help_progress_pipeline, storage_scope
+    )
+    mark_coach_mark_seen_operator = pipeline_operator(
+        platform_ops_pipelines.mark_coach_mark_seen_pipeline, storage_scope
+    )
+    reset_coach_marks_operator = pipeline_operator(
+        platform_ops_pipelines.reset_coach_marks_pipeline, storage_scope
+    )
+    read_changelog_operator = pipeline_operator(
+        platform_ops_pipelines.read_changelog_pipeline, storage_scope
+    )

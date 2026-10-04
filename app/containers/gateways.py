@@ -30,6 +30,9 @@ from app.gateways.worker.periodic.growth_analytics import (
 )
 from app.gateways.worker.periodic.platform_alerts import platform_alerts_job
 from app.gateways.worker.periodic.purge_stale_rows import purge_stale_rows_job
+from app.gateways.worker.periodic.record_platform_status import (
+    record_platform_status_job,
+)
 from app.gateways.worker.periodic.refresh_exchange_rates import (
     refresh_exchange_rates_job,
 )
@@ -208,6 +211,11 @@ class GatewaysContainer(containers.DeclarativeContainer):
         Factory(
             check_channel_credentials_job,
             operator=operators.platform_ops.check_channel_credentials_operator,
+        ),
+        # The status page's daily history (1111).
+        Factory(
+            record_platform_status_job,
+            operator=operators.platform_ops.record_platform_status_operator,
         ),
         # Platform support's time-boxed access closed in the audit log.
         Factory(

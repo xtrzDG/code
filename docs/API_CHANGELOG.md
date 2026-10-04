@@ -45,6 +45,40 @@ Spec: `2d10f6638c041f9c`
   sending and keeping nothing, its colour, corner and language set by
   `window.postMessage` from the framing page.
 
+## 2026-10-04 — help center, support contacts, guidance and the status page
+
+Spec: `6344f91cd124decc`
+
+- **Added** `GET /v1/help/{language}` (public): `HelpCenterView`, the help
+  articles of the language served (the one asked for, its base language,
+  else English) grouped by `topic` (`getting_started`, `channels`,
+  `daily_work`, `account`), each a `HelpArticleCard` (`slug`, `title`,
+  `summary`); `available_languages`. Cached 5 minutes.
+- **Added** `GET /v1/help/{language}/{slug}` (public): `HelpArticleView`
+  with the article's `markdown` and its `related` cards; 404 for an unknown
+  slug or language.
+- **Added** `GET /v1/help/{language}/search?q=` (public):
+  `HelpSearchResults`, the matching articles best first with the passage
+  that matched (`snippet`); 422 without `q`.
+- **Added** `GET /v1/support/contacts` (public): `SupportContactsView`, the
+  platform's support by WhatsApp, Telegram and e-mail with ready links
+  (`SUPPORT_*`; null when not set up).
+- **Added** `GET /v1/me/help`, `PUT /v1/me/help/coach-marks/{key}`,
+  `DELETE /v1/me/help/coach-marks` (204) and `PUT /v1/me/help/changelog`
+  (`ChangelogReadBody`): `HelpProgressView`, the coach marks the person
+  closed and the newest "What's new" entry read (only moves forward).
+- **Added** `GET /v1/platform/status?language=` (public, cached 30 s):
+  `PlatformStatusView`, the overall `level` and each component's (`chat`,
+  `meta`, `telegram`, `voice`, `cabinet`; `operational`, `maintenance`,
+  `degraded`, `outage`) now and over 90 UTC days (`no_data` for days
+  without records), the announcements shown now (`is_scheduled` for
+  planned maintenance) and those resolved in the last 90 days.
+- **Added** `POST /v1/admin/announcements` (201), `PATCH
+  /v1/admin/announcements/{announcement_id}` (`resolve: true` ends it) and
+  `GET /v1/admin/announcements?limit=&cursor=`: platform admins (step-up;
+  audited) tell every owner about an outage, slow service or maintenance
+  in en (required), ka and ru.
+
 ## 2026-10-04 — wave 10 together: value where owners read, the phone loop, reply guard, sessions and support access
 
 Spec: `52268d9934c952f6`

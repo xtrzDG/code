@@ -45,6 +45,7 @@ from app.containers.adapters.value_collections_container import (
 )
 from app.schemas.constants.compliance import AuditAction
 from app.schemas.constants.storage import CollectionIsolation
+from app.schemas.domain import help_progress, platform_status
 from app.schemas.domain.assistants import AssistantVersionDocument
 from app.schemas.domain.businesses import BusinessDocument, BusinessMember
 from app.schemas.domain.compliance import AuditLogEntryDocument
@@ -135,6 +136,10 @@ PLATFORM_DOCUMENT_TYPES: frozenset[type[PersistentDocument]] = frozenset(
         IncidentDocument,
         # The platform admin team belongs to the platform (1103).
         PlatformAdminDocument,
+        # The status page belongs to the platform, help progress to a person.
+        platform_status.PlatformAnnouncementDocument,
+        platform_status.PlatformStatusDayDocument,
+        help_progress.HelpProgressDocument,
     }
 )
 

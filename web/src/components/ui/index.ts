@@ -15,6 +15,7 @@ export { FilterSheet } from "./FilterSheet";
 export { Modal } from "./Modal";
 export { OverflowMenu, type MenuAction } from "./OverflowMenu";
 export { PageHeader, SubPages, usePageLevel, type PagePrimaryAction } from "./PageHeader";
+export { PageHelpProvider, usePageHelp } from "./PageHelp";
 export {
   PhoneChromeProvider,
   usePhoneChrome,

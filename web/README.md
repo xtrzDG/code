@@ -156,7 +156,16 @@ npm run e2e -- onboarding         # one file
   control (`e2e/pseudo-locale.spec.ts`; the suite starts the cabinet with
   `PSEUDO_LOCALE=true`), a 45-minute service performed by one master added
   in the knowledge base, booked by hand and listed with its value, and the
-  demo salon counting clients, not guests (`e2e/services.spec.ts`).
+  demo salon counting clients, not guests (`e2e/services.spec.ts`), a
+  page's "?" opening its guide in a drawer (links between guides in place,
+  Back, the support team's Telegram), the inbox tip shown once across
+  reloads, the public help center's search, "What's new" with its dot in
+  the account menu, the phone's "?" in the top bar and an axe audit of the
+  help center and status page (`e2e/help-center.spec.ts`), and an outage
+  announced on the System page reaching the public status page and every
+  cabinet until it is resolved, a notice hidden by an owner
+  (`e2e/status-page.spec.ts`; the suite's API has `SUPPORT_TELEGRAM` and
+  `SUPPORT_EMAIL`).
 
 | Variable | Default | Meaning |
 | --- | --- | --- |
@@ -177,6 +186,8 @@ web/
   public/                      sw.js (the service worker: offline page, build files, push), icons/
                                (the installed app's PNG icons, `npm run gen:icons`)
   scripts/                     measure-first-load.mjs, render-app-icons.mjs
+  content/changelog/           "What's new": one entry per file (key = the day it shipped + a name,
+                               title and paragraphs in en/ru/ka), listed in index.ts
   src/
     proxy.ts                   runs before pages: sign-in redirects, current path header, language cookie;
                                the hosted chat page's lookup and policy (server/hostedChatProxy.ts)
@@ -188,6 +199,10 @@ web/
       manifest.ts              /manifest.webmanifest: the installed app (name in the interface language,
                                colours of the theme, icons); apple-icon.png for iOS home screens
       offline/                 the page the service worker shows without a connection
+      help/                    the public help center (see Help and support): page.tsx (topics and
+                               search), [slug]/ (one article), whats-new/ ("What's new", marks it read)
+      status/                  the public status page: overall state, announcements, five parts of the
+                               platform with 90 days of history, past incidents
       c/[slug]/                the public hosted chat page and its default privacy notice (/privacy),
                                for customers: their language, system colours, src/styles/hostedChat.css
       */template.tsx           business, admin, login, businesses: each page rises in (PageTransition)
@@ -259,7 +274,9 @@ web/
                                quick-replies/ (owners: the replies staff insert with "/", a text per
                                language, variables), billing/ (plan, trial, usage, plans of the
                                country, invoices, payment), privacy/, audit/
-      admin/                   platform admin: clients (filters, sorts) and clients/[businessId]/;
+      admin/                   platform admin (System also holds the status page's announcements:
+                               AnnouncementsCard, AnnouncementDialog, _lib/announcementForm);
+                               clients (filters, sorts) and clients/[businessId]/;
                                security/ (encryption keys: the key ring and re-encryption runs)
       api/
         auth/start|verify|logout|expired   sign-in route handlers (cookie handling);
@@ -369,6 +386,11 @@ web/
                                UsageMeter, Facts, OwnerOnly notes, channel names,
                                MarkdownDocument (renders the DPA text without HTML), helpers (zoned
                                dates, usage)
+      help/                    help and support: HelpProvider + HelpDrawer (an article over the page),
+                               HelpLink (the "?", put beside a page's title through PageHelp in the UI
+                               kit), HelpMarkdown, CoachMarkSlot (the one-time tips), HelpSupportSection
+                               and ChangelogDot (account menu), SupportContacts, AnnouncementBanner,
+                               PublicPageFrame (/help and /status), useHelp, usePlatformStatus
       BusinessSwitcher.tsx LanguageSwitcher.tsx CountrySelect.tsx
     lib/                       pure helpers with unit tests (*.test.ts): navigation (pages, paths,
                                where a path is, safeNextPath), sections (the five sections, their pages,
@@ -383,7 +405,9 @@ web/
                                heroScene (3D hero: device check, orbits, camera), channelMarks, tunnel/
                                (the tunnel's steps and resume place, launch stages, the /create
                                draft, offer rows, booking choices, contacts, test questions, depth
-                               and confetti math)
+                               and confetti math), help/ (helpTopics: which article a page opens, the
+                               tips; helpMarkdown: the articles' Markdown as data; changelog: unread
+                               entries; platformStatus: colours, good days, the banner's choice)
     styles/                    motion.css (motion tokens, keyframes, press/lift/shimmer/dialog motion),
                                landing.css (backdrop, hero entrance, the still hero picture), shell.css
                                (the phone sheet, the user menu, the setup entry's running light),
@@ -673,6 +697,45 @@ booking after hours) show a toast with a small burst once
 the owner's own phone test are acknowledged quietly). The subscribe dialog
 offers both setup options (`SetupOptionPicker`), and Settings → Notifications
 has the owner's switch for the setup reminders (`SetupRemindersCard`).
+
+### Help and support
+
+- **The "?" beside a page's title** opens the article that explains the
+  page in a drawer (`lib/help/helpTopics.ts` `PAGE_HELP`; the frame puts a
+  `HelpLink` into `PageHelpProvider`, which `PageHeader`, the inbox's title
+  and the phone's top bar show). Links in an article open another article
+  in place (Back returns), cabinet links (`cabinet:assistant/channels`) lead
+  into the business that is open, and "Open in the help center" goes to
+  `/help/{slug}`. The articles are Markdown files of the API (`docs/help/{en,ru,ka}`,
+  served by `GET /v1/help/{language}/{slug}`); `helpTopics.test.ts` fails when
+  a file, a link or a cabinet page does not exist.
+- **The help center** (`/help`, public): the articles by topic and a search
+  (`GET /v1/help/{language}/search`); someone signed in can bring back the
+  tips they closed.
+- **Tips** on the Inbox, the Assistant's test page and Channels show once
+  per person, on any device: "Got it" or "Read the guide" stores it
+  (`PUT /v1/me/help/coach-marks/{key}`).
+- **"What's new"** (`/help/whats-new`): entries in `content/changelog/`; the
+  account button has a dot and "Help and support" counts the entries
+  newer than the last one read (a new account sees only the newest).
+  Add an entry: a file named by its key with en, ru and ka texts, listed in
+  `content/changelog/index.ts`.
+- **Help and support** in the account menu (and "More" on phones): the help
+  center, "What's new", the status page and the support team's WhatsApp,
+  Telegram and e-mail (`SUPPORT_*` on the API; a channel left unset is not
+  shown).
+- **The status page** (`/status`, public, rendered with what the server read
+  and polled every minute past the browser's cache): the overall state,
+  the team's announcements, chat, WhatsApp/Instagram/Messenger, Telegram,
+  calls and the cabinet with 90 days of history, past incidents, and a
+  plain notice when the platform cannot be reached.
+- **Announcements** (Admin → System, "Status page announcements"): a
+  notice, planned maintenance, a slowdown or an outage with the parts it
+  affects, texts in English (required), Georgian and Russian, an optional
+  start and expected end; updates and "Resolve" are audited. Every cabinet
+  shows the active ones above the page (`AnnouncementBanner`); an owner may
+  hide a notice, maintenance or a slowdown in this browser until it changes,
+  never an outage.
 
 ### Installable app
 

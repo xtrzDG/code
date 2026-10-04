@@ -416,3 +416,15 @@ _.end_reason  # app/schemas/domain/support_access_grants.py
 # Channels page's per-language staff templates and the checked bot's photo).
 _.staff_reply_templates  # app/schemas/dto/channels/channel_settings.py
 _.avatar_data_url  # app/schemas/dto/channels/telegram_token_checks.py
+
+# Help, support contacts and the status page (1111): help topics named by the
+# articles' front matter (docs/help), and response fields the cabinet's help
+# drawer, account panel and the public /status page read; no Python code does.
+_.GETTING_STARTED  # app/schemas/constants/help.py
+_.DAILY_WORK  # app/schemas/constants/help.py
+_.ACCOUNT  # app/schemas/constants/help.py
+_.whatsapp_url  # app/schemas/dto/help.py (SupportContactsView)
+_.telegram_url  # app/schemas/dto/help.py (SupportContactsView)
+_.email_url  # app/schemas/dto/help.py (SupportContactsView)
+_.is_scheduled  # app/schemas/dto/platform_status.py (AnnouncementView)
+_.past_announcements  # app/schemas/dto/platform_status.py (PlatformStatusView)

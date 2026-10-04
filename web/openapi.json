@@ -870,6 +870,255 @@
         "title": "AlertUnit",
         "type": "string"
       },
+      "AnnouncementAdminView": {
+        "additionalProperties": false,
+        "description": "One announcement with every translation, as the platform admin sees it.",
+        "properties": {
+          "components": {
+            "items": {
+              "$ref": "#/components/schemas/StatusComponent"
+            },
+            "title": "Components",
+            "type": "array"
+          },
+          "created_at": {
+            "title": "Created At",
+            "type": "integer"
+          },
+          "created_by": {
+            "title": "Created By",
+            "type": "string"
+          },
+          "expected_end_at": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expected End At"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "level": {
+            "$ref": "#/components/schemas/AnnouncementLevel"
+          },
+          "messages": {
+            "items": {
+              "$ref": "#/components/schemas/AnnouncementMessageInput"
+            },
+            "title": "Messages",
+            "type": "array"
+          },
+          "resolved_at": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resolved At"
+          },
+          "starts_at": {
+            "title": "Starts At",
+            "type": "integer"
+          },
+          "status": {
+            "$ref": "#/components/schemas/AnnouncementStatus"
+          },
+          "updated_at": {
+            "title": "Updated At",
+            "type": "integer"
+          },
+          "updated_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated By"
+          }
+        },
+        "required": [
+          "id",
+          "level",
+          "status",
+          "components",
+          "messages",
+          "starts_at",
+          "created_by",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "AnnouncementAdminView",
+        "type": "object"
+      },
+      "AnnouncementLevel": {
+        "description": "What a platform announcement says about the components it names: a\nnotice only (INFO), planned maintenance, degraded service or an\noutage. The status page and the cabinet's banner take their colour\nand wording from it.",
+        "enum": [
+          "info",
+          "maintenance",
+          "degraded",
+          "outage"
+        ],
+        "title": "AnnouncementLevel",
+        "type": "string"
+      },
+      "AnnouncementMessageInput": {
+        "additionalProperties": false,
+        "description": "An announcement's text in one language.",
+        "properties": {
+          "language": {
+            "maxLength": 16,
+            "minLength": 2,
+            "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$",
+            "title": "Language",
+            "type": "string"
+          },
+          "text": {
+            "maxLength": 600,
+            "minLength": 3,
+            "pattern": "^\\S(.*\\S)?\\Z",
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "language",
+          "text"
+        ],
+        "title": "AnnouncementMessageInput",
+        "type": "object"
+      },
+      "AnnouncementPage": {
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/AnnouncementAdminView"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "minLength": 1,
+                "pattern": "^[A-Za-z0-9_-]+$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "AnnouncementPage",
+        "type": "object"
+      },
+      "AnnouncementStatus": {
+        "description": "Whether an announcement is shown now or was resolved by the team.",
+        "enum": [
+          "active",
+          "resolved"
+        ],
+        "title": "AnnouncementStatus",
+        "type": "string"
+      },
+      "AnnouncementView": {
+        "additionalProperties": false,
+        "description": "An announcement in one language: what the banner and the status page\nshow. `is_scheduled` is planned maintenance that has not started yet.",
+        "properties": {
+          "components": {
+            "items": {
+              "$ref": "#/components/schemas/StatusComponent"
+            },
+            "title": "Components",
+            "type": "array"
+          },
+          "expected_end_at": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expected End At"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "is_scheduled": {
+            "default": false,
+            "title": "Is Scheduled",
+            "type": "boolean"
+          },
+          "language": {
+            "maxLength": 16,
+            "minLength": 2,
+            "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$",
+            "title": "Language",
+            "type": "string"
+          },
+          "level": {
+            "$ref": "#/components/schemas/AnnouncementLevel"
+          },
+          "resolved_at": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resolved At"
+          },
+          "starts_at": {
+            "title": "Starts At",
+            "type": "integer"
+          },
+          "text": {
+            "maxLength": 600,
+            "minLength": 3,
+            "pattern": "^\\S(.*\\S)?\\Z",
+            "title": "Text",
+            "type": "string"
+          },
+          "updated_at": {
+            "title": "Updated At",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "level",
+          "components",
+          "text",
+          "language",
+          "starts_at",
+          "updated_at"
+        ],
+        "title": "AnnouncementView",
+        "type": "object"
+      },
       "AnsweredQuestionResult": {
         "additionalProperties": false,
         "description": "The resolved question and the new FAQ item. The assistant must be\nreassembled (and autotested) before customers see the answer.",
@@ -5141,6 +5390,32 @@
         "title": "CohortRowView",
         "type": "object"
       },
+      "ComponentStatusView": {
+        "additionalProperties": false,
+        "description": "A component's level now and its last 90 days, oldest first.",
+        "properties": {
+          "component": {
+            "$ref": "#/components/schemas/StatusComponent"
+          },
+          "history": {
+            "items": {
+              "$ref": "#/components/schemas/StatusDayView"
+            },
+            "title": "History",
+            "type": "array"
+          },
+          "level": {
+            "$ref": "#/components/schemas/StatusLevel"
+          }
+        },
+        "required": [
+          "component",
+          "level",
+          "history"
+        ],
+        "title": "ComponentStatusView",
+        "type": "object"
+      },
       "ConfirmImportedItemsResult": {
         "additionalProperties": false,
         "description": "Items now active in the knowledge base.",
@@ -8711,6 +8986,274 @@
           "count"
         ],
         "title": "HandoffUrgencyCount",
+        "type": "object"
+      },
+      "HelpArticleCard": {
+        "additionalProperties": false,
+        "description": "An article as a list shows it: where it is, its title and summary.",
+        "properties": {
+          "slug": {
+            "maxLength": 64,
+            "minLength": 2,
+            "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+            "title": "Slug",
+            "type": "string"
+          },
+          "summary": {
+            "title": "Summary",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "topic": {
+            "$ref": "#/components/schemas/HelpTopic"
+          }
+        },
+        "required": [
+          "slug",
+          "title",
+          "summary",
+          "topic"
+        ],
+        "title": "HelpArticleCard",
+        "type": "object"
+      },
+      "HelpArticleView": {
+        "additionalProperties": false,
+        "description": "One article, its Markdown and the articles it points to.",
+        "properties": {
+          "available_languages": {
+            "items": {
+              "maxLength": 16,
+              "minLength": 2,
+              "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$",
+              "type": "string"
+            },
+            "title": "Available Languages",
+            "type": "array"
+          },
+          "language": {
+            "maxLength": 16,
+            "minLength": 2,
+            "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$",
+            "title": "Language",
+            "type": "string"
+          },
+          "markdown": {
+            "title": "Markdown",
+            "type": "string"
+          },
+          "related": {
+            "items": {
+              "$ref": "#/components/schemas/HelpArticleCard"
+            },
+            "title": "Related",
+            "type": "array"
+          },
+          "slug": {
+            "maxLength": 64,
+            "minLength": 2,
+            "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+            "title": "Slug",
+            "type": "string"
+          },
+          "summary": {
+            "title": "Summary",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "topic": {
+            "$ref": "#/components/schemas/HelpTopic"
+          }
+        },
+        "required": [
+          "slug",
+          "language",
+          "available_languages",
+          "title",
+          "summary",
+          "topic",
+          "markdown",
+          "related"
+        ],
+        "title": "HelpArticleView",
+        "type": "object"
+      },
+      "HelpCenterView": {
+        "additionalProperties": false,
+        "description": "Every article of the language served (the one asked for, else its base\nlanguage, else English), grouped by topic in the help center's order.",
+        "properties": {
+          "available_languages": {
+            "items": {
+              "maxLength": 16,
+              "minLength": 2,
+              "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$",
+              "type": "string"
+            },
+            "title": "Available Languages",
+            "type": "array"
+          },
+          "language": {
+            "maxLength": 16,
+            "minLength": 2,
+            "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$",
+            "title": "Language",
+            "type": "string"
+          },
+          "topics": {
+            "items": {
+              "$ref": "#/components/schemas/HelpTopicView"
+            },
+            "title": "Topics",
+            "type": "array"
+          }
+        },
+        "required": [
+          "language",
+          "available_languages",
+          "topics"
+        ],
+        "title": "HelpCenterView",
+        "type": "object"
+      },
+      "HelpProgressView": {
+        "additionalProperties": false,
+        "description": "The coach marks already closed and the newest changelog entry read.",
+        "properties": {
+          "changelog_read_key": {
+            "anyOf": [
+              {
+                "maxLength": 80,
+                "minLength": 10,
+                "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}(-[a-z0-9]+)*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Changelog Read Key"
+          },
+          "seen_coach_marks": {
+            "items": {
+              "maxLength": 40,
+              "minLength": 2,
+              "pattern": "^[a-z][a-z0-9_]*$",
+              "type": "string"
+            },
+            "title": "Seen Coach Marks",
+            "type": "array"
+          }
+        },
+        "required": [
+          "seen_coach_marks"
+        ],
+        "title": "HelpProgressView",
+        "type": "object"
+      },
+      "HelpSearchHit": {
+        "additionalProperties": false,
+        "description": "An article that matches, best first, with the passage that matched.",
+        "properties": {
+          "slug": {
+            "maxLength": 64,
+            "minLength": 2,
+            "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+            "title": "Slug",
+            "type": "string"
+          },
+          "snippet": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Snippet"
+          },
+          "summary": {
+            "title": "Summary",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "topic": {
+            "$ref": "#/components/schemas/HelpTopic"
+          }
+        },
+        "required": [
+          "slug",
+          "title",
+          "summary",
+          "topic"
+        ],
+        "title": "HelpSearchHit",
+        "type": "object"
+      },
+      "HelpSearchResults": {
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/HelpSearchHit"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "language": {
+            "maxLength": 16,
+            "minLength": 2,
+            "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$",
+            "title": "Language",
+            "type": "string"
+          }
+        },
+        "required": [
+          "language",
+          "items"
+        ],
+        "title": "HelpSearchResults",
+        "type": "object"
+      },
+      "HelpTopic": {
+        "description": "The groups of the help center: getting started, connecting the\nchannels customers write and call in, the daily work (inbox, bookings,\nteaching the assistant), and the account (billing, privacy).",
+        "enum": [
+          "getting_started",
+          "channels",
+          "daily_work",
+          "account"
+        ],
+        "title": "HelpTopic",
+        "type": "string"
+      },
+      "HelpTopicView": {
+        "additionalProperties": false,
+        "properties": {
+          "articles": {
+            "items": {
+              "$ref": "#/components/schemas/HelpArticleCard"
+            },
+            "title": "Articles",
+            "type": "array"
+          },
+          "topic": {
+            "$ref": "#/components/schemas/HelpTopic"
+          }
+        },
+        "required": [
+          "topic",
+          "articles"
+        ],
+        "title": "HelpTopicView",
         "type": "object"
       },
       "HostedChatView": {
@@ -13698,6 +14241,55 @@
         "title": "PlatformBotWebhookOutcome",
         "type": "object"
       },
+      "PlatformStatusView": {
+        "additionalProperties": false,
+        "description": "The platform as owners and their customers see it: the overall level\n(the worst component), each component, the announcements shown now\nand the ones resolved in the last 90 days, newest first. `checked_at`\nis the platform alerts' latest check (null before the first).",
+        "properties": {
+          "announcements": {
+            "items": {
+              "$ref": "#/components/schemas/AnnouncementView"
+            },
+            "title": "Announcements",
+            "type": "array"
+          },
+          "checked_at": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Checked At"
+          },
+          "components": {
+            "items": {
+              "$ref": "#/components/schemas/ComponentStatusView"
+            },
+            "title": "Components",
+            "type": "array"
+          },
+          "level": {
+            "$ref": "#/components/schemas/StatusLevel"
+          },
+          "past_announcements": {
+            "items": {
+              "$ref": "#/components/schemas/AnnouncementView"
+            },
+            "title": "Past Announcements",
+            "type": "array"
+          }
+        },
+        "required": [
+          "level",
+          "components",
+          "announcements",
+          "past_announcements"
+        ],
+        "title": "PlatformStatusView",
+        "type": "object"
+      },
       "PostCallEventStatus": {
         "description": "What happened to one post-call webhook of the voice platform. The\nwebhook only stores the report (QUEUED, or DUPLICATE when it came\nbefore); the worker then records the call (RECORDED).",
         "enum": [
@@ -16173,6 +16765,52 @@
         "title": "StarterSectionView",
         "type": "object"
       },
+      "StatusComponent": {
+        "description": "The parts of the platform the public status page reports on: the\nwebsite chat and hosted chat page (CHAT), WhatsApp, Instagram and\nMessenger (META), Telegram, phone calls (VOICE) and the owner cabinet\nwith its sign-in (CABINET).",
+        "enum": [
+          "chat",
+          "meta",
+          "telegram",
+          "voice",
+          "cabinet"
+        ],
+        "title": "StatusComponent",
+        "type": "string"
+      },
+      "StatusDayView": {
+        "additionalProperties": false,
+        "description": "A day of a component's history and the worst level it had that day.",
+        "properties": {
+          "day": {
+            "maxLength": 10,
+            "minLength": 10,
+            "pattern": "^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$",
+            "title": "Day",
+            "type": "string"
+          },
+          "level": {
+            "$ref": "#/components/schemas/StatusLevel"
+          }
+        },
+        "required": [
+          "day",
+          "level"
+        ],
+        "title": "StatusDayView",
+        "type": "object"
+      },
+      "StatusLevel": {
+        "description": "How a component works, from best to worst (STATUS_LEVEL_ORDER):\nnormally, under planned maintenance, degraded (slow or partly failing)\nor down. NO_DATA is a day of the history nothing was recorded on.",
+        "enum": [
+          "operational",
+          "maintenance",
+          "degraded",
+          "outage",
+          "no_data"
+        ],
+        "title": "StatusLevel",
+        "type": "string"
+      },
       "StayNightPrice": {
         "additionalProperties": false,
         "description": "The rate of one night of a stay (the night that starts on `date`).",
@@ -16437,6 +17075,98 @@
           }
         },
         "title": "SupportAccessView",
+        "type": "object"
+      },
+      "SupportContactsView": {
+        "additionalProperties": false,
+        "description": "How owners reach a person at the platform (SUPPORT_WHATSAPP,\nSUPPORT_TELEGRAM, SUPPORT_EMAIL), with ready links; a channel the\nplatform did not set up is null.",
+        "properties": {
+          "email": {
+            "anyOf": [
+              {
+                "maxLength": 254,
+                "minLength": 6,
+                "pattern": "^[a-z0-9._%+\\-]+@[a-z0-9\\-]+(\\.[a-z0-9\\-]+)*\\.([a-z]{2,}|xn--[a-z0-9\\-]+)$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
+          },
+          "email_url": {
+            "anyOf": [
+              {
+                "maxLength": 300,
+                "minLength": 10,
+                "pattern": "^(https://(wa\\.me|t\\.me)/[^\\s]+|mailto:[^\\s@]+@[^\\s@]+)$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email Url"
+          },
+          "telegram_url": {
+            "anyOf": [
+              {
+                "maxLength": 300,
+                "minLength": 10,
+                "pattern": "^(https://(wa\\.me|t\\.me)/[^\\s]+|mailto:[^\\s@]+@[^\\s@]+)$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Telegram Url"
+          },
+          "telegram_username": {
+            "anyOf": [
+              {
+                "maxLength": 32,
+                "minLength": 5,
+                "pattern": "^[A-Za-z][A-Za-z0-9_]{4,31}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Telegram Username"
+          },
+          "whatsapp_number": {
+            "anyOf": [
+              {
+                "maxLength": 16,
+                "minLength": 8,
+                "pattern": "^\\+[1-9][0-9]{6,14}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Whatsapp Number"
+          },
+          "whatsapp_url": {
+            "anyOf": [
+              {
+                "maxLength": 300,
+                "minLength": 10,
+                "pattern": "^(https://(wa\\.me|t\\.me)/[^\\s]+|mailto:[^\\s@]+@[^\\s@]+)$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Whatsapp Url"
+          }
+        },
+        "title": "SupportContactsView",
         "type": "object"
       },
       "SupportSessionView": {
@@ -18838,6 +19568,585 @@
   },
   "openapi": "3.1.0",
   "paths": {
+    "/v1/admin/announcements": {
+      "get": {
+        "operationId": "list_announcements_v1_admin_announcements_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Limit"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnnouncementPage"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "List Announcements",
+        "tags": [
+          "platform status"
+        ]
+      },
+      "post": {
+        "operationId": "create_announcement_v1_admin_announcements_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "description": "POST /v1/admin/announcements. `starts_at` is when it counts for its\ncomponents (default: now; later for planned maintenance), and\n`expected_end_at` when the team expects it to be over (optional).",
+                "properties": {
+                  "components": {
+                    "items": {
+                      "description": "The parts of the platform the public status page reports on: the\nwebsite chat and hosted chat page (CHAT), WhatsApp, Instagram and\nMessenger (META), Telegram, phone calls (VOICE) and the owner cabinet\nwith its sign-in (CABINET).",
+                      "enum": [
+                        "chat",
+                        "meta",
+                        "telegram",
+                        "voice",
+                        "cabinet"
+                      ],
+                      "title": "StatusComponent",
+                      "type": "string"
+                    },
+                    "maxItems": 5,
+                    "title": "Components",
+                    "type": "array"
+                  },
+                  "expected_end_at": {
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Expected End At"
+                  },
+                  "level": {
+                    "description": "What a platform announcement says about the components it names: a\nnotice only (INFO), planned maintenance, degraded service or an\noutage. The status page and the cabinet's banner take their colour\nand wording from it.",
+                    "enum": [
+                      "info",
+                      "maintenance",
+                      "degraded",
+                      "outage"
+                    ],
+                    "title": "AnnouncementLevel",
+                    "type": "string"
+                  },
+                  "messages": {
+                    "items": {
+                      "additionalProperties": false,
+                      "description": "An announcement's text in one language.",
+                      "properties": {
+                        "language": {
+                          "maxLength": 16,
+                          "minLength": 2,
+                          "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$",
+                          "title": "Language",
+                          "type": "string"
+                        },
+                        "text": {
+                          "maxLength": 600,
+                          "minLength": 3,
+                          "pattern": "^\\S(.*\\S)?\\Z",
+                          "title": "Text",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "language",
+                        "text"
+                      ],
+                      "title": "AnnouncementMessageInput",
+                      "type": "object"
+                    },
+                    "maxItems": 10,
+                    "minItems": 1,
+                    "title": "Messages",
+                    "type": "array"
+                  },
+                  "starts_at": {
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Starts At"
+                  }
+                },
+                "required": [
+                  "level",
+                  "messages"
+                ],
+                "title": "CreateAnnouncementBody",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnnouncementAdminView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Create Announcement",
+        "tags": [
+          "platform status"
+        ]
+      }
+    },
+    "/v1/admin/announcements/{announcement_id}": {
+      "patch": {
+        "operationId": "update_announcement_v1_admin_announcements__announcement_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "announcement_id",
+            "required": true,
+            "schema": {
+              "title": "Announcement Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "description": "PATCH /v1/admin/announcements/{id}: a new level, components, texts or\nexpected end (fields left out stay), or `resolve: true` to end it.",
+                "properties": {
+                  "components": {
+                    "anyOf": [
+                      {
+                        "items": {
+                          "description": "The parts of the platform the public status page reports on: the\nwebsite chat and hosted chat page (CHAT), WhatsApp, Instagram and\nMessenger (META), Telegram, phone calls (VOICE) and the owner cabinet\nwith its sign-in (CABINET).",
+                          "enum": [
+                            "chat",
+                            "meta",
+                            "telegram",
+                            "voice",
+                            "cabinet"
+                          ],
+                          "title": "StatusComponent",
+                          "type": "string"
+                        },
+                        "maxItems": 5,
+                        "type": "array"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Components"
+                  },
+                  "expected_end_at": {
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Expected End At"
+                  },
+                  "level": {
+                    "anyOf": [
+                      {
+                        "description": "What a platform announcement says about the components it names: a\nnotice only (INFO), planned maintenance, degraded service or an\noutage. The status page and the cabinet's banner take their colour\nand wording from it.",
+                        "enum": [
+                          "info",
+                          "maintenance",
+                          "degraded",
+                          "outage"
+                        ],
+                        "title": "AnnouncementLevel",
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "messages": {
+                    "anyOf": [
+                      {
+                        "items": {
+                          "additionalProperties": false,
+                          "description": "An announcement's text in one language.",
+                          "properties": {
+                            "language": {
+                              "maxLength": 16,
+                              "minLength": 2,
+                              "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$",
+                              "title": "Language",
+                              "type": "string"
+                            },
+                            "text": {
+                              "maxLength": 600,
+                              "minLength": 3,
+                              "pattern": "^\\S(.*\\S)?\\Z",
+                              "title": "Text",
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "language",
+                            "text"
+                          ],
+                          "title": "AnnouncementMessageInput",
+                          "type": "object"
+                        },
+                        "maxItems": 10,
+                        "minItems": 1,
+                        "type": "array"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Messages"
+                  },
+                  "resolve": {
+                    "default": false,
+                    "title": "Resolve",
+                    "type": "boolean"
+                  }
+                },
+                "title": "UpdateAnnouncementBody",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnnouncementAdminView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Update Announcement",
+        "tags": [
+          "platform status"
+        ]
+      }
+    },
     "/v1/admin/clients": {
       "get": {
         "operationId": "list_clients_v1_admin_clients_get",
@@ -48477,6 +49786,337 @@
         ]
       }
     },
+    "/v1/help/{language}": {
+      "get": {
+        "operationId": "get_help_center_v1_help__language__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "language",
+            "required": true,
+            "schema": {
+              "title": "Language",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HelpCenterView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Get Help Center",
+        "tags": [
+          "help"
+        ]
+      }
+    },
+    "/v1/help/{language}/search": {
+      "get": {
+        "operationId": "search_help_v1_help__language__search_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "language",
+            "required": true,
+            "schema": {
+              "title": "Language",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Q"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HelpSearchResults"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Search Help",
+        "tags": [
+          "help"
+        ]
+      }
+    },
+    "/v1/help/{language}/{slug}": {
+      "get": {
+        "operationId": "get_help_article_v1_help__language___slug__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "language",
+            "required": true,
+            "schema": {
+              "title": "Language",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "slug",
+            "required": true,
+            "schema": {
+              "title": "Slug",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HelpArticleView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Get Help Article",
+        "tags": [
+          "help"
+        ]
+      }
+    },
     "/v1/integrations/google-calendar/callback": {
       "get": {
         "operationId": "get_google_calendar_callback_v1_integrations_google_calendar_callback_get",
@@ -49140,6 +50780,469 @@
         "summary": "Update Current User",
         "tags": [
           "auth"
+        ]
+      }
+    },
+    "/v1/me/help": {
+      "get": {
+        "operationId": "get_help_progress_v1_me_help_get",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HelpProgressView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Get Help Progress",
+        "tags": [
+          "help"
+        ]
+      }
+    },
+    "/v1/me/help/changelog": {
+      "put": {
+        "operationId": "read_changelog_v1_me_help_changelog_put",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "description": "PUT /v1/me/help/changelog: the newest entry the person has read.",
+                "properties": {
+                  "read_key": {
+                    "maxLength": 80,
+                    "minLength": 10,
+                    "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}(-[a-z0-9]+)*$",
+                    "title": "Read Key",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "read_key"
+                ],
+                "title": "ChangelogReadBody",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HelpProgressView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Read Changelog",
+        "tags": [
+          "help"
+        ]
+      }
+    },
+    "/v1/me/help/coach-marks": {
+      "delete": {
+        "operationId": "reset_coach_marks_v1_me_help_coach_marks_delete",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Reset Coach Marks",
+        "tags": [
+          "help"
+        ]
+      }
+    },
+    "/v1/me/help/coach-marks/{key}": {
+      "put": {
+        "operationId": "mark_coach_mark_seen_v1_me_help_coach_marks__key__put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "key",
+            "required": true,
+            "schema": {
+              "title": "Key",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HelpProgressView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Mark Coach Mark Seen",
+        "tags": [
+          "help"
         ]
       }
     },
@@ -50241,6 +52344,115 @@
         "summary": "Parse Phone Number"
       }
     },
+    "/v1/platform/status": {
+      "get": {
+        "operationId": "get_platform_status_v1_platform_status_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "language",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Language"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlatformStatusView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Get Platform Status",
+        "tags": [
+          "platform status"
+        ]
+      }
+    },
     "/v1/public/chat/{address}": {
       "get": {
         "operationId": "get_hosted_chat_v1_public_chat__address__get",
@@ -50435,6 +52647,97 @@
         "summary": "Open Review",
         "tags": [
           "reviews"
+        ]
+      }
+    },
+    "/v1/support/contacts": {
+      "get": {
+        "operationId": "get_support_contacts_v1_support_contacts_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupportContactsView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Get Support Contacts",
+        "tags": [
+          "help"
         ]
       }
     },

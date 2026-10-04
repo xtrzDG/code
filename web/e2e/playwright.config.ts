@@ -24,6 +24,7 @@ import {
   E2E_VAPID_PRIVATE_KEY,
   E2E_VAPID_PUBLIC_KEY,
   PLATFORM_ADMIN_EMAIL,
+  SUPPORT_TELEGRAM,
   REPOSITORY_ROOT,
   WEB_DIRECTORY,
   WEB_PORT,
@@ -136,6 +137,9 @@ export default defineConfig({
         WEB_PUSH_VAPID_PUBLIC_KEY: E2E_VAPID_PUBLIC_KEY,
         WEB_PUSH_VAPID_PRIVATE_KEY: E2E_VAPID_PRIVATE_KEY,
         WEB_PUSH_VAPID_SUBJECT: "mailto:e2e@workshop.example",
+        // "Help and support" and the article drawer show these (help-center.spec.ts).
+        SUPPORT_TELEGRAM,
+        SUPPORT_EMAIL: "help@workshop.example",
         PYTHONUNBUFFERED: "1",
       },
       reuseExistingServer: false,

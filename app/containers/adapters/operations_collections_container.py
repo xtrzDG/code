@@ -6,9 +6,14 @@ from app.containers.clients import ClientsContainer
 from app.containers.config import ConfigContainer
 from app.containers.time_provider import TimeProviderContainer
 from app.containers.utilities import UtilitiesContainer
+from app.schemas.domain.help_progress import HelpProgressDocument
 from app.schemas.domain.incidents import IncidentDocument
 from app.schemas.domain.maintenance_runs import MaintenanceRunDocument
 from app.schemas.domain.platform_alerts import PlatformAlertStateDocument
+from app.schemas.domain.platform_status import (
+    PlatformAnnouncementDocument,
+    PlatformStatusDayDocument,
+)
 
 
 class OperationsCollectionsContainer(containers.DeclarativeContainer):
@@ -43,6 +48,33 @@ class OperationsCollectionsContainer(containers.DeclarativeContainer):
     incident_collection = document_collection(
         IncidentDocument,
         "incidents",
+        config,
+        clients,
+        utilities,
+        time_provider,
+    )
+    # The status page and the cabinet's guidance (1111): the platform
+    # team's announcements, the status history by day, and what each
+    # person has seen of the coach marks and the changelog.
+    platform_announcement_collection = document_collection(
+        PlatformAnnouncementDocument,
+        "platform_announcements",
+        config,
+        clients,
+        utilities,
+        time_provider,
+    )
+    platform_status_day_collection = document_collection(
+        PlatformStatusDayDocument,
+        "platform_status_days",
+        config,
+        clients,
+        utilities,
+        time_provider,
+    )
+    help_progress_collection = document_collection(
+        HelpProgressDocument,
+        "help_progress",
         config,
         clients,
         utilities,

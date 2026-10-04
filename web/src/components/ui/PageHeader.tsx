@@ -5,6 +5,7 @@ import { createContext, useContext, type ReactNode } from "react";
 import { cn } from "@/lib/cn";
 
 import { Button } from "./Button";
+import { usePageHelp } from "./PageHelp";
 import { usePhoneChrome, usePhoneDescription, usePhoneFab, type PhoneFabAction } from "./PhoneChrome";
 
 /** 1 on a page of its own; 2 inside a section frame, which owns the page's <h1>. */
@@ -55,7 +56,9 @@ function PrimaryButton({ action, hideOnPhones }: { action: PagePrimaryAction; hi
  * title is the top bar's (the heading stays for screen readers), the
  * description sits behind the top bar's (i), `status` (the live status)
  * becomes its dot, and `primaryAction` the floating button above the tab
- * bar. Only `actions` stay on the page.
+ * bar. Only `actions` stay on the page. The page's help (a "?" set by the
+ * cabinet's frame, PageHelp) sits beside the <h1>; on phones it is in the
+ * top bar.
  */
 export function PageHeader({
   title,
@@ -80,6 +83,7 @@ export function PageHeader({
   className?: string;
 }) {
   const level = usePageLevel();
+  const help = usePageHelp();
   const chrome = usePhoneChrome();
   const isCompact = chrome?.hasTopBar ?? false;
   const hasFab = chrome?.hasFabSlot ?? false;
@@ -138,7 +142,10 @@ export function PageHeader({
     >
       <div className={cn("min-w-0 space-y-1.5", isCompact && !eyebrow && "max-lg:contents")}>
         {eyebrow ? <p className="text-sm font-medium text-accent">{eyebrow}</p> : null}
-        <h1 className={cn("text-xl font-semibold tracking-tight text-ink sm:text-2xl", isCompact && "max-lg:sr-only")}>{title}</h1>
+        <div className={cn("flex min-w-0 items-center gap-2", isCompact && "max-lg:contents")}>
+          <h1 className={cn("text-xl font-semibold tracking-tight text-ink sm:text-2xl", isCompact && "max-lg:sr-only")}>{title}</h1>
+          {help ? <div className={cn("shrink-0", isCompact && "max-lg:hidden")}>{help}</div> : null}
+        </div>
         {description ? <p className={cn("max-w-3xl text-sm text-ink-muted", hideOnPhones)}>{description}</p> : null}
       </div>
       {hasActionRow ? (

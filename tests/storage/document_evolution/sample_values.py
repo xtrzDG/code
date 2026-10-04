@@ -10,9 +10,12 @@ SAMPLE_MICROSECONDS: int = 1_790_000_000_000_000
 
 CONSTRAINED_TEXT_SAMPLES: dict[str, str] = {
     "AcquisitionSourceTag": "qr-tables",
+    "AnnouncementText": "WhatsApp replies are delayed by a few minutes.",
     "AutotestScenarioKey": "booking-happy-path",
     "BackupObjectKey": "workshop/2026/09/workshop-20260921T122640Z.pgdump.age",
     "CabinetRoutePattern": "/b/[businessId]/inbox",
+    "ChangelogEntryKey": "2026-10-04-help-center",
+    "CoachMarkKey": "inbox",
     "BusinessPublicSlug": "cafe-batumi",
     "CabinetDeepLink": (
         "https://app.example.com/n/AQ3xL8nYtQ2bS0pK9mVwZcRj5uHfE1gDaB7iO4lN6eT"
@@ -58,6 +61,7 @@ CONSTRAINED_TEXT_SAMPLES: dict[str, str] = {
     "ReleaseVersion": "4718714c0f2e9a1b",
     "ReviewLinkToken": "q3Jd8sLq0Pz-Xb7W2nVc1A",
     "SeasonDay": "06-15",
+    "StatusDay": "2026-09-21",
     "SessionUserAgent": (
         "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 "
         "(KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"

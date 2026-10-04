@@ -23,6 +23,14 @@ from app.schemas.dto.incidents import (
 )
 from app.schemas.dto.jobs import JobReport, JobTick, QueuedJobInput
 from app.schemas.dto.maintenance_runs import RecordMaintenanceRunCommand
+from app.schemas.dto.platform_announcements import (
+    AnnouncementAdminView,
+    AnnouncementPage,
+    AnnouncementsQuery,
+    CreateAnnouncementCommand,
+    UpdateAnnouncementCommand,
+)
+from app.schemas.dto.platform_status import PlatformStatusQuery, PlatformStatusView
 from app.use_cases.admin.alerts.alert_checks import PlatformAlertChecks
 from app.use_cases.admin.alerts.check_platform_alerts_use_case import (
     CheckPlatformAlertsUseCase,
@@ -43,6 +51,21 @@ from app.use_cases.admin.system.get_admin_system_use_case import (
 )
 from app.use_cases.admin.system.record_maintenance_run_use_case import (
     RecordMaintenanceRunUseCase,
+)
+from app.use_cases.platform_status.create_announcement_use_case import (
+    CreateAnnouncementUseCase,
+)
+from app.use_cases.platform_status.get_platform_status_use_case import (
+    GetPlatformStatusUseCase,
+)
+from app.use_cases.platform_status.list_announcements_use_case import (
+    ListAnnouncementsUseCase,
+)
+from app.use_cases.platform_status.record_platform_status_use_case import (
+    RecordPlatformStatusUseCase,
+)
+from app.use_cases.platform_status.update_announcement_use_case import (
+    UpdateAnnouncementUseCase,
 )
 
 
@@ -148,4 +171,51 @@ class PlatformOpsUseCasesContainer(containers.DeclarativeContainer):
             authorize_platform_admin=platform_use_cases.authorize_platform_admin_use_case,
             incident_repo=repositories.incident_repo,
         )
+    )
+
+    # --- The public status page, its history and the announcements (1111).
+    get_platform_status_use_case: Factory[
+        UseCaseContract[PlatformStatusQuery, PlatformStatusView]
+    ] = Factory(
+        GetPlatformStatusUseCase,
+        alert_state_repo=repositories.platform_alert_state_repo,
+        announcement_repo=repositories.platform_announcement_repo,
+        status_day_repo=repositories.platform_status_day_repo,
+        wall_clock=time_provider.microsecond_wall_clock,
+    )
+    record_platform_status_use_case: Factory[UseCaseContract[JobTick, JobReport]] = (
+        Factory(
+            RecordPlatformStatusUseCase,
+            alert_state_repo=repositories.platform_alert_state_repo,
+            announcement_repo=repositories.platform_announcement_repo,
+            status_day_repo=repositories.platform_status_day_repo,
+            wall_clock=time_provider.microsecond_wall_clock,
+        )
+    )
+    create_announcement_use_case: Factory[
+        UseCaseContract[CreateAnnouncementCommand, AnnouncementAdminView]
+    ] = Factory(
+        CreateAnnouncementUseCase,
+        authorize_platform_admin=platform_use_cases.authorize_platform_admin_use_case,
+        announcement_repo=repositories.platform_announcement_repo,
+        audit_log_repo=repositories.audit_log_repo,
+        step_up=utilities.step_up_guard,
+        wall_clock=time_provider.microsecond_wall_clock,
+    )
+    update_announcement_use_case: Factory[
+        UseCaseContract[UpdateAnnouncementCommand, AnnouncementAdminView]
+    ] = Factory(
+        UpdateAnnouncementUseCase,
+        authorize_platform_admin=platform_use_cases.authorize_platform_admin_use_case,
+        announcement_repo=repositories.platform_announcement_repo,
+        audit_log_repo=repositories.audit_log_repo,
+        step_up=utilities.step_up_guard,
+        wall_clock=time_provider.microsecond_wall_clock,
+    )
+    list_announcements_use_case: Factory[
+        UseCaseContract[AnnouncementsQuery, AnnouncementPage]
+    ] = Factory(
+        ListAnnouncementsUseCase,
+        authorize_platform_admin=platform_use_cases.authorize_platform_admin_use_case,
+        announcement_repo=repositories.platform_announcement_repo,
     )

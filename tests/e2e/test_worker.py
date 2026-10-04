@@ -38,6 +38,9 @@ from app.gateways.worker.periodic.growth_analytics import (
 )
 from app.gateways.worker.periodic.platform_alerts import PLATFORM_ALERTS_JOB
 from app.gateways.worker.periodic.purge_stale_rows import PURGE_STALE_ROWS_JOB
+from app.gateways.worker.periodic.record_platform_status import (
+    RECORD_PLATFORM_STATUS_JOB,
+)
 from app.gateways.worker.periodic.refresh_exchange_rates import (
     REFRESH_EXCHANGE_RATES_JOB,
 )
@@ -112,6 +115,7 @@ def test_worker_ticks_once_with_every_job_registered() -> None:
         (SEND_ACTIVATION_NUDGES_JOB, 3_600),
         (PLATFORM_ALERTS_JOB, 300),
         (CHECK_CHANNEL_CREDENTIALS_JOB, 3_600),
+        (RECORD_PLATFORM_STATUS_JOB, 300),
         (END_EXPIRED_SUPPORT_ACCESS_JOB, 600),
     ]
     assert [job.name for job in jobs if job.is_process_local] == [FLUSH_LLM_TRACES_JOB]
@@ -132,7 +136,7 @@ def test_worker_ticks_once_with_every_job_registered() -> None:
         ROTATE_ENCRYPTED_SECRETS_JOB,
         SEND_PLATFORM_ALERT_JOB,
     ]
-    assert (first.periodic_runs, first.queued_runs, first.failures) == (22, 0, 0)
+    assert (first.periodic_runs, first.queued_runs, first.failures) == (23, 0, 0)
     assert right_after.periodic_runs == 0
     assert a_minute_later.periodic_runs == 1  # the trace flush
     # Trials, overage, grace periods, reminders, the trace flush, the sweep
@@ -140,7 +144,7 @@ def test_worker_ticks_once_with_every_job_registered() -> None:
     # the customers' topics, the feedback requests, the milestones, the
     # activation nudges, the platform alerts, the Meta token check and the
     # end of expired support access.
-    assert (an_hour_later.periodic_runs, an_hour_later.failures) == (15, 0)
+    assert (an_hour_later.periodic_runs, an_hour_later.failures) == (16, 0)
     # A new worker process (a deploy) only flushes its own trace buffer.
     assert (after_a_restart.periodic_runs, after_a_restart.failures) == (1, 0)
 

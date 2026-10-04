@@ -14,6 +14,7 @@ from app.containers.use_cases.booking_use_cases import BookingUseCasesContainer
 from app.containers.use_cases.catalog_use_cases import CatalogUseCasesContainer
 from app.containers.use_cases.compliance_use_cases import ComplianceUseCasesContainer
 from app.containers.use_cases.follow_up_use_cases import FollowUpUseCasesContainer
+from app.containers.use_cases.help_use_cases import HelpUseCasesContainer
 from app.containers.use_cases.inbox_use_cases import InboxUseCasesContainer
 from app.containers.use_cases.knowledge_use_cases import KnowledgeUseCasesContainer
 from app.containers.use_cases.menu_import_use_cases import MenuImportUseCasesContainer
@@ -66,6 +67,14 @@ class CoreUseCasesContainer(containers.DeclarativeContainer):
         transformers=transformers,
         utilities=utilities,
         account_use_cases=accounts,
+    )
+    # The help center, support contacts and the guidance each person saw.
+    help: HelpUseCasesContainer = Container(  # type: ignore[assignment]
+        HelpUseCasesContainer,
+        config=config,
+        registries=registries,
+        repositories=repositories,
+        time_provider=time_provider,
     )
     catalog: CatalogUseCasesContainer = Container(  # type: ignore[assignment]
         CatalogUseCasesContainer,
