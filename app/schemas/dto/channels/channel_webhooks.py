@@ -25,6 +25,7 @@ from app.schemas.typings.channels.strings import (
 from app.schemas.typings.contacts.strings import ContactName
 from app.schemas.typings.conversations.strings import ChannelUserId, MessageText
 from app.schemas.typings.localization.constrained_strings import E164PhoneNumber
+from app.schemas.typings.sharing.constrained_strings import AcquisitionSourceTag
 
 
 class ChannelWebhookPayload(ImmutableDTO):
@@ -69,7 +70,8 @@ class ChannelInboundMessage(ImmutableDTO):
     webhook address already names the channel (Telegram). `text` is what
     the customer typed (empty for a photo or a voice note without words);
     `attachments` are the voice notes, photos, places and other files, with
-    their captions.
+    their captions. `acquisition_source` is where the customer came from
+    when the message carried it (`acquisition_sources.py`).
     """
 
     channel: ChannelKind
@@ -82,6 +84,7 @@ class ChannelInboundMessage(ImmutableDTO):
     attachments: list[InboundAttachment] = Field(
         default_factory=list[InboundAttachment]
     )
+    acquisition_source: AcquisitionSourceTag | None = None
 
 
 class ChannelDeliveryTarget(ImmutableDTO):

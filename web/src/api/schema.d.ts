@@ -2251,6 +2251,49 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/businesses/{business_id}/value/sources": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Customer Sources
+         * @description Conversations, kept bookings, requests and their value per source
+         *     (a link's tag, a QR code, an ad, the phone line). `period`: today,
+         *     7d, 30d, 90d, last_week or last_month; or local dates `from` and
+         *     `to`; neither: the last 30 days.
+         */
+        get: operations["get_customer_sources_v1_businesses__business_id__value_sources_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/businesses/{business_id}/value/topics": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Conversation Topics
+         * @description The topics of the last 30 days' first messages, grouped nightly.
+         */
+        get: operations["get_conversation_topics_v1_businesses__business_id__value_topics_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/catalog/countries": {
         parameters: {
             query?: never;
@@ -4872,8 +4915,15 @@ export interface components {
          *
          *     Version 2: the team inbox fields (all optional, so version 1 rows read
          *     as they are).
+         *
+         *     Version 3: `acquisition_source`, where the customer came from when the
+         *     conversation started (a shared link's tag, an ad, the number dialled;
+         *     `app/utilities/sharing/acquisition_sources.py`). Set once, never
+         *     changed; optional, so version 2 rows read as they are.
          */
         ConversationDocument: {
+            /** Acquisition Source */
+            acquisition_source?: string | null;
             /** Assigned At */
             assigned_at?: number | null;
             /** Assigned By */
@@ -4932,7 +4982,7 @@ export interface components {
             rating?: components["schemas"]["ConversationRating"] | null;
             /**
              * Schema Version
-             * @default 2
+             * @default 3
              */
             schema_version: string;
             /** @default open */
@@ -5082,6 +5132,37 @@ export interface components {
             status: components["schemas"]["ConversationStatus"];
         };
         /**
+         * ConversationTopicView
+         * @description One topic: its label in the owner's language, the conversations that
+         *     opened with it and the open questions the assistant could not answer.
+         */
+        ConversationTopicView: {
+            /** Conversation Count */
+            conversation_count: number;
+            /** Label */
+            label: string;
+            /** Unanswered Count */
+            unanswered_count: number;
+        };
+        /**
+         * ConversationTopicsView
+         * @description The topics of the conversations started from `window_from` to
+         *     `window_to` (the last 30 days when grouped, every night), largest
+         *     language first. Never grouped yet: no window and no groups.
+         */
+        ConversationTopicsView: {
+            /** Business Id */
+            business_id: string;
+            /** Groups */
+            groups?: components["schemas"]["TopicLanguageView"][];
+            /** Label Language */
+            label_language: string;
+            /** Window From */
+            window_from?: number | null;
+            /** Window To */
+            window_to?: number | null;
+        };
+        /**
          * ConversationUsageView
          * @description Language-model usage of a whole conversation (every message, also the
          *     ones a page of the transcript does not show).
@@ -5214,6 +5295,63 @@ export interface components {
          */
         CurrentWebsiteImport: {
             current?: components["schemas"]["WebsiteImportView"] | null;
+        };
+        /**
+         * CustomerSourceKind
+         * @description One row of the customer sources report: a source tag, the conversations
+         *     of one channel that came without a tag, or the smallest tags together.
+         * @enum {string}
+         */
+        CustomerSourceKind: "tagged" | "untagged" | "other";
+        /**
+         * CustomerSourceRow
+         * @description One source of the period: a tag (`TAGGED`, every channel it came
+         *     through), the conversations of one channel without a tag (`UNTAGGED`),
+         *     or the smallest tags folded together (`OTHER`).
+         *
+         *     `booking_count`: bookings made in the period in the source's
+         *     conversations and kept (not cancelled, not a no-show), whenever those
+         *     conversations started; `request_count`: requests taken in them;
+         *     `estimated_value_minor`: their value as the value model counts it (own
+         *     values, the others at the average check; requests at the check), None
+         *     when nothing prices them.
+         */
+        CustomerSourceRow: {
+            /** Acquisition Source */
+            acquisition_source?: string | null;
+            /** Booking Count */
+            booking_count: number;
+            /** Channels */
+            channels?: components["schemas"]["ChannelKind"][];
+            /** Conversation Count */
+            conversation_count: number;
+            /** Estimated Value Minor */
+            estimated_value_minor?: number | null;
+            kind: components["schemas"]["CustomerSourceKind"];
+            /** Request Count */
+            request_count: number;
+            /**
+             * Source Count
+             * @default 1
+             */
+            source_count: number;
+        };
+        /**
+         * CustomerSourcesView
+         * @description The sources of a period, most conversations first.
+         */
+        CustomerSourcesView: {
+            /** Business Id */
+            business_id: string;
+            /** Currency Code */
+            currency_code: string;
+            /** Date From */
+            date_from: string;
+            /** Date To */
+            date_to: string;
+            /** Rows */
+            rows?: components["schemas"]["CustomerSourceRow"][];
+            value_basis: components["schemas"]["ValueBasis"];
         };
         /**
          * DashboardDay
@@ -5355,15 +5493,29 @@ export interface components {
          */
         DeviceClass: "mobile" | "tablet" | "desktop";
         /**
+         * DigestChannel
+         * @description Where an owner gets their digests and monthly reports: the sign-in
+         *     e-mail, the devices with notifications on (Web Push), a Telegram chat
+         *     linked to the platform bot, or WhatsApp from the platform's number (an
+         *     approved utility template, so the owner opts in by choosing it).
+         * @enum {string}
+         */
+        DigestChannel: "email" | "push" | "telegram" | "whatsapp";
+        /**
          * DigestPreferencesView
-         * @description The owner's choices and where the summaries reach them: their sign-in
-         *     e-mail (None: they sign in by phone) when the platform can send e-mail
-         *     (`is_email_ready`), and their devices with notifications on in this
-         *     business.
+         * @description The owner's choices and where the summaries reach them: the `channels`
+         *     they chose; their sign-in e-mail (None: they sign in by phone) when the
+         *     platform can send e-mail (`is_email_ready`); their devices with
+         *     notifications on in this business; their Telegram chat among the
+         *     business's `telegram_chats` (`is_telegram_ready`: the platform bot is
+         *     set up); their WhatsApp number (`suggested_whatsapp_number`: the phone
+         *     they sign in with; `is_whatsapp_ready`: the report template is set up).
          */
         DigestPreferencesView: {
             /** Business Id */
             business_id: string;
+            /** Channels */
+            channels: components["schemas"]["DigestChannel"][];
             /** Device Count */
             device_count: number;
             /** Email */
@@ -5374,8 +5526,32 @@ export interface components {
             is_email_ready: boolean;
             /** Is Monthly Report On */
             is_monthly_report_on: boolean;
+            /** Is Telegram Ready */
+            is_telegram_ready: boolean;
             /** Is Weekly Digest On */
             is_weekly_digest_on: boolean;
+            /** Is Whatsapp Ready */
+            is_whatsapp_ready: boolean;
+            /** Suggested Whatsapp Number */
+            suggested_whatsapp_number?: string | null;
+            /** Telegram Chat */
+            telegram_chat?: string | null;
+            /** Telegram Chats */
+            telegram_chats: components["schemas"]["DigestTelegramChatView"][];
+            /** Whatsapp Number */
+            whatsapp_number?: string | null;
+        };
+        /**
+         * DigestTelegramChatView
+         * @description A Telegram chat linked to the business through the platform bot.
+         */
+        DigestTelegramChatView: {
+            /** Address */
+            address: string;
+            /** Name */
+            name: string;
+            /** Username */
+            username?: string | null;
         };
         /**
          * DpaAcceptanceView
@@ -6082,8 +6258,12 @@ export interface components {
          *     handoff, the newest open request). No model, cost or tool details,
          *     no free-text request details and no note texts (only their count).
          *     `assignment_revision` is what an assignment must name.
+         *     `acquisition_source` is where the customer came from (a link's tag, an
+         *     ad, the number dialled), when known.
          */
         InboxItemView: {
+            /** Acquisition Source */
+            acquisition_source?: string | null;
             /** Assigned At */
             assigned_at?: number | null;
             /** Assignee User Id */
@@ -9001,6 +9181,18 @@ export interface components {
             tool_name: components["schemas"]["AssistantToolName"];
         };
         /**
+         * TopicLanguageView
+         * @description The topics of the conversations started in one customer language.
+         */
+        TopicLanguageView: {
+            /** Conversation Count */
+            conversation_count: number;
+            /** Language */
+            language?: string | null;
+            /** Topics */
+            topics?: components["schemas"]["ConversationTopicView"][];
+        };
+        /**
          * TotpEnrollmentView
          * @description A new authenticator to add to an app: the QR code's address and, for
          *     typing it in by hand, the secret. Shown once; the first code from the
@@ -9171,6 +9363,10 @@ export interface components {
          *     (`OWNER`) or the niche's typical check in the business currency
          *     (`NICHE_DEFAULT`, also given as `typical_check_minor`); without either
          *     there is no money estimate. The staff time rates explain the minutes.
+         *     `plan_cost_minor` is what the business's plan costs for the period's
+         *     days and `return_multiple` how many times the period's money estimate
+         *     covers it (both None when the plan is priced in another currency; no
+         *     multiple without an estimate).
          */
         ValueModel: {
             /** Average Check Minor */
@@ -9185,11 +9381,15 @@ export interface components {
             date_from: string;
             /** Date To */
             date_to: string;
+            /** Plan Cost Minor */
+            plan_cost_minor?: number | null;
             previous: components["schemas"]["ValueTotals"];
             /** Previous Date From */
             previous_date_from: string;
             /** Previous Date To */
             previous_date_to: string;
+            /** Return Multiple */
+            return_multiple?: number | null;
             /** Seconds Per Call */
             seconds_per_call: number;
             /** Seconds Per Reply */
@@ -9230,7 +9430,9 @@ export interface components {
         /**
          * ValueReportView
          * @description One stored report: its period and the one before, the totals of both as
-         *     they were when it was made, the average check it used, and whether it
+         *     they were when it was made, the average check it used, what the plan
+         *     cost for the period and how many times the money covered it (None:
+         *     reports from before, or a plan in another currency), and whether it
          *     went out (`delivery`, to `recipient_count` addresses and devices).
          */
         ValueReportView: {
@@ -9254,6 +9456,8 @@ export interface components {
             kind: components["schemas"]["ValueReportKind"];
             /** Period Key */
             period_key: string;
+            /** Plan Cost Minor */
+            plan_cost_minor?: number | null;
             previous: components["schemas"]["ValueTotals"];
             /** Previous Date From */
             previous_date_from: string;
@@ -9261,6 +9465,8 @@ export interface components {
             previous_date_to: string;
             /** Recipient Count */
             recipient_count: number;
+            /** Return Multiple */
+            return_multiple?: number | null;
             value_basis: components["schemas"]["ValueBasis"];
         };
         /**
@@ -16784,6 +16990,8 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": {
+                    /** Channels */
+                    channels?: ("email" | "push" | "telegram" | "whatsapp")[] | null;
                     /**
                      * Is Daily Digest On
                      * @default false
@@ -16799,6 +17007,10 @@ export interface operations {
                      * @default true
                      */
                     is_weekly_digest_on?: boolean;
+                    /** Telegram Chat */
+                    telegram_chat?: string | null;
+                    /** Whatsapp Number */
+                    whatsapp_number?: string | null;
                 };
             };
         };
@@ -25163,6 +25375,184 @@ export interface operations {
             };
         };
     };
+    get_customer_sources_v1_businesses__business_id__value_sources_get: {
+        parameters: {
+            query?: {
+                period?: string | null;
+                from?: string | null;
+                to?: string | null;
+            };
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CustomerSourcesView"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    get_conversation_topics_v1_businesses__business_id__value_topics_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConversationTopicsView"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
     list_countries_v1_catalog_countries_get: {
         parameters: {
             query?: {
@@ -28023,6 +28413,8 @@ export interface operations {
                     language?: string | null;
                     /** Session Key */
                     session_key: string;
+                    /** Source */
+                    source?: string | null;
                 };
             };
         };
@@ -28206,6 +28598,8 @@ export interface operations {
                     contact_name?: string | null;
                     /** Session Key */
                     session_key: string;
+                    /** Source */
+                    source?: string | null;
                     /** Text */
                     text: string;
                 };

@@ -8,8 +8,11 @@
 
 import { api } from "@/api/client";
 import { queryKeys } from "@/api/queryKeys";
+import type { Schema } from "@/api/types";
 import { useMutation } from "@/api/useMutation";
 import { useQuery } from "@/api/useQuery";
+
+import { DIGEST_REFUSAL_MESSAGES } from "./digestRefusals";
 
 /** The value of local dates `from` to `to` (the dashboard's period), against as many days before. */
 export function useValueOfDates(businessId: string, from: string, to: string, enabled = true) {
@@ -44,15 +47,44 @@ export function useSaveAverageCheck(businessId: string) {
   );
 }
 
-/** The signed-in owner's daily and weekly digests and monthly report, and saving them. */
+/** What the PUT of the owner's summaries takes: the three switches, and channels when they change. */
+export interface DigestPreferencesBody {
+  is_daily_digest_on: boolean;
+  is_weekly_digest_on: boolean;
+  is_monthly_report_on: boolean;
+  channels?: Schema<"DigestChannel">[];
+  telegram_chat?: string;
+  whatsapp_number?: string;
+}
+
+/** The signed-in owner's daily and weekly digests and monthly report, where they go, and saving them. */
 export function useDigestPreferences(businessId: string) {
   const path = { business_id: businessId };
   const preferences = useQuery(queryKeys.reports.digests(businessId), () =>
     api.GET("/v1/businesses/{business_id}/digest-preferences", { params: { path } }),
   );
   const save = useMutation(
-    (body: { is_daily_digest_on: boolean; is_weekly_digest_on: boolean; is_monthly_report_on: boolean }) =>
-      api.PUT("/v1/businesses/{business_id}/digest-preferences", { params: { path }, body }),
+    (body: DigestPreferencesBody) => api.PUT("/v1/businesses/{business_id}/digest-preferences", { params: { path }, body }),
+    { reasonMessages: DIGEST_REFUSAL_MESSAGES },
   );
   return { preferences, save };
+}
+
+/** Where customers came from in a named period: conversations, bookings and value per source (owners). */
+export function useCustomerSources(businessId: string, period: "7d" | "30d" | "90d") {
+  return useQuery(
+    queryKeys.reports.sources(businessId, period),
+    () =>
+      api.GET("/v1/businesses/{business_id}/value/sources", {
+        params: { path: { business_id: businessId }, query: { period } },
+      }),
+    { keepPreviousData: true },
+  );
+}
+
+/** What customers asked about in the last 30 days, grouped every night. */
+export function useConversationTopics(businessId: string) {
+  return useQuery(queryKeys.dashboard.topics(businessId), () =>
+    api.GET("/v1/businesses/{business_id}/value/topics", { params: { path: { business_id: businessId } } }),
+  );
 }

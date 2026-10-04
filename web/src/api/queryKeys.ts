@@ -34,6 +34,8 @@ export const queryKeys = {
     /** Today's bookings (counts only) and the inbox views of the signed-in member. */
     todayQueue: (businessId: Id, today: string) => ["dashboard", businessId, "todayQueue", today] as const,
     inboxViews: (businessId: Id) => ["dashboard", businessId, "inboxViews"] as const,
+    /** What customers asked about, as the nightly grouping last stored it. */
+    topics: (businessId: Id) => ["dashboard", businessId, "topics"] as const,
   },
 
   reports: {
@@ -43,6 +45,8 @@ export const queryKeys = {
     detail: (businessId: Id, reportId: Id) => ["reports", businessId, "detail", reportId] as const,
     /** The signed-in owner's summaries. */
     digests: (businessId: Id) => ["reports", businessId, "digests"] as const,
+    /** Where customers came from in a named period ("30d"). */
+    sources: (businessId: Id, period: string) => ["reports", businessId, "sources", period] as const,
   },
 
   conversations: {

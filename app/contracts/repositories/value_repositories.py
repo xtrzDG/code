@@ -1,9 +1,9 @@
 """
 Persistence contracts of what the assistant is worth to a business: the
 average check, each owner's digest choices, the stored digests and monthly
-reports, and the indexed counts the value model needs beyond the
-dashboard's. Every read is limited to one business; sandbox activity (the
-owner's test chat, autotests) is never counted.
+reports, the indexed counts the value model needs beyond the dashboard's,
+and the counts per customer source. Every read is limited to one business;
+sandbox activity (the owner's test chat, autotests) is never counted.
 """
 
 from collections.abc import Sequence
@@ -20,6 +20,12 @@ from app.schemas.domain.value_settings import (
     ValueSettingsDocument,
 )
 from app.schemas.dto.paging import KeysetSlice
+from app.schemas.dto.value.customer_sources import (
+    ConversationBookingCount,
+    ConversationLeadCount,
+    ConversationOrigin,
+    SourceConversationCount,
+)
 from app.schemas.typings.bookings.constrained_integers import BookingSearchBoundSeconds
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.conversations.prefixed_id import ConversationId
@@ -105,4 +111,44 @@ class ValueCountRepoContract(RepoContract, Protocol):
         starts_before: BookingSearchBoundSeconds,
     ) -> dict[BookingStatus, PeriodItemCount]:
         """Bookings that start from `starts_from` to `starts_before`, by status."""
+        raise NotImplementedError
+
+
+class CustomerSourceRepoContract(RepoContract, Protocol):
+    def count_conversations_by_source(
+        self,
+        business_id: BusinessId,
+        start: Microseconds,
+        end: Microseconds,
+    ) -> list[SourceConversationCount]:
+        """Conversations started from `start` to `end`, by source and channel."""
+        raise NotImplementedError
+
+    def count_bookings_by_conversation(
+        self,
+        business_id: BusinessId,
+        start: Microseconds,
+        end: Microseconds,
+    ) -> list[ConversationBookingCount]:
+        """
+        Bookings made from `start` to `end` in conversations (staff-made
+        ones left out), by conversation, status and currency, with values.
+        """
+        raise NotImplementedError
+
+    def count_leads_by_conversation(
+        self,
+        business_id: BusinessId,
+        start: Microseconds,
+        end: Microseconds,
+    ) -> list[ConversationLeadCount]:
+        """Requests taken from `start` to `end` in conversations, by conversation."""
+        raise NotImplementedError
+
+    def find_origins(
+        self,
+        business_id: BusinessId,
+        conversation_ids: Sequence[ConversationId],
+    ) -> list[ConversationOrigin]:
+        """Where these conversations of the business came from (others skipped)."""
         raise NotImplementedError

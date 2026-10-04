@@ -20,6 +20,10 @@
  *                          open, the business's other channels on top
  *   data-container="<id>"  page mode: the element the chat fills (default:
  *                          the whole window)
+ *   data-source="qr"       where visitors of this page came from (default:
+ *                          the page's ?src= or ?utm_source=); the business's
+ *                          reports count conversations, bookings and value
+ *                          per source
  *
  * No dependencies and no cookies. The visitor is identified by a random
  * session key kept in localStorage; the widget renders inside a shadow root,
@@ -56,6 +60,7 @@
 
   var MAX_MESSAGE_LENGTH = 4000;
   var MAX_STORED_MESSAGES = 60;
+  var MAX_SOURCE_LENGTH = 200;
   var REQUEST_TIMEOUT_MS = 90000;
   var SESSION_KEY_PATTERN = /^[A-Za-z0-9_-]{16,128}$/;
   var SESSION_KEY_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_-";

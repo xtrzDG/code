@@ -40,6 +40,7 @@ from app.utilities.channels.message_chunks import split_message_text
 from app.utilities.channels.telegram_attachments import read_telegram_attachments
 from app.utilities.channels.webhook_signatures import is_matching_telegram_secret
 from app.utilities.security.key_ring import key_ring
+from app.utilities.sharing.acquisition_sources import read_start_payload
 
 # Telegram counts the 4096-character limit of sendMessage in UTF-16 units.
 TELEGRAM_MESSAGE_LIMIT: int = 4096
@@ -56,7 +57,8 @@ class TelegramChannelAdapter(ChannelAdapterContract):
     answered; a contact the customer shares about themselves gives their
     phone number (stored as E.164). Voice notes, photos (with their
     captions), places and other files are attachments
-    (`telegram_attachments`).
+    (`telegram_attachments`). The payload of a tagged link's
+    "/start src_<tag>" is where the customer came from.
     """
 
     def __init__(
@@ -115,7 +117,9 @@ class TelegramChannelAdapter(ChannelAdapterContract):
         attachments: list[InboundAttachment] = read_telegram_attachments(
             message, is_own_contact=phone_number is not None
         )
-        text: str = read_text(message, "text") or ""
+        # A tagged t.me link starts with "/start src_<tag>": the tag is kept
+        # as the source, the assistant reads "/start".
+        source, text = read_start_payload(read_text(message, "text") or "")
         if text == "" and phone_number is not None:
             text = str(phone_number)
 
@@ -136,6 +140,7 @@ class TelegramChannelAdapter(ChannelAdapterContract):
                     else ProviderMessageId(f"{chat_id}:{message_id}")
                 ),
                 attachments=attachments,
+                acquisition_source=source,
             )
         ]
 

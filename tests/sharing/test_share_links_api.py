@@ -119,7 +119,7 @@ def test_connected_channels_are_listed_with_their_links(workshop: Workshop) -> N
 
     assert links[1] == {
         "kind": "telegram",
-        "url": "https://t.me/workshop_bot",
+        "url": "https://t.me/workshop_bot?start=src_qr",
         "label": "@workshop_bot",
         "gap": None,
     }

@@ -5582,8 +5582,22 @@
       },
       "ConversationDocument": {
         "additionalProperties": false,
-        "description": "Customer conversation in one channel (concept table `conversations`).\n\nPinned to one assistant version so its instruction and tools never change\nmid-conversation. `rating` is the owner's or staff's good / bad verdict.\n\nThe team inbox fields belong to their own operations, and a plain save\nof the conversation keeps their stored values\n(`ConversationRepoContract.save`): the assignment (`assignee_user_id`,\nwho assigned it, when, and `assignment_revision`, the compare-and-set\nversion) changes only through `ConversationTeamRepoContract.assign`,\n`has_open_request` (a request of the conversation is new or in\nprogress) only through `set_open_request`. `awaits_team` is derived on\nevery write: the conversation needs a person (HANDOFF) or has an open\nrequest. `assigned_by` is None for an automatic assignment.\n\nVersion 2: the team inbox fields (all optional, so version 1 rows read\nas they are).",
+        "description": "Customer conversation in one channel (concept table `conversations`).\n\nPinned to one assistant version so its instruction and tools never change\nmid-conversation. `rating` is the owner's or staff's good / bad verdict.\n\nThe team inbox fields belong to their own operations, and a plain save\nof the conversation keeps their stored values\n(`ConversationRepoContract.save`): the assignment (`assignee_user_id`,\nwho assigned it, when, and `assignment_revision`, the compare-and-set\nversion) changes only through `ConversationTeamRepoContract.assign`,\n`has_open_request` (a request of the conversation is new or in\nprogress) only through `set_open_request`. `awaits_team` is derived on\nevery write: the conversation needs a person (HANDOFF) or has an open\nrequest. `assigned_by` is None for an automatic assignment.\n\nVersion 2: the team inbox fields (all optional, so version 1 rows read\nas they are).\n\nVersion 3: `acquisition_source`, where the customer came from when the\nconversation started (a shared link's tag, an ad, the number dialled;\n`app/utilities/sharing/acquisition_sources.py`). Set once, never\nchanged; optional, so version 2 rows read as they are.",
         "properties": {
+          "acquisition_source": {
+            "anyOf": [
+              {
+                "maxLength": 32,
+                "minLength": 1,
+                "pattern": "^[a-z0-9][a-z0-9_-]{0,31}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Acquisition Source"
+          },
           "assigned_at": {
             "anyOf": [
               {
@@ -5722,7 +5736,7 @@
             ]
           },
           "schema_version": {
-            "default": "2",
+            "default": "3",
             "title": "Schema Version",
             "type": "string"
           },
@@ -6081,6 +6095,88 @@
         "title": "ConversationSummaryView",
         "type": "object"
       },
+      "ConversationTopicView": {
+        "additionalProperties": false,
+        "description": "One topic: its label in the owner's language, the conversations that\nopened with it and the open questions the assistant could not answer.",
+        "properties": {
+          "conversation_count": {
+            "minimum": 0.0,
+            "title": "Conversation Count",
+            "type": "integer"
+          },
+          "label": {
+            "maxLength": 60,
+            "minLength": 1,
+            "pattern": "\\S",
+            "title": "Label",
+            "type": "string"
+          },
+          "unanswered_count": {
+            "minimum": 0.0,
+            "title": "Unanswered Count",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "label",
+          "conversation_count",
+          "unanswered_count"
+        ],
+        "title": "ConversationTopicView",
+        "type": "object"
+      },
+      "ConversationTopicsView": {
+        "additionalProperties": false,
+        "description": "The topics of the conversations started from `window_from` to\n`window_to` (the last 30 days when grouped, every night), largest\nlanguage first. Never grouped yet: no window and no groups.",
+        "properties": {
+          "business_id": {
+            "title": "Business Id",
+            "type": "string"
+          },
+          "groups": {
+            "items": {
+              "$ref": "#/components/schemas/TopicLanguageView"
+            },
+            "title": "Groups",
+            "type": "array"
+          },
+          "label_language": {
+            "maxLength": 16,
+            "minLength": 2,
+            "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$",
+            "title": "Label Language",
+            "type": "string"
+          },
+          "window_from": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Window From"
+          },
+          "window_to": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Window To"
+          }
+        },
+        "required": [
+          "business_id",
+          "label_language"
+        ],
+        "title": "ConversationTopicsView",
+        "type": "object"
+      },
       "ConversationUsageView": {
         "additionalProperties": false,
         "description": "Language-model usage of a whole conversation (every message, also the\nones a page of the transcript does not show).",
@@ -6437,6 +6533,137 @@
         "title": "CurrentWebsiteImport",
         "type": "object"
       },
+      "CustomerSourceKind": {
+        "description": "One row of the customer sources report: a source tag, the conversations\nof one channel that came without a tag, or the smallest tags together.",
+        "enum": [
+          "tagged",
+          "untagged",
+          "other"
+        ],
+        "title": "CustomerSourceKind",
+        "type": "string"
+      },
+      "CustomerSourceRow": {
+        "additionalProperties": false,
+        "description": "One source of the period: a tag (`TAGGED`, every channel it came\nthrough), the conversations of one channel without a tag (`UNTAGGED`),\nor the smallest tags folded together (`OTHER`).\n\n`booking_count`: bookings made in the period in the source's\nconversations and kept (not cancelled, not a no-show), whenever those\nconversations started; `request_count`: requests taken in them;\n`estimated_value_minor`: their value as the value model counts it (own\nvalues, the others at the average check; requests at the check), None\nwhen nothing prices them.",
+        "properties": {
+          "acquisition_source": {
+            "anyOf": [
+              {
+                "maxLength": 32,
+                "minLength": 1,
+                "pattern": "^[a-z0-9][a-z0-9_-]{0,31}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Acquisition Source"
+          },
+          "booking_count": {
+            "minimum": 0.0,
+            "title": "Booking Count",
+            "type": "integer"
+          },
+          "channels": {
+            "items": {
+              "$ref": "#/components/schemas/ChannelKind"
+            },
+            "title": "Channels",
+            "type": "array"
+          },
+          "conversation_count": {
+            "minimum": 0.0,
+            "title": "Conversation Count",
+            "type": "integer"
+          },
+          "estimated_value_minor": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Estimated Value Minor"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/CustomerSourceKind"
+          },
+          "request_count": {
+            "minimum": 0.0,
+            "title": "Request Count",
+            "type": "integer"
+          },
+          "source_count": {
+            "default": 1,
+            "minimum": 0.0,
+            "title": "Source Count",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "kind",
+          "conversation_count",
+          "booking_count",
+          "request_count"
+        ],
+        "title": "CustomerSourceRow",
+        "type": "object"
+      },
+      "CustomerSourcesView": {
+        "additionalProperties": false,
+        "description": "The sources of a period, most conversations first.",
+        "properties": {
+          "business_id": {
+            "title": "Business Id",
+            "type": "string"
+          },
+          "currency_code": {
+            "maxLength": 3,
+            "minLength": 3,
+            "pattern": "^[A-Z]{3}$",
+            "title": "Currency Code",
+            "type": "string"
+          },
+          "date_from": {
+            "maxLength": 10,
+            "minLength": 10,
+            "pattern": "^(19|20|21)[0-9]{2}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$",
+            "title": "Date From",
+            "type": "string"
+          },
+          "date_to": {
+            "maxLength": 10,
+            "minLength": 10,
+            "pattern": "^(19|20|21)[0-9]{2}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$",
+            "title": "Date To",
+            "type": "string"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/components/schemas/CustomerSourceRow"
+            },
+            "title": "Rows",
+            "type": "array"
+          },
+          "value_basis": {
+            "$ref": "#/components/schemas/ValueBasis"
+          }
+        },
+        "required": [
+          "business_id",
+          "currency_code",
+          "date_from",
+          "date_to",
+          "value_basis"
+        ],
+        "title": "CustomerSourcesView",
+        "type": "object"
+      },
       "DashboardDay": {
         "additionalProperties": false,
         "description": "What started on one local day of the dashboard period.",
@@ -6765,13 +6992,31 @@
         "title": "DeviceClass",
         "type": "string"
       },
+      "DigestChannel": {
+        "description": "Where an owner gets their digests and monthly reports: the sign-in\ne-mail, the devices with notifications on (Web Push), a Telegram chat\nlinked to the platform bot, or WhatsApp from the platform's number (an\napproved utility template, so the owner opts in by choosing it).",
+        "enum": [
+          "email",
+          "push",
+          "telegram",
+          "whatsapp"
+        ],
+        "title": "DigestChannel",
+        "type": "string"
+      },
       "DigestPreferencesView": {
         "additionalProperties": false,
-        "description": "The owner's choices and where the summaries reach them: their sign-in\ne-mail (None: they sign in by phone) when the platform can send e-mail\n(`is_email_ready`), and their devices with notifications on in this\nbusiness.",
+        "description": "The owner's choices and where the summaries reach them: the `channels`\nthey chose; their sign-in e-mail (None: they sign in by phone) when the\nplatform can send e-mail (`is_email_ready`); their devices with\nnotifications on in this business; their Telegram chat among the\nbusiness's `telegram_chats` (`is_telegram_ready`: the platform bot is\nset up); their WhatsApp number (`suggested_whatsapp_number`: the phone\nthey sign in with; `is_whatsapp_ready`: the report template is set up).",
         "properties": {
           "business_id": {
             "title": "Business Id",
             "type": "string"
+          },
+          "channels": {
+            "items": {
+              "$ref": "#/components/schemas/DigestChannel"
+            },
+            "title": "Channels",
+            "type": "array"
           },
           "device_count": {
             "minimum": 0.0,
@@ -6804,9 +7049,63 @@
             "title": "Is Monthly Report On",
             "type": "boolean"
           },
+          "is_telegram_ready": {
+            "title": "Is Telegram Ready",
+            "type": "boolean"
+          },
           "is_weekly_digest_on": {
             "title": "Is Weekly Digest On",
             "type": "boolean"
+          },
+          "is_whatsapp_ready": {
+            "title": "Is Whatsapp Ready",
+            "type": "boolean"
+          },
+          "suggested_whatsapp_number": {
+            "anyOf": [
+              {
+                "maxLength": 16,
+                "minLength": 8,
+                "pattern": "^\\+[1-9][0-9]{6,14}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Suggested Whatsapp Number"
+          },
+          "telegram_chat": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Telegram Chat"
+          },
+          "telegram_chats": {
+            "items": {
+              "$ref": "#/components/schemas/DigestTelegramChatView"
+            },
+            "title": "Telegram Chats",
+            "type": "array"
+          },
+          "whatsapp_number": {
+            "anyOf": [
+              {
+                "maxLength": 16,
+                "minLength": 8,
+                "pattern": "^\\+[1-9][0-9]{6,14}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Whatsapp Number"
           }
         },
         "required": [
@@ -6814,10 +7113,48 @@
           "is_daily_digest_on",
           "is_weekly_digest_on",
           "is_monthly_report_on",
+          "channels",
           "is_email_ready",
-          "device_count"
+          "device_count",
+          "telegram_chats",
+          "is_telegram_ready",
+          "is_whatsapp_ready"
         ],
         "title": "DigestPreferencesView",
+        "type": "object"
+      },
+      "DigestTelegramChatView": {
+        "additionalProperties": false,
+        "description": "A Telegram chat linked to the business through the platform bot.",
+        "properties": {
+          "address": {
+            "title": "Address",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "username": {
+            "anyOf": [
+              {
+                "maxLength": 32,
+                "minLength": 4,
+                "pattern": "^[A-Za-z][A-Za-z0-9_]{3,31}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Username"
+          }
+        },
+        "required": [
+          "address",
+          "name"
+        ],
+        "title": "DigestTelegramChatView",
         "type": "object"
       },
       "DpaAcceptanceView": {
@@ -8498,8 +8835,22 @@
       },
       "InboxItemView": {
         "additionalProperties": false,
-        "description": "A conversation row of the team inbox, safe for every staff member:\nwho the customer is, where and how the conversation stands, who is\nassigned, the beginning of the last message and what waits (the open\nhandoff, the newest open request). No model, cost or tool details,\nno free-text request details and no note texts (only their count).\n`assignment_revision` is what an assignment must name.",
+        "description": "A conversation row of the team inbox, safe for every staff member:\nwho the customer is, where and how the conversation stands, who is\nassigned, the beginning of the last message and what waits (the open\nhandoff, the newest open request). No model, cost or tool details,\nno free-text request details and no note texts (only their count).\n`assignment_revision` is what an assignment must name.\n`acquisition_source` is where the customer came from (a link's tag, an\nad, the number dialled), when known.",
         "properties": {
+          "acquisition_source": {
+            "anyOf": [
+              {
+                "maxLength": 32,
+                "minLength": 1,
+                "pattern": "^[a-z0-9][a-z0-9_-]{0,31}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Acquisition Source"
+          },
           "assigned_at": {
             "anyOf": [
               {
@@ -15942,6 +16293,43 @@
         "title": "ToolCallView",
         "type": "object"
       },
+      "TopicLanguageView": {
+        "additionalProperties": false,
+        "description": "The topics of the conversations started in one customer language.",
+        "properties": {
+          "conversation_count": {
+            "minimum": 0.0,
+            "title": "Conversation Count",
+            "type": "integer"
+          },
+          "language": {
+            "anyOf": [
+              {
+                "maxLength": 16,
+                "minLength": 2,
+                "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Language"
+          },
+          "topics": {
+            "items": {
+              "$ref": "#/components/schemas/ConversationTopicView"
+            },
+            "title": "Topics",
+            "type": "array"
+          }
+        },
+        "required": [
+          "conversation_count"
+        ],
+        "title": "TopicLanguageView",
+        "type": "object"
+      },
       "TotpEnrollmentView": {
         "additionalProperties": false,
         "description": "A new authenticator to add to an app: the QR code's address and, for\ntyping it in by hand, the secret. Shown once; the first code from the\napp confirms it.",
@@ -16350,7 +16738,7 @@
       },
       "ValueModel": {
         "additionalProperties": false,
-        "description": "The value of a business in a period and the period before it, in the\nbusiness currency and time zone. `average_check_minor` is the owner's\n(`OWNER`) or the niche's typical check in the business currency\n(`NICHE_DEFAULT`, also given as `typical_check_minor`); without either\nthere is no money estimate. The staff time rates explain the minutes.",
+        "description": "The value of a business in a period and the period before it, in the\nbusiness currency and time zone. `average_check_minor` is the owner's\n(`OWNER`) or the niche's typical check in the business currency\n(`NICHE_DEFAULT`, also given as `typical_check_minor`); without either\nthere is no money estimate. The staff time rates explain the minutes.\n`plan_cost_minor` is what the business's plan costs for the period's\ndays and `return_multiple` how many times the period's money estimate\ncovers it (both None when the plan is priced in another currency; no\nmultiple without an estimate).",
         "properties": {
           "average_check_minor": {
             "anyOf": [
@@ -16396,6 +16784,18 @@
             "title": "Date To",
             "type": "string"
           },
+          "plan_cost_minor": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Plan Cost Minor"
+          },
           "previous": {
             "$ref": "#/components/schemas/ValueTotals"
           },
@@ -16412,6 +16812,18 @@
             "pattern": "^(19|20|21)[0-9]{2}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$",
             "title": "Previous Date To",
             "type": "string"
+          },
+          "return_multiple": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Return Multiple"
           },
           "seconds_per_call": {
             "maximum": 7200.0,
@@ -16518,7 +16930,7 @@
       },
       "ValueReportView": {
         "additionalProperties": false,
-        "description": "One stored report: its period and the one before, the totals of both as\nthey were when it was made, the average check it used, and whether it\nwent out (`delivery`, to `recipient_count` addresses and devices).",
+        "description": "One stored report: its period and the one before, the totals of both as\nthey were when it was made, the average check it used, what the plan\ncost for the period and how many times the money covered it (None:\nreports from before, or a plan in another currency), and whether it\nwent out (`delivery`, to `recipient_count` addresses and devices).",
         "properties": {
           "average_check_minor": {
             "anyOf": [
@@ -16585,6 +16997,18 @@
             "title": "Period Key",
             "type": "string"
           },
+          "plan_cost_minor": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Plan Cost Minor"
+          },
           "previous": {
             "$ref": "#/components/schemas/ValueTotals"
           },
@@ -16606,6 +17030,18 @@
             "minimum": 0.0,
             "title": "Recipient Count",
             "type": "integer"
+          },
+          "return_multiple": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Return Multiple"
           },
           "value_basis": {
             "$ref": "#/components/schemas/ValueBasis"
@@ -29726,8 +30162,30 @@
             "application/json": {
               "schema": {
                 "additionalProperties": false,
-                "description": "Which summaries the signed-in owner gets: the daily digest (every\nmorning), the weekly digest (Mondays) and the monthly report (the 1st).",
+                "description": "Which summaries the signed-in owner gets: the daily digest (every\nmorning), the weekly digest (Mondays) and the monthly report (the 1st);\nand where (each None keeps what is stored): `channels`, `telegram_chat`\n(one of the business's chats linked to the platform bot) and\n`whatsapp_number` (choosing WhatsApp opts this number in).",
                 "properties": {
+                  "channels": {
+                    "anyOf": [
+                      {
+                        "items": {
+                          "description": "Where an owner gets their digests and monthly reports: the sign-in\ne-mail, the devices with notifications on (Web Push), a Telegram chat\nlinked to the platform bot, or WhatsApp from the platform's number (an\napproved utility template, so the owner opts in by choosing it).",
+                          "enum": [
+                            "email",
+                            "push",
+                            "telegram",
+                            "whatsapp"
+                          ],
+                          "title": "DigestChannel",
+                          "type": "string"
+                        },
+                        "type": "array"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Channels"
+                  },
                   "is_daily_digest_on": {
                     "default": false,
                     "title": "Is Daily Digest On",
@@ -29742,6 +30200,31 @@
                     "default": true,
                     "title": "Is Weekly Digest On",
                     "type": "boolean"
+                  },
+                  "telegram_chat": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Telegram Chat"
+                  },
+                  "whatsapp_number": {
+                    "anyOf": [
+                      {
+                        "maxLength": 16,
+                        "minLength": 8,
+                        "pattern": "^\\+[1-9][0-9]{6,14}$",
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Whatsapp Number"
                   }
                 },
                 "title": "DigestPreferencesRequest",
@@ -44135,6 +44618,292 @@
         ]
       }
     },
+    "/v1/businesses/{business_id}/value/sources": {
+      "get": {
+        "description": "Conversations, kept bookings, requests and their value per source\n(a link's tag, a QR code, an ad, the phone line). `period`: today,\n7d, 30d, 90d, last_week or last_month; or local dates `from` and\n`to`; neither: the last 30 days.",
+        "operationId": "get_customer_sources_v1_businesses__business_id__value_sources_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "period",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Period"
+            }
+          },
+          {
+            "in": "query",
+            "name": "from",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "From"
+            }
+          },
+          {
+            "in": "query",
+            "name": "to",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "To"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomerSourcesView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Get Customer Sources",
+        "tags": [
+          "value"
+        ]
+      }
+    },
+    "/v1/businesses/{business_id}/value/topics": {
+      "get": {
+        "description": "The topics of the last 30 days' first messages, grouped nightly.",
+        "operationId": "get_conversation_topics_v1_businesses__business_id__value_topics_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConversationTopicsView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Get Conversation Topics",
+        "tags": [
+          "value"
+        ]
+      }
+    },
     "/v1/catalog/countries": {
       "get": {
         "operationId": "list_countries_v1_catalog_countries_get",
@@ -48089,7 +48858,7 @@
             "application/json": {
               "schema": {
                 "additionalProperties": false,
-                "description": "HTTP body of \"Talk to a person\": the visitor's key and the widget's\ninterface language (the language staff's notice to the visitor is in\nwhen the visitor has not written yet).",
+                "description": "HTTP body of \"Talk to a person\": the visitor's key and the widget's\ninterface language (the language staff's notice to the visitor is in\nwhen the visitor has not written yet), and where the visitor came from\n(a conversation the request opens keeps it).",
                 "properties": {
                   "language": {
                     "anyOf": [
@@ -48111,6 +48880,18 @@
                     "pattern": "^[A-Za-z0-9_\\-]{16,128}$",
                     "title": "Session Key",
                     "type": "string"
+                  },
+                  "source": {
+                    "anyOf": [
+                      {
+                        "maxLength": 200,
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Source"
                   }
                 },
                 "required": [
@@ -48355,7 +49136,7 @@
             "application/json": {
               "schema": {
                 "additionalProperties": false,
-                "description": "HTTP body of a visitor message typed into the widget.",
+                "description": "HTTP body of a visitor message typed into the widget. `source` is where\nthe visitor came from as the widget read it (data-source, `?src=` or\n`?utm_source=` of the page); a conversation the message starts keeps it.",
                 "properties": {
                   "contact_name": {
                     "anyOf": [
@@ -48374,6 +49155,18 @@
                     "pattern": "^[A-Za-z0-9_\\-]{16,128}$",
                     "title": "Session Key",
                     "type": "string"
+                  },
+                  "source": {
+                    "anyOf": [
+                      {
+                        "maxLength": 200,
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Source"
                   },
                   "text": {
                     "maxLength": 4000,

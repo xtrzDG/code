@@ -3,8 +3,8 @@
 /**
  * One conversation of the inbox: the customer, when, the beginning of the
  * last message, and what waits in it: why a person is needed (its urgency
- * colours the edge), the open request, who handles it and the team's
- * notes. The whole row opens the conversation.
+ * colours the edge), the open request, who handles it, the team's notes
+ * and where the customer came from. The whole row opens the conversation.
  */
 
 import Link from "next/link";
@@ -16,6 +16,7 @@ import { CustomerName } from "@/components/insights/common";
 import { formatRelative } from "@/components/insights/dates";
 import { CHANNEL_LABELS, HANDOFF_REASONS, HANDOFF_URGENCY, LEAD_TYPES, MESSAGE_AUTHORS } from "@/components/insights/labels";
 import { Badge } from "@/components/ui";
+import { sourceLabel } from "@/components/value/sourceLabel";
 import { useI18n } from "@/i18n/client";
 import { cn } from "@/lib/cn";
 import { conversationPath } from "@/lib/navigation";
@@ -137,6 +138,11 @@ export function InboxRowItem({
               <Badge tone="accent">{t("inbox.row.request", { type: t(LEAD_TYPES[row.request.lead_type]) })}</Badge>
             ) : null}
             <span>{t(CHANNEL_LABELS[row.channel])}</span>
+            {row.acquisitionSource ? (
+              <Badge tone="neutral" className="max-w-full min-w-0">
+                <span className="truncate">{t("sources.chip", { source: sourceLabel(row.acquisitionSource, t) })}</span>
+              </Badge>
+            ) : null}
             {row.isAfterHours ? <AfterHoursBadge /> : null}
             {row.isSandbox ? <TestBadge /> : null}
             <Assignee row={row} member={member} />

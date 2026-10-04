@@ -14,6 +14,7 @@ import { EmptyState, ErrorState, PageHeader, SkeletonCardList } from "@/componen
 import { REPORT_KINDS, type ValueReport, type ValueReportKind } from "@/components/value/valueModel";
 import { useI18n } from "@/i18n/client";
 
+import { CustomerSourcesCard } from "./_components/CustomerSourcesCard";
 import { DigestPreferencesCard } from "./_components/DigestPreferencesCard";
 import { MonthSoFarCard } from "./_components/MonthSoFarCard";
 import { OpenedReport } from "./_components/OpenedReport";
@@ -24,9 +25,10 @@ import { KIND_LABELS } from "./_lib/reportsModel";
 const REPORTS_PAGE_SIZE = 12;
 
 /**
- * Overview → Reports (owners): the month so far, the stored monthly
- * reports and weekly and daily digests (the snapshots the summaries were
- * sent from), and which summaries reach the signed-in owner.
+ * Overview → Reports (owners): the month so far, where customers came
+ * from, the stored monthly reports and weekly and daily digests (the
+ * snapshots the summaries were sent from), and which summaries reach the
+ * signed-in owner and where.
  */
 export function ReportsScreen({ initialKind, openedReportId }: { initialKind: ValueReportKind | null; openedReportId: string | null }) {
   const { t } = useI18n();
@@ -55,6 +57,7 @@ export function ReportsScreen({ initialKind, openedReportId }: { initialKind: Va
       <div className="space-y-6">
         {openedReportId ? <OpenedReport reportId={openedReportId} /> : null}
         <MonthSoFarCard />
+        <CustomerSourcesCard />
         <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
           <section aria-labelledby="reports-past" className="min-w-0 space-y-4">
             <div className="flex flex-wrap items-center justify-between gap-3">

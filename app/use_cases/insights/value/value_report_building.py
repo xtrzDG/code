@@ -39,6 +39,8 @@ def build_value_report(
         previous=to_snapshot(model.previous),
         delivery=ValueReportDelivery.QUIET,
         recipient_count=DigestRecipientCount(0),
+        plan_cost_minor=model.plan_cost_minor,
+        return_multiple=model.return_multiple,
         created_at=now,
         updated_at=now,
     )

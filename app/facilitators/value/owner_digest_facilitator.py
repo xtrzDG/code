@@ -1,5 +1,4 @@
 import logging
-from zoneinfo import ZoneInfo
 
 from typed_time_provider import Microseconds, WallClock
 
@@ -16,21 +15,28 @@ from app.contracts.repositories.value_repositories import (
 )
 from app.contracts.transformer_contract import TransformerContract
 from app.contracts.value import OwnerDigestFacilitatorContract
+from app.facilitators.value.owner_digest_messages import (
+    OwnerReport,
+    email_notification,
+    owner_telegram_chat,
+    telegram_notification,
+    whatsapp_notification,
+)
 from app.schemas.configurations.app_settings import AppSettings
-from app.schemas.constants.handoffs import ManagerContactChannel
 from app.schemas.constants.notifications import StaffLinkTarget
 from app.schemas.constants.users import BusinessMemberRole
-from app.schemas.domain.businesses import BusinessDocument, ManagerContact
+from app.schemas.constants.value import DigestChannel
+from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.notification_preferences import (
     UserNotificationPreferencesDocument,
 )
 from app.schemas.domain.users import UserDocument
+from app.schemas.domain.value_settings import DigestPreferencesDocument
 from app.schemas.dto.deliveries import StaffNotification
 from app.schemas.dto.notifications.staff_alerts import PushNotification
 from app.schemas.dto.notifications.staff_links import StaffLinkClaims
 from app.schemas.dto.value.value_digests import ValueDigestText, ValueDigestTextInput
 from app.schemas.dto.value.value_reports import ValueReportView
-from app.schemas.typings.handoffs.strings import ManagerContactAddress, ManagerName
 from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.schemas.typings.notifications.constrained_strings import (
     CabinetDeepLink,
@@ -41,7 +47,7 @@ from app.schemas.typings.value.constrained_integers import DigestRecipientCount
 from app.utilities.notifications.cabinet_links import build_cabinet_link, link_expiry
 from app.utilities.notifications.quiet_hours import quiet_hours_end
 from app.utilities.scheduling.zoned_time import load_time_zone
-from app.utilities.value.digest_choices import wants_report
+from app.utilities.value.digest_choices import digest_channels_of, wants_report
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -49,17 +55,24 @@ logger: logging.Logger = logging.getLogger(__name__)
 class OwnerDigestFacilitator(OwnerDigestFacilitatorContract):
     """
     Sends the owners' digests and monthly reports through the outbox, like
-    staff notifications (retries, delivery state, hourly caps):
+    staff notifications (retries, delivery state, hourly caps), to the
+    channels each owner chose (`digest_channels_of`; e-mail and devices
+    when they chose none):
 
-    - by e-mail to each owner's sign-in address (SMTP; written to the log
-      outside production without it), in the language of their cabinet;
-    - to each device the owner turned notifications on for this business
-      (Web Push), in the language of the device, held through the owner's
-      quiet hours.
+    - EMAIL: their sign-in address (SMTP; written to the log outside
+      production without it), in the language of their cabinet;
+    - PUSH: each device they turned notifications on for this business
+      (Web Push), in the language of the device;
+    - TELEGRAM: their own chat among the business's chats linked to the
+      platform bot, the whole report in the chat's language;
+    - WHATSAPP: the number they opted in with, the report's summary in the
+      approved owner report template from the platform number.
 
+    Devices, Telegram and WhatsApp are held through the owner's quiet hours.
     The link opens the report, where its reader also turns the summaries
-    off. Each report reaches each address and device once (its outbox id
-    derives from the report). One failing recipient never stops the others.
+    off. Each report reaches each address, chat and device once (its outbox
+    id derives from the report and the recipient), also when sent again.
+    One failing recipient never stops the others.
     """
 
     def __init__(
@@ -118,63 +131,83 @@ class OwnerDigestFacilitator(OwnerDigestFacilitatorContract):
                 continue
 
             try:
-                if wants_report(
-                    self._digest_preferences_repo.get(business.id, member.user_id),
-                    report.kind,
-                ):
-                    user: UserDocument | None = self._user_repo.get(member.user_id)
-                    if user is not None:
-                        queued += self._send_to_owner(business, user, report, link, now)
+                preferences: DigestPreferencesDocument | None = (
+                    self._digest_preferences_repo.get(business.id, member.user_id)
+                )
+                user: UserDocument | None = self._user_repo.get(member.user_id)
+                if user is not None and wants_report(preferences, report.kind):
+                    owner = OwnerReport(business, user, preferences, report, link)
+                    queued += self._send_to_owner(owner, now)
             except Exception:
                 logger.exception("A value report for an owner was not queued.")
 
         return DigestRecipientCount(queued)
 
-    def _send_to_owner(
-        self,
-        business: BusinessDocument,
-        user: UserDocument,
-        report: ValueReportView,
-        link: CabinetDeepLink | None,
-        now: Microseconds,
-    ) -> int:
-        subject = StaffAlertSubject(f"value_report:{report.id}")
-        queued: int = 0
-        if user.email is not None:
-            text: ValueDigestText = self._text(business, report, user.locale, link)
-            is_queued: bool = self._manager_notifier.notify(
-                StaffNotification(
-                    business_id=business.id,
-                    contact=ManagerContact(
-                        name=ManagerName(str(user.display_name or user.email)),
-                        channel=ManagerContactChannel.EMAIL,
-                        address=ManagerContactAddress(str(user.email)),
-                        language=user.locale,
-                    ),
-                    text=text.message,
-                    subject=subject,
-                )
-            )
-            queued += int(is_queued)
-
-        zone: ZoneInfo = load_time_zone(business.timezone)
+    def _send_to_owner(self, owner: OwnerReport, now: Microseconds) -> int:
+        business, user = owner.business, owner.user
+        subject = StaffAlertSubject(f"value_report:{owner.report.id}")
         stored: UserNotificationPreferencesDocument | None = (
             self._notification_preferences_repo.get(business.id, user.id)
         )
         held_until: Microseconds | None = quiet_hours_end(
-            None if stored is None else stored.preferences.quiet_hours, zone, now
+            None if stored is None else stored.preferences.quiet_hours,
+            load_time_zone(business.timezone),
+            now,
         )
+        notifications: list[StaffNotification | None] = []
+        queued: int = 0
+        for channel in digest_channels_of(owner.preferences):
+            if channel is DigestChannel.EMAIL:
+                text = self._text(owner, user.locale)
+                notifications.append(email_notification(business, user, text, subject))
+            elif channel is DigestChannel.PUSH:
+                queued += self._send_to_devices(owner, subject, held_until)
+            elif channel is DigestChannel.TELEGRAM:
+                chat = owner_telegram_chat(business, owner.preferences)
+                if chat is not None:
+                    text = self._text(owner, chat.language)
+                    notifications.append(
+                        telegram_notification(business, chat, text, subject, held_until)
+                    )
+            else:
+                notifications.append(
+                    whatsapp_notification(
+                        business,
+                        user,
+                        owner.preferences,
+                        self._text(owner, user.locale),
+                        owner.link,
+                        self._app_settings,
+                        (subject, held_until),
+                    )
+                )
+
+        for notification in notifications:
+            if notification is not None:
+                queued += int(self._manager_notifier.notify(notification))
+
+        return queued
+
+    def _send_to_devices(
+        self,
+        owner: OwnerReport,
+        subject: StaffAlertSubject,
+        held_until: Microseconds | None,
+    ) -> int:
+        queued: int = 0
+        business, user = owner.business, owner.user
         for device in self._push_subscription_repo.list_by_user(business.id, user.id):
-            brief = self._text(business, report, device.language, link).brief
             queued += int(
                 self._push_queue.queue(
                     PushNotification(
                         business_id=business.id,
                         subscription_id=device.id,
                         user_id=user.id,
-                        brief=brief,
-                        link=link,
-                        tag=PushNotificationTag(f"value_report:{report.kind.value}"),
+                        brief=self._text(owner, device.language).brief,
+                        link=owner.link,
+                        tag=PushNotificationTag(
+                            f"value_report:{owner.report.kind.value}"
+                        ),
                         subject=subject,
                         deliver_after=held_until,
                     )
@@ -183,18 +216,12 @@ class OwnerDigestFacilitator(OwnerDigestFacilitatorContract):
 
         return queued
 
-    def _text(
-        self,
-        business: BusinessDocument,
-        report: ValueReportView,
-        language: LanguageTag,
-        link: CabinetDeepLink | None,
-    ) -> ValueDigestText:
+    def _text(self, owner: OwnerReport, language: LanguageTag) -> ValueDigestText:
         return self._text_transformer.transform(
             ValueDigestTextInput(
-                business_name=business.name,
+                business_name=owner.business.name,
                 language=language,
-                report=report,
-                link=link,
+                report=owner.report,
+                link=owner.link,
             )
         )

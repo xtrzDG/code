@@ -3,6 +3,27 @@
 from base_typed_string import BaseConstrainedTypedString
 
 
+class AcquisitionSourceTag(BaseConstrainedTypedString):
+    """
+    Where a customer's conversation came from, as the platform recorded it
+    when the conversation started: the tag of a shared link (`?src=` of
+    the hosted page or the widget, Telegram's `start=src_<tag>`, the code
+    in a wa.me greeting, Meta's `ref`), an ad (`ad-<id>`) or the number a
+    caller dialled (`tel-<digits>`). Lowercase letters, digits, "_" and "-",
+    up to 32 characters.
+
+    A sibling of `ShareSourceTag` (the tag an owner puts on a link), not
+    the same meaning: this one was read back from a customer's channel.
+
+    Example:
+        source = AcquisitionSourceTag("qr-tables")
+    """
+
+    min_length = 1
+    max_length = 32
+    pattern = r"^[a-z0-9][a-z0-9_-]{0,31}$"
+
+
 class BusinessPublicSlug(BaseConstrainedTypedString):
     """
     The business's part of its public chat address (`/c/{slug}`): lowercase

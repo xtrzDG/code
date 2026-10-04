@@ -56,6 +56,8 @@ def without_money(model: ValueModel) -> ValueModel:
             "typical_check_minor": None,
             "current": counts_only(model.current),
             "previous": counts_only(model.previous),
+            "plan_cost_minor": None,
+            "return_multiple": None,
         }
     )
 

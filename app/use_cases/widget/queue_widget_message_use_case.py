@@ -64,6 +64,7 @@ class QueueWidgetMessageUseCase(
                 input_data.text,
                 input_data.contact_name,
                 input_data.contact_phone_number,
+                acquisition_source=input_data.acquisition_source,
             ),
             created_at=now,
             updated_at=now,

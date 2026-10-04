@@ -78,3 +78,41 @@ class ValueReportDelivery(StrEnum):
     SENT = "sent"
     NO_RECIPIENTS = "no_recipients"
     QUIET = "quiet"
+
+
+class DigestChannel(StrEnum):
+    """
+    Where an owner gets their digests and monthly reports: the sign-in
+    e-mail, the devices with notifications on (Web Push), a Telegram chat
+    linked to the platform bot, or WhatsApp from the platform's number (an
+    approved utility template, so the owner opts in by choosing it).
+    """
+
+    EMAIL = "email"
+    PUSH = "push"
+    TELEGRAM = "telegram"
+    WHATSAPP = "whatsapp"
+
+
+class DigestChannelRefusalCode(StrEnum):
+    """
+    Why an owner's summary channels were refused: the platform bot or the
+    WhatsApp report template is not set up here, the Telegram chat is not
+    linked to the business, or WhatsApp was chosen without a number.
+    """
+
+    TELEGRAM_NOT_AVAILABLE = "telegram_not_available"
+    TELEGRAM_CHAT_NOT_LINKED = "telegram_chat_not_linked"
+    WHATSAPP_NOT_AVAILABLE = "whatsapp_not_available"
+    WHATSAPP_NUMBER_MISSING = "whatsapp_number_missing"
+
+
+class CustomerSourceKind(StrEnum):
+    """
+    One row of the customer sources report: a source tag, the conversations
+    of one channel that came without a tag, or the smallest tags together.
+    """
+
+    TAGGED = "tagged"
+    UNTAGGED = "untagged"
+    OTHER = "other"

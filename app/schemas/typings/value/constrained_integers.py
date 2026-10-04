@@ -40,6 +40,19 @@ class EstimatedRevenueMinor(BaseConstrainedTypedInt):
     ge = 0
 
 
+class PlanCostMinor(BaseConstrainedTypedInt):
+    """
+    What a business's plan costs for the days of a value period, in minor
+    units of its currency: the monthly price times the period's share of a
+    month (the whole price for a calendar month).
+
+    Example:
+        plan_cost = PlanCostMinor(29900)  # 299.00 GEL
+    """
+
+    ge = 0
+
+
 class StaffMinutesSaved(BaseConstrainedTypedInt):
     """Estimated minutes of staff work the assistant took over in a period."""
 

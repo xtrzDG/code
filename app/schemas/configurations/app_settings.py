@@ -205,6 +205,9 @@ class AppSettings(ImmutableDTO):
     whatsapp_notification_phone_number_id: MetaObjectId | None = None
     whatsapp_notification_template_name: WhatsAppTemplateName | None = None
     whatsapp_reminder_template_name: WhatsAppTemplateName | None = None
+    # The owners' digests and monthly reports on WhatsApp (an approved
+    # utility template with three body parameters; .env.example).
+    whatsapp_owner_report_template_name: WhatsAppTemplateName | None = None
     telegram_platform_bot_token: PlatformSecret | None = None
     google_oauth_client_id: PlatformIdentifier | None = None
     google_oauth_client_secret: PlatformSecret | None = None

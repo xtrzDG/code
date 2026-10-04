@@ -1,7 +1,9 @@
 from dependency_injector import containers
 from dependency_injector.providers import DependenciesContainer, Factory
 
+from app.containers.adapters.adapters_container import AdaptersContainer
 from app.containers.config import ConfigContainer
+from app.containers.container_edges import composed_container_edge
 from app.containers.facilitators import FacilitatorsContainer
 from app.containers.registries import RegistriesContainer
 from app.containers.repositories import RepositoriesContainer
@@ -9,6 +11,14 @@ from app.containers.time_provider import TimeProviderContainer
 from app.containers.use_cases.account_use_cases import AccountUseCasesContainer
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.dto.jobs import JobReport, JobTick
+from app.schemas.dto.value.conversation_topics import (
+    ConversationTopicsQuery,
+    ConversationTopicsView,
+)
+from app.schemas.dto.value.customer_sources import (
+    CustomerSourcesQuery,
+    CustomerSourcesView,
+)
 from app.schemas.dto.value.value_model import ValueModel, ValueModelQuery
 from app.schemas.dto.value.value_reports import (
     ValueReportPage,
@@ -27,11 +37,20 @@ from app.schemas.dto.value.value_views import (
     ValueSettingsQuery,
     ValueSettingsView,
 )
+from app.use_cases.insights.topics.get_conversation_topics_use_case import (
+    GetConversationTopicsUseCase,
+)
+from app.use_cases.insights.topics.group_conversation_topics_use_case import (
+    GroupConversationTopicsUseCase,
+)
 from app.use_cases.insights.value.compute_value_model_use_case import (
     ComputeValueModelUseCase,
 )
 from app.use_cases.insights.value.get_business_value_use_case import (
     GetBusinessValueUseCase,
+)
+from app.use_cases.insights.value.get_customer_sources_use_case import (
+    GetCustomerSourcesUseCase,
 )
 from app.use_cases.insights.value.get_digest_preferences_use_case import (
     GetDigestPreferencesUseCase,
@@ -59,6 +78,7 @@ from app.use_cases.insights.value.update_value_settings_use_case import (
 )
 from app.use_cases.insights.value.value_counting import ValueSources
 from app.use_cases.insights.value.value_estimates import EstimateCatalogs
+from app.use_cases.insights.value.value_return import PlanPrices
 
 
 class ValueUseCasesContainer(containers.DeclarativeContainer):
@@ -66,9 +86,11 @@ class ValueUseCasesContainer(containers.DeclarativeContainer):
     What the assistant is worth to a business: the value model of a period
     (one computation for the dashboard, the digests and the monthly
     report), the average check, each owner's digest choices, the stored
-    reports, today's queue, and the hourly job that sends the digests.
+    reports, today's queue, and the hourly job that sends the digests;
+    where customers came from and what they ask about (the nightly topics).
     """
 
+    adapters: AdaptersContainer = composed_container_edge(AdaptersContainer)  # type: ignore[assignment]
     config: ConfigContainer = DependenciesContainer()  # type: ignore[assignment]
     facilitators: FacilitatorsContainer = DependenciesContainer()  # type: ignore[assignment]
     registries: RegistriesContainer = DependenciesContainer()  # type: ignore[assignment]
@@ -95,6 +117,11 @@ class ValueUseCasesContainer(containers.DeclarativeContainer):
         exchange_rate_registry=registries.exchange_rate_registry,
         value_settings_repo=repositories.value_settings_repo,
     )
+    plan_prices: Factory[PlanPrices] = Factory(
+        PlanPrices,
+        subscription_repo=repositories.subscription_repo,
+        plan_registry=registries.plan_registry,
+    )
     compute_value_model_use_case: Factory[
         UseCaseContract[ValueModelQuery, ValueModel]
     ] = Factory(
@@ -104,6 +131,7 @@ class ValueUseCasesContainer(containers.DeclarativeContainer):
         schedule_exception_repo=repositories.schedule_exception_repo,
         sources=value_sources,
         catalogs=estimate_catalogs,
+        plan_prices=plan_prices,
     )
     get_business_value_use_case: Factory[
         UseCaseContract[BusinessValueQuery, ValueModel]
@@ -182,4 +210,33 @@ class ValueUseCasesContainer(containers.DeclarativeContainer):
         compute_value_model=compute_value_model_use_case,
         owner_digests=facilitators.owner_digest_facilitator,
         wall_clock=wall_clock,
+    )
+    get_customer_sources_use_case: Factory[
+        UseCaseContract[CustomerSourcesQuery, CustomerSourcesView]
+    ] = Factory(
+        GetCustomerSourcesUseCase,
+        authorize_business_access=authorize,
+        customer_source_repo=repositories.customer_source_repo,
+        catalogs=estimate_catalogs,
+        wall_clock=wall_clock,
+    )
+    get_conversation_topics_use_case: Factory[
+        UseCaseContract[ConversationTopicsQuery, ConversationTopicsView]
+    ] = Factory(
+        GetConversationTopicsUseCase,
+        authorize_business_access=authorize,
+        conversation_topics_repo=repositories.conversation_topics_repo,
+    )
+    # The hourly job that groups the topics once a night (platform-wide).
+    group_conversation_topics_use_case: Factory[UseCaseContract[JobTick, JobReport]] = (
+        Factory(
+            GroupConversationTopicsUseCase,
+            business_repo=repositories.business_repo,
+            conversation_topics_repo=repositories.conversation_topics_repo,
+            topic_input_repo=repositories.topic_input_repo,
+            unanswered_question_repo=repositories.unanswered_question_repo,
+            llm_adapter=adapters.llm_adapter,
+            app_settings=config.app_settings,
+            wall_clock=wall_clock,
+        )
     )

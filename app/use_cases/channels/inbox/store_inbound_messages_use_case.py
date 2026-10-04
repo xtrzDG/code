@@ -95,6 +95,7 @@ def build_customer_event(
             message.contact_name,
             message.contact_phone_number,
             message.attachments,
+            message.acquisition_source,
         ),
         created_at=now,
         updated_at=now,

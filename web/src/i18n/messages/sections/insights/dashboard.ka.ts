@@ -74,6 +74,9 @@ export const dashboardKa: Translation<typeof dashboardEn> = {
     afterHoursHint: "{count} / {total} მიმართვიდან",
     leads: "მოთხოვნები",
     handoffs: "ადამიანის დახმარება",
+    bookedValue: "ჯავშნების ღირებულება",
+    bookedValueHint: { one: "{count} ჯავშანი საკუთარი ფასით", other: "{count} ჯავშანი საკუთარი ფასებით" },
+    bookedValueOther: "და {money}",
   },
   continueSetup: "დაყენების გაგრძელება",
   usage: {

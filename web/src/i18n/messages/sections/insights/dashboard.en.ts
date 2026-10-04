@@ -71,6 +71,9 @@ export const dashboardEn = {
     afterHoursHint: "{count} of {total} requests",
     leads: "Leads",
     handoffs: "Needed a person",
+    bookedValue: "Booked worth",
+    bookedValueHint: { one: "{count} booking at its own price", other: "{count} bookings at their own prices" },
+    bookedValueOther: "and {money}",
   },
   continueSetup: "Continue setup",
   usage: {

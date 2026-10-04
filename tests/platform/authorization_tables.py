@@ -68,6 +68,7 @@ OWNER_ONLY_OPERATIONS: frozenset[str] = frozenset(
         f"GET {B}/value-reports",
         f"GET {B}/value-reports/{{report_id}}",
         f"GET {B}/value/settings",
+        f"GET {B}/value/sources",
         f"PUT {B}/value/settings",
     }
 )

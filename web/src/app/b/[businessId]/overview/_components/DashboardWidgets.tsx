@@ -73,9 +73,21 @@ export function NextStepCard({
  * One headline number: label, value (an <AnimatedNumber> counts up), an
  * optional change against the period before (a DeltaChip) and hint line.
  */
-export function StatTile({ label, value, hint, chip }: { label: string; value: ReactNode; hint?: string; chip?: ReactNode }) {
+export function StatTile({
+  label,
+  value,
+  hint,
+  chip,
+  className,
+}: {
+  label: string;
+  value: ReactNode;
+  hint?: string;
+  chip?: ReactNode;
+  className?: string;
+}) {
   return (
-    <div className="rounded-2xl border border-line bg-surface p-4 shadow-sm sm:p-5">
+    <div className={cn("rounded-2xl border border-line bg-surface p-4 shadow-sm sm:p-5", className)}>
       <dt className="text-sm text-ink-muted">{label}</dt>
       <dd className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
         <span className="text-2xl font-semibold tracking-tight text-ink tabular-nums sm:text-3xl">{value}</span>

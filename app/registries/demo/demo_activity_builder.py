@@ -9,6 +9,7 @@ from app.registries.demo.demo_feedback import (
     build_demo_feedback_requests,
     build_demo_review_settings,
 )
+from app.registries.demo.demo_insights import build_demo_topics, tag_demo_sources
 from app.registries.demo.demo_operations_recorder import DemoOperationsRecorder
 from app.schemas.constants.assistants import AssistantVersionStatus
 from app.schemas.constants.conversations import ConversationStatus
@@ -90,6 +91,7 @@ class DemoActivityBuilder:
         """
 
         self._assign_oldest_waiting_conversation()
+        tag_demo_sources(self.talk.conversations, self.talk.calls)
         return DemoBusinessActivity(
             contacts=self.talk.contacts,
             conversations=self.talk.conversations,
@@ -115,6 +117,13 @@ class DemoActivityBuilder:
                 self.business, self.desk.bookings, self.talk.contacts, self.clock.now
             ),
             media_files=self.talk.media_files,
+            conversation_topics=build_demo_topics(
+                self.business,
+                self.talk.conversations,
+                self.talk.messages,
+                self.desk.questions,
+                self.clock.now,
+            ),
         )
 
     def _assign_oldest_waiting_conversation(self) -> None:

@@ -31,5 +31,7 @@ def build_value_report_view(report: ValueReportDocument) -> ValueReportView:
         previous=from_snapshot(report.previous),
         delivery=report.delivery,
         recipient_count=report.recipient_count,
+        plan_cost_minor=report.plan_cost_minor,
+        return_multiple=report.return_multiple,
         created_at=report.created_at,
     )

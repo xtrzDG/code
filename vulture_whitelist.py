@@ -384,3 +384,8 @@ _.database_bytes  # app/schemas/dto/admin_system.py (AdminSystemView)
 _.last_restore_drill  # app/schemas/dto/admin_system.py (AdminSystemView)
 _.alerts  # app/schemas/dto/admin_system.py (AdminSystemView)
 _.notice_languages  # app/schemas/dto/incidents.py (IncidentView)
+
+# Where customers came from and the owner's summary channels: response
+# fields the cabinet's Reports page reads; no Python code reads them.
+_.estimated_value_minor  # app/schemas/dto/value/customer_sources.py (CustomerSourceRow)
+_.suggested_whatsapp_number  # app/schemas/dto/value/value_views.py

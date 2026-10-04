@@ -63,6 +63,42 @@
     }
   }
 
+  // The script's data-source, else ?src= or ?utm_source= of the page,
+  // kept for the tab, so a visitor who came by a QR code and opened
+  // another page before writing still counts for that code.
+  function loadVisitSource() {
+    var storage = sessionStorageOrNull();
+    var found = (
+      script.getAttribute("data-source") ||
+      readPageParameter("src") ||
+      readPageParameter("utm_source") ||
+      ""
+    )
+      .trim()
+      .slice(0, MAX_SOURCE_LENGTH);
+    if (found) {
+      storageSet(storage, storagePrefix + "source", found);
+      return found;
+    }
+    return storageGet(storage, storagePrefix + "source") || "";
+  }
+
+  function readPageParameter(name) {
+    try {
+      return new URLSearchParams(window.location.search).get(name) || "";
+    } catch (error) {
+      return "";
+    }
+  }
+
+  // A message or handoff body with the visitor's source, when known.
+  function withVisitSource(body) {
+    if (visitSource) {
+      body.source = visitSource;
+    }
+    return body;
+  }
+
   function randomString(length) {
     var values = new Uint8Array(length);
     var cryptoSource = window.crypto || window.msCrypto;

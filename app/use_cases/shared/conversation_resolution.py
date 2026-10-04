@@ -35,7 +35,8 @@ def resolve_conversation(
     """
     The open conversation (see `find_open_conversation`) unless the message
     asks for another version; else a new one pinned to the requested or
-    published version. Returns it and whether it is new.
+    published version, keeping where the customer came from (the
+    message's source). Returns it and whether it is new.
 
     Raises:
         ConflictError: the business has no published version.
@@ -73,6 +74,7 @@ def resolve_conversation(
         last_message_at=now,
         created_at=now,
         updated_at=now,
+        acquisition_source=message.acquisition_source,
     )
     conversation_repo.save(conversation)
     return conversation, True

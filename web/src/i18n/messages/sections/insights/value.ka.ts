@@ -22,6 +22,8 @@ export const valueKa: Translation<typeof valueEn> = {
     savedHint: "თქვენ ნაცვლად დაწერილი პასუხები: {replies}, მიღებული ზარები: {calls}",
     conversations: { one: "{count} საუბარი", other: "{count} საუბარი" },
     conversationsHint: "კლიენტები, რომლებმაც მოგწერეს ან დაგირეკეს",
+    returnMultiple: "≈ {multiple}× ტარიფის ღირებულება",
+    returnHint: "ტარიფი ამ დღეებში ღირს {price}.",
   },
   check: {
     owner: "საშუალო ჩეკი {money}",

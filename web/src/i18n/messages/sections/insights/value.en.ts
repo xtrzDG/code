@@ -24,6 +24,8 @@ export const valueEn = {
     savedHint: "{replies} replies written and {calls} calls answered for you",
     conversations: { one: "{count} conversation", other: "{count} conversations" },
     conversationsHint: "customers who wrote or called",
+    returnMultiple: "≈ {multiple}× your plan's price",
+    returnHint: "The plan costs {price} for these days.",
   },
   check: {
     owner: "Average check {money}",

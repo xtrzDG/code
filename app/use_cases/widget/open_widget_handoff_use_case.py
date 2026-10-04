@@ -27,6 +27,7 @@ from app.schemas.exceptions.application_errors import ConflictError, NotFoundErr
 from app.schemas.typings.conversations.strings import ChannelUserId
 from app.schemas.typings.handoffs.strings import HandoffSummary
 from app.schemas.typings.localization.constrained_strings import LanguageTag
+from app.schemas.typings.sharing.constrained_strings import AcquisitionSourceTag
 from app.use_cases.shared.conversation_resolution import (
     find_open_conversation,
 )
@@ -40,6 +41,7 @@ from app.utilities.channels.widget_rate_limits import (
     WIDGET_HANDOFF_LIMITS,
     refuse_too_frequent_widget_requests,
 )
+from app.utilities.sharing.acquisition_sources import normalize_source
 
 
 class OpenWidgetHandoffUseCase(
@@ -100,7 +102,17 @@ class OpenWidgetHandoffUseCase(
             ChannelKind.WEB_CHAT,
             False,
             now,
-        ) or self._start_conversation(business, contact, visitor, now)
+        ) or self._start_conversation(
+            business,
+            contact,
+            visitor,
+            normalize_source(
+                None
+                if input_data.request.source is None
+                else str(input_data.request.source)
+            ),
+            now,
+        )
         language: LanguageTag = (
             conversation.language
             or input_data.request.language
@@ -169,6 +181,7 @@ class OpenWidgetHandoffUseCase(
         business: BusinessDocument,
         contact: ContactDocument,
         visitor: ChannelUserId,
+        source: AcquisitionSourceTag | None,
         now: Microseconds,
     ) -> ConversationDocument:
         if business.published_assistant_version_id is None:
@@ -183,6 +196,7 @@ class OpenWidgetHandoffUseCase(
             last_message_at=now,
             created_at=now,
             updated_at=now,
+            acquisition_source=source,
         )
         self._conversation_repo.save(conversation)
         return conversation

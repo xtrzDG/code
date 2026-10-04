@@ -45,5 +45,6 @@ def build_share_links_view(
             profile,
             hosted_chat_url,
             source,
+            business.default_language,
         ),
     )

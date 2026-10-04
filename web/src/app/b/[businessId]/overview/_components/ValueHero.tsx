@@ -14,11 +14,15 @@ import { cn } from "@/lib/cn";
 import { formatNumber } from "@/lib/format";
 import { businessPath } from "@/lib/navigation";
 
+const ONE_DECIMAL: Intl.NumberFormatOptions = { minimumFractionDigits: 1, maximumFractionDigits: 1 };
+
 /**
  * The owner's headline: what the assistant did in the period and what it
  * is worth ("22 bookings ≈ 2,640 GEL, 18 after hours, ~9 staff hours
  * saved"), each against the period before, with the average check behind
- * the money editable in place. The money tile floats in 3D under the mouse.
+ * the money editable in place, and what that returned against the plan's
+ * price ("≈ 3.7× your plan's price"). The money tile floats in 3D under
+ * the mouse.
  */
 export function ValueHero({ model, isPlaceholder }: { model: ValueModel; isPlaceholder: boolean }) {
   const { t, tp, locale } = useI18n();
@@ -97,6 +101,14 @@ export function ValueHero({ model, isPlaceholder }: { model: ValueModel; isPlace
             )}
             <span className="text-xs text-ink-subtle">{isRequests ? t("value.hero.requestsHint") : t("value.hero.bookingsHint")}</span>
           </TiltLayer>
+          {model.return_multiple !== null && model.return_multiple !== undefined && model.plan_cost_minor ? (
+            <TiltLayer depth={12} className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1">
+              <span className="inline-flex items-center rounded-full border border-success/30 bg-success/10 px-2.5 py-1 text-sm font-semibold text-success tabular-nums">
+                {t("value.hero.returnMultiple", { multiple: formatNumber(model.return_multiple, locale, ONE_DECIMAL) })}
+              </span>
+              <span className="text-xs text-ink-subtle">{t("value.hero.returnHint", { price: money(model.plan_cost_minor) })}</span>
+            </TiltLayer>
+          ) : null}
           <TiltLayer depth={8} className="mt-auto pt-4">
             <p className="text-sm text-ink-muted">
               {formula.kind === "none"

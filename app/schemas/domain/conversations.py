@@ -55,6 +55,7 @@ from app.schemas.typings.localization.constrained_strings import (
     E164PhoneNumber,
     LanguageTag,
 )
+from app.schemas.typings.sharing.constrained_strings import AcquisitionSourceTag
 from app.schemas.typings.users.prefixed_id import UserId
 
 
@@ -77,9 +78,14 @@ class ConversationDocument(BaseDocument):
 
     Version 2: the team inbox fields (all optional, so version 1 rows read
     as they are).
+
+    Version 3: `acquisition_source`, where the customer came from when the
+    conversation started (a shared link's tag, an ad, the number dialled;
+    `app/utilities/sharing/acquisition_sources.py`). Set once, never
+    changed; optional, so version 2 rows read as they are.
     """
 
-    schema_version: SchemaVersion = SchemaVersion("2")
+    schema_version: SchemaVersion = SchemaVersion("3")
     id: ConversationId = Field(default_factory=ConversationId)
     business_id: BusinessId
     contact_id: ContactId
@@ -100,6 +106,7 @@ class ConversationDocument(BaseDocument):
     assignment_revision: AssignmentRevision = AssignmentRevision(0)
     has_open_request: HasOpenRequest = False
     awaits_team: AwaitsTeam = False
+    acquisition_source: AcquisitionSourceTag | None = None
 
 
 class ToolCallRecord(PersistentDocument):

@@ -7,6 +7,7 @@ from app.schemas.domain.message_media import InboundAttachment
 from app.schemas.typings.contacts.strings import ContactName
 from app.schemas.typings.conversations.strings import ChannelUserId, MessageText
 from app.schemas.typings.localization.constrained_strings import E164PhoneNumber
+from app.schemas.typings.sharing.constrained_strings import AcquisitionSourceTag
 
 NUL_CHARACTER: str = "\x00"
 
@@ -17,6 +18,7 @@ def build_inbound_customer_message(
     contact_name: ContactName | None,
     contact_phone_number: E164PhoneNumber | None,
     attachments: Sequence[InboundAttachment] = (),
+    acquisition_source: AcquisitionSourceTag | None = None,
 ) -> InboundCustomerMessage:
     """
     The message without NUL characters in its text and name: no customer
@@ -35,6 +37,7 @@ def build_inbound_customer_message(
         contact_name=None if not name else ContactName(name),
         contact_phone_number=contact_phone_number,
         attachments=list(attachments),
+        acquisition_source=acquisition_source,
     )
 
 

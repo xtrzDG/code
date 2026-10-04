@@ -28,6 +28,7 @@ from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.channels import ChannelDocument
 from app.schemas.domain.compliance import AuditLogEntryDocument
 from app.schemas.domain.contacts import ContactDocument
+from app.schemas.domain.conversation_topics import ConversationTopicsDocument
 from app.schemas.domain.conversations import (
     CallDocument,
     ConversationDocument,
@@ -193,6 +194,7 @@ class DemoBusinessActivity(ImmutableDTO):
         default_factory=list[FeedbackRequestDocument]
     )
     media_files: list[DemoMediaFile] = Field(default_factory=list[DemoMediaFile])
+    conversation_topics: ConversationTopicsDocument | None = None
 
 
 class DemoSeedPlan(ImmutableDTO):

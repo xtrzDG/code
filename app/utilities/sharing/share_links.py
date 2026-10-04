@@ -18,7 +18,10 @@ from app.schemas.typings.channels.constrained_strings import (
     MetaObjectId,
     TelegramBotUsername,
 )
-from app.schemas.typings.localization.constrained_strings import E164PhoneNumber
+from app.schemas.typings.localization.constrained_strings import (
+    E164PhoneNumber,
+    LanguageTag,
+)
 from app.schemas.typings.platform.constrained_strings import CabinetBaseUrl
 from app.schemas.typings.sharing.constrained_strings import (
     HostedChatUrl,
@@ -34,6 +37,7 @@ from app.utilities.channels.channel_links import (
     build_telegram_link,
     build_whatsapp_link,
 )
+from app.utilities.sharing.share_greetings import greeting_in
 
 # Messengers in the order customers are offered them (free ones first, as
 # in the cabinet), then a call.
@@ -58,8 +62,12 @@ def build_share_links(
     profile: BusinessProfileDocument | None,
     hosted_chat_url: HostedChatUrl | None,
     source: ShareSourceTag | None,
+    language: LanguageTag | None = None,
 ) -> list[ShareLinkView]:
-    """The hosted page first (a gap without CABINET_BASE_URL), then channels."""
+    """
+    The hosted page first (a gap without CABINET_BASE_URL), then channels;
+    a tagged WhatsApp link greets in `language` (the greeting language).
+    """
 
     links: list[ShareLinkView] = [
         ShareLinkView(
@@ -76,7 +84,9 @@ def build_share_links(
     for channel_kind, link_kind in CHANNEL_LINK_KINDS:
         channel: ChannelDocument | None = find_connected(channels, channel_kind)
         if channel is not None:
-            links.append(build_channel_link(link_kind, channel, profile, source))
+            links.append(
+                build_channel_link(link_kind, channel, profile, source, language)
+            )
 
     return links
 
@@ -153,18 +163,26 @@ def build_channel_link(
     channel: ChannelDocument,
     profile: BusinessProfileDocument | None,
     source: ShareSourceTag | None,
+    language: LanguageTag | None = None,
 ) -> ShareLinkView:
-    """A connected channel's link, or a gap when its address is unknown."""
+    """
+    A connected channel's link, tagged with `source` where the channel
+    carries it back, or a gap when its address is unknown.
+    """
 
     public: ChannelPublicProfile = channel.public_profile or ChannelPublicProfile()
     account: str = "" if channel.external_id is None else str(channel.external_id)
     match kind:
         case ShareLinkKind.TELEGRAM if is_valid(TelegramBotUsername, account):
             username = TelegramBotUsername(account)
-            return linked(kind, build_telegram_link(username), f"@{username}")
+            return linked(kind, build_telegram_link(username, source), f"@{username}")
         case ShareLinkKind.WHATSAPP if public.whatsapp_number is not None:
             number = public.whatsapp_number
-            return linked(kind, build_whatsapp_link(number), f"+{number}")
+            return linked(
+                kind,
+                build_whatsapp_link(number, source, greeting_in(language)),
+                f"+{number}",
+            )
         case ShareLinkKind.INSTAGRAM if public.instagram_username is not None:
             username_text = public.instagram_username
             return linked(

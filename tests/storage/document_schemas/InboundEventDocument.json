@@ -1,7 +1,7 @@
 {
   "collection": "inbound_events",
   "document_type": "InboundEventDocument",
-  "schema_version": 3,
+  "schema_version": 4,
   "shape": {
     "additionalProperties": false,
     "properties": {
@@ -68,6 +68,20 @@
           {
             "additionalProperties": false,
             "properties": {
+              "acquisition_source": {
+                "anyOf": [
+                  {
+                    "maxLength": 32,
+                    "minLength": 1,
+                    "pattern": "^[a-z0-9][a-z0-9_-]{0,31}$",
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null
+              },
               "attachments": {
                 "items": {
                   "additionalProperties": false,
@@ -333,7 +347,7 @@
         "type": "string"
       },
       "schema_version": {
-        "default": "3",
+        "default": "4",
         "type": "string"
       },
       "status": {
