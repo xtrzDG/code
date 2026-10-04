@@ -13,7 +13,7 @@ label and a migration path).
 
 ## 2026-10-04 — bookable services, performers, seasonal rates and booking value
 
-Spec: `14263659dddcbbbd`
+Spec: `8999d057f062d358`
 
 - **Added** knowledge items of kind `service`, `package` and `room_type`
   say what a booking of them takes: `buffer_minutes` (0 to 240, services
@@ -43,7 +43,7 @@ Spec: `14263659dddcbbbd`
   price, a stay's nights at their seasonal rates).
 - **Added** `DashboardStats.booked_value` and `after_hours_booked_value`
   (per currency: value and number of valued bookings made in the period,
-  cancelled and no-shows left out), and `ValueTotals.valued_booking_count`,
+  cancelled and no-shows left out; owners only, staff get empty lists), and `ValueTotals.valued_booking_count`,
   `booked_value_minor` and `revenue_source` (`booked_values`, `mixed`,
   `average_check`) in the value model: bookings with a value count at
   their value, the others at the average check.

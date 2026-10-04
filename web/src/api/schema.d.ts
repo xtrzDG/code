@@ -4767,7 +4767,8 @@ export interface components {
          *     `booked_value` is what the bookings made in the period are worth per
          *     currency (not cancelled, not a no-show; bookings without a priced
          *     service are left out), `after_hours_booked_value` the part booked while
-         *     the business was closed by its weekly hours.
+         *     the business was closed by its weekly hours. Both stay empty for staff,
+         *     who see no money.
          *
          *     Sandbox (owner test and autotest) activity is excluded. Breakdown lists
          *     are ordered by count descending; `daily` has every date of the period,

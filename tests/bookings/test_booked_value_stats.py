@@ -5,7 +5,9 @@ from datetime import datetime
 
 from app.schemas.constants.bookings import BookingStatus
 from app.schemas.constants.channels import ChannelKind
+from app.schemas.constants.users import BusinessMemberRole
 from app.schemas.domain.bookings import BookingDocument
+from app.schemas.domain.businesses import BusinessMember
 from app.schemas.dto.operations.activity_counts import BookingValueCount
 from app.schemas.dto.operations.dashboard import BookedValueTotal
 from app.schemas.typings.bookings.constrained_integers import (
@@ -19,6 +21,7 @@ from app.schemas.typings.insights.constrained_integers import (
     TimelineSegment,
 )
 from app.schemas.typings.localization.constrained_strings import CurrencyCode
+from app.schemas.typings.users.prefixed_id import UserId
 from app.schemas.typings.value.constrained_integers import BookedValueMinor
 from app.use_cases.insights.dashboard_values import booked_value_totals
 from tests.operations.dashboard_fixture import DashboardFixture
@@ -99,6 +102,28 @@ def test_a_period_without_valued_bookings_shows_no_value() -> None:
 
     assert stats.booked_value == []
     assert stats.after_hours_booked_value == []
+
+
+def test_staff_see_the_bookings_but_not_what_they_are_worth() -> None:
+    dashboard = DashboardFixture()
+    staff_id = UserId()
+    dashboard.business = dashboard.business.model_copy(
+        update={
+            "members": [
+                *dashboard.business.members,
+                BusinessMember(user_id=staff_id, role=BusinessMemberRole.STAFF),
+            ]
+        }
+    )
+    dashboard.world.business_repo.save(dashboard.business)
+    valued_booking(dashboard, "2026-10-03T02:05:00+04:00", 4500)
+
+    staff_view = dashboard.stats(viewer=staff_id)
+
+    assert staff_view.booking_count == 1
+    assert staff_view.booked_value == []
+    assert staff_view.after_hours_booked_value == []
+    assert totals(dashboard.stats().booked_value) == [("GEL", 4500, 1)]
 
 
 def test_value_totals_fold_groups_per_currency() -> None:

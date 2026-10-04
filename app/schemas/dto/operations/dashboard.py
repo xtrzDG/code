@@ -32,15 +32,18 @@ from app.schemas.typings.localization.constrained_strings import (
     LanguageTag,
     TimezoneName,
 )
+from app.schemas.typings.users.prefixed_id import UserId
 from app.schemas.typings.value.constrained_integers import BookedValueMinor
 
 
 class DashboardStatsQuery(ImmutableDTO):
     """
     Dashboard for an inclusive range of local dates in the business time
-    zone. Defaults to the last 30 days including today.
+    zone. Defaults to the last 30 days including today. `user_id` is the
+    member asking: staff see no money (the booked values stay empty).
     """
 
+    user_id: UserId
     business_id: BusinessId
     date_from: LocalDate | None = None
     date_to: LocalDate | None = None
@@ -129,7 +132,8 @@ class DashboardStats(ImmutableDTO):
     `booked_value` is what the bookings made in the period are worth per
     currency (not cancelled, not a no-show; bookings without a priced
     service are left out), `after_hours_booked_value` the part booked while
-    the business was closed by its weekly hours.
+    the business was closed by its weekly hours. Both stay empty for staff,
+    who see no money.
 
     Sandbox (owner test and autotest) activity is excluded. Breakdown lists
     are ordered by count descending; `daily` has every date of the period,

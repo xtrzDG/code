@@ -5980,7 +5980,7 @@
       },
       "DashboardStats": {
         "additionalProperties": false,
-        "description": "Cabinet dashboard (concept /dashboard): conversations, customer messages,\nshare started outside opening hours, bookings, leads, handoffs, languages,\nchannels, open unanswered questions, package minutes used in the period,\na series per local day, and the package of the current billing window\n(None without a subscription).\n\n`booked_value` is what the bookings made in the period are worth per\ncurrency (not cancelled, not a no-show; bookings without a priced\nservice are left out), `after_hours_booked_value` the part booked while\nthe business was closed by its weekly hours.\n\nSandbox (owner test and autotest) activity is excluded. Breakdown lists\nare ordered by count descending; `daily` has every date of the period,\noldest first.",
+        "description": "Cabinet dashboard (concept /dashboard): conversations, customer messages,\nshare started outside opening hours, bookings, leads, handoffs, languages,\nchannels, open unanswered questions, package minutes used in the period,\na series per local day, and the package of the current billing window\n(None without a subscription).\n\n`booked_value` is what the bookings made in the period are worth per\ncurrency (not cancelled, not a no-show; bookings without a priced\nservice are left out), `after_hours_booked_value` the part booked while\nthe business was closed by its weekly hours. Both stay empty for staff,\nwho see no money.\n\nSandbox (owner test and autotest) activity is excluded. Breakdown lists\nare ordered by count descending; `daily` has every date of the period,\noldest first.",
         "properties": {
           "after_hours_booked_value": {
             "items": {
