@@ -44,12 +44,6 @@ from app.adapters.recordings.recording_storage_factory import (
 from app.adapters.voice.elevenlabs_recording_storage_adapter import (
     ElevenLabsRecordingStorageAdapter,
 )
-from app.adapters.voice.elevenlabs_voice_agent_provisioner import (
-    ElevenLabsVoiceAgentProvisioner,
-)
-from app.adapters.voice.elevenlabs_voice_webhook_adapter import (
-    ElevenLabsVoiceWebhookAdapter,
-)
 from app.containers.adapters.call_adapters_container import CallAdaptersContainer
 from app.containers.adapters.document_collections_container import (
     DocumentCollectionsContainer,
@@ -187,16 +181,9 @@ class AdaptersContainer(containers.DeclarativeContainer):
         wall_clock=time_provider.microsecond_wall_clock,
     )
 
-    # --- Voice platform (ElevenLabs Agents).
-    voice_webhook_adapter: Singleton[ElevenLabsVoiceWebhookAdapter] = Singleton(
-        ElevenLabsVoiceWebhookAdapter,
-        app_settings=config.app_settings,
-    )
-    voice_agent_provisioner: Singleton[ElevenLabsVoiceAgentProvisioner] = Singleton(
-        ElevenLabsVoiceAgentProvisioner,
-        elevenlabs_client=clients.elevenlabs_client,
-        app_settings=config.app_settings,
-    )
+    # --- Voice platform (ElevenLabs Agents), built with the call adapters.
+    voice_webhook_adapter = calls.voice_webhook_adapter
+    voice_agent_provisioner = calls.voice_agent_provisioner
 
     # --- Messaging channels.
     telegram_channel_adapter: Singleton[TelegramChannelAdapter] = Singleton(

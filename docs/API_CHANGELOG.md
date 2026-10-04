@@ -11,71 +11,15 @@ Kinds of change: **Added**, **Changed** (additive), **Deprecated** (with
 sunset date), **Removed** and **Breaking** (only with the `api-breaking`
 label and a migration path).
 
-## 2026-10-03 — the setup guide, self-serve setup and setup reminders
+## 2026-10-04 — wave 8 together: setup guide, customer media, two-factor sign-in, services
 
-Spec: `4f97fcafe0dae3be`
+Spec: `94b41f2ced788361`
 
-- **Added** `SetupView.guide` (`SetupGuideView`) on
-  `GET /v1/businesses/{business_id}/setup`: the steps after the launch
-  (`steps_after_launch`: `phone_test`, `second_channel`, `share`), the
-  guide's `next_step` and `next_action`, `percent`, `minutes_left`,
-  `is_complete`, `is_dismissed`, and the phone check
-  (`is_phone_check_listening`, `phone_check_until`, `phone_tested_at`).
-  `SetupStepCode` gains `phone_test`, `second_channel` and `share`;
-  `SetupActionTarget` gains `phone_test` and `share`; both are read by
-  the cabinet of this release, and a client that does not know a step
-  can show its `title`, `description` and `action.label`.
-- **Added** `POST /v1/businesses/{business_id}/setup/phone-check`
-  (listen half an hour for the owner's own message from a phone),
-  `POST …/setup/share-marks/{mark}` (`printed_qr`, `downloaded_qr`;
-  `204`), `PUT`/`DELETE …/setup/guide-dismissal` (owners; `409` while the
-  guide is unfinished; `DELETE` answers `204`) and
-  `GET`/`PUT …/setup/reminders` (`SetupRemindersView`; `PUT` owners,
-  body `{"is_on": false}` turns the activation reminders off).
-- **Added** `ActivationEventKind.first_after_hours_booking`, celebrated
-  once through `POST …/setup/milestones/{kind}/celebrate` like the other
-  milestones.
-- **Added** `StaffLinkTarget` values `overview`, `setup`, `channels`,
-  `share` and `billing` (signed links of milestone notices and setup
-  reminders, resolved by `GET /v1/businesses/{business_id}/notification-links/{token}`).
-- **Added** setup options: `PlanQuote.setup_options`
-  (`SetupOptionQuote`: `self_serve` free, `done_for_you` the plan's
-  setup fee), `SubscriptionView.setup_option` and
-  `onboarding_requested_at`, `AdminClientSummary.setup_option` and
-  `onboarding_request` (`OnboardingRequestView`), and
-  `setup_option` in the body of
-  `POST /v1/businesses/{business_id}/billing/subscribe` (default
-  `self_serve`).
-- **Changed** the one-time setup fee is invoiced only for a
-  `done_for_you` subscription (an onboarding request reaches the
-  platform team); `self_serve` and subscriptions from before the choice
-  (`setup_option: null`) pay none. `PlanQuote.setup_fee` stays the
-  `done_for_you` fee.
-
-## 2026-10-03 — voice messages, photos and places of customers
-
-Spec: `76e1e3904dd01540`
-
-- **Added** `GET /v1/businesses/{business_id}/media/{media_id}`: a voice
-  message or photo a customer sent, for owners and staff of the business
-  (`404` for another business's file, or one the retention purge or an
-  erasure removed). The type is read from the file itself; the answer is
-  `Cache-Control: private, no-store`, `X-Content-Type-Options: nosniff`,
-  `Content-Disposition: inline` and a sandboxing CSP. Each opening is in
-  the audit log (`view`, entity `message_media`).
-- **Changed** (additive) `MessageView.attachments`: the voice messages
-  (`media_id`, `duration_seconds`, `transcript`), photos (`media_id`,
-  `media_type`), places (`location`, `map_url`) and other files of a
-  customer message, with `problem` when the assistant could not read one
-  (`unsupported_kind`, `too_large`, `too_long`, `unavailable`,
-  `unrecognized_format`, `not_understood`) and `is_media_deleted` after
-  the retention purge.
-- **Changed** (additive) `ConversationSummaryView` and `InboxItemView`:
-  `last_message_attachment`, the kind of what the last message carried
-  besides text (`audio`, `image`, `location`, `contact`, `sticker`,
-  `other`); `last_message_text` includes a voice message's transcript.
-- **Changed** (additive) `UsageKind`: `transcription_seconds` (voice
-  messages transcribed) in admin usage views.
+No change of its own: the API description with the four entries below
+merged together (two-factor sign-in with step-up, bookable services with
+booked value, the setup guide and setup options, customer voice messages,
+photos and places). Each of those entries names the description of its
+own change alone.
 
 ## 2026-10-04 — two-factor sign-in, step-up, admin rights read per request
 
@@ -172,6 +116,72 @@ Spec: `8999d057f062d358`
   (`attributes: [{"key": "duration_minutes", "value": "1440"}]`), as the
   stored items were moved on read (knowledge items schema version 2).
   The cabinet sends no such lengths.
+
+## 2026-10-03 — the setup guide, self-serve setup and setup reminders
+
+Spec: `4f97fcafe0dae3be`
+
+- **Added** `SetupView.guide` (`SetupGuideView`) on
+  `GET /v1/businesses/{business_id}/setup`: the steps after the launch
+  (`steps_after_launch`: `phone_test`, `second_channel`, `share`), the
+  guide's `next_step` and `next_action`, `percent`, `minutes_left`,
+  `is_complete`, `is_dismissed`, and the phone check
+  (`is_phone_check_listening`, `phone_check_until`, `phone_tested_at`).
+  `SetupStepCode` gains `phone_test`, `second_channel` and `share`;
+  `SetupActionTarget` gains `phone_test` and `share`; both are read by
+  the cabinet of this release, and a client that does not know a step
+  can show its `title`, `description` and `action.label`.
+- **Added** `POST /v1/businesses/{business_id}/setup/phone-check`
+  (listen half an hour for the owner's own message from a phone),
+  `POST …/setup/share-marks/{mark}` (`printed_qr`, `downloaded_qr`;
+  `204`), `PUT`/`DELETE …/setup/guide-dismissal` (owners; `409` while the
+  guide is unfinished; `DELETE` answers `204`) and
+  `GET`/`PUT …/setup/reminders` (`SetupRemindersView`; `PUT` owners,
+  body `{"is_on": false}` turns the activation reminders off).
+- **Added** `ActivationEventKind.first_after_hours_booking`, celebrated
+  once through `POST …/setup/milestones/{kind}/celebrate` like the other
+  milestones.
+- **Added** `StaffLinkTarget` values `overview`, `setup`, `channels`,
+  `share` and `billing` (signed links of milestone notices and setup
+  reminders, resolved by `GET /v1/businesses/{business_id}/notification-links/{token}`).
+- **Added** setup options: `PlanQuote.setup_options`
+  (`SetupOptionQuote`: `self_serve` free, `done_for_you` the plan's
+  setup fee), `SubscriptionView.setup_option` and
+  `onboarding_requested_at`, `AdminClientSummary.setup_option` and
+  `onboarding_request` (`OnboardingRequestView`), and
+  `setup_option` in the body of
+  `POST /v1/businesses/{business_id}/billing/subscribe` (default
+  `self_serve`).
+- **Changed** the one-time setup fee is invoiced only for a
+  `done_for_you` subscription (an onboarding request reaches the
+  platform team); `self_serve` and subscriptions from before the choice
+  (`setup_option: null`) pay none. `PlanQuote.setup_fee` stays the
+  `done_for_you` fee.
+
+## 2026-10-03 — voice messages, photos and places of customers
+
+Spec: `76e1e3904dd01540`
+
+- **Added** `GET /v1/businesses/{business_id}/media/{media_id}`: a voice
+  message or photo a customer sent, for owners and staff of the business
+  (`404` for another business's file, or one the retention purge or an
+  erasure removed). The type is read from the file itself; the answer is
+  `Cache-Control: private, no-store`, `X-Content-Type-Options: nosniff`,
+  `Content-Disposition: inline` and a sandboxing CSP. Each opening is in
+  the audit log (`view`, entity `message_media`).
+- **Changed** (additive) `MessageView.attachments`: the voice messages
+  (`media_id`, `duration_seconds`, `transcript`), photos (`media_id`,
+  `media_type`), places (`location`, `map_url`) and other files of a
+  customer message, with `problem` when the assistant could not read one
+  (`unsupported_kind`, `too_large`, `too_long`, `unavailable`,
+  `unrecognized_format`, `not_understood`) and `is_media_deleted` after
+  the retention purge.
+- **Changed** (additive) `ConversationSummaryView` and `InboxItemView`:
+  `last_message_attachment`, the kind of what the last message carried
+  besides text (`audio`, `image`, `location`, `contact`, `sticker`,
+  `other`); `last_message_text` includes a voice message's transcript.
+- **Changed** (additive) `UsageKind`: `transcription_seconds` (voice
+  messages transcribed) in admin usage views.
 
 ## 2026-10-03 — widget messages are answered by the worker
 

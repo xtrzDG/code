@@ -1,6 +1,12 @@
 from dependency_injector import containers
 from dependency_injector.providers import DependenciesContainer, Singleton
 
+from app.adapters.voice.elevenlabs_voice_agent_provisioner import (
+    ElevenLabsVoiceAgentProvisioner,
+)
+from app.adapters.voice.elevenlabs_voice_webhook_adapter import (
+    ElevenLabsVoiceWebhookAdapter,
+)
 from app.adapters.voice.zadarma_pbx_webhook_adapter import ZadarmaPbxWebhookAdapter
 from app.containers.adapters.document_collection_provider import document_collection
 from app.containers.clients import ClientsContainer
@@ -17,8 +23,9 @@ class CallAdaptersContainer(containers.DeclarativeContainer):
     (migration 1051: callers who did not get through with their
     text-backs, each business's call settings; a sibling of
     DocumentCollectionsContainer with the same storage factory, Postgres
-    with DATABASE_URL, else in memory) and the call notifications of the
-    telephony line (Zadarma PBX).
+    with DATABASE_URL, else in memory), the call notifications of the
+    telephony line (Zadarma PBX) and the voice platform (ElevenLabs Agents:
+    its webhooks and the agent of each business).
     """
 
     clients: ClientsContainer = DependenciesContainer()  # type: ignore[assignment]
@@ -44,4 +51,13 @@ class CallAdaptersContainer(containers.DeclarativeContainer):
     )
     pbx_webhook_adapter: Singleton[ZadarmaPbxWebhookAdapter] = Singleton(
         ZadarmaPbxWebhookAdapter, app_settings=config.app_settings
+    )
+    voice_webhook_adapter: Singleton[ElevenLabsVoiceWebhookAdapter] = Singleton(
+        ElevenLabsVoiceWebhookAdapter,
+        app_settings=config.app_settings,
+    )
+    voice_agent_provisioner: Singleton[ElevenLabsVoiceAgentProvisioner] = Singleton(
+        ElevenLabsVoiceAgentProvisioner,
+        elevenlabs_client=clients.elevenlabs_client,
+        app_settings=config.app_settings,
     )

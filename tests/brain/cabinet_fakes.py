@@ -44,8 +44,8 @@ from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.schemas.typings.users.prefixed_id import UserId
 from app.schemas.typings.users.strings import AccessToken
 from app.utilities.recordings.recording_byte_ranges import cut_recording_part
-from tests.media.media_fakes import InMemoryMediaStorage
 from tests.foundation.access_support import signed_in
+from tests.media.media_fakes import InMemoryMediaStorage
 
 
 class TokenAuthenticationOperator(OperatorContract[AccessToken, SessionAssurance]):
