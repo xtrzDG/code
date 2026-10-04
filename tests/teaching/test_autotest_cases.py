@@ -57,13 +57,15 @@ PARKING: dict[str, Any] = {
 }
 
 
-def create(
-    world: TeachingWorld, user_id: UserId | None = None, **fields: Any
-) -> AutotestCaseView:
+def create(world: TeachingWorld, **fields: Any) -> AutotestCaseView:
+    return create_as(world, world.brain.owner_id, **fields)
+
+
+def create_as(world: TeachingWorld, user_id: UserId, **fields: Any) -> AutotestCaseView:
     world.advance(60)
     return world.create_case.run(
         CreateAutotestCaseCommand(
-            user_id=user_id or world.brain.owner_id,
+            user_id=user_id,
             business_id=world.brain.business.id,
             case=AutotestCaseInput.model_validate_json(json.dumps(fields)),
         )
@@ -222,7 +224,7 @@ def test_a_check_is_removed_and_only_by_an_owner() -> None:
             command.model_copy(update={"user_id": world.brain.staff_id})
         )
     with pytest.raises(AccessDeniedError):
-        create(world, world.brain.staff_id, **PARKING)
+        create_as(world, world.brain.staff_id, **PARKING)
     world.delete_case.run(command)
 
     assert listed(world).items == []

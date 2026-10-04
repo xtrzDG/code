@@ -6,6 +6,7 @@ looked up for it (get_price and search_knowledge results name them).
 
 import json
 from collections.abc import Sequence
+from typing import cast
 
 from app.schemas.constants.assistants import AssistantToolName
 from app.schemas.constants.knowledge import AnswerCorrectionScope, KnowledgeItemKind
@@ -62,14 +63,19 @@ def looked_up_item_ids(tool_calls: Sequence[ToolCallRecord]) -> list[str]:
         if not isinstance(result, dict):
             continue
 
+        fields: dict[object, object] = cast(dict[object, object], result)
         for key in RESULT_LISTS:
-            entries: object = result.get(key)
+            entries: object = fields.get(key)
             if not isinstance(entries, list):
                 continue
 
-            for entry in entries:
-                if isinstance(entry, dict) and isinstance(entry.get("id"), str):
-                    found.append(str(entry["id"]))
+            for entry in cast(list[object], entries):
+                if not isinstance(entry, dict):
+                    continue
+
+                item_id: object = cast(dict[object, object], entry).get("id")
+                if isinstance(item_id, str):
+                    found.append(item_id)
 
     return list(dict.fromkeys(found))
 

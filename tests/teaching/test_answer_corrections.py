@@ -183,19 +183,14 @@ def test_a_wrong_price_of_an_unknown_offer_becomes_a_new_offer() -> None:
     assert result.item.currency_code == "GEL"
 
 
-@pytest.mark.parametrize(
-    "fields",
-    [
-        {},
-        {"price_minor": 900},
-    ],
-)
-def test_a_price_fix_needs_a_price_and_an_offer(fields: dict[str, object]) -> None:
+def test_a_price_fix_needs_a_price_and_an_offer() -> None:
     world = build_teaching_world(say("Не знаю."))
     answer = world.answer_of(world.brain.send("Сколько стоит лобио?"))
 
     with pytest.raises(ValidationFailedError):
-        fix(world, answer, AnswerCorrectionScope.PRICE, **fields)
+        fix(world, answer, AnswerCorrectionScope.PRICE)
+    with pytest.raises(ValidationFailedError):
+        fix(world, answer, AnswerCorrectionScope.PRICE, price_minor=900)
 
 
 def test_a_price_cannot_go_on_a_question_or_an_unknown_item() -> None:
