@@ -4,6 +4,7 @@ every selected scenario played `samples` times.
 """
 
 from collections.abc import Callable
+from concurrent.futures import ProcessPoolExecutor
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -45,6 +46,14 @@ class RunOptions:
     scenario_ids: tuple[str, ...] = ()
     samples: int = 1
     turn_limit: int = DEFAULT_TURN_LIMIT
+    workers: int = 1
+
+
+@dataclass(frozen=True)
+class NicheOutcome:
+    niche: str
+    scenarios: list[ScenarioResult]
+    models: RunModels
 
 
 @dataclass(frozen=True)
@@ -58,49 +67,79 @@ class RunOutcome:
 def run_evals(
     options: RunOptions, report_progress: ProgressReporter | None = None
 ) -> RunOutcome:
+    """
+    Every selected dataset, one niche after another, or `workers` niches at
+    a time in separate processes (a live benchmark waits on providers).
+    """
+
+    paths: list[Path] = list_dataset_paths(options.datasets_dir, options.niches)
+    if options.workers > 1:
+        with ProcessPoolExecutor(max_workers=options.workers) as pool:
+            outcomes: list[NicheOutcome | None] = list(
+                pool.map(run_niche, paths, [options] * len(paths))
+            )
+    else:
+        outcomes = [run_niche(path, options, report_progress) for path in paths]
+
+    played: list[NicheOutcome] = [outcome for outcome in outcomes if outcome]
+    return RunOutcome(
+        scenarios=[scenario for outcome in played for scenario in outcome.scenarios],
+        models={outcome.niche: outcome.models for outcome in played},
+    )
+
+
+def run_niche(
+    path: Path,
+    options: RunOptions,
+    report_progress: ProgressReporter | None = None,
+) -> NicheOutcome | None:
+    """One dataset's selected scenarios; None when none is selected."""
+
+    dataset: EvalDataset = load_dataset(path)
+    selected: list[ScenarioSpec] = select_scenarios(dataset, options)
+    if not selected:
+        return None
+
+    is_complete: bool = not options.languages and not options.scenario_ids
+    store = LlmCassetteFileStore(
+        options.cassettes_dir / f"{dataset.niche.value}.json",
+        is_fresh=options.mode is EvalMode.RECORD and is_complete,
+    )
+    models: RunModels = choose_models(options, store.recording())
+    session: NicheSession = open_session(dataset, store, options, models)
     scenarios: list[ScenarioResult] = []
-    models_by_niche: dict[str, RunModels] = {}
-    for path in list_dataset_paths(options.datasets_dir, options.niches):
-        dataset: EvalDataset = load_dataset(path)
-        selected: list[ScenarioSpec] = select_scenarios(dataset, options)
-        if not selected:
-            continue
-
-        is_complete: bool = not options.languages and not options.scenario_ids
-        store = LlmCassetteFileStore(
-            options.cassettes_dir / f"{dataset.niche.value}.json",
-            is_fresh=options.mode is EvalMode.RECORD and is_complete,
+    for scenario in selected:
+        samples: list[SampleResult] = [
+            play_sample(session, scenario, index) for index in range(options.samples)
+        ]
+        result = ScenarioResult(
+            niche=dataset.niche.value,
+            scenario_id=scenario.id,
+            language=scenario.language,
+            kind=scenario.kind.value,
+            samples=samples,
         )
-        models: RunModels = choose_models(options, store.recording())
-        models_by_niche[dataset.niche.value] = models
-        session: NicheSession = open_session(dataset, store, options, models)
-        for scenario in selected:
-            samples: list[SampleResult] = [
-                play_sample(session, scenario, index)
-                for index in range(options.samples)
-            ]
-            result = ScenarioResult(
-                niche=dataset.niche.value,
-                scenario_id=scenario.id,
-                language=scenario.language,
-                kind=scenario.kind.value,
-                samples=samples,
-            )
-            scenarios.append(result)
-            if report_progress is not None:
-                report_progress(result)
+        scenarios.append(result)
+        (report_progress or print_progress)(result)
 
-        if options.mode is EvalMode.RECORD:
-            store.set_recording(
-                LlmCassetteRecording(
-                    assistant_model_id=models.assistant,
-                    customer_model_id=models.customer,
-                    judge_model_id=models.judge,
-                )
+    if options.mode is EvalMode.RECORD:
+        store.set_recording(
+            LlmCassetteRecording(
+                assistant_model_id=models.assistant,
+                customer_model_id=models.customer,
+                judge_model_id=models.judge,
             )
-            store.save()
+        )
+        store.save()
 
-    return RunOutcome(scenarios=scenarios, models=models_by_niche)
+    return NicheOutcome(niche=dataset.niche.value, scenarios=scenarios, models=models)
+
+
+def print_progress(scenario: ScenarioResult) -> None:
+    status: str = (
+        "PASS" if scenario.is_passed else "STALE" if scenario.is_stale else "FAIL"
+    )
+    print(f"{status:5} {scenario.key}", flush=True)
 
 
 def select_scenarios(dataset: EvalDataset, options: RunOptions) -> list[ScenarioSpec]:

@@ -54,6 +54,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--judge-model", help="judge model (default: none)")
     parser.add_argument("--samples", type=int, default=1, help="k of pass^k")
     parser.add_argument("--turn-limit", type=int, default=DEFAULT_TURN_LIMIT)
+    parser.add_argument("--workers", type=int, default=1, help="niches at once")
     parser.add_argument("--datasets", type=Path, default=EVALS_DIRECTORY / "datasets")
     parser.add_argument("--cassettes", type=Path, default=EVALS_DIRECTORY / "cassettes")
     parser.add_argument("--baselines", type=Path, default=EVALS_DIRECTORY / "baselines")
@@ -94,6 +95,7 @@ def parse_options(arguments: list[str] | None = None) -> CliOptions:
             scenario_ids=tuple(parsed.scenario),
             samples=parsed.samples,
             turn_limit=parsed.turn_limit,
+            workers=max(1, parsed.workers),
         ),
         baselines_dir=parsed.baselines,
         out_dir=parsed.out,

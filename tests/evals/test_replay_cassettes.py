@@ -73,3 +73,24 @@ def test_every_dataset_has_a_cassette_and_a_baseline_entry() -> None:
     assert cassettes == set(NICHES)
     assert baseline is not None
     assert {key.split("/")[0] for key in baseline.scenarios} == set(NICHES)
+
+
+def test_niches_can_replay_in_parallel_processes() -> None:
+    outcome = run_evals(
+        RunOptions(
+            datasets_dir=EVALS / "datasets",
+            cassettes_dir=EVALS / "cassettes",
+            mode=EvalMode.REPLAY,
+            models=None,
+            niches=("b2b_supply", "online_shop"),
+            languages=("en",),
+            workers=2,
+        )
+    )
+
+    assert {scenario.niche for scenario in outcome.scenarios} == {
+        "b2b_supply",
+        "online_shop",
+    }
+    assert all(scenario.is_passed for scenario in outcome.scenarios)
+    assert set(outcome.models) == {"b2b_supply", "online_shop"}

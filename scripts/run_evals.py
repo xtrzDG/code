@@ -28,17 +28,9 @@ from scripts.eval_harness.baselines import (
 from scripts.eval_harness.cli_options import CliOptions, parse_options
 from scripts.eval_harness.dataset_loading import DatasetError
 from scripts.eval_harness.eval_report import EvalReport, ModelsUsed
-from scripts.eval_harness.eval_runner import RunOutcome, run_evals
+from scripts.eval_harness.eval_runner import RunOutcome, print_progress, run_evals
 from scripts.eval_harness.report_writing import write_reports
-from scripts.eval_harness.run_results import ScenarioResult
 from scripts.eval_harness.run_summary import RunSummary, summarize
-
-
-def print_progress(scenario: ScenarioResult) -> None:
-    status: str = (
-        "PASS" if scenario.is_passed else "STALE" if scenario.is_stale else "FAIL"
-    )
-    print(f"{status:5} {scenario.key}", flush=True)
 
 
 def main(arguments: list[str] | None = None) -> int:
