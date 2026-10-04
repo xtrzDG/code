@@ -36,8 +36,9 @@ public page from the status page footer when the account exists.
 
 ## Announcements (the banner)
 
-The admin page **Status** (`/admin/status`, platform admins with
-`MANAGE_OPERATIONS`, step-up) writes `POST /v1/admin/announcements`:
+The card **Status page announcements** on the admin page **System**
+(`/admin/system`, platform admins with `MANAGE_OPERATIONS`, step-up) writes
+`POST /v1/admin/announcements`:
 
 1. Choose the level: a notice (`info`), planned maintenance, degraded
    service or an outage, and the components it affects.
@@ -51,9 +52,10 @@ The admin page **Status** (`/admin/status`, platform admins with
 
 Every create and change is an audit entry (`platform_announcement`, no
 business, the admin and their address). The banner shows over every page
-of the signed-in cabinet (a business, the business list, the admin pages),
-polls the status every minute and can be dismissed per announcement and
-device; an outage cannot be dismissed.
+of a business's cabinet and of the admin pages, polls the status every
+minute (past the browser's cache), and a notice, maintenance or a slowdown
+can be hidden on a device until the announcement changes; an outage cannot
+be hidden.
 
 ## Help center and support contacts
 
