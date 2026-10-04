@@ -6,6 +6,7 @@ validated at the boundary, the PDF a download with its number for a name.
 from fastapi.testclient import TestClient
 
 from app.schemas.constants.compliance import AuditAction
+from app.schemas.constants.users import BusinessMemberRole
 from tests.billing.billing_testbed import bearer
 from tests.billing.paid_world import PaidWorld, checkout
 from tests.invoicing.document_world import HtmlEchoRenderer, build_document_world
@@ -104,7 +105,9 @@ def test_billing_details_and_documents_are_for_owners() -> None:
     business = world.testbed.business(world.business.id)
     business.members = [
         *business.members,
-        business.members[0].model_copy(update={"user_id": staff.id, "role": "staff"}),
+        business.members[0].model_copy(
+            update={"user_id": staff.id, "role": BusinessMemberRole.STAFF}
+        ),
     ]
     world.testbed.business_repo.save(business)
     checkout(world)

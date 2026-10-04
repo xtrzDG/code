@@ -18,6 +18,7 @@ from app.schemas.typings.invoicing.constrained_integers import (
     InvoiceYear,
 )
 from app.schemas.typings.invoicing.constrained_strings import InvoiceSeries
+from app.schemas.typings.invoicing.strings import PaymentCardBrand
 from app.schemas.typings.localization.constrained_strings import (
     LanguageTag,
     TimezoneName,
@@ -25,6 +26,7 @@ from app.schemas.typings.localization.constrained_strings import (
 from app.transformers.invoicing.billing_document_email_transformer import (
     BillingDocumentEmailTransformer,
 )
+from app.utilities.billing.card_brands import spell_card_brand
 from app.utilities.billing.invoice_parties import legal_name_of_business
 from app.utilities.billing.invoicing_keys import (
     build_counter_key,
@@ -115,6 +117,23 @@ def test_only_the_payment_system_and_the_last_four_digits_are_kept(
 def test_no_card_details_means_no_card() -> None:
     assert read_card(None, None) is None
     assert read_card(42, "") is None
+
+
+@pytest.mark.parametrize(
+    ("provider_name", "printed"),
+    [
+        ("VISA", "Visa"),
+        ("MASTERCARD", "Mastercard"),
+        ("master-card", "Mastercard"),
+        (" American Express ", "American Express"),
+        ("AMEX", "American Express"),
+        ("Elcart", "Elcart"),
+    ],
+)
+def test_invoices_print_each_card_brand_in_its_own_spelling(
+    provider_name: str, printed: str
+) -> None:
+    assert spell_card_brand(PaymentCardBrand(provider_name)) == printed
 
 
 def test_documents_need_a_number_and_receipts_a_payment() -> None:

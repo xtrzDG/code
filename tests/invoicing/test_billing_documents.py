@@ -115,7 +115,7 @@ def test_a_receipt_comes_with_the_payment() -> None:
         "გადახდის ქვითარი",
         "ინვოისი № AW-2026-000001",
         "გადახდის თარიღი",
-        "ბარათი VISA, ბოლო ციფრები 1111",
+        "ბარათი Visa, ბოლო ციფრები 1111",
         "მიღებული თანხა",
         "დღგ არ ერიცხება",
     ):
@@ -133,7 +133,7 @@ def test_a_paid_invoice_in_english_says_when_and_how_it_was_paid() -> None:
         "<h1>Invoice</h1>",
         "Paid",
         "Payment date",
-        "VISA card ending in 1111",
+        "Visa card ending in 1111",
     ):
         assert text in page, text
     assert "Total paid" in page

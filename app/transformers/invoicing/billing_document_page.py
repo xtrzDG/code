@@ -29,6 +29,7 @@ from app.transformers.billing.billing_texts import (
 from app.transformers.invoicing import billing_document_texts as texts
 from app.transformers.invoicing.billing_document_sheet import SheetParty, SheetRow
 from app.utilities.billing.billing_periods import to_local_datetime
+from app.utilities.billing.card_brands import spell_card_brand
 from app.utilities.localization.babel_locales import require_babel_locale
 from app.utilities.localization.display_names import build_country_display_name
 from app.utilities.money.money_formatting import format_money
@@ -131,7 +132,7 @@ class BillingDocumentPage:
 
         return self.say(
             texts.CARD_WITH_BRAND,
-            brand=str(card.brand),
+            brand=spell_card_brand(card.brand),
             digits=str(card.last_digits),
         )
 
