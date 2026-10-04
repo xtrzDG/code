@@ -75,8 +75,8 @@ COPIES_EVERY_VALUE: re.Pattern[str] = re.compile(
 WEB_CHAT_CARD: str = "«Чат на сайте»"
 TURN_ON: str = "«Включить»"
 WIDGET_SECTION_LABELS: tuple[str, ...] = (
-    "«Код чата для сайта»",
-    "«Открыть живой предпросмотр»",
+    "«Поставьте чат на сайт»",
+    "«Живой просмотр»",
 )
 # The cabinet's workspace texts: one file per namespace and language.
 WORKSPACE_TEXTS: Path = ROOT / "web/src/i18n/messages/sections/workspace"
