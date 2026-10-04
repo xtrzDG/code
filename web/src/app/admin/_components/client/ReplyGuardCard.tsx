@@ -37,7 +37,7 @@ export function ReplyGuardCard({ summary }: { summary: AdminClientSummary }) {
                 value: (
                   <span className={cn("tabular-nums", heldBackOften && "text-danger")}>
                     {formatNumber(figures.heldBack, locale)}
-                    {figures.heldBackShare !== null ? (
+                    {figures.heldBack > 0 && figures.heldBackShare !== null ? (
                       <span className="ms-2 text-sm text-ink-muted">
                         {t("adminReplyGuard.heldBackShare", {
                           share: formatNumber(figures.heldBackShare, locale, {
