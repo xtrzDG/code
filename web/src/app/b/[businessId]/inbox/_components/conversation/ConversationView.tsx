@@ -116,6 +116,7 @@ export function ConversationView({ conversationId }: { conversationId: string })
         <Composer
           conversation={conversation}
           reply={reply}
+          messages={card.messages ?? []}
           draft={draft}
           onDraft={setDraft}
           onSent={addMessage}

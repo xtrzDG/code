@@ -6342,6 +6342,21 @@
         "title": "DataRegion",
         "type": "string"
       },
+      "DeliveryFailureReason": {
+        "description": "Why the last send attempt of an outbox message failed, in words a\nbusiness owner can act on (the cabinet says it next to the message):\nthe platform asked for a pause (RATE_LIMITED) or did not answer\n(PROVIDER_UNAVAILABLE), both tried again; it refused the message\n(RECIPIENT_REFUSED: a blocked bot, an unknown recipient, a closed\n24-hour window) or the WhatsApp template (TEMPLATE_REJECTED); the\nbusiness's channel was disconnected (CHANNEL_DISCONNECTED) or its\ncredential stopped working (CREDENTIAL_REJECTED); nothing can carry\nthis kind of message (NOT_CONFIGURED); or its moment passed before it\ncould go (EXPIRED: \"you just called us\" hours later).",
+        "enum": [
+          "rate_limited",
+          "provider_unavailable",
+          "recipient_refused",
+          "template_rejected",
+          "channel_disconnected",
+          "credential_rejected",
+          "not_configured",
+          "expired"
+        ],
+        "title": "DeliveryFailureReason",
+        "type": "string"
+      },
       "DeviceClass": {
         "description": "The kind of screen a page was used on (by viewport width).",
         "enum": [
@@ -10236,6 +10251,59 @@
         "title": "MessageAuthor",
         "type": "string"
       },
+      "MessageDeliveryView": {
+        "additionalProperties": false,
+        "description": "The delivery of a staff reply, read from its outbox message: where it\nstands (`state`), why the last attempt failed (`failure_reason`, while\nit is tried again and after it was given up), the attempts so far, when\nthe next one is due and when the customer's platform accepted it.",
+        "properties": {
+          "attempts": {
+            "maximum": 1000.0,
+            "minimum": 0.0,
+            "title": "Attempts",
+            "type": "integer"
+          },
+          "delivered_at": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Delivered At"
+          },
+          "failure_reason": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DeliveryFailureReason"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "next_attempt_at": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Attempt At"
+          },
+          "state": {
+            "$ref": "#/components/schemas/OutboundDeliveryState"
+          }
+        },
+        "required": [
+          "state",
+          "attempts"
+        ],
+        "title": "MessageDeliveryView",
+        "type": "object"
+      },
       "MessageDirection": {
         "description": "Direction of a stored message.",
         "enum": [
@@ -10399,7 +10467,7 @@
       },
       "MessageView": {
         "additionalProperties": false,
-        "description": "A message with the model usage behind it; `sent_by` is the owner or\nstaff member who wrote a staff message from the cabinet; `attachments`\nare a customer's voice notes, photos and places.",
+        "description": "A message with the model usage behind it; `sent_by` is the owner or\nstaff member who wrote a staff message from the cabinet, and\n`delivery` how that message travels to the customer (None for every\nother message, and for staff messages kept for the website chat);\n`attachments` are a customer's voice notes, photos and places.",
         "properties": {
           "attachments": {
             "items": {
@@ -10419,6 +10487,16 @@
           "created_at": {
             "title": "Created At",
             "type": "integer"
+          },
+          "delivery": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MessageDeliveryView"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "direction": {
             "$ref": "#/components/schemas/MessageDirection"
@@ -11236,6 +11314,17 @@
           "email"
         ],
         "title": "OtpDeliveryChannel",
+        "type": "string"
+      },
+      "OutboundDeliveryState": {
+        "description": "Where a message to a customer stands, as the cabinet shows it: waiting\nfor its first attempt (SENDING), tried and waiting for the next attempt\nafter a temporary failure (RETRYING), DELIVERED, or given up (FAILED).",
+        "enum": [
+          "sending",
+          "retrying",
+          "delivered",
+          "failed"
+        ],
+        "title": "OutboundDeliveryState",
         "type": "string"
       },
       "OutboundMessageStatus": {
@@ -13929,7 +14018,7 @@
         "type": "object"
       },
       "StaffMessageDelivery": {
-        "description": "How a staff message reaches the customer: sent through the messenger\nright away, sent in the owner's WhatsApp message template (after the\n24-hour window), or kept for the website chat, which shows it when the\nvisitor's widget asks for new messages.",
+        "description": "How a staff message reaches the customer: queued in the outbox for the\nmessenger (SENT; the worker sends it with retries and the message's\n`delivery` says how it goes), queued in the owner's WhatsApp message\ntemplate (after the 24-hour window), or kept for the website chat,\nwhich shows it when the visitor's widget asks for new messages.",
         "enum": [
           "sent",
           "sent_as_template",

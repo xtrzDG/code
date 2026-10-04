@@ -11,6 +11,27 @@ Kinds of change: **Added**, **Changed** (additive), **Deprecated** (with
 sunset date), **Removed** and **Breaking** (only with the `api-breaking`
 label and a migration path).
 
+## 2026-10-04 — every message to a customer through the outbox
+
+Spec: `3d1409bdbac41e3a`
+
+- **Added** `MessageView.delivery` (`MessageDeliveryView`: `state`
+  `sending` | `retrying` | `delivered` | `failed`, `failure_reason`
+  (`DeliveryFailureReason`: `rate_limited`, `provider_unavailable`,
+  `recipient_refused`, `template_rejected`, `channel_disconnected`,
+  `credential_rejected`, `not_configured`, `expired`), `attempts`,
+  `next_attempt_at`, `delivered_at`) on staff replies sent through a
+  messenger: the conversation card and its message pages show how the
+  reply travels. Website chat replies and every other message carry
+  `null`.
+- **Changed** (additive) `POST /v1/businesses/{business_id}/conversations/{conversation_id}/messages`:
+  `delivery` `sent` / `sent_as_template` now means queued in the outbox
+  (the worker sends it with retries; the message's `delivery` follows
+  it). A provider outage no longer answers `502`: the reply is stored and
+  retried. A WhatsApp template Meta refuses is no longer refused in the
+  request (`409` with the code `template_rejected`); the reply is stored
+  and its `delivery` ends `failed` with `template_rejected`.
+
 ## 2026-10-04 — wave 8 together: setup guide, customer media, two-factor sign-in, services
 
 Spec: `94b41f2ced788361`

@@ -38,6 +38,9 @@ import { inboxCardRu } from "./insights/inboxCard.ru";
 import { leadsEn } from "./insights/leads.en";
 import { leadsKa } from "./insights/leads.ka";
 import { leadsRu } from "./insights/leads.ru";
+import { messageDeliveryEn } from "./insights/messageDelivery.en";
+import { messageDeliveryKa } from "./insights/messageDelivery.ka";
+import { messageDeliveryRu } from "./insights/messageDelivery.ru";
 import { reportsEn } from "./insights/reports.en";
 import { reportsKa } from "./insights/reports.ka";
 import { reportsRu } from "./insights/reports.ru";
@@ -53,6 +56,7 @@ export const insightsEn = {
   dashboard: dashboardEn,
   conversations: conversationsEn,
   conversationMedia: conversationMediaEn,
+  messageDelivery: messageDeliveryEn,
   bookings: bookingsEn,
   leads: leadsEn,
   handoffs: handoffsEn,
@@ -68,6 +72,7 @@ export const insightsRu: Translation<typeof insightsEn> = {
   dashboard: dashboardRu,
   conversations: conversationsRu,
   conversationMedia: conversationMediaRu,
+  messageDelivery: messageDeliveryRu,
   bookings: bookingsRu,
   leads: leadsRu,
   handoffs: handoffsRu,
@@ -83,6 +88,7 @@ export const insightsKa: Translation<typeof insightsEn> = {
   dashboard: dashboardKa,
   conversations: conversationsKa,
   conversationMedia: conversationMediaKa,
+  messageDelivery: messageDeliveryKa,
   bookings: bookingsKa,
   leads: leadsKa,
   handoffs: handoffsKa,

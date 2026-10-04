@@ -5157,6 +5157,21 @@ export interface components {
          */
         DataRegion: "eu" | "us";
         /**
+         * DeliveryFailureReason
+         * @description Why the last send attempt of an outbox message failed, in words a
+         *     business owner can act on (the cabinet says it next to the message):
+         *     the platform asked for a pause (RATE_LIMITED) or did not answer
+         *     (PROVIDER_UNAVAILABLE), both tried again; it refused the message
+         *     (RECIPIENT_REFUSED: a blocked bot, an unknown recipient, a closed
+         *     24-hour window) or the WhatsApp template (TEMPLATE_REJECTED); the
+         *     business's channel was disconnected (CHANNEL_DISCONNECTED) or its
+         *     credential stopped working (CREDENTIAL_REJECTED); nothing can carry
+         *     this kind of message (NOT_CONFIGURED); or its moment passed before it
+         *     could go (EXPIRED: "you just called us" hours later).
+         * @enum {string}
+         */
+        DeliveryFailureReason: "rate_limited" | "provider_unavailable" | "recipient_refused" | "template_rejected" | "channel_disconnected" | "credential_rejected" | "not_configured" | "expired";
+        /**
          * DeviceClass
          * @description The kind of screen a page was used on (by viewport width).
          * @enum {string}
@@ -6687,6 +6702,23 @@ export interface components {
          */
         MessageAuthor: "customer" | "assistant" | "staff" | "system";
         /**
+         * MessageDeliveryView
+         * @description The delivery of a staff reply, read from its outbox message: where it
+         *     stands (`state`), why the last attempt failed (`failure_reason`, while
+         *     it is tried again and after it was given up), the attempts so far, when
+         *     the next one is due and when the customer's platform accepted it.
+         */
+        MessageDeliveryView: {
+            /** Attempts */
+            attempts: number;
+            /** Delivered At */
+            delivered_at?: number | null;
+            failure_reason?: components["schemas"]["DeliveryFailureReason"] | null;
+            /** Next Attempt At */
+            next_attempt_at?: number | null;
+            state: components["schemas"]["OutboundDeliveryState"];
+        };
+        /**
          * MessageDirection
          * @description Direction of a stored message.
          * @enum {string}
@@ -6770,8 +6802,10 @@ export interface components {
         /**
          * MessageView
          * @description A message with the model usage behind it; `sent_by` is the owner or
-         *     staff member who wrote a staff message from the cabinet; `attachments`
-         *     are a customer's voice notes, photos and places.
+         *     staff member who wrote a staff message from the cabinet, and
+         *     `delivery` how that message travels to the customer (None for every
+         *     other message, and for staff messages kept for the website chat);
+         *     `attachments` are a customer's voice notes, photos and places.
          */
         MessageView: {
             /** Attachments */
@@ -6781,6 +6815,7 @@ export interface components {
             cost_micro_usd: number;
             /** Created At */
             created_at: number;
+            delivery?: components["schemas"]["MessageDeliveryView"] | null;
             direction: components["schemas"]["MessageDirection"];
             /** Id */
             id: string;
@@ -7098,6 +7133,14 @@ export interface components {
          * @enum {string}
          */
         OtpDeliveryChannel: "sms" | "whatsapp" | "telegram" | "email";
+        /**
+         * OutboundDeliveryState
+         * @description Where a message to a customer stands, as the cabinet shows it: waiting
+         *     for its first attempt (SENDING), tried and waiting for the next attempt
+         *     after a temporary failure (RETRYING), DELIVERED, or given up (FAILED).
+         * @enum {string}
+         */
+        OutboundDeliveryState: "sending" | "retrying" | "delivered" | "failed";
         /**
          * OutboundMessageStatus
          * @description Delivery state of an outbox message: PENDING waits for its next attempt,
@@ -8167,10 +8210,11 @@ export interface components {
         };
         /**
          * StaffMessageDelivery
-         * @description How a staff message reaches the customer: sent through the messenger
-         *     right away, sent in the owner's WhatsApp message template (after the
-         *     24-hour window), or kept for the website chat, which shows it when the
-         *     visitor's widget asks for new messages.
+         * @description How a staff message reaches the customer: queued in the outbox for the
+         *     messenger (SENT; the worker sends it with retries and the message's
+         *     `delivery` says how it goes), queued in the owner's WhatsApp message
+         *     template (after the 24-hour window), or kept for the website chat,
+         *     which shows it when the visitor's widget asks for new messages.
          * @enum {string}
          */
         StaffMessageDelivery: "sent" | "sent_as_template" | "stored_for_widget";

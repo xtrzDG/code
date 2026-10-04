@@ -32,6 +32,7 @@ const MAX_TEXT_HEIGHT_PX = 160;
 export function Composer({
   conversation,
   reply,
+  messages,
   draft,
   onDraft,
   onSent,
@@ -41,6 +42,8 @@ export function Composer({
 }: {
   conversation: ConversationSummaryView;
   reply: StaffReplyView | null;
+  /** The transcript (the newest staff reply's delivery shapes the notice). */
+  messages: readonly MessageView[];
   draft: string;
   onDraft: (text: string) => void;
   onSent: (message: MessageView) => void;
@@ -57,6 +60,7 @@ export function Composer({
         <ReplyForm
           conversation={conversation}
           reply={reply}
+          messages={messages}
           draft={draft}
           onDraft={onDraft}
           onSent={onSent}
@@ -71,6 +75,7 @@ export function Composer({
 function ReplyForm({
   conversation,
   reply,
+  messages,
   draft,
   onDraft,
   onSent,
@@ -79,6 +84,7 @@ function ReplyForm({
 }: {
   conversation: ConversationSummaryView;
   reply: StaffReplyView;
+  messages: readonly MessageView[];
   draft: string;
   onDraft: (text: string) => void;
   onSent: (message: MessageView) => void;
@@ -89,7 +95,7 @@ function ReplyForm({
   const format = useBusinessFormat();
   const id = useId();
   const textRef = useRef<HTMLTextAreaElement>(null);
-  const staffReply = useStaffReply({ conversation, reply, onSent, onRefused });
+  const staffReply = useStaffReply({ conversation, reply, messages, onSent, onRefused });
   const picker = useQuickReplyPicker(conversation.id, draft);
   const placeholders = placeholdersIn(draft);
   const { template, channel } = staffReply;
