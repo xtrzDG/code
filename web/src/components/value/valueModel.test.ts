@@ -28,6 +28,7 @@ const TOTALS: ValueTotals = {
   handoff_count: 4,
   staff_minutes_saved: 540,
   estimated_revenue_minor: 264_000,
+  valued_booking_count: 0,
 };
 
 const plain = (value: number) => String(value);

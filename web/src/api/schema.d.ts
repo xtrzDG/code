@@ -3067,11 +3067,16 @@ export interface components {
         };
         /**
          * AvailabilityResult
-         * @description Free slots for a query; empty when closed or fully booked.
+         * @description Free slots for a query; empty when closed or fully booked. `service` is
+         *     the service the query named; without one, `services` lists the
+         *     business's bookable offers with their ids, so the model can name one.
          */
         AvailabilityResult: {
             /** Is Open On Date */
             is_open_on_date: boolean;
+            service?: components["schemas"]["BookableOfferView"] | null;
+            /** Services */
+            services?: components["schemas"]["BookableOfferView"][];
             /** Slots */
             slots?: components["schemas"]["AvailableSlot"][];
             /** Timezone */
@@ -3079,7 +3084,8 @@ export interface components {
         };
         /**
          * AvailableSlot
-         * @description One free slot or stay in the business time zone.
+         * @description One free slot or stay in the business time zone; a stay of a priced
+         *     room type carries its quote (each night at its season's rate).
          */
         AvailableSlot: {
             booking_unit: components["schemas"]["BookingUnit"];
@@ -3093,6 +3099,7 @@ export interface components {
             resource_id: string;
             /** Resource Name */
             resource_name: string;
+            stay_quote?: components["schemas"]["StayQuote"] | null;
             /** Time */
             time?: string | null;
         };
@@ -3138,10 +3145,55 @@ export interface components {
          */
         BillingPeriod: "monthly" | "annual";
         /**
+         * BookableOfferView
+         * @description One bookable offer as the model tools list it: how long a booking of it
+         *     lasts (with the time its performer stays blocked after it), its price
+         *     and who performs it.
+         */
+        BookableOfferView: {
+            /** Buffer Minutes */
+            buffer_minutes?: number | null;
+            /** Currency Code */
+            currency_code?: string | null;
+            /** Duration Minutes */
+            duration_minutes?: number | null;
+            /** Id */
+            id: string;
+            kind: components["schemas"]["KnowledgeItemKind"];
+            /** Performers */
+            performers?: components["schemas"]["OfferPerformer"][];
+            /** Price Minor */
+            price_minor?: number | null;
+            /** Title */
+            title: string;
+        };
+        /**
+         * BookedValueTotal
+         * @description What the bookings made in a period are worth in one currency (their
+         *     service prices and stays' nightly rates), and how many carry a value.
+         */
+        BookedValueTotal: {
+            /** Booking Count */
+            booking_count: number;
+            /** Currency Code */
+            currency_code: string;
+            /** Value Minor */
+            value_minor: number;
+        };
+        /**
          * BookingDocument
          * @description Booking of a resource (concept table `bookings`); times are UTC.
+         *
+         *     A booking of a service, package or room type names it
+         *     (`service_item_id`) and keeps what it was booked with: the
+         *     `buffer_minutes` its resource stays blocked after `ends_at`, and its
+         *     value (`value_minor` in `currency_code`: the service price, or the
+         *     nightly rates of the stay's nights). Without a priced item the value
+         *     is unknown (None).
          */
         BookingDocument: {
+            /** Buffer Minutes */
+            buffer_minutes?: number | null;
             /** Business Id */
             business_id: string;
             /** Contact Id */
@@ -3153,6 +3205,8 @@ export interface components {
              * @description Creation wall-clock UNIX timestamp in microseconds.
              */
             created_at?: number;
+            /** Currency Code */
+            currency_code?: string | null;
             /** Ends At */
             ends_at: number;
             /** Id */
@@ -3174,10 +3228,11 @@ export interface components {
             resource_id: string;
             /**
              * Schema Version
-             * @description Persistence schema version. This is not the package version or application release version.
-             * @default 1
+             * @default 2
              */
             schema_version: string;
+            /** Service Item Id */
+            service_item_id?: string | null;
             source_channel: components["schemas"]["ChannelKind"];
             /** Starts At */
             starts_at: number;
@@ -3188,6 +3243,8 @@ export interface components {
              * @description Last update wall-clock UNIX timestamp in microseconds.
              */
             updated_at?: number;
+            /** Value Minor */
+            value_minor?: number | null;
         };
         /**
          * BookingPage
@@ -3287,7 +3344,9 @@ export interface components {
          *     `conversation_id` is the conversation it was made in (the assistant's
          *     tools, or staff booking from a conversation card). `language` is the
          *     customer's language for texts about it. `reminder_sent_at` is when the
-         *     customer's reminder went out (None: not yet).
+         *     customer's reminder went out (None: not yet). A booking of a service,
+         *     package or room type names it and carries its value (`value_minor` in
+         *     `currency_code`).
          */
         BookingView: {
             /** Business Id */
@@ -3302,6 +3361,8 @@ export interface components {
             conversation_id?: string | null;
             /** Created At */
             created_at: number;
+            /** Currency Code */
+            currency_code?: string | null;
             /** Date */
             date: string;
             /** End Date */
@@ -3327,12 +3388,18 @@ export interface components {
             resource_id: string;
             /** Resource Name */
             resource_name: string;
+            /** Service Item Id */
+            service_item_id?: string | null;
+            /** Service Title */
+            service_title?: string | null;
             source_channel: components["schemas"]["ChannelKind"];
             status: components["schemas"]["BookingStatus"];
             /** Time */
             time?: string | null;
             /** Timezone */
             timezone: string;
+            /** Value Minor */
+            value_minor?: number | null;
         };
         /**
          * BusinessAddress
@@ -4697,15 +4764,24 @@ export interface components {
          *     a series per local day, and the package of the current billing window
          *     (None without a subscription).
          *
+         *     `booked_value` is what the bookings made in the period are worth per
+         *     currency (not cancelled, not a no-show; bookings without a priced
+         *     service are left out), `after_hours_booked_value` the part booked while
+         *     the business was closed by its weekly hours.
+         *
          *     Sandbox (owner test and autotest) activity is excluded. Breakdown lists
          *     are ordered by count descending; `daily` has every date of the period,
          *     oldest first.
          */
         DashboardStats: {
+            /** After Hours Booked Value */
+            after_hours_booked_value?: components["schemas"]["BookedValueTotal"][];
             /** After Hours Conversation Count */
             after_hours_conversation_count: number;
             /** After Hours Share Percent */
             after_hours_share_percent: number;
+            /** Booked Value */
+            booked_value?: components["schemas"]["BookedValueTotal"][];
             /** Booking Count */
             booking_count: number;
             /** Bookings By Status */
@@ -5733,13 +5809,18 @@ export interface components {
         };
         /**
          * KnowledgeItemDetails
-         * @description A knowledge item as the owner sees it, with the price formatted.
+         * @description A knowledge item as the owner sees it, with the price formatted. Its
+         *     `performer_resource_ids` are every resource linked to it, from either
+         *     side (the item names them, or they list the item as a service or as
+         *     their room type).
          */
         KnowledgeItemDetails: {
             /** Attributes */
             attributes?: components["schemas"]["KnowledgeAttribute"][];
             /** Body */
             body?: string | null;
+            /** Buffer Minutes */
+            buffer_minutes?: number | null;
             /** Business Id */
             business_id: string;
             /** Created At */
@@ -5757,8 +5838,12 @@ export interface components {
             kind: components["schemas"]["KnowledgeItemKind"];
             /** Languages */
             languages?: string[];
+            /** Performer Resource Ids */
+            performer_resource_ids?: string[];
             /** Price Minor */
             price_minor?: number | null;
+            /** Seasonal Rates */
+            seasonal_rates?: components["schemas"]["SeasonalNightlyRate"][];
             source: components["schemas"]["KnowledgeItemSource"];
             /** Tags */
             tags?: string[];
@@ -5792,11 +5877,14 @@ export interface components {
         KnowledgeItemSource: "profile" | "owner" | "unanswered_question" | "menu_import";
         /**
          * KnowledgeItemView
-         * @description Knowledge item as shown to the model or the owner.
+         * @description Knowledge item as shown to the model or the owner; a room type carries
+         *     its seasonal nightly rates (`price_minor` outside the seasons).
          */
         KnowledgeItemView: {
             /** Body */
             body?: string | null;
+            /** Buffer Minutes */
+            buffer_minutes?: number | null;
             /** Currency Code */
             currency_code?: string | null;
             /** Duration Minutes */
@@ -5808,6 +5896,8 @@ export interface components {
             kind: components["schemas"]["KnowledgeItemKind"];
             /** Price Minor */
             price_minor?: number | null;
+            /** Seasonal Rates */
+            seasonal_rates?: components["schemas"]["SeasonalNightlyRate"][];
             /** Tags */
             tags?: string[];
             /** Title */
@@ -6505,6 +6595,16 @@ export interface components {
             telegram_username?: string | null;
         };
         /**
+         * OfferPerformer
+         * @description A resource that performs or provides an offer.
+         */
+        OfferPerformer: {
+            /** Resource Id */
+            resource_id: string;
+            /** Resource Name */
+            resource_name: string;
+        };
+        /**
          * OpeningInterval
          * @description One opening interval in the business time zone (closing may be 24:00).
          */
@@ -7122,7 +7222,8 @@ export interface components {
         };
         /**
          * ResourceView
-         * @description A resource as the owner sees it.
+         * @description A resource as the owner sees it; `serves_item_ids` are every service or
+         *     package linked to it, from either side (it lists them, or they name it).
          */
         ResourceView: {
             booking_unit: components["schemas"]["BookingUnit"];
@@ -7139,8 +7240,12 @@ export interface components {
             kind: components["schemas"]["ResourceKind"];
             /** Name */
             name: string;
+            /** Room Type Item Id */
+            room_type_item_id?: string | null;
             /** Schedule */
             schedule?: components["schemas"]["OpeningInterval"][];
+            /** Serves Item Ids */
+            serves_item_ids?: string[];
             /** Slot Minutes */
             slot_minutes?: number | null;
             /** Unit Count */
@@ -7148,6 +7253,14 @@ export interface components {
             /** Updated At */
             updated_at: number;
         };
+        /**
+         * RevenueSource
+         * @description What the money estimate of a period rests on: the bookings' own values
+         *     (service prices, stays' nightly rates), those plus the average check
+         *     for the bookings without one, or the average check alone.
+         * @enum {string}
+         */
+        RevenueSource: "booked_values" | "mixed" | "average_check";
         /** RevenueView */
         RevenueView: {
             margin: components["schemas"]["MarginView"];
@@ -7230,6 +7343,22 @@ export interface components {
             /** Special Hours */
             special_hours?: components["schemas"]["OpeningInterval"][];
             weekday: components["schemas"]["Weekday"];
+        };
+        /**
+         * SeasonalNightlyRate
+         * @description The nightly rate of a room type from `starts_on` to `ends_on` (both
+         *     included, every year; a season may run over New Year, "12-20" to
+         *     "01-10"). Nights outside every season cost the item's `price_minor`.
+         */
+        SeasonalNightlyRate: {
+            /** Ends On */
+            ends_on: string;
+            /** Name */
+            name?: string | null;
+            /** Nightly Rate Minor */
+            nightly_rate_minor: number;
+            /** Starts On */
+            starts_on: string;
         };
         /**
          * ServiceMode
@@ -7648,6 +7777,41 @@ export interface components {
         StarterSectionView: {
             section: components["schemas"]["StarterSection"];
             state: components["schemas"]["StarterSectionState"];
+        };
+        /**
+         * StayNightPrice
+         * @description The rate of one night of a stay (the night that starts on `date`).
+         */
+        StayNightPrice: {
+            /** Date */
+            date: string;
+            /** Nightly Rate Minor */
+            nightly_rate_minor: number;
+            /** Season Name */
+            season_name?: string | null;
+        };
+        /**
+         * StayQuote
+         * @description What a stay in a room type costs: every night at the rate of its season
+         *     (or the item's price outside the seasons), summed.
+         */
+        StayQuote: {
+            /** Check In */
+            check_in: string;
+            /** Check Out */
+            check_out: string;
+            /** Currency Code */
+            currency_code: string;
+            /** Item Id */
+            item_id: string;
+            /** Item Title */
+            item_title: string;
+            /** Night Prices */
+            night_prices?: components["schemas"]["StayNightPrice"][];
+            /** Nights */
+            nights: number;
+            /** Total Minor */
+            total_minor: number;
         };
         /**
          * SubscriptionStatus
@@ -8118,9 +8282,12 @@ export interface components {
          *       not a no-show);
          *     - requests taken and conversations handed to a person;
          *     - the staff minutes the replies and calls saved (rounded);
-         *     - the money estimate: the assistant's bookings (or, for niches that
-         *       take orders instead, its requests) times the average check; None
-         *       without an average check.
+         *     - the money estimate: the assistant's bookings at their own values
+         *       (`booked_value_minor`, for the `valued_booking_count` bookings of a
+         *       priced service in the business currency) plus the others times the
+         *       average check (or, for niches that take orders instead, its requests
+         *       times the average check); `revenue_source` says which; None without
+         *       either.
          */
         ValueTotals: {
             /** After Hours Conversation Count */
@@ -8129,6 +8296,8 @@ export interface components {
             assistant_booking_count: number;
             /** Assistant Reply Count */
             assistant_reply_count: number;
+            /** Booked Value Minor */
+            booked_value_minor?: number | null;
             /** Booking Count */
             booking_count: number;
             /** Call Count */
@@ -8143,8 +8312,14 @@ export interface components {
             handoff_count: number;
             /** Request Count */
             request_count: number;
+            revenue_source?: components["schemas"]["RevenueSource"] | null;
             /** Staff Minutes Saved */
             staff_minutes_saved: number;
+            /**
+             * Valued Booking Count
+             * @default 0
+             */
+            valued_booking_count: number;
         };
         /**
          * VisitScoreCount
@@ -11369,6 +11544,7 @@ export interface operations {
                 party_size?: string | null;
                 resource_id?: string | null;
                 resource_kind?: string | null;
+                service_item_id?: string | null;
                 duration_minutes?: string | null;
                 nights?: string | null;
                 full_day?: string | null;
@@ -12181,6 +12357,8 @@ export interface operations {
                     /** Resource Id */
                     resource_id?: string | null;
                     resource_kind?: ("table" | "room" | "staff" | "arena" | "bay" | "vehicle" | "slot") | null;
+                    /** Service Item Id */
+                    service_item_id?: string | null;
                     /**
                      * ChannelKind
                      * @description Customer-facing channel the assistant answers in.
@@ -16347,6 +16525,8 @@ export interface operations {
                     }[];
                     /** Body */
                     body?: string | null;
+                    /** Buffer Minutes */
+                    buffer_minutes?: number | null;
                     /** Currency Code */
                     currency_code?: string | null;
                     /** Duration Minutes */
@@ -16364,8 +16544,21 @@ export interface operations {
                     kind: "faq" | "policy" | "menu_item" | "service" | "room_type" | "package" | "vehicle" | "product";
                     /** Languages */
                     languages?: string[];
+                    /** Performer Resource Ids */
+                    performer_resource_ids?: string[];
                     /** Price Minor */
                     price_minor?: number | null;
+                    /** Seasonal Rates */
+                    seasonal_rates?: {
+                        /** Ends On */
+                        ends_on: string;
+                        /** Name */
+                        name?: string | null;
+                        /** Nightly Rate Minor */
+                        nightly_rate_minor: number;
+                        /** Starts On */
+                        starts_on: string;
+                    }[];
                     /** Tags */
                     tags?: string[];
                     /** Title */
@@ -17210,6 +17403,8 @@ export interface operations {
                     }[] | null;
                     /** Body */
                     body?: string | null;
+                    /** Buffer Minutes */
+                    buffer_minutes?: number | null;
                     /** Currency Code */
                     currency_code?: string | null;
                     /** Duration Minutes */
@@ -17219,8 +17414,21 @@ export interface operations {
                     kind?: ("faq" | "policy" | "menu_item" | "service" | "room_type" | "package" | "vehicle" | "product") | null;
                     /** Languages */
                     languages?: string[] | null;
+                    /** Performer Resource Ids */
+                    performer_resource_ids?: string[] | null;
                     /** Price Minor */
                     price_minor?: number | null;
+                    /** Seasonal Rates */
+                    seasonal_rates?: {
+                        /** Ends On */
+                        ends_on: string;
+                        /** Name */
+                        name?: string | null;
+                        /** Nightly Rate Minor */
+                        nightly_rate_minor: number;
+                        /** Starts On */
+                        starts_on: string;
+                    }[] | null;
                     /** Tags */
                     tags?: string[] | null;
                     /** Title */
@@ -18941,6 +19149,8 @@ export interface operations {
                         }[];
                         /** Body */
                         body?: string | null;
+                        /** Buffer Minutes */
+                        buffer_minutes?: number | null;
                         /** Currency Code */
                         currency_code?: string | null;
                         /** Duration Minutes */
@@ -18960,8 +19170,21 @@ export interface operations {
                         kind: "faq" | "policy" | "menu_item" | "service" | "room_type" | "package" | "vehicle" | "product";
                         /** Languages */
                         languages?: string[];
+                        /** Performer Resource Ids */
+                        performer_resource_ids?: string[];
                         /** Price Minor */
                         price_minor?: number | null;
+                        /** Seasonal Rates */
+                        seasonal_rates?: {
+                            /** Ends On */
+                            ends_on: string;
+                            /** Name */
+                            name?: string | null;
+                            /** Nightly Rate Minor */
+                            nightly_rate_minor: number;
+                            /** Starts On */
+                            starts_on: string;
+                        }[];
                         /** Tags */
                         tags?: string[];
                         /** Title */
@@ -20087,6 +20310,8 @@ export interface operations {
                     kind?: ("table" | "room" | "staff" | "arena" | "bay" | "vehicle" | "slot") | null;
                     /** Name */
                     name: string;
+                    /** Room Type Item Id */
+                    room_type_item_id?: string | null;
                     /** Schedule */
                     schedule?: {
                         /** Closes At */
@@ -20100,6 +20325,8 @@ export interface operations {
                          */
                         weekday: 1 | 2 | 3 | 4 | 5 | 6 | 7;
                     }[];
+                    /** Serves Item Ids */
+                    serves_item_ids?: string[];
                     /** Slot Minutes */
                     slot_minutes?: number | null;
                     /**
@@ -20208,6 +20435,8 @@ export interface operations {
                     kind?: ("table" | "room" | "staff" | "arena" | "bay" | "vehicle" | "slot") | null;
                     /** Name */
                     name?: string | null;
+                    /** Room Type Item Id */
+                    room_type_item_id?: string | null;
                     /** Schedule */
                     schedule?: {
                         /** Closes At */
@@ -20221,6 +20450,8 @@ export interface operations {
                          */
                         weekday: 1 | 2 | 3 | 4 | 5 | 6 | 7;
                     }[] | null;
+                    /** Serves Item Ids */
+                    serves_item_ids?: string[] | null;
                     /** Slot Minutes */
                     slot_minutes?: number | null;
                     /** Unit Count */

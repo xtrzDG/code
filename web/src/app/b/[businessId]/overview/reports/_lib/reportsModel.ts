@@ -2,7 +2,7 @@
 
 import type { BadgeTone } from "@/components/ui";
 import { formatLocalDate, formatLocalDateRange } from "@/components/insights/dates";
-import { formatMonth, type Polarity, type ValueReport, type ValueReportKind, type ValueTotals } from "@/components/value/valueModel";
+import { formatMonth, type Polarity, type ValueReport, type ValueReportKind, type ValueTotals, type ValueTotalsNumber } from "@/components/value/valueModel";
 import type { MessageKey } from "@/i18n/translate";
 import { businessPath } from "@/lib/navigation";
 
@@ -10,7 +10,7 @@ import { businessPath } from "@/lib/navigation";
 export type RowKind = "count" | "minutes" | "money";
 
 export interface ReportRow {
-  field: keyof ValueTotals;
+  field: ValueTotalsNumber;
   label: MessageKey;
   kind: RowKind;
   polarity: Polarity;

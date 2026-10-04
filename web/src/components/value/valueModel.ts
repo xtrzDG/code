@@ -11,6 +11,11 @@ import { dateTimeFormat, numberFormat } from "@/lib/intl/formatters";
 
 export type ValueModel = Schema<"ValueModel">;
 export type ValueTotals = Schema<"ValueTotals">;
+/**
+ * The numbers of a period the views compare with the period before: the
+ * counts and the money estimate (not how the estimate was made).
+ */
+export type ValueTotalsNumber = Exclude<keyof ValueTotals, "booked_value_minor" | "revenue_source" | "valued_booking_count">;
 export type ValueReport = Schema<"ValueReportView">;
 export type ValueReportKind = Schema<"ValueReportKind">;
 export type DigestPreferences = Schema<"DigestPreferencesView">;

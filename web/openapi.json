@@ -1581,11 +1581,28 @@
       },
       "AvailabilityResult": {
         "additionalProperties": false,
-        "description": "Free slots for a query; empty when closed or fully booked.",
+        "description": "Free slots for a query; empty when closed or fully booked. `service` is\nthe service the query named; without one, `services` lists the\nbusiness's bookable offers with their ids, so the model can name one.",
         "properties": {
           "is_open_on_date": {
             "title": "Is Open On Date",
             "type": "boolean"
+          },
+          "service": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BookableOfferView"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "services": {
+            "items": {
+              "$ref": "#/components/schemas/BookableOfferView"
+            },
+            "title": "Services",
+            "type": "array"
           },
           "slots": {
             "items": {
@@ -1611,7 +1628,7 @@
       },
       "AvailableSlot": {
         "additionalProperties": false,
-        "description": "One free slot or stay in the business time zone.",
+        "description": "One free slot or stay in the business time zone; a stay of a priced\nroom type carries its quote (each night at its season's rate).",
         "properties": {
           "booking_unit": {
             "$ref": "#/components/schemas/BookingUnit"
@@ -1656,6 +1673,16 @@
           "resource_name": {
             "title": "Resource Name",
             "type": "string"
+          },
+          "stay_quote": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/StayQuote"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "time": {
             "anyOf": [
@@ -1772,10 +1799,136 @@
         "title": "BillingPeriod",
         "type": "string"
       },
+      "BookableOfferView": {
+        "additionalProperties": false,
+        "description": "One bookable offer as the model tools list it: how long a booking of it\nlasts (with the time its performer stays blocked after it), its price\nand who performs it.",
+        "properties": {
+          "buffer_minutes": {
+            "anyOf": [
+              {
+                "maximum": 240.0,
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Buffer Minutes"
+          },
+          "currency_code": {
+            "anyOf": [
+              {
+                "maxLength": 3,
+                "minLength": 3,
+                "pattern": "^[A-Z]{3}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Currency Code"
+          },
+          "duration_minutes": {
+            "anyOf": [
+              {
+                "maximum": 720.0,
+                "minimum": 5.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Duration Minutes"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/KnowledgeItemKind"
+          },
+          "performers": {
+            "items": {
+              "$ref": "#/components/schemas/OfferPerformer"
+            },
+            "title": "Performers",
+            "type": "array"
+          },
+          "price_minor": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Price Minor"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "title"
+        ],
+        "title": "BookableOfferView",
+        "type": "object"
+      },
+      "BookedValueTotal": {
+        "additionalProperties": false,
+        "description": "What the bookings made in a period are worth in one currency (their\nservice prices and stays' nightly rates), and how many carry a value.",
+        "properties": {
+          "booking_count": {
+            "minimum": 0.0,
+            "title": "Booking Count",
+            "type": "integer"
+          },
+          "currency_code": {
+            "maxLength": 3,
+            "minLength": 3,
+            "pattern": "^[A-Z]{3}$",
+            "title": "Currency Code",
+            "type": "string"
+          },
+          "value_minor": {
+            "minimum": 0.0,
+            "title": "Value Minor",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "currency_code",
+          "value_minor",
+          "booking_count"
+        ],
+        "title": "BookedValueTotal",
+        "type": "object"
+      },
       "BookingDocument": {
         "additionalProperties": false,
-        "description": "Booking of a resource (concept table `bookings`); times are UTC.",
+        "description": "Booking of a resource (concept table `bookings`); times are UTC.\n\nA booking of a service, package or room type names it\n(`service_item_id`) and keeps what it was booked with: the\n`buffer_minutes` its resource stays blocked after `ends_at`, and its\nvalue (`value_minor` in `currency_code`: the service price, or the\nnightly rates of the stay's nights). Without a priced item the value\nis unknown (None).",
         "properties": {
+          "buffer_minutes": {
+            "anyOf": [
+              {
+                "maximum": 240.0,
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Buffer Minutes"
+          },
           "business_id": {
             "title": "Business Id",
             "type": "string"
@@ -1799,6 +1952,20 @@
             "description": "Creation wall-clock UNIX timestamp in microseconds.",
             "title": "Created At",
             "type": "integer"
+          },
+          "currency_code": {
+            "anyOf": [
+              {
+                "maxLength": 3,
+                "minLength": 3,
+                "pattern": "^[A-Z]{3}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Currency Code"
           },
           "ends_at": {
             "minimum": 0.0,
@@ -1861,10 +2028,20 @@
             "type": "string"
           },
           "schema_version": {
-            "default": "1",
-            "description": "Persistence schema version. This is not the package version or application release version.",
+            "default": "2",
             "title": "Schema Version",
             "type": "string"
+          },
+          "service_item_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Service Item Id"
           },
           "source_channel": {
             "$ref": "#/components/schemas/ChannelKind"
@@ -1882,6 +2059,18 @@
             "description": "Last update wall-clock UNIX timestamp in microseconds.",
             "title": "Updated At",
             "type": "integer"
+          },
+          "value_minor": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value Minor"
           }
         },
         "required": [
@@ -2143,7 +2332,7 @@
       },
       "BookingView": {
         "additionalProperties": false,
-        "description": "Booking rendered in the business time zone.\n\n`conversation_id` is the conversation it was made in (the assistant's\ntools, or staff booking from a conversation card). `language` is the\ncustomer's language for texts about it. `reminder_sent_at` is when the\ncustomer's reminder went out (None: not yet).",
+        "description": "Booking rendered in the business time zone.\n\n`conversation_id` is the conversation it was made in (the assistant's\ntools, or staff booking from a conversation card). `language` is the\ncustomer's language for texts about it. `reminder_sent_at` is when the\ncustomer's reminder went out (None: not yet). A booking of a service,\npackage or room type names it and carries its value (`value_minor` in\n`currency_code`).",
         "properties": {
           "business_id": {
             "title": "Business Id",
@@ -2192,6 +2381,20 @@
           "created_at": {
             "title": "Created At",
             "type": "integer"
+          },
+          "currency_code": {
+            "anyOf": [
+              {
+                "maxLength": 3,
+                "minLength": 3,
+                "pattern": "^[A-Z]{3}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Currency Code"
           },
           "date": {
             "maxLength": 10,
@@ -2280,6 +2483,28 @@
             "title": "Resource Name",
             "type": "string"
           },
+          "service_item_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Service Item Id"
+          },
+          "service_title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Service Title"
+          },
           "source_channel": {
             "$ref": "#/components/schemas/ChannelKind"
           },
@@ -2306,6 +2531,18 @@
             "pattern": "^[A-Za-z][A-Za-z0-9_+\\-]*(/[A-Za-z0-9_+\\-]+){0,2}$",
             "title": "Timezone",
             "type": "string"
+          },
+          "value_minor": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value Minor"
           }
         },
         "required": [
@@ -5743,8 +5980,15 @@
       },
       "DashboardStats": {
         "additionalProperties": false,
-        "description": "Cabinet dashboard (concept /dashboard): conversations, customer messages,\nshare started outside opening hours, bookings, leads, handoffs, languages,\nchannels, open unanswered questions, package minutes used in the period,\na series per local day, and the package of the current billing window\n(None without a subscription).\n\nSandbox (owner test and autotest) activity is excluded. Breakdown lists\nare ordered by count descending; `daily` has every date of the period,\noldest first.",
+        "description": "Cabinet dashboard (concept /dashboard): conversations, customer messages,\nshare started outside opening hours, bookings, leads, handoffs, languages,\nchannels, open unanswered questions, package minutes used in the period,\na series per local day, and the package of the current billing window\n(None without a subscription).\n\n`booked_value` is what the bookings made in the period are worth per\ncurrency (not cancelled, not a no-show; bookings without a priced\nservice are left out), `after_hours_booked_value` the part booked while\nthe business was closed by its weekly hours.\n\nSandbox (owner test and autotest) activity is excluded. Breakdown lists\nare ordered by count descending; `daily` has every date of the period,\noldest first.",
         "properties": {
+          "after_hours_booked_value": {
+            "items": {
+              "$ref": "#/components/schemas/BookedValueTotal"
+            },
+            "title": "After Hours Booked Value",
+            "type": "array"
+          },
           "after_hours_conversation_count": {
             "minimum": 0.0,
             "title": "After Hours Conversation Count",
@@ -5755,6 +5999,13 @@
             "minimum": 0.0,
             "title": "After Hours Share Percent",
             "type": "number"
+          },
+          "booked_value": {
+            "items": {
+              "$ref": "#/components/schemas/BookedValueTotal"
+            },
+            "title": "Booked Value",
+            "type": "array"
           },
           "booking_count": {
             "minimum": 0.0,
@@ -8249,7 +8500,7 @@
       },
       "KnowledgeItemDetails": {
         "additionalProperties": false,
-        "description": "A knowledge item as the owner sees it, with the price formatted.",
+        "description": "A knowledge item as the owner sees it, with the price formatted. Its\n`performer_resource_ids` are every resource linked to it, from either\nside (the item names them, or they list the item as a service or as\ntheir room type).",
         "properties": {
           "attributes": {
             "items": {
@@ -8268,6 +8519,19 @@
               }
             ],
             "title": "Body"
+          },
+          "buffer_minutes": {
+            "anyOf": [
+              {
+                "maximum": 240.0,
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Buffer Minutes"
           },
           "business_id": {
             "title": "Business Id",
@@ -8294,8 +8558,8 @@
           "duration_minutes": {
             "anyOf": [
               {
-                "maximum": 43200.0,
-                "minimum": 1.0,
+                "maximum": 720.0,
+                "minimum": 5.0,
                 "type": "integer"
               },
               {
@@ -8336,6 +8600,13 @@
             "title": "Languages",
             "type": "array"
           },
+          "performer_resource_ids": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Performer Resource Ids",
+            "type": "array"
+          },
           "price_minor": {
             "anyOf": [
               {
@@ -8347,6 +8618,13 @@
               }
             ],
             "title": "Price Minor"
+          },
+          "seasonal_rates": {
+            "items": {
+              "$ref": "#/components/schemas/SeasonalNightlyRate"
+            },
+            "title": "Seasonal Rates",
+            "type": "array"
           },
           "source": {
             "$ref": "#/components/schemas/KnowledgeItemSource"
@@ -8440,7 +8718,7 @@
       },
       "KnowledgeItemView": {
         "additionalProperties": false,
-        "description": "Knowledge item as shown to the model or the owner.",
+        "description": "Knowledge item as shown to the model or the owner; a room type carries\nits seasonal nightly rates (`price_minor` outside the seasons).",
         "properties": {
           "body": {
             "anyOf": [
@@ -8452,6 +8730,19 @@
               }
             ],
             "title": "Body"
+          },
+          "buffer_minutes": {
+            "anyOf": [
+              {
+                "maximum": 240.0,
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Buffer Minutes"
           },
           "currency_code": {
             "anyOf": [
@@ -8470,8 +8761,8 @@
           "duration_minutes": {
             "anyOf": [
               {
-                "maximum": 43200.0,
-                "minimum": 1.0,
+                "maximum": 720.0,
+                "minimum": 5.0,
                 "type": "integer"
               },
               {
@@ -8509,6 +8800,13 @@
               }
             ],
             "title": "Price Minor"
+          },
+          "seasonal_rates": {
+            "items": {
+              "$ref": "#/components/schemas/SeasonalNightlyRate"
+            },
+            "title": "Seasonal Rates",
+            "type": "array"
           },
           "tags": {
             "items": {
@@ -10258,6 +10556,26 @@
         "title": "NotificationContactView",
         "type": "object"
       },
+      "OfferPerformer": {
+        "additionalProperties": false,
+        "description": "A resource that performs or provides an offer.",
+        "properties": {
+          "resource_id": {
+            "title": "Resource Id",
+            "type": "string"
+          },
+          "resource_name": {
+            "title": "Resource Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "resource_id",
+          "resource_name"
+        ],
+        "title": "OfferPerformer",
+        "type": "object"
+      },
       "OpeningInterval": {
         "additionalProperties": false,
         "description": "One opening interval in the business time zone (closing may be 24:00).",
@@ -11875,7 +12193,7 @@
       },
       "ResourceView": {
         "additionalProperties": false,
-        "description": "A resource as the owner sees it.",
+        "description": "A resource as the owner sees it; `serves_item_ids` are every service or\npackage linked to it, from either side (it lists them, or they name it).",
         "properties": {
           "booking_unit": {
             "$ref": "#/components/schemas/BookingUnit"
@@ -11909,11 +12227,29 @@
             "title": "Name",
             "type": "string"
           },
+          "room_type_item_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Room Type Item Id"
+          },
           "schedule": {
             "items": {
               "$ref": "#/components/schemas/OpeningInterval"
             },
             "title": "Schedule",
+            "type": "array"
+          },
+          "serves_item_ids": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Serves Item Ids",
             "type": "array"
           },
           "slot_minutes": {
@@ -11954,6 +12290,16 @@
         ],
         "title": "ResourceView",
         "type": "object"
+      },
+      "RevenueSource": {
+        "description": "What the money estimate of a period rests on: the bookings' own values\n(service prices, stays' nightly rates), those plus the average check\nfor the bookings without one, or the average check alone.",
+        "enum": [
+          "booked_values",
+          "mixed",
+          "average_check"
+        ],
+        "title": "RevenueSource",
+        "type": "string"
       },
       "RevenueView": {
         "additionalProperties": false,
@@ -12185,6 +12531,49 @@
           "is_closed_all_day"
         ],
         "title": "ScheduleExceptionView",
+        "type": "object"
+      },
+      "SeasonalNightlyRate": {
+        "additionalProperties": false,
+        "description": "The nightly rate of a room type from `starts_on` to `ends_on` (both\nincluded, every year; a season may run over New Year, \"12-20\" to\n\"01-10\"). Nights outside every season cost the item's `price_minor`.",
+        "properties": {
+          "ends_on": {
+            "maxLength": 5,
+            "minLength": 5,
+            "pattern": "^(?:(?:0[13578]|1[02])-(?:0[1-9]|[12][0-9]|3[01])|(?:0[469]|11)-(?:0[1-9]|[12][0-9]|30)|02-(?:0[1-9]|1[0-9]|2[0-9]))$",
+            "title": "Ends On",
+            "type": "string"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "nightly_rate_minor": {
+            "minimum": 0.0,
+            "title": "Nightly Rate Minor",
+            "type": "integer"
+          },
+          "starts_on": {
+            "maxLength": 5,
+            "minLength": 5,
+            "pattern": "^(?:(?:0[13578]|1[02])-(?:0[1-9]|[12][0-9]|3[01])|(?:0[469]|11)-(?:0[1-9]|[12][0-9]|30)|02-(?:0[1-9]|1[0-9]|2[0-9]))$",
+            "title": "Starts On",
+            "type": "string"
+          }
+        },
+        "required": [
+          "starts_on",
+          "ends_on",
+          "nightly_rate_minor"
+        ],
+        "title": "SeasonalNightlyRate",
         "type": "object"
       },
       "ServiceMode": {
@@ -13092,8 +13481,8 @@
           "duration_minutes": {
             "anyOf": [
               {
-                "maximum": 43200.0,
-                "minimum": 1.0,
+                "maximum": 720.0,
+                "minimum": 5.0,
                 "type": "integer"
               },
               {
@@ -13214,6 +13603,105 @@
           "state"
         ],
         "title": "StarterSectionView",
+        "type": "object"
+      },
+      "StayNightPrice": {
+        "additionalProperties": false,
+        "description": "The rate of one night of a stay (the night that starts on `date`).",
+        "properties": {
+          "date": {
+            "maxLength": 10,
+            "minLength": 10,
+            "pattern": "^(19|20|21)[0-9]{2}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$",
+            "title": "Date",
+            "type": "string"
+          },
+          "nightly_rate_minor": {
+            "minimum": 0.0,
+            "title": "Nightly Rate Minor",
+            "type": "integer"
+          },
+          "season_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Season Name"
+          }
+        },
+        "required": [
+          "date",
+          "nightly_rate_minor"
+        ],
+        "title": "StayNightPrice",
+        "type": "object"
+      },
+      "StayQuote": {
+        "additionalProperties": false,
+        "description": "What a stay in a room type costs: every night at the rate of its season\n(or the item's price outside the seasons), summed.",
+        "properties": {
+          "check_in": {
+            "maxLength": 10,
+            "minLength": 10,
+            "pattern": "^(19|20|21)[0-9]{2}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$",
+            "title": "Check In",
+            "type": "string"
+          },
+          "check_out": {
+            "maxLength": 10,
+            "minLength": 10,
+            "pattern": "^(19|20|21)[0-9]{2}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$",
+            "title": "Check Out",
+            "type": "string"
+          },
+          "currency_code": {
+            "maxLength": 3,
+            "minLength": 3,
+            "pattern": "^[A-Z]{3}$",
+            "title": "Currency Code",
+            "type": "string"
+          },
+          "item_id": {
+            "title": "Item Id",
+            "type": "string"
+          },
+          "item_title": {
+            "title": "Item Title",
+            "type": "string"
+          },
+          "night_prices": {
+            "items": {
+              "$ref": "#/components/schemas/StayNightPrice"
+            },
+            "title": "Night Prices",
+            "type": "array"
+          },
+          "nights": {
+            "maximum": 365.0,
+            "minimum": 1.0,
+            "title": "Nights",
+            "type": "integer"
+          },
+          "total_minor": {
+            "minimum": 0.0,
+            "title": "Total Minor",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "item_id",
+          "item_title",
+          "check_in",
+          "check_out",
+          "nights",
+          "currency_code",
+          "total_minor"
+        ],
+        "title": "StayQuote",
         "type": "object"
       },
       "SubscriptionStatus": {
@@ -14414,7 +14902,7 @@
       },
       "ValueTotals": {
         "additionalProperties": false,
-        "description": "What happened in one period (sandbox activity left out):\n\n- conversations that started, and those after hours (flagged by the\n  conversation engine or started while the business was closed);\n- customer messages and the replies the assistant wrote;\n- phone calls the assistant answered (conversations of the phone line);\n- bookings made (as the dashboard counts them), and those the\n  assistant made in a conversation that are still on (not cancelled,\n  not a no-show);\n- requests taken and conversations handed to a person;\n- the staff minutes the replies and calls saved (rounded);\n- the money estimate: the assistant's bookings (or, for niches that\n  take orders instead, its requests) times the average check; None\n  without an average check.",
+        "description": "What happened in one period (sandbox activity left out):\n\n- conversations that started, and those after hours (flagged by the\n  conversation engine or started while the business was closed);\n- customer messages and the replies the assistant wrote;\n- phone calls the assistant answered (conversations of the phone line);\n- bookings made (as the dashboard counts them), and those the\n  assistant made in a conversation that are still on (not cancelled,\n  not a no-show);\n- requests taken and conversations handed to a person;\n- the staff minutes the replies and calls saved (rounded);\n- the money estimate: the assistant's bookings at their own values\n  (`booked_value_minor`, for the `valued_booking_count` bookings of a\n  priced service in the business currency) plus the others times the\n  average check (or, for niches that take orders instead, its requests\n  times the average check); `revenue_source` says which; None without\n  either.",
         "properties": {
           "after_hours_conversation_count": {
             "minimum": 0.0,
@@ -14430,6 +14918,18 @@
             "minimum": 0.0,
             "title": "Assistant Reply Count",
             "type": "integer"
+          },
+          "booked_value_minor": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Booked Value Minor"
           },
           "booking_count": {
             "minimum": 0.0,
@@ -14473,9 +14973,25 @@
             "title": "Request Count",
             "type": "integer"
           },
+          "revenue_source": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RevenueSource"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "staff_minutes_saved": {
             "minimum": 0.0,
             "title": "Staff Minutes Saved",
+            "type": "integer"
+          },
+          "valued_booking_count": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Valued Booking Count",
             "type": "integer"
           }
         },
@@ -20298,6 +20814,22 @@
           },
           {
             "in": "query",
+            "name": "service_item_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Service Item Id"
+            }
+          },
+          {
+            "in": "query",
             "name": "duration_minutes",
             "required": false,
             "schema": {
@@ -21693,7 +22225,7 @@
             "application/json": {
               "schema": {
                 "additionalProperties": false,
-                "description": "Body of a booking added by staff in the cabinet.\n\nThe phone may be typed in any national or international format; it is\nparsed with `country_hint` (the business country when omitted).\n`language` is the customer's language for the confirmation text\n(business default when omitted). `conversation_id` books for the\ncustomer of that conversation and links the booking to it.",
+                "description": "Body of a booking added by staff in the cabinet.\n\nThe phone may be typed in any national or international format; it is\nparsed with `country_hint` (the business country when omitted).\n`language` is the customer's language for the confirmation text\n(business default when omitted). `conversation_id` books for the\ncustomer of that conversation and links the booking to it.\n`service_item_id` books a service, package or room type: its length\n(unless `duration_minutes` says otherwise), buffer and value, with one\nof its performers (`resource_id` must be one).",
                 "properties": {
                   "contact_name": {
                     "title": "Contact Name",
@@ -21832,6 +22364,18 @@
                         "type": "null"
                       }
                     ]
+                  },
+                  "service_item_id": {
+                    "anyOf": [
+                      {
+                        "pattern": "^knowledge_item_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Service Item Id"
                   },
                   "source_channel": {
                     "default": "phone",
@@ -28484,7 +29028,7 @@
             "application/json": {
               "schema": {
                 "additionalProperties": false,
-                "description": "A new knowledge item (menu dish, service, room type, package, FAQ, rule).\n\n`currency_code` may be omitted: prices are always in the business\ncurrency, and a different code is rejected.",
+                "description": "A new knowledge item (menu dish, service, room type, package, FAQ, rule).\n\n`currency_code` may be omitted: prices are always in the business\ncurrency, and a different code is rejected.\n\nServices and packages may have a `buffer_minutes` their performer stays\nblocked afterwards; services, packages and room types name the\nresources that perform or provide them (`performer_resource_ids`, of\nthis business); room types may have `seasonal_rates` per night (seasons\nmay not overlap; `price_minor` is the rate outside them).",
                 "properties": {
                   "attributes": {
                     "items": {
@@ -28524,6 +29068,19 @@
                     ],
                     "title": "Body"
                   },
+                  "buffer_minutes": {
+                    "anyOf": [
+                      {
+                        "maximum": 240,
+                        "minimum": 0,
+                        "type": "integer"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Buffer Minutes"
+                  },
                   "currency_code": {
                     "anyOf": [
                       {
@@ -28541,8 +29098,8 @@
                   "duration_minutes": {
                     "anyOf": [
                       {
-                        "maximum": 43200,
-                        "minimum": 1,
+                        "maximum": 720,
+                        "minimum": 5,
                         "type": "integer"
                       },
                       {
@@ -28581,6 +29138,14 @@
                     "title": "Languages",
                     "type": "array"
                   },
+                  "performer_resource_ids": {
+                    "items": {
+                      "pattern": "^resource_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                      "type": "string"
+                    },
+                    "title": "Performer Resource Ids",
+                    "type": "array"
+                  },
                   "price_minor": {
                     "anyOf": [
                       {
@@ -28592,6 +29157,53 @@
                       }
                     ],
                     "title": "Price Minor"
+                  },
+                  "seasonal_rates": {
+                    "items": {
+                      "additionalProperties": false,
+                      "description": "The nightly rate of a room type from `starts_on` to `ends_on` (both\nincluded, every year; a season may run over New Year, \"12-20\" to\n\"01-10\"). Nights outside every season cost the item's `price_minor`.",
+                      "properties": {
+                        "ends_on": {
+                          "maxLength": 5,
+                          "minLength": 5,
+                          "pattern": "^(?:(?:0[13578]|1[02])-(?:0[1-9]|[12][0-9]|3[01])|(?:0[469]|11)-(?:0[1-9]|[12][0-9]|30)|02-(?:0[1-9]|1[0-9]|2[0-9]))$",
+                          "title": "Ends On",
+                          "type": "string"
+                        },
+                        "name": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ],
+                          "title": "Name"
+                        },
+                        "nightly_rate_minor": {
+                          "minimum": 0,
+                          "title": "Nightly Rate Minor",
+                          "type": "integer"
+                        },
+                        "starts_on": {
+                          "maxLength": 5,
+                          "minLength": 5,
+                          "pattern": "^(?:(?:0[13578]|1[02])-(?:0[1-9]|[12][0-9]|3[01])|(?:0[469]|11)-(?:0[1-9]|[12][0-9]|30)|02-(?:0[1-9]|1[0-9]|2[0-9]))$",
+                          "title": "Starts On",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "starts_on",
+                        "ends_on",
+                        "nightly_rate_minor"
+                      ],
+                      "title": "SeasonalNightlyRate",
+                      "type": "object"
+                    },
+                    "title": "Seasonal Rates",
+                    "type": "array"
                   },
                   "tags": {
                     "items": {
@@ -29881,7 +30493,7 @@
             "application/json": {
               "schema": {
                 "additionalProperties": false,
-                "description": "Partial update of a knowledge item.\n\nOnly fields present in the request change; an explicit null clears an\noptional field (body, price, duration). `is_active` switches the item on\nor off for the assistant without deleting it.",
+                "description": "Partial update of a knowledge item.\n\nOnly fields present in the request change; an explicit null clears an\noptional field (body, price, duration, buffer). `is_active` switches the\nitem on or off for the assistant without deleting it. A new\n`performer_resource_ids` list is who performs the item from now on: a\nresource left out no longer lists it among its services either.",
                 "properties": {
                   "attributes": {
                     "anyOf": [
@@ -29928,6 +30540,19 @@
                     ],
                     "title": "Body"
                   },
+                  "buffer_minutes": {
+                    "anyOf": [
+                      {
+                        "maximum": 240,
+                        "minimum": 0,
+                        "type": "integer"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Buffer Minutes"
+                  },
                   "currency_code": {
                     "anyOf": [
                       {
@@ -29945,8 +30570,8 @@
                   "duration_minutes": {
                     "anyOf": [
                       {
-                        "maximum": 43200,
-                        "minimum": 1,
+                        "maximum": 720,
+                        "minimum": 5,
                         "type": "integer"
                       },
                       {
@@ -30005,6 +30630,21 @@
                     ],
                     "title": "Languages"
                   },
+                  "performer_resource_ids": {
+                    "anyOf": [
+                      {
+                        "items": {
+                          "pattern": "^resource_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                          "type": "string"
+                        },
+                        "type": "array"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Performer Resource Ids"
+                  },
                   "price_minor": {
                     "anyOf": [
                       {
@@ -30016,6 +30656,60 @@
                       }
                     ],
                     "title": "Price Minor"
+                  },
+                  "seasonal_rates": {
+                    "anyOf": [
+                      {
+                        "items": {
+                          "additionalProperties": false,
+                          "description": "The nightly rate of a room type from `starts_on` to `ends_on` (both\nincluded, every year; a season may run over New Year, \"12-20\" to\n\"01-10\"). Nights outside every season cost the item's `price_minor`.",
+                          "properties": {
+                            "ends_on": {
+                              "maxLength": 5,
+                              "minLength": 5,
+                              "pattern": "^(?:(?:0[13578]|1[02])-(?:0[1-9]|[12][0-9]|3[01])|(?:0[469]|11)-(?:0[1-9]|[12][0-9]|30)|02-(?:0[1-9]|1[0-9]|2[0-9]))$",
+                              "title": "Ends On",
+                              "type": "string"
+                            },
+                            "name": {
+                              "anyOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ],
+                              "title": "Name"
+                            },
+                            "nightly_rate_minor": {
+                              "minimum": 0,
+                              "title": "Nightly Rate Minor",
+                              "type": "integer"
+                            },
+                            "starts_on": {
+                              "maxLength": 5,
+                              "minLength": 5,
+                              "pattern": "^(?:(?:0[13578]|1[02])-(?:0[1-9]|[12][0-9]|3[01])|(?:0[469]|11)-(?:0[1-9]|[12][0-9]|30)|02-(?:0[1-9]|1[0-9]|2[0-9]))$",
+                              "title": "Starts On",
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "starts_on",
+                            "ends_on",
+                            "nightly_rate_minor"
+                          ],
+                          "title": "SeasonalNightlyRate",
+                          "type": "object"
+                        },
+                        "type": "array"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Seasonal Rates"
                   },
                   "tags": {
                     "anyOf": [
@@ -33370,6 +34064,19 @@
                               ],
                               "title": "Body"
                             },
+                            "buffer_minutes": {
+                              "anyOf": [
+                                {
+                                  "maximum": 240,
+                                  "minimum": 0,
+                                  "type": "integer"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ],
+                              "title": "Buffer Minutes"
+                            },
                             "currency_code": {
                               "anyOf": [
                                 {
@@ -33387,8 +34094,8 @@
                             "duration_minutes": {
                               "anyOf": [
                                 {
-                                  "maximum": 43200,
-                                  "minimum": 1,
+                                  "maximum": 720,
+                                  "minimum": 5,
                                   "type": "integer"
                                 },
                                 {
@@ -33439,6 +34146,14 @@
                               "title": "Languages",
                               "type": "array"
                             },
+                            "performer_resource_ids": {
+                              "items": {
+                                "pattern": "^resource_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                                "type": "string"
+                              },
+                              "title": "Performer Resource Ids",
+                              "type": "array"
+                            },
                             "price_minor": {
                               "anyOf": [
                                 {
@@ -33450,6 +34165,53 @@
                                 }
                               ],
                               "title": "Price Minor"
+                            },
+                            "seasonal_rates": {
+                              "items": {
+                                "additionalProperties": false,
+                                "description": "The nightly rate of a room type from `starts_on` to `ends_on` (both\nincluded, every year; a season may run over New Year, \"12-20\" to\n\"01-10\"). Nights outside every season cost the item's `price_minor`.",
+                                "properties": {
+                                  "ends_on": {
+                                    "maxLength": 5,
+                                    "minLength": 5,
+                                    "pattern": "^(?:(?:0[13578]|1[02])-(?:0[1-9]|[12][0-9]|3[01])|(?:0[469]|11)-(?:0[1-9]|[12][0-9]|30)|02-(?:0[1-9]|1[0-9]|2[0-9]))$",
+                                    "title": "Ends On",
+                                    "type": "string"
+                                  },
+                                  "name": {
+                                    "anyOf": [
+                                      {
+                                        "type": "string"
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ],
+                                    "title": "Name"
+                                  },
+                                  "nightly_rate_minor": {
+                                    "minimum": 0,
+                                    "title": "Nightly Rate Minor",
+                                    "type": "integer"
+                                  },
+                                  "starts_on": {
+                                    "maxLength": 5,
+                                    "minLength": 5,
+                                    "pattern": "^(?:(?:0[13578]|1[02])-(?:0[1-9]|[12][0-9]|3[01])|(?:0[469]|11)-(?:0[1-9]|[12][0-9]|30)|02-(?:0[1-9]|1[0-9]|2[0-9]))$",
+                                    "title": "Starts On",
+                                    "type": "string"
+                                  }
+                                },
+                                "required": [
+                                  "starts_on",
+                                  "ends_on",
+                                  "nightly_rate_minor"
+                                ],
+                                "title": "SeasonalNightlyRate",
+                                "type": "object"
+                              },
+                              "title": "Seasonal Rates",
+                              "type": "array"
                             },
                             "tags": {
                               "items": {
@@ -35423,7 +36185,7 @@
             "application/json": {
               "schema": {
                 "additionalProperties": false,
-                "description": "A new bookable resource (table, room type, master, arena, bay, car).\n\n`kind` and `booking_unit` default to the niche of the business. An empty\n`schedule` means the resource follows the business opening hours.",
+                "description": "A new bookable resource (table, room type, master, arena, bay, car).\n\n`kind` and `booking_unit` default to the niche of the business. An empty\n`schedule` means the resource follows the business opening hours.\n`serves_item_ids` are the services and packages it performs, and\n`room_type_item_id` the room type a room belongs to (items of this\nbusiness); neither set, it takes any booking of its kind.",
                 "properties": {
                   "booking_unit": {
                     "anyOf": [
@@ -35477,6 +36239,18 @@
                     "title": "Name",
                     "type": "string"
                   },
+                  "room_type_item_id": {
+                    "anyOf": [
+                      {
+                        "pattern": "^knowledge_item_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Room Type Item Id"
+                  },
                   "schedule": {
                     "items": {
                       "additionalProperties": false,
@@ -35518,6 +36292,14 @@
                       "type": "object"
                     },
                     "title": "Schedule",
+                    "type": "array"
+                  },
+                  "serves_item_ids": {
+                    "items": {
+                      "pattern": "^knowledge_item_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                      "type": "string"
+                    },
+                    "title": "Serves Item Ids",
                     "type": "array"
                   },
                   "slot_minutes": {
@@ -35684,7 +36466,7 @@
             "application/json": {
               "schema": {
                 "additionalProperties": false,
-                "description": "Partial update of a resource.\n\nOnly fields present in the request change; an explicit null clears\n`slot_minutes`, and an empty `schedule` returns to the business hours.\nResources are switched off with `is_active` instead of being deleted, so\npast bookings keep their resource.",
+                "description": "Partial update of a resource.\n\nOnly fields present in the request change; an explicit null clears\n`slot_minutes`, and an empty `schedule` returns to the business hours.\nResources are switched off with `is_active` instead of being deleted, so\npast bookings keep their resource. A new `serves_item_ids` list is what\nthe resource performs from now on: an item left out no longer names it\nas a performer either; null clears `room_type_item_id`.",
                 "properties": {
                   "booking_unit": {
                     "anyOf": [
@@ -35758,6 +36540,18 @@
                     ],
                     "title": "Name"
                   },
+                  "room_type_item_id": {
+                    "anyOf": [
+                      {
+                        "pattern": "^knowledge_item_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Room Type Item Id"
+                  },
                   "schedule": {
                     "anyOf": [
                       {
@@ -35807,6 +36601,21 @@
                       }
                     ],
                     "title": "Schedule"
+                  },
+                  "serves_item_ids": {
+                    "anyOf": [
+                      {
+                        "items": {
+                          "pattern": "^knowledge_item_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                          "type": "string"
+                        },
+                        "type": "array"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Serves Item Ids"
                   },
                   "slot_minutes": {
                     "anyOf": [

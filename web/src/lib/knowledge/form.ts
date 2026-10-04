@@ -25,7 +25,9 @@ export type KnowledgeItemPatchBody = RequestBody<"/v1/businesses/{business_id}/k
 
 export const MAX_TITLE_LENGTH = 300;
 export const MAX_BODY_LENGTH = 8000;
-export const MAX_DURATION_MINUTES = 43_200;
+/** One booking of a service lasts 5 to 720 minutes (the API's limit). */
+export const MIN_DURATION_MINUTES = 5;
+export const MAX_DURATION_MINUTES = 720;
 
 /** The editor's values; price and duration are kept as typed. */
 export interface KnowledgeForm {
@@ -86,8 +88,10 @@ export function validateKnowledgeForm(form: KnowledgeForm, currency: string): Kn
   if (duration !== "") {
     if (!/^\d+$/.test(duration)) {
       errors.duration = "validation.wholeNumber";
-    } else if (Number(duration) < 1 || Number(duration) > MAX_DURATION_MINUTES) {
+    } else if (Number(duration) < 1) {
       errors.duration = "validation.positive";
+    } else if (Number(duration) < MIN_DURATION_MINUTES || Number(duration) > MAX_DURATION_MINUTES) {
+      errors.duration = "validation.durationRange";
     }
   }
   return errors;

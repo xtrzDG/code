@@ -5,7 +5,7 @@ import { useBusinessFormat } from "@/components/business/BusinessContext";
 import { formatPercent } from "@/components/insights/numbers";
 import { AnimatedNumber } from "@/components/motion";
 import { DeltaChip } from "@/components/value/DeltaChip";
-import { hadNoActivity, periodDays, type Polarity, type ValueModel, type ValueTotals } from "@/components/value/valueModel";
+import { hadNoActivity, periodDays, type Polarity, type ValueModel, type ValueTotalsNumber } from "@/components/value/valueModel";
 import { useI18n } from "@/i18n/client";
 
 import { StatTile } from "./DashboardWidgets";
@@ -32,7 +32,7 @@ export function PeriodTiles({
   const days = periodDays(data.date_from, data.date_to);
   const isFirstPeriod = compared ? hadNoActivity(compared.previous) : false;
 
-  const chip = (field: keyof Omit<ValueTotals, "estimated_revenue_minor">, polarity: Polarity = "more-is-better") =>
+  const chip = (field: Exclude<ValueTotalsNumber, "estimated_revenue_minor">, polarity: Polarity = "more-is-better") =>
     compared ? (
       <DeltaChip
         current={compared.current[field]}
