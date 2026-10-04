@@ -3,8 +3,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { GET } from "./route";
 
-const EXPIRED =
-  "https://cabinet.example/api/auth/expired?next=/b/biz_1/bookings";
+const EXPIRED = "https://cabinet.example/api/auth/expired?next=/b/biz_1/bookings";
 
 function request(cookie?: string): NextRequest {
   return new NextRequest(EXPIRED, {
@@ -24,17 +23,10 @@ describe("GET /api/auth/expired", () => {
     const response = await GET(request("aw_session=valid-token"));
 
     expect(response.headers.get("set-cookie")).toBeNull();
-    expect(response.headers.get("location")).toBe(
-      "https://cabinet.example/b/biz_1/bookings",
-    );
-    const [url, init] = fetchMock.mock.calls[0] as unknown as [
-      string,
-      RequestInit,
-    ];
+    expect(response.headers.get("location")).toBe("https://cabinet.example/b/biz_1/bookings");
+    const [url, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
     expect(url).toMatch(/\/v1\/me$/);
-    expect(new Headers(init.headers).get("authorization")).toBe(
-      "Bearer valid-token",
-    );
+    expect(new Headers(init.headers).get("authorization")).toBe("Bearer valid-token");
   });
 
   it("keeps the session when the API cannot be reached", async () => {
@@ -51,16 +43,11 @@ describe("GET /api/auth/expired", () => {
   });
 
   it("drops a session the API rejects and opens the sign-in page", async () => {
-    vi.stubGlobal(
-      "fetch",
-      vi.fn(async () => new Response(null, { status: 401 })),
-    );
+    vi.stubGlobal("fetch", vi.fn(async () => new Response(null, { status: 401 })));
 
     const response = await GET(request("aw_session=old-token"));
 
-    expect(response.headers.get("set-cookie")).toMatch(
-      /aw_session=;.*Max-Age=0/i,
-    );
+    expect(response.headers.get("set-cookie")).toMatch(/aw_session=;.*Max-Age=0/i);
     expect(response.headers.get("location")).toBe(
       "https://cabinet.example/login?next=%2Fb%2Fbiz_1%2Fbookings&reason=expired",
     );

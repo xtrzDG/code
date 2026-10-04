@@ -19,11 +19,7 @@ export async function POST(request: NextRequest): Promise<Response> {
 
   if (prepared.token) {
     try {
-      await callBackend("/v1/auth/logout", {
-        method: "POST",
-        headers: prepared.headers,
-        timeoutMs: 10_000,
-      });
+      await callBackend("/v1/auth/logout", { method: "POST", headers: prepared.headers, timeoutMs: 10_000 });
     } catch {
       // The cookie is dropped below either way.
     }

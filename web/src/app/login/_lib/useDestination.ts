@@ -14,11 +14,7 @@ import { queryKeys } from "@/api/queryKeys";
 import { useQuery } from "@/api/useQuery";
 import type { OtpDeliveryChannel } from "@/api/types";
 import type { MessageKey } from "@/i18n/translate";
-import {
-  guessCountryCode,
-  isCountryAvailable,
-  type LoginMethod,
-} from "@/lib/countries";
+import { guessCountryCode, isCountryAvailable, type LoginMethod } from "@/lib/countries";
 
 import {
   chooseDeliveryChannel,
@@ -31,9 +27,7 @@ import {
 export function useDestination() {
   const countries = useCountries();
   const [chosenMethod, setChosenMethod] = useState<LoginMethod>("phone");
-  const [chosenChannel, setChosenChannel] = useState<OtpDeliveryChannel | null>(
-    null,
-  );
+  const [chosenChannel, setChosenChannel] = useState<OtpDeliveryChannel | null>(null);
   const [chosenCountry, setChosenCountry] = useState<string | null>(null);
   const [phoneNumber, setPhoneNumber] = useState("");
   const [email, setEmail] = useState("");
@@ -44,20 +38,14 @@ export function useDestination() {
     countryList.length > 0 && typeof navigator !== "undefined"
       ? guessCountryCode(
           navigator.languages ?? [navigator.language],
-          countryList
-            .filter(isCountryAvailable)
-            .map((country) => country.country_code),
+          countryList.filter(isCountryAvailable).map((country) => country.country_code),
         )
       : null;
   const countryCode = chosenCountry ?? guessedCountry;
   const country = countryList.find((item) => item.country_code === countryCode);
 
-  const loginOptions = useQuery(
-    queryKeys.auth.loginOptions(countryCode ?? null),
-    () =>
-      api.GET("/v1/auth/login-options", {
-        params: { query: countryCode ? { country_code: countryCode } : {} },
-      }),
+  const loginOptions = useQuery(queryKeys.auth.loginOptions(countryCode ?? null), () =>
+    api.GET("/v1/auth/login-options", { params: { query: countryCode ? { country_code: countryCode } : {} } }),
   );
   const options = loginOptions.data;
   const method = effectiveLoginMethod(chosenMethod, options);

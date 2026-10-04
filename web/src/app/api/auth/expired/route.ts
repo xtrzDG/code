@@ -12,21 +12,14 @@ import { NextResponse, type NextRequest } from "next/server";
 
 import { LOCALE_COOKIE, matchLocale } from "@/i18n/config";
 import { HOME_PATH, loginPath, safeNextPath } from "@/lib/navigation";
-import {
-  buildUpstreamHeaders,
-  callBackend,
-  sanitizeRequestId,
-} from "@/server/backend";
+import { buildUpstreamHeaders, callBackend, sanitizeRequestId } from "@/server/backend";
 import { clearSessionCookie, readSessionToken } from "@/server/sessionCookie";
 
 export const dynamic = "force-dynamic";
 
 const SESSION_CHECK_TIMEOUT_MS = 5_000;
 
-async function isSessionRejected(
-  token: string,
-  request: NextRequest,
-): Promise<boolean> {
+async function isSessionRejected(token: string, request: NextRequest): Promise<boolean> {
   try {
     const response = await callBackend("/v1/me", {
       headers: buildUpstreamHeaders(null, {
@@ -48,13 +41,9 @@ export async function GET(request: NextRequest): Promise<Response> {
   if (token && !(await isSessionRejected(token, request))) {
     // The API returns 401 only for a missing or rejected session, so going
     // back to `next` cannot loop here.
-    return NextResponse.redirect(
-      new URL(safeNextPath(next, HOME_PATH), request.url),
-    );
+    return NextResponse.redirect(new URL(safeNextPath(next, HOME_PATH), request.url));
   }
-  const response = NextResponse.redirect(
-    new URL(loginPath({ next, reason: "expired" }), request.url),
-  );
+  const response = NextResponse.redirect(new URL(loginPath({ next, reason: "expired" }), request.url));
   if (token) {
     clearSessionCookie(response);
   }

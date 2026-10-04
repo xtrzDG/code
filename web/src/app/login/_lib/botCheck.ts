@@ -10,8 +10,7 @@ import type { Theme } from "@/lib/theme";
 
 export const BOT_CHECK_REASON = "challenge_required";
 /** Loaded only when the API asks for the check (allowed by the page's CSP). */
-export const TURNSTILE_SCRIPT_URL =
-  "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
+export const TURNSTILE_SCRIPT_URL = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
 /** The API accepts tokens of this action only. */
 export const LOGIN_ACTION = "login";
 const SITE_KEY_PATTERN = /^[0-9A-Za-z_-]{1,64}$/;
@@ -21,9 +20,7 @@ export function findBotCheckSiteKey(error: ApiError): string | null {
   if (error.status !== 403) {
     return null;
   }
-  const siteKey = error.reasons.find(
-    (reason) => reason.code === BOT_CHECK_REASON,
-  )?.details[0];
+  const siteKey = error.reasons.find((reason) => reason.code === BOT_CHECK_REASON)?.details[0];
   return siteKey && SITE_KEY_PATTERN.test(siteKey) ? siteKey : null;
 }
 

@@ -31,19 +31,10 @@ describe("login options", () => {
 
   it("explains why phone sign-in cannot start", () => {
     expect(phoneLoginBlock(options())).toBeNull();
-    expect(
-      phoneLoginBlock(
-        options({
-          is_sign_up_restricted: true,
-          is_phone_login_available: false,
-        }),
-      ),
-    ).toBe("restricted");
-    expect(
-      phoneLoginBlock(
-        options({ phone_channels: [], is_phone_login_available: false }),
-      ),
-    ).toBe("noChannels");
+    expect(phoneLoginBlock(options({ is_sign_up_restricted: true, is_phone_login_available: false }))).toBe(
+      "restricted",
+    );
+    expect(phoneLoginBlock(options({ phone_channels: [], is_phone_login_available: false }))).toBe("noChannels");
   });
 
   it("hides e-mail when it cannot deliver codes", () => {
@@ -63,15 +54,11 @@ describe("login options", () => {
     });
 
     expect(isSignInUnavailable(nothing)).toBe(true);
-    expect(
-      isSignInUnavailable({ ...nothing, configured_channels: ["whatsapp"] }),
-    ).toBe(false);
+    expect(isSignInUnavailable({ ...nothing, configured_channels: ["whatsapp"] })).toBe(false);
   });
 
   it("keeps a working chosen channel and falls back to the country's first", () => {
-    expect(chooseDeliveryChannel(["sms", "telegram"], "telegram")).toBe(
-      "telegram",
-    );
+    expect(chooseDeliveryChannel(["sms", "telegram"], "telegram")).toBe("telegram");
     expect(chooseDeliveryChannel(["sms", "telegram"], "whatsapp")).toBe("sms");
     expect(chooseDeliveryChannel(["whatsapp"], null)).toBe("whatsapp");
     expect(chooseDeliveryChannel([], "sms")).toBeNull();
@@ -80,21 +67,12 @@ describe("login options", () => {
   it("asks for a channel only when there was a choice", () => {
     const body = { phone_number: "555", country_hint: "GE", locale: "ka" };
 
-    expect(
-      withDeliveryChannel(body, "phone", ["sms", "telegram"], "telegram"),
-    ).toEqual({
+    expect(withDeliveryChannel(body, "phone", ["sms", "telegram"], "telegram")).toEqual({
       ...body,
       preferred_delivery_channel: "telegram",
     });
     expect(withDeliveryChannel(body, "phone", ["sms"], "sms")).toEqual(body);
-    expect(
-      withDeliveryChannel(
-        { email: "a@b.ge", locale: "en" },
-        "email",
-        ["sms", "telegram"],
-        "sms",
-      ),
-    ).toEqual({
+    expect(withDeliveryChannel({ email: "a@b.ge", locale: "en" }, "email", ["sms", "telegram"], "sms")).toEqual({
       email: "a@b.ge",
       locale: "en",
     });
@@ -103,9 +81,7 @@ describe("login options", () => {
 
 describe("otherDeliveryChannels", () => {
   it("offers the country's other channels on the code screen", () => {
-    expect(otherDeliveryChannels(["whatsapp", "sms"], "whatsapp")).toEqual([
-      "sms",
-    ]);
+    expect(otherDeliveryChannels(["whatsapp", "sms"], "whatsapp")).toEqual(["sms"]);
     expect(otherDeliveryChannels(["sms"], "sms")).toEqual([]);
   });
 });

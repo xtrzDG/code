@@ -14,16 +14,10 @@ import { useLoginFlow } from "./_lib/useLoginFlow";
  * Sign-in by phone (any country) or e-mail with a 6-digit code. New
  * visitors get an account automatically. When the API asks for it (a risky
  * request), a Cloudflare Turnstile check comes first; people with an
- * authenticator app (and platform admins) take a second step. The steps live in
- * `_components/`, the state in `_lib/useLoginFlow.ts`.
+ * authenticator app (and platform admins) take a second step. The steps
+ * live in `_components/`, the state in `_lib/useLoginFlow.ts`.
  */
-export function LoginScreen({
-  next,
-  sessionExpired,
-}: {
-  next: string;
-  sessionExpired: boolean;
-}) {
+export function LoginScreen({ next, sessionExpired }: { next: string; sessionExpired: boolean }) {
   const { t } = useI18n();
   const flow = useLoginFlow(next);
 
@@ -52,10 +46,7 @@ export function LoginScreen({
         ) : null}
       </div>
       <p className="mt-5 text-center text-sm">
-        <Link
-          href="/"
-          className="text-ink-muted underline-offset-4 transition-colors hover:text-ink hover:underline"
-        >
+        <Link href="/" className="text-ink-muted underline-offset-4 transition-colors hover:text-ink hover:underline">
           {t("auth.aboutLink")}
         </Link>
       </p>

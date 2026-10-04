@@ -35,11 +35,6 @@ export const PhoneSchema = z
   .min(1, messageKey("auth.errors.phoneRequired"))
   .refine(looksLikePhoneNumber, messageKey("auth.errors.phoneInvalid"));
 
-export const EmailSchema = z
-  .string()
-  .trim()
-  .refine(looksLikeEmail, messageKey("auth.errors.emailInvalid"));
+export const EmailSchema = z.string().trim().refine(looksLikeEmail, messageKey("auth.errors.emailInvalid"));
 
-export const CodeSchema = z
-  .string()
-  .regex(/^\d{6}$/, messageKey("auth.errors.codeInvalid"));
+export const CodeSchema = z.string().regex(/^\d{6}$/, messageKey("auth.errors.codeInvalid"));

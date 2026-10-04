@@ -11,9 +11,7 @@ export type LoginOptions = Schema<"LoginOptionsView">;
 /** Why phone sign-in cannot start for the chosen country (null: it can). */
 export type PhoneLoginBlock = "restricted" | "noChannels" | null;
 
-export function phoneLoginBlock(
-  options: LoginOptions | undefined,
-): PhoneLoginBlock {
+export function phoneLoginBlock(options: LoginOptions | undefined): PhoneLoginBlock {
   if (!options) {
     return null;
   }
@@ -24,24 +22,17 @@ export function phoneLoginBlock(
 }
 
 /** E-mail is offered unless the API says it cannot deliver codes now. */
-export function isEmailLoginOffered(
-  options: LoginOptions | undefined,
-): boolean {
+export function isEmailLoginOffered(options: LoginOptions | undefined): boolean {
   return options?.is_email_login_available ?? true;
 }
 
 /** The method actually shown: e-mail falls back to phone when it is not offered. */
-export function effectiveLoginMethod(
-  method: LoginMethod,
-  options: LoginOptions | undefined,
-): LoginMethod {
+export function effectiveLoginMethod(method: LoginMethod, options: LoginOptions | undefined): LoginMethod {
   return method === "email" && !isEmailLoginOffered(options) ? "phone" : method;
 }
 
 /** No channel can deliver a code for any country: sign-in is down. */
-export function isSignInUnavailable(
-  options: LoginOptions | undefined,
-): boolean {
+export function isSignInUnavailable(options: LoginOptions | undefined): boolean {
   return options !== undefined && options.configured_channels.length === 0;
 }
 
@@ -56,9 +47,7 @@ export function chooseDeliveryChannel(
   return channels[0] ?? null;
 }
 
-export type OtpStartBodyWithChannel = OtpStartBody & {
-  preferred_delivery_channel?: OtpDeliveryChannel;
-};
+export type OtpStartBodyWithChannel = OtpStartBody & { preferred_delivery_channel?: OtpDeliveryChannel };
 
 /** The start body with the chosen channel when the visitor had a choice. */
 export function withDeliveryChannel(
