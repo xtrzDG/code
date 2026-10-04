@@ -53,6 +53,7 @@ def build_knowledge_item_view(
         formatted_price=formatted_price,
         duration_minutes=item.duration_minutes,
         tags=list(item.tags),
+        is_imported=True,
     )
 
 

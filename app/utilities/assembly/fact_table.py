@@ -30,8 +30,12 @@ def append_fact(
     base_key: str,
     label: str,
     value: str,
+    is_imported: bool = False,
 ) -> None:
-    """Add one row; blank labels or values are never added."""
+    """
+    Add one row; blank labels or values are never added. `is_imported`
+    marks a row of knowledge imported from a website or a menu file.
+    """
 
     if label.strip() == "" or value.strip() == "":
         return
@@ -41,5 +45,6 @@ def append_fact(
             key=build_unique_fact_key(base_key, used_keys),
             label=FactLabel(label.strip()),
             value=FactValue(value.strip()),
+            is_imported=is_imported,
         )
     )

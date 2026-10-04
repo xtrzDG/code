@@ -5,6 +5,7 @@ from app.schemas.constants.businesses import ServiceMode
 from app.schemas.constants.client_health import ClientHealthIssue, ClientHealthStatus
 from app.schemas.domain.billing import SubscriptionDocument
 from app.schemas.dto.admin import AdminClientSummary
+from app.utilities.client_health.guard_activity import is_guard_spike
 from app.utilities.client_health.reply_speed import is_slow
 
 MANY_HANDOFFS_THRESHOLD: int = 20
@@ -56,6 +57,10 @@ def find_health_issues(
     # Customers waited: one reply in twenty took over 15 s (last 7 days).
     if is_slow(summary.reply_speed):
         issues.append(ClientHealthIssue.SLOW_REPLIES)
+
+    # The guard held back many replies, or many messages tried injection.
+    if is_guard_spike(summary.guard_activity):
+        issues.append(ClientHealthIssue.GUARD_SPIKE)
 
     is_minutes_exceeded: bool = int(summary.included_voice_minutes) > 0 and int(
         summary.used_voice_minutes

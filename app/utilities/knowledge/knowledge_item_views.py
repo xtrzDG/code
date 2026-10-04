@@ -2,6 +2,7 @@
 
 from collections.abc import Sequence
 
+from app.schemas.constants.knowledge import KnowledgeItemSource
 from app.schemas.domain.knowledge import KnowledgeItemDocument
 from app.schemas.domain.resources import ResourceDocument
 from app.schemas.dto.knowledge import KnowledgeItemView
@@ -54,6 +55,7 @@ def to_item_view(
         buffer_minutes=item.buffer_minutes,
         seasonal_rates=list(item.seasonal_rates),
         tags=list(item.tags),
+        is_imported=item.source is KnowledgeItemSource.MENU_IMPORT,
     )
 
 

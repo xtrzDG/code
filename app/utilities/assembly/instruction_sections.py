@@ -10,6 +10,7 @@ from collections.abc import Sequence
 
 from app.schemas.constants.assistants import AssistantToolName
 from app.schemas.domain.assistants import BusinessFact
+from app.utilities.conversations.untrusted_text import UNTRUSTED_RULE, wrap_untrusted
 
 DEFAULT_TONE: str = "friendly, polite and brief"
 SECTION_SEPARATOR: str = "\n\n"
@@ -92,8 +93,14 @@ def build_fact_section(
     """The fact table and the rule to answer only from it."""
 
     return build_fact_section_from_rows(
-        [(str(fact.label), str(fact.value)) for fact in facts], tools
+        [(str(fact.label), fact_value_text(fact)) for fact in facts], tools
     )
+
+
+def fact_value_text(fact: BusinessFact) -> str:
+    """A fact's value; an imported one as an untrusted block."""
+
+    return wrap_untrusted(str(fact.value)) if fact.is_imported else str(fact.value)
 
 
 def build_fact_section_from_rows(
@@ -117,6 +124,7 @@ def build_fact_section_from_rows(
         "and tool results. Never invent prices, opening hours, dates, "
         "availability, people or policies.",
         unknown_answer_rule,
+        UNTRUSTED_RULE,
         *(f"- {label}: {value}" for label, value in rows),
     ]
 

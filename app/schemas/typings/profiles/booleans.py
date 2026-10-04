@@ -4,6 +4,7 @@ Example:
     is_ready: IsProfileReady = False
 """
 
+IsImportedFact = bool
 IsProfileGapBlocking = bool
 IsProfileReady = bool
 IsProfileSaved = bool

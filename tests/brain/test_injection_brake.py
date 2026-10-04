@@ -5,6 +5,9 @@ from datetime import timedelta
 from app.schemas.constants.conversations import MessageAuthor
 from app.schemas.constants.reply_safety import InjectionSignal
 from app.schemas.domain.conversations import MessageDocument
+from app.transformers.conversations.message_view_transformer import (
+    MessageViewTransformer,
+)
 from tests.brain.brain_orchestrators import GuardOptions
 from tests.brain.brain_world import BrainWorld, build_world
 from tests.brain.engine_helpers import requests_of
@@ -36,6 +39,10 @@ def test_an_attempt_is_answered_and_flagged_on_the_message() -> None:
     assert reply.text.endswith("I can only help with our menu and tables.")
     (message,) = customer_messages(world)
     assert message.injection_flag is InjectionSignal.INSTRUCTION_OVERRIDE
+    view = MessageViewTransformer().transform(message)
+    assert view.guard is not None
+    assert view.guard.injection_flag is InjectionSignal.INSTRUCTION_OVERRIDE
+    assert view.guard.verdict is None
 
 
 def test_an_ordinary_message_carries_no_flag() -> None:

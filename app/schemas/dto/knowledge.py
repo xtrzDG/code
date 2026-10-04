@@ -10,6 +10,7 @@ from app.schemas.typings.bookings.constrained_integers import NightCount
 from app.schemas.typings.bookings.constrained_strings import LocalDate
 from app.schemas.typings.businesses.constrained_strings import WebLink
 from app.schemas.typings.businesses.prefixed_id import BusinessId
+from app.schemas.typings.knowledge.booleans import IsImportedKnowledge
 from app.schemas.typings.knowledge.constrained_integers import (
     BufferMinutes,
     KnowledgeSearchLimit,
@@ -42,6 +43,8 @@ class KnowledgeItemView(ImmutableDTO):
     """
     Knowledge item as shown to the model or the owner; a room type carries
     its seasonal nightly rates (`price_minor` outside the seasons).
+    `is_imported`: the item came from a website or menu import, so the
+    model reads its text as an untrusted block.
     """
 
     id: KnowledgeItemId
@@ -57,6 +60,7 @@ class KnowledgeItemView(ImmutableDTO):
         default_factory=list[SeasonalNightlyRate]
     )
     tags: list[KnowledgeTag] = Field(default_factory=list[KnowledgeTag])
+    is_imported: IsImportedKnowledge = False
 
 
 class KnowledgeSearchResult(ImmutableDTO):

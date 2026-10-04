@@ -9,6 +9,9 @@ from app.schemas.constants.reply_safety import (
     ReplyGuardReason,
 )
 from app.schemas.domain.conversations import MessageDocument
+from app.transformers.conversations.message_view_transformer import (
+    MessageViewTransformer,
+)
 from tests.brain.brain_orchestrators import GuardOptions
 from tests.brain.brain_world import BrainWorld, build_world
 from tests.brain.engine_helpers import requests_of, user_turn_text
@@ -139,3 +142,30 @@ def test_platform_texts_carry_no_guard_verdict() -> None:
     world.send("Hi again")
 
     assert last_reply(world).guard_verdict is None
+
+
+def test_the_conversation_card_shows_what_the_guard_did() -> None:
+    check = FakeClaimCheck({"parking is free": ClaimVerdict.UNSUPPORTED})
+    world = build_world(
+        scripted(
+            say("Parking is free for our guests."),
+            say("A colleague will confirm the parking terms for you."),
+        ),
+        guard=GuardOptions(claim_check=check),
+    )
+    world.send("Is parking free?")
+    conversation = world.conversations()[0]
+
+    views = [
+        MessageViewTransformer().transform(message)
+        for message in world.messages(conversation.id)
+    ]
+
+    customer_view, reply_view = views
+    assert customer_view.guard is None
+    assert reply_view.guard is not None
+    assert reply_view.guard.verdict is ReplyGuardVerdict.REWRITTEN
+    assert reply_view.guard.reasons == [ReplyGuardReason.UNSUPPORTED_CLAIMS]
+    assert [str(item.claim) for item in reply_view.guard.claim_findings] == [
+        "Parking is free for our guests."
+    ]
