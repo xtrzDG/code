@@ -21,7 +21,6 @@ ISSUE_DATE = build_localized_text(
 PAYMENT_DATE = build_localized_text(
     en="Payment date", ru="Дата оплаты", ka="გადახდის თარიღი"
 )
-STATUS = build_localized_text(en="Status", ru="Статус", ka="სტატუსი")
 SELLER = build_localized_text(en="Seller", ru="Исполнитель", ka="გამყიდველი")
 BUYER = build_localized_text(en="Buyer", ru="Заказчик", ka="მყიდველი")
 TAX_ID = build_localized_text(
@@ -71,9 +70,6 @@ PAY_ONLINE = build_localized_text(
     en="Pay online in the cabinet: Settings → Plan and billing.",
     ru="Оплатите онлайн в кабинете: Настройки → Тариф и оплата.",
     ka="გადაიხადეთ ონლაინ კაბინეტში: პარამეტრები → ტარიფი და გადახდა.",
-)
-PAID_ON = build_localized_text(
-    en="Paid on {date}.", ru="Оплачен {date}.", ka="გადახდილია {date}."
 )
 RECEIPT_THANKS = build_localized_text(
     en="Thank you. This receipt confirms the payment above.",

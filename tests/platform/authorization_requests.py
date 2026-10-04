@@ -14,6 +14,7 @@ from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from httpx2 import Response
 
+from tests.platform.authorization_billing import BILLING_BODIES
 from tests.platform.authorization_inbox import INBOX_BODIES
 from tests.platform.authorization_notifications import NOTIFICATION_BODIES
 
@@ -66,6 +67,7 @@ REQUEST_BODIES: dict[str, JsonObject] = {
 }
 REQUEST_BODIES.update(NOTIFICATION_BODIES)
 REQUEST_BODIES.update(INBOX_BODIES)
+REQUEST_BODIES.update(BILLING_BODIES)
 REQUIRED_QUERIES: dict[str, dict[str, str]] = {
     f"GET {B}/availability": {"date": "2026-10-20"},
 }

@@ -10,6 +10,7 @@ from app.schemas.domain.billing_profiles import PaymentCardSnapshot
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.payments import PaymentOrderDocument
 from app.schemas.dto.billing_ledger import DueInvoicesRequest
+from app.schemas.dto.payments import PaymentNotification
 from app.schemas.typings.billing.strings import PaymentProviderReference
 from app.use_cases.shared.billing_records import (
     OPEN_INVOICE_STATUSES,
@@ -29,10 +30,11 @@ def record_renewal_invoice(
     payment_reference: PaymentProviderReference | None,
     now: Microseconds,
     *,
-    card: PaymentCardSnapshot | None = None,
+    charge: PaymentNotification | None = None,
 ) -> InvoiceDocument:
     """
-    Invoice of the period an automatic charge was for. An invoice that
+    Invoice of the period an automatic charge (`charge`: the amount it
+    took, which the invoice totals, and the card) was for. An invoice that
     already carries this provider payment is reused (a declined charge
     later approved becomes PAID), so a repeated delivery never bills a
     second period.
@@ -51,7 +53,12 @@ def record_renewal_invoice(
             continue
 
         if status is InvoiceStatus.PAID and invoice.status in OPEN_INVOICE_STATUSES:
-            record_invoice_payment(invoice, InvoiceStatus.PAID, card, now)
+            record_invoice_payment(
+                invoice,
+                InvoiceStatus.PAID,
+                None if charge is None else charge.card,
+                now,
+            )
             invoice.updated_at = now
             invoice_repo.save(invoice)
 
@@ -64,7 +71,8 @@ def record_renewal_invoice(
             period_start=find_next_period_start(subscription, invoices),
             status=status,
             payment_reference=payment_reference,
-            payment_card=card,
+            payment_card=None if charge is None else charge.card,
+            charged_amount=None if charge is None else charge.amount,
         )
     )[-1]
 

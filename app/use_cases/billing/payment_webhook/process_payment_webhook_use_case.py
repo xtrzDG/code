@@ -69,8 +69,7 @@ class ProcessPaymentWebhookUseCase(
 
     The gateway verifies the signature first; the payment order is found by
     the order id we sent (or the parent order of an automatic charge, or the
-    echoed merchant data). Each (payment, status) pair is applied once, so
-    repeated notifications answer DUPLICATE and change nothing.
+    echoed merchant data). Each (payment, status) pair is applied once.
 
     - approved, first payment of a checkout: its invoices become PAID and
       the card's automatic charges are remembered; the automatic charges of
@@ -80,7 +79,8 @@ class ProcessPaymentWebhookUseCase(
       resumed), grace ends and the assistant serves in full. A payment that
       settles no bill (the bills were already paid) is marked for refund.
     - approved, later automatic charge of the current schedule: the next
-      period is invoiced as PAID and becomes current once it starts.
+      period is invoiced as PAID (for what was charged) and becomes current
+      once it starts.
     - an automatic charge of any other schedule (replaced, stopped, or of a
       cancelled subscription) is never booked as service: its schedule is
       stopped and an approved charge is marked for refund (REFUND_DUE).
@@ -225,7 +225,7 @@ class ProcessPaymentWebhookUseCase(
                 InvoiceStatus.PAID,
                 notification.payment_reference,
                 now,
-                card=notification.card,
+                charge=notification,
             )
         else:
             outcome = settle_checkout_payment(
@@ -268,6 +268,7 @@ class ProcessPaymentWebhookUseCase(
                 InvoiceStatus.FAILED,
                 notification.payment_reference,
                 now,
+                charge=notification,
             )
             failed_amount = Money(
                 amount_minor=failed_invoice.amount_minor,

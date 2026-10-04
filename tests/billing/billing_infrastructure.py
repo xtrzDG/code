@@ -65,6 +65,7 @@ from tests.billing.billing_settings import (
 )
 from tests.billing.exchange_rate_fixtures import rate_registry
 from tests.billing.flitt_sandbox import FlittSandbox
+from tests.billing.invoicing_parts import InvoicingParts, build_invoicing_parts
 
 
 class BillingInfrastructure:
@@ -74,11 +75,15 @@ class BillingInfrastructure:
         self,
         plan_registry: PlanRegistryContract | None = None,
         exchange_rate_registry: ExchangeRateRegistryContract | None = None,
+        settings: AppSettings | None = None,
     ) -> None:
         self.clock = AdjustableClock()
         self.notifier = RecordingNotifier()
         self.flitt = FlittSandbox()
-        self.settings: AppSettings = build_settings()
+        self.settings: AppSettings = settings or build_settings()
+        self.invoicing: InvoicingParts = build_invoicing_parts(
+            self.settings.seller, self.clock.wall_clock
+        )
         self.plan_registry: PlanRegistryContract = plan_registry or PlanRegistry()
         self.exchange_rate_registry: ExchangeRateRegistryContract = (
             exchange_rate_registry or rate_registry()

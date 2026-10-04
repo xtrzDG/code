@@ -79,12 +79,18 @@ class InvoiceIssuingFacilitatorContract(FacilitatorContract, Protocol):
         raise NotImplementedError
 
     def issue(
-        self, business: BusinessDocument, invoice: InvoiceDocument
+        self,
+        business: BusinessDocument,
+        invoice: InvoiceDocument,
+        *,
+        charged: Money | None = None,
     ) -> InvoiceDocument:
         """
         A new invoice whose `amount_minor` is the price before tax, made
         into the accountant's invoice: numbered, the seller and the buyer
-        copied, the VAT added (`amount_minor` becomes the total). Not saved.
+        copied, the VAT added (`amount_minor` becomes the total). An
+        invoice of a charge already made (`charged`) totals what was
+        charged, its VAT taken out of it. Not saved.
         """
         raise NotImplementedError
 

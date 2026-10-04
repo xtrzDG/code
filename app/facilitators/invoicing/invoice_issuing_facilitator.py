@@ -27,7 +27,7 @@ from app.utilities.billing.invoice_parties import (
     build_tax_buyer,
 )
 from app.utilities.billing.invoicing_keys import build_invoice_number
-from app.utilities.billing.tax_math import add_tax
+from app.utilities.billing.tax_math import add_tax, extract_tax
 
 NO_TAX: TaxRateBasisPoints = TaxRateBasisPoints(0)
 
@@ -59,17 +59,27 @@ class InvoiceIssuingFacilitator(InvoiceIssuingFacilitatorContract):
         return add_tax(net, self._decide(self._buyer(business)))
 
     def issue(
-        self, business: BusinessDocument, invoice: InvoiceDocument
+        self,
+        business: BusinessDocument,
+        invoice: InvoiceDocument,
+        *,
+        charged: Money | None = None,
     ) -> InvoiceDocument:
         if invoice.number is not None:
             return invoice
 
         buyer: InvoiceParty = self._buyer(business)
-        taxed: TaxedAmount = add_tax(
-            Money(
-                amount_minor=invoice.amount_minor, currency_code=invoice.currency_code
-            ),
-            self._decide(buyer),
+        decision: TaxDecision = self._decide(buyer)
+        taxed: TaxedAmount = (
+            add_tax(
+                Money(
+                    amount_minor=invoice.amount_minor,
+                    currency_code=invoice.currency_code,
+                ),
+                decision,
+            )
+            if charged is None or charged.currency_code != invoice.currency_code
+            else extract_tax(charged, decision)
         )
         return invoice.model_copy(
             update={

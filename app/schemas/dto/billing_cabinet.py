@@ -40,6 +40,9 @@ from app.schemas.typings.billing.prefixed_id import (
 )
 from app.schemas.typings.billing.strings import InvoiceDescription
 from app.schemas.typings.businesses.prefixed_id import BusinessId
+from app.schemas.typings.invoicing.booleans import IsReceiptAvailable
+from app.schemas.typings.invoicing.constrained_integers import TaxRateBasisPoints
+from app.schemas.typings.invoicing.constrained_strings import InvoiceNumber
 from app.schemas.typings.localization.constrained_strings import (
     CurrencyCode,
     LanguageTag,
@@ -223,7 +226,12 @@ class PackageUsageView(ImmutableDTO):
 
 
 class InvoiceView(ImmutableDTO):
-    """One invoice with its amount formatted for the reader."""
+    """
+    One invoice with its amount (the total, with VAT) formatted for the
+    reader; its number once numbered (an invoice from before numbering
+    gets one with its first PDF), the VAT in it, when it was paid, and
+    whether its receipt can be downloaded.
+    """
 
     id: InvoiceId
     kind: InvoiceKind
@@ -233,6 +241,11 @@ class InvoiceView(ImmutableDTO):
     period_start: Microseconds
     period_end: Microseconds
     issued_at: Microseconds
+    number: InvoiceNumber | None = None
+    tax: QuotedMoney | None = None
+    tax_rate_basis_points: TaxRateBasisPoints | None = None
+    paid_at: Microseconds | None = None
+    is_receipt_available: IsReceiptAvailable = False
 
 
 class BillingOverview(ImmutableDTO):

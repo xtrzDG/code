@@ -140,6 +140,7 @@ _.item_kind  # app/schemas/dto/setup/pending_changes.py
 _.live_version_number  # app/schemas/dto/setup/pending_changes.py
 _.dialog_usage_percent  # app/schemas/dto/billing_cabinet.py
 _.issued_at  # app/schemas/dto/billing_cabinet.py
+_.is_receipt_available  # app/schemas/dto/billing_cabinet.py
 _.overage_cost  # app/schemas/dto/billing_cabinet.py
 _.plan_name  # app/schemas/dto/billing_cabinet.py
 _.voice_usage_percent  # app/schemas/dto/billing_cabinet.py

@@ -531,6 +531,10 @@ e2e). В кабинете «Каналы → Поделиться»: ссылк�
 | `WHATSAPP_OWNER_REPORT_TEMPLATE` | владелец не может выбрать WhatsApp для сводок и отчётов (нужен ещё `WHATSAPP_NOTIFICATION_PHONE_NUMBER_ID`); почта, устройства и Telegram работают |
 | `GOOGLE_OAUTH_CLIENT_ID`, `GOOGLE_OAUTH_CLIENT_SECRET` | нет синхронизации с Google Calendar |
 | `FLITT_MERCHANT_ID`, `FLITT_SECRET_KEY` | оплата недоступна (502), вебхук оплаты отклоняется |
+| `SELLER_LEGAL_NAME`, `SELLER_TAX_ID`, `SELLER_ADDRESS`, `SELLER_EMAIL` | продавец в счетах и квитанциях (PDF): по умолчанию только название `Assistant Workshop`, без налогового номера, адреса и почты. В адресе строки разделяются `\n` |
+| `SELLER_COUNTRY_CODE`, `SELLER_TIME_ZONE` | `GE` и `Asia/Tbilisi`: страна, чьи правила НДС действуют, и часовой пояс дат в счетах и года, по которому считаются номера |
+| `SELLER_INVOICE_SERIES` | `AW`: серия номеров счетов (`AW-2026-000042`); новый год начинает счёт с 1 |
+| `PLATFORM_VAT_REGISTERED` | `false`: НДС не начисляется, в счёте пометка «без НДС». `true` (нужен `SELLER_TAX_ID`, иначе ошибка запуска): покупатели в стране продавца платят её НДС сверху (Грузия — 18 %), покупатели за рубежом — без НДС (с налоговым номером — пометка об обратном начислении) |
 | `LANGFUSE_PUBLIC_KEY`, `LANGFUSE_SECRET_KEY`, `LANGFUSE_HOST` | журнал вызовов модели не ведётся; адрес по умолчанию — `https://cloud.langfuse.com` (ЕС) |
 | `LANGFUSE_CAPTURE_CONTENT` | `false`: тексты сообщений в журнал не пишутся |
 | `SENTRY_DSN` | неожиданные ошибки только в логе |

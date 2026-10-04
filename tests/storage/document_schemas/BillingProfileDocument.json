@@ -52,7 +52,7 @@
       },
       "legal_name": {
         "maxLength": 200,
-        "minLength": 2,
+        "minLength": 1,
         "pattern": "^[^\\x00-\\x1f\\x7f]+$",
         "type": "string"
       },
@@ -76,18 +76,6 @@
       },
       "updated_at": {
         "type": "integer"
-      },
-      "updated_by": {
-        "anyOf": [
-          {
-            "pattern": "^user_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
-            "type": "string"
-          },
-          {
-            "type": "null"
-          }
-        ],
-        "default": null
       }
     },
     "required": [

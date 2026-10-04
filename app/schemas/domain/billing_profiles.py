@@ -17,7 +17,6 @@ from app.schemas.typings.invoicing.prefixed_id import BillingProfileId
 from app.schemas.typings.invoicing.strings import PaymentCardBrand
 from app.schemas.typings.localization.constrained_strings import CountryCode
 from app.schemas.typings.users.constrained_strings import EmailAddress
-from app.schemas.typings.users.prefixed_id import UserId
 
 
 class BillingProfileDocument(BaseDocument):
@@ -36,7 +35,6 @@ class BillingProfileDocument(BaseDocument):
     address: BillingAddressText | None = None
     billing_email: EmailAddress | None = None
     country_code: CountryCode
-    updated_by: UserId | None = None
 
 
 class InvoiceCounterDocument(BaseDocument):

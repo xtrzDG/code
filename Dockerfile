@@ -36,9 +36,12 @@ FROM python-base AS runtime
 # (image scans fail on fixable HIGH/CRITICAL findings). The Postgres client
 # (pg_dump, pg_restore) serves `workshop backup` and `workshop restore-check`
 # (docs/operations/backup-restore.md); it reads servers of older majors.
+# Pango, HarfBuzz and the Noto fonts (Latin, Cyrillic, Georgian) lay out the
+# invoice and receipt PDFs (WeasyPrint, docs/LAUNCH.md 4.7.1).
 RUN apt-get update \
     && apt-get upgrade --yes --no-install-recommends \
     && apt-get install --yes --no-install-recommends postgresql-client \
+       libpango-1.0-0 libpangoft2-1.0-0 libharfbuzz-subset0 fonts-noto-core \
     && rm -rf /var/lib/apt/lists/*
 
 RUN groupadd --system --gid 10001 workshop \

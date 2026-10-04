@@ -189,7 +189,13 @@ class IssueDueInvoicesUseCase(
         """Number, parties and VAT, the requested status, then stored."""
 
         invoice: InvoiceDocument = self._invoice_issuing.issue(
-            input_data.business, draft
+            input_data.business,
+            draft,
+            charged=(
+                input_data.charged_amount
+                if draft.kind is InvoiceKind.SERVICE_PERIOD
+                else None
+            ),
         )
         record_invoice_payment(invoice, input_data.status, input_data.payment_card, now)
         self._invoice_repo.save(invoice)

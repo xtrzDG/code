@@ -9,6 +9,7 @@ from dependency_injector import providers
 from app.adapters.storage.postgres.document_collection_factory import (
     build_document_collection,
 )
+from app.containers.adapters import invoicing_collections_container as invoicing
 from app.containers.adapters.analytics_collections_container import (
     AnalyticsCollectionsContainer,
 )
@@ -46,6 +47,7 @@ from app.containers.adapters.value_collections_container import (
 from app.schemas.constants.compliance import AuditAction
 from app.schemas.constants.storage import CollectionIsolation
 from app.schemas.domain.assistants import AssistantVersionDocument
+from app.schemas.domain.billing_profiles import InvoiceCounterDocument
 from app.schemas.domain.businesses import BusinessDocument, BusinessMember
 from app.schemas.domain.compliance import AuditLogEntryDocument
 from app.schemas.domain.contacts import ContactDocument
@@ -135,6 +137,7 @@ PLATFORM_DOCUMENT_TYPES: frozenset[type[PersistentDocument]] = frozenset(
         IncidentDocument,
         # The platform admin team belongs to the platform (1103).
         PlatformAdminDocument,
+        InvoiceCounterDocument,  # One invoice series for every business (1114).
     }
 )
 
@@ -154,6 +157,7 @@ COLLECTION_CONTAINERS = (
     AnalyticsCollectionsContainer,
     MediaCollectionsContainer,
     OperationsCollectionsContainer,
+    invoicing.InvoicingCollectionsContainer,
 )
 
 

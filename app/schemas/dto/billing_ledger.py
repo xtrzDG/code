@@ -48,7 +48,8 @@ class DueInvoicesRequest(ImmutableDTO):
 
     `status` is ISSUED for a bill to pay, PAID for an automatic charge that
     already succeeded (paid with `payment_card` when the provider named
-    it), FAILED for one that was declined.
+    it), FAILED for one that was declined. `charged_amount` is what an
+    automatic charge took (or tried to): its invoice totals exactly that.
     """
 
     business: BusinessDocument
@@ -57,6 +58,7 @@ class DueInvoicesRequest(ImmutableDTO):
     status: InvoiceStatus = InvoiceStatus.ISSUED
     payment_reference: PaymentProviderReference | None = None
     payment_card: PaymentCardSnapshot | None = None
+    charged_amount: Money | None = None
     is_setup_fee_included: IsSetupFeeIncluded = False
 
 

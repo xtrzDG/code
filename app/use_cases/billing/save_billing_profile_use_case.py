@@ -98,7 +98,6 @@ class SaveBillingProfileUseCase(
             address=request.address,
             billing_email=request.billing_email,
             country_code=request.country_code,
-            updated_by=input_data.user_id,
             created_at=now if stored is None else stored.created_at,
             updated_at=now,
         )
