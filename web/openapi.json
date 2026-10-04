@@ -1470,12 +1470,13 @@
         "type": "string"
       },
       "AutotestCheckCode": {
-        "description": "Why the test harness failed a scenario, as a code each language renders:\na deterministic check of what the assistant did (no booking, no handoff,\nrecords nobody asked for, a reply in another script), or why the\nscenario could not be evaluated at all.",
+        "description": "Why the test harness failed a scenario, as a code each language renders:\na deterministic check of what the assistant did (no booking, no handoff,\nrecords nobody asked for, a reply in another script, the AI disclosure\nin another language than the customer's), or why the\nscenario could not be evaluated at all.",
         "enum": [
           "no_booking_created",
           "not_handed_off",
           "unexpected_records",
           "wrong_reply_language",
+          "wrong_disclosure_language",
           "conversation_failed",
           "no_customer_message",
           "judge_unavailable",
@@ -1615,7 +1616,9 @@
           "rude_customer",
           "human_request",
           "prompt_injection",
-          "emergency"
+          "emergency",
+          "foreign_language",
+          "transliterated"
         ],
         "title": "AutotestScenarioKind",
         "type": "string"
@@ -20454,7 +20457,9 @@
                             "rude_customer",
                             "human_request",
                             "prompt_injection",
-                            "emergency"
+                            "emergency",
+                            "foreign_language",
+                            "transliterated"
                           ],
                           "title": "AutotestScenarioKind",
                           "type": "string"
@@ -20900,7 +20905,9 @@
                             "rude_customer",
                             "human_request",
                             "prompt_injection",
-                            "emergency"
+                            "emergency",
+                            "foreign_language",
+                            "transliterated"
                           ],
                           "title": "AutotestScenarioKind",
                           "type": "string"

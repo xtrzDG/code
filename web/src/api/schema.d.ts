@@ -3276,11 +3276,12 @@ export interface components {
          * AutotestCheckCode
          * @description Why the test harness failed a scenario, as a code each language renders:
          *     a deterministic check of what the assistant did (no booking, no handoff,
-         *     records nobody asked for, a reply in another script), or why the
+         *     records nobody asked for, a reply in another script, the AI disclosure
+         *     in another language than the customer's), or why the
          *     scenario could not be evaluated at all.
          * @enum {string}
          */
-        AutotestCheckCode: "no_booking_created" | "not_handed_off" | "unexpected_records" | "wrong_reply_language" | "conversation_failed" | "no_customer_message" | "judge_unavailable" | "judge_unreadable";
+        AutotestCheckCode: "no_booking_created" | "not_handed_off" | "unexpected_records" | "wrong_reply_language" | "wrong_disclosure_language" | "conversation_failed" | "no_customer_message" | "judge_unavailable" | "judge_unreadable";
         /**
          * AutotestOutcome
          * @description Result of one autotest scenario.
@@ -3341,7 +3342,7 @@ export interface components {
          * @description Scripted test conversation run against every version (concept section 11).
          * @enum {string}
          */
-        AutotestScenarioKind: "booking" | "booking_out_of_hours" | "cancellation" | "price_question" | "unknown_question" | "discount_request" | "rude_customer" | "human_request" | "prompt_injection" | "emergency";
+        AutotestScenarioKind: "booking" | "booking_out_of_hours" | "cancellation" | "price_question" | "unknown_question" | "discount_request" | "rude_customer" | "human_request" | "prompt_injection" | "emergency" | "foreign_language" | "transliterated";
         /**
          * AutotestScenarioResultView
          * @description Result of one autotest scenario.
@@ -11446,7 +11447,7 @@ export interface operations {
             content: {
                 "application/json": {
                     /** Kinds */
-                    kinds?: ("booking" | "booking_out_of_hours" | "cancellation" | "price_question" | "unknown_question" | "discount_request" | "rude_customer" | "human_request" | "prompt_injection" | "emergency")[] | null;
+                    kinds?: ("booking" | "booking_out_of_hours" | "cancellation" | "price_question" | "unknown_question" | "discount_request" | "rude_customer" | "human_request" | "prompt_injection" | "emergency" | "foreign_language" | "transliterated")[] | null;
                     /** Languages */
                     languages?: string[] | null;
                     /**
@@ -11724,7 +11725,7 @@ export interface operations {
             content: {
                 "application/json": {
                     /** Kinds */
-                    kinds?: ("booking" | "booking_out_of_hours" | "cancellation" | "price_question" | "unknown_question" | "discount_request" | "rude_customer" | "human_request" | "prompt_injection" | "emergency")[] | null;
+                    kinds?: ("booking" | "booking_out_of_hours" | "cancellation" | "price_question" | "unknown_question" | "discount_request" | "rude_customer" | "human_request" | "prompt_injection" | "emergency" | "foreign_language" | "transliterated")[] | null;
                     /** Languages */
                     languages?: string[] | null;
                 };

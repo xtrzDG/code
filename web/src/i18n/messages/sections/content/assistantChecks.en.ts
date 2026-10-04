@@ -71,6 +71,8 @@ export const assistantChecksEn = {
       human_request: "Asks for a person",
       prompt_injection: "Tries to trick the assistant",
       emergency: "Emergency",
+      foreign_language: "Writes in a language you did not list",
+      transliterated: "Writes your language in Latin letters",
     },
   },
   checklist: {
