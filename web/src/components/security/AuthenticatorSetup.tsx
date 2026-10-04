@@ -67,7 +67,7 @@ export function AuthenticatorSetup({
             <p className="text-xs font-medium tracking-wide text-ink-subtle uppercase">
               {t("mfa.setup.key")}
             </p>
-            <p className="font-mono text-sm break-all text-ink" translate="no">
+            <p className="font-mono text-sm break-words text-ink" translate="no">
               {groupedKey(enrollment.secret)}
             </p>
             <p
