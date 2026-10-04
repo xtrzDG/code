@@ -46,7 +46,7 @@ def test_every_rule_of_the_code_has_its_file_and_no_file_is_extra() -> None:
     assert set(PLATFORM_ALERT_RULES) == set(PlatformAlertCode)
 
 
-@pytest.mark.parametrize("code", sorted(PlatformAlertCode, key=lambda c: c.value))
+@pytest.mark.parametrize("code", list(PlatformAlertCode))
 def test_the_code_matches_the_reviewed_rule(code: PlatformAlertCode) -> None:
     written: dict[str, object] = read_rule_files()[code.value]
     rule: PlatformAlertRule = PLATFORM_ALERT_RULES[code]
