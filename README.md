@@ -746,6 +746,16 @@ uv run pytest
 `.github/workflows/perf.yml` — подробности в
 [docs/operations/capacity.md](docs/operations/capacity.md).
 
+Качество ответов ассистента меряет харнесс оценки (`evals/`): 448 сценариев
+16 ниш (ka, ru, en, для четырёх ниш ещё he и ar). В каждом прогоне `pytest`
+(`tests/evals`) они проигрываются офлайн из записанных ответов модели
+(`evals/cassettes`); изменённый промпт или инструмент помечает запись
+устаревшей с причиной, и её перезаписывают
+`uv run python -m scripts.run_evals --record --update-baseline`. Каждую ночь
+`.github/workflows/evals-nightly.yml` гоняет их на живых моделях (pass^3,
+судья из другого семейства моделей) и сравнивает с `evals/baselines` —
+подробности в [evals/README.md](evals/README.md).
+
 Ворота качества в CI: покрытие строк и ветвей `app/` не ниже 95 %
 (`pytest -n auto --cov=app --cov-branch`), пороги покрытия `src/lib` и `_lib`
 кабинета (`npm run test:coverage`), слои ролей (`.importlinter`, решение
