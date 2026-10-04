@@ -38,6 +38,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/admin/clients/{business_id}/access": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Close Client Cabinet */
+        delete: operations["close_client_cabinet_v1_admin_clients__business_id__access_delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/admin/clients/{business_id}/open": {
         parameters: {
             query?: never;
@@ -190,6 +207,42 @@ export interface paths {
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/v1/admin/team": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Platform Admins */
+        get: operations["list_platform_admins_v1_admin_team_get"];
+        put?: never;
+        /** Add Platform Admin */
+        post: operations["add_platform_admin_v1_admin_team_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/admin/team/{admin_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Remove Platform Admin */
+        delete: operations["remove_platform_admin_v1_admin_team__admin_id__delete"];
+        options?: never;
+        head?: never;
+        /** Change Platform Admin Role */
+        patch: operations["change_platform_admin_role_v1_admin_team__admin_id__patch"];
         trace?: never;
     };
     "/v1/assistants": {
@@ -2087,6 +2140,41 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/businesses/{business_id}/support-access": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Support Access */
+        get: operations["get_support_access_v1_businesses__business_id__support_access_get"];
+        put?: never;
+        post?: never;
+        /** End Support Access */
+        delete: operations["end_support_access_v1_businesses__business_id__support_access_delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/businesses/{business_id}/support-access/write-access": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Update Support Write Access */
+        put: operations["update_support_write_access_v1_businesses__business_id__support_access_write_access_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/businesses/{business_id}/test-chat": {
         parameters: {
             query?: never;
@@ -2542,6 +2630,57 @@ export interface paths {
         put?: never;
         post?: never;
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/me/sessions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List My Sessions */
+        get: operations["list_my_sessions_v1_me_sessions_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/me/sessions/revoke-others": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Revoke Other Sessions */
+        post: operations["revoke_other_sessions_v1_me_sessions_revoke_others_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/me/sessions/{session_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Revoke Session */
+        delete: operations["revoke_session_v1_me_sessions__session_id__delete"];
         options?: never;
         head?: never;
         patch?: never;
@@ -3328,10 +3467,14 @@ export interface components {
          *     10), a launch decision that must stay traceable (publishing a version
          *     that has not passed its autotests), or a change of a person's
          *     two-factor sign-in (an authenticator added or removed, new recovery
-         *     codes): MFA_CHANGED entries name no business.
+         *     codes): MFA_CHANGED entries name no business. SUPPORT_ACCESS_START and
+         *     SUPPORT_ACCESS_END bound a platform admin's time-boxed look into a
+         *     client's cabinet (with the reason, the address and how it ended);
+         *     SESSION_REVOKED (a person ended sessions of theirs) and
+         *     PLATFORM_ADMIN_CHANGED (the admin team changed) name no business.
          * @enum {string}
          */
-        AuditAction: "view" | "create" | "update" | "delete" | "export" | "admin_access" | "login" | "retention_purge" | "publish_untested" | "mfa_changed";
+        AuditAction: "view" | "create" | "update" | "delete" | "export" | "admin_access" | "login" | "retention_purge" | "publish_untested" | "mfa_changed" | "support_access_start" | "support_access_end" | "session_revoked" | "platform_admin_changed";
         /**
          * AuditLogEntryView
          * @description One operation on personal data.
@@ -4483,8 +4626,10 @@ export interface components {
         };
         /**
          * ClientCabinetAccess
-         * @description What a platform admin may now open in the client's cabinet. Every later
-         *     cabinet request of the admin is audited again by the access check.
+         * @description What a platform admin may now open in the client's cabinet, until
+         *     `expires_at`: reading only, unless the owner lets support change things
+         *     (`can_write`, checked again at every request). Every change the admin
+         *     makes is audited by the access check.
          */
         ClientCabinetAccess: {
             /** Audit Log Entry Id */
@@ -4493,14 +4638,23 @@ export interface components {
             business_id: string;
             /** Business Name */
             business_name: string;
+            /**
+             * Can Write
+             * @default false
+             */
+            can_write: boolean;
             /** Country Code */
             country_code: string;
+            /** Expires At */
+            expires_at: number;
             /** Opened At */
             opened_at: number;
             /** Owner Language */
             owner_language: string;
             /** Sections */
             sections: components["schemas"]["CabinetSection"][];
+            /** Support Access Grant Id */
+            support_access_grant_id: string;
         };
         /**
          * ClientCostReport
@@ -5199,13 +5353,18 @@ export interface components {
         };
         /**
          * CurrentUserView
-         * @description The signed-in user and every business they work in, and how the current
-         *     session is signed in (None outside a signed-in request).
+         * @description The signed-in user and every business they work in, how the current
+         *     session is signed in (None outside a signed-in request), and for a
+         *     platform admin their role and what it permits (which admin pages and
+         *     actions the cabinet offers).
          */
         CurrentUserView: {
             auth_level?: components["schemas"]["AuthLevel"] | null;
             /** Memberships */
             memberships?: components["schemas"]["UserMembershipView"][];
+            /** Platform Admin Permissions */
+            platform_admin_permissions?: components["schemas"]["PlatformAdminPermission"][];
+            platform_admin_role?: components["schemas"]["PlatformAdminRole"] | null;
             user: components["schemas"]["UserView"];
         };
         /**
@@ -7725,6 +7884,62 @@ export interface components {
             quotes: components["schemas"]["PlanQuote"][];
         };
         /**
+         * PlatformAdminPermission
+         * @description One thing an admin page or action needs; each role holds a fixed set
+         *     (`app/utilities/security/admin_permissions.py`).
+         * @enum {string}
+         */
+        PlatformAdminPermission: "view_clients" | "open_client_cabinet" | "change_client_cabinet" | "view_metrics" | "view_operations" | "manage_operations" | "manage_admins";
+        /**
+         * PlatformAdminRole
+         * @description What a platform admin is for. SUPER runs the platform: every admin
+         *     page, the admin team, and, with the owner's consent, changes inside a
+         *     client's cabinet. SUPPORT_READONLY helps clients: the client list, the
+         *     platform's health, and time-boxed read-only looks into a client's
+         *     cabinet. BILLING sees the client list and the growth metrics, never a
+         *     client's conversations.
+         * @enum {string}
+         */
+        PlatformAdminRole: "super" | "support_readonly" | "billing";
+        /**
+         * PlatformAdminTeamView
+         * @description The admin team, SUPER admins first, then by when they were added.
+         */
+        PlatformAdminTeamView: {
+            /** Items */
+            items?: components["schemas"]["PlatformAdminView"][];
+        };
+        /**
+         * PlatformAdminView
+         * @description One member of the admin team: how they sign in, their role, their name
+         *     once they have signed in (`user_id` is None before), who added them
+         *     (None: bootstrapped from the PLATFORM_ADMIN_* lists) and when.
+         *     `is_you` marks the viewer.
+         */
+        PlatformAdminView: {
+            /** Added By Name */
+            added_by_name?: string | null;
+            /** Created At */
+            created_at: number;
+            /** Display Name */
+            display_name?: string | null;
+            /** Email */
+            email?: string | null;
+            /** Id */
+            id: string;
+            /**
+             * Is You
+             * @default false
+             */
+            is_you: boolean;
+            login_method: components["schemas"]["LoginMethod"];
+            /** Phone Number */
+            phone_number?: string | null;
+            role: components["schemas"]["PlatformAdminRole"];
+            /** User Id */
+            user_id?: string | null;
+        };
+        /**
          * PlatformAlertCode
          * @description What the platform alerts job watches (ops/alerts/*.yaml has each rule's
          *     threshold, window and runbook).
@@ -8159,6 +8374,14 @@ export interface components {
             skipped_count: number;
         };
         /**
+         * RevokedSessionsView
+         * @description How many sessions were ended.
+         */
+        RevokedSessionsView: {
+            /** Revoked Count */
+            revoked_count: number;
+        };
+        /**
          * ScheduleExceptionList
          * @description Schedule exceptions ordered by date.
          */
@@ -8223,6 +8446,25 @@ export interface components {
             /** Step Up Valid Until */
             step_up_valid_until: number;
         };
+        /**
+         * SessionDevice
+         * @description The browser, system and kind of device a User-Agent names.
+         */
+        SessionDevice: {
+            /** Browser */
+            browser?: string | null;
+            /** @default unknown */
+            kind: components["schemas"]["SessionDeviceKind"];
+            /** Operating System */
+            operating_system?: string | null;
+        };
+        /**
+         * SessionDeviceKind
+         * @description The kind of device a session's User-Agent describes, for the icon of
+         *     the sessions list; UNKNOWN when it does not say (or there is none).
+         * @enum {string}
+         */
+        SessionDeviceKind: "desktop" | "phone" | "tablet" | "unknown";
         /**
          * SetupActionTarget
          * @description The cabinet place where the owner acts; the cabinet maps it to a page:
@@ -8508,11 +8750,12 @@ export interface components {
          *     Overview (a milestone's celebration waits there). The activation
          *     reminders open SETUP (the guided setup, at the saved step), CHANNELS,
          *     SHARE (the link and QR card on the Channels page) and BILLING (where
-         *     the done-for-you setup is chosen). Link targets live only in signed
-         *     links, never in stored documents.
+         *     the done-for-you setup is chosen). ACCOUNT_SECURITY is the person's
+         *     Account → Security page (their sessions: a sign-in from a new device).
+         *     Link targets live only in signed links, never in stored documents.
          * @enum {string}
          */
-        StaffLinkTarget: "conversation" | "lead" | "booking" | "notifications" | "report" | "overview" | "setup" | "channels" | "share" | "billing";
+        StaffLinkTarget: "conversation" | "lead" | "booking" | "notifications" | "report" | "overview" | "setup" | "channels" | "share" | "billing" | "account_security";
         /**
          * StaffLinkView
          * @description Where a link leads, for the cabinet to open (it maps the target to its
@@ -8824,6 +9067,64 @@ export interface components {
             trial_ends_at?: number | null;
         };
         /**
+         * SupportAccessView
+         * @description Platform support in this business now: the open looks into the cabinet,
+         *     the owner's consent to changes, and the viewer's own position (a
+         *     support admin, and whether they may change things right now).
+         */
+        SupportAccessView: {
+            /**
+             * Is Support Viewer
+             * @default false
+             */
+            is_support_viewer: boolean;
+            /** Sessions */
+            sessions?: components["schemas"]["SupportSessionView"][];
+            /**
+             * Viewer Can Write
+             * @default false
+             */
+            viewer_can_write: boolean;
+            write_access?: components["schemas"]["SupportWriteAccessView"];
+        };
+        /**
+         * SupportSessionView
+         * @description One platform admin's open look into the cabinet: who (their name, or
+         *     None: shown as "Platform support"), why, since and until when.
+         *     `is_yours` marks the viewer's own.
+         */
+        SupportSessionView: {
+            /** Admin Name */
+            admin_name?: string | null;
+            /** Expires At */
+            expires_at: number;
+            /** Grant Id */
+            grant_id: string;
+            /**
+             * Is Yours
+             * @default false
+             */
+            is_yours: boolean;
+            /** Reason */
+            reason: string;
+            /** Started At */
+            started_at: number;
+        };
+        /**
+         * SupportWriteAccessView
+         * @description Whether the owner lets support change things, and until when (None
+         *     while it is off).
+         */
+        SupportWriteAccessView: {
+            /** Expires At */
+            expires_at?: number | null;
+            /**
+             * Is Allowed
+             * @default false
+             */
+            is_allowed: boolean;
+        };
+        /**
          * TableSizeView
          * @description One table of the database: its disk space with indexes, its rows (estimated).
          */
@@ -9132,6 +9433,46 @@ export interface components {
             /** Country Code */
             country_code: string;
             role: components["schemas"]["BusinessMemberRole"];
+        };
+        /**
+         * UserSessionList
+         * @description The person's live sessions, the current one first, then the most
+         *     recently used (a short list: expired sessions are gone).
+         */
+        UserSessionList: {
+            /** Items */
+            items?: components["schemas"]["UserSessionView"][];
+        };
+        /**
+         * UserSessionView
+         * @description One signed-in device of the person (Account → Security): what it is,
+         *     where and when it signed in, when it was last used and from where,
+         *     how it was signed in, and when it ends by itself (unused until
+         *     `idle_expires_at`, or at `expires_at` whatever happens). The request's
+         *     own session is `is_current`.
+         */
+        UserSessionView: {
+            auth_level: components["schemas"]["AuthLevel"];
+            /** Created At */
+            created_at: number;
+            /** Created Ip */
+            created_ip?: string | null;
+            device: components["schemas"]["SessionDevice"];
+            /** Expires At */
+            expires_at: number;
+            /** Id */
+            id: string;
+            /** Idle Expires At */
+            idle_expires_at?: number | null;
+            /**
+             * Is Current
+             * @default false
+             */
+            is_current: boolean;
+            /** Last Seen At */
+            last_seen_at: number;
+            /** Last Seen Ip */
+            last_seen_ip?: string | null;
         };
         /**
          * UserView
@@ -9868,7 +10209,7 @@ export interface operations {
             };
         };
     };
-    open_client_cabinet_v1_admin_clients__business_id__open_post: {
+    close_client_cabinet_v1_admin_clients__business_id__access_delete: {
         parameters: {
             query?: never;
             header?: {
@@ -9880,6 +10221,98 @@ export interface operations {
             cookie?: never;
         };
         requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    open_client_cabinet_v1_admin_clients__business_id__open_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Reason */
+                    reason: string;
+                };
+            };
+        };
         responses: {
             /** @description Successful Response */
             200: {
@@ -10720,6 +11153,384 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AdminSystemView"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    list_platform_admins_v1_admin_team_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlatformAdminTeamView"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    add_platform_admin_v1_admin_team_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Email */
+                    email?: string | null;
+                    /** Phone Number */
+                    phone_number?: string | null;
+                    /**
+                     * PlatformAdminRole
+                     * @description What a platform admin is for. SUPER runs the platform: every admin
+                     *     page, the admin team, and, with the owner's consent, changes inside a
+                     *     client's cabinet. SUPPORT_READONLY helps clients: the client list, the
+                     *     platform's health, and time-boxed read-only looks into a client's
+                     *     cabinet. BILLING sees the client list and the growth metrics, never a
+                     *     client's conversations.
+                     * @enum {string}
+                     */
+                    role: "super" | "support_readonly" | "billing";
+                };
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlatformAdminTeamView"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    remove_platform_admin_v1_admin_team__admin_id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                admin_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    change_platform_admin_role_v1_admin_team__admin_id__patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                admin_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /**
+                     * PlatformAdminRole
+                     * @description What a platform admin is for. SUPER runs the platform: every admin
+                     *     page, the admin team, and, with the owner's consent, changes inside a
+                     *     client's cabinet. SUPPORT_READONLY helps clients: the client list, the
+                     *     platform's health, and time-boxed read-only looks into a client's
+                     *     cabinet. BILLING sees the client list and the growth metrics, never a
+                     *     client's conversations.
+                     * @enum {string}
+                     */
+                    role: "super" | "support_readonly" | "billing";
+                };
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlatformAdminTeamView"];
                 };
             };
             /** @description Sign-in required: the bearer token is missing, invalid or expired. */
@@ -24248,6 +25059,274 @@ export interface operations {
             };
         };
     };
+    get_support_access_v1_businesses__business_id__support_access_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SupportAccessView"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    end_support_access_v1_businesses__business_id__support_access_delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    update_support_write_access_v1_businesses__business_id__support_access_write_access_put: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Hours */
+                    hours?: number | null;
+                    /** Is Allowed */
+                    is_allowed: boolean;
+                };
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SupportAccessView"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
     owner_test_chat_v1_businesses__business_id__test_chat_post: {
         parameters: {
             query?: never;
@@ -26837,6 +27916,261 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["AccountSecurityView"];
                 };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    list_my_sessions_v1_me_sessions_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserSessionList"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    revoke_other_sessions_v1_me_sessions_revoke_others_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RevokedSessionsView"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    revoke_session_v1_me_sessions__session_id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Sign-in required: the bearer token is missing, invalid or expired. */
             401: {
