@@ -6,13 +6,19 @@ from typed_time_provider import Microseconds
 
 from app.schemas.constants.conversation_engine import ReplyFailureKind, TurnGate
 from app.schemas.constants.conversations import ReplyGuardVerdict
+from app.schemas.constants.reply_safety import ReplyGuardReason
 from app.schemas.domain.assistants import AssistantVersionDocument
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.contacts import ContactDocument
-from app.schemas.domain.conversations import ConversationDocument, ToolCallRecord
+from app.schemas.domain.conversations import (
+    ClaimFinding,
+    ConversationDocument,
+    ToolCallRecord,
+)
 from app.schemas.domain.message_media import MessageAttachment
 from app.schemas.dto.assistant_tools import AssistantToolContext, AssistantToolOutcome
 from app.schemas.dto.conversations import LlmToolCall
+from app.schemas.dto.reply_safety import VerifierUsage
 from app.schemas.typings.assistants.constrained_strings import LlmModelId
 from app.schemas.typings.bookings.prefixed_id import BookingId, LeadId
 from app.schemas.typings.conversations.booleans import (
@@ -84,15 +90,22 @@ class GeneratedReply(ImmutableDTO):
     Outcome of the language-model loop for one turn.
 
     `text` is None when `failure` is set: the engine then passes the
-    conversation to staff and answers with a localized text instead.
+    conversation to staff and answers with a localized text instead. The
+    guard fields say what the reply guard did and found (see
+    `MessageDocument`); `verifier_usage` are the claim check's model calls.
     """
 
     text: MessageText | None = None
     failure: ReplyFailureKind | None = None
     guard_verdict: ReplyGuardVerdict = ReplyGuardVerdict.CLEAN
+    guard_reasons: list[ReplyGuardReason] = Field(
+        default_factory=list[ReplyGuardReason]
+    )
     unverified_values: list[UnverifiedReplyValue] = Field(
         default_factory=list[UnverifiedReplyValue]
     )
+    claim_findings: list[ClaimFinding] = Field(default_factory=list[ClaimFinding])
+    verifier_usage: list[VerifierUsage] = Field(default_factory=list[VerifierUsage])
     tool_calls: list[ToolCallRecord] = Field(default_factory=list[ToolCallRecord])
     created_booking_ids: list[BookingId] = Field(default_factory=list[BookingId])
     created_lead_ids: list[LeadId] = Field(default_factory=list[LeadId])
@@ -117,6 +130,14 @@ class ReplyRecord(ImmutableDTO):
     turn: PreparedTurn
     text: MessageText | None = None
     guard_verdict: ReplyGuardVerdict = ReplyGuardVerdict.CLEAN
+    guard_reasons: list[ReplyGuardReason] = Field(
+        default_factory=list[ReplyGuardReason]
+    )
+    unverified_values: list[UnverifiedReplyValue] = Field(
+        default_factory=list[UnverifiedReplyValue]
+    )
+    claim_findings: list[ClaimFinding] = Field(default_factory=list[ClaimFinding])
+    verifier_usage: list[VerifierUsage] = Field(default_factory=list[VerifierUsage])
     tool_calls: list[ToolCallRecord] = Field(default_factory=list[ToolCallRecord])
     created_booking_ids: list[BookingId] = Field(default_factory=list[BookingId])
     created_lead_ids: list[LeadId] = Field(default_factory=list[LeadId])

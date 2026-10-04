@@ -15,8 +15,23 @@ class ClientCount(BaseConstrainedTypedInt):
     ge = 0
 
 
+class GuardedReplyCount(BaseConstrainedTypedInt):
+    """
+    Assistant replies of a time window, or those of them the reply guard
+    held back (rewritten once or handed to staff).
+    """
+
+    ge = 0
+
+
 class HandoffCount(BaseConstrainedTypedInt):
     """Conversations passed to staff in a time window (sandbox excluded)."""
+
+    ge = 0
+
+
+class InjectionFlagCount(BaseConstrainedTypedInt):
+    """Customer messages of a time window that looked like prompt injection."""
 
     ge = 0
 

@@ -1,11 +1,10 @@
 """
-A complete in-memory conversation engine for tests.
-
-Real repositories over InMemoryDocumentCollectionAdapter, the real language
-detector, phone parser, tool registry and localized texts; fake tool use
-cases (tests/brain/fake_*_tools.py) and a scripted language model. The clock
-is manual, so tests can move time forward. The parts are built by
-brain_repositories, brain_business_seed, brain_tools and brain_orchestrators.
+A complete in-memory conversation engine for tests: real repositories over
+InMemoryDocumentCollectionAdapter, the real language detector, phone parser,
+tool registry and localized texts; fake tool use cases, a fake claim check
+(`GuardOptions`) and a scripted language model. The clock is manual. The
+parts are built by brain_repositories, brain_business_seed, brain_tools and
+brain_orchestrators.
 """
 
 from dataclasses import dataclass, field
@@ -88,7 +87,7 @@ from app.utilities.config_helpers.app_settings.app_settings_assembler import (
 from app.utilities.localization.localized_text_resolver import LocalizedTextResolver
 from app.utilities.security.session_assurance_context import SessionAssuranceContext
 from tests.brain.brain_business_seed import seed_business
-from tests.brain.brain_orchestrators import build_brain_orchestrators
+from tests.brain.brain_orchestrators import GuardOptions, build_brain_orchestrators
 from tests.brain.brain_repositories import build_brain_repositories
 from tests.brain.brain_tools import build_brain_tools
 from tests.brain.business_setups import GEORGIA, BusinessSetup, default_menu
@@ -219,6 +218,7 @@ def build_world(
     hours: list[tuple[int, int]] | None = None,
     is_published: bool = True,
     app_base_url: str | None = None,
+    guard: GuardOptions | None = None,
 ) -> BrainWorld:
     clock = ManualClock()
     wall_clock: WallClock[Microseconds] = clock.wall_clock()
@@ -243,6 +243,7 @@ def build_world(
         contact_message_limit=ContactMessageLimit(contact_message_limit),
         tool_round_limit=LlmToolRoundLimit(tool_round_limit),
         app_base_url=None if app_base_url is None else PublicBaseUrl(app_base_url),
+        guard=guard or GuardOptions(),
     )
     return BrainWorld(
         clock=clock,

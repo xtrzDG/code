@@ -1,10 +1,11 @@
 """The real text and voice orchestrators of a brain test world."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from typed_time_provider import Microseconds, WallClock
 
 from app.contracts.llm import LlmAdapterContract
+from app.contracts.reply_safety import ClaimCheckFacilitatorContract
 from app.orchestrators.conversations.conversation_turn_orchestrator import (
     ConversationTurnOrchestrator,
 )
@@ -19,7 +20,10 @@ from app.schemas.typings.assistants.constrained_integers import (
     LlmToolRoundLimit,
 )
 from app.schemas.typings.channels.constrained_strings import PublicBaseUrl
-from app.schemas.typings.conversations.constrained_integers import ContactMessageLimit
+from app.schemas.typings.conversations.constrained_integers import (
+    ContactMessageLimit,
+    InjectionFlagLimit,
+)
 from app.use_cases.conversations.open_voice_conversation_use_case import (
     OpenVoiceConversationUseCase,
 )
@@ -43,7 +47,18 @@ from app.utilities.localization.localized_text_resolver import LocalizedTextReso
 from app.utilities.storage.storage_scope_context import StorageScopeContext
 from tests.brain.brain_repositories import BrainRepositories
 from tests.brain.brain_tools import BrainTools
+from tests.brain.fake_claim_check import FakeClaimCheck
 from tests.live_events.recording_event_publisher import RecordingEventPublisher
+
+
+@dataclass(frozen=True)
+class GuardOptions:
+    """The reply guard's claim check (off) and the injection brake limit."""
+
+    claim_check: ClaimCheckFacilitatorContract = field(
+        default_factory=lambda: FakeClaimCheck(is_enabled=False)
+    )
+    injection_flag_limit: InjectionFlagLimit = InjectionFlagLimit(3)
 
 
 @dataclass(frozen=True)
@@ -63,7 +78,9 @@ def build_brain_orchestrators(
     contact_message_limit: ContactMessageLimit,
     tool_round_limit: LlmToolRoundLimit,
     app_base_url: PublicBaseUrl | None = None,
+    guard: GuardOptions | None = None,
 ) -> BrainOrchestrators:
+    options: GuardOptions = guard or GuardOptions()
     storage_scope = StorageScopeContext()
     live_events = RecordingEventPublisher()
     orchestrator = ConversationTurnOrchestrator(
@@ -84,6 +101,8 @@ def build_brain_orchestrators(
             llm_adapter=llm,
             llm_turn_repo=repos.llm_turn_repo,
             message_repo=repos.message_repo,
+            contact_repo=repos.contact_repo,
+            claim_check=options.claim_check,
             tool_registry=AssistantToolRegistry(),
             run_assistant_tool=tools.run_tool,
             wall_clock=wall_clock,

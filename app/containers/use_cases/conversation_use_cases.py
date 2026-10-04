@@ -119,6 +119,8 @@ class ConversationUseCasesContainer(containers.DeclarativeContainer):
         llm_adapter=adapters.chat_llm_adapter,
         llm_turn_repo=repositories.llm_turn_repo,
         message_repo=repositories.message_repo,
+        contact_repo=repositories.contact_repo,
+        claim_check=facilitators.claim_check,
         tool_registry=registries.assistant_tool_registry,
         run_assistant_tool=run_assistant_tool_use_case,
         wall_clock=time_provider.microsecond_wall_clock,

@@ -22,9 +22,17 @@ class TurnGate(StrEnum):
 
 
 class ReplyFailureKind(StrEnum):
-    """Why the language model could not produce a reply that may be sent."""
+    """
+    Why the language model could not produce a reply that may be sent: it
+    refused, the provider failed, it did not finish, or its rewritten reply
+    still had values (UNVERIFIED_NUMBERS) or policy and availability claims
+    (UNSUPPORTED_CLAIM) the evidence does not back, or another person's
+    phone or e-mail (PERSONAL_DATA).
+    """
 
     REFUSAL = "refusal"
     PROVIDER_ERROR = "provider_error"
     NO_ANSWER = "no_answer"
     UNVERIFIED_NUMBERS = "unverified_numbers"
+    UNSUPPORTED_CLAIM = "unsupported_claim"
+    PERSONAL_DATA = "personal_data"

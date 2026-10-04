@@ -4,6 +4,7 @@ from pydantic import Field
 from app.schemas.configurations.backup_settings import BackupSettings
 from app.schemas.configurations.media_settings import MediaSettings
 from app.schemas.configurations.platform_alert_settings import PlatformAlertSettings
+from app.schemas.configurations.reply_safety_settings import ReplySafetySettings
 from app.schemas.configurations.reply_speed_settings import ReplySpeedSettings
 from app.schemas.constants.assistants import LlmEffort, LlmProvider
 from app.schemas.constants.environment import DeploymentEnvironment
@@ -265,6 +266,9 @@ class AppSettings(ImmutableDTO):
     # Grouped bursts, the turn deadline and model failover
     # (MESSAGE_COALESCE_SECONDS, CHAT_TURN_DEADLINE_SECONDS, LLM_FALLBACK_MODEL_ID).
     reply_speed: ReplySpeedSettings = Field(default_factory=ReplySpeedSettings)
+    # The claim check and the prompt-injection brake of the reply guard
+    # (LLM_VERIFIER_MODEL_ID, INJECTION_FLAG_LIMIT).
+    reply_safety: ReplySafetySettings = Field(default_factory=ReplySafetySettings)
     # Where the platform alerts go (PLATFORM_ALERT_*, docs/operations/slo.md).
     platform_alerts: PlatformAlertSettings = Field(
         default_factory=PlatformAlertSettings

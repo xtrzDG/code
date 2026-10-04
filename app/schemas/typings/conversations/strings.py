@@ -16,6 +16,13 @@ class ChannelUserId(BaseTypedString):
     """
 
 
+class ClaimText(BaseTypedString):
+    """
+    A policy or availability statement of an assistant reply, as written
+    ("Parking is free for guests."), that the claim check verified.
+    """
+
+
 class LlmProviderPayload(BaseTypedString):
     """
     Raw JSON of one language-model turn exactly as it is replayed.
@@ -54,6 +61,14 @@ class ProviderCallId(BaseTypedString):
 
 class RecordingStoragePath(BaseTypedString):
     """Path of a call recording in EU object storage."""
+
+
+class ReplyEvidenceText(BaseTypedString):
+    """
+    One text that backs what the assistant says: a fact row, a tool result,
+    the server's context line or a staff message, as the claim check's
+    verifier reads it.
+    """
 
 
 class UnverifiedReplyValue(BaseTypedString):

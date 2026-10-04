@@ -1,5 +1,7 @@
 """What the model is told and what backs its reply, read from the messages."""
 
+from dataclasses import dataclass
+
 from app.contracts.repositories.conversation_repositories import MessageRepoContract
 from app.schemas.constants.channels import MessageDirection
 from app.schemas.constants.conversations import MessageAuthor
@@ -47,54 +49,85 @@ def collect_unanswered_messages(
     ]
 
 
-def find_unverified_reply_values(
+@dataclass(frozen=True)
+class ReplyEvidence:
+    """
+    What backs a reply, read from the conversation once (technical record).
+
+    `trusted`: what the business and the server said (the business name,
+    the context line, the facts, tool results and staff messages).
+    `customer`: what the customer wrote and the assistant repeated; it
+    backs times, dates, phones and counts, never a price. `own_contact`:
+    where the customer's own and the business's public contact details
+    may come from (no staff messages: staff may quote other customers).
+    """
+
+    trusted: list[str]
+    customer: list[str]
+    own_contact: list[str]
+
+
+def gather_reply_evidence(
     message_repo: MessageRepoContract,
     turn: PreparedTurn,
     progress: TurnProgress,
-    text: MessageText,
-) -> list[UnverifiedReplyValue]:
-    """Values of the reply text that no evidence of the conversation backs."""
+) -> ReplyEvidence:
+    """The evidence of the conversation's stored messages and this turn."""
 
-    # Trusted: what the business and the server said.
-    evidence: list[str] = [
+    business_texts: list[str] = [
         str(turn.business.name),
         str(turn.context_line),
         *(f"{fact.label}: {fact.value}" for fact in turn.version.facts),
         *progress.tool_results,
     ]
-    # What the customer wrote, and earlier replies (which may repeat it):
-    # they back times, dates, phones and counts, never a price.
-    customer_texts: list[str] = []
+    staff_texts: list[str] = []
+    tool_texts: list[str] = []
+    customer_written: list[str] = [str(turn.customer_text)]
+    assistant_texts: list[str] = []
     for message in message_repo.list_by_conversation(
         turn.business.id, turn.conversation.id
     ):
         if message.direction is MessageDirection.INBOUND:
             # Voice-note transcripts and shared places are the customer's
             # words too.
-            customer_texts.append(
+            customer_written.append(
                 readable_message_text(str(message.text), message.attachments)
             )
             continue
 
         if message.author is MessageAuthor.ASSISTANT:
-            customer_texts.append(str(message.text))
+            assistant_texts.append(str(message.text))
 
         # Staff are the business speaking: the assistant may repeat their
         # prices and terms.
         if message.author is MessageAuthor.STAFF:
-            evidence.append(str(message.text))
+            staff_texts.append(str(message.text))
 
         # Tool results of earlier replies and of voice-agent calls count.
-        evidence.extend(
+        tool_texts.extend(
             str(record.result_json)
             for record in message.tool_calls
             if not record.is_error
         )
 
+    return ReplyEvidence(
+        trusted=[*business_texts, *staff_texts, *tool_texts],
+        customer=[*customer_written, *assistant_texts],
+        own_contact=[*business_texts, *tool_texts, *customer_written],
+    )
+
+
+def find_unverified_reply_values(
+    evidence: ReplyEvidence,
+    turn: PreparedTurn,
+    text: MessageText,
+) -> list[UnverifiedReplyValue]:
+    """Values of the reply text that no evidence of the conversation backs."""
+
     return find_unverified_values(
         text,
-        evidence,
+        evidence.trusted,
         [*turn.version.languages, turn.reply_language],
         [turn.business.currency_code],
-        customer_texts=customer_texts,
+        customer_texts=evidence.customer,
     )

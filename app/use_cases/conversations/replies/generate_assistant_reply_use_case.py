@@ -4,17 +4,16 @@ from typed_time_provider import Microseconds, WallClock
 
 from app.contracts.brain import AssistantToolRegistryContract
 from app.contracts.llm import LlmAdapterContract
+from app.contracts.reply_safety import ClaimCheckFacilitatorContract
 from app.contracts.repositories.conversation_repositories import (
+    ContactRepoContract,
     LlmTurnRepoContract,
     MessageRepoContract,
 )
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.assistants import LlmEffort
 from app.schemas.constants.conversation_engine import ReplyFailureKind
-from app.schemas.constants.conversations import (
-    LlmTurnRole,
-    ReplyGuardVerdict,
-)
+from app.schemas.constants.conversations import LlmTurnRole
 from app.schemas.domain.conversations import LlmTurnDocument
 from app.schemas.dto.assistant_tools import (
     AssistantToolInvocation,
@@ -39,11 +38,16 @@ from app.schemas.typings.assistants.constrained_integers import (
 from app.schemas.typings.conversations.strings import (
     LlmProviderPayload,
     MessageText,
-    UnverifiedReplyValue,
 )
 from app.use_cases.conversations.replies.customer_turn import build_customer_turn
-from app.use_cases.conversations.replies.reply_evidence import (
-    find_unverified_reply_values,
+from app.use_cases.conversations.replies.guarded_replies import (
+    clean_reply,
+    handed_off_reply,
+    rewritten_reply,
+)
+from app.use_cases.conversations.replies.reply_review import (
+    ReplyReview,
+    ReplyReviewer,
 )
 from app.use_cases.conversations.replies.transcript_turns import (
     append_response,
@@ -57,7 +61,7 @@ from app.use_cases.conversations.replies.turn_progress import (
     start_progress,
 )
 from app.utilities.conversations.customer_text_fencing import new_fence_key
-from app.utilities.conversations.turn_context import build_rewrite_note
+from app.utilities.conversations.guard_rewrite_note import build_guard_rewrite_note
 
 
 class GenerateAssistantReplyUseCase(UseCaseContract[PreparedTurn, GeneratedReply]):
@@ -75,13 +79,16 @@ class GenerateAssistantReplyUseCase(UseCaseContract[PreparedTurn, GeneratedReply
     round go back in one tool-results turn. Every turn gets the next
     sequence number and is only ever appended.
 
-    The final text passes the invented-numbers guard: values missing from the
-    facts, the conversation's tool results and the context (and, except for
-    prices and percentages, from the customer's messages) are sent back once
-    with a request to rewrite; a reply that still has them is replaced by a
-    handoff (failure UNVERIFIED_NUMBERS). A refusal,
-    a provider error or no answer within the round limit are failures too;
-    the engine then passes the conversation to a colleague.
+    The final text passes the reply guard (`ReplyReviewer`): values missing
+    from the facts, the conversation's tool results and the context (and,
+    except for prices and percentages, from the customer's messages),
+    policy and availability claims the claim check's verifier finds
+    unsupported, and another person's phone number or e-mail address are
+    sent back once with a request to rewrite; a reply that still has them
+    is replaced by a handoff (failure PERSONAL_DATA, UNVERIFIED_NUMBERS or
+    UNSUPPORTED_CLAIM). A refusal, a provider error or no answer within the
+    round limit are failures too; the engine then passes the conversation
+    to a colleague.
     """
 
     def __init__(
@@ -89,6 +96,8 @@ class GenerateAssistantReplyUseCase(UseCaseContract[PreparedTurn, GeneratedReply
         llm_adapter: LlmAdapterContract,
         llm_turn_repo: LlmTurnRepoContract,
         message_repo: MessageRepoContract,
+        contact_repo: ContactRepoContract,
+        claim_check: ClaimCheckFacilitatorContract,
         tool_registry: AssistantToolRegistryContract,
         run_assistant_tool: UseCaseContract[
             AssistantToolInvocation, AssistantToolOutcome
@@ -102,6 +111,9 @@ class GenerateAssistantReplyUseCase(UseCaseContract[PreparedTurn, GeneratedReply
         self._llm_adapter: LlmAdapterContract = llm_adapter
         self._llm_turn_repo: LlmTurnRepoContract = llm_turn_repo
         self._message_repo: MessageRepoContract = message_repo
+        self._reviewer: ReplyReviewer = ReplyReviewer(
+            message_repo, contact_repo, claim_check
+        )
         self._tool_registry: AssistantToolRegistryContract = tool_registry
         self._run_assistant_tool: UseCaseContract[
             AssistantToolInvocation, AssistantToolOutcome
@@ -144,20 +156,18 @@ class GenerateAssistantReplyUseCase(UseCaseContract[PreparedTurn, GeneratedReply
         if text is None or str(text).strip() == "":
             return build_reply(input_data, progress, failure=ReplyFailureKind.NO_ANSWER)
 
-        unverified_values: list[UnverifiedReplyValue] = find_unverified_reply_values(
-            self._message_repo, input_data, progress, text
-        )
-        if not unverified_values:
-            return build_reply(input_data, progress, text=text)
+        review: ReplyReview = self._reviewer.review(input_data, progress, text)
+        if not review.reasons:
+            return clean_reply(input_data, progress, text, review)
 
-        return self._rewrite_once(input_data, tools, progress, unverified_values)
+        return self._rewrite_once(input_data, tools, progress, review)
 
     def _rewrite_once(
         self,
         turn: PreparedTurn,
         tools: list[LlmToolDefinition],
         progress: TurnProgress,
-        unverified_values: list[UnverifiedReplyValue],
+        first: ReplyReview,
     ) -> GeneratedReply:
         self._append(
             turn,
@@ -165,7 +175,11 @@ class GenerateAssistantReplyUseCase(UseCaseContract[PreparedTurn, GeneratedReply
             LlmTurnRole.USER,
             self._llm_adapter.build_user_text_turn(
                 MessageText(
-                    build_rewrite_note([str(value) for value in unverified_values])
+                    build_guard_rewrite_note(
+                        [str(value) for value in first.unverified_values],
+                        [str(finding.claim) for finding in first.unsupported_claims],
+                        first.withheld_details,
+                    )
                 )
             ),
         )
@@ -175,32 +189,14 @@ class GenerateAssistantReplyUseCase(UseCaseContract[PreparedTurn, GeneratedReply
         except ExternalServiceError:
             rewritten_text = None
 
-        is_rewritten: bool = (
-            rewritten_text is not None and str(rewritten_text).strip() != ""
-        )
-        remaining_values: list[UnverifiedReplyValue] = (
-            find_unverified_reply_values(
-                self._message_repo, turn, progress, rewritten_text
-            )
-            if rewritten_text is not None and is_rewritten
-            else unverified_values
-        )
-        if rewritten_text is None or not is_rewritten or remaining_values:
-            return build_reply(
-                turn,
-                progress,
-                failure=ReplyFailureKind.UNVERIFIED_NUMBERS,
-                guard_verdict=ReplyGuardVerdict.HANDED_OFF,
-                unverified_values=remaining_values,
-            )
+        if rewritten_text is None or str(rewritten_text).strip() == "":
+            return handed_off_reply(turn, progress, first, None)
 
-        return build_reply(
-            turn,
-            progress,
-            text=rewritten_text,
-            guard_verdict=ReplyGuardVerdict.REWRITTEN,
-            unverified_values=unverified_values,
-        )
+        second: ReplyReview = self._reviewer.review(turn, progress, rewritten_text)
+        if second.reasons:
+            return handed_off_reply(turn, progress, first, second)
+
+        return rewritten_reply(turn, progress, rewritten_text, first, second)
 
     def _run_rounds(
         self,

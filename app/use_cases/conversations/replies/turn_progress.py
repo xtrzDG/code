@@ -4,10 +4,16 @@ from dataclasses import dataclass, field
 
 from app.schemas.constants.conversation_engine import ReplyFailureKind
 from app.schemas.constants.conversations import ReplyGuardVerdict
-from app.schemas.domain.conversations import LlmTurnDocument, ToolCallRecord
+from app.schemas.constants.reply_safety import ReplyGuardReason
+from app.schemas.domain.conversations import (
+    ClaimFinding,
+    LlmTurnDocument,
+    ToolCallRecord,
+)
 from app.schemas.dto.assistant_tools import AssistantToolOutcome
 from app.schemas.dto.conversation_engine import GeneratedReply, PreparedTurn
 from app.schemas.dto.conversations import LlmResponse, LlmToolCall
+from app.schemas.dto.reply_safety import VerifierUsage
 from app.schemas.typings.assistants.constrained_strings import LlmModelId
 from app.schemas.typings.bookings.prefixed_id import BookingId, LeadId
 from app.schemas.typings.conversations.constrained_integers import (
@@ -110,6 +116,9 @@ def build_reply(
     failure: ReplyFailureKind | None = None,
     guard_verdict: ReplyGuardVerdict = ReplyGuardVerdict.CLEAN,
     unverified_values: list[UnverifiedReplyValue] | None = None,
+    guard_reasons: list[ReplyGuardReason] | None = None,
+    claim_findings: list[ClaimFinding] | None = None,
+    verifier_usage: list[VerifierUsage] | None = None,
 ) -> GeneratedReply:
     """
     The turn's reply; its model is the one that answered the last round
@@ -120,7 +129,10 @@ def build_reply(
         text=text,
         failure=failure,
         guard_verdict=guard_verdict,
+        guard_reasons=[] if guard_reasons is None else guard_reasons,
         unverified_values=[] if unverified_values is None else unverified_values,
+        claim_findings=[] if claim_findings is None else claim_findings,
+        verifier_usage=[] if verifier_usage is None else verifier_usage,
         tool_calls=list(progress.tool_calls),
         created_booking_ids=list(progress.created_booking_ids),
         created_lead_ids=list(progress.created_lead_ids),
