@@ -3931,6 +3931,8 @@ export interface components {
          * @description Result of one autotest scenario.
          */
         AutotestScenarioResultView: {
+            /** Autotest Case Id */
+            autotest_case_id?: string | null;
             /** Check Codes */
             check_codes?: components["schemas"]["AutotestCheckCode"][];
             /** Check Notes */

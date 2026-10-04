@@ -13,7 +13,7 @@ label and a migration path).
 
 ## 2026-10-04 — teaching from conversations: "Fix this answer", bad rating reasons, the owner's checks
 
-Spec: `30a20a0878ee7b5b`
+Spec: `1cb3839d3a129574`
 
 - **Added** `GET /v1/businesses/{business_id}/conversations/{conversation_id}/messages/{message_id}/correction`
   (owners; audited as a view of the message): `AnswerCorrectionDraft`, the
@@ -54,7 +54,8 @@ Spec: `30a20a0878ee7b5b`
   `rated_message_id`.
 - **Changed** autotest results: scenario kind `owner_check`, check codes
   `expected_text_missing`, `forbidden_text_mentioned`, `no_lead_created`,
-  and `autotest_case_id` on `AutotestScenarioResult`.
+  and `autotest_case_id` on `AutotestScenarioResultView` (the check an
+  `owner_check` scenario played).
 
 ## 2026-10-04 — wave 10 together: value where owners read, the phone loop, reply guard, sessions and support access
 

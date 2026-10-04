@@ -2321,6 +2321,17 @@
         "additionalProperties": false,
         "description": "Result of one autotest scenario.",
         "properties": {
+          "autotest_case_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Autotest Case Id"
+          },
           "check_codes": {
             "items": {
               "$ref": "#/components/schemas/AutotestCheckCode"
