@@ -1,10 +1,11 @@
 "use client";
 
 import { IconAlert } from "@/components/icons";
-import { Badge, Card, EmptyState, TBody, THead, Table, Td, Th, Tr } from "@/components/ui";
+import { Badge, Card, EmptyState, TBody, THead, Td, Th, Tr } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { cn } from "@/lib/cn";
 
+import { ScrollingTable } from "../metrics/ScrollingTable";
 import { laneTone, sortWorkers, type Lane, type WorkerPulse } from "../../_lib/system";
 import { LANE_NAMES, useSystemFormat } from "./useSystemFormat";
 
@@ -22,7 +23,7 @@ export function WorkersCard({ workers }: { workers: readonly WorkerPulse[] }) {
           description={t("adminSystem.workers.noneDescription")}
         />
       ) : (
-        <Table caption={title}>
+        <ScrollingTable caption={title}>
           <THead>
             <Tr>
               <Th>{t("adminSystem.workers.host")}</Th>
@@ -49,7 +50,7 @@ export function WorkersCard({ workers }: { workers: readonly WorkerPulse[] }) {
               </Tr>
             ))}
           </TBody>
-        </Table>
+        </ScrollingTable>
       )}
     </Card>
   );
@@ -62,7 +63,7 @@ export function LanesCard({ lanes }: { lanes: readonly Lane[] }) {
   const title = t("adminSystem.lanes.title");
   return (
     <Card aria-label={title} title={title} description={t("adminSystem.lanes.description")} padded={false}>
-      <Table caption={title}>
+      <ScrollingTable caption={title}>
         <THead>
           <Tr>
             <Th>{t("adminSystem.lanes.lane")}</Th>
@@ -101,7 +102,7 @@ export function LanesCard({ lanes }: { lanes: readonly Lane[] }) {
             );
           })}
         </TBody>
-      </Table>
+      </ScrollingTable>
     </Card>
   );
 }

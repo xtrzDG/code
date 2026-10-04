@@ -1,10 +1,11 @@
 "use client";
 
-import { Alert, Badge, Card, TBody, THead, Table, Td, Th, Tr } from "@/components/ui";
+import { Alert, Badge, Card, TBody, THead, Td, Th, Tr } from "@/components/ui";
 import { Facts } from "@/components/workspace/Facts";
 import { useI18n } from "@/i18n/client";
 import type { MessageKey } from "@/i18n/translate";
 
+import { ScrollingTable } from "../metrics/ScrollingTable";
 import {
   RUN_STATE_TONES,
   backupState,
@@ -32,7 +33,7 @@ export function DatabaseCard({ totalBytes, tables }: { totalBytes: number | null
           <div className="border-b border-line px-5 py-4">
             <Facts items={[{ label: t("adminSystem.database.total"), value: format.bytes(totalBytes) }]} />
           </div>
-          <Table caption={t("adminSystem.database.largest")}>
+          <ScrollingTable caption={t("adminSystem.database.largest")}>
             <THead>
               <Tr>
                 <Th>{t("adminSystem.database.table")}</Th>
@@ -53,7 +54,7 @@ export function DatabaseCard({ totalBytes, tables }: { totalBytes: number | null
                 </Tr>
               ))}
             </TBody>
-          </Table>
+          </ScrollingTable>
         </>
       )}
     </Card>

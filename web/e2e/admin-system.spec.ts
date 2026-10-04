@@ -86,7 +86,8 @@ test("the platform admin reads the system page and records a data breach that no
 
   // The owner's audit log names the incident.
   await page.goto(`/b/${owner.businessId}/settings/audit`);
-  await expect(page.getByText(en.settings.audit.entities.incident).first()).toBeVisible();
+  const entries = page.getByRole("table", { name: en.settings.audit.title });
+  await expect(entries.getByRole("cell", { name: new RegExp(`^${en.settings.audit.entities.incident}`) })).toBeVisible();
 });
 
 test("the System page is not there for owners", async ({ page, owner, consoleErrors }) => {

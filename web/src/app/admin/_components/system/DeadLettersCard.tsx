@@ -5,11 +5,12 @@ import { useState } from "react";
 
 import { IconCheckCircle, IconRefresh, IconTrash } from "@/components/icons";
 import { LoadMore } from "@/components/insights/common";
-import { Badge, Button, Card, ConfirmDialog, EmptyState, ErrorState, SkeletonText, TBody, THead, Table, Td, Th, Tr } from "@/components/ui";
+import { Badge, Button, Card, ConfirmDialog, EmptyState, ErrorState, SkeletonText, TBody, THead, Td, Th, Tr } from "@/components/ui";
 import { useToast } from "@/components/ui/Toast";
 import { useI18n } from "@/i18n/client";
 import type { Schema } from "@/api/types";
 
+import { ScrollingTable } from "../metrics/ScrollingTable";
 import { adminClientPath } from "../../_lib/clients";
 import type { QueuedJob } from "../../_lib/system";
 import { useDeadJobs } from "../../_lib/useDeadJobs";
@@ -75,7 +76,7 @@ export function DeadLettersCard({ tallies }: { tallies: readonly Schema<"DeadJob
         </div>
       ) : (
         <>
-          <Table caption={title}>
+          <ScrollingTable caption={title}>
             <THead>
               <Tr>
                 <Th>{t("adminSystem.deadLetters.job")}</Th>
@@ -97,7 +98,7 @@ export function DeadLettersCard({ tallies }: { tallies: readonly Schema<"DeadJob
                 />
               ))}
             </TBody>
-          </Table>
+          </ScrollingTable>
           <LoadMore hasMore={jobs.hasMore} isLoading={jobs.isLoadingMore} error={jobs.moreError} onMore={jobs.loadMore} />
         </>
       )}
