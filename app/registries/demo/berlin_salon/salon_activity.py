@@ -26,6 +26,14 @@ WHATSAPP = ChannelKind.WHATSAPP
 INSTAGRAM = ChannelKind.INSTAGRAM
 WEB = ChannelKind.WEB_CHAT
 PHONE = ChannelKind.PHONE
+# The paid invoice's line in the languages of the PDFs, as the platform
+# words a monthly Chat period (InvoiceLineTextsTransformer).
+SALON_INVOICE_LINES: dict[str, str] = {
+    "en": "Call and message handling service — Chat, monthly",
+    "ru": "Услуга приёма и обработки обращений — Чат, помесячно",
+    "ka": "ზარებისა და შეტყობინებების მიღებისა და დამუშავების მომსახურება — "
+    "ჩატი, ყოველთვიური",
+}
 
 
 def build_salon_activity(
@@ -129,7 +137,7 @@ def build_salon_activity(
         story.business,
         clock.past(-8, "09:00"),
         "flitt-demo-7781",
-        "Call and message handling service — Chat, monthly",
+        SALON_INVOICE_LINES,
     )
     published = request.foundation.assistant_versions[0]
     return story.finish(

@@ -15,6 +15,7 @@ from app.transformers.invoicing.billing_document_sheet import (
     SheetLine,
     SheetRow,
 )
+from app.utilities.billing.invoice_lines import word_invoice_line
 
 
 class BillingDocumentLayoutTransformer(
@@ -24,9 +25,10 @@ class BillingDocumentLayoutTransformer(
     Lays a numbered invoice out as its invoice or its receipt, in English,
     Russian or Georgian (other languages read English, dates and amounts
     included, so one page never mixes conventions): the number and dates,
-    the seller and the buyer as issued, the line with its period, the
-    subtotal, the VAT and the total, the VAT note of its treatment, and how
-    and when it was paid. An invoice still to pay says where to pay it.
+    the seller and the buyer as issued, the line as worded in the page
+    language with its period, the subtotal, the VAT and the total, the VAT
+    note of its treatment, and how and when it was paid. An invoice still
+    to pay says where to pay it.
 
     Raises:
         ConflictError: the invoice has no number or parties yet.
@@ -62,7 +64,7 @@ class BillingDocumentLayoutTransformer(
             ),
             lines=[
                 SheetLine(
-                    description=str(invoice.description),
+                    description=str(word_invoice_line(invoice, page.language)),
                     period=page.period(),
                     amount=page.money(page.subtotal_minor()),
                 )

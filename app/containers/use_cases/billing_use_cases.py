@@ -100,6 +100,7 @@ class BillingUseCasesContainer(containers.DeclarativeContainer):
         invoice_description_transformer=transformers.invoice_description_transformer,
         wall_clock=time_provider.microsecond_wall_clock,
         invoice_issuing=facilitators.invoice_issuing_facilitator,
+        invoice_line_texts_transformer=transformers.invoice_line_texts_transformer,
     )
     assemble_billing_overview_use_case: Factory[
         UseCaseContract[BillingOverviewSource, BillingOverview]
@@ -273,6 +274,7 @@ class BillingUseCasesContainer(containers.DeclarativeContainer):
             billing_notice_transformer=transformers.billing_notice_transformer,
             wall_clock=time_provider.microsecond_wall_clock,
             invoice_issuing=facilitators.invoice_issuing_facilitator,
+            invoice_line_texts_transformer=transformers.invoice_line_texts_transformer,
         )
     )
     # The day's NBG and ECB rates stored as dated rows (periodic job).

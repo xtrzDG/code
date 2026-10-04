@@ -9696,7 +9696,7 @@
       },
       "InvoiceView": {
         "additionalProperties": false,
-        "description": "One invoice with its amount (the total, with VAT) formatted for the\nreader; its number once numbered (an invoice from before numbering\ngets one with its first PDF), the VAT in it, when it was paid, and\nwhether its receipt can be downloaded.",
+        "description": "One invoice with its line in the reader's language (without its dates,\nwhich `period_start` and `period_end` give; an invoice from before the\nPDFs keeps its line as issued) and its amount (the total, with VAT)\nformatted for the reader; its number once numbered (an invoice from\nbefore numbering gets one with its first PDF), the VAT in it, when it\nwas paid, and whether its receipt can be downloaded.",
         "properties": {
           "amount": {
             "$ref": "#/components/schemas/QuotedMoney"

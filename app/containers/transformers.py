@@ -45,6 +45,9 @@ from app.transformers.invoicing.billing_document_email_transformer import (
 from app.transformers.invoicing.billing_document_layout_transformer import (
     BillingDocumentLayoutTransformer,
 )
+from app.transformers.invoicing.invoice_line_texts_transformer import (
+    InvoiceLineTextsTransformer,
+)
 from app.transformers.notifications.booking_cancelled_notification_transformer import (  # noqa: E501
     BookingCancelledNotificationTransformer,
 )
@@ -171,6 +174,10 @@ class TransformersContainer(containers.DeclarativeContainer):
             BillingDocumentEmailTransformer,
             localized_text_resolver=utilities.localized_text_resolver,
         )
+    )
+    invoice_line_texts_transformer: Singleton[InvoiceLineTextsTransformer] = Singleton(
+        InvoiceLineTextsTransformer,
+        localized_text_resolver=utilities.localized_text_resolver,
     )
 
     # --- Customer and staff messages about bookings, leads and handoffs.

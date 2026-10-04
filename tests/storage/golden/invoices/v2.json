@@ -13,6 +13,12 @@
   "description": "Sample InvoiceDescription",
   "id": "invoice_ae69102c-5756-421e-ade0-b1fe20f468ca",
   "kind": "service_period",
+  "line_texts": [
+    {
+      "language": "ka",
+      "text": "Sample InvoiceDescription"
+    }
+  ],
   "number": "AW-2026-000042",
   "paid_at": 1790000000000000,
   "payment_card": {

@@ -61,6 +61,7 @@ from app.use_cases.shared.trial_subscriptions import (
     is_trial_due_at_go_live,
 )
 from app.utilities.billing.billing_periods import find_usage_window
+from app.utilities.billing.invoice_lines import word_invoice_line
 from app.utilities.localization.babel_locales import require_babel_locale
 from app.utilities.money.money_math import multiply_money
 
@@ -271,7 +272,7 @@ class AssembleBillingOverviewUseCase(
         return InvoiceView(
             id=invoice.id,
             kind=invoice.kind,
-            description=invoice.description,
+            description=word_invoice_line(invoice, language),
             amount=money(invoice.amount_minor),
             status=invoice.status,
             period_start=invoice.period_start,

@@ -11,6 +11,7 @@ from app.schemas.constants.billing import InvoiceKind, InvoiceStatus
 from app.schemas.constants.compliance import AuditAction
 from app.schemas.constants.invoicing import BillingDocumentKind, TaxTreatment
 from app.schemas.domain.billing import InvoiceDocument
+from app.schemas.domain.billing_profiles import InvoiceLineText
 from app.schemas.dto.invoicing import BillingDocumentFile, BillingDocumentQuery
 from app.schemas.exceptions.application_errors import ConflictError
 from app.schemas.typings.billing.constrained_integers import MoneyAmountMinor
@@ -173,7 +174,9 @@ def test_every_value_on_the_page_is_escaped() -> None:
     world = build_seller_trial(is_vat_registered=False)
     checkout(world)
     invoice = first_invoice(world)
-    invoice.description = InvoiceDescription('<img src="x" onerror="alert(1)">')
+    hostile = InvoiceDescription('<img src="x" onerror="alert(1)">')
+    invoice.description = hostile
+    invoice.line_texts = [InvoiceLineText(language=LanguageTag("en"), text=hostile)]
     world.testbed.invoice_repo.save(invoice)
 
     _, page = download(documents_of(world), invoice, language="en")

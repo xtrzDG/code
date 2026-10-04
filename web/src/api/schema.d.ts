@@ -6838,10 +6838,12 @@ export interface components {
         InvoiceStatus: "issued" | "paid" | "failed" | "void";
         /**
          * InvoiceView
-         * @description One invoice with its amount (the total, with VAT) formatted for the
-         *     reader; its number once numbered (an invoice from before numbering
-         *     gets one with its first PDF), the VAT in it, when it was paid, and
-         *     whether its receipt can be downloaded.
+         * @description One invoice with its line in the reader's language (without its dates,
+         *     which `period_start` and `period_end` give; an invoice from before the
+         *     PDFs keeps its line as issued) and its amount (the total, with VAT)
+         *     formatted for the reader; its number once numbered (an invoice from
+         *     before numbering gets one with its first PDF), the VAT in it, when it
+         *     was paid, and whether its receipt can be downloaded.
          */
         InvoiceView: {
             amount: components["schemas"]["QuotedMoney"];

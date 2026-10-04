@@ -13,7 +13,7 @@ label and a migration path).
 
 ## 2026-10-04 — invoices for the accountant: billing details, numbers, VAT, PDF invoices and receipts
 
-Spec: `1c713eb0adb09522`
+Spec: `4012670dcb9c7de5`
 
 - **Added** `GET /v1/businesses/{business_id}/billing/profile` and
   `PUT /v1/businesses/{business_id}/billing/profile` (owners):
@@ -37,7 +37,10 @@ Spec: `1c713eb0adb09522`
   Every download is audited.
 - **Changed** `InvoiceView` (`GET /billing`) gains `number` (null until
   issued), `tax` (formatted, null without VAT), `tax_rate_basis_points`,
-  `paid_at` and `is_receipt_available`.
+  `paid_at` and `is_receipt_available`; its `description` is the line in
+  the display language without its dates (English, Russian or Georgian,
+  worded when the invoice is issued; an older invoice keeps its line as
+  issued).
 
 ## 2026-10-04 — wave 10 together: value where owners read, the phone loop, reply guard, sessions and support access
 

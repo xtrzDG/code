@@ -93,6 +93,7 @@ class BillingUseCases(BillingInfrastructure):
             invoice_description_transformer=self.invoice_description_transformer,
             wall_clock=wall_clock,
             invoice_issuing=self.invoicing.invoice_issuing,
+            invoice_line_texts_transformer=self.invoice_line_texts_transformer,
         )
         self.get_overview = GetBillingOverviewUseCase(
             authorize_business_access=authorize,
@@ -226,6 +227,7 @@ class BillingUseCases(BillingInfrastructure):
             billing_notice_transformer=self.notice_transformer,
             wall_clock=wall_clock,
             invoice_issuing=self.invoicing.invoice_issuing,
+            invoice_line_texts_transformer=self.invoice_line_texts_transformer,
         )
         self.compute_client_cost = ComputeClientCostUseCase(
             business_repo=self.business_repo,

@@ -55,6 +55,9 @@ from app.transformers.billing.billing_notice_transformer import BillingNoticeTra
 from app.transformers.billing.invoice_description_transformer import (
     InvoiceDescriptionTransformer,
 )
+from app.transformers.invoicing.invoice_line_texts_transformer import (
+    InvoiceLineTextsTransformer,
+)
 from app.utilities.localization.localized_text_resolver import LocalizedTextResolver
 from tests.billing.billing_fakes import AdjustableClock, RecordingNotifier
 from tests.billing.billing_settings import (
@@ -155,4 +158,5 @@ class BillingInfrastructure:
             app_base_url=PublicBaseUrl(APP_BASE_URL),
         )
         self.invoice_description_transformer = InvoiceDescriptionTransformer(resolver)
+        self.invoice_line_texts_transformer = InvoiceLineTextsTransformer(resolver)
         self.notice_transformer = BillingNoticeTransformer(resolver)

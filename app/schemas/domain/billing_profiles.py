@@ -1,5 +1,6 @@
 from base_pydantic_schemas import BaseDocument, PersistentDocument
 
+from app.schemas.typings.billing.strings import InvoiceDescription
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.invoicing.constrained_integers import (
     InvoiceSequenceNumber,
@@ -15,7 +16,10 @@ from app.schemas.typings.invoicing.constrained_strings import (
 )
 from app.schemas.typings.invoicing.prefixed_id import BillingProfileId
 from app.schemas.typings.invoicing.strings import PaymentCardBrand
-from app.schemas.typings.localization.constrained_strings import CountryCode
+from app.schemas.typings.localization.constrained_strings import (
+    CountryCode,
+    LanguageTag,
+)
 from app.schemas.typings.users.constrained_strings import EmailAddress
 
 
@@ -72,3 +76,14 @@ class PaymentCardSnapshot(PersistentDocument):
 
     brand: PaymentCardBrand | None = None
     last_digits: PaymentCardLastDigits | None = None
+
+
+class InvoiceLineText(PersistentDocument):
+    """
+    What an invoice line says in one of the languages its PDF is written
+    in, worded when it is issued and without its dates (the period prints
+    beside it): "Call and message handling service — Chat, monthly".
+    """
+
+    language: LanguageTag
+    text: InvoiceDescription

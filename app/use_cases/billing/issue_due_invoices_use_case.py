@@ -12,6 +12,7 @@ from app.schemas.constants.billing import (
     SetupOption,
 )
 from app.schemas.domain.billing import InvoiceDocument, SubscriptionDocument
+from app.schemas.domain.billing_profiles import InvoiceLineText
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.dto.billing import Money, PlanDefinition
 from app.schemas.dto.billing_ledger import DueInvoicesRequest, InvoiceDescriptionInput
@@ -55,6 +56,10 @@ class IssueDueInvoicesUseCase(
         ],
         wall_clock: WallClock[Microseconds],
         invoice_issuing: InvoiceIssuingFacilitatorContract,
+        invoice_line_texts_transformer: TransformerContract[
+            InvoiceDescriptionInput,
+            list[InvoiceLineText],
+        ],
     ) -> None:
         self._invoice_issuing: InvoiceIssuingFacilitatorContract = invoice_issuing
         self._invoice_repo: InvoiceRepoContract = invoice_repo
@@ -64,6 +69,10 @@ class IssueDueInvoicesUseCase(
             InvoiceDescription,
         ] = invoice_description_transformer
         self._wall_clock: WallClock[Microseconds] = wall_clock
+        self._invoice_line_texts_transformer: TransformerContract[
+            InvoiceDescriptionInput,
+            list[InvoiceLineText],
+        ] = invoice_line_texts_transformer
 
     def run(self, input_data: DueInvoicesRequest) -> list[InvoiceDocument]:
         business: BusinessDocument = input_data.business
@@ -116,17 +125,15 @@ class IssueDueInvoicesUseCase(
             subscription.currency_code,
             SetupOption.DONE_FOR_YOU,
         )
+        line: InvoiceDescriptionInput = self._line(
+            input_data, plan, InvoiceKind.SETUP_FEE, now, now
+        )
         invoice = InvoiceDocument(
             business_id=subscription.business_id,
             subscription_id=subscription.id,
             kind=InvoiceKind.SETUP_FEE,
-            description=self._describe(
-                input_data,
-                plan,
-                InvoiceKind.SETUP_FEE,
-                now,
-                now,
-            ),
+            description=self._invoice_description_transformer.transform(line),
+            line_texts=self._invoice_line_texts_transformer.transform(line),
             amount_minor=setup_fee.amount_minor,
             currency_code=setup_fee.currency_code,
             period_start=now,
@@ -159,17 +166,19 @@ class IssueDueInvoicesUseCase(
             subscription.billing_period,
             input_data.business.timezone,
         )
+        line: InvoiceDescriptionInput = self._line(
+            input_data,
+            plan,
+            InvoiceKind.SERVICE_PERIOD,
+            input_data.period_start,
+            period_end,
+        )
         draft = InvoiceDocument(
             business_id=subscription.business_id,
             subscription_id=subscription.id,
             kind=InvoiceKind.SERVICE_PERIOD,
-            description=self._describe(
-                input_data,
-                plan,
-                InvoiceKind.SERVICE_PERIOD,
-                input_data.period_start,
-                period_end,
-            ),
+            description=self._invoice_description_transformer.transform(line),
+            line_texts=self._invoice_line_texts_transformer.transform(line),
             amount_minor=subscription.price_minor,
             currency_code=subscription.currency_code,
             period_start=input_data.period_start,
@@ -221,22 +230,23 @@ class IssueDueInvoicesUseCase(
         self._invoice_repo.save(invoice)
         return invoice
 
-    def _describe(
+    def _line(
         self,
         input_data: DueInvoicesRequest,
         plan: PlanDefinition,
         kind: InvoiceKind,
         period_start: Microseconds,
         period_end: Microseconds,
-    ) -> InvoiceDescription:
-        return self._invoice_description_transformer.transform(
-            InvoiceDescriptionInput(
-                kind=kind,
-                language=input_data.business.owner_language,
-                timezone=input_data.business.timezone,
-                plan_names=plan.names,
-                billing_period=input_data.subscription.billing_period,
-                period_start=period_start,
-                period_end=period_end,
-            )
+    ) -> InvoiceDescriptionInput:
+        """What the line is about: worded in the owner language and in each
+        language of the PDFs."""
+
+        return InvoiceDescriptionInput(
+            kind=kind,
+            language=input_data.business.owner_language,
+            timezone=input_data.business.timezone,
+            plan_names=plan.names,
+            billing_period=input_data.subscription.billing_period,
+            period_start=period_start,
+            period_end=period_end,
         )

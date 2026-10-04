@@ -4,7 +4,7 @@ subscription, and the usage their seeded conversations and calls metered
 in the current package window (the dashboard and billing pages read it).
 """
 
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 
 from typed_time_provider import Microseconds
 
@@ -25,6 +25,7 @@ from app.schemas.domain.billing import (
 )
 from app.schemas.domain.billing_profiles import (
     BillingProfileDocument,
+    InvoiceLineText,
     PaymentCardSnapshot,
 )
 from app.schemas.domain.businesses import BusinessDocument
@@ -50,6 +51,7 @@ from app.schemas.typings.invoicing.constrained_strings import (
     TaxpayerIdentificationNumber,
 )
 from app.schemas.typings.invoicing.strings import PaymentCardBrand
+from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.schemas.typings.users.constrained_strings import EmailAddress
 from app.utilities.billing.billing_periods import add_calendar_months, add_local_days
 from app.utilities.billing.invoicing_keys import derive_billing_profile_id
@@ -104,9 +106,12 @@ def paid_subscription(
     business: BusinessDocument,
     period_start: Microseconds,
     reference: str,
-    invoice_line: str,
+    invoice_lines: Mapping[str, str],
 ) -> tuple[SubscriptionDocument, InvoiceDocument]:
-    """An active monthly subscription and the paid invoice of its period."""
+    """
+    An active monthly subscription and the paid invoice of its period;
+    `invoice_lines` words its line by language ("en" is the issued line).
+    """
 
     price: Money = price_of(plan_registry, business)
     period_end: Microseconds = add_calendar_months(period_start, 1, business.timezone)
@@ -127,7 +132,13 @@ def paid_subscription(
         business_id=business.id,
         subscription_id=subscription.id,
         kind=InvoiceKind.SERVICE_PERIOD,
-        description=InvoiceDescription(invoice_line),
+        description=InvoiceDescription(invoice_lines["en"]),
+        line_texts=[
+            InvoiceLineText(
+                language=LanguageTag(language), text=InvoiceDescription(text)
+            )
+            for language, text in invoice_lines.items()
+        ],
         amount_minor=price.amount_minor,
         currency_code=price.currency_code,
         status=InvoiceStatus.PAID,
