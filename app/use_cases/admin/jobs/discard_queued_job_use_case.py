@@ -3,14 +3,15 @@ from typed_time_provider import Microseconds, WallClock
 from app.contracts.jobs import QueuedJobRepoContract
 from app.contracts.repositories.compliance_repositories import AuditLogRepoContract
 from app.contracts.use_case_contract import UseCaseContract
+from app.schemas.constants.access import PlatformAdminPermission
 from app.schemas.constants.compliance import AuditAction
 from app.schemas.constants.jobs import QueuedJobStatus
 from app.schemas.domain.compliance import AuditLogEntryDocument
 from app.schemas.domain.jobs import QueuedJobDocument
 from app.schemas.domain.users import UserDocument
 from app.schemas.dto.admin_jobs import AdminJobActionResult, AdminJobCommand
+from app.schemas.dto.platform_admins import PlatformAdminAccessRequest
 from app.schemas.exceptions.application_errors import ConflictError
-from app.schemas.typings.users.prefixed_id import UserId
 from app.utilities.jobs.queued_job_views import (
     build_job_audit_entry,
     build_queued_job_view,
@@ -37,20 +38,27 @@ class DiscardQueuedJobUseCase(UseCaseContract[AdminJobCommand, AdminJobActionRes
 
     def __init__(
         self,
-        authorize_platform_admin: UseCaseContract[UserId, UserDocument],
+        authorize_platform_admin: UseCaseContract[
+            PlatformAdminAccessRequest, UserDocument
+        ],
         job_repo: QueuedJobRepoContract,
         audit_log_repo: AuditLogRepoContract,
         wall_clock: WallClock[Microseconds],
     ) -> None:
-        self._authorize_platform_admin: UseCaseContract[UserId, UserDocument] = (
-            authorize_platform_admin
-        )
+        self._authorize_platform_admin: UseCaseContract[
+            PlatformAdminAccessRequest, UserDocument
+        ] = authorize_platform_admin
         self._job_repo: QueuedJobRepoContract = job_repo
         self._audit_log_repo: AuditLogRepoContract = audit_log_repo
         self._wall_clock: WallClock[Microseconds] = wall_clock
 
     def run(self, input_data: AdminJobCommand) -> AdminJobActionResult:
-        admin: UserDocument = self._authorize_platform_admin.run(input_data.user_id)
+        admin: UserDocument = self._authorize_platform_admin.run(
+            PlatformAdminAccessRequest(
+                user_id=input_data.user_id,
+                permission=PlatformAdminPermission.MANAGE_OPERATIONS,
+            )
+        )
         now: Microseconds = self._wall_clock.now_unix()
 
         def discard(job: QueuedJobDocument) -> None:

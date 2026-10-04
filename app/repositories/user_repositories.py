@@ -8,13 +8,14 @@ from app.contracts.repositories.user_repositories import (
     UserRepoContract,
     UserSessionRepoContract,
 )
-from app.repositories.document_queries import time_range
+from app.repositories.document_queries import field_equals, time_range
 from app.schemas.constants.mfa import AuthLevel
 from app.schemas.domain.users import (
     OtpChallengeDocument,
     UserDocument,
     UserSessionDocument,
 )
+from app.schemas.dto.sessions import SessionActivity
 from app.schemas.dto.storage_queries import DocumentFieldRange
 from app.schemas.typings.localization.constrained_strings import E164PhoneNumber
 from app.schemas.typings.storage.constrained_integers import DocumentCount
@@ -35,6 +36,8 @@ EMAIL_FIELD: DocumentFieldPath = DocumentFieldPath("email")
 CREATED_AT_FIELD: DocumentFieldPath = DocumentFieldPath("created_at")
 TOKEN_HASH_FIELD: DocumentFieldPath = DocumentFieldPath("token_hash")
 EXPIRES_AT_FIELD: DocumentFieldPath = DocumentFieldPath("expires_at")
+USER_ID_FIELD: DocumentFieldPath = DocumentFieldPath("user_id")
+IDLE_EXPIRES_AT_FIELD: DocumentFieldPath = DocumentFieldPath("idle_expires_at")
 
 
 class UserRepository(UserRepoContract):
@@ -180,6 +183,26 @@ class UserSessionRepository(UserSessionRepoContract):
 
         return self._collection.modify(str(session_id), record)
 
+    def record_activity(
+        self,
+        session_id: UserSessionId,
+        activity: SessionActivity,
+    ) -> UserSessionDocument | None:
+        def record(session: UserSessionDocument) -> UserSessionDocument:
+            session.last_seen_at = activity.seen_at
+            session.last_seen_ip = activity.seen_ip
+            if activity.user_agent is not None:
+                session.user_agent = activity.user_agent
+            session.idle_expires_at = activity.idle_expires_at
+            session.expires_at = activity.expires_at
+            session.updated_at = activity.seen_at
+            return session
+
+        return self._collection.modify(str(session_id), record)
+
+    def list_by_user(self, user_id: UserId) -> list[UserSessionDocument]:
+        return self._collection.list_by_fields([field_equals(USER_ID_FIELD, user_id)])
+
     def find_by_token_hash(
         self,
         token_hash: AccessTokenHash,
@@ -189,13 +212,18 @@ class UserSessionRepository(UserSessionRepoContract):
         )
 
     def delete_expired(self, now: Microseconds) -> DocumentCount:
-        # A session is valid while now < expires_at (AuthenticateUserUseCase).
-        return self._collection.delete_by_range(
-            DocumentFieldRange(
-                field=EXPIRES_AT_FIELD,
-                upper=DocumentFieldInteger(int(now) + 1),
+        # A session is valid while now < expires_at and now < idle_expires_at
+        # (AuthenticateUserUseCase).
+        ended: int = 0
+        for field in (EXPIRES_AT_FIELD, IDLE_EXPIRES_AT_FIELD):
+            ended += int(
+                self._collection.delete_by_range(
+                    DocumentFieldRange(
+                        field=field, upper=DocumentFieldInteger(int(now) + 1)
+                    )
+                )
             )
-        )
+        return DocumentCount(ended)
 
     def delete(self, session_id: UserSessionId) -> None:
         self._collection.delete(str(session_id))

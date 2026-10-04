@@ -2,6 +2,7 @@ from typed_time_provider import Microseconds, WallClock
 
 from app.contracts.analytics import RecordProductEventFacilitatorContract
 from app.contracts.mfa import TotpSecretCipherAdapterContract
+from app.contracts.platform_admins import PlatformAdminRegistryContract
 from app.contracts.registries import RequestRateLimitRegistryContract
 from app.contracts.repositories.compliance_repositories import AuditLogRepoContract
 from app.contracts.repositories.mfa_repositories import (
@@ -13,6 +14,7 @@ from app.contracts.repositories.user_repositories import (
     UserRepoContract,
     UserSessionRepoContract,
 )
+from app.contracts.support_access import SignInNoticeFacilitatorContract
 from app.contracts.transformer_contract import TransformerContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.configurations.app_settings import AppSettings
@@ -74,6 +76,8 @@ class VerifyMfaLoginUseCase(UseCaseContract[VerifyMfaLoginCommand, LoginSessionV
         wall_clock: WallClock[Microseconds],
         rate_limit_registry: RequestRateLimitRegistryContract,
         product_events: RecordProductEventFacilitatorContract,
+        platform_admins: PlatformAdminRegistryContract,
+        sign_in_notices: SignInNoticeFacilitatorContract,
     ) -> None:
         self._mfa_challenge_repo: MfaChallengeRepoContract = mfa_challenge_repo
         self._user_repo: UserRepoContract = user_repo
@@ -95,6 +99,8 @@ class VerifyMfaLoginUseCase(UseCaseContract[VerifyMfaLoginCommand, LoginSessionV
             app_settings,
             wall_clock,
             product_events,
+            platform_admins,
+            sign_in_notices,
         )
 
     def run(self, input_data: VerifyMfaLoginCommand) -> LoginSessionView:
@@ -127,6 +133,7 @@ class VerifyMfaLoginUseCase(UseCaseContract[VerifyMfaLoginCommand, LoginSessionV
             AuthLevel.TWO_FACTOR,
             challenge.is_new_user,
             input_data.client_ip_address,
+            input_data.user_agent,
             recovery_codes,
         )
 

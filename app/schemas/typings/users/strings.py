@@ -33,6 +33,20 @@ class RawEmailAddressInput(BaseTypedString):
     """
 
 
+class SessionBrowserName(BaseTypedString):
+    """
+    The browser a session signs in from, as its User-Agent names it
+    ("Chrome", "Safari", "Firefox"); a proper name, never translated.
+    """
+
+
+class SessionOperatingSystem(BaseTypedString):
+    """
+    The operating system a session signs in from, as its User-Agent names
+    it ("macOS", "Android", "iOS"); a proper name, never translated.
+    """
+
+
 class TurnstileErrorCode(BaseTypedString):
     """An error code Cloudflare's siteverify returned ("invalid-input-response")."""
 

@@ -65,3 +65,43 @@ class SecurityOperatorsContainer(containers.DeclarativeContainer):
     update_business_security_operator = pipeline_operator(
         security_pipelines.update_business_security_pipeline, storage_scope
     )
+
+    # --- Device sessions, the admin team (platform collections, unscoped),
+    # support access in the business's scope, and the job that ends expired
+    # support access everywhere (1103).
+    list_my_sessions_operator = pipeline_operator(
+        security_pipelines.list_my_sessions_pipeline, storage_scope
+    )
+    revoke_session_operator = pipeline_operator(
+        security_pipelines.revoke_session_pipeline, storage_scope
+    )
+    revoke_other_sessions_operator = pipeline_operator(
+        security_pipelines.revoke_other_sessions_pipeline, storage_scope
+    )
+    list_platform_admins_operator = pipeline_operator(
+        security_pipelines.list_platform_admins_pipeline, storage_scope
+    )
+    add_platform_admin_operator = pipeline_operator(
+        security_pipelines.add_platform_admin_pipeline, storage_scope
+    )
+    change_platform_admin_role_operator = pipeline_operator(
+        security_pipelines.change_platform_admin_role_pipeline, storage_scope
+    )
+    remove_platform_admin_operator = pipeline_operator(
+        security_pipelines.remove_platform_admin_pipeline, storage_scope
+    )
+    close_client_cabinet_operator = pipeline_operator(
+        security_pipelines.close_client_cabinet_pipeline, storage_scope
+    )
+    end_expired_support_access_operator = platform_pipeline_operator(
+        security_pipelines.end_expired_support_access_pipeline, storage_scope
+    )
+    get_support_access_operator = pipeline_operator(
+        security_pipelines.get_support_access_pipeline, storage_scope
+    )
+    update_support_write_access_operator = pipeline_operator(
+        security_pipelines.update_support_write_access_pipeline, storage_scope
+    )
+    end_support_access_operator = pipeline_operator(
+        security_pipelines.end_support_access_pipeline, storage_scope
+    )

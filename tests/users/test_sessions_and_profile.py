@@ -2,6 +2,7 @@ import pytest
 
 from app.schemas.constants.users import BusinessMemberRole
 from app.schemas.dto.businesses import InviteStaffCommand, InviteStaffRequest
+from app.schemas.dto.sessions import SessionCheck
 from app.schemas.dto.users import LogoutCommand, UpdateCurrentUserCommand
 from app.schemas.exceptions.application_errors import (
     AuthenticationRequiredError,
@@ -18,6 +19,7 @@ from tests.users.accounts_phones import GEORGIA_MOBILE, ISRAEL_MOBILE
 from tests.users.accounts_testbed import build_accounts_testbed
 
 THIRTY_DAYS_IN_SECONDS: int = 30 * 24 * 60 * 60
+SIX_DAYS_IN_SECONDS: int = 6 * 24 * 60 * 60
 
 
 def test_valid_token_authenticates_its_user() -> None:
@@ -25,7 +27,10 @@ def test_valid_token_authenticates_its_user() -> None:
     session = testbed.sign_in_with_phone(GEORGIA_MOBILE)
 
     assert (
-        testbed.authenticate_user.run(session.access_token).user_id == session.user.id
+        testbed.authenticate_user.run(
+            SessionCheck(access_token=session.access_token)
+        ).user_id
+        == session.user.id
     )
 
 
@@ -34,21 +39,26 @@ def test_unknown_token_is_refused() -> None:
     testbed.sign_in_with_phone(GEORGIA_MOBILE)
 
     with pytest.raises(AuthenticationRequiredError):
-        testbed.authenticate_user.run(AccessToken("forged-token"))
+        testbed.authenticate_user.run(
+            SessionCheck(access_token=AccessToken("forged-token"))
+        )
 
 
 def test_expired_session_is_refused_and_removed() -> None:
     testbed = build_accounts_testbed()
     session = testbed.sign_in_with_phone(GEORGIA_MOBILE)
+    check = SessionCheck(access_token=session.access_token)
 
-    testbed.clock.advance(THIRTY_DAYS_IN_SECONDS - 1)
-    assert (
-        testbed.authenticate_user.run(session.access_token).user_id == session.user.id
-    )
+    # Used every six days, the session lives its 30 days and then ends.
+    for _ in range(4):
+        testbed.clock.advance(SIX_DAYS_IN_SECONDS)
+        assert testbed.authenticate_user.run(check).user_id == session.user.id
+    testbed.clock.advance(THIRTY_DAYS_IN_SECONDS - 4 * SIX_DAYS_IN_SECONDS - 1)
+    assert testbed.authenticate_user.run(check).user_id == session.user.id
 
     testbed.clock.advance(1)
     with pytest.raises(AuthenticationRequiredError):
-        testbed.authenticate_user.run(session.access_token)
+        testbed.authenticate_user.run(SessionCheck(access_token=session.access_token))
 
     token_hash = hash_access_token(session.access_token)
     assert testbed.user_session_repo.find_by_token_hash(token_hash) is None
@@ -61,7 +71,7 @@ def test_session_lifetime_comes_from_settings() -> None:
     testbed.clock.advance(3600)
 
     with pytest.raises(AuthenticationRequiredError):
-        testbed.authenticate_user.run(session.access_token)
+        testbed.authenticate_user.run(SessionCheck(access_token=session.access_token))
 
 
 def test_session_of_a_deleted_user_is_refused() -> None:
@@ -70,7 +80,7 @@ def test_session_of_a_deleted_user_is_refused() -> None:
     testbed.user_collection.delete(str(session.user.id))
 
     with pytest.raises(AuthenticationRequiredError):
-        testbed.authenticate_user.run(session.access_token)
+        testbed.authenticate_user.run(SessionCheck(access_token=session.access_token))
 
 
 def test_logout_ends_only_the_current_session() -> None:
@@ -82,9 +92,13 @@ def test_logout_ends_only_the_current_session() -> None:
     testbed.logout.run(LogoutCommand(access_token=first_session.access_token))
 
     with pytest.raises(AuthenticationRequiredError):
-        testbed.authenticate_user.run(first_session.access_token)
+        testbed.authenticate_user.run(
+            SessionCheck(access_token=first_session.access_token)
+        )
     assert (
-        testbed.authenticate_user.run(second_session.access_token).user_id
+        testbed.authenticate_user.run(
+            SessionCheck(access_token=second_session.access_token)
+        ).user_id
         == second_session.user.id
     )
     with pytest.raises(AuthenticationRequiredError):

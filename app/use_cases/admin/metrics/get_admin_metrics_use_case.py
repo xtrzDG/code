@@ -8,6 +8,7 @@ from app.contracts.repositories.analytics_repositories import (
 from app.contracts.repositories.business_repositories import BusinessRepoContract
 from app.contracts.repositories.user_repositories import UserRepoContract
 from app.contracts.use_case_contract import UseCaseContract
+from app.schemas.constants.access import PlatformAdminPermission
 from app.schemas.constants.analytics import ProductEventName, WebVitalName
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.product_events import ProductEventDocument
@@ -17,6 +18,7 @@ from app.schemas.dto.analytics.admin_metrics_view import AdminMetricsView, WebVi
 from app.schemas.dto.analytics.growth_views import GrowthView
 from app.schemas.dto.analytics.revenue_views import RevenueView
 from app.schemas.dto.billing_ledger import ClientCostQuery, ClientCostReport
+from app.schemas.dto.platform_admins import PlatformAdminAccessRequest
 from app.schemas.typings.users.prefixed_id import UserId
 from app.use_cases.admin.metrics.margin_summary import summarize_margin
 from app.use_cases.admin.metrics.metrics_period import MetricsPeriod, resolve_period
@@ -73,7 +75,9 @@ class GetAdminMetricsUseCase(UseCaseContract[AdminMetricsQuery, AdminMetricsView
 
     def __init__(
         self,
-        authorize_platform_admin: UseCaseContract[UserId, UserDocument],
+        authorize_platform_admin: UseCaseContract[
+            PlatformAdminAccessRequest, UserDocument
+        ],
         user_repo: UserRepoContract,
         business_repo: BusinessRepoContract,
         product_event_repo: ProductEventRepoContract,
@@ -82,9 +86,9 @@ class GetAdminMetricsUseCase(UseCaseContract[AdminMetricsQuery, AdminMetricsView
         exchange_rate_registry: ExchangeRateRegistryContract,
         wall_clock: WallClock[Microseconds],
     ) -> None:
-        self._authorize_platform_admin: UseCaseContract[UserId, UserDocument] = (
-            authorize_platform_admin
-        )
+        self._authorize_platform_admin: UseCaseContract[
+            PlatformAdminAccessRequest, UserDocument
+        ] = authorize_platform_admin
         self._user_repo: UserRepoContract = user_repo
         self._business_repo: BusinessRepoContract = business_repo
         self._product_event_repo: ProductEventRepoContract = product_event_repo
@@ -98,7 +102,12 @@ class GetAdminMetricsUseCase(UseCaseContract[AdminMetricsQuery, AdminMetricsView
         self._wall_clock: WallClock[Microseconds] = wall_clock
 
     def run(self, input_data: AdminMetricsQuery) -> AdminMetricsView:
-        self._authorize_platform_admin.run(input_data.user_id)
+        self._authorize_platform_admin.run(
+            PlatformAdminAccessRequest(
+                user_id=input_data.user_id,
+                permission=PlatformAdminPermission.VIEW_METRICS,
+            )
+        )
         now: Microseconds = self._wall_clock.now_unix()
         period: MetricsPeriod = resolve_period(
             input_data.period_start, input_data.period_end, now

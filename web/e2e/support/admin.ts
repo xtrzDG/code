@@ -5,6 +5,10 @@
  * artifacts, so later spec files sign in with it. An address gets a login
  * code at most every 30 seconds and each app code works once: both waits
  * happen here.
+ *
+ * PLATFORM_ADMIN_EMAILS names only the run's first admin (it bootstraps the
+ * first SUPER admin); every other test admin is added to the team by that
+ * admin before signing in, as on the Team page.
  */
 
 import { readFileSync, writeFileSync } from "node:fs";
@@ -12,7 +16,7 @@ import path from "node:path";
 
 import { expect, type APIRequestContext } from "@playwright/test";
 
-import { API_URL, ARTIFACTS_DIRECTORY } from "./env";
+import { API_URL, ARTIFACTS_DIRECTORY, PLATFORM_ADMIN_EMAIL } from "./env";
 import { apiLogSize, waitForLoginCode } from "./login-codes";
 import { freshTotpCode } from "./totp";
 
@@ -72,8 +76,37 @@ async function passLoginCode(request: APIRequestContext, email: string): Promise
   }
 }
 
+let rootToken: Promise<string> | null = null;
+
+/**
+ * The run's first admin adds this person to the admin team as a SUPER admin
+ * (a second add answers 409: already there). A token too old for the
+ * team's step-up check (401) is replaced once.
+ */
+export async function ensureOnAdminTeam(request: APIRequestContext, email: string): Promise<void> {
+  if (email === PLATFORM_ADMIN_EMAIL) {
+    return;
+  }
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    rootToken ??= signInAsPlatformAdmin(request, PLATFORM_ADMIN_EMAIL);
+    const added = await request.post(`${API_URL}/v1/admin/team`, {
+      headers: { Authorization: `Bearer ${await rootToken}` },
+      data: { email, role: "super" },
+    });
+    if (added.status() === 200 || added.status() === 409) {
+      return;
+    }
+    if (added.status() === 401 && attempt === 0) {
+      rootToken = null;
+      continue;
+    }
+    expect(added.status(), await added.text()).toBe(200);
+  }
+}
+
 /** Signs a platform admin in with both factors (setting the app up the first time); the bearer token. */
 export async function signInAsPlatformAdmin(request: APIRequestContext, email: string): Promise<string> {
+  await ensureOnAdminTeam(request, email);
   const answer = await passLoginCode(request, email);
   expect(answer.mfa_required, "platform admins take the second step").toBe(true);
   const challenge = answer.mfa_challenge as { mfa_challenge_id: string; requires_enrollment: boolean };

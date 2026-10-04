@@ -29,6 +29,7 @@ REQUEST_BODIES: dict[str, JsonObject] = {
     f"POST {B}/billing/plan": {"plan_key": "chat", "billing_period": "monthly"},
     f"POST {B}/billing/subscribe": {"plan_key": "chat"},
     f"PUT {B}/setup/reminders": {"is_on": False},
+    f"PUT {B}/support-access/write-access": {"is_allowed": False},
     f"POST {B}/bookings": {
         "contact_name": "Nino",
         "date": "2026-10-20",

@@ -36,3 +36,15 @@ class LoginCodeCap(StrEnum):
     COUNTRY = "country"
     NEW_DESTINATIONS = "new_destinations"
     VERIFIED_USERS = "verified_users"
+
+
+class SessionDeviceKind(StrEnum):
+    """
+    The kind of device a session's User-Agent describes, for the icon of
+    the sessions list; UNKNOWN when it does not say (or there is none).
+    """
+
+    DESKTOP = "desktop"
+    PHONE = "phone"
+    TABLET = "tablet"
+    UNKNOWN = "unknown"

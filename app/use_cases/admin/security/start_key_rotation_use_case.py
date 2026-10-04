@@ -6,6 +6,7 @@ from app.contracts.repositories.compliance_repositories import AuditLogRepoContr
 from app.contracts.secret_cipher import SecretRotationAdapterContract
 from app.contracts.session_assurance import StepUpGuardContract
 from app.contracts.use_case_contract import UseCaseContract
+from app.schemas.constants.access import PlatformAdminPermission
 from app.schemas.constants.jobs import JobLane
 from app.schemas.domain.compliance import AuditLogEntryDocument
 from app.schemas.domain.key_rotations import KeyRotationDocument
@@ -15,9 +16,9 @@ from app.schemas.dto.key_rotation import (
     KeyRotationStarted,
     StartKeyRotationCommand,
 )
+from app.schemas.dto.platform_admins import PlatformAdminAccessRequest
 from app.schemas.exceptions.application_errors import ConflictError
 from app.schemas.typings.platform.strings import JobPayloadJson
-from app.schemas.typings.users.prefixed_id import UserId
 from app.use_cases.admin.security.key_rotation_views import (
     ROTATE_ENCRYPTED_SECRETS_JOB,
     ROTATION_SERIAL_KEY,
@@ -45,7 +46,9 @@ class StartKeyRotationUseCase(
 
     def __init__(
         self,
-        authorize_platform_admin: UseCaseContract[UserId, UserDocument],
+        authorize_platform_admin: UseCaseContract[
+            PlatformAdminAccessRequest, UserDocument
+        ],
         secret_rotation: SecretRotationAdapterContract,
         key_rotation_repo: KeyRotationRepoContract,
         job_queue: JobQueueFacilitatorContract,
@@ -54,9 +57,9 @@ class StartKeyRotationUseCase(
         step_up: StepUpGuardContract,
     ) -> None:
         self._step_up: StepUpGuardContract = step_up
-        self._authorize_platform_admin: UseCaseContract[UserId, UserDocument] = (
-            authorize_platform_admin
-        )
+        self._authorize_platform_admin: UseCaseContract[
+            PlatformAdminAccessRequest, UserDocument
+        ] = authorize_platform_admin
         self._secret_rotation: SecretRotationAdapterContract = secret_rotation
         self._key_rotation_repo: KeyRotationRepoContract = key_rotation_repo
         self._job_queue: JobQueueFacilitatorContract = job_queue
@@ -64,7 +67,12 @@ class StartKeyRotationUseCase(
         self._wall_clock: WallClock[Microseconds] = wall_clock
 
     def run(self, input_data: StartKeyRotationCommand) -> KeyRotationStarted:
-        admin: UserDocument = self._authorize_platform_admin.run(input_data.user_id)
+        admin: UserDocument = self._authorize_platform_admin.run(
+            PlatformAdminAccessRequest(
+                user_id=input_data.user_id,
+                permission=PlatformAdminPermission.MANAGE_OPERATIONS,
+            )
+        )
         self._step_up.require_recent_authentication()
         now: Microseconds = self._wall_clock.now_unix()
         rotation = KeyRotationDocument(

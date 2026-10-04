@@ -13,15 +13,13 @@ from app.schemas.dto.menu_import import ConfirmImportedItemsCommand, MenuImportR
 from app.schemas.dto.website_import import WebsiteImportView
 from app.schemas.typings.assistants.constrained_strings import LlmModelId
 from app.schemas.typings.conversations.constrained_integers import LlmTokenCount
-from app.use_cases.authorize_business_access_use_case import (
-    AuthorizeBusinessAccessUseCase,
-)
 from app.use_cases.menu_import.confirm_imported_items_use_case import (
     ConfirmImportedItemsUseCase,
 )
 from app.utilities.conversations.llm_models import compute_llm_call_cost
 from app.utilities.security.session_assurance_context import SessionAssuranceContext
 from tests.foundation.access_support import ACCESS_SETTINGS
+from tests.foundation.support_access_builders import build_authorize_business_access
 from tests.knowledge.website_import.site_fixtures import HIDDEN_INSTRUCTION, SITE
 from tests.knowledge.website_import.website_import_world import WebsiteImportWorld
 
@@ -97,7 +95,7 @@ def test_drafts_are_never_published_until_confirmed() -> None:
     }
 
     confirm = ConfirmImportedItemsUseCase(
-        authorize_business_access=AuthorizeBusinessAccessUseCase(
+        authorize_business_access=build_authorize_business_access(
             business_repo=world.business_repo,
             user_repo=world.user_repo,
             audit_log_repo=world.audit_log_repo,

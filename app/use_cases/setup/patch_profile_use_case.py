@@ -95,6 +95,8 @@ class PatchProfileUseCase(UseCaseContract[PatchProfileCommand, BusinessProfileVi
                 user_id=input_data.actor_id,
                 business_id=input_data.business_id,
                 required_role=BusinessMemberRole.OWNER,
+                # Done-for-you setup: support may, with the owner's consent.
+                support_may_change=True,
             )
         )
         template: NicheTemplate = self._niche_template_registry.get(business.niche_key)

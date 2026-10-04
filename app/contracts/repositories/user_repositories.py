@@ -17,6 +17,7 @@ from app.schemas.domain.users import (
     UserDocument,
     UserSessionDocument,
 )
+from app.schemas.dto.sessions import SessionActivity
 from app.schemas.typings.localization.constrained_strings import E164PhoneNumber
 from app.schemas.typings.storage.constrained_integers import DocumentCount
 from app.schemas.typings.users.constrained_integers import OtpAttemptCount
@@ -123,15 +124,35 @@ class UserSessionRepoContract(RepoContract, Protocol):
         """
         raise NotImplementedError
 
+    def record_activity(
+        self,
+        session_id: UserSessionId,
+        activity: SessionActivity,
+    ) -> UserSessionDocument | None:
+        """
+        Record a use of the session in one atomic step: when and from
+        where it was last seen, the browser it names (when it sent one),
+        the new idle expiry and the (possibly earlier) absolute expiry;
+        None when the session is gone.
+        """
+        raise NotImplementedError
+
     def find_by_token_hash(
         self,
         token_hash: AccessTokenHash,
     ) -> UserSessionDocument | None:
         raise NotImplementedError
 
+    def list_by_user(self, user_id: UserId) -> list[UserSessionDocument]:
+        """Every stored session of a person (indexed; a short list)."""
+        raise NotImplementedError
+
     def delete(self, session_id: UserSessionId) -> None:
         raise NotImplementedError
 
     def delete_expired(self, now: Microseconds) -> DocumentCount:
-        """Purge sessions whose expiry has come (expires_at <= now)."""
+        """
+        Purge sessions whose absolute expiry has come (expires_at <= now)
+        and those unused too long (idle_expires_at <= now).
+        """
         raise NotImplementedError

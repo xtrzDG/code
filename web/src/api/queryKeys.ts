@@ -247,5 +247,17 @@ export const queryKeys = {
     deadJobs: () => ["admin", "jobs", "dead"] as const,
     /** The recorded incidents, newest first. */
     incidents: () => ["admin", "incidents"] as const,
+    /** The platform admin team. */
+    team: () => ["admin", "team"] as const,
+  },
+
+  account: {
+    /** The signed-in person's devices (Account → Security). */
+    sessions: () => ["account", "sessions"] as const,
+  },
+
+  supportAccess: {
+    /** Platform support in a business now: open looks and the consent to changes. */
+    status: (businessId: Id) => ["supportAccess", businessId] as const,
   },
 } satisfies Record<string, Record<string, (...args: never[]) => QueryKey>>;

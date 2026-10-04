@@ -10,6 +10,7 @@ from app.contracts.monitoring import (
     SystemHealthRepoContract,
 )
 from app.contracts.use_case_contract import UseCaseContract
+from app.schemas.constants.access import PlatformAdminPermission
 from app.schemas.constants.jobs import JobLane, QueuedJobStatus
 from app.schemas.constants.monitoring import MaintenanceRunKind, PlatformAlertCode
 from app.schemas.domain.businesses import BusinessDocument
@@ -17,6 +18,7 @@ from app.schemas.domain.channels import ChannelDocument
 from app.schemas.domain.maintenance_runs import MaintenanceRunDocument
 from app.schemas.domain.users import UserDocument
 from app.schemas.dto.admin_system import AdminSystemQuery, AdminSystemView, LaneView
+from app.schemas.dto.platform_admins import PlatformAdminAccessRequest
 from app.schemas.dto.platform_alerts import PlatformAlertRule
 from app.schemas.dto.platform_health import DatabaseSize, JobStateTally
 from app.schemas.exceptions.base_exception import ApplicationError
@@ -28,7 +30,6 @@ from app.schemas.typings.monitoring.constrained_integers import (
     WaitSeconds,
 )
 from app.schemas.typings.storage.constrained_integers import DocumentQueryLimit
-from app.schemas.typings.users.prefixed_id import UserId
 from app.use_cases.admin.alerts.alert_rules import PLATFORM_ALERT_RULES
 from app.use_cases.admin.system.system_views import (
     alert_views,
@@ -62,7 +63,9 @@ class GetAdminSystemUseCase(UseCaseContract[AdminSystemQuery, AdminSystemView]):
 
     def __init__(
         self,
-        authorize_platform_admin: UseCaseContract[UserId, UserDocument],
+        authorize_platform_admin: UseCaseContract[
+            PlatformAdminAccessRequest, UserDocument
+        ],
         system_health_repo: SystemHealthRepoContract,
         maintenance_run_repo: MaintenanceRunRepoContract,
         alert_state_repo: PlatformAlertStateRepoContract,
@@ -71,9 +74,9 @@ class GetAdminSystemUseCase(UseCaseContract[AdminSystemQuery, AdminSystemView]):
         wall_clock: WallClock[Microseconds],
         rules: Mapping[PlatformAlertCode, PlatformAlertRule] = PLATFORM_ALERT_RULES,
     ) -> None:
-        self._authorize_platform_admin: UseCaseContract[UserId, UserDocument] = (
-            authorize_platform_admin
-        )
+        self._authorize_platform_admin: UseCaseContract[
+            PlatformAdminAccessRequest, UserDocument
+        ] = authorize_platform_admin
         self._health: SystemHealthRepoContract = system_health_repo
         self._runs: MaintenanceRunRepoContract = maintenance_run_repo
         self._alerts: PlatformAlertStateRepoContract = alert_state_repo
@@ -83,7 +86,12 @@ class GetAdminSystemUseCase(UseCaseContract[AdminSystemQuery, AdminSystemView]):
         self._rules: Mapping[PlatformAlertCode, PlatformAlertRule] = rules
 
     def run(self, input_data: AdminSystemQuery) -> AdminSystemView:
-        self._authorize_platform_admin.run(input_data.user_id)
+        self._authorize_platform_admin.run(
+            PlatformAdminAccessRequest(
+                user_id=input_data.user_id,
+                permission=PlatformAdminPermission.VIEW_OPERATIONS,
+            )
+        )
         now: Microseconds = self._wall_clock.now_unix()
         in_error: list[ChannelDocument] = self._health.list_channels_in_error(
             CHANNELS_SHOWN

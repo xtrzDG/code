@@ -104,6 +104,64 @@ Spec: `a4d3fb74c835b55f`
   `AssistantVersionDocument` (schema version 5, `facts[].is_imported`)
   gain optional fields; older rows read as they are.
 
+## 2026-10-04 — device sessions, the platform admin team, support access
+
+Spec: `f29245886ba350fb`
+
+- **Added** `GET /v1/me/sessions` (`UserSessionList`): the person's
+  signed-in devices (`UserSessionView`: `device` with `kind`, `browser`,
+  `operating_system` read from the User-Agent; `created_at`/`created_ip`,
+  `last_seen_at`/`last_seen_ip`, `auth_level`, `expires_at`,
+  `idle_expires_at`, `is_current`), the most recently used first.
+  `DELETE /v1/me/sessions/{session_id}` (`204`; another person's or an
+  unknown id: `404`) and `POST /v1/me/sessions/revoke-others`
+  (`RevokedSessionsView.revoked_count`) end sessions; each is audited
+  `session_revoked`.
+- **Changed** sessions end when unused: 7 days for owners and staff
+  (`SESSION_IDLE_TIMEOUT_SECONDS`), 12 hours for platform admins, whose
+  sessions also end after 24 hours whatever happens
+  (`ADMIN_SESSION_*`). The next request of an ended session gets `401`.
+  Sign-ins from a new device send the person a personal notice (staff
+  alert with the deep link target `account_security`).
+- **Added** the platform admin team: `GET·POST /v1/admin/team`
+  (`PlatformAdminTeamView`: each `PlatformAdminView` with `added_by`, null
+  for one bootstrapped from the lists; add by `phone_number` or `email`
+  with a `role`: `super`, `support_readonly`, `billing`; step-up; the same person
+  twice: `409`), `PATCH /v1/admin/team/{admin_id}` (`role`) and
+  `DELETE /v1/admin/team/{admin_id}` (`204`); leaving the team without a
+  `super` admin: `409`. Every change is audited `platform_admin_changed`.
+  Only `super` manages the team.
+- **Changed** `CurrentUserView` (`GET /v1/me`) gains
+  `platform_admin_role` and `platform_admin_permissions`; the admin pages
+  check the role's permission (`403` without it): `billing` sees clients
+  and metrics, `support_readonly` sees clients and operations and opens
+  cabinets read-only, `super` does everything.
+- **Changed** `PLATFORM_ADMIN_EMAILS` and `PLATFORM_ADMIN_PHONE_NUMBERS`
+  only bootstrap the team: the first listed person to sign in while the
+  team has no `super` admin becomes one; other listed people get admin
+  pages only once added on the Team page.
+- **Breaking** `POST /v1/admin/clients/{business_id}/open` needs a body
+  `OpenClientCabinetRequest` with a `reason` (8–300 characters; without
+  it: `422`) and opens a 60-minute read-only look into the cabinet
+  (`ClientCabinetAccess` gains `support_access_grant_id`, `expires_at`,
+  `can_write`). Platform admins' requests to `/v1/businesses/{id}/…`
+  without an open look get `403` with the reason `support_access_required`;
+  changes during a look get `403` `support_read_only` unless the owner
+  allowed changes (and the admin is `super`). Exports of contact data
+  count as changes. Migration path: the cabinet asks for the reason in
+  the "Open cabinet" dialog; scripts send `{"reason": "…"}`.
+- **Added** `DELETE /v1/admin/clients/{business_id}/access` (`204`): the
+  admin leaves the cabinet before the hour is over.
+- **Added** the owner's side: `GET /v1/businesses/{id}/support-access`
+  (`SupportAccessView`: open looks with who, why and until when, the
+  consent to changes, and whether the viewer is support),
+  `PUT …/support-access/write-access` (`is_allowed`, `hours` 1–168,
+  a day by default; owners only, step-up to allow) and
+  `DELETE …/support-access` (`204`; ends every look and the consent).
+  Starts and ends are audited `support_access_start` and
+  `support_access_end` with the address; the team gets a staff alert
+  when a look starts.
+
 ## 2026-10-04 — wave 9 together: reply speed, any language, outbox everywhere, platform operations
 
 Spec: `26522d8605b0100d`

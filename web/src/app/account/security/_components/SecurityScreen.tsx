@@ -1,7 +1,8 @@
 "use client";
 
 /**
- * Account → Security. The page keeps the latest `GET /v1/me/security` and
+ * Account → Security: the authenticator app, recovery codes, this
+ * session and every signed-in device. The page keeps the latest `GET /v1/me/security` and
  * reads it again after every change; each card does its own requests
  * (sensitive ones may first ask to confirm with a code: the step-up dialog
  * is global).
@@ -19,6 +20,7 @@ import { useI18n } from "@/i18n/client";
 import { HOME_PATH, type SecurityReason } from "@/lib/navigation";
 
 import { AuthenticatorCard } from "./AuthenticatorCard";
+import { DevicesCard } from "./DevicesCard";
 import { RecoveryCodesCard } from "./RecoveryCodesCard";
 import { SessionCard } from "./SessionCard";
 
@@ -86,6 +88,7 @@ export function SecurityScreen({
         />
       ) : null}
       <SessionCard security={security} onChanged={refresh} />
+      <DevicesCard isPlatformAdmin={me.user.is_platform_admin} />
     </div>
   );
 }

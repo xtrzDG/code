@@ -15,6 +15,7 @@ from app.schemas.constants.mfa import AuthLevel
 from app.schemas.constants.users import LoginMethod
 from app.schemas.domain.users import UserDocument
 from app.schemas.dto.mfa import SessionAssurance
+from app.schemas.dto.platform_admins import PlatformAdminAccessRequest
 from app.schemas.exceptions.application_errors import AccessDeniedError
 from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.schemas.typings.users.constrained_strings import EmailAddress
@@ -82,18 +83,19 @@ class AllowStepUp(StepUpGuardContract):
         return None
 
 
-class AuthorizeFlaggedAdmin(UseCaseContract[UserId, UserDocument]):
+class AuthorizeFlaggedAdmin(UseCaseContract[PlatformAdminAccessRequest, UserDocument]):
     """
     The admin check of tests about the admin pages' content: the stored
-    flag decides. tests/users/mfa check the real one (the PLATFORM_ADMIN_*
-    lists at every call and a session signed in with two factors).
+    flag decides, whatever the permission. tests/users/mfa and
+    tests/users/access check the real one (roles from the admin team at
+    every call and a session signed in with two factors).
     """
 
     def __init__(self, user_repo: UserRepoContract) -> None:
         self._user_repo: UserRepoContract = user_repo
 
-    def run(self, input_data: UserId) -> UserDocument:
-        user: UserDocument | None = self._user_repo.get(input_data)
+    def run(self, input_data: PlatformAdminAccessRequest) -> UserDocument:
+        user: UserDocument | None = self._user_repo.get(input_data.user_id)
         if user is None or not user.is_platform_admin:
             raise AccessDeniedError("Only platform admins may open the admin pages.")
         return user

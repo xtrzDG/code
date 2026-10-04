@@ -1,4 +1,3 @@
-from dependency_injector import containers
 from dependency_injector.providers import DependenciesContainer, Factory
 
 from app.containers.adapters.adapters_container import AdaptersContainer
@@ -7,6 +6,7 @@ from app.containers.config import ConfigContainer
 from app.containers.facilitators import FacilitatorsContainer
 from app.containers.repositories import RepositoriesContainer
 from app.containers.time_provider import TimeProviderContainer
+from app.containers.use_cases.access_use_cases import AccessUseCasesContainer
 from app.containers.use_cases.platform_use_cases import PlatformUseCasesContainer
 from app.containers.utilities import UtilitiesContainer
 from app.contracts.use_case_contract import UseCaseContract
@@ -30,20 +30,26 @@ from app.use_cases.admin.security.start_key_rotation_use_case import (
 from app.use_cases.admin.security.totp_secret_resealer import TotpSecretResealer
 
 
-class SecurityUseCasesContainer(containers.DeclarativeContainer):
+class SecurityUseCasesContainer(AccessUseCasesContainer):
     """
     Key management: the platform admin's view of the key ring, starting a
-    re-encryption of the stored secrets and the job that carries it out.
+    re-encryption of the stored secrets and the job that carries it out;
+    and platform access (the admin team and support access, from
+    AccessUseCasesContainer).
     """
 
     adapters: AdaptersContainer = DependenciesContainer()  # type: ignore[assignment]
     clients: ClientsContainer = DependenciesContainer()  # type: ignore[assignment]
-    config: ConfigContainer = DependenciesContainer()  # type: ignore[assignment]
-    facilitators: FacilitatorsContainer = DependenciesContainer()  # type: ignore[assignment]
-    repositories: RepositoriesContainer = DependenciesContainer()  # type: ignore[assignment]
-    time_provider: TimeProviderContainer = DependenciesContainer()  # type: ignore[assignment]
-    utilities: UtilitiesContainer = DependenciesContainer()  # type: ignore[assignment]
-    platform_use_cases: PlatformUseCasesContainer = DependenciesContainer()  # type: ignore[assignment]
+    # The edges the base declares, shared (not redeclared), so one override
+    # reaches the providers of both.
+    config: ConfigContainer = AccessUseCasesContainer.config
+    facilitators: FacilitatorsContainer = AccessUseCasesContainer.facilitators
+    repositories: RepositoriesContainer = AccessUseCasesContainer.repositories
+    time_provider: TimeProviderContainer = AccessUseCasesContainer.time_provider
+    utilities: UtilitiesContainer = AccessUseCasesContainer.utilities
+    platform_use_cases: PlatformUseCasesContainer = (
+        AccessUseCasesContainer.platform_use_cases
+    )
 
     get_encryption_keys_use_case: Factory[
         UseCaseContract[EncryptionKeysQuery, EncryptionKeysView]

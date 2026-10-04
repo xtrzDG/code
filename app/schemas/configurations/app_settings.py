@@ -6,6 +6,7 @@ from app.schemas.configurations.media_settings import MediaSettings
 from app.schemas.configurations.platform_alert_settings import PlatformAlertSettings
 from app.schemas.configurations.reply_safety_settings import ReplySafetySettings
 from app.schemas.configurations.reply_speed_settings import ReplySpeedSettings
+from app.schemas.configurations.session_settings import SessionSettings
 from app.schemas.constants.assistants import LlmEffort, LlmProvider
 from app.schemas.constants.environment import DeploymentEnvironment
 from app.schemas.constants.jobs import JobLane
@@ -276,3 +277,6 @@ class AppSettings(ImmutableDTO):
     platform_alerts: PlatformAlertSettings = Field(
         default_factory=PlatformAlertSettings
     )
+    # When unused and admin sessions end (SESSION_IDLE_TIMEOUT_SECONDS,
+    # ADMIN_SESSION_IDLE_TIMEOUT_SECONDS, ADMIN_SESSION_LIFETIME_SECONDS).
+    sessions: SessionSettings = Field(default_factory=SessionSettings)

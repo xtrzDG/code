@@ -23,6 +23,7 @@ from app.schemas.dto.conversations import (
     LlmToolDefinition,
 )
 from app.schemas.dto.mfa import SessionAssurance
+from app.schemas.dto.sessions import SessionCheck
 from app.schemas.dto.voice import VoiceAgentSpec
 from app.schemas.exceptions.application_errors import (
     AuthenticationRequiredError,
@@ -157,7 +158,7 @@ class FakeAssistantToolCatalog(AssistantToolCatalogContract):
         ]
 
 
-class FakeAuthenticationOperator(OperatorContract[AccessToken, SessionAssurance]):
+class FakeAuthenticationOperator(OperatorContract[SessionCheck, SessionAssurance]):
     """Bearer tokens are "token-<user id>"."""
 
     def __init__(self) -> None:
@@ -168,8 +169,9 @@ class FakeAuthenticationOperator(OperatorContract[AccessToken, SessionAssurance]
         self._users[token] = user_id
         return token
 
-    def operate(self, input_data: AccessToken) -> SessionAssurance:
-        user_id: UserId | None = self._users.get(str(input_data))
+    def operate(self, input_data: SessionCheck) -> SessionAssurance:
+        token: AccessToken = input_data.access_token
+        user_id: UserId | None = self._users.get(str(token))
         if user_id is None:
             raise AuthenticationRequiredError("Unknown token.")
 

@@ -9,8 +9,8 @@ from app.containers.repositories import RepositoriesContainer
 from app.containers.time_provider import TimeProviderContainer
 from app.containers.use_cases.billing_use_cases import BillingUseCasesContainer
 from app.containers.utilities import UtilitiesContainer
+from app.contracts.platform_admins import PlatformAdminCheck
 from app.contracts.use_case_contract import UseCaseContract
-from app.schemas.domain.users import UserDocument
 from app.schemas.dto.admin import (
     AdminClientPage,
     AdminClientQuery,
@@ -30,7 +30,6 @@ from app.schemas.dto.admin_jobs import (
 from app.schemas.dto.health import ReadinessQuery, ReadinessReport
 from app.schemas.dto.jobs import JobReport, JobTick
 from app.schemas.dto.widget_errors import WidgetErrorCommand
-from app.schemas.typings.users.prefixed_id import UserId
 from app.use_cases.admin.authorize_platform_admin_use_case import (
     AuthorizePlatformAdminUseCase,
 )
@@ -74,13 +73,11 @@ class PlatformUseCasesContainer(containers.DeclarativeContainer):
     billing_use_cases: BillingUseCasesContainer = DependenciesContainer()  # type: ignore[assignment]
 
     # --- Platform admin.
-    authorize_platform_admin_use_case: Factory[
-        UseCaseContract[UserId, UserDocument]
-    ] = Factory(
+    authorize_platform_admin_use_case: Factory[PlatformAdminCheck] = Factory(
         AuthorizePlatformAdminUseCase,
         user_repo=repositories.user_repo,
         session_assurance=utilities.session_assurance,
-        app_settings=config.app_settings,
+        platform_admins=registries.platform_admin_registry,
     )
     summarize_client_use_case: Factory[
         UseCaseContract[ClientSummarySource, AdminClientSummary]
@@ -123,8 +120,12 @@ class PlatformUseCasesContainer(containers.DeclarativeContainer):
     ] = Factory(
         OpenClientCabinetUseCase,
         authorize_platform_admin=authorize_platform_admin_use_case,
+        platform_admins=registries.platform_admin_registry,
         business_repo=repositories.business_repo,
+        grant_repo=repositories.support_access_grant_repo,
         audit_log_repo=repositories.audit_log_repo,
+        staff_alerts=facilitators.staff_alert_facilitator,
+        localized_text_resolver=utilities.localized_text_resolver,
         wall_clock=time_provider.microsecond_wall_clock,
         step_up=utilities.step_up_guard,
     )

@@ -9,6 +9,8 @@ from app.gateways.http.openapi_error_contract import standard_error_responses
 from app.gateways.http.paging_query import parse_page_request
 from app.gateways.http.query_parsing import parse_optional
 from app.gateways.http.strict_request_parsing import (
+    build_json_body_dependency,
+    describe_json_body,
     parse_path_identifier,
     read_client_ip_address,
 )
@@ -24,10 +26,13 @@ from app.schemas.dto.admin import (
     ClientHealthView,
     OpenClientCabinetCommand,
 )
+from app.schemas.dto.support_access import OpenClientCabinetRequest
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.client_health.constrained_strings import ClientSearchText
 from app.schemas.typings.localization.constrained_strings import CountryCode
 from app.schemas.typings.users.prefixed_id import UserId
+
+read_open_body = build_json_body_dependency(OpenClientCabinetRequest)
 
 type ListClientsOperator = OperatorContract[AdminClientsQuery, AdminClientPage]
 type GetClientHealthOperator = OperatorContract[AdminClientQuery, ClientHealthView]
@@ -48,8 +53,9 @@ def build_admin_router(
         GET  /v1/admin/clients                          clients, one page
              ?limit=&cursor=&status=&health=&country=&niche=&search=&sort=
         GET  /v1/admin/clients/{business_id}            one client in detail
-        POST /v1/admin/clients/{business_id}/open       enter the cabinet
-                                                        (audited)
+        POST /v1/admin/clients/{business_id}/open       look into the cabinet
+             {"reason"}: an hour, read-only unless the owner allows
+             changes; the owner is told (step-up; audited)
     """
 
     router = APIRouter(tags=["admin"], responses=standard_error_responses())
@@ -100,16 +106,21 @@ def build_admin_router(
             )
         )
 
-    @router.post("/v1/admin/clients/{business_id}/open")
+    @router.post(
+        "/v1/admin/clients/{business_id}/open",
+        openapi_extra=describe_json_body(OpenClientCabinetRequest),
+    )
     def open_client_cabinet(
         request: Request,
         business_id: str,
         user_id: Annotated[UserId, Depends(current_user)],
+        body: Annotated[OpenClientCabinetRequest, Depends(read_open_body)],
     ) -> ClientCabinetAccess:
         return open_client_cabinet_operator.operate(
             OpenClientCabinetCommand(
                 user_id=user_id,
                 business_id=parse_path_identifier(business_id, BusinessId, "Business"),
+                reason=body.reason,
                 client_ip_address=read_client_ip_address(request),
             )
         )

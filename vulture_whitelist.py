@@ -392,3 +392,22 @@ _.notice_languages  # app/schemas/dto/incidents.py (IncidentView)
 # fields the cabinet's Reports page reads; no Python code reads them.
 _.estimated_value_minor  # app/schemas/dto/value/customer_sources.py (CustomerSourceRow)
 _.suggested_whatsapp_number  # app/schemas/dto/value/value_views.py
+
+# Device sessions, the admin team and support access (1103): response
+# fields the cabinet reads (Account → Security, Admin → Team, the support
+# banner), and what a grant stores for the audit trail (who granted it,
+# from where, why it ended); no Python code reads them.
+_.revoked_count  # app/schemas/dto/sessions.py (RevokedSessionsView)
+_.added_by_name  # app/schemas/dto/platform_admins.py (PlatformAdminView)
+_.is_you  # app/schemas/dto/platform_admins.py (PlatformAdminView)
+_.is_yours  # app/schemas/dto/support_access.py (SupportSessionView)
+_.write_access  # app/schemas/dto/support_access.py (SupportAccessView)
+_.is_support_viewer  # app/schemas/dto/support_access.py (SupportAccessView)
+_.viewer_can_write  # app/schemas/dto/support_access.py (SupportAccessView)
+_.support_access_grant_id  # app/schemas/dto/admin.py (ClientCabinetAccess)
+_.can_write  # app/schemas/dto/admin.py (ClientCabinetAccess)
+_.platform_admin_role  # app/schemas/dto/users.py (CurrentUserView)
+_.platform_admin_permissions  # app/schemas/dto/users.py (CurrentUserView)
+_.granted_by  # app/schemas/domain/support_access_grants.py
+_.opened_from_ip  # app/schemas/domain/support_access_grants.py
+_.end_reason  # app/schemas/domain/support_access_grants.py

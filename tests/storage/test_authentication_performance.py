@@ -15,6 +15,7 @@ from app.clients.postgres.postgres_connection_pool_client import (
     PostgresConnectionPoolClient,
 )
 from app.schemas.domain.users import UserSessionDocument
+from app.schemas.dto.sessions import SessionCheck
 from app.schemas.typings.platform.strings import DatabaseUrl
 from app.schemas.typings.users.prefixed_id import UserId
 from app.use_cases.users.authenticate_user_use_case import AuthenticateUserUseCase
@@ -23,6 +24,8 @@ from app.utilities.security.access_tokens import (
     hash_access_token,
 )
 from app.utilities.storage.storage_scope_context import StorageScopeContext
+from tests.foundation.access_support import ACCESS_SETTINGS
+from tests.foundation.support_access_builders import in_memory_platform_admins
 from tests.storage.builders import COUNTRY_SAMPLES, build_owner
 from tests.storage.hot_path_repositories import HotPathRepositories
 from tests.storage.hot_path_seeding import analyze, insert_session_rows
@@ -73,16 +76,19 @@ def test_authenticate_stays_under_5_ms_with_50k_sessions(
             expires_at=Microseconds(NOW + 3_600_000_000),
         )
     )
+    wall_clock = build_fixed_wall_clock()
     authenticate = AuthenticateUserUseCase(
         user_session_repo=repositories.sessions,
         user_repo=repositories.users,
-        wall_clock=build_fixed_wall_clock(),
+        wall_clock=wall_clock,
+        platform_admins=in_memory_platform_admins(wall_clock),
+        app_settings=ACCESS_SETTINGS,
     )
     durations: list[float] = []
     try:
         for run in range(WARM_UP_RUNS + MEASURED_RUNS):
             started: float = time.perf_counter()
-            user_id: UserId = authenticate.run(token).user_id
+            user_id: UserId = authenticate.run(SessionCheck(access_token=token)).user_id
             if run >= WARM_UP_RUNS:
                 durations.append((time.perf_counter() - started) * 1000)
             assert user_id == user.id

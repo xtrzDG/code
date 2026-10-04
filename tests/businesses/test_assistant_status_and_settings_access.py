@@ -2,8 +2,8 @@
 
 import pytest
 
+from app.schemas.constants.access import BusinessAccessMode
 from app.schemas.constants.businesses import BusinessStatus
-from app.schemas.constants.compliance import AuditAction
 from app.schemas.constants.users import LoginMethod
 from app.schemas.domain.users import UserDocument
 from app.schemas.dto.businesses import (
@@ -23,6 +23,11 @@ from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.schemas.typings.localization.strings import RawPhoneNumberInput
 from app.schemas.typings.users.constrained_strings import EmailAddress
 from tests.businesses.business_settings_steps import georgian_restaurant, update
+from tests.foundation.support_access_builders import (
+    allow_support_changes,
+    as_request,
+    open_support_session,
+)
 from tests.users.accounts_phones import GERMANY_MOBILE, ISRAEL_MOBILE
 from tests.users.accounts_testbed import build_accounts_testbed
 
@@ -116,7 +121,7 @@ def test_staff_and_strangers_cannot_change_settings() -> None:
     assert staff_view.name == "Sakhli"
 
 
-def test_platform_admin_can_help_and_is_audited() -> None:
+def test_platform_support_needs_an_open_look_and_never_changes_owner_settings() -> None:
     testbed = build_accounts_testbed({"PLATFORM_ADMIN_EMAILS": "ops@example.com"})
     owner_id, business = georgian_restaurant(testbed)
     admin = UserDocument(
@@ -126,17 +131,31 @@ def test_platform_admin_can_help_and_is_audited() -> None:
         is_platform_admin=True,
     )
     testbed.user_repo.save(admin)
+    changes = BusinessSettingsChanges(city=CityName("Kutaisi"))
 
-    updated = update(
-        testbed,
-        admin.id,
-        business.id,
-        BusinessSettingsChanges(city=CityName("Kutaisi")),
+    def change() -> object:
+        return update(testbed, admin.id, business.id, changes)
+
+    def look() -> object:
+        return testbed.get_business.run(
+            BusinessQuery(user_id=admin.id, business_id=business.id)
+        )
+
+    # Without an open look into the cabinet, support gets nothing.
+    with pytest.raises(AccessDeniedError, match="reason first"):
+        as_request(testbed.session_assurance, admin.id, look, BusinessAccessMode.READ)
+    now = int(testbed.clock.now_microseconds())
+    open_support_session(testbed.grant_repo, business.id, admin.id, now)
+    viewed = as_request(
+        testbed.session_assurance, admin.id, look, BusinessAccessMode.READ
     )
+    # Read-only by default; with the owner's consent support changes what
+    # staff may, never the owner's settings.
+    with pytest.raises(AccessDeniedError, match="may only look"):
+        as_request(testbed.session_assurance, admin.id, change)
+    allow_support_changes(testbed.grant_repo, business.id, owner_id, now)
+    with pytest.raises(AccessDeniedError, match="Only the business owner"):
+        as_request(testbed.session_assurance, admin.id, change)
 
-    assert updated.city == "Kutaisi"
-    assert updated.viewer_role is None
-    assert [
-        entry.action for entry in testbed.audit_log_repo.list_by_business(business.id)
-    ] == [AuditAction.ADMIN_ACCESS]
-    assert owner_id != admin.id
+    assert getattr(viewed, "viewer_role", "missing") is None
+    assert testbed.audit_log_repo.list_by_business(business.id) == []

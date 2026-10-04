@@ -90,6 +90,8 @@ def store_session(
             user_id=UserId(user_id),
             token_hash=hash_access_token(AccessToken(token)),
             expires_at=Microseconds(now + DAY_MICROSECONDS),
+            created_at=Microseconds(now),
+            updated_at=Microseconds(now),
             auth_level=auth_level,
             authenticated_at=None if auth_level is None else Microseconds(now),
         )

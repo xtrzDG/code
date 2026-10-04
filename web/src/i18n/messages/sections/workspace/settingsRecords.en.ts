@@ -65,6 +65,10 @@ export const settingsRecordsEn = {
       retention_purge: "Deleted by retention",
       publish_untested: "Update published without passing checks",
       mfa_changed: "Two-factor sign-in changed",
+      support_access_start: "Platform support opened the cabinet",
+      support_access_end: "Platform support's access ended",
+      session_revoked: "Signed out a device",
+      platform_admin_changed: "Admin team changed",
     },
     entities: {
       contact: "Customer",

@@ -26,6 +26,9 @@ from app.gateways.worker.periodic.activation_follow_up import (
 from app.gateways.worker.periodic.channel_credentials import (
     CHECK_CHANNEL_CREDENTIALS_JOB,
 )
+from app.gateways.worker.periodic.end_expired_support_access import (
+    END_EXPIRED_SUPPORT_ACCESS_JOB,
+)
 from app.gateways.worker.periodic.group_conversation_topics import (
     GROUP_CONVERSATION_TOPICS_JOB,
 )
@@ -109,6 +112,7 @@ def test_worker_ticks_once_with_every_job_registered() -> None:
         (SEND_ACTIVATION_NUDGES_JOB, 3_600),
         (PLATFORM_ALERTS_JOB, 300),
         (CHECK_CHANNEL_CREDENTIALS_JOB, 3_600),
+        (END_EXPIRED_SUPPORT_ACCESS_JOB, 600),
     ]
     assert [job.name for job in jobs if job.is_process_local] == [FLUSH_LLM_TRACES_JOB]
     # The worker plays queued autotest runs (concept: assembly autotests run
@@ -128,14 +132,15 @@ def test_worker_ticks_once_with_every_job_registered() -> None:
         ROTATE_ENCRYPTED_SECRETS_JOB,
         SEND_PLATFORM_ALERT_JOB,
     ]
-    assert (first.periodic_runs, first.queued_runs, first.failures) == (21, 0, 0)
+    assert (first.periodic_runs, first.queued_runs, first.failures) == (22, 0, 0)
     assert right_after.periodic_runs == 0
     assert a_minute_later.periodic_runs == 1  # the trace flush
     # Trials, overage, grace periods, reminders, the trace flush, the sweep
     # of rate-limit counters, the inbox sweep, the owners' value reports,
     # the customers' topics, the feedback requests, the milestones, the
-    # activation nudges, the platform alerts and the Meta token check.
-    assert (an_hour_later.periodic_runs, an_hour_later.failures) == (14, 0)
+    # activation nudges, the platform alerts, the Meta token check and the
+    # end of expired support access.
+    assert (an_hour_later.periodic_runs, an_hour_later.failures) == (15, 0)
     # A new worker process (a deploy) only flushes its own trace buffer.
     assert (after_a_restart.periodic_runs, after_a_restart.failures) == (1, 0)
 

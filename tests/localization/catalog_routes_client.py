@@ -15,6 +15,7 @@ from app.pipelines.orchestrator_pipeline import OrchestratorPipeline
 from app.registries.billing.plan_registry import PlanRegistry
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.dto.mfa import SessionAssurance
+from app.schemas.dto.sessions import SessionCheck
 from app.schemas.exceptions.application_errors import AuthenticationRequiredError
 from app.schemas.typings.users.prefixed_id import UserId
 from app.schemas.typings.users.strings import AccessToken
@@ -45,14 +46,17 @@ OWNER_TOKEN: str = "owner-token"
 STRANGER_TOKEN: str = "stranger-token"
 
 
-class TokenTableAuthenticationOperator(OperatorContract[AccessToken, SessionAssurance]):
+class TokenTableAuthenticationOperator(
+    OperatorContract[SessionCheck, SessionAssurance]
+):
     """Fake authentication: a fixed token -> user table."""
 
     def __init__(self, users_by_token: dict[str, UserId]) -> None:
         self._users_by_token: dict[str, UserId] = users_by_token
 
-    def operate(self, input_data: AccessToken) -> SessionAssurance:
-        user_id: UserId | None = self._users_by_token.get(str(input_data))
+    def operate(self, input_data: SessionCheck) -> SessionAssurance:
+        token: AccessToken = input_data.access_token
+        user_id: UserId | None = self._users_by_token.get(str(token))
         if user_id is None:
             raise AuthenticationRequiredError("Session is not valid.")
 

@@ -21,8 +21,9 @@ class StaffLinkTarget(StrEnum):
     Overview (a milestone's celebration waits there). The activation
     reminders open SETUP (the guided setup, at the saved step), CHANNELS,
     SHARE (the link and QR card on the Channels page) and BILLING (where
-    the done-for-you setup is chosen). Link targets live only in signed
-    links, never in stored documents.
+    the done-for-you setup is chosen). ACCOUNT_SECURITY is the person's
+    Account → Security page (their sessions: a sign-in from a new device).
+    Link targets live only in signed links, never in stored documents.
     """
 
     CONVERSATION = "conversation"
@@ -35,6 +36,7 @@ class StaffLinkTarget(StrEnum):
     CHANNELS = "channels"
     SHARE = "share"
     BILLING = "billing"
+    ACCOUNT_SECURITY = "account_security"
 
 
 class StaffTextStyle(StrEnum):

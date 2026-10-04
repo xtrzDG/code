@@ -109,6 +109,23 @@ are late during the overlap, not lost. Before rolling back past that
 release, let the outbox drain (no `pending` rows of the new kinds), or
 the previous release cannot read them.
 
+The release with device sessions, the admin team and support access
+(PLAN 16.10.4) also writes new enum values in the release that introduces
+them, an exception to the enum rule below: four `AuditAction` values
+(`support_access_start`, `support_access_end`, `session_revoked`,
+`platform_admin_changed`) and the staff link target `account_security`
+(code 11 in signed staff links). An old API instance that lists an audit
+log holding such an entry may fail that page until the overlap ends, and
+an old instance refuses a new-device link: both only during the minutes
+of the overlap, nothing is lost. Its new collections
+(`platform_admins`, `support_access_grants`, migration 1103) and the new
+optional session fields are unknown to the old release, which ignores
+them; but an old instance does not check support grants, so a platform
+admin may read a client's cabinet without an open look during the
+overlap (it still needs two factors). Before rolling back past that
+release, note that the admin rights fall back to the
+`PLATFORM_ADMIN_*` lists.
+
 The storage layer makes the second part mechanical
 (`app/adapters/storage/persisted_document_codec.py`): documents are
 validated strictly everywhere they are built and written, carry their

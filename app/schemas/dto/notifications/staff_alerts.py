@@ -62,7 +62,9 @@ class StaffAlert(ImmutableDTO):
     always once per handoff); `contact_channels` limits the staff contacts
     it goes to (None: every channel). An alert without an `event` (a
     milestone of the business, such as its first booking) is news for
-    everyone it goes to, whatever events they chose.
+    everyone it goes to, whatever events they chose. `recipient_user_ids`
+    makes an alert personal (a sign-in from a new device): only those
+    cabinet users' devices hear it, and no staff contact.
     """
 
     business_id: BusinessId
@@ -76,6 +78,7 @@ class StaffAlert(ImmutableDTO):
     tag: PushNotificationTag
     subject: StaffAlertSubject | None = None
     contact_channels: list[ManagerContactChannel] | None = None
+    recipient_user_ids: list[UserId] | None = None
 
 
 class HandoffBrief(ImmutableDTO):

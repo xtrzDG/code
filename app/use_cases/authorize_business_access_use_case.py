@@ -1,27 +1,16 @@
-from typed_time_provider import Microseconds, WallClock
-
 from app.contracts.repositories.business_repositories import BusinessRepoContract
-from app.contracts.repositories.compliance_repositories import AuditLogRepoContract
-from app.contracts.repositories.user_repositories import UserRepoContract
 from app.contracts.session_assurance import SessionAssuranceContract
 from app.contracts.use_case_contract import UseCaseContract
-from app.schemas.configurations.app_settings import AppSettings
-from app.schemas.constants.compliance import AuditAction
 from app.schemas.constants.users import BusinessMemberRole
 from app.schemas.domain.businesses import BusinessDocument
-from app.schemas.domain.compliance import AuditLogEntryDocument
-from app.schemas.domain.users import UserDocument
+from app.schemas.domain.support_access_grants import SupportAccessGrantDocument
 from app.schemas.dto.access import BusinessAccessRequest
 from app.schemas.dto.mfa import SessionAssurance
+from app.schemas.dto.support_access import SupportAccessCheck
 from app.schemas.exceptions.application_errors import (
     AccessDeniedError,
     NotFoundError,
 )
-from app.schemas.typings.compliance.strings import (
-    AuditEntityName,
-    AuditEntityReference,
-)
-from app.utilities.security.platform_admins import is_listed_platform_admin
 from app.utilities.security.two_factor_policy import (
     is_two_factor_session,
     mfa_required,
@@ -46,10 +35,12 @@ class AuthorizeBusinessAccessUseCase(
     signed in with the login code alone gets MfaRequiredError (reason
     `mfa_required`).
 
-    Platform admins pass and leave an ADMIN_ACCESS entry in the audit log
-    (concept sections 8 and 10). Admin status is read from the
-    PLATFORM_ADMIN_* lists at every call (someone taken off them is refused
-    at once), and an admin's session must be signed in with two factors.
+    Someone who is not a member may still be platform support with an
+    open, time-boxed look into this cabinet: AuthorizeSupportAccessUseCase
+    decides (admin role and two factors read at every call, read-only
+    unless the owner allowed changes; concept sections 8 and 10).
+    `access_mode` WRITE marks a read that copies personal data out (an
+    export): support may do it only with the owner's consent.
 
     The two-factor rules apply to requests made with a session (the HTTP
     gateway binds it); work in the background (no session bound) acts on
@@ -59,18 +50,16 @@ class AuthorizeBusinessAccessUseCase(
     def __init__(
         self,
         business_repo: BusinessRepoContract,
-        user_repo: UserRepoContract,
-        audit_log_repo: AuditLogRepoContract,
-        wall_clock: WallClock[Microseconds],
         session_assurance: SessionAssuranceContract,
-        app_settings: AppSettings,
+        authorize_support_access: UseCaseContract[
+            SupportAccessCheck, SupportAccessGrantDocument
+        ],
     ) -> None:
         self._business_repo: BusinessRepoContract = business_repo
-        self._user_repo: UserRepoContract = user_repo
-        self._audit_log_repo: AuditLogRepoContract = audit_log_repo
-        self._wall_clock: WallClock[Microseconds] = wall_clock
         self._session_assurance: SessionAssuranceContract = session_assurance
-        self._app_settings: AppSettings = app_settings
+        self._authorize_support_access: UseCaseContract[
+            SupportAccessCheck, SupportAccessGrantDocument
+        ] = authorize_support_access
 
     def run(self, input_data: BusinessAccessRequest) -> BusinessDocument:
         business: BusinessDocument | None = self._business_repo.get(
@@ -99,28 +88,13 @@ class AuthorizeBusinessAccessUseCase(
 
             return business
 
-        user: UserDocument | None = self._user_repo.get(input_data.user_id)
-        if user is not None and self._is_admin_with_two_factors(user, assurance):
-            now: Microseconds = self._wall_clock.now_unix()
-            self._audit_log_repo.append(
-                AuditLogEntryDocument(
-                    business_id=business.id,
-                    actor_id=user.id,
-                    action=AuditAction.ADMIN_ACCESS,
-                    entity=AuditEntityName("business"),
-                    entity_id=AuditEntityReference(str(business.id)),
-                    created_at=now,
-                    updated_at=now,
-                )
+        self._authorize_support_access.run(
+            SupportAccessCheck(
+                user_id=input_data.user_id,
+                business_id=business.id,
+                required_role=input_data.required_role,
+                access_mode=input_data.access_mode,
+                support_may_change=input_data.support_may_change,
             )
-            return business
-
-        raise NotFoundError(f"Business {input_data.business_id} was not found.")
-
-    def _is_admin_with_two_factors(
-        self, user: UserDocument, assurance: SessionAssurance | None
-    ) -> bool:
-        if not is_listed_platform_admin(user, self._app_settings):
-            return False
-
-        return assurance is None or is_two_factor_session(assurance, user.id)
+        )
+        return business

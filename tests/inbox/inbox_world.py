@@ -49,6 +49,7 @@ from app.use_cases.insights.count_inbox_attention_use_case import (
 )
 from app.utilities.security.session_assurance_context import SessionAssuranceContext
 from tests.foundation.access_support import ACCESS_SETTINGS
+from tests.foundation.support_access_builders import build_authorize_business_access
 from tests.inbox.inbox_store import InboxStore
 
 
@@ -56,7 +57,7 @@ class InboxWorld(InboxStore):
     """Every inbox use case over the store (fresh instances on each call)."""
 
     def authorize(self) -> AuthorizeBusinessAccessUseCase:
-        return AuthorizeBusinessAccessUseCase(
+        return build_authorize_business_access(
             business_repo=self.business_repo,
             user_repo=self.user_repo,
             audit_log_repo=self.audit_log_repo,

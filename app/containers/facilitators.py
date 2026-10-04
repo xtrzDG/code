@@ -60,6 +60,7 @@ from app.facilitators.setup.owner_nudge_facilitator import OwnerNudgeFacilitator
 from app.facilitators.users.login_code_cap_alert_facilitator import (
     LoginCodeCapAlertFacilitator,
 )
+from app.facilitators.users.sign_in_notice_facilitator import SignInNoticeFacilitator
 from app.facilitators.users.turnstile_bot_check_facilitator import (
     TurnstileBotCheckFacilitator,
 )
@@ -226,6 +227,18 @@ class FacilitatorsContainer(containers.DeclarativeContainer):
     )
     # Activation nudges: e-mail, Telegram and devices, once per nudge and
     # recipient, through the same outbox.
+    # A sign-in from a new device: the person's devices and e-mail (1103).
+    sign_in_notice_facilitator: Singleton[SignInNoticeFacilitator] = Singleton(
+        SignInNoticeFacilitator,
+        business_repo=repositories.business_repo,
+        staff_alerts=staff_alert_facilitator,
+        manager_notifier=manager_notification_facilitator,
+        text_transformer=transformers.staff_notification_text_transformer,
+        link_signer=staff_link_signer,
+        localized_text_resolver=utilities.localized_text_resolver,
+        app_settings=config.app_settings,
+        wall_clock=time_provider.microsecond_wall_clock,
+    )
     owner_nudge_facilitator: Singleton[OwnerNudgeFacilitator] = Singleton(
         OwnerNudgeFacilitator,
         user_repo=repositories.user_repo,

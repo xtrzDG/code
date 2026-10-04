@@ -5,31 +5,49 @@ import type { ReactNode } from "react";
 
 import type { CurrentUserView } from "@/api/types";
 import { useI18n } from "@/i18n/client";
-import { ADMIN_METRICS_PATH, ADMIN_PATH, ADMIN_SECURITY_PATH, ADMIN_SYSTEM_PATH, HOME_PATH } from "@/lib/navigation";
+import { canOpenAdminPage, type AdminPageKey } from "@/lib/adminPermissions";
+import { ADMIN_METRICS_PATH, ADMIN_PATH, ADMIN_SECURITY_PATH, ADMIN_SYSTEM_PATH, ADMIN_TEAM_PATH, HOME_PATH } from "@/lib/navigation";
 
-import { IconBuilding, IconGauge, IconKey, IconPulse, IconShield } from "../icons";
+import { IconBuilding, IconGauge, IconKey, IconPulse, IconShield, IconUsers } from "../icons";
 import { ShellFrame } from "./ShellFrame";
+import type { ShellNavItem } from "./types";
+
+function isUnder(pathname: string, path: string): boolean {
+  return pathname === path || pathname.startsWith(`${path}/`);
+}
 
 /**
  * Frame of the platform admin pages (/admin/*): the clients, the platform's
- * health (System), the growth metrics, the encryption keys, and the way
- * back to the businesses.
+ * health (System), the growth metrics, the encryption keys, the admin team,
+ * and the way back to the businesses. Each admin sees the pages their role
+ * opens (lib/adminPermissions.ts).
  */
 export function AdminShell({ me, initialCollapsed = false, children }: { me: CurrentUserView; initialCollapsed?: boolean; children: ReactNode }) {
   const { t } = useI18n();
   const pathname = usePathname();
-  const isSecurityPage = pathname === ADMIN_SECURITY_PATH || pathname.startsWith(`${ADMIN_SECURITY_PATH}/`);
-  const isMetricsPage = pathname === ADMIN_METRICS_PATH || pathname.startsWith(`${ADMIN_METRICS_PATH}/`);
-  const isSystemPage = pathname === ADMIN_SYSTEM_PATH || pathname.startsWith(`${ADMIN_SYSTEM_PATH}/`);
-  const isAdminPage =
-    !isSecurityPage && !isMetricsPage && !isSystemPage && (pathname === ADMIN_PATH || pathname.startsWith(`${ADMIN_PATH}/`));
+  const isSecurityPage = isUnder(pathname, ADMIN_SECURITY_PATH);
+  const isMetricsPage = isUnder(pathname, ADMIN_METRICS_PATH);
+  const isSystemPage = isUnder(pathname, ADMIN_SYSTEM_PATH);
+  const isTeamPage = isUnder(pathname, ADMIN_TEAM_PATH);
+  const isAdminPage = !isSecurityPage && !isMetricsPage && !isSystemPage && !isTeamPage && isUnder(pathname, ADMIN_PATH);
   const title = isSecurityPage
     ? t("adminSecurity.nav")
     : isMetricsPage
       ? t("adminMetrics.nav")
       : isSystemPage
         ? t("adminSystem.nav")
-        : t("nav.admin");
+        : isTeamPage
+          ? t("adminTeam.nav")
+          : t("nav.admin");
+  const pages: (ShellNavItem & { key: AdminPageKey })[] = [
+    { key: "admin", href: ADMIN_PATH, label: t("nav.admin"), icon: IconShield, isActive: isAdminPage, inTabBar: true },
+    // On call from a phone: the platform's health is one tap away.
+    { key: "system", href: ADMIN_SYSTEM_PATH, label: t("adminSystem.nav"), icon: IconPulse, isActive: isSystemPage, inTabBar: true },
+    // Phones: the rest under "More", so the tab bar keeps room for its labels.
+    { key: "metrics", href: ADMIN_METRICS_PATH, label: t("adminMetrics.nav"), icon: IconGauge, isActive: isMetricsPage, inTabBar: false },
+    { key: "security", href: ADMIN_SECURITY_PATH, label: t("adminSecurity.nav"), icon: IconKey, isActive: isSecurityPage, inTabBar: false },
+    { key: "team", href: ADMIN_TEAM_PATH, label: t("adminTeam.nav"), icon: IconUsers, isActive: isTeamPage, inTabBar: false },
+  ];
   return (
     <ShellFrame
       me={me}
@@ -37,27 +55,7 @@ export function AdminShell({ me, initialCollapsed = false, children }: { me: Cur
       context={t("shell.platformAdmin")}
       title={title}
       items={[
-        { key: "admin", href: ADMIN_PATH, label: t("nav.admin"), icon: IconShield, isActive: isAdminPage, inTabBar: true },
-        // On call from a phone: the platform's health is one tap away.
-        { key: "system", href: ADMIN_SYSTEM_PATH, label: t("adminSystem.nav"), icon: IconPulse, isActive: isSystemPage, inTabBar: true },
-        {
-          key: "metrics",
-          href: ADMIN_METRICS_PATH,
-          label: t("adminMetrics.nav"),
-          icon: IconGauge,
-          isActive: isMetricsPage,
-          // Phones: under "More", so the tab bar keeps room for its labels.
-          inTabBar: false,
-        },
-        {
-          key: "security",
-          href: ADMIN_SECURITY_PATH,
-          label: t("adminSecurity.nav"),
-          icon: IconKey,
-          isActive: isSecurityPage,
-          // Phones: under "More" next to the metrics; System takes its tab.
-          inTabBar: false,
-        },
+        ...pages.filter((page) => canOpenAdminPage(me, page.key)),
         { key: "businesses", href: HOME_PATH, label: t("nav.allBusinesses"), icon: IconBuilding, isActive: false, inTabBar: true },
       ]}
     >

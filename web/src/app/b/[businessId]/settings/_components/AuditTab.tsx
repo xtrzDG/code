@@ -56,10 +56,17 @@ const ACTION_LABELS: Record<AuditAction, MessageKey> = {
   retention_purge: "settings.audit.actions.retention_purge",
   publish_untested: "settings.audit.actions.publish_untested",
   mfa_changed: "settings.audit.actions.mfa_changed",
+  support_access_start: "settings.audit.actions.support_access_start",
+  support_access_end: "settings.audit.actions.support_access_end",
+  session_revoked: "settings.audit.actions.session_revoked",
+  platform_admin_changed: "settings.audit.actions.platform_admin_changed",
 };
 
-/** Filter choices: two-factor changes belong to a person, never to a business's log. */
-const ACTIONS = (Object.keys(ACTION_LABELS) as AuditAction[]).filter((action) => action !== "mfa_changed");
+/** Actions about a person or the platform, never in a business's log. */
+const PERSONAL_ACTIONS: ReadonlySet<AuditAction> = new Set(["mfa_changed", "session_revoked", "platform_admin_changed"]);
+
+/** Filter choices: two-factor changes, sessions and the admin team belong to a person, never to a business's log. */
+const ACTIONS = (Object.keys(ACTION_LABELS) as AuditAction[]).filter((action) => !PERSONAL_ACTIONS.has(action));
 
 /** Operations on personal data, newest first, 50 at a time, filtered on the server. */
 export function AuditTab() {

@@ -20,9 +20,6 @@ from app.transformers.businesses.business_view_transformer import (
     BusinessViewTransformer,
 )
 from app.transformers.users.user_view_transformer import UserViewTransformer
-from app.use_cases.authorize_business_access_use_case import (
-    AuthorizeBusinessAccessUseCase,
-)
 from app.use_cases.businesses.change_member_role_use_case import ChangeMemberRoleUseCase
 from app.use_cases.businesses.create_business_use_case import CreateBusinessUseCase
 from app.use_cases.businesses.get_business_use_case import GetBusinessUseCase
@@ -40,6 +37,13 @@ from app.use_cases.users.otp_login.send_login_code_use_case import (
     SendLoginCodeUseCase,
 )
 from app.use_cases.users.otp_login.start_otp_login_use_case import StartOtpLoginUseCase
+from app.use_cases.users.sessions.list_my_sessions_use_case import (
+    ListMySessionsUseCase,
+)
+from app.use_cases.users.sessions.revoke_other_sessions_use_case import (
+    RevokeOtherSessionsUseCase,
+)
+from app.use_cases.users.sessions.revoke_session_use_case import RevokeSessionUseCase
 from app.use_cases.users.update_current_user_use_case import UpdateCurrentUserUseCase
 from app.use_cases.users.verify_otp_login_use_case import VerifyOtpLoginUseCase
 from app.utilities.security.require_recent_authentication import (
@@ -47,6 +51,11 @@ from app.utilities.security.require_recent_authentication import (
 )
 from tests.analytics.recording_product_events import RecordingProductEvents
 from tests.foundation.access_support import AllowStepUp
+from tests.foundation.support_access_builders import (
+    RecordingSignInNotices,
+    build_authorize_business_access,
+    in_memory_platform_admins,
+)
 from tests.users.accounts_recorders import (
     RecordingAssistantResumption,
     RecordingVoiceAgentRemoval,
@@ -69,13 +78,19 @@ class AccountsUserUseCases(AccountsRepositories):
 
         user_view_transformer = UserViewTransformer()
         business_view_transformer = BusinessViewTransformer()
-        self.authorize_business_access = AuthorizeBusinessAccessUseCase(
+        self.platform_admins = in_memory_platform_admins(
+            wall_clock, self.settings, self.platform_admin_repo
+        )
+        self.sign_in_notices = RecordingSignInNotices()
+        self.authorize_business_access = build_authorize_business_access(
             business_repo=self.business_repo,
             user_repo=self.user_repo,
             audit_log_repo=self.audit_log_repo,
             wall_clock=wall_clock,
             session_assurance=self.session_assurance,
             app_settings=self.settings,
+            grant_repo=self.grant_repo,
+            platform_admins=self.platform_admins,
         )
         # Tests of the team and of data rights run their actions without a
         # signed-in session; tests/users/mfa enforce the real step-up.
@@ -132,19 +147,39 @@ class AccountsUserUseCases(AccountsRepositories):
             product_events=self.product_events,
             totp_factor_repo=self.totp_factor_repo,
             mfa_challenge_repo=self.mfa_challenge_repo,
+            platform_admins=self.platform_admins,
+            sign_in_notices=self.sign_in_notices,
         )
         self.authenticate_user = AuthenticateUserUseCase(
             user_session_repo=self.user_session_repo,
             user_repo=self.user_repo,
             wall_clock=wall_clock,
+            platform_admins=self.platform_admins,
+            app_settings=self.settings,
         )
         self.logout = LogoutUseCase(user_session_repo=self.user_session_repo)
+        self.list_my_sessions = ListMySessionsUseCase(
+            user_session_repo=self.user_session_repo,
+            session_assurance=self.session_assurance,
+            wall_clock=wall_clock,
+        )
+        self.revoke_session = RevokeSessionUseCase(
+            user_session_repo=self.user_session_repo,
+            audit_log_repo=self.audit_log_repo,
+            wall_clock=wall_clock,
+        )
+        self.revoke_other_sessions = RevokeOtherSessionsUseCase(
+            user_session_repo=self.user_session_repo,
+            session_assurance=self.session_assurance,
+            audit_log_repo=self.audit_log_repo,
+            wall_clock=wall_clock,
+        )
         self.get_current_user = GetCurrentUserUseCase(
             user_repo=self.user_repo,
             business_repo=self.business_repo,
             user_view_transformer=user_view_transformer,
             session_assurance=self.session_assurance,
-            app_settings=self.settings,
+            platform_admins=self.platform_admins,
         )
         self.update_current_user = UpdateCurrentUserUseCase(
             user_repo=self.user_repo,

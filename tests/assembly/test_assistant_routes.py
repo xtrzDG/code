@@ -137,7 +137,7 @@ def test_failed_version_is_published_only_by_an_admin_with_acceptance() -> None:
     testbed.judge_raw_answers["booking__it"] = "not a verdict"
     client = testbed.build_client()
     owner = testbed.bearer(testbed.owner_id)
-    admin = testbed.bearer(testbed.add_platform_admin())
+    admin = testbed.bearer(testbed.add_platform_admin(business.id))
     assembled = assemble(client, owner, business.id)
     testbed.run_worker()
     version = client.get(

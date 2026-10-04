@@ -72,6 +72,10 @@ export const settingsRecordsRu: Translation<typeof settingsRecordsEn> = {
       retention_purge: "Удалено по сроку хранения",
       publish_untested: "Опубликовано обновление без пройденных проверок",
       mfa_changed: "Изменён вход с подтверждением",
+      support_access_start: "Поддержка платформы открыла кабинет",
+      support_access_end: "Доступ поддержки платформы закончился",
+      session_revoked: "Выход на устройстве",
+      platform_admin_changed: "Изменена команда админов",
     },
     entities: {
       contact: "Клиент",

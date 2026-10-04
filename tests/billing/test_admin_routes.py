@@ -4,6 +4,8 @@ from app.schemas.constants.compliance import AuditAction
 from tests.billing.billing_testbed import bearer
 from tests.billing.route_world import RouteWorld
 
+REASON_BODY: dict[str, str] = {"reason": "Owner asked about the invoice"}
+
 
 def test_admin_routes() -> None:
     world = RouteWorld()
@@ -12,7 +14,12 @@ def test_admin_routes() -> None:
 
     listing = world.client.get("/v1/admin/clients", headers=bearer(world.admin))
     detail = world.client.get(detail_path, headers=bearer(world.admin))
-    opened = world.client.post(f"{detail_path}/open", headers=bearer(world.admin))
+    opened = world.client.post(
+        f"{detail_path}/open", headers=bearer(world.admin), json=REASON_BODY
+    )
+    without_reason = world.client.post(
+        f"{detail_path}/open", headers=bearer(world.admin)
+    )
 
     filtered = world.client.get(
         "/v1/admin/clients",
@@ -51,8 +58,10 @@ def test_admin_routes() -> None:
     assert detail.json()["summary"]["subscription_status"] == "trialing"
     assert opened.status_code == 200
     assert "billing" in opened.json()["sections"]
+    assert opened.json()["can_write"] is False
+    assert without_reason.status_code == 422
     [entry] = world.testbed.audit_log_repo.list_by_business(world.business.id)
-    assert entry.action is AuditAction.ADMIN_ACCESS
+    assert entry.action is AuditAction.SUPPORT_ACCESS_START
     assert str(entry.ip_address) == "testclient"
 
 
@@ -68,6 +77,7 @@ def test_admin_routes_refuse_everyone_else() -> None:
         world.client.post(
             f"/v1/admin/clients/{world.business.id}/open",
             headers=bearer(world.owner),
+            json=REASON_BODY,
         ).status_code
         == 403
     )

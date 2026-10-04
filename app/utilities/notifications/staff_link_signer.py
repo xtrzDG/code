@@ -54,6 +54,7 @@ TARGET_CODES: dict[StaffLinkTarget, int] = {
     StaffLinkTarget.CHANNELS: 8,
     StaffLinkTarget.SHARE: 9,
     StaffLinkTarget.BILLING: 10,
+    StaffLinkTarget.ACCOUNT_SECURITY: 11,
 }
 TARGETS_BY_CODE: dict[int, StaffLinkTarget] = {
     code: target for target, code in TARGET_CODES.items()

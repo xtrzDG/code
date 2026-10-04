@@ -4,6 +4,7 @@ import {
   BUSINESS_PAGES,
   DEFAULT_INBOX_VIEW,
   INBOX_VIEWS,
+  adminClientPath,
   businessLocation,
   businessPath,
   conversationPath,
@@ -92,5 +93,12 @@ describe("the team inbox", () => {
     expect(isInboxView("mine")).toBe(true);
     expect(isInboxView("handoffs")).toBe(false);
     expect(isInboxView(null)).toBe(false);
+  });
+});
+
+describe("the admin area", () => {
+  it("links a client's page, where an admin opens the cabinet with a reason", () => {
+    expect(adminClientPath("business_1")).toBe("/admin/clients/business_1");
+    expect(adminClientPath("a/b")).toBe("/admin/clients/a%2Fb");
   });
 });

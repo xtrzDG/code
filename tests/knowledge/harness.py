@@ -1,8 +1,5 @@
 """In-memory wiring of the knowledge slice for tests (no network, fixed clock)."""
 
-from app.use_cases.authorize_business_access_use_case import (
-    AuthorizeBusinessAccessUseCase,
-)
 from app.use_cases.knowledge.create_knowledge_item_use_case import (
     CreateKnowledgeItemUseCase,
 )
@@ -49,6 +46,7 @@ from app.use_cases.resources.list_schedule_exceptions_use_case import (
 from app.use_cases.resources.update_resource_use_case import UpdateResourceUseCase
 from app.utilities.security.session_assurance_context import SessionAssuranceContext
 from tests.foundation.access_support import ACCESS_SETTINGS
+from tests.foundation.support_access_builders import build_authorize_business_access
 from tests.knowledge.knowledge_store import KnowledgeStore
 
 
@@ -57,7 +55,7 @@ class KnowledgeHarness(KnowledgeStore):
 
     def __init__(self) -> None:
         super().__init__()
-        self.authorize_business_access = AuthorizeBusinessAccessUseCase(
+        self.authorize_business_access = build_authorize_business_access(
             business_repo=self.business_repo,
             user_repo=self.user_repo,
             audit_log_repo=self.audit_log_repo,

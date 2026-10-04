@@ -61,7 +61,7 @@ def test_untested_or_failed_versions_go_live_only_when_an_admin_forces_them(
 ) -> None:
     testbed = AssemblyTestbed()
     business = seed_italian_restaurant(testbed)
-    admin_id = testbed.add_platform_admin()
+    admin_id = testbed.add_platform_admin(business.id)
     if make_failed:
         testbed.judge_raw_answers["booking__it"] = "unreadable"
         version = testbed.assemble(business.id, run_autotests=True)

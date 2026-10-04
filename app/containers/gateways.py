@@ -18,6 +18,9 @@ from app.gateways.worker.periodic.activation_follow_up import (
 from app.gateways.worker.periodic.channel_credentials import (
     check_channel_credentials_job,
 )
+from app.gateways.worker.periodic.end_expired_support_access import (
+    end_expired_support_access_job,
+)
 from app.gateways.worker.periodic.group_conversation_topics import (
     group_conversation_topics_job,
 )
@@ -205,6 +208,11 @@ class GatewaysContainer(containers.DeclarativeContainer):
         Factory(
             check_channel_credentials_job,
             operator=operators.platform_ops.check_channel_credentials_operator,
+        ),
+        # Platform support's time-boxed access closed in the audit log.
+        Factory(
+            end_expired_support_access_job,
+            operator=operators.security.end_expired_support_access_operator,
         ),
     )
     # Handlers of queued jobs by job name (the queue is filled by use cases

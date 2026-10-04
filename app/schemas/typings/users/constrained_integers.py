@@ -36,6 +36,16 @@ class OtpVerifyLimit(BaseConstrainedTypedInt):
     le = 1_000_000
 
 
+class SessionIdleTimeoutSeconds(BaseConstrainedTypedInt):
+    """
+    How long a session may go unused before it ends, in seconds (a week
+    for owners and staff, twelve hours for platform admins by default).
+    """
+
+    ge = 300
+    le = 31_536_000
+
+
 class SessionLifetimeSeconds(BaseConstrainedTypedInt):
     """How long a session stays valid, in seconds."""
 

@@ -5,6 +5,7 @@ from app.containers.adapters.adapters_container import AdaptersContainer
 from app.containers.config import ConfigContainer
 from app.containers.repositories import RepositoriesContainer
 from app.containers.time_provider import TimeProviderContainer
+from app.registries.access.platform_admin_registry import PlatformAdminRegistry
 from app.registries.billing.exchange_rate_registry import ExchangeRateRegistry
 from app.registries.billing.plan_registry import PlanRegistry
 from app.registries.demo.demo_dataset_registry import DemoDatasetRegistry
@@ -46,6 +47,14 @@ class RegistriesContainer(containers.DeclarativeContainer):
     time_provider: TimeProviderContainer = DependenciesContainer()  # type: ignore[assignment]
 
     language_registry: Singleton[LanguageRegistry] = Singleton(LanguageRegistry)
+    # Platform admin roles from the admin team, read at every check; the
+    # PLATFORM_ADMIN_* lists only bootstrap the first SUPER admin (1103).
+    platform_admin_registry: Singleton[PlatformAdminRegistry] = Singleton(
+        PlatformAdminRegistry,
+        platform_admin_repo=repositories.platform_admin_repo,
+        app_settings=config.app_settings,
+        wall_clock=time_provider.microsecond_wall_clock,
+    )
     # Profiles of every country are built once (about 0.5 s) and cached; the
     # HTTP application warms them at startup.
     country_registry: Singleton[CountryRegistry] = Singleton(

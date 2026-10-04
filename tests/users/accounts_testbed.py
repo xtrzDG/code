@@ -22,10 +22,12 @@ from app.schemas.dto.users import (
     VerifyOtpLoginCommand,
 )
 from app.schemas.typings.businesses.strings import BusinessName
+from app.schemas.typings.compliance.strings import ClientIpAddress
 from app.schemas.typings.localization.constrained_strings import CountryCode
 from app.schemas.typings.localization.strings import RawPhoneNumberInput
 from app.schemas.typings.users.prefixed_id import UserId
 from app.schemas.typings.users.strings import AccessToken, RawEmailAddressInput
+from app.utilities.security.user_agents import read_user_agent
 from tests.users.accounts_clock import AdjustableClock
 from tests.users.accounts_compliance_use_cases import AccountsComplianceUseCases
 from tests.users.accounts_http import build_accounts_http_client
@@ -63,17 +65,26 @@ class AccountsTestbed(AccountsComplianceUseCases):
         self,
         raw_phone_number: str,
         country_hint: str | None = None,
+        user_agent: str | None = None,
+        client_ip: str | None = None,
     ) -> LoginSessionView:
         return self.expect_session(
-            self.verify_phone_code(raw_phone_number, country_hint)
+            self.verify_phone_code(
+                raw_phone_number, country_hint, user_agent, client_ip
+            )
         )
 
     def verify_phone_code(
         self,
         raw_phone_number: str,
         country_hint: str | None = None,
+        user_agent: str | None = None,
+        client_ip: str | None = None,
     ) -> LoginSessionView | MfaRequiredView:
-        """The login code step for a phone (a session, or the second step)."""
+        """
+        The login code step for a phone (a session, or the second step),
+        from a browser and an address when given.
+        """
 
         challenge: OtpChallengeView = self.request_phone_code(
             raw_phone_number,
@@ -83,6 +94,10 @@ class AccountsTestbed(AccountsComplianceUseCases):
             VerifyOtpLoginCommand(
                 challenge_id=challenge.challenge_id,
                 code=self.otp_delivery.last_code(),
+                user_agent=read_user_agent(user_agent),
+                client_ip_address=None
+                if client_ip is None
+                else ClientIpAddress(client_ip),
             )
         )
 

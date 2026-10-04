@@ -1556,7 +1556,7 @@
         "type": "string"
       },
       "AuditAction": {
-        "description": "Operation on personal data recorded in the audit log (concept section\n10), a launch decision that must stay traceable (publishing a version\nthat has not passed its autotests), or a change of a person's\ntwo-factor sign-in (an authenticator added or removed, new recovery\ncodes): MFA_CHANGED entries name no business.",
+        "description": "Operation on personal data recorded in the audit log (concept section\n10), a launch decision that must stay traceable (publishing a version\nthat has not passed its autotests), or a change of a person's\ntwo-factor sign-in (an authenticator added or removed, new recovery\ncodes): MFA_CHANGED entries name no business. SUPPORT_ACCESS_START and\nSUPPORT_ACCESS_END bound a platform admin's time-boxed look into a\nclient's cabinet (with the reason, the address and how it ended);\nSESSION_REVOKED (a person ended sessions of theirs) and\nPLATFORM_ADMIN_CHANGED (the admin team changed) name no business.",
         "enum": [
           "view",
           "create",
@@ -1567,7 +1567,11 @@
           "login",
           "retention_purge",
           "publish_untested",
-          "mfa_changed"
+          "mfa_changed",
+          "support_access_start",
+          "support_access_end",
+          "session_revoked",
+          "platform_admin_changed"
         ],
         "title": "AuditAction",
         "type": "string"
@@ -4741,7 +4745,7 @@
       },
       "ClientCabinetAccess": {
         "additionalProperties": false,
-        "description": "What a platform admin may now open in the client's cabinet. Every later\ncabinet request of the admin is audited again by the access check.",
+        "description": "What a platform admin may now open in the client's cabinet, until\n`expires_at`: reading only, unless the owner lets support change things\n(`can_write`, checked again at every request). Every change the admin\nmakes is audited by the access check.",
         "properties": {
           "audit_log_entry_id": {
             "title": "Audit Log Entry Id",
@@ -4755,12 +4759,21 @@
             "title": "Business Name",
             "type": "string"
           },
+          "can_write": {
+            "default": false,
+            "title": "Can Write",
+            "type": "boolean"
+          },
           "country_code": {
             "maxLength": 2,
             "minLength": 2,
             "pattern": "^[A-Z]{2}$",
             "title": "Country Code",
             "type": "string"
+          },
+          "expires_at": {
+            "title": "Expires At",
+            "type": "integer"
           },
           "opened_at": {
             "title": "Opened At",
@@ -4779,6 +4792,10 @@
             },
             "title": "Sections",
             "type": "array"
+          },
+          "support_access_grant_id": {
+            "title": "Support Access Grant Id",
+            "type": "string"
           }
         },
         "required": [
@@ -4788,7 +4805,9 @@
           "owner_language",
           "sections",
           "audit_log_entry_id",
-          "opened_at"
+          "opened_at",
+          "support_access_grant_id",
+          "expires_at"
         ],
         "title": "ClientCabinetAccess",
         "type": "object"
@@ -6621,7 +6640,7 @@
       },
       "CurrentUserView": {
         "additionalProperties": false,
-        "description": "The signed-in user and every business they work in, and how the current\nsession is signed in (None outside a signed-in request).",
+        "description": "The signed-in user and every business they work in, how the current\nsession is signed in (None outside a signed-in request), and for a\nplatform admin their role and what it permits (which admin pages and\nactions the cabinet offers).",
         "properties": {
           "auth_level": {
             "anyOf": [
@@ -6639,6 +6658,23 @@
             },
             "title": "Memberships",
             "type": "array"
+          },
+          "platform_admin_permissions": {
+            "items": {
+              "$ref": "#/components/schemas/PlatformAdminPermission"
+            },
+            "title": "Platform Admin Permissions",
+            "type": "array"
+          },
+          "platform_admin_role": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PlatformAdminRole"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "user": {
             "$ref": "#/components/schemas/UserView"
@@ -13428,6 +13464,150 @@
         "title": "PlanQuoteList",
         "type": "object"
       },
+      "PlatformAdminPermission": {
+        "description": "One thing an admin page or action needs; each role holds a fixed set\n(`app/utilities/security/admin_permissions.py`).",
+        "enum": [
+          "view_clients",
+          "open_client_cabinet",
+          "change_client_cabinet",
+          "view_metrics",
+          "view_operations",
+          "manage_operations",
+          "manage_admins"
+        ],
+        "title": "PlatformAdminPermission",
+        "type": "string"
+      },
+      "PlatformAdminRole": {
+        "description": "What a platform admin is for. SUPER runs the platform: every admin\npage, the admin team, and, with the owner's consent, changes inside a\nclient's cabinet. SUPPORT_READONLY helps clients: the client list, the\nplatform's health, and time-boxed read-only looks into a client's\ncabinet. BILLING sees the client list and the growth metrics, never a\nclient's conversations.",
+        "enum": [
+          "super",
+          "support_readonly",
+          "billing"
+        ],
+        "title": "PlatformAdminRole",
+        "type": "string"
+      },
+      "PlatformAdminTeamView": {
+        "additionalProperties": false,
+        "description": "The admin team, SUPER admins first, then by when they were added.",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/PlatformAdminView"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "title": "PlatformAdminTeamView",
+        "type": "object"
+      },
+      "PlatformAdminView": {
+        "additionalProperties": false,
+        "description": "One member of the admin team: how they sign in, their role, their name\nonce they have signed in (`user_id` is None before), who added them\n(`added_by` None: bootstrapped from the PLATFORM_ADMIN_* lists; their\nname when they have one) and when. `is_you` marks the viewer.",
+        "properties": {
+          "added_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Added By"
+          },
+          "added_by_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Added By Name"
+          },
+          "created_at": {
+            "title": "Created At",
+            "type": "integer"
+          },
+          "display_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Display Name"
+          },
+          "email": {
+            "anyOf": [
+              {
+                "maxLength": 254,
+                "minLength": 6,
+                "pattern": "^[a-z0-9._%+\\-]+@[a-z0-9\\-]+(\\.[a-z0-9\\-]+)*\\.([a-z]{2,}|xn--[a-z0-9\\-]+)$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "is_you": {
+            "default": false,
+            "title": "Is You",
+            "type": "boolean"
+          },
+          "login_method": {
+            "$ref": "#/components/schemas/LoginMethod"
+          },
+          "phone_number": {
+            "anyOf": [
+              {
+                "maxLength": 16,
+                "minLength": 8,
+                "pattern": "^\\+[1-9][0-9]{6,14}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone Number"
+          },
+          "role": {
+            "$ref": "#/components/schemas/PlatformAdminRole"
+          },
+          "user_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "User Id"
+          }
+        },
+        "required": [
+          "id",
+          "login_method",
+          "role",
+          "created_at"
+        ],
+        "title": "PlatformAdminView",
+        "type": "object"
+      },
       "PlatformAlertCode": {
         "description": "What the platform alerts job watches (ops/alerts/*.yaml has each rule's\nthreshold, window and runbook).\n\nDEAD_JOBS: queued jobs ran out of attempts. INBOUND_BACKLOG: a customer\nmessage waits for a worker. OUTBOUND_FAILURES: replies and staff\nnotifications fail for good. LLM_ERRORS: model calls fail. HANDOFF_SPIKE:\nfar more conversations go to people than usual. TOOL_ERRORS: assistant\ntools fail. STALE_WORKER: a worker of the current release stopped\nbeating. OTP_CAP_TRIPS: a platform cap refused login codes.",
         "enum": [
@@ -14516,6 +14696,22 @@
         "title": "ReviewStatsView",
         "type": "object"
       },
+      "RevokedSessionsView": {
+        "additionalProperties": false,
+        "description": "How many sessions were ended.",
+        "properties": {
+          "revoked_count": {
+            "minimum": 0.0,
+            "title": "Revoked Count",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "revoked_count"
+        ],
+        "title": "RevokedSessionsView",
+        "type": "object"
+      },
       "ScheduleExceptionList": {
         "additionalProperties": false,
         "description": "Schedule exceptions ordered by date.",
@@ -14672,6 +14868,51 @@
         ],
         "title": "SessionAssuranceView",
         "type": "object"
+      },
+      "SessionDevice": {
+        "additionalProperties": false,
+        "description": "The browser, system and kind of device a User-Agent names.",
+        "properties": {
+          "browser": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Browser"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/SessionDeviceKind",
+            "default": "unknown"
+          },
+          "operating_system": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Operating System"
+          }
+        },
+        "title": "SessionDevice",
+        "type": "object"
+      },
+      "SessionDeviceKind": {
+        "description": "The kind of device a session's User-Agent describes, for the icon of\nthe sessions list; UNKNOWN when it does not say (or there is none).",
+        "enum": [
+          "desktop",
+          "phone",
+          "tablet",
+          "unknown"
+        ],
+        "title": "SessionDeviceKind",
+        "type": "string"
       },
       "SetupActionTarget": {
         "description": "The cabinet place where the owner acts; the cabinet maps it to a page:\nPROFILE (with a wizard step), STAFF_CONTACTS, CHANNELS,\nTEST_CHAT, AGREEMENT (the data processing agreement), BILLING,\nCHECKS (the automatic checks, under Advanced), APPLY_CHANGES, or\nOVERVIEW once everything is done; after the launch PHONE_TEST (the\nguide's QR code to write from a phone) and SHARE (the link and QR code\nfor customers).",
@@ -15320,7 +15561,7 @@
         "type": "object"
       },
       "StaffLinkTarget": {
-        "description": "The cabinet page a notification link opens (after sign-in). REPORT is a\nstored digest or monthly report on the Reports page (owners), where its\nreader also turns the summaries off; OVERVIEW is the business's\nOverview (a milestone's celebration waits there). The activation\nreminders open SETUP (the guided setup, at the saved step), CHANNELS,\nSHARE (the link and QR card on the Channels page) and BILLING (where\nthe done-for-you setup is chosen). Link targets live only in signed\nlinks, never in stored documents.",
+        "description": "The cabinet page a notification link opens (after sign-in). REPORT is a\nstored digest or monthly report on the Reports page (owners), where its\nreader also turns the summaries off; OVERVIEW is the business's\nOverview (a milestone's celebration waits there). The activation\nreminders open SETUP (the guided setup, at the saved step), CHANNELS,\nSHARE (the link and QR card on the Channels page) and BILLING (where\nthe done-for-you setup is chosen). ACCOUNT_SECURITY is the person's\nAccount → Security page (their sessions: a sign-in from a new device).\nLink targets live only in signed links, never in stored documents.",
         "enum": [
           "conversation",
           "lead",
@@ -15331,7 +15572,8 @@
           "setup",
           "channels",
           "share",
-          "billing"
+          "billing",
+          "account_security"
         ],
         "title": "StaffLinkTarget",
         "type": "string"
@@ -16130,6 +16372,107 @@
         "title": "SubscriptionView",
         "type": "object"
       },
+      "SupportAccessView": {
+        "additionalProperties": false,
+        "description": "Platform support in this business now: the open looks into the cabinet,\nthe owner's consent to changes, and the viewer's own position (a\nsupport admin, and whether they may change things right now).",
+        "properties": {
+          "is_support_viewer": {
+            "default": false,
+            "title": "Is Support Viewer",
+            "type": "boolean"
+          },
+          "sessions": {
+            "items": {
+              "$ref": "#/components/schemas/SupportSessionView"
+            },
+            "title": "Sessions",
+            "type": "array"
+          },
+          "viewer_can_write": {
+            "default": false,
+            "title": "Viewer Can Write",
+            "type": "boolean"
+          },
+          "write_access": {
+            "$ref": "#/components/schemas/SupportWriteAccessView"
+          }
+        },
+        "title": "SupportAccessView",
+        "type": "object"
+      },
+      "SupportSessionView": {
+        "additionalProperties": false,
+        "description": "One platform admin's open look into the cabinet: who (their name, or\nNone: shown as \"Platform support\"), why, since and until when.\n`is_yours` marks the viewer's own.",
+        "properties": {
+          "admin_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Admin Name"
+          },
+          "expires_at": {
+            "title": "Expires At",
+            "type": "integer"
+          },
+          "grant_id": {
+            "title": "Grant Id",
+            "type": "string"
+          },
+          "is_yours": {
+            "default": false,
+            "title": "Is Yours",
+            "type": "boolean"
+          },
+          "reason": {
+            "maxLength": 300,
+            "minLength": 8,
+            "pattern": "^\\S[\\s\\S]*\\S$",
+            "title": "Reason",
+            "type": "string"
+          },
+          "started_at": {
+            "title": "Started At",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "grant_id",
+          "reason",
+          "started_at",
+          "expires_at"
+        ],
+        "title": "SupportSessionView",
+        "type": "object"
+      },
+      "SupportWriteAccessView": {
+        "additionalProperties": false,
+        "description": "Whether the owner lets support change things, and until when (None\nwhile it is off).",
+        "properties": {
+          "expires_at": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expires At"
+          },
+          "is_allowed": {
+            "default": false,
+            "title": "Is Allowed",
+            "type": "boolean"
+          }
+        },
+        "title": "SupportWriteAccessView",
+        "type": "object"
+      },
       "TableSizeView": {
         "additionalProperties": false,
         "description": "One table of the database: its disk space with indexes, its rows (estimated).",
@@ -16913,6 +17256,97 @@
           "country_code"
         ],
         "title": "UserMembershipView",
+        "type": "object"
+      },
+      "UserSessionList": {
+        "additionalProperties": false,
+        "description": "The person's live sessions, the current one first, then the most\nrecently used (a short list: expired sessions are gone).",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/UserSessionView"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "title": "UserSessionList",
+        "type": "object"
+      },
+      "UserSessionView": {
+        "additionalProperties": false,
+        "description": "One signed-in device of the person (Account → Security): what it is,\nwhere and when it signed in, when it was last used and from where,\nhow it was signed in, and when it ends by itself (unused until\n`idle_expires_at`, or at `expires_at` whatever happens). The request's\nown session is `is_current`.",
+        "properties": {
+          "auth_level": {
+            "$ref": "#/components/schemas/AuthLevel"
+          },
+          "created_at": {
+            "title": "Created At",
+            "type": "integer"
+          },
+          "created_ip": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created Ip"
+          },
+          "device": {
+            "$ref": "#/components/schemas/SessionDevice"
+          },
+          "expires_at": {
+            "title": "Expires At",
+            "type": "integer"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "idle_expires_at": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Idle Expires At"
+          },
+          "is_current": {
+            "default": false,
+            "title": "Is Current",
+            "type": "boolean"
+          },
+          "last_seen_at": {
+            "title": "Last Seen At",
+            "type": "integer"
+          },
+          "last_seen_ip": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Seen Ip"
+          }
+        },
+        "required": [
+          "id",
+          "device",
+          "auth_level",
+          "created_at",
+          "last_seen_at",
+          "expires_at"
+        ],
+        "title": "UserSessionView",
         "type": "object"
       },
       "UserView": {
@@ -18677,6 +19111,117 @@
         ]
       }
     },
+    "/v1/admin/clients/{business_id}/access": {
+      "delete": {
+        "operationId": "close_client_cabinet_v1_admin_clients__business_id__access_delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Close Client Cabinet",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
     "/v1/admin/clients/{business_id}/open": {
       "post": {
         "operationId": "open_client_cabinet_v1_admin_clients__business_id__open_post",
@@ -18707,6 +19252,31 @@
             }
           }
         ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "description": "Why a platform admin opens the client's cabinet (the owner sees it).",
+                "properties": {
+                  "reason": {
+                    "maxLength": 300,
+                    "minLength": 8,
+                    "pattern": "^\\S[\\s\\S]*\\S$",
+                    "title": "Reason",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "reason"
+                ],
+                "title": "OpenClientCabinetRequest",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "content": {
@@ -20126,6 +20696,527 @@
           }
         },
         "summary": "Get Admin System",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/v1/admin/team": {
+      "get": {
+        "operationId": "list_platform_admins_v1_admin_team_get",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlatformAdminTeamView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "List Platform Admins",
+        "tags": [
+          "admin"
+        ]
+      },
+      "post": {
+        "operationId": "add_platform_admin_v1_admin_team_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "description": "Add a person to the admin team by the phone number (international\nformat) or e-mail they sign in with; exactly one is set.",
+                "properties": {
+                  "email": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Email"
+                  },
+                  "phone_number": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Phone Number"
+                  },
+                  "role": {
+                    "description": "What a platform admin is for. SUPER runs the platform: every admin\npage, the admin team, and, with the owner's consent, changes inside a\nclient's cabinet. SUPPORT_READONLY helps clients: the client list, the\nplatform's health, and time-boxed read-only looks into a client's\ncabinet. BILLING sees the client list and the growth metrics, never a\nclient's conversations.",
+                    "enum": [
+                      "super",
+                      "support_readonly",
+                      "billing"
+                    ],
+                    "title": "PlatformAdminRole",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "role"
+                ],
+                "title": "AddPlatformAdminRequest",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlatformAdminTeamView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Add Platform Admin",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/v1/admin/team/{admin_id}": {
+      "delete": {
+        "operationId": "remove_platform_admin_v1_admin_team__admin_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "admin_id",
+            "required": true,
+            "schema": {
+              "title": "Admin Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Remove Platform Admin",
+        "tags": [
+          "admin"
+        ]
+      },
+      "patch": {
+        "operationId": "change_platform_admin_role_v1_admin_team__admin_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "admin_id",
+            "required": true,
+            "schema": {
+              "title": "Admin Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "description": "Give a member of the admin team another role.",
+                "properties": {
+                  "role": {
+                    "description": "What a platform admin is for. SUPER runs the platform: every admin\npage, the admin team, and, with the owner's consent, changes inside a\nclient's cabinet. SUPPORT_READONLY helps clients: the client list, the\nplatform's health, and time-boxed read-only looks into a client's\ncabinet. BILLING sees the client list and the growth metrics, never a\nclient's conversations.",
+                    "enum": [
+                      "super",
+                      "support_readonly",
+                      "billing"
+                    ],
+                    "title": "PlatformAdminRole",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "role"
+                ],
+                "title": "ChangePlatformAdminRoleRequest",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlatformAdminTeamView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Change Platform Admin Role",
         "tags": [
           "admin"
         ]
@@ -43682,6 +44773,386 @@
         ]
       }
     },
+    "/v1/businesses/{business_id}/support-access": {
+      "delete": {
+        "operationId": "end_support_access_v1_businesses__business_id__support_access_delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "End Support Access",
+        "tags": [
+          "businesses"
+        ]
+      },
+      "get": {
+        "operationId": "get_support_access_v1_businesses__business_id__support_access_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupportAccessView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Get Support Access",
+        "tags": [
+          "businesses"
+        ]
+      }
+    },
+    "/v1/businesses/{business_id}/support-access/write-access": {
+      "put": {
+        "operationId": "update_support_write_access_v1_businesses__business_id__support_access_write_access_put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "description": "The owner turns support's permission to change things on (for `hours`,\na day by default) or off.",
+                "properties": {
+                  "hours": {
+                    "anyOf": [
+                      {
+                        "maximum": 168,
+                        "minimum": 1,
+                        "type": "integer"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Hours"
+                  },
+                  "is_allowed": {
+                    "title": "Is Allowed",
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "is_allowed"
+                ],
+                "title": "UpdateSupportWriteAccessRequest",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupportAccessView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Update Support Write Access",
+        "tags": [
+          "businesses"
+        ]
+      }
+    },
     "/v1/businesses/{business_id}/test-chat": {
       "post": {
         "operationId": "owner_test_chat_v1_businesses__business_id__test_chat_post",
@@ -47842,6 +49313,335 @@
           }
         },
         "summary": "Get Account Security",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/v1/me/sessions": {
+      "get": {
+        "operationId": "list_my_sessions_v1_me_sessions_get",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserSessionList"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "List My Sessions",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/v1/me/sessions/revoke-others": {
+      "post": {
+        "operationId": "revoke_other_sessions_v1_me_sessions_revoke_others_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RevokedSessionsView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Revoke Other Sessions",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/v1/me/sessions/{session_id}": {
+      "delete": {
+        "operationId": "revoke_session_v1_me_sessions__session_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "session_id",
+            "required": true,
+            "schema": {
+              "title": "Session Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Revoke Session",
         "tags": [
           "auth"
         ]

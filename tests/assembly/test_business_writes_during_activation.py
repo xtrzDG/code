@@ -32,9 +32,6 @@ from app.transformers.businesses.business_view_transformer import (
     BusinessViewTransformer,
 )
 from app.use_cases.assistants.resume_assistant_use_case import ResumeAssistantUseCase
-from app.use_cases.authorize_business_access_use_case import (
-    AuthorizeBusinessAccessUseCase,
-)
 from app.use_cases.businesses.update_business_settings_use_case import (
     UpdateBusinessSettingsUseCase,
 )
@@ -43,6 +40,7 @@ from app.utilities.security.session_assurance_context import SessionAssuranceCon
 from tests.assembly.georgian_restaurant_seed import seed_georgian_restaurant
 from tests.assembly.testbed import AssemblyTestbed
 from tests.foundation.access_support import ACCESS_SETTINGS
+from tests.foundation.support_access_builders import build_authorize_business_access
 from tests.users.accounts_testbed import PhonenumbersParser
 
 LEVAN = ManagerContact(
@@ -85,7 +83,7 @@ def add_contact_while_the_agent_is_set_up(testbed: AssemblyTestbed) -> list[int]
 
 def build_settings(testbed: AssemblyTestbed) -> UpdateBusinessSettingsUseCase:
     return UpdateBusinessSettingsUseCase(
-        authorize_business_access=AuthorizeBusinessAccessUseCase(
+        authorize_business_access=build_authorize_business_access(
             testbed.business_repo,
             testbed.user_repo,
             testbed.audit_repo,

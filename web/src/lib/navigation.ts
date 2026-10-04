@@ -47,6 +47,13 @@ export const ADMIN_SECURITY_PATH = "/admin/security";
 export const ADMIN_METRICS_PATH = "/admin/metrics";
 /** The platform's health: alerts, workers, queues, dead letters, channels, storage, incidents. */
 export const ADMIN_SYSTEM_PATH = "/admin/system";
+/** The platform admin team: who may open the admin pages, with which role. */
+export const ADMIN_TEAM_PATH = "/admin/team";
+
+/** A client's page in the admin area (where an admin opens their cabinet with a reason). */
+export function adminClientPath(businessId: string): string {
+  return `${ADMIN_PATH}/clients/${encodeURIComponent(businessId)}`;
+}
 /** Account → Security: the authenticator app and recovery codes. */
 export const ACCOUNT_SECURITY_PATH = "/account/security";
 /** Shown by the service worker (public/sw.js) when a page cannot be loaded. */

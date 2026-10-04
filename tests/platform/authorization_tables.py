@@ -55,6 +55,8 @@ OWNER_ONLY_OPERATIONS: frozenset[str] = frozenset(
         f"PUT {B}/review-settings",
         f"GET {B}/review-stats",
         f"PUT {B}/security",
+        f"PUT {B}/support-access/write-access",
+        f"DELETE {B}/support-access",
         f"POST {B}/setup/starter-answers/apply",
         f"PUT {B}/setup/skipped-steps/{{setup_step}}",
         f"DELETE {B}/setup/skipped-steps/{{setup_step}}",

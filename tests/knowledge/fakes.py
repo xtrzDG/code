@@ -14,6 +14,7 @@ from app.contracts.operator_contract import OperatorContract
 from app.schemas.constants.localization import PhoneNumberKind
 from app.schemas.dto.localization import LocalizedText, PhoneNumberDetails
 from app.schemas.dto.mfa import SessionAssurance
+from app.schemas.dto.sessions import SessionCheck
 from app.schemas.exceptions.application_errors import (
     AuthenticationRequiredError,
     InvalidPhoneNumberError,
@@ -102,14 +103,15 @@ class FakeLocalizedTextResolver(LocalizedTextResolverContract):
         return next(iter(text.values.values()))
 
 
-class FakeUserAuthenticationOperator(OperatorContract[AccessToken, SessionAssurance]):
+class FakeUserAuthenticationOperator(OperatorContract[SessionCheck, SessionAssurance]):
     """Maps known bearer tokens to users."""
 
     def __init__(self, users_by_token: dict[str, UserId]) -> None:
         self._users_by_token: dict[str, UserId] = users_by_token
 
-    def operate(self, input_data: AccessToken) -> SessionAssurance:
-        user_id: UserId | None = self._users_by_token.get(input_data)
+    def operate(self, input_data: SessionCheck) -> SessionAssurance:
+        token: AccessToken = input_data.access_token
+        user_id: UserId | None = self._users_by_token.get(str(token))
         if user_id is None:
             raise AuthenticationRequiredError("Unknown access token.")
 
