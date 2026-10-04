@@ -31,13 +31,14 @@ from app.transformers.notifications.booking_reminder_transformer import (
     BookingReminderTransformer,
 )
 from app.use_cases.bookings.reminders.send_booking_reminders_use_case import (
+    DEFAULT_REMINDER_LEAD,
     SendBookingRemindersUseCase,
 )
 from app.utilities.localization.localized_text_resolver import LocalizedTextResolver
 from tests.operations.builders import DEFAULT_NOW
 from tests.operations.fakes import to_microseconds
 from tests.operations.operations_world import OperationsWorld
-from tests.operations.reminder_channel_sender import RecordingChannelSender
+from tests.operations.reminder_outbox import ReminderOutbox
 
 # DEFAULT_NOW is Monday 2026-10-05 08:00 UTC = 12:00 in Tbilisi (UTC+4).
 TICK: JobTick = JobTick(
@@ -47,11 +48,15 @@ TICK: JobTick = JobTick(
 
 
 class ReminderScene:
-    """A Georgian restaurant with one table, its customer and the job."""
+    """
+    A Georgian restaurant with one table, its customer and the job; its
+    messengers are connected (but those named `not_connected`) and the
+    reminders it queues land in `sender`, the in-memory outbox.
+    """
 
     def __init__(
         self,
-        failing_channels: frozenset[ChannelKind] = frozenset(),
+        not_connected: frozenset[ChannelKind] = frozenset(),
         reminder_lead: BookingReminderLeadSeconds | None = None,
         reminder_template: str | None = "booking_reminder",
     ) -> None:
@@ -59,7 +64,8 @@ class ReminderScene:
         self.business: BusinessDocument = self.world.add_business()
         self.world.add_profile(self.business)
         self.table: ResourceDocument = self.world.add_resource(self.business, "Table 1")
-        self.sender = RecordingChannelSender(failing_channels)
+        self.sender = ReminderOutbox(self.world.clock.wall_clock)
+        self.sender.connect(self.business.id, not_connected)
         self.rate_limits = RequestRateLimitRegistry(InMemoryRateLimitBucketAdapter())
         self.reminders = SendBookingRemindersUseCase(
             business_repo=self.world.business_repo,
@@ -69,7 +75,9 @@ class ReminderScene:
             contact_repo=self.world.contact_repo,
             conversation_repo=self.world.conversation_repo,
             message_repo=self.world.message_repo,
-            channel_message_sender=self.sender,
+            channel_repo=self.sender.channel_repo,
+            outbound_message_repo=self.sender.outbound_message_repo,
+            job_queue=self.sender.job_queue,
             reminder_transformer=BookingReminderTransformer(LocalizedTextResolver()),
             reminder_template_transformer=BookingReminderTemplateTransformer(),
             wall_clock=self.world.clock.wall_clock,
@@ -79,7 +87,9 @@ class ReminderScene:
                 if reminder_template is None
                 else WhatsAppTemplateName(reminder_template)
             ),
-            **({} if reminder_lead is None else {"reminder_lead": reminder_lead}),
+            reminder_lead=(
+                DEFAULT_REMINDER_LEAD if reminder_lead is None else reminder_lead
+            ),
         )
 
     def customer_wrote(
@@ -124,6 +134,11 @@ class ReminderScene:
         language: str | None = "ka",
         business: BusinessDocument | None = None,
     ) -> ContactDocument:
+        if business is not None and not self.sender.channel_repo.list_by_business(
+            business.id
+        ):
+            self.sender.connect(business.id)
+
         contact = self.world.add_contact(
             business or self.business,
             name="Nino",
@@ -171,7 +186,7 @@ class ReminderScene:
         return stored
 
     def usage_events(self) -> int:
-        """Usage the job itself recorded (the channel sender meters sends)."""
+        """Usage the job itself recorded (the outbox meters what it sends)."""
 
         return len(
             self.world.usage_repo.list_by_business_between(

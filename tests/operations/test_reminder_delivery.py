@@ -89,7 +89,7 @@ def test_messenger_outside_its_window_is_not_written_to() -> None:
     )
 
     assert scene.run().processed_count == 0
-    assert scene.sender.attempts == []
+    assert scene.sender.queued() == []
     assert scene.stored(booking).reminder_sent_at is None
 
 
@@ -122,12 +122,12 @@ def test_customers_known_only_by_phone_or_web_chat_are_skipped(
     report = scene.run()
 
     assert report.processed_count == 0
-    assert scene.sender.attempts == []
+    assert scene.sender.queued() == []
     assert scene.stored(booking).reminder_sent_at is None
 
 
-def test_failed_channel_falls_back_to_the_next_messenger() -> None:
-    scene = ReminderScene(failing_channels=frozenset({ChannelKind.WHATSAPP}))
+def test_a_messenger_the_business_disconnected_falls_back_to_the_next() -> None:
+    scene = ReminderScene(not_connected=frozenset({ChannelKind.WHATSAPP}))
     contact = scene.add_customer(
         {ChannelKind.WHATSAPP: "995555123456", ChannelKind.INSTAGRAM: "ig-1"}
     )
@@ -137,18 +137,18 @@ def test_failed_channel_falls_back_to_the_next_messenger() -> None:
     report = scene.run()
 
     assert report.processed_count == 1
-    assert scene.sender.attempts == [ChannelKind.WHATSAPP, ChannelKind.INSTAGRAM]
+    assert scene.sender.channels == [ChannelKind.INSTAGRAM]
     assert scene.sender.templates == []
 
 
-def test_delivery_failure_is_logged_and_retried_on_the_next_run(
+def test_a_reminder_no_channel_can_carry_is_tried_again_on_the_next_run(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    scene = ReminderScene(failing_channels=frozenset({ChannelKind.WHATSAPP}))
+    scene = ReminderScene(not_connected=frozenset({ChannelKind.WHATSAPP}))
     contact = scene.add_customer({ChannelKind.WHATSAPP: "995555123456"})
     booking = scene.add_booking(contact, "2026-10-05T15:00:00+00:00")
 
-    with caplog.at_level(logging.WARNING):
+    with caplog.at_level(logging.INFO):
         failed = scene.run()
 
     assert failed.processed_count == 0
@@ -156,7 +156,7 @@ def test_delivery_failure_is_logged_and_retried_on_the_next_run(
     assert scene.sender.templates == []
     assert "whatsapp" in caplog.text
 
-    scene.sender.failing_channels.clear()
+    scene.sender.reconnect(scene.business.id, ChannelKind.WHATSAPP)
     retried = scene.run()
 
     assert retried.processed_count == 1

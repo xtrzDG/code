@@ -2,6 +2,7 @@ from typed_time_provider import Microseconds, WallClock
 
 from app.contracts.jobs import JobQueueFacilitatorContract
 from app.contracts.repositories.delivery_repositories import InboundEventRepoContract
+from app.contracts.storage import StorageUnitOfWorkContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.deliveries import InboundEventKind
 from app.schemas.domain.inbound_events import InboundEventDocument
@@ -38,10 +39,12 @@ class StoreInboundMessagesUseCase(
         inbound_event_repo: InboundEventRepoContract,
         job_queue: JobQueueFacilitatorContract,
         wall_clock: WallClock[Microseconds],
+        unit_of_work: StorageUnitOfWorkContract | None = None,
     ) -> None:
         self._inbound_event_repo: InboundEventRepoContract = inbound_event_repo
         self._job_queue: JobQueueFacilitatorContract = job_queue
         self._wall_clock: WallClock[Microseconds] = wall_clock
+        self._unit_of_work: StorageUnitOfWorkContract | None = unit_of_work
 
     def run(self, input_data: list[RoutedInboundMessage]) -> InboxIntake:
         now: Microseconds = self._wall_clock.now_unix()
@@ -58,6 +61,7 @@ class StoreInboundMessagesUseCase(
                     routed.channel,
                     str(routed.message.channel_user_id),
                 ),
+                unit_of_work=self._unit_of_work,
             ):
                 queued += 1
 

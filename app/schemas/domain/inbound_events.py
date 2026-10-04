@@ -54,9 +54,13 @@ class InboundEventDocument(BaseDocument):
 
     Version 2: the attachments of the customer message (optional, so
     version 1 rows read as they are).
+
+    Version 3: when staff were asked to answer a customer message the
+    assistant never answered (`handoff_requested_at`, set by the sweeper of
+    the inbox once per FAILED event; optional).
     """
 
-    schema_version: SchemaVersion = SchemaVersion("2")
+    schema_version: SchemaVersion = SchemaVersion("3")
     id: InboundEventId
     business_id: BusinessId | None = None
     kind: InboundEventKind
@@ -74,3 +78,4 @@ class InboundEventDocument(BaseDocument):
     conversation_id: ConversationId | None = None
     outbound_message_id: OutboundMessageId | None = None
     processed_at: Microseconds | None = None
+    handoff_requested_at: Microseconds | None = None

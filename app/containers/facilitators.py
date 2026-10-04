@@ -16,9 +16,6 @@ from app.contracts.observability import JobMonitorFacilitatorContract
 from app.facilitators.calendar.google_calendar_sync_facilitator import (
     GoogleCalendarSyncFacilitator,
 )
-from app.facilitators.channels.channel_message_sender_facilitator import (
-    ChannelMessageSenderFacilitator,
-)
 from app.facilitators.channels.typing_signal_facilitator import (
     TypingSignalFacilitator,
 )
@@ -235,20 +232,6 @@ class FacilitatorsContainer(containers.DeclarativeContainer):
         link_signer=staff_link_signer,
         localized_text_resolver=utilities.localized_text_resolver,
         app_settings=config.app_settings,
-        wall_clock=time_provider.microsecond_wall_clock,
-    )
-    # Proactive messages to customers through the business's own messengers.
-    channel_message_sender: Singleton[ChannelMessageSenderFacilitator] = Singleton(
-        ChannelMessageSenderFacilitator,
-        channel_repo=repositories.channel_repo,
-        secret_cipher=adapters.secret_cipher,
-        telegram_adapter=adapters.telegram_channel_adapter,
-        whatsapp_adapter=adapters.whatsapp_channel_adapter,
-        messenger_adapter=adapters.messenger_channel_adapter,
-        instagram_adapter=adapters.instagram_channel_adapter,
-        whatsapp_templates=adapters.whatsapp_channel_adapter,
-        usage_event_repo=repositories.usage_event_repo,
-        live_events=event_publisher,
         wall_clock=time_provider.microsecond_wall_clock,
     )
     # "typing…" while a reply is written (Telegram, WhatsApp, Meta pages).

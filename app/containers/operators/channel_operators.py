@@ -42,6 +42,10 @@ class ChannelOperatorsContainer(containers.DeclarativeContainer):
     deliver_outbound_operator = pipeline_operator(
         channel_pipelines.deliver_outbound_pipeline, storage_scope
     )
+    # The inbox's sweeper reads every business's events: platform-wide.
+    sweep_stale_inbound_events_operator = platform_pipeline_operator(
+        channel_pipelines.sweep_stale_inbound_events_pipeline, storage_scope
+    )
 
     # --- Channels: webhook checks, widget, cabinet settings, staff links.
     verify_meta_webhook_operator = pipeline_operator(

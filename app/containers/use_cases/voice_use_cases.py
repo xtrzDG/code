@@ -35,6 +35,7 @@ from app.use_cases.voice.authenticate_post_call_use_case import (
 from app.use_cases.voice.authenticate_voice_tool_call_use_case import (
     AuthenticateVoiceToolCallUseCase,
 )
+from app.use_cases.voice.call_message_outbox import CallMessageOutbox
 from app.use_cases.voice.finished_call.record_finished_call_use_case import (
     RecordFinishedCallUseCase,
 )
@@ -142,14 +143,24 @@ class VoiceUseCasesContainer(containers.DeclarativeContainer):
         phone_number_parser=utilities.phone_number_parser,
         wall_clock=time_provider.microsecond_wall_clock,
     )
+    # Messages to a caller after the call go through the outbox.
+    call_message_outbox: Factory[CallMessageOutbox] = Factory(
+        CallMessageOutbox,
+        channel_repo=repositories.channel_repo,
+        conversation_repo=repositories.conversation_repo,
+        message_repo=repositories.message_repo,
+        outbound_message_repo=repositories.outbound_message_repo,
+        job_queue=facilitators.job_queue_facilitator,
+        unit_of_work=adapters.storage_unit_of_work,
+        wall_clock=time_provider.microsecond_wall_clock,
+    )
     send_call_links_use_case: Factory[UseCaseContract[RecordedCall, bool]] = Factory(
         SendCallLinksUseCase,
         business_repo=repositories.business_repo,
         business_profile_repo=repositories.business_profile_repo,
         contact_repo=repositories.contact_repo,
-        channel_repo=repositories.channel_repo,
         message_repo=repositories.message_repo,
-        channel_message_sender=facilitators.channel_message_sender,
+        call_messages=call_message_outbox,
         text_resolver=utilities.localized_text_resolver,
     )
     send_call_confirmation_use_case: Factory[UseCaseContract[RecordedCall, bool]] = (
@@ -158,8 +169,7 @@ class VoiceUseCasesContainer(containers.DeclarativeContainer):
             business_repo=repositories.business_repo,
             booking_repo=repositories.booking_repo,
             contact_repo=repositories.contact_repo,
-            channel_repo=repositories.channel_repo,
-            channel_message_sender=facilitators.channel_message_sender,
+            call_messages=call_message_outbox,
             text_resolver=utilities.localized_text_resolver,
         )
     )

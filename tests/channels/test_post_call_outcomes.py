@@ -5,6 +5,11 @@ from typed_time_provider import Microseconds
 from app.schemas.constants.billing import UsageKind
 from app.schemas.constants.bookings import BookingStatus, LeadType
 from app.schemas.constants.channels import ChannelKind
+from app.schemas.constants.deliveries import (
+    DeliveryFailureReason,
+    OutboundMessageKind,
+    OutboundMessageStatus,
+)
 from app.schemas.constants.handoffs import HandoffReason
 from app.schemas.domain.bookings import LeadDocument
 from app.schemas.domain.handoffs import HandoffDocument
@@ -14,8 +19,10 @@ from tests.channels.channels_payloads import telegram_ok
 from tests.channels.channels_settings import TELEGRAM_BOT_TOKEN
 from tests.channels.post_call_steps import (
     add_booking,
+    post_call,
     post_call_payload,
     process_call,
+    queued_call_messages,
     stored_calls,
 )
 from tests.channels.voice_setup import ASSISTANT_LINE, CALLER, build_voice_setup
@@ -67,7 +74,14 @@ class TestPostCallWebhook:
         assert "19:30" in text
         assert "სტუმრები: 4." in text
 
-    def test_confirmation_falls_back_to_the_next_messenger(self) -> None:
+    def test_a_refused_confirmation_is_given_up_not_resent(self) -> None:
+        """
+        The confirmation goes into the outbox for the first messenger that
+        can carry it now (Telegram; WhatsApp only within a day of the
+        caller's last message there): a refusal there is final, and the
+        caller gets no second copy through another messenger.
+        """
+
         setup = build_voice_setup(conversation_language="ru")
         setup.testbed.add_channel(
             setup.business.id,
@@ -84,16 +98,44 @@ class TestPostCallWebhook:
             {"ok": False, "error_code": 403, "description": "blocked"},
             status_code=403,
         )
-        setup.testbed.meta_transport.respond("POST", r"/messages$", {"messages": []})
         add_booking(setup, party_size=1)
 
         body = process_call(setup, post_call_payload())
+        setup.testbed.run_worker()
 
         assert body["is_confirmation_sent"] is True
-        [whatsapp] = setup.testbed.meta_transport.requests
-        message: str = whatsapp.json()["text"]["body"]
+        [refused] = setup.testbed.telegram_transport.requests_to("/sendMessage")
+        message: str = refused.json()["text"]
         assert message.startswith("Funicular VR: ваша бронь на ")
         assert "Гостей" not in message
+        assert setup.testbed.meta_transport.requests == []
+        [confirmation] = queued_call_messages(setup)
+        assert confirmation.kind is OutboundMessageKind.CALL_CONFIRMATION
+        assert confirmation.status is OutboundMessageStatus.DEAD
+        assert confirmation.last_failure_reason is (
+            DeliveryFailureReason.RECIPIENT_REFUSED
+        )
+
+    def test_a_repeated_report_confirms_once(self) -> None:
+        setup = build_voice_setup()
+        setup.testbed.add_channel(
+            setup.business.id,
+            ChannelKind.TELEGRAM,
+            "funicular_vr_bot",
+            TELEGRAM_BOT_TOKEN,
+        )
+        setup.testbed.telegram_transport.respond(
+            "POST", r"/sendMessage$", telegram_ok({})
+        )
+        add_booking(setup)
+
+        process_call(setup, post_call_payload())
+        assert post_call(setup, post_call_payload()).status_code == 200
+        setup.testbed.run_worker()
+
+        [confirmation] = queued_call_messages(setup)
+        assert confirmation.status is OutboundMessageStatus.DELIVERED
+        assert len(setup.testbed.telegram_transport.requests_to("/sendMessage")) == 1
 
     def test_no_reachable_messenger_means_no_confirmation(self) -> None:
         setup = build_voice_setup()

@@ -13,7 +13,8 @@ from app.schemas.domain.conversations import ConversationDocument
 from app.schemas.exceptions.application_errors import DeliveryNotConfiguredError
 from app.schemas.typings.conversations.strings import ChannelUserId
 from app.transformers.conversations.call_view_transformer import CallViewTransformer
-from app.use_cases.voice.missed_calls.text_back_messages import TextBackSender
+from app.use_cases.voice.missed_calls.text_back_messages import TextBackSms
+from app.use_cases.voice.missed_calls.text_back_whatsapp import TextBackWhatsApp
 from tests.calls.call_steps import (
     WHATSAPP_NUMBER_ID,
     connect_whatsapp,
@@ -140,16 +141,23 @@ class TestTextBackConversations:
         report_missed_call(setup)
         [missed] = missed_calls(setup)
         assert missed.caller_phone_number is not None
-        sender = TextBackSender(
-            setup.testbed.channel_repo,
-            setup.testbed.channel_message_sender,
-            None,
-            setup.testbed.text_resolver,
+        sms = TextBackSms(None, setup.testbed.text_resolver)
+        whatsapp = TextBackWhatsApp(
+            channel_repo=setup.testbed.channel_repo,
+            outbound_message_repo=setup.testbed.outbound_message_repo,
+            job_queue=setup.testbed.job_queue,
+            unit_of_work=None,
+            text_resolver=setup.testbed.text_resolver,
         )
 
         with pytest.raises(DeliveryNotConfiguredError):
-            sender.send_sms(setup.business, missed, missed.caller_phone_number)
+            sms.send(setup.business, missed, missed.caller_phone_number)
         with pytest.raises(DeliveryNotConfiguredError):
-            sender.send_whatsapp(
-                setup.business, missed, missed.caller_phone_number, None
+            whatsapp.queue(
+                setup.business,
+                missed,
+                missed.caller_phone_number,
+                None,
+                setup.testbed.wall_clock.now_unix(),
             )
+        assert whatsapp.queued(missed) is None

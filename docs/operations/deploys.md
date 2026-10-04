@@ -98,6 +98,17 @@ a widget script from before that release (cached in a visitor's browser)
 takes the `202` as an answer without text and shows the answer at its
 next poll, only without the typing dots meanwhile.
 
+The release that moved every message to a customer into the outbox
+(staff replies, booking reminders, call confirmations and links,
+text-backs; PLAN 16.9.5) writes five new `OutboundMessageKind` values in
+the release that introduces them, an exception to the enum rule below. An
+old worker that claims the delivery job of such a row, or reads it among a
+recipient's waiting messages, fails the job, and the job queue tries it
+again (30 s backoff, five attempts) until a new worker takes it: replies
+are late during the overlap, not lost. Before rolling back past that
+release, let the outbox drain (no `pending` rows of the new kinds), or
+the previous release cannot read them.
+
 The storage layer makes the second part mechanical
 (`app/adapters/storage/persisted_document_codec.py`): documents are
 validated strictly everywhere they are built and written, carry their

@@ -5,6 +5,9 @@ from app.contracts.repositories.conversation_repositories import (
     ConversationRepoContract,
     MessageRepoContract,
 )
+from app.contracts.repositories.delivery_repositories import (
+    OutboundMessageRepoContract,
+)
 from app.contracts.transformer_contract import TransformerContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.compliance import AuditAction
@@ -23,6 +26,7 @@ from app.schemas.typings.compliance.strings import (
     AuditEntityReference,
 )
 from app.schemas.typings.platform.constrained_strings import PageCursor
+from app.use_cases.conversations.staff_reply_deliveries import with_staff_deliveries
 from app.utilities.paging.keyset_paging import finish_page, read_slice
 
 CONVERSATION_ENTITY: AuditEntityName = AuditEntityName("conversation")
@@ -48,6 +52,7 @@ class ListConversationMessagesUseCase(
         message_transformer: TransformerContract[MessageDocument, MessageView],
         audit_log_repo: AuditLogRepoContract,
         wall_clock: WallClock[Microseconds],
+        outbound_message_repo: OutboundMessageRepoContract,
     ) -> None:
         self._authorize_business_access: UseCaseContract[
             BusinessAccessRequest, BusinessDocument
@@ -59,6 +64,7 @@ class ListConversationMessagesUseCase(
         )
         self._audit_log_repo: AuditLogRepoContract = audit_log_repo
         self._wall_clock: WallClock[Microseconds] = wall_clock
+        self._outbound_message_repo: OutboundMessageRepoContract = outbound_message_repo
 
     def run(self, input_data: ConversationMessagesQuery) -> MessagePage:
         business: BusinessDocument = self._authorize_business_access.run(
@@ -99,9 +105,14 @@ class ListConversationMessagesUseCase(
             )
         )
         return MessagePage(
-            items=[
-                self._message_transformer.transform(message)
-                for message in reversed(newest_first)
-            ],
+            items=with_staff_deliveries(
+                business.id,
+                newest_first,
+                [
+                    self._message_transformer.transform(message)
+                    for message in reversed(newest_first)
+                ],
+                self._outbound_message_repo,
+            ),
             next_cursor=next_cursor,
         )

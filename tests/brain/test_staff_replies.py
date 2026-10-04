@@ -38,7 +38,7 @@ class TestStaffReplies:
         assert message["direction"] == "outbound"
         assert message["text"] == "We saved table 4 for you."
         assert message["sent_by"] == str(world.staff_id)
-        assert cabinet.storage.channel_sender.sent == [
+        assert cabinet.storage.outbox.sent == [
             (ChannelKind.TELEGRAM, "tg-7", "We saved table 4 for you.")
         ]
         stored = world.messages(reply.conversation_id)
@@ -81,7 +81,7 @@ class TestStaffReplies:
         assert closed_state["block"] == "window_closed"
         assert refused.status_code == 409
         assert "24 hours" in refused.json()["message"]
-        assert len(cabinet.storage.channel_sender.sent) == 1
+        assert len(cabinet.storage.outbox.sent) == 1
 
     def test_website_chat_keeps_the_message_for_the_widget(self) -> None:
         world = build_world(scripted(say("Hello!")))
@@ -95,7 +95,7 @@ class TestStaffReplies:
 
         assert sent.status_code == 201
         assert sent.json()["delivery"] == "stored_for_widget"
-        assert cabinet.storage.channel_sender.sent == []
+        assert cabinet.storage.outbox.sent == []
         assert world.messages(reply.conversation_id)[-1].text == "A manager here."
 
     def test_calls_tests_and_disconnected_channels_are_refused(self) -> None:
@@ -132,7 +132,7 @@ class TestStaffReplies:
         }
         assert [response.status_code for response in responses] == [409, 409, 409]
         assert "call the customer back" in responses[0].json()["message"]
-        assert cabinet.storage.channel_sender.sent == []
+        assert cabinet.storage.outbox.sent == []
 
     def test_a_channel_in_error_still_takes_staff_replies(self) -> None:
         world = build_world(scripted(say("Hello!")))
@@ -149,26 +149,46 @@ class TestStaffReplies:
         assert state["is_available"] is True
         assert state["delivery"] == "sent"
         assert sent.status_code == 201, sent.text
-        assert cabinet.storage.channel_sender.sent == [
+        assert cabinet.storage.outbox.sent == [
             (ChannelKind.TELEGRAM, "tg-9", "We are on it.")
         ]
 
-    def test_failed_delivery_stores_nothing_and_bad_input_is_refused(self) -> None:
+    def test_a_reply_is_queued_with_its_delivery_state_and_bad_input_refused(
+        self,
+    ) -> None:
         world = build_world(scripted(say("Hello!")))
         reply = world.send(
             "Hi", channel=ChannelKind.TELEGRAM, user_id="tg-7", phone=None
         )
         cabinet = Cabinet(world)
         cabinet.connect(ChannelKind.TELEGRAM)
-        cabinet.storage.channel_sender.failure = "Telegram is down."
 
-        failed = cabinet.reply(reply.conversation_id, "Hello")
+        queued = cabinet.reply(reply.conversation_id, "Hello")
         empty = cabinet.reply(reply.conversation_id, "   ")
         long = cabinet.reply(reply.conversation_id, "x" * 4001)
         stranger = cabinet.reply(reply.conversation_id, "Hi", token="stranger")
         unknown = cabinet.reply(ConversationId(), "Hi")
 
-        assert failed.status_code == 502
+        # Stored and queued at once; the worker sends it with retries.
+        assert queued.status_code == 201, queued.text
+        assert queued.json()["message"]["delivery"] == {
+            "state": "sending",
+            "failure_reason": None,
+            "attempts": 0,
+            "next_attempt_at": None,
+            "delivered_at": None,
+        }
+        [card_reply] = [
+            message
+            for message in cabinet.card(reply.conversation_id)["messages"]
+            if message["author"] == "staff"
+        ]
+        assert card_reply["delivery"]["state"] == "sending"
+        assert [
+            message["delivery"]
+            for message in cabinet.card(reply.conversation_id)["messages"][:2]
+        ] == [None, None]
         assert [empty.status_code, long.status_code] == [422, 422]
         assert [stranger.status_code, unknown.status_code] == [404, 404]
-        assert len(world.messages(reply.conversation_id)) == 2
+        assert len(world.messages(reply.conversation_id)) == 3
+        assert len(cabinet.storage.outbox.queued()) == 1

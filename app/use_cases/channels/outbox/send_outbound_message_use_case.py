@@ -21,6 +21,7 @@ from app.use_cases.channels.outbox.customer_templates import (
     build_template_usage_event,
     route_customer_template,
 )
+from app.use_cases.channels.outbox.outbound_expiry import expired_attempt
 from app.use_cases.channels.outbox.outbound_routes import (
     OutboundRoute,
     route_customer_reply,
@@ -31,6 +32,7 @@ from app.utilities.channels.delivery_targets import build_whatsapp_usage_event
 from app.utilities.deliveries.retry_policy import (
     classify_delivery_error,
     describe_delivery_error,
+    explain_delivery_error,
     read_retry_after,
 )
 
@@ -44,9 +46,10 @@ class SendOutboundMessageUseCase(
     earlier attempt delivered, so a retry never repeats a part the customer
     already has. A failure stops the attempt and is classified (rate
     limited, temporary, refused, credential refused, no provider) for the
-    retry decision. WhatsApp replies are metered per delivered part, a
-    WhatsApp template to a customer (outside the 24-hour window) as one
-    template.
+    retry decision. A message past its `send_before` is not sent at all
+    (given up as EXPIRED). WhatsApp replies are metered per delivered
+    part, a WhatsApp template to a customer (outside the 24-hour window)
+    as one template.
     """
 
     def __init__(
@@ -78,6 +81,10 @@ class SendOutboundMessageUseCase(
         self._wall_clock: WallClock[Microseconds] = wall_clock
 
     def run(self, input_data: OutboundMessageDocument) -> OutboundAttempt:
+        now: Microseconds = self._wall_clock.now_unix()
+        if input_data.send_before is not None and now > input_data.send_before:
+            return expired_attempt(input_data, now)
+
         delivered: int = int(input_data.delivered_parts)
         provider_message_id: ProviderMessageId | None = input_data.provider_message_id
         route: OutboundRoute | None = None
@@ -94,6 +101,7 @@ class SendOutboundMessageUseCase(
                 delivered_parts=DeliveredMessageCount(delivered),
                 provider_message_id=provider_message_id,
                 failure=classify_delivery_error(error),
+                reason=explain_delivery_error(error),
                 error=describe_delivery_error(error),
                 retry_after_seconds=read_retry_after(error),
                 attempted_at=self._wall_clock.now_unix(),

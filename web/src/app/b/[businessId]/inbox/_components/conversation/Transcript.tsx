@@ -8,7 +8,8 @@
  * model and the cost are in "Technical details". Internal notes of the
  * team are never here: this is what the customer and the assistant said.
  * Voice messages, photos and places a customer sent are shown above the
- * words they came with (MessageAttachments).
+ * words they came with (MessageAttachments); a staff reply sent through a
+ * messenger says under it how it travels (DeliveryChip).
  */
 
 import { describeError } from "@/api/errors";
@@ -24,6 +25,7 @@ import { cn } from "@/lib/cn";
 import { groupMessagesByDay, messageSide } from "../../_lib/conversationModel";
 import { messageAttachments } from "../../_lib/messageMedia";
 import type { EarlierMessages } from "../../_lib/useEarlierMessages";
+import { DeliveryChip } from "./DeliveryChip";
 import { MessageAttachments } from "./MessageAttachments";
 import { hasTechnicalDetails, MessageTechnicalDetails } from "./TechnicalDetails";
 
@@ -153,6 +155,7 @@ function MessageBubble({ message }: { message: MessageView }) {
             {message.text}
           </div>
         )}
+        {message.delivery ? <DeliveryChip delivery={message.delivery} className="mt-1" /> : null}
         {calls.length > 0 ? (
           <ul className={cn("mt-1.5 flex flex-wrap gap-1.5", side === "end" && "justify-end")} aria-label={t("inboxCard.actions.label")}>
             {calls.map((call, index) => (

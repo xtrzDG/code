@@ -95,6 +95,7 @@ class ConversationFeedUseCasesContainer(containers.DeclarativeContainer):
         handoff_repo=repositories.handoff_repo,
         resource_repo=repositories.resource_repo,
         channel_repo=repositories.channel_repo,
+        outbound_message_repo=repositories.outbound_message_repo,
     )
     list_conversation_messages_use_case: Factory[
         UseCaseContract[ConversationMessagesQuery, MessagePage]
@@ -106,6 +107,7 @@ class ConversationFeedUseCasesContainer(containers.DeclarativeContainer):
         message_transformer=transformers.message_view_transformer,
         audit_log_repo=repositories.audit_log_repo,
         wall_clock=time_provider.microsecond_wall_clock,
+        outbound_message_repo=repositories.outbound_message_repo,
     )
     get_message_media_use_case: Factory[
         UseCaseContract[MessageMediaQuery, StoredMediaFile]
@@ -136,10 +138,12 @@ class ConversationFeedUseCasesContainer(containers.DeclarativeContainer):
         message_repo=repositories.message_repo,
         channel_repo=repositories.channel_repo,
         audit_log_repo=repositories.audit_log_repo,
-        channel_message_sender=facilitators.channel_message_sender,
+        outbound_message_repo=repositories.outbound_message_repo,
+        job_queue=facilitators.job_queue_facilitator,
         message_transformer=transformers.message_view_transformer,
         live_events=facilitators.event_publisher,
         wall_clock=time_provider.microsecond_wall_clock,
+        unit_of_work=adapters.storage_unit_of_work,
     )
     rate_conversation_use_case: Factory[
         UseCaseContract[RateConversationCommand, ConversationSummaryView]

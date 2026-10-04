@@ -4,7 +4,7 @@ temporary failure (longer when the platform asked for a pause), never
 after a refusal, and not at all after the last attempt.
 """
 
-from app.schemas.constants.deliveries import DeliveryFailureKind
+from app.schemas.constants.deliveries import DeliveryFailureKind, DeliveryFailureReason
 from app.schemas.exceptions.application_errors import (
     ChannelCredentialRejectedError,
     DeliveryNotConfiguredError,
@@ -53,6 +53,32 @@ def classify_delivery_error(error: ApplicationError) -> DeliveryFailureKind:
     # Not a provider failure (the channel is gone, a value is invalid):
     # sending the same message again cannot help.
     return DeliveryFailureKind.REJECTED
+
+
+def explain_delivery_error(error: ApplicationError) -> DeliveryFailureReason:
+    """Why a send failed, in the terms the cabinet explains to the owner."""
+
+    if isinstance(error, ProviderRateLimitedError):
+        return DeliveryFailureReason.RATE_LIMITED
+
+    if isinstance(error, ChannelCredentialRejectedError):
+        return DeliveryFailureReason.CREDENTIAL_REJECTED
+
+    if isinstance(error, DeliveryNotConfiguredError):
+        return DeliveryFailureReason.NOT_CONFIGURED
+
+    if isinstance(error, WhatsAppTemplateRejectedError):
+        return DeliveryFailureReason.TEMPLATE_REJECTED
+
+    if isinstance(error, ProviderRejectedMessageError):
+        return DeliveryFailureReason.RECIPIENT_REFUSED
+
+    if isinstance(error, ExternalServiceError):
+        return DeliveryFailureReason.PROVIDER_UNAVAILABLE
+
+    # The route refused before any provider was asked: the business's
+    # channel is no longer connected.
+    return DeliveryFailureReason.CHANNEL_DISCONNECTED
 
 
 def read_retry_after(error: ApplicationError) -> RetryAfterSeconds | None:

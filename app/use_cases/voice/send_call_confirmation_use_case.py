@@ -1,32 +1,24 @@
-import logging
-
-from app.contracts.facilitators import ChannelMessageSenderFacilitatorContract
 from app.contracts.localization_utilities import LocalizedTextResolverContract
 from app.contracts.repositories.booking_repositories import BookingRepoContract
-from app.contracts.repositories.business_repositories import (
-    BusinessRepoContract,
-    ChannelRepoContract,
-)
+from app.contracts.repositories.business_repositories import BusinessRepoContract
 from app.contracts.repositories.conversation_repositories import ContactRepoContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.channel_events import PostCallEventStatus
 from app.schemas.constants.conversations import CallOutcome
+from app.schemas.constants.deliveries import OutboundMessageKind
 from app.schemas.domain.bookings import BookingDocument
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.contacts import ContactDocument
 from app.schemas.dto.voice_webhooks import RecordedCall
-from app.schemas.exceptions.application_errors import ExternalServiceError
 from app.schemas.typings.channels.booleans import IsCallConfirmationSent
 from app.schemas.typings.conversations.strings import MessageText
 from app.schemas.typings.localization.constrained_strings import LanguageTag
-from app.utilities.channels.caller_reachability import list_reachable_identities
+from app.use_cases.voice.call_message_outbox import CallMessageOutbox
 from app.utilities.channels.channel_texts import (
     CALL_BOOKING_CONFIRMATION_TEXT,
     CALL_BOOKING_PARTY_TEXT,
 )
 from app.utilities.channels.local_moments import format_local_moment
-
-logger: logging.Logger = logging.getLogger(__name__)
 
 
 class SendCallConfirmationUseCase(
@@ -38,9 +30,10 @@ class SendCallConfirmationUseCase(
     confirmation goes to a messenger).
 
     The caller must already be known in a messenger the business has
-    connected; the first that delivers is used. The text is in the call's
-    language with the date and time in the business's time zone. Delivery
-    problems are logged; the call stays recorded either way.
+    connected that can carry it now (`CallMessageOutbox`); the message goes
+    into the outbox once per call and the worker sends it with retries.
+    The text is in the call's language with the date and time in the
+    business's time zone. True when it was queued.
     """
 
     def __init__(
@@ -48,17 +41,13 @@ class SendCallConfirmationUseCase(
         business_repo: BusinessRepoContract,
         booking_repo: BookingRepoContract,
         contact_repo: ContactRepoContract,
-        channel_repo: ChannelRepoContract,
-        channel_message_sender: ChannelMessageSenderFacilitatorContract,
+        call_messages: CallMessageOutbox,
         text_resolver: LocalizedTextResolverContract,
     ) -> None:
         self._business_repo: BusinessRepoContract = business_repo
         self._booking_repo: BookingRepoContract = booking_repo
         self._contact_repo: ContactRepoContract = contact_repo
-        self._channel_repo: ChannelRepoContract = channel_repo
-        self._channel_message_sender: ChannelMessageSenderFacilitatorContract = (
-            channel_message_sender
-        )
+        self._call_messages: CallMessageOutbox = call_messages
         self._text_resolver: LocalizedTextResolverContract = text_resolver
 
     def run(self, input_data: RecordedCall) -> IsCallConfirmationSent:
@@ -66,6 +55,7 @@ class SendCallConfirmationUseCase(
             input_data.status is not PostCallEventStatus.RECORDED
             or input_data.outcome is not CallOutcome.BOOKING
             or input_data.business_id is None
+            or input_data.call_id is None
             or input_data.contact_id is None
             or not input_data.booking_ids
         ):
@@ -87,27 +77,13 @@ class SendCallConfirmationUseCase(
 
         language: LanguageTag = input_data.language or business.default_language
         text = MessageText(self._build_text(business, booking, language))
-        for identity in list_reachable_identities(
-            self._channel_repo, business.id, contact
-        ):
-            try:
-                self._channel_message_sender.send(
-                    business.id,
-                    identity.channel,
-                    identity.channel_user_id,
-                    text,
-                )
-            except ExternalServiceError as error:
-                logger.warning(
-                    "Call confirmation through %s failed: %s",
-                    identity.channel.value,
-                    error,
-                )
-                continue
-
-            return True
-
-        return False
+        return self._call_messages.queue(
+            business,
+            contact,
+            input_data.call_id,
+            OutboundMessageKind.CALL_CONFIRMATION,
+            text,
+        )
 
     def _build_text(
         self,

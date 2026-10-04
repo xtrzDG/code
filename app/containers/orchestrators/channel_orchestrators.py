@@ -23,12 +23,15 @@ from app.orchestrators.channels.inbox.process_platform_bot_update_orchestrator i
 from app.orchestrators.channels.inbox.read_inbound_attachments_orchestrator import (
     ReadInboundAttachmentsOrchestrator,
 )
+from app.orchestrators.channels.inbox.sweep_stale_inbound_events_orchestrator import (
+    SweepStaleInboundEventsOrchestrator,
+)
 from app.orchestrators.channels.inbox.turn_deadline_watch import TurnDeadlineWatch
 from app.orchestrators.channels.outbox.deliver_outbound_message_orchestrator import (
     DeliverOutboundMessageOrchestrator,
 )
 from app.schemas.dto.conversations import InboundMessage
-from app.schemas.dto.jobs import JobReport, QueuedJobInput
+from app.schemas.dto.jobs import JobReport, JobTick, QueuedJobInput
 from app.schemas.dto.media_requests import InboundMediaRequest
 
 
@@ -131,4 +134,19 @@ class ChannelOrchestratorsContainer(containers.DeclarativeContainer):
             delivery_use_cases.build_undelivered_reply_handoff_use_case
         ),
         handoff_to_human=follow_up_use_cases.handoff_to_human_use_case,
+    )
+    sweep_stale_inbound_events_orchestrator: Factory[
+        OrchestratorContract[JobTick, JobReport]
+    ] = Factory(
+        SweepStaleInboundEventsOrchestrator,
+        requeue_stale_inbound_events=(
+            delivery_use_cases.requeue_stale_inbound_events_use_case
+        ),
+        collect_unanswered_inbound_events=(
+            delivery_use_cases.collect_unanswered_inbound_events_use_case
+        ),
+        handoff_to_human=follow_up_use_cases.handoff_to_human_use_case,
+        mark_inbound_event_handed_off=(
+            delivery_use_cases.mark_inbound_event_handed_off_use_case
+        ),
     )

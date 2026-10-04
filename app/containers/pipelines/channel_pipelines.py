@@ -111,6 +111,9 @@ class ChannelPipelinesContainer(containers.DeclarativeContainer):
     deliver_outbound_pipeline = orchestrator_pipeline(
         channel_orchestrators.deliver_outbound_orchestrator
     )
+    sweep_stale_inbound_events_pipeline = orchestrator_pipeline(
+        channel_orchestrators.sweep_stale_inbound_events_orchestrator
+    )
     get_widget_config_pipeline = orchestrator_pipeline(
         channel_orchestrators.get_widget_config_orchestrator
     )

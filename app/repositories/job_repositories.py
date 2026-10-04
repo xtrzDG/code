@@ -1,4 +1,4 @@
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 
 from typed_time_provider import Microseconds
 
@@ -27,6 +27,7 @@ from app.schemas.typings.platform.constrained_strings import (
     JobPeriodKey,
 )
 from app.schemas.typings.platform.prefixed_id import QueuedJobId
+from app.schemas.typings.platform.strings import JobPayloadJson
 
 
 class QueuedJobRepository(QueuedJobRepoContract):
@@ -54,6 +55,16 @@ class QueuedJobRepository(QueuedJobRepoContract):
 
     def claim_due(self, claim: JobClaimRequest) -> list[QueuedJobDocument]:
         return self._claims.claim_due(claim)
+
+    def list_active_payloads(
+        self,
+        job_name: JobName,
+        payloads: Sequence[JobPayloadJson],
+    ) -> set[JobPayloadJson]:
+        if not payloads:
+            return set()
+
+        return self._claims.list_active_payloads(job_name, payloads)
 
     def extend_leases(self, extension: JobLeaseExtension) -> list[QueuedJobId]:
         return self._claims.extend_leases(extension)

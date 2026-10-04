@@ -7,7 +7,7 @@ from base_pydantic_schemas import ImmutableDTO
 from typed_time_provider import Microseconds
 
 from app.schemas.constants.channels import ChannelKind
-from app.schemas.constants.deliveries import DeliveryFailureKind
+from app.schemas.constants.deliveries import DeliveryFailureKind, DeliveryFailureReason
 from app.schemas.domain.businesses import ManagerContact
 from app.schemas.domain.channels import ChannelDocument
 from app.schemas.domain.inbound_events import InboundEventDocument
@@ -131,7 +131,8 @@ class StaffNotification(ImmutableDTO):
 class OutboundAttempt(ImmutableDTO):
     """
     One send attempt of an outbox message: the parts delivered so far (all
-    of them when `failure` is None) and why it stopped otherwise.
+    of them when `failure` is None) and why it stopped otherwise (`failure`
+    decides the retry, `reason` says it to the owner).
     `channel` is the business channel a reply was sent with (its health
     follows the outcome only while it still has that connection).
     """
@@ -141,6 +142,7 @@ class OutboundAttempt(ImmutableDTO):
     delivered_parts: DeliveredMessageCount
     provider_message_id: ProviderMessageId | None = None
     failure: DeliveryFailureKind | None = None
+    reason: DeliveryFailureReason | None = None
     error: DeliveryErrorText | None = None
     retry_after_seconds: RetryAfterSeconds | None = None
     attempted_at: Microseconds

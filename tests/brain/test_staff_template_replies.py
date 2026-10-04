@@ -49,8 +49,8 @@ class TestStaffRepliesAsWhatsAppTemplates:
         message = sent.json()["message"]
         assert message["text"] == "Your table is ready. See you at 20:00."
         assert (message["author"], message["sent_by"]) == ("staff", str(world.staff_id))
-        assert cabinet.storage.channel_sender.sent == []
-        assert cabinet.storage.channel_sender.templates == [
+        assert cabinet.storage.outbox.sent == []
+        assert cabinet.storage.outbox.templates == [
             (
                 "995555123456",
                 "staff_reply",
@@ -64,7 +64,7 @@ class TestStaffRepliesAsWhatsAppTemplates:
         assert (audit[-1].action, audit[-1].entity) == (AuditAction.CREATE, "message")
         assert len(world.turns(reply.conversation_id)) == 2
 
-    def test_template_text_is_length_checked_and_failures_store_nothing(
+    def test_template_text_is_length_checked_and_a_refusal_stores_nothing(
         self,
     ) -> None:
         world = build_world(scripted(say("Hello!")))
@@ -74,17 +74,16 @@ class TestStaffRepliesAsWhatsAppTemplates:
         world.clock.advance(timedelta(days=3))
 
         too_long = cabinet.reply(reply.conversation_id, "x" * 1025, as_template=True)
-        just_fits = "y " * 512
-        cabinet.storage.channel_sender.failure = "WhatsApp refused the template."
-        failed = cabinet.reply(reply.conversation_id, just_fits, as_template=True)
+        just_fits = cabinet.reply(reply.conversation_id, "y " * 512, as_template=True)
 
         assert too_long.status_code == 422
         assert "1024" in too_long.json()["message"]
-        assert failed.status_code == 502
-        assert cabinet.storage.channel_sender.templates == []
-        assert len(world.messages(reply.conversation_id)) == 2
+        assert just_fits.status_code == 201, just_fits.text
+        [(_, _, _, [parameter])] = cabinet.storage.outbox.templates
+        assert len(parameter) == 1023  # "y y ... y": line breaks and runs fold
+        assert len(world.messages(reply.conversation_id)) == 3
 
-    def test_a_template_meta_refuses_is_a_conflict_naming_the_template(
+    def test_a_template_reply_is_queued_in_the_owners_language_only(
         self,
     ) -> None:
         world = build_world(scripted(say("Hello!")))
@@ -92,25 +91,19 @@ class TestStaffRepliesAsWhatsAppTemplates:
         cabinet = Cabinet(world)
         cabinet.connect(ChannelKind.WHATSAPP, staff_template=STAFF_TEMPLATE)
         world.clock.advance(timedelta(hours=25))
-        cabinet.storage.channel_sender.template_rejection = (
-            "Meta refused the message template (132001): (#132001) Template "
-            "name does not exist in the translation"
-        )
 
-        refused = cabinet.reply(reply.conversation_id, "Hello", as_template=True)
+        sent = cabinet.reply(reply.conversation_id, "Hello", as_template=True)
 
-        # Not "try again in a minute": retrying cannot help until the owner
-        # corrects the template in the channel settings.
-        assert refused.status_code == 409
-        body = refused.json()
-        assert body["error"] == "conflict"
-        assert "template" in body["message"]
-        [reason] = body["reasons"]
-        assert reason["code"] == "template_rejected"
-        assert "132001" in reason["message"]
-        assert reason["details"] == ["staff_reply", "en_US"]
-        assert cabinet.storage.channel_sender.templates == []
-        assert len(world.messages(reply.conversation_id)) == 2
+        # Whether Meta accepts the template is known when the worker sends
+        # it: the reply shows "sending" until then (tests/channels covers a
+        # refusal: the reply turns "failed" with the reason).
+        assert sent.status_code == 201, sent.text
+        assert sent.json()["delivery"] == "sent_as_template"
+        assert sent.json()["message"]["delivery"]["state"] == "sending"
+        [message] = cabinet.storage.outbox.queued()
+        assert message.template is not None
+        assert str(message.template.language_code) == "en_US"
+        assert message.kind.value == "staff_reply"
 
     def test_without_a_template_the_refusal_points_to_the_channels_page(
         self,
@@ -127,7 +120,7 @@ class TestStaffRepliesAsWhatsAppTemplates:
         assert (state["block"], state["template"]) == ("window_closed", None)
         assert refused.status_code == 409
         assert "Channels page" in refused.json()["message"]
-        assert cabinet.storage.channel_sender.templates == []
+        assert cabinet.storage.outbox.templates == []
         assert len(world.messages(reply.conversation_id)) == 2
 
     def test_inside_the_window_a_template_request_is_an_ordinary_message(
@@ -147,10 +140,10 @@ class TestStaffRepliesAsWhatsAppTemplates:
         assert (state["is_available"], state["template"]) == (True, None)
         assert sent.status_code == 201
         assert sent.json()["delivery"] == "sent"
-        assert cabinet.storage.channel_sender.sent == [
+        assert cabinet.storage.outbox.sent == [
             (ChannelKind.WHATSAPP, "995555123456", "Line one\nLine two")
         ]
-        assert cabinet.storage.channel_sender.templates == []
+        assert cabinet.storage.outbox.templates == []
 
     def test_other_windowed_channels_and_disconnected_whatsapp_get_no_template(
         self,
@@ -180,4 +173,4 @@ class TestStaffRepliesAsWhatsAppTemplates:
             None,
         )
         assert refused.status_code == 409
-        assert cabinet.storage.channel_sender.templates == []
+        assert cabinet.storage.outbox.templates == []

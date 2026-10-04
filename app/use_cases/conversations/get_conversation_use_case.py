@@ -13,6 +13,9 @@ from app.contracts.repositories.conversation_repositories import (
     ConversationRepoContract,
     MessageRepoContract,
 )
+from app.contracts.repositories.delivery_repositories import (
+    OutboundMessageRepoContract,
+)
 from app.contracts.repositories.knowledge_repositories import ResourceRepoContract
 from app.contracts.transformer_contract import TransformerContract
 from app.contracts.use_case_contract import UseCaseContract
@@ -47,6 +50,7 @@ from app.use_cases.conversations.card.conversation_links import (
     collect_conversation_links,
 )
 from app.use_cases.conversations.feed.conversation_rows import build_view_sources
+from app.use_cases.conversations.staff_reply_deliveries import with_staff_deliveries
 from app.use_cases.conversations.staff_reply_support import (
     assess_conversation_reply,
 )
@@ -69,7 +73,8 @@ class GetConversationUseCase(
     conversation, the phone calls of the conversation with
     their transcripts, outcomes and recordings, the bookings, leads and
     handoffs made in it, whether staff can write to the customer now
-    (concept section 8) and who of the team is assigned to it. Reading a
+    (concept section 8), how each staff reply travels to the customer, and
+    who of the team is assigned to it. Reading a
     conversation is an operation on personal data, so each view is
     written to the audit log, one entry per call shown as well (concept
     section 10).
@@ -96,6 +101,7 @@ class GetConversationUseCase(
         handoff_repo: HandoffRepoContract,
         resource_repo: ResourceRepoContract,
         channel_repo: ChannelRepoContract,
+        outbound_message_repo: OutboundMessageRepoContract,
     ) -> None:
         self._authorize_business_access: UseCaseContract[
             BusinessAccessRequest, BusinessDocument
@@ -120,6 +126,7 @@ class GetConversationUseCase(
         self._handoff_repo: HandoffRepoContract = handoff_repo
         self._resource_repo: ResourceRepoContract = resource_repo
         self._channel_repo: ChannelRepoContract = channel_repo
+        self._outbound_message_repo: OutboundMessageRepoContract = outbound_message_repo
 
     def run(self, input_data: ConversationQuery) -> ConversationDetailView:
         business: BusinessDocument = self._authorize_business_access.run(
@@ -190,10 +197,15 @@ class GetConversationUseCase(
                     {} if contact is None else {contact.id: contact},
                 )[0]
             ),
-            messages=[
-                self._message_transformer.transform(message)
-                for message in reversed(newest_first)
-            ],
+            messages=with_staff_deliveries(
+                business.id,
+                newest_first,
+                [
+                    self._message_transformer.transform(message)
+                    for message in reversed(newest_first)
+                ],
+                self._outbound_message_repo,
+            ),
             earlier_messages_cursor=earlier_cursor,
             usage=self._message_repo.sum_usage(business.id, conversation.id),
             calls=[self._call_transformer.transform(call) for call in calls],

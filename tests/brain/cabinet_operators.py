@@ -153,6 +153,7 @@ def build_cabinet_operators(
                         handoff_repo=world.handoff_repo,
                         resource_repo=storage.resource_repo,
                         channel_repo=world.channel_repo,
+                        outbound_message_repo=storage.outbox.outbound_message_repo,
                     )
                 )
             )
@@ -166,7 +167,8 @@ def build_cabinet_operators(
                         message_repo=world.message_repo,
                         channel_repo=world.channel_repo,
                         audit_log_repo=world.audit_log_repo,
-                        channel_message_sender=storage.channel_sender,
+                        outbound_message_repo=storage.outbox.outbound_message_repo,
+                        job_queue=storage.outbox.job_queue,
                         message_transformer=MessageViewTransformer(),
                         live_events=RecordingEventPublisher(),
                         wall_clock=world.clock.wall_clock(),
@@ -184,6 +186,7 @@ def build_cabinet_operators(
                         message_transformer=MessageViewTransformer(),
                         audit_log_repo=world.audit_log_repo,
                         wall_clock=world.clock.wall_clock(),
+                        outbound_message_repo=storage.outbox.outbound_message_repo,
                     )
                 )
             )

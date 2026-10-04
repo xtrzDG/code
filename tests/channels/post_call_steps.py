@@ -3,8 +3,10 @@
 from typing import Any
 
 from app.schemas.constants.channels import ChannelKind
+from app.schemas.constants.deliveries import OutboundMessageKind
 from app.schemas.domain.bookings import BookingDocument
 from app.schemas.domain.conversations import CallDocument
+from app.schemas.domain.outbound_messages import OutboundMessageDocument
 from app.schemas.typings.bookings.constrained_integers import (
     BookingEndsAtUnixSeconds,
     BookingStartsAtUnixSeconds,
@@ -16,6 +18,7 @@ from tests.channels.channels_payloads import (
     sign_elevenlabs,
     to_json_bytes,
 )
+from tests.channels.outbox_reads import outbox_of
 from tests.channels.voice_setup import VoiceSetup
 
 # 2026-10-03 15:30 UTC (19:30 in Tbilisi).
@@ -137,3 +140,18 @@ def process_call(setup: VoiceSetup, payload: dict[str, Any]) -> dict[str, Any]:
 
 def stored_calls(setup: VoiceSetup) -> list[CallDocument]:
     return setup.testbed.call_repo.list_by_business(setup.business.id)
+
+
+CALL_MESSAGE_KINDS: frozenset[OutboundMessageKind] = frozenset(
+    {OutboundMessageKind.CALL_CONFIRMATION, OutboundMessageKind.CALL_LINKS}
+)
+
+
+def queued_call_messages(setup: VoiceSetup) -> list[OutboundMessageDocument]:
+    """The confirmations and links queued for callers, oldest first."""
+
+    return [
+        message
+        for message in outbox_of(setup.testbed, setup.business.id)
+        if message.kind in CALL_MESSAGE_KINDS
+    ]

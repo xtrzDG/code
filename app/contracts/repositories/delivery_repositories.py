@@ -9,19 +9,23 @@ another process. Changes go through `update`: read, change and write the
 stored document in one step (a row lock on Postgres).
 """
 
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from typing import Protocol
 
 from typed_time_provider import Microseconds
 
 from app.contracts.repo_contract import RepoContract
+from app.schemas.constants.deliveries import InboundEventStatus
 from app.schemas.domain.inbound_events import InboundEventDocument
 from app.schemas.domain.outbound_messages import OutboundMessageDocument
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.deliveries.constrained_strings import OutboundRecipientKey
 from app.schemas.typings.deliveries.prefixed_id import InboundEventId, OutboundMessageId
 from app.schemas.typings.storage.booleans import IsDocumentInserted
-from app.schemas.typings.storage.constrained_integers import DocumentCount
+from app.schemas.typings.storage.constrained_integers import (
+    DocumentCount,
+    DocumentQueryLimit,
+)
 
 type InboundEventChange = Callable[[InboundEventDocument], InboundEventDocument | None]
 type OutboundMessageChange = Callable[
@@ -67,6 +71,20 @@ class InboundEventRepoContract(RepoContract, Protocol):
         """
         raise NotImplementedError
 
+    def list_stale(
+        self,
+        status: InboundEventStatus,
+        created_before: Microseconds,
+        limit: DocumentQueryLimit,
+        created_from: Microseconds | None = None,
+    ) -> list[InboundEventDocument]:
+        """
+        Events of every business (and the platform's) in this status that
+        arrived before `created_before` (and from `created_from`, when
+        given), oldest first, at most `limit`.
+        """
+        raise NotImplementedError
+
     def delete_created_before(self, created_before: Microseconds) -> DocumentCount:
         raise NotImplementedError
 
@@ -81,6 +99,14 @@ class OutboundMessageRepoContract(RepoContract, Protocol):
         business_id: BusinessId,
         message_id: OutboundMessageId,
     ) -> OutboundMessageDocument | None:
+        raise NotImplementedError
+
+    def get_many(
+        self,
+        business_id: BusinessId,
+        message_ids: Sequence[OutboundMessageId],
+    ) -> list[OutboundMessageDocument]:
+        """The business's messages of these ids (missing ones skipped), one read."""
         raise NotImplementedError
 
     def update(

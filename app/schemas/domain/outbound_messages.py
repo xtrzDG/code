@@ -3,10 +3,16 @@ from pydantic import Field
 from typed_time_provider import Microseconds
 
 from app.schemas.constants.channels import ChannelKind
-from app.schemas.constants.deliveries import OutboundMessageKind, OutboundMessageStatus
+from app.schemas.constants.deliveries import (
+    DeliveryFailureReason,
+    OutboundMessageKind,
+    OutboundMessageStatus,
+)
 from app.schemas.constants.notifications import WebPushUrgency
 from app.schemas.domain.businesses import ManagerContact
+from app.schemas.typings.bookings.prefixed_id import BookingId
 from app.schemas.typings.businesses.prefixed_id import BusinessId
+from app.schemas.typings.calls.prefixed_id import MissedCallId
 from app.schemas.typings.channels.constrained_integers import DeliveredMessageCount
 from app.schemas.typings.channels.constrained_strings import (
     WhatsAppTemplateLanguageCode,
@@ -14,7 +20,11 @@ from app.schemas.typings.channels.constrained_strings import (
 )
 from app.schemas.typings.channels.prefixed_id import ChannelId
 from app.schemas.typings.channels.strings import ProviderMessageId
-from app.schemas.typings.conversations.prefixed_id import ConversationId, MessageId
+from app.schemas.typings.conversations.prefixed_id import (
+    CallId,
+    ConversationId,
+    MessageId,
+)
 from app.schemas.typings.conversations.strings import ChannelUserId, MessageText
 from app.schemas.typings.deliveries.constrained_integers import DeliveryAttemptCount
 from app.schemas.typings.deliveries.constrained_strings import (
@@ -93,9 +103,18 @@ class OutboundMessageDocument(BaseDocument):
     own parameters (`template.body_parameters`; outside the 24-hour
     window), and a request for feedback after a visit names its request
     (`feedback_request_id`), which follows its delivery. Both optional.
+
+    Version 4: why the last attempt failed in words for the owner
+    (`last_failure_reason`, shown next to a staff reply in the cabinet),
+    and what a message to a customer is about besides a conversation: the
+    booking a reminder is for (`booking_id`), the call a confirmation or
+    its links follow (`call_id`) and the missed call a text-back answers
+    (`missed_call_id`, whose text-back follows the delivery), and the
+    moment after which a message is no longer worth sending
+    (`send_before`: it is given up instead). All optional.
     """
 
-    schema_version: SchemaVersion = SchemaVersion("3")
+    schema_version: SchemaVersion = SchemaVersion("4")
     id: OutboundMessageId
     business_id: BusinessId
     kind: OutboundMessageKind
@@ -110,10 +129,15 @@ class OutboundMessageDocument(BaseDocument):
     source_message_id: MessageId | None = None
     handoff_id: HandoffId | None = None
     feedback_request_id: FeedbackRequestId | None = None
+    booking_id: BookingId | None = None
+    call_id: CallId | None = None
+    missed_call_id: MissedCallId | None = None
     status: OutboundMessageStatus = OutboundMessageStatus.PENDING
     attempts: DeliveryAttemptCount = DeliveryAttemptCount(0)
     delivered_parts: DeliveredMessageCount = DeliveredMessageCount(0)
     next_attempt_at: Microseconds | None = None
+    send_before: Microseconds | None = None
     last_error: DeliveryErrorText | None = None
+    last_failure_reason: DeliveryFailureReason | None = None
     provider_message_id: ProviderMessageId | None = None
     delivered_at: Microseconds | None = None

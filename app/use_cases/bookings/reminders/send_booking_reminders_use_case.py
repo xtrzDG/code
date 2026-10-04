@@ -5,19 +5,24 @@ from zoneinfo import ZoneInfo
 
 from typed_time_provider import Microseconds, WallClock
 
-from app.contracts.facilitators import ChannelMessageSenderFacilitatorContract
+from app.contracts.jobs import JobQueueFacilitatorContract
 from app.contracts.registries import RequestRateLimitRegistryContract
 from app.contracts.repositories.booking_repositories import BookingRepoContract
 from app.contracts.repositories.business_repositories import (
     BusinessProfileRepoContract,
     BusinessRepoContract,
+    ChannelRepoContract,
 )
 from app.contracts.repositories.conversation_repositories import (
     ContactRepoContract,
     ConversationRepoContract,
     MessageRepoContract,
 )
+from app.contracts.repositories.delivery_repositories import (
+    OutboundMessageRepoContract,
+)
 from app.contracts.repositories.knowledge_repositories import ResourceRepoContract
+from app.contracts.storage import StorageUnitOfWorkContract
 from app.contracts.transformer_contract import TransformerContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.bookings import BookingStatus
@@ -75,7 +80,11 @@ class SendBookingRemindersUseCase(UseCaseContract[JobTick, JobReport]):
     hours of the customer's last message there (concept section 6). Later,
     a WhatsApp reminder is the approved template WHATSAPP_REMINDER_TEMPLATE
     (business, date, time, name), and Messenger and Instagram are skipped
-    for the next messenger. The channel sender meters each delivery once.
+    for the next messenger; so is a messenger the business no longer has
+    connected. The reminder goes into the outbox, once per booking and
+    start time (a run after a crash finds it queued instead of sending it
+    twice), and the worker sends it with retries; each delivery is metered
+    once.
 
     A customer who opted out of unrequested messages (STOP) gets no
     reminder, and every reminder counts against the customer's shared
@@ -86,8 +95,9 @@ class SendBookingRemindersUseCase(UseCaseContract[JobTick, JobReport]):
     cancellation or a move made meanwhile is never undone (and a booking
     cancelled or moved meanwhile is not reminded with stale details).
 
-    A delivery failure is logged and the booking stays unreminded, so the
-    next run tries again until the booking starts. Businesses the owner
+    A booking whose reminder could not be queued (an error, or no channel
+    can carry it) stays unreminded, so the next run tries again until the
+    booking starts. Businesses the owner
     paused, and businesses whose unpaid subscription switched the assistant
     to leads only, send no reminders.
     """
@@ -101,7 +111,9 @@ class SendBookingRemindersUseCase(UseCaseContract[JobTick, JobReport]):
         contact_repo: ContactRepoContract,
         conversation_repo: ConversationRepoContract,
         message_repo: MessageRepoContract,
-        channel_message_sender: ChannelMessageSenderFacilitatorContract,
+        channel_repo: ChannelRepoContract,
+        outbound_message_repo: OutboundMessageRepoContract,
+        job_queue: JobQueueFacilitatorContract,
         reminder_transformer: TransformerContract[BookingMessageInput, MessageText],
         reminder_template_transformer: TransformerContract[
             BookingMessageInput, list[MessageText]
@@ -110,6 +122,7 @@ class SendBookingRemindersUseCase(UseCaseContract[JobTick, JobReport]):
         rate_limits: RequestRateLimitRegistryContract,
         whatsapp_reminder_template: WhatsAppTemplateName | None = None,
         reminder_lead: BookingReminderLeadSeconds = DEFAULT_REMINDER_LEAD,
+        unit_of_work: StorageUnitOfWorkContract | None = None,
     ) -> None:
         self._business_repo: BusinessRepoContract = business_repo
         self._business_profile_repo: BusinessProfileRepoContract = business_profile_repo
@@ -119,7 +132,10 @@ class SendBookingRemindersUseCase(UseCaseContract[JobTick, JobReport]):
         self._delivery: ReminderDelivery = ReminderDelivery(
             conversation_repo=conversation_repo,
             message_repo=message_repo,
-            channel_message_sender=channel_message_sender,
+            channel_repo=channel_repo,
+            outbound_message_repo=outbound_message_repo,
+            job_queue=job_queue,
+            unit_of_work=unit_of_work,
             reminder_transformer=reminder_transformer,
             reminder_template_transformer=reminder_template_transformer,
             wall_clock=wall_clock,
@@ -189,6 +205,10 @@ class SendBookingRemindersUseCase(UseCaseContract[JobTick, JobReport]):
         cancellation_policy: CancellationPolicyText | None,
         booking: BookingDocument,
     ) -> bool:
+        if self._delivery.is_queued(booking):
+            self._mark_reminded(booking)
+            return True
+
         contact: ContactDocument | None = self._contact_repo.get(
             business.id,
             booking.contact_id,
@@ -214,17 +234,17 @@ class SendBookingRemindersUseCase(UseCaseContract[JobTick, JobReport]):
         for identity in identities:
             try:
                 if not self._delivery.deliver(
-                    business, contact, identity, message_input
+                    business, contact, identity, booking, message_input
                 ):
                     continue
             except ApplicationError as error:
                 logger.warning(
-                    "Reminder of booking %s through %s failed: %s",
+                    "Reminder of booking %s through %s was not queued: %s",
                     booking.id,
                     identity.channel.value,
                     error,
                 )
-                continue
+                return False
 
             self._mark_reminded(booking)
             return True

@@ -1,20 +1,22 @@
-"""Fakes behind the cabinet routes: token login, channel sender, recordings."""
+"""Fakes behind the cabinet routes: token login, the outbox, recordings."""
 
 from dataclasses import dataclass, field
 
 from app.adapters.storage.in_memory_document_collection import (
     InMemoryDocumentCollectionAdapter,
 )
-from app.contracts.facilitators import ChannelMessageSenderFacilitatorContract
 from app.contracts.operator_contract import OperatorContract
 from app.contracts.recording_storage import RecordingStorageAdapterContract
 from app.contracts.use_case_contract import UseCaseContract
+from app.facilitators.jobs.job_queue_facilitator import JobQueueFacilitator
 from app.repositories.booking_repositories import BookingRepository, LeadRepository
+from app.repositories.delivery_repositories import OutboundMessageRepository
 from app.repositories.knowledge_repositories import ResourceRepository
 from app.repositories.message_media_repository import MessageMediaRepository
 from app.schemas.constants.channels import ChannelKind
 from app.schemas.domain.bookings import BookingDocument, LeadDocument
 from app.schemas.domain.message_media import MessageMediaDocument
+from app.schemas.domain.outbound_messages import OutboundMessageDocument
 from app.schemas.domain.resources import ResourceDocument
 from app.schemas.dto.call_recordings import (
     RecordingAudio,
@@ -28,24 +30,15 @@ from app.schemas.dto.mfa import SessionAssurance
 from app.schemas.exceptions.application_errors import (
     AuthenticationRequiredError,
     ExternalServiceError,
-    WhatsAppTemplateRejectedError,
-)
-from app.schemas.typings.businesses.prefixed_id import BusinessId
-from app.schemas.typings.channels.constrained_strings import (
-    WhatsAppTemplateLanguageCode,
-    WhatsAppTemplateName,
 )
 from app.schemas.typings.conversations.constrained_strings import RecordingMediaType
-from app.schemas.typings.conversations.strings import (
-    ChannelUserId,
-    MessageText,
-)
-from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.schemas.typings.users.prefixed_id import UserId
 from app.schemas.typings.users.strings import AccessToken
 from app.utilities.recordings.recording_byte_ranges import cut_recording_part
 from tests.foundation.access_support import signed_in
 from tests.media.media_fakes import InMemoryMediaStorage
+from tests.platform.worker_fakes import build_job_stores
+from tests.storage.storage_testing import build_fixed_wall_clock
 
 
 class TokenAuthenticationOperator(OperatorContract[AccessToken, SessionAssurance]):
@@ -62,59 +55,52 @@ class TokenAuthenticationOperator(OperatorContract[AccessToken, SessionAssurance
         return signed_in(user_id)
 
 
-class RecordingChannelSender(ChannelMessageSenderFacilitatorContract):
-    """Records messages to customers; `failure` makes the channel fail."""
+class CabinetOutbox:
+    """
+    The outbox the cabinet's staff replies go into (in memory) with the
+    job queue of their deliveries; `sent` and `templates` read the queued
+    messages back (no worker sends them here).
+    """
 
     def __init__(self) -> None:
-        self.sent: list[tuple[ChannelKind, str, str]] = []
-        self.templates: list[tuple[str, str, str, list[str]]] = []
-        self.failure: str | None = None
-        self.template_rejection: str | None = None
-
-    def send(
-        self,
-        business_id: BusinessId,
-        channel: ChannelKind,
-        channel_user_id: ChannelUserId,
-        text: MessageText,
-    ) -> None:
-        if self.failure is not None:
-            raise ExternalServiceError(self.failure)
-
-        self.sent.append((channel, str(channel_user_id), str(text)))
-
-    def send_whatsapp_template(
-        self,
-        business_id: BusinessId,
-        channel_user_id: ChannelUserId,
-        template_name: WhatsAppTemplateName,
-        language: LanguageTag,
-        body_parameters: list[MessageText],
-    ) -> None:
-        raise AssertionError("Staff templates are sent in their own language.")
-
-    def send_whatsapp_template_in_language(
-        self,
-        business_id: BusinessId,
-        channel_user_id: ChannelUserId,
-        template_name: WhatsAppTemplateName,
-        language_code: WhatsAppTemplateLanguageCode,
-        body_parameters: list[MessageText],
-    ) -> None:
-        if self.failure is not None:
-            raise ExternalServiceError(self.failure)
-
-        if self.template_rejection is not None:
-            raise WhatsAppTemplateRejectedError(self.template_rejection)
-
-        self.templates.append(
-            (
-                str(channel_user_id),
-                str(template_name),
-                str(language_code),
-                [str(parameter) for parameter in body_parameters],
-            )
+        self.messages = InMemoryDocumentCollectionAdapter(OutboundMessageDocument)
+        self.outbound_message_repo = OutboundMessageRepository(self.messages)
+        self.jobs = build_job_stores()
+        self.job_queue = JobQueueFacilitator(
+            self.jobs.job_repo, build_fixed_wall_clock(), self.jobs.job_wakeup
         )
+
+    def queued(self) -> list[OutboundMessageDocument]:
+        return sorted(self.messages.list_all(), key=lambda item: int(item.created_at))
+
+    @property
+    def sent(self) -> list[tuple[ChannelKind, str, str]]:
+        """Free-text replies: channel, recipient, text."""
+
+        return [
+            (
+                message.customer.channel,
+                str(message.customer.channel_user_id),
+                str(message.text),
+            )
+            for message in self.queued()
+            if message.customer is not None and message.template is None
+        ]
+
+    @property
+    def templates(self) -> list[tuple[str, str, str, list[str]]]:
+        """Template replies: recipient, template, language, parameters."""
+
+        return [
+            (
+                str(message.customer.channel_user_id),
+                str(message.template.name),
+                str(message.template.language_code),
+                [str(value) for value in message.template.body_parameters],
+            )
+            for message in self.queued()
+            if message.customer is not None and message.template is not None
+        ]
 
 
 class InMemoryRecordingStorage(RecordingStorageAdapterContract):
@@ -171,9 +157,7 @@ class CabinetStorage:
             InMemoryDocumentCollectionAdapter(ResourceDocument)
         )
     )
-    channel_sender: RecordingChannelSender = field(
-        default_factory=RecordingChannelSender
-    )
+    outbox: CabinetOutbox = field(default_factory=CabinetOutbox)
     recording_storage: InMemoryRecordingStorage = field(
         default_factory=InMemoryRecordingStorage
     )

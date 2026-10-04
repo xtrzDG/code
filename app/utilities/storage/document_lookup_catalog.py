@@ -3,7 +3,7 @@ The declared lookup fields of the document collections, by collection.
 
 Each TEXT, FILTER_TEXT and INTEGER field is a generated column
 `doc_<field>` (migrations 1010, 1040, 1042, 1043, 1051, 1052, 1061, 1062,
-1074, 1081, 1082 and 1090), each ELEMENT_TEXT field a trigger over
+1074, 1081, 1082, 1090 and 1094), each ELEMENT_TEXT field a trigger over
 `workshop.document_lookup_keys`; `document_lookup_fields` explains the kinds
 and checks queries against this catalog.
 """
@@ -179,7 +179,12 @@ DOCUMENT_LOOKUP_FIELDS: Mapping[
     ),
     # The inbox and the outbox: their purge; one recipient's messages that
     # still wait (they go out in order).
-    DocumentCollectionName("inbound_events"): (_integer("created_at"),),
+    # The inbox by arrival (the purge) and by status and arrival (the
+    # sweeper of stale events, 1094).
+    DocumentCollectionName("inbound_events"): (
+        _integer("created_at"),
+        _text("status"),
+    ),
     DocumentCollectionName("outbound_messages"): (
         _text("recipient_key"),
         _filter("status"),

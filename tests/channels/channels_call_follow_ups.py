@@ -58,6 +58,8 @@ from app.use_cases.voice.missed_calls.register_missed_call_use_case import (
 from app.use_cases.voice.missed_calls.send_text_back_use_case import (
     SendTextBackUseCase,
 )
+from app.use_cases.voice.missed_calls.text_back_messages import TextBackSms
+from app.use_cases.voice.missed_calls.text_back_whatsapp import TextBackWhatsApp
 from app.use_cases.voice.recordings.schedule_recording_archive_use_case import (
     ScheduleRecordingArchiveUseCase,
 )
@@ -161,13 +163,17 @@ class ChannelsCallFollowUps(ChannelsInbox):
             self.missed_call_repo,
             self.business_repo,
             self.call_settings_repo,
-            self.channel_repo,
             self.contact_repo,
             self.conversation_repo,
             self.message_repo,
-            self.channel_message_sender,
-            self.sms_client,
-            self.text_resolver,
+            TextBackWhatsApp(
+                channel_repo=self.channel_repo,
+                outbound_message_repo=self.outbound_message_repo,
+                job_queue=self.job_queue,
+                unit_of_work=None,
+                text_resolver=self.text_resolver,
+            ),
+            TextBackSms(self.sms_client, self.text_resolver),
             self.live_events,
             self.wall_clock,
         )

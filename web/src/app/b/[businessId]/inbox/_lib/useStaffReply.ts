@@ -1,15 +1,14 @@
 "use client";
 
 /**
- * Sending a staff message from the conversation (POST …/messages): through
- * the conversation's channel, kept for the website chat, or, after
- * WhatsApp's 24 hours, in the owner's approved template. A template Meta
- * refused stays refused until the owner fixes it, so the composer says so
- * instead of offering a retry; a closed window found on sending reloads
- * the card.
+ * Sending a staff message from the conversation (POST …/messages): queued
+ * for the conversation's channel (the worker sends it with retries and the
+ * message shows how its delivery goes), kept for the website chat, or,
+ * after WhatsApp's 24 hours, queued in the owner's approved template. A
+ * template Meta refused stays refused until the owner fixes it, so the
+ * composer says so instead of offering a retry (read from the newest staff
+ * reply's delivery); a closed window found on sending reloads the card.
  */
-
-import { useState } from "react";
 
 import { api } from "@/api/client";
 import { useMutation } from "@/api/useMutation";
@@ -27,29 +26,29 @@ import {
   offeredTemplate,
   templateReplyLength,
 } from "./conversationModel";
-
-/** The refusal reason of a WhatsApp template Meta did not accept. */
-export const TEMPLATE_REJECTED = "template_rejected";
+import { isTemplateRejected } from "./staffDeliveries";
 
 export function useStaffReply({
   conversation,
   reply,
+  messages,
   onSent,
   onRefused,
 }: {
   conversation: ConversationSummaryView;
   reply: StaffReplyView;
+  /** The transcript: the newest staff reply's delivery tells a refused template. */
+  messages: readonly MessageView[];
   onSent: (message: MessageView) => void;
   /** The API refused (the window closed meanwhile): load the card again. */
   onRefused: () => void;
 }) {
   const { t } = useI18n();
   const toast = useToast();
-  const { business, isOwner } = useBusiness();
+  const { business } = useBusiness();
   const channel = t(CHANNEL_LABELS[conversation.channel]);
   // Offered only once the WhatsApp window has closed and the owner set one.
   const template = offeredTemplate(reply);
-  const [isTemplateRejected, setTemplateRejected] = useState(false);
 
   const send = useMutation(
     (text: string, asTemplate: boolean) =>
@@ -57,15 +56,7 @@ export function useStaffReply({
         params: { path: { business_id: business.id, conversation_id: conversation.id } },
         body: asTemplate ? { text, as_template: true } : { text },
       }),
-    {
-      errorMessages: { conflict: "conversations.reply.refused" },
-      reasonMessages: {
-        [TEMPLATE_REJECTED]: () => ({
-          key: isOwner ? "conversations.reply.template.rejectedOwner" : "conversations.reply.template.rejectedStaff",
-          values: { name: template?.name ?? "" },
-        }),
-      },
-    },
+    { errorMessages: { conflict: "conversations.reply.refused" } },
   );
 
   const maxLength = template ? template.max_text_length : MAX_REPLY_LENGTH;
@@ -84,7 +75,6 @@ export function useStaffReply({
     }
     const result = await send.run(draft.trim(), template !== null);
     if (result.ok) {
-      setTemplateRejected(false);
       onSent(result.data.message);
       const delivery = result.data.delivery;
       toast.success(
@@ -99,9 +89,7 @@ export function useStaffReply({
       );
       return true;
     }
-    if (result.error.reasons.some((reason) => reason.code === TEMPLATE_REJECTED)) {
-      setTemplateRejected(true);
-    } else if (result.error.code === "conflict") {
+    if (result.error.code === "conflict") {
       onRefused();
     }
     return false;
@@ -110,7 +98,7 @@ export function useStaffReply({
   return {
     channel,
     template,
-    isTemplateRejected,
+    isTemplateRejected: template !== null && isTemplateRejected(messages),
     canWrite: reply.is_available || template !== null,
     maxLength,
     lengthOf,

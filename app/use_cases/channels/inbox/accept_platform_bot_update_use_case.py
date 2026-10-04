@@ -2,6 +2,7 @@ from typed_time_provider import Microseconds, WallClock
 
 from app.contracts.jobs import JobQueueFacilitatorContract
 from app.contracts.repositories.delivery_repositories import InboundEventRepoContract
+from app.contracts.storage import StorageUnitOfWorkContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.configurations.app_settings import AppSettings
 from app.schemas.constants.channel_events import PlatformBotCommandResult
@@ -51,11 +52,13 @@ class AcceptPlatformBotUpdateUseCase(
         job_queue: JobQueueFacilitatorContract,
         app_settings: AppSettings,
         wall_clock: WallClock[Microseconds],
+        unit_of_work: StorageUnitOfWorkContract | None = None,
     ) -> None:
         self._inbound_event_repo: InboundEventRepoContract = inbound_event_repo
         self._job_queue: JobQueueFacilitatorContract = job_queue
         self._app_settings: AppSettings = app_settings
         self._wall_clock: WallClock[Microseconds] = wall_clock
+        self._unit_of_work: StorageUnitOfWorkContract | None = unit_of_work
 
     def run(self, input_data: PlatformBotWebhookRequest) -> PlatformBotWebhookOutcome:
         self._authenticate(input_data)
@@ -85,6 +88,7 @@ class AcceptPlatformBotUpdateUseCase(
             event,
             PROCESS_PLATFORM_BOT_UPDATE_JOB,
             inbound_serial_key(None, ChannelKind.TELEGRAM, str(message.chat_id)),
+            unit_of_work=self._unit_of_work,
         )
         return PlatformBotWebhookOutcome(
             result=(

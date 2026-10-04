@@ -1,11 +1,7 @@
-import logging
-
-from app.contracts.facilitators import ChannelMessageSenderFacilitatorContract
 from app.contracts.localization_utilities import LocalizedTextResolverContract
 from app.contracts.repositories.business_repositories import (
     BusinessProfileRepoContract,
     BusinessRepoContract,
-    ChannelRepoContract,
 )
 from app.contracts.repositories.conversation_repositories import (
     ContactRepoContract,
@@ -14,22 +10,20 @@ from app.contracts.repositories.conversation_repositories import (
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.businesses import BusinessLinkKind
 from app.schemas.constants.channel_events import PostCallEventStatus
+from app.schemas.constants.deliveries import OutboundMessageKind
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.contacts import ContactDocument
 from app.schemas.domain.profiles import BusinessProfileDocument
 from app.schemas.dto.voice_webhooks import RecordedCall
-from app.schemas.exceptions.application_errors import ExternalServiceError
 from app.schemas.typings.channels.booleans import IsCallLinkMessageSent
 from app.schemas.typings.conversations.strings import MessageText
+from app.use_cases.voice.call_message_outbox import CallMessageOutbox
 from app.utilities.channels.call_links import (
     CALL_LINKS_TEXT,
     build_call_links_text,
     find_promised_link_kinds,
 )
-from app.utilities.channels.caller_reachability import list_reachable_identities
 from app.utilities.knowledge.profile_links import find_profile_link
-
-logger: logging.Logger = logging.getLogger(__name__)
 
 
 class SendCallLinksUseCase(UseCaseContract[RecordedCall, IsCallLinkMessageSent]):
@@ -39,9 +33,11 @@ class SendCallLinksUseCase(UseCaseContract[RecordedCall, IsCallLinkMessageSent])
 
     The promised links are the send_link results of the call that said
     `texted_after_call`; their addresses come from the business profile as
-    it is now. One message in the call's language goes to the first
-    connected messenger that reaches the caller. A repeated webhook sends
-    nothing again; delivery problems are logged and the call stays stored.
+    it is now. One message in the call's language goes into the outbox for
+    the first connected messenger that can reach the caller now
+    (`CallMessageOutbox`), once per call, and the worker sends it with
+    retries. A repeated webhook sends nothing again; True when it was
+    queued.
     """
 
     def __init__(
@@ -49,25 +45,22 @@ class SendCallLinksUseCase(UseCaseContract[RecordedCall, IsCallLinkMessageSent])
         business_repo: BusinessRepoContract,
         business_profile_repo: BusinessProfileRepoContract,
         contact_repo: ContactRepoContract,
-        channel_repo: ChannelRepoContract,
         message_repo: MessageRepoContract,
-        channel_message_sender: ChannelMessageSenderFacilitatorContract,
+        call_messages: CallMessageOutbox,
         text_resolver: LocalizedTextResolverContract,
     ) -> None:
         self._business_repo: BusinessRepoContract = business_repo
         self._business_profile_repo: BusinessProfileRepoContract = business_profile_repo
         self._contact_repo: ContactRepoContract = contact_repo
-        self._channel_repo: ChannelRepoContract = channel_repo
         self._message_repo: MessageRepoContract = message_repo
-        self._channel_message_sender: ChannelMessageSenderFacilitatorContract = (
-            channel_message_sender
-        )
+        self._call_messages: CallMessageOutbox = call_messages
         self._text_resolver: LocalizedTextResolverContract = text_resolver
 
     def run(self, input_data: RecordedCall) -> IsCallLinkMessageSent:
         if (
             input_data.status is not PostCallEventStatus.RECORDED
             or input_data.business_id is None
+            or input_data.call_id is None
             or input_data.conversation_id is None
             or input_data.contact_id is None
         ):
@@ -105,19 +98,6 @@ class SendCallLinksUseCase(UseCaseContract[RecordedCall, IsCallLinkMessageSent])
             )
         ).format(business=business.name)
         text = MessageText(build_call_links_text(header, urls))
-        for identity in list_reachable_identities(
-            self._channel_repo, business.id, contact
-        ):
-            try:
-                self._channel_message_sender.send(
-                    business.id, identity.channel, identity.channel_user_id, text
-                )
-            except ExternalServiceError as error:
-                logger.warning(
-                    "Call links through %s failed: %s", identity.channel.value, error
-                )
-                continue
-
-            return True
-
-        return False
+        return self._call_messages.queue(
+            business, contact, input_data.call_id, OutboundMessageKind.CALL_LINKS, text
+        )

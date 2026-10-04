@@ -106,20 +106,13 @@ class StaffReplyBlock(StrEnum):
     CHANNEL_DISCONNECTED = "channel_disconnected"
 
 
-class StaffReplyRefusalCode(StrEnum):
-    """Machine-readable reasons a staff reply is refused (409)."""
-
-    # Meta refused the owner's WhatsApp template (name, language or its one
-    # {{1}} variable): the owner corrects it in the channel settings.
-    TEMPLATE_REJECTED = "template_rejected"
-
-
 class StaffMessageDelivery(StrEnum):
     """
-    How a staff message reaches the customer: sent through the messenger
-    right away, sent in the owner's WhatsApp message template (after the
-    24-hour window), or kept for the website chat, which shows it when the
-    visitor's widget asks for new messages.
+    How a staff message reaches the customer: queued in the outbox for the
+    messenger (SENT; the worker sends it with retries and the message's
+    `delivery` says how it goes), queued in the owner's WhatsApp message
+    template (after the 24-hour window), or kept for the website chat,
+    which shows it when the visitor's widget asks for new messages.
     """
 
     SENT = "sent"

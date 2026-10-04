@@ -50,6 +50,16 @@ class LeadStatus(StrEnum):
     LOST = "lost"
 
 
+class BookingReminderKind(StrEnum):
+    """
+    Which reminder of a booking a message is: the one the day before
+    (DAY_BEFORE). A booking gets each kind once per start time, so a moved
+    booking is reminded of its new time.
+    """
+
+    DAY_BEFORE = "day_before"
+
+
 class BookingOrder(StrEnum):
     """
     Order of the cabinet's booking list by start time: upcoming bookings

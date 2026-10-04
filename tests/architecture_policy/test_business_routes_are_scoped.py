@@ -38,6 +38,7 @@ PLATFORM_WIDE_OPERATORS: dict[str, str] = {
     "channels.telegram_webhook_operator": "webhook: business from the channel",
     "channels.meta_webhook_operator": "webhook: business from the channel",
     "channels.handle_platform_bot_update_operator": "staff bot: link codes",
+    "channels.sweep_stale_inbound_events_operator": "inbox sweep over every business",
     "channels.process_platform_bot_update_operator": "staff bot job",
     "compliance.purge_expired_recordings_operator": "retention over every business",
     "conversations.voice_tool_webhook_operator": "voice webhook, then scoped",

@@ -1,7 +1,7 @@
 {
   "collection": "outbound_messages",
   "document_type": "OutboundMessageDocument",
-  "schema_version": 3,
+  "schema_version": 4,
   "shape": {
     "additionalProperties": false,
     "properties": {
@@ -11,9 +11,33 @@
         "minimum": 0,
         "type": "integer"
       },
+      "booking_id": {
+        "anyOf": [
+          {
+            "pattern": "^booking_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
       "business_id": {
         "pattern": "^business_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
         "type": "string"
+      },
+      "call_id": {
+        "anyOf": [
+          {
+            "pattern": "^call_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
       },
       "conversation_id": {
         "anyOf": [
@@ -122,13 +146,51 @@
       "kind": {
         "enum": [
           "customer_reply",
-          "staff_notification"
+          "staff_notification",
+          "staff_reply",
+          "booking_reminder",
+          "call_confirmation",
+          "call_links",
+          "text_back"
         ],
         "type": "string"
       },
       "last_error": {
         "anyOf": [
           {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "last_failure_reason": {
+        "anyOf": [
+          {
+            "enum": [
+              "rate_limited",
+              "provider_unavailable",
+              "recipient_refused",
+              "template_rejected",
+              "channel_disconnected",
+              "credential_rejected",
+              "not_configured",
+              "expired"
+            ],
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "missed_call_id": {
+        "anyOf": [
+          {
+            "pattern": "^missed_call_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
             "type": "string"
           },
           {
@@ -231,8 +293,19 @@
         "type": "string"
       },
       "schema_version": {
-        "default": "3",
+        "default": "4",
         "type": "string"
+      },
+      "send_before": {
+        "anyOf": [
+          {
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
       },
       "source_message_id": {
         "anyOf": [

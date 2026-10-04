@@ -33,7 +33,7 @@ def test_a_cancellation_during_the_job_is_never_undone() -> None:
             stored.status = BookingStatus.CANCELLED
             scene.world.booking_repo.save(stored)
 
-    scene.sender.on_send = cancel_both_while_sending
+    scene.sender.outbound_message_repo.on_insert = cancel_both_while_sending
 
     report = scene.run()
 
@@ -60,7 +60,7 @@ def test_a_move_during_the_send_keeps_the_new_time() -> None:
         stored.starts_at = moved_start
         scene.world.booking_repo.save(stored)
 
-    scene.sender.on_send = move_while_sending
+    scene.sender.outbound_message_repo.on_insert = move_while_sending
 
     scene.run()
 
