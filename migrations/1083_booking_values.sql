@@ -2,12 +2,13 @@
 --
 -- What bookings are worth (R8 services): a booking of a service, a package
 -- or a room type stores its value (`value_minor`, in `currency_code`), and
--- the dashboard and the value model sum it by the database. They read the
--- bookings made in a period, per status and currency, bucketed by local
--- day and by opening hours (after-hours value), from the index alone:
---   (business_id, doc_created_at) including status, currency, value,
---   sandbox flag and conversation (the assistant's bookings are those with
---   a conversation).
+-- the dashboard and the value model sum it by the database: the bookings
+-- made in a period, per status and currency, bucketed by local day and by
+-- opening hours (after-hours value). The rows are found by
+-- (business_id, doc_created_at), as the booking counts are; the covering
+-- index below also carries every column the sums read, so that a vacuumed
+-- table answers them by an index-only scan (and the new integer lookup is
+-- indexed, as every lookup field is).
 --
 -- bookings gain the optional `service_item_id`, `buffer_minutes`,
 -- `value_minor` and `currency_code` (schema version 2); knowledge_items

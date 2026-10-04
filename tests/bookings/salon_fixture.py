@@ -39,6 +39,7 @@ from app.schemas.typings.knowledge.constrained_integers import (
 from app.schemas.typings.knowledge.prefixed_id import KnowledgeItemId
 from app.schemas.typings.knowledge.strings import KnowledgeTitle, ServiceReference
 from app.schemas.typings.localization.constrained_strings import LanguageTag
+from app.schemas.typings.users.prefixed_id import UserId
 from tests.operations.builders import every_day
 from tests.operations.operations_world import OperationsWorld
 
@@ -48,8 +49,11 @@ TOMORROW: str = "2026-10-06"
 class Salon:
     def __init__(self, world: OperationsWorld | None = None) -> None:
         self.world: OperationsWorld = world or OperationsWorld()
+        self.staff_id: UserId = UserId()
         self.business: BusinessDocument = self.world.add_business(
-            name="Salon Tsiskari", niche_key=NicheKey.BEAUTY_SALON
+            name="Salon Tsiskari",
+            niche_key=NicheKey.BEAUTY_SALON,
+            staff_ids=(self.staff_id,),
         )
         self.world.add_profile(
             self.business,

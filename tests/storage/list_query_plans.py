@@ -224,6 +224,12 @@ LIST_QUERIES: tuple[ListQuery, ...] = (
         "bookings_doc_created_at_idx",
     ),
     ListQuery(
+        "dashboard: what the bookings made per day are worth",
+        lambda r: r.bookings.sum_value_made(BUSINESS, PERIOD),
+        "bookings",
+        "bookings_doc_created_at_idx",
+    ),
+    ListQuery(
         "admin: model spend per conversation",
         lambda r: r.messages.sum_cost_by_conversation(BUSINESS, START, END),
         "messages",

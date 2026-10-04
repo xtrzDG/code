@@ -22,6 +22,7 @@ INTEGER_NAMES: frozenset[str] = frozenset(
     {
         "BookingEndsAtUnixSeconds",
         "BookingStartsAtUnixSeconds",
+        "BookingValueMinor",
         "CostMicroUsd",
         "ExchangeRateDayNumber",
         "LlmTokenCount",
