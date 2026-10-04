@@ -28,7 +28,7 @@ test("the owner sees where they are signed in", async ({ page, owner }) => {
 
   const devices = page.getByRole("region", { name: en.devices.title });
   await expect(devices).toBeVisible();
-  await expect(devices.getByText(en.devices.thisDevice)).toBeVisible();
+  await expect(devices.getByText(en.devices.thisDevice, { exact: true })).toBeVisible();
   await expect(devices.getByText(en.devices.onlyThis)).toBeVisible();
 });
 

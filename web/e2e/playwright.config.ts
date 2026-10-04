@@ -122,6 +122,9 @@ export default defineConfig({
         OTP_SENDS_PER_IP_PER_HOUR: "100000",
         OTP_VERIFIES_PER_IP_PER_10_MINUTES: "100000",
         OTP_SENDS_PER_COUNTRY_PER_HOUR: "100000",
+        // The run's first platform admin signs in once per admin spec file
+        // (and again after a worker restart): lift the per-address cap too.
+        OTP_SENDS_PER_DESTINATION_PER_HOUR: "100000",
         // The run's first platform admin (the list only bootstraps the first
         // SUPER admin); the other test admins (admin-metrics.spec.ts,
         // two-factor.spec.ts, admin-system.spec.ts) are added to the team
