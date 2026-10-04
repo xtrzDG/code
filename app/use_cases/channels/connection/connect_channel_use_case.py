@@ -130,11 +130,14 @@ class ConnectChannelUseCase(UseCaseContract[ConnectChannelCommand, ChannelView])
                 required_role=BusinessMemberRole.OWNER,
             )
         )
-        self._step_up.require_recent_authentication()
         if input_data.channel not in CONNECTABLE_CHANNELS:
             raise ValidationFailedError(
                 f"The {input_data.channel.value} channel cannot be connected yet."
             )
+
+        if input_data.channel is not ChannelKind.WEB_CHAT:
+            # Credentials of an outside account: only a recently proved person.
+            self._step_up.require_recent_authentication()
 
         if input_data.channel is not ChannelKind.WEB_CHAT and (
             input_data.request.widget_color is not None

@@ -37,7 +37,8 @@ Spec: `9e7869ca5b5edff3`
   audit log as `mfa_changed` (new `AuditAction` value, on entries that
   name no business: the business audit log never lists them).
 - **Added** step-up: exporting or erasing a contact's data, team changes,
-  connecting a channel, `PUT …/security`, setting up an authenticator,
+  connecting a channel (not the website chat, which holds no outside
+  account's credentials), `PUT …/security`, setting up an authenticator,
   the admin opening a client's cabinet and starting a key rotation answer
   `401 authentication_required` with the reason `step_up_required`
   (detail: the window in seconds) and

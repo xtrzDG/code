@@ -137,3 +137,18 @@ def test_every_sensitive_action_asks_to_confirm(workshop: Workshop) -> None:
     for method, url, headers, body in calls:
         response = workshop.client.request(method, url, headers=headers, json=body)
         assert_step_up_required(response)
+
+
+def test_the_website_chat_needs_no_confirmation(workshop: Workshop) -> None:
+    token, _, business_id = sign_in_and_create_restaurant(workshop)
+    workshop.clock.advance(STEP_UP_SECONDS + 1)
+
+    # No outside account's credentials: changing its look is everyday work.
+    saved = workshop.client.put(
+        f"/v1/businesses/{business_id}/channels/web",
+        json={"widget_color": "#0F766E"},
+        headers=bearer(token),
+    )
+
+    assert saved.status_code == 200, saved.text
+    assert saved.json()["widget_color"] == "#0F766E"
