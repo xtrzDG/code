@@ -78,6 +78,9 @@ FIXED_GOALS: dict[AutotestScenarioKind, str] = {
         "Ask whether the business is open tomorrow evening and how much its "
         "most popular offer costs."
     ),
+    AutotestScenarioKind.OWNER_CHECK: (
+        "Ask the question the owner saved as a check, word for word."
+    ),
 }
 
 

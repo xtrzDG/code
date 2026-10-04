@@ -66,7 +66,7 @@ def test_documents_that_cannot_be_upgraded_fail_with_one(
     )
 
     assert exit_code == 1
-    assert "knowledge_items (v2): 1 outdated, upgraded 0" in output.getvalue()
+    assert "knowledge_items (v3): 1 outdated, upgraded 0" in output.getvalue()
     assert "1 failed (broken)" in output.getvalue()
 
 

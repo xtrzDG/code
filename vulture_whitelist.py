@@ -411,3 +411,15 @@ _.platform_admin_permissions  # app/schemas/dto/users.py (CurrentUserView)
 _.granted_by  # app/schemas/domain/support_access_grants.py
 _.opened_from_ip  # app/schemas/domain/support_access_grants.py
 _.end_reason  # app/schemas/domain/support_access_grants.py
+
+# Teaching from conversations (1112): where a saved check came from and the
+# reasons of a bad rating arrive from the cabinet; the correction draft,
+# the last result of a check and the counts of "Answers worth improving"
+# are response fields only the cabinet reads.
+_.CORRECTION  # app/schemas/constants/assistants.py (AutotestCaseSource)
+_.SHOULD_HAND_OFF  # app/schemas/constants/conversations.py (ConversationRatingReason)
+_.last_result  # app/schemas/dto/assistants/autotest_cases.py (AutotestCaseView)
+_.suggested_scope  # app/schemas/dto/conversation_feed/answer_corrections.py
+_.current_fact  # app/schemas/dto/conversation_feed/answer_corrections.py
+_.is_corrected  # app/schemas/dto/conversation_feed/answer_corrections.py
+_.bad_rating_count  # app/schemas/dto/conversation_feed/answers_to_improve.py

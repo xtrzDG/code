@@ -15,6 +15,7 @@ from app.repositories.assistant_repositories import (
     AssistantVersionRepository,
     AutotestRunRepository,
 )
+from app.repositories.autotest_case_repository import AutotestCaseRepository
 from app.repositories.billing_repositories import (
     InvoiceRepository,
     SubscriptionRepository,
@@ -41,6 +42,7 @@ from app.repositories.user_repositories import UserRepository
 from app.schemas.configurations.app_settings import AppSettings
 from app.schemas.constants.jobs import QueuedJobStatus
 from app.schemas.domain.assistants import AssistantVersionDocument, AutotestRunDocument
+from app.schemas.domain.autotest_cases import AutotestCaseDocument
 from app.schemas.domain.billing import InvoiceDocument, SubscriptionDocument
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.compliance import AuditLogEntryDocument, DpaAcceptanceDocument
@@ -158,6 +160,9 @@ class AssemblyStore:
         )
         self.apply_repo = AssistantApplyRepository(
             InMemoryDocumentCollectionAdapter(AssistantApplyDocument)
+        )
+        self.autotest_case_repo = AutotestCaseRepository(
+            InMemoryDocumentCollectionAdapter(AutotestCaseDocument)
         )
         self.job_stores: JobStores = build_job_stores()
         self.job_repo: QueuedJobRepoContract = self.job_stores.job_repo

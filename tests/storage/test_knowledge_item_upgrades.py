@@ -52,7 +52,7 @@ def test_a_day_long_duration_moves_to_an_attribute() -> None:
     assert [(attribute.key, attribute.value) for attribute in item.attributes] == [
         ("duration_minutes", "1440")
     ]
-    assert item.schema_version == "2"
+    assert item.schema_version == "3"
 
 
 @pytest.mark.parametrize("duration", [5, 45, 720, None])

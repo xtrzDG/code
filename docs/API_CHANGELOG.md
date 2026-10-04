@@ -11,6 +11,51 @@ Kinds of change: **Added**, **Changed** (additive), **Deprecated** (with
 sunset date), **Removed** and **Breaking** (only with the `api-breaking`
 label and a migration path).
 
+## 2026-10-04 — teaching from conversations: "Fix this answer", bad rating reasons, the owner's checks
+
+Spec: `30a20a0878ee7b5b`
+
+- **Added** `GET /v1/businesses/{business_id}/conversations/{conversation_id}/messages/{message_id}/correction`
+  (owners; audited as a view of the message): `AnswerCorrectionDraft`, the
+  customer's `question` before the assistant answer, the `answer`, its
+  `language`, the `suggested_scope` (`faq`, `price`, `hours`, `rule`), the
+  `current_fact` the answer came from (`CorrectionFactView`) and the
+  `guard_reasons` the reply guard held it back for. A message that is not
+  the assistant's is 422 `validation_failed`.
+- **Added** `POST …/conversations/{conversation_id}/messages/{message_id}/correction`
+  (owners): `AnswerCorrectionRequest` (`scope`; `question` and
+  `correct_answer` for `faq`, `hours`, `rule`; `price_minor` of the offer
+  `knowledge_item_id`, or of a new offer named `question`, for `price`)
+  creates or updates a knowledge item linked to the answer
+  (`correction_of`): correcting the same answer again updates the same
+  item. `AnswerCorrectionResult` (`item`, `is_new`, `question`,
+  `language`). The item joins the pending changes and reaches customers
+  with the next "Apply changes".
+- **Added** `GET /v1/businesses/{business_id}/answers-to-improve` (owners and
+  staff; `limit` 1–20, default 5): `AnswersToImproveView`, conversations
+  rated bad whose answer nobody corrected or saved as a check yet, then the
+  open unanswered questions (`AnswerToImproveView`, `kind`
+  `bad_rating`/`unanswered_question`), with `bad_rating_count` and
+  `unanswered_count`.
+- **Added** `GET·POST /v1/businesses/{business_id}/autotest-cases` and
+  `PATCH·DELETE …/autotest-cases/{case_id}` (owners; POST 201, DELETE 204):
+  the owner's own checks, `AutotestCaseView` (`question`, `expectation`
+  `must_mention`/`must_not_mention`/`must_hand_off`/`must_create_lead`,
+  `expected_text` for the first two, `language`, `source`
+  `owner`/`correction`/`unanswered_question`/`bad_rating` with the record it
+  was saved from, `is_active`, `last_result` of the newest run). At most 50
+  per business (422 `validation_failed`); the same check twice is 409
+  `conflict`. Every autotest run, the quick check of "Apply changes"
+  included, plays the active checks.
+- **Changed** `PUT …/conversations/{conversation_id}/rating` takes `reason`
+  (`wrong_info`, `should_hand_off`, `tone`, `too_long`; only with `bad`) and
+  `message_id` (the answer it is about; the latest assistant answer by
+  default); `ConversationSummaryView` returns `rating_reason` and
+  `rated_message_id`.
+- **Changed** autotest results: scenario kind `owner_check`, check codes
+  `expected_text_missing`, `forbidden_text_mentioned`, `no_lead_created`,
+  and `autotest_case_id` on `AutotestScenarioResult`.
+
 ## 2026-10-04 — wave 10 together: value where owners read, the phone loop, reply guard, sessions and support access
 
 Spec: `52268d9934c952f6`
