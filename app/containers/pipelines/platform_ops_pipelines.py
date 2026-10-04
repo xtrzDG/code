@@ -33,3 +33,42 @@ class PlatformOpsPipelinesContainer(containers.DeclarativeContainer):
     check_channel_credentials_pipeline = orchestrator_pipeline(
         platform_ops.check_channel_credentials_orchestrator
     )
+
+    # The status page and announcements (1111); the help center and guidance.
+    get_platform_status_pipeline = orchestrator_pipeline(
+        platform_ops.get_platform_status_orchestrator
+    )
+    record_platform_status_pipeline = orchestrator_pipeline(
+        platform_ops.record_platform_status_orchestrator
+    )
+    create_announcement_pipeline = orchestrator_pipeline(
+        platform_ops.create_announcement_orchestrator
+    )
+    update_announcement_pipeline = orchestrator_pipeline(
+        platform_ops.update_announcement_orchestrator
+    )
+    list_announcements_pipeline = orchestrator_pipeline(
+        platform_ops.list_announcements_orchestrator
+    )
+    get_help_center_pipeline = orchestrator_pipeline(
+        platform_ops.get_help_center_orchestrator
+    )
+    get_help_article_pipeline = orchestrator_pipeline(
+        platform_ops.get_help_article_orchestrator
+    )
+    search_help_pipeline = orchestrator_pipeline(platform_ops.search_help_orchestrator)
+    get_support_contacts_pipeline = orchestrator_pipeline(
+        platform_ops.get_support_contacts_orchestrator
+    )
+    get_help_progress_pipeline = orchestrator_pipeline(
+        platform_ops.get_help_progress_orchestrator
+    )
+    mark_coach_mark_seen_pipeline = orchestrator_pipeline(
+        platform_ops.mark_coach_mark_seen_orchestrator
+    )
+    reset_coach_marks_pipeline = orchestrator_pipeline(
+        platform_ops.reset_coach_marks_orchestrator
+    )
+    read_changelog_pipeline = orchestrator_pipeline(
+        platform_ops.read_changelog_orchestrator
+    )

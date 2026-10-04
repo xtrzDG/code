@@ -10,6 +10,7 @@ from app.registries.billing.exchange_rate_registry import ExchangeRateRegistry
 from app.registries.billing.plan_registry import PlanRegistry
 from app.registries.demo.demo_dataset_registry import DemoDatasetRegistry
 from app.registries.demo.load_dataset_registry import LoadDatasetRegistry
+from app.registries.help.help_article_registry import HelpArticleRegistry
 from app.registries.legal.legal_document_registry import LegalDocumentRegistry
 from app.registries.limits.request_rate_limit_registry import (
     RequestRateLimitRegistry,
@@ -91,6 +92,10 @@ class RegistriesContainer(containers.DeclarativeContainer):
     # Data processing agreement texts (docs/legal), read once per process.
     legal_document_registry: Singleton[LegalDocumentRegistry] = Singleton(
         LegalDocumentRegistry
+    )
+    # The help center's articles (docs/help), read once per process.
+    help_article_registry: Singleton[HelpArticleRegistry] = Singleton(
+        HelpArticleRegistry
     )
     # Locks every API instance and worker respects (Postgres advisory locks;
     # in-process locks without a database): one per business around booking

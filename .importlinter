@@ -69,6 +69,7 @@ modules =
     app.use_cases.demo
     app.use_cases.feedback
     app.use_cases.handoffs
+    app.use_cases.help
     app.use_cases.inbox
     app.use_cases.insights
     app.use_cases.jobs
@@ -79,6 +80,7 @@ modules =
     app.use_cases.menu_import
     app.use_cases.notifications
     app.use_cases.observability
+    app.use_cases.platform_status
     app.use_cases.profiles
     app.use_cases.resources
     app.use_cases.setup

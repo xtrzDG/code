@@ -177,6 +177,7 @@ class OrchestratorsContainer(containers.DeclarativeContainer):
     platform_ops: PlatformOpsOrchestratorsContainer = Container(  # type: ignore[assignment]
         PlatformOpsOrchestratorsContainer,
         platform_ops_use_cases=use_cases.platform_ops,
+        help_use_cases=use_cases.help,
     )
     security: SecurityOrchestratorsContainer = Container(  # type: ignore[assignment]
         SecurityOrchestratorsContainer,

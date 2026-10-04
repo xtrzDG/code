@@ -216,6 +216,13 @@ DOCUMENT_LOOKUP_FIELDS: Mapping[
         _integer("run_at"),
     ),
     DocumentCollectionName("incidents"): (_integer("created_at"),),
+    # The status page (1111): the announcements in effect, those resolved
+    # in the last ninety days, the admin's pages newest first.
+    DocumentCollectionName("platform_announcements"): (
+        _text("status"),
+        _integer("resolved_at"),
+        _integer("created_at"),
+    ),
     DocumentCollectionName("maintenance_runs"): (
         _text("kind"),
         _integer("finished_at"),
