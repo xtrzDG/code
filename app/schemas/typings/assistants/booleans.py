@@ -6,6 +6,7 @@ Example:
 
 AcceptsFailedAutotests = bool
 CarriesBusinessChanges = bool
+IsAutotestCaseActive = bool
 IsAutotestRunPassed = bool
 IsFullAutotestCoverage = bool
 IsGoLiveCheckBlocking = bool

@@ -8,6 +8,7 @@ from app.schemas.constants.conversations import (
     CallGuardVerdict,
     CallOutcome,
     ConversationRating,
+    ConversationRatingReason,
     ConversationStatus,
     LlmTurnRole,
     MessageAuthor,
@@ -27,6 +28,7 @@ from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.calls.constrained_strings import CallSummaryText
 from app.schemas.typings.contacts.prefixed_id import ContactId
 from app.schemas.typings.conversations.booleans import (
+    AwaitsImprovement,
     IsAfterHours,
     IsFallbackModel,
     IsLlmToolError,
@@ -91,9 +93,17 @@ class ConversationDocument(BaseDocument):
     conversation started (a shared link's tag, an ad, the number dialled;
     `app/utilities/sharing/acquisition_sources.py`). Set once, never
     changed; optional, so version 2 rows read as they are.
+
+    Version 4: why a bad rating was given (`rating_reason`), the answer it
+    is about (`rated_message_id`), when someone acted on it (corrected the
+    answer or saved a check from it: `improved_at`) and, derived on every
+    review write, whether it still waits for that (`awaits_improvement`,
+    the Overview's "Answers worth improving"). The review fields change
+    only through `ConversationReviewRepoContract.set_review`; a plain save
+    keeps them as stored. All optional, so version 3 rows read as they are.
     """
 
-    schema_version: SchemaVersion = SchemaVersion("3")
+    schema_version: SchemaVersion = SchemaVersion("4")
     id: ConversationId = Field(default_factory=ConversationId)
     business_id: BusinessId
     contact_id: ContactId
@@ -115,6 +125,10 @@ class ConversationDocument(BaseDocument):
     has_open_request: HasOpenRequest = False
     awaits_team: AwaitsTeam = False
     acquisition_source: AcquisitionSourceTag | None = None
+    rating_reason: ConversationRatingReason | None = None
+    rated_message_id: MessageId | None = None
+    improved_at: Microseconds | None = None
+    awaits_improvement: AwaitsImprovement = False
 
 
 class ToolCallRecord(PersistentDocument):

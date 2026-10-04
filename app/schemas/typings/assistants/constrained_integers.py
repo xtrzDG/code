@@ -9,6 +9,13 @@ class AssistantVersionNumber(BaseConstrainedTypedInt):
     ge = 1
 
 
+class AutotestCaseLimit(BaseConstrainedTypedInt):
+    """How many owner checks one business may keep (each runs in every apply)."""
+
+    ge = 1
+    le = 200
+
+
 class AutotestScenarioCount(BaseConstrainedTypedInt):
     """Number of scenarios in one autotest run (all, passed, failed)."""
 

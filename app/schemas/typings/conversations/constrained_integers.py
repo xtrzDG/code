@@ -3,6 +3,13 @@
 from base_typed_int import BaseConstrainedTypedInt
 
 
+class AnswersToImproveLimit(BaseConstrainedTypedInt):
+    """How many answers to improve the Overview lists at most (`?limit=`)."""
+
+    ge = 1
+    le = 20
+
+
 class CallDurationSeconds(BaseConstrainedTypedInt):
     """Duration of a phone call in seconds."""
 

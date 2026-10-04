@@ -52,6 +52,29 @@ class ConversationRating(StrEnum):
     BAD = "bad"
 
 
+class ConversationRatingReason(StrEnum):
+    """
+    Why the owner or staff rated a conversation bad: the assistant said
+    something wrong, should have passed it to a person, struck the wrong
+    tone, or wrote too much.
+    """
+
+    WRONG_INFO = "wrong_info"
+    SHOULD_HAND_OFF = "should_hand_off"
+    TONE = "tone"
+    TOO_LONG = "too_long"
+
+
+class AnswerToImproveKind(StrEnum):
+    """
+    One item of the Overview's "Answers worth improving": a question the
+    assistant could not answer, or a conversation rated bad.
+    """
+
+    UNANSWERED_QUESTION = "unanswered_question"
+    BAD_RATING = "bad_rating"
+
+
 class CallOutcome(StrEnum):
     """Result extracted from a finished phone call."""
 

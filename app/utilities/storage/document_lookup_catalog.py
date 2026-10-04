@@ -3,7 +3,7 @@ The declared lookup fields of the document collections, by collection.
 
 Each TEXT, FILTER_TEXT and INTEGER field is a generated column
 `doc_<field>` (migrations 1010, 1040, 1042, 1043, 1051, 1052, 1061, 1062,
-1074, 1081, 1082, 1090, 1093, 1094, 1100, 1102 and 1103), each ELEMENT_TEXT
+1074, 1081, 1082, 1090, 1093, 1094, 1100, 1102, 1103 and 1112), each ELEMENT_TEXT
 field a trigger over `workshop.document_lookup_keys`; `document_lookup_fields`
 explains the kinds and checks queries against this catalog.
 """
@@ -100,6 +100,8 @@ DOCUMENT_LOOKUP_FIELDS: Mapping[
         _filter("is_sandbox"),
         # Where customers came from, counted per period (Reports, 1100).
         _filter("acquisition_source"),
+        # Rated bad and not acted on yet ("Answers worth improving", 1112).
+        _text("awaits_improvement"),
         _integer("last_message_at"),
         _integer("created_at"),
     ),
@@ -227,8 +229,12 @@ DOCUMENT_LOOKUP_FIELDS: Mapping[
     # The text-backs of a business newest first (Settings → Calls) and the
     # retention purge (1051).
     DocumentCollectionName("missed_calls"): (_integer("created_at"),),
-    # The FAQ of a business: the website chat's starter questions (1052).
-    DocumentCollectionName("knowledge_items"): (_text("kind"),),
+    # The FAQ of a business: the website chat's starter questions (1052);
+    # the item that corrected an assistant answer (1112).
+    DocumentCollectionName("knowledge_items"): (
+        _text("kind"),
+        _text("correction_of"),
+    ),
     # The stored digests and monthly reports of a business, newest period
     # first, of one kind (1061).
     DocumentCollectionName("value_reports"): (_text("kind"), _integer("starts_at")),

@@ -32,6 +32,7 @@ from app.schemas.typings.assistants.constrained_strings import (
 )
 from app.schemas.typings.assistants.prefixed_id import (
     AssistantVersionId,
+    AutotestCaseId,
     AutotestRunId,
 )
 from app.schemas.typings.assistants.strings import (
@@ -144,7 +145,8 @@ class AutotestScenarioResult(PersistentDocument):
     (no booking created, no handoff, reply in another language) and why an
     ERRORED scenario could not be evaluated; `check_codes` say the same as
     codes every language renders (empty on results stored before codes
-    existed). The judge explains its scores in `judge_notes`.
+    existed). The judge explains its scores in `judge_notes`. An owner
+    check's result names its check (`autotest_case_id`).
     """
 
     scenario_key: AutotestScenarioKey
@@ -163,6 +165,7 @@ class AutotestScenarioResult(PersistentDocument):
         default_factory=list[AutotestTranscriptLine]
     )
     cost_micro_usd: CostMicroUsd = CostMicroUsd(0)
+    autotest_case_id: AutotestCaseId | None = None
 
 
 class AutotestRunDocument(BaseDocument):
@@ -182,7 +185,10 @@ class AutotestRunDocument(BaseDocument):
     # 2: `check_codes` on the scenario results (optional, no upcaster).
     # 3: the language scenario kinds (foreign_language, transliterated) and
     # the wrong_disclosure_language check code (new values, no upcaster).
-    schema_version: SchemaVersion = SchemaVersion("3")
+    # 4: owner checks: the owner_check kind, its three check codes and the
+    # `autotest_case_id` of their results (new values and an optional
+    # field, no upcaster).
+    schema_version: SchemaVersion = SchemaVersion("4")
     id: AutotestRunId = Field(default_factory=AutotestRunId)
     business_id: BusinessId
     assistant_version_id: AssistantVersionId

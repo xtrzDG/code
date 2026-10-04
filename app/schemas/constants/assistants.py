@@ -56,6 +56,10 @@ class AutotestScenarioKind(StrEnum):
     FOREIGN_LANGUAGE = "foreign_language"
     # The customer types a business language in Latin letters.
     TRANSLITERATED = "transliterated"
+    # One of the owner's own checks (`AutotestCaseDocument`): the customer
+    # asks its question word for word and the answer must meet its
+    # expectation.
+    OWNER_CHECK = "owner_check"
 
 
 class JudgeCriterion(StrEnum):
@@ -82,10 +86,41 @@ class AutotestCheckCode(StrEnum):
     UNEXPECTED_RECORDS = "unexpected_records"
     WRONG_REPLY_LANGUAGE = "wrong_reply_language"
     WRONG_DISCLOSURE_LANGUAGE = "wrong_disclosure_language"
+    # An owner check's expectation did not hold: the answer missed the
+    # expected text, named the forbidden one, or made no request (lead).
+    EXPECTED_TEXT_MISSING = "expected_text_missing"
+    FORBIDDEN_TEXT_MENTIONED = "forbidden_text_mentioned"
+    NO_LEAD_CREATED = "no_lead_created"
     CONVERSATION_FAILED = "conversation_failed"
     NO_CUSTOMER_MESSAGE = "no_customer_message"
     JUDGE_UNAVAILABLE = "judge_unavailable"
     JUDGE_UNREADABLE = "judge_unreadable"
+
+
+class AutotestExpectation(StrEnum):
+    """
+    What an owner check demands of the assistant's answer to its question:
+    to contain its expected text, never to contain it, to pass the
+    conversation to a person, or to create a request (lead).
+    """
+
+    MUST_MENTION = "must_mention"
+    MUST_NOT_MENTION = "must_not_mention"
+    MUST_HAND_OFF = "must_hand_off"
+    MUST_CREATE_LEAD = "must_create_lead"
+
+
+class AutotestCaseSource(StrEnum):
+    """
+    Where an owner check came from: written by hand, saved from a corrected
+    answer, from a question the assistant could not answer, or from a
+    conversation rated bad.
+    """
+
+    OWNER = "owner"
+    CORRECTION = "correction"
+    UNANSWERED_QUESTION = "unanswered_question"
+    BAD_RATING = "bad_rating"
 
 
 class AutotestOutcome(StrEnum):

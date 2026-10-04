@@ -1,7 +1,7 @@
 {
   "collection": "conversations",
   "document_type": "ConversationDocument",
-  "schema_version": 3,
+  "schema_version": 4,
   "shape": {
     "additionalProperties": false,
     "properties": {
@@ -63,6 +63,10 @@
         "pattern": "^assistant_version_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
         "type": "string"
       },
+      "awaits_improvement": {
+        "default": false,
+        "type": "boolean"
+      },
       "awaits_team": {
         "default": false,
         "type": "boolean"
@@ -101,6 +105,17 @@
       "id": {
         "pattern": "^conversation_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
         "type": "string"
+      },
+      "improved_at": {
+        "anyOf": [
+          {
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
       },
       "is_after_hours": {
         "default": false,
@@ -150,6 +165,18 @@
         ],
         "default": null
       },
+      "rated_message_id": {
+        "anyOf": [
+          {
+            "pattern": "^message_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
       "rating": {
         "anyOf": [
           {
@@ -165,8 +192,25 @@
         ],
         "default": null
       },
+      "rating_reason": {
+        "anyOf": [
+          {
+            "enum": [
+              "wrong_info",
+              "should_hand_off",
+              "tone",
+              "too_long"
+            ],
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
       "schema_version": {
-        "default": "3",
+        "default": "4",
         "type": "string"
       },
       "status": {
