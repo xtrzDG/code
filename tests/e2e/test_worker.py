@@ -26,6 +26,9 @@ from app.gateways.worker.periodic.activation_follow_up import (
 from app.gateways.worker.periodic.channel_credentials import (
     CHECK_CHANNEL_CREDENTIALS_JOB,
 )
+from app.gateways.worker.periodic.end_expired_support_access import (
+    END_EXPIRED_SUPPORT_ACCESS_JOB,
+)
 from app.gateways.worker.periodic.growth_analytics import (
     PURGE_WEB_VITALS_JOB,
     RECONCILE_PRODUCT_EVENTS_JOB,
@@ -65,9 +68,6 @@ from app.utilities.deliveries.delivery_jobs import (
     PROCESS_INBOUND_MESSAGE_JOB,
     PROCESS_PLATFORM_BOT_UPDATE_JOB,
     PROCESS_POST_CALL_JOB,
-)
-from app.gateways.worker.periodic.end_expired_support_access import (
-    END_EXPIRED_SUPPORT_ACCESS_JOB,
 )
 from app.worker_main import STOP_SIGNALS, install_stop_signal_handlers, main
 from tests.e2e.harness import start_workshop
