@@ -11,6 +11,7 @@ import { useId } from "react";
 
 import { IconHelp, IconPulse, IconSparkles } from "@/components/icons";
 import { useI18n } from "@/i18n/client";
+import { cn } from "@/lib/cn";
 import { unreadKeys } from "@/lib/help/changelog";
 import { HELP_PATH, STATUS_PATH, WHATS_NEW_PATH } from "@/lib/help/helpTopics";
 
@@ -29,7 +30,7 @@ export function useUnreadChangelog(): number {
 export function ChangelogDot({ className }: { className?: string }) {
   const unread = useUnreadChangelog();
   return unread > 0 ? (
-    <span data-changelog-dot="" aria-hidden className={`size-2.5 rounded-full bg-accent ring-2 ring-canvas ${className ?? ""}`} />
+    <span data-changelog-dot="" aria-hidden className={cn("size-2.5 rounded-full bg-accent ring-2 ring-canvas", className)} />
   ) : null;
 }
 
