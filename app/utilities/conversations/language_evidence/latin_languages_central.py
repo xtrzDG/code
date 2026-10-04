@@ -46,8 +46,8 @@ CENTRAL_LATIN_LANGUAGE_EVIDENCE: dict[str, LanguageEvidence] = {
         frozenset(),
         words(
             "in je to se na da s z za dober dan zdravo živjo pozdravljeni hvala "
-            "prosim rad rada bi rezerviral rezervirala mizo jutri danes koliko stane cena "
-            "imate odprto lahko oseb ure zvečer nas"
+            "prosim rad rada bi rezerviral rezervirala mizo jutri danes koliko "
+            "stane cena imate odprto lahko oseb ure zvečer nas"
         ),
     ),
     "hr": LanguageEvidence(
