@@ -10,6 +10,7 @@ from pathlib import Path
 import pytest
 
 from app.gateways.cli.migrate import DEFAULT_MIGRATIONS_DIRECTORY
+from app.registries.help.help_article_registry import DEFAULT_HELP_DIRECTORY
 from app.registries.legal.legal_document_registry import (
     DEFAULT_LEGAL_DOCUMENTS_DIRECTORY,
 )
@@ -72,12 +73,19 @@ def test_dockerfile_copies_what_the_image_needs() -> None:
     dockerfile = read("Dockerfile")
     copied = re.findall(r"^COPY (?!--from)(\S+)", dockerfile, re.MULTILINE)
 
-    assert copied == ["app", "migrations", "docs/legal", "docker/entrypoint.sh"]
+    assert copied == [
+        "app",
+        "migrations",
+        "docs/legal",
+        "docs/help",
+        "docker/entrypoint.sh",
+    ]
     for source in copied:
         assert (ROOT / source).exists(), source
 
     assert DEFAULT_MIGRATIONS_DIRECTORY == ROOT / "migrations"
     assert DEFAULT_LEGAL_DOCUMENTS_DIRECTORY == ROOT / "docs" / "legal"
+    assert DEFAULT_HELP_DIRECTORY == ROOT / "docs" / "help"
     assert "uv sync --frozen --no-dev" in dockerfile
     assert "/healthz" in dockerfile
     assert re.search(r"^USER \d+:\d+$", dockerfile, re.MULTILINE)
@@ -91,6 +99,7 @@ def test_dockerfile_copies_what_the_image_needs() -> None:
         "pyproject.toml",
     } & set(ignored)
     assert "!docs/legal" in ignored
+    assert "!docs/help" in ignored
 
 
 def test_every_documented_variable_is_read() -> None:

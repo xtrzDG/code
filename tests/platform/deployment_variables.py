@@ -74,6 +74,11 @@ RENDER_OPTIONAL_VARIABLES: frozenset[str] = frozenset(
         # Empty until a key rotation; then set in the env group
         # workshop-backend (docs/operations/backup-restore.md).
         "ENCRYPTION_KEYS",
+        # Optional contacts of "Help and support"; set in the env group
+        # workshop-backend when the team has them (docs/LAUNCH.md).
+        "SUPPORT_WHATSAPP",
+        "SUPPORT_TELEGRAM",
+        "SUPPORT_EMAIL",
         # The restore drill runs in GitHub Actions (restore-drill.yml), never
         # on Render: production holds no private backup key.
         "BACKUP_AGE_IDENTITY",

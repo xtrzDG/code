@@ -1,0 +1,128 @@
+{
+  "collection": "platform_announcements",
+  "document_type": "PlatformAnnouncementDocument",
+  "schema_version": 1,
+  "shape": {
+    "additionalProperties": false,
+    "properties": {
+      "components": {
+        "items": {
+          "enum": [
+            "chat",
+            "meta",
+            "telegram",
+            "voice",
+            "cabinet"
+          ],
+          "type": "string"
+        },
+        "type": "array"
+      },
+      "created_at": {
+        "type": "integer"
+      },
+      "created_by": {
+        "pattern": "^user_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "expected_end_at": {
+        "anyOf": [
+          {
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "id": {
+        "pattern": "^announcement_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "level": {
+        "enum": [
+          "info",
+          "maintenance",
+          "degraded",
+          "outage"
+        ],
+        "type": "string"
+      },
+      "messages": {
+        "items": {
+          "additionalProperties": false,
+          "properties": {
+            "language": {
+              "maxLength": 16,
+              "minLength": 2,
+              "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$",
+              "type": "string"
+            },
+            "text": {
+              "maxLength": 600,
+              "minLength": 3,
+              "pattern": "^\\S(.*\\S)?\\Z",
+              "type": "string"
+            }
+          },
+          "required": [
+            "language",
+            "text"
+          ],
+          "type": "object"
+        },
+        "minItems": 1,
+        "type": "array"
+      },
+      "resolved_at": {
+        "anyOf": [
+          {
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "schema_version": {
+        "default": "1",
+        "type": "string"
+      },
+      "starts_at": {
+        "type": "integer"
+      },
+      "status": {
+        "default": "active",
+        "enum": [
+          "active",
+          "resolved"
+        ],
+        "type": "string"
+      },
+      "updated_at": {
+        "type": "integer"
+      },
+      "updated_by": {
+        "anyOf": [
+          {
+            "pattern": "^user_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      }
+    },
+    "required": [
+      "level",
+      "messages",
+      "starts_at",
+      "created_by"
+    ],
+    "type": "object"
+  }
+}

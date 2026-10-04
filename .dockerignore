@@ -1,5 +1,5 @@
 # Build context of the backend image: only pyproject.toml, uv.lock, app/,
-# migrations/, docs/legal/ and docker/ are used.
+# migrations/, docs/legal/, docs/help/ and docker/ are used.
 .git
 .github
 .claude
@@ -19,8 +19,10 @@ htmlcov
 var
 tests
 docs
-# The DPA texts (served by the API) are the only documents in the image.
+# The DPA texts and the help articles (served by the API) are the only
+# documents in the image.
 !docs/legal
+!docs/help
 web
 node_modules
 *.md
