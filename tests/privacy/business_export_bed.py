@@ -170,7 +170,7 @@ class BusinessExportBed:
 
     def download(self, path: str) -> BusinessExportDownload:
         parsed = urlparse(path)
-        _, _, _, business_id, export_id, _ = parsed.path.split("/")
+        export_id: str = parsed.path.split("/")[4]
         return self.download_export.run(
             BusinessExportDownloadQuery(
                 business_id=self.tenants.business.id,

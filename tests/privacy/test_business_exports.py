@@ -8,6 +8,7 @@ import json
 
 import pytest
 
+from app.contracts.export_archives import ExportArchiveStorageContract
 from app.schemas.constants.compliance import AuditAction
 from app.schemas.constants.privacy import BusinessExportStatus
 from app.schemas.dto.privacy.business_exports import BusinessExportListQuery
@@ -15,7 +16,9 @@ from app.schemas.exceptions.application_errors import (
     AccessDeniedError,
     NotFoundError,
 )
+from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.privacy.prefixed_id import BusinessExportId
+from app.schemas.typings.privacy.strings import ExportArchivePath
 from app.schemas.typings.users.prefixed_id import UserId
 from app.use_cases.shared.business_export_queue import BUILD_BUSINESS_EXPORT_JOB
 from app.utilities.privacy.csv_writing import UTF8_BOM
@@ -130,14 +133,16 @@ def test_a_wrong_or_expired_link_is_not_found_and_the_archive_is_purged() -> Non
 
 
 def test_a_failure_is_retried_then_left_failed() -> None:
-    class BrokenStorage:
-        def store(self, *_: object) -> None:
+    class BrokenStorage(ExportArchiveStorageContract):
+        def store(
+            self, business_id: BusinessId, path: ExportArchivePath, archive: bytes
+        ) -> None:
             raise OSError("disk full")
 
-        def read(self, *_: object) -> bytes | None:
+        def read(self, business_id: BusinessId, path: ExportArchivePath) -> None:
             return None
 
-        def delete(self, *_: object) -> None:
+        def delete(self, business_id: BusinessId, path: ExportArchivePath) -> None:
             return None
 
     bed = BusinessExportBed(seed_two_tenants(), archive_storage=BrokenStorage())
