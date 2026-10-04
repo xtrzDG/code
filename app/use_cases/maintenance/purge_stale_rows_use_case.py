@@ -1,5 +1,3 @@
-import logging
-
 from typed_time_provider import Microseconds, Seconds, WallClock
 
 from app.contracts.channels import ChannelMessageReceiptRepoContract
@@ -24,7 +22,6 @@ from app.schemas.typings.compliance.strings import AuditEntityName
 from app.schemas.typings.platform.constrained_integers import ProcessedItemCount
 from app.schemas.typings.storage.constrained_integers import DocumentCount
 
-LOGGER: logging.Logger = logging.getLogger(__name__)
 SECONDS_PER_HOUR: int = 60 * 60
 # A login code is valid for minutes; the hourly send limits look back one
 # hour. A day keeps enough history for abuse questions.
@@ -137,8 +134,10 @@ class PurgeStaleRowsUseCase(UseCaseContract[JobTick, JobReport]):
                 ),
             ),
         ]
+        # Each purge is recorded in the audit log and the total goes back in
+        # the job report; the counts are not logged, since some come from the
+        # sign-in code stores.
         for entity, count in purged:
-            LOGGER.info("Purged %d stale %s rows", int(count), entity)
             if int(count) > 0:
                 self._audit_log_repo.append(
                     AuditLogEntryDocument(
