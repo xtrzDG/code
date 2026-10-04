@@ -11,6 +11,40 @@ Kinds of change: **Added**, **Changed** (additive), **Deprecated** (with
 sunset date), **Removed** and **Breaking** (only with the `api-breaking`
 label and a migration path).
 
+## 2026-10-04 — guided channels: Telegram token check, staff templates per language, channel health
+
+Spec: `2d10f6638c041f9c`
+
+- **Added** `POST /v1/businesses/{business_id}/channels/telegram/validate-token`
+  (owners; body `{bot_token}`): `TelegramBotCheckView` with the bot the
+  token opens (`username`, `display_name`, `avatar_data_url`: its profile
+  photo inlined as a `data:image/…;base64` URL, the photo's address holds
+  the token). Nothing is saved and no webhook is set. 422 with reason
+  `telegram_token_format` (not a token's shape) or
+  `telegram_token_rejected` (Telegram does not know it), 429 after 20
+  checks per business in 10 minutes, 502 when Telegram does not answer.
+- **Added** `PUT /v1/businesses/{business_id}/channels/whatsapp/staff-templates`
+  (owners; body `{templates: [{name, language_code}]}`, at most 30, one
+  per language): replaces the WhatsApp templates staff replies go out in
+  after the 24-hour window and answers the WhatsApp `ChannelView`; 422
+  with reason `duplicate_template_language` when a language repeats. A
+  staff reply takes the template of the conversation's language (exact
+  WhatsApp code, then the base language), else the business's main
+  language. The single-template `PUT …/whatsapp/staff-template` keeps
+  working and now replaces the list with its one template.
+- **Changed** `ChannelView` gains `staff_reply_templates`
+  (`WhatsAppStaffTemplateView[]`; `staff_reply_template` stays, the main
+  language's one), `last_inbound_at` and `last_outbound_at` (the last
+  customer message in and the last reply out, to the minute; null before
+  the first) and `last_error_reason` (`DeliveryFailureReason`, what the
+  channel's last error means; an older error without one reads as
+  `credential_rejected`).
+- **Changed** `GET /widget.js` takes `data-preview="live"`: the cabinet's
+  live preview (the hosted chat page `/c/{address}?preview=1` framed by
+  the Channels page of the same origin), shown even while switched off,
+  sending and keeping nothing, its colour, corner and language set by
+  `window.postMessage` from the framing page.
+
 ## 2026-10-04 — wave 10 together: value where owners read, the phone loop, reply guard, sessions and support access
 
 Spec: `52268d9934c952f6`

@@ -126,6 +126,20 @@ overlap (it still needs two factors). Before rolling back past that
 release, note that the admin rights fall back to the
 `PLATFORM_ADMIN_*` lists.
 
+The release with WhatsApp staff templates per language and channel health
+(R9-CONNECT, `ChannelDocument` version 4) adds `whatsapp_staff_templates`,
+`last_error_reason`, `last_inbound_at` and `last_outbound_at` and keeps
+writing the single `whatsapp_staff_template` (the main language's
+template, else the first), so the previous release still sends late staff
+replies, in that one template. A version 3 row reads with its single
+template as a list of one (upcaster). An old instance that saves a
+WhatsApp channel during the overlap (a reconnect, the single-template
+form, a delivery that marks it failing) writes version 3 without the new
+fields: the list falls back to the single template and the owner adds the
+other languages again; the activity times come back with the next
+messages. `workshop migrate-documents --collection channels` after the
+release is optional (reads upcast anyway).
+
 The storage layer makes the second part mechanical
 (`app/adapters/storage/persisted_document_codec.py`): documents are
 validated strictly everywhere they are built and written, carry their
