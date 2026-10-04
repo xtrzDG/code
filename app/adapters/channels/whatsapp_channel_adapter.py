@@ -1,4 +1,7 @@
-from app.contracts.channel_clients import MetaGraphApiClientContract
+from app.contracts.channel_clients import (
+    MetaGraphApiClientContract,
+    MetaTypingClientContract,
+)
 from app.contracts.channels import (
     ChannelAdapterContract,
     WhatsAppTemplateAdapterContract,
@@ -77,10 +80,12 @@ class WhatsAppChannelAdapter(ChannelAdapterContract, WhatsAppTemplateAdapterCont
         meta_client: MetaGraphApiClientContract,
         phone_number_parser: PhoneNumberParserContract,
         app_settings: AppSettings,
+        typing_client: MetaTypingClientContract | None = None,
     ) -> None:
         self._meta_client: MetaGraphApiClientContract = meta_client
         self._phone_number_parser: PhoneNumberParserContract = phone_number_parser
         self._app_settings: AppSettings = app_settings
+        self._typing_client: MetaTypingClientContract | None = typing_client
 
     def verify_signature(
         self,
@@ -143,6 +148,22 @@ class WhatsAppChannelAdapter(ChannelAdapterContract, WhatsAppTemplateAdapterCont
         return ChannelSendReceipt(
             delivered=DeliveredMessageCount(len(parts)),
             provider_message_id=provider_message_id,
+        )
+
+    def signal_typing(
+        self,
+        target: ChannelDeliveryTarget,
+        replying_to: ProviderMessageId | None,
+    ) -> None:
+        """The typing indicator goes with the read receipt of the message."""
+
+        if self._typing_client is None or replying_to is None:
+            return
+
+        self._typing_client.show_whatsapp_typing(
+            self._require_token(),
+            require_phone_number_id(target.account_id),
+            replying_to,
         )
 
     def send_template(

@@ -19,6 +19,9 @@ from app.facilitators.calendar.google_calendar_sync_facilitator import (
 from app.facilitators.channels.channel_message_sender_facilitator import (
     ChannelMessageSenderFacilitator,
 )
+from app.facilitators.channels.typing_signal_facilitator import (
+    TypingSignalFacilitator,
+)
 from app.facilitators.events.event_publisher_facilitator import (
     EventPublisherFacilitator,
 )
@@ -247,6 +250,16 @@ class FacilitatorsContainer(containers.DeclarativeContainer):
         usage_event_repo=repositories.usage_event_repo,
         live_events=event_publisher,
         wall_clock=time_provider.microsecond_wall_clock,
+    )
+    # "typing…" while a reply is written (Telegram, WhatsApp, Meta pages).
+    typing_signals: Singleton[TypingSignalFacilitator] = Singleton(
+        TypingSignalFacilitator,
+        channel_repo=repositories.channel_repo,
+        secret_cipher=adapters.secret_cipher,
+        telegram_adapter=adapters.telegram_channel_adapter,
+        whatsapp_adapter=adapters.whatsapp_channel_adapter,
+        messenger_adapter=adapters.messenger_channel_adapter,
+        instagram_adapter=adapters.instagram_channel_adapter,
     )
     calendar_sync_facilitator: Singleton[GoogleCalendarSyncFacilitator] = Singleton(
         GoogleCalendarSyncFacilitator,

@@ -38,6 +38,7 @@ RATE_LIMITED_ERROR_CODE: int = 429
 CLIENT_ERROR_CODES: range = range(400, 500)
 # Only customer messages are handled; edits, callbacks and the rest are not.
 ALLOWED_UPDATES: tuple[str, ...] = ("message",)
+TYPING_ACTION: str = "typing"
 
 
 class TelegramBotClient(TelegramBotApiClientContract):
@@ -114,6 +115,15 @@ class TelegramBotClient(TelegramBotApiClientContract):
         )
         return (
             None if message_id is None else ProviderMessageId(f"{chat_id}:{message_id}")
+        )
+
+    def send_typing_action(
+        self, bot_token: ProviderToken, chat_id: ChannelUserId
+    ) -> None:
+        self._call(
+            bot_token,
+            "sendChatAction",
+            {"chat_id": str(chat_id), "action": TYPING_ACTION},
         )
 
     def _call(

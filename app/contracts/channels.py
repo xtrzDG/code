@@ -88,6 +88,20 @@ class ChannelAdapterContract(AdapterContract, Protocol):
         """
         raise NotImplementedError
 
+    def signal_typing(
+        self,
+        target: ChannelDeliveryTarget,
+        replying_to: ProviderMessageId | None,
+    ) -> None:
+        """
+        Show the customer "typing…" while the reply is being written; the
+        platform hides it after a few seconds or when the reply arrives.
+        `replying_to` is the platform's id of the customer's message (the
+        WhatsApp indicator goes with its read receipt). A channel that
+        cannot show typing does nothing (this default). Raises like `send`.
+        """
+        del target, replying_to
+
 
 class WhatsAppTemplateAdapterContract(AdapterContract, Protocol):
     """

@@ -65,6 +65,15 @@ class TelegramBotApiClientContract(ClientContract, Protocol):
         """
         raise NotImplementedError
 
+    def send_typing_action(
+        self, bot_token: ProviderToken, chat_id: ChannelUserId
+    ) -> None:
+        """
+        `sendChatAction` "typing": the chat shows the bot typing for about
+        5 seconds (or until it sends a message). Errors as `send_message`.
+        """
+        raise NotImplementedError
+
 
 class MetaGraphApiClientContract(ClientContract, Protocol):
     """Meta Graph API: WhatsApp Cloud API, Messenger and Instagram messaging."""
@@ -138,6 +147,33 @@ class MetaGraphApiClientContract(ClientContract, Protocol):
         (429, throttling codes), ChannelCredentialRejectedError (the token),
         WhatsAppTemplateRejectedError, ProviderRejectedMessageError (another
         4xx), ExternalServiceError (5xx, network).
+        """
+        raise NotImplementedError
+
+
+class MetaTypingClientContract(ClientContract, Protocol):
+    """The "typing…" signals of the WhatsApp Cloud API and the Send API."""
+
+    def show_whatsapp_typing(
+        self,
+        access_token: ProviderToken,
+        phone_number_id: MetaObjectId,
+        message_id: ProviderMessageId,
+    ) -> None:
+        """
+        Mark the customer's message read with a typing indicator (shown up
+        to 25 seconds, or until the reply). Errors as `send_page_message`.
+        """
+        raise NotImplementedError
+
+    def show_page_typing(
+        self,
+        access_token: ProviderToken,
+        recipient: ChannelUserId,
+    ) -> None:
+        """
+        Messenger or Instagram `sender_action` "typing_on" (shown up to 20
+        seconds, or until the reply). Errors as `send_page_message`.
         """
         raise NotImplementedError
 

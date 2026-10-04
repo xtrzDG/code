@@ -6,10 +6,6 @@ from dependency_injector.providers import (
     Singleton,
 )
 
-from app.adapters.channels.instagram_channel_adapter import InstagramChannelAdapter
-from app.adapters.channels.messenger_channel_adapter import MessengerChannelAdapter
-from app.adapters.channels.telegram_channel_adapter import TelegramChannelAdapter
-from app.adapters.channels.whatsapp_channel_adapter import WhatsAppChannelAdapter
 from app.adapters.events.live_event_bus_factory import build_live_event_bus_adapter
 from app.adapters.llm.anthropic_llm_adapter import AnthropicLlmAdapter
 from app.adapters.llm.call_limited_llm_adapter import (
@@ -45,6 +41,9 @@ from app.adapters.voice.elevenlabs_recording_storage_adapter import (
     ElevenLabsRecordingStorageAdapter,
 )
 from app.containers.adapters.call_adapters_container import CallAdaptersContainer
+from app.containers.adapters.channel_adapters_container import (
+    ChannelAdaptersContainer,
+)
 from app.containers.adapters.document_collections_container import (
     DocumentCollectionsContainer,
 )
@@ -189,29 +188,14 @@ class AdaptersContainer(containers.DeclarativeContainer):
     voice_agent_provisioner = calls.voice_agent_provisioner
 
     # --- Messaging channels.
-    telegram_channel_adapter: Singleton[TelegramChannelAdapter] = Singleton(
-        TelegramChannelAdapter,
-        telegram_client=clients.telegram_bot_client,
-        phone_number_parser=utilities.phone_number_parser,
-        app_settings=config.app_settings,
+    channels: ChannelAdaptersContainer = Container(  # type: ignore[assignment]
+        ChannelAdaptersContainer, clients=clients, config=config, utilities=utilities
     )
+    telegram_channel_adapter = channels.telegram_channel_adapter
     # Also the WhatsApp template sender (staff notifications).
-    whatsapp_channel_adapter: Singleton[WhatsAppChannelAdapter] = Singleton(
-        WhatsAppChannelAdapter,
-        meta_client=clients.meta_graph_client,
-        phone_number_parser=utilities.phone_number_parser,
-        app_settings=config.app_settings,
-    )
-    messenger_channel_adapter: Singleton[MessengerChannelAdapter] = Singleton(
-        MessengerChannelAdapter,
-        meta_client=clients.meta_graph_client,
-        app_settings=config.app_settings,
-    )
-    instagram_channel_adapter: Singleton[InstagramChannelAdapter] = Singleton(
-        InstagramChannelAdapter,
-        meta_client=clients.meta_graph_client,
-        app_settings=config.app_settings,
-    )
+    whatsapp_channel_adapter = channels.whatsapp_channel_adapter
+    messenger_channel_adapter = channels.messenger_channel_adapter
+    instagram_channel_adapter = channels.instagram_channel_adapter
 
     # --- Language models.
     openai_llm_adapter: Singleton[OpenAiLlmAdapter] = Singleton(
