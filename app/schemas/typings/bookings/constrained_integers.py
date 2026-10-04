@@ -38,6 +38,15 @@ class BookingStartsAtUnixSeconds(BaseConstrainedTypedInt):
     ge = 0
 
 
+class BookingValueMinor(BaseConstrainedTypedInt):
+    """
+    What one booking is worth, in minor units of its currency: the price
+    of the booked service, or the nightly rates of a stay's nights.
+    """
+
+    ge = 0
+
+
 class CalendarTokenLifetimeSeconds(BaseConstrainedTypedInt):
     """Seconds an OAuth access token of a connected calendar stays valid."""
 

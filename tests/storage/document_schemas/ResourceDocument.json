@@ -1,7 +1,7 @@
 {
   "collection": "resources",
   "document_type": "ResourceDocument",
-  "schema_version": 1,
+  "schema_version": 2,
   "shape": {
     "additionalProperties": false,
     "properties": {
@@ -48,6 +48,18 @@
       "name": {
         "type": "string"
       },
+      "room_type_item_id": {
+        "anyOf": [
+          {
+            "pattern": "^knowledge_item_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
       "schedule": {
         "items": {
           "additionalProperties": false,
@@ -85,8 +97,15 @@
         "type": "array"
       },
       "schema_version": {
-        "default": "1",
+        "default": "2",
         "type": "string"
+      },
+      "serves_item_ids": {
+        "items": {
+          "pattern": "^knowledge_item_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+          "type": "string"
+        },
+        "type": "array"
       },
       "slot_minutes": {
         "anyOf": [

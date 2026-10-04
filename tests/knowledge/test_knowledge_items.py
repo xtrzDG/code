@@ -97,7 +97,7 @@ def test_items_are_checked_against_the_niche_and_kept_as_written() -> None:
                 body=KnowledgeBody("   "),
                 price_minor=MoneyAmountMinor(25000),
                 currency_code=CurrencyCode("GEL"),
-                duration_minutes=ServiceDurationMinutes(1440),
+                duration_minutes=ServiceDurationMinutes(720),
                 tags=[KnowledgeTag("sea-view"), KnowledgeTag("sea-view")],
                 attributes=[
                     KnowledgeAttribute(

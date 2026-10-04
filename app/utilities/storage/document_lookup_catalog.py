@@ -111,15 +111,18 @@ DOCUMENT_LOOKUP_FIELDS: Mapping[
     ),
     # Bookings by start (list pages, availability: the ones not over yet),
     # by creation (dashboard), by status (badges, migration 1040), and those
-    # of one conversation.
+    # of one conversation; their value per currency (dashboard and value
+    # model sums, 1083).
     DocumentCollectionName("bookings"): (
         _text("conversation_id"),
         _text("status"),
         _filter("resource_id"),
         _filter("is_sandbox"),
+        _filter("currency_code"),
         _integer("starts_at"),
         _integer("ends_at"),
         _integer("created_at"),
+        _integer("value_minor"),
     ),
     DocumentCollectionName("leads"): (
         _text("conversation_id"),
