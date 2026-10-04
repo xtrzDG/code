@@ -10,6 +10,7 @@ from app.schemas.constants.conversations import (
     CallGuardVerdict,
     CallOutcome,
     ConversationRating,
+    ConversationRatingReason,
     ConversationStatus,
     MessageAuthor,
     ReplyGuardVerdict,
@@ -128,6 +129,7 @@ class DemoConversationRecorder:
         status: ConversationStatus = ConversationStatus.CLOSED,
         rating: ConversationRating | None = None,
         rated_by: UserId | None = None,
+        rating_reason: ConversationRatingReason | None = None,
         channel_user_id: str | None = None,
         is_sandbox: bool = False,
     ) -> ConversationDocument:
@@ -169,6 +171,16 @@ class DemoConversationRecorder:
             conversation.rating = rating
             conversation.rated_by = rated_by
             conversation.rated_at = self._clock.later(Microseconds(moment), 90)
+            conversation.rating_reason = rating_reason
+            conversation.rated_message_id = next(
+                (
+                    message.id
+                    for message in reversed(self.messages)
+                    if message.conversation_id == conversation.id
+                    and message.author is MessageAuthor.ASSISTANT
+                ),
+                None,
+            )
 
         if moment > int(self._clock.now):
             raise ValueError(f"A demo conversation ends in the future: {lines[-1]}")

@@ -129,6 +129,19 @@ class AssistantOrchestratorsContainer(containers.DeclarativeContainer):
     get_autotest_run_orchestrator = use_case_orchestrator(
         autotest_use_cases.get_autotest_run_use_case
     )
+    # The owner's own checks ("My checks").
+    list_autotest_cases_orchestrator = use_case_orchestrator(
+        autotest_use_cases.list_autotest_cases_use_case
+    )
+    create_autotest_case_orchestrator = use_case_orchestrator(
+        autotest_use_cases.create_autotest_case_use_case
+    )
+    update_autotest_case_orchestrator = use_case_orchestrator(
+        autotest_use_cases.update_autotest_case_use_case
+    )
+    delete_autotest_case_orchestrator = use_case_orchestrator(
+        autotest_use_cases.delete_autotest_case_use_case
+    )
     get_go_live_readiness_orchestrator = use_case_orchestrator(
         assistant_use_cases.get_go_live_readiness_use_case
     )

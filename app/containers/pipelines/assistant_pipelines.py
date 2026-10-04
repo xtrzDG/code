@@ -58,6 +58,18 @@ class AssistantPipelinesContainer(containers.DeclarativeContainer):
     get_autotest_run_pipeline = orchestrator_pipeline(
         assistant_orchestrators.get_autotest_run_orchestrator
     )
+    list_autotest_cases_pipeline = orchestrator_pipeline(
+        assistant_orchestrators.list_autotest_cases_orchestrator
+    )
+    create_autotest_case_pipeline = orchestrator_pipeline(
+        assistant_orchestrators.create_autotest_case_orchestrator
+    )
+    update_autotest_case_pipeline = orchestrator_pipeline(
+        assistant_orchestrators.update_autotest_case_orchestrator
+    )
+    delete_autotest_case_pipeline = orchestrator_pipeline(
+        assistant_orchestrators.delete_autotest_case_orchestrator
+    )
     get_go_live_readiness_pipeline = orchestrator_pipeline(
         assistant_orchestrators.get_go_live_readiness_orchestrator
     )

@@ -66,6 +66,7 @@ class UseCasesContainer(CoreUseCasesContainer):
         ConversationFeedUseCasesContainer,
         adapters=CoreUseCasesContainer.adapters,
         facilitators=CoreUseCasesContainer.facilitators,
+        registries=CoreUseCasesContainer.registries,
         repositories=CoreUseCasesContainer.repositories,
         time_provider=CoreUseCasesContainer.time_provider,
         transformers=CoreUseCasesContainer.transformers,

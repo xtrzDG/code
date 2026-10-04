@@ -176,6 +176,16 @@ class ConversationOrchestratorsContainer(containers.DeclarativeContainer):
     get_message_media_orchestrator = use_case_orchestrator(
         conversation_feed_use_cases.get_message_media_use_case
     )
+    # Teaching the assistant: "Fix this answer", answers worth improving.
+    get_answer_correction_draft_orchestrator = use_case_orchestrator(
+        conversation_feed_use_cases.get_answer_correction_draft_use_case
+    )
+    correct_answer_orchestrator = use_case_orchestrator(
+        conversation_feed_use_cases.correct_answer_use_case
+    )
+    list_answers_to_improve_orchestrator = use_case_orchestrator(
+        conversation_feed_use_cases.list_answers_to_improve_use_case
+    )
 
     # --- Voice call start.
     start_voice_call_orchestrator = use_case_orchestrator(

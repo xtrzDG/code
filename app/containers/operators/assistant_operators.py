@@ -47,6 +47,18 @@ class AssistantOperatorsContainer(containers.DeclarativeContainer):
     get_autotest_run_operator = pipeline_operator(
         assistant_pipelines.get_autotest_run_pipeline, storage_scope
     )
+    list_autotest_cases_operator = pipeline_operator(
+        assistant_pipelines.list_autotest_cases_pipeline, storage_scope
+    )
+    create_autotest_case_operator = pipeline_operator(
+        assistant_pipelines.create_autotest_case_pipeline, storage_scope
+    )
+    update_autotest_case_operator = pipeline_operator(
+        assistant_pipelines.update_autotest_case_pipeline, storage_scope
+    )
+    delete_autotest_case_operator = pipeline_operator(
+        assistant_pipelines.delete_autotest_case_pipeline, storage_scope
+    )
     get_go_live_readiness_operator = pipeline_operator(
         assistant_pipelines.get_go_live_readiness_pipeline, storage_scope
     )

@@ -5,7 +5,10 @@ from app.registries.demo.demo_activity_builder import DemoActivityBuilder
 from app.registries.demo.demo_lines import assistant, customer
 from app.registries.demo.tbilisi_restaurant.restaurant_menu import CAKE_QUESTION_TITLE
 from app.schemas.constants.channels import ChannelKind
-from app.schemas.constants.conversations import ConversationRating
+from app.schemas.constants.conversations import (
+    ConversationRating,
+    ConversationRatingReason,
+)
 from app.schemas.domain.contacts import ContactDocument
 from app.schemas.typings.handoffs.prefixed_id import UnansweredQuestionId
 
@@ -70,6 +73,7 @@ def record_russian_question_chats(
         ],
         rating=ConversationRating.BAD,
         rated_by=story.owner_id,
+        rating_reason=ConversationRatingReason.WRONG_INFO,
     )
     desk.question(
         question,

@@ -29,6 +29,7 @@ from app.gateways.http.profile_routes import build_profile_router
 from app.gateways.http.resource_routes import build_resource_router
 from app.gateways.http.security_router_assembly import build_security_routers
 from app.gateways.http.sharing_router_assembly import build_sharing_routers
+from app.gateways.http.teaching_router_assembly import build_teaching_routers
 from app.gateways.http.user_authentication import (
     CurrentUserDependency,
     build_current_user_dependency,
@@ -294,4 +295,5 @@ def build_application_routers(app_container: AppContainer) -> list[APIRouter]:
         *build_feedback_routers(operators, current_user),
         *build_analytics_routers(operators, current_user),
         *build_admin_ops_routers(operators, current_user),
+        *build_teaching_routers(operators, current_user),
     ]

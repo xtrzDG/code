@@ -11,8 +11,8 @@ assistant in every other chat.
   scenario language, with its phone number when it books, then [DONE].
 - The topic grouping (its instruction) puts what customers asked into
   topics by keywords (`rehearsal_topics.py`).
-- The assistant (anything else) answers in the language the platform read
-  the customer's message in (the context line), else the one it tells: it
+- The assistant (anything else) answers a question of its fact table with
+  that answer (`rehearsal_facts.py`), else in the customer's language: it
   books the first free time of the next days when asked to book, passes
   the conversation to a colleague when asked for a person or in an
   emergency, and otherwise says that it is a test assistant.
@@ -31,6 +31,7 @@ from app.utilities.assembly.autotest_prompts import (
     CUSTOMER_PERSONA_OPENING,
     DONE_MARKER,
     JUDGE_SYSTEM_PROMPT,
+    OWNER_CHECK_CONTINUATION_OPENING,
     TRANSLITERATION_NOTE,
 )
 from app.utilities.llm_rehearsal.assistant_phrases import (
@@ -46,6 +47,7 @@ from app.utilities.llm_rehearsal.customer_phrases import (
     TRANSLITERATED_PHRASES,
     RehearsalIntent,
 )
+from app.utilities.llm_rehearsal.rehearsal_facts import find_fact_answer
 from app.utilities.llm_rehearsal.rehearsal_reading import (
     JsonObject,
     detect_language,
@@ -94,7 +96,9 @@ def play_rehearsal_turn(request: LlmRequest) -> ScriptedLlmTurn:
 
 def play_customer(request: LlmRequest) -> ScriptedLlmTurn:
     if any(
-        read_turn(payload).get("role") == "assistant" for payload in request.transcript
+        read_turn(payload).get("role") == "assistant"
+        or OWNER_CHECK_CONTINUATION_OPENING in read_texts(payload)
+        for payload in request.transcript
     ):
         return say(DONE_MARKER)
 
@@ -124,6 +128,10 @@ def play_assistant(request: LlmRequest) -> ScriptedLlmTurn:
     )
     if answered is not None:
         return after_tool(request.transcript, *answered, language=language)
+
+    known: str | None = find_fact_answer(str(request.system_prompt), customer_text)
+    if known is not None:
+        return say(known)
 
     intent: RehearsalIntent = read_intent(customer_text)
     if intent in HANDOFF_INTENTS and AssistantToolName.HANDOFF_TO_HUMAN in tool_names:
