@@ -96,9 +96,7 @@ def test_the_tool_definitions_explain_services_and_masters() -> None:
         AssistantToolName.CHECK_AVAILABILITY,
         AssistantToolName.CREATE_BOOKING,
     ):
-        properties = json.loads(registry.get(tool_name).input_schema_json)[
-            "properties"
-        ]
+        properties = json.loads(registry.get(tool_name).input_schema_json)["properties"]
         assert "its id" in properties["service_id"]["description"]
         assert "any script" in properties["resource_id"]["description"]
 

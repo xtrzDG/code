@@ -50,7 +50,11 @@ def test_staff_book_a_service_with_its_length_buffer_and_value() -> None:
     result = salon.world.create_manual_booking().run(manual(salon, salon.manicure.id))
 
     view = result.booking
-    assert (view.resource_name, view.time, view.end_time) == ("Mariam", "12:00", "13:00")
+    assert (view.resource_name, view.time, view.end_time) == (
+        "Mariam",
+        "12:00",
+        "13:00",
+    )
     assert (view.service_title, view.value_minor, view.currency_code) == (
         "Manicure",
         3000,

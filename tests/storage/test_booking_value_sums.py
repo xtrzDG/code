@@ -1,4 +1,4 @@
-"""What the bookings made in a period are worth: one answer in memory and on Postgres."""
+"""What the bookings made in a period are worth, in memory and on Postgres."""
 
 import pytest
 from typed_time_provider import Microseconds
