@@ -52,6 +52,7 @@ export function DevicesCard({ isPlatformAdmin }: { isPlatformAdmin: boolean }) {
 
   return (
     <Card
+      aria-label={t("devices.title")}
       title={t("devices.title")}
       description={isPlatformAdmin ? t("devices.descriptionAdmin") : t("devices.description")}
       actions={

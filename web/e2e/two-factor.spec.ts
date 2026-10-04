@@ -8,6 +8,7 @@
 
 import type { Locator, Page } from "@playwright/test";
 
+import { ensureOnAdminTeam } from "./support/admin";
 import { MFA_ADMIN_EMAIL } from "./support/env";
 import { expect, test } from "./support/fixtures";
 import { apiLogSize, waitForLoginCode } from "./support/login-codes";
@@ -135,7 +136,9 @@ test("an owner sets up an authenticator app, confirms an action with it and sign
   await fresh.close();
 });
 
-test("a platform admin sets up the app at the first sign-in and opens the admin pages", async ({ page }) => {
+test("a platform admin sets up the app at the first sign-in and opens the admin pages", async ({ page, request }) => {
+  // A SUPER admin added this person on the Team page.
+  await ensureOnAdminTeam(request, MFA_ADMIN_EMAIL);
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/login?next=/admin");
   await passLoginCode(page, MFA_ADMIN_EMAIL);

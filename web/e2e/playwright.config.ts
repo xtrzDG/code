@@ -23,11 +23,8 @@ import {
   ARTIFACTS_DIRECTORY,
   E2E_VAPID_PRIVATE_KEY,
   E2E_VAPID_PUBLIC_KEY,
-  METRICS_ADMIN_EMAIL,
-  MFA_ADMIN_EMAIL,
   PLATFORM_ADMIN_EMAIL,
   REPOSITORY_ROOT,
-  SYSTEM_ADMIN_EMAIL,
   WEB_DIRECTORY,
   WEB_PORT,
   WEB_URL,
@@ -125,10 +122,11 @@ export default defineConfig({
         OTP_SENDS_PER_IP_PER_HOUR: "100000",
         OTP_VERIFIES_PER_IP_PER_10_MINUTES: "100000",
         OTP_SENDS_PER_COUNTRY_PER_HOUR: "100000",
-        // Platform admins for the admin pages (encryption-keys.spec.ts,
-        // admin-metrics.spec.ts, two-factor.spec.ts, admin-system.spec.ts);
-        // they sign in with two factors (support/admin.ts).
-        PLATFORM_ADMIN_EMAILS: `${PLATFORM_ADMIN_EMAIL},${METRICS_ADMIN_EMAIL},${MFA_ADMIN_EMAIL},${SYSTEM_ADMIN_EMAIL}`,
+        // The run's first platform admin (the list only bootstraps the first
+        // SUPER admin); the other test admins (admin-metrics.spec.ts,
+        // two-factor.spec.ts, admin-system.spec.ts) are added to the team
+        // by it, and all sign in with two factors (support/admin.ts).
+        PLATFORM_ADMIN_EMAILS: PLATFORM_ADMIN_EMAIL,
         // Notification links lead to this cabinet; device notifications go
         // to the push service a test starts (notifications.spec.ts).
         CABINET_BASE_URL: WEB_URL,
