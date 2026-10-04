@@ -4,8 +4,8 @@ from typed_time_provider import Microseconds, WallClock
 
 from app.contracts.catalog_registries import ExchangeRateRegistryContract
 from app.contracts.registries import PlanRegistryContract
-from app.schemas.configurations.app_settings import AppSettings
 from app.orchestrators.billing.subscribe_orchestrator import SubscribeOrchestrator
+from app.schemas.configurations.app_settings import AppSettings
 from app.use_cases.admin.get_client_health_use_case import GetClientHealthUseCase
 from app.use_cases.admin.list_clients_use_case import ListClientsUseCase
 from app.use_cases.admin.open_client_cabinet_use_case import OpenClientCabinetUseCase
