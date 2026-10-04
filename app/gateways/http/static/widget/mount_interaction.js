@@ -87,7 +87,7 @@
 
     function submit() {
       var messageText = input.value.trim();
-      if (!messageText || state.isSending) {
+      if (!messageText || state.isSending || isLivePreview) {
         return;
       }
       if (isSendingHeld()) {

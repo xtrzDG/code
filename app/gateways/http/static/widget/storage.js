@@ -116,7 +116,12 @@
     return result;
   }
 
+  // The live preview keeps everything in memory: the owner's browser shares
+  // the origin with the hosted chat page, whose visitors' keys stay apart.
   function localStorageOrNull() {
+    if (isLivePreview) {
+      return null;
+    }
     try {
       return window.localStorage;
     } catch (error) {
@@ -125,6 +130,9 @@
   }
 
   function sessionStorageOrNull() {
+    if (isLivePreview) {
+      return null;
+    }
     try {
       return window.sessionStorage;
     } catch (error) {

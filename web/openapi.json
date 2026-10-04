@@ -4425,7 +4425,7 @@
       },
       "ChannelView": {
         "additionalProperties": false,
-        "description": "A channel as the cabinet shows it; credentials are never returned.\n\n`account_id` is the public account inside the channel: bot username,\nWhatsApp phone number id, page id, Instagram account id, or the E.164\nnumber of the assistant line. With status ERROR, `last_error` is the\nplatform's short reason (no secrets) and `last_error_at` its time. The\nwebsite chat also reports its saved colour and launcher corner (None:\nthe widget's defaults). WhatsApp reports the template staff replies use\nonce the 24-hour window has closed (None: no template, such replies are\nrefused). `link_state` says whether a connected messenger or phone can\nbe shared as a link (the same rule the share links follow); None for a\nchannel that is not connected or has no link (the website chat).",
+        "description": "A channel as the cabinet shows it; credentials are never returned.\n\n`account_id` is the public account inside the channel: bot username,\nWhatsApp phone number id, page id, Instagram account id, or the E.164\nnumber of the assistant line. With status ERROR, `last_error` is the\nplatform's short reason (no secrets) and `last_error_at` its time; a\nconnected channel keeps the reason of a message the platform refused\nfor good the same way. `last_error_reason` says what it means in the\ncabinet's terms (`credential_rejected`: reconnect; `template_rejected`:\ncheck the WhatsApp templates; `recipient_refused`: one customer could\nnot be reached; None when unknown). `last_inbound_at` and\n`last_outbound_at` are when the channel last brought a customer message\nand last carried one of ours (to the minute; None: not yet). The\nwebsite chat also reports its saved colour and launcher corner (None:\nthe widget's defaults). WhatsApp reports the templates staff replies use\nonce the 24-hour window has closed, one per language\n(`staff_reply_templates`, empty: such replies are refused), and in\n`staff_reply_template` the one of the business's default language (else\nthe first; the single template of earlier clients). `link_state` says\nwhether a connected messenger or phone can be shared as a link (the\nsame rule the share links follow); None for a channel that is not\nconnected or has no link (the website chat).",
         "properties": {
           "account_id": {
             "anyOf": [
@@ -4478,6 +4478,38 @@
             ],
             "title": "Last Error At"
           },
+          "last_error_reason": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DeliveryFailureReason"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "last_inbound_at": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Inbound At"
+          },
+          "last_outbound_at": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Outbound At"
+          },
           "link_state": {
             "anyOf": [
               {
@@ -4497,6 +4529,13 @@
                 "type": "null"
               }
             ]
+          },
+          "staff_reply_templates": {
+            "items": {
+              "$ref": "#/components/schemas/WhatsAppStaffTemplateView"
+            },
+            "title": "Staff Reply Templates",
+            "type": "array"
           },
           "status": {
             "$ref": "#/components/schemas/ChannelStatus"
@@ -16501,6 +16540,49 @@
           "row_estimate"
         ],
         "title": "TableSizeView",
+        "type": "object"
+      },
+      "TelegramBotCheckView": {
+        "additionalProperties": false,
+        "description": "The bot a token opens, as customers will see it: its username, its name\nand its profile photo (a small image inlined as a data URL; None when\nthe bot has none or Telegram did not hand it out).",
+        "properties": {
+          "avatar_data_url": {
+            "anyOf": [
+              {
+                "maxLength": 200000,
+                "minLength": 24,
+                "pattern": "^data:image/(jpeg|png|webp);base64,[A-Za-z0-9+/]+={0,2}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Avatar Data Url"
+          },
+          "display_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Display Name"
+          },
+          "username": {
+            "maxLength": 32,
+            "minLength": 5,
+            "pattern": "^[A-Za-z][A-Za-z0-9_]{4,31}$",
+            "title": "Username",
+            "type": "string"
+          }
+        },
+        "required": [
+          "username"
+        ],
+        "title": "TelegramBotCheckView",
         "type": "object"
       },
       "TelegramLinkView": {
@@ -28617,6 +28699,146 @@
         ]
       }
     },
+    "/v1/businesses/{business_id}/channels/telegram/validate-token": {
+      "post": {
+        "operationId": "validate_telegram_token_v1_businesses__business_id__channels_telegram_validate_token_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "description": "HTTP body: the token @BotFather gave, as pasted (it is not saved).",
+                "properties": {
+                  "bot_token": {
+                    "title": "Bot Token",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "bot_token"
+                ],
+                "title": "TelegramTokenCheckRequest",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TelegramBotCheckView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Validate Telegram Token",
+        "tags": [
+          "channels"
+        ]
+      }
+    },
     "/v1/businesses/{business_id}/channels/web/snippet": {
       "get": {
         "operationId": "get_widget_snippet_v1_businesses__business_id__channels_web_snippet_get",
@@ -28891,6 +29113,170 @@
           }
         },
         "summary": "Set Whatsapp Staff Template",
+        "tags": [
+          "channels"
+        ]
+      }
+    },
+    "/v1/businesses/{business_id}/channels/whatsapp/staff-templates": {
+      "put": {
+        "operationId": "set_whatsapp_staff_templates_v1_businesses__business_id__channels_whatsapp_staff_templates_put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "description": "HTTP body that replaces the templates for staff replies, one per\ntemplate language (e.g. \"staff_reply\" in \"ka\", \"staff_reply_he\" in\n\"he\"); an empty list removes them all. Staff replies take the template\nof the conversation's language, then the business's default language.",
+                "properties": {
+                  "templates": {
+                    "items": {
+                      "additionalProperties": false,
+                      "description": "One approved template of the per-language list: its name and language.",
+                      "properties": {
+                        "language_code": {
+                          "maxLength": 8,
+                          "minLength": 2,
+                          "pattern": "^[a-z]{2,3}(_[A-Z]{2})?$",
+                          "title": "Language Code",
+                          "type": "string"
+                        },
+                        "name": {
+                          "maxLength": 512,
+                          "minLength": 1,
+                          "pattern": "^[a-z0-9_]{1,512}$",
+                          "title": "Name",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "name",
+                        "language_code"
+                      ],
+                      "title": "WhatsAppStaffTemplateEntry",
+                      "type": "object"
+                    },
+                    "maxItems": 30,
+                    "title": "Templates",
+                    "type": "array"
+                  }
+                },
+                "title": "WhatsAppStaffTemplatesRequest",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChannelView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Set Whatsapp Staff Templates",
         "tags": [
           "channels"
         ]

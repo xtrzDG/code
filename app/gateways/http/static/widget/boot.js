@@ -26,6 +26,9 @@
   var handoffUrl =
     apiBase + HANDOFF_PATH.replace("{business_id}", encodeURIComponent(businessId));
   var isPageMode = script.getAttribute("data-mode") === PAGE_MODE;
+  // The cabinet's preview: shown even while switched off, sends nothing,
+  // keeps nothing in the browser and follows the owner's choices.
+  var isLivePreview = script.getAttribute("data-preview") === LIVE_PREVIEW;
   var storagePrefix = STORAGE_PREFIX + businessId + ":";
   // Where the visitor came from (the business's reports group by it).
   var visitSource = loadVisitSource();
@@ -40,7 +43,7 @@
     requestJson(configUrl, null).then(
       guarded("boot", function (result) {
         var config = result.body;
-        var isPreview = script.getAttribute("data-preview") === "true";
+        var isPreview = script.getAttribute("data-preview") === "true" || isLivePreview;
         if (!result.ok || !config || typeof config !== "object") {
           if (result.status >= 500) {
             reportWidgetError("config_failed", "boot", null, result.status);
