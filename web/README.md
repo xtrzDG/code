@@ -128,7 +128,9 @@ npm run e2e -- onboarding         # one file
   launch's progress played by the test since the suite's API has no language
   model), a reload and a later visit continuing where the owner left off,
   a business in Turkey with Turkish, English and Arabic, a failed creation
-  keeping every answer, the six profile steps under Hours and rules, every section and page from
+  keeping every answer, the business profile's section editors (`e2e/profile-edit.spec.ts` in
+  ru/en/ka: a new closing time saves itself and the banner counts one change;
+  `e2e/profile-sections.spec.ts`), every section and page from
   the sidebar (`e2e/navigation.spec.ts`: the open section's pages under it,
   Advanced, folding the sidebar, the user menu) and on a phone from the tab
   bar and "More" (no sideways scrolling at 390 px, 44 px targets), the setup
@@ -216,7 +218,7 @@ web/
         setup/                 "Create an AI assistant" for an existing business: the full-screen tunnel
                                (components/setup/flow/SetupTunnel), ?step= opens a screen
         onboarding/            the old setup address: into the tunnel before the assistant exists,
-                               to assistant/profile (keeping ?step=) after
+                               to assistant/profile after (an old ?step= opens the section that edits it)
         overview/              layout.tsx: the Overview frame (tabs for owners); the dashboard: the owner's
                                value hero (bookings ≈ money, after hours, staff time, average check edited
                                in place), next step, staff "Your queue today", KPI tiles with change chips
@@ -244,7 +246,9 @@ web/
                                server-paged), import/ (menu photo, PDF or link; discard a whole batch),
                                resources/ (bookable resources with their services or room type,
                                special days: lib/resources.ts, lib/specialDays.ts)
-          profile/             "Hours and rules": the six-step profile wizard (?step=…) and "what to add"
+          profile/             "Business profile": six section cards (what each holds, what is left to add);
+                               [section]/ opens the tunnel's screen of that section in its edit mode
+                               (components/setup, mode="edit"), saving as the owner types
           channels/            chat channels (with the platform's last error; WhatsApp's template for
                                staff replies), website chat code and look, call forwarding, Google
                                Calendar (state, last sync), staff Telegram link
@@ -300,7 +304,7 @@ web/
       bodyLimits.ts            request body limits of the BFF (413)
     i18n/                      config.ts (locales, negotiation), translate.ts, server.ts, client.tsx
       messages/en.ts ru.ts ka.ts   shared texts (common, auth, nav, theme, errors …); English is the reference
-      messages/onboarding/     the profile wizard's texts, one file per language
+      messages/onboarding/     the business profile's texts (profileEdit.*), one file per language
       messages/landing/        the landing page's texts, one file per language
       messages/sections/       section texts, spread into en/ru/ka: insights.ts (dashboard, conversations,
                                bookings, leads, handoffs), content.ts (knowledge, assistant),
@@ -397,7 +401,7 @@ section tabs, page titles and the e2e suite read it):
 | Overview | `overview?period=…` (dashboard), `overview/reports?kind=…&report=…` | owners; staff: the dashboard only |
 | Inbox | `inbox[?view=needs_person\|requests\|mine\|unassigned\|all]` (one page, its views; `needs_person` without a query), `inbox/{conversationId}` | owners, staff |
 | Bookings | `bookings` | owners, staff |
-| Assistant | `assistant` ("Try it", the test chat), `assistant/knowledge[/questions\|/import\|/resources]`, `assistant/profile?step=…` ("Hours and rules"), `assistant/channels`; under Advanced `assistant/versions[/{versionId}]` | staff: "Try it" only |
+| Assistant | `assistant` ("Try it", the test chat), `assistant/knowledge[/questions\|/import\|/resources]`, `assistant/profile[/business\|/place\|/offer\|/hours\|/people\|/rules]` ("Business profile"), `assistant/channels`; under Advanced `assistant/versions[/{versionId}]` | staff: "Try it" only |
 | Settings | `settings` (business), `settings/team`, `settings/notifications`, `settings/quick-replies`, `settings/calls`, `settings/billing`, `settings/privacy`, `settings/audit` | owners; staff: Notifications only (their own devices, events and quiet hours) |
 
 - **Sidebar** (large screens): the mark, the business switcher (it keeps the
@@ -443,7 +447,8 @@ section tabs, page titles and the e2e suite read it):
   `channels` → `assistant/channels`, `billing` → `settings/billing`, `/b/{id}`
   → `overview`; `settings#team` (a hash never reaches the server) is moved by
   the settings page, and `onboarding?step=…` by the old setup page: into the
-  tunnel before the assistant exists, to Hours and rules after.
+  tunnel before the assistant exists, afterwards to the section of the
+  business profile that edits the step (`assistant/profile?step=…` too).
 
 ### What each page does
 
@@ -457,7 +462,7 @@ section tabs, page titles and the e2e suite read it):
 | Assistant → Try it | Test chat with tool calls (`?version=…` talks to a chosen version); "Apply changes" opens the sheet with what customers do not get yet |
 | Every page (owners) | The banner "N changes are not with your customers yet · Review and apply" while the profile, knowledge, hours, prices or booking rules differ from what customers get (`GET …/assistant/pending-changes`); its sheet lists them in the owner's words and applies them: the tunnel's three stages over `POST`/`GET …/assistant/apply` and the live event stream, a quick check of what changed, then the toast "Your assistant now knows: …"; a stop says why in plain words with the page that fixes it and the conversation that failed (`versions/{id}?checks=problems`) |
 | Assistant → Knowledge | Server-paged items and search, unanswered questions to FAQ, menu import with review and batch discard, import from the business's website (queued, live progress, same review; `?source=website`), resources and special days |
-| Assistant → Hours and rules | The six profile steps (niche and languages, contacts and hours, offer, booking rules, FAQ and handoff, channels), each saved on its own; the "what to add" summary opens the full list in a side panel |
+| Assistant → Business profile | Six cards (Business, Place, Offer, Hours and bookings, People, Rules) with what each holds and what is left to add; each opens the tunnel's screen in its edit mode: no step counter, no Save, every change saved as the owner types ("Saving…", "Saved") and counted by the banner over the page. The offer is a compact table (name, kind, price, minutes; Enter adds a line, lines pasted from a spreadsheet, "From your website" and "From a menu photo or file" beside it); the niche's usual hours, booking rules and ready answers are only offered until the owner takes or changes them |
 | Assistant → Channels | Connect messengers and see why one stopped, WhatsApp's template for staff replies after 24 hours (name and language), website chat snippet, colour and corner, call forwarding codes, Google Calendar state and last sync, staff Telegram link |
 | Assistant → Channels → Share | The hosted chat page's link (copy, open, a new address for owners: old addresses keep working) and a link per switched-on channel, tagged with where it goes (`?src=`); a QR code made in the browser (`uqr`) as PNG or SVG, and a printable A6 table card in a business language (an iframe preview printed as is) |
 | Hosted chat page (`/c/{address}`) | Public, for customers: the widget in page mode, full screen on phones, in the visitor's language (Accept-Language among the business's), the business's colour; older addresses and the business id move to the current one; `noindex`, a policy that allows only the API; texts in all widget languages (`lib/hostedChat/`); `/c/{address}/privacy` is the platform's default privacy notice (ka, ru, en) |
@@ -877,7 +882,7 @@ as `reasonMessages` to `useMutation`); never match the English message.
   `*En`/`*Ru`/`*Ka` objects are spread into those files; each is composed of
   one file per namespace and language in its folder
   (`sections/insights/bookings.en.ts`, `bookings.ru.ts`, `bookings.ka.ts`; a
-  large namespace in a few parts); the wizard's and the landing page's in
+  large namespace in a few parts); the business profile's and the landing page's in
   `messages/onboarding/` and `messages/landing/` (one file per language).
   Translations are typed `Translation<typeof …En>`. English is the
   reference; `ru` and `ka` are typed as `Messages`, so a key added in English
@@ -887,7 +892,7 @@ as `reasonMessages` to `useMutation`); never match the English message.
   object with a key named `other` is read as plural forms, so do not use
   `other` as an ordinary key (e.g. `leads.type.otherRequest`).
 - Client Components: `const { t, tp, locale } = useI18n();` —
-  `t("bookings.title")`, `t("onboarding.stepOf", { number: 2, total: 6 })`,
+  `t("bookings.title")`, `t("tunnel.stepOf", { number: 2, total: 8 })`,
   plurals `tp("onboarding.gaps.times", count)` with Intl plural categories
   (`one`/`few`/`many`/`other`; Russian needs `few` and `many`).
 - Server Components: `const { t } = await getI18n();` (`@/i18n/server`).

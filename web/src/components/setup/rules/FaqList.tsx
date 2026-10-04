@@ -90,6 +90,7 @@ export function FaqList({ faq, starters, gaps }: { faq: FaqRows; starters: reado
                   value={row.answer}
                   maxLength={8000}
                   onChange={(event) => faq.update(row.key, { answer: event.target.value })}
+                  className="field-sizing-content min-h-16 max-h-72"
                 />
               </li>
             );

@@ -7,8 +7,9 @@
 
 import { expect, type APIRequestContext, type Page } from "@playwright/test";
 
+import type { Messages } from "../../src/i18n/translate";
+
 import { API_URL } from "./env";
-import type { en } from "./messages";
 
 /** The sections in the order of their cards (src/lib/profile/sections.ts). */
 export const PROFILE_SECTIONS = ["business", "place", "offer", "hours", "people", "rules"] as const;
@@ -16,7 +17,7 @@ export const PROFILE_SECTIONS = ["business", "place", "offer", "hours", "people"
 export type ProfileSection = (typeof PROFILE_SECTIONS)[number];
 
 /** The cabinet's texts in any of its languages (ru and ka are typed against English). */
-export type Messages = typeof en;
+export type { Messages };
 
 export function escapeRegExp(text: string): string {
   return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
