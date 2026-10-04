@@ -13,7 +13,7 @@ import {
   transliterate,
 } from "./telegramSetup";
 
-const reason = (code: string) => ({ code, message: code, details: {} });
+const reason = (code: string) => ({ code, message: code, details: [] });
 
 describe("the username suggested for @BotFather", () => {
   it("comes from the business name, in Latin letters, ending in _bot", () => {

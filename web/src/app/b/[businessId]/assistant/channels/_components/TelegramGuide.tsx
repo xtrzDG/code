@@ -29,6 +29,8 @@ import {
 
 /** A pause after typing or pasting before the token goes to Telegram. */
 const CHECK_DELAY_MS = 400;
+/** Typed this far without a key's shape, it is not one. */
+const FORMAT_HINT_LENGTH = 12;
 
 type CheckState = { token: string; bot: TelegramBotCheck } | { token: string; problem: TokenCheckProblem };
 
@@ -54,6 +56,8 @@ export function TelegramGuide({
   const { t } = useI18n();
   const { business } = useBusiness();
   const [tokenText, setTokenText] = useState("");
+  // A wrong shape is said once the field is left or holds more than a start of typing.
+  const [isLeft, setIsLeft] = useState(false);
   const [checked, setChecked] = useState<CheckState | null>(null);
   const token = cleanBotToken(tokenText);
   const isShaped = isBotToken(token);
@@ -84,7 +88,11 @@ export function TelegramGuide({
   const current = checked?.token === token ? checked : null;
   const bot = current && "bot" in current ? current.bot : null;
   const problem: TokenCheckProblem | null =
-    current && "problem" in current ? current.problem : token.length > 0 && !isShaped ? "format" : null;
+    current && "problem" in current
+      ? current.problem
+      : token.length > 0 && !isShaped && (isLeft || token.length >= FORMAT_HINT_LENGTH)
+        ? "format"
+        : null;
   const isChecking = isShaped && current === null;
   const canConnect = isShaped && problem !== "rejected" && problem !== "format";
 
@@ -139,10 +147,11 @@ export function TelegramGuide({
                 placeholder="123456789:AAH…"
                 value={tokenText}
                 onChange={(event) => setTokenText(event.target.value)}
+                onBlur={() => setIsLeft(true)}
               />
             )}
           </Field>
-          <div aria-live="polite" className="min-h-6">
+          <div role="status" className="min-h-6">
             {isChecking ? (
               <p className="flex items-center gap-2 text-sm text-ink-muted">
                 <Spinner size="sm" />
@@ -184,14 +193,17 @@ function Step({ number, title, children }: { number: number; title: string; chil
   );
 }
 
+/** A value to send BotFather with its Copy button; on phones the label sits above it. */
 function CopyRow({ label, value }: { label?: string; value: string }) {
   return (
-    <div className="flex items-center gap-2">
-      {label ? <span className="w-28 shrink-0 text-xs text-ink-subtle">{label}</span> : null}
-      <code dir="auto" className="min-w-0 flex-1 truncate rounded-lg bg-surface-muted px-3 py-1.5 font-mono text-sm text-ink">
-        {value}
-      </code>
-      <CopyButton value={value} iconOnly />
+    <div className="grid gap-1 sm:grid-cols-[7rem_minmax(0,1fr)] sm:items-center sm:gap-2">
+      {label ? <span className="text-xs text-ink-subtle">{label}</span> : null}
+      <div className={label ? "flex min-w-0 items-center gap-2" : "col-span-full flex min-w-0 items-center gap-2"}>
+        <code dir="auto" className="min-w-0 flex-1 rounded-lg bg-surface-muted px-3 py-1.5 font-mono text-sm break-all text-ink">
+          {value}
+        </code>
+        <CopyButton value={value} iconOnly />
+      </div>
     </div>
   );
 }

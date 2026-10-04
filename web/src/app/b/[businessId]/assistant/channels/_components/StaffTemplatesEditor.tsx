@@ -127,9 +127,7 @@ export function StaffTemplatesEditor({
       </h4>
       <p className="mt-1 text-sm text-ink-muted">
         {saved.length > 0 ? (
-          <span dir="ltr" className="font-mono">
-            {t("channelSetup.templates.summary", { list: summary })}
-          </span>
+          t("channelSetup.templates.summary", { list: summary })
         ) : (
           t("channelSetup.templates.none")
         )}
@@ -142,10 +140,11 @@ export function StaffTemplatesEditor({
           {canManage ? (
             <form noValidate onSubmit={(event) => void onSubmit(event)} className="space-y-3">
               <ul className="space-y-3">
-                {rows.map((row) => (
+                {rows.map((row, index) => (
                   <TemplateRowFields
                     key={row.key}
                     row={row}
+                    showHints={index === 0}
                     errors={errors[row.key]}
                     onChange={update}
                     onRemove={() => removeRow(row.key)}
@@ -153,8 +152,14 @@ export function StaffTemplatesEditor({
                 ))}
               </ul>
               <div className="flex flex-wrap gap-2">
-                <Button type="button" size="sm" variant="ghost" onClick={addRow} disabled={rows.length >= MAX_TEMPLATES}>
-                  <IconPlus aria-hidden className="size-4" />
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="ghost"
+                  leadingIcon={<IconPlus aria-hidden className="size-4" />}
+                  onClick={addRow}
+                  disabled={rows.length >= MAX_TEMPLATES}
+                >
                   {t("channelSetup.templates.add")}
                 </Button>
                 <Button
@@ -178,11 +183,14 @@ export function StaffTemplatesEditor({
 
 function TemplateRowFields({
   row,
+  showHints,
   errors,
   onChange,
   onRemove,
 }: {
   row: TemplateRow;
+  /** The examples under the fields, on the first row only. */
+  showHints: boolean;
   errors: TemplateRowErrors | undefined;
   onChange: (key: string, field: "language" | "name", value: string) => void;
   onRemove: () => void;
@@ -193,7 +201,7 @@ function TemplateRowFields({
     <li className="grid items-start gap-2 rounded-xl bg-surface-muted/60 p-3 sm:grid-cols-[8rem_minmax(0,1fr)_auto]">
       <Field
         label={t("channelSetup.templates.language")}
-        hint={t("channelSetup.templates.languageHint")}
+        hint={showHints ? t("channelSetup.templates.languageHint") : undefined}
         error={errors?.language ? t(ROW_ERRORS[errors.language]) : undefined}
       >
         {(control) => (
@@ -211,7 +219,7 @@ function TemplateRowFields({
       </Field>
       <Field
         label={t("channelSetup.templates.name")}
-        hint={t("channelSetup.templates.nameHint")}
+        hint={showHints ? t("channelSetup.templates.nameHint") : undefined}
         error={errors?.name ? t(ROW_ERRORS[errors.name]) : undefined}
       >
         {(control) => (
