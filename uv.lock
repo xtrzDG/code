@@ -94,7 +94,9 @@ dev = [
     { name = "pytest" },
     { name = "pytest-cov" },
     { name = "pytest-xdist" },
+    { name = "pyyaml" },
     { name = "ruff" },
+    { name = "types-pyyaml" },
     { name = "vulture" },
 ]
 
@@ -134,7 +136,9 @@ dev = [
     { name = "pytest" },
     { name = "pytest-cov" },
     { name = "pytest-xdist", specifier = ">=3.8.0" },
+    { name = "pyyaml", specifier = ">=6.0.3" },
     { name = "ruff" },
+    { name = "types-pyyaml", specifier = ">=6.0.12" },
     { name = "vulture", specifier = ">=2.16" },
 ]
 
@@ -1643,6 +1647,15 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/67/ea/09ae3fed86276b90eae3c495a00501897a3a320a3a4393fb203fff007cb6/typed_time_provider-0.2.0.tar.gz", hash = "sha256:b0a67bb83510a36496e5317951e5b24984a59987f0346b8f55f6ae36903c6c0f", size = 28522, upload-time = "2026-07-08T06:51:59.559Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/9a/f1/fdc98f0895e52c32bc9c8663ec9388879c4e96f0647c9bc1cbb8956ad98d/typed_time_provider-0.2.0-py3-none-any.whl", hash = "sha256:51d160811aa0de082209220c0788f48876c74880fd36c25a0fa0a30ef7732aa1", size = 29475, upload-time = "2026-07-08T06:51:58.079Z" },
+]
+
+[[package]]
+name = "types-pyyaml"
+version = "6.0.12.20260906"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/90/6e/abec85b9013db5b934b0280a6dd104904d84f7bcbaab2e2f3def87ac7463/types_pyyaml-6.0.12.20260906.tar.gz", hash = "sha256:f59c1cc05010b833d2d72287bbaa72610106b28d42d89a907313117faba85212", size = 18649, upload-time = "2026-09-06T06:35:35.362Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/15/c0/fc0644b7ddcfb969e95845837143cb5173ddd6e06ee4ba5fc493cd9329b7/types_pyyaml-6.0.12.20260906-py3-none-any.whl", hash = "sha256:bca893ff0d51df5c9053137d5d0e6ccd36e939a196356f1d5c16372422f5137b", size = 21282, upload-time = "2026-09-06T06:35:34.372Z" },
 ]
 
 [[package]]

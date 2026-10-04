@@ -354,3 +354,7 @@ _.is_mfa_required  # app/schemas/dto/mfa.py (AccountSecurityView)
 _.step_up_valid_until  # app/schemas/dto/mfa.py (SessionAssuranceView)
 _.members_without_two_factor  # app/schemas/dto/mfa.py (BusinessSecurityView)
 _.viewer_auth_level  # app/schemas/dto/mfa.py (BusinessSecurityView)
+
+# Pydantic configuration, read by pydantic's metaclass (the evaluation
+# dataset models refuse unknown keys).
+_.model_config  # scripts/eval_harness/dataset_models.py
