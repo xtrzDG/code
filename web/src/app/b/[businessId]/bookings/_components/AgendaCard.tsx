@@ -59,8 +59,11 @@ export function AgendaCard({
           aria-label={t("bookings.today.open", { name })}
           className="flex min-w-0 flex-1 cursor-pointer items-start gap-3 px-4 py-3.5 text-start transition-colors hover:bg-surface-muted/60 focus-visible:-outline-offset-2"
         >
-          <span className="w-14 shrink-0 tabular-nums">
-            <span className={cn("block text-lg leading-6 font-semibold", isActive ? "text-ink" : "text-ink-subtle")}>{when.main}</span>
+          {/* "19:30" fits a narrow column; "10:30 PM" keeps to one line in a wider one. */}
+          <span className={cn("shrink-0 tabular-nums", isStay || when.main.length > 5 ? "w-[5.25rem]" : "w-14")}>
+            <span className={cn("block text-lg leading-6 font-semibold", !isStay && "whitespace-nowrap", isActive ? "text-ink" : "text-ink-subtle")}>
+              {when.main}
+            </span>
             {when.sub ? <span className="block text-xs text-ink-subtle">{when.sub}</span> : null}
           </span>
           <span className="min-w-0 flex-1">
@@ -96,7 +99,7 @@ export function AgendaCard({
         <div className="border-t border-line px-3 pt-3 pb-3">
           <div className="grid grid-cols-2 gap-2" role="group" aria-label={name}>
             <Button
-              className="h-12 text-base"
+              className="h-auto min-h-12 py-1.5 text-base leading-tight"
               leadingIcon={<IconCheck className="size-5" aria-hidden />}
               disabled={!canMark || isBusy}
               aria-describedby={canMark ? undefined : hintId}
@@ -106,7 +109,7 @@ export function AgendaCard({
             </Button>
             <Button
               variant="secondary"
-              className="h-12 text-base"
+              className="h-auto min-h-12 py-1.5 text-base leading-tight"
               leadingIcon={<IconX className="size-5" aria-hidden />}
               disabled={!canMark || isBusy}
               aria-describedby={canMark ? undefined : hintId}

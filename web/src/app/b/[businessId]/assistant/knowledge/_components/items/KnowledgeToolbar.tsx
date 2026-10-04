@@ -4,7 +4,6 @@ import { useBusiness } from "@/components/business/BusinessContext";
 import { IconPlus, IconUpload } from "@/components/icons";
 import { Button, ButtonLink, Field, FilterSheet, Select, usePageLevel, usePhoneChrome, usePhoneFab } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
-import { cn } from "@/lib/cn";
 import type { KnowledgeFilter, KnowledgeStatusFilter } from "@/lib/knowledge/kinds";
 import { businessPath } from "@/lib/navigation";
 
@@ -77,9 +76,11 @@ export function KnowledgeToolbar({ list }: { list: KnowledgeItemsState }) {
         trailing={
           <>
             {importLink}
-            <Button leadingIcon={<IconPlus className="size-4" aria-hidden />} onClick={addItem} className={cn("h-10", hasFab && "hidden")}>
-              {t("knowledge.items.add")}
-            </Button>
+            {hasFab ? null : (
+              <Button leadingIcon={<IconPlus className="size-4" aria-hidden />} onClick={addItem} className="h-10">
+                {t("knowledge.items.add")}
+              </Button>
+            )}
           </>
         }
         inline={
