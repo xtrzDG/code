@@ -17,7 +17,8 @@ export function usePlatformStatus(initial?: PlatformStatus | null) {
   const { locale } = useI18n();
   const status = useQuery(
     queryKeys.platformStatus.status(locale),
-    () => api.GET("/v1/platform/status", { params: { query: { language: locale } } }),
+    // The API lets caches keep the status for 30 seconds; a person looking at it wants it now.
+    () => api.GET("/v1/platform/status", { params: { query: { language: locale } }, cache: "no-store" }),
     { staleMs: STATUS_POLL_MS },
   );
   const { reload } = status;

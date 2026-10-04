@@ -38,3 +38,7 @@ export const METRICS_ADMIN_EMAIL = "metrics-admin@e2e.workshop.example";
 export const MFA_ADMIN_EMAIL = "mfa-admin@e2e.workshop.example";
 /** A platform admin of the System page (admin-system.spec.ts). */
 export const SYSTEM_ADMIN_EMAIL = "system-admin@e2e.workshop.example";
+/** A platform admin who announces on the status page (status-page.spec.ts). */
+export const STATUS_ADMIN_EMAIL = "status-admin@e2e.workshop.example";
+/** The support contacts the suite's API shows (help-center.spec.ts). */
+export const SUPPORT_TELEGRAM = "workshop_help";
