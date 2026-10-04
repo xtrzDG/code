@@ -43,6 +43,11 @@ export type ConnectFieldError = "required" | "botToken" | "digits" | "pageToken"
 
 /** Token from @BotFather: "<bot id>:<35 characters>" (the API checks the same shape). */
 const BOT_TOKEN = /^[0-9]{5,20}:[A-Za-z0-9_-]{30,100}$/;
+/** Whether a (whitespace-free) text has the shape of a token from @BotFather. */
+export function isBotToken(token: string): boolean {
+  return BOT_TOKEN.test(token);
+}
+
 /** Meta object ids (phone number id, business account id, page id). */
 const META_ID = /^[0-9]{1,32}$/;
 const MIN_PAGE_TOKEN_LENGTH = 20;

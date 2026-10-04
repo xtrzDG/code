@@ -1,10 +1,12 @@
 import type { Metadata, Viewport } from "next";
 import { notFound } from "next/navigation";
 
+import { readPreviewLook } from "@/lib/hostedChat/preview";
 import { hostedChatTexts } from "@/lib/hostedChat/texts";
 import { SCHEME_BACKGROUNDS } from "@/lib/theme";
 import { chatApiBase } from "@/server/hostedChat";
 
+import { HostedChatPreview } from "./_components/HostedChatPreview";
 import { HostedChatNotice, HostedChatShell } from "./_components/HostedChatShell";
 import { chatLanguage, readHostedChatRequest, visitorLanguage } from "./_lib/hostedChatRequest";
 import { visitSourceOf } from "./_lib/visitSource";
@@ -44,7 +46,9 @@ export async function generateViewport(): Promise<Viewport> {
  * older addresses here and allowed the API in the page's policy; the
  * widget (page mode) does the rest with its usual limits. The visitor key
  * stays in the browser's storage, never in the address; the link's
- * `?src=` goes to the widget as the visitor's source.
+ * `?src=` goes to the widget as the visitor's source. With `?preview=1`
+ * it is the cabinet's live preview (HostedChatPreview), framed by the
+ * Channels page.
  */
 export default async function HostedChatPage({ searchParams }: PageProps<"/c/[slug]">) {
   const { lookup, acceptLanguage, nonce } = await readHostedChatRequest();
@@ -62,6 +66,13 @@ export default async function HostedChatPage({ searchParams }: PageProps<"/c/[sl
   }
 
   const view = lookup.view;
+  const query = await searchParams;
+  const preview = readPreviewLook(query);
+  if (preview) {
+    // The owner's language when the assistant speaks it, else its default one.
+    const page = chatLanguage(view, preview.language ?? acceptLanguage);
+    return <HostedChatPreview view={view} page={page} look={preview} apiBase={chatApiBase(view)} nonce={nonce} />;
+  }
   const page = chatLanguage(view, acceptLanguage);
   const texts = hostedChatTexts(page.language);
   if (!view.is_enabled) {
@@ -73,7 +84,7 @@ export default async function HostedChatPage({ searchParams }: PageProps<"/c/[sl
   }
 
   const apiBase = chatApiBase(view);
-  const source = visitSourceOf(await searchParams);
+  const source = visitSourceOf(query);
   return (
     <HostedChatShell page={page} accent={view.accent_color}>
       <div className="hc-frame">

@@ -6,8 +6,9 @@
  * route chunks, the Turnstile script of the sign-in page). Styles stay
  * 'unsafe-inline': React renders style attributes, and a nonce would turn
  * that keyword off. The page talks only to its own origin (the BFF at
- * /api/*) and to Cloudflare Turnstile, may not be framed, and forms post
- * only to itself or to the Flitt checkout.
+ * /api/*) and to Cloudflare Turnstile, may not be framed, frames only its
+ * own pages (the Channels page's live chat preview) and Turnstile, and
+ * forms post only to itself or to the Flitt checkout.
  */
 
 export const TURNSTILE_ORIGIN = "https://challenges.cloudflare.com";
@@ -44,7 +45,7 @@ export function buildContentSecurityPolicy(options: {
     "font-src 'self' data:",
     "media-src 'self' blob:",
     `connect-src 'self' ${TURNSTILE_ORIGIN}`,
-    `frame-src ${TURNSTILE_ORIGIN}`,
+    `frame-src 'self' ${TURNSTILE_ORIGIN}`,
     "worker-src 'self' blob:",
     "manifest-src 'self'",
     "object-src 'none'",
@@ -60,13 +61,16 @@ export function buildContentSecurityPolicy(options: {
  * The hosted chat page (/c/{address}): stricter than the cabinet's. It
  * runs Next.js and the chat widget (a nonce'd script from the API) and
  * talks only to its own origin and the API (`apiOrigin`, the widget's
- * requests). No Turnstile, no frames, no form posts, never framed.
+ * requests). No Turnstile, no frames, no form posts, never framed, except
+ * the cabinet's live preview (`isPreview`, ?preview=1): the Channels page
+ * of the same origin frames it.
  */
 export function buildHostedChatPolicy(options: {
   nonce: string;
   apiOrigin: string | null;
   isDevelopment: boolean;
   isHttps: boolean;
+  isPreview?: boolean;
 }): string {
   const directives = [
     "default-src 'self'",
@@ -86,7 +90,7 @@ export function buildHostedChatPolicy(options: {
     "object-src 'none'",
     "base-uri 'none'",
     "form-action 'none'",
-    "frame-ancestors 'none'",
+    options.isPreview ? "frame-ancestors 'self'" : "frame-ancestors 'none'",
     ...(options.isHttps ? ["upgrade-insecure-requests"] : []),
   ];
   return directives.join("; ");

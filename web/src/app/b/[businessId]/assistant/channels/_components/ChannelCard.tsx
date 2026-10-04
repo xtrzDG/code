@@ -8,21 +8,23 @@ import { useI18n } from "@/i18n/client";
 import { cn } from "@/lib/cn";
 import { businessPath } from "@/lib/navigation";
 
+import type { ChannelFix } from "../_lib/channelHealth";
 import {
   accountLabel,
   CHANNEL_STATE_TONES,
   channelState,
   isChannelOn,
-  isLinkMissing,
   type ChannelView,
   type ConnectableChannel,
 } from "../_lib/channels";
+import { ChannelHealthPanel } from "./ChannelHealthPanel";
 import { CHANNEL_ACCOUNT_LABELS, CHANNEL_BLURBS, CHANNEL_ICONS, CHANNEL_NAMES, CHANNEL_STATE_LABELS } from "./channelMeta";
 
 /**
- * One customer channel: status, account, settings of its own (`children`,
- * e.g. WhatsApp's template for staff replies) and connect / disconnect for
- * the owner.
+ * One customer channel: status, account, how it is doing (last messages
+ * each way, a problem in plain words with its fix), settings of its own
+ * (`children`, e.g. WhatsApp's templates for late replies) and connect /
+ * disconnect for the owner.
  */
 export function ChannelCard({
   kind,
@@ -32,6 +34,7 @@ export function ChannelCard({
   isBusy,
   onConnect,
   onDisconnect,
+  onFix,
   children,
 }: {
   kind: ConnectableChannel;
@@ -42,6 +45,8 @@ export function ChannelCard({
   isBusy: boolean;
   onConnect: (kind: ConnectableChannel) => void;
   onDisconnect: (kind: ConnectableChannel) => void;
+  /** The fix a problem's button asks for (connect again, or the WhatsApp templates). */
+  onFix: (kind: ConnectableChannel, fix: ChannelFix) => void;
   children?: ReactNode;
 }) {
   const { t } = useI18n();
@@ -95,32 +100,11 @@ export function ChannelCard({
           </dd>
         </dl>
       ) : null}
-      {channel ? (
-        <p className={cn("text-xs text-ink-subtle", isOn && account ? "mt-1" : "mt-4")}>
-          {t("channels.updatedAt", { date: format.dateTime(channel.updated_at) })}
-        </p>
+      {channel && !isOn ? (
+        <p className="mt-4 text-xs text-ink-subtle">{t("channels.updatedAt", { date: format.dateTime(channel.updated_at) })}</p>
       ) : null}
 
-      {state === "error" ? (
-        <Alert tone="danger" title={t("channels.errorTitle")} className="mt-4">
-          {channel?.last_error_at ? <p>{t("channels.errorSince", { date: format.dateTime(channel.last_error_at) })}</p> : null}
-          <p>{t("channels.errorDescription")}</p>
-          {channel?.last_error ? (
-            <p className="mt-1 text-xs break-words">
-              {t("channels.errorReason")}{" "}
-              <span dir="auto" className="font-mono">
-                {channel.last_error}
-              </span>
-            </p>
-          ) : null}
-          <p className="mt-1 text-xs">{t("channels.errorHeals")}</p>
-        </Alert>
-      ) : null}
-      {isLinkMissing(channel) ? (
-        <Alert tone="warning" title={t("channels.noLinkTitle")} className="mt-4">
-          <p>{t("channels.noLinkDescription", { channel: name })}</p>
-        </Alert>
-      ) : null}
+      <ChannelHealthPanel kind={kind} channel={channel} name={name} canManage={canManage} onFix={(fix) => onFix(kind, fix)} />
       {state === "pending" ? (
         <Alert tone="info" className="mt-4">
           {t("channels.pendingDescription")}

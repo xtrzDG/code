@@ -39,6 +39,14 @@ const nextConfig: NextConfig = {
           ...STRICT_TRANSPORT_SECURITY,
         ],
       },
+      {
+        // The cabinet's live preview of the website chat frames the hosted
+        // chat page of its own origin (src/lib/hostedChat/preview.ts); the
+        // later rule wins, and the page's policy says frame-ancestors 'self'.
+        source: "/c/:address",
+        has: [{ type: "query", key: "preview", value: "1" }],
+        headers: [{ key: "X-Frame-Options", value: "SAMEORIGIN" }],
+      },
     ];
   },
 };

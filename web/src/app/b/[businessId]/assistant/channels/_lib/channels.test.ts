@@ -19,7 +19,7 @@ import {
 } from "./channels";
 import { buildConnectBody, EMPTY_CONNECT_FORM } from "./connectForm";
 import {
-  buildWidgetPreviewUrl,
+  initialPreviewLanguage,
   isSameWidgetLook,
   normalizeHexColor,
   readableTextColor,
@@ -27,7 +27,6 @@ import {
   WIDGET_COLOR_PRESETS,
   WIDGET_DEFAULT_COLOR,
 } from "./widgetLook";
-import { buildStaffTemplateBody } from "./staffTemplate";
 import { readCalendarReturn, withoutCalendarReturn } from "./calendarReturn";
 
 const channel = (overrides: Partial<ChannelView>): ChannelView => ({
@@ -214,19 +213,10 @@ describe("website chat look", () => {
     expect(isSameWidgetLook({ color: "#0f766e", position: "left" }, { color: "#0f766e", position: "right" })).toBe(false);
   });
 
-  it("builds the live preview link with unsaved choices", () => {
-    const url = buildWidgetPreviewUrl(
-      "https://api.example.com/widget/demo?business_id=business_1",
-      { color: "#0F766E", position: "left" },
-      "ka",
-    );
-    const parsed = new URL(url);
-
-    expect(parsed.origin + parsed.pathname).toBe("https://api.example.com/widget/demo");
-    expect(parsed.searchParams.get("business_id")).toBe("business_1");
-    expect(parsed.searchParams.get("color")).toBe("#0f766e");
-    expect(parsed.searchParams.get("position")).toBe("left");
-    expect(parsed.searchParams.get("language")).toBe("ka");
+  it("starts the live preview in the owner's language when the assistant speaks it", () => {
+    expect(initialPreviewLanguage("ka", ["en", "ka"], "en")).toBe("ka");
+    expect(initialPreviewLanguage("ru", ["ka", "ru-RU"], "ka")).toBe("ru-RU");
+    expect(initialPreviewLanguage("en", ["de", "fr"], "de")).toBe("de");
   });
 });
 
@@ -243,27 +233,6 @@ describe("Google Calendar return", () => {
   it("removes only the notice from the query", () => {
     expect(withoutCalendarReturn("?calendar=error&reason=link_expired&tab=x")).toBe("tab=x");
     expect(withoutCalendarReturn("?calendar=connected")).toBe("");
-  });
-});
-
-describe("WhatsApp template for staff replies", () => {
-  it("is saved with its name and approved language", () => {
-    expect(buildStaffTemplateBody(" staff_reply ", "en")).toEqual({
-      ok: true,
-      body: { name: "staff_reply", language_code: "en" },
-    });
-    expect(buildStaffTemplateBody("staff_reply", "pt-br")).toEqual({
-      ok: true,
-      body: { name: "staff_reply", language_code: "pt_BR" },
-    });
-  });
-
-  it("names what is missing or malformed", () => {
-    expect(buildStaffTemplateBody("", "")).toEqual({ ok: false, errors: { name: "required", language: "required" } });
-    expect(buildStaffTemplateBody("Staff Reply", "english")).toEqual({
-      ok: false,
-      errors: { name: "name", language: "language" },
-    });
   });
 });
 

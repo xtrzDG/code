@@ -1,7 +1,7 @@
 /**
  * WhatsApp replies after the 24-hour window: sent in the owner's template,
  * a template WhatsApp refuses or a missing one pointing to the Channels page,
- * and setting the template there. The card and the channel list are served by
+ * and setting the templates there (one per language). The card and the channel list are served by
  * the test (see support/conversation-card.ts); everything else runs against
  * the real API.
  */
@@ -123,7 +123,7 @@ test("without a template the closed window points to the Channels page", async (
   await expect(page.getByRole("button", { name: en.conversations.reply.template.send })).toHaveCount(0);
 });
 
-test("the owner sets the WhatsApp template for staff replies on the Channels page", async ({ page, owner }) => {
+test("the owner sets WhatsApp templates for late staff replies, one per language", async ({ page, owner }) => {
   const whatsapp: ChannelView = {
     id: "channel_4d3c2b1a-0f9e-4d8c-b7a6-5f4e3d2c1b0a",
     business_id: owner.businessId,
@@ -137,27 +137,45 @@ test("the owner sets the WhatsApp template for staff replies on the Channels pag
     route.fulfill({ json: [whatsapp] }),
   );
   const saved: unknown[] = [];
-  await page.route(`**/api/backend/v1/businesses/${owner.businessId}/channels/whatsapp/staff-template`, (route) => {
-    const body = route.request().postDataJSON() as { name: string; language_code: string };
+  await page.route(`**/api/backend/v1/businesses/${owner.businessId}/channels/whatsapp/staff-templates`, (route) => {
+    const body = route.request().postDataJSON() as { templates: { name: string; language_code: string }[] };
     saved.push(body);
-    return route.fulfill({ json: { ...whatsapp, staff_reply_template: body } });
+    return route.fulfill({
+      json: { ...whatsapp, staff_reply_templates: body.templates, staff_reply_template: body.templates[0] ?? null },
+    });
   });
 
   await page.goto(`/b/${owner.businessId}/assistant/channels`);
   const card = page.getByRole("region", { name: en.channels.kinds.whatsapp, exact: true });
-  await expect(card.getByText(en.channels.staffTemplate.notSet)).toBeVisible();
+  await expect(card.getByText(en.channelSetup.templates.none)).toBeVisible();
+  await card.getByRole("button", { name: en.channelSetup.templates.advanced }).click();
 
-  await card.getByLabel(en.channels.staffTemplate.name, { exact: true }).fill("Staff Reply");
-  await card.getByLabel(en.channels.staffTemplate.language, { exact: true }).fill("pt-br");
-  await card.getByRole("button", { name: en.channels.staffTemplate.save }).click();
-  await expect(card.getByText(en.channels.staffTemplate.nameInvalid)).toBeVisible();
+  const languages = card.getByLabel(en.channelSetup.templates.language, { exact: true });
+  const names = card.getByLabel(en.channelSetup.templates.name, { exact: true });
+  // The first row starts in the business's main language (the salon speaks German first).
+  await expect(languages.first()).toHaveValue("de");
+  await names.first().fill("Staff Reply");
+  await card.getByRole("button", { name: en.channelSetup.templates.add }).click();
+  await expect(languages.nth(1)).toHaveValue("en");
+  await languages.nth(1).fill("de");
+  await names.nth(1).fill("staff_reply_pt");
+  await card.getByRole("button", { name: en.channelSetup.templates.save }).click();
+  await expect(card.getByText(en.channelSetup.templates.errors.name)).toBeVisible();
+  await expect(card.getByText(en.channelSetup.templates.errors.duplicate)).toBeVisible();
   expect(saved).toEqual([]);
 
-  await card.getByLabel(en.channels.staffTemplate.name, { exact: true }).fill("staff_reply");
-  await card.getByRole("button", { name: en.channels.staffTemplate.save }).click();
+  await names.first().fill("staff_reply");
+  await languages.nth(1).fill("pt-br");
+  await card.getByRole("button", { name: en.channelSetup.templates.save }).click();
 
-  await expect(page.getByText(en.channels.staffTemplate.savedToast)).toBeVisible();
-  expect(saved).toEqual([{ name: "staff_reply", language_code: "pt_BR" }]);
-  await expect(card.getByText("staff_reply (pt_BR)")).toBeVisible();
-  await expect(card.getByRole("button", { name: en.channels.staffTemplate.remove })).toBeVisible();
+  await expect(page.getByText(en.channelSetup.templates.savedToast)).toBeVisible();
+  expect(saved).toEqual([
+    {
+      templates: [
+        { name: "staff_reply", language_code: "de" },
+        { name: "staff_reply_pt", language_code: "pt_BR" },
+      ],
+    },
+  ]);
+  await expect(card.getByText("de (main language), pt_BR", { exact: false })).toBeVisible();
 });

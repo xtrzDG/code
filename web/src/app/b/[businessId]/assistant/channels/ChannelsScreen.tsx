@@ -23,7 +23,7 @@ import { CHANNEL_NAMES } from "./_components/channelMeta";
 import { ConnectChannelModal } from "./_components/ConnectChannelModal";
 import { GoogleCalendarCard } from "./_components/GoogleCalendarCard";
 import { ShareSection } from "./_components/ShareSection";
-import { StaffReplyTemplateForm } from "./_components/StaffReplyTemplateForm";
+import { STAFF_TEMPLATES_ID, StaffTemplatesEditor } from "./_components/StaffTemplatesEditor";
 import { StaffTelegramCard } from "./_components/StaffTelegramCard";
 import { WebChatSection } from "./_components/WebChatSection";
 import {
@@ -36,7 +36,9 @@ import {
   upsertChannel,
   type ConnectableChannel,
 } from "./_lib/channels";
+import type { ChannelFix } from "./_lib/channelHealth";
 import type { ConnectChannelBody } from "./_lib/connectForm";
+import { staffTemplatesKey } from "./_lib/staffTemplates";
 import { withoutCalendarReturn, type CalendarFailureReason, type CalendarReturn } from "./_lib/calendarReturn";
 
 const CALENDAR_RETURN_REASONS: Record<CalendarFailureReason, MessageKey> = {
@@ -123,6 +125,16 @@ export function ChannelsScreen({ calendarReturn: initialCalendarReturn }: { cale
     }
     setConnectError(null);
     setConnecting(kind);
+  };
+
+  const [showTemplates, setShowTemplates] = useState(false);
+  const onFix = (kind: ConnectableChannel, fix: ChannelFix) => {
+    if (fix === "reconnect") {
+      onConnect(kind);
+      return;
+    }
+    setShowTemplates(true);
+    window.requestAnimationFrame(() => document.getElementById(STAFF_TEMPLATES_ID)?.scrollIntoView({ block: "start" }));
   };
 
   const askDisconnect = (kind: ConnectableChannel) => {
@@ -215,11 +227,16 @@ export function ChannelsScreen({ calendarReturn: initialCalendarReturn }: { cale
                     isBusy={(connect.isPending && kind === "web_chat" && connecting === null) || (disconnect.isPending && disconnecting === kind)}
                     onConnect={onConnect}
                     onDisconnect={askDisconnect}
+                    onFix={onFix}
                   >
-                    {kind === "whatsapp" && channel ? (
-                      <StaffReplyTemplateForm
+                    {kind === "whatsapp" && channel && isChannelOn(channel) ? (
+                      <StaffTemplatesEditor
+                        // Starts again from the saved templates whenever they change.
+                        key={staffTemplatesKey(channel)}
                         channel={channel}
                         canManage={isOwner}
+                        isOpen={showTemplates}
+                        onOpenChange={setShowTemplates}
                         onSaved={(updated) => channels.setData((current) => upsertChannel(current, updated))}
                       />
                     ) : null}

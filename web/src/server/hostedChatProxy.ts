@@ -1,12 +1,15 @@
 /**
  * The proxy's part for the hosted chat page (/c/{address}): look the
  * address up, move an older address (or the business id) to the current
- * one, and give the page its strict policy with the API's origin. Every
+ * one, and give the page its strict policy with the API's origin (the
+ * cabinet's live preview, ?preview=1, may be framed by the cabinet). Every
  * /c/ page is kept out of search engines (X-Robots-Tag, besides the
  * page's own robots meta tag).
  */
 
 import { NextResponse, type NextRequest } from "next/server";
+
+import { isPreviewRequest } from "@/lib/hostedChat/preview";
 
 import { PATHNAME_HEADER, isCookieSecure } from "./backend";
 import { NONCE_HEADER, buildHostedChatPolicy, createNonce } from "./contentSecurityPolicy";
@@ -39,6 +42,7 @@ export async function routeHostedChat(request: NextRequest, address: string): Pr
     apiOrigin: lookup.kind === "found" ? originOf(chatApiBase(lookup.view)) : null,
     isDevelopment: process.env.NODE_ENV === "development",
     isHttps: isCookieSecure(),
+    isPreview: isPreviewRequest(request.nextUrl.searchParams),
   });
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set(PATHNAME_HEADER, `${pathname}${search}`);

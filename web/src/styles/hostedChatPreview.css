@@ -1,0 +1,119 @@
+/*
+ * The cabinet's live preview of the website chat (/c/{address}?preview=1,
+ * framed by the Channels page): a quiet sketch of a website under the chat
+ * widget, in the visitor's system colours and the chosen accent. Only
+ * shapes: the eye goes to the chat.
+ */
+
+.hc-preview {
+  color-scheme: light dark;
+  --hc-accent: #ad5732;
+  --hc-canvas: light-dark(#f3f2ee, #121110);
+  --hc-surface: light-dark(#ffffff, #1b1a18);
+  --hc-ink: light-dark(#1d1c1a, #ecebe6);
+  --hc-shape: light-dark(rgb(0 0 0 / 0.07), rgb(255 255 255 / 0.08));
+
+  min-height: 100dvh;
+  overflow: hidden;
+  background: var(--hc-canvas);
+  color: var(--hc-ink);
+  font-family:
+    system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", "Noto Sans Georgian", "Noto Sans Armenian",
+    "Noto Sans Hebrew", "Noto Sans Arabic", sans-serif;
+}
+
+.hc-preview-site {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  padding: 18px 22px;
+}
+
+.hc-preview-site i {
+  display: block;
+  border-radius: 8px;
+  background: var(--hc-shape);
+}
+
+.hc-preview-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--hc-shape);
+}
+
+.hc-preview-logo {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 7px;
+  background: var(--hc-accent);
+}
+
+.hc-preview-name {
+  min-width: 0;
+  overflow: hidden;
+  font-size: 14px;
+  font-weight: 650;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.hc-preview-nav {
+  display: flex;
+  gap: 10px;
+  margin-inline-start: auto;
+}
+
+.hc-preview-nav i {
+  width: 38px;
+  height: 8px;
+}
+
+.hc-preview-hero {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 340px;
+}
+
+.hc-preview-hero .hc-preview-line {
+  height: 10px;
+}
+
+.hc-preview-hero .hc-preview-title {
+  width: 80%;
+  height: 22px;
+}
+
+.hc-preview-hero .hc-preview-short {
+  width: 55%;
+}
+
+.hc-preview-hero .hc-preview-button {
+  width: 112px;
+  height: 30px;
+  margin-top: 6px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--hc-accent) 75%, transparent);
+}
+
+.hc-preview-cards {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.hc-preview-cards i {
+  height: 84px;
+  border-radius: 12px;
+  background: var(--hc-surface);
+  box-shadow: 0 0 0 1px var(--hc-shape);
+}
+
+@media (max-width: 480px) {
+  .hc-preview-nav {
+    display: none;
+  }
+}

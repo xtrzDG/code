@@ -50,13 +50,19 @@ export const CHANNEL_STATE_LABELS: Record<ChannelState, MessageKey> = {
   error: "channels.state.error",
 };
 
-/** The three "how to connect" steps of each channel that has a form. */
+/** The three "how to connect" steps of each channel with a form (Telegram has its own guide). */
 export const CHANNEL_STEPS: Partial<Record<ConnectableChannel, readonly MessageKey[]>> = {
-  telegram: ["channels.steps.telegram.step1", "channels.steps.telegram.step2", "channels.steps.telegram.step3"],
   whatsapp: ["channels.steps.whatsapp.step1", "channels.steps.whatsapp.step2", "channels.steps.whatsapp.step3"],
   instagram: ["channels.steps.instagram.step1", "channels.steps.instagram.step2", "channels.steps.instagram.step3"],
   messenger: ["channels.steps.messenger.step1", "channels.steps.messenger.step2", "channels.steps.messenger.step3"],
   phone: ["channels.steps.phone.step1", "channels.steps.phone.step2", "channels.steps.phone.step3"],
+};
+
+/** What Meta's channels need, in plain words, before their technical fields. */
+export const META_INTROS: Partial<Record<ConnectableChannel, MessageKey>> = {
+  whatsapp: "channelSetup.meta.whatsapp",
+  instagram: "channelSetup.meta.instagram",
+  messenger: "channelSetup.meta.messenger",
 };
 
 export const FIELD_LABELS: Record<ConnectField, { label: MessageKey; hint: MessageKey }> = {

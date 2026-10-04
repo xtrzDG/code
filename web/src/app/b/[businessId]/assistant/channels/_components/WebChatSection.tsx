@@ -10,7 +10,7 @@ import type { ChannelView } from "../_lib/channels";
 import { WidgetAppearanceCard } from "./WidgetAppearanceCard";
 import { WidgetSnippetCard } from "./WidgetSnippetCard";
 
-/** The switched-on website chat: its look with a live preview, and the embed code. */
+/** The switched-on website chat: its look with a live preview, and its code with where to paste it. */
 export function WebChatSection({
   channel,
   canManage,
@@ -37,7 +37,6 @@ export function WebChatSection({
       <WidgetAppearanceCard
         key={`${channel.widget_color ?? ""}:${channel.widget_position ?? ""}`}
         channel={channel}
-        demoUrl={snippet.data?.demo_url}
         canManage={canManage}
         onSaved={onSaved}
       />

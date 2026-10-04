@@ -5,17 +5,14 @@ import { useState, type FormEvent } from "react";
 import { api } from "@/api/client";
 import { useMutation } from "@/api/useMutation";
 import { useBusiness } from "@/components/business/BusinessContext";
-import { IconExternal } from "@/components/icons";
-import { Badge, Button, Card, Field, Fieldset, Input, Radio, buttonClasses, useToast } from "@/components/ui";
+import { Badge, Button, Card, Field, Fieldset, Input, Radio, useToast } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { cn } from "@/lib/cn";
 
 import type { ChannelView } from "../_lib/channels";
 import {
-  buildWidgetPreviewUrl,
   isSameWidgetLook,
   normalizeHexColor,
-  readableTextColor,
   savedWidgetLook,
   WIDGET_COLOR_PRESETS,
   WIDGET_DEFAULT_COLOR,
@@ -23,24 +20,23 @@ import {
   type WidgetLook,
   type WidgetPosition,
 } from "../_lib/widgetLook";
+import { WidgetPreviewFrame } from "./WidgetPreviewFrame";
 
 /**
  * The website chat's brand colour and launcher corner (saved on the web
- * chat channel; the widget reads them from its config), a sketch of the
- * page and a link to the live preview with the choices made here.
+ * chat channel; the widget reads them from its config) beside a live
+ * preview that follows every choice before it is saved.
  */
 export function WidgetAppearanceCard({
   channel,
-  demoUrl,
   canManage,
   onSaved,
 }: {
   channel: ChannelView;
-  demoUrl: string | undefined;
   canManage: boolean;
   onSaved: (channel: ChannelView) => void;
 }) {
-  const { t, locale } = useI18n();
+  const { t } = useI18n();
   const toast = useToast();
   const { business } = useBusiness();
   const saved = savedWidgetLook(channel);
@@ -78,15 +74,13 @@ export function WidgetAppearanceCard({
     }
   };
 
-  const previewUrl = demoUrl ? buildWidgetPreviewUrl(demoUrl, draft, locale) : null;
-
   return (
     <Card
       title={t("channels.widget.lookTitle")}
       description={t("channels.widget.lookDescription")}
       actions={canManage && isChanged ? <Badge tone="warning">{t("channels.widget.unsaved")}</Badge> : undefined}
     >
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_16rem]">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-6 xl:grid-cols-[minmax(0,1fr)_32rem]">
         <form noValidate onSubmit={onSubmit} className="min-w-0 space-y-5">
           <Field
             label={t("channels.widget.colorLabel")}
@@ -166,71 +160,15 @@ export function WidgetAppearanceCard({
             </div>
           </Fieldset>
 
-          <p className="text-xs text-ink-subtle">{t("channels.widget.overrideNote")}</p>
-
-          <div className="flex flex-wrap items-center gap-2">
-            {canManage ? (
-              <Button type="submit" size="sm" isLoading={save.isPending} loadingText={t("channels.widget.saving")} disabled={!isChanged}>
-                {t("channels.widget.save")}
-              </Button>
-            ) : null}
-            {previewUrl ? (
-              <a
-                href={previewUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className={buttonClasses({ variant: "secondary", size: "sm" })}
-                aria-describedby="widget-preview-hint"
-              >
-                <IconExternal className="size-4" aria-hidden />
-                <span>{t("channels.widget.openPreview")}</span>
-              </a>
-            ) : null}
-          </div>
-          {previewUrl ? (
-            <p id="widget-preview-hint" className="text-xs text-ink-subtle">
-              {t("channels.widget.previewHint")}
-            </p>
+          {canManage ? (
+            <Button type="submit" size="sm" isLoading={save.isPending} loadingText={t("channels.widget.saving")} disabled={!isChanged}>
+              {t("channels.widget.save")}
+            </Button>
           ) : null}
         </form>
 
-        <PageSketch look={draft} label={t("channels.widget.previewAlt")} />
+        <WidgetPreviewFrame look={draft} />
       </div>
     </Card>
-  );
-}
-
-/** A tiny page with the chat button in the chosen corner and colour. */
-function PageSketch({ look, label }: { look: WidgetLook; label: string }) {
-  return (
-    <div
-      role="img"
-      aria-label={label}
-      className="relative mx-auto aspect-[4/3] w-full max-w-64 self-start overflow-hidden rounded-xl border border-line bg-surface-muted"
-    >
-      <div className="flex items-center gap-1 border-b border-line bg-surface px-2 py-1.5" aria-hidden>
-        <span className="size-1.5 rounded-full bg-line-strong" />
-        <span className="size-1.5 rounded-full bg-line-strong" />
-        <span className="size-1.5 rounded-full bg-line-strong" />
-      </div>
-      <div className="space-y-2 p-3" aria-hidden>
-        <div className="h-2.5 w-3/5 rounded bg-line-strong/70" />
-        <div className="h-2 w-4/5 rounded bg-line" />
-        <div className="h-2 w-2/3 rounded bg-line" />
-        <div className="h-2 w-3/4 rounded bg-line" />
-      </div>
-      <span
-        aria-hidden
-        className={cn(
-          "absolute bottom-3 flex size-9 items-center justify-center rounded-full shadow-md",
-          look.position === "left" ? "left-3" : "right-3",
-        )}
-        style={{ backgroundColor: look.color, color: readableTextColor(look.color) }}
-      >
-        <svg viewBox="0 0 24 24" className="size-4" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-          <path d="M21 12a8 8 0 0 1-11.8 7.04L4 20l1.05-4.2A8 8 0 1 1 21 12z" />
-        </svg>
-      </span>
-    </div>
   );
 }
