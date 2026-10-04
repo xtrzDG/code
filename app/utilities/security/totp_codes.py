@@ -4,6 +4,7 @@ steps), the parameters every common authenticator app uses by default.
 """
 
 import hmac
+from urllib.parse import quote, urlencode
 
 import pyotp
 
@@ -35,10 +36,13 @@ def totp_provisioning_uri(
 ) -> TotpProvisioningUri:
     """The `otpauth://totp/…` address an authenticator app reads from a QR code."""
 
-    uri: str = pyotp.TOTP(str(secret)).provisioning_uri(
-        name=str(account_label), issuer_name=str(issuer)
+    # Key URI Format: "Issuer:account" as the label, the issuer again as a
+    # parameter; SHA-1, six digits and 30 seconds are its defaults.
+    label: str = f"{quote(str(issuer))}:{quote(str(account_label))}"
+    query: str = urlencode(
+        {"secret": str(secret), "issuer": str(issuer)}, quote_via=quote
     )
-    return TotpProvisioningUri(uri)
+    return TotpProvisioningUri(f"otpauth://totp/{label}?{query}")
 
 
 def current_totp_step(now_microseconds: int) -> TotpTimeStep:

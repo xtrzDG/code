@@ -8,7 +8,10 @@ text>"}. When the error carries machine-readable reasons
 publish (409) or why a menu link could not be read (422). The field is
 absent otherwise, and clients that do not know it ignore it. A 429 whose
 error knows how long to wait (`RateLimitedError.retry_after_seconds`) carries
-a Retry-After header.
+a Retry-After header, and a 401 asking to confirm a sensitive action
+(StepUpRequiredError) carries `WWW-Authenticate: Bearer
+error="insufficient_user_authentication"` (RFC 9470), so the cabinet's
+proxy keeps the session.
 
 The framework's own refusals speak the same language: a missing or
 malformed query parameter or header is a 422 `validation_failed` with one
@@ -39,6 +42,7 @@ from app.schemas.exceptions.application_errors import (
     ValidationFailedError,
 )
 from app.schemas.exceptions.base_exception import ApplicationError
+from app.schemas.exceptions.mfa_errors import StepUpRequiredError
 from app.schemas.typings.platform.constrained_strings import (
     ErrorReasonCode,
     ErrorReasonDetail,
@@ -67,6 +71,7 @@ HTTP_STATUS_ERROR_CODES: dict[int, ApiErrorCode] = {
     504: ApiErrorCode.EXTERNAL_SERVICE_ERROR,
 }
 MAX_REPORTED_VALIDATION_ERRORS: int = 5
+STEP_UP_CHALLENGE: str = 'Bearer error="insufficient_user_authentication"'
 MISSING_FIELD_ERROR_TYPE: str = "missing"
 MISSING_REASON_CODE: ErrorReasonCode = ErrorReasonCode("missing")
 INVALID_REASON_CODE: ErrorReasonCode = ErrorReasonCode("invalid")
@@ -104,6 +109,8 @@ async def handle_application_error(request: Request, error: Exception) -> JSONRe
     headers: dict[str, str] = {}
     if isinstance(error, RateLimitedError) and error.retry_after_seconds is not None:
         headers["Retry-After"] = str(int(error.retry_after_seconds))
+    if isinstance(error, StepUpRequiredError):
+        headers["WWW-Authenticate"] = STEP_UP_CHALLENGE
 
     return error_response(
         status_code,

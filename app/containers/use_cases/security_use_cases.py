@@ -27,6 +27,7 @@ from app.use_cases.admin.security.secret_resealer import SecretResealer
 from app.use_cases.admin.security.start_key_rotation_use_case import (
     StartKeyRotationUseCase,
 )
+from app.use_cases.admin.security.totp_secret_resealer import TotpSecretResealer
 
 
 class SecurityUseCasesContainer(containers.DeclarativeContainer):
@@ -73,6 +74,12 @@ class SecurityUseCasesContainer(containers.DeclarativeContainer):
         telegram_client=clients.telegram_bot_client,
         app_settings=config.app_settings,
     )
+    totp_secret_resealer: Factory[TotpSecretResealer] = Factory(
+        TotpSecretResealer,
+        totp_factor_repo=repositories.totp_factor_repo,
+        totp_secret_cipher=adapters.totp_secret_cipher,
+        wall_clock=time_provider.microsecond_wall_clock,
+    )
     rotate_encrypted_secrets_use_case: Factory[
         UseCaseContract[QueuedJobInput, JobReport]
     ] = Factory(
@@ -82,4 +89,5 @@ class SecurityUseCasesContainer(containers.DeclarativeContainer):
         secret_rotation=adapters.secret_cipher,
         resealer=secret_resealer,
         wall_clock=time_provider.microsecond_wall_clock,
+        totp_resealer=totp_secret_resealer,
     )

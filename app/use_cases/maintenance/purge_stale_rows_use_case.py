@@ -11,6 +11,7 @@ from app.contracts.repositories.delivery_repositories import (
     InboundEventRepoContract,
     OutboundMessageRepoContract,
 )
+from app.contracts.repositories.mfa_repositories import MfaChallengeRepoContract
 from app.contracts.repositories.user_repositories import (
     OtpChallengeRepoContract,
     UserSessionRepoContract,
@@ -38,6 +39,7 @@ DELIVERY_RETENTION_SECONDS: int = 30 * 24 * SECONDS_PER_HOUR
 MISSED_CALL_RETENTION_SECONDS: int = 90 * 24 * SECONDS_PER_HOUR
 USER_SESSION_ENTITY: AuditEntityName = AuditEntityName("user_session")
 OTP_CHALLENGE_ENTITY: AuditEntityName = AuditEntityName("otp_challenge")
+MFA_CHALLENGE_ENTITY: AuditEntityName = AuditEntityName("mfa_challenge")
 CHANNEL_RECEIPT_ENTITY: AuditEntityName = AuditEntityName("channel_message_receipt")
 INBOUND_EVENT_ENTITY: AuditEntityName = AuditEntityName("inbound_event")
 OUTBOUND_MESSAGE_ENTITY: AuditEntityName = AuditEntityName("outbound_message")
@@ -46,10 +48,10 @@ MISSED_CALL_ENTITY: AuditEntityName = AuditEntityName("missed_call")
 
 class PurgeStaleRowsUseCase(UseCaseContract[JobTick, JobReport]):
     """
-    Daily retention job: delete expired sessions, login codes older than a
-    day, webhook receipts, inbox events and outbox messages older than 30
-    days, and missed calls older than 90 days, so the auth, delivery and
-    call tables stop growing forever.
+    Daily retention job: delete expired sessions, login codes and second
+    sign-in steps older than a day, webhook receipts, inbox events and
+    outbox messages older than 30 days, and missed calls older than 90
+    days, so the auth, delivery and call tables stop growing forever.
 
     Each delete is an indexed range query in small batches. A purge that
     removed rows is audited as RETENTION_PURGE without an actor or business
@@ -67,7 +69,9 @@ class PurgeStaleRowsUseCase(UseCaseContract[JobTick, JobReport]):
         missed_call_repo: MissedCallRepoContract,
         audit_log_repo: AuditLogRepoContract,
         wall_clock: WallClock[Microseconds],
+        mfa_challenge_repo: MfaChallengeRepoContract,
     ) -> None:
+        self._mfa_challenge_repo: MfaChallengeRepoContract = mfa_challenge_repo
         self._user_session_repo: UserSessionRepoContract = user_session_repo
         self._otp_challenge_repo: OtpChallengeRepoContract = otp_challenge_repo
         self._channel_message_receipt_repo: ChannelMessageReceiptRepoContract = (
@@ -87,6 +91,14 @@ class PurgeStaleRowsUseCase(UseCaseContract[JobTick, JobReport]):
             (
                 OTP_CHALLENGE_ENTITY,
                 self._otp_challenge_repo.delete_created_before(
+                    self._wall_clock.now_unix_with_delta(
+                        Seconds(-OTP_CHALLENGE_RETENTION_SECONDS)
+                    )
+                ),
+            ),
+            (
+                MFA_CHALLENGE_ENTITY,
+                self._mfa_challenge_repo.delete_created_before(
                     self._wall_clock.now_unix_with_delta(
                         Seconds(-OTP_CHALLENGE_RETENTION_SECONDS)
                     )

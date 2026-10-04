@@ -17,6 +17,7 @@ from app.schemas.domain.mfa import (
 )
 from app.schemas.typings.mfa.constrained_integers import MfaAttemptCount, TotpTimeStep
 from app.schemas.typings.mfa.prefixed_id import MfaChallengeId, RecoveryCodeId
+from app.schemas.typings.mfa.strings import SealedTotpSecret
 from app.schemas.typings.storage.constrained_integers import DocumentCount
 from app.schemas.typings.storage.constrained_strings import DocumentFieldPath
 from app.schemas.typings.users.prefixed_id import UserId
@@ -83,8 +84,22 @@ class TotpFactorRepository(TotpFactorRepoContract):
 
         return self._collection.modify(str(user_id), remember)
 
-    def save(self, factor: TotpFactorDocument) -> None:
-        self._collection.upsert(str(factor.user_id), factor)
+    def replace_sealed_secret(
+        self,
+        user_id: UserId,
+        expected: SealedTotpSecret,
+        resealed: SealedTotpSecret,
+        now: Microseconds,
+    ) -> bool:
+        def reseal(factor: TotpFactorDocument) -> TotpFactorDocument | None:
+            if factor.sealed_secret != expected:
+                return None
+
+            factor.sealed_secret = resealed
+            factor.updated_at = now
+            return factor
+
+        return self._collection.modify(str(user_id), reseal) is not None
 
     def delete_for_user(self, user_id: UserId) -> None:
         self._collection.delete(str(user_id))

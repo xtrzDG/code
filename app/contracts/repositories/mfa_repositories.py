@@ -19,6 +19,7 @@ from app.schemas.domain.mfa import (
 )
 from app.schemas.typings.mfa.constrained_integers import MfaAttemptCount, TotpTimeStep
 from app.schemas.typings.mfa.prefixed_id import MfaChallengeId, RecoveryCodeId
+from app.schemas.typings.mfa.strings import SealedTotpSecret
 from app.schemas.typings.storage.constrained_integers import DocumentCount
 from app.schemas.typings.users.prefixed_id import UserId
 
@@ -57,8 +58,18 @@ class TotpFactorRepoContract(RepoContract, Protocol):
         """
         raise NotImplementedError
 
-    def save(self, factor: TotpFactorDocument) -> None:
-        """Overwrite the user's factor (re-sealing its secret)."""
+    def replace_sealed_secret(
+        self,
+        user_id: UserId,
+        expected: SealedTotpSecret,
+        resealed: SealedTotpSecret,
+        now: Microseconds,
+    ) -> bool:
+        """
+        Store the same secret sealed with another key, in one atomic step,
+        only while the stored one is still `expected` (the key rotation
+        job); False when the factor changed or is gone.
+        """
         raise NotImplementedError
 
     def delete_for_user(self, user_id: UserId) -> None:

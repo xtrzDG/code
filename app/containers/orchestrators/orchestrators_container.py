@@ -163,6 +163,7 @@ class OrchestratorsContainer(containers.DeclarativeContainer):
     security: SecurityOrchestratorsContainer = Container(  # type: ignore[assignment]
         SecurityOrchestratorsContainer,
         security_use_cases=use_cases.security,
+        mfa_use_cases=use_cases.mfa,
     )
     sharing: SharingOrchestratorsContainer = Container(  # type: ignore[assignment]
         SharingOrchestratorsContainer,
