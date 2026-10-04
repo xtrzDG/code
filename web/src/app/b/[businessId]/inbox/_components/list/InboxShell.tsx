@@ -11,12 +11,14 @@
 import { useSearchParams, useSelectedLayoutSegment } from "next/navigation";
 import { useMemo, type ReactNode } from "react";
 
+import { ExportCsvButton } from "@/components/exports/ExportCsvButton";
 import { replaceUrlQuery } from "@/components/insights/urlQuery";
 import { LiveStatus } from "@/components/shell/LiveStatus";
 import { useI18n } from "@/i18n/client";
 import { cn } from "@/lib/cn";
 
 import {
+  inboxApiQuery,
   inboxFiltersQuery,
   parseInboxFilters,
   sheetFilterCount,
@@ -52,7 +54,17 @@ export function InboxShell({ children }: { children: ReactNode }) {
           <h1 id="inbox-title" className="text-xl font-semibold tracking-tight text-ink sm:text-2xl">
             {t("inbox.title")}
           </h1>
-          <LiveStatus updatedAt={list.page.updatedAt} isFetching={list.page.isFetching && list.rows !== undefined} />
+          <div className="flex items-center gap-2">
+            <LiveStatus updatedAt={list.page.updatedAt} isFetching={list.page.isFetching && list.rows !== undefined} />
+            <ExportCsvButton
+              table="conversations"
+              query={inboxApiQuery(filters)}
+              label={t("dataExports.csv.inboxLabel")}
+              hint={t("dataExports.csv.inboxHint")}
+              variant="ghost"
+              iconOnly
+            />
+          </div>
         </header>
         <InboxViewTabs
           value={filters.view}

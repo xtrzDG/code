@@ -44,6 +44,9 @@ import { callSettingsRu } from "./workspace/callSettings.ru";
 import { channelsEn } from "./workspace/channels.en";
 import { channelsKa } from "./workspace/channels.ka";
 import { channelsRu } from "./workspace/channels.ru";
+import { dataExportsEn } from "./workspace/dataExports.en";
+import { dataExportsKa } from "./workspace/dataExports.ka";
+import { dataExportsRu } from "./workspace/dataExports.ru";
 import { workspaceCommonEn } from "./workspace/common.en";
 import { workspaceCommonKa } from "./workspace/common.ka";
 import { workspaceCommonRu } from "./workspace/common.ru";
@@ -92,6 +95,7 @@ export const workspaceEn = {
   adminIncident: adminIncidentEn,
   share: shareEn,
   privacyNotice: privacyNoticeEn,
+  dataExports: dataExportsEn,
 } as const;
 
 export const workspaceRu: Translation<typeof workspaceEn> = {
@@ -114,6 +118,7 @@ export const workspaceRu: Translation<typeof workspaceEn> = {
   adminIncident: adminIncidentRu,
   share: shareRu,
   privacyNotice: privacyNoticeRu,
+  dataExports: dataExportsRu,
 };
 
 export const workspaceKa: Translation<typeof workspaceEn> = {
@@ -136,4 +141,5 @@ export const workspaceKa: Translation<typeof workspaceEn> = {
   adminIncident: adminIncidentKa,
   share: shareKa,
   privacyNotice: privacyNoticeKa,
+  dataExports: dataExportsKa,
 };
