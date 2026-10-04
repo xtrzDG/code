@@ -33,6 +33,7 @@ from app.schemas.domain.message_media import MessageAttachment
 from app.schemas.domain.profiles import BusinessProfileDocument
 from app.schemas.dto.conversation_engine import PreparedTurn
 from app.schemas.dto.conversations import InboundMessage
+from app.schemas.dto.language_detection import DetectedLanguage
 from app.schemas.exceptions.application_errors import ConflictError, NotFoundError
 from app.schemas.typings.conversations.booleans import IsAfterHours
 from app.schemas.typings.conversations.constrained_integers import (
@@ -54,6 +55,10 @@ from app.use_cases.conversations.turns.prepared_turn_parts import (
     touch_conversation,
 )
 from app.use_cases.conversations.turns.turn_gate import choose_turn_gate
+from app.use_cases.conversations.turns.turn_language import (
+    detect_turn_language,
+    remember_contact_language,
+)
 from app.use_cases.shared.conversation_resolution import (
     resolve_conversation,
 )
@@ -90,8 +95,9 @@ class PrepareConversationTurnUseCase(UseCaseContract[InboundMessage, PreparedTur
     4. The gate: staff own a conversation in HANDOFF (silence in chat, a
        call-back promise on the phone); past the hourly per-contact limit the
        assistant answers once with a stop message, then stays silent.
-    5. The language among the version's languages (fallback: the
-       conversation's, then the version default), the after-hours flag from
+    5. The customer's language, any language (`detect_any`: a message that
+       tells too little keeps the conversation's, then the contact's, then
+       the version default language), the after-hours flag from
        the profile hours in the business time zone, the inbound message and
        the context line for the model. A message with nothing the assistant
        can read (a sticker, a file, a voice note without words) is answered
@@ -179,15 +185,10 @@ class PrepareConversationTurnUseCase(UseCaseContract[InboundMessage, PreparedTur
         ):
             gate = TurnGate.ATTACHMENT_NOTICE
 
-        language: LanguageTag = self._language_detector.detect(
-            str(customer_text),
-            list(version.languages),
-            (
-                conversation.language
-                if conversation.language is not None
-                else version.default_language
-            ),
+        detected: DetectedLanguage = detect_turn_language(
+            self._language_detector, customer_text, version, conversation, contact
         )
+        language: LanguageTag = detected.language
         local_now: datetime = to_local_datetime(now, business)
         profile: BusinessProfileDocument | None = (
             self._business_profile_repo.get_by_business(business.id)
@@ -225,17 +226,14 @@ class PrepareConversationTurnUseCase(UseCaseContract[InboundMessage, PreparedTur
             (conversation.id,),
             is_sandbox=conversation.is_sandbox,
         )
-        if contact.language is None:
-            contact.language = language
-            contact.updated_at = now
-            self._contact_repo.save(contact)
-
+        remember_contact_language(self._contact_repo, contact, detected, now)
         return PreparedTurn(
             business=business,
             version=version,
             contact=contact,
             conversation=conversation,
-            language=language,
+            reply_language=language,
+            script_hint=detected.script_hint,
             gate=gate,
             is_new_conversation=is_new_conversation,
             is_first_reply=is_first_reply,
@@ -249,6 +247,7 @@ class PrepareConversationTurnUseCase(UseCaseContract[InboundMessage, PreparedTur
                 business,
                 contact,
                 conversation,
+                detected,
                 local_now,
                 is_open is False,
                 is_first_reply,

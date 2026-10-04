@@ -12,8 +12,10 @@ from app.schemas.domain.contacts import ContactDocument
 from app.schemas.domain.conversations import ConversationDocument
 from app.schemas.dto.assistant_tools import AssistantToolContext
 from app.schemas.dto.conversations import InboundMessage
+from app.schemas.dto.language_detection import DetectedLanguage
 from app.schemas.typings.conversations.strings import MessageText
 from app.schemas.typings.localization.constrained_strings import LanguageTag
+from app.utilities.conversations.reply_language import describe_reply_language
 from app.utilities.conversations.turn_context import TurnContext, build_context_line
 
 
@@ -21,6 +23,7 @@ def build_turn_context_line(
     business: BusinessDocument,
     contact: ContactDocument,
     conversation: ConversationDocument,
+    detected: DetectedLanguage,
     local_now: datetime,
     is_after_hours: bool,
     is_first_reply: bool,
@@ -34,6 +37,9 @@ def build_turn_context_line(
                 timezone_name=str(business.timezone),
                 local_now=local_now,
                 channel=conversation.channel,
+                reply_language_note=describe_reply_language(
+                    detected.language, detected.script_hint
+                ),
                 customer_name=None if contact.name is None else str(contact.name),
                 customer_phone_number=(
                     None if contact.phone_number is None else str(contact.phone_number)

@@ -229,7 +229,7 @@ class ConversationTurnOrchestrator(ConversationTurnOrchestratorContract):
                     summary=build_failure_summary(turn, generated),
                     urgency=HandoffUrgency.NORMAL,
                     source_channel=turn.conversation.channel,
-                    language=turn.language,
+                    language=turn.reply_language,
                     is_sandbox=turn.conversation.is_sandbox,
                 )
             )
@@ -240,7 +240,9 @@ class ConversationTurnOrchestrator(ConversationTurnOrchestratorContract):
         return result.customer_message, result.id
 
     def _resolve(self, text: LocalizedText, turn: PreparedTurn) -> MessageText:
-        return MessageText(self._localized_text_resolver.resolve(text, turn.language))
+        return MessageText(
+            self._localized_text_resolver.resolve(text, turn.reply_language)
+        )
 
 
 def build_failure_summary(

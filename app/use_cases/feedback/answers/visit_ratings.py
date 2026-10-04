@@ -66,7 +66,7 @@ class VisitRatings:
 
         languages: set[str] = {
             base_language_code(language)
-            for language in (turn.language, *turn.business.languages)
+            for language in (turn.reply_language, *turn.business.languages)
         }
         score: VisitScore | None = parse_visit_score(str(turn.customer_text), languages)
         if score is None:
@@ -149,11 +149,13 @@ class VisitRatings:
         thanks = (
             FEEDBACK_THANKS_TEXT if score > LOW_SCORE_LIMIT else FEEDBACK_SORRY_TEXT
         )
-        paragraphs: list[str] = [str(self.text_resolver.resolve(thanks, turn.language))]
+        paragraphs: list[str] = [
+            str(self.text_resolver.resolve(thanks, turn.reply_language))
+        ]
         link: str | None = self._review_link(turn, request)
         if link is not None:
             invite: str = str(
-                self.text_resolver.resolve(REVIEW_INVITE_TEXT, turn.language)
+                self.text_resolver.resolve(REVIEW_INVITE_TEXT, turn.reply_language)
             )
             paragraphs.append(invite.replace(LINK_FIELD, link))
 
@@ -207,6 +209,6 @@ def low_rating_handoff(
         summary=summary,
         urgency=HandoffUrgency.LOW,
         source_channel=turn.conversation.channel,
-        language=turn.language,
+        language=turn.reply_language,
         is_sandbox=turn.conversation.is_sandbox,
     )
