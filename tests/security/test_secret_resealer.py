@@ -24,6 +24,7 @@ from app.schemas.typings.bookings.strings import ExternalCalendarId
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.channels.constrained_strings import (
     ChannelWebhookUrl,
+    TelegramBotUserId,
     TelegramWebhookSecret,
 )
 from app.schemas.typings.channels.prefixed_id import ChannelId
@@ -34,6 +35,7 @@ from app.schemas.typings.channels.strings import (
     ProviderMessageId,
 )
 from app.schemas.typings.conversations.strings import ChannelUserId
+from app.schemas.typings.media.strings import ProviderMediaId
 from app.schemas.typings.users.prefixed_id import UserId
 from app.use_cases.admin.security.secret_resealer import RotationTally, SecretResealer
 from app.utilities.config_helpers.app_settings.app_settings_assembler import (
@@ -79,6 +81,11 @@ class RecordingTelegram(TelegramBotApiClientContract):
     def send_typing_action(
         self, bot_token: ProviderToken, chat_id: ChannelUserId
     ) -> None:
+        raise NotImplementedError
+
+    def get_profile_photo_file_id(
+        self, bot_token: ProviderToken, bot_user_id: TelegramBotUserId
+    ) -> ProviderMediaId | None:
         raise NotImplementedError
 
 
