@@ -47,11 +47,11 @@ from app.use_cases.bookings.reminders.reminder_rules import (
     read_cancellation_policy,
     sends_reminders,
 )
-from app.utilities.privacy.messaging_suppression import is_messaging_suppressed
 from app.utilities.channels.proactive_limits import (
     PROACTIVE_WINDOW,
     proactive_message_counter,
 )
+from app.utilities.privacy.messaging_suppression import is_messaging_suppressed
 from app.utilities.scheduling.zoned_time import (
     load_time_zone,
     microseconds_to_seconds,
@@ -88,8 +88,9 @@ class SendBookingRemindersUseCase(UseCaseContract[JobTick, JobReport]):
     once.
 
     A customer who opted out of unrequested messages (STOP, also as a
-    suppression-list entry that outlived an erasure) gets no reminder, and every reminder counts against the customer's shared
-    daily cap of such messages.
+    suppression-list entry that outlived an erasure) gets no reminder, and
+    every reminder counts against the customer's shared daily cap of such
+    messages.
 
     The booking is read again right before it is reminded and before it is
     marked, and only `reminder_sent_at` is changed on that fresh copy, so a

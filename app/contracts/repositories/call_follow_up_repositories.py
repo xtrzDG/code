@@ -15,6 +15,7 @@ from app.schemas.domain.missed_calls import MissedCallDocument
 from app.schemas.dto.paging import KeysetSlice
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.calls.prefixed_id import MissedCallId
+from app.schemas.typings.localization.constrained_strings import E164PhoneNumber
 from app.schemas.typings.storage.booleans import IsDocumentInserted
 from app.schemas.typings.storage.constrained_integers import DocumentCount
 
@@ -54,6 +55,14 @@ class MissedCallRepoContract(RepoContract, Protocol):
         window: KeysetSlice,
     ) -> list[MissedCallDocument]:
         """One keyset page of the business's missed calls, newest first."""
+        raise NotImplementedError
+
+    def list_by_caller(
+        self,
+        business_id: BusinessId,
+        caller_phone_number: E164PhoneNumber,
+    ) -> list[MissedCallDocument]:
+        """The business's missed calls from one number, oldest first."""
         raise NotImplementedError
 
     def delete_created_before(self, created_before: Microseconds) -> DocumentCount:

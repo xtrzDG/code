@@ -1,11 +1,15 @@
 from typed_time_provider import Microseconds, WallClock
 
 from app.contracts.media_storage import MediaStorageAdapterContract
+from app.contracts.privacy import SuppressionListContract
 from app.contracts.recording_storage import RecordingStorageAdapterContract
 from app.contracts.repositories.booking_repositories import (
     BookingRepoContract,
     HandoffRepoContract,
     LeadRepoContract,
+)
+from app.contracts.repositories.call_follow_up_repositories import (
+    MissedCallRepoContract,
 )
 from app.contracts.repositories.compliance_repositories import AuditLogRepoContract
 from app.contracts.repositories.conversation_repositories import (
@@ -14,6 +18,13 @@ from app.contracts.repositories.conversation_repositories import (
     ConversationRepoContract,
     LlmTurnRepoContract,
     MessageRepoContract,
+)
+from app.contracts.repositories.delivery_repositories import (
+    InboundEventRepoContract,
+    OutboundMessageRepoContract,
+)
+from app.contracts.repositories.feedback_repositories import (
+    FeedbackRequestRepoContract,
 )
 from app.contracts.repositories.inbox_repositories import (
     ConversationNoteRepoContract,
@@ -29,14 +40,12 @@ from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.compliance import AuditLogEntryDocument
 from app.schemas.domain.contacts import ContactDocument
 from app.schemas.dto.access import BusinessAccessRequest
-from app.schemas.dto.call_recordings import RecordingLocation
 from app.schemas.dto.compliance import (
     ContactDataCommand,
     ContactErasureResult,
     ContactRecords,
     ContactRecordsQuery,
 )
-from app.schemas.dto.media import MediaLocation
 from app.schemas.typings.bookings.strings import LeadDetails
 from app.schemas.typings.compliance.constrained_integers import (
     DeletedRecordingCount,
@@ -48,6 +57,12 @@ from app.schemas.typings.compliance.strings import (
 )
 from app.schemas.typings.conversations.strings import ChannelUserId
 from app.schemas.typings.handoffs.strings import HandoffSummary
+from app.use_cases.compliance.contact_file_erasure import ContactFileEraser
+from app.use_cases.compliance.contact_trace_erasure import (
+    ContactTraceEraser,
+    TraceErasure,
+)
+from app.utilities.privacy.suppressed_identities import contact_identities
 
 ERASED_TEXT: str = "[erased at the visitor's request]"
 ERASED_CHANNEL_USER_ID_PREFIX: str = "erased-"
@@ -61,7 +76,7 @@ class DeleteContactDataUseCase(
 
     Recordings, voice notes and photos are deleted from storage first, so a
     storage failure leaves the database untouched and the erasure can be
-    retried. Then the messages,
+    retried (`contact_file_erasure`). Then the messages,
     model transcripts and the team's internal notes of their conversations
     and call transcripts are deleted, and the contact keeps only its id and
     the erasure time (no name, phones, language or channel identities), so
@@ -69,8 +84,12 @@ class DeleteContactDataUseCase(
     starts a new contact.
     Business records stay but lose the personal parts: conversations lose
     the channel identity, bookings their notes, leads their details and
-    budget, handoffs their summary. The erasure is audited with the contact
-    id only.
+    budget, handoffs their summary. Missed calls, queued messages, webhook
+    events and requests for feedback lose what identifies the person
+    (`contact_trace_erasure`). A customer who said STOP stays on the
+    suppression list (only digests, kept on purpose), so the erasure never
+    makes them reachable again. The erasure is audited with the contact id
+    only.
     """
 
     def __init__(
@@ -95,6 +114,11 @@ class DeleteContactDataUseCase(
         media_storage: MediaStorageAdapterContract,
         message_media_repo: MessageMediaRepoContract,
         step_up: StepUpGuardContract,
+        suppression_list: SuppressionListContract,
+        missed_call_repo: MissedCallRepoContract,
+        outbound_message_repo: OutboundMessageRepoContract,
+        inbound_event_repo: InboundEventRepoContract,
+        feedback_request_repo: FeedbackRequestRepoContract,
     ) -> None:
         self._step_up: StepUpGuardContract = step_up
         self._authorize_business_access: UseCaseContract[
@@ -114,11 +138,18 @@ class DeleteContactDataUseCase(
         self._lead_repo: LeadRepoContract = lead_repo
         self._handoff_repo: HandoffRepoContract = handoff_repo
         self._note_repo: ConversationNoteRepoContract = note_repo
-        self._recording_storage: RecordingStorageAdapterContract = recording_storage
         self._audit_log_repo: AuditLogRepoContract = audit_log_repo
         self._wall_clock: WallClock[Microseconds] = wall_clock
-        self._media_storage: MediaStorageAdapterContract = media_storage
-        self._message_media_repo: MessageMediaRepoContract = message_media_repo
+        self._suppression_list: SuppressionListContract = suppression_list
+        self._files: ContactFileEraser = ContactFileEraser(
+            recording_storage, media_storage, message_media_repo
+        )
+        self._traces: ContactTraceEraser = ContactTraceEraser(
+            missed_call_repo,
+            outbound_message_repo,
+            inbound_event_repo,
+            feedback_request_repo,
+        )
 
     def run(self, input_data: ContactDataCommand) -> ContactErasureResult:
         business: BusinessDocument = self._authorize_business_access.run(
@@ -137,8 +168,14 @@ class DeleteContactDataUseCase(
         )
         contact: ContactDocument = records.contact
         now: Microseconds = self._wall_clock.now_unix()
-        deleted_recordings: int = self._delete_recordings(records)
-        self._delete_message_media(business, records)
+        if contact.opted_out_channels:
+            # A STOP from before the suppression list: it outlives the erasure.
+            self._suppression_list.suppress(
+                business.id, contact_identities(contact), now
+            )
+
+        deleted_recordings: DeletedRecordingCount = self._files.erase(records)
+        traces: TraceErasure = self._traces.erase(records, now)
         self._erase_calls(records, now)
         deleted_llm_turns: int = self._erase_conversations(business, records, now)
         self._anonymize_business_records(records, now)
@@ -169,41 +206,17 @@ class DeleteContactDataUseCase(
             deleted_messages=ErasedRecordCount(len(records.messages)),
             deleted_llm_turns=ErasedRecordCount(deleted_llm_turns),
             erased_calls=ErasedRecordCount(len(records.calls)),
-            deleted_recordings=DeletedRecordingCount(deleted_recordings),
+            deleted_recordings=deleted_recordings,
             anonymized_conversations=ErasedRecordCount(len(records.conversations)),
             anonymized_bookings=ErasedRecordCount(len(records.bookings)),
             anonymized_leads=ErasedRecordCount(len(records.leads)),
             anonymized_handoffs=ErasedRecordCount(len(records.handoffs)),
             deleted_notes=ErasedRecordCount(len(records.notes)),
+            erased_missed_calls=traces.missed_calls,
+            redacted_outbound_messages=traces.outbound_messages,
+            redacted_inbound_events=traces.inbound_events,
+            anonymized_feedback_requests=traces.feedback_requests,
         )
-
-    def _delete_recordings(self, records: ContactRecords) -> int:
-        deleted_recordings: int = 0
-        for call in records.calls:
-            if call.recording_path is not None:
-                self._recording_storage.delete(
-                    RecordingLocation(
-                        business_id=call.business_id, path=call.recording_path
-                    )
-                )
-                deleted_recordings += 1
-
-        return deleted_recordings
-
-    def _delete_message_media(
-        self, business: BusinessDocument, records: ContactRecords
-    ) -> None:
-        """The voice notes and photos the person sent, from the storage too."""
-
-        for message in records.messages:
-            for attachment in message.attachments:
-                if attachment.media_id is None or attachment.storage_path is None:
-                    continue
-
-                self._media_storage.delete(
-                    MediaLocation(business_id=business.id, path=attachment.storage_path)
-                )
-                self._message_media_repo.delete(business.id, attachment.media_id)
 
     def _erase_calls(self, records: ContactRecords, now: Microseconds) -> None:
         for call in records.calls:

@@ -147,6 +147,11 @@ class ComplianceUseCasesContainer(containers.DeclarativeContainer):
         lead_repo=repositories.lead_repo,
         handoff_repo=repositories.handoff_repo,
         note_repo=repositories.conversation_note_repo,
+        channel_repo=repositories.channel_repo,
+        missed_call_repo=repositories.missed_call_repo,
+        outbound_message_repo=repositories.outbound_message_repo,
+        inbound_event_repo=repositories.inbound_event_repo,
+        feedback_request_repo=repositories.feedback_request_repo,
     )
     export_contact_data_use_case: Factory[
         UseCaseContract[ContactDataCommand, ContactDataExport]
@@ -157,6 +162,7 @@ class ComplianceUseCasesContainer(containers.DeclarativeContainer):
         audit_log_repo=repositories.audit_log_repo,
         wall_clock=time_provider.microsecond_wall_clock,
         step_up=utilities.step_up_guard,
+        suppression_list=facilitators.suppression_list,
     )
     delete_contact_data_use_case: Factory[
         UseCaseContract[ContactDataCommand, ContactErasureResult]
@@ -179,6 +185,11 @@ class ComplianceUseCasesContainer(containers.DeclarativeContainer):
         note_repo=repositories.conversation_note_repo,
         media_storage=adapters.media.media_storage,
         message_media_repo=repositories.message_media_repo,
+        suppression_list=facilitators.suppression_list,
+        missed_call_repo=repositories.missed_call_repo,
+        outbound_message_repo=repositories.outbound_message_repo,
+        inbound_event_repo=repositories.inbound_event_repo,
+        feedback_request_repo=repositories.feedback_request_repo,
     )
     purge_expired_message_media_use_case: Factory[
         UseCaseContract[PurgeExpiredRecordingsCommand, MessageMediaPurgeResult]

@@ -82,6 +82,14 @@ class FeedbackRequestRepoContract(RepoContract, Protocol):
         """The customer's SENT requests (waiting for a rating), newest first."""
         raise NotImplementedError
 
+    def list_by_contact(
+        self,
+        business_id: BusinessId,
+        contact_id: ContactId,
+    ) -> list[FeedbackRequestDocument]:
+        """Every request about the customer's visits, oldest first."""
+        raise NotImplementedError
+
     def find_by_token(self, token: ReviewLinkToken) -> FeedbackRequestDocument | None:
         """
         The request whose review link carries this token, in any business

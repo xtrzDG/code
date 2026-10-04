@@ -1,5 +1,6 @@
 from typed_time_provider import Microseconds, WallClock
 
+from app.contracts.privacy import SuppressionListContract
 from app.contracts.repositories.compliance_repositories import AuditLogRepoContract
 from app.contracts.session_assurance import StepUpGuardContract
 from app.contracts.use_case_contract import UseCaseContract
@@ -12,12 +13,17 @@ from app.schemas.dto.access import BusinessAccessRequest
 from app.schemas.dto.compliance import (
     ContactDataCommand,
     ContactDataExport,
+    ContactOptOutState,
     ContactRecords,
     ContactRecordsQuery,
 )
 from app.schemas.typings.compliance.strings import (
     AuditEntityName,
     AuditEntityReference,
+)
+from app.utilities.privacy.suppressed_identities import (
+    channel_identity,
+    contact_identities,
 )
 
 
@@ -27,7 +33,10 @@ class ExportContactDataUseCase(UseCaseContract[ContactDataCommand, ContactDataEx
 
     The export holds the contact, their conversations and messages, calls,
     bookings, leads, handoffs and the team's notes on their conversations,
-    and is written to the audit log.
+    their missed calls, the messages queued to them, the webhook events they
+    sent, their feedback ratings and their opt-out state (the channels they
+    sent STOP in, and whether the suppression list holds one of their
+    numbers or accounts), and is written to the audit log.
     """
 
     def __init__(
@@ -40,6 +49,7 @@ class ExportContactDataUseCase(UseCaseContract[ContactDataCommand, ContactDataEx
         audit_log_repo: AuditLogRepoContract,
         wall_clock: WallClock[Microseconds],
         step_up: StepUpGuardContract,
+        suppression_list: SuppressionListContract,
     ) -> None:
         self._step_up: StepUpGuardContract = step_up
         self._authorize_business_access: UseCaseContract[
@@ -52,6 +62,7 @@ class ExportContactDataUseCase(UseCaseContract[ContactDataCommand, ContactDataEx
         ] = collect_contact_records
         self._audit_log_repo: AuditLogRepoContract = audit_log_repo
         self._wall_clock: WallClock[Microseconds] = wall_clock
+        self._suppression_list: SuppressionListContract = suppression_list
 
     def run(self, input_data: ContactDataCommand) -> ContactDataExport:
         business: BusinessDocument = self._authorize_business_access.run(
@@ -88,4 +99,17 @@ class ExportContactDataUseCase(UseCaseContract[ContactDataCommand, ContactDataEx
             business_id=business.id,
             exported_at=now,
             records=records,
+            opt_out=ContactOptOutState(
+                opted_out_channels=list(records.contact.opted_out_channels),
+                is_on_suppression_list=self._suppression_list.is_suppressed(
+                    business.id,
+                    [
+                        *contact_identities(records.contact),
+                        *(
+                            channel_identity(item.channel, item.channel_user_id)
+                            for item in records.conversations
+                        ),
+                    ],
+                ),
+            ),
         )

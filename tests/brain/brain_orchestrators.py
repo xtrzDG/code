@@ -132,7 +132,7 @@ def build_brain_orchestrators(
             text_resolver=texts,
             wall_clock=wall_clock,
             app_base_url=app_base_url,
-            suppression_list=build_suppression_list(),
+            suppression_list=build_suppression_list(repos.suppression_entry_repo),
         ),
     )
     voice_orchestrator = VoiceToolCallOrchestrator(

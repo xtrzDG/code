@@ -67,10 +67,8 @@ class SuppressionListFacilitator(SuppressionListContract):
         business_id: BusinessId,
         identities: Sequence[SuppressedIdentity],
     ) -> SuppressedIdentityCount:
-        listed: list[SuppressionEntryDocument] = (
-            self._suppression_entry_repo.get_many(
-                business_id, self._entry_ids(business_id, identities)
-            )
+        listed: list[SuppressionEntryDocument] = self._suppression_entry_repo.get_many(
+            business_id, self._entry_ids(business_id, identities)
         )
         for entry in listed:
             self._suppression_entry_repo.delete(business_id, entry.id)

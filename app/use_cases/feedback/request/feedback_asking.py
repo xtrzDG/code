@@ -34,11 +34,11 @@ from app.use_cases.feedback.request.feedback_sending import (
     FeedbackSender,
     feedback_message_id,
 )
-from app.utilities.privacy.messaging_suppression import is_messaging_suppressed
 from app.utilities.feedback.feedback_keys import (
     feedback_request_id_of,
     new_review_token,
 )
+from app.utilities.privacy.messaging_suppression import is_messaging_suppressed
 
 MICROSECONDS_PER_SECOND: int = 1_000_000
 

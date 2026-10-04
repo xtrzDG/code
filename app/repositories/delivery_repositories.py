@@ -20,6 +20,8 @@ from app.schemas.constants.deliveries import InboundEventStatus, OutboundMessage
 from app.schemas.domain.inbound_events import InboundEventDocument
 from app.schemas.domain.outbound_messages import OutboundMessageDocument
 from app.schemas.typings.businesses.prefixed_id import BusinessId
+from app.schemas.typings.conversations.prefixed_id import ConversationId
+from app.schemas.typings.conversations.strings import ChannelUserId
 from app.schemas.typings.deliveries.constrained_strings import OutboundRecipientKey
 from app.schemas.typings.deliveries.prefixed_id import InboundEventId, OutboundMessageId
 from app.schemas.typings.storage.booleans import IsDocumentInserted
@@ -32,6 +34,8 @@ from app.schemas.typings.storage.constrained_strings import DocumentFieldPath
 CREATED_AT_FIELD: DocumentFieldPath = DocumentFieldPath("created_at")
 RECIPIENT_KEY_FIELD: DocumentFieldPath = DocumentFieldPath("recipient_key")
 STATUS_FIELD: DocumentFieldPath = DocumentFieldPath("status")
+SENDER_FIELD: DocumentFieldPath = DocumentFieldPath("customer_channel_user_id")
+CONVERSATION_ID_FIELD: DocumentFieldPath = DocumentFieldPath("conversation_id")
 
 
 class InboundEventRepository(InboundEventRepoContract):
@@ -110,6 +114,28 @@ class InboundEventRepository(InboundEventRepoContract):
             limit=limit,
         )
 
+    def list_by_customer(
+        self,
+        business_id: BusinessId,
+        channel_user_ids: Sequence[ChannelUserId],
+        conversation_ids: Sequence[ConversationId],
+    ) -> list[InboundEventDocument]:
+        found: dict[InboundEventId, InboundEventDocument] = {}
+        lookups = [
+            *(field_equals(SENDER_FIELD, sender) for sender in channel_user_ids),
+            *(
+                field_equals(CONVERSATION_ID_FIELD, conversation)
+                for conversation in conversation_ids
+            ),
+        ]
+        for lookup in lookups:
+            for event in self._collection.list_by_fields(
+                (of_business(business_id), lookup)
+            ):
+                found.setdefault(event.id, event)
+
+        return sorted(found.values(), key=lambda event: int(event.created_at))
+
     def delete_created_before(self, created_before: Microseconds) -> DocumentCount:
         return self._collection.delete_by_range(
             time_range(CREATED_AT_FIELD, ending_before=created_before)
@@ -163,6 +189,17 @@ class OutboundMessageRepository(
                 field_equals(RECIPIENT_KEY_FIELD, recipient_key),
                 field_equals(STATUS_FIELD, OutboundMessageStatus.PENDING),
             ),
+            order=ascending(CREATED_AT_FIELD),
+        )
+
+    def list_for_recipient(
+        self,
+        business_id: BusinessId,
+        recipient_key: OutboundRecipientKey,
+    ) -> list[OutboundMessageDocument]:
+        return self._list_in_business(
+            business_id,
+            (field_equals(RECIPIENT_KEY_FIELD, recipient_key),),
             order=ascending(CREATED_AT_FIELD),
         )
 

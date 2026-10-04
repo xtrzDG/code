@@ -2,6 +2,7 @@ from base_pydantic_schemas import ImmutableDTO
 from pydantic import Field
 from typed_time_provider import Microseconds
 
+from app.schemas.constants.channels import ChannelKind
 from app.schemas.constants.compliance import AuditAction
 from app.schemas.domain.bookings import BookingDocument, LeadDocument
 from app.schemas.domain.contacts import ContactDocument
@@ -11,7 +12,11 @@ from app.schemas.domain.conversations import (
     ConversationDocument,
     MessageDocument,
 )
+from app.schemas.domain.feedback import FeedbackRequestDocument
 from app.schemas.domain.handoffs import HandoffDocument
+from app.schemas.domain.inbound_events import InboundEventDocument
+from app.schemas.domain.missed_calls import MissedCallDocument
+from app.schemas.domain.outbound_messages import OutboundMessageDocument
 from app.schemas.dto.paging import PageRequest
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.compliance.booleans import IsDpaAccepted
@@ -39,6 +44,7 @@ from app.schemas.typings.compliance.strings import (
 from app.schemas.typings.contacts.prefixed_id import ContactId
 from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.schemas.typings.platform.constrained_strings import PageCursor
+from app.schemas.typings.privacy.booleans import IsMessagingSuppressed
 from app.schemas.typings.users.prefixed_id import UserId
 
 
@@ -163,7 +169,11 @@ class ContactRecords(ImmutableDTO):
     Calls belong to the visitor through one of their conversations or their
     phone number; `notes` are the team's internal notes on their
     conversations. Raw language-model turns repeat the messages and are not
-    listed.
+    listed. Missed calls are found by the visitor's numbers, the messages
+    queued to them (`outbound_messages`: replies, reminders, text-backs) by
+    their account in each of the business's channels, the webhook events
+    they sent (`inbound_events`) by their accounts and conversations, and
+    the requests for feedback after their visits by the contact.
     """
 
     contact: ContactDocument
@@ -178,14 +188,41 @@ class ContactRecords(ImmutableDTO):
     notes: list[ConversationNoteDocument] = Field(
         default_factory=list[ConversationNoteDocument]
     )
+    missed_calls: list[MissedCallDocument] = Field(
+        default_factory=list[MissedCallDocument]
+    )
+    outbound_messages: list[OutboundMessageDocument] = Field(
+        default_factory=list[OutboundMessageDocument]
+    )
+    inbound_events: list[InboundEventDocument] = Field(
+        default_factory=list[InboundEventDocument]
+    )
+    feedback_requests: list[FeedbackRequestDocument] = Field(
+        default_factory=list[FeedbackRequestDocument]
+    )
+
+
+class ContactOptOutState(ImmutableDTO):
+    """
+    Whether the visitor stopped messages they did not ask for: the
+    channels they sent STOP in, and whether one of their numbers or
+    accounts is on the business's suppression list.
+    """
+
+    opted_out_channels: list[ChannelKind] = Field(default_factory=list[ChannelKind])
+    is_on_suppression_list: IsMessagingSuppressed = False
 
 
 class ContactDataExport(ImmutableDTO):
-    """Machine-readable copy of a visitor's personal data (right of access)."""
+    """
+    Machine-readable copy of a visitor's personal data (right of access),
+    with their missed calls, feedback ratings and opt-out state.
+    """
 
     business_id: BusinessId
     exported_at: Microseconds
     records: ContactRecords
+    opt_out: ContactOptOutState = Field(default_factory=ContactOptOutState)
 
 
 class ContactErasureResult(ImmutableDTO):
@@ -194,7 +231,11 @@ class ContactErasureResult(ImmutableDTO):
 
     Messages, model transcripts, the team's notes, call transcripts and
     recordings are deleted; conversations, bookings, leads and handoffs stay
-    as anonymous business records.
+    as anonymous business records. Missed calls lose the caller's number,
+    messages queued to them and webhook events they sent lose their text
+    and account (queued ones are no longer sent or processed), and requests
+    for feedback lose their review link; a STOP stays on the suppression
+    list.
     """
 
     business_id: BusinessId
@@ -208,6 +249,10 @@ class ContactErasureResult(ImmutableDTO):
     anonymized_leads: ErasedRecordCount
     anonymized_handoffs: ErasedRecordCount
     deleted_notes: ErasedRecordCount = ErasedRecordCount(0)
+    erased_missed_calls: ErasedRecordCount = ErasedRecordCount(0)
+    redacted_outbound_messages: ErasedRecordCount = ErasedRecordCount(0)
+    redacted_inbound_events: ErasedRecordCount = ErasedRecordCount(0)
+    anonymized_feedback_requests: ErasedRecordCount = ErasedRecordCount(0)
 
 
 class PurgeExpiredRecordingsCommand(ImmutableDTO):

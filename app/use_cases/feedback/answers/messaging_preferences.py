@@ -64,7 +64,9 @@ class MessagingPreferences:
             self.contact_repo.get(turn.business.id, turn.contact.id) or turn.contact
         )
         identities: list[SuppressedIdentity] = [
-            channel_identity(turn.conversation.channel, turn.conversation.channel_user_id),
+            channel_identity(
+                turn.conversation.channel, turn.conversation.channel_user_id
+            ),
             *contact_identities(contact),
         ]
         if kind is CustomerSignalKind.OPT_OUT:
@@ -81,6 +83,7 @@ class MessagingPreferences:
                 return None
 
             # STOP said before an erasure: only the list remembered it.
+            self._audit(contact, AuditAction.DELETE, now)
             return self._reply(turn, kind, OPTED_IN_TEXT)
 
         self._store(contact, [], AuditAction.DELETE, now)
@@ -96,6 +99,11 @@ class MessagingPreferences:
         contact.opted_out_channels = opted_out_channels
         contact.updated_at = now
         self.contact_repo.save(contact)
+        self._audit(contact, action, now)
+
+    def _audit(
+        self, contact: ContactDocument, action: AuditAction, now: Microseconds
+    ) -> None:
         self.audit_log_repo.append(
             AuditLogEntryDocument(
                 business_id=contact.business_id,
