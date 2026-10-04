@@ -120,6 +120,8 @@ export const queryKeys = {
     questionsAlert: (businessId: Id) => ["knowledge", businessId, "questionsAlert"] as const,
     /** The business's current import from its website (progress and drafts). */
     websiteImport: (businessId: Id) => ["knowledge", businessId, "websiteImport"] as const,
+    /** The active services, packages and room types (bookings, resources). */
+    offers: (businessId: Id) => ["knowledge", businessId, "offers"] as const,
   },
 
   resources: {

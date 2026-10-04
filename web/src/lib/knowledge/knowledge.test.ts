@@ -89,6 +89,9 @@ describe("the item form", () => {
       body: "",
       price: "18.5",
       duration: "45",
+      buffer: "",
+      performerIds: [],
+      seasons: [],
       languages: ["ka"],
       isActive: false,
     });

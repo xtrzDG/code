@@ -38,6 +38,10 @@ export function useKnowledgeItems() {
   const items = useCursorPage<KnowledgeItemDetails, Schema<"KnowledgeItemPage">>(itemsQuery.key, itemsQuery.fetchPage, {
     pageSize: itemsQuery.pageSize,
   });
+  // Who performs a service (names on its row); shared with the resources page and the editor.
+  const resources = useQuery(queryKeys.resources.list(business.id), () =>
+    api.GET("/v1/businesses/{business_id}/resources", { params: { path: { business_id: business.id } } }),
+  );
   const questions = useQuery(queryKeys.knowledge.questionsAlert(business.id), () =>
     api.GET("/v1/businesses/{business_id}/unanswered-questions", {
       params: { path: { business_id: business.id }, query: { limit: String(QUESTIONS_ALERT_LIMIT) } },
@@ -108,6 +112,7 @@ export function useKnowledgeItems() {
 
   return {
     kinds,
+    resources: resources.data?.items ?? [],
     filter,
     setFilter,
     items,
