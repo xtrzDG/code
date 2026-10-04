@@ -8,8 +8,10 @@ from app.schemas.constants.deliveries import (
     OutboundMessageKind,
     OutboundMessageStatus,
 )
+from app.schemas.constants.invoicing import BillingDocumentKind
 from app.schemas.constants.notifications import WebPushUrgency
 from app.schemas.domain.businesses import ManagerContact
+from app.schemas.typings.billing.prefixed_id import InvoiceId
 from app.schemas.typings.bookings.prefixed_id import BookingId
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.calls.prefixed_id import MissedCallId
@@ -35,6 +37,7 @@ from app.schemas.typings.deliveries.prefixed_id import OutboundMessageId
 from app.schemas.typings.deliveries.strings import DeliveryErrorText
 from app.schemas.typings.feedback.prefixed_id import FeedbackRequestId
 from app.schemas.typings.handoffs.prefixed_id import HandoffId
+from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.schemas.typings.notifications.constrained_strings import (
     CabinetDeepLink,
     PushNotificationTag,
@@ -84,6 +87,18 @@ class PushRecipient(PersistentDocument):
     urgency: WebPushUrgency = WebPushUrgency.NORMAL
 
 
+class OutboundBillingDocuments(PersistentDocument):
+    """
+    The PDFs an e-mail to a business's billing contact carries: the
+    invoice and, once it is paid, its receipt, laid out in `language`
+    when the e-mail is sent (never stored in the outbox).
+    """
+
+    invoice_id: InvoiceId
+    kinds: list[BillingDocumentKind]
+    language: LanguageTag
+
+
 class OutboundMessageDocument(BaseDocument):
     """
     One message to send (the outbox): an assistant reply to a customer or a
@@ -112,9 +127,13 @@ class OutboundMessageDocument(BaseDocument):
     (`missed_call_id`, whose text-back follows the delivery), and the
     moment after which a message is no longer worth sending
     (`send_before`: it is given up instead). All optional.
+
+    Version 5: an e-mail to the billing contact may carry the invoice and
+    receipt PDFs of an invoice (`billing_documents`, optional; a release
+    that does not know it sends the e-mail without them).
     """
 
-    schema_version: SchemaVersion = SchemaVersion("4")
+    schema_version: SchemaVersion = SchemaVersion("5")
     id: OutboundMessageId
     business_id: BusinessId
     kind: OutboundMessageKind
@@ -132,6 +151,7 @@ class OutboundMessageDocument(BaseDocument):
     booking_id: BookingId | None = None
     call_id: CallId | None = None
     missed_call_id: MissedCallId | None = None
+    billing_documents: OutboundBillingDocuments | None = None
     status: OutboundMessageStatus = OutboundMessageStatus.PENDING
     attempts: DeliveryAttemptCount = DeliveryAttemptCount(0)
     delivered_parts: DeliveredMessageCount = DeliveredMessageCount(0)

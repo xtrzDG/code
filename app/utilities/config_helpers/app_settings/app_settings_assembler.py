@@ -73,6 +73,9 @@ from app.utilities.config_helpers.app_settings.reply_speed_settings_section impo
 from app.utilities.config_helpers.app_settings.runtime_settings_section import (
     read_runtime_settings,
 )
+from app.utilities.config_helpers.app_settings.seller_settings_section import (
+    read_seller_settings,
+)
 from app.utilities.config_helpers.app_settings.session_settings_section import (
     read_session_settings,
 )
@@ -144,4 +147,5 @@ def assemble_app_settings(environment_variables: Mapping[str, str]) -> AppSettin
         **read_reply_safety_settings(environment_variables, llm_provider),
         **read_platform_alert_settings(environment_variables),
         **read_session_settings(environment_variables),
+        **read_seller_settings(environment_variables),
     )

@@ -77,6 +77,13 @@ CONSTRAINED_TEXT_SAMPLES: dict[str, str] = {
     "WhatsAppTemplateName": "booking_reminder",
     "WidgetAccentColor": "#7c5cff",
     "WorkerHostName": "srv-workshop-worker-1",
+    "BillingAddressText": "12 Rustaveli Ave, 0108 Tbilisi",
+    "BillingLegalName": "Mtsvane Ezo LLC",
+    "InvoiceCounterKey": "AW:2026",
+    "InvoiceNumber": "AW-2026-000042",
+    "InvoiceSeries": "AW",
+    "PaymentCardLastDigits": "4242",
+    "TaxpayerIdentificationNumber": "405123456",
 }
 
 # Unconstrained text that still has a format in practice.
