@@ -650,6 +650,220 @@
         "title": "AdminPaymentView",
         "type": "object"
       },
+      "AdminSystemView": {
+        "additionalProperties": false,
+        "description": "The platform at `checked_at`: workers, queue lanes and dead letters,\nchannels that need the team, database size by table (None without\nPostgres), the last backup and restore drill, and the platform alerts.",
+        "properties": {
+          "alerts": {
+            "items": {
+              "$ref": "#/components/schemas/AlertStateView"
+            },
+            "title": "Alerts",
+            "type": "array"
+          },
+          "channels_in_error": {
+            "items": {
+              "$ref": "#/components/schemas/ChannelIssueView"
+            },
+            "title": "Channels In Error",
+            "type": "array"
+          },
+          "channels_in_error_count": {
+            "minimum": 0.0,
+            "title": "Channels In Error Count",
+            "type": "integer"
+          },
+          "checked_at": {
+            "title": "Checked At",
+            "type": "integer"
+          },
+          "database_bytes": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Database Bytes"
+          },
+          "dead_jobs": {
+            "items": {
+              "$ref": "#/components/schemas/DeadJobTally"
+            },
+            "title": "Dead Jobs",
+            "type": "array"
+          },
+          "expiring_credentials": {
+            "items": {
+              "$ref": "#/components/schemas/ChannelIssueView"
+            },
+            "title": "Expiring Credentials",
+            "type": "array"
+          },
+          "is_backup_overdue": {
+            "title": "Is Backup Overdue",
+            "type": "boolean"
+          },
+          "lanes": {
+            "items": {
+              "$ref": "#/components/schemas/LaneView"
+            },
+            "title": "Lanes",
+            "type": "array"
+          },
+          "last_backup": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MaintenanceRunView"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "last_restore_drill": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MaintenanceRunView"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "tables": {
+            "items": {
+              "$ref": "#/components/schemas/TableSizeView"
+            },
+            "title": "Tables",
+            "type": "array"
+          },
+          "workers": {
+            "items": {
+              "$ref": "#/components/schemas/WorkerPulseView"
+            },
+            "title": "Workers",
+            "type": "array"
+          }
+        },
+        "required": [
+          "checked_at",
+          "workers",
+          "lanes",
+          "dead_jobs",
+          "channels_in_error",
+          "channels_in_error_count",
+          "expiring_credentials",
+          "tables",
+          "is_backup_overdue",
+          "alerts"
+        ],
+        "title": "AdminSystemView",
+        "type": "object"
+      },
+      "AlertStateView": {
+        "additionalProperties": false,
+        "description": "A platform alert that fires now, or whose last episode ended within a day.",
+        "properties": {
+          "code": {
+            "$ref": "#/components/schemas/PlatformAlertCode"
+          },
+          "detail": {
+            "title": "Detail",
+            "type": "string"
+          },
+          "figure": {
+            "minimum": 0.0,
+            "title": "Figure",
+            "type": "integer"
+          },
+          "fired_at": {
+            "title": "Fired At",
+            "type": "integer"
+          },
+          "notification_count": {
+            "minimum": 0.0,
+            "title": "Notification Count",
+            "type": "integer"
+          },
+          "notified_at": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notified At"
+          },
+          "resolved_at": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resolved At"
+          },
+          "runbook": {
+            "maxLength": 160,
+            "minLength": 20,
+            "pattern": "^docs/operations/[a-z0-9/-]+\\.md\\Z",
+            "title": "Runbook",
+            "type": "string"
+          },
+          "severity": {
+            "$ref": "#/components/schemas/IncidentSeverity"
+          },
+          "status": {
+            "$ref": "#/components/schemas/PlatformAlertStatus"
+          },
+          "summary": {
+            "title": "Summary",
+            "type": "string"
+          },
+          "threshold": {
+            "minimum": 0.0,
+            "title": "Threshold",
+            "type": "integer"
+          },
+          "unit": {
+            "$ref": "#/components/schemas/AlertUnit"
+          }
+        },
+        "required": [
+          "code",
+          "status",
+          "severity",
+          "summary",
+          "figure",
+          "threshold",
+          "unit",
+          "detail",
+          "fired_at",
+          "notification_count",
+          "runbook"
+        ],
+        "title": "AlertStateView",
+        "type": "object"
+      },
+      "AlertUnit": {
+        "description": "What a platform alert's figure and threshold count. RATIO is a rule's\nmultiple of a usual level (the handoff spike: three times the hourly\nmean of the week); its checks compare counts.",
+        "enum": [
+          "count",
+          "seconds",
+          "percent",
+          "ratio"
+        ],
+        "title": "AlertUnit",
+        "type": "string"
+      },
       "AnsweredQuestionResult": {
         "additionalProperties": false,
         "description": "The resolved question and the new FAQ item. The assistant must be\nreassembled (and autotested) before customers see the answer.",
@@ -4019,6 +4233,82 @@
         "title": "ChannelIdentity",
         "type": "object"
       },
+      "ChannelIssueView": {
+        "additionalProperties": false,
+        "description": "A connected channel that needs the team: in ERROR (the platform refused\nits credential or deliveries fail), or a Meta token that runs out soon\n(`credential_expires_at`) or already did.",
+        "properties": {
+          "business_id": {
+            "title": "Business Id",
+            "type": "string"
+          },
+          "business_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Business Name"
+          },
+          "channel_id": {
+            "title": "Channel Id",
+            "type": "string"
+          },
+          "credential_expires_at": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Credential Expires At"
+          },
+          "is_expired": {
+            "default": false,
+            "title": "Is Expired",
+            "type": "boolean"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/ChannelKind"
+          },
+          "last_error": {
+            "anyOf": [
+              {
+                "maxLength": 300,
+                "minLength": 1,
+                "pattern": "\\S",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Error"
+          },
+          "last_error_at": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Error At"
+          }
+        },
+        "required": [
+          "channel_id",
+          "business_id",
+          "kind"
+        ],
+        "title": "ChannelIssueView",
+        "type": "object"
+      },
       "ChannelKind": {
         "description": "Customer-facing channel the assistant answers in.",
         "enum": [
@@ -6342,6 +6632,30 @@
         "title": "DataRegion",
         "type": "string"
       },
+      "DeadJobTally": {
+        "additionalProperties": false,
+        "description": "How many dead letters one job name has.",
+        "properties": {
+          "count": {
+            "minimum": 0.0,
+            "title": "Count",
+            "type": "integer"
+          },
+          "name": {
+            "maxLength": 64,
+            "minLength": 2,
+            "pattern": "^[a-z][a-z0-9_]*$",
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "count"
+        ],
+        "title": "DeadJobTally",
+        "type": "object"
+      },
       "DeviceClass": {
         "description": "The kind of screen a page was used on (by viewport width).",
         "enum": [
@@ -8439,6 +8753,183 @@
         "title": "InboxViewCounts",
         "type": "object"
       },
+      "IncidentKind": {
+        "description": "What happened: an outage (customers get no answers), degraded service\n(slow or partial answers), or a personal data breach, which the\naffected owners are told about under section 12.1 of the DPA.",
+        "enum": [
+          "outage",
+          "degradation",
+          "data_breach"
+        ],
+        "title": "IncidentKind",
+        "type": "string"
+      },
+      "IncidentPage": {
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/IncidentView"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "minLength": 1,
+                "pattern": "^[A-Za-z0-9_-]+$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "IncidentPage",
+        "type": "object"
+      },
+      "IncidentSeverity": {
+        "description": "How bad an incident is (docs/operations/incident.md): SEV1 most or all\ncustomers get no answers, or personal data left the platform; SEV2 one\nchannel, provider or feature is down for many, or answers are slow;\nSEV3 a few businesses are affected, or there is a workaround.",
+        "enum": [
+          "sev1",
+          "sev2",
+          "sev3"
+        ],
+        "title": "IncidentSeverity",
+        "type": "string"
+      },
+      "IncidentStatus": {
+        "description": "Whether an incident is still being handled or over.",
+        "enum": [
+          "open",
+          "resolved"
+        ],
+        "title": "IncidentStatus",
+        "type": "string"
+      },
+      "IncidentView": {
+        "additionalProperties": false,
+        "description": "One incident of the log, as the platform admin sees it.",
+        "properties": {
+          "affected_business_ids": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Affected Business Ids",
+            "type": "array"
+          },
+          "approximate_record_count": {
+            "anyOf": [
+              {
+                "maximum": 1000000000.0,
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Approximate Record Count"
+          },
+          "approximate_subject_count": {
+            "anyOf": [
+              {
+                "maximum": 1000000000.0,
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Approximate Subject Count"
+          },
+          "created_at": {
+            "title": "Created At",
+            "type": "integer"
+          },
+          "detected_at": {
+            "title": "Detected At",
+            "type": "integer"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/IncidentKind"
+          },
+          "notice_languages": {
+            "items": {
+              "maxLength": 16,
+              "minLength": 2,
+              "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$",
+              "type": "string"
+            },
+            "title": "Notice Languages",
+            "type": "array"
+          },
+          "notified_at": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notified At"
+          },
+          "notified_owner_count": {
+            "minimum": 0.0,
+            "title": "Notified Owner Count",
+            "type": "integer"
+          },
+          "reported_by": {
+            "title": "Reported By",
+            "type": "string"
+          },
+          "severity": {
+            "$ref": "#/components/schemas/IncidentSeverity"
+          },
+          "started_at": {
+            "title": "Started At",
+            "type": "integer"
+          },
+          "status": {
+            "$ref": "#/components/schemas/IncidentStatus"
+          },
+          "title": {
+            "maxLength": 160,
+            "minLength": 3,
+            "pattern": "^\\S(.*\\S)?\\Z",
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "severity",
+          "status",
+          "title",
+          "started_at",
+          "detected_at",
+          "affected_business_ids",
+          "notice_languages",
+          "notified_owner_count",
+          "reported_by",
+          "created_at"
+        ],
+        "title": "IncidentView",
+        "type": "object"
+      },
       "InvoiceKind": {
         "description": "What an invoice charges for.",
         "enum": [
@@ -9049,6 +9540,56 @@
           }
         },
         "title": "KnowledgeSearchResult",
+        "type": "object"
+      },
+      "LaneView": {
+        "additionalProperties": false,
+        "description": "One lane of the job queue: jobs due and waiting for a worker, waiting\nfor a later time (retries with backoff, scheduled work), running, and\ndead; how long the oldest due job has waited (None: nothing waits).",
+        "properties": {
+          "dead": {
+            "minimum": 0.0,
+            "title": "Dead",
+            "type": "integer"
+          },
+          "lane": {
+            "$ref": "#/components/schemas/JobLane"
+          },
+          "oldest_wait_seconds": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Oldest Wait Seconds"
+          },
+          "running": {
+            "minimum": 0.0,
+            "title": "Running",
+            "type": "integer"
+          },
+          "scheduled": {
+            "minimum": 0.0,
+            "title": "Scheduled",
+            "type": "integer"
+          },
+          "waiting": {
+            "minimum": 0.0,
+            "title": "Waiting",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "lane",
+          "waiting",
+          "scheduled",
+          "running",
+          "dead"
+        ],
+        "title": "LaneView",
         "type": "object"
       },
       "LanguageCount": {
@@ -9832,6 +10373,101 @@
           "is_new_user"
         ],
         "title": "LoginSessionView",
+        "type": "object"
+      },
+      "MaintenanceRunKind": {
+        "description": "What a recorded maintenance run did: an off-site backup or a restore drill.",
+        "enum": [
+          "backup",
+          "restore_drill"
+        ],
+        "title": "MaintenanceRunKind",
+        "type": "string"
+      },
+      "MaintenanceRunOutcome": {
+        "description": "How a backup or a restore drill ended.",
+        "enum": [
+          "succeeded",
+          "failed"
+        ],
+        "title": "MaintenanceRunOutcome",
+        "type": "string"
+      },
+      "MaintenanceRunView": {
+        "additionalProperties": false,
+        "description": "The last backup or restore drill and how it ended.",
+        "properties": {
+          "archive_size": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Archive Size"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          },
+          "finished_at": {
+            "title": "Finished At",
+            "type": "integer"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/MaintenanceRunKind"
+          },
+          "outcome": {
+            "$ref": "#/components/schemas/MaintenanceRunOutcome"
+          },
+          "release": {
+            "anyOf": [
+              {
+                "maxLength": 64,
+                "minLength": 1,
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9._+\\-]*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Release"
+          },
+          "row_count": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Row Count"
+          },
+          "started_at": {
+            "title": "Started At",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "kind",
+          "outcome",
+          "started_at",
+          "finished_at"
+        ],
+        "title": "MaintenanceRunView",
         "type": "object"
       },
       "ManagerContactChannel": {
@@ -11966,6 +12602,30 @@
         ],
         "title": "PlanQuoteList",
         "type": "object"
+      },
+      "PlatformAlertCode": {
+        "description": "What the platform alerts job watches (ops/alerts/*.yaml has each rule's\nthreshold, window and runbook).\n\nDEAD_JOBS: queued jobs ran out of attempts. INBOUND_BACKLOG: a customer\nmessage waits for a worker. OUTBOUND_FAILURES: replies and staff\nnotifications fail for good. LLM_ERRORS: model calls fail. HANDOFF_SPIKE:\nfar more conversations go to people than usual. TOOL_ERRORS: assistant\ntools fail. STALE_WORKER: a worker of the current release stopped\nbeating. OTP_CAP_TRIPS: a platform cap refused login codes.",
+        "enum": [
+          "dead_jobs",
+          "inbound_backlog",
+          "outbound_failures",
+          "llm_errors",
+          "handoff_spike",
+          "tool_errors",
+          "stale_worker",
+          "otp_cap_trips"
+        ],
+        "title": "PlatformAlertCode",
+        "type": "string"
+      },
+      "PlatformAlertStatus": {
+        "description": "Whether a platform alert fires right now or its last episode is over.",
+        "enum": [
+          "firing",
+          "resolved"
+        ],
+        "title": "PlatformAlertStatus",
+        "type": "string"
       },
       "PlatformBotCommandResult": {
         "description": "How the platform Telegram bot handled one staff message. The webhook\nonly stores the message (QUEUED); the worker then answers it.",
@@ -14635,6 +15295,36 @@
         "title": "SubscriptionView",
         "type": "object"
       },
+      "TableSizeView": {
+        "additionalProperties": false,
+        "description": "One table of the database: its disk space with indexes, its rows (estimated).",
+        "properties": {
+          "row_estimate": {
+            "minimum": 0.0,
+            "title": "Row Estimate",
+            "type": "integer"
+          },
+          "table": {
+            "maxLength": 127,
+            "minLength": 3,
+            "pattern": "^[a-z_][a-z0-9_]{0,62}\\.[a-z_][a-z0-9_]{0,62}\\Z",
+            "title": "Table",
+            "type": "string"
+          },
+          "total_bytes": {
+            "minimum": 0.0,
+            "title": "Total Bytes",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "table",
+          "total_bytes",
+          "row_estimate"
+        ],
+        "title": "TableSizeView",
+        "type": "object"
+      },
       "TelegramLinkView": {
         "additionalProperties": false,
         "description": "One-time link code. The staff member opens `deep_link` (or sends\n\"/start <code>\" to `bot_username`) before `expires_at`.",
@@ -16634,6 +17324,75 @@
         ],
         "title": "WizardStepView",
         "type": "object"
+      },
+      "WorkerPulseView": {
+        "additionalProperties": false,
+        "description": "One worker process that beat within the last day: its build, since when\nit runs, how old its last pulse is (stale after five minutes) and the\nperiodic jobs whose last run in it failed.",
+        "properties": {
+          "age_seconds": {
+            "minimum": 0.0,
+            "title": "Age Seconds",
+            "type": "integer"
+          },
+          "beat_at": {
+            "title": "Beat At",
+            "type": "integer"
+          },
+          "failing_jobs": {
+            "items": {
+              "maxLength": 64,
+              "minLength": 2,
+              "pattern": "^[a-z][a-z0-9_]*$",
+              "type": "string"
+            },
+            "title": "Failing Jobs",
+            "type": "array"
+          },
+          "host_name": {
+            "maxLength": 255,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._\\-]*$",
+            "title": "Host Name",
+            "type": "string"
+          },
+          "is_stale": {
+            "title": "Is Stale",
+            "type": "boolean"
+          },
+          "release": {
+            "anyOf": [
+              {
+                "maxLength": 64,
+                "minLength": 1,
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9._+\\-]*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Release"
+          },
+          "started_at": {
+            "title": "Started At",
+            "type": "integer"
+          },
+          "worker_id": {
+            "title": "Worker Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "worker_id",
+          "host_name",
+          "started_at",
+          "beat_at",
+          "age_seconds",
+          "is_stale",
+          "failing_jobs"
+        ],
+        "title": "WorkerPulseView",
+        "type": "object"
       }
     }
   },
@@ -17111,6 +17870,417 @@
           }
         },
         "summary": "Open Client Cabinet",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/v1/admin/incidents": {
+      "get": {
+        "operationId": "list_incidents_v1_admin_incidents_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Limit"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IncidentPage"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "List Incidents",
+        "tags": [
+          "admin"
+        ]
+      },
+      "post": {
+        "operationId": "create_incident_v1_admin_incidents_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "description": "POST /v1/admin/incidents. `started_at` is when the incident began,\n`detected_at` when the platform became aware of it (default: now).\nA data breach needs the notice: the approximate numbers of people and\nrecords concerned and the texts in English (and in any other language\nowners read, e.g. Georgian and Russian).",
+                "properties": {
+                  "affected_business_ids": {
+                    "items": {
+                      "pattern": "^business_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                      "type": "string"
+                    },
+                    "maxItems": 1000,
+                    "minItems": 1,
+                    "title": "Affected Business Ids",
+                    "type": "array"
+                  },
+                  "approximate_record_count": {
+                    "anyOf": [
+                      {
+                        "maximum": 1000000000,
+                        "minimum": 0,
+                        "type": "integer"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Approximate Record Count"
+                  },
+                  "approximate_subject_count": {
+                    "anyOf": [
+                      {
+                        "maximum": 1000000000,
+                        "minimum": 0,
+                        "type": "integer"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Approximate Subject Count"
+                  },
+                  "detected_at": {
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Detected At"
+                  },
+                  "kind": {
+                    "description": "What happened: an outage (customers get no answers), degraded service\n(slow or partial answers), or a personal data breach, which the\naffected owners are told about under section 12.1 of the DPA.",
+                    "enum": [
+                      "outage",
+                      "degradation",
+                      "data_breach"
+                    ],
+                    "title": "IncidentKind",
+                    "type": "string"
+                  },
+                  "notice_texts": {
+                    "items": {
+                      "additionalProperties": false,
+                      "description": "The DPA 12.1 texts of a breach notice in one language.",
+                      "properties": {
+                        "language": {
+                          "maxLength": 16,
+                          "minLength": 2,
+                          "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$",
+                          "title": "Language",
+                          "type": "string"
+                        },
+                        "likely_consequences": {
+                          "maxLength": 2000,
+                          "minLength": 1,
+                          "pattern": "\\S",
+                          "title": "Likely Consequences",
+                          "type": "string"
+                        },
+                        "measures": {
+                          "maxLength": 2000,
+                          "minLength": 1,
+                          "pattern": "\\S",
+                          "title": "Measures",
+                          "type": "string"
+                        },
+                        "nature": {
+                          "maxLength": 2000,
+                          "minLength": 1,
+                          "pattern": "\\S",
+                          "title": "Nature",
+                          "type": "string"
+                        },
+                        "record_categories": {
+                          "maxLength": 1000,
+                          "minLength": 1,
+                          "pattern": "\\S",
+                          "title": "Record Categories",
+                          "type": "string"
+                        },
+                        "subject_categories": {
+                          "maxLength": 1000,
+                          "minLength": 1,
+                          "pattern": "\\S",
+                          "title": "Subject Categories",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "language",
+                        "nature",
+                        "subject_categories",
+                        "record_categories",
+                        "likely_consequences",
+                        "measures"
+                      ],
+                      "title": "IncidentNoticeInput",
+                      "type": "object"
+                    },
+                    "maxItems": 10,
+                    "title": "Notice Texts",
+                    "type": "array"
+                  },
+                  "severity": {
+                    "description": "How bad an incident is (docs/operations/incident.md): SEV1 most or all\ncustomers get no answers, or personal data left the platform; SEV2 one\nchannel, provider or feature is down for many, or answers are slow;\nSEV3 a few businesses are affected, or there is a workaround.",
+                    "enum": [
+                      "sev1",
+                      "sev2",
+                      "sev3"
+                    ],
+                    "title": "IncidentSeverity",
+                    "type": "string"
+                  },
+                  "started_at": {
+                    "title": "Started At",
+                    "type": "integer"
+                  },
+                  "title": {
+                    "maxLength": 160,
+                    "minLength": 3,
+                    "pattern": "^\\S(.*\\S)?\\Z",
+                    "title": "Title",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "severity",
+                  "title",
+                  "started_at",
+                  "affected_business_ids"
+                ],
+                "title": "CreateIncidentBody",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IncidentView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Create Incident",
         "tags": [
           "admin"
         ]
@@ -17927,6 +19097,115 @@
           }
         },
         "summary": "Start Key Rotation",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/v1/admin/system": {
+      "get": {
+        "operationId": "get_admin_system_v1_admin_system_get",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminSystemView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Get Admin System",
         "tags": [
           "admin"
         ]
