@@ -14,7 +14,7 @@ from app.schemas.dto.value.value_views import (
     DigestPreferencesQuery,
     DigestPreferencesView,
 )
-from app.use_cases.insights.value.value_settings_views import (
+from app.use_cases.insights.value.digest_preferences_views import (
     build_digest_preferences_view,
     stored_preferences_or_default,
 )

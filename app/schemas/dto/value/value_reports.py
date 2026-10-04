@@ -17,9 +17,11 @@ from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.localization.constrained_strings import CurrencyCode
 from app.schemas.typings.platform.constrained_strings import PageCursor
 from app.schemas.typings.users.prefixed_id import UserId
+from app.schemas.typings.value.constrained_floats import ValueReturnMultiple
 from app.schemas.typings.value.constrained_integers import (
     AverageCheckMinor,
     DigestRecipientCount,
+    PlanCostMinor,
 )
 from app.schemas.typings.value.constrained_strings import ValueReportPeriodKey
 from app.schemas.typings.value.prefixed_id import ValueReportId
@@ -43,7 +45,9 @@ class ValueReportQuery(ImmutableDTO):
 class ValueReportView(ImmutableDTO):
     """
     One stored report: its period and the one before, the totals of both as
-    they were when it was made, the average check it used, and whether it
+    they were when it was made, the average check it used, what the plan
+    cost for the period and how many times the money covered it (None:
+    reports from before, or a plan in another currency), and whether it
     went out (`delivery`, to `recipient_count` addresses and devices).
     """
 
@@ -63,6 +67,8 @@ class ValueReportView(ImmutableDTO):
     previous: ValueTotals
     delivery: ValueReportDelivery
     recipient_count: DigestRecipientCount
+    plan_cost_minor: PlanCostMinor | None = None
+    return_multiple: ValueReturnMultiple | None = None
     created_at: Microseconds
 
 

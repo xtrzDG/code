@@ -24,6 +24,8 @@ from app.transformers.notifications.value_digest_texts import (
     NO_CHECK_HINT,
     OPT_OUT,
     OTHER_COUNTS,
+    RETURN_ON_PLAN,
+    RETURN_SHORT,
     TIME_SAVED,
     TITLES,
     TYPICAL_CHECK_HINT,
@@ -33,6 +35,7 @@ from app.utilities.scheduling.zoned_time import parse_local_date
 from app.utilities.value.digest_formatting import (
     format_change,
     format_count,
+    format_multiple,
     format_report_period,
     format_whole_money,
     split_minutes,
@@ -46,9 +49,10 @@ class ValueDigestTextTransformer(
     A stored digest or monthly report in one owner's language: the title
     (the e-mail subject), the period, what the assistant earned (bookings
     or requests, in money when an average check is known, with the change
-    against the period before), the conversations after hours, the staff
-    time saved, the other counts, a hint about the average check, the link
-    to the report and how to turn the summaries off. The device
+    against the period before, and how many times it covered the plan's
+    price), the conversations after hours, the staff time saved, the other
+    counts, a hint about the average check, the link to the report and how
+    to turn the summaries off. The device
     notification carries the title and the earnings with the time saved.
     """
 
@@ -78,6 +82,10 @@ class ValueDigestTextTransformer(
             lines.append(period)
 
         lines.append(earnings + self._change(report, language))
+        returned: str | None = self._return_on_plan(report, language, RETURN_ON_PLAN)
+        if returned is not None:
+            lines.append(returned)
+
         current: ValueTotals = report.current
         lines.append(
             self._render(
@@ -115,12 +123,19 @@ class ValueDigestTextTransformer(
             lines.append(text.format(link=str(input_data.link)))
 
         lines.append(self._render(OPT_OUT, language, {"business": business}))
+        summary: list[str] = [period, earnings]
+        short_return: str | None = self._return_on_plan(report, language, RETURN_SHORT)
+        if short_return is not None:
+            summary.append(short_return)
+
+        summary.append(time_saved)
         return ValueDigestText(
             message=MessageText("\n".join(lines)),
             brief=StaffAlertBrief(
                 title=StaffAlertTitle(title),
                 detail=StaffAlertDetail(f"{earnings} · {time_saved}"),
             ),
+            summary=MessageText(" · ".join(summary)),
         )
 
     def _earnings(self, report: ValueReportView, language: LanguageTag) -> str:
@@ -136,6 +151,27 @@ class ValueDigestTextTransformer(
             line = f"{line} {self._render(MONEY, language, {'money': amount})}"
 
         return line
+
+    def _return_on_plan(
+        self,
+        report: ValueReportView,
+        language: LanguageTag,
+        template: LocalizedText,
+    ) -> str | None:
+        """ "≈ 3.7× the price of your plan" when the money covered it at all."""
+
+        if (
+            report.return_multiple is None
+            or report.plan_cost_minor is None
+            or float(report.return_multiple) <= 0
+        ):
+            return None
+
+        price: str = format_whole_money(
+            int(report.plan_cost_minor), report.currency_code, language
+        )
+        multiple: str = format_multiple(float(report.return_multiple), language)
+        return self._render(template, language, {"multiple": multiple, "price": price})
 
     def _change(self, report: ValueReportView, language: LanguageTag) -> str:
         """The change against the period before; empty without a comparison."""

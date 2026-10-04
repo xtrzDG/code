@@ -14,7 +14,11 @@ from app.contracts.repositories.knowledge_repositories import (
 )
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.domain.businesses import BusinessDocument
-from app.schemas.dto.value.value_model import ValueModel, ValueModelQuery
+from app.schemas.dto.value.value_model import (
+    ValueModel,
+    ValueModelQuery,
+    ValueTotals,
+)
 from app.schemas.typings.bookings.constrained_strings import LocalDate
 from app.schemas.typings.conversations.prefixed_id import ConversationId
 from app.use_cases.insights.value.value_counting import (
@@ -27,6 +31,13 @@ from app.use_cases.insights.value.value_estimates import (
     ValueEstimates,
     estimate_business_value,
     read_weekly_hours,
+)
+from app.use_cases.insights.value.value_return import (
+    NO_RETURN,
+    PlanPrices,
+    PlanReturn,
+    monthly_plan_price,
+    plan_return,
 )
 from app.use_cases.shared.business_access import require_business
 from app.utilities.scheduling.opening_hours import DayRanges
@@ -52,7 +63,9 @@ class ComputeValueModelUseCase(UseCaseContract[ValueModelQuery, ValueModel]):
     - conversations after hours (flagged, or started while closed);
     - staff minutes saved: the assistant's replies times the niche's
       minutes per reply, plus the calls it answered times its minutes per
-      call.
+      call;
+    - what the money returned against the plan's price for the same days
+      (`value_return.py`; only with `plan_prices`).
 
     Everything is counted by the database; sandbox activity is excluded.
     Callers check access (the cabinet route, the report job).
@@ -65,6 +78,7 @@ class ComputeValueModelUseCase(UseCaseContract[ValueModelQuery, ValueModel]):
         schedule_exception_repo: ScheduleExceptionRepoContract,
         sources: ValueSources,
         catalogs: EstimateCatalogs,
+        plan_prices: PlanPrices | None = None,
     ) -> None:
         self._business_repo: BusinessRepoContract = business_repo
         self._business_profile_repo: BusinessProfileRepoContract = business_profile_repo
@@ -73,6 +87,7 @@ class ComputeValueModelUseCase(UseCaseContract[ValueModelQuery, ValueModel]):
         )
         self._sources: ValueSources = sources
         self._catalogs: EstimateCatalogs = catalogs
+        self._plan_prices: PlanPrices | None = plan_prices
 
     def run(self, input_data: ValueModelQuery) -> ValueModel:
         business: BusinessDocument = require_business(
@@ -104,6 +119,22 @@ class ComputeValueModelUseCase(UseCaseContract[ValueModelQuery, ValueModel]):
                 sandbox_ids=sandbox_ids,
             )
 
+        current: ValueTotals = count_value_totals(
+            self._sources,
+            window(input_data.date_from, input_data.date_to),
+            estimates.rates,
+        )
+        returned: PlanReturn = (
+            NO_RETURN
+            if self._plan_prices is None
+            else plan_return(
+                monthly_plan_price(self._plan_prices, business),
+                business.currency_code,
+                parse_local_date(input_data.date_from),
+                parse_local_date(input_data.date_to),
+                current.estimated_revenue_minor,
+            )
+        )
         return ValueModel(
             business_id=business.id,
             currency_code=business.currency_code,
@@ -118,14 +149,12 @@ class ComputeValueModelUseCase(UseCaseContract[ValueModelQuery, ValueModel]):
             typical_check_minor=estimates.typical_check,
             seconds_per_reply=estimates.rates.seconds_per_reply,
             seconds_per_call=estimates.rates.seconds_per_call,
-            current=count_value_totals(
-                self._sources,
-                window(input_data.date_from, input_data.date_to),
-                estimates.rates,
-            ),
+            current=current,
             previous=count_value_totals(
                 self._sources,
                 window(input_data.previous_date_from, input_data.previous_date_to),
                 estimates.rates,
             ),
+            plan_cost_minor=returned.plan_cost_minor,
+            return_multiple=returned.return_multiple,
         )

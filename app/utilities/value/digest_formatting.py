@@ -31,6 +31,19 @@ def format_count(count: int, language: LanguageTag) -> str:
     )
 
 
+def format_multiple(multiple: float, language: LanguageTag) -> str:
+    """3.7 -> "3.7" (en), "3,7" (ru, ka): one decimal, Latin digits."""
+
+    return str(
+        format_decimal(
+            Decimal(str(multiple)),
+            format="#,##0.0",
+            locale=find_locale(language),
+            numbering_system=LATIN_DIGITS,
+        )
+    )
+
+
 def format_whole_money(
     amount_minor: int,
     currency_code: CurrencyCode,

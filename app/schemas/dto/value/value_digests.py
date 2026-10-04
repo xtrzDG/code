@@ -21,10 +21,13 @@ class ValueDigestTextInput(ImmutableDTO):
 
 class ValueDigestText(ImmutableDTO):
     """
-    The report as an e-mail (`message`: the first line is the subject, the
-    link line becomes a button) and as a device notification (`brief`).
-    Totals only, nothing about a customer.
+    The report as an e-mail or a Telegram message (`message`: the first line
+    is the subject, the link line becomes a button), as a device
+    notification (`brief`) and as one line for a WhatsApp template
+    (`summary`: the period, the earnings, the return on the plan and the
+    time saved). Totals only, nothing about a customer.
     """
 
     message: MessageText
     brief: StaffAlertBrief
+    summary: MessageText

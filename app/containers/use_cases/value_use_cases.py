@@ -59,6 +59,7 @@ from app.use_cases.insights.value.update_value_settings_use_case import (
 )
 from app.use_cases.insights.value.value_counting import ValueSources
 from app.use_cases.insights.value.value_estimates import EstimateCatalogs
+from app.use_cases.insights.value.value_return import PlanPrices
 
 
 class ValueUseCasesContainer(containers.DeclarativeContainer):
@@ -95,6 +96,11 @@ class ValueUseCasesContainer(containers.DeclarativeContainer):
         exchange_rate_registry=registries.exchange_rate_registry,
         value_settings_repo=repositories.value_settings_repo,
     )
+    plan_prices: Factory[PlanPrices] = Factory(
+        PlanPrices,
+        subscription_repo=repositories.subscription_repo,
+        plan_registry=registries.plan_registry,
+    )
     compute_value_model_use_case: Factory[
         UseCaseContract[ValueModelQuery, ValueModel]
     ] = Factory(
@@ -104,6 +110,7 @@ class ValueUseCasesContainer(containers.DeclarativeContainer):
         schedule_exception_repo=repositories.schedule_exception_repo,
         sources=value_sources,
         catalogs=estimate_catalogs,
+        plan_prices=plan_prices,
     )
     get_business_value_use_case: Factory[
         UseCaseContract[BusinessValueQuery, ValueModel]

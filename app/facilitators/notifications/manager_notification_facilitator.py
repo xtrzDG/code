@@ -37,6 +37,7 @@ from app.utilities.notifications.staff_delivery_keys import (
 )
 from app.utilities.notifications.staff_providers import (
     missing_staff_provider,
+    missing_template_provider,
     staff_template,
 )
 
@@ -50,14 +51,15 @@ class ManagerNotificationFacilitator(ManagerNotificationFacilitatorContract):
     so a provider outage delays a notification instead of losing it, and
     its delivery state is stored (and shown per contact in Settings).
 
-    A notification is held until `deliver_after` (the contact's quiet
-    hours). A contact whose channel has no provider (the platform bot, the
-    WhatsApp template, SMTP or Twilio is not configured; e-mail and SMS are
-    logged outside production), or that already got its hourly share of
-    notifications (SMS 10, WhatsApp 20, others 30), is stored as DEAD with
-    the reason and reported as not deliverable. A notification about a
-    handoff is queued once per handoff and contact. Never raises: a
-    notification must not break the action it reports.
+    A notification is held until `deliver_after` (the contact's quiet hours);
+    one with a template of its own (an owner's report on WhatsApp) needs only
+    the platform number. A contact whose channel has no provider (the platform
+    bot, the WhatsApp template, SMTP or Twilio is not configured; e-mail and
+    SMS are logged outside production), or that already got its hourly share of
+    notifications (SMS 10, WhatsApp 20, others 30), is stored as DEAD with the
+    reason and reported as not deliverable. A notification about a handoff is
+    queued once per handoff and contact. Never raises: a notification must not
+    break the action it reports.
     """
 
     def __init__(
@@ -103,8 +105,10 @@ class ManagerNotificationFacilitator(ManagerNotificationFacilitatorContract):
             return stored.status is not OutboundMessageStatus.DEAD
 
         recipient_key: OutboundRecipientKey = staff_recipient_key(contact)
-        refusal: DeliveryErrorText | None = missing_staff_provider(
-            self._app_settings, contact.channel
+        refusal: DeliveryErrorText | None = (
+            missing_staff_provider(self._app_settings, contact.channel)
+            if notification.template is None
+            else missing_template_provider(self._app_settings)
         ) or self._refusal_by_rate(notification, recipient_key, now)
         message = OutboundMessageDocument(
             id=message_id,
@@ -114,7 +118,8 @@ class ManagerNotificationFacilitator(ManagerNotificationFacilitatorContract):
             recipient_key=recipient_key,
             staff_contact=contact,
             text=notification.text,
-            template=staff_template(self._app_settings, contact),
+            template=notification.template
+            or staff_template(self._app_settings, contact),
             handoff_id=notification.handoff_id,
             next_attempt_at=notification.deliver_after,
             created_at=now,

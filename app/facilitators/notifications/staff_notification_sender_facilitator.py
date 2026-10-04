@@ -47,8 +47,9 @@ class StaffNotificationSenderFacilitator(StaffNotificationSenderContract):
 
     - Telegram: the platform bot (TELEGRAM_PLATFORM_BOT_TOKEN) writes to the
       chat linked with "/start <code>"; free of charge.
-    - WhatsApp: the approved template the message was queued with (one body
-      parameter: the text on one line) from the platform number
+    - WhatsApp: the approved template the message was queued with (its own
+      body parameters, else one: the text; each on one line) from the
+      platform number
       WHATSAPP_NOTIFICATION_PHONE_NUMBER_ID, in English when Meta refuses
       the staff member's language.
     - E-mail: SMTP (the server of login codes), the first line as subject,
@@ -150,14 +151,17 @@ class StaffNotificationSenderFacilitator(StaffNotificationSenderContract):
             )
 
         recipient = ChannelUserId(str(contact.address).removeprefix("+"))
-        parameter = MessageText(one_line(str(text)))
+        parameters: list[MessageText] = [
+            MessageText(one_line(str(parameter)))
+            for parameter in (template.body_parameters or [text])
+        ]
         try:
             return self._whatsapp_templates.send_template(
                 phone_number_id,
                 recipient,
                 template.name,
                 template.language_code,
-                [parameter],
+                parameters,
             )
         except WhatsAppTemplateRejectedError:
             if template.language_code == FALLBACK_TEMPLATE_LANGUAGE:
@@ -172,7 +176,7 @@ class StaffNotificationSenderFacilitator(StaffNotificationSenderContract):
                 recipient,
                 template.name,
                 FALLBACK_TEMPLATE_LANGUAGE,
-                [parameter],
+                parameters,
             )
 
     def _send_without_provider(self, contact: ManagerContact) -> None:

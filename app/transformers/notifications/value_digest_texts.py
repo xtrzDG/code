@@ -41,6 +41,14 @@ EARNINGS: Mapping[ValueBasis, LocalizedText] = {
     ),
 }
 MONEY: LocalizedText = localized(en="≈ {money}", ru="≈ {money}", ka="≈ {money}")
+RETURN_SHORT: LocalizedText = localized(
+    en="≈ {multiple}× your plan", ru="≈ {multiple}× тарифа", ka="≈ {multiple}× ტარიფი"
+)
+RETURN_ON_PLAN: LocalizedText = localized(
+    en="That is ≈ {multiple}× the price of your plan ({price} for the period).",
+    ru="Это ≈ {multiple}× стоимости вашего тарифа ({price} за период).",
+    ka="ეს ≈ {multiple}×-ია თქვენი ტარიფის ფასისა ({price} ამ პერიოდში).",
+)
 CHANGE_AGAINST: Mapping[ValueReportKind, LocalizedText] = {
     ValueReportKind.DAILY: localized(
         en="({change} vs the day before)",

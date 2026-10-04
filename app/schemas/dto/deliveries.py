@@ -11,7 +11,10 @@ from app.schemas.constants.deliveries import DeliveryFailureKind, DeliveryFailur
 from app.schemas.domain.businesses import ManagerContact
 from app.schemas.domain.channels import ChannelDocument
 from app.schemas.domain.inbound_events import InboundEventDocument
-from app.schemas.domain.outbound_messages import OutboundMessageDocument
+from app.schemas.domain.outbound_messages import (
+    OutboundMessageDocument,
+    OutboundTemplate,
+)
 from app.schemas.dto.channels.channel_webhooks import ChannelInboundMessage
 from app.schemas.dto.conversations import InboundMessage
 from app.schemas.dto.voice_webhooks import FinishedCallReport
@@ -116,7 +119,9 @@ class StaffNotification(ImmutableDTO):
     A message to one staff contact of a business. A notification about a
     handoff is queued once per handoff and contact, and its delivery moves
     the handoff to NOTIFIED or NOTIFICATION_FAILED. `deliver_after` holds it
-    until the contact's quiet hours end.
+    until the contact's quiet hours end. `template` is the WhatsApp template
+    it goes out as instead of the staff notification template (an owner's
+    report, with its own body parameters).
     """
 
     business_id: BusinessId
@@ -126,6 +131,7 @@ class StaffNotification(ImmutableDTO):
     # Another subject the notification is queued once per contact for.
     subject: StaffAlertSubject | None = None
     deliver_after: Microseconds | None = None
+    template: OutboundTemplate | None = None
 
 
 class OutboundAttempt(ImmutableDTO):

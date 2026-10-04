@@ -77,6 +77,18 @@ def missing_staff_provider(
     return DeliveryErrorText(MISSING_PROVIDER_TEXTS[channel])
 
 
+def missing_template_provider(settings: AppSettings) -> DeliveryErrorText | None:
+    """
+    Why a message with a template of its own (an owner's report) cannot go
+    out on WhatsApp here: only the platform number is needed.
+    """
+
+    if settings.whatsapp_notification_phone_number_id is not None:
+        return None
+
+    return DeliveryErrorText("WHATSAPP_NOTIFICATION_PHONE_NUMBER_ID is not configured.")
+
+
 def is_delivery_simulated(
     settings: AppSettings, channel: ManagerContactChannel
 ) -> bool:

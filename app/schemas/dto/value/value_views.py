@@ -5,11 +5,16 @@ an owner's digest choices and the queue of today.
 
 from base_pydantic_schemas import ImmutableDTO
 
-from app.schemas.constants.value import ValueBasis, ValuePeriod
+from app.schemas.constants.value import DigestChannel, ValueBasis, ValuePeriod
 from app.schemas.typings.bookings.constrained_strings import LocalDate
 from app.schemas.typings.businesses.prefixed_id import BusinessId
+from app.schemas.typings.handoffs.constrained_strings import ManagerTelegramUsername
+from app.schemas.typings.handoffs.strings import ManagerContactAddress, ManagerName
 from app.schemas.typings.insights.constrained_integers import PeriodItemCount
-from app.schemas.typings.localization.constrained_strings import CurrencyCode
+from app.schemas.typings.localization.constrained_strings import (
+    CurrencyCode,
+    E164PhoneNumber,
+)
 from app.schemas.typings.notifications.booleans import IsProviderReady
 from app.schemas.typings.platform.constrained_integers import ListItemCount
 from app.schemas.typings.users.constrained_strings import EmailAddress
@@ -74,12 +79,18 @@ class ValueSettingsView(ImmutableDTO):
 class DigestPreferencesRequest(ImmutableDTO):
     """
     Which summaries the signed-in owner gets: the daily digest (every
-    morning), the weekly digest (Mondays) and the monthly report (the 1st).
+    morning), the weekly digest (Mondays) and the monthly report (the 1st);
+    and where (each None keeps what is stored): `channels`, `telegram_chat`
+    (one of the business's chats linked to the platform bot) and
+    `whatsapp_number` (choosing WhatsApp opts this number in).
     """
 
     is_daily_digest_on: IsDailyDigestOn = False
     is_weekly_digest_on: IsWeeklyDigestOn = True
     is_monthly_report_on: IsMonthlyReportOn = True
+    channels: list[DigestChannel] | None = None
+    telegram_chat: ManagerContactAddress | None = None
+    whatsapp_number: E164PhoneNumber | None = None
 
 
 class DigestPreferencesQuery(ImmutableDTO):
@@ -93,21 +104,39 @@ class UpdateDigestPreferencesCommand(ImmutableDTO):
     request: DigestPreferencesRequest
 
 
+class DigestTelegramChatView(ImmutableDTO):
+    """A Telegram chat linked to the business through the platform bot."""
+
+    address: ManagerContactAddress
+    name: ManagerName
+    username: ManagerTelegramUsername | None = None
+
+
 class DigestPreferencesView(ImmutableDTO):
     """
-    The owner's choices and where the summaries reach them: their sign-in
-    e-mail (None: they sign in by phone) when the platform can send e-mail
-    (`is_email_ready`), and their devices with notifications on in this
-    business.
+    The owner's choices and where the summaries reach them: the `channels`
+    they chose; their sign-in e-mail (None: they sign in by phone) when the
+    platform can send e-mail (`is_email_ready`); their devices with
+    notifications on in this business; their Telegram chat among the
+    business's `telegram_chats` (`is_telegram_ready`: the platform bot is
+    set up); their WhatsApp number (`suggested_whatsapp_number`: the phone
+    they sign in with; `is_whatsapp_ready`: the report template is set up).
     """
 
     business_id: BusinessId
     is_daily_digest_on: IsDailyDigestOn
     is_weekly_digest_on: IsWeeklyDigestOn
     is_monthly_report_on: IsMonthlyReportOn
+    channels: list[DigestChannel]
     email: EmailAddress | None = None
     is_email_ready: IsProviderReady
     device_count: ListItemCount
+    telegram_chat: ManagerContactAddress | None = None
+    telegram_chats: list[DigestTelegramChatView]
+    is_telegram_ready: IsProviderReady
+    whatsapp_number: E164PhoneNumber | None = None
+    suggested_whatsapp_number: E164PhoneNumber | None = None
+    is_whatsapp_ready: IsProviderReady
 
 
 class TodayQueueQuery(ImmutableDTO):

@@ -24,7 +24,8 @@ from app.schemas.typings.compliance.strings import (
     AuditEntityName,
     AuditEntityReference,
 )
-from app.use_cases.insights.value.value_settings_views import (
+from app.use_cases.insights.value.digest_preferences_views import (
+    apply_digest_request,
     build_digest_preferences_view,
     stored_preferences_or_default,
 )
@@ -37,8 +38,11 @@ class UpdateDigestPreferencesUseCase(
 ):
     """
     The signed-in owner turns their daily or weekly digest or their
-    monthly report on or off (the opt-out every digest links to). Only
-    their own choices change; a report already queued still arrives.
+    monthly report on or off (the opt-out every digest links to) and
+    chooses where they arrive: e-mail, devices, their Telegram chat linked
+    to the platform bot, WhatsApp to the number they opt in with
+    (`apply_digest_request` refuses a channel that cannot reach them).
+    Only their own choices change; a report already queued still arrives.
     Audited.
     """
 
@@ -82,10 +86,9 @@ class UpdateDigestPreferencesUseCase(
             input_data.user_id,
             self._digest_preferences_repo.get(business.id, input_data.user_id),
         )
-        request = input_data.request
-        preferences.is_daily_digest_on = request.is_daily_digest_on
-        preferences.is_weekly_digest_on = request.is_weekly_digest_on
-        preferences.is_monthly_report_on = request.is_monthly_report_on
+        apply_digest_request(
+            business, preferences, input_data.request, self._app_settings
+        )
         preferences.updated_at = now
         self._digest_preferences_repo.save(preferences)
         self._audit_log_repo.append(

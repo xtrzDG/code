@@ -23,6 +23,7 @@ class IntegrationSettingsSection(TypedDict):
     whatsapp_notification_phone_number_id: MetaObjectId | None
     whatsapp_notification_template_name: WhatsAppTemplateName | None
     whatsapp_reminder_template_name: WhatsAppTemplateName | None
+    whatsapp_owner_report_template_name: WhatsAppTemplateName | None
     telegram_platform_bot_token: PlatformSecret | None
     google_oauth_client_id: PlatformIdentifier | None
     google_oauth_client_secret: PlatformSecret | None
@@ -57,6 +58,11 @@ def read_integration_settings(
         whatsapp_reminder_template_name=optional_text(
             environment_variables,
             "WHATSAPP_REMINDER_TEMPLATE",
+            WhatsAppTemplateName,
+        ),
+        whatsapp_owner_report_template_name=optional_text(
+            environment_variables,
+            "WHATSAPP_OWNER_REPORT_TEMPLATE",
             WhatsAppTemplateName,
         ),
         telegram_platform_bot_token=secret("TELEGRAM_PLATFORM_BOT_TOKEN"),

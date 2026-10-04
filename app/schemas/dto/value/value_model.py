@@ -14,10 +14,12 @@ from app.schemas.typings.localization.constrained_strings import (
     CurrencyCode,
     TimezoneName,
 )
+from app.schemas.typings.value.constrained_floats import ValueReturnMultiple
 from app.schemas.typings.value.constrained_integers import (
     AverageCheckMinor,
     BookedValueMinor,
     EstimatedRevenueMinor,
+    PlanCostMinor,
     StaffMinutesSaved,
     StaffSecondsPerCall,
     StaffSecondsPerReply,
@@ -81,6 +83,10 @@ class ValueModel(ImmutableDTO):
     (`OWNER`) or the niche's typical check in the business currency
     (`NICHE_DEFAULT`, also given as `typical_check_minor`); without either
     there is no money estimate. The staff time rates explain the minutes.
+    `plan_cost_minor` is what the business's plan costs for the period's
+    days and `return_multiple` how many times the period's money estimate
+    covers it (both None when the plan is priced in another currency; no
+    multiple without an estimate).
     """
 
     business_id: BusinessId
@@ -98,3 +104,5 @@ class ValueModel(ImmutableDTO):
     seconds_per_call: StaffSecondsPerCall
     current: ValueTotals
     previous: ValueTotals
+    plan_cost_minor: PlanCostMinor | None = None
+    return_multiple: ValueReturnMultiple | None = None
