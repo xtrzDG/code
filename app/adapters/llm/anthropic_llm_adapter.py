@@ -1,5 +1,6 @@
 import json
 from collections.abc import Sequence
+from typing import cast
 
 from anthropic.types.beta import BetaMessage, BetaTextBlock, BetaToolUseBlock
 
@@ -178,7 +179,8 @@ def keep_sendable_block(block: dict[str, object]) -> dict[str, object]:
 
     source: object = block.get("source")
     if read_string(block, "type") != "image" or (
-        isinstance(source, dict) and source.get("type") == "base64"
+        isinstance(source, dict)
+        and cast(dict[str, object], source).get("type") == "base64"
     ):
         return block
 

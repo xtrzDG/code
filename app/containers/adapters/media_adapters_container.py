@@ -27,7 +27,6 @@ from app.contracts.channel_media import (
     ChannelMediaFetcherContract,
     VoiceTranscriberContract,
 )
-from app.contracts.llm import LlmAdapterContract
 from app.contracts.media_storage import MediaStorageAdapterContract
 from app.schemas.constants.channels import ChannelKind
 
@@ -43,7 +42,8 @@ class MediaAdaptersContainer(containers.DeclarativeContainer):
 
     clients: ClientsContainer = DependenciesContainer()  # type: ignore[assignment]
     config: ConfigContainer = DependenciesContainer()  # type: ignore[assignment]
-    llm_adapter: Dependency[LlmAdapterContract] = Dependency()
+    # The LlmAdapterContract it decorates (a Dependency checks no type).
+    llm_adapter: Dependency[object] = Dependency()
 
     media_storage: Singleton[MediaStorageAdapterContract] = Singleton(
         build_media_storage,
