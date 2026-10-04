@@ -58,7 +58,7 @@ export function OfferFields({
             onChange={(performerIds) => change({ performerIds })}
             empty={
               <p className="text-sm text-ink-muted">
-                {t("knowledge.offer.noResources")}{" "}
+                {t(isRoomType ? "knowledge.offer.noRooms" : "knowledge.offer.noResources")}{" "}
                 <Link href={`${businessPath(business.id, "assistant/knowledge")}/resources`} className="font-medium text-accent hover:underline">
                   {t("knowledge.offer.toResources")}
                 </Link>

@@ -17,7 +17,7 @@ export const knowledgeResourcesKa: Translation<typeof knowledgeResourcesEn> = {
     name: "სახელი",
     kind: "ტიპი",
     capacity: "ადამიანი ერთდროულად",
-    capacityHint: "რამდენ სტუმარს იტევს ერთი ერთეული.",
+    capacityHint: "რამდენ ადამიანს იღებს ერთი ერთეული ერთდროულად.",
     units: "ერთნაირი ერთეული",
     unitsHint: "მაგალითად, 5 მაგიდა 4 კაცზე.",
     slotMinutes: "ჯავშნის ხანგრძლივობა, წთ",

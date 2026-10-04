@@ -7,6 +7,7 @@ import {
   daysInMonth,
   emptySeasonRow,
   monthNames,
+  nextSeasonRow,
   overlappingSeasons,
   sameRates,
   seasonDay,
@@ -73,6 +74,15 @@ describe("season rows", () => {
       overlap: [0, 1],
       rows: [{}, {}],
     });
+  });
+
+  it("adds the summer first, then the month after the last season", () => {
+    expect(nextSeasonRow([])).toMatchObject({ startMonth: "6", startDay: "1", endMonth: "8", endDay: "31" });
+    const autumn = nextSeasonRow([row()]);
+    expect(autumn).toMatchObject({ startMonth: "9", startDay: "1", endMonth: "9", endDay: "30" });
+    expect(nextSeasonRow([row({ endMonth: "12", endDay: "31" })])).toMatchObject({ startMonth: "1", startDay: "1", endMonth: "1" });
+    expect(nextSeasonRow([row({ endMonth: "3", endDay: "10" })])).toMatchObject({ startMonth: "3", startDay: "11", endDay: "31" });
+    expect(validateSeasonRows([row(), { ...autumn, rate: "90" }], "EUR").ok).toBe(true);
   });
 
   it("compares rates and names months and seasons in the UI language", () => {

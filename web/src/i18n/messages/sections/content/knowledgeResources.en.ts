@@ -17,7 +17,7 @@ export const knowledgeResourcesEn = {
     name: "Name",
     kind: "Type",
     capacity: "People at once",
-    capacityHint: "The most guests one unit takes.",
+    capacityHint: "The most people one unit takes at once.",
     units: "Identical units",
     unitsHint: "For example, 5 tables for 4.",
     slotMinutes: "Booking length, min",

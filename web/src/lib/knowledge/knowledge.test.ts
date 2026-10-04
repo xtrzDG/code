@@ -17,6 +17,7 @@ import {
   groupByKind,
   kindHasDuration,
   kindHasPrice,
+  allowedKinds,
   orderKinds,
   sortByTitle,
 } from "./kinds";
@@ -41,6 +42,12 @@ describe("kinds", () => {
     expect(order).toHaveLength(8);
     expect(new Set(order).size).toBe(8);
     expect(orderKinds(undefined)[0]).toBe("menu_item");
+  });
+
+  it("lets a business add only its niche's kinds, questions and rules", () => {
+    expect(allowedKinds(["service", "package", "product", "faq"])).toEqual(["service", "package", "product", "faq", "policy"]);
+    expect(allowedKinds(["room_type"])).toEqual(["room_type", "faq", "policy"]);
+    expect(allowedKinds(undefined)).toHaveLength(8);
   });
 
   it("knows which kinds have prices and durations", () => {

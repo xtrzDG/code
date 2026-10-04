@@ -6,7 +6,7 @@ import { IconPlus, IconTrash } from "@/components/icons";
 import { Button, Fieldset, Input, Select } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import type { SeasonsProblem } from "@/lib/knowledge/offerFields";
-import { MAX_SEASONS, daysInMonth, emptySeasonRow, monthNames, type SeasonRow, type SeasonRowErrors } from "@/lib/knowledge/seasons";
+import { MAX_SEASONS, daysInMonth, monthNames, nextSeasonRow, type SeasonRow, type SeasonRowErrors } from "@/lib/knowledge/seasons";
 
 /**
  * A room type's seasonal nightly rates: one row per season (name, first and
@@ -63,7 +63,7 @@ export function SeasonalRatesEditor({
           variant="secondary"
           size="sm"
           leadingIcon={<IconPlus className="size-4" aria-hidden />}
-          onClick={() => onChange([...rows, emptySeasonRow()])}
+          onClick={() => onChange([...rows, nextSeasonRow(rows)])}
         >
           {t("knowledge.offer.addSeason")}
         </Button>
@@ -163,7 +163,7 @@ function SeasonRowFields({
           <IconTrash className="size-4" aria-hidden />
         </Button>
       </div>
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_1fr_8rem]">
+      <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_10rem]">
         <div className="space-y-1.5">
           <label htmlFor={`${id}-name`} className="block text-sm font-medium text-ink">
             {t("knowledge.offer.seasonName")}
@@ -179,8 +179,6 @@ function SeasonRowFields({
             onChange={(event) => onChange({ name: event.target.value })}
           />
         </div>
-        {bound("start")}
-        {bound("end")}
         <div className="space-y-1.5">
           <label htmlFor={`${id}-rate`} className="block text-sm font-medium text-ink">
             {t("knowledge.offer.seasonRate", { currency })}
@@ -199,6 +197,10 @@ function SeasonRowFields({
             onChange={(event) => onChange({ rate: event.target.value })}
           />
         </div>
+      </div>
+      <div className="mt-3 grid gap-3 sm:grid-cols-2">
+        {bound("start")}
+        {bound("end")}
       </div>
       {[errors?.dates, errors?.name, errors?.rate].some(Boolean) ? (
         <ul className="mt-2 space-y-0.5 text-sm text-danger">

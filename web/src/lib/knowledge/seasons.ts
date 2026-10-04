@@ -59,6 +59,29 @@ export function emptySeasonRow(): SeasonRow {
   return { key: rowKey(), name: "", startMonth: "6", startDay: "1", endMonth: "8", endDay: "31", rate: "" };
 }
 
+/**
+ * The season "Add a season" adds: the summer first, then the month after
+ * the last season ends (so a new season never starts on top of the last).
+ */
+export function nextSeasonRow(rows: readonly SeasonRow[]): SeasonRow {
+  const last = rows.at(-1);
+  if (!last) {
+    return emptySeasonRow();
+  }
+  const endMonth = Number(last.endMonth) || 1;
+  const endDay = Number(last.endDay) || 1;
+  const startsNextMonth = endDay >= daysInMonth(endMonth);
+  const month = startsNextMonth ? (endMonth % 12) + 1 : endMonth;
+  const day = startsNextMonth ? 1 : endDay + 1;
+  return {
+    ...emptySeasonRow(),
+    startMonth: String(month),
+    startDay: String(day),
+    endMonth: String(month),
+    endDay: String(daysInMonth(month)),
+  };
+}
+
 function splitDay(day: string): [string, string] {
   const [month = "1", date = "1"] = day.split("-");
   return [String(Number(month)), String(Number(date))];

@@ -17,7 +17,7 @@ export const knowledgeResourcesRu: Translation<typeof knowledgeResourcesEn> = {
     name: "Название",
     kind: "Тип",
     capacity: "Человек одновременно",
-    capacityHint: "Сколько гостей вмещает одна единица.",
+    capacityHint: "Сколько человек одна единица принимает одновременно.",
     units: "Одинаковых единиц",
     unitsHint: "Например, 5 столов на 4 человека.",
     slotMinutes: "Длительность брони, мин",
