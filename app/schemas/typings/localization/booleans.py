@@ -5,5 +5,6 @@ Example:
 """
 
 IsHighCostPhoneNumber = bool
+IsLanguageReadFromText = bool
 IsMobilePhoneNumber = bool
 # Keep abc order for all non example types, if possible.
