@@ -2,7 +2,7 @@
 summary: How to correct an answer, add prices and rules, and send your changes to customers.
 topic: getting_started
 order: 20
-keywords: knowledge, profile, faq, answer, wrong answer, prices, menu, hours, rules, apply changes, update, publish, unanswered questions
+keywords: knowledge, profile, faq, answer, wrong answer, fix the answer, my checks, prices, menu, hours, rules, apply changes, update, publish, unanswered questions
 related: getting-started, inbox
 ---
 # Teach your assistant
@@ -21,9 +21,11 @@ Your edits do not reach customers at once. A banner over every page says how man
 
 ## Fix a wrong answer
 
-1. Open the conversation in the [Inbox](inbox) and read what the customer asked.
-2. Add or correct the fact in the profile or knowledge.
-3. Ask the same question on the **Try it** screen.
+1. Open the conversation in the [Inbox](inbox) and press **Fix the answer** under the assistant's reply. The form already holds the customer's question and what the assistant knows now.
+2. Correct the answer, price, hours or rule and save it: it waits with your other changes.
+3. Press **Save as a check**: every **Apply changes** asks the question again. Your checks are under [My checks](cabinet:assistant/checks).
 4. Apply changes.
+
+A bad rating of an answer asks what was wrong and offers the same fix.
 
 > Advanced: **Updates and checks** lists every published update with its checks; you can go back to an earlier one.

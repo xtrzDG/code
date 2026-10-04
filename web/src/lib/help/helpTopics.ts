@@ -37,6 +37,7 @@ export const PAGE_HELP: Readonly<Record<BusinessPage, HelpArticleSlug>> = {
   "assistant/profile": "teach-your-assistant",
   "assistant/channels": "channels",
   "assistant/versions": "teach-your-assistant",
+  "assistant/checks": "teach-your-assistant",
   settings: "getting-started",
   "settings/team": "getting-started",
   "settings/notifications": "inbox",
