@@ -6,6 +6,7 @@ from app.schemas.constants.billing import PlanKey
 from app.schemas.constants.bookings import BookingUnit, ResourceKind
 from app.schemas.constants.knowledge import KnowledgeItemKind
 from app.schemas.constants.niches import (
+    BookingScenarioVariant,
     ExampleExchangeKind,
     LaunchWave,
     NicheKey,
@@ -75,7 +76,8 @@ class NicheTemplate(ImmutableDTO):
 
     `takes_bookings` is False for niches that only take orders as leads
     (online shops, B2B supply); their resource kind and booking unit are then
-    unused.
+    unused. `booking_variants` add booking autotests of the niche's own
+    (a named master, a room type for several nights).
     """
 
     key: NicheKey
@@ -96,5 +98,8 @@ class NicheTemplate(ImmutableDTO):
     default_handoff_rules: LocalizedText
     default_forbidden_rules: LocalizedText
     autotest_kinds: list[AutotestScenarioKind]
+    booking_variants: list[BookingScenarioVariant] = Field(
+        default_factory=list[BookingScenarioVariant]
+    )
     integrations: list[IntegrationName] = Field(default_factory=list[IntegrationName])
     requires_legal_review: RequiresLegalReview = False

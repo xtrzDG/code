@@ -3,7 +3,10 @@ from app.contracts.registries import (
     NicheTemplateRegistryContract,
 )
 from app.contracts.repositories.business_repositories import BusinessProfileRepoContract
-from app.contracts.repositories.knowledge_repositories import KnowledgeItemRepoContract
+from app.contracts.repositories.knowledge_repositories import (
+    KnowledgeItemRepoContract,
+    ResourceRepoContract,
+)
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.assistants import AutotestScenarioKind
 from app.schemas.constants.knowledge import KnowledgeItemKind
@@ -12,6 +15,7 @@ from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.knowledge import KnowledgeItemDocument
 from app.schemas.domain.profiles import BusinessProfileDocument
 from app.schemas.dto.assistants.autotest_runs import (
+    AutotestLanguage,
     AutotestPlanningRequest,
     AutotestScenario,
     AutotestScenarioPlanning,
@@ -21,6 +25,7 @@ from app.schemas.dto.niches import NicheTemplate
 from app.schemas.typings.assistants.constrained_integers import (
     PriceQuestionScenarioLimit,
 )
+from app.schemas.typings.assistants.strings import AutotestScenarioGoal
 from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.utilities.assembly.autotest_scenarios import (
     DEFAULT_PARTY_SIZE,
@@ -28,6 +33,10 @@ from app.utilities.assembly.autotest_scenarios import (
     plan_scenarios,
     select_kinds,
     select_languages,
+)
+from app.utilities.assembly.booking_variant_scenarios import (
+    plan_variant_goals,
+    plan_variant_scenarios,
 )
 from app.utilities.assembly.fact_descriptions import RESOURCE_KIND_NOUNS
 from app.utilities.assembly.fact_formatting import read_english_text
@@ -52,9 +61,12 @@ class PlanAutotestScenariosUseCase(
     Scenarios are the selected version languages crossed with the niche's
     applicable scenario kinds (booking scenarios only for a version that
     books), plus one price question per priced knowledge item, at most
-    `price_question_limit`. The plan has full coverage when every version
-    language and every applicable kind was selected: only such a run can
-    show that a version is ready for customers. The quick check of an
+    `price_question_limit`, and the niche's own booking variants (a named
+    master, a room type for several nights) from the business's services
+    and rooms, asked in the languages in turn. The plan has full coverage
+    when every version language and every applicable kind was selected:
+    only such a run can show that a version is ready for customers. The
+    quick check of an
     apply (`smoke_check`) plans exactly its scenarios instead and never has
     full coverage.
     """
@@ -63,12 +75,14 @@ class PlanAutotestScenariosUseCase(
         self,
         business_profile_repo: BusinessProfileRepoContract,
         knowledge_item_repo: KnowledgeItemRepoContract,
+        resource_repo: ResourceRepoContract,
         niche_template_registry: NicheTemplateRegistryContract,
         language_registry: LanguageRegistryContract,
         price_question_limit: PriceQuestionScenarioLimit = DEFAULT_PRICE_QUESTION_LIMIT,
     ) -> None:
         self._business_profile_repo: BusinessProfileRepoContract = business_profile_repo
         self._knowledge_item_repo: KnowledgeItemRepoContract = knowledge_item_repo
+        self._resource_repo: ResourceRepoContract = resource_repo
         self._niche_template_registry: NicheTemplateRegistryContract = (
             niche_template_registry
         )
@@ -108,30 +122,40 @@ class PlanAutotestScenariosUseCase(
             applicable_kinds,
             input_data.kinds,
         )
+        items: list[KnowledgeItemDocument] = self._knowledge_item_repo.list_by_business(
+            business.id
+        )
         priced_items: list[KnowledgeItemDocument] = sorted(
-            (
-                item
-                for item in self._knowledge_item_repo.list_by_business(business.id)
-                if item.is_active and item.price_minor is not None
-            ),
+            (item for item in items if item.is_active and item.price_minor is not None),
             key=lambda item: (
                 KNOWLEDGE_KIND_ORDER.index(item.kind),
                 str(item.title).casefold(),
                 str(item.id),
             ),
         )
+        autotest_languages: list[AutotestLanguage] = build_autotest_languages(
+            languages,
+            collect_language_profiles(self._language_registry, languages),
+        )
+        variant_goals: list[AutotestScenarioGoal] = (
+            plan_variant_goals(
+                niche.booking_variants,
+                items,
+                self._resource_repo.list_by_business(business.id),
+            )
+            if AutotestScenarioKind.BOOKING in kinds
+            else []
+        )
         return AutotestScenarioPlanning(
             scenarios=plan_scenarios(
-                languages=build_autotest_languages(
-                    languages,
-                    collect_language_profiles(self._language_registry, languages),
-                ),
+                languages=autotest_languages,
                 kinds=kinds,
                 priced_item_titles=[str(item.title) for item in priced_items],
                 price_question_limit=int(self._price_question_limit),
                 resource_noun=resource_noun,
                 party_size=party_size,
-            ),
+            )
+            + plan_variant_scenarios(autotest_languages, variant_goals),
             is_full_coverage=(
                 set(languages) >= set(version.languages)
                 and set(kinds) >= set(applicable_kinds)
