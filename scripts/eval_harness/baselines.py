@@ -110,9 +110,14 @@ def compare_with_baseline(
             for scenario in shared
             if not baseline.scenarios[scenario.key] and scenario.is_passed
         ],
-        criteria_deltas={
-            item.criterion: round(item.rate - baseline.criteria[item.criterion], 4)
-            for item in summary.criteria
-            if item.criterion in baseline.criteria
-        },
+        # Criterion rates are whole-run numbers: compared only over the same set.
+        criteria_deltas=(
+            {
+                item.criterion: round(item.rate - baseline.criteria[item.criterion], 4)
+                for item in summary.criteria
+                if item.criterion in baseline.criteria
+            }
+            if len(shared) == len(baseline.scenarios) == len(scenarios)
+            else {}
+        ),
     )

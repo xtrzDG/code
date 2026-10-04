@@ -150,11 +150,13 @@ def play_sample(
     criteria: list[EvalCriterionResult] = score_conversation(
         planned, expectations, conversation.replies, seeded.business.name
     )
-    stale: list[str] = list(
-        dict.fromkeys(
-            str(miss.reason) for miss in ([] if replay is None else replay.misses)
-        )
+    stale: list[str] = describe_misses(
+        [str(miss.reason) for miss in ([] if replay is None else replay.misses)]
     )
+    if stale:
+        # The engine met the miss as a provider error; the miss explains it.
+        error = None
+
     judge: JudgeResult | None = (
         None
         if verdict is None
@@ -194,6 +196,23 @@ def play_sample(
         turn_latencies_ms=list(conversation.turn_latencies_ms),
         stale_reasons=stale,
         error=error,
+    )
+
+
+def describe_misses(reasons: list[str]) -> list[str]:
+    """
+    The first miss is the cause; the calls after it miss because the
+    conversation already went another way, so they are only counted.
+    """
+
+    if not reasons:
+        return []
+
+    later: int = len(reasons) - 1
+    return [reasons[0]] + (
+        [f"{later} later model call(s) of this sample were not recorded either."]
+        if later
+        else []
     )
 
 

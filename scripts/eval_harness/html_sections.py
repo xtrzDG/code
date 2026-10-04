@@ -49,8 +49,10 @@ def render_tiles(summary: RunSummary) -> str:
             "bad" if summary.stale_count else "",
         ),
         tile(f"${summary.cost_usd:.4f}", "list-price cost"),
-        tile(f"{summary.latency_p50_ms} ms", "model time p50 per turn"),
-        tile(f"{summary.latency_p95_ms} ms", "model time p95 per turn"),
+        tile(
+            f"{summary.latency_p50_ms} / {summary.latency_p95_ms} ms",
+            "model time per turn, p50 / p95",
+        ),
     ]
     return f'<div class="tiles">{"".join(tiles)}</div>'
 
@@ -90,18 +92,23 @@ def render_baseline(diff: BaselineDiff | None) -> str:
 
 
 def list_block(title: str, keys: Sequence[str], css: str) -> str:
+    """A collapsible list of scenario keys, e.g. "Newly failing (3)"."""
+
     if not keys:
         return ""
 
     items: str = "".join(f"<li><code>{escape(key)}</code></li>" for key in keys)
-    return f'<p class="{css}"><b>{escape(title)}</b></p><ul>{items}</ul>'
+    return (
+        f'<details class="list"><summary class="{css}"><b>{escape(title)} '
+        f"({len(keys)})</b></summary><ul>{items}</ul></details>"
+    )
 
 
 def render_criteria(summary: RunSummary) -> str:
     rows: str = "".join(
         f"<tr><td>{escape(item.criterion)}</td><td>{item.passed}/{item.checked}</td>"
         f'<td class="{rate_class(item.rate)}">{percent(item.rate)}</td>'
-        f"<td>{bar(item.rate)}</td></tr>"
+        f'<td class="bar-cell">{bar(item.rate)}</td></tr>'
         for item in summary.criteria
     )
     return (
@@ -173,13 +180,18 @@ def render_scenario(scenario: ScenarioResult) -> str:
 
 
 def render_sample(sample: SampleResult) -> str:
-    failed: list[str] = [
-        f"<li><b>{escape(result.criterion.value)}</b>: "
-        + escape(" ".join(str(note) for note in result.notes))
-        + "</li>"
-        for result in sample.criteria
-        if not result.is_passed
-    ]
+    # A stale sample's failed criteria only follow from the missing recording.
+    failed: list[str] = (
+        []
+        if sample.stale_reasons
+        else [
+            f"<li><b>{escape(result.criterion.value)}</b>: "
+            + escape(" ".join(str(note) for note in result.notes))
+            + "</li>"
+            for result in sample.criteria
+            if not result.is_passed
+        ]
+    )
     if sample.error:
         failed.append(f"<li><b>error</b>: {escape(sample.error)}</li>")
 
@@ -197,7 +209,8 @@ def render_sample(sample: SampleResult) -> str:
         + "</p>"
     )
     lines: str = "".join(
-        f'<div class="line"><b>{escape(line.author)}</b>{escape(line.text)}</div>'
+        f'<div class="line"><b>{escape(line.author)}</b>'
+        f'<span dir="auto">{escape(line.text)}</span></div>'
         for line in sample.transcript
     )
     tools: str = "".join(f"<pre>{escape(call)}</pre>" for call in sample.tool_calls)
