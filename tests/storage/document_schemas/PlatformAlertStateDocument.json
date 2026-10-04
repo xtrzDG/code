@@ -73,8 +73,17 @@
         "type": "string"
       },
       "threshold": {
-        "minimum": 1,
+        "minimum": 0,
         "type": "integer"
+      },
+      "unit": {
+        "enum": [
+          "count",
+          "seconds",
+          "percent",
+          "ratio"
+        ],
+        "type": "string"
       },
       "updated_at": {
         "type": "integer"
@@ -85,6 +94,7 @@
       "status",
       "figure",
       "threshold",
+      "unit",
       "detail",
       "fired_at",
       "checked_at"

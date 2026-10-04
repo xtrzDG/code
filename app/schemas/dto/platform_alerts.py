@@ -5,7 +5,6 @@ message one alert sends to one recipient (a queued job's payload).
 """
 
 from base_pydantic_schemas import ImmutableDTO
-from typed_time_provider import Microseconds
 
 from app.schemas.constants.handoffs import ManagerContactChannel
 from app.schemas.constants.incidents import IncidentSeverity
@@ -50,25 +49,24 @@ class PlatformAlertRule(ImmutableDTO):
 
 
 class AlertObservation(ImmutableDTO):
-    """What one check of one rule measured, and whether the rule fires."""
+    """
+    What one check of one rule measured, the threshold it was compared
+    with (the rule's own, or for a spike the multiple of the usual level),
+    and whether the rule fires.
+    """
 
     code: PlatformAlertCode
     figure: AlertFigure
+    threshold: AlertThreshold
+    unit: AlertUnit
     detail: AlertDetailText
     is_firing: IsAlertFiring
 
 
-class SignalWindow(ImmutableDTO):
-    """The fixed windows of `length_minutes` a signal is counted in, seen at `now`."""
-
-    length_minutes: AlertWindowMinutes
-    now: Microseconds
-
-
 class SignalTally(ImmutableDTO):
     """
-    The events of one signal in the window that holds `now` (still
-    filling) and in the complete window before it.
+    The events of one signal in the shared window that holds the moment of
+    the read (still filling) and in the complete window before it.
     """
 
     signal: PlatformSignal

@@ -6,6 +6,8 @@ from typed_time_provider import Microseconds, WallClock
 
 from app.contracts.login_protection import LoginCodeCapAlertFacilitatorContract
 from app.contracts.messaging_clients import EmailSenderClientContract
+from app.contracts.monitoring import SignalCounterAdapterContract
+from app.schemas.constants.monitoring import PlatformSignal
 from app.schemas.constants.users import LoginCodeCap
 from app.schemas.dto.login_protection import LoginCodeCapAlert
 from app.schemas.exceptions.application_errors import ExternalServiceError
@@ -43,7 +45,9 @@ class LoginCodeCapAlertFacilitator(LoginCodeCapAlertFacilitatorContract):
 
     One alert per cap (and country) per hour and process, so an attack that
     keeps hitting a cap does not flood the inbox. It runs in the refused
-    request, after the send lock is released.
+    request, after the send lock is released. Every refusal is also counted
+    in the shared platform signals (the OTP_CAP_TRIPS platform alert reads
+    them across every process).
     """
 
     def __init__(
@@ -51,7 +55,9 @@ class LoginCodeCapAlertFacilitator(LoginCodeCapAlertFacilitatorContract):
         email_client: EmailSenderClientContract | None,
         platform_admin_emails: list[EmailAddress],
         wall_clock: WallClock[Microseconds],
+        signal_counter: SignalCounterAdapterContract | None = None,
     ) -> None:
+        self._signal_counter: SignalCounterAdapterContract | None = signal_counter
         self._email_client: EmailSenderClientContract | None = email_client
         self._platform_admin_emails: list[EmailAddress] = platform_admin_emails
         self._wall_clock: WallClock[Microseconds] = wall_clock
@@ -59,6 +65,9 @@ class LoginCodeCapAlertFacilitator(LoginCodeCapAlertFacilitatorContract):
         self._lock: threading.Lock = threading.Lock()
 
     def report_cap_reached(self, alert: LoginCodeCapAlert) -> None:
+        if self._signal_counter is not None:
+            self._signal_counter.count(PlatformSignal.OTP_CAP_TRIP)
+
         if not self._claim_alert(alert):
             return
 

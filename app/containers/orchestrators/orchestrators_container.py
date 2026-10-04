@@ -44,6 +44,9 @@ from app.containers.orchestrators.notification_orchestrators import (
 from app.containers.orchestrators.operations_orchestrators import (
     OperationsOrchestratorsContainer,
 )
+from app.containers.orchestrators.platform_ops_orchestrators import (
+    PlatformOpsOrchestratorsContainer,
+)
 from app.containers.orchestrators.platform_orchestrators import (
     PlatformOrchestratorsContainer,
 )
@@ -161,6 +164,10 @@ class OrchestratorsContainer(containers.DeclarativeContainer):
     platform: PlatformOrchestratorsContainer = Container(  # type: ignore[assignment]
         PlatformOrchestratorsContainer,
         platform_use_cases=use_cases.platform,
+    )
+    platform_ops: PlatformOpsOrchestratorsContainer = Container(  # type: ignore[assignment]
+        PlatformOpsOrchestratorsContainer,
+        platform_ops_use_cases=use_cases.platform_ops,
     )
     security: SecurityOrchestratorsContainer = Container(  # type: ignore[assignment]
         SecurityOrchestratorsContainer,

@@ -23,7 +23,7 @@ from app.schemas.domain.jobs import QueuedJobDocument, WorkerHeartbeatDocument
 from app.schemas.domain.maintenance_runs import MaintenanceRunDocument
 from app.schemas.domain.platform_alerts import PlatformAlertStateDocument
 from app.schemas.dto.admin_system import DeadJobTally
-from app.schemas.dto.platform_alerts import SignalTally, SignalWindow
+from app.schemas.dto.platform_alerts import SignalTally
 from app.schemas.dto.platform_health import (
     ActivityWindow,
     DatabaseSize,
@@ -128,7 +128,8 @@ class SignalCounterAdapterContract(AdapterContract, Protocol):
     def count(self, signal: PlatformSignal) -> None:
         raise NotImplementedError
 
-    def read(self, signal: PlatformSignal, window: SignalWindow) -> SignalTally:
+    def read(self, signal: PlatformSignal, now: Microseconds) -> SignalTally:
+        """The signal's events in the window holding `now` and the one before."""
         raise NotImplementedError
 
 

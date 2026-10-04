@@ -21,6 +21,9 @@ from app.containers.operators.notification_operators import (
 )
 from app.containers.operators.operations_operators import OperationsOperatorsContainer
 from app.containers.operators.platform_operators import PlatformOperatorsContainer
+from app.containers.operators.platform_ops_operators import (
+    PlatformOpsOperatorsContainer,
+)
 from app.containers.operators.security_operators import SecurityOperatorsContainer
 from app.containers.operators.setup_operators import SetupOperatorsContainer
 from app.containers.operators.sharing_operators import SharingOperatorsContainer
@@ -104,6 +107,11 @@ class OperatorsContainer(containers.DeclarativeContainer):
     platform: PlatformOperatorsContainer = Container(  # type: ignore[assignment]
         PlatformOperatorsContainer,
         platform_pipelines=pipelines.platform,
+        utilities=utilities,
+    )
+    platform_ops: PlatformOpsOperatorsContainer = Container(  # type: ignore[assignment]
+        PlatformOpsOperatorsContainer,
+        platform_ops_pipelines=pipelines.platform_ops,
         utilities=utilities,
     )
     security: SecurityOperatorsContainer = Container(  # type: ignore[assignment]

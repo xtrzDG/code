@@ -32,11 +32,16 @@ class PlatformAlertStatus(StrEnum):
 
 
 class AlertUnit(StrEnum):
-    """What a platform alert's figure and threshold count."""
+    """
+    What a platform alert's figure and threshold count. RATIO is a rule's
+    multiple of a usual level (the handoff spike: three times the hourly
+    mean of the week); its checks compare counts.
+    """
 
     COUNT = "count"
     SECONDS = "seconds"
     PERCENT = "percent"
+    RATIO = "ratio"
 
 
 class PlatformSignal(StrEnum):
@@ -63,3 +68,14 @@ class MaintenanceRunOutcome(StrEnum):
 
     SUCCEEDED = "succeeded"
     FAILED = "failed"
+
+
+class AlertNoticeKind(StrEnum):
+    """
+    Why the team gets a platform alert message: an episode started, it
+    still fires after the cooldown, or it is over.
+    """
+
+    FIRING = "firing"
+    STILL_FIRING = "still_firing"
+    RESOLVED = "resolved"

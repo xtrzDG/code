@@ -25,6 +25,9 @@ from app.containers.use_cases.notification_use_cases import (
 from app.containers.use_cases.pending_change_use_cases import (
     PendingChangeUseCasesContainer,
 )
+from app.containers.use_cases.platform_ops_use_cases import (
+    PlatformOpsUseCasesContainer,
+)
 from app.containers.use_cases.platform_use_cases import PlatformUseCasesContainer
 from app.containers.use_cases.security_use_cases import SecurityUseCasesContainer
 from app.containers.use_cases.setup_use_cases import SetupUseCasesContainer
@@ -232,6 +235,14 @@ class UseCasesContainer(CoreUseCasesContainer):
         utilities=CoreUseCasesContainer.utilities,
         platform_use_cases=platform,
     )
+    platform_ops: PlatformOpsUseCasesContainer = Container(  # type: ignore[assignment]
+        PlatformOpsUseCasesContainer, adapters=CoreUseCasesContainer.adapters,
+        config=CoreUseCasesContainer.config,
+        facilitators=CoreUseCasesContainer.facilitators,
+        repositories=CoreUseCasesContainer.repositories,
+        time_provider=CoreUseCasesContainer.time_provider,
+        utilities=CoreUseCasesContainer.utilities, platform_use_cases=platform,
+    )  # fmt: skip
     sharing: SharingUseCasesContainer = Container(  # type: ignore[assignment]
         SharingUseCasesContainer,
         config=CoreUseCasesContainer.config,

@@ -19,6 +19,7 @@ from app.gateways.worker.periodic.growth_analytics import (
     purge_web_vitals_job,
     reconcile_product_events_job,
 )
+from app.gateways.worker.periodic.platform_alerts import platform_alerts_job
 from app.gateways.worker.periodic.purge_stale_rows import purge_stale_rows_job
 from app.gateways.worker.periodic.refresh_exchange_rates import (
     refresh_exchange_rates_job,
@@ -32,6 +33,9 @@ from app.gateways.worker.periodic.sweep_rate_limit_buckets import (
 )
 from app.schemas.typings.platform.constrained_integers import JobIntervalSeconds
 from app.schemas.typings.platform.constrained_strings import JobName
+from app.use_cases.admin.alerts.check_platform_alerts_use_case import (
+    SEND_PLATFORM_ALERT_JOB,
+)
 from app.use_cases.admin.security.key_rotation_views import (
     ROTATE_ENCRYPTED_SECRETS_JOB,
 )
@@ -173,6 +177,11 @@ class GatewaysContainer(containers.DeclarativeContainer):
             send_activation_nudges_job,
             operator=operators.setup.send_activation_nudges_operator,
         ),
+        # The platform watching itself (docs/operations/slo.md).
+        Factory(
+            platform_alerts_job,
+            operator=operators.platform_ops.check_platform_alerts_operator,
+        ),
     )
     # Handlers of queued jobs by job name (the queue is filled by use cases
     # through the job queue facilitator).
@@ -200,6 +209,10 @@ class GatewaysContainer(containers.DeclarativeContainer):
             # Every stored secret sealed again with the current key.
             ROTATE_ENCRYPTED_SECRETS_JOB: (
                 operators.security.rotate_encrypted_secrets_operator
+            ),
+            # A platform alert to the team's chats and inboxes.
+            SEND_PLATFORM_ALERT_JOB: (
+                operators.platform_ops.send_platform_alert_operator
             ),
         }
     )

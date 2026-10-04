@@ -52,6 +52,9 @@ from app.containers.adapters.launch_collections_container import (
     LaunchCollectionsContainer,
 )
 from app.containers.adapters.media_adapters_container import MediaAdaptersContainer
+from app.containers.adapters.monitoring_adapters_container import (
+    MonitoringAdaptersContainer,
+)
 from app.containers.adapters.notification_collections_container import (
     NotificationCollectionsContainer,
 )
@@ -252,11 +255,17 @@ class AdaptersContainer(containers.DeclarativeContainer):
         monotonic_clock=time_provider.monotonic_clock,
         is_content_traced=config.app_settings.provided.is_llm_content_traced,
     )
+    # Signal counters of the platform alerts; every model call counted.
+    monitoring: MonitoringAdaptersContainer = Container(  # type: ignore[assignment]
+        MonitoringAdaptersContainer, clients=clients, time_provider=time_provider,
+        rate_limit_buckets=rate_limit_buckets, traced_llm_adapter=traced_llm_adapter,
+    )  # fmt: skip
+    signal_counter, database_size = monitoring.signal_counter, monitoring.database_size
     # ... and the adapter every use case gets: routing by model id, traced,
-    # at most LLM_MAX_CONCURRENCY calls of this process at once.
+    # counted, at most LLM_MAX_CONCURRENCY calls of this process at once.
     llm_adapter: Singleton[ConcurrencyLimitedLlmAdapter] = Singleton(
         ConcurrencyLimitedLlmAdapter,
-        inner_adapter=traced_llm_adapter,
+        inner_adapter=monitoring.counted_llm_adapter,
         max_concurrency=config.app_settings.provided.llm_max_concurrency,
         wait_seconds=config.app_settings.provided.llm_call_timeout_seconds,
     )

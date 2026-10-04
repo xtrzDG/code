@@ -1,7 +1,11 @@
 from base_pydantic_schemas import BaseDocument
 from typed_time_provider import Microseconds
 
-from app.schemas.constants.monitoring import PlatformAlertCode, PlatformAlertStatus
+from app.schemas.constants.monitoring import (
+    AlertUnit,
+    PlatformAlertCode,
+    PlatformAlertStatus,
+)
 from app.schemas.typings.monitoring.constrained_integers import (
     AlertFigure,
     AlertThreshold,
@@ -19,14 +23,15 @@ class PlatformAlertStateDocument(BaseDocument):
     ends when a check no longer fires (`resolved_at`). The team is told
     when it starts, again after each cooldown while it still fires
     (`notified_at`, `notification_count`) and once when it is over. The
-    figure, threshold and detail are those of the latest check, for the
-    admin system page.
+    figure, the threshold it was compared with, their unit and the detail
+    are those of the latest check, for the admin system page.
     """
 
     code: PlatformAlertCode
     status: PlatformAlertStatus
     figure: AlertFigure
     threshold: AlertThreshold
+    unit: AlertUnit
     detail: AlertDetailText
     fired_at: Microseconds
     checked_at: Microseconds

@@ -26,11 +26,11 @@ class AlertFigure(BaseConstrainedTypedInt):
 
 class AlertThreshold(BaseConstrainedTypedInt):
     """
-    The figure at or above which a platform alert fires, in the unit of its
-    rule (ops/alerts/*.yaml).
+    The figure above which a platform alert fires, in the unit of its rule
+    (ops/alerts/*.yaml): 0 for "any at all".
     """
 
-    ge = 1
+    ge = 0
 
 
 class AlertVolumeFloor(BaseConstrainedTypedInt):
