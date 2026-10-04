@@ -3,6 +3,7 @@ from pydantic import Field
 from typed_time_provider import Microseconds
 
 from app.schemas.constants.localization import OtpDeliveryChannel
+from app.schemas.constants.mfa import AuthLevel
 from app.schemas.constants.users import LoginMethod
 from app.schemas.domain.signup_attribution import SignupAttribution
 from app.schemas.typings.compliance.strings import ClientIpAddress
@@ -80,9 +81,22 @@ class OtpChallengeDocument(BaseDocument):
 
 
 class UserSessionDocument(BaseDocument):
-    """Signed-in session; only the SHA-256 hash of the bearer token is stored."""
+    """
+    Signed-in session; only the SHA-256 hash of the bearer token is stored.
 
+    `auth_level` says how it was signed in (the login code alone, or with
+    an authenticator or recovery code too) and `authenticated_at` when the
+    person last proved it is them: at sign-in, and again when they confirm
+    a sensitive action (step-up). A session of version 1 has neither and
+    counts as one factor that must confirm its next sensitive action.
+    """
+
+    # 2: `auth_level` and `authenticated_at` (optional, so version 1 needs
+    # no upcaster).
+    schema_version: SchemaVersion = SchemaVersion("2")
     id: UserSessionId = Field(default_factory=UserSessionId)
     user_id: UserId
     token_hash: AccessTokenHash
     expires_at: Microseconds
+    auth_level: AuthLevel | None = None
+    authenticated_at: Microseconds | None = None

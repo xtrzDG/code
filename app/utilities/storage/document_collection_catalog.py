@@ -48,6 +48,11 @@ from app.schemas.domain.jobs import (
 from app.schemas.domain.key_rotations import KeyRotationDocument
 from app.schemas.domain.knowledge import KnowledgeItemDocument
 from app.schemas.domain.manager_links import ManagerTelegramLinkDocument
+from app.schemas.domain.mfa import (
+    MfaChallengeDocument,
+    RecoveryCodeDocument,
+    TotpFactorDocument,
+)
 from app.schemas.domain.missed_calls import MissedCallDocument
 from app.schemas.domain.notification_preferences import (
     UserNotificationPreferencesDocument,
@@ -99,6 +104,17 @@ DOCUMENT_COLLECTIONS: tuple[DocumentCollectionDefinition, ...] = (
     ),
     DocumentCollectionDefinition(
         DocumentCollectionName("user_sessions"), UserSessionDocument
+    ),
+    # Two-factor sign-in: authenticators, recovery codes and the second
+    # step of a sign-in (1082).
+    DocumentCollectionDefinition(
+        DocumentCollectionName("totp_factors"), TotpFactorDocument
+    ),
+    DocumentCollectionDefinition(
+        DocumentCollectionName("recovery_codes"), RecoveryCodeDocument
+    ),
+    DocumentCollectionDefinition(
+        DocumentCollectionName("mfa_challenges"), MfaChallengeDocument
     ),
     # Businesses, their profile and channels.
     DocumentCollectionDefinition(

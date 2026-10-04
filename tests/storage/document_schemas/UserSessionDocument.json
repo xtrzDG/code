@@ -1,10 +1,36 @@
 {
   "collection": "user_sessions",
   "document_type": "UserSessionDocument",
-  "schema_version": 1,
+  "schema_version": 2,
   "shape": {
     "additionalProperties": false,
     "properties": {
+      "auth_level": {
+        "anyOf": [
+          {
+            "enum": [
+              "one_factor",
+              "two_factor"
+            ],
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "authenticated_at": {
+        "anyOf": [
+          {
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
       "created_at": {
         "type": "integer"
       },
@@ -16,7 +42,7 @@
         "type": "string"
       },
       "schema_version": {
-        "default": "1",
+        "default": "2",
         "type": "string"
       },
       "token_hash": {
