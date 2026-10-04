@@ -92,6 +92,12 @@ class UpdateAnnouncementUseCase(
                 "Maintenance, degraded service and outages name the components "
                 "they affect."
             )
+        if body.expected_end_at is not None and int(body.expected_end_at) <= max(
+            int(announcement.starts_at), int(now)
+        ):
+            raise ValidationFailedError(
+                "An announcement is expected to end after it starts and after now."
+            )
 
         changed = announcement.model_copy(
             update={

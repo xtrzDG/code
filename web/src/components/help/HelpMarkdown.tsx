@@ -28,7 +28,7 @@ export interface HelpLinkHandlers {
 
 const LINK = "font-medium text-accent underline decoration-accent/40 underline-offset-2 hover:decoration-accent";
 
-function SpanText({ span }: { span: HelpSpan }) {
+function SpanText({ span, inLink = false }: { span: HelpSpan; inLink?: boolean }) {
   const text = span.code ? (
     <code className="rounded bg-surface-muted px-1 py-0.5 font-mono text-[0.85em] text-ink" dir="ltr">
       {span.text}
@@ -36,13 +36,13 @@ function SpanText({ span }: { span: HelpSpan }) {
   ) : (
     span.text
   );
-  return span.bold ? <strong className="font-semibold text-ink">{text}</strong> : <>{text}</>;
+  return span.bold ? <strong className={cn("font-semibold", !inLink && "text-ink")}>{text}</strong> : <>{text}</>;
 }
 
 function SpanLink({ span, handlers }: { span: HelpSpan; handlers: HelpLinkHandlers }) {
   const { t } = useI18n();
   const link = span.link;
-  const content = <SpanText span={span} />;
+  const content = <SpanText span={span} inLink />;
   if (!link) {
     return content;
   }

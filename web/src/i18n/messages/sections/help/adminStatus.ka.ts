@@ -45,6 +45,7 @@ export const adminStatusKa: Translation<typeof adminStatusEn> = {
     saving: "ინახება…",
     errors: {
       textRequired: "დაწერეთ ინგლისური ტექსტი: მინიმუმ 3 სიმბოლო.",
+      textShort: "მინიმუმ 3 სიმბოლო, ან დატოვეთ ცარიელი.",
       componentsRequired: "აირჩიეთ მინიმუმ ერთი დაზარალებული ნაწილი.",
       time: "მიუთითეთ თარიღი და დრო.",
       endBeforeStart: "დასრულება უნდა იყოს დაწყების შემდეგ და მომავალში.",

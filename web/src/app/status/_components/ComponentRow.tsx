@@ -24,9 +24,14 @@ export function ComponentRow({ component }: { component: ComponentStatus }) {
 
   return (
     <li data-component={component.component} className="space-y-3 px-5 py-4">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <h3 className="font-medium text-ink">{name}</h3>
-        <Badge tone={LEVEL_TONES[component.level]}>{t(`platformStatus.levels.${component.level}`)}</Badge>
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h3 className="font-medium text-ink">{name}</h3>
+          <p className="text-xs text-ink-muted">{summary}</p>
+        </div>
+        <Badge tone={LEVEL_TONES[component.level]} className="shrink-0">
+          {t(`platformStatus.levels.${component.level}`)}
+        </Badge>
       </div>
       <div role="img" aria-label={`${t("platformStatus.historyLabel", { component: name })}. ${summary}`} className="flex h-8 items-stretch gap-px" dir="ltr">
         {component.history.map((day) => (
@@ -37,9 +42,8 @@ export function ComponentRow({ component }: { component: ComponentStatus }) {
           />
         ))}
       </div>
-      <div className="flex items-center justify-between gap-3 text-xs text-ink-subtle">
+      <div className="flex items-center justify-between gap-3 text-xs text-ink-subtle" aria-hidden>
         <span>{t("platformStatus.historyStart")}</span>
-        <span className="text-ink-muted">{summary}</span>
         <span>{t("platformStatus.historyEnd")}</span>
       </div>
     </li>

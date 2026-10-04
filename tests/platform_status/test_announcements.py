@@ -216,6 +216,12 @@ def test_an_update_keeps_components_for_levels_that_need_them() -> None:
         update(
             world, created.id, UpdateAnnouncementBody(level=AnnouncementLevel.OUTAGE)
         )
+    with pytest.raises(ValidationFailedError):
+        update(
+            world,
+            created.id,
+            UpdateAnnouncementBody(expected_end_at=Microseconds(world.now - HOUR)),
+        )
     with pytest.raises(NotFoundError):
         update(world, AnnouncementId(), UpdateAnnouncementBody(resolve=True))
     with pytest.raises(StepUpRequiredError):

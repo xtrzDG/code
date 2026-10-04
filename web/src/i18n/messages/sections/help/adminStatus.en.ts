@@ -46,6 +46,7 @@ export const adminStatusEn = {
     saving: "Saving…",
     errors: {
       textRequired: "Write the English text: at least 3 characters.",
+      textShort: "At least 3 characters, or leave it empty.",
       componentsRequired: "Choose at least one affected part.",
       time: "Enter a date and a time.",
       endBeforeStart: "The end must be after the start and in the future.",

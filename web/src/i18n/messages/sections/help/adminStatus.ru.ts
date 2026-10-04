@@ -45,6 +45,7 @@ export const adminStatusRu: Translation<typeof adminStatusEn> = {
     saving: "Сохраняем…",
     errors: {
       textRequired: "Напишите текст на английском: не меньше 3 символов.",
+      textShort: "Не меньше 3 символов — или оставьте пустым.",
       componentsRequired: "Выберите хотя бы одну затронутую часть.",
       time: "Укажите дату и время.",
       endBeforeStart: "Окончание должно быть позже начала и в будущем.",
