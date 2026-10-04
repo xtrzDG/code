@@ -10,7 +10,7 @@ import { queryKeys } from "@/api/queryKeys";
 import { useMutation } from "@/api/useMutation";
 import { useQuery } from "@/api/useQuery";
 import { IconArrowLeft, IconExternal } from "@/components/icons";
-import { Button, ButtonLink, Card, ConfirmDialog, ErrorState, LoadingRegion, PageHeader } from "@/components/ui";
+import { Button, ButtonLink, Card, ErrorState, LoadingRegion, PageHeader } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { countryFlag, countryName } from "@/lib/countries";
 import { ADMIN_PATH, businessPath } from "@/lib/navigation";
@@ -20,6 +20,7 @@ import { ClientUsageCard } from "./client/ClientUsageCard";
 import { CostCard } from "./client/CostCard";
 import { FailedAutotestsCard } from "./client/FailedAutotestsCard";
 import { InvoicesCard } from "./client/InvoicesCard";
+import { OpenCabinetDialog } from "./client/OpenCabinetDialog";
 import { OverviewCard } from "./client/OverviewCard";
 import { PaymentsCard } from "./client/PaymentsCard";
 import { ReplySpeedCard } from "./client/ReplySpeedCard";
@@ -37,12 +38,13 @@ export function AdminClientScreen({ businessId }: { businessId: string }) {
     api.GET("/v1/admin/clients/{business_id}", { params: { path: { business_id: businessId } } }),
   );
   const open = useMutation(
-    () => api.POST("/v1/admin/clients/{business_id}/open", { params: { path: { business_id: businessId } } }),
+    (reason: string) =>
+      api.POST("/v1/admin/clients/{business_id}/open", { params: { path: { business_id: businessId } }, body: { reason } }),
     { errorToast: false },
   );
 
-  const onOpen = async () => {
-    const result = await open.run();
+  const onOpen = async (reason: string) => {
+    const result = await open.run(reason);
     if (result.ok) {
       router.push(businessPath(result.data.business_id, "overview"));
     } else {
@@ -115,16 +117,13 @@ export function AdminClientScreen({ businessId }: { businessId: string }) {
             </div>
           </div>
 
-          <ConfirmDialog
+          <OpenCabinetDialog
             open={isConfirming}
-            onClose={() => setConfirming(false)}
-            onConfirm={onOpen}
-            tone="primary"
+            name={summary.name}
             isPending={open.isPending}
             error={openError}
-            title={t("admin.detail.openTitle", { name: summary.name })}
-            description={t("admin.detail.openDescription")}
-            confirmLabel={t("admin.detail.openCabinet")}
+            onClose={() => setConfirming(false)}
+            onOpen={onOpen}
           />
         </>
       )}

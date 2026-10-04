@@ -80,3 +80,12 @@ export type AccountSecurityView = Schema<"AccountSecurityView">;
 export type StepUpChallengeView = Schema<"StepUpChallengeView">;
 export type SessionAssuranceView = Schema<"SessionAssuranceView">;
 export type BusinessSecurityView = Schema<"BusinessSecurityView">;
+
+// Devices, the platform admin team and support access
+export type UserSessionView = Schema<"UserSessionView">;
+export type SessionDevice = Schema<"SessionDevice">;
+export type PlatformAdminView = Schema<"PlatformAdminView">;
+export type PlatformAdminRole = Schema<"PlatformAdminRole">;
+export type PlatformAdminPermission = Schema<"PlatformAdminPermission">;
+export type SupportAccessView = Schema<"SupportAccessView">;
+export type SupportSessionView = Schema<"SupportSessionView">;

@@ -67,6 +67,10 @@ export const settingsRecordsKa: Translation<typeof settingsRecordsEn> = {
       retention_purge: "წაიშალა შენახვის ვადის გამო",
       publish_untested: "გამოქვეყნდა შემოწმებაგაუვლელი განახლება",
       mfa_changed: "შეიცვალა ორსაფეხურიანი შესვლა",
+      support_access_start: "პლატფორმის მხარდაჭერამ გახსნა კაბინეტი",
+      support_access_end: "პლატფორმის მხარდაჭერის წვდომა დასრულდა",
+      session_revoked: "მოწყობილობიდან გასვლა",
+      platform_admin_changed: "შეიცვალა ადმინისტრატორების გუნდი",
     },
     entities: {
       contact: "მომხმარებელი",
