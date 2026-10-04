@@ -4,6 +4,7 @@ from hashlib import sha256
 
 import pytest
 
+from app.schemas.constants.access import PlatformAdminRole
 from app.schemas.constants.compliance import AuditAction
 from app.schemas.constants.users import LoginMethod
 from app.schemas.domain.users import UserDocument
@@ -179,7 +180,7 @@ def test_email_login_creates_an_email_user_without_a_country() -> None:
     assert session.user.locale == "en"
 
 
-def test_platform_admins_are_bootstrapped_from_settings() -> None:
+def test_the_settings_lists_bootstrap_only_the_first_super_admin() -> None:
     testbed = build_accounts_testbed(
         {
             "PLATFORM_ADMIN_EMAILS": "Dani@Example.com, ops@example.com",
@@ -188,21 +189,23 @@ def test_platform_admins_are_bootstrapped_from_settings() -> None:
     )
 
     email_admin = testbed.verify_email_code("DANI@example.com")
-    phone_admin = testbed.verify_phone_code("555 12 34 56", "GE")
+    # Listed too, but the team has its SUPER admin now: the Team page
+    # adds people from here on.
+    listed_later = testbed.sign_in_with_phone("+995555123456")
     regular_user = testbed.sign_in_with_phone(GERMANY_MOBILE)
 
     # Admins always take the second step: setting up an authenticator first.
-    for answer in (email_admin, phone_admin):
-        assert isinstance(answer, MfaRequiredView)
-        assert answer.mfa_challenge.requires_enrollment is True
-    admins = [
-        testbed.user_repo.find_by_email(EmailAddress("dani@example.com")),
-        testbed.user_repo.find_by_phone_number(E164PhoneNumber("+995555123456")),
-    ]
-    assert [admin is not None and admin.is_platform_admin for admin in admins] == [
-        True,
-        True,
-    ]
+    assert isinstance(email_admin, MfaRequiredView)
+    assert email_admin.mfa_challenge.requires_enrollment is True
+    admin = testbed.user_repo.find_by_email(EmailAddress("dani@example.com"))
+    assert admin is not None and admin.is_platform_admin is True
+    [record] = testbed.platform_admin_repo.list_team()
+    assert (record.email, record.role, record.added_by) == (
+        admin.email,
+        PlatformAdminRole.SUPER,
+        None,
+    )
+    assert listed_later.user.is_platform_admin is False
     assert regular_user.user.is_platform_admin is False
 
 

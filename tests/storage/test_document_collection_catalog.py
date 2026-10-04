@@ -68,6 +68,7 @@ from app.schemas.domain.mfa import (
 from app.schemas.domain.platform_alerts import PlatformAlertStateDocument
 from app.schemas.domain.product_events import ProductEventDocument
 from app.schemas.domain.profiles import BusinessProfileDocument
+from app.schemas.domain.platform_admins import PlatformAdminDocument
 from app.schemas.domain.users import (
     OtpChallengeDocument,
     UserDocument,
@@ -132,6 +133,8 @@ PLATFORM_DOCUMENT_TYPES: frozenset[type[PersistentDocument]] = frozenset(
         PlatformAlertStateDocument,
         MaintenanceRunDocument,
         IncidentDocument,
+        # The platform admin team belongs to the platform (1103).
+        PlatformAdminDocument,
     }
 )
 

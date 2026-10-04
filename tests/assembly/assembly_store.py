@@ -70,6 +70,11 @@ from tests.assembly.fake_locale_registries import (
 )
 from tests.assembly.fake_niche_templates import FakeNicheTemplateRegistry
 from tests.foundation.access_support import platform_admin
+from tests.foundation.support_access_builders import (
+    allow_support_changes,
+    in_memory_grant_repo,
+    open_support_session,
+)
 from tests.platform.worker_fakes import (
     TEST_LANE_CONCURRENCY,
     JobStores,
@@ -135,6 +140,7 @@ class AssemblyStore:
             InMemoryDocumentCollectionAdapter(MessageDocument)
         )
         self.user_repo = UserRepository(InMemoryDocumentCollectionAdapter(UserDocument))
+        self.support_grants = in_memory_grant_repo()
         self.audit_repo = AuditLogRepository(
             InMemoryDocumentCollectionAdapter(AuditLogEntryDocument)
         )
@@ -191,9 +197,17 @@ class AssemblyStore:
             lane_concurrency=TEST_LANE_CONCURRENCY,
         )
 
-    def add_platform_admin(self) -> UserId:
+    def add_platform_admin(self, business_id: BusinessId) -> UserId:
+        """
+        A platform admin looking into the business with the owner's
+        consent to changes (a done-for-you setup).
+        """
+
         admin = platform_admin()
         self.user_repo.save(admin)
+        now: int = int(self.wall_clock.now_unix())
+        open_support_session(self.support_grants, business_id, admin.id, now)
+        allow_support_changes(self.support_grants, business_id, self.owner_id, now)
         return admin.id
 
     def version(

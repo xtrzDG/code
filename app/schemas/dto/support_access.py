@@ -11,6 +11,7 @@ from app.schemas.constants.access import BusinessAccessMode, SupportAccessEndRea
 from app.schemas.constants.users import BusinessMemberRole
 from app.schemas.typings.access.booleans import (
     IsOwnSupportAccess,
+    IsSupportChangeAllowed,
     IsSupportViewer,
     IsSupportWriteAllowed,
 )
@@ -34,6 +35,7 @@ class SupportAccessCheck(ImmutableDTO):
     business_id: BusinessId
     required_role: BusinessMemberRole | None = None
     access_mode: BusinessAccessMode | None = None
+    support_may_change: IsSupportChangeAllowed = False
 
 
 class SupportAccessEnding(ImmutableDTO):

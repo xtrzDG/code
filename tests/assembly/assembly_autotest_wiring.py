@@ -101,6 +101,7 @@ class AssemblyAutotestWiring(AssemblyScriptedModels):
             self.wall_clock,
             session_assurance=SessionAssuranceContext(),
             app_settings=ACCESS_SETTINGS,
+            grant_repo=self.support_grants,
         )
         details_transformer = self.details_transformer = (
             AssistantVersionDetailsTransformer()

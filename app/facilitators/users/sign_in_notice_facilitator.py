@@ -109,14 +109,14 @@ class SignInNoticeFacilitator(SignInNoticeFacilitatorContract):
             return
 
         texts = SignInNoticeTexts(self._resolver, device, session.created_ip)
-        subject = StaffAlertSubject(f"sign-in:{session.id}")
+        subject = StaffAlertSubject(f"sign_in:{session.id}")
         for business in businesses:
             self._staff_alerts.alert(
                 business,
                 StaffAlert(
                     business_id=business.id,
                     target=StaffLinkTarget.ACCOUNT_SECURITY,
-                    tag=PushNotificationTag(f"sign-in:{session.id}"),
+                    tag=PushNotificationTag(f"sign_in:{session.id}"),
                     subject=subject,
                     is_urgent=True,
                     recipient_user_ids=[user.id],

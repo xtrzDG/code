@@ -83,6 +83,8 @@ class StartAutotestRunUseCase(UseCaseContract[RunAutotestsCommand, AutotestRunPl
                 user_id=input_data.user_id,
                 business_id=input_data.business_id,
                 required_role=BusinessMemberRole.OWNER,
+                # Done-for-you setup: support may, with the owner's consent.
+                support_may_change=True,
             )
         )
         version: AssistantVersionDocument | None = self._assistant_version_repo.get(

@@ -5,7 +5,8 @@ business, platform support only during an open look into the cabinet
 from the settings' PLATFORM_ADMIN_* lists.
 """
 
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
+from contextvars import copy_context
 
 from typed_time_provider import Microseconds, WallClock
 
@@ -31,11 +32,13 @@ from app.repositories.support_access_grant_repository import (
     SupportAccessGrantRepository,
 )
 from app.schemas.configurations.app_settings import AppSettings
-from app.schemas.constants.access import SupportAccessKind
+from app.schemas.constants.access import BusinessAccessMode, SupportAccessKind
+from app.schemas.constants.mfa import AuthLevel
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.platform_admins import PlatformAdminDocument
 from app.schemas.domain.support_access_grants import SupportAccessGrantDocument
 from app.schemas.domain.users import UserDocument, UserSessionDocument
+from app.schemas.dto.mfa import SessionAssurance
 from app.schemas.dto.notifications.staff_alerts import StaffAlert, StaffAlertBrief
 from app.schemas.typings.access.constrained_strings import SupportAccessReason
 from app.schemas.typings.businesses.prefixed_id import BusinessId
@@ -184,3 +187,28 @@ class RecordingStaffAlerts(StaffAlertFacilitatorContract):
         del business
         self.alerts.append((alert, texts.brief(LanguageTag("en"))))
         return DeliveredNotificationCount(1)
+
+
+def as_request[T](
+    session_assurance: SessionAssuranceContract,
+    user_id: UserId,
+    work: Callable[[], T],
+    access_mode: BusinessAccessMode = BusinessAccessMode.WRITE,
+) -> T:
+    """
+    Run `work` as an HTTP request of this user would: a two-factor
+    session bound in its own context, reading or changing.
+    """
+
+    def request() -> T:
+        session_assurance.bind(
+            SessionAssurance(
+                user_id=user_id,
+                session_id=UserSessionId(),
+                auth_level=AuthLevel.TWO_FACTOR,
+                access_mode=access_mode,
+            )
+        )
+        return work()
+
+    return copy_context().run(request)

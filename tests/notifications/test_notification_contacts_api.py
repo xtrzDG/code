@@ -150,7 +150,10 @@ def test_a_signed_link_leads_to_its_page_until_it_expires() -> None:
             == 404
         )
 
-        workshop.clock.advance(8 * 24 * 60 * 60)
+        # Eight days on (the session in use meanwhile, so it stays open).
+        workshop.clock.advance(4 * 24 * 60 * 60)
+        assert workshop.client.get(path, headers=restaurant.headers).status_code == 200
+        workshop.clock.advance(4 * 24 * 60 * 60)
         expired = workshop.client.get(path, headers=restaurant.headers)
         assert expired.status_code == 200
         assert expired.json()["is_expired"] is True

@@ -2,6 +2,7 @@
 
 import pytest
 
+from app.schemas.constants.access import BusinessAccessMode
 from app.schemas.constants.compliance import AuditAction
 from app.schemas.constants.users import LoginMethod
 from app.schemas.domain.users import UserDocument
@@ -13,6 +14,7 @@ from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.schemas.typings.platform.constrained_integers import PageSize
 from app.schemas.typings.users.constrained_strings import EmailAddress
 from tests.compliance.business_with_staff import business_with_staff
+from tests.foundation.support_access_builders import as_request, open_support_session
 from tests.users.accounts_phones import ISRAEL_MOBILE
 from tests.users.accounts_testbed import build_accounts_testbed
 
@@ -108,7 +110,7 @@ def test_audit_log_filters_run_before_paging_and_name_the_filter_values() -> Non
     assert everything.actor_ids == [owner_id]
 
 
-def test_platform_admin_reading_the_audit_log_is_itself_audited() -> None:
+def test_platform_support_reads_the_audit_log_only_during_an_open_look() -> None:
     testbed = build_accounts_testbed({"PLATFORM_ADMIN_EMAILS": "ops@example.com"})
     _, _, business = business_with_staff(testbed)
     admin = UserDocument(
@@ -119,9 +121,18 @@ def test_platform_admin_reading_the_audit_log_is_itself_audited() -> None:
     )
     testbed.user_repo.save(admin)
 
-    entries = testbed.list_audit_log.run(
-        AuditLogQuery(user_id=admin.id, business_id=business.id)
-    ).items
+    def read() -> object:
+        return testbed.list_audit_log.run(
+            AuditLogQuery(user_id=admin.id, business_id=business.id)
+        )
 
-    assert entries[0].action is AuditAction.ADMIN_ACCESS
-    assert entries[0].actor_id == admin.id
+    with pytest.raises(AccessDeniedError, match="reason first"):
+        as_request(testbed.session_assurance, admin.id, read, BusinessAccessMode.READ)
+    open_support_session(
+        testbed.grant_repo, business.id, admin.id, int(testbed.clock.now_microseconds())
+    )
+
+    page = as_request(
+        testbed.session_assurance, admin.id, read, BusinessAccessMode.READ
+    )
+    assert getattr(page, "items", None) is not None

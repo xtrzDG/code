@@ -194,6 +194,8 @@ HOT_QUERIES: tuple[HotQuery, ...] = (
         "user_sessions",
         "user_sessions_doc_expires_at_idx",
         is_in_business_scope=False,
+        # The second delete (sessions unused too long, 1103) uses its own.
+        alternative_indexes=("user_sessions_doc_idle_expires_at_idx",),
     ),
     HotQuery(
         "purge of old login codes",

@@ -94,6 +94,7 @@ class AuthorizeBusinessAccessUseCase(
                 business_id=business.id,
                 required_role=input_data.required_role,
                 access_mode=input_data.access_mode,
+                support_may_change=input_data.support_may_change,
             )
         )
         return business

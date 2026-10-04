@@ -49,8 +49,10 @@ class AuthorizeSupportAccessUseCase(
     - Reading only, unless the owner's consent to changes is in force and
       the admin's role may change client cabinets (SUPER): a change
       without both gets AccessDeniedError with the reason
-      `support_read_only`. Even then support changes what staff may, never
-      an owner-only action (billing, team, publishing, security). Each
+      `support_read_only`. Even then support changes what staff may, and
+      of the owner-only actions only building and publishing the assistant
+      (`support_may_change`), never billing, team, channels, security or
+      customers' data. Each
       change is audited (ADMIN_ACCESS with the address); reads are covered
       by SUPPORT_ACCESS_START.
 
@@ -103,7 +105,10 @@ class AuthorizeSupportAccessUseCase(
             ):
                 raise support_read_only()
 
-            if input_data.required_role is BusinessMemberRole.OWNER:
+            if (
+                input_data.required_role is BusinessMemberRole.OWNER
+                and not input_data.support_may_change
+            ):
                 raise AccessDeniedError("Only the business owner may do this.")
 
             self._audit_change(input_data, assurance, now)

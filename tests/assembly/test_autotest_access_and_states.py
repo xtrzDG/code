@@ -32,7 +32,7 @@ def test_restricted_states_and_access() -> None:
         business.id,
         version.id,
         accept_failed_tests=True,
-        user_id=testbed.add_platform_admin(),
+        user_id=testbed.add_platform_admin(business.id),
     )
     with pytest.raises(ConflictError, match="published"):
         testbed.run_autotests(business.id, version.id)

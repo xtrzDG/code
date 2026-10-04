@@ -113,6 +113,10 @@ def test_an_authenticator_confirms_and_the_confirmation_expires(
     assert_step_up_required(expired)
 
 
+SUPPORT_REASON: dict[str, Any] = {"reason": "Owner asked why bookings stopped"}
+NEW_ADMIN: dict[str, Any] = {"email": "ops@example.com", "role": "billing"}
+
+
 def test_every_sensitive_action_asks_to_confirm(workshop: Workshop) -> None:
     token, _, business_id = sign_in_and_create_restaurant(workshop)
     admin_token, _ = workshop.sign_in_with_email(ADMIN_EMAIL)
@@ -130,7 +134,13 @@ def test_every_sensitive_action_asks_to_confirm(workshop: Workshop) -> None:
         ("PUT", f"{base}/channels/telegram", owner, {"bot_token": "1:token-0000"}),
         ("PUT", f"{base}/security", owner, {"require_mfa_for_members": False}),
         ("POST", "/v1/me/mfa/totp", owner, None),
-        ("POST", f"/v1/admin/clients/{business_id}/open", admin, None),
+        ("POST", f"/v1/admin/clients/{business_id}/open", admin, SUPPORT_REASON),
+        (
+            "POST",
+            "/v1/admin/team",
+            admin,
+            {"email": "ops@example.com", "role": "billing"},
+        ),
         ("POST", "/v1/admin/security/encryption-keys/rotate", admin, None),
     ]
 

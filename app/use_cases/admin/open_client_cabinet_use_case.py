@@ -170,8 +170,8 @@ class OpenClientCabinetUseCase(
             StaffAlert(
                 business_id=business.id,
                 target=StaffLinkTarget.OVERVIEW,
-                tag=PushNotificationTag(f"support-access:{grant.id}"),
-                subject=StaffAlertSubject(f"support-access:{grant.id}"),
+                tag=PushNotificationTag(f"support_access:{grant.id}"),
+                subject=StaffAlertSubject(f"support_access:{grant.id}"),
                 contact_channels=NOTICE_CHANNELS,
             ),
             SupportAccessTexts(self._resolver, admin.display_name, grant.reason),

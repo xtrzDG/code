@@ -37,7 +37,6 @@ def start_with_flaky_job(failures: int) -> tuple[Workshop, FlakyQueuedOperator]:
 
 def test_a_dead_job_is_retried_through_the_api() -> None:
     workshop, operator = start_with_flaky_job(failures=5)
-    admin_token, _ = workshop.sign_in_with_email(ADMIN_EMAIL)
     business_id = BusinessId()
     job_id = workshop.container.facilitators.job_queue_facilitator().enqueue(
         SEND_DIGEST, SECRET_PAYLOAD, business_id
@@ -46,6 +45,8 @@ def test_a_dead_job_is_retried_through_the_api() -> None:
     for _ in range(5):
         worker.run_once()
         workshop.clock.advance(10_000)
+    # Signed in now: an admin session unused for twelve hours ends.
+    admin_token, _ = workshop.sign_in_with_email(ADMIN_EMAIL)
 
     dead = workshop.client.get(
         "/v1/admin/jobs",

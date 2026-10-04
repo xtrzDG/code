@@ -5,6 +5,7 @@ Example:
 """
 
 IsOwnSupportAccess = bool
+IsSupportChangeAllowed = bool
 IsSupportViewer = bool
 IsSupportWriteAllowed = bool
 IsViewingAdmin = bool

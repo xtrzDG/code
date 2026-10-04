@@ -4,7 +4,6 @@ from app.registries.localization.call_forwarding_guide_registry import (
     CallForwardingGuideRegistry,
 )
 from app.schemas.constants.channels import ChannelKind, ChannelStatus
-from app.schemas.constants.compliance import AuditAction
 from app.schemas.constants.localization import CallForwardingCondition
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.dto.catalog.call_forwarding import (
@@ -12,6 +11,7 @@ from app.schemas.dto.catalog.call_forwarding import (
     CallForwardingInstructionsRequest,
 )
 from app.schemas.exceptions.application_errors import (
+    AccessDeniedError,
     NotFoundError,
     ValidationFailedError,
 )
@@ -125,15 +125,15 @@ def test_staff_may_read_instructions_and_strangers_may_not() -> None:
         request_instructions(world, business, UserId())
 
 
-def test_platform_admin_access_is_audited() -> None:
+def test_platform_support_without_an_open_look_is_refused() -> None:
     world, business, _, _ = build_georgian_world()
     admin = platform_admin("ru")
     world.user_repo.save(admin)
 
-    request_instructions(world, business, admin.id, "ru")
+    with pytest.raises(AccessDeniedError, match="reason first"):
+        request_instructions(world, business, admin.id, "ru")
 
-    entries = world.audit_log_repo.list_by_business(business.id)
-    assert [entry.action for entry in entries] == [AuditAction.ADMIN_ACCESS]
+    assert world.audit_log_repo.list_by_business(business.id) == []
 
 
 def test_other_countries_get_standard_gsm_codes_without_carriers() -> None:

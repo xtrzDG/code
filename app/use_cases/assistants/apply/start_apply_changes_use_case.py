@@ -84,6 +84,8 @@ class StartApplyChangesUseCase(UseCaseContract[ApplyChangesCommand, ApplyStart])
                 user_id=input_data.user_id,
                 business_id=input_data.business_id,
                 required_role=BusinessMemberRole.OWNER,
+                # Done-for-you setup: support may, with the owner's consent.
+                support_may_change=True,
             )
         )
         now: Microseconds = self._wall_clock.now_unix()

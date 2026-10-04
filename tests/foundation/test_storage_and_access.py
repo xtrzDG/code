@@ -13,7 +13,6 @@ from app.repositories.compliance_repositories import AuditLogRepository
 from app.repositories.conversation_repositories import ContactRepository
 from app.repositories.user_repositories import UserRepository
 from app.schemas.constants.channels import ChannelKind
-from app.schemas.constants.compliance import AuditAction
 from app.schemas.constants.users import BusinessMemberRole
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.compliance import AuditLogEntryDocument
@@ -124,15 +123,13 @@ def test_owner_staff_stranger_and_platform_admin_access() -> None:
             BusinessAccessRequest(user_id=UserId(), business_id=business.id)
         )
 
-    assert (
+    # A platform admin without an open look into the cabinet gets nothing
+    # (support access: tests/users/access).
+    with pytest.raises(AccessDeniedError, match="reason first"):
         operator.operate(
             BusinessAccessRequest(user_id=admin.id, business_id=business.id)
-        ).id
-        == business.id
-    )
-    audit_entries = audit_log_repo.list_by_business(business.id)
-    assert [entry.action for entry in audit_entries] == [AuditAction.ADMIN_ACCESS]
-    assert audit_entries[0].actor_id == admin.id
+        )
+    assert audit_log_repo.list_by_business(business.id) == []
 
 
 def test_tenant_scoped_repository_hides_other_businesses_documents() -> None:
