@@ -4,12 +4,15 @@ A `send_platform_alert` job sends one message through the staff providers
 and PLATFORM_ALERT_* configure where the alerts go.
 """
 
+from collections.abc import Sequence
+
 import pytest
 
 from app.schemas.constants.handoffs import ManagerContactChannel
 from app.schemas.domain.businesses import ManagerContact
 from app.schemas.domain.outbound_messages import OutboundTemplate
 from app.schemas.dto.jobs import QueuedJobInput
+from app.schemas.dto.messaging import EmailAttachment
 from app.schemas.dto.platform_alerts import PlatformAlertDelivery
 from app.schemas.exceptions.application_errors import (
     DeliveryNotConfiguredError,
@@ -60,6 +63,14 @@ class RecordingSender:
             raise self._error
         self.sent.append((contact, str(text)))
         return None
+
+    def send_with_files(
+        self,
+        contact: ManagerContact,
+        text: MessageText,
+        attachments: Sequence[EmailAttachment],
+    ) -> None:
+        raise AssertionError("Platform alerts carry no files.")
 
 
 def queued(channel: ManagerContactChannel, address: str) -> QueuedJobInput:
