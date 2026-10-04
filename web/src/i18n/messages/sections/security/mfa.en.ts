@@ -37,7 +37,6 @@ export const mfaEn = {
     qrLabel: "QR code for the authenticator app",
     key: "Key",
     copyKey: "Copy the key",
-    keyCopied: "Key copied",
     code: "Code from the app",
     confirm: "Turn on",
     confirming: "Turning on…",
@@ -47,7 +46,6 @@ export const mfaEn = {
     description:
       "If you lose your phone, sign in with one of these codes instead of the app. Each code works once. They are shown only now: keep them in a password manager or print them.",
     copy: "Copy",
-    copied: "Codes copied",
     download: "Download",
     fileHeading:
       "Assistant Workshop recovery codes for {account}. Each code works once.",
@@ -70,8 +68,6 @@ export const mfaEn = {
     wrongCode: "The code is wrong or was already used. Try the newest code.",
     expired: "This sign-in has expired. Start again.",
     tooManyAttempts: "Too many wrong codes. Sign in again.",
-    stepUpRequired: "Confirm it is you to do this: enter a code.",
-    mfaRequired: "This needs a sign-in with an authenticator app.",
     codeFormat: "Enter the 6 digits",
   },
 } as const;

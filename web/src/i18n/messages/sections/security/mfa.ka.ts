@@ -35,7 +35,6 @@ export const mfaKa: Translation<typeof mfaEn> = {
     qrLabel: "QR-კოდი ავთენტიფიკატორის აპისთვის",
     key: "გასაღები",
     copyKey: "გასაღების კოპირება",
-    keyCopied: "გასაღები დაკოპირდა",
     code: "კოდი აპიდან",
     confirm: "ჩართვა",
     confirming: "ვრთავთ…",
@@ -45,7 +44,6 @@ export const mfaKa: Translation<typeof mfaEn> = {
     description:
       "თუ ტელეფონი დაიკარგება, შედით ამ კოდებიდან ერთ-ერთით აპის ნაცვლად. თითოეული კოდი ერთხელ მუშაობს. ისინი მხოლოდ ახლა ჩანს: შეინახეთ პაროლების მენეჯერში ან ამობეჭდეთ.",
     copy: "კოპირება",
-    copied: "კოდები დაკოპირდა",
     download: "ჩამოტვირთვა",
     fileHeading:
       "Assistant Workshop-ის აღდგენის კოდები ანგარიშისთვის {account}. თითოეული კოდი ერთხელ მუშაობს.",
@@ -68,8 +66,6 @@ export const mfaKa: Translation<typeof mfaEn> = {
     wrongCode: "კოდი არასწორია ან უკვე გამოყენებულია. სცადეთ უახლესი კოდი.",
     expired: "შესვლის დრო ამოიწურა. დაიწყეთ თავიდან.",
     tooManyAttempts: "ძალიან ბევრი არასწორი კოდი. შედით თავიდან.",
-    stepUpRequired: "დაადასტურეთ, რომ ეს თქვენ ხართ: შეიყვანეთ კოდი.",
-    mfaRequired: "აქ ავთენტიფიკატორის აპით შესვლაა საჭირო.",
     codeFormat: "შეიყვანეთ 6 ციფრი",
   },
 };

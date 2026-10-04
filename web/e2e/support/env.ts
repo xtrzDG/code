@@ -34,3 +34,5 @@ export const E2E_VAPID_PRIVATE_KEY = "TvFxPI0UYWj6Tk2K1oObluuz01W1zeWieAwrRpfzfh
 export const PLATFORM_ADMIN_EMAIL = "platform-admin@e2e.workshop.example";
 /** A second platform admin (admin-metrics.spec.ts): an address gets a code at most every 30 seconds. */
 export const METRICS_ADMIN_EMAIL = "metrics-admin@e2e.workshop.example";
+/** A platform admin who sets up the authenticator app through the sign-in page (two-factor.spec.ts). */
+export const MFA_ADMIN_EMAIL = "mfa-admin@e2e.workshop.example";

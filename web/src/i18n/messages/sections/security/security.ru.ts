@@ -7,6 +7,7 @@ export const securityRu: Translation<typeof securityEn> = {
   title: "Безопасность",
   description: "Как вы входите в кабинет.",
   menu: "Безопасность",
+  back: "К моим бизнесам",
   required: {
     business:
       "Этот бизнес просит всю команду входить с приложением-аутентификатором. Подключите его ниже и продолжайте.",

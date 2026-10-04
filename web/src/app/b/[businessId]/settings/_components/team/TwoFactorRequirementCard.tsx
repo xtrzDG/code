@@ -3,10 +3,14 @@
 /**
  * Settings → Team: whether everyone must sign in with an authenticator app
  * as well as the login code (owners switch it; turning it on needs their
- * own two-factor session), and how many members have no app yet.
+ * own two-factor session), and how many members have no app yet (read
+ * again whenever the team changes).
  */
 
+import { useEffect, useRef } from "react";
+
 import { api } from "@/api/client";
+import { invalidate } from "@/api/queryCache";
 import { queryKeys } from "@/api/queryKeys";
 import { useMutation } from "@/api/useMutation";
 import { useQuery } from "@/api/useQuery";
@@ -40,6 +44,14 @@ export function TwoFactorRequirementCard() {
     { errorToast: false },
   );
   const needsOwnApp = hasReason(save.error, "mfa_required");
+  const team = business.members.map((member) => member.user_id).join();
+  const shownTeam = useRef(team);
+  useEffect(() => {
+    if (shownTeam.current !== team) {
+      shownTeam.current = team;
+      invalidate(queryKeys.settings.security(business.id));
+    }
+  }, [business.id, team]);
   const view = security.data;
 
   const toggle = async (required: boolean) => {

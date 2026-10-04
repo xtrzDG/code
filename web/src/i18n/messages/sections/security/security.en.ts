@@ -9,6 +9,7 @@ export const securityEn = {
   title: "Security",
   description: "How you sign in to the cabinet.",
   menu: "Security",
+  back: "To my businesses",
   required: {
     business:
       "This business asks everyone in its team to sign in with an authenticator app. Set one up below, then continue.",

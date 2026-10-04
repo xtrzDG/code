@@ -129,6 +129,7 @@ export function SecondStepForm({
               autoComplete="off"
               autoCapitalize="none"
               spellCheck={false}
+              autoFocus
               onChange={(event) => flow.setRecoveryCode(event.target.value)}
             />
           )}
@@ -140,6 +141,7 @@ export function SecondStepForm({
           error={flow.problem ?? undefined}
           onChange={flow.typeCode}
           onComplete={(digits) => void flow.submit(digits)}
+          autoFocus
         />
       )}
       <Button

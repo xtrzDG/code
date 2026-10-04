@@ -4,7 +4,8 @@
  * "Confirm it is you": shown when the API asks a sensitive action to be
  * confirmed (src/api/stepUp.ts). People with an authenticator app enter
  * its code (or a recovery code); others get a login code at their own
- * phone or e-mail. Once confirmed, the waiting requests run again by
+ * phone or e-mail (one sent moments ago is offered again: stepUpAsker.ts).
+ * Once confirmed, the waiting requests run again by
  * themselves; cancelling leaves them refused. Mounted once, in the root
  * layout, so every page of the cabinet has it.
  */
@@ -30,8 +31,11 @@ import {
   isCompleteOneTimeCode,
   secondFactorProblem,
 } from "@/lib/security/secondFactor";
+import { createStepUpAsker } from "@/lib/security/stepUpAsker";
 
 import { OneTimeCodeField } from "./OneTimeCodeField";
+
+const stepUp = createStepUpAsker(() => unwrap(api.POST("/v1/auth/step-up")));
 
 export function StepUpDialog() {
   const open = useSyncExternalStore(
@@ -52,12 +56,9 @@ function StepUpForm() {
   const [problem, setProblem] = useState<string | null>(null);
   const [isChecking, setChecking] = useState(false);
 
-  /** Ask how to confirm (and, without an authenticator, send a login code). */
-  const ask = () => unwrap(api.POST("/v1/auth/step-up"));
-
   const resend = async () => {
     try {
-      const next = await ask();
+      const next = await stepUp.ask({ fresh: true });
       setProblem(null);
       setChallenge(next);
       setCode("");
@@ -68,7 +69,8 @@ function StepUpForm() {
 
   useEffect(() => {
     let isCurrent = true;
-    ask().then(
+    // How to confirm (without an authenticator, a login code is sent).
+    stepUp.ask().then(
       (next) => {
         if (isCurrent) {
           setChallenge(next);
@@ -107,6 +109,7 @@ function StepUpForm() {
           };
     try {
       await unwrap(api.POST("/v1/auth/step-up/verify", { body }));
+      stepUp.forget();
       toast.success(t("mfa.stepUp.confirmed"));
       settleStepUp(true);
     } catch (caught) {
@@ -179,6 +182,7 @@ function StepUpForm() {
                   value={recoveryCode}
                   autoComplete="off"
                   spellCheck={false}
+                  autoFocus
                   onChange={(event) => setRecoveryCode(event.target.value)}
                 />
               )}
@@ -193,6 +197,7 @@ function StepUpForm() {
                 setProblem(null);
               }}
               onComplete={(digits) => void confirm(digits)}
+              autoFocus
             />
           )}
           <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm">

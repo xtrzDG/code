@@ -7,14 +7,16 @@
  * is global).
  */
 
+import Link from "next/link";
 import { useState } from "react";
 
 import { api } from "@/api/client";
 import { unwrap } from "@/api/result";
 import type { AccountSecurityView, CurrentUserView } from "@/api/types";
+import { IconArrowLeft } from "@/components/icons";
 import { Alert, ButtonLink, PageHeader } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
-import type { SecurityReason } from "@/lib/navigation";
+import { HOME_PATH, type SecurityReason } from "@/lib/navigation";
 
 import { AuthenticatorCard } from "./AuthenticatorCard";
 import { RecoveryCodesCard } from "./RecoveryCodesCard";
@@ -44,6 +46,13 @@ export function SecurityScreen({
 
   return (
     <div className="space-y-6">
+      <Link
+        href={HOME_PATH}
+        className="inline-flex items-center gap-1.5 text-sm font-medium text-ink-muted hover:text-ink"
+      >
+        <IconArrowLeft className="size-4 rtl:-scale-x-100" aria-hidden />
+        {t("security.back")}
+      </Link>
       <PageHeader
         title={t("security.title")}
         description={t("security.description")}

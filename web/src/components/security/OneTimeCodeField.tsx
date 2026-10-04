@@ -23,6 +23,7 @@ export function OneTimeCodeField({
   onComplete,
   inputRef,
   disabled = false,
+  autoFocus = false,
 }: {
   label: string;
   hint?: string;
@@ -33,6 +34,8 @@ export function OneTimeCodeField({
   onComplete?: (digits: string) => void;
   inputRef?: Ref<HTMLInputElement>;
   disabled?: boolean;
+  /** Focus it when it appears (a step whose only job is this code). */
+  autoFocus?: boolean;
 }) {
   return (
     <Field label={label} hint={hint} error={error}>
@@ -46,6 +49,7 @@ export function OneTimeCodeField({
           pattern="\d{6}"
           maxLength={ONE_TIME_CODE_LENGTH}
           disabled={disabled}
+          autoFocus={autoFocus}
           className="h-12 text-center font-mono text-2xl tracking-[0.5em]"
           onChange={(event) => {
             const digits = oneTimeCodeDigits(event.target.value);

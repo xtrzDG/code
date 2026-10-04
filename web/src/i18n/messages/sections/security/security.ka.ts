@@ -7,6 +7,7 @@ export const securityKa: Translation<typeof securityEn> = {
   title: "უსაფრთხოება",
   description: "როგორ შედიხართ კაბინეტში.",
   menu: "უსაფრთხოება",
+  back: "ჩემს ბიზნესებზე",
   required: {
     business:
       "ეს ბიზნესი მთელ გუნდს სთხოვს, ავთენტიფიკატორის აპით შევიდეს. დააყენეთ ქვემოთ და გააგრძელეთ.",

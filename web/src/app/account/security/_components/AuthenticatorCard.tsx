@@ -22,7 +22,7 @@ import {
   useToast,
 } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
-import { formatDateTime } from "@/lib/format";
+import { formatDate, formatDateTime } from "@/lib/format";
 import { secondFactorProblem } from "@/lib/security/secondFactor";
 
 export function AuthenticatorCard({
@@ -100,10 +100,7 @@ export function AuthenticatorCard({
   if (status === "active" && security.totp_confirmed_at) {
     details.push(
       t("security.app.since", {
-        date: formatDateTime(security.totp_confirmed_at, {
-          locale,
-          timeStyle: undefined,
-        }),
+        date: formatDate(security.totp_confirmed_at, { locale }),
       }),
     );
   }

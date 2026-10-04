@@ -56,28 +56,31 @@ export function AuthenticatorSetup({
         <li>{t("mfa.setup.stepScan")}</li>
         <li>{t("mfa.setup.stepCode")}</li>
       </ol>
-      <div className="flex flex-col items-center gap-4 sm:flex-row sm:items-start">
-        <TotpQrCode
-          uri={enrollment.provisioning_uri}
-          label={t("mfa.setup.qrLabel")}
-        />
-        <div className="w-full min-w-0 space-y-2">
-          <p className="text-xs font-medium tracking-wide text-ink-subtle uppercase">
-            {t("mfa.setup.key")}
-          </p>
-          <p className="font-mono text-sm break-all text-ink" translate="no">
-            {groupedKey(enrollment.secret)}
-          </p>
-          <p
-            className="truncate text-xs text-ink-subtle"
-            title={enrollment.account_label}
-          >
-            {enrollment.issuer} · {enrollment.account_label}
-          </p>
-          <CopyButton
-            value={enrollment.secret}
-            label={t("mfa.setup.copyKey")}
+      {/* Side by side where the container is wide (a dialog), stacked in the narrow sign-in card. */}
+      <div className="@container">
+        <div className="flex flex-col items-center gap-4 @md:flex-row @md:items-start">
+          <TotpQrCode
+            uri={enrollment.provisioning_uri}
+            label={t("mfa.setup.qrLabel")}
           />
+          <div className="flex w-full min-w-0 flex-col items-center gap-2 text-center @md:items-start @md:text-start">
+            <p className="text-xs font-medium tracking-wide text-ink-subtle uppercase">
+              {t("mfa.setup.key")}
+            </p>
+            <p className="font-mono text-sm break-all text-ink" translate="no">
+              {groupedKey(enrollment.secret)}
+            </p>
+            <p
+              className="max-w-full truncate text-xs text-ink-subtle"
+              title={enrollment.account_label}
+            >
+              {enrollment.issuer} · {enrollment.account_label}
+            </p>
+            <CopyButton
+              value={enrollment.secret}
+              label={t("mfa.setup.copyKey")}
+            />
+          </div>
         </div>
       </div>
       <OneTimeCodeField
