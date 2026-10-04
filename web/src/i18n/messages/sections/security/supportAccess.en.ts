@@ -11,7 +11,7 @@ export const supportAccessEn = {
   owner: {
     title: "Platform support is looking at your cabinet",
     who: "{name}: “{reason}”",
-    someone: "Platform support",
+    reason: "Reason: “{reason}”",
     until: "until {time}",
     readOnly: "Support can only look; nothing can be changed without you.",
     end: "End access",

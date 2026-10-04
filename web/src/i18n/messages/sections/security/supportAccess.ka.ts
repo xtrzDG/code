@@ -7,7 +7,7 @@ export const supportAccessKa: Translation<typeof supportAccessEn> = {
   owner: {
     title: "პლატფორმის მხარდაჭერა ათვალიერებს თქვენს კაბინეტს",
     who: "{name}: „{reason}“",
-    someone: "პლატფორმის მხარდაჭერა",
+    reason: "მიზეზი: „{reason}“",
     until: "{time}-მდე",
     readOnly: "მხარდაჭერას მხოლოდ დათვალიერება შეუძლია: თქვენ გარეშე არაფერი შეიცვლება.",
     end: "წვდომის დახურვა",

@@ -62,7 +62,9 @@ export function OwnerSupportPanel({
             {(view.sessions ?? []).map((session) => (
               <li key={session.grant_id} className="text-ink">
                 <span dir="auto">
-                  {t("supportAccess.owner.who", { name: session.admin_name ?? t("supportAccess.owner.someone"), reason: session.reason })}
+                  {session.admin_name
+                    ? t("supportAccess.owner.who", { name: session.admin_name, reason: session.reason })
+                    : t("supportAccess.owner.reason", { reason: session.reason })}
                 </span>{" "}
                 <span className="text-ink-muted">{t("supportAccess.owner.until", { time: time(session.expires_at) })}</span>
               </li>

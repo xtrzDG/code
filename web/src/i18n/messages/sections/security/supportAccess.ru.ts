@@ -7,7 +7,7 @@ export const supportAccessRu: Translation<typeof supportAccessEn> = {
   owner: {
     title: "Поддержка платформы смотрит ваш кабинет",
     who: "{name}: «{reason}»",
-    someone: "Поддержка платформы",
+    reason: "Причина: «{reason}»",
     until: "до {time}",
     readOnly: "Поддержка может только смотреть: без вас ничего не изменится.",
     end: "Закрыть доступ",

@@ -42,8 +42,8 @@ export function SupportViewerPanel({
   };
 
   return (
-    <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-      <div className="min-w-0 flex-1 space-y-1">
+    <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:gap-4">
+      <div className="w-full min-w-0 flex-1 space-y-1">
         <p className="font-medium text-ink">{t("supportAccess.support.title", { name: businessName })}</p>
         <p className="text-ink-muted">
           {[
