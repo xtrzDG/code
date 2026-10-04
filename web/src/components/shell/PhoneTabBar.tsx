@@ -4,7 +4,8 @@
  * The bottom tab bar on phones: Overview, Messages, Bookings, Assistant and
  * "More" (settings, the business switcher and the account). Every place is
  * at least 56 px tall, the bar sits above the home indicator (safe-area
- * inset) and a soft pill glides behind the current place.
+ * inset) and a soft pill glides behind the current place. Above its end
+ * floats the page's primary action, when the page has one (usePhoneFab).
  */
 
 import { LayoutGroup } from "motion/react";
@@ -12,6 +13,7 @@ import * as m from "motion/react-m";
 import Link from "next/link";
 import { useId, type ComponentType } from "react";
 
+import { Fab, usePhoneChromeSnapshot } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { cn } from "@/lib/cn";
 import { springTransition } from "@/lib/motion";
@@ -60,9 +62,15 @@ export function PhoneTabBar({
 }) {
   const { t } = useI18n();
   const groupId = useId();
+  const { fab } = usePhoneChromeSnapshot();
 
   return (
     <LayoutGroup id={groupId}>
+      {fab ? (
+        <div className="pointer-events-none fixed end-4 bottom-[calc(4.75rem+env(safe-area-inset-bottom))] z-30 lg:hidden">
+          <Fab key={fab.label} label={fab.label} icon={fab.icon} onClick={fab.run} opensDialog={fab.opensDialog} />
+        </div>
+      ) : null}
       <nav
         aria-label={t("navigation.tabBar")}
         className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-surface/85 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl lg:hidden"

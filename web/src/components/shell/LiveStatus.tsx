@@ -4,11 +4,14 @@
  * Where the Refresh button used to be: whether the page is live and how
  * fresh its data is ("Live · Updated just now"). Lists reload by
  * themselves when the live stream reports a change; while the connection
- * is down the dot turns amber and "Try now" reconnects at once.
+ * is down the dot turns amber and "Try now" reconnects at once. On a
+ * phone in the cabinet's shell the line steps aside for a dot in the top
+ * bar (LiveDot), and the line itself moves behind the bar's (i).
  */
 
 import { useEffect, useState } from "react";
 
+import { usePageLevel, usePhoneChrome, usePhoneLive } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { cn } from "@/lib/cn";
 import { formatTime } from "@/lib/format";
@@ -27,26 +30,45 @@ function useNow(): number {
   return now;
 }
 
-function UpdatedText({ updatedAt, isFetching }: { updatedAt: number; isFetching: boolean }) {
+/** "Updated just now", "Updated 3 minutes ago", "Updating…" (empty before the first load). */
+export function useUpdatedText(updatedAt: number, isFetching: boolean): string {
   const { t, tp, locale } = useI18n();
   const now = useNow();
   if (isFetching && updatedAt > 0) {
-    return <>{t("live.updating")}</>;
+    return t("live.updating");
   }
   const state = freshness(updatedAt, Math.max(now, updatedAt));
   switch (state.kind) {
     case "never":
-      return null;
+      return "";
     case "justNow":
-      return <>{t("live.updatedJustNow")}</>;
+      return t("live.updatedJustNow");
     case "minutes":
-      return <>{tp("live.updatedMinutesAgo", state.minutes)}</>;
+      return tp("live.updatedMinutesAgo", state.minutes);
     case "at":
-      return <>{t("live.updatedAt", { time: formatTime(state.at, { locale }) })}</>;
+      return t("live.updatedAt", { time: formatTime(state.at, { locale }) });
   }
 }
 
+/** The page's live status; on a phone in the shell, the top bar's dot instead. */
 export function LiveStatus({
+  updatedAt,
+  isFetching = false,
+  className,
+}: {
+  /** When the page's data came from the server (ms; 0 while loading). */
+  updatedAt: number;
+  isFetching?: boolean;
+  className?: string;
+}) {
+  const chrome = usePhoneChrome();
+  const isCompact = chrome?.hasTopBar ?? false;
+  usePhoneLive(usePageLevel(), isCompact ? { updatedAt, isFetching } : null);
+  return <LiveStatusLine updatedAt={updatedAt} isFetching={isFetching} className={cn(isCompact && "max-lg:hidden", className)} />;
+}
+
+/** The status line itself ("Live · Updated just now · Try now"). */
+export function LiveStatusLine({
   updatedAt,
   isFetching = false,
   className,
@@ -58,6 +80,7 @@ export function LiveStatus({
 }) {
   const { t } = useI18n();
   const live = useLiveCabinet();
+  const updatedText = useUpdatedText(updatedAt, isFetching);
   const status = live?.status ?? null;
   const isLive = status === "live";
   const isDown = status === "reconnecting" || status === "stopped";
@@ -80,9 +103,7 @@ export function LiveStatus({
           {t(`live.status.${status === "stopped" ? "paused" : status}`)}
         </span>
       ) : null}
-      <span className="tabular-nums">
-        <UpdatedText updatedAt={updatedAt} isFetching={isFetching} />
-      </span>
+      <span className="tabular-nums">{updatedText}</span>
       {isDown && live ? (
         <button
           type="button"

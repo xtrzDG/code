@@ -4,12 +4,15 @@
  * Page frame of the signed-in cabinet. Large screens: the sidebar
  * (collapsible to icons) and the page. Phones: a calm top bar, the page and
  * the bottom tab bar with "More". The navigation is passed in by
- * BusinessShell (business pages) or AdminShell (platform admin).
+ * BusinessShell (business pages) or AdminShell (platform admin). On phones
+ * the page's header folds into the top bar and its primary action floats
+ * above the tab bar (PhoneChromeProvider, components/ui/PhoneChrome).
  */
 
 import { useState, type CSSProperties, type ReactNode } from "react";
 
 import type { CurrentUserView } from "@/api/types";
+import { PhoneChromeProvider, usePhoneChromeSnapshot } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { cn } from "@/lib/cn";
 import { sidebarCookie } from "@/lib/shellPreferences";
@@ -21,6 +24,25 @@ import { ServiceWorker } from "./ServiceWorker";
 import { Sidebar } from "./Sidebar";
 import type { ShellNavItem } from "./types";
 import { UserAvatar } from "./UserAvatar";
+
+/** The page; on phones it leaves room for the tab bar and, when there is one, the floating button. */
+function ShellMain({ isWide, showTabBar, children }: { isWide: boolean; showTabBar: boolean; children: ReactNode }) {
+  const { fab } = usePhoneChromeSnapshot();
+  return (
+    <main
+      id="main"
+      tabIndex={-1}
+      className={cn(
+        "mx-auto w-full px-4 py-6 focus:outline-none sm:px-6 lg:px-8 lg:py-8",
+        isWide ? "max-w-[100rem]" : "max-w-6xl",
+        showTabBar && (fab ? "pb-[calc(10.5rem+env(safe-area-inset-bottom))]" : "pb-[calc(6.5rem+env(safe-area-inset-bottom))]"),
+        showTabBar && "lg:pb-8",
+      )}
+    >
+      {children}
+    </main>
+  );
+}
 
 export function ShellFrame({
   items,
@@ -70,6 +92,7 @@ export function ShellFrame({
   };
 
   return (
+    <PhoneChromeProvider hasTopBar={showPhoneTopBar} hasFabSlot={showTabBar}>
     <div className="min-h-dvh" style={{ "--sidebar-width": collapsed ? "4.5rem" : "16rem" } as CSSProperties}>
       <ServiceWorker />
       <a
@@ -122,17 +145,9 @@ export function ShellFrame({
           }
         />
         ) : null}
-        <main
-          id="main"
-          tabIndex={-1}
-          className={cn(
-            "mx-auto w-full px-4 py-6 focus:outline-none sm:px-6 lg:px-8 lg:py-8",
-            isWide ? "max-w-[100rem]" : "max-w-6xl",
-            showTabBar && "pb-[calc(6.5rem+env(safe-area-inset-bottom))] lg:pb-8",
-          )}
-        >
+        <ShellMain isWide={isWide} showTabBar={showTabBar}>
           {children}
-        </main>
+        </ShellMain>
       </div>
 
       {showTabBar ? (
@@ -151,5 +166,6 @@ export function ShellFrame({
         me={me}
       />
     </div>
+    </PhoneChromeProvider>
   );
 }
