@@ -60,6 +60,8 @@ def test_a_saved_cassette_reads_back(tmp_path: Path) -> None:
     before = path.read_text(encoding="utf-8")
     loaded.save()
     assert path.read_text(encoding="utf-8") == before
+    # A digest under a field named "key" trips the secret scan (gitleaks).
+    assert '"key":' not in before
 
 
 def test_a_fresh_store_ignores_what_the_file_holds(tmp_path: Path) -> None:
