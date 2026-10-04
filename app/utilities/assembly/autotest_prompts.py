@@ -7,6 +7,7 @@ scenario language and the judge scores the five criteria of the concept.
 
 from collections.abc import Sequence
 
+from app.schemas.constants.assistants import AutotestScenarioKind
 from app.schemas.constants.conversations import MessageAuthor
 from app.schemas.domain.assistants import AutotestTranscriptLine, BusinessFact
 from app.schemas.dto.assistants.autotest_runs import AutotestScenario
@@ -32,6 +33,18 @@ TRANSCRIPT_AUTHOR_LABELS: dict[MessageAuthor, str] = {
     MessageAuthor.ASSISTANT: "Assistant",
     MessageAuthor.STAFF: "Staff",
     MessageAuthor.SYSTEM: "System",
+}
+TRANSLITERATION_NOTE: str = (
+    "Type it in Latin letters (transliteration), the way people write it on a "
+    "phone without its own keyboard; never use its own alphabet."
+)
+# How the customer writes in the language scenarios.
+KIND_LANGUAGE_NOTES: dict[AutotestScenarioKind, tuple[str, ...]] = {
+    AutotestScenarioKind.TRANSLITERATED: (TRANSLITERATION_NOTE,),
+    AutotestScenarioKind.FOREIGN_LANGUAGE: (
+        "It is the only language you speak: keep writing in it even when the "
+        "assistant answers in another language.",
+    ),
 }
 CUSTOMER_OPENING_TEXT: str = (
     "The conversation starts now. Write your first message to the assistant."
@@ -97,6 +110,7 @@ def build_customer_persona_prompt(
         "Write only your own messages as the customer: one short message at a "
         "time, the way people write in a messenger, and only in "
         f"{scenario.language_name} (language tag {scenario.language}).",
+        *KIND_LANGUAGE_NOTES.get(scenario.kind, ()),
         f"Your goal: {scenario.goal}",
         phone_line,
         (

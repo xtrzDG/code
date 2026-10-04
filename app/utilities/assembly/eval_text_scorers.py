@@ -142,7 +142,11 @@ def score_records(
     notes: list[str] = [
         str(failure.note)
         for failure in check_conversation(scenario, replies)
-        # The language criterion reports the script already.
-        if failure.code is not AutotestCheckCode.WRONG_REPLY_LANGUAGE
+        # The language and disclosure criteria report these already.
+        if failure.code
+        not in (
+            AutotestCheckCode.WRONG_REPLY_LANGUAGE,
+            AutotestCheckCode.WRONG_DISCLOSURE_LANGUAGE,
+        )
     ]
     return result(EvalCriterion.RECORDS, notes)

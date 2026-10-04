@@ -22,6 +22,9 @@ from app.utilities.llm_rehearsal.customer_phrases import (
 type JsonObject = dict[str, object]
 
 LANGUAGE_TAG_PATTERN: re.Pattern[str] = re.compile(r"language tag ([A-Za-z\-]+)\)")
+REPLY_LANGUAGE_PATTERN: re.Pattern[str] = re.compile(
+    r"^Reply language: .*\(([a-z]{2,3}(?:-[A-Za-z0-9]+)*)\)\.", re.MULTILINE
+)
 GOAL_PATTERN: re.Pattern[str] = re.compile(r"^Your goal: (.+)$", re.MULTILINE)
 PHONE_LINE_PATTERN: re.Pattern[str] = re.compile(r"Your phone number is ([+\d][\d ]+)")
 PHONE_PATTERN: re.Pattern[str] = re.compile(r"\+\d[\d \-]{6,}\d")
@@ -73,6 +76,20 @@ def last_customer_text(transcript: Sequence[str]) -> str:
             return fenced[-1] if fenced else (words if header else text).strip()
 
     return ""
+
+
+def read_reply_language(transcript: Sequence[str]) -> str | None:
+    """The language the platform read the customer's latest message in."""
+
+    for payload in reversed(transcript):
+        if read_turn(payload).get("role") != "user":
+            continue
+
+        match: re.Match[str] | None = REPLY_LANGUAGE_PATTERN.search(read_texts(payload))
+        if match is not None:
+            return match.group(1)
+
+    return None
 
 
 def next_days(transcript: Sequence[str]) -> list[str]:

@@ -52,6 +52,10 @@ class AutotestScenarioKind(StrEnum):
     HUMAN_REQUEST = "human_request"
     PROMPT_INJECTION = "prompt_injection"
     EMERGENCY = "emergency"
+    # The customer writes a language the business did not list.
+    FOREIGN_LANGUAGE = "foreign_language"
+    # The customer types a business language in Latin letters.
+    TRANSLITERATED = "transliterated"
 
 
 class JudgeCriterion(StrEnum):
@@ -68,7 +72,8 @@ class AutotestCheckCode(StrEnum):
     """
     Why the test harness failed a scenario, as a code each language renders:
     a deterministic check of what the assistant did (no booking, no handoff,
-    records nobody asked for, a reply in another script), or why the
+    records nobody asked for, a reply in another script, the AI disclosure
+    in another language than the customer's), or why the
     scenario could not be evaluated at all.
     """
 
@@ -76,6 +81,7 @@ class AutotestCheckCode(StrEnum):
     NOT_HANDED_OFF = "not_handed_off"
     UNEXPECTED_RECORDS = "unexpected_records"
     WRONG_REPLY_LANGUAGE = "wrong_reply_language"
+    WRONG_DISCLOSURE_LANGUAGE = "wrong_disclosure_language"
     CONVERSATION_FAILED = "conversation_failed"
     NO_CUSTOMER_MESSAGE = "no_customer_message"
     JUDGE_UNAVAILABLE = "judge_unavailable"

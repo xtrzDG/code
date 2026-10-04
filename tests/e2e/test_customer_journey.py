@@ -155,7 +155,9 @@ def test_georgian_restaurant_from_sign_in_to_a_booked_and_handed_off_chat(
     assert refused.status_code == 409, refused.text
 
     # The full run: an AI customer plays every scenario in ka, ru and en
-    # (prices, bookings, a request for a person, ...), a judge scores.
+    # (prices, bookings, a request for a person, ...), then writes Hebrew
+    # and German, which the business did not list, and Georgian and Russian
+    # in Latin letters; a judge scores.
     started = client.post(
         f"{base}/assistant-versions/{version_id}/autotests",
         json={},
@@ -170,7 +172,7 @@ def test_georgian_restaurant_from_sign_in_to_a_booked_and_handed_off_chat(
     assert report["version_status"] == "ready"
     assert report["is_passed"] is True
     assert report["is_full_coverage"] is True
-    assert report["scenario_count"] == report["passed_count"] == 29
+    assert report["scenario_count"] == report["passed_count"] == 33
     results: dict[str, JsonObject] = {
         str(result["scenario_key"]): result for result in report["results"]
     }
@@ -181,7 +183,19 @@ def test_georgian_restaurant_from_sign_in_to_a_booked_and_handed_off_chat(
     assert results["human_request__ka"]["transcript"][1]["text"].endswith(
         "თქვენი მოთხოვნა კოლეგას გადაეცა. მალე გიპასუხებენ."
     )
-    assert workshop.model.judge_calls == 3 + 29
+    assert results["foreign_language__he"]["transcript"][1]["text"].startswith(
+        "שלום! אני עוזר ה-AI של"
+    )
+    assert results["foreign_language__de"]["transcript"][1]["text"].startswith(
+        "Hallo! Ich bin der KI-Assistent von"
+    )
+    assert results["transliterated__ka"]["transcript"][0]["text"] == (
+        "gamarjoba, kitxva makvs"
+    )
+    assert results["transliterated__ka"]["transcript"][1]["text"].startswith(
+        "გამარჯობა!"
+    )
+    assert workshop.model.judge_calls == 3 + 33
     assert sorted(set(workshop.model.tool_calls)) == [
         "check_availability",
         "create_booking",

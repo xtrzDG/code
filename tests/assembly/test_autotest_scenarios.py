@@ -34,6 +34,11 @@ ENGLISH = AutotestLanguage(
     name=LanguageDisplayName("English"),
     script=ScriptCode("Latn"),
 )
+GEORGIAN_BUSINESS_LANGUAGES: list[LanguageTag] = [
+    LanguageTag("ka"),
+    LanguageTag("ru"),
+    LanguageTag("en"),
+]
 BOOKING_TOOLS = select_assistant_tools(takes_bookings=True, has_links=True)
 LEAD_TOOLS = select_assistant_tools(takes_bookings=False, has_links=True)
 
@@ -108,8 +113,11 @@ def test_booking_kinds_apply_only_to_versions_that_book() -> None:
     with_bookings = list_applicable_kinds(
         [*ALL_BASE_KINDS, AutotestScenarioKind.BOOKING],
         BOOKING_TOOLS,
+        GEORGIAN_BUSINESS_LANGUAGES,
     )
-    without_bookings = list_applicable_kinds(ALL_BASE_KINDS, LEAD_TOOLS)
+    without_bookings = list_applicable_kinds(
+        ALL_BASE_KINDS, LEAD_TOOLS, GEORGIAN_BUSINESS_LANGUAGES
+    )
 
     assert with_bookings == ALL_BASE_KINDS
     assert AutotestScenarioKind.BOOKING not in without_bookings
@@ -134,7 +142,9 @@ def test_language_selection_keeps_version_order_and_rejects_others() -> None:
 
 
 def test_kind_selection_rejects_kinds_that_do_not_apply() -> None:
-    applicable = list_applicable_kinds(ALL_BASE_KINDS, LEAD_TOOLS)
+    applicable = list_applicable_kinds(
+        ALL_BASE_KINDS, LEAD_TOOLS, GEORGIAN_BUSINESS_LANGUAGES
+    )
 
     assert select_kinds(applicable, None) == applicable
     assert select_kinds(
@@ -190,6 +200,7 @@ def test_tools_without_create_booking_drop_booking_scenarios() -> None:
     kinds = list_applicable_kinds(
         ALL_BASE_KINDS,
         [AssistantToolName.CHECK_AVAILABILITY, AssistantToolName.GET_PRICE],
+        GEORGIAN_BUSINESS_LANGUAGES,
     )
 
     assert AutotestScenarioKind.BOOKING not in kinds

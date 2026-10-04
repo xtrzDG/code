@@ -16,8 +16,11 @@ from tests.e2e.model_script_texts import (
     HANDOFF_WORDS,
     LANGUAGE_TAG_PATTERN,
     PRICE_WORDS,
+    TRANSLITERATED_MESSAGES,
+    TRANSLITERATION_MARKER,
     detect_language,
     read_customer_intent,
+    read_reply_language,
 )
 from tests.e2e.model_script_turns import (
     call_tool,
@@ -69,7 +72,9 @@ class WorkshopModelScript:
             return self._play_customer(request)
 
         self.assistant_calls += 1
-        language: str = detect_language(last_customer_text(request))
+        language: str = read_reply_language(
+            "\n".join(read_turn_texts(payload) for payload in request.transcript)
+        ) or detect_language(last_customer_text(request))
         answered: tuple[str, JsonObject] | None = last_tool_call(request)
         if answered is not None:
             return self._after_tool(*answered, language=language)
@@ -87,6 +92,9 @@ class WorkshopModelScript:
         language_match: re.Match[str] | None = LANGUAGE_TAG_PATTERN.search(prompt)
         goal_match: re.Match[str] | None = GOAL_PATTERN.search(prompt)
         assert language_match is not None and goal_match is not None, prompt
+        if TRANSLITERATION_MARKER in prompt:
+            return say(TRANSLITERATED_MESSAGES[language_match.group(1)])
+
         return say(
             CUSTOMER_MESSAGES[language_match.group(1)][
                 read_customer_intent(goal_match.group(1))

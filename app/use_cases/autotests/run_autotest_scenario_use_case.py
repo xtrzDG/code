@@ -139,6 +139,7 @@ class RunAutotestScenarioUseCase(
         check_failures: list[AutotestCheckFailure] = check_conversation(
             input_data.scenario,
             replies,
+            str(input_data.business.name),
         )
         try:
             judge_response: LlmResponse = self._judge_llm_adapter.complete(

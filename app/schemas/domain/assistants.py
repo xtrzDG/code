@@ -172,7 +172,9 @@ class AutotestRunDocument(BaseDocument):
     """
 
     # 2: `check_codes` on the scenario results (optional, no upcaster).
-    schema_version: SchemaVersion = SchemaVersion("2")
+    # 3: the language scenario kinds (foreign_language, transliterated) and
+    # the wrong_disclosure_language check code (new values, no upcaster).
+    schema_version: SchemaVersion = SchemaVersion("3")
     id: AutotestRunId = Field(default_factory=AutotestRunId)
     business_id: BusinessId
     assistant_version_id: AssistantVersionId

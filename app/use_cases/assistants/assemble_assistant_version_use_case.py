@@ -150,4 +150,7 @@ class AssembleAssistantVersionUseCase(
         tools: list[AssistantToolName],
     ) -> None:
         select_languages(business.languages, request.languages)
-        select_kinds(list_applicable_kinds(niche.autotest_kinds, tools), request.kinds)
+        select_kinds(
+            list_applicable_kinds(niche.autotest_kinds, tools, business.languages),
+            request.kinds,
+        )

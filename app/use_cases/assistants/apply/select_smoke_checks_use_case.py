@@ -78,7 +78,7 @@ class SelectSmokeChecksUseCase(
 
         niche: NicheTemplate = self._niche_template_registry.get(version.niche_key)
         applicable_kinds: list[AutotestScenarioKind] = list_applicable_kinds(
-            niche.autotest_kinds, version.tools
+            niche.autotest_kinds, version.tools, version.languages
         )
         return select_smoke_checks(
             self._version_changes(business, live, version),

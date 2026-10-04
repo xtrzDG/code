@@ -16,6 +16,9 @@ from app.schemas.typings.assistants.constrained_strings import AutotestScenarioK
 from app.schemas.typings.assistants.strings import AutotestScenarioGoal
 from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.utilities.assembly.fact_formatting import format_people
+from app.utilities.assembly.language_scenarios import (
+    choose_transliterated_languages,
+)
 
 KEY_SEPARATOR: str = "__"
 DEFAULT_PARTY_SIZE: int = 2
@@ -64,25 +67,40 @@ FIXED_GOALS: dict[AutotestScenarioKind, str] = {
         "Report an emergency at the business (for example, someone has fainted) "
         "and ask what to do."
     ),
+    AutotestScenarioKind.FOREIGN_LANGUAGE: (
+        "You are a visitor who does not speak the local languages. Ask whether "
+        "the business is open tomorrow evening and what it offers."
+    ),
+    AutotestScenarioKind.TRANSLITERATED: (
+        "Ask whether the business is open tomorrow evening and how much its "
+        "most popular offer costs."
+    ),
 }
 
 
 def list_applicable_kinds(
     niche_kinds: Sequence[AutotestScenarioKind],
     tools: Sequence[AssistantToolName],
+    languages: Sequence[LanguageTag],
 ) -> list[AutotestScenarioKind]:
     """
     Niche kinds without repeats; booking scenarios only when the version can
-    book (a version without create_booking takes requests instead).
+    book (a version without create_booking takes requests instead), and the
+    transliteration scenario only when one of its `languages` is often typed
+    in Latin letters.
     """
 
     can_book: bool = AssistantToolName.CREATE_BOOKING in tools
+    can_be_transliterated: bool = bool(choose_transliterated_languages(languages))
     applicable_kinds: list[AutotestScenarioKind] = []
     for kind in niche_kinds:
         if kind in applicable_kinds:
             continue
 
         if kind in BOOKING_SCENARIO_KINDS and not can_book:
+            continue
+
+        if kind is AutotestScenarioKind.TRANSLITERATED and not can_be_transliterated:
             continue
 
         applicable_kinds.append(kind)
