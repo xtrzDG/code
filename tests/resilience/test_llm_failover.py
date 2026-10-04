@@ -32,9 +32,7 @@ CANONICAL: list[str] = [
 ]
 
 
-def test_a_failed_call_is_rerun_on_the_fallback_with_the_canonical_transcript() -> (
-    None
-):
+def test_a_failed_call_is_rerun_on_the_fallback_with_the_canonical_transcript() -> None:
     openai = failing()
     anthropic = answering("from anthropic")
 
